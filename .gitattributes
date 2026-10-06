@@ -1,0 +1,11 @@
+# Line endings: text files are stored with LF in the repo and checked out the way Windows tools expect.
+* text=auto
+# cmd.exe misreads labels / goto in batch files with LF endings: always CRLF on disk
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# never touch binary files
+*.png binary
+*.ico binary
+*.jpg binary
+*.mp4 binary
+*.wav binary

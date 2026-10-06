@@ -1,0 +1,37 @@
+# MotionLab - only code, docs and shared knowledge go into the repo. Everything personal stays on your PC.
+
+# --- your data (videos, analyses, edits, renders) - never in git
+/refs/*
+!/refs/README.md
+/analysis/
+/projects/*
+!/projects/README.md
+/library/
+/settings.json
+
+# --- knowledge: knowledge/references (cards) and knowledge/incoming (lessons to review) are shared; these stay here
+/knowledge/local/
+/knowledge/inbox/
+/knowledge/outbox/
+
+# --- personal hand-off notes (not useful to others)
+/docs/option2_prompt.md
+
+# --- Python
+/.venv/
+__pycache__/
+*.pyc
+
+# --- generated / caches
+/.app/
+/tools/selftest/
+/tools/bin/
+
+# --- Claude Code local state (keep the skill + lessons, which are shared knowledge)
+/.claude/*
+!/.claude/skills/
+/.claude/settings.local.json
+
+# --- Windows
+Thumbs.db
+desktop.ini

@@ -1,0 +1,231 @@
+{
+  "_comment": "MotionLab thresholds. Every detector reads its section here; tune values, then re-run analyze.py with --redetect (re-uses cached per-frame metrics, no re-decode). Units: luma/sat in %, motion in % of frame width (x) / height (y) per frame, scale as ratio per frame, rotation in degrees per frame, RGB shift in source pixels.",
+
+  "analysis": {
+    "long_side_px": 480,
+    "thumb_long_side_px": 96,
+    "repeat_search_frames": 36,
+    "dup_frame_diff": 0.35
+  },
+
+  "timecode": {
+    "drop_frame": false
+  },
+
+  "probe": {
+    "vfr_tolerance_frames": 0.25,
+    "vfr_min_irregular_fraction": 0.01,
+    "proxy_max_width": 1920,
+    "proxy_crf": 16
+  },
+
+  "audio": {
+    "sample_rate": 22050,
+    "hop_length": 256,
+    "beat_tightness": 100,
+    "beat_offset_ms": 0,
+    "refine_n_fft": 512,
+    "refine_hop": 64,
+    "silence_db_below_peak": 45,
+    "on_beat_tolerance_frames": 1.0,
+    "drop_window_s": 2.0,
+    "drop_min_db": 5.0,
+    "drop_min_separation_s": 8.0,
+    "build_min_s": 2.0,
+    "build_max_s": 16.0,
+    "build_min_rise_db": 3.0
+  },
+
+  "cut": {
+    "_comment": "hard cut = one-frame content change. rel = value / local median. corr = structure correlation with the previous frame (only trusted when both thumbnails have contrast >= min_thumb_std, otherwise the frame-difference ratio fd_rel_min is used).",
+    "hist_min": 0.25,
+    "hist_strong": 0.6,
+    "rel_min": 2.0,
+    "corr_max": 0.5,
+    "min_thumb_std": 4.0,
+    "fd_rel_min": 4.0,
+    "local_window": 31,
+    "jump_cut_diff_rel": 6.0,
+    "jump_cut_diff_min": 6.0,
+    "jump_cut_corr_max": 0.85,
+    "partial_unchanged_min": 0.3
+  },
+
+  "flash": {
+    "_comment": "flash = short luma spike. luma_delta = rise in luma % over 1-2 frames; white = whole frame >= white_luma with p05 >= white_p05. look_* = the measured 'flash look' (evidence only, types unchanged): the area brighter than the frame before the flash by > look_diff_min levels (0-255, at the extract width); texture below look_flat_texture = a flat solid frame, above = an over-exposed picture that keeps its texture (4AM: flat 0.3-1.2, textured 3.8-23).",
+    "luma_delta": 18.0,
+    "max_frames": 8,
+    "white_luma": 85.0,
+    "white_p05": 70.0,
+    "look_diff_min": 40.0,
+    "look_flat_texture": 2.5
+  },
+
+  "dip": {
+    "black_luma": 8.0,
+    "black_p95": 22.0,
+    "white_luma": 90.0,
+    "white_p05": 75.0,
+    "min_depth_ratio": 0.35,
+    "min_ramp_frames": 2,
+    "max_frames": 150
+  },
+
+  "transition": {
+    "_comment": "gradual transitions. stride = frames compared on each side (t-stride vs t+stride); lo/hi = progress thresholds that mark the first/last affected frame; spread = spatial spread of per-pixel progress at the midpoint (dissolve: every pixel at the same progress, low spread; wipe/iris/luma fade: some areas already switched, high spread); same_picture_corr = above this the picture did not change (colour/brightness change only, not a shot transition).",
+    "stride": 8,
+    "G_min": 0.3,
+    "lo": 0.03,
+    "hi": 0.97,
+    "min_frames": 3,
+    "max_frames": 90,
+    "pixel_min_diff": 40,
+        "wipe_plane_acc": 0.88,
+    "luma_mask_corr_min": 0.5,
+    "push_motion_min_pct": 3.0,
+    "same_picture_corr": 0.85,
+    "same_picture_edge_corr": 0.8,
+    "same_picture_aligned_corr": 0.6,
+    "slide_min_frames": 4,
+    "spread_spatial_min": 0.25,
+    "radial_corr_min": 0.5
+  },
+
+  "zoom": {
+    "min_rate": 0.02,
+    "min_total": 0.08,
+    "instant_min": 0.07,
+    "min_inliers": 0.45,
+    "min_pts": 20,
+    "transition_gap_frames": 2
+  },
+
+  "whip": {
+    "min_speed_pct": 7.0,
+    "min_frames": 2,
+    "blur_aniso_min": 0.6,
+    "extend_min_pct": 1.5
+  },
+
+  "spin": {
+    "min_rate_deg": 2.5,
+    "min_total_deg": 15.0
+  },
+
+  "shake": {
+    "window": 6,
+    "min_amp_pct": 0.9,
+    "min_frames": 4,
+    "min_sign_changes": 3
+  },
+
+  "speed_ramp": {
+    "min_ratio": 2.5,
+    "min_speed_pct": 0.6,
+    "smooth": 5
+  },
+
+  "freeze": {
+    "min_frames": 5
+  },
+
+  "stutter": {
+    "rep_err_max": 1.2,
+    "rep_ratio_max": 0.35,
+    "min_repeats": 2,
+    "strobe_min_delta": 8.0,
+    "strobe_rel": 0.6
+  },
+
+  "rgb": {
+    "min_shift_px": 3.0,
+    "min_gain": 0.2,
+    "min_luma_std": 8.0
+  },
+
+  "glitch": {
+    "band_dev_min_pct": 4.0,
+    "row_tear_min": 12.0,
+    "rel_min": 3.0,
+    "corr_drop_min": 0.03,
+    "max_frames": 12
+  },
+
+  "blur": {
+    "ratio_max": 0.45,
+    "min_frames": 2,
+    "max_motion_pct": 4.0,
+    "reference_frames": 60
+  },
+
+  "color": {
+    "invert_corr_max": -0.45,
+    "invert_match_min": 0.8,
+    "sat_step_min": 15.0,
+    "sat_hold_frames": 4,
+    "ab_flash_delta": 14.0
+  },
+
+  "light_leak": {
+    "luma_rise_min": 8.0,
+    "warm_rise_min": 5.0,
+    "lowfreq_rise_min": 4.0,
+    "tail_min_pct": 0.5,
+    "tail_rel": 0.06,
+    "min_frames": 4
+  },
+
+  "split_mirror": {
+    "sym_min": 0.9,
+    "tile_min": 0.9,
+    "seam_min": 0.9,
+    "min_frames": 6,
+    "min_motion_pct": 0.05
+  },
+
+  "text": {
+    "score_min": 0.012,
+    "rise_min": 0.008,
+    "rise_rel": 1.0,
+    "min_frames": 6
+  },
+
+  "unknown": {
+    "z_min": 10.0,
+    "max_frames": 12
+  },
+
+  "near_miss": {
+    "_comment": "possible misses listed for the user / reviewer (evidence only, never events): local peaks of the same surprise score as 'unknown' (robust z of luma / saturation / colour / picture change) from z_min up that no event (+- pad_frames) and no cut explains; at most max_items, spacing_frames apart.",
+    "z_min": 5.0,
+    "max_items": 12,
+    "spacing_frames": 12,
+    "pad_frames": 3
+  },
+
+  "events": {
+    "merge_gap_frames": 1,
+    "max_merge_frames": 60,
+    "pad_frames": 3
+  },
+
+  "sheets": {
+    "max_frames_per_sheet": 24,
+    "width_px": 1500,
+    "max_full_extract_frames": 900,
+    "long_event_edge_frames": 21,
+    "long_event_sample_step": 6
+  },
+
+  "preview": {
+    "width_px": 640,
+    "min_seconds": 1.6,
+    "context_seconds": 0.4,
+    "crf": 20
+  },
+
+  "extract": {
+    "width_px": 640,
+    "jpeg_quality": 92
+  }
+}

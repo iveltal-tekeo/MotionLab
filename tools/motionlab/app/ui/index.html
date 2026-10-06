@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ml-token" content="{{TOKEN}}">
+<meta name="ml-version" content="{{VERSION}}">
+<title>MotionLab</title>
+<link rel="icon" href="/ui/favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/ui/icon-192.png">
+<link rel="apple-touch-icon" href="/ui/icon-192.png">
+<link rel="stylesheet" href="/ui/app.css?v={{VERSION}}">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h5v-6h3v6h5V10"/></symbol>
+  <symbol id="i-refs" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/></symbol>
+  <symbol id="i-videos" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13.5" height="12" rx="2"/><path d="m16 10.5 5.5-3v9l-5.5-3z"/></symbol>
+  <symbol id="i-library" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.8-4.3 4.2 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.2 5.9-.8z"/></symbol>
+  <symbol id="i-jobs" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6.5 5 13L17 12h4"/></symbol>
+  <symbol id="i-storage" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="m5 13 3-8h8l3 8"/><path d="M16.5 16.5h.01"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6.5h9M17 6.5h3M4 12h3M11 12h9M4 17.5h11M19 17.5h1"/><circle cx="15" cy="6.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17.5" r="2"/></symbol>
+  <symbol id="i-claude" viewBox="0 0 24 24"><path d="m11 3 1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="m18.5 14.5.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></symbol>
+  <symbol id="i-knowledge" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.9 7.6-3.8M8.2 13.1l7.6 3.8"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
+</svg>
+<nav id="side">
+  <a class="logo" href="#/"><img src="/ui/logo.png" alt="MotionLab"></a>
+  <a href="#/" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
+  <a href="#/refs" data-nav="refs" title="Videos by others that the lab breaks down"><svg class="ic"><use href="#i-refs"/></svg>References</a>
+  <a href="#/projects" data-nav="projects" title="Your own footage, edited in a reference's style"><svg class="ic"><use href="#i-videos"/></svg>Videos</a>
+  <a href="#/library" data-nav="library"><svg class="ic"><use href="#i-library"/></svg>Library</a>
+  <a href="#/knowledge" data-nav="knowledge" title="What everyone has learned: reference cards, pacing per category, lessons - and sharing"><svg class="ic"><use href="#i-knowledge"/></svg>Knowledge</a>
+  <a href="#/jobs" data-nav="jobs"><svg class="ic"><use href="#i-jobs"/></svg>Jobs <b id="jobcount"></b></a>
+  <a href="#/storage" data-nav="storage"><svg class="ic"><use href="#i-storage"/></svg>Storage</a>
+  <a href="#/settings" data-nav="settings"><svg class="ic"><use href="#i-settings"/></svg>Settings <i class="updot" hidden title="an update is available"></i></a>
+  <div class="grow"></div>
+  <button class="claude-open" id="side-claude" title="Open Claude Code in the lab folder (reviews, feedback, rebuilds)"><svg class="ic"><use href="#i-claude"/></svg>Open Claude Code</button>
+  <div id="resolve-state" title="DaVinci Resolve">Resolve <i class="dot"></i> <span>...</span></div>
+  <div class="ver">MotionLab {{VERSION}}</div>
+</nav>
+<main id="main"><div class="loading">Loading...</div></main>
+<div id="toasts"></div>
+<div id="modal" hidden><div class="mbox"><button class="mclose" title="Close (Esc)">&times;</button><div class="mbody"></div></div></div>
+<div id="lightbox" hidden><img alt=""><div class="lbcap"></div></div>
+<div id="tip" hidden></div>
+<script src="/ui/app.js?v={{VERSION}}"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# MotionLab Python packages (Python 3.12, 64-bit). Install into C:\MotionLab\.venv with:
+#   py -3.12 -m venv .venv  &&  .venv\Scripts\python -m pip install -r requirements.txt
+# Versions are the ones the lab was built and self-tested with on the first PC (2026-10-05).
+opencv-python==5.0.0.93
+numpy==2.5.3
+scipy==1.18.1
+librosa==1.0.0
+soundfile==0.14.0
+scenedetect==0.7.1
+matplotlib==3.11.2
+pillow==12.3.0
