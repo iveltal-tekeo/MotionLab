@@ -1,6 +1,7 @@
 """The app's settings and the outside programs it works with: ffmpeg (required), yt-dlp (downloads), Claude Code
-(the "Open in Claude" buttons), DaVinci Resolve and Microsoft Edge. Everything is found automatically; paths can be
-set on the Settings page. Settings live in settings.json in the lab folder (personal: not in the repo).
+(the "Open in Claude" buttons: each asks for one task - TASKS - with its recommended effort level unless Settings
+picks one), DaVinci Resolve and Microsoft Edge. Everything is found automatically; paths can be set on the Settings
+page. Settings live in settings.json in the lab folder (personal: not in the repo).
 
 Nothing here installs anything: missing programs are reported with how to get them."""
 from __future__ import annotations
@@ -24,7 +25,17 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
             "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_check": True,
-            "update_auto": True}
+            "update_auto": True, "claude_effort": "auto"}
+EFFORTS = ("low", "medium", "high", "xhigh", "max")
+# what the app's Claude buttons ask for -> (effort used when Settings says "recommended", session name)
+TASKS = {
+    "free": (None, "MotionLab"),                      # sidebar / Settings: Claude Code's own default
+    "review": ("high", "MotionLab review"),            # /analyze-reference: read every contact sheet, name each effect
+    "feedback": ("high", "MotionLab feedback"),        # apply MOTIONLAB FEEDBACK: lessons, thresholds, re-check
+    "lessons": ("high", "MotionLab lessons"),          # review friends' incoming lessons
+    "library": ("high", "MotionLab library"),          # save library picks as Fusion macros (needs Resolve)
+    "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
+}
 BOOLS = {"update_check", "update_auto"}
 # preset id -> (label, yt-dlp arguments, folder inside the lab)
 PRESETS = {
@@ -80,6 +91,8 @@ def save(body: dict) -> dict:
             v = norm_category(v) or ""
             if v not in CATEGORIES:
                 raise ValueError("unknown category")
+        if k == "claude_effort" and v not in ("auto", *EFFORTS):
+            raise ValueError(f"unknown effort {v}")
         s[k] = v
     data.write_json_atomic(SETTINGS, s)
     return s
@@ -200,28 +213,71 @@ def download_cmd(url: str, preset: str) -> tuple[str, list[str]]:
 
 
 # ------------------------------------------------------------------------------------------------- Claude Code
-def claude_launcher(prompt: str = "") -> tuple[str, str]:
-    """(cleaned prompt, .cmd text) that opens Claude Code in the lab folder with an optional first message. The
-    prompt loses the characters cmd would interpret (quotes, %, ^, &, |, <, >)."""
-    exe = find("claude")
+_flags: dict[tuple, str] = {}
+
+
+def claude_flags(exe: str) -> str:
+    """`claude --help` of this Claude Code (cached until the program changes): older versions lack --effort / --name."""
+    try:
+        key = (exe, os.stat(exe).st_mtime_ns)
+    except OSError:
+        return ""
+    if key not in _flags:
+        try:
+            out = subprocess.run([exe, "--help"], capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW,
+                                 encoding="utf-8", errors="replace")
+            _flags[key] = out.stdout + out.stderr
+        except (OSError, subprocess.TimeoutExpired):
+            _flags[key] = ""
+    return _flags[key]
+
+
+def _cmd_text(s: str, n: int) -> str:
+    """Text that is safe inside "..." on a cmd line: double quotes become single ones (a quoted path stays one
+    path), %, ^, &, |, <, >, backticks and line breaks become spaces."""
+    return re.sub(r" {2,}", " ", re.sub(r'[%^&|<>\r\n`]', " ", str(s).replace('"', "'")))[:n].strip()
+
+
+def claude_effort(task: str, s: dict | None = None) -> str | None:
+    """The effort level for one of the app's Claude buttons: Settings > Claude Code, or the task's recommendation."""
+    s = s or load()
+    chosen = s.get("claude_effort") or "auto"
+    return chosen if chosen in EFFORTS else TASKS.get(task, TASKS["free"])[0]
+
+
+def claude_launcher(prompt: str = "", task: str = "free", label: str = "") -> tuple[str, str, str | None]:
+    """(cleaned prompt, .cmd text, effort used) that opens Claude Code in the lab folder with an optional first
+    message, the task's effort level (--effort) and a session name (--name, shown by /resume). The prompt loses the
+    characters cmd would interpret (quotes, %, ^, &, |, <, >)."""
+    if task not in TASKS:
+        raise ValueError(f"unknown task {task!r}")
+    s = load()
+    exe = find("claude", s)
     if not exe:
         raise FileNotFoundError("Claude Code (claude) - " + HOW["claude"])
-    clean = re.sub(r'["%^&|<>\r\n`]', " ", str(prompt))
-    clean = re.sub(r" {2,}", " ", clean)[:600].strip()
+    clean = _cmd_text(prompt, 600)
+    help_text = claude_flags(exe)
+    args = []
+    effort = claude_effort(task, s) if "--effort" in help_text else None
+    if effort:
+        args.append(f"--effort {effort}")
+    name = _cmd_text(f"{TASKS[task][1]} {label}", 60)
+    if task != "free" and "--name" in help_text:
+        args.append(f'--name "{name}"')
     lines = ["@echo off", "title MotionLab - Claude Code", f'cd /d "{LAB}"',
-             f'call "{exe}"' + (f' "{clean}"' if clean else "")]
-    return clean, "\r\n".join(lines) + "\r\n"
+             f'call "{exe}"' + "".join(" " + a for a in args) + (f' "{clean}"' if clean else "")]
+    return clean, "\r\n".join(lines) + "\r\n", effort
 
 
-def open_claude(prompt: str = "") -> dict:
+def open_claude(prompt: str = "", task: str = "free", label: str = "") -> dict:
     """Open Claude Code in a new console in the lab folder, optionally with a first message (the app's fixed
-    hand-off texts: /analyze-reference ..., apply the feedback in ...)."""
-    clean, text = claude_launcher(prompt)
+    hand-off texts: /analyze-reference ..., apply the feedback in ...) and the task's effort level."""
+    clean, text, effort = claude_launcher(prompt, task, label)
     APPDIR.mkdir(exist_ok=True)
     launcher = APPDIR / "open_claude.cmd"
     launcher.write_text(text, encoding="utf-8")
     subprocess.Popen(["cmd", "/c", str(launcher)], cwd=str(LAB), creationflags=NEW_CONSOLE)
-    return {"ok": True, "prompt": clean}
+    return {"ok": True, "prompt": clean, "effort": effort}
 
 
 # ------------------------------------------------------------------------------------------------- shortcuts

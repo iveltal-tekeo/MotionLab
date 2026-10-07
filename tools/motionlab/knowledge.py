@@ -24,6 +24,7 @@ import json
 import os
 import re
 import statistics
+import threading
 import time
 from pathlib import Path
 
@@ -45,6 +46,7 @@ INBOX = KDIR / "inbox"
 SHARED_LESSONS = LAB / ".claude" / "skills" / "analyze-reference" / "lessons.md"
 DOWNLOADS = REFS / "downloads.json"
 SCHEMA = 1
+_CARDS_LOCK = threading.RLock()
 LESSON_HEAD = """# Lessons learned on this PC (not reviewed / shared yet)
 
 <!--
@@ -214,15 +216,17 @@ def _digest(c: dict) -> str:
 
 
 def build_local_cards(names: list[str] | None = None) -> list[dict]:
-    """(Re)write knowledge\\local\\references\\<video id>.json for this PC's analyses."""
+    """(Re)write knowledge\\local\\references\\<video id>.json for this PC's analyses (one writer at a time: the app
+    asks for cards from several requests at once)."""
     out = []
     names = names or ([p.name for p in sorted(ANALYSIS.iterdir()) if p.is_dir()] if ANALYSIS.exists() else [])
-    for n in names:
-        c = card(n)
-        if c:
-            c["analysis"] = n
-            _write(LOCAL_REFS / f"{c['video_id']}.json", c)
-            out.append(c)
+    with _CARDS_LOCK:
+        for n in names:
+            c = card(n)
+            if c:
+                c["analysis"] = n
+                _write(LOCAL_REFS / f"{c['video_id']}.json", c)
+                out.append(c)
     return out
 
 
@@ -309,9 +313,13 @@ def _state() -> dict:
     return read_json(SHARED_STATE) if SHARED_STATE.exists() else {"cards": {}, "lessons": [], "shares": []}
 
 
-def pending() -> dict:
-    """What 'Share my knowledge' would send now: new / changed cards of this PC and unshared local lessons."""
-    build_local_cards()
+def pending(rebuild: list[str] | None = None) -> dict:
+    """What 'Share my knowledge' would send now: new / changed cards of this PC and unshared local lessons.
+    rebuild = the analyses whose cards are rebuilt first (None = all of them)."""
+    if rebuild is None:
+        build_local_cards()
+    elif rebuild:
+        build_local_cards(rebuild)
     st = _state()
     cards = [c for c in _load_dir(LOCAL_REFS) if st.get("cards", {}).get(c["video_id"]) != _digest(c)]
     lessons = [(i, t) for i, t in local_lessons() if i not in st.get("lessons", [])]
@@ -528,9 +536,9 @@ def overview() -> dict:
     st = _state()
     lite = []
     for c in cards:
-        lite.append({k: c.get(k) for k in ("video_id", "title", "url", "platform", "category", "category_label", "tags",
-                                           "format", "pacing", "verdicts", "author", "origin", "pending", "analysis",
-                                           "_file")})
+        lite.append({**{k: c.get(k) for k in ("video_id", "title", "url", "platform", "category", "category_label",
+                                              "tags", "format", "pacing", "verdicts", "author", "origin", "pending",
+                                              "_file")}, "analysis": _analysis_here(c)})
     return {"author": author(), "cards": lite, "categories": category_stats(cards),
             "pending": {"cards": len(pend["cards"]), "lessons": len(pend["lessons"]),
                         "card_titles": [c.get("title") for c in pend["cards"]][:20]},
@@ -539,9 +547,16 @@ def overview() -> dict:
             "all_categories": [{"id": k, "label": v} for k, v in CATEGORIES.items()]}
 
 
+def _analysis_here(c: dict) -> str | None:
+    """The analysis folder of a card if it is still on this PC (the app can delete a reference; its card stays)."""
+    a = c.get("analysis")
+    return a if a and (ANALYSIS / a / "events.json").exists() else None
+
+
 def card_detail(file_or_id: str) -> dict:
     for d in (LOCAL_REFS, SHARED_REFS):
         for c in _load_dir(d):
             if file_or_id in (c["_file"], c["video_id"]):
+                c["analysis"] = _analysis_here(c)
                 return c
     raise FileNotFoundError(file_or_id)

@@ -1,6 +1,6 @@
 """Everything the app shows, read from the lab folders. Read-only, except the user's verdicts
 (analysis\\<name>\\feedback\\verdicts.json + exported MOTIONLAB FEEDBACK files) and library picks
-(projects\\<name>\\build\\library_picks.json)."""
+(projects\\<name>\\build\\library_picks.json). Deleting is trash.py (the user's Delete buttons)."""
 from __future__ import annotations
 
 import datetime
@@ -21,6 +21,7 @@ PROJECTS = LAB / "projects"
 LIBRARY = LAB / "library"
 DOCS = LAB / "docs"
 VIDEO_EXT = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm", ".mts", ".mxf"}
+AUDIO_EXT = {".mp3", ".m4a", ".wav", ".aac", ".flac", ".ogg"}
 _cache: dict[str, tuple[float, object]] = {}
 _lock = threading.Lock()
 
@@ -64,6 +65,17 @@ def stamp(t: float | None = None) -> str:
     return datetime.datetime.fromtimestamp(t or time.time()).strftime("%Y-%m-%d %H:%M")
 
 
+def human(n: float | None) -> str:
+    """Bytes in decimal units, like the app shows them (1.2 GB)."""
+    if n is None:
+        return "-"
+    units, i = ["B", "KB", "MB", "GB", "TB"], 0
+    while n >= 1000 and i < 4:
+        n /= 1000
+        i += 1
+    return f"{n:.0f} {units[i]}" if n >= 100 or i == 0 else f"{n:.1f} {units[i]}"
+
+
 def safe_name(name: str) -> str:
     """A folder name from a URL: no separators, no '..'."""
     if not re.fullmatch(r"[\w.\- \[\]()&'+,]+", name or "") or ".." in name:
@@ -78,15 +90,19 @@ def verdicts_path(name: str) -> Path:
 
 def load_verdicts(name: str) -> dict:
     v = read_json(verdicts_path(name), None) or {}
-    return {"events": v.get("events", {}), "cuts": v.get("cuts", {}), "missed": v.get("missed", ""),
-            "updated": v.get("updated")}
+    return {"events": v.get("events", {}), "cuts": v.get("cuts", {}), "misses": v.get("misses", {}),
+            "missed": v.get("missed", ""), "updated": v.get("updated")}
 
 
-def save_verdicts(name: str, body: dict) -> dict:
+def save_verdicts(name: str, body: dict, by_user: bool = False) -> dict:
+    """Write verdicts.json. by_user = the app's own save (the user changed something): "changed" (epoch seconds) is
+    when the user last changed it - an import of pasted feedback by Claude keeps it, so the workflow still knows the
+    feedback was applied."""
     d = ANALYSIS / safe_name(name)
     if not (d / "events.json").exists():
         raise FileNotFoundError(name)
-    clean = {"events": {}, "cuts": {}, "missed": str(body.get("missed", ""))[:20000]}
+    old = read_json(verdicts_path(name), None) or {}
+    clean = {"events": {}, "cuts": {}, "misses": {}, "missed": str(body.get("missed", ""))[:20000]}
     for sec in ("events", "cuts"):
         for k, s in (body.get(sec) or {}).items():
             if not re.fullmatch(r"[EC]\d{1,5}", k) or not isinstance(s, dict):
@@ -97,8 +113,16 @@ def save_verdicts(name: str, body: dict) -> dict:
             lib = bool(s.get("library"))
             if v or note.strip() or lib:
                 clean[sec][k] = {"v": v, "note": note, **({"library": True} if lib else {})}
+    # possible misses (events.json near_misses), by frame: the user's "it's an effect" / "not an effect"
+    for k, s in (body.get("misses") or {}).items():
+        if re.fullmatch(r"\d{1,7}", str(k)) and isinstance(s, dict):
+            v = s.get("v", "") if s.get("v") in ("effect", "none") else ""
+            note = str(s.get("note", ""))[:4000]
+            if v or note.strip():
+                clean["misses"][str(k)] = {"v": v, "note": note}
     ev = read_json(d / "events.json", {})
-    clean.update(analysis_id=ev.get("analysis_id"), updated=stamp())
+    clean.update(analysis_id=ev.get("analysis_id"), updated=stamp(),
+                 changed=round(time.time(), 1) if by_user else old.get("changed"))
     write_json_atomic(verdicts_path(name), clean)
     return clean
 
@@ -140,6 +164,16 @@ def feedback_text(name: str) -> str:
             cl.append(f"{(st.get('v') or 'note').upper()} | {c['id']} | hard cut | f{c['frame']} ({c['tc']})"
                       + (f" | note: {one}" if note else ""))
     L.extend(cl or ["(all hard cuts accepted / not reviewed)"])
+    ml = []
+    for n in ev.get("near_misses") or []:
+        st = S["misses"].get(str(n["frame"]), {})
+        note = re.sub(r"\s*\n\s*", " / ", (st.get("note") or "").strip())
+        if st.get("v") or note:
+            ml.append(f"{({'effect': 'EFFECT', 'none': 'NOT AN EFFECT'}).get(st.get('v'), 'NOTE')} | "
+                      f"f{n['frame']} ({n.get('tc') or frame_to_tc(n['frame'], fps)})" + (f" | note: {note}" if note else ""))
+    if ev.get("near_misses"):
+        L.append("--- possible misses ---")
+        L.extend(ml or ["(none checked)"])
     L.append("--- missed effects / general notes ---")
     L.append(S["missed"].strip() or "(none)")
     L.append("END")
@@ -154,10 +188,76 @@ def export_feedback(name: str) -> dict:
     return {"text": text, "path": str(p), "rel": rel(p)}
 
 
+def review_prompt(video: str, analysis: str | None = None) -> str:
+    """The hand-off for Claude's check of one reference (the /analyze-reference skill skips the lab pass when it is
+    already done)."""
+    return f'/analyze-reference "{video}"' + (f" - the lab pass is done: analysis\\{analysis}" if analysis else "")
+
+
+# the workflow of one reference: download > lab pass > Claude checks > your verdicts > feedback to Claude > share
+FLOW = ("download", "lab", "claude", "verdicts", "feedback", "share")
+_pend: dict = {"sig": {}, "names": set(), "state": None}
+_plock = threading.Lock()
+
+
+def _mtimes(*files: Path) -> tuple:
+    out = []
+    for p in files:
+        try:
+            out.append(p.stat().st_mtime_ns)
+        except OSError:
+            out.append(None)
+    return tuple(out)
+
+
+def share_pending() -> set:
+    """Analyses whose knowledge card is new or changed since the last Share. A card is rebuilt only when a file it is
+    made of changed (its analysis' events / meta / verdicts, the lessons, refs\\downloads.json)."""
+    common = _mtimes(KN.SHARED_LESSONS, KN.LOCAL_LESSONS, KN.DOWNLOADS)
+    with _plock:
+        changed = []
+        for d in sorted(ANALYSIS.iterdir()) if ANALYSIS.exists() else []:
+            sig = common + _mtimes(d / "events.json", d / "meta.json", d / "feedback" / "verdicts.json")
+            if _pend["sig"].get(d.name) != sig:
+                _pend["sig"][d.name] = sig
+                changed.append(d.name)
+        state = _mtimes(KN.SHARED_STATE, KN.LOCAL_REFS)
+        if changed or state != _pend["state"]:
+            _pend["names"] = {c.get("analysis") for c in KN.pending(changed)["cards"]}
+            _pend["state"] = _mtimes(KN.SHARED_STATE, KN.LOCAL_REFS)
+        return set(_pend["names"])
+
+
+def flow(name: str, ev: dict, S: dict, pend: set) -> dict:
+    """Where one reference stands in the workflow (FLOW) and its next step. Feedback counts as applied when Claude
+    ran tools\\feedback.py (it archives feedback_<time>.txt) after the last change to the verdicts."""
+    evs = ev.get("events", [])
+    real = [e for e in evs if not (e.get("final") or {}).get("false_alarm")]
+    reviewed = sum(1 for e in evs if e.get("review"))
+    given = sum(1 for e in real if (S["events"].get(e["id"]) or {}).get("v"))
+    misses = [str(n["frame"]) for n in ev.get("near_misses") or []]
+    checked = sum(1 for k in misses if (S["misses"].get(k) or {}).get("v"))
+    fb = ANALYSIS / name / "feedback"
+
+    def newest(pattern: str) -> float:
+        return max((p.stat().st_mtime for p in fb.glob(pattern)), default=0.0) if fb.exists() else 0.0
+
+    vp = verdicts_path(name)                    # when the user last changed a verdict (older files: their time)
+    vt = ((read_json(vp, None) or {}).get("changed") or vp.stat().st_mtime) if vp.exists() else 0.0
+    applied, exported = newest("feedback_*.txt"), newest("app_*.txt")
+    done = {"download": True, "lab": True, "claude": reviewed >= len(evs),
+            "verdicts": given >= len(real) and checked >= len(misses),
+            "feedback": applied >= vt if vt else not real, "share": name not in pend}
+    return {"done": [k for k in FLOW if done[k]], "next": next((k for k in FLOW if not done[k]), None),
+            "reviewed": reviewed, "events": len(evs), "real": len(real), "given": given,
+            "misses": len(misses), "misses_checked": checked, "sent": bool(vt) and exported >= vt > applied}
+
+
 def list_references(include_tests: bool = False) -> list[dict]:
     out = []
     if not ANALYSIS.exists():
         return out
+    pend = share_pending()
     for d in sorted(ANALYSIS.iterdir(), key=lambda p: p.name.lower()):
         ev = read_json(d / "events.json", None) if d.is_dir() else None
         if not ev:
@@ -188,6 +288,7 @@ def list_references(include_tests: bool = False) -> list[dict]:
             **_kind(d.name, ev, v),
             "report": rel(d / "report.html") if (d / "report.html").exists() else None,
             "feedback_files": sorted(p.name for p in (d / "feedback").glob("*.txt")) if (d / "feedback").exists() else [],
+            "source": src, "flow": flow(d.name, ev, S, pend), "review_prompt": review_prompt(src or d.name, d.name),
         })
     return out
 
@@ -258,6 +359,9 @@ def reference(name: str) -> dict:
         "overview": rel(d / "overview.png") if (d / "overview.png").exists() else None,
         "verdicts": load_verdicts(name),
         "feedback_files": [rel(p) for p in sorted((d / "feedback").glob("*.txt"))] if (d / "feedback").exists() else [],
+        "flow": flow(d.name, ev, load_verdicts(name), share_pending()),
+        "review_prompt": review_prompt(src or d.name, d.name),
+        "projects": [p["name"] for p in list_projects()],
     }
 
 
@@ -269,6 +373,20 @@ def candidate_videos() -> list[dict]:
     for p in sorted((LAB / "refs").glob("*")):
         if p.suffix.lower() in VIDEO_EXT:
             out.append({"path": str(p), "name": p.name, "size": p.stat().st_size, "analysed": p.name.lower() in done})
+    return out
+
+
+def waiting() -> list[dict]:
+    """Downloads not analysed yet: videos in refs\\ without an analysis, and the audio in refs\\audio\\."""
+    files = [Path(c["path"]) for c in candidate_videos() if not c["analysed"]]
+    ad = LAB / "refs" / "audio"
+    files += [p for p in sorted(ad.glob("*")) if p.is_file() and p.suffix.lower() in AUDIO_EXT] if ad.is_dir() else []
+    out = []
+    for p in files:
+        st, dl = p.stat(), KN.download_info(p.name)
+        out.append({"name": p.name, "path": str(p), "rel": rel(p), "size": st.st_size, "modified": stamp(st.st_mtime),
+                    "audio": p.suffix.lower() in AUDIO_EXT, "title": dl.get("title"), "url": dl.get("url"),
+                    "platform": dl.get("platform")})
     return out
 
 

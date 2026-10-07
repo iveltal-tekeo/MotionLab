@@ -16,11 +16,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from motionlab.timecode import tc_to_frame  # noqa: E402
+from motionlab.timecode import frame_to_tc, tc_to_frame  # noqa: E402
 from motionlab.util import ANALYSIS, read_json, setup_console, write_json  # noqa: E402
 
 LINE = re.compile(r"^(CORRECT|PARTLY|WRONG|NOTE)\s*\|\s*(E\d+|C\d+)\s*\|\s*([^|]+?)\s*\|\s*f(\d+)(?:-(\d+))?[^|]*"
                   r"(?:\|\s*note:\s*(.*))?$", re.IGNORECASE)
+# "--- possible misses ---" (app 0.2.5): the user's answer per near-miss frame
+MISS = re.compile(r"^(EFFECT|NOT AN EFFECT|NOTE)\s*\|\s*f(\d+)[^|]*(?:\|\s*note:\s*(.*))?$", re.IGNORECASE)
 
 
 def frames_in_text(text: str, fps: float) -> list[int]:
@@ -39,7 +41,7 @@ def frames_in_text(text: str, fps: float) -> list[int]:
 
 
 def parse(text: str) -> dict:
-    res = {"video": None, "analysis_id": None, "events": [], "cuts": [], "missed": "", "unparsed": []}
+    res = {"video": None, "analysis_id": None, "events": [], "cuts": [], "misses": [], "missed": "", "unparsed": []}
     section = None
     missed = []
     for raw in text.splitlines():
@@ -61,11 +63,22 @@ def parse(text: str) -> dict:
         if line.startswith("--- missed"):
             section = "missed"
             continue
-        if line.startswith(("MOTIONLAB FEEDBACK", "report:", "(no verdict", "(all hard cuts")):
+        if line.startswith("--- possible misses"):
+            section = "misses"
+            continue
+        if line.startswith(("MOTIONLAB FEEDBACK", "report:", "(no verdict", "(all hard cuts", "(none checked")):
             continue
         if section == "missed":
             if line != "(none)":
                 missed.append(line)
+            continue
+        if section == "misses":
+            m = MISS.match(line)
+            if m:
+                res["misses"].append({"verdict": m.group(1).upper(), "frame": int(m.group(2)),
+                                      "note": (m.group(3) or "").strip()})
+            else:
+                res["unparsed"].append(line)
             continue
         m = LINE.match(line)
         if m:
@@ -148,6 +161,14 @@ def main() -> int:
     for it in fb["cuts"]:
         print(f"[{it['verdict']}] {it['id']} hard cut f{it['start']}" + (f" - note: {it['note']}" if it["note"] else "")
               + (f" (thumb {out / it['current']['thumb']})" if it.get("current") and it["current"].get("thumb") else ""))
+    if fb["misses"]:
+        tcs = {n["frame"]: n.get("tc", "") for n in data.get("near_misses") or []}
+        print("\nPOSSIBLE MISSES (the user's answer; EFFECT = a missed effect: look at it and add it):")
+        for it in fb["misses"]:
+            print(f"  [{it['verdict']}] f{it['frame']} ({tcs.get(it['frame']) or frame_to_tc(it['frame'], fps)})"
+                  + (f" - note: {it['note']}" if it["note"] else "")
+                  + (f"  -> tools\\sheet.py {data['name']} {it['frame'] - 6} {it['frame'] + 6}"
+                     if it["verdict"] == "EFFECT" else ""))
     if fb["missed"]:
         print(f"\nMISSED / GENERAL:\n{fb['missed']}")
         if fb["missed_frames"]:

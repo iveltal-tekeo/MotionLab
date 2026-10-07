@@ -1,6 +1,8 @@
 """Long tasks started from the app. Each job is one of the lab's own tools (or yt-dlp for a download) run as a child
 process (no console window), its output kept for the Jobs page and in .app\\jobs\\<id>.log. Only the kinds in `make`
-exist: the app cannot run arbitrary commands. One job at a time per group (cpu / resolve / light / net)."""
+exist: the app cannot run arbitrary commands. One job at a time per group (cpu / resolve / light / net).
+"Analyse with Claude" = an analyze job with claude=true: when the lab pass ends well, Claude Code opens with
+/analyze-reference for that video (the user's click started it; Claude spends nothing while the pass runs)."""
 from __future__ import annotations
 
 import itertools
@@ -99,13 +101,15 @@ class Job:
         self.lines: list[str] = []
         self.proc: subprocess.Popen | None = None
         self.log = LOGS / f"{jid:04d}_{kind}.log"
+        self.then_claude = kind == "analyze" and bool(args.get("claude"))      # open Claude when it ends well
+        self.claude: dict | None = None                                         # what was opened afterwards
 
     def info(self, since: int | None = None) -> dict:
         d = {"id": self.id, "kind": self.kind, "args": self.args, "title": self.title, "group": self.group,
              "status": self.status, "rc": self.rc, "started": data.stamp(self.started),
              "seconds": round((self.ended or time.time()) - self.started, 1),
              "command": " ".join(Path(c).name if i < 2 else c for i, c in enumerate(self.cmd)),
-             "lines": len(self.lines)}
+             "lines": len(self.lines), "then_claude": self.then_claude, "claude": self.claude}
         if since is not None:
             d["log"] = self.lines[since:since + 5000]
             d["since"] = since
@@ -151,8 +155,25 @@ class Runner:
                 f.write(line + "\n")
                 f.flush()
             job.rc = job.proc.wait()
-        job.ended = time.time()
-        job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
+            job.ended = time.time()
+            job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
+            if job.then_claude and job.status == "done":
+                self._hand_to_claude(job, f)
+
+    @staticmethod
+    def _hand_to_claude(job: Job, f) -> None:
+        """'Analyse with Claude': the lab pass is done - open Claude Code to check every effect of it."""
+        rep = next((ln.split("REPORT:", 1)[1].strip() for ln in reversed(job.lines) if ln.startswith("REPORT:")), "")
+        analysis = Path(rep).parent.name if rep else None
+        video = str(Path(str(job.args.get("video", ""))).expanduser())
+        try:
+            job.claude = system.open_claude(data.review_prompt(video, analysis), "review", Path(video).stem)
+            msg = f"Claude Code opened to check every effect ({job.claude['prompt']})"
+        except Exception as e:                                  # noqa: BLE001 - the pass itself succeeded
+            job.claude = {"ok": False, "error": str(e)}
+            msg = f"Could not open Claude Code: {e} - open it from the reference's page (Send to Claude)"
+        job.lines.append(msg)
+        f.write(msg + "\n")
 
     def cancel(self, jid: int) -> Job:
         job = self.jobs.get(jid)

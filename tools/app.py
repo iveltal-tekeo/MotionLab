@@ -3,6 +3,7 @@
     double-click C:\\MotionLab\\MotionLab.bat                        (normal use: no console window)
     .venv\\Scripts\\python tools\\app.py [--port 8765]                 the same, with a console
     .venv\\Scripts\\python tools\\app.py --no-window [--stay]          server only: open http://127.0.0.1:8765/
+    .venv\\Scripts\\python tools\\app.py --no-window --stay --no-update --port 8791     a test server (no update check)
 
 The window talks to a small server on 127.0.0.1 that only this PC can reach. The only network traffic: downloads
 from a link (yt-dlp), the update check / update (git fetch / pull from the GitHub repo, if this copy is connected)
@@ -124,6 +125,8 @@ def main() -> int:
     ap.add_argument("--no-window", action="store_true", help="only start the server")
     ap.add_argument("--stay", action="store_true", help="keep the server running when no window is open")
     ap.add_argument("--wait-port", action="store_true", help="wait until the port is free (restart after an update)")
+    ap.add_argument("--no-update", action="store_true",
+                    help="no update check at start (a test server on a working copy must not pull an update into it)")
     a = ap.parse_args()
     if a.wait_port:
         for _ in range(80):                                      # the old server lets go within a second or two
@@ -141,7 +144,7 @@ def main() -> int:
         say(f"MotionLab {run.get('version')} already runs on http://127.0.0.1:{a.port}/")
         return 0
     port = a.port if free(a.port) else 0                       # 0 = any free port
-    srv = server.make(port, auto_exit=not a.stay)
+    srv = server.make(port, auto_exit=not a.stay, check_updates=not a.no_update)
     url = f"http://127.0.0.1:{srv.server_address[1]}/"
     say(f"MotionLab app on {url}")
     if not a.no_window:

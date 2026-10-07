@@ -6,8 +6,10 @@ so videos can seek; /api/ returns JSON. Every request that changes something (ve
 session token embedded in the page, so other web pages cannot use the server. The only writes: the user's
 verdicts / exported feedback (analysis\\<name>\\feedback\\), library picks (projects\\<name>\\build\\), and the app's
 own .app\\ folder (logs, job logs, video thumbnails), settings.json (Settings page) and downloads into refs\\
-(yt-dlp, started from the References page). Programs it can start: Claude Code in a new console ("Open in
-Claude"), Explorer / the default viewer for lab files, and the shortcut maker - each only on a click."""
+(yt-dlp, started from the References page). Deleting = the user's Delete buttons only (trash.py): after a dialog
+listing every item, references / downloads / video projects / renders go to the Windows Recycle Bin. Programs it
+can start: Claude Code in a new console ("Open in Claude", or when a lab pass started with "Analyse with Claude"
+ends), Explorer / the default viewer for lab files, and the shortcut maker - each only on a click."""
 from __future__ import annotations
 
 import hashlib
@@ -31,10 +33,10 @@ from motionlab import knowledge as KN
 from motionlab.styles import CATEGORIES
 from motionlab.util import LAB, tool
 
-from . import data, jobs, system, updater
+from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 2                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 3                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -75,6 +77,7 @@ class State:
         self.resolve = {"state": "checking", "checked": None}
         self.server = None
         self.phase = "ready"               # ready / updating / restarting (the window shows it and reloads after)
+        self.check_updates = True          # False: app.py --no-update (test servers)
         self.update = updater.cached()
         self.update_result = updater.last_result()
 
@@ -89,13 +92,20 @@ def status() -> dict:
     du = shutil.disk_usage(str(LAB))
     verdicts = sum(r["verdicts"] for r in refs)
     nxt = []
-    for r in refs:
-        if r["reviewed"] < r["events"]:
-            nxt.append({"text": f"Claude still has to review {r['events'] - r['reviewed']} events of {r['title']}",
-                        "go": f"#/ref/{r['name']}", "claude": f'/analyze-reference "{r["name"]}"'})
-        if r["verdicts"] < r["events"]:
-            nxt.append({"text": f"Give your verdicts on {r['title']}: {r['verdicts']} of {r['events']} done",
-                        "go": f"#/ref/{r['name']}"})
+    for r in refs:                                      # each reference's next step of the workflow (data.FLOW)
+        fl, go = r["flow"], f"#/ref/{urllib.parse.quote(r['name'])}"
+        if fl["next"] == "claude":
+            nxt.append({"text": f"Send {r['title']} to Claude: {fl['events'] - fl['reviewed']} effect(s) not checked "
+                                f"yet (until then their names are the lab's guesses)", "go": go,
+                        "claude": r["review_prompt"], "task": "review",
+                        "label": r["title"]})
+        elif fl["next"] == "verdicts":
+            nxt.append({"text": f"Give your verdicts on {r['title']}: {fl['given']} of {fl['real']} effects"
+                                + (f", {fl['misses_checked']} of {fl['misses']} possible misses" if fl["misses"] else ""),
+                        "go": go})
+        elif fl["next"] == "feedback":
+            nxt.append({"text": f"Send your verdicts on {r['title']} to Claude (Send feedback to Claude): it turns them "
+                                f"into lessons" + (" - exported, waiting for Claude" if fl["sent"] else ""), "go": go})
     if projs and not lib["items"]:
         nxt.append({"text": "Pick the effects to save in the library (your video's page, Resolve tab)",
                     "go": f"#/project/{projs[0]['name']}/resolve"})
@@ -308,6 +318,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.list_references(arg("tests") == "1"))
         if path == "/api/candidates":
             return self._json(data.candidate_videos())
+        if path == "/api/waiting":
+            return self._json(data.waiting())
+        if path == "/api/delete":                        # what a Delete button would move to the Recycle Bin
+            return self._json(trash.plan(arg("kind", ""), arg("name", ""), S.resolve.get("state", "")))
         if path == "/api/projects":
             return self._json(data.list_projects())
         if path == "/api/library":
@@ -322,6 +336,8 @@ class Handler(BaseHTTPRequestHandler):
                                                                for k, v in system.PRESETS.items()],
                                "categories": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
                                "styles": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
+                               "efforts": list(system.EFFORTS),
+                               "tasks": {k: v[0] for k, v in system.TASKS.items()},
                                "update": {**(S.update or {}), "phase": S.phase}})
         if path == "/api/downloads":
             return self._json(system.downloads())
@@ -374,7 +390,7 @@ class Handler(BaseHTTPRequestHandler):
         if m:
             name = urllib.parse.unquote(m[1])
             if m[2] == "verdicts":
-                return self._json(data.save_verdicts(name, body))
+                return self._json(data.save_verdicts(name, body, by_user=True))
             return self._json(data.export_feedback(name))
         m = re.fullmatch(r"/api/project/([^/]+)/picks", path)
         if m:
@@ -421,7 +437,17 @@ class Handler(BaseHTTPRequestHandler):
             KN.build_local_cards([name])
             return self._json(r)
         if path == "/api/claude":
-            return self._json(system.open_claude(str(body.get("prompt", ""))))
+            return self._json(system.open_claude(str(body.get("prompt", "")), str(body.get("task") or "free"),
+                                                 str(body.get("label", ""))))
+        if path == "/api/delete":                        # the user's Delete button, after the dialog
+            if S.runner.running():
+                raise jobs.JobError("wait until the running jobs finish, then delete")
+            r = trash.delete(str(body.get("kind", "")), str(body.get("name", "")), body.get("keys") or [],
+                             S.resolve.get("state", ""))
+            with open(APPDIR / "deleted.log", "a", encoding="utf-8") as f:      # what went to the Recycle Bin, when
+                f.write(f"{data.stamp()} moved to the Recycle Bin: {r['moved']}"
+                        + (f" - not moved: {r['failed']}" if r["failed"] else "") + "\n")
+            return self._json(r)
         if path == "/api/shortcut":
             return self._json(system.make_shortcut(str(body.get("where", ""))))
         if path == "/api/open":
@@ -447,6 +473,8 @@ def restart_soon() -> None:
     args = [str(exe), str(LAB / "tools" / "app.py"), "--no-window", "--wait-port", "--port", str(S.port)]
     if not S.auto_exit:
         args.append("--stay")
+    if not S.check_updates:
+        args.append("--no-update")
     flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
     subprocess.Popen(args, cwd=str(LAB), creationflags=flags | NO_WINDOW, close_fds=True)
     threading.Timer(0.8, S.server.shutdown).start()
@@ -526,7 +554,7 @@ def watcher(server: ThreadingHTTPServer):
     while True:
         if n % 4 == 0:
             S.resolve = {"state": resolve_state(), "checked": data.stamp()}
-        if n and n % 4320 == 0 and system.load().get("update_check", True):          # every 6 h: banner only
+        if n and n % 4320 == 0 and S.check_updates and system.load().get("update_check", True):  # 6 h: banner only
             try:
                 S.update = updater.check(fetch=True)
             except Exception:                                   # noqa: BLE001
@@ -551,15 +579,19 @@ class Server(ThreadingHTTPServer):
         log_error(f"request from {client_address[0]}\n{traceback.format_exc()}")
 
 
-def make(port: int, auto_exit: bool) -> ThreadingHTTPServer:
+def make(port: int, auto_exit: bool, check_updates: bool = True) -> ThreadingHTTPServer:
+    """check_updates=False (app.py --no-update): no update check at all - a test server on a working copy with
+    unsaved changes must never pull an update into it."""
     global S
     srv = Server(("127.0.0.1", port), Handler)
     S = State(srv.server_address[1], auto_exit)
     S.server = srv
+    S.check_updates = check_updates
     APPDIR.mkdir(exist_ok=True)
     # for tools\\app.py: which server runs here (version, token) - it replaces an older one after an update
     (APPDIR / "server.json").write_text(json.dumps({"port": S.port, "pid": os.getpid(), "token": S.token,
                                                     "version": VERSION, "started": data.stamp()}), encoding="utf-8")
     threading.Thread(target=watcher, args=(srv,), daemon=True).start()
-    threading.Thread(target=startup_update, daemon=True).start()
+    if check_updates:
+        threading.Thread(target=startup_update, daemon=True).start()
     return srv

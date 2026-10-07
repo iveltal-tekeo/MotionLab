@@ -29,16 +29,20 @@ If no path was given, ask for one (or list `refs\`). If the user pasted feedback
    `analysis\<name>\` (it checks the SHA-256 before and after and says so in the report).
 3. Every frame you mention to the user gets its frame number AND timecode, e.g. `f480 (00:00:16:00)`.
 
-## 1. Run the pipeline
+## 1. Run the pipeline (skip it when the app already did)
+If the request says `the lab pass is done: analysis\<name>` (the app's "Analyse with Claude" / "Send to Claude"
+buttons), or `analysis\<name>\events.json` exists and is newer than `tools\config.json`, do NOT run it again: go to
+step 2 (re-run only when the user asks or the config changed since). Otherwise:
 ```
 .venv\Scripts\python tools\analyze.py "<path>"
 ```
-Quote the path. It prints progress and ends with `REPORT:` and counts. Expect roughly 1-2 minutes per minute of
-1080p30 video. It probes (CFR/VFR - VFR gets a CFR proxy), analyzes audio (BPM, beats, downbeats, drops,
-builds), measures every frame, detects events, extracts frames, builds contact sheets + looping previews, and writes
-`report.html`, `events.json`, `metrics.csv`, `overview.png` and `review_todo.md` into `analysis\<name>\`.
-If a run fails, show the user the error, fix the cause, re-run. `--redetect` re-uses the per-frame metrics cache
-(use after config changes); `--force` recomputes everything.
+Quote the path; add `--category <id>` / `--tags "a, b"` when the request names them. It prints progress and ends with
+`REPORT:` and counts. Expect roughly 1-2 minutes per minute of 1080p30 video - for videos longer than ~4 minutes run
+it in the background and wait for it. It probes (CFR/VFR - VFR gets a CFR proxy), analyzes audio (BPM, beats,
+downbeats, drops, builds), measures every frame, detects events, extracts frames, builds contact sheets + looping
+previews, and writes `report.html`, `events.json`, `metrics.csv`, `overview.png` and `review_todo.md` into
+`analysis\<name>\`. If a run fails, show the user the error, fix the cause, re-run. `--redetect` re-uses the
+per-frame metrics cache (use after config changes); `--force` recomputes everything.
 
 ## 2. Review EVERY event (the pipeline's types are drafts until you have looked)
 Open `analysis\<name>\review_todo.md`. For **each** event, in order:
@@ -70,6 +74,8 @@ Open `analysis\<name>\review_todo.md`. For **each** event, in order:
    event's `notes` and your summary. The report shows these next to each candidate.
 
 Long videos have many events: you may batch the work, but every sheet of every event must be read.
+If `review.json` already has reviews (an earlier chat stopped half-way), keep them and continue with the events that
+have none - don't redo finished ones unless the user asks.
 Plain hard cuts are NOT reviewed visually (they are listed in the cuts table with on-beat yes/no).
 
 ### review.json format
@@ -103,10 +109,12 @@ flash_color invert sat_pop light_leak split_screen mirror multi_screen text wipe
 unknown`
 
 ## 3. Report back to the user
-Give: the report path (`analysis\<name>\report.html`, open in a browser), video facts (fps, CFR/VFR, duration),
-BPM and drops, counts per effect family, the most notable events (with frame + timecode), and the low-confidence
-events worth checking first. Remind them: Correct / Partly / Wrong + notes on each card, then **Generate feedback**
-at the bottom, **Copy**, and paste it back here.
+Give: video facts (fps, CFR/VFR, duration), BPM and drops, counts per effect family, the most notable events (with
+frame + timecode), the low-confidence events worth checking first, and the possible misses you think are real.
+Then tell them the next step, in the MotionLab app: References > this video > **Review effects** (Correct / Partly /
+Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses** tab, then **Send feedback to
+Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
+`analysis\<name>\report.html` > Generate feedback > Copy, and paste it into a chat.
 
 ---
 
@@ -116,10 +124,13 @@ at the bottom, **Copy**, and paste it back here.
    prints each WRONG / PARTLY item with the event as it is now and its sheet paths (IDs are re-matched by frames).
    Feedback given in the app is already a file: the newest `analysis\<name>\feedback\app_<date time>.txt` (made by
    its "Send feedback to Claude" button; `verdicts.json` next to it is the live state) - run `feedback.py` on it.
-   A note starting with `[save to library]` means the user wants that effect in `library\`.
+   A note starting with `[save to library]` means the user wants that effect in `library\`. The section
+   `--- possible misses ---` holds the user's answer per possible miss: `EFFECT | f<n>` = an effect the pipeline
+   missed (with what it is in the note), `NOT AN EFFECT | f<n>` = confirmed nothing.
 2. For every WRONG / PARTLY event: open its sheets again and find the exact mistake (type? frames? timing?
-   origin? rebuild?). For missed effects or frames the user mentions, look with
-   `.venv\Scripts\python tools\sheet.py <name> <start> <end>` (contact sheet + preview of any range).
+   origin? rebuild?). For missed effects, possible misses marked EFFECT, or frames the user mentions, look with
+   `.venv\Scripts\python tools\sheet.py <name> <start> <end>` (contact sheet + preview of any range); a miss your
+   own `_near_misses` verdict called "not an effect" but the user calls an effect is a lesson candidate.
 3. Decide the cause of each mistake:
    - **judgment / classification** -> a rule in `knowledge/local/lessons.md` (this PC's lessons);
    - **a threshold** (missed, split, merged or false event; wrong frame range) -> change `tools\config.json`

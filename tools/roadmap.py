@@ -18,7 +18,7 @@ from motionlab import graphics as G  # noqa: E402
 from motionlab.util import LAB, setup_console  # noqa: E402
 
 OUT = LAB / "docs" / "roadmap.png"
-DATE = "2026-10-06"
+DATE = "2026-10-07"
 W, H = 1920, 1080
 BG = (13, 13, 15)
 WHITE, GREY, DIM = (236, 236, 236), (128, 128, 132), (58, 58, 62)
@@ -39,17 +39,19 @@ STAGES = [
      "1 round on 4AM: 31 correct, 13 partly > lessons L001-L007, flash look, possible-misses list."),
     ("Effect library", "DONE", 3, "14", "effects saved, 10 macros",
      "Recipes + Fusion macros checked in Resolve against 4AM. Later: install them as Resolve templates."),
-    ("MVP for friends", "STARTED", 3, "v0.2", "ready: you upload it",
-     "Setup, Settings, downloads, categories, auto-update from GitHub. Tested on a fake GitHub with 2 friends."),
+    ("MVP for friends", "STARTED", 3, "v0.2.5", "ready: you upload it",
+     "Setup, auto-update, sharing. 0.2.5: review tab, red possible misses, Delete, Claude buttons with effort."),
     ("Share + specialise", "STARTED", 1, "1", "reference card (yours)",
-     "Cards + lessons through GitHub, review step, packs, pacing per category. Next: 30 videos, category profiles."),
+     "Cards + lessons through GitHub, review step, packs, pacing per category. v0.3: 30 videos, category profiles."),
+    ("Templates + macOS", "LATER", 0, "v0.5", "planned",
+     "Use a reference as a template: its feel and pacing with your own story and music, not 1:1. A macOS app."),
 ]
 VERDICT = [
     ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
     ("WEAK", "Detection has seen one video and one round of your feedback (7 lessons). Every accuracy number is "
              "anecdotal until ~10 references per category come with feedback."),
-    ("NEXT", "You upload v0.2 to GitHub  >  friends clone + setup.bat  >  10 videos each with verdicts  >  Share  >  "
-             "category profiles (v0.3)."),
+    ("NEXT", "You upload v0.2.5 to GitHub  >  friends clone + setup.bat  >  10 videos each with verdicts  >  Share  >  "
+             "category profiles (v0.3)  >  templates by feel + macOS (v0.5)."),
 ]
 FOOTER = ("risks: Resolve crashes on heavy Fusion (comps kept lean, watchdog)  |  footage cache = 2.6 GB per minute "
           "of footage (tools\\storage.py)  |  drawn by tools\\roadmap.py")
@@ -92,15 +94,15 @@ def main() -> int:
     f_num = font("consola.ttf", 17)
     f_title = font("segoeuib.ttf", 23)
     f_chip = font("consolab.ttf", 15)
-    f_big = font("bahnschrift.ttf", 58)
+    f_big = font("bahnschrift.ttf", 52)
     f_cap = font("segoeuib.ttf", 15)
     f_body = font("segoeui.ttf", 16)
     f_verdict = font("segoeuisl.ttf", 23)
     f_small = font("consola.ttf", 15)
 
-    track_y, x0, x1 = 336, 170, 1750
+    track_y, x0, x1 = 336, 160, 1770
     xs = [x0 + i * (x1 - x0) / (len(STAGES) - 1) for i in range(len(STAGES))]
-    col_w = 212
+    col_w = min(212, int((x1 - x0) / (len(STAGES) - 1)) - 12)
     # ---- track: solid where done, dashed amber for next, dotted grey for later
     for i in range(len(STAGES) - 1):
         a, b = xs[i] + 16, xs[i + 1] - 16
@@ -152,13 +154,13 @@ def main() -> int:
             d.text((left, y), ln, font=f_body, fill=(170, 170, 176))
             y += 22
         # maturity: 5 blocks
-        by = 772
+        by, bw = 772, col_w / 5
         for k in range(5):
-            bx = left + k * 40
+            bx = left + k * bw
             if k < mat:
-                d.rectangle([bx, by, bx + 32, by + 9], fill=col if status != "DONE" else WHITE)
+                d.rectangle([bx, by, bx + bw - 8, by + 9], fill=col if status != "DONE" else WHITE)
             else:
-                d.rectangle([bx, by, bx + 32, by + 9], outline=DIM, width=1)
+                d.rectangle([bx, by, bx + bw - 8, by + 9], outline=DIM, width=1)
     d.text((x0 - 106, 750), "maturity (0-5)", font=f_small, fill=GREY, anchor="lm")
     # ---- verdict band
     vy = 820

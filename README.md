@@ -17,8 +17,8 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 
 ![roadmap](docs/roadmap.png)
 
-> **Status: v0.2 - MVP for friends.** Detection was tuned on music videos; other categories work and get better with
-> every verdict you give.
+> **Status: v0.2.5 - MVP for friends.** Detection was tuned on music videos; other categories work and get better
+> with every verdict you give.
 
 ## What it does
 
@@ -31,19 +31,21 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
   and drops, **pacing** (cuts per minute, shot lengths, cuts in the first 3 seconds, cuts on the beat), contact sheets
   and previews per effect, "possible misses".
 - **Review** with Claude Code: what happens, timing and easing, camera or post, and how to rebuild it.
-- **Teach it**: verdicts in the app -> Claude turns them into rules, checked by a self-test.
+- **Teach it**: your verdicts in the app's review tab (and your answers on the "possible misses") -> Claude turns
+  them into rules, checked by a self-test.
 - **Share it**: *Knowledge > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
   back with every update. The *Knowledge* page compares pacing and effects per category across everybody.
 - **Stay current**: MotionLab updates itself from GitHub when it starts (Settings can turn that off).
-- **Rebuild** (advanced, with Claude): edit your own clips in a reference's style, as a lab render or as an editable
-  DaVinci Resolve Studio project.
+- **Rebuild** (advanced, with Claude): *Recreate with my footage* edits your own clips like a reference, 1:1, as a
+  lab render or as an editable DaVinci Resolve Studio project.
+- **Tidy up**: *Delete* on references, downloads, your videos and renders moves them to the Windows Recycle Bin.
 
 ## Install (Windows 10 / 11)
 
 **Recommended - with git** (needed for automatic updates and sharing):
 
 1. Install Git once: `winget install Git.Git` (or https://git-scm.com).
-2. In a terminal: `git clone https://github.com/YOUR-GITHUB-NAME/MotionLab.git C:\MotionLab`
+2. In a terminal: `git clone https://github.com/iveltal-tekeo/MotionLab.git C:\MotionLab`
    (use this repo's address - the green *Code* button on GitHub; a private repo asks you to log in to GitHub in the
    browser once).
 3. Double-click **`C:\MotionLab\setup.bat`**: Python packages, a check of the programs below (it offers to install
@@ -67,13 +69,17 @@ Microsoft Edge (the app window) comes with Windows.
 ## First steps
 
 1. **References > Download from a link** -> paste a link -> *Download* -> **Analyse it**.
-2. Pick the **category** (and tags, e.g. `instagram, recipe`) and start: about 1-2 minutes per minute of video.
-3. **Open in Claude Code** (button in the app): Claude runs `/analyze-reference` and reviews every effect.
-4. Open the reference: give your **verdicts** (Correct / Partly / Wrong, keys 1 2 3) and notes, then **Send feedback
-   to Claude** > *Open in Claude Code (applies it)*.
+2. Pick the **category** (and tags, e.g. `instagram, recipe`) and click **Analyse with Claude**: the lab measures the
+   video (about 1-2 minutes per minute of video), then Claude Code opens by itself and checks every effect.
+3. Open the reference: **Review effects** - Correct / Partly / Wrong (keys 1 2 3) and a note where needed - then the
+   red **Possible misses** tab.
+4. **Send feedback to Claude**: a new Claude Code window turns your verdicts into lessons.
 5. **Knowledge > Share my knowledge.**
 
-Every frame number comes with its timecode (`f480 (00:00:16:00)`), so you can check anything in your editor.
+The References page shows these steps and where each video stands. Every frame number comes with its timecode
+(`f480 (00:00:16:00)`), so you can check anything in your editor. New to Claude Code? Read
+[docs/claude_tips.md](docs/claude_tips.md) (also in the app: *Tips for working with Claude*): one chat per task,
+which effort level, how to use fewer tokens.
 
 ## Sharing knowledge - how it works
 
@@ -128,7 +134,7 @@ so it never publishes work in progress.
 | Folder | What | In the repo? |
 |---|---|---|
 | `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder | yes |
-| `.claude\skills\analyze-reference\` | the Claude Code skill + the shared `lessons.md` | yes |
+| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`) | yes |
 | `knowledge\` | shared reference cards and lessons waiting for review (`local\`, `inbox\`, `outbox\` are private) | partly |
 | `docs\` | roadmap, guides, design notes | yes |
 | `refs\` | reference videos (read-only for the lab) | no - yours |
@@ -143,7 +149,8 @@ MotionLab never modifies a source video: it only reads it and checks its SHA-256
 
 - Only download and analyse videos you are allowed to use; only text and numbers about them are shared.
 - Problems: errors go to `.app\server.log`; *Settings* shows missing programs; *Check now* checks for updates.
-- `CLAUDE.md` is the guide Claude Code reads in this folder (rules, layout, tools, gotchas).
+- `CLAUDE.md` is the short guide Claude Code reads in every chat in this folder; the details are in the skills,
+  `docs\` and `tools\motionlab\app\CLAUDE.md`, read only when a task needs them.
 
 ## License
 
