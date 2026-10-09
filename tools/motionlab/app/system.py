@@ -24,8 +24,11 @@ APPDIR = LAB / ".app"
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
-            "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_check": True,
-            "update_auto": True, "claude_effort": "auto"}
+            "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_mode": "ask",
+            "claude_effort": "auto"}
+# a new version on GitHub: "ask" = the sidebar's Update button + what's new, one click installs it (since 0.3.0;
+# 0.2.x installed by itself at start-up), "auto" = install it when MotionLab starts, "off" = never look
+UPDATE_MODES = ("ask", "auto", "off")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 # what the app's Claude buttons ask for -> (effort used when Settings says "recommended", session name)
 TASKS = {
@@ -36,7 +39,6 @@ TASKS = {
     "library": ("high", "MotionLab library"),          # save library picks as Fusion macros (needs Resolve)
     "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
 }
-BOOLS = {"update_check", "update_auto"}
 # preset id -> (label, yt-dlp arguments, folder inside the lab)
 PRESETS = {
     "mp4_1080": ("MP4 video, best up to 1080p (recommended)",
@@ -50,8 +52,12 @@ HOW = {
     "yt-dlp": "optional, for 'Download from a link' - install: winget install yt-dlp.yt-dlp, or put yt-dlp.exe "
               "anywhere and set its path here",
     "claude": "for the review and learning steps - install Claude Code: https://claude.com/claude-code",
-    "git": "for automatic updates and sharing knowledge - install: winget install Git.Git (or https://git-scm.com)",
+    "git": "for updates and sharing knowledge - install: winget install Git.Git (or https://git-scm.com)",
     "resolve": "optional (rebuilding in DaVinci Resolve Studio)",
+    "hyperframes": "optional, renders graphics written as HTML into transparent clips for rebuilds (tools\\overlay.py) "
+                   "- needs Node.js; Install below or setup.bat (pinned version, about 130 MB + its Chrome 150 MB)",
+    "node": "optional, for graphics written as HTML (HyperFrames overlays) when rebuilding a video - install: winget "
+            "install OpenJS.NodeJS.LTS, then run setup.bat again (it installs HyperFrames into tools\\overlays)",
     "edge": "the app window (comes with Windows)",
 }
 _versions: dict[tuple, str | None] = {}
@@ -63,8 +69,12 @@ def load() -> dict:
     raw = data.read_json(SETTINGS, {}) or {}
     if "default_style" in raw and "default_category" not in raw:              # v0.2.0 name
         raw["default_category"] = raw["default_style"]
+    if "update_mode" not in raw:          # 0.2.x: update_check / update_auto; installing by itself was only the default
+        raw["update_mode"] = "off" if raw.get("update_check") is False else "ask"
     s.update({k: v for k, v in raw.items() if k in DEFAULTS})
     s["default_category"] = norm_category(s["default_category"]) or CATEGORY_DEFAULT
+    if s["update_mode"] not in UPDATE_MODES:
+        s["update_mode"] = "ask"
     return s
 
 
@@ -75,10 +85,9 @@ def save(body: dict) -> dict:
             k = "default_category"
         if k not in DEFAULTS:
             continue
-        if k in BOOLS:
-            s[k] = v in (True, "true", "1", 1, "on")
-            continue
         v = str(v).strip().strip('"')
+        if k == "update_mode" and v not in UPDATE_MODES:
+            raise ValueError(f"unknown update mode {v}")
         if k == "author":
             v = re.sub(r"[^a-z0-9_-]", "", v.lower().replace(" ", "-"))[:24]
         if k.endswith("_path") and v and not Path(v).is_file():
@@ -136,6 +145,11 @@ def find(name: str, s: dict | None = None) -> str | None:
         return _which("git") or next((str(p) for p in (Path(r"C:\Program Files\Git\cmd\git.exe"),
                                                         Path(r"C:\Program Files (x86)\Git\cmd\git.exe"))
                                       if p.is_file()), None)
+    if name == "node":
+        return _which("node")
+    if name == "hyperframes":
+        p = LAB / "tools" / "overlays" / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs"
+        return str(p) if p.is_file() else None
     if name == "resolve":
         p = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Blackmagic Design" / "DaVinci Resolve" / "Resolve.exe"
         return str(p) if p.is_file() else None
@@ -166,6 +180,15 @@ def version(exe: str | None, args=("--version",)) -> str | None:
     return _versions[key]
 
 
+def resolve_mcp_state() -> dict:
+    """The Resolve MCP for Claude Code (tools\\resolve_mcp.py): set up on this PC? (marker written by its install)"""
+    mark = APPDIR / "resolve_mcp" / "registered.json"
+    root = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "davinci-resolve-mcp"
+    info = data.read_json(mark, {}) if mark.exists() else {}
+    return {"registered": bool(info), "installed": (root / "src" / "server.py").exists(),
+            "version": info.get("version"), "when": info.get("when")}
+
+
 def tools(full: bool = False) -> list[dict]:
     """Every outside program: found? where, version (full=True runs them once), what it is for / how to get it."""
     s = load()
@@ -173,12 +196,20 @@ def tools(full: bool = False) -> list[dict]:
             "version": sys.version.split()[0], "need": "required", "how": "the lab's .venv"}]
     for n, label, need in (("ffmpeg", "ffmpeg", "required"), ("claude", "Claude Code", "recommended"),
                            ("git", "Git", "recommended"), ("yt-dlp", "yt-dlp", "optional"),
+                           ("node", "Node.js (HTML overlays)", "optional"),
+                           ("hyperframes", "HyperFrames (HTML overlays)", "optional"),
                            ("resolve", "DaVinci Resolve", "optional"),
                            ("edge", "Microsoft Edge", "required")):
         p = find(n, s)
         v = None
         if full and p:
-            v = version(p, ("-version",) if n == "ffmpeg" else ("--version",)) if n not in ("resolve", "edge") else None
+            v = version(p, ("-version",) if n == "ffmpeg" else ("--version",)) if n not in ("resolve", "edge",
+                                                                                        "hyperframes") else None
+            if n == "hyperframes":
+                v = (data.read_json(Path(p).parents[1] / "package.json", {}) or {}).get("version")
+                chrome = Path.home() / ".cache" / "hyperframes" / "chrome"
+                v = f"{v}" + ("" if chrome.is_dir() and any(chrome.rglob("chrome-headless-shell.exe"))
+                              else " (its Chrome not downloaded yet)")
             if n == "ffmpeg" and v:
                 v = v.replace("ffmpeg version ", "").split(" Copyright")[0]
         out.append({"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need,

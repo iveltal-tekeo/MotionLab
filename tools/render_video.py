@@ -2,6 +2,7 @@
 
     .venv\\Scripts\\python tools\\render_video.py <plan.json>                       full render -> plan["output"]
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --range 300 420       part of the timeline
+    ... --workers N   parallel processes for a render (default: half the CPUs, at most 8; 1 = one process)
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --sheet 0:3895:25     contact sheet of rendered frames
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --stills 480,1633     PNG stills
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --compare             reference | render side by side
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -43,7 +45,8 @@ def _guard(out: Path, plan_path: Path, plan: dict) -> Path:
     return out
 
 
-def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, crf: int, preset: str):
+def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, crf: int, preset: str,
+            threads: int | None = None):
     cmd = [tool("ffmpeg"), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
            "-r", f"{fps:g}", "-i", "-"]
     if audio and audio.get("path"):
@@ -53,6 +56,8 @@ def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, 
             "-color_range", "tv", "-movflags", "+faststart"]
     if audio and audio.get("path"):
         cmd += ["-c:a", "copy", "-shortest"] if audio.get("trim_to_video", True) else ["-c:a", "copy"]
+    if threads:
+        cmd += ["-threads", str(threads)]
     cmd += [str(out)]
     return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
@@ -71,6 +76,76 @@ def render_range(R: Renderer, plan: dict, out: Path, a: int, b: int, crf: int, p
         p.stdin.close()
         p.wait()
     log(f"wrote {out} ({b - a + 1} frames in {time.time() - t0:.0f}s)")
+
+
+def default_workers() -> int:
+    """Parallel render processes: half the logical CPUs (each also runs an encoder), at most 8."""
+    return max(1, min(8, (os.cpu_count() or 2) // 2))
+
+
+def _render_part(plan_path: str, s0: int, s1: int, seg: str, crf: int, preset: str) -> tuple[int, int, float]:
+    """One worker process: frames s0..s1 of the plan -> a video-only segment (only the layers that touch them)."""
+    import cv2
+    cv2.setNumThreads(1)                                   # the parallelism is the processes
+    plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    plan["layers"] = [L for L in plan["layers"] if int(L["end"]) >= s0 and int(L["start"]) <= s1]
+    t0 = time.time()
+    R = Renderer(plan)
+    p = encoder(Path(seg), R.W, R.H, R.fps, None, s0, crf, preset, threads=2)
+    try:
+        for f in range(s0, s1 + 1):
+            p.stdin.write(R.render(f).tobytes())
+    finally:
+        p.stdin.close()
+        p.wait()
+    if p.returncode:
+        raise RuntimeError(f"ffmpeg failed on the segment f{s0}-{s1}")
+    return s0, s1, time.time() - t0
+
+
+def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf: int, preset: str, workers: int):
+    """Frames a..b in `workers` processes, each encoding its own chunk; the chunks are joined without re-encoding
+    (every chunk starts on a keyframe) and the soundtrack is added once. Same frames as a single-process render:
+    the compositor is deterministic per frame (noise is seeded by plan seed + frame)."""
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+    n = b - a + 1
+    k = max(1, min(workers, n // 40))                      # at least ~40 frames per chunk
+    edges = [a + round(i * n / k) for i in range(k + 1)]
+    parts = [(edges[i], edges[i + 1] - 1) for i in range(k)]
+    tmp = _guard(out.parent / f"{out.stem}_parts", plan_path, plan)
+    tmp.mkdir(parents=True, exist_ok=True)
+    segs = [tmp / f"part_{i:03d}_{s0}-{s1}.mp4" for i, (s0, s1) in enumerate(parts)]
+    fps = float(plan["fps"])
+    log(f"rendering f{a}-f{b} ({n} frames) in {k} parallel parts")
+    t0 = time.time()
+    done = 0
+    with ProcessPoolExecutor(max_workers=k) as ex:
+        futs = [ex.submit(_render_part, str(plan_path), s0, s1, str(seg), crf, preset)
+                for (s0, s1), seg in zip(parts, segs)]
+        for fu in as_completed(futs):
+            s0, s1, sec = fu.result()
+            done += s1 - s0 + 1
+            el = time.time() - t0
+            log(f"  part f{s0}-f{s1} {frame_to_tc(s0, fps)} done ({sec:.0f}s) - {done}/{n} frames, "
+                f"{done / el:.1f} fps overall, ~{(n - done) / max(done / el, 1e-6):.0f}s left")
+    lst = tmp / "parts.txt"
+    lst.write_text("".join(f"file '{s.name}'\n" for s in segs), encoding="utf-8")
+    audio = plan.get("audio") or {}
+    cmd = [tool("ffmpeg"), "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst)]
+    if audio.get("path"):
+        cmd += ["-ss", f"{a / fps:.6f}", "-i", str(audio["path"]), "-map", "0:v", "-map", "1:a:0", "-c:v", "copy",
+                "-c:a", "copy"] + (["-shortest"] if audio.get("trim_to_video", True) else [])
+    else:
+        cmd += ["-map", "0:v", "-c:v", "copy"]
+    cmd += ["-movflags", "+faststart", str(out)]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode:
+        raise RuntimeError(f"joining the parts failed: {r.stderr[-800:]}")
+    for s in segs + [lst]:
+        s.unlink(missing_ok=True)
+    tmp.rmdir()
+    el = time.time() - t0
+    log(f"wrote {out} ({n} frames in {el:.0f}s = {n / el:.1f} fps with {k} parts)")
 
 
 def sheet(R: Renderer, frames: list[int], out: Path, title: str, cols: int = 6, tile_w: int = 240):
@@ -137,6 +212,7 @@ def main() -> int:
     ap.add_argument("--out")
     ap.add_argument("--crf", type=int, default=16)
     ap.add_argument("--preset", default="medium")
+    ap.add_argument("--workers", type=int, default=default_workers(), help="parallel render processes")
     a = ap.parse_args()
     plan_path = Path(a.plan).resolve()
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -187,7 +263,12 @@ def main() -> int:
         out = build / out
     if a.range:
         out = out.with_name(f"{out.stem}_{s0}-{s1}{out.suffix}")
-    render_range(R, plan, _guard(out, plan_path, plan), s0, s1, a.crf, a.preset)
+    out = _guard(out, plan_path, plan)
+    if a.workers > 1 and s1 - s0 + 1 >= 80:
+        del R                                              # the workers build their own renderers
+        render_parallel(plan_path, plan, out, s0, s1, a.crf, a.preset, a.workers)
+    else:
+        render_range(R, plan, out, s0, s1, a.crf, a.preset)
     return 0
 
 

@@ -17,8 +17,9 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 
 ![roadmap](docs/roadmap.png)
 
-> **Status: v0.2.5 - MVP for friends.** Detection was tuned on music videos; other categories work and get better
-> with every verdict you give.
+> **Status: v0.3.0 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
+> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and an *Update available* button.
+> Detection was tuned on music videos; other categories work and get better with every verdict you give.
 
 ## What it does
 
@@ -35,9 +36,16 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
   them into rules, checked by a self-test.
 - **Share it**: *Knowledge > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
   back with every update. The *Knowledge* page compares pacing and effects per category across everybody.
-- **Stay current**: MotionLab updates itself from GitHub when it starts (Settings can turn that off).
-- **Rebuild** (advanced, with Claude): *Recreate with my footage* edits your own clips like a reference, 1:1, as a
-  lab render or as an editable DaVinci Resolve Studio project.
+- **Stay current**: when a new version is on GitHub, a bright **Update available** button appears in the sidebar;
+  it shows what changed ([CHANGELOG.md](CHANGELOG.md)) and one click updates and restarts MotionLab. Friends' shared
+  knowledge comes the same way (*New from friends*). Settings can install updates at start-up instead, or turn
+  checking off.
+- **Rebuild** (advanced, with Claude): *Recreate with my footage* edits your own clips like a reference, 1:1, in
+  colour, as a lab render or as an editable DaVinci Resolve Studio project; titles and other graphics are written as
+  HTML ([HyperFrames](https://github.com/heygen-com/hyperframes)) and work in both.
+- **Claude knows the lab**: MotionLab's own MCP server gives Claude Code compact views of every analysis (effects with
+  frame + timecode, contact sheets as pictures, your verdicts), and optionally Claude can look into your open
+  DaVinci Resolve project ([davinci-resolve-mcp](https://github.com/samuelgursky/davinci-resolve-mcp)).
 - **Tidy up**: *Delete* on references, downloads, your videos and renders moves them to the Windows Recycle Bin.
 
 ## Install (Windows 10 / 11)
@@ -63,6 +71,7 @@ turns on updates and sharing.
 | Claude Code | reviews, learning from feedback, rebuilds | https://claude.com/claude-code (your own Claude plan) |
 | yt-dlp | *Download from a link* (optional) | `winget install yt-dlp.yt-dlp`, or any `yt-dlp.exe` + its path in Settings |
 | DaVinci Resolve Studio | rebuilding as a Resolve project (optional) | blackmagicdesign.com (Studio is paid; needed for scripting) |
+| Node.js 22+ | graphics written as HTML ([HyperFrames](https://github.com/heygen-com/hyperframes) overlays) when rebuilding (optional) | `winget install OpenJS.NodeJS.LTS`, then `setup.bat` installs HyperFrames into `tools\overlays` |
 
 Microsoft Edge (the app window) comes with Windows.
 
@@ -124,8 +133,9 @@ Emails*. `git status` must list only code and docs (about 75 files) - no `refs\`
 *Settings > Collaborators > Add people* (they accept the invitation by email), and send them the repo address.
 
 **Publishing a new version**: change the code (with Claude), run `.venv\Scripts\python tools\selftest.py --extended`
-(all PASS), raise the version in `tools\motionlab\__init__.py`, add a section to `CHANGELOG.md`, commit and push.
-Every install picks it up at its next start ("MotionLab 0.2.1 is available" - or installed automatically). Push
+(all PASS), raise the version in `tools\motionlab\__init__.py`, add a section to `CHANGELOG.md` (heading
+`## x.y.z - date - title`: the *Update available* dialog shows every section newer than a friend's copy), commit and
+push. Every install sees the button within an hour (or at its next start) and shows "What's new" after updating. Push
 code commits right away: *Share my knowledge* refuses to run while this copy has commits that are not on GitHub,
 so it never publishes work in progress.
 
@@ -133,7 +143,7 @@ so it never publishes work in progress.
 
 | Folder | What | In the repo? |
 |---|---|---|
-| `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder | yes |
+| `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder, MotionLab's MCP server, HTML overlays (`tools\overlays\`: HyperFrames, versions pinned; its `node_modules` stays on your PC) | yes |
 | `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`) | yes |
 | `knowledge\` | shared reference cards and lessons waiting for review (`local\`, `inbox\`, `outbox\` are private) | partly |
 | `docs\` | roadmap, guides, design notes | yes |

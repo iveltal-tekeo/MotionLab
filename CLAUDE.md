@@ -28,6 +28,7 @@ explore the whole lab:
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
 | knowledge sharing (cards, lessons, packs) | `docs\knowledge_sharing.md`, `knowledge\README.md` |
 | questions about working with Claude, effort levels, tokens | `docs\claude_tips.md` |
+| what comes next (planned versions and their design notes) | `docs\plans.md` (the app's What's new shows it) |
 
 Every tool starts with a usage docstring: read its first lines (or run it without arguments), not the whole file.
 
@@ -59,7 +60,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `recreate-video\`
-- Repo files (v0.2.5): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the app's update banner shows it),
+- Repo files (v0.3.0): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
+  it), `.mcp.json` (MotionLab's MCP server),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
   version is `tools\motionlab\__init__.py` `__version__`. The USER creates and uploads the repo - never `git init` /
@@ -77,11 +79,15 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `knowledge.py cards | summary | pending | next-lesson-id | share | export | import <pack>`
 - `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
-  `render_video.py <plan.json>`, `compare_renders.py`; Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
-  `library.py build | test | title | install`
+  `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new | render | stills` (graphics as HTML via
+  HyperFrames, pinned in `tools\overlays\`); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
+  `library.py build | test | title | install`, `resolve_mcp.py install | status | remove` (optional Resolve MCP for
+  Claude Code, this PC only)
 - `storage.py` disk report by category; `--prune <name|all> --what cache,checks,finals --yes` deletes only what the
   lab can rebuild (dry run without `--yes`), never sources, knowledge or media a Resolve project uses. Footage
-  caches are the big item: ~2.6 GB per minute of footage.
+  caches are the big item: ~3.9 GB per minute of footage in colour (2.6 grey).
+- `mcp_server.py` MotionLab's MCP server (`.mcp.json`; read-only: events, sheets, frames, verdicts, projects,
+  stills - prefer its tools to reading events.json)
 - `app.py` the app (`--no-window --stay --no-update --port N` = a test server); `roadmap.py` redraws `docs\roadmap.png`
   (edit its STAGES / VERDICT when the state changes)
 

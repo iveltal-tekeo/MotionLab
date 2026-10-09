@@ -1,11 +1,15 @@
 """Frame compositor for MotionLab renders: a plan (layers on a timeline) -> RGB frames.
 
 Coordinates are output pixels (x right, y down); frames are 0-based at plan["fps"]; ranges are inclusive.
-Layer types: clip, solid, text, clock, mosaic, firework, streaks, strip.
+Layer types: clip, solid, text, clock, mosaic, firework, streaks, strip, overlay (an HTML graphic rendered by
+tools/overlay.py with HyperFrames - the way to make new graphics since 0.3.0).
 Animated values ("curves") are a number, {"keys": [[f, v, ease], ...]}, {"start": f0, "values": [...]} or
 "@name" for a curve defined once in plan["curves"]. Eases (for the segment after a key): hold, linear,
 smooth (S-curve), in (accelerating / slow start), out (decelerating / slow end).
-Clip sources are the grey frame caches written by tools/prep_footage.py (full range, cover-fit at 1x).
+Clip sources are the frame caches written by tools/prep_footage.py (full range, cover-fit at 1x): colour (plan
+source "format": "i420", the default since 0.3.0) or grey ("gray"; test_4am) - see motionlab/footage.py. Grades
+(plan["grades"]) are levels / gamma / output range per channel (grade_lut) plus "saturation" (1 = as shot, 0 = grey;
+colour sources only).
 """
 from __future__ import annotations
 
@@ -15,7 +19,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from . import footage as FC
 from . import graphics as G
+
+REC709 = np.array([0.2126, 0.7152, 0.0722], np.float32)       # luma weights (saturation, colour -> grey)
 
 # ------------------------------------------------------------------------------------------------ curves
 EASES = {
@@ -101,6 +108,25 @@ def grade_lut(black=40, white=245, gamma=1.5, out_black=0.03, out_white=0.85) ->
     """uint8 grey -> float32 0..1: levels (black/white input points), gamma (>1 darker mids), output range."""
     x = np.clip((np.arange(256, dtype=np.float32) - black) / max(1.0, white - black), 0, 1)
     return (out_black + (out_white - out_black) * x ** gamma).astype(np.float32)
+
+
+def grade_parts(g: dict) -> tuple[np.ndarray, float]:
+    """A plan grade -> (the levels LUT, saturation)."""
+    g = dict(g or {})
+    sat = float(g.pop("saturation", 1.0))
+    return grade_lut(**g), sat
+
+
+def saturate(patch: np.ndarray, sat: float) -> np.ndarray:
+    """Saturation about Rec.709 luma (RGB patches only; grey ones stay as they are)."""
+    if sat == 1.0 or patch.ndim != 3:
+        return patch
+    y = (patch @ REC709)[..., None]
+    return y + (patch - y) * sat
+
+
+def as_rgb(img: np.ndarray) -> np.ndarray:
+    return img if img.ndim == 3 else np.repeat(img[..., None], 3, axis=2)
 
 
 def _cover(w: float, h: float, sw: int, sh: int) -> tuple[float, float]:
@@ -207,7 +233,7 @@ class ClipLayer(Layer):
         self.ay = Curve(an[1], R.curves, 0.5)
         self.gain = Curve(spec.get("gain"), R.curves, 1.0)
         g = {**R.grades.get(spec.get("grade", "default"), {}), **spec.get("grade_override", {})}
-        self.lut = grade_lut(**g) if g else grade_lut()
+        self.lut, self.sat = grade_parts(g)
         self.speed = float(spec.get("speed", 1.0))
         self.hold = bool(spec.get("hold", False))
         self.jumps = sorted([[int(a), int(b)] for a, b in spec.get("jumps", [[self.start, spec.get("in", 0)]])])
@@ -242,6 +268,7 @@ class ClipLayer(Layer):
         if res is None:
             return
         patch, cov, X0, Y0 = res
+        patch = saturate(patch, self.sat)
         g = self.gain(f)
         if g != 1.0:
             patch = patch * g
@@ -449,9 +476,10 @@ class StripLayer(Layer):
         x, y, w, h = self.rect
         tw = float(spec.get("tile_w", h * 1.4))
         gap = float(spec.get("gap", 2))
-        lut = grade_lut(**R.grades.get(spec.get("grade", "default"), {}))
-        img = np.full((int(round(h)), int(round(w))), R.bg, np.float32)
+        lut, sat = grade_parts(R.grades.get(spec.get("grade", "default"), {}))
         tiles = spec["tiles"]
+        color = any(R.is_color(t["src"]) for t in tiles)
+        img = np.full((int(round(h)), int(round(w))) + ((3,) if color else ()), R.bg, np.float32)
         n = int(math.ceil(w / tw))
         for i in range(n):
             t = tiles[i % len(tiles)]
@@ -460,6 +488,9 @@ class StripLayer(Layer):
                                t.get("ay", 0.5), img.shape[1], img.shape[0])
             if res:
                 p, cov, X0, Y0 = res
+                p = saturate(p, sat)
+                if color:
+                    p, cov = as_rgb(p), cov[..., None]
                 reg = img[Y0:Y0 + p.shape[0], X0:X0 + p.shape[1]]
                 reg[:] = reg * (1 - cov) + p * cov
         self.img = img * float(spec.get("gain", 1.0))
@@ -468,7 +499,7 @@ class StripLayer(Layer):
         x, y, w, h = self.rect
         x += self.dx(f)
         X0, Y0 = int(round(x)), int(round(y))
-        hh, ww = self.img.shape
+        hh, ww = self.img.shape[:2]
         xa, ya = max(0, -X0), max(0, -Y0)
         xb, yb = min(ww, R.W - X0), min(hh, R.H - Y0)
         if xb > xa and yb > ya:
@@ -491,7 +522,8 @@ class MosaicLayer(Layer):
         self.say = Curve(spec.get("screen_ay", R.H / 2), R.curves)
         at = self.tiles[int(spec["anchor_tile"])]
         self.mc = (at["x"] + self.tw / 2, at["y"] + self.th / 2)
-        self.lut = grade_lut(**R.grades.get(spec.get("grade", "default"), {}))
+        self.lut, self.sat = grade_parts(R.grades.get(spec.get("grade", "default"), {}))
+        self.color = any(R.is_color(t["src"]) for t in self.tiles if not t.get("clock"))
         self.tile_gain = float(spec.get("tile_gain", 1.0))
         self.clock = spec.get("clock", {"text": "4:00", "fit": 0.94, "color": [0.74, 0.74, 0.74]})
         self.twinkle = {int(k): int(v) for k, v in spec.get("twinkle", {}).items()}
@@ -521,7 +553,7 @@ class MosaicLayer(Layer):
             m = 2.0 / L
             x0, y0, x1, y1 = x0 - m, y0 - m, x1 + m, y1 + m
             cw, ch = int(math.ceil((x1 - x0) * L)), int(math.ceil((y1 - y0) * L))
-            can = np.full((ch, cw), R.bg, np.float32)
+            can = np.full((ch, cw) + ((3,) if self.color else ()), R.bg, np.float32)
             rects = []
             for i, t in enumerate(self.tiles):
                 tx, ty = (t["x"] - x0) * L, (t["y"] - y0) * L
@@ -537,6 +569,9 @@ class MosaicLayer(Layer):
                                    t.get("ay", 0.5), cw, ch)
                 if res:
                     p, cov, X0, Y0 = res
+                    p = saturate(p, self.sat)
+                    if self.color:
+                        p, cov = as_rgb(p), cov[..., None]
                     reg = can[Y0:Y0 + p.shape[0], X0:X0 + p.shape[1]]
                     reg[:] = reg * (1 - cov) + p * self.tile_gain * cov
             self.levels[k] = {"L": L, "origin": (x0, y0), "img": can}
@@ -558,7 +593,8 @@ class MosaicLayer(Layer):
         xb, yb = min(w, can.shape[1] - X0), min(h, can.shape[0] - Y0)
         if xb > xa and yb > ya:
             reg = can[Y0 + ya:Y0 + yb, X0 + xa:X0 + xb]
-            reg[:] = np.maximum(reg, m[ya:yb, xa:xb])
+            mm = m[ya:yb, xa:xb]
+            reg[:] = np.maximum(reg, mm[..., None] if reg.ndim == 3 else mm)
 
     def screen_rect(self, i, f, R):
         s = self.scale(f)
@@ -580,23 +616,75 @@ class MosaicLayer(Layer):
         ty = self.say(f) + s * (y0 - self.mc[1]) + 0.5 * a - 0.5
         M = np.array([[a, 0, tx], [0, a, ty]], np.float32)
         img = cv2.warpAffine(lv["img"], M, (R.W, R.H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
-                             borderValue=R.bg)
+                             borderValue=(R.bg,) * 3)
         if f in self.twinkle:
             out = sample_box(*self.screen_rect(self.twinkle[f], f, R), R.W, R.H)
             if out:
                 cov, X0, Y0 = out
                 reg = img[Y0:Y0 + cov.shape[0], X0:X0 + cov.shape[1]]
-                reg[:] = reg + cov * 0.8 * (1 - reg)
+                cv = cov[..., None] if reg.ndim == 3 else cov
+                reg[:] = reg + cv * 0.8 * (1 - reg)
         op = self.opacity(f)
         if f in self.red:
-            rgb = np.stack([img * 1.15, img * 0.16, img * 0.13], axis=-1)
+            y = img @ REC709 if img.ndim == 3 else img
+            rgb = np.stack([y * 1.15, y * 0.16, y * 0.13], axis=-1)
             canvas[:] = canvas * (1 - op) + np.clip(rgb, 0, 1) * op
         else:
-            canvas[:] = canvas * (1 - op) + img[..., None] * op
+            canvas[:] = canvas * (1 - op) + as_rgb(img) * op
+
+
+class OverlayLayer(Layer):
+    """A clip made by tools/overlay.py (HyperFrames: HTML / CSS / GSAP -> ProRes 4444 + alpha; motionlab/overlays.py):
+    plan frame f shows clip frame in + (f - start) (its last frame holds). "rect" [x, y, w, h] places and scales the
+    clip (default: at 0, 0 at the size it was authored). blend "normal" composites with its alpha; "add" / "screen"
+    add its light (colour x alpha) like the lab's glows and fireworks."""
+
+    def __init__(self, spec, R):
+        super().__init__(spec, R)
+        from . import overlays as OV
+        self.meta, self.arr = OV.load(spec["file"])
+        self.inn = int(spec.get("in", 0))
+        W0, H0 = self.meta["width"], self.meta["height"]
+        x, y, w, h = [float(v) for v in spec.get("rect", [0, 0, W0, H0])]
+        self.sx, self.sy = w / W0, h / H0
+        cx, cy, cw, ch = self.meta["crop"]
+        self.X, self.Y = x + cx * self.sx, y + cy * self.sy              # where the visible crop lands
+        self.w, self.h = cw * self.sx, ch * self.sy
+        self.exact = (abs(self.sx - 1) < 1e-9 and abs(self.sy - 1) < 1e-9 and float(self.X).is_integer()
+                      and float(self.Y).is_integer())
+
+    def draw(self, canvas, f, R):
+        op = self.opacity(f)
+        if op <= 0.002:
+            return
+        i = min(max(self.inn + f - self.start, 0), self.arr.shape[0] - 1)
+        fr = np.asarray(self.arr[i], np.float32) * (1.0 / 255.0)
+        rgb, a = fr[..., :3], fr[..., 3]
+        light = self.mode in ("add", "screen")
+        if self.exact:
+            X0, Y0 = int(self.X), int(self.Y)
+            col = rgb * a[..., None] if light else rgb
+        else:                                   # resample premultiplied (no dark fringes at soft edges)
+            X0, Y0 = int(math.floor(self.X)), int(math.floor(self.Y))
+            ow, oh = int(math.ceil(self.X + self.w)) - X0, int(math.ceil(self.Y + self.h)) - Y0
+            M = np.array([[self.sx, 0, self.X - X0 + 0.5 * self.sx - 0.5],
+                          [0, self.sy, self.Y - Y0 + 0.5 * self.sy - 0.5]], np.float32)
+            pm = cv2.warpAffine(np.dstack([rgb * a[..., None], a]), M, (ow, oh), flags=cv2.INTER_LINEAR,
+                                borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+            a = pm[..., 3]
+            col = pm[..., :3] if light else pm[..., :3] / np.maximum(a, 1e-6)[..., None]
+        h, w = a.shape
+        xa, ya = max(0, -X0), max(0, -Y0)
+        xb, yb = min(w, R.W - X0), min(h, R.H - Y0)
+        if xb <= xa or yb <= ya:
+            return
+        sl = (slice(ya, yb), slice(xa, xb))
+        alpha = np.full((yb - ya, xb - xa), op, np.float32) if light else a[sl] * op
+        blend(canvas, col[sl], alpha, X0 + xa, Y0 + ya, self.mode)
 
 
 LAYERS = {"clip": ClipLayer, "solid": SolidLayer, "text": TextLayer, "clock": ClockLayer, "mosaic": MosaicLayer,
-          "firework": FireworkLayer, "streaks": StreaksLayer, "strip": StripLayer}
+          "firework": FireworkLayer, "streaks": StreaksLayer, "strip": StripLayer, "overlay": OverlayLayer}
 
 
 # ------------------------------------------------------------------------------------------------ renderer
@@ -609,23 +697,28 @@ class Renderer:
         self.bg = float(plan.get("background", 0.045))
         self.curves = plan.get("curves", {})
         self.grades = plan.get("grades", {})
-        self.rng = np.random.default_rng(int(plan.get("seed", 1234)))
+        self.seed = int(plan.get("seed", 1234))
+        self.rng = np.random.default_rng(self.seed)            # re-seeded per frame in render(): see there
         self.grain_sigma = float(plan.get("grain", 0.0))
         self.master = Curve(plan.get("master_gain"), self.curves, 1.0)
         # levels: a plan says which cache levels its grades were designed on (see prep_footage.py); a cache of the
         # other kind is converted on read, so e.g. a rebuilt cache cannot change an approved plan's look
         self.levels = plan.get("levels", "single")
-        self._src, self._conv = {}, {}
+        self._src, self._conv, self._fmt = {}, {}, {}
         for sid, s in plan["sources"].items():
-            self._src[sid] = np.memmap(Path(s["cache"]), dtype=np.uint8, mode="r",
-                                       shape=(int(s["frames"]), int(s["height"]), int(s["width"])))
+            self._fmt[sid] = fmt = s.get("format", "gray")                  # "i420" = colour cache
+            self._src[sid] = FC.open_memmap(s["cache"], s["frames"], s["width"], s["height"], fmt)
             self._conv[sid] = level_conversion(cache_levels(s["cache"]), self.levels)
         self._vign = {}
         self.layers = [LAYERS[sp["type"]](sp, self) for sp in plan["layers"]]
 
+    def is_color(self, sid: str) -> bool:
+        return self._fmt.get(sid) == "i420"
+
     def frame(self, sid: str, i: int) -> np.ndarray:
+        """Cached frame i (clamped) of source sid: grey (h, w) or RGB (h, w, 3) uint8, in the plan's levels."""
         a = self._src[sid]
-        fr = a[min(max(int(i), 0), a.shape[0] - 1)]
+        fr = FC.decode(a[min(max(int(i), 0), a.shape[0] - 1)], self._fmt[sid])
         conv = self._conv[sid]
         return fr if conv is None else conv[fr]
 
@@ -638,6 +731,9 @@ class Renderer:
         return self._vign[color]
 
     def render(self, f: int) -> np.ndarray:
+        # noise (grain, grainy clocks) is seeded by (plan seed, frame): a frame looks the same whether it is rendered
+        # alone (--stills), in a range or in a parallel chunk (since 0.3.0; before, it depended on the render order)
+        self.rng = np.random.default_rng([self.seed, int(f)])
         canvas = np.full((self.H, self.W, 3), self.bg, np.float32)
         for L in self.layers:
             if L.active(f):

@@ -99,6 +99,31 @@ def text_mask(text: str, height: float, stroke: float | None = None, tracking: f
     return cv2.resize(a, (W, H), interpolation=cv2.INTER_AREA)
 
 
+def text_layout(text: str, height: float, stroke: float | None = None, tracking: float = 0.55,
+                width_scale: float = 1.0) -> tuple:
+    """The geometry text_mask draws, for vector versions of the pixel font (SVG in HTML overlays): (polylines,
+    dots, stroke width, W, H) in mask pixels - square caps, round joins; a dot = a square of 1.2 x stroke."""
+    text = text.upper()
+    u = height / 6.0
+    ux = u * width_scale
+    st = stroke if stroke is not None else max(1.0, height * 0.085)
+    pad = st * 2
+    widths = [2.2 * ux if ch == " " else (0.0 + st if ch in NARROW else 4 * ux + st) for ch in text]
+    total = sum(widths) + tracking * ux * 2 * max(0, len(text) - 1)
+    W, H = int(math.ceil(total + 2 * pad)), int(math.ceil(height + st + 2 * pad))
+    lines, dots = [], []
+    x = pad + st / 2
+    for ch, w in zip(text, widths):
+        for poly in GLYPHS.get(ch, []):
+            pts = [(x + px * ux, pad + st / 2 + py * u) for px, py in poly]
+            if len(pts) == 2 and abs(pts[0][0] - pts[1][0]) < 0.5 and abs(pts[0][1] - pts[1][1]) < 0.5:
+                dots.append(pts[0])
+            else:
+                lines.append(pts)
+        x += w + tracking * ux * 2
+    return lines, dots, st, W, H
+
+
 # ----------------------------------------------------------------------------------------------- seven segment
 SEGMENTS = {"0": "abcdef", "1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc", "5": "afgcd", "6": "afgedc",
             "7": "abc", "8": "abcdefg", "9": "abcdfg", "-": "g", " ": ""}

@@ -7,7 +7,8 @@ cd /d "%~dp0"
 echo.
 echo  MotionLab setup
 echo  - installs the Python packages into .venv (inside this folder)
-echo  - checks git, ffmpeg, yt-dlp and Claude Code, and offers to install what is missing (winget, you choose)
+echo  - checks git, ffmpeg, yt-dlp, Claude Code and Node.js, and offers to install what is missing
+echo    (winget, you choose)
 echo.
 
 rem ---- 1. Python 3.12, 64-bit
@@ -44,9 +45,41 @@ where yt-dlp >nul 2>nul && (echo [ok] yt-dlp found) && goto :claude
 echo [ ]  yt-dlp not found - optional, for "Download from a link" in the app.
 call :offer "yt-dlp.yt-dlp" "yt-dlp"
 :claude
-where claude >nul 2>nul && (echo [ok] Claude Code found) && goto :shortcut
+where claude >nul 2>nul && (echo [ok] Claude Code found) && goto :mcp
 echo [ ]  Claude Code not found - needed for the review and learning steps.
 echo      Install it from https://claude.com/claude-code and sign in once by typing: claude
+goto :node
+:mcp
+rem MotionLab's own MCP server (read-only lab data, .mcp.json): approve it once, so Claude windows start at once
+".venv\Scripts\python.exe" tools\mcp_server.py --enable >nul && echo [ok] Claude Code may use MotionLab's MCP server (read-only lab data)
+
+
+rem ---- 4b. Node.js + HyperFrames (optional: graphics written as HTML when rebuilding a video)
+:node
+where node >nul 2>nul && goto :overlays
+echo [ ]  Node.js not found - optional, for graphics as HTML overlays when rebuilding a video.
+call :offer "OpenJS.NodeJS.LTS" "Node.js"
+goto :shortcut
+:overlays
+echo [ok] Node.js found
+if not exist "tools\overlays\node_modules\hyperframes\bin\hyperframes.mjs" goto :askhf
+echo [ok] HyperFrames found (tools\overlays)
+goto :shortcut
+:askhf
+choice /C YN /M "     Install HyperFrames for HTML graphics (about 130 MB, plus its own Chrome, about 150 MB)"
+if errorlevel 2 goto :shortcut
+pushd tools\overlays
+call npm ci --no-fund --no-audit
+if errorlevel 1 goto :hffail
+set "HYPERFRAMES_NO_TELEMETRY=1"
+set "DO_NOT_TRACK=1"
+call node node_modules\hyperframes\bin\hyperframes.mjs browser ensure
+popd
+echo [ok] HyperFrames installed (tools\overlays, versions pinned in package-lock.json)
+goto :shortcut
+:hffail
+popd
+echo [ ]  HyperFrames could not be installed - overlays are optional; run setup.bat again later.
 
 rem ---- 5. your name for shared knowledge (Settings in the app can change it)
 :shortcut
@@ -64,7 +97,7 @@ if errorlevel 2 goto :done
 :done
 echo.
 echo  Done. Start MotionLab with the shortcut or by double-clicking MotionLab.bat.
-echo  The app's Settings page shows which programs it found; it updates itself from GitHub when it starts.
+echo  The app's Settings page shows which programs it found; new versions show an Update button in the sidebar.
 echo  Optional self-check (a few minutes, should end with PASS):  .venv\Scripts\python tools\selftest.py
 echo.
 pause

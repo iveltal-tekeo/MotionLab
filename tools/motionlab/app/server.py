@@ -36,7 +36,7 @@ from motionlab.util import LAB, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 3                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 4                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -309,9 +309,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(lab_file(path[len("/files/"):]))
         if path == "/api/ping":
             S.last_ping = time.time()
+            u = S.update or {}
             return self._json({"app": "motionlab", "version": VERSION, "running": len(S.runner.running()),
                                "resolve": S.resolve, "phase": S.phase, "api": API_LEVEL,
-                               "update": bool((S.update or {}).get("can_update"))})
+                               "update": bool(u.get("can_update")), "update_kind": u.get("kind"),
+                               "update_version": u.get("new_version"), "update_cards": u.get("new_cards", 0),
+                               "update_lessons": u.get("new_lessons", 0)})
         if path == "/api/status":
             return self._json(status())
         if path == "/api/references":
@@ -338,6 +341,7 @@ class Handler(BaseHTTPRequestHandler):
                                "styles": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
                                "efforts": list(system.EFFORTS),
                                "tasks": {k: v[0] for k, v in system.TASKS.items()},
+                               "resolve_mcp": system.resolve_mcp_state(),
                                "update": {**(S.update or {}), "phase": S.phase}})
         if path == "/api/downloads":
             return self._json(system.downloads())
@@ -417,6 +421,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(S.update)
         if path == "/api/update/apply":
             return self._json(apply_update())
+        if path == "/api/update/seen":                   # the window showed "What's new" after an update
+            updater.mark_seen()
+            if S.update_result:
+                S.update_result["seen"] = True
+            return self._json({"ok": True})
         if path == "/api/update/connect":
             r = updater.connect(str(body.get("url", "")))
             S.update = updater.check(fetch=False)
@@ -492,8 +501,14 @@ def apply_update() -> dict:
     S.update_result = r
     S.update = updater.cached()
     if r.get("updated"):
+        try:
+            KN.summary()                                     # friends' cards that came in, for Claude
+        except Exception:                                    # noqa: BLE001 - the update itself worked
+            log_error("knowledge summary after the update failed\n" + traceback.format_exc())
+    r["restart"] = bool(r.get("updated") and r.get("code_changed", True))
+    if r["restart"]:
         restart_soon()
-    else:
+    else:                                                    # only knowledge came in: no restart needed
         S.phase = "ready"
     return r
 
@@ -532,15 +547,15 @@ def share_knowledge() -> dict:
 
 
 def startup_update() -> None:
-    """Shortly after start: look for a new version on GitHub; install it right away if the user allows automatic
-    updates (only now, before work starts - later checks just show the banner)."""
+    """Shortly after start: look for a new version on GitHub. Settings' update_mode: "ask" (default) = the window's
+    Update button appears; "auto" = install it right away (only now, before work starts); "off" = don't look."""
     time.sleep(3)
     try:
-        st = system.load()
-        if not st.get("update_check", True) or not updater.is_repo():
+        mode = system.load().get("update_mode", "ask")
+        if mode == "off" or not updater.is_repo():
             return
         S.update = updater.check(fetch=True)
-        if (S.update.get("can_update") and st.get("update_auto", True) and not S.runner.running()
+        if (mode == "auto" and S.update.get("can_update") and not S.runner.running()
                 and time.time() - S.started < 180):
             apply_update()
     except Exception:                                           # noqa: BLE001 - never break the app over an update
@@ -554,7 +569,8 @@ def watcher(server: ThreadingHTTPServer):
     while True:
         if n % 4 == 0:
             S.resolve = {"state": resolve_state(), "checked": data.stamp()}
-        if n and n % 4320 == 0 and S.check_updates and system.load().get("update_check", True):  # 6 h: banner only
+        if (n and n % 720 == 0 and S.check_updates                      # hourly: the Update button only
+                and system.load().get("update_mode", "ask") != "off"):
             try:
                 S.update = updater.check(fetch=True)
             except Exception:                                   # noqa: BLE001

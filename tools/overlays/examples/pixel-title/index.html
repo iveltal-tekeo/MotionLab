@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1520, height=1080">
+<!-- MotionLab overlay example "pixel-title" (4AM title_open, plan frames 0-29): 30 frames at 25 fps, 1520 x 1080 px (the plan's frame). Render:
+     .venv\Scripts\python tools\overlay.py render <this folder>
+     Rules: transparent background (never paint html / body / #root); everything absolutely positioned in output
+     pixels; animate only on the paused GSAP timeline below (no CSS animations, timers, Date or Math.random -
+     use rnd(seed) for noise); times in frames with F(n) / AT(n). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1520px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1520px; height: 1080px; overflow: hidden; }
+  .abs { position: absolute; }
+  /* the graphic: */
+
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="1.2" data-width="1520"
+     data-height="1080">
+  <svg id="title" class="abs" style="left:394px; top:494px; overflow:visible" width="733" height="77"
+       viewBox="0 0 733 77">
+    <defs>
+      <filter id="glow" filterUnits="userSpaceOnUse" x="-60" y="-60" width="853" height="197"
+              color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="9.720" result="blur"/>
+        <feFlood flood-color="rgb(219,13,13)" result="c"/>
+        <feComposite in="c" in2="blur" operator="in" result="g0"/>
+        <feComponentTransfer in="g0" result="glow"><feFuncA type="linear" slope="0.9"/></feComponentTransfer>
+        <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#glow)" fill="none" stroke="rgb(219,13,13)" stroke-width="4.590" stroke-linecap="square"
+       stroke-linejoin="round">
+      <polyline points="11.475,11.475 83.475,11.475"/>
+      <polyline points="47.475,11.475 47.475,65.475"/>
+      <polyline points="179.865,11.475 107.865,11.475 107.865,65.475 179.865,65.475"/>
+      <polyline points="107.865,38.475 161.865,38.475"/>
+      <polyline points="276.255,11.475 204.255,11.475 204.255,38.475 276.255,38.475 276.255,65.475 204.255,65.475"/>
+      <polyline points="300.645,11.475 372.645,11.475"/>
+      <polyline points="336.645,11.475 336.645,65.475"/>
+      <polyline points="456.435,11.475 456.435,38.475 528.435,38.475"/>
+      <polyline points="528.435,11.475 528.435,65.475"/>
+      <polyline points="552.825,65.475 552.825,11.475 624.825,11.475 624.825,65.475"/>
+      <polyline points="552.825,38.475 624.825,38.475"/>
+      <polyline points="649.215,65.475 649.215,11.475 721.215,11.475 721.215,65.475"/>
+      <polyline points="685.215,11.475 685.215,47.475"/>
+    </g>
+  </svg>
+</div>
+<script>
+  const FPS = 25, FRAMES = 30;
+  const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
+  const AT = n => (n - 0.5) / FPS;        // a jump (tl.set) that shows from frame n on, never on frame n - 1
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  // a static title card for all of its frames
+
+  tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -18,12 +18,12 @@ from motionlab import graphics as G  # noqa: E402
 from motionlab.util import LAB, setup_console  # noqa: E402
 
 OUT = LAB / "docs" / "roadmap.png"
-DATE = "2026-10-07"
+DATE = "2026-10-09"
 W, H = 1920, 1080
 BG = (13, 13, 15)
 WHITE, GREY, DIM = (236, 236, 236), (128, 128, 132), (58, 58, 62)
 AMBER = (255, 196, 0)
-YOU_ARE_HERE_AFTER = 7                      # the marker sits between this stage and the next
+YOU_ARE_HERE_AFTER = 6                      # the marker sits between this stage and the next
 
 # (title, status, maturity 0-5, big number, caption, details)
 STAGES = [
@@ -31,30 +31,32 @@ STAGES = [
      "analyse > sheets > review > report. Frame + timecode on everything. Your videos are never changed."),
     ("Detect effects", "WEAK", 1, "40%", "effect types right before review",
      "1 reference analysed (4AM). 0 false alarms, but 34 of 57 effects needed Claude's relabel."),
-    ("Rebuild in the lab", "DONE", 3, "51/54", "key frames on time",
-     "test_4am v1: your DJI footage in 4AM's style. Lab renderer: exact, not editable."),
-    ("Rebuild in Resolve", "DONE", 4, "53/54", "key frames, 1.83/255 off v1",
-     "Native timeline + Fusion you can edit. Same render after reopening. Spots your hand edits."),
-    ("Feedback loop", "STARTED", 2, "44", "verdicts given (4AM)",
-     "1 round on 4AM: 31 correct, 13 partly > lessons L001-L007, flash look, possible-misses list."),
+    ("Rebuild 1:1", "DONE", 4, "53/54", "key frames on time",
+     "test_4am in the lab (51/54) and as an editable Resolve project (1.83/255 off). Colour + 3x faster in v0.3."),
     ("Effect library", "DONE", 3, "14", "effects saved, 10 macros",
      "Recipes + Fusion macros checked in Resolve against 4AM. Later: install them as Resolve templates."),
-    ("MVP for friends", "STARTED", 3, "v0.2.5", "ready: you upload it",
-     "Setup, auto-update, sharing. 0.2.5: review tab, red possible misses, Delete, Claude buttons with effort."),
-    ("Share + specialise", "STARTED", 1, "1", "reference card (yours)",
-     "Cards + lessons through GitHub, review step, packs, pacing per category. v0.3: 30 videos, category profiles."),
+    ("MVP for friends", "DONE", 4, "v0.2.5", "on GitHub",
+     "Setup, sharing, review tab, Delete, Claude buttons with effort per task."),
+    ("Rebuild toolkit", "DONE", 3, "v0.3", "ready: you upload it",
+     "Update button + what's new. Colour, 3x renders, HTML graphics (HyperFrames), MCP for the lab + Resolve."),
+    ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",
+     "7 lessons from 1 round, cards shared through GitHub. Next: 10 videos each > category profiles."),
+    ("Content intelligence", "NEXT", 0, "v0.4", "planned",
+     "Videos as information: transcripts, common topics across e.g. 10 'make money online' videos, notes, ask Claude."),
     ("Templates + macOS", "LATER", 0, "v0.5", "planned",
-     "Use a reference as a template: its feel and pacing with your own story and music, not 1:1. A macOS app."),
+     "A reference as a template: its feel, pacing and structure with your own story and music. A macOS app."),
+    ("AI B-roll + cinematics", "LATER", 0, "v0.7", "planned",
+     "Missing shots, B-roll or whole sequences generated (Higgsfield: Seedance and more), used like your clips."),
 ]
 VERDICT = [
     ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
-    ("WEAK", "Detection has seen one video and one round of your feedback (7 lessons). Every accuracy number is "
-             "anecdotal until ~10 references per category come with feedback."),
-    ("NEXT", "You upload v0.2.5 to GitHub  >  friends clone + setup.bat  >  10 videos each with verdicts  >  Share  >  "
-             "category profiles (v0.3)  >  templates by feel + macOS (v0.5)."),
+    ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
+             "per category."),
+    ("NEXT", "You upload v0.3.0  >  friends click Update  >  10 videos each with verdicts > Share  |  v0.4 content "
+             "intelligence  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll.  Plans: docs/plans.md."),
 ]
-FOOTER = ("risks: Resolve crashes on heavy Fusion (comps kept lean, watchdog)  |  footage cache = 2.6 GB per minute "
-          "of footage (tools\\storage.py)  |  drawn by tools\\roadmap.py")
+FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
+          "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")
 
 
 def font(name: str, size: int):

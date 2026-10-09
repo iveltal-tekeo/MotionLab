@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab example "whats-new-0.3.0": a stand-alone 10 s motion graphic (1920 x 1080, 30 fps, 300 frames)
+     that paints its own background - unlike an overlay. Copy it into a folder made by
+     overlay.py new <folder> --frames 300 --fps 30 --width 1920 --height 1080, then
+     overlay.py render <folder> --mp4. Times here are in seconds; the logo / LED geometry comes from
+     graphics.text_layout / seg_layout. Animation only on the paused GSAP timeline (fromTo needs
+     immediateRender: false when its start state must not show before it begins). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+  .abs { position: absolute; }
+  /* the graphic: */
+  #bg { position:absolute; inset:0; background: radial-gradient(ellipse at 50% 38%, #1b1b21 0%, #0e0e11 58%, #060607 100%); }
+  #blob { position:absolute; left:-300px; top:80px; width:1000px; height:1000px; border-radius:50%;
+          background: radial-gradient(circle, rgba(255,196,0,.13) 0%, rgba(255,196,0,0) 62%); }
+  #vig { position:absolute; inset:0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+  #hero { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin: 960px 140px; }
+  .stroke { fill:none; stroke:#ececec; stroke-width:7.82; stroke-linecap:square; stroke-linejoin:round; }
+  .led { fill:#ffc400; }
+  .ghost { fill:#ffc400; opacity:.07; }
+  #sub { position:absolute; left:0; width:1920px; top:640px; text-align:center; font: 600 30px Consolas, monospace;
+         letter-spacing: 14px; color:#8d8d96; clip-path: inset(0 50% 0 50%); }
+  #sub b { color:#ffc400; font-weight:600; }
+  .card { position:absolute; width:520px; height:236px; border-radius:16px; background: rgba(22,22,27,.92);
+          border:1px solid #2c2c33; box-shadow: inset 4px 0 0 #ffc400, 0 18px 40px rgba(0,0,0,.45); opacity:0;
+          font-family: 'Segoe UI', sans-serif; }
+  .icon { position:absolute; left:34px; top:32px; width:50px; height:50px; fill:none; stroke:#ffc400;
+          stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .ttl { position:absolute; left:104px; top:30px; font: 600 35px Bahnschrift, 'Segoe UI', sans-serif; color:#f2f2f4; }
+  .rule { position:absolute; left:106px; top:84px; height:3px; width:330px; background:#ffc400; transform-origin:left;
+          transform: scaleX(0); opacity:.85; }
+  .det { position:absolute; left:106px; top:100px; font-size:22px; color:#a7a7b0; }
+  .metric { position:absolute; right:34px; bottom:44px; font: 600 64px Bahnschrift, 'Segoe UI', sans-serif;
+            color:#ffc400; line-height:1; text-shadow: 0 0 18px rgba(255,196,0,.35); }
+  .metric .suf { font-size:30px; margin-left:6px; color:#d8b23a; }
+  .cap { position:absolute; right:36px; bottom:18px; font: 16px Consolas, monospace; color:#777780; letter-spacing:1px; }
+  #cta { position:absolute; left:660.0px; top:478.0px; width:600px; height:124px; border-radius:18px;
+         background:#ffc400; display:flex; align-items:center; gap:24px; padding:0 40px; opacity:0;
+         box-shadow: 0 0 60px rgba(255,196,0,.45); }
+  #cta svg { width:64px; height:64px; fill:none; stroke:#111; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
+  #cta .a { font: 700 46px Bahnschrift, 'Segoe UI', sans-serif; color:#111; line-height:1; }
+  #cta .b { font: 600 22px Consolas, monospace; color:#3a3000; margin-top:8px; }
+  #ring { position:absolute; left:660.0px; top:478.0px; width:600px; height:124px; border-radius:18px;
+          border:3px solid #ffc400; opacity:0; }
+  #hint { position:absolute; left:0; width:1920px; top:640.0px; text-align:center; font: 24px Consolas, monospace;
+          color:#9a9aa3; letter-spacing:3px; opacity:0; }
+  #hint b { color:#ffc400; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10" data-width="1920"
+     data-height="1080">
+  <div id="bg"></div><div id="blob"></div>
+  <svg class="abs" width="1920" height="1080" style="left:0;top:0;opacity:.07"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="saturate" values="0"/></filter><rect width="1920" height="1080" filter="url(#n)"/></svg>
+  <div id="vig"></div>
+  <div id="hero">
+    <svg class="abs" style="left:439.5px; top:330px; overflow:visible" width="1041" height="132" viewBox="0 0 1041 132">
+      <defs><filter id="glow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="1201" height="292">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <g filter="url(#glow)"><polyline class="stroke" id="s0" points="19.55,111.55 19.55,19.55 111.55,19.55 111.55,111.55" style="stroke-dasharray:283.8;stroke-dashoffset:283.8"/><polyline class="stroke" id="s1" points="65.55,19.55 65.55,80.88" style="stroke-dasharray:69.2;stroke-dashoffset:69.2"/><polyline class="stroke" id="s2" points="144.67,19.55 236.67,19.55 236.67,111.55 144.67,111.55 144.67,19.55" style="stroke-dasharray:375.8;stroke-dashoffset:375.8"/><polyline class="stroke" id="s3" points="269.79,19.55 361.79,19.55" style="stroke-dasharray:99.8;stroke-dashoffset:99.8"/><polyline class="stroke" id="s4" points="315.79,19.55 315.79,111.55" style="stroke-dasharray:99.8;stroke-dashoffset:99.8"/><polyline class="stroke" id="s5" points="394.91,19.55 394.91,111.55" style="stroke-dasharray:99.8;stroke-dashoffset:99.8"/><polyline class="stroke" id="s6" points="428.03,19.55 520.03,19.55 520.03,111.55 428.03,111.55 428.03,19.55" style="stroke-dasharray:375.8;stroke-dashoffset:375.8"/><polyline class="stroke" id="s7" points="553.15,111.55 553.15,19.55 645.15,19.55 645.15,111.55" style="stroke-dasharray:283.8;stroke-dashoffset:283.8"/><polyline class="stroke" id="s8" points="678.27,19.55 678.27,111.55 770.27,111.55" style="stroke-dasharray:191.8;stroke-dashoffset:191.8"/><polyline class="stroke" id="s9" points="803.39,111.55 803.39,19.55 895.39,19.55 895.39,111.55" style="stroke-dasharray:283.8;stroke-dashoffset:283.8"/><polyline class="stroke" id="s10" points="803.39,65.55 895.39,65.55" style="stroke-dasharray:99.8;stroke-dashoffset:99.8"/><polyline class="stroke" id="s11" points="928.51,19.55 928.51,111.55 1020.51,111.55 1020.51,65.55 928.51,65.55" style="stroke-dasharray:329.8;stroke-dashoffset:329.8"/><polyline class="stroke" id="s12" points="928.51,19.55 997.51,19.55 997.51,65.55" style="stroke-dasharray:122.8;stroke-dashoffset:122.8"/></g>
+    </svg>
+    <svg id="ver" class="abs" style="left:804.5px; top:470px; overflow:visible; opacity:0" width="311" height="130"
+         viewBox="0 0 311.0 130">
+      <defs><filter id="ledglow" filterUnits="userSpaceOnUse" x="-60" y="-60" width="431" height="250">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <polygon class="ghost" points="20.89,8.96 59.75,8.96 59.75,23.52 20.89,23.52"/><polygon class="ghost" points="57.12,20.89 71.68,20.89 71.68,60.31 57.12,60.31"/><polygon class="ghost" points="57.12,69.61 71.68,69.61 71.68,109.03 57.12,109.03"/><polygon class="ghost" points="20.89,106.40 59.75,106.40 59.75,120.96 20.89,120.96"/><polygon class="ghost" points="8.96,69.61 23.52,69.61 23.52,109.03 8.96,109.03"/><polygon class="ghost" points="8.96,20.89 23.52,20.89 23.52,60.31 8.96,60.31"/><polygon class="ghost" points="20.89,57.68 59.75,57.68 59.75,72.24 20.89,72.24"/><polygon class="ghost" points="135.89,8.96 174.75,8.96 174.75,23.52 135.89,23.52"/><polygon class="ghost" points="172.12,20.89 186.68,20.89 186.68,60.31 172.12,60.31"/><polygon class="ghost" points="172.12,69.61 186.68,69.61 186.68,109.03 172.12,109.03"/><polygon class="ghost" points="135.89,106.40 174.75,106.40 174.75,120.96 135.89,120.96"/><polygon class="ghost" points="123.96,69.61 138.52,69.61 138.52,109.03 123.96,109.03"/><polygon class="ghost" points="123.96,20.89 138.52,20.89 138.52,60.31 123.96,60.31"/><polygon class="ghost" points="135.89,57.68 174.75,57.68 174.75,72.24 135.89,72.24"/><polygon class="ghost" points="250.89,8.96 289.75,8.96 289.75,23.52 250.89,23.52"/><polygon class="ghost" points="287.12,20.89 301.68,20.89 301.68,60.31 287.12,60.31"/><polygon class="ghost" points="287.12,69.61 301.68,69.61 301.68,109.03 287.12,109.03"/><polygon class="ghost" points="250.89,106.40 289.75,106.40 289.75,120.96 250.89,120.96"/><polygon class="ghost" points="238.96,69.61 253.52,69.61 253.52,109.03 238.96,109.03"/><polygon class="ghost" points="238.96,20.89 253.52,20.89 253.52,60.31 238.96,60.31"/><polygon class="ghost" points="250.89,57.68 289.75,57.68 289.75,72.24 250.89,72.24"/><g filter="url(#ledglow)"><polygon class="led" points="20.89,8.96 59.75,8.96 59.75,23.52 20.89,23.52"/><polygon class="led" points="57.12,20.89 71.68,20.89 71.68,60.31 57.12,60.31"/><polygon class="led" points="57.12,69.61 71.68,69.61 71.68,109.03 57.12,109.03"/><polygon class="led" points="20.89,106.40 59.75,106.40 59.75,120.96 20.89,120.96"/><polygon class="led" points="8.96,69.61 23.52,69.61 23.52,109.03 8.96,109.03"/><polygon class="led" points="8.96,20.89 23.52,20.89 23.52,60.31 8.96,60.31"/><rect class="led" x="90.72" y="106.40" width="14.56" height="14.56"/><polygon class="led" points="135.89,8.96 174.75,8.96 174.75,23.52 135.89,23.52"/><polygon class="led" points="172.12,20.89 186.68,20.89 186.68,60.31 172.12,60.31"/><polygon class="led" points="135.89,57.68 174.75,57.68 174.75,72.24 135.89,72.24"/><polygon class="led" points="172.12,69.61 186.68,69.61 186.68,109.03 172.12,109.03"/><polygon class="led" points="135.89,106.40 174.75,106.40 174.75,120.96 135.89,120.96"/><rect class="led" x="205.72" y="106.40" width="14.56" height="14.56"/><polygon class="led" points="250.89,8.96 289.75,8.96 289.75,23.52 250.89,23.52"/><polygon class="led" points="287.12,20.89 301.68,20.89 301.68,60.31 287.12,60.31"/><polygon class="led" points="287.12,69.61 301.68,69.61 301.68,109.03 287.12,109.03"/><polygon class="led" points="250.89,106.40 289.75,106.40 289.75,120.96 250.89,120.96"/><polygon class="led" points="238.96,69.61 253.52,69.61 253.52,109.03 238.96,109.03"/><polygon class="led" points="238.96,20.89 253.52,20.89 253.52,60.31 238.96,60.31"/></g>
+    </svg>
+    <div id="sub">WHAT'S <b>NEW</b></div>
+  </div>
+  <div class="card" id="c0" style="left:140px; top:360px">
+    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16.5V7.8M8.3 11.3 12 7.6l3.7 3.7"/></svg>
+    <div class="ttl">Update button</div><div class="rule" id="r0"></div><div class="det">One click, then What's new</div>
+    <div class="metric"><span class="num" id="m0">1</span><span class="suf"></span></div>
+    <div class="cap">click to update</div>
+  </div>
+  <div class="card" id="c1" style="left:700px; top:360px">
+    <svg class="icon" viewBox="0 0 24 24"><path d="M12 3.5c3 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.5-6 5.5-10z"/><path d="M9.5 14a2.5 2.5 0 0 0 2.5 2.5"/></svg>
+    <div class="ttl">Colour rebuilds</div><div class="rule" id="r1"></div><div class="det">Each clip in its own colours</div>
+    <div class="metric"><span class="num" id="m1">12</span><span class="suf">/255</span></div>
+    <div class="cap">colour error</div>
+  </div>
+  <div class="card" id="c2" style="left:1260px; top:360px">
+    <svg class="icon" viewBox="0 0 24 24"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg>
+    <div class="ttl">3x faster renders</div><div class="rule" id="r2"></div><div class="det">Parallel, the very same frames</div>
+    <div class="metric"><span class="num" id="m2">12</span><span class="suf">fps</span></div>
+    <div class="cap">test_4am render</div>
+  </div>
+  <div class="card" id="c3" style="left:140px; top:636px">
+    <svg class="icon" viewBox="0 0 24 24"><path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/></svg>
+    <div class="ttl">Graphics as HTML</div><div class="rule" id="r3"></div><div class="det">HyperFrames to transparent clips</div>
+    <div class="metric"><span class="num" id="m3">&lt;/&gt;</span><span class="suf"></span></div>
+    <div class="cap">this video is one</div>
+  </div>
+  <div class="card" id="c4" style="left:700px; top:636px">
+    <svg class="icon" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>
+    <div class="ttl">Claude + Resolve</div><div class="rule" id="r4"></div><div class="det">MCP server, safe mode on</div>
+    <div class="metric"><span class="num" id="m4">0</span><span class="suf"></span></div>
+    <div class="cap">Resolve tools</div>
+  </div>
+  <div class="card" id="c5" style="left:1260px; top:636px">
+    <svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-6"/></svg>
+    <div class="ttl">Lab MCP for Claude</div><div class="rule" id="r5"></div><div class="det">Compact reads, sheets as pictures</div>
+    <div class="metric"><span class="num" id="m5">1</span><span class="suf">x</span></div>
+    <div class="cap">smaller reads</div>
+  </div>
+  <div id="ring"></div>
+  <div id="cta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16.5V7.8M8.3 11.3 12 7.6l3.7 3.7"/></svg><div><div class="a">Update available</div>
+    <div class="b">MotionLab 0.3.0</div></div></div>
+  <div id="hint">sidebar  <b>&#9656;</b>  What's new  <b>&#9656;</b>  every version, one click</div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 300;
+  const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
+  const AT = n => (n - 0.5) / FPS;        // a jump (tl.set) that shows from frame n on, never on frame n - 1
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  // seconds here (S) - a stand-alone motion graphic; overlays for edits use frames (F / AT)
+  const S = s => s;
+  // 1. the logo draws itself, stroke by stroke
+  for (let i = 0; i < 13; i++)
+    tl.to("#s" + i, { strokeDashoffset: 0, duration: 0.55, ease: "power2.inOut" }, 0.15 + i * 0.045);
+  // 2. the version LED flickers on, the subtitle opens
+  [[1.00, 1], [1.07, .15], [1.13, 1], [1.20, .35], [1.27, 1]].forEach(([t, o]) => tl.set("#ver", { opacity: o }, t));
+  tl.to("#sub", { clipPath: "inset(0 0% 0 0%)", duration: 0.6, ease: "power3.out" }, 1.35);
+  tl.to("#blob", { x: 1500, y: 60, duration: 10, ease: "none" }, 0);
+  // 3. the title moves up and makes room for the six cards
+  tl.to("#hero", { y: -205, scale: 0.56, duration: 0.75, ease: "power3.inOut" }, 2.15);
+  for (let i = 0; i < 6; i++) {
+    const t = 2.75 + i * 0.32;
+    tl.fromTo("#c" + i, { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t);
+    tl.to("#r" + i, { scaleX: 1, duration: 0.7, ease: "power2.out" }, t + 0.25);
+  }
+  tl.to("#m1", { innerText: 1, snap: { innerText: 1 }, duration: 1.3, ease: "power2.out" }, 3.42);
+  tl.to("#m2", { innerText: 40, snap: { innerText: 1 }, duration: 1.3, ease: "power2.out" }, 3.74);
+  tl.to("#m4", { innerText: 37, snap: { innerText: 1 }, duration: 1.3, ease: "power2.out" }, 4.38);
+  tl.to("#m5", { innerText: 100, snap: { innerText: 1 }, duration: 1.3, ease: "power2.out" }, 4.70);
+  // 4. outro: the cards step back, the Update button pops in and pulses
+  tl.to(".card", { opacity: 0.1, scale: 0.97, duration: 0.5, ease: "power2.inOut" }, 8.35);
+  tl.to("#hero", { opacity: 0.3, duration: 0.5 }, 8.35);
+  tl.fromTo("#cta", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(1.8)", immediateRender: false }, 8.55);
+  tl.fromTo("#ring", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.45, duration: 0.85, ease: "power2.out", immediateRender: false }, 9.05);
+  tl.to("#hint", { opacity: 1, duration: 0.5 }, 9.2);
+  tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

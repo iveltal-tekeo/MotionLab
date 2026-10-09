@@ -86,9 +86,13 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-tips]')) { e.preventDefault(); tipsModal(); }
 });
 $('#side-claude').onclick = () => openClaude('');
+$('#side-update').onclick = () => updateModal();
+$('#side-news').onclick = () => newsModal();
 function md(src) {                                     // small Markdown subset for the lab's reports
-  const out = []; let para = [], list = null, table = false, pre = null;
-  const inl = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  const out = []; let para = [], list = null, table = false, pre = null, li = null;
+  const inl = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,:;!?]|$)/g, '$1<i>$2</i>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   const flush = () => {
     if (para.length) { out.push('<p>' + inl(para.join(' ')) + '</p>'); para = []; }
     if (list) { out.push(`</${list}>`); list = null; }
@@ -103,7 +107,7 @@ function md(src) {                                     // small Markdown subset 
     if ((m = ln.match(/^\s*[-*]\s+(.*)/)) || (m = ln.match(/^\s*\d+\.\s+(.*)/))) {
       const kind = /^\s*\d+\./.test(ln) ? 'ol' : 'ul';
       if (para.length || table || list !== kind) { flush(); out.push(`<${kind}>`); list = kind; }
-      out.push('<li>' + inl(m[1]) + '</li>'); continue;
+      li = m[1]; out.push('<li>' + inl(li) + '</li>'); continue;       // li: its raw text, for wrapped lines
     }
     if (/^\s*\|/.test(ln)) {
       if (/^\s*\|[\s|:-]+\|\s*$/.test(ln)) continue;
@@ -111,7 +115,7 @@ function md(src) {                                     // small Markdown subset 
       out.push('<tr>' + ln.trim().replace(/^\||\|$/g, '').split('|').map(c => '<td>' + inl(c.trim()) + '</td>').join('') + '</tr>');
       continue;
     }
-    if (list && /^\s{2,}\S/.test(ln)) { out[out.length - 1] = out[out.length - 1].replace(/<\/li>$/, ' ' + inl(ln.trim()) + '</li>'); continue; }
+    if (list && /^\s{2,}\S/.test(ln)) { li += ' ' + ln.trim(); out[out.length - 1] = '<li>' + inl(li) + '</li>'; continue; }
     if (list || table) flush();
     para.push(ln.trim());
   }
@@ -172,7 +176,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 3;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 4;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -213,7 +217,7 @@ async function ping() {
     if (p.phase === 'updating' || p.phase === 'restarting') { waitForServer(p.phase === 'updating' ? 'Updating MotionLab from GitHub…' : 'Restarting MotionLab…'); return; }
     if ((p.api || 1) < API_LEVEL) banner('oldsrv', 'MotionLab was updated but its server is still the old one. <button class="btn sm pri">Restart now</button>', restartApp);
     else if (PAGE_VERSION && p.version !== PAGE_VERSION) { location.reload(); return; }
-    const up = $('#side a[data-nav=settings] .updot'); if (up) up.hidden = !p.update;
+    sideUpdate(p);
     $('#jobcount').textContent = p.running || '';
     const st = (p.resolve || {}).state || '…';
     const d = $('#resolve-state .dot');
@@ -458,7 +462,7 @@ async function pageHome(main) {
     <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}`;
   $('#an').onclick = () => analyseModal();
   $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
-  wireUpdateBox(main);
+  wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
   api('/api/knowledge').then(K => {
     const n = $('#kn-n', main), l = $('#kn-l', main); if (!n) return;
@@ -470,29 +474,107 @@ async function pageHome(main) {
   }).catch(() => {});
 }
 
+// ---- updates: the sidebar's Update button, its dialog (the CHANGELOG sections newer than this copy), "What's new"
+function plural(n, w) { return `${n} ${w}${n === 1 ? '' : 's'}`; }
+function knowledgeText(cards, lessons) {             // "2 reference cards and 1 lesson"
+  return [cards ? plural(cards, 'reference card') : '', lessons ? plural(lessons, 'lesson') : ''].filter(Boolean).join(' and ');
+}
+function sideUpdate(p) {                             // from the heartbeat: show / label the sidebar button
+  const b = $('#side-update'); if (!b) return;
+  b.hidden = !p.update;
+  if (!p.update) return;
+  const kn = p.update_kind === 'knowledge';
+  b.classList.toggle('kn', kn);
+  $('b', b).textContent = kn ? 'New from friends' : 'Update available';
+  $('small', b).textContent = kn ? (knowledgeText(p.update_cards || 0, p.update_lessons || 0) || 'shared knowledge')
+    : p.update_kind === 'version' && p.update_version ? 'MotionLab ' + p.update_version : 'changes on GitHub';
+}
 // update banner (home + settings): new version on GitHub, or the result of the last update
 function updateBox(u, res) {
   u = u || {};
-  if (res && res.updated) return `<div class="panel upd ok"><b>Updated to MotionLab ${esc(res.version || '')}</b> <span class="small muted">(${esc(res.from)} → ${esc(res.to)}, ${(res.changed || []).length} files${res.pip ? ', Python packages updated' : ''})</span>
+  if (res && res.updated) return `<div class="panel upd ok"><div class="row sp"><div><b>${res.code_changed === false ? "Friends' knowledge added" : 'Updated to MotionLab ' + esc(res.version || '')}</b> <span class="small muted">(${esc(res.from)} → ${esc(res.to)}, ${(res.changed || []).length} files${res.pip ? ', Python packages updated' : ''})</span></div>
+    ${res.whats_new ? '<button class="btn sm" data-shownew>What\'s new</button>' : ''}</div>
     ${res.set_aside && res.set_aside.length ? `<div class="small">Your own changes to <b>${esc(res.set_aside.join(', '))}</b> clashed with the update: the file now has the new version and your changes are kept in git (<code>git stash list</code>) - ask Claude to bring them back if you still need them.</div>` : ''}</div>`;
   if (u.restart_needed) return `<div class="panel upd"><div class="row sp"><b>MotionLab ${esc(u.disk_version || '')} is installed - restart to use it</b><button class="btn sm pri" data-restart>Restart now</button></div></div>`;
   if (!u.can_update) return '';
-  return `<div class="panel upd"><div class="row sp"><div><b>MotionLab ${esc(u.new_version || 'update')} is available</b> <span class="small muted">· ${u.behind} change(s) on GitHub</span>
+  const kn = u.kind === 'knowledge';
+  return `<div class="panel upd"><div class="row sp"><div><b>${kn ? `New from friends: ${esc(knowledgeText(u.new_cards || 0, u.new_lessons || 0) || 'shared knowledge')}`
+      : u.kind === 'version' ? `MotionLab ${esc(u.new_version)} is available` : 'Updates are available'}</b> <span class="small muted">· ${plural(u.behind, 'change')} on GitHub</span>
     ${u.dirty && u.dirty.length ? `<div class="small muted">Your changed files are kept: ${esc(u.dirty.slice(0, 4).join(', '))}${u.dirty.length > 4 ? ' …' : ''}</div>` : ''}</div>
-    <div class="row"><button class="btn sm" data-whatsnew>What's new</button><button class="btn sm pri" data-update>Update now</button></div></div>
-    <div class="md small" data-wn hidden>${md(u.whats_new || (u.changes || []).map(c => '- ' + c).join('\n'))}</div></div>`;
+    <div class="row"><button class="btn sm" data-whatsnew>What's new</button><button class="btn sm pri" data-update>${kn ? 'Get it now' : 'Update now'}</button></div></div></div>`;
 }
-function wireUpdateBox(el) {
-  const w = $('[data-whatsnew]', el); if (w) w.onclick = () => { const b = $('[data-wn]', el); b.hidden = !b.hidden; };
+function wireUpdateBox(el, res) {
+  const w = $('[data-whatsnew]', el); if (w) w.onclick = () => updateModal();
   const u = $('[data-update]', el); if (u) u.onclick = updateNow;
   const rs = $('[data-restart]', el); if (rs) rs.onclick = restartApp;
+  const sn = $('[data-shownew]', el); if (sn && res) sn.onclick = () => whatsNewModal(res);
+}
+async function updateModal() {
+  let u;
+  try { u = await api('/api/update'); } catch (e) { toast(e.message, 'err'); return; }
+  if (!u.can_update) { toast(u.error || 'MotionLab is up to date', u.error ? 'err' : 'ok'); return; }
+  const kn = u.kind === 'knowledge', jobs = +($('#jobcount').textContent || 0);
+  const list = (u.changes || []).map(c => `<li>${esc(c)}</li>`).join('');
+  modal(`<h2>${kn ? 'New knowledge from your friends' : u.kind === 'version' ? `MotionLab ${esc(u.new_version)} is available` : 'Updates are available'}</h2>
+    <div class="small muted">You have MotionLab ${esc(u.version)} · ${plural(u.behind, 'change')} on GitHub${u.checked ? ' · checked ' + esc(u.checked) : ''}</div>
+    <div class="whatsnew">${kn ? `<p><b>${esc(knowledgeText(u.new_cards || 0, u.new_lessons || 0) || 'Shared knowledge')}</b> - what your friends analysed and
+      learned (pacing, effects, their verdicts); lessons wait for a review before they change anything. No restart needed.</p><ul class="small">${list}</ul>`
+      : u.whats_new ? `<div class="md">${md(u.whats_new)}</div>` : `<ul class="small">${list}</ul>`}</div>
+    ${u.dirty && u.dirty.length ? `<div class="small muted" style="margin-top:10px">Files you changed in this copy are kept: ${esc(u.dirty.slice(0, 4).join(', '))}${u.dirty.length > 4 ? ' …' : ''}</div>` : ''}
+    <div class="small muted" style="margin-top:10px">${kn ? 'Only shared knowledge comes in.' : 'MotionLab restarts by itself (about 10 seconds).'} Your videos, analyses, verdicts, settings and knowledge are not touched.</div>
+    ${jobs ? '<div class="small amber" style="margin-top:6px">A job is running - update when it has finished (Jobs).</div>' : ''}
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-later>Later</button><button class="btn pri" data-go ${jobs ? 'disabled' : ''}>${kn ? 'Get it now' : 'Update now'}</button></div>`,
+  el => { $('[data-later]', el).onclick = closeModal; $('[data-go]', el).onclick = () => { closeModal(); updateNow(); }; });
+}
+function whatsNewModal(res) {                        // after an update (the window reloaded) or knowledge that came in
+  const kn = res.code_changed === false;
+  modal(`<h2>${kn ? "Friends' knowledge added" : `Updated to MotionLab ${esc(res.version || '')}`}</h2>
+    <div class="small muted">${!kn && res.from_version ? `from ${esc(res.from_version)} · ` : ''}${plural((res.changed || []).length, 'file')}${res.pip === 'ok' ? ' · Python packages updated' : ''}</div>
+    ${res.pip && res.pip !== 'ok' ? `<div class="small bad" style="margin-top:8px">Installing the new Python packages failed - run setup.bat again: ${esc(res.pip)}</div>` : ''}
+    ${res.set_aside && res.set_aside.length ? `<div class="small" style="margin-top:8px">Your own changes to <b>${esc(res.set_aside.join(', '))}</b> clashed with the update: the file now has the new version and your changes are kept in git (<code>git stash list</code>) - ask Claude to bring them back if you still need them.</div>` : ''}
+    <div class="whatsnew">${res.whats_new ? `<div class="md">${md(res.whats_new)}</div>`
+      : kn ? `<p>${esc(knowledgeText(res.new_cards || 0, res.new_lessons || 0) || 'Shared knowledge')} from your friends: the Knowledge page shows them, and Claude reads them in your next analysis.</p>`
+      : '<p class="muted">The changelog has no notes for this update.</p>'}</div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn pri" data-ok>Got it</button></div>`,
+  el => { $('[data-ok]', el).onclick = closeModal; });
+  api('/api/update/seen', {}).catch(() => {});
+}
+// the sidebar's What's new: every version in CHANGELOG.md as a timeline (newest first; yours marked; a newer one on
+// GitHub on top with its Update button), and above it the planned versions from docs/plans.md. Old ones are folded.
+function changelogSections(text) {
+  const out = [], re = /^## +(\d+(?:\.\d+){1,3})\b(.*)$/gm, heads = [...String(text || '').replace(/\r/g, '').matchAll(re)];
+  heads.forEach((m, i) => {
+    const rest = m[2].replace(/^\s*-\s*/, '').split(/\s+-\s+/);
+    out.push({version: m[1], date: rest.length > 1 ? rest[0] : '', title: rest.length > 1 ? rest.slice(1).join(' - ') : rest[0],
+              body: m.input.slice(m.index + m[0].length, i + 1 < heads.length ? heads[i + 1].index : undefined).trim()});
+  });
+  return out;
+}
+async function newsModal() {
+  let local = [], u = {}, plans = [];
+  try { local = changelogSections((await api('/api/text?path=CHANGELOG.md')).text); } catch (e) { toast(e.message, 'err'); return; }
+  try { plans = changelogSections((await api('/api/text?path=docs/plans.md')).text).map(s => ({...s, date: ''})); } catch (e) { /* no plans file */ }
+  try { u = await api('/api/update'); } catch (e) { /* offline: the local history is enough */ }
+  const have = new Set(local.map(s => s.version));
+  const upcoming = u.can_update && u.kind === 'version' ? changelogSections(u.whats_new).filter(s => !have.has(s.version)) : [];
+  const item = (s, cls, open, badge) => `<details class="tl-item ${cls}" ${open ? 'open' : ''}><summary><span class="tl-ver">${esc(s.version)}</span>
+      ${s.date ? `<span class="tl-date">${esc(s.date)}</span>` : ''}<span class="tl-title">${esc(s.title)}</span>${badge ? `<span class="tl-badge">${badge}</span>` : ''}</summary>
+      <div class="md small">${md(s.body)}</div></details>`;
+  modal(`<div class="row sp"><h2 style="margin:0">What's new in MotionLab</h2><span class="small muted">you have ${esc(PAGE_VERSION)}</span></div>
+    <div class="tline">${plans.length ? '<div class="tl-sec">Planned</div>' + plans.map(s => item(s, 'plan', false, 'planned')).join('') + '<div class="tl-sec">Released</div>' : ''}
+      ${upcoming.map(s => item(s, 'new', true, 'on GitHub - not installed yet')).join('')}
+      ${local.map((s, i) => item(s, s.version === PAGE_VERSION ? 'cur' : '', i === 0 && !upcoming.length || s.version === PAGE_VERSION,
+                                 s.version === PAGE_VERSION ? 'your version' : '')).join('')}</div>
+    <div class="row" style="justify-content:flex-end;margin-top:10px">${upcoming.length ? '<button class="btn pri" data-up>Update now</button>' : ''}<button class="btn" data-close>Close</button></div>`,
+  el => { $('[data-close]', el).onclick = closeModal; const b = $('[data-up]', el); if (b) b.onclick = () => { closeModal(); updateNow(); }; });
 }
 async function updateNow() {
   overlay('Updating MotionLab from GitHub…');
   try {
     const r = await api('/api/update/apply', {});
-    if (r.updated) { RELOADING = false; waitForServer('Restarting MotionLab with the new version…'); }
-    else { $('#overlay').hidden = true; toast('Already up to date', 'ok'); route(); }
+    if (r.updated && r.restart !== false) { RELOADING = false; waitForServer('Restarting MotionLab with the new version…'); }
+    else if (r.updated) { $('#overlay').hidden = true; route(); ping(); whatsNewModal(r); }
+    else { $('#overlay').hidden = true; toast('Already up to date', 'ok'); route(); ping(); }
   } catch (e) { $('#overlay').hidden = true; toast(e.message, 'err'); }
 }
 
@@ -1231,7 +1313,8 @@ async function pageSettings(main) {
     <table class="t tools"><thead><tr><th>Program</th><th></th><th>Found at</th><th>Version</th><th>What for · how to get it</th></tr></thead><tbody>
     ${S.tools.map(t => `<tr><td><b>${esc(t.label)}</b><div class="need">${esc(t.need)}</div></td>
       <td class="st">${t.found ? '<span class="tag done">found</span>' : `<span class="tag ${t.need === 'required' ? 'failed' : ''}">missing</span>`}</td>
-      <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}</td><td class="small muted">${esc(t.how)}</td></tr>`).join('')}
+      <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}</td><td class="small muted">${esc(t.how)}${t.name === 'hyperframes' && (!t.found || /not downloaded/.test(t.version || ''))
+        ? ((S.tools.find(x => x.name === 'node') || {}).found ? ' <button class="btn sm" data-hfinst>Install</button>' : ' <b>Install Node.js first.</b>') : ''}</td></tr>`).join('')}
     </tbody></table></div>
   <div class="grid g2" style="margin-top:14px">
     <div class="panel"><h2>Downloads (yt-dlp)</h2><div class="form">
@@ -1244,7 +1327,12 @@ async function pageSettings(main) {
       <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
       <span></span><div class="small muted">How hard Claude thinks in the windows the app opens. Higher = more careful, slower, and it uses more of
-        your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div></div>
+        your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div>
+      <label>DaVinci Resolve</label><div>${(S.resolve_mcp || {}).registered
+          ? `<span class="ok">Claude Code can look into DaVinci Resolve</span> <span class="small muted">(MCP ${esc(S.resolve_mcp.version || '')}, this PC, safe mode on)</span> <button class="btn sm" data-rmcp="resolve_mcp_remove">Disconnect</button>`
+          : `<button class="btn sm" data-rmcp="resolve_mcp_install">Connect Claude Code to DaVinci Resolve (MCP)</button>`}
+        <div class="small muted">Optional, needs Resolve Studio and Node.js. Claude can then read your open project (timelines, clips, markers)
+          in a chat; it asks before changing anything there, and the lab's own Resolve builder still makes the rebuilds. New chats pick it up.</div></div></div>
       <div class="small muted" style="margin-top:10px">The review of every contact sheet, learning from your feedback and the rebuilds
       run in Claude Code; the app opens it in the lab folder with the exact request, so Claude starts working right away.</div>
       <div class="row" style="margin-top:10px">${claudeBtn('', 'Open Claude Code in the lab folder')}<button class="btn sm" data-tips>Tips for working with Claude</button></div></div>
@@ -1257,8 +1345,10 @@ async function pageSettings(main) {
       <label>GitHub</label><div class="small">${S.update && S.update.remote ? `<span class="mono">${esc(S.update.remote)}</span> · branch ${esc(S.update.branch || '')}` : `<span class="muted">${esc((S.update && S.update.error) || 'not checked yet')}</span>`}
         ${S.update && S.update.checked ? `<div class="dim">checked ${esc(S.update.checked)} · ${S.update.can_update ? `<b class="amber">${S.update.behind} update(s) waiting</b>` : 'up to date'}${S.update.ahead ? ` · ${S.update.ahead} of your commits not on GitHub yet` : ''}</div>` : ''}</div>
       <label>Updates</label><div class="col" style="gap:4px">
-        <label class="chk small"><input type="checkbox" id="upc" ${st.update_check ? 'checked' : ''}> check GitHub for a new version when MotionLab starts</label>
-        <label class="chk small"><input type="checkbox" id="upa" ${st.update_auto ? 'checked' : ''}> install it right away (your videos, analyses, settings and knowledge are never touched)</label></div>
+        <label class="chk small"><input type="radio" name="upm" value="ask" ${st.update_mode === 'ask' ? 'checked' : ''}><span>show the <b>Update available</b> button with what's new and wait for my click (recommended)</span></label>
+        <label class="chk small"><input type="radio" name="upm" value="auto" ${st.update_mode === 'auto' ? 'checked' : ''}><span>install new versions by itself when MotionLab starts, then show what's new</span></label>
+        <label class="chk small"><input type="radio" name="upm" value="off" ${st.update_mode === 'off' ? 'checked' : ''}><span>don't look for updates (<i>Check now</i> still works)</span></label>
+        <div class="small muted">An update never touches your videos, analyses, verdicts, settings or knowledge.</div></div>
       <span></span><div class="row"><button class="btn sm" id="upcheck">Check now</button>${S.update && S.update.can_update ? '<button class="btn sm pri" data-update>Update now</button>' : ''}</div>
       ${S.update && S.update.git && !S.update.repo ? `<label for="conn">Connect to GitHub</label><div><div class="row"><input type="text" id="conn" placeholder="https://github.com/name/MotionLab" style="max-width:360px"><button class="btn sm" id="connb">Connect</button></div>
         <div class="small muted">This copy was not installed with git clone. Connecting turns on updates and sharing; only the app's own files are replaced by the repo's version.</div></div>` : ''}
@@ -1271,10 +1361,22 @@ async function pageSettings(main) {
       <div class="row" style="margin-top:10px"><button class="btn" data-open=".">Open the lab folder</button></div></div>
   </div>`;
   $('#recheck').onclick = () => route();
+  const hfb = $('[data-hfinst]', main); if (hfb) hfb.onclick = async () => {
+    hfb.disabled = true;
+    try { await startJob('overlays_install', {}); } catch (e) { toast(e.message, 'err'); hfb.disabled = false; }
+  };
+  $$('[data-rmcp]', main).forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try { await startJob(b.dataset.rmcp, {}); } catch (e) { toast(e.message, 'err'); b.disabled = false; }
+  });
   wireUpdateBox(main);
   $('#upcheck').onclick = async () => {
     const b = $('#upcheck'); b.disabled = true; b.textContent = 'Checking…';
-    try { const u = await api('/api/update/check', {}); toast(u.error ? u.error : u.can_update ? `${u.behind} update(s) available` : 'Up to date', u.error ? 'err' : 'ok'); route(); }
+    try {
+      const u = await api('/api/update/check', {});
+      toast(u.error ? u.error : u.can_update ? (u.kind === 'version' ? `MotionLab ${u.new_version} is available` : `${plural(u.behind, 'change')} on GitHub`) : 'Up to date', u.error ? 'err' : 'ok');
+      route(); ping();
+    }
     catch (e) { toast(e.message, 'err'); b.disabled = false; b.textContent = 'Check now'; }
   };
   const cb = $('#connb'); if (cb) cb.onclick = async () => {
@@ -1286,8 +1388,8 @@ async function pageSettings(main) {
       await api('/api/settings', {settings: {ytdlp_path: $('#ytp').value, download_preset: $('#pre').value,
                                              download_name: $('#nm').value, claude_path: $('#clp').value,
                                              claude_effort: $('#cle').value,
-                                             author: $('#who').value, update_check: $('#upc').checked,
-                                             update_auto: $('#upa').checked}});
+                                             author: $('#who').value,
+                                             update_mode: ($('input[name=upm]:checked') || {}).value || 'ask'}});
       $('#sv').textContent = 'saved ✓'; toast('Settings saved', 'ok'); setTimeout(route, 500);
     } catch (e) { toast(e.message, 'err'); }
   };
@@ -1394,3 +1496,5 @@ async function cardModal(c) {
 }
 
 route();
+// after an update the restarted window shows once what came in (the CHANGELOG sections between the two versions)
+api('/api/update').then(u => { const r = u && u.result; if (r && r.updated && !r.seen) whatsNewModal(r); }).catch(() => {});

@@ -9,3 +9,4 @@ soundfile==0.14.0
 scenedetect==0.7.1
 matplotlib==3.11.2
 pillow==12.3.0
+mcp==1.30.0

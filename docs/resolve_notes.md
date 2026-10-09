@@ -32,6 +32,14 @@ care and test in a scratch project.
   `C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\MotionLab\<project>\` (outside the lab: ask the user
   once before the first build on a PC - the original user approved it on theirs).
   For `"levels": "double"` plans they include the old caches' extra tv->full step (Resolve decodes correctly).
+  Clips from colour caches (plan source `"format": "i420"`, 0.3.0) get colour LUTs (key suffix `_c`: levels per
+  channel + the grade's `"saturation"`, checked against compose to 1e-6); grey plans keep their B&W LUTs (byte-
+  identical to before). The lab stills (strips, mosaic wall) are written in colour when their tiles are.
+- Overlays (plan layer `"overlay"`, 0.3.0): the HyperFrames clip (`tools\overlay.py`: ProRes 4444 + alpha, Rec.709
+  tags - HyperFrames' own MOV is BT.601 untagged, so the lab encodes it) is imported into the bin "Overlays" and
+  appended as a plain clip (unit kind `"media"`, clip colour Pink) on its own track; Alpha mode set to Straight;
+  composite mode Screen / Add for light. No Fusion. `--doctor` / `--diff` check placement, length and composite
+  mode. Not yet run inside Resolve (written 2026-10-09 without Resolve open): test in the scratch project first.
 - Drift check: the manifest + `comps\imported\<sha1>.comp` record exactly what each timeline got; `--diff` compares
   every comp input (static ones at first/middle/last frame, keyed ones on every frame), connections, expressions,
   added/deleted tools, Edit-page transform, in-point, LUT, extra Color nodes, opacity/composite/enabled, missing or
@@ -47,6 +55,20 @@ care and test in a scratch project.
 - Hand edits in Resolve are the user's: never overwrite them silently (`--diff` first); good ones become knowledge.
 - Option 2 per section: `resolve_build.py <plan> --replace`, then per section `--render A B` + `compare_renders.py`
   against the lab render, then `--render-full` + `verify_timing.py <timeline>`.
+
+## Resolve MCP (optional, 0.3.0): Claude Code talking to the open Resolve
+- What: the community server samuelgursky/davinci-resolve-mcp (MIT), pinned (`tools\resolve_mcp.py` PINNED, 4.9.2 on
+  2026-10-09), 37 compound tools over the scripting API. Set up per PC: Settings > Claude Code > DaVinci Resolve, or
+  `tools\resolve_mcp.py install | status | remove`. Its own venv in `%LOCALAPPDATA%\davinci-resolve-mcp`; registered
+  with Claude Code at **local** scope (this folder, this Windows user - never in the repo); no self-updates; safe
+  mode on (high-risk actions refused unless explicitly allowed, one-time confirm tokens), audit and operation logs in
+  `.app\resolve_mcp\`. Its tools are named `mcp__davinci-resolve__*`; they appear in chats started after the setup.
+- Use it to LOOK: what is on the user's timeline, clip properties, markers, render settings, quick checks after a
+  build (next to `--doctor`), answers to "what did I do in Resolve". Small changes only when the user asks for them
+  in that chat, and on a duplicate timeline when in doubt.
+- Do NOT: rebuild a plan with it (`resolve_build.py` keeps manifests, LUTs, comps and the drift check); change the
+  user's projects or hand edits unasked; pass `allow_risky_operation` or `acknowledge_trap` (CopyGrades destroys
+  grades) without the user's explicit OK; point it at source media (read-only, hard rule 1).
 
 ## library.py (the effect library: Fusion macros + recipes)
 `library.py build [effect ...]` writes `library\` (macros from the `fx_*` builders + recipes from `META` /

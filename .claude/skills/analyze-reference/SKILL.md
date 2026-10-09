@@ -45,8 +45,11 @@ previews, and writes `report.html`, `events.json`, `metrics.csv`, `overview.png`
 per-frame metrics cache (use after config changes); `--force` recomputes everything.
 
 ## 2. Review EVERY event (the pipeline's types are drafts until you have looked)
-Open `analysis\<name>\review_todo.md`. For **each** event, in order:
-1. **Read every contact sheet** listed for it (Read tool on each `events\<ID>\sheet_NN.jpg`). Tiles are labelled
+Open `analysis\<name>\review_todo.md`. With the `motionlab` MCP tools (0.3.0; `mcp__motionlab__*`), use them instead
+of reading files: `events` (one line per event, filters by type / frames / unreviewed), `event` (evidence + auto
+draft of one), `sheet` (its contact sheet as a picture), `frames` (any frames, e.g. around a possible miss) - never
+read the whole `events.json` (~0.7 MB). For **each** event, in order:
+1. **Read every contact sheet** listed for it (`sheet`, or the Read tool on each `events\<ID>\sheet_NN.jpg`). Tiles are labelled
    with frame number, timecode and a per-frame measurement (L = luma %, xN = scale per frame, %B = transition
    progress, Npx = RGB offset, %/f = motion speed, =N = repeats frame N). Yellow border = effect frames, grey =
    3 padding frames. CUT / BEAT / BAR / DROP flags mark cuts, beats, bar starts and drops.

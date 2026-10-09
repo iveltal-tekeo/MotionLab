@@ -24,9 +24,12 @@
   <symbol id="i-knowledge" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.9 7.6-3.8M8.2 13.1l7.6 3.8"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></symbol>
+  <symbol id="i-news" viewBox="0 0 24 24"><circle cx="6" cy="5.5" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="18.5" r="1.6"/><path d="M6 7.1v3.3M6 13.6v3.3M10.5 5.5H20M10.5 12H18M10.5 18.5H16"/></symbol>
+  <symbol id="i-update" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16.5V7.8M8.3 11.3 12 7.6l3.7 3.7"/></symbol>
 </svg>
 <nav id="side">
   <a class="logo" href="#/"><img src="/ui/logo.png" alt="MotionLab"></a>
+  <button class="upd-open" id="side-update" hidden title="See what changed and update"><svg class="ic"><use href="#i-update"/></svg><span><b>Update available</b><small></small></span></button>
   <a href="#/" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
   <a href="#/refs" data-nav="refs" title="Videos by others that the lab breaks down"><svg class="ic"><use href="#i-refs"/></svg>References</a>
   <a href="#/projects" data-nav="projects" title="Your own footage, edited in a reference's style"><svg class="ic"><use href="#i-videos"/></svg>Videos</a>
@@ -34,8 +37,9 @@
   <a href="#/knowledge" data-nav="knowledge" title="What everyone has learned: reference cards, pacing per category, lessons - and sharing"><svg class="ic"><use href="#i-knowledge"/></svg>Knowledge</a>
   <a href="#/jobs" data-nav="jobs"><svg class="ic"><use href="#i-jobs"/></svg>Jobs <b id="jobcount"></b></a>
   <a href="#/storage" data-nav="storage"><svg class="ic"><use href="#i-storage"/></svg>Storage</a>
-  <a href="#/settings" data-nav="settings"><svg class="ic"><use href="#i-settings"/></svg>Settings <i class="updot" hidden title="an update is available"></i></a>
+  <a href="#/settings" data-nav="settings"><svg class="ic"><use href="#i-settings"/></svg>Settings</a>
   <div class="grow"></div>
+  <button class="news-open" id="side-news" title="Every MotionLab version and what it changed (CHANGELOG.md)"><svg class="ic"><use href="#i-news"/></svg>What's new</button>
   <button class="claude-open" id="side-claude" title="Open Claude Code in the lab folder (reviews, feedback, rebuilds)"><svg class="ic"><use href="#i-claude"/></svg>Open Claude Code</button>
   <div id="resolve-state" title="DaVinci Resolve">Resolve <i class="dot"></i> <span>...</span></div>
   <div class="ver">MotionLab {{VERSION}}</div>

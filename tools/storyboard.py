@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from motionlab import footage as FC  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
 from motionlab.probe import probe  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
@@ -104,12 +105,12 @@ def main() -> int:
     out = prj.check(prj.build / "boards")
     out.mkdir(parents=True, exist_ok=True)
     for sid in sorted(prj.manifest()["sources"]):
-        if not (prj.cache / f"{sid}.json").exists():
+        if not any(FC.paths(prj.cache, sid, c)[1].exists() for c in (True, False)):
             continue
-        m, arr, st = load_cache(prj, sid)
+        m, arr, st = load_cache(prj, sid)                      # the colour cache when there is one
         end = m["frames"] - 1 if a.end is None else min(a.end, m["frames"] - 1)
         idx = list(range(a.start, end + 1, a.every))
-        tiles = [(np.asarray(arr[i]), f"{sid} f{i}  {frame_to_tc(i, m['fps'])}") for i in idx]
+        tiles = [(FC.image(m, arr, i), f"{sid} f{i}  {frame_to_tc(i, m['fps'])}") for i in idx]
         title = f"{sid} = {m['name']}  ({m['frames']} f @ {m['fps']:g} fps = {m['frames'] / m['fps']:.1f}s)"
         for p in make_sheets(tiles, out, f"{sid}", title, a.cols, a.tile):
             print(p)

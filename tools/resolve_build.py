@@ -174,16 +174,19 @@ def norm_center(x, y, w, h, CW, CH):
 
 # ================================================================================================= LUTs
 class Luts:
-    """One 3D .cube per (grade, gain, flash) the edit needs: B&W from Rec.709 luma, the lab cache's extra
-    tv->full step, levels / gamma / output range (compose.grade_lut), gain, flash. Masters go to build\\resolve\\luts;
-    a copy goes to Resolve's LUT folder so the Color page can use them."""
+    """One 3D .cube per (grade, gain, flash) the edit needs: B&W from Rec.709 luma for grey plans (test_4am) or per
+    channel + saturation for clips from colour caches (key suffix _c; compose.grade_parts / saturate), the lab
+    cache's extra tv->full step, levels / gamma / output range (compose.grade_lut), gain, flash. Masters go to
+    build\\resolve\\luts; a copy goes to Resolve's LUT folder so the Color page can use them."""
 
-    def __init__(self, grades: dict, out_dir: Path, resolve_sub: str, double_levels: bool = False):
+    def __init__(self, grades: dict, out_dir: Path, resolve_sub: str, double_levels: bool = False,
+                 sources: dict | None = None):
         self.grades = grades
         self.double = double_levels
         self.dir = out_dir
         self.sub = resolve_sub
         self.rdir = RESOLVE_LUTS / resolve_sub
+        self.sources = sources or {}                   # plan["sources"]: "format" i420 = a colour cache
         self.made: dict[str, Path] = {}
 
     @staticmethod
@@ -197,19 +200,28 @@ class Luts:
             k += "_fw"
         return k
 
-    def get(self, grade: str, gain: float = 1.0, flash_over: float = 0.0, flash_white: bool = False) -> str:
-        k = self.key(grade, gain, flash_over, flash_white)
+    def get(self, grade: str, gain: float = 1.0, flash_over: float = 0.0, flash_white: bool = False,
+            src: str | None = None) -> str:
+        """The LUT key for a clip of source `src` (a colour cache gets a colour LUT) with this grade / gain / flash."""
+        color = bool(src) and self.sources.get(src, {}).get("format") == "i420"
+        k = self.key(grade, gain, flash_over, flash_white) + ("_c" if color else "")
         if k not in self.made:
             g = {"black": 40, "white": 245, "gamma": 1.5, "out_black": 0.03, "out_white": 0.85, **self.grades[grade]}
             n = 65
             a = np.linspace(0.0, 1.0, n)
             B, Gg, R = np.meshgrid(a, a, a, indexing="ij")             # .cube order: red changes fastest
-            Y = 0.2126 * R + 0.7152 * Gg + 0.0722 * B
-            c = 255.0 * Y
+            if color:
+                c = 255.0 * np.stack([R, Gg, B], axis=-1)             # per channel, as compose grades RGB
+            else:
+                Y = 0.2126 * R + 0.7152 * Gg + 0.0722 * B
+                c = 255.0 * Y
             if self.double:                                            # the old lab cache's second tv->full step
                 c = np.clip((c - 16.0) * 255.0 / 219.0, 0.0, 255.0)
             x = np.clip((c - g["black"]) / max(1.0, g["white"] - g["black"]), 0.0, 1.0)
             v = g["out_black"] + (g["out_white"] - g["out_black"]) * x ** g["gamma"]
+            if color and float(g.get("saturation", 1.0)) != 1.0:      # compose.saturate (Rec.709 luma)
+                y = (v * np.array([0.2126, 0.7152, 0.0722])).sum(axis=-1, keepdims=True)
+                v = y + (v - y) * float(g["saturation"])
             v = np.minimum(1.0, v * gain)
             if flash_over:
                 v = v + flash_over * (1.0 - v)
@@ -219,9 +231,12 @@ class Luts:
             self.dir.mkdir(parents=True, exist_ok=True)
             with open(p, "w", newline="\n") as f:
                 f.write(f'TITLE "MotionLab {k}"\n# grade {grade} {json.dumps(g)} gain {gain:g} flash_over '
-                        f'{flash_over:g} flash_white {flash_white}\nLUT_3D_SIZE {n}\nDOMAIN_MIN 0 0 0\n'
-                        f'DOMAIN_MAX 1 1 1\n')
-                f.write("\n".join(f"{t:.6f} {t:.6f} {t:.6f}" for t in v.ravel()))
+                        f'{flash_over:g} flash_white {flash_white}{" colour" if color else ""}\n'
+                        f'LUT_3D_SIZE {n}\nDOMAIN_MIN 0 0 0\nDOMAIN_MAX 1 1 1\n')
+                if color:
+                    f.write("\n".join(f"{r:.6f} {gg:.6f} {b:.6f}" for r, gg, b in np.clip(v, 0, 1).reshape(-1, 3)))
+                else:
+                    f.write("\n".join(f"{t:.6f} {t:.6f} {t:.6f}" for t in v.ravel()))
                 f.write("\n")
             self.made[k] = p
         return k
@@ -257,8 +272,8 @@ class Unit:
     order: float
     a: int
     b: int
-    kind: str                      # "clip" (Edit-page pieces) or "comp" (Fusion comp on a carrier)
-    pieces: list = field(default_factory=list)
+    kind: str                      # "clip" (Edit-page pieces), "comp" (Fusion comp on a carrier) or "media" (a
+    pieces: list = field(default_factory=list)          # rendered clip, e.g. a HyperFrames overlay - no Fusion)
     builder: tuple | None = None   # (function, args) that returns the Comp
     composite: str = "normal"
     color: str = ""
@@ -266,6 +281,8 @@ class Unit:
     track: int = 0
     comp: Comp | None = None
     comp_path: Path | None = None
+    media: str = ""                # kind "media": the clip file and its first frame
+    src_in: int = 0
 
 
 class Ctx:
@@ -406,7 +423,7 @@ def panel(fb: FB, L: dict, bg: str, CW: int, CH: int, dx: float = 0.0, name: str
     ts = fb.add("TimeStretcher", f"{lid}_time", Input=Conn(src), SourceTime=Spline(source_time_keys(L, ctx)),
                 InterpolateBetweenFrames=0)
     gain = float(L.get("gain", 1.0))
-    lut = ctx.luts.get(L.get("grade", "default"), gain)
+    lut = ctx.luts.get(L.get("grade", "default"), gain, src=L["src"])
     img = fb.add("FileLUT", f"{lid}_grade", Input=Conn(ts), LUTFile=ctx.luts.file_path(lut))
     fo = {int(k): float(v) for k, v in L.get("flash_over", {}).items()}
     fw = set(int(v) for v in L.get("flash_white", []))
@@ -745,6 +762,7 @@ def lab_assets(plan: dict, out_dir: Path, refresh: bool = False) -> dict:
                                    "levels": plan.get("levels", "single"), "bg": plan.get("background", 0.045),
                                    "size": [plan["width"], plan["height"]],
                                    "sources": {k: [s["frames"], s["width"], s["height"]]
+                                               + ([s["format"]] if s.get("format", "gray") != "gray" else [])
                                                for k, s in plan["sources"].items()}},
                                   sort_keys=True).encode()).hexdigest()
     index = out_dir / "stills.json"
@@ -769,8 +787,8 @@ def lab_assets(plan: dict, out_dir: Path, refresh: bool = False) -> dict:
 
     def write(p: Path, img: np.ndarray):
         import cv2
-        a16 = (np.clip(img, 0, 1) * 65535 + 0.5).astype(np.uint16)
-        cv2.imwrite(str(p), np.dstack([a16, a16, a16]))
+        a16 = (np.clip(img, 0, 1) * 65535 + 0.5).astype(np.uint16)          # grey (h, w) or colour (h, w, RGB)
+        cv2.imwrite(str(p), np.ascontiguousarray(a16[..., ::-1]) if a16.ndim == 3 else np.dstack([a16, a16, a16]))
 
     for lay in R.layers:
         if isinstance(lay, StripLayer):
@@ -978,7 +996,7 @@ def clip_pieces(L: dict, ctx: Ctx) -> list:
     for p0, p1 in zip(cuts, cuts[1:]):
         p1 -= 1
         flash = p0 == p1 and (p0 in fo or p0 in fw)
-        lut = ctx.luts.get(grade, gain, fo.get(p0, 0.0) if flash else 0.0, flash and p0 in fw)
+        lut = ctx.luts.get(grade, gain, fo.get(p0, 0.0) if flash else 0.0, flash and p0 in fw, src=L["src"])
         label = L["id"] + (f" flash f{p0}" if flash else "")
         out.append(Piece(p0, p1, L["src"], int(src_frame(p0)), hold and p1 > p0, lut, props, label))
     return out
@@ -1032,6 +1050,13 @@ def make_units(plan: dict, ctx: Ctx, sections: set) -> list:
         elif t == "firework":
             comp_unit(L, i, by_type, (t, L), "firework (Fusion particles), composite mode Screen",
                       composite="screen")
+        elif t == "overlay":
+            if L.get("rect"):
+                raise NotImplementedError(f"{L['id']}: overlay 'rect' (scaled / moved) has no Resolve builder yet - "
+                                          "render the overlay at the plan's size instead")
+            units.append(Unit(L["id"], i, a, b, "media", composite=L.get("blend", "normal"), color="Pink",
+                              note="HyperFrames overlay (ProRes 4444 + alpha), a plain clip - no Fusion",
+                              media=str(L["file"]), src_in=int(L.get("in", 0))))
         else:
             comp_unit(L, i, by_type, (t, L), f"{t} (Fusion)")
     mg = plan.get("master_gain")
@@ -1445,7 +1470,7 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
     rdir = build_dir / "resolve"
     W, H, fps, N = int(plan["width"]), int(plan["height"]), float(plan["fps"]), int(plan["frames"])
     luts = Luts(plan.get("grades", {}), rdir / "luts", f"MotionLab/{sess.pname}",
-                double_levels=plan.get("levels", "single") == "double")
+                double_levels=plan.get("levels", "single") == "double", sources=plan.get("sources", {}))
     ctx = Ctx(plan, luts)
     # ------------------------------------------------------------------ media (originals, read-only)
     carrier = rdir / "media" / f"carrier_bg_{W}x{H}_{fps:g}fps.mov"
@@ -1463,6 +1488,16 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
     car = sess.media(carrier, "Carriers")
     # ------------------------------------------------------------------ units, LUTs, comps
     units = make_units(plan, ctx, sections)
+    ovl = {}
+    for u in units:                                  # rendered overlay clips (HyperFrames): plain media, no Fusion
+        if u.kind == "media":
+            it = ovl[u.name] = sess.media(Path(u.media), "Overlays")
+            frames = int(it.GetClipProperty()["Frames"])
+            if u.src_in + (u.b - u.a + 1) > frames:
+                raise SystemExit(f"{u.name}: f{u.a}-{u.b} needs {u.b - u.a + 1} frames from frame {u.src_in} of "
+                                 f"{Path(u.media).name}, which has {frames}")
+            if not it.SetClipProperty("Alpha mode", "Straight"):
+                log(f"  note {u.name}: Resolve did not take 'Alpha mode = Straight' (check Clip Attributes)")
     if any(L["type"] in ("strip", "mosaic") and (not sections or section_of(int(L["start"])) in sections)
            for L in plan["layers"]):
         ctx.assets = lab_assets(plan, rdir / "media" / "stills", refresh_stills)
@@ -1539,6 +1574,16 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
                 it.SetName(pc.label)
                 if pc.label != u.name:
                     it.SetClipColor("Yellow")
+        elif u.kind == "media":
+            n = u.b - u.a + 1
+            it = sess.append(ovl[u.name], u.src_in, u.src_in + n, u.track, u.a)
+            if it.GetStart() != u.a or it.GetDuration() != n:
+                raise RuntimeError(f"{u.name}: overlay placed at {it.GetStart()}+{it.GetDuration()}, wanted {u.a}+{n}")
+            it.SetName(u.name)
+            modes = {"screen": sess.r.COMPOSITE_SCREEN, "add": sess.r.COMPOSITE_ADD}
+            if u.composite in modes and not it.SetProperties({"CompositeMode": modes[u.composite]}):
+                raise RuntimeError(f"{u.name}: composite mode {u.composite} refused")
+            it.SetClipColor(u.color)
         else:
             it = sess.append(car, u.a, u.b + 1, u.track, u.a)
             if it.GetStart() != u.a or it.GetDuration() != u.b - u.a + 1:
@@ -1560,6 +1605,8 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
                            "start_tc": frame_to_tc(u.a, fps), "end_tc": frame_to_tc(u.b, fps), "note": u.note,
                            **({"composite": u.composite, "comp_sha1": comp_sha1(u.comp_path)}
                               if u.kind == "comp" else {}),
+                           **({"composite": u.composite, "media": u.media, "src_in": u.src_in}
+                              if u.kind == "media" else {}),
                            "clips": [{"start": p.a, "end": p.b, "src": p.src, "dji_frame": p.frame, "hold": p.hold,
                                       "lut": p.lut, "transform": {k: round(v, 4) for k, v in p.props.items()}}
                                      for p in u.pieces]} for u in units],
@@ -1617,7 +1664,13 @@ def doctor(sess: Session, plan: dict, plan_path: Path) -> int:
                 at = {(t, int(it.GetStart())): it for t, it in sess.items()}
                 bad = []
                 for u in man["units"]:
-                    if u["kind"] == "comp":
+                    if u["kind"] == "media":
+                        it = at.get((u["track"], u["start"]))
+                        if not it or it.GetName() != u["name"] or int(it.GetDuration()) != u["end"] - u["start"] + 1:
+                            bad.append(f"{u['name']} (f{u['start']} {u['start_tc']})")
+                        if not Path(u["media"]).exists():
+                            bad.append(f"{Path(u['media']).name} missing")
+                    elif u["kind"] == "comp":
                         it = at.get((u["track"], u["start"]))
                         if not it or it.GetName() != u["name"] or (it.GetFusionCompCount() or 0) < 1:
                             bad.append(f"{u['name']} (f{u['start']} {u['start_tc']})")
@@ -1789,11 +1842,21 @@ def drift(sess: Session, plan_path: Path, export_dir: Path | None = None, units:
         if composite is not None and it.GetProperty("CompositeMode") != composite:
             add(u, a, b, track, "composite mode", composite, it.GetProperty("CompositeMode"))
 
-    modes = {"normal": 0, "screen": sess.r.COMPOSITE_SCREEN, "linear_light": sess.r.COMPOSITE_LINEAR_LIGHT}
+    modes = {"normal": 0, "screen": sess.r.COMPOSITE_SCREEN, "linear_light": sess.r.COMPOSITE_LINEAR_LIGHT,
+             "add": sess.r.COMPOSITE_ADD}
     for u in man["units"]:
         if units and u["name"] not in units:
             continue
         beat(f"drift: {u['name']}")
+        if u["kind"] == "media":                         # an overlay clip: placement, length, composite mode
+            a, b, track = u["start"], u["end"], u["track"]
+            it = at.get((track, a))
+            seen.add((track, a))
+            if not it or it.GetName() != u["name"]:
+                add(u["name"], a, b, track, "item", f"V{track} f{a}", "moved or missing")
+                continue
+            item_checks(u["name"], it, track, a, b, modes.get(u.get("composite", "normal")))
+            continue
         if u["kind"] == "comp":
             a, b, track = u["start"], u["end"], u["track"]
             it = at.get((track, a))

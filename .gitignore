@@ -35,3 +35,6 @@ __pycache__/
 # --- Windows
 Thumbs.db
 desktop.ini
+
+# --- overlays: Node packages (setup.bat runs npm ci from package-lock.json)
+/tools/overlays/node_modules/

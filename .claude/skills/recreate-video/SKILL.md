@@ -17,7 +17,9 @@ story, length and music) is planned for v0.5 - say so if the user asks for it, a
 1. Hard rules (CLAUDE.md): the user's clips and the reference are read-only; everything you make goes into
    `projects\<project>\build\`. Every frame you mention to the user: frame number + timecode, e.g. `f480 (00:00:19:05)`.
 2. The reference: `analysis\<ref>\events.json` - reviewed events (`events[i].final`: type, what, timing, easing,
-   rebuild), `hard_cuts`, `shots`, `audio` (bpm, beats, drops), `video` (fps, frames, size). The user's verdicts and
+   rebuild), `hard_cuts`, `shots`, `audio` (bpm, beats, drops), `video` (fps, frames, size). With the `motionlab` MCP
+   tools use `events` / `event` / `frame_info` / `verdicts` / `project` / `stills` instead of reading the big JSON
+   files and image files one by one. The user's verdicts and
    notes in `analysis\<ref>\feedback\verdicts.json` win over Claude's review (WRONG / PARTLY notes say what is
    really there). If the reference was never reviewed by Claude (no `review` on the events), say so: rebuilding
    unreviewed drafts copies their mistakes - suggest `/analyze-reference` first.
@@ -31,8 +33,10 @@ story, length and music) is planned for v0.5 - say so if the user asks for it, a
 
 ## 1. The footage
 - `tools\prep_footage.py <project>` decodes each clip once into `build\cache\` (IDs A, B, ... + SHA-256 in
-  `build\sources.json`, per-frame luma / motion / sharpness / pan stats). About 2.6 GB per minute of footage: check
-  free space first (the app's Storage page / `tools\storage.py`).
+  `build\sources.json`, per-frame luma / motion / sharpness / pan stats): **colour** caches by default (~3.9 GB per
+  minute of footage), `--grey` for a black-and-white edit (~2.6 GB, like test_4am). It refuses to start when less
+  than 2 GB would stay free (the app's Storage page / `tools\storage.py` make room). Cache formats:
+  `tools\motionlab\footage.py`.
 - `tools\storyboard.py <project>` -> `build\boards\` (one frame per second, frame + timecode). Look at every board
   and note what each clip offers (subject, motion, light, framing).
 - Levels: `prep_footage.py` caches expand video range once (cache meta `"levels": "single"`). Plans say which caches
@@ -46,16 +50,35 @@ story, length and music) is planned for v0.5 - say so if the user asks for it, a
 
 ## 3. The edit
 - Write `build\edit_v1.py` -> `build\plan_v1.json`: the reference's fps, frame count and audio (same song: frame
-  numbers = the reference's frame numbers), one layer per shot / graphic / effect.
+  numbers = the reference's frame numbers), one layer per shot / graphic / effect. `plan["sources"] =
+  footage.plan_sources(BUILD)` (colour caches; `color=False` for grey). Grades (`plan["grades"]`): levels / gamma /
+  output range per channel + `"saturation"` (1 = as shot, 0 = black and white) - the Resolve build turns each into
+  the same LUT. test_4am is a grey edit: its grades were tuned on grey caches.
 - Map every reference shot to the user's footage and show the user the mapping as a table (reference shot
   `fA-fB (timecodes)` -> clip ID + in-point -> why it fits). Where the footage has nothing comparable, say so and
   propose the closest option instead of inventing.
 - Check before a full render: `tools\render_video.py build\plan_v1.json --stills 480,1633` or
   `--sheet 0:<last>:25` (rendered frames with numbers), `--range A B` for a part.
 
+## 3b. Graphics = HTML overlays (HyperFrames, since 0.3.0)
+Titles, counters, lower thirds, shapes, glows, light leaks, particles: write them as HTML / CSS / SVG / GSAP, not as
+new compositor or Fusion code. One file serves both the lab render and Resolve (a plain clip, no Fusion to crash).
+1. `tools\overlay.py new build\overlays\<name> --frames N` (the plan's size and fps; N = the frames it shows).
+2. Edit `index.html`, keeping the rules in its header: transparent background, absolute positions in output pixels,
+   animation only on the paused GSAP timeline, times in frames (`F(n)` for tweens, `AT(n)` for jumps that show from
+   frame n), no timers / `Math.random` (`rnd(seed)`). Fonts: system fonts or files in the overlay folder.
+   Geometry of the lab's own looks: `graphics.text_layout` (pixel font) and `graphics.seg_layout` (seven segment)
+   give SVG-ready points; worked examples: `tools\overlays\examples\` (4AM's title and clock).
+3. `tools\overlay.py render <folder>` (prints the plan layer), `tools\overlay.py stills <folder> 0,10,40` and look at
+   those stills (frame + timecode on a checkerboard) - fix, render again.
+4. Plan layer: `{"type": "overlay", "id": ..., "start": f0, "end": f1, "file": "<the .mov>", "blend": "normal"}`
+   (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track.
+Measured on 4AM's title and clock (2026-10-09): same frames as the lab's layers, title within 4/255 (99.9 %).
+
 ## 4. Render and verify
-- `tools\render_video.py build\plan_v1.json` -> `build\<project>_v1.mp4`; `--compare` -> reference | render side by
-  side in `build\compare\` (frame numbers burned in).
+- `tools\render_video.py build\plan_v1.json` -> `build\<project>_v1.mp4` (renders in parallel processes: ~3x
+  faster, `--workers 1` = one process; any frame looks the same alone, in a range or in a chunk); `--compare` ->
+  reference | render side by side in `build\compare\` (frame numbers burned in).
 - Copy and adapt `verify_timing.py` (its key frames from the reference's events.json: cuts, flashes, pop-ins,
   strobes) and report the score.
 - Tell the user: the render path, the shot mapping, the score, what is approximate and why. Their notes become v2

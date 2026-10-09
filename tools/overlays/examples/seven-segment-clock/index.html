@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1520, height=1080">
+<!-- MotionLab overlay example "seven-segment-clock" (4AM clock_intro, plan frames 270-331): 62 frames at 25 fps, 1520 x 1080 px (the plan's frame). Render:
+     .venv\Scripts\python tools\overlay.py render <this folder>
+     Rules: transparent background (never paint html / body / #root); everything absolutely positioned in output
+     pixels; animate only on the paused GSAP timeline below (no CSS animations, timers, Date or Math.random -
+     use rnd(seed) for noise); times in frames with F(n) / AT(n). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1520px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1520px; height: 1080px; overflow: hidden; }
+  .abs { position: absolute; }
+  /* the graphic: */
+
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="2.48" data-width="1520"
+     data-height="1080">
+  <svg id="clock" class="abs" style="left:44px; top:734px" width="672" height="267" viewBox="0 0 672 267"
+       fill="rgb(189,189,189)">
+    <defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence id="noise" type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="1" result="n"/>
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0 0 0 0.55" result="na"/>
+        <feComposite in="SourceGraphic" in2="na" operator="in"/>
+      </filter>
+    </defs>
+    <g id="body" filter="url(#grain)">
+    <g id="t0" opacity="0">
+      <polygon points="26.450,35.650 43.700,18.400 154.100,18.400 171.350,35.650 154.100,52.900 43.700,52.900"/>
+      <polygon points="162.150,43.700 179.400,60.950 179.400,108.100 162.150,125.350 144.900,108.100 144.900,60.950"/>
+      <polygon points="26.450,133.400 43.700,116.150 154.100,116.150 171.350,133.400 154.100,150.650 43.700,150.650"/>
+      <polygon points="162.150,141.450 179.400,158.700 179.400,205.850 162.150,223.100 144.900,205.850 144.900,158.700"/>
+      <polygon points="26.450,231.150 43.700,213.900 154.100,213.900 171.350,231.150 154.100,248.400 43.700,248.400"/>
+      <polygon points="219.650,70.150 254.150,70.150 254.150,104.650 219.650,104.650"/>
+      <polygon points="219.650,162.150 254.150,162.150 254.150,196.650 219.650,196.650"/>
+      <polygon points="302.450,35.650 319.700,18.400 430.100,18.400 447.350,35.650 430.100,52.900 319.700,52.900"/>
+      <polygon points="311.650,43.700 328.900,60.950 328.900,108.100 311.650,125.350 294.400,108.100 294.400,60.950"/>
+      <polygon points="302.450,133.400 319.700,116.150 430.100,116.150 447.350,133.400 430.100,150.650 319.700,150.650"/>
+      <polygon points="438.150,141.450 455.400,158.700 455.400,205.850 438.150,223.100 420.900,205.850 420.900,158.700"/>
+      <polygon points="302.450,231.150 319.700,213.900 430.100,213.900 447.350,231.150 430.100,248.400 319.700,248.400"/>
+      <polygon points="500.250,35.650 517.500,18.400 627.900,18.400 645.150,35.650 627.900,52.900 517.500,52.900"/>
+      <polygon points="635.950,43.700 653.200,60.950 653.200,108.100 635.950,125.350 618.700,108.100 618.700,60.950"/>
+      <polygon points="635.950,141.450 653.200,158.700 653.200,205.850 635.950,223.100 618.700,205.850 618.700,158.700"/>
+      <polygon points="500.250,231.150 517.500,213.900 627.900,213.900 645.150,231.150 627.900,248.400 517.500,248.400"/>
+      <polygon points="509.450,43.700 526.700,60.950 526.700,108.100 509.450,125.350 492.200,108.100 492.200,60.950"/>
+      <polygon points="500.250,133.400 517.500,116.150 627.900,116.150 645.150,133.400 627.900,150.650 517.500,150.650"/>
+    </g>
+    <g id="t1" opacity="0">
+      <polygon points="35.650,43.700 52.900,60.950 52.900,108.100 35.650,125.350 18.400,108.100 18.400,60.950"/>
+      <polygon points="26.450,133.400 43.700,116.150 154.100,116.150 171.350,133.400 154.100,150.650 43.700,150.650"/>
+      <polygon points="162.150,43.700 179.400,60.950 179.400,108.100 162.150,125.350 144.900,108.100 144.900,60.950"/>
+      <polygon points="162.150,141.450 179.400,158.700 179.400,205.850 162.150,223.100 144.900,205.850 144.900,158.700"/>
+      <polygon points="219.650,70.150 254.150,70.150 254.150,104.650 219.650,104.650"/>
+      <polygon points="219.650,162.150 254.150,162.150 254.150,196.650 219.650,196.650"/>
+      <polygon points="302.450,35.650 319.700,18.400 430.100,18.400 447.350,35.650 430.100,52.900 319.700,52.900"/>
+      <polygon points="438.150,43.700 455.400,60.950 455.400,108.100 438.150,125.350 420.900,108.100 420.900,60.950"/>
+      <polygon points="438.150,141.450 455.400,158.700 455.400,205.850 438.150,223.100 420.900,205.850 420.900,158.700"/>
+      <polygon points="302.450,231.150 319.700,213.900 430.100,213.900 447.350,231.150 430.100,248.400 319.700,248.400"/>
+      <polygon points="311.650,141.450 328.900,158.700 328.900,205.850 311.650,223.100 294.400,205.850 294.400,158.700"/>
+      <polygon points="311.650,43.700 328.900,60.950 328.900,108.100 311.650,125.350 294.400,108.100 294.400,60.950"/>
+      <polygon points="500.250,35.650 517.500,18.400 627.900,18.400 645.150,35.650 627.900,52.900 517.500,52.900"/>
+      <polygon points="635.950,43.700 653.200,60.950 653.200,108.100 635.950,125.350 618.700,108.100 618.700,60.950"/>
+      <polygon points="635.950,141.450 653.200,158.700 653.200,205.850 635.950,223.100 618.700,205.850 618.700,158.700"/>
+      <polygon points="500.250,231.150 517.500,213.900 627.900,213.900 645.150,231.150 627.900,248.400 517.500,248.400"/>
+      <polygon points="509.450,141.450 526.700,158.700 526.700,205.850 509.450,223.100 492.200,205.850 492.200,158.700"/>
+      <polygon points="509.450,43.700 526.700,60.950 526.700,108.100 509.450,125.350 492.200,108.100 492.200,60.950"/>
+    </g>
+    </g>
+  </svg>
+</div>
+<script>
+  const FPS = 25, FRAMES = 62;
+  const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
+  const AT = n => (n - 0.5) / FPS;        // a jump (tl.set) that shows from frame n on, never on frame n - 1
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  tl.set("#t0", { opacity: 1 }, 0);
+  tl.set("#t0", { opacity: 0 }, AT(50));
+  tl.set("#t1", { opacity: 1 }, AT(50));
+  tl.set("#clock", { attr: { fill: "rgb(255,255,255)" } }, AT(61));
+  const noise = document.getElementById("noise");             // grain: a new noise seed every frame
+  tl.eventCallback("onUpdate", () => noise.setAttribute("seed", 1 + Math.round(tl.time() * FPS)));
+
+  tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

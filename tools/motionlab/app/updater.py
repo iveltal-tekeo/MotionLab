@@ -2,11 +2,15 @@
 the app: the repo this copy was cloned from ('origin') is the hub. Git asks for a login itself (Git Credential
 Manager, in the browser) the first time something is pushed.
 
-  check()   git fetch; how many commits behind / ahead, local changes, the new version and its changelog
+  check()   git fetch; how many commits behind / ahead, local changes, the new version, what kind of update it is
+            ("version" = a newer MotionLab, "knowledge" = only friends' cards / lessons, "changes" = anything else)
+            and every CHANGELOG section newer than this copy (the Update button's dialog shows them)
   apply()   git pull --rebase --autostash (your knowledge commits and settings stay), pip install if
-            requirements.txt changed; the caller restarts the app. A local change that clashes with the update
-            (e.g. a threshold Claude tuned in config.json that the update changes too) is set aside in git's stash
-            and the file gets the new version - the app never runs on a file with conflict markers
+            requirements.txt changed; the caller restarts the app when code changed. A local change that clashes
+            with the update (e.g. a threshold Claude tuned in config.json that the update changes too) is set aside in
+            git's stash and the file gets the new version - the app never runs on a file with conflict markers.
+            The result (.app\\update_last.json) carries the CHANGELOG sections that came in: the restarted window
+            shows them once ("What's new"), then mark_seen()
   share()   commit the staged knowledge files and push them (on failure everything is put back as it was)
   connect() turn a ZIP copy into a git checkout of a repo (so updates and sharing work)"""
 from __future__ import annotations
@@ -75,9 +79,40 @@ def _version_of(text: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _whats_new(changelog: str) -> str:
-    parts = re.split(r"(?m)^## ", changelog or "")
-    return ("## " + parts[1]).strip()[:4000] if len(parts) > 1 else ""
+def vtuple(v: str | None) -> tuple[int, ...]:
+    """'0.2.5' -> (0, 2, 5) for comparing versions (missing parts count as 0)."""
+    t = [int(x) for x in re.findall(r"\d+", v or "")[:4]]
+    return tuple(t + [0] * (4 - len(t)))
+
+
+def releases(changelog: str) -> list[dict]:
+    """The CHANGELOG's version sections, newest first: `## 0.2.5 - 2026-10-07 - title` -> version, heading, body."""
+    text = (changelog or "").replace("\r", "")
+    heads = list(re.finditer(r"(?m)^## +(\d+(?:\.\d+){1,3})\b.*$", text))
+    return [{"version": m.group(1), "heading": m.group(0)[3:].strip(),
+             "body": text[m.end():heads[i + 1].start() if i + 1 < len(heads) else len(text)].strip()}
+            for i, m in enumerate(heads)]
+
+
+def whats_new(changelog: str, after: str | None, upto: str | None = None) -> str:
+    """Markdown of every CHANGELOG section newer than version `after` (and not newer than `upto`), newest first."""
+    keep = [r for r in releases(changelog) if vtuple(r["version"]) > vtuple(after)
+            and (upto is None or vtuple(r["version"]) <= vtuple(upto))]
+    return "\n\n".join(f"## {r['heading']}\n\n{r['body']}" for r in keep)[:30000]
+
+
+def _is_knowledge(path: str) -> bool:
+    return any(path == k or path.startswith(k + "/") for k in KNOWLEDGE_PATHS)
+
+
+def _incoming(a: str, b: str) -> dict:
+    """What commits a..b bring: changed files, whether only knowledge changed, new cards / lessons waiting for review."""
+    files = git("diff", "--name-only", a, b, check=False).splitlines()
+    added = git("diff", "--name-only", "--diff-filter=A", a, b, check=False).splitlines()
+    return {"files": files, "knowledge_only": bool(files) and all(_is_knowledge(f) for f in files),
+            "new_cards": sum(f.startswith("knowledge/references/") and f.endswith(".json") for f in added),
+            "new_lessons": sum(f.startswith("knowledge/incoming/") and f.endswith(".md") for f in added),
+            "lessons_changed": ".claude/skills/analyze-reference/lessons.md" in files}
 
 
 def local_version() -> str:
@@ -90,7 +125,8 @@ def check(fetch: bool = True) -> dict:
     out = {"checked": time.strftime("%Y-%m-%d %H:%M"), "version": local_version(), "disk_version": disk_version(),
            "git": bool(git_exe()),
            "repo": is_repo(), "remote": None, "branch": None, "behind": 0, "ahead": 0, "dirty": [], "new_version": None,
-           "changes": [], "whats_new": "", "error": None, "can_update": False}
+           "changes": [], "whats_new": "", "kind": None, "files": 0, "new_cards": 0, "new_lessons": 0,
+           "error": None, "can_update": False}
     if not out["git"]:
         out["error"] = "git is not installed (needed for updates and sharing): winget install Git.Git"
     elif not out["repo"]:
@@ -110,9 +146,13 @@ def check(fetch: bool = True) -> dict:
                 out["ahead"] = int(git("rev-list", "--count", f"{up}..HEAD") or 0)
                 out["dirty"] = git("diff", "--name-only", "HEAD").splitlines()[:30]
                 if out["behind"]:
-                    out["new_version"] = _version_of(git("show", f"{up}:tools/motionlab/__init__.py", check=False))
+                    nv = out["new_version"] = _version_of(git("show", f"{up}:tools/motionlab/__init__.py", check=False))
                     out["changes"] = git("log", "--format=%s", f"HEAD..{up}", "-n", "30").splitlines()
-                    out["whats_new"] = _whats_new(git("show", f"{up}:CHANGELOG.md", check=False))
+                    out["whats_new"] = whats_new(git("show", f"{up}:CHANGELOG.md", check=False), out["version"])
+                    inc = _incoming(git("merge-base", "HEAD", up), up)          # what the update brings
+                    out.update(files=len(inc["files"]), new_cards=inc["new_cards"], new_lessons=inc["new_lessons"])
+                    out["kind"] = ("version" if nv and vtuple(nv) > vtuple(out["version"]) else
+                                   "knowledge" if inc["knowledge_only"] else "changes")
                 out["can_update"] = out["behind"] > 0
         except (GitError, subprocess.TimeoutExpired, ValueError) as e:
             out["error"] = f"could not check GitHub: {e}"
@@ -140,6 +180,7 @@ def apply() -> dict:
         raise GitError("this copy is not connected to GitHub")
     br = _branch()
     old = git("rev-parse", "HEAD")
+    old_version = disk_version()
     try:
         set_aside = _pull(br)
     except (GitError, subprocess.TimeoutExpired) as e:
@@ -148,14 +189,26 @@ def apply() -> dict:
     new = git("rev-parse", "HEAD")
     changed = git("diff", "--name-only", old, new).splitlines() if old != new else []
     pip = install_requirements() if "requirements.txt" in changed else None
+    npm = install_overlays() if "tools/overlays/package-lock.json" in changed else None
     check(fetch=False)
-    out = {"updated": old != new, "from": old[:7], "to": new[:7], "changed": changed[:80], "pip": pip,
-           "set_aside": set_aside, "when": time.time(),
-           "version": _version_of((LAB / "tools" / "motionlab" / "__init__.py").read_text(encoding="utf-8"))}
+    version = disk_version()
+    inc = _incoming(old, new) if old != new else {"new_cards": 0, "new_lessons": 0}
+    out = {"updated": old != new, "from": old[:7], "to": new[:7], "changed": changed[:80], "pip": pip, "npm": npm,
+           "set_aside": set_aside, "when": time.time(), "version": version, "from_version": old_version,
+           "code_changed": any(not _is_knowledge(f) for f in changed),
+           "new_cards": inc["new_cards"], "new_lessons": inc["new_lessons"], "seen": False,
+           "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), old_version, version) if version != old_version else ""}
     if out["updated"]:
         LAST.parent.mkdir(exist_ok=True)
         LAST.write_text(json.dumps(out, indent=1), encoding="utf-8")
     return out
+
+
+def _read(p: Path) -> str:
+    try:
+        return p.read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 
 def _pull(br: str) -> list[str]:
@@ -170,12 +223,39 @@ def _pull(br: str) -> list[str]:
 
 
 def last_result(max_age: float = 900) -> dict | None:
-    """The last update, for the window after the restart (shown for 15 minutes)."""
+    """The last update, for the window after the restart: the Home banner for 15 minutes, the "What's new" dialog
+    until the user has seen it (at most a week)."""
     try:
         r = json.loads(LAST.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    return r if time.time() - float(r.get("when", 0)) < max_age else None
+    age = time.time() - float(r.get("when", 0))
+    if "seen" not in r:                  # written by MotionLab 0.2.x while updating itself to this version
+        return _complete_old(r) if age < max_age else None
+    return r if age < max_age or (not r["seen"] and age < 7 * 86400) else None
+
+
+def _complete_old(r: dict) -> dict:
+    """A 0.2.x record lacks the version it came from and the changelog: add both (from git and CHANGELOG.md)."""
+    try:
+        frm = _version_of(git("show", f"{r['from']}:tools/motionlab/__init__.py", check=False)) if r.get("from") else None
+    except (GitError, subprocess.TimeoutExpired, OSError):
+        frm = None
+    ver = r.get("version") or disk_version()
+    return {**r, "from_version": frm, "version": ver, "seen": False, "code_changed": True,
+            "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver) if frm and ver and frm != ver else ""}
+
+
+def mark_seen() -> None:
+    """The window has shown "What's new": don't show it again."""
+    try:
+        r = json.loads(LAST.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if "seen" not in r:
+        r = _complete_old(r)
+    r["seen"] = True
+    LAST.write_text(json.dumps(r, indent=1), encoding="utf-8")
 
 
 def install_requirements() -> str:
@@ -184,6 +264,19 @@ def install_requirements() -> str:
     r = subprocess.run([str(py if py.exists() else sys.executable), "-m", "pip", "install", "--disable-pip-version-check",
                         "-q", "-r", str(LAB / "requirements.txt")], capture_output=True, text=True, timeout=1800,
                        creationflags=NO_WINDOW)
+    return "ok" if r.returncode == 0 else (r.stderr or r.stdout)[-400:]
+
+
+def install_overlays() -> str | None:
+    """npm ci in tools\\overlays after an update changed the pinned HyperFrames / GSAP versions - only where they are
+    installed (setup.bat's optional step); None = not installed here."""
+    d = LAB / "tools" / "overlays"
+    npm = shutil.which("npm")
+    if not npm or not (d / "node_modules").exists():
+        return None
+    r = subprocess.run([npm, "ci", "--no-fund", "--no-audit"], cwd=str(d), capture_output=True, text=True,
+                       timeout=1800, creationflags=NO_WINDOW, encoding="utf-8", errors="replace",
+                       env={**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"})
     return "ok" if r.returncode == 0 else (r.stderr or r.stdout)[-400:]
 
 
@@ -249,10 +342,15 @@ def share(files: list[Path], who: str, message: str) -> dict:
                "pulled": pulled, "set_aside": set_aside,
                "code_updated": any(not f.startswith(("knowledge/", ".claude/skills/")) for f in pulled)}
         if out["code_updated"]:
+            frm = _version_of(git("show", f"{mine}:tools/motionlab/__init__.py", check=False))
+            ver = disk_version()
             LAST.parent.mkdir(exist_ok=True)
             LAST.write_text(json.dumps({"updated": True, "from": mine[:7], "to": out["commit"], "changed": pulled[:80],
-                                        "pip": None, "set_aside": set_aside, "when": time.time(),
-                                        "version": disk_version()}, indent=1), encoding="utf-8")
+                                        "pip": None, "set_aside": set_aside, "when": time.time(), "version": ver,
+                                        "from_version": frm, "code_changed": True, "new_cards": 0, "new_lessons": 0,
+                                        "seen": False,
+                                        "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver)
+                                        if frm and ver and frm != ver else ""}, indent=1), encoding="utf-8")
         return out
     except (GitError, subprocess.TimeoutExpired) as e:
         git("rebase", "--abort", check=False)

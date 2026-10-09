@@ -97,6 +97,7 @@ def probe(path: Path) -> dict:
             "r_fps": r_fps, "avg_fps": avg_fps, "nb_frames": nb, "start_time": v_start,
             "bit_rate": _float(v.get("bit_rate")), "field_order": v.get("field_order"),
             "color_transfer": v.get("color_transfer"), "color_primaries": v.get("color_primaries"),
+            "color_space": v.get("color_space"), "color_range": v.get("color_range"),
             "hdr": hdr,
         },
         "audio": None if not a else {

@@ -80,6 +80,12 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
                 "exclusive" if yes else "light")
     if kind == "selftest":
         return "Self-test (extended)", [PY, str(TOOLS / "selftest.py"), "--extended"], "cpu"
+    if kind == "overlays_install":                                 # Settings > Programs > HyperFrames > Install
+        return "Install HyperFrames (HTML overlays)", [PY, str(TOOLS / "overlay.py"), "install"], "net"
+    if kind in ("resolve_mcp_install", "resolve_mcp_remove"):      # Settings > Claude Code > DaVinci Resolve (MCP)
+        install = kind == "resolve_mcp_install"
+        return ("Connect Claude Code to DaVinci Resolve (MCP)" if install else "Disconnect the Resolve MCP",
+                [PY, str(TOOLS / "resolve_mcp.py"), "install" if install else "remove"], "net")
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"

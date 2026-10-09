@@ -47,15 +47,22 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Downloads = `tools\download.py` around yt-dlp (`system.PRESETS`: MP4 <=1080p / best / MP3; one video, no
   playlists; the final path is printed last so the dialog offers "Analyse it").
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
-  diff, storage + prune, self-test, verify_timing, download), one per group (cpu / resolve / light / net). Claude's
+  diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
+  DaVinci Resolve), one per group (cpu / resolve / light / net). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.
 - Updates (`updater.py`, git only - no GitHub API, no tokens in the lab): `check` = `git fetch` + behind / ahead /
-  local changes + the new version (read from `origin:tools/motionlab/__init__.py`) + its CHANGELOG section;
-  `apply` = `git pull --rebase --autostash`, `pip install -r requirements.txt` if it changed, then the server
-  restarts itself (`restart_soon`: a new `app.py --wait-port`, the window shows "Updating..." and reloads). At
-  start-up (3 s in, only within 180 s and with no job) a found update installs itself if `update_auto`; later checks
-  (every 6 h) only show the banner. A local change that clashes with an update (e.g. a threshold tuned in
+  local changes + the new version (read from `origin:tools/motionlab/__init__.py`) + `kind` ("version" = newer
+  MotionLab, "knowledge" = only friends' cards / lessons, "changes") + every CHANGELOG section newer than this copy
+  (`updater.whats_new`: `## x.y.z - date - title` headings); `apply` = `git pull --rebase --autostash`, `pip install
+  -r requirements.txt` if it changed, then the server restarts itself when code changed (`restart_soon`: a new
+  `app.py --wait-port`, the window shows "Updating..." and reloads; knowledge-only updates need no restart).
+  Settings `update_mode` (0.3.0; 0.2.x had update_check / update_auto, migrated to "ask"): "ask" (default) = the
+  sidebar's bright **Update available** button (calmer "New from friends" for knowledge) -> a dialog with the new
+  CHANGELOG sections -> Update now; "auto" = installs at start-up (3 s in, only within 180 s and with no job);
+  "off". Checks at start-up and hourly. After an update `.app\update_last.json` (`from_version`, `whats_new`,
+  `seen`) makes the window show "What's new" once (POST `/api/update/seen`; records written by 0.2.x are completed
+  from git). The sidebar's What's new button (`newsModal`) shows CHANGELOG.md (`/api/text`) as a timeline. Tested 2026-10-09 against a fake GitHub incl. a real 0.2.5 copy updating itself to 0.3. A local change that clashes with an update (e.g. a threshold tuned in
   `config.json` that the update changes too) is set aside: the file gets the new version, the change stays in git's
   stash ("autostash"), and the restarted app says so (`.app\update_last.json`) - bring it back with
   `git stash show -p` if it is still wanted. `share` commits only the knowledge paths and refuses while the copy
@@ -65,7 +72,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Versions: `server.VERSION` = `__version__`; the page carries `<meta name="ml-version">` and `API_LEVEL` (app.js)
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
-  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks).
+  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen).
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).
 - Testing after a change: start `app.py --no-window --stay --no-update --port 879x` (NOT 8765: the user's own app
@@ -77,4 +84,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   the user's real references (that writes their verdicts.json) and never a Claude button (it starts Claude): use a
   copy of a self-test analysis (`analysis\synthetic_zz_*`, no knowledge card is made for synthetic_ names) and zz
   test files for delete tests. Updates / sharing are tested against a local bare repo as a fake GitHub with two
-  clones as friends (never the real remote). Then `selftest.py --extended`.
+  clones as friends (never the real remote; helpers in `tools\dev\`: `cdp.py` drives headless Edge, `upd_prepare.py`
+  (setup / push a test version) + `upd_test.py` the update paths; scratch in `.app\dev\`). Close every headless Edge
+  you start (a forgotten one on an old test port reconnects to the next test server there). Then
+  `selftest.py --extended`.
