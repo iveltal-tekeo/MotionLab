@@ -78,6 +78,10 @@ filmmaking / effects."
 
 ## 0.3.1 - planned - Follow-ups of 0.3.0
 
+- **Automatic tests on GitHub (priority, the user's pick 2026-10-09)**: a GitHub Actions workflow runs
+  `selftest.py --extended` (Windows runner, Python 3.12 + ffmpeg; the self-test videos are generated there) on every
+  push and shows a red / green check, so a broken version never reaches friends' Update button; a git tag per
+  release (`v0.3.0`, ...). Costs nothing on anyone's PC. Ideas still to test: [ideas.md](ideas.md).
 - Try the HTML overlays inside a real DaVinci Resolve build (written without Resolve open; test in a scratch project).
 - HyperFrames grain: tune the HTML clock's grain to the lab's texture (geometry and timing already match).
 - Whatever friends report after updating.

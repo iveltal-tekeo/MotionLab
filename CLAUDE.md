@@ -28,7 +28,7 @@ explore the whole lab:
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
 | knowledge sharing (cards, lessons, packs) | `docs\knowledge_sharing.md`, `knowledge\README.md` |
 | questions about working with Claude, effort levels, tokens | `docs\claude_tips.md` |
-| what comes next (planned versions and their design notes) | `docs\plans.md` (the app's What's new shows it) |
+| what comes next (planned versions and their design notes) | `docs\plans.md` (the app's What's new shows it); ideas not picked yet: `docs\ideas.md` |
 
 Every tool starts with a usage docstring: read its first lines (or run it without arguments), not the whole file.
 
