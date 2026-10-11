@@ -61,6 +61,25 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
   was imported; `--diff` shows what you changed by hand. Hand edits worth keeping become knowledge (a lesson, a
   profile value or a library macro).
 
+### Tests on GitHub (since 0.3.1)
+
+- `.github\workflows\tests.yml` runs on every push to main and every pull request, on GitHub's Windows machine:
+  Python 3.12 + `requirements.txt` + Gyan's ffmpeg (`FFMPEG_VERSION`, the build `setup.bat` installs through winget -
+  raise it when winget's moves), then `selftest.py --extended` (the synthetic videos are generated there) and
+  `tools\dev\smoke.py` (every file compiles, every module imports, the app server's read-only routes, every page in
+  headless Edge, the MCP server). Free for a public repo; ~15 minutes per full run.
+- **The `tested` branch is the gate**: when a push to main passes, the workflow moves `tested` to it, and the app's
+  Update button installs only what is on `tested` (`updater._upstream`). A push that is still being tested, or
+  failed, shows as "waiting for GitHub's tests" in Settings > Sharing & updates and is never offered. Share still
+  pushes to main. A push that only touches shared knowledge (`knowledge\references`, `knowledge\incoming`,
+  `lessons.md`) skips the self-test (smoke test only, ~3 minutes). Runs on main go one after another in order; a
+  re-run of an old commit never moves `tested` back.
+- **Tags**: the first passing run of a new `__version__` tags that commit `v<version>`. Older releases, once, by
+  hand: `git tag v0.2.0 cee5485`, `git tag v0.2.5 9334caa`, `git tag v0.3.0 82642a1`, `git push origin --tags`.
+- **When a run is red**: the Actions tab shows the failing step; a failed run keeps the scores and logs as the
+  artifact "test-results". Fix and push again - friends keep the last tested version meanwhile. Only if the
+  workflow itself is broken (not the lab) and an update must go out anyway: `git push origin main:tested`.
+
 ## 4. Fix before a repo or before friends use it (judgement)
 
 1. Paths: move machine paths to `settings.json`; store footage paths in plans relative to the project folder.

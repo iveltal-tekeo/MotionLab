@@ -10,9 +10,10 @@ Prefer CPU-friendly models and options that run only when asked.
 
 ## Liked - test first (2026-10-09)
 
+Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md).
+
 | Idea | Why | Cost to check |
 |---|---|---|
-| **Automatic tests on GitHub** (GitHub Actions runs the self-tests on every push; a tag per release) | friends update with one click now - a broken push reaches everyone | none on PCs (runs on GitHub); the self-test videos are generated, ~minutes per run - **priority, see plans.md 0.3.1** |
 | **Find footage that matches a shot** (image embeddings - CLIP / SigLIP - of every clip, compared with each reference shot) | the slowest manual step of `/recreate-video`; "templates by feel" needs it too | an embedding pass per clip: test a small CPU model vs the GPU, time per minute of footage, and whether its top-3 picks beat Claude reading storyboards |
 | **Match the reference's colour grade** (measure its colours / contrast or transfer shot to shot -> a LUT for the lab and Resolve) | rebuilds are in colour since 0.3 but don't copy the look yet | cheap (numpy on a few frames); test how close a LUT gets on real references |
 | **Transcription with word timings** (platform subtitles via yt-dlp first; faster-whisper / WhisperX otherwise) | the base of 0.4 content intelligence; also word-by-word captions as HTML overlays | Whisper can be heavy: compare the small / base models on CPU (laptop) vs large on GPU - minutes per minute of audio and errors |

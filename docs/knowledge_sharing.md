@@ -20,6 +20,7 @@ Revisit a database at around 1,000 references, or when you want search like "fin
 | **Reviewed rules** every MotionLab applies | a few dozen paragraphs | `.claude\skills\analyze-reference\lessons.md` (L001 ...) | yes |
 | Thresholds (`tools\config.json`), code | a few KB | the repo | yes, with the self-test |
 | Videos, frames, contact sheets, previews, file paths, your settings | GBs | `refs\`, `analysis\`, `projects\`, `settings.json` | **never** |
+| Transcripts (other people's words, 0.4) | KBs per video | `analysis\<name>\content\` | **never** - later only topic summaries, counts and short quotes in cards |
 
 Cards carry the name you set in *Settings > Sharing & updates* - not your email or anything else.
 

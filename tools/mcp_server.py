@@ -382,10 +382,55 @@ def overlay_stills(folder: str, frames: str):
     return [f"overlay {c['name']}: {len(tiles)} frame(s)", _jpeg(_tile(tiles, cols=min(3, len(tiles)), tile_w=520))]
 
 
-TOOLS = [references, events, event, sheet, frames, frame_info, verdicts, knowledge, project, stills, overlay_stills]
+def transcript(reference: str, start: int | None = None, end: int | None = None, words: bool = False) -> str:
+    """What a reference SAYS: its transcript (the platform's subtitles), one line per caption with frame + timecode;
+    start / end = only those frames; words=True adds every word's frame. Made by `tools\\content.py transcript
+    <name>` in the shell when there is none yet."""
+    d = _ref_dir(reference)
+    p = d / "content" / "transcript.json"
+    if not p.exists():
+        return f"no transcript for {d.name} yet - run: .venv\\Scripts\\python tools\\content.py transcript {d.name}"
+    t = json.loads(p.read_text(encoding="utf-8"))
+    fps = float(t["fps"])
+    rows = [r for r in t["lines"] if (start is None or r["end"] >= start) and (end is None or r["start"] <= end)]
+    L = [f"{d.name}: {len(rows)} of {len(t['lines'])} lines, {t.get('words', 0)} words in all "
+         f"({'uploaded subtitles' if t.get('kind') == 'manual' else 'auto captions'} '{t.get('track')}'; timings are "
+         "the platform's, not measured by the lab)"]
+    for r in rows[:400]:
+        w = ("  [" + " ".join(f"{x['w']}@f{x['f']}" for x in r["words"]) + "]") if words and r.get("words") else ""
+        L.append(f"{_ftc(r['start'], fps)} {r['text']}{w}")
+    if len(rows) > 400:
+        L.append(f"... {len(rows) - 400} more lines - narrow start / end")
+    return "\n".join(L)
+
+
+def prompts(kind: str = "", id: str = "") -> str:
+    """The prompt library (knowledge\\local\\prompts): proven prompts for video models (kind 'shot'), hooks ('hook')
+    and talking scripts ('script'), best examples first - rated good, then creators' unrated, ok, unrated, bad - each
+    with its source, model, the user's rating + note and its structure (slots). id = one prompt in full. Written by
+    `tools\\prompts.py import / annotate / rate` in the shell (the /write-prompt skill)."""
+    from motionlab import prompts as P
+    if id:
+        return P.describe(P.get(id), full=True)
+    items = P.load_all(kind)
+    if not items:
+        return f"no {kind + ' ' if kind else ''}prompts yet in {P.FOLDER} (the user adds them on the Prompts page " \
+               "or pastes them in the chat: tools\\prompts.py template)"
+    L = [f"{len(items)} {kind + ' ' if kind else ''}prompt(s), best examples first; slots to use: "
+         + "; ".join(f"{k}: {', '.join(v)}" for k, v in P.SLOTS.items() if not kind or k == kind)]
+    L += [P.describe(r) for r in items[:60]]
+    if len(items) > 60:
+        L.append(f"... {len(items) - 60} more - pass a kind")
+    return "\n".join(L)
+
+
+TOOLS = [references, events, event, sheet, frames, frame_info, verdicts, transcript, knowledge, project, stills,
+         overlay_stills, prompts]
 INSTRUCTIONS = ("MotionLab lab data, read-only. Start with references() or project(); events()/event() instead of "
-                "reading events.json; sheet()/frames()/stills()/overlay_stills() return pictures with frame + "
-                "timecode on every tile. Long jobs (analyze.py, render_video.py, overlay.py render) stay in the shell.")
+                "reading events.json; transcript() = what a video says; prompts() = the prompt library (shots, hooks, "
+                "scripts) for /write-prompt; sheet()/frames()/stills()/overlay_stills() "
+                "return pictures with frame + timecode on every tile. Long jobs (analyze.py, content.py, "
+                "render_video.py, overlay.py render) stay in the shell.")
 
 
 def build():
@@ -411,8 +456,10 @@ def selftest() -> int:
         print(event(r, eid)[:300], "\n")
         print(frame_info(r, 480), "\n")
         print(verdicts(r)[:300], "\n")
+        print(transcript(r, 0, 500)[:300], "\n")
         print([type(x).__name__ for x in sheet(r, eid)], [type(x).__name__ for x in frames(r, "0-100:25")])
     print(knowledge()[:200], "\n")
+    print(prompts()[:300], "\n")
     if projs:
         print(project(projs[0])[:600])
         plans = sorted((PROJECTS / projs[0] / "build").glob("plan_v*.json"))

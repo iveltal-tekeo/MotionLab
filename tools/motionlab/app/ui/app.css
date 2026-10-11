@@ -370,3 +370,16 @@ tr.sel td { background: #221d0d; }
 .btn.big { padding: 9px 16px; font-size: 14.5px; }
 .panel.waiting { margin-bottom: 14px; border-color: var(--amber-d); }
 .panel.waiting td { vertical-align: middle; }
+/* prompts (0.4) */
+.pcard { margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.pcard .phead { gap: 8px; }
+.ptext { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px; background: #101013; border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; max-height: 260px; overflow: auto; }
+.pslots { display: flex; flex-wrap: wrap; gap: 6px; }
+.pslot { font-size: 12px; border: 1px solid var(--line2); border-radius: 5px; padding: 2px 8px; color: var(--muted); }
+.pslot b { color: var(--amber); font-weight: 600; margin-right: 4px; }
+.prate { gap: 6px; }
+.prate .pnote { flex: 1; min-width: 180px; max-width: 420px; }
+.prate .btn.on[data-r=good] { background: #12352a; border-color: var(--green); color: var(--green); }
+.prate .btn.on[data-r=ok] { background: #3a2f05; border-color: var(--amber); color: var(--amber); }
+.prate .btn.on[data-r=bad] { background: #3a1515; border-color: var(--red); color: var(--red); }
+.upstream { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }

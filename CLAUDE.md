@@ -24,6 +24,7 @@ explore the whole lab:
 |---|---|
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | recreate a reference with the user's footage (lab render, then Resolve) | the `/recreate-video` skill |
+| prompts: the user pastes / asks for video-model shots (Seedance...), hooks, scripts | the `/write-prompt` skill |
 | anything in DaVinci Resolve (resolve_build.py, Fusion comps, library.py test / install) | `docs\resolve_notes.md` |
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
 | knowledge sharing (cards, lessons, packs) | `docs\knowledge_sharing.md`, `knowledge\README.md` |
@@ -43,7 +44,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `feedback.py` when Claude applied them)
 - `knowledge\` what installs share: `references\` = SHARED reference cards `<video id>--<author>.json`, `incoming\` =
   SHARED lessons waiting for review; private: `local\` (this PC's cards, `lessons.md` = new lessons `local-N`,
-  `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review), `inbox\` / `outbox\`
+  `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review, `prompts\<kind>\<id>.json`
+  = the prompt library, ratings included), `inbox\` / `outbox\`
   (`*.mlpack.json` packs for friends without push access)
 - `projects\<name>\` the user's footage (read-only, top level); everything we make goes to `build\`: `sources.json`
   (IDs A, B, ... + SHA-256), `cache\` (grey frame caches), `boards\`, `edit_vN.py` -> `plan_vN.json` (the edit),
@@ -59,9 +61,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `organization.md` (repo/versioning plan), `roadmap.png` (`tools\roadmap.py` redraws it)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
-  `recreate-video\`
-- Repo files (v0.3.0): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
-  it), `.mcp.json` (MotionLab's MCP server),
+  `recreate-video\`, `write-prompt\`
+- Repo files (v0.3.1): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
+  it), `.mcp.json` (MotionLab's MCP server), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
   version is `tools\motionlab\__init__.py` `__version__`. The USER creates and uploads the repo - never `git init` /
@@ -74,13 +76,17 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `report.py <name>` merge `review.json` into `events.json` and re-render `report.html`
 - `feedback.py <name> <file>` parse feedback text, archive it, map verdicts (and possible-miss answers) to events
 - `sheet.py <name> <start> <end>` contact sheet + preview for any frame range (missed effects)
+- `content.py transcript <name> | show <name> [a b]` what a video says (0.4, step 1): the platform's subtitles ->
+  `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); stays local
+- `prompts.py list | show | import | annotate | rate | template` the prompt library (0.4; MCP `prompts`)
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth
 - `knowledge.py cards | summary | pending | next-lesson-id | share | export | import <pack>`
 - `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
   `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new | render | stills` (graphics as HTML via
-  HyperFrames, pinned in `tools\overlays\`); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
+  HyperFrames, pinned in `tools\overlays\`; `versions | upgrade-test | pin` = adopt a newer one only after its frames
+  match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
   `library.py build | test | title | install`, `resolve_mcp.py install | status | remove` (optional Resolve MCP for
   Claude Code, this PC only)
 - `storage.py` disk report by category; `--prune <name|all> --what cache,checks,finals --yes` deletes only what the
@@ -93,7 +99,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
 `MotionLab.bat` = a local server + an Edge app window: Home, References (download, analyse, the review page with
-verdicts and possible misses, Delete), Videos (the user's edits, renders, Resolve check-up, library picks), Library,
+verdicts and possible misses, Delete), Videos (the user's edits, renders, Resolve check-up, library picks), Prompts, Library,
 Knowledge (Share), Jobs, Storage, Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude
 Code windows the app opens with a fixed first message and an effort level per task (Settings > Claude Code).
 
@@ -144,7 +150,8 @@ Code windows the app opens with a fixed first message and an effort level per ta
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` all PASS, raise
   `__version__` in `tools\motionlab\__init__.py`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
   update banner shows it), raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits
-  and pushes. Installs pick it up at their next start.
+  and pushes. GitHub's tests (self-test + `tools\dev\smoke.py`) must turn green: they move the `tested` branch, which
+  is what the Update button installs, and tag `v<version>` (docs\organization.md "Tests on GitHub").
 
 ## Environment gotchas (learned while building the lab)
 - ffmpeg's `drawtext` filter segfaults on this Gyan build (no fontconfig file): draw labels with Pillow.

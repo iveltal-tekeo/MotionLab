@@ -1,0 +1,125 @@
+# MotionLab - automatic tests on GitHub (0.3.1). Every push to main and every pull request runs the lab's tests on
+# a clean Windows machine: Python 3.12 + requirements.txt + the ffmpeg build friends get from setup.bat (winget
+# Gyan.FFmpeg). The self-test videos are generated there, nothing personal is in the repo.
+#
+# When a push to main passes, the branch "tested" moves to it. The app's Update button installs only what is on
+# "tested" (tools/motionlab/app/updater.py), so a broken push never reaches friends. A push that only adds friends'
+# shared knowledge (cards, incoming lessons, lessons.md) skips the long self-test: the app smoke test is enough and
+# the cards reach everyone within minutes. A new __version__ also gets its git tag (v0.3.1, ...).
+# Details: docs/organization.md, "Tests on GitHub".
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:                                   # pushes to main run one after the other, in order (none cancelled)
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write                              # move the "tested" branch, push version tags
+
+env:
+  FFMPEG_VERSION: "9.0.2"                      # Gyan's release = what winget Gyan.FFmpeg installs; raise it when it moves
+  PYTHONUTF8: "1"
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: What changed since the last tested commit
+        id: scope
+        shell: bash
+        run: |
+          full=true
+          if [ "${{ github.event_name }}" = "push" ] && git rev-parse -q --verify origin/tested >/dev/null \
+             && git merge-base --is-ancestor origin/tested HEAD; then
+            changed=$(git diff --name-only origin/tested HEAD)
+            echo "$changed"
+            other=$(printf '%s\n' "$changed" | grep -v -E '^(knowledge/references/|knowledge/incoming/|\.claude/skills/analyze-reference/lessons\.md$)' | grep -v '^$' || true)
+            [ -z "$other" ] && full=false
+          fi
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "full self-test: $full"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Python packages
+        run: python -m pip install --disable-pip-version-check -q -r requirements.txt
+
+      - name: ffmpeg (cache)
+        if: steps.scope.outputs.full == 'true'
+        id: ffcache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}\ffmpeg
+          key: ffmpeg-gyan-${{ env.FFMPEG_VERSION }}-essentials
+
+      - name: ffmpeg (download)
+        if: steps.scope.outputs.full == 'true' && steps.ffcache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          $v = $env:FFMPEG_VERSION
+          $zip = Join-Path $env:RUNNER_TEMP 'ffmpeg.7z'
+          Invoke-WebRequest "https://github.com/GyanD/codexffmpeg/releases/download/$v/ffmpeg-$v-essentials_build.7z" -OutFile $zip
+          7z x $zip "-o$env:RUNNER_TEMP\fftmp" | Out-Null
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\ffmpeg" | Out-Null
+          Move-Item "$env:RUNNER_TEMP\fftmp\ffmpeg-$v-essentials_build\bin\*" "$env:RUNNER_TEMP\ffmpeg\"
+
+      - name: ffmpeg (on PATH)
+        if: steps.scope.outputs.full == 'true'
+        shell: pwsh
+        run: |
+          "$env:RUNNER_TEMP\ffmpeg" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$env:RUNNER_TEMP\ffmpeg\ffmpeg.exe" -hide_banner -version | Select-Object -First 1
+
+      - name: Self-test (synthetic videos with known effects, --extended)
+        if: steps.scope.outputs.full == 'true'
+        run: python tools/selftest.py --extended
+
+      - name: App smoke test (modules, server routes, every page in Edge, MCP server)
+        run: python tools/dev/smoke.py
+
+      - name: Mark as tested + tag a new version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          git fetch -q origin
+          head=$(git rev-parse HEAD)
+          if ! git merge-base --is-ancestor "$head" origin/main; then
+            echo "this commit is no longer on main - tested stays"; exit 0
+          fi
+          if git rev-parse -q --verify origin/tested >/dev/null && git merge-base --is-ancestor origin/tested origin/main \
+             && ! git merge-base --is-ancestor origin/tested "$head"; then
+            echo "tested is already further on - it stays"; exit 0
+          fi
+          git push --force origin "$head:refs/heads/tested"
+          v=$(sed -n 's/^__version__ = "\(.*\)".*/\1/p' tools/motionlab/__init__.py)
+          if [ -n "$v" ] && ! git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then
+            git tag "v$v" "$head" && git push origin "refs/tags/v$v"
+          fi
+
+      - name: Keep the scores and logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: |
+            analysis/synthetic_*/selftest_score.json
+            analysis/synthetic_*/events.json
+            .app/server.log
+          if-no-files-found: ignore

@@ -5,6 +5,9 @@ Manager, in the browser) the first time something is pushed.
   check()   git fetch; how many commits behind / ahead, local changes, the new version, what kind of update it is
             ("version" = a newer MotionLab, "knowledge" = only friends' cards / lessons, "changes" = anything else)
             and every CHANGELOG section newer than this copy (the Update button's dialog shows them)
+            Updates come from the branch "tested" when the repo has it: GitHub's tests (.github/workflows/tests.yml)
+            move it to each push to main that passed, so a broken push never reaches the Update button. Without it
+            (a repo without the workflow, another branch) they come from origin/<branch> as before.
   apply()   git pull --rebase --autostash (your knowledge commits and settings stay), pip install if
             requirements.txt changed; the caller restarts the app when code changed. A local change that clashes
             with the update (e.g. a threshold Claude tuned in config.json that the update changes too) is set aside in
@@ -30,6 +33,7 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 CACHE = LAB / ".app" / "update.json"
 LAST = LAB / ".app" / "update_last.json"                 # the last apply(), shown by the restarted app
 KNOWLEDGE_PATHS = ("knowledge/references", "knowledge/incoming", ".claude/skills/analyze-reference/lessons.md")
+GATE = "tested"                                          # the branch GitHub's tests move forward (tests.yml)
 
 
 class GitError(RuntimeError):
@@ -65,6 +69,14 @@ def is_repo(root: Path = LAB) -> bool:
 def _branch() -> str:
     b = git("rev-parse", "--abbrev-ref", "HEAD")
     return "main" if b == "HEAD" else b
+
+
+def _upstream(br: str) -> str:
+    """Where updates come from: origin/tested (the newest push to main that passed GitHub's tests) when the repo has
+    that branch and this copy follows main, else origin/<branch>. Pushes (Share) always go to origin/<branch>."""
+    if br == "main" and git("rev-parse", "-q", "--verify", f"refs/remotes/origin/{GATE}", check=False):
+        return f"origin/{GATE}"
+    return f"origin/{br}"
 
 
 def _remote() -> str | None:
@@ -125,6 +137,7 @@ def check(fetch: bool = True) -> dict:
     out = {"checked": time.strftime("%Y-%m-%d %H:%M"), "version": local_version(), "disk_version": disk_version(),
            "git": bool(git_exe()),
            "repo": is_repo(), "remote": None, "branch": None, "behind": 0, "ahead": 0, "dirty": [], "new_version": None,
+           "source": None, "testing": 0,
            "changes": [], "whats_new": "", "kind": None, "files": 0, "new_cards": 0, "new_lessons": 0,
            "error": None, "can_update": False}
     if not out["git"]:
@@ -140,10 +153,12 @@ def check(fetch: bool = True) -> dict:
             else:
                 if fetch:
                     git("fetch", "--quiet", "origin", timeout=60)
-                up = f"origin/{br}"
-                git("rev-parse", "--verify", up)
+                git("rev-parse", "--verify", f"origin/{br}")
+                out["source"] = up = _upstream(br)
                 out["behind"] = int(git("rev-list", "--count", f"HEAD..{up}") or 0)
-                out["ahead"] = int(git("rev-list", "--count", f"{up}..HEAD") or 0)
+                out["ahead"] = int(git("rev-list", "--count", f"origin/{br}..HEAD") or 0)     # not on GitHub yet
+                if up != f"origin/{br}":                     # newer pushes that have not passed the tests (yet)
+                    out["testing"] = int(git("rev-list", "--count", f"{up}..origin/{br}") or 0)
                 out["dirty"] = git("diff", "--name-only", "HEAD").splitlines()[:30]
                 if out["behind"]:
                     nv = out["new_version"] = _version_of(git("show", f"{up}:tools/motionlab/__init__.py", check=False))
@@ -182,7 +197,7 @@ def apply() -> dict:
     old = git("rev-parse", "HEAD")
     old_version = disk_version()
     try:
-        set_aside = _pull(br)
+        set_aside = _pull(_upstream(br).removeprefix("origin/"))
     except (GitError, subprocess.TimeoutExpired) as e:
         git("rebase", "--abort", check=False)
         raise GitError(f"the update could not be applied cleanly, nothing was changed: {e}")
@@ -212,9 +227,10 @@ def _read(p: Path) -> str:
 
 
 def _pull(br: str) -> list[str]:
-    """git pull --rebase --autostash; returns the files whose local changes clashed with what came in. When the
-    autostash cannot be put back cleanly git leaves conflict markers in those files (and keeps the changes in its
-    stash, "autostash"): give them the version from GitHub, so the lab never runs on a half-merged file."""
+    """git pull --rebase --autostash from origin's branch `br`; returns the files whose local changes clashed with
+    what came in. When the autostash cannot be put back cleanly git leaves conflict markers in those files (and
+    keeps the changes in its stash, "autostash"): give them the version from GitHub, so the lab never runs on a
+    half-merged file."""
     git("pull", "--rebase", "--autostash", "origin", br, timeout=300)
     clashed = git("diff", "--name-only", "--diff-filter=U").splitlines()
     if clashed:
@@ -274,10 +290,18 @@ def install_overlays() -> str | None:
     npm = shutil.which("npm")
     if not npm or not (d / "node_modules").exists():
         return None
+    env = {**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1", "HYPERFRAMES_SKIP_SKILLS": "1"}
     r = subprocess.run([npm, "ci", "--no-fund", "--no-audit"], cwd=str(d), capture_output=True, text=True,
-                       timeout=1800, creationflags=NO_WINDOW, encoding="utf-8", errors="replace",
-                       env={**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"})
-    return "ok" if r.returncode == 0 else (r.stderr or r.stdout)[-400:]
+                       timeout=1800, creationflags=NO_WINDOW, encoding="utf-8", errors="replace", env=env)
+    if r.returncode:
+        return (r.stderr or r.stdout)[-400:]
+    hf, node = d / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs", shutil.which("node")
+    if hf.exists() and node:                     # a newer HyperFrames may want a newer Chrome (no-op when present)
+        b = subprocess.run([node, str(hf), "browser", "ensure"], cwd=str(d), capture_output=True, text=True,
+                           timeout=1800, creationflags=NO_WINDOW, encoding="utf-8", errors="replace", env=env)
+        if b.returncode:
+            return "npm ci ok, but HyperFrames' Chrome: " + (b.stderr or b.stdout)[-300:]
+    return "ok"
 
 
 def disk_version() -> str | None:

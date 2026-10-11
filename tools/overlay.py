@@ -16,6 +16,11 @@ particles) are written this way since 0.3.0.
     .venv\\Scripts\\python tools\\overlay.py doctor                       Node.js, HyperFrames, its Chrome
     .venv\\Scripts\\python tools\\overlay.py install                      npm ci in tools\\overlays (the pinned versions) +
                                                                    HyperFrames' Chrome (Settings > Programs > Install)
+    .venv\\Scripts\\python tools\\overlay.py versions                     pinned / installed / newest HyperFrames + GSAP
+    .venv\\Scripts\\python tools\\overlay.py upgrade-test [<ver>] [--gsap <ver>|latest] [--quick]
+          installs a newer HyperFrames in .app\\dev\\hf-upgrade (scratch), renders tools\\overlays\\examples with it
+          and with the pinned one, compares every frame (max 4/255) and the render time; PASS -> pin
+    .venv\\Scripts\\python tools\\overlay.py pin <ver> [--gsap <ver>]    adopt a tested version (package.json + lock)
 Needs Node.js 22+ and `npm ci` in tools\\overlays (setup.bat does both). HyperFrames' anonymous telemetry is switched
 off for every call (HYPERFRAMES_NO_TELEMETRY / DO_NOT_TRACK). Writes only inside projects\\<name>\\build\\ (or the
 lab's .app\\ scratch); sources are never touched.
@@ -25,9 +30,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -285,6 +292,174 @@ def cmd_doctor(a) -> int:
     return 0
 
 
+# ------------------------------------------------------------------------------------------- upgrades (0.3.2)
+UPG = LAB / ".app" / "dev" / "hf-upgrade"
+EXAMPLES = OVL / "examples"
+TOL = 4                                           # max difference per channel (/255), the 0.3.0 overlay check's bar
+
+
+def _example_conf(folder: Path) -> tuple[float, int]:
+    """(fps, frames) from an example's index.html (`const FPS = 25, FRAMES = 30`)."""
+    t = (folder / "index.html").read_text(encoding="utf-8")
+    m = re.search(r"FPS\s*=\s*([\d.]+)\s*,\s*FRAMES\s*=\s*(\d+)", t)
+    if not m:
+        raise SystemExit(f"{folder.name}: no 'const FPS = .., FRAMES = ..' line in index.html")
+    return float(m[1]), int(m[2])
+
+
+def _render_pngs(hf_bin: Path, gsap_js: Path, example: Path, work: Path) -> tuple[list[Path], float]:
+    """Render one example to PNG frames with a given HyperFrames + GSAP; returns (frames, seconds)."""
+    src = work / "comp"
+    shutil.rmtree(work, ignore_errors=True)
+    src.mkdir(parents=True)
+    shutil.copy2(example / "index.html", src / "index.html")
+    shutil.copy2(gsap_js, src / "gsap.min.js")
+    fps, _ = _example_conf(example)
+    t0 = time.time()
+    r = subprocess.run([node(), str(hf_bin), "render", str(src), "--format", "png-sequence", "--fps", fps_arg(fps),
+                        "--output", str(work / "frames"), "--quiet", "--workers", "auto", "--strict",
+                        "--frames-cache-dir", "off"], cwd=str(hf_bin.parents[3]), env=env(), text=True,
+                       capture_output=True, encoding="utf-8", errors="replace")
+    secs = time.time() - t0
+    pngs = sorted((work / "frames").glob("frame_*.png"))
+    if r.returncode or not pngs:
+        raise RuntimeError(f"render failed (exit {r.returncode}): {(r.stderr or r.stdout)[-500:]}")
+    return pngs, secs
+
+
+def _premul(p: Path) -> np.ndarray:
+    a = np.asarray(Image.open(p).convert("RGBA")).astype(np.int32)
+    out = a.copy()
+    out[..., :3] = (a[..., :3] * a[..., 3:] + 127) // 255           # invisible pixels don't count
+    return out
+
+
+def _side_by_side(pa: Path, pb: Path, out: Path) -> None:
+    """pinned | candidate | difference x8 (on a checkerboard), for the worst frame."""
+    imgs = []
+    for p in (pa, pb):
+        a = np.asarray(Image.open(p).convert("RGBA")).astype(np.float32) / 255
+        bg = checker(a.shape[0], a.shape[1]).astype(np.float32) / 255
+        imgs.append(((a[..., :3] * a[..., 3:] + bg * (1 - a[..., 3:])) * 255 + 0.5).astype(np.uint8))
+    d = np.clip(np.abs(_premul(pa) - _premul(pb))[..., :3] * 8, 0, 255).astype(np.uint8)
+    Image.fromarray(np.hstack([imgs[0], imgs[1], d])).save(out)
+
+
+def cmd_upgrade_test(a) -> int:
+    from motionlab import upstream as UP
+    npm = shutil.which("npm")
+    if not npm or not HF.exists():
+        raise SystemExit("needs Node.js and the pinned HyperFrames (overlay.py install)")
+    pin = UP.pinned()
+    ver = a.version or UP.latest("hyperframes")
+    gver = (UP.latest("gsap") if a.gsap == "latest" else a.gsap) if a.gsap else pin["gsap"]
+    if ver == pin["hyperframes"] and gver == pin["gsap"]:
+        print(f"HyperFrames {ver} + GSAP {gver} is what MotionLab pins already - nothing to test")
+        return 0
+    root = UPG / f"hyperframes-{ver}"
+    pkg = root / "pkg"
+    shutil.rmtree(root, ignore_errors=True)
+    pkg.mkdir(parents=True)
+    (pkg / "package.json").write_text(json.dumps({"name": "motionlab-overlays-candidate", "private": True,
+                                                  "dependencies": {"hyperframes": ver, "gsap": gver}}, indent=1),
+                                      encoding="utf-8")
+    log(f"installing the candidate HyperFrames {ver} + GSAP {gver} into {pkg} (scratch) ...")
+    r = subprocess.run([npm, "install", "--no-fund", "--no-audit"], cwd=str(pkg), env=env(), capture_output=True,
+                       text=True, encoding="utf-8", errors="replace")
+    cand = pkg / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs"
+    if r.returncode or not cand.exists():
+        raise SystemExit(f"npm install failed (exit {r.returncode}): {(r.stderr or r.stdout)[-600:]}")
+    if subprocess.run([node(), str(cand), "browser", "ensure"], cwd=str(pkg), env=env(), capture_output=True).returncode:
+        raise SystemExit("the candidate could not get its Chrome")
+    sides = {"pinned": (HF, GSAP), "candidate": (cand, pkg / "node_modules" / "gsap" / "dist" / "gsap.min.js")}
+    examples = sorted(p for p in EXAMPLES.iterdir() if (p / "index.html").exists())
+    if a.quick:
+        examples = [p for p in examples if _example_conf(p)[1] <= 100]
+    rows, ok = [], True
+    for ex in examples:
+        res = {"example": ex.name}
+        try:
+            got = {}
+            for side, (hb, gj) in sides.items():
+                got[side] = _render_pngs(hb, gj, ex, root / side / ex.name)
+                res[f"seconds_{side}"] = round(got[side][1], 1)
+            pa, pb = got["pinned"][0], got["candidate"][0]
+            res["frames"] = [len(pa), len(pb)]
+            worst, wf, over = 0, 0, 0
+            for i, (x, y) in enumerate(zip(pa, pb)):
+                d = np.abs(_premul(x) - _premul(y))
+                m = int(d.max())
+                over += int((d.max(axis=2) > 1).sum())
+                if m > worst:
+                    worst, wf = m, i
+            px = len(pa) * np.asarray(Image.open(pa[0])).shape[0] * np.asarray(Image.open(pa[0])).shape[1]
+            fps, _ = _example_conf(ex)
+            res.update({"max_diff": worst, "worst_frame": wf, "worst_tc": frame_to_tc(wf, fps),
+                        "pixels_over_1_pct": round(100 * over / max(px, 1), 3),
+                        "pass": len(pa) == len(pb) and worst <= TOL})
+            if worst:
+                shot = root / f"{ex.name}_f{wf}.png"
+                _side_by_side(pa[wf], pb[wf], shot)
+                res["worst_image"] = str(shot.relative_to(LAB))
+        except RuntimeError as e:
+            res.update({"pass": False, "error": str(e)})
+        ok = ok and res["pass"]
+        rows.append(res)
+        log(f"  {ex.name}: " + (f"ERROR {res['error']}" if "error" in res else
+            f"{'PASS' if res['pass'] else 'FAIL'}  frames {res['frames'][0]}/{res['frames'][1]}, max difference "
+            f"{res['max_diff']}/255 (worst f{res['worst_frame']} ({res['worst_tc']})), "
+            f"{res['pixels_over_1_pct']} % pixels > 1/255; render {res['seconds_pinned']} s -> "
+            f"{res['seconds_candidate']} s"))
+        for side in sides:                                          # frames are big; keep the report + worst frames
+            shutil.rmtree(root / side / ex.name, ignore_errors=True)
+    if not a.keep:
+        shutil.rmtree(pkg, ignore_errors=True)
+    result = {"hyperframes": ver, "gsap": gver, "from": pin, "pass": ok, "examples": rows}
+    (root / "report.json").write_text(json.dumps(result, indent=1), encoding="utf-8")
+    UP.record_test(ver, result)
+    print(f"\nUPGRADE TEST {'PASS' if ok else 'FAIL'}: HyperFrames {pin['hyperframes']} -> {ver}, GSAP {pin['gsap']} -> "
+          f"{gver} ({len(rows)} examples, max {TOL}/255). Report: {(root / 'report.json').relative_to(LAB)}")
+    if ok:
+        print(f"To adopt it (the repo owner): .venv\\Scripts\\python tools\\overlay.py pin {ver}"
+              + (f" --gsap {gver}" if gver != pin["gsap"] else ""))
+    return 0 if ok else 1
+
+
+def cmd_versions(a) -> int:
+    from motionlab import upstream as UP
+    s = UP.check(force=True)
+    for k, p in s["packages"].items():
+        print(f"{k}: pinned {p['pinned']}, installed {p['installed']}, newest on npm {p['latest']}"
+              + ("  <- newer" if p["newer"] else "") + ("  (installed != pinned: overlay.py install)"
+                                                        if p["out_of_date"] else "") + f"   notes: {p['notes']}")
+    for v, t in sorted(s["tests"].items(), key=lambda kv: UP.vkey(kv[0])):
+        print(f"upgrade test {v} (+ GSAP {t.get('gsap')}): {'PASS' if t.get('pass') else 'FAIL'} on {t.get('when')}")
+    if s["error"]:
+        print("npm check:", s["error"])
+    return 0
+
+
+def cmd_pin(a) -> int:
+    """Adopt a tested version: npm install --save-exact in tools\\overlays (package.json + lock), its Chrome."""
+    from motionlab import upstream as UP
+    t = UP.state()["tests"].get(a.version)
+    if not (t and t.get("pass")) and not a.force:
+        raise SystemExit(f"no passing upgrade test for HyperFrames {a.version} - run: overlay.py upgrade-test "
+                         f"{a.version}" + (f" --gsap {a.gsap}" if a.gsap else "") + "  (or --force)")
+    if t and a.gsap and t.get("gsap") != a.gsap and not a.force:
+        raise SystemExit(f"the test used GSAP {t.get('gsap')}, not {a.gsap}")
+    npm = shutil.which("npm")
+    specs = [f"hyperframes@{a.version}"] + ([f"gsap@{a.gsap}"] if a.gsap else [])
+    log(f"pinning {' '.join(specs)} in tools\\overlays ...")
+    if subprocess.run([npm, "install", "--save-exact", "--no-fund", "--no-audit", *specs], cwd=str(OVL),
+                      env=env()).returncode:
+        raise SystemExit("npm install failed - tools\\overlays\\package.json may be half changed: git diff it")
+    hf("browser", "ensure")
+    print(f"pinned: {UP.pinned()}\nNext: selftest.py --extended, tools\\dev\\smoke.py, a CHANGELOG line, then commit + "
+          "push - friends get it through GitHub's tests and the Update button (setup.bat / Install run npm ci).")
+    return 0
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -308,9 +483,20 @@ def main() -> int:
     sub.add_parser("install")
     s = sub.add_parser("doctor")
     s.add_argument("--fix", action="store_true", help="download HyperFrames' Chrome if missing")
+    s = sub.add_parser("versions", help="pinned / installed / newest HyperFrames + GSAP (asks npm)")
+    s = sub.add_parser("upgrade-test", help="render the examples with a newer HyperFrames and compare every frame")
+    s.add_argument("version", nargs="?", help="default: the newest on npm")
+    s.add_argument("--gsap", help="a GSAP version to test too ('latest'); default: the pinned one")
+    s.add_argument("--quick", action="store_true", help="only the short examples (skip the 10 s clip)")
+    s.add_argument("--keep", action="store_true", help="keep the scratch install in .app\\dev\\hf-upgrade")
+    s = sub.add_parser("pin", help="adopt a version that passed upgrade-test (changes tools\\overlays\\package.json)")
+    s.add_argument("version")
+    s.add_argument("--gsap")
+    s.add_argument("--force", action="store_true")
     a = ap.parse_args()
     return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check,
-            "doctor": cmd_doctor, "install": cmd_install}[a.cmd](a)
+            "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
+            "pin": cmd_pin}[a.cmd](a)
 
 
 if __name__ == "__main__":

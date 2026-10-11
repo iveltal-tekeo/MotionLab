@@ -5,8 +5,9 @@ are served read-only from /files/<lab-relative path> (analysis, projects, refs, 
 so videos can seek; /api/ returns JSON. Every request that changes something (verdicts, picks, jobs) must carry the
 session token embedded in the page, so other web pages cannot use the server. The only writes: the user's
 verdicts / exported feedback (analysis\\<name>\\feedback\\), library picks (projects\\<name>\\build\\), and the app's
-own .app\\ folder (logs, job logs, video thumbnails), settings.json (Settings page) and downloads into refs\\
-(yt-dlp, started from the References page). Deleting = the user's Delete buttons only (trash.py): after a dialog
+own .app\\ folder (logs, job logs, video thumbnails), settings.json (Settings page), downloads into refs\\
+(yt-dlp, started from the References page) and the prompt library (knowledge\\local\\prompts\\: added and rated on
+the Prompts page). Deleting = the user's Delete buttons only (trash.py): after a dialog
 listing every item, references / downloads / video projects / renders go to the Windows Recycle Bin. Programs it
 can start: Claude Code in a new console ("Open in Claude", or when a lab pass started with "Analyse with Claude"
 ends), Explorer / the default viewer for lab files, and the shortcut maker - each only on a click."""
@@ -30,13 +31,15 @@ from pathlib import Path
 
 from motionlab import __version__
 from motionlab import knowledge as KN
+from motionlab import prompts as PR
+from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
 from motionlab.util import LAB, tool
 
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 4                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 5                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -339,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
                                                                for k, v in system.PRESETS.items()],
                                "categories": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
                                "styles": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
-                               "efforts": list(system.EFFORTS),
+                               "efforts": list(system.EFFORTS), "upstream": UP.state(),
                                "tasks": {k: v[0] for k, v in system.TASKS.items()},
                                "resolve_mcp": system.resolve_mcp_state(),
                                "update": {**(S.update or {}), "phase": S.phase}})
@@ -351,6 +354,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(KN.overview())
         if path == "/api/knowledge/card":
             return self._json(KN.card_detail(arg("id", "")))
+        if path == "/api/prompts":
+            return self._json(PR.overview())
         if path == "/api/text":
             return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
         if path == "/api/thumb":
@@ -445,6 +450,13 @@ class Handler(BaseHTTPRequestHandler):
             r = KN.save_meta(name, **{k: body[k] for k in ("category", "tags") if k in body})
             KN.build_local_cards([name])
             return self._json(r)
+        if path == "/api/upstream/check":                 # Settings > Programs: newer HyperFrames / GSAP now
+            return self._json(UP.check(force=True))
+        if path == "/api/prompts/import":                 # the Prompts page's Add dialog (the paste format)
+            return self._json({"saved": PR.import_paste(str(body.get("text", "")))})
+        if path == "/api/prompts/rate":
+            return self._json(PR.update(str(body.get("id", "")), rating=body.get("rating") or None,
+                                        note=body.get("note")))
         if path == "/api/claude":
             return self._json(system.open_claude(str(body.get("prompt", "")), str(body.get("task") or "free"),
                                                  str(body.get("label", ""))))
@@ -552,7 +564,10 @@ def startup_update() -> None:
     time.sleep(3)
     try:
         mode = system.load().get("update_mode", "ask")
-        if mode == "off" or not updater.is_repo():
+        if mode == "off":
+            return
+        threading.Thread(target=UP.check, daemon=True).start()  # newer HyperFrames / GSAP (at most once a day)
+        if not updater.is_repo():
             return
         S.update = updater.check(fetch=True)
         if (mode == "auto" and S.update.get("can_update") and not S.runner.running()
@@ -575,6 +590,7 @@ def watcher(server: ThreadingHTTPServer):
                 S.update = updater.check(fetch=True)
             except Exception:                                   # noqa: BLE001
                 pass
+            UP.check()                                          # newer HyperFrames / GSAP: asks npm once a day
         n += 1
         time.sleep(5)
         if not S.auto_exit or S.runner.running():

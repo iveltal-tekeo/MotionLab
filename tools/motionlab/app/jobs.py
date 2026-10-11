@@ -82,6 +82,9 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         return "Self-test (extended)", [PY, str(TOOLS / "selftest.py"), "--extended"], "cpu"
     if kind == "overlays_install":                                 # Settings > Programs > HyperFrames > Install
         return "Install HyperFrames (HTML overlays)", [PY, str(TOOLS / "overlay.py"), "install"], "net"
+    if kind == "overlays_upgrade_test":            # Settings > Programs > HyperFrames > Test it (scratch install)
+        return ("Test the newest HyperFrames + GSAP on the overlay examples",
+                [PY, str(TOOLS / "overlay.py"), "upgrade-test", "--gsap", "latest"], "cpu")
     if kind in ("resolve_mcp_install", "resolve_mcp_remove"):      # Settings > Claude Code > DaVinci Resolve (MCP)
         install = kind == "resolve_mcp_install"
         return ("Connect Claude Code to DaVinci Resolve (MCP)" if install else "Disconnect the Resolve MCP",

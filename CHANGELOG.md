@@ -4,6 +4,39 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## 0.3.1 - 2026-10-12 - Tested on GitHub first, and a prompt library
+
+- **Every change is tested first**: each change pushed to GitHub is now tested automatically on a clean Windows
+  machine - the self-tests (synthetic videos with known effects, made there) and a check that the app starts, every
+  page opens and Claude's MCP connection works. The *Update available* button only offers what passed; a change
+  still being tested shows as "waiting for GitHub's tests" in *Settings > Sharing & updates*. Friends' shared cards
+  and lessons take a quick check and arrive within minutes.
+- **ffmpeg 9.0.2**: `setup.bat` installs the newest ffmpeg through winget, which is 9.0.2 now - the self-tests pass
+  with it (21 of 21 effects, every cut exact, no false alarms), and GitHub's tests use the same version.
+- Each version gets a tag on GitHub (`v0.3.1`, ...), so any earlier version can be fetched again.
+- **Prompts** (new page in the sidebar, the first part of 0.4): keep the prompts that worked for you - for video
+  models like Seedance / Higgsfield / Kling, hooks (the first 3 seconds) and talking scripts - or a creator's public
+  prompt with its link. Claude splits each one into its structure (subject, camera, light, look... or hook > points >
+  call to action); *Write one like this* opens Claude Code, which writes three new prompts for your need in a
+  structure that already worked. Text only - you paste the prompt into the site, nothing is paid or sent - then rate
+  what it made (Good / OK / Bad + a note), and the best-rated ones become the first examples next time. A shot
+  prompt can also be filled from a reference's frames (its measured camera move and look). Your prompts stay on your
+  PC for now.
+- **HyperFrames kept current, safely**: HyperFrames (the HTML graphics) now uses 0.8.149 and GSAP 3.15.0 - tested
+  first: the 4AM title and clock come out identical, the 10-second What's new clip within 2/255. HyperFrames releases
+  several times a day, so MotionLab never upgrades by itself: *Settings > Programs* shows the version in use and the
+  newest one (asked once a day, nothing about you is sent), and *Test it* renders the examples with the newer version
+  and compares every frame. A version that passes reaches you with a MotionLab update, which installs it by itself
+  (where HyperFrames is installed).
+- **Transcripts**: `tools\content.py transcript <reference>` fetches the video's own subtitles (or YouTube's
+  automatic captions) and writes what is said, every line and word with frame + timecode, into the reference's
+  analysis folder. Claude reads it through MotionLab's MCP server (hooks and scripts of talking videos build on it
+  next). Nothing is shared: transcripts are other people's words and stay on your PC.
+- For developers: `.github\workflows\tests.yml`, `tools\dev\smoke.py` (the app smoke test - also worth running
+  after any change to the app); how the `tested` branch works: `docs\organization.md`, "Tests on GitHub". The prompt
+  library: `tools\prompts.py`, `tools\motionlab\prompts.py`, MCP `prompts`, the `/write-prompt` skill; the page needs
+  `API_LEVEL` 5. Overlay packages: `tools\motionlab\upstream.py`, `overlay.py versions | upgrade-test | pin`.
+
 ## 0.3.0 - 2026-10-09 - Update button, colour rebuilds, HTML graphics, Claude + Resolve
 
 - **Update available**: when a new version is on GitHub, a bright button appears in the sidebar. It shows what

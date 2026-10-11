@@ -1,5 +1,5 @@
 /* MotionLab app - plain JavaScript, no build step. Pages: home, references (other people's videos: download,
-   analyses + verdicts), videos (your footage: renders, timing, Resolve + library picks), library, jobs, storage,
+   analyses + verdicts), videos (your footage: renders, timing, Resolve + library picks), prompts, library, jobs, storage,
    settings (programs + downloads). Routes keep their first names (#/refs, #/projects). Every frame shown = number +
    timecode. */
 'use strict';
@@ -69,7 +69,7 @@ async function openPath(path, reveal = false) {
   try { await api('/api/open', {path, reveal}); } catch (e) { toast(e.message, 'err'); }
 }
 // Claude Code in a new console in the lab folder, with an optional first message (the app's hand-off texts). task =
-// what it is for (system.TASKS: review, feedback, lessons, library, recreate, free) - it picks the effort level
+// what it is for (system.TASKS: review, feedback, lessons, library, recreate, prompt, free) - it picks the effort level
 async function openClaude(prompt = '', task = 'free', label = '') {
   try {
     const r = await api('/api/claude', {prompt, task, label});
@@ -157,7 +157,8 @@ const PAGES = [
   [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)))?$/, pageRef, 'refs'], [/^#\/projects$/, pageProjects, 'projects'],
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'projects'], [/^#\/library$/, pageLibrary, 'library'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'storage'],
-  [/^#\/settings$/, pageSettings, 'settings'], [/^#\/knowledge$/, pageKnowledge, 'knowledge']];
+  [/^#\/settings$/, pageSettings, 'settings'], [/^#\/knowledge$/, pageKnowledge, 'knowledge'],
+  [/^#\/prompts(?:\/(\w+))?$/, pagePrompts, 'prompts']];
 async function route() {
   CLEAN.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); CLEAN = []; KEYS = null; hideTip();
   const h = location.hash || '#/';
@@ -176,7 +177,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 4;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 5;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -476,6 +477,8 @@ async function pageHome(main) {
 
 // ---- updates: the sidebar's Update button, its dialog (the CHANGELOG sections newer than this copy), "What's new"
 function plural(n, w) { return `${n} ${w}${n === 1 ? '' : 's'}`; }
+// updates come from GitHub's "tested" branch: newer pushes wait until the automatic tests pass (updater.check)
+function testingText(u) { return u && u.testing ? ` · ${plural(u.testing, 'newer change')} waiting for GitHub's tests` : ''; }
 function knowledgeText(cards, lessons) {             // "2 reference cards and 1 lesson"
   return [cards ? plural(cards, 'reference card') : '', lessons ? plural(lessons, 'lesson') : ''].filter(Boolean).join(' and ');
 }
@@ -516,7 +519,7 @@ async function updateModal() {
   const kn = u.kind === 'knowledge', jobs = +($('#jobcount').textContent || 0);
   const list = (u.changes || []).map(c => `<li>${esc(c)}</li>`).join('');
   modal(`<h2>${kn ? 'New knowledge from your friends' : u.kind === 'version' ? `MotionLab ${esc(u.new_version)} is available` : 'Updates are available'}</h2>
-    <div class="small muted">You have MotionLab ${esc(u.version)} · ${plural(u.behind, 'change')} on GitHub${u.checked ? ' · checked ' + esc(u.checked) : ''}</div>
+    <div class="small muted">You have MotionLab ${esc(u.version)} · ${plural(u.behind, 'change')} on GitHub${u.checked ? ' · checked ' + esc(u.checked) : ''}${testingText(u)}</div>
     <div class="whatsnew">${kn ? `<p><b>${esc(knowledgeText(u.new_cards || 0, u.new_lessons || 0) || 'Shared knowledge')}</b> - what your friends analysed and
       learned (pacing, effects, their verdicts); lessons wait for a review before they change anything. No restart needed.</p><ul class="small">${list}</ul>`
       : u.whats_new ? `<div class="md">${md(u.whats_new)}</div>` : `<ul class="small">${list}</ul>`}</div>
@@ -1192,6 +1195,74 @@ async function pageLibrary(main) {
   const cs = $('#cs'); if (cs) cs.onclick = () => copy(say);
 }
 
+// ============================================================================================ prompts (0.4)
+// the prompt library: proven prompts per kind, split into their structure; Claude writes new ones like them
+// (/write-prompt). One file per prompt in knowledge\local\prompts\ - the ratings live there too.
+const PSRC = {tested: 'tested by you', creator: 'creator', written: 'written by Claude'};
+async function pagePrompts(main, kind) {
+  const R = await api('/api/prompts');
+  const K = R.kinds.find(x => x.id === kind) || R.kinds.find(x => x.count) || R.kinds[0];
+  const items = R.items.filter(p => p.kind === K.id);
+  const unsplit = items.filter(p => !p.structure).map(p => p.id);
+  const src = p => { const s = p.source || {};
+    return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}`
+      : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(esc).join(', ')}</span>` : ''}`; };
+  const card = p => { const res = p.result || {};
+    return `<div class="panel pcard" data-id="${esc(p.id)}">
+      <div class="row phead"><b class="mono">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
+        <span class="grow"></span><span class="small dim">${esc(p.updated || p.added || '')}</span></div>
+      <pre class="ptext">${esc(p.text)}</pre>
+      ${p.structure ? `<div class="pslots">${p.structure.map(x => `<span class="pslot"><b>${esc(x.slot)}</b> ${esc(x.text)}</span>`).join('')}</div>`
+        : '<div class="small muted">Not split into its structure yet.</div>'}
+      <div class="row prate"><span class="small muted">What it made:</span>
+        ${['good', 'ok', 'bad'].map(r => `<button class="btn sm${res.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}
+        <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}">
+        <span class="grow"></span><button class="btn sm" data-copy>Copy</button>
+        ${claudeBtn(`/write-prompt ${p.kind} like ${p.id}`, 'Write one like this', 'prompt', p.id)}</div></div>`; };
+  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Prompts that worked - for video models, hooks and talking scripts - each split into its
+      structure, so Claude writes a new one for your need in a structure that already worked. Text only: paste the prompt into the site
+      (Higgsfield, Seedance, ...), then rate what it made - the best-rated ones are the first examples next time.</div></div>
+      <div class="row"><button class="btn pri" id="padd">Add prompts</button>${claudeBtn(`/write-prompt ${K.id}`, 'Write a new prompt', 'prompt', K.id, 'cl')}
+        ${R.items.length ? `<button class="btn" data-open="${esc(R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
+    <div class="tabs">${R.kinds.map(k => `<a href="#/prompts/${k.id}" class="${k.id === K.id ? 'on' : ''}">${esc(k.label)} <span class="dim">${k.count}</span></a>`).join('')}</div>
+    ${unsplit.length ? `<div class="claude" style="margin-bottom:12px"><span>${plural(unsplit.length, 'prompt')} not split into structure yet: ${unsplit.map(esc).join(', ')}</span>
+      ${claudeBtn(`/write-prompt split ${unsplit.join(' ')}`, 'Split them in Claude Code', 'prompt', 'split')}</div>` : ''}
+    ${items.map(card).join('') || `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
+      or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`}`;
+  $('#padd').onclick = () => addPromptsModal(R.template);
+  $$('.pcard', main).forEach(c => {
+    const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
+    const save = async (rating, msg) => {
+      try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
+        p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
+    note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
+    $('[data-copy]', c).onclick = () => copy(p.text);
+  });
+}
+function addPromptsModal(template) {
+  modal(`<h2>Add prompts</h2>
+    <div class="small muted">Paste one or more prompts in this format - start each with <code>PROMPT 1</code>, <code>PROMPT 2</code>, ...; <code>kind</code> = shot, hook or script;
+      <code>source</code> = <code>tested by me</code> or <code>creator: name link</code>; <code>result</code> = good / ok / bad and a note (or <code>-</code>). Everything after
+      <code>text:</code> is the prompt. A creator's prompt stays on this PC.</div>
+    <textarea id="ptxt" rows="18" class="mono" style="width:100%;margin-top:10px" spellcheck="false">${esc(template)}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="psave">Save</button><span id="pres" class="small"></span></div>`, el => {
+    $('#psave', el).onclick = async () => {
+      try {
+        const r = await api('/api/prompts/import', {text: $('#ptxt', el).value});
+        const ids = r.saved.map(x => x.id);
+        $('#pres', el).innerHTML = `<span class="ok">Saved ${plural(ids.length, 'prompt')}: ${ids.map(esc).join(', ')}</span>`;
+        $('.row', el).insertAdjacentHTML('beforeend', claudeBtn(`/write-prompt split ${ids.join(' ')}`, 'Split them in Claude Code', 'prompt', 'split'));
+        $('#psave', el).remove();
+        const h = '#/prompts/' + r.saved[0].kind;           // the page behind the dialog shows them
+        if (location.hash === h) route(); else location.hash = h;
+      } catch (e) { $('#pres', el).innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+    };
+  });
+}
+
 // ============================================================================================ jobs
 async function pageJobs(main, id) {
   const list = await api('/api/jobs');
@@ -1262,6 +1333,26 @@ async function pageStorage(main) {
 
 // ============================================================================================ downloads (yt-dlp)
 const FILE_RX = /^[A-Za-z]:\\.+\.(mp4|mkv|webm|mov|m4v|mp3|m4a)$/i;
+// Settings > Programs: the pinned HyperFrames / GSAP vs the newest on npm (asked once a day, motionlab.upstream) and
+// the upgrade test (overlay.py upgrade-test renders the examples with both versions and compares every frame)
+function upstreamBox(S) {
+  const U = S.upstream || {}, P = U.packages || {}, hf = P.hyperframes || {}, gs = P.gsap || {};
+  if (!hf.pinned || !(S.tools.find(t => t.name === 'hyperframes') || {}).found) return '';
+  const pkg = (name, p) => `${name} <b>${esc(p.pinned)}</b>${p.installed && p.installed !== p.pinned ? ` <span class="amber">(installed ${esc(p.installed)} - Install again)</span>` : ''}${p.latest ? (p.newer
+    ? ` · <span class="amber">${esc(p.latest)} on npm</span> <a href="${esc(p.notes)}" target="_blank" rel="noopener">what changed</a>` : ' · the newest') : ''}`;
+  const t = hf.latest && (U.tests || {})[hf.latest];
+  const worst = t && t.examples ? Math.max(...t.examples.map(x => x.max_diff ?? 255)) : null;
+  const adopt = t && t.pass ? `Pin HyperFrames ${t.hyperframes}${t.gsap !== gs.pinned ? ` and GSAP ${t.gsap}` : ''} for MotionLab: run tools\\overlay.py pin ${t.hyperframes}${t.gsap !== gs.pinned ? ` --gsap ${t.gsap}` : ''}, then selftest.py --extended and tools\\dev\\smoke.py, and add a CHANGELOG line` : '';
+  const test = !hf.newer && !gs.newer ? '' : t ? (t.pass
+      ? `<span class="tag done">tested ${esc(String(t.when || '').slice(0, 10))}: same frames</span> <span class="small muted">(max ${worst}/255 on ${t.examples.length} examples, render ${t.examples.map(x => `${x.seconds_pinned} → ${x.seconds_candidate} s`).join(', ')}). A MotionLab update brings it once the repo owner adopts it.</span> ${claudeBtn(adopt, 'Adopt it (repo owner)', 'free', 'hyperframes')}`
+      : `<span class="tag failed">tested ${esc(String(t.when || '').slice(0, 10))}: frames differ</span> <span class="small muted">${t.examples.map(x => `${esc(x.example)} ${x.error ? 'error' : x.max_diff + '/255'}`).join(' · ')} - MotionLab keeps ${esc(hf.pinned)}.</span>`)
+      + ' <button class="btn sm" data-hftest>Test again</button>'
+    : '<button class="btn sm" data-hftest title="Installs it in a scratch folder (.app\\dev), renders the overlay examples with both versions and compares every frame - a few minutes, ~300 MB">Test it</button>';
+  return `<div class="upstream small"><div><b>HTML overlay packages:</b> ${pkg('HyperFrames', hf)} &nbsp;|&nbsp; ${pkg('GSAP', gs)}</div>
+    <div class="row" style="margin-top:6px">${test}<span class="grow"></span><span class="dim">${U.checked ? `npm checked ${esc(U.checked.replace('T', ' ').slice(0, 16))}` : 'not checked yet'}${U.error ? ` · <span class="bad">${esc(U.error)}</span>` : ''}
+      · <a href="#" id="upnpm">check now</a></span></div>
+    <div class="dim">MotionLab only uses versions that passed this test; newer HyperFrames come several times a day.</div></div>`;
+}
 async function downloadModal() {
   const S = await api('/api/settings');
   const yt = S.tools.find(t => t.name === 'yt-dlp') || {};
@@ -1315,7 +1406,7 @@ async function pageSettings(main) {
       <td class="st">${t.found ? '<span class="tag done">found</span>' : `<span class="tag ${t.need === 'required' ? 'failed' : ''}">missing</span>`}</td>
       <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}</td><td class="small muted">${esc(t.how)}${t.name === 'hyperframes' && (!t.found || /not downloaded/.test(t.version || ''))
         ? ((S.tools.find(x => x.name === 'node') || {}).found ? ' <button class="btn sm" data-hfinst>Install</button>' : ' <b>Install Node.js first.</b>') : ''}</td></tr>`).join('')}
-    </tbody></table></div>
+    </tbody></table>${upstreamBox(S)}</div>
   <div class="grid g2" style="margin-top:14px">
     <div class="panel"><h2>Downloads (yt-dlp)</h2><div class="form">
       <label for="ytp">yt-dlp.exe</label><input type="text" id="ytp" value="${esc(st.ytdlp_path)}" placeholder="empty = find it automatically">
@@ -1324,7 +1415,7 @@ async function pageSettings(main) {
       <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div></div></div>
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
-      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}</option>
+      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
       <span></span><div class="small muted">How hard Claude thinks in the windows the app opens. Higher = more careful, slower, and it uses more of
         your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div>
@@ -1343,7 +1434,7 @@ async function pageSettings(main) {
       <label for="who">Your name</label><div><input type="text" id="who" value="${esc(st.author)}" placeholder="e.g. alex (shown on what you share)" style="max-width:320px">
         <div class="small muted">Used for “Share my knowledge” - letters, numbers and - only.</div></div>
       <label>GitHub</label><div class="small">${S.update && S.update.remote ? `<span class="mono">${esc(S.update.remote)}</span> · branch ${esc(S.update.branch || '')}` : `<span class="muted">${esc((S.update && S.update.error) || 'not checked yet')}</span>`}
-        ${S.update && S.update.checked ? `<div class="dim">checked ${esc(S.update.checked)} · ${S.update.can_update ? `<b class="amber">${S.update.behind} update(s) waiting</b>` : 'up to date'}${S.update.ahead ? ` · ${S.update.ahead} of your commits not on GitHub yet` : ''}</div>` : ''}</div>
+        ${S.update && S.update.checked ? `<div class="dim">checked ${esc(S.update.checked)} · ${S.update.can_update ? `<b class="amber">${S.update.behind} update(s) waiting</b>` : 'up to date'}${S.update.ahead ? ` · ${S.update.ahead} of your commits not on GitHub yet` : ''}${testingText(S.update)}</div>` : ''}</div>
       <label>Updates</label><div class="col" style="gap:4px">
         <label class="chk small"><input type="radio" name="upm" value="ask" ${st.update_mode === 'ask' ? 'checked' : ''}><span>show the <b>Update available</b> button with what's new and wait for my click (recommended)</span></label>
         <label class="chk small"><input type="radio" name="upm" value="auto" ${st.update_mode === 'auto' ? 'checked' : ''}><span>install new versions by itself when MotionLab starts, then show what's new</span></label>
@@ -1361,6 +1452,14 @@ async function pageSettings(main) {
       <div class="row" style="margin-top:10px"><button class="btn" data-open=".">Open the lab folder</button></div></div>
   </div>`;
   $('#recheck').onclick = () => route();
+  const hft = $('[data-hftest]', main); if (hft) hft.onclick = async () => {
+    hft.disabled = true;
+    try { await startJob('overlays_upgrade_test', {}); } catch (e) { toast(e.message, 'err'); hft.disabled = false; }
+  };
+  const upc = $('#upnpm', main); if (upc) upc.onclick = async e => {
+    e.preventDefault();
+    try { await api('/api/upstream/check', {}); route(); } catch (err) { toast(err.message, 'err'); }
+  };
   const hfb = $('[data-hfinst]', main); if (hfb) hfb.onclick = async () => {
     hfb.disabled = true;
     try { await startJob('overlays_install', {}); } catch (e) { toast(e.message, 'err'); hfb.disabled = false; }

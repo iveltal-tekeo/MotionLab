@@ -2,11 +2,15 @@
 
 # MotionLab
 
+[![tests](https://github.com/iveltal-tekeo/MotionLab/actions/workflows/tests.yml/badge.svg)](https://github.com/iveltal-tekeo/MotionLab/actions/workflows/tests.yml)
+
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.3.0 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
-> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and an *Update available* button.
+> **Status: v0.3.1 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
+> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and an *Update available* button that
+> only offers versions GitHub's automatic tests passed. New in 0.3.1: a *Prompts* page - your proven prompts for
+> video models, hooks and scripts, and Claude writing new ones in the same structure.
 > Detection was tuned on music videos; other categories work and get better with every verdict you give.
 
 ## Contents
@@ -53,6 +57,9 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 - **Share it**: *Knowledge > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
   back with the next update. The *Knowledge* page compares pacing and effects per category across everybody.
 - **Rebuild it** with your own clips, in colour, as a lab render or as an editable DaVinci Resolve project.
+- **Prompts**: keep the prompts that worked for you (Seedance / Higgsfield / Kling shots, hooks, talking scripts) or
+  a creator's public one with its link; Claude splits each into its structure and writes new ones for your need in
+  a structure that already worked. You paste them into the site and rate what they made.
 - **Tidy up**: *Delete* on references, downloads, your videos and renders moves them to the Windows Recycle Bin.
 
 MotionLab never modifies a source video: it only reads it and checks its SHA-256 before and after every analysis.
@@ -132,6 +139,8 @@ When a new version is on GitHub, a bright **Update available** button appears in
 came in. Friends' shared knowledge arrives the same way (*New from friends*, no restart). The sidebar's
 **What's new** button shows the whole history ([CHANGELOG.md](CHANGELOG.md)) and the planned versions any time.
 *Settings > Sharing & updates* can install updates at start-up instead, or turn checking off.
+Every change is tested on GitHub first (the self-tests and the app, on a clean Windows machine - the badge at the
+top): the button only offers versions that passed, so a broken change never reaches you.
 An update never touches your videos, analyses, verdicts, settings or knowledge. Problems: errors go to
 `.app\server.log`.
 
@@ -158,7 +167,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 | Folder | What | In the repo? |
 |---|---|---|
 | `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder, MotionLab's MCP server, HTML overlays (`tools\overlays\`: HyperFrames, versions pinned; its `node_modules` stays on your PC) | yes |
-| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`) | yes |
+| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`, `write-prompt`) | yes |
 | `knowledge\` | shared reference cards and lessons waiting for review (`local\`, `inbox\`, `outbox\` are private) | partly |
 | `docs\` | roadmap, plans, ideas, guides, design notes | yes |
 | `refs\` | reference videos (read-only for the lab) | no - yours |
@@ -169,8 +178,9 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.4 content intelligence: videos as information, 0.5
-  templates by feel + macOS, 0.7 AI B-roll and cinematics), also shown in the app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.4 prompt library + the "yapping" method for talking-head
+  videos, 0.5 templates by feel + macOS, 0.6 collections and topics, 0.7 AI B-roll and cinematics), also shown in the
+  app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

@@ -38,6 +38,7 @@ TASKS = {
     "lessons": ("high", "MotionLab lessons"),          # review friends' incoming lessons
     "library": ("high", "MotionLab library"),          # save library picks as Fusion macros (needs Resolve)
     "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
+    "prompt": ("medium", "MotionLab prompt"),          # /write-prompt: split examples, write new prompts (text only)
 }
 # preset id -> (label, yt-dlp arguments, folder inside the lab)
 PRESETS = {

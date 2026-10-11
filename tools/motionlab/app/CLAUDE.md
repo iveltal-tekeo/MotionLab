@@ -11,7 +11,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
   refs, docs, library, knowledge only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
-  `knowledge\` (cards, summary, packs, imports), and - on a click - a Desktop / Start-menu shortcut, git pull
+  `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below).
 - Delete (v0.2.5, `trash.py`): the user's Delete buttons on References (a reference = its analysis folder + its video
   when that lies in `refs\`; a download nobody analysed), Videos (a whole `projects\<name>\`) and Renders (one render
@@ -25,7 +25,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, timing check, Resolve check-up / what changed by hand /
-  library picks, Delete), **Knowledge**, Library, Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
+  library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
+  structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = the paste format;
+  `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, Library, Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates).
 - The analysis page (#/ref/<name>, `?e=E004` selects an effect, `?misses` opens the misses tab), the user's
   2026-10-07 layout: header + workflow strip (`data.flow`: download > lab pass > Claude checks > your verdicts >
@@ -38,8 +40,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `--- possible misses ---` section that `tools\feedback.py` parses). False alarms stay hidden unless asked for.
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
-  review / feedback / lessons / library / recreate / free) that picks `--effort` (Settings > Claude Code > Effort:
-  "recommended" = review high, feedback high, lessons high, library high, recreate xhigh; or one level for all) and
+  review / feedback / lessons / library / recreate / prompt / free) that picks `--effort` (Settings > Claude Code >
+  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, prompt medium; or
+  one level for all) and
   `--name "MotionLab <task> <video>"` (shown by /resume) - both only when `claude --help` lists them (older
   versions). "Analyse with Claude" = an analyze job with `claude: true`: when the lab pass ends well the job opens
   Claude with `/analyze-reference "<video>" - the lab pass is done: analysis\<name>` (`data.review_prompt`; the skill
@@ -48,13 +51,17 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   playlists; the final path is printed last so the dialog offers "Analyse it").
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
-  DaVinci Resolve), one per group (cpu / resolve / light / net). Claude's
+  DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs), one per group (cpu / resolve / light / net). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.
 - Updates (`updater.py`, git only - no GitHub API, no tokens in the lab): `check` = `git fetch` + behind / ahead /
   local changes + the new version (read from `origin:tools/motionlab/__init__.py`) + `kind` ("version" = newer
   MotionLab, "knowledge" = only friends' cards / lessons, "changes") + every CHANGELOG section newer than this copy
-  (`updater.whats_new`: `## x.y.z - date - title` headings); `apply` = `git pull --rebase --autostash`, `pip install
+  (`updater.whats_new`: `## x.y.z - date - title` headings). Since 0.3.1 updates come from `origin/tested` when the
+  repo has it (`updater._upstream`; GitHub's tests move it to each passing push to main, docs\organization.md "Tests
+  on GitHub"): `behind` / the new version / What's new are read from there, `ahead` and Share stay on
+  `origin/<branch>`, `testing` = pushes on main not tested yet (the page says "waiting for GitHub's tests"). Tested
+  2026-10-09 against a fake GitHub with the workflow's own bash steps. `apply` = `git pull --rebase --autostash`, `pip install
   -r requirements.txt` if it changed, then the server restarts itself when code changed (`restart_soon`: a new
   `app.py --wait-port`, the window shows "Updating..." and reloads; knowledge-only updates need no restart).
   Settings `update_mode` (0.3.0; 0.2.x had update_check / update_auto, migrated to "ask"): "ask" (default) = the
@@ -72,7 +79,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Versions: `server.VERSION` = `__version__`; the page carries `<meta name="ml-version">` and `API_LEVEL` (app.js)
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
-  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen).
+  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts).
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).
 - Testing after a change: start `app.py --no-window --stay --no-update --port 879x` (NOT 8765: the user's own app
@@ -87,4 +94,5 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   clones as friends (never the real remote; helpers in `tools\dev\`: `cdp.py` drives headless Edge, `upd_prepare.py`
   (setup / push a test version) + `upd_test.py` the update paths; scratch in `.app\dev\`). Close every headless Edge
   you start (a forgotten one on an old test port reconnects to the next test server there). Then
-  `selftest.py --extended`.
+  `selftest.py --extended` and `tools\dev\smoke.py` (read-only: every module, every GET route, every page in headless
+  Edge, the MCP server - GitHub's tests run it on every push too).
