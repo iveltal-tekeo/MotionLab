@@ -37,9 +37,9 @@ STAGES = [
      "Recipes + Fusion macros checked in Resolve against 4AM. Later: install them as Resolve templates."),
     ("MVP for friends", "DONE", 4, "v0.2.5", "on GitHub",
      "Setup, sharing, review tab, Delete, Claude buttons with effort per task."),
-    ("Rebuild toolkit", "DONE", 3, "v0.3.2", "on GitHub",
-     "Update button, colour, 3x renders, HTML graphics (now with settings, a library, captions), MCP, Prompts. "
-     "Tested on GitHub."),
+    ("Rebuild toolkit", "DONE", 3, "v0.3.3", "on GitHub",
+     "Update button, colour, 3x renders, HTML graphics (settings, library, captions from your words), Create video, "
+     "Prompts. Tested on GitHub."),
     ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",
      "7 lessons from 1 round, cards shared through GitHub. Next: 10 videos each > category profiles."),
     ("Describe + yap", "STARTED", 1, "v0.3.5", "> v0.4 > v0.4.1",
@@ -53,8 +53,8 @@ VERDICT = [
     ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
              "per category."),
-    ("NEXT", "v0.3.3 fixes + soft edges  |  v0.3.5 describe video  |  v0.3.7 colour (looks, LUTs, Resolve)  |  v0.4 "
-             "yapping mode (HEIT)  |  v0.4.1 prompt generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll."),
+    ("NEXT", "v0.3.5 describe video  |  v0.3.7 colour (looks, LUTs, Resolve)  |  v0.4 yapping mode (HEIT)  |  v0.4.1 "
+             "prompt generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll.  You: try 0.3.3, rate your videos."),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")

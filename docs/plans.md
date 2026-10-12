@@ -70,6 +70,10 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
     structure a script example (0.3.5 / 0.4), with the link and frame + timecode.
   - **Sharing** your own prompts and ratings through *Knowledge > Share* (text); creators' prompts stay on the PC.
+  - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
+    0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
+    shown on the prompt as "Used in"); learn from those answers which structure works per purpose - needs a few
+    made videos rated first.
 - **Needs**: your prompts (the Prompts page or pasted in the chat).
 
 ## 0.4.0 - planned - Yapping mode: the yap-maxing framework
@@ -113,7 +117,7 @@ talking-head creators AND edit the user's own recording that way.)
   the extras' numbers on them; (3) the yapping detectors + self-tests; (4) brief + the edit of your own recording.
 - **Needs first**: 0.3.5 (describe video, incl. the words of your own recordings for captions).
 - **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
-  video"; not released): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
+  video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
   (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
   (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
   `assets\beats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
@@ -175,7 +179,7 @@ right - base with a prompt dropped a whole paragraph); Parakeet (HyperFrames, `m
 5 s here, ~20 CPU-seconds, 1.15 GB RAM, 25 European languages, no names prompt) 26.1 %. HyperFrames' whisper
 engine needs whisper.cpp built by hand on Windows - out. Word starts agree within 0.02-0.12 s (median) between
 engines. Names are what every engine gets wrong without help.
-**Decided + built 2026-10-12** (the user picked faster-whisper small, base as the light option; not released):
+**Decided + built 2026-10-12** (the user picked faster-whisper small, base as the light option; released in 0.3.3):
 `motionlab\speech.py` + `tools\speech.py install | status | transcribe` (optional: Settings > Programs > Speech to
 text > Install = the pinned faster-whisper 1.2.1 in the lab's venv + the small model; names via --names / the
 dialog, ignored by base); `overlay.py captions --from <a video>` (size / rate / length from the plan or the video -
@@ -184,6 +188,17 @@ video (a render of the edit or a clip) or from a subtitle file. Measured on the 
 14.5 s, captions at 1080 x 1920, 30 fps, 2159 frames (UI test 9/9). Still open here: references without subtitles
 (content.py transcript falling back to speech), Parakeet as a later option. Also: the SRT onto
 Resolve's subtitle track by script (test in the scratch project); the HTML clock's grain tuned to the lab's texture.
+
+**Carried over from 0.3.3** (released 2026-10-12, see CHANGELOG.md; found in the download review, the user decides):
+- Logins: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once here: HTTP 429 + "Sign in to
+  confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;
+  Chrome / Edge lock and encrypt their cookies). It is the user's login: a setting only with their OK.
+- HEVC (TikTok's best format) plays in the app only where Windows has the HEVC Video Extension (this PC has it): a
+  small H.264 copy for the player when it is missing.
+- yt-dlp out of date breaks TikTok / Instagram first: its age in Settings + an *Update yt-dlp* button (`yt-dlp -U`;
+  winget copies: `winget upgrade yt-dlp.yt-dlp`). Recent yt-dlp uses a JavaScript runtime (deno) for YouTube -
+  installed here; Settings could check for it.
+- Instagram carousels / TikTok photo posts give several files or sound only; the app records only the last file.
 
 **The user's notes (2026-10-09, again 2026-10-12):** "describe video: instead of focusing on our already existing
 analyze video for effects, transitions and pacing, we focus on analysing videos informatively (the content inside
@@ -237,40 +252,3 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
   - Other engines seen 2026-10-09: HyperFrames (in `tools\overlays\`, optional, needs Node) has a whisper.cpp
     `transcribe` command; ffmpeg's `whisper` filter is in BtbN builds but NOT in Gyan's essentials build (CI's; winget's
     full build: unchecked).
-
-## 0.3.3 - planned - Fixes and soft edges: titles, downloads, prompts, the app's layout
-
-**The user's notes (2026-10-12):** "lets do a little step back and focus on bugs and fixing some soft edges focusing
-on the entire workflow", then "continue with the v0.3.3 bug oriented version". On GitHub as they are done; listed in
-CHANGELOG.md `## Unreleased` until 0.3.3 ships.
-
-- **Done - odd titles** (a friend's report): "..." in a title made an analysis no page opened (folders renamed at
-  start: `util.fix_dotted_names`); an emoji made a saved download "fail" (yt-dlp `--encoding utf-8`, the file found
-  by its `[id]`). Regression checks: `selftest.py` `check_titles`.
-- **Done - downloads from other sites** (reviewed with yt-dlp 2026.08.19): 1080p = the short side (a vertical TikTok
-  came at 576x1024 although 720x1280 was there; 1080x1920 Reels / Shorts were capped at 608x1080), then the highest
-  frame rate, then H.264 + AAC; a link without video (SoundCloud) is refused clearly instead of putting a sound file
-  in refs\; yt-dlp's errors in words (no video, blocked / bot check, login, unknown link, ffmpeg missing, outdated).
-- **Done - adding prompts**: *Add prompts* takes any text or files (.txt / .md / .docx read by the app; a PDF goes
-  to Claude), the kind guessed (28 of the 29 saved prompts right), *Let Claude sort it* for a guide (`/write-prompt
-  import`), Claude reviews and splits afterwards; `prompts.py kind` fixes a wrong kind. The old format still works.
-- **Done - asked 2026-10-12**: Delete for prompts (Recycle Bin); what a prompt is for (its tags: purpose chips +
-  search on the page, *For: Edit*) and *Use it, change…* (`/write-prompt <kind> like <id> - change: ...`); *Create
-  video* on the Videos page (a reference or a prompt -> your clips / a new folder -> `/recreate-video <ref> <p>` or
-  `prompt:<id> <p>`, recorded in `build\made_from.json`); "How did it turn out?" per part (sound, SFX, colour,
-  captions, motion graphics, effects, pacing, overall) -> `build\outcome.json`, read by Claude
-  (`/recreate-video improve <p>`) and shown on the prompt it came from; the sidebar regrouped (Home, Videos | Media:
-  References, Prompts | Additional: Library, Knowledge | Tools: Jobs, Settings - Storage is a Settings tab); a colour
-  per section, softer cards, dialogs that pop in (CSS only). UI test 16/16 in headless Edge.
-- **Next for prompts (0.4.1)**: a structure per purpose (a vlog prompt is built differently from a talking-head, SFX
-  or transition prompt) learned from the "how did it turn out?" answers - needs a few made videos rated first.
-- **Open - found in the review, the user decides**:
-  - Logins: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once here: HTTP 429 + "Sign in to
-    confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;
-    Chrome / Edge lock and encrypt their cookies). It is the user's login: a setting only with their OK.
-  - HEVC (TikTok's best format) plays in the app only where Windows has the HEVC Video Extension (this PC has it): a
-    small H.264 copy for the player when it is missing.
-  - yt-dlp out of date breaks TikTok / Instagram first: its age in Settings + an *Update yt-dlp* button (`yt-dlp -U`;
-    winget copies: `winget upgrade yt-dlp.yt-dlp`). Recent yt-dlp uses a JavaScript runtime (deno) for YouTube -
-    installed here; Settings could check for it.
-  - Instagram carousels / TikTok photo posts give several files or sound only; the app records only the last file.

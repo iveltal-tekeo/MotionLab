@@ -4,8 +4,16 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
-## Unreleased
+## 0.3.3 - 2026-10-12 - Fixes, Create video, captions from your own words, a livelier app
 
+- **Captions from your own recordings** (*Videos > your video > Graphics > Captions...*): pick a video and MotionLab
+  writes down what is said - on your PC, nothing uploaded - and makes the captions from it, timed to the words.
+  Install it once in *Settings > Programs > Speech to text* (about 460 MB; *base* is a lighter choice for slow
+  laptops). Give it the names in your video (your channel, songs, products) and it spells them right. Phone videos
+  filmed upright come out upright.
+- **A talking-head graphics pack** (*Library > Graphics*): a progress bar, a hook title, numbers that pop up (and
+  count up) the moment you say them, a list that builds point by point, and an end card - all in a band clear of
+  your face. Colour, font, size, height and opacity are settings; it fits any video size.
 - **Fixed: videos with odd titles** (reported by a friend): a video whose title was cut short with "..." (TikTok
   hashtags) was analysed, but its page never opened ("bad name"). Such analyses are renamed when MotionLab starts,
   and new ones never get "..". *Download from a link* also said "download failed" for a title with an emoji (🎬),

@@ -7,11 +7,12 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.3.2 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
+> **Status: v0.3.3 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
 > written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and updates that only offer versions
-> GitHub's automatic tests passed. New in 0.3.2: graphics you edit in the app (text, colours, timing), a graphics
-> library, captions timed to the words, graphics tested inside DaVinci Resolve (swap in place), a *Content* tab
-> (transcript, views vs followers) and *Check for updates*. Since 0.3.1: a *Prompts* page.
+> GitHub's automatic tests passed. New in 0.3.3: *Create video* from a reference or a prompt, "how did it turn out?"
+> per part, captions from your own recordings (speech to text), a talking-head graphics pack, prompts added as any
+> text or file, vertical downloads in full size, and a regrouped, livelier app. 0.3.2: graphics you edit in the
+> app, a graphics library, captions, graphics inside DaVinci Resolve, a *Content* tab and *Check for updates*.
 > Detection was tuned on music videos; other categories work and get better with every verdict you give.
 
 ## Contents
