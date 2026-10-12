@@ -38,6 +38,8 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   after any change to the app); how the `tested` branch works: `docs\organization.md`, "Tests on GitHub". The prompt
   library: `tools\prompts.py`, `tools\motionlab\prompts.py`, MCP `prompts`, the `/write-prompt` skill; the page needs
   `API_LEVEL` 5. Overlay packages: `tools\motionlab\upstream.py`, `overlay.py versions | upgrade-test | pin`.
+  Detection: no zoom is read from frames inside (or next to) a whip pan any more - on GitHub's test machines a
+  blurred whip read as a zoom transition; a failed test now shows its lines in GitHub's public error notes.
 
 ## 0.3.0 - 2026-10-09 - Update button, colour rebuilds, HTML graphics, Claude + Resolve
 

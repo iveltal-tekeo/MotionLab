@@ -748,7 +748,13 @@ def detect_motion(ctx: Ctx, cut_frames: set) -> list[Comp]:
     rel = ctx.motion_reliable()
     for c in cut_frames:
         rel[c] = False
-    ls = np.where(rel, np.log(nz(m["scale"], 1.0)), 0.0)
+    # a scale read while the picture flies sideways (a whip: 7-20 % of the width per frame, smeared by blur) is noise,
+    # and it differed between CPUs (GitHub's AVX-512 runner read a zoom inside the self-test's whip f925-934). A real
+    # zoom keeps the centre still (the synthetic zooms move <= 0.4 %/f): no zoom from whip-fast frames or their
+    # neighbours (the frame next to a whip often falls back to another estimator).
+    whipfast = ctx.speed(cut_frames) >= w["min_speed_pct"]
+    whipfast = whipfast | np.r_[False, whipfast[:-1]] | np.r_[whipfast[1:], False]
+    ls = np.where(rel & ~whipfast, np.log(nz(m["scale"], 1.0)), 0.0)
     rot = np.where(rel, nz(m["rot_deg"]), 0.0)
     tx, ty = nz(m["tx_pct"]), nz(m["ty_pct"])
     comps: list[Comp] = []
