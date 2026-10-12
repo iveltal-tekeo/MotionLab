@@ -1112,27 +1112,33 @@ const gthumb = g => g.thumb ? `<img src="${fileUrl(g.thumb)}?v=${g.thumb_v}" alt
 
 function projGraphics(el, P) {
   const O = P.overlays || [];
+  const top = `<div class="row sp" style="margin-bottom:12px"><div class="hint">Titles, clocks, captions and other graphics are small HTML pages rendered into transparent clips (ProRes 4444) for the lab render and for DaVinci Resolve. Change a setting, Save, then Render: the next render of the edit uses the new clip.</div>
+    <button class="btn sm" id="gcap" ${P.plans.length ? '' : 'disabled title="needs an edit version first (its size, rate and length)"'}>Captions from a subtitle file…</button></div>`;
   if (!O.length) {
-    el.innerHTML = `<div class="empty">No graphics in this video yet. Add one from the <a href="#/library">Library</a> (Graphics → Use in a video), or ask Claude for a new one when you recreate a video.</div>`;
+    el.innerHTML = top + `<div class="empty">No graphics in this video yet. Add one from the <a href="#/library">Library</a> (Graphics → Use in a video), make captions from a subtitle file, or ask Claude for a new one when you recreate a video.</div>`;
+    captionsBtn(el, P);
     return;
   }
-  el.innerHTML = `<div class="hint" style="margin-bottom:12px">Titles, clocks and other graphics are small HTML pages rendered into transparent clips (ProRes 4444) for the lab render and for DaVinci Resolve. Change a setting, Save, then Render: the next render of the edit uses the new clip.</div>
+  el.innerHTML = top + `
     <div class="col">${O.map(o => {
       const st = o.current ? `<span class="ok">rendered ✓</span> <span class="muted">${esc(o.rendered_at)}</span>`
         : o.rendered ? '<span class="amber">settings changed: render it again</span>' : '<span class="amber">not rendered yet</span>';
       return `<div class="gcard" data-g="${esc(o.name)}"><div class="gthumb">${gthumb(o)}</div>
         <div><div class="row sp"><b style="font-size:15px">${esc(o.name)}</b><span class="small muted">${o.frames} frames ${frange(0, o.frames - 1, o.fps)} · ${o.width}×${o.height} · ${o.fps} fps</span></div>
           <div class="small" style="margin:4px 0 10px">${st} · ${o.used_in.length ? `in the edit: ${o.used_in.map(esc).join(', ')}` : '<span class="muted">not in an edit version yet</span>'}</div>
+          ${o.captions ? `<div class="small" style="margin:-4px 0 10px">Captions: ${plural(o.captions.cues, 'line')}, ${plural(o.captions.words, 'word')} from the ${esc(o.captions.what)}${o.captions.estimated ? ' · <span class="amber">word times estimated (the file has one time per line)</span>' : ''}</div>` : ''}
           ${o.problem ? `<div class="bad small">${esc(o.problem)}</div>` : ''}
           ${o.settings.length ? `<div class="gset">${o.settings.map(s => `<label title="${esc(s.id)}">${esc(s.label || s.id)}</label><div>${gsetInput(s)}</div>`).join('')}</div>`
             : '<div class="muted small">This graphic has no settings yet (Claude can add them: text, colours, timing).</div>'}
           <div class="row" style="margin-top:10px">${o.settings.length ? '<button class="btn sm" data-gsave disabled>Save settings</button>' : ''}
             <button class="btn sm ${o.current ? '' : 'pri'}" data-grender>Render</button>
             <button class="btn sm" data-glib ${o.current ? '' : 'disabled title="render it first"'}>Save to library…</button>
+            ${o.srt ? `<button class="btn sm" data-open="${esc(o.srt)}" data-reveal title="the same captions as subtitles: import it into DaVinci Resolve's subtitle track and correct them there">Subtitles for Resolve (.srt)</button>` : ''}
             <button class="btn sm" data-open="${esc(o.folder)}">Folder</button></div>
           <div class="hint" style="margin-top:6px">Swapping a re-rendered graphic into an open DaVinci Resolve timeline comes after the Resolve test.</div>
           <pre class="log" hidden></pre></div></div>`;
     }).join('')}</div>`;
+  captionsBtn(el, P);
   $$('.gcard', el).forEach(card => {
     const name = card.dataset.g, pre = $('pre.log', card), save = $('[data-gsave]', card);
     $$('[data-set]', card).forEach(i => { i.oninput = i.onchange = () => { if (save) save.disabled = false; }; });
@@ -1157,6 +1163,28 @@ function projGraphics(el, P) {
       <div class="row" style="margin-top:12px"><button class="btn pri" id="glgo">Save to library</button></div>`, m => {
       $('#glgo', m).onclick = () => { const nm = $('#glname', m).value.trim(), rep = $('#glrep', m).checked; closeModal(); run('overlay_save', {name: nm, replace: rep}, e.target); };
     });
+  });
+}
+
+function captionsBtn(el, P) {
+  const b = $('#gcap', el);
+  if (!b) return;
+  b.onclick = () => modal(`<h2>Captions from a subtitle file</h2>
+    <div class="small muted">An .srt or .vtt file of this video's words (from YouTube, CapCut, DaVinci Resolve's “Create Subtitles from Audio”…) or a lab transcript.json. MotionLab makes styled captions timed to the words (change the style afterwards on this tab) and an .srt for Resolve's subtitle track. Size, frame rate and length come from the newest edit version. Your file is only read.</div>
+    <div class="col" style="margin-top:12px"><label>File <input id="gcf" placeholder="C:\\...\\my video.srt"></label>
+      <label>Name <input id="gcn" value="captions" style="width:200px"></label></div>
+    <div class="hint" style="margin-top:6px">The same name again replaces the words of those captions and keeps their style.</div>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="gcgo">Make the captions</button><span id="gcmsg" class="small"></span></div><pre class="log" hidden></pre>`, m => {
+    $('#gcgo', m).onclick = async () => {
+      const go = $('#gcgo', m);
+      const j = await startJob('overlay_captions', {project: P.name, file: $('#gcf', m).value.trim(), name: $('#gcn', m).value.trim()}, false);
+      if (!j) return;
+      go.disabled = true; const pre = $('pre.log', m); pre.hidden = false;
+      followJob(j.id, pre, jj => {
+        if (jj.status === 'done') { closeModal(); route(); }
+        else { $('#gcmsg', m).innerHTML = '<span class="bad">did not work - see the log</span>'; go.disabled = false; }
+      });
+    };
   });
 }
 

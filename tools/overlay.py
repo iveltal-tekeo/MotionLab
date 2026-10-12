@@ -16,6 +16,9 @@ particles) are written this way since 0.3.0.
     .venv\\Scripts\\python tools\\overlay.py set <folder> text="NEW" color=#ff0000     then render again
     .venv\\Scripts\\python tools\\overlay.py save <folder> [--name N]     a rendered, approved overlay -> library\\graphics\\
     .venv\\Scripts\\python tools\\overlay.py graphics                    the graphics library (yours + the examples)
+    .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json> [--render]
+          captions timed to the words (styles + settings like any graphic) + <name>.srt for Resolve's subtitle track;
+          rate / size / length from the project's newest edit plan (or --fps --width --height --frames)
     .venv\\Scripts\\python tools\\overlay.py stills <folder> 0,12,40     PNGs of rendered frames on a checkerboard,
           frame number + timecode burned in (look at these instead of the video)
     .venv\\Scripts\\python tools\\overlay.py check <folder>               HyperFrames lint
@@ -417,6 +420,87 @@ def cmd_save(a) -> int:
     return 0
 
 
+def retime(folder: Path, fps: float, frames: int, width: int, height: int) -> None:
+    """Set a size-independent composition's rate, length and size (the captions graphic): its FPS / FRAMES and W / H
+    constants, data-duration / -width / -height, the viewport and the page size."""
+    import re as _re
+    p = folder / "index.html"
+    t = p.read_text(encoding="utf-8")
+    secs = f"{frames / fps:.6f}".rstrip("0").rstrip(".")
+    subs = [(r"const FPS = [\d./]+, FRAMES = \d+;", f"const FPS = {fps_arg(fps)}, FRAMES = {frames};"),
+            (r"const W = \d+, H = \d+;", f"const W = {width}, H = {height};"),
+            (r'data-duration="[\d.]+"', f'data-duration="{secs}"'),
+            (r'data-width="\d+"', f'data-width="{width}"'), (r'data-height="\d+"', f'data-height="{height}"'),
+            (r'content="width=\d+, height=\d+"', f'content="width={width}, height={height}"'),
+            (r"width: \d+px; height: \d+px;", f"width: {width}px; height: {height}px;")]
+    for pat, new in subs:
+        t, n = _re.subn(pat, new, t)
+        if not n:
+            raise SystemExit(f"{p}: no '{pat}' to set - not a size-independent graphic (start from --from captions)")
+    p.write_text(t, encoding="utf-8")
+
+
+def _plan_of(folder: Path) -> dict:
+    """The newest edit plan of the project an overlay folder belongs to (projects\\<p>\\build\\overlays\\<o>)."""
+    build = folder.parent.parent
+    plans = sorted(build.glob("plan_v*.json"), key=lambda q: int(q.stem.split("_v")[-1])
+                   if q.stem.split("_v")[-1].isdigit() else 0)
+    return json.loads(plans[-1].read_text(encoding="utf-8")) if plans else {}
+
+
+def cmd_captions(a) -> int:
+    """Captions timed to the words: <folder> becomes (or stays) a copy of the captions graphic, its words come from
+    an SRT / WebVTT / lab transcript.json; writes assets\\captions.js, <name>.srt (for Resolve's subtitle track) and
+    sets the rate, size and length (default: the project's newest edit plan - captions over the whole edit)."""
+    from motionlab import captions as CAP
+    folder = guard(Path(a.folder))
+    plan = _plan_of(folder)
+    new = not (folder / "index.html").exists()
+    if new:
+        copy_sources(OS.EXAMPLES / "captions", folder, folder.name, {"from": "captions"})
+    c = read_conf(folder)
+    if "captions" not in c and not new:
+        raise SystemExit(f"{folder.name} is not a captions graphic (make a new folder for the captions)")
+    fps = float(a.fps or plan.get("fps") or c.get("fps") or 25)
+    W = int(a.width or plan.get("width") or c.get("width") or 1920)
+    H = int(a.height or plan.get("height") or c.get("height") or 1080)
+    try:
+        words, est, what = CAP.load(a.from_)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    cues = CAP.in_frames(CAP.group(words, max_chars=a.max_chars, max_words=a.max_words), fps, a.offset)
+    if not cues:
+        raise SystemExit("no words to show")
+    frames = int(a.frames or plan.get("frames") or cues[-1]["f1"] + 1)
+    cues = [q for q in cues if q["f0"] < frames]
+    if cues and cues[-1]["f1"] >= frames:
+        cues[-1]["f1"] = frames - 1
+        for w in cues[-1]["words"]:
+            w["f0"], w["f1"] = min(w["f0"], frames - 1), min(w["f1"], frames - 1)
+    (folder / "assets").mkdir(exist_ok=True)
+    (folder / "assets" / "captions.js").write_text(CAP.captions_js(cues, fps, Path(a.from_).name, est),
+                                                   encoding="utf-8", newline="\n")
+    srt = folder / f"{c['name']}.srt"
+    srt.write_text(CAP.srt(cues, fps), encoding="utf-8")
+    retime(folder, fps, frames, W, H)
+    c.update({"fps": fps, "frames": frames, "width": W, "height": H,
+              "captions": {"from": str(Path(a.from_).resolve()), "what": what, "words": sum(len(q["words"]) for q in cues),
+                           "cues": len(cues), "estimated": est, "offset": a.offset}})
+    (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+    log(f"{folder.name}: {len(cues)} captions, {c['captions']['words']} words from the {what}"
+        + (" (word times ESTIMATED: the file has one time per line)" if est else "")
+        + f"; {frames} frames at {fps:g} fps, {W}x{H}")
+    for q in cues[:4]:
+        print(f"  f{q['f0']}-{q['f1']} ({frame_to_tc(q['f0'], fps)} - {frame_to_tc(q['f1'], fps)})  "
+              + " ".join(w["w"] for w in q["words"]))
+    if len(cues) > 4:
+        print(f"  ... {len(cues) - 4} more")
+    print(f"for DaVinci Resolve's subtitle track: {srt}")
+    if a.render:
+        return cmd_render(argparse.Namespace(folder=str(folder), workers=None, mp4=False))
+    return 0
+
+
 def cmd_graphics(a) -> int:
     items = OS.library()
     if not items:
@@ -482,8 +566,7 @@ def _render_pngs(hf_bin: Path, gsap_js: Path, example: Path, work: Path) -> tupl
     """Render one example to PNG frames with a given HyperFrames + GSAP; returns (frames, seconds)."""
     src = work / "comp"
     shutil.rmtree(work, ignore_errors=True)
-    src.mkdir(parents=True)
-    shutil.copy2(example / "index.html", src / "index.html")
+    shutil.copytree(example, src, ignore=shutil.ignore_patterns("thumb.png", "*.mov", "*.rgba*", "render.json"))
     shutil.copy2(gsap_js, src / "gsap.min.js")
     fps, _ = _example_conf(example)
     t0 = time.time()
@@ -663,6 +746,17 @@ def main() -> int:
     s.add_argument("--name")
     s.add_argument("--force", action="store_true")
     sub.add_parser("graphics", help="the graphics library (yours + the examples)")
+    s = sub.add_parser("captions", help="captions timed to the words from an .srt / .vtt / transcript.json")
+    s.add_argument("folder")
+    s.add_argument("--from", dest="from_", required=True, metavar="FILE")
+    s.add_argument("--fps", type=float)
+    s.add_argument("--width", type=int)
+    s.add_argument("--height", type=int)
+    s.add_argument("--frames", type=int, help="the clip's length (default: the edit plan's, else the last caption)")
+    s.add_argument("--offset", type=int, default=0, help="frames to move every caption by")
+    s.add_argument("--max-chars", type=int, default=32)
+    s.add_argument("--max-words", type=int, default=6)
+    s.add_argument("--render", action="store_true")
     sub.add_parser("install")
     s = sub.add_parser("doctor")
     s.add_argument("--fix", action="store_true", help="download HyperFrames' Chrome if missing")
@@ -678,7 +772,7 @@ def main() -> int:
     s.add_argument("--force", action="store_true")
     a = ap.parse_args()
     return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check, "settings": cmd_settings,
-            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics,
+            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
             "pin": cmd_pin}[a.cmd](a)
 

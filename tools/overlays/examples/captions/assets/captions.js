@@ -1,0 +1,2 @@
+// MotionLab captions (tools\overlay.py captions): cues with frames, words = [text, first frame, last frame]
+window.CAPTIONS = {"fps": 25.0, "source": "example", "estimated": false, "cues": [{"f0": 0, "f1": 32, "words": [["These", 0, 7], ["captions", 8, 17], ["follow", 18, 32]]}, {"f0": 33, "f1": 65, "words": [["every", 33, 40], ["word", 41, 46], ["you", 47, 53], ["say", 54, 65]]}, {"f0": 66, "f1": 99, "words": [["made", 66, 73], ["in", 74, 79], ["MotionLab", 80, 99]]}]};

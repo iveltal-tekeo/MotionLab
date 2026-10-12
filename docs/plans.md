@@ -215,6 +215,20 @@ in this order:
    graphic for another size / rate needs Claude to adapt it.
 4. **Captions both ways** (toward 0.4's yapping edit): styled / animated captions as a HyperFrames clip timed to the
    words, or plain captions on Resolve's subtitle track (SRT) that the user can correct in Resolve.
+   **Built 2026-10-12, the part that needs no speech-to-text** (not released): `motionlab\captions.py` (the SRT /
+   WebVTT parser moved here from content.py, unchanged: 4AM's 72 lines identical; words -> short cues: sentence
+   ends, pauses, max 32 characters / 6 words, ~3 s; a plain SRT keeps its own lines, a much longer line is split in
+   even parts; [Music]-style tags dropped; frames + SRT out), `overlay.py captions <folder> --from <.srt | .vtt |
+   transcript.json>` (rate / size / length from the newest edit plan; writes assets\captions.js + <name>.srt), the
+   example graphic `tools\overlays\examples\captions\` (size-independent; styles: line with the spoken word
+   highlighted / words pop in / plain line; font, size, capitals, colours, outline, box, height, width, pop
+   length). Highlight timing checked frame by frame (the spoken word f8-17 (00:00:00:08 - 00:00:00:17) exactly).
+   App: Videos > Graphics > *Captions from a subtitle file* (job `overlay_captions`; the same name again = new
+   words, style kept) and a *Subtitles for Resolve (.srt)* button. UI test 12/12.
+   **Still open**: (a) the words of the user's own recordings - the engine is chosen after measuring on a talking
+   video the user picks (0.3.5 / 0.4; HyperFrames' `transcribe` = local whisper.cpp / Parakeet with `--to srt` is a
+   candidate next to faster-whisper); until then any SRT works (Resolve Studio's *Create Subtitles from Audio*,
+   CapCut, YouTube); (b) importing the SRT onto Resolve's subtitle track by script - with item 2's Resolve test.
 
 Also: tune the HTML clock's grain to the lab's texture (geometry and timing already match); whatever friends report
 after updating. Ideas still to test: [ideas.md](ideas.md).

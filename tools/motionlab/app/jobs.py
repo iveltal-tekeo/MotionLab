@@ -97,6 +97,20 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         return (f"Save the graphic {f.name} to the library as {name}",
                 [PY, str(TOOLS / "overlay.py"), "save", str(f), "--name", name] + (["--force"] if a.get("replace") else []),
                 "light")
+    if kind == "overlay_captions":           # Videos > Graphics > Captions from a subtitle file (a captions graphic)
+        p = data.safe_name(str(a.get("project", "")))
+        _latest_plan(p)                                             # rate / size / length come from the edit plan
+        src = Path(str(a.get("file", "")).strip().strip('"')).expanduser()
+        if not src.is_file() or src.suffix.lower() not in (".srt", ".vtt", ".json"):
+            raise JobError(f"not a subtitle file (.srt / .vtt / a lab transcript.json): {src}")
+        name = str(a.get("name") or "captions")
+        if not re.fullmatch(r"[\w.-]+", name):
+            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
+        dst = data.PROJECTS / p / "build" / "overlays" / name
+        if dst.exists() and not (OS.conf(dst).get("captions")):
+            raise JobError(f"{p} already has a graphic called {name} that is not captions: pick another name")
+        return (f"Captions for {p} from {src.name}",
+                [PY, str(TOOLS / "overlay.py"), "captions", str(dst), "--from", str(src), "--render"], "cpu")
     if kind == "overlay_new":                       # Library > Graphics > Use in a video: a copy, rendered right away
         p = data.safe_name(str(a.get("project", "")))
         if not (data.PROJECTS / p).is_dir():

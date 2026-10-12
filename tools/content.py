@@ -17,7 +17,6 @@ in shared cards or the repo).
 from __future__ import annotations
 
 import argparse
-import html
 import json
 import re
 import subprocess
@@ -27,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from motionlab.captions import parse_captions  # noqa: E402  (SRT / WebVTT, shared with overlay.py captions)
 from motionlab.timecode import frame_to_tc, label  # noqa: E402
 from motionlab.util import ANALYSIS, read_json, safe_name, setup_console  # noqa: E402
 
@@ -40,70 +40,7 @@ def _load(p: Path):
 
 
 SCHEMA = 1
-TIME = r"(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{3})"
-CUE = re.compile(TIME + r"\s+-->\s+" + TIME)
-WORD_TAG = re.compile(r"<(\d+:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})>")
 YT_ID = re.compile(r"\[([A-Za-z0-9_-]{11})\]$")
-
-
-def _secs(h, m, s, ms) -> float:
-    return round(int(h or 0) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000, 3)
-
-
-def _tag_secs(t: str) -> float:
-    parts = t.replace(",", ".").split(":")
-    return sum(float(p) * 60 ** i for i, p in enumerate(reversed(parts)))
-
-
-def _clean(text: str) -> str:
-    text = re.sub(r"<[^>]+>", "", text)                       # <c>, <i>, <b>, voice tags
-    text = html.unescape(text).replace("​", "")
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def parse_captions(text: str) -> tuple[list[dict], bool]:
-    """WebVTT or SRT -> (lines, has_word_timings). A line = {t0, t1, text, words: [{t, w}]}.
-    YouTube's auto captions repeat the previous line in every cue and time each new word (<00:00:01.234><c> word</c>):
-    only the timed lines are new speech. Uploaded subtitles are one cue = one line."""
-    cues, cur = [], None
-    for row in text.replace("﻿", "").splitlines():      # a cue ends at the first empty line after its text
-        m = CUE.search(row)                                   # (YouTube's cues hold lines of one space, and an
-        if m:                                                 # empty line may follow the timing line)
-            cur = (_secs(*m.groups()[:4]), _secs(*m.groups()[4:]), [])
-            cues.append(cur)
-        elif cur is not None and not row.strip():
-            if any(r.strip() for r in cur[2]):
-                cur = None
-        elif cur is not None:
-            cur[2].append(row)
-    word_mode = any(WORD_TAG.search(r) for _, _, rows in cues for r in rows)
-    lines: list[dict] = []
-    for t0, t1, rows in cues:
-        if word_mode:
-            for row in rows:
-                if not WORD_TAG.search(row):
-                    continue                                    # the repeated previous line
-                words, t = [], t0
-                for k, piece in enumerate(WORD_TAG.split(row)):
-                    if k % 2:                                   # a timing tag: the next word starts here
-                        t = _tag_secs(piece)
-                        continue
-                    for w in _clean(piece).split():
-                        words.append({"t": round(t, 3), "w": w})
-                if words:
-                    lines.append({"t0": words[0]["t"], "t1": t1, "text": " ".join(w["w"] for w in words),
-                                  "words": words})
-        else:
-            txt = _clean(" ".join(rows))
-            if txt and not (lines and lines[-1]["text"] == txt and abs(lines[-1]["t1"] - t0) < 0.05):
-                lines.append({"t0": t0, "t1": t1, "text": txt, "words": []})
-            elif txt:
-                lines[-1]["t1"] = t1                            # the same text continued
-    lines.sort(key=lambda l: l["t0"])
-    for a, b in zip(lines, lines[1:]):                          # rolling captions overlap: end at the next line
-        if word_mode:
-            a["t1"] = min(a["t1"], b["t0"]) if b["t0"] > a["t0"] else a["t1"]
-    return lines, word_mode
 
 
 # ------------------------------------------------------------------------------------------------ the reference

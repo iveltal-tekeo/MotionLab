@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "style", "type": "enum", "label": "Style", "default": "highlight",
+   "options": [{"value": "highlight", "label": "Line, the spoken word highlighted"}, {"value": "pop", "label": "Words pop in as they are said"}, {"value": "line", "label": "Whole line, no animation"}]},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Arial Black",
+   "options": [{"value": "Arial Black", "label": "Arial Black"}, {"value": "Impact", "label": "Impact"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}, {"value": "Georgia", "label": "Georgia (bold)"}]},
+  {"id": "font_size", "type": "number", "label": "Text size (px)", "default": 72, "min": 12, "max": 400, "step": 1},
+  {"id": "uppercase", "type": "boolean", "label": "Capitals", "default": true},
+  {"id": "color", "type": "color", "label": "Colour", "default": "#ffffff"},
+  {"id": "highlight_color", "type": "color", "label": "Spoken word colour", "default": "#ffd400"},
+  {"id": "outline", "type": "number", "label": "Outline (px)", "default": 6, "min": 0, "max": 40, "step": 1},
+  {"id": "outline_color", "type": "color", "label": "Outline colour", "default": "#000000"},
+  {"id": "box", "type": "boolean", "label": "Box behind the text", "default": false},
+  {"id": "box_color", "type": "color", "label": "Box colour", "default": "#000000"},
+  {"id": "box_opacity", "type": "number", "label": "Box opacity", "default": 0.6, "min": 0, "max": 1, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Height on screen (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
+  {"id": "max_width", "type": "number", "label": "Line width (% of the frame)", "default": 80, "min": 20, "max": 100, "step": 1},
+  {"id": "pop_frames", "type": "number", "label": "Pop-in length (frames)", "default": 3, "min": 0, "max": 15, "step": 1}
+]'>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab overlay example "captions" (0.3.2): captions timed to the words, from assets/captions.js (written by
+     .venv\Scripts\python tools\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json>, which also sets
+     the size, rate and length below and writes <name>.srt for DaVinci Resolve's subtitle track). Render:
+     .venv\Scripts\python tools\overlay.py render <this folder>
+     Rules: transparent background (never paint html / body / #root); animate only on the paused GSAP timeline below
+     (no CSS animations, timers, Date or Math.random); times in frames with F(n) / AT(n). -->
+<script src="./gsap.min.js"></script>
+<script src="./assets/captions.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+  .cue { position: absolute; left: 50%; text-align: center; line-height: 1.18; opacity: 0;
+         transform: translate(-50%, -50%); }
+  .cue .in { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .w { display: inline-block; white-space: pre; paint-order: stroke fill; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920"
+     data-height="1080"></div>
+<script>
+  const FPS = 25, FRAMES = 100;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
+  const AT = n => Math.max(0, (n - 0.5) / FPS);   // a jump (tl.set) that shows from frame n on, never on frame n - 1
+  const V = window.__hyperframes.getVariables();
+  const C = window.CAPTIONS || { cues: [] };
+  const root = document.getElementById("root");
+  const hex = (c, a) => `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`;
+  const tl = gsap.timeline({ paused: true });
+  for (const cue of C.cues) {
+    const el = document.createElement("div");
+    el.className = "cue";
+    Object.assign(el.style, { top: V.y + "%", width: V.max_width + "%", fontFamily: `"${V.font}", Arial, sans-serif`,
+                              fontWeight: V.font === "Arial Black" || V.font === "Impact" ? "400" : "800",
+                              fontSize: V.font_size + "px", color: V.color,
+                              textTransform: V.uppercase ? "uppercase" : "none" });
+    const inner = document.createElement("span");
+    inner.className = "in";
+    if (V.box) Object.assign(inner.style, { background: hex(V.box_color, V.box_opacity), borderRadius: (V.font_size * 0.18) + "px",
+                                            padding: `${V.font_size * 0.06}px ${V.font_size * 0.25}px` });
+    el.appendChild(inner);
+    cue.words.forEach(([text, f0, f1], i) => {
+      const s = document.createElement("span");
+      s.className = "w";
+      s.textContent = text;
+      if (V.outline > 0) s.style.webkitTextStroke = `${2 * V.outline}px ${V.outline_color}`;   // half of it is under the fill
+      inner.appendChild(s);
+      if (i < cue.words.length - 1) inner.appendChild(document.createTextNode(" "));
+      if (V.style === "pop") {
+        s.style.opacity = "0";
+        tl.set(s, { opacity: 1 }, AT(f0));
+        if (V.pop_frames > 0) tl.fromTo(s, { scale: 0.7 }, { scale: 1, duration: F(V.pop_frames), ease: "back.out(2)" }, F(f0));
+      } else if (V.style === "highlight") {
+        tl.set(s, { color: V.highlight_color }, AT(f0));
+        if (f1 + 1 <= cue.f1) tl.set(s, { color: V.color }, AT(f1 + 1));
+      }
+    });
+    root.appendChild(el);
+    tl.set(el, { opacity: 1 }, AT(cue.f0));
+    if (cue.f1 + 1 < FRAMES) tl.set(el, { opacity: 0 }, AT(cue.f1 + 1));
+  }
+  tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

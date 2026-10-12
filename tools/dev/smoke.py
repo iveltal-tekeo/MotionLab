@@ -100,6 +100,19 @@ def check_graphics() -> None:
         good = False
         print("      ", type(e).__name__, e)
     ok(good, "graphics: the examples' settings parse, bad values are refused, thumbnails exist")
+    from motionlab import captions as CAP
+    try:
+        lines, _ = CAP.parse_captions("1\n00:00:01,000 --> 00:00:03,000\n[Music] So here is the thing\n\n"
+                                      "2\n00:00:03,200 --> 00:00:04,000\nnobody tells you.\n")
+        words, est = CAP.words_of(lines)
+        cues = CAP.in_frames(CAP.group(words), 25.0)
+        srt = CAP.srt(cues, 25.0)
+        good = (est and [c["text"] for c in cues] == ["So here is the thing", "nobody tells you."]
+                and cues[0]["f0"] == 25 and "00:00:01,000 --> " in srt and cues[1]["words"][-1]["f1"] == cues[1]["f1"])
+    except (ValueError, KeyError, IndexError) as e:
+        good = False
+        print("      ", type(e).__name__, e)
+    ok(good, "captions: SRT -> words -> cues (sound tags dropped, the file's lines kept) -> SRT")
 
 
 def get(base: str, path: str, timeout: float = 60):

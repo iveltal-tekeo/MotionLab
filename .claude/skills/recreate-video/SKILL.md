@@ -82,6 +82,9 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track.
 5. One the user approves: `overlay.py save <folder> [--name N]` -> `library\graphics\<N>\` (or their Save to library
    button), so other videos can start from it.
+6. Captions: `overlay.py captions build\overlays\captions --from <.srt | .vtt | transcript.json> --render` (styled,
+   timed to the words; also `captions.srt` for Resolve's subtitle track). Words of the user's own recordings need an
+   SRT until the lab's speech-to-text is chosen (docs\plans.md 0.3.2 item 4).
 Measured on 4AM's title and clock (2026-10-09): same frames as the lab's layers, title within 4/255 (99.9 %).
 
 ## 4. Render and verify

@@ -207,7 +207,9 @@ def status(folder: Path) -> dict:
             "rendered": rendered, "current": bool(current), "rendered_at": rinfo.get("date", ""),
             "mov": rel(mov) if rendered else None,
             "thumb": rel(thumb) if thumb.exists() else None,
-            "thumb_v": int(thumb.stat().st_mtime) if thumb.exists() else 0, "problem": problem}
+            "thumb_v": int(thumb.stat().st_mtime) if thumb.exists() else 0, "problem": problem,
+            "captions": c.get("captions"),
+            "srt": rel(folder / f"{c['name']}.srt") if (folder / f"{c['name']}.srt").exists() else None}
 
 
 def project_overlays(project: str) -> list[dict]:

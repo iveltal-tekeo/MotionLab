@@ -27,7 +27,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
-  Render / Save to library = jobs), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
+  Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
   structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = the paste format;
   `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
@@ -55,7 +55,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
   DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
-  overlay_new = Graphics), one per group (cpu / resolve / light / net). Claude's
+  overlay_new / overlay_captions = Graphics; captions read the user's .srt / .vtt / transcript.json, never change
+  it), one per group (cpu / resolve / light / net). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.
 - Updates (`updater.py`, git only - no GitHub API, no tokens in the lab): `check` = `git fetch` + behind / ahead /
