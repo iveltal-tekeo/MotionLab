@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#ffd400"},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Arial Black",
+   "options": [{"value": "Arial Black", "label": "Arial Black"}, {"value": "Impact", "label": "Impact"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.5, "max": 2, "step": 0.05},
+  {"id": "band_y", "type": "number", "label": "Height of the graphics (% from the top)", "default": 17, "min": 3, "max": 70, "step": 1},
+  {"id": "progress_bar", "type": "boolean", "label": "Progress bar at the top", "default": true},
+  {"id": "panel_opacity", "type": "number", "label": "List panel opacity", "default": 0.72, "min": 0, "max": 1, "step": 0.05}
+]'>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab overlay example "talking-head-pack" (0.3.5): minimal graphics for a talking-to-camera video - a progress
+     bar, a hook title, number pop-ups (a counter when the number counts up), a numbered list that builds point by
+     point, an end card. WHAT shows WHEN comes from assets/beats.js (texts + frames, written from the video's
+     transcript: tools\speech.py); the look is in the settings. Size-independent: `overlay.py fit <folder> --like
+     <video>` sets the size, rate and length of a video. Render: .venv\Scripts\python tools\overlay.py render <folder>
+     Rules: transparent background; animate only on the paused GSAP timeline; times in frames with F(n) / AT(n). -->
+<script src="./gsap.min.js"></script>
+<script src="./assets/beats.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .el { position: absolute; left: 50%; opacity: 0; text-align: center; white-space: nowrap; }
+  .stroke { paint-order: stroke fill; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920"></div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;                                   // frames -> seconds
+  const AT = n => Math.max(0, (n - 0.5) / FPS);           // a jump that shows from frame n on
+  const V = window.__hyperframes.getVariables();
+  const B = window.BEATS || {};
+  const u = Math.min(W, H) / 1080 * V.size;               // sizes are designed for a 1080 px wide frame
+  const Y = H * V.band_y / 100;                           // the centre of the graphics band
+  const font = `"${V.font}", Arial, sans-serif`, weight = /Black|Impact/.test(V.font) ? "400" : "800";
+  const root = document.getElementById("root");
+  const tl = gsap.timeline({ paused: true });
+  const div = (style, parent = root) => { const e = document.createElement("div"); Object.assign(e.style, style); parent.appendChild(e); return e; };
+  const text = (e, s) => { s.split("\n").forEach((ln, i) => { if (i) e.appendChild(document.createElement("br")); e.appendChild(document.createTextNode(ln)); }); return e; };
+  const place = (e, y) => { e.className = "el"; gsap.set(e, { xPercent: -50, yPercent: -50, top: y }); return e; };
+  const popIn = (e, f, d = 6) => { tl.set(e, { opacity: 1 }, AT(f)); tl.fromTo(e, { scale: 0.55 }, { scale: 1, duration: F(d), ease: "back.out(2.2)" }, F(f)); };
+  const popOut = (e, f, d = 5) => { if (f != null && f < FRAMES) tl.to(e, { opacity: 0, scale: 0.9, duration: F(d), ease: "power1.in" }, F(f)); };
+  const pill = (s, y) => place(text(div({ background: V.accent, color: "#111", font: `${weight} ${70 * u}px ${font}`,
+      lineHeight: 1.12, padding: `${18 * u}px ${34 * u}px`, borderRadius: `${22 * u}px`, maxWidth: `${W * 0.9}px`, whiteSpace: "normal", width: "max-content", boxShadow: `0 ${8 * u}px ${30 * u}px rgba(0,0,0,.35)` }), s), y);
+
+  if (V.progress_bar) {                                   // how far into the video we are
+    const bar = div({ position: "absolute", left: 0, top: 0, width: W + "px", height: `${10 * u}px`, background: V.accent, transformOrigin: "0 50%" });
+    tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: F(FRAMES), ease: "none" }, 0);
+  }
+  if (B.hook) { const e = pill(B.hook.text, Y); popIn(e, B.hook.f0); popOut(e, B.hook.f1); }
+  for (const c of B.callouts || []) {                     // a big number + a label, the moment it is said
+    const box = place(div({}), Y + 20 * u);
+    const big = div({ font: `${weight} ${190 * u}px ${font}`, color: V.accent, lineHeight: 1, WebkitTextStroke: `${10 * u}px #000` }, box);
+    big.className = "stroke";
+    const lab = div({ font: `${weight} ${50 * u}px ${font}`, color: V.text_color, marginTop: `${10 * u}px`, WebkitTextStroke: `${7 * u}px #000` }, box);
+    lab.className = "stroke";
+    text(lab, c.label || "");
+    if (c.count) {                                        // counts up while it pops in
+      const k = c.count, o = { v: k.from || 0 };
+      const show = () => { big.textContent = (k.prefix || "") + o.v.toFixed(k.decimals || 0) + (k.suffix || ""); };
+      show();
+      tl.to(o, { v: k.to, duration: F(k.frames || 12), ease: "power2.out", onUpdate: show }, F(c.f0));
+    } else big.textContent = c.big;
+    popIn(box, c.f0); popOut(box, c.f1);
+  }
+  if (B.list) {                                           // a numbered list, point by point as it is said
+    const L = B.list;
+    const card = place(div({ width: `${W * 0.9}px`, background: `rgba(0,0,0,${V.panel_opacity})`, borderRadius: `${30 * u}px`,
+                             padding: `${30 * u}px ${36 * u}px`, textAlign: "left", whiteSpace: "normal" }), Y + 60 * u);
+    text(div({ font: `${weight} ${54 * u}px ${font}`, color: V.accent, marginBottom: `${14 * u}px` }, card), L.title || "");
+    (L.items || []).forEach((it, i) => {
+      const row = div({ display: "flex", alignItems: "center", gap: `${22 * u}px`, margin: `${14 * u}px 0`, opacity: 0 }, card);
+      div({ flex: "none", width: `${70 * u}px`, height: `${70 * u}px`, borderRadius: "50%", background: V.accent, color: "#111",
+            font: `${weight} ${44 * u}px/${70 * u}px ${font}`, textAlign: "center" }, row).textContent = String(i + 1);
+      text(div({ font: `${weight} ${44 * u}px ${font}`, color: V.text_color, lineHeight: 1.15 }, row), it.text);
+      tl.set(row, { opacity: 1 }, AT(it.f));
+      tl.fromTo(row, { x: -50 * u }, { x: 0, duration: F(6), ease: "power2.out" }, F(it.f));
+    });
+    popIn(card, L.f0); popOut(card, L.f1);
+  }
+  if (B.end) { const e = pill(B.end.text, Y); popIn(e, B.end.f0); popOut(e, B.end.f1); }
+  tl.set({}, {}, F(FRAMES));                              // the timeline's length = the overlay's length
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

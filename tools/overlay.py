@@ -588,6 +588,22 @@ def cmd_resolve_clip(a) -> int:
     return 0
 
 
+def cmd_fit(a) -> int:
+    """A size-independent graphic (captions, talking-head-pack) takes a video's size, rate and length."""
+    from motionlab import speech as SP
+    folder = guard(Path(a.folder))
+    v = SP.probe(a.like)
+    if not v.get("has_video"):
+        raise SystemExit(f"{a.like}: no picture to fit")
+    retime(folder, v["fps"], v["frames"], int(v["width"]), int(v["height"]))
+    c = read_conf(folder)
+    c.update(fps=v["fps"], frames=v["frames"], width=int(v["width"]), height=int(v["height"]))
+    (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+    log(f"{folder.name}: {v['width']}x{v['height']}, {v['fps']:g} fps, {v['frames']} frames "
+        f"({frame_to_tc(v['frames'] - 1, v['fps'])} last) - like {Path(a.like).name}; render it again")
+    return 0
+
+
 def cmd_graphics(a) -> int:
     items = OS.library()
     if not items:
@@ -833,6 +849,9 @@ def main() -> int:
     s.add_argument("--name")
     s.add_argument("--force", action="store_true")
     sub.add_parser("graphics", help="the graphics library (yours + the examples)")
+    s = sub.add_parser("fit", help="a size-independent graphic takes a video's size, rate and length")
+    s.add_argument("folder")
+    s.add_argument("--like", required=True, metavar="VIDEO")
     s = sub.add_parser("refresh", help="swap this graphic in the project open in DaVinci Resolve (keeps your edits)")
     s.add_argument("folder")
     s = sub.add_parser("resolve-clip", help="the numbered copy to drag into DaVinci Resolve (it locks what it uses)")
@@ -868,7 +887,7 @@ def main() -> int:
     a = ap.parse_args()
     return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check, "settings": cmd_settings,
             "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions,
-            "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip,
+            "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip, "fit": cmd_fit,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
             "pin": cmd_pin}[a.cmd](a)
 

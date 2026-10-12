@@ -112,6 +112,16 @@ talking-head creators AND edit the user's own recording that way.)
   (`tools\dev\whisper_bench.py`, tiny / base / small on a laptop setting) -> you pick the engine; (2) HEIT labels +
   the extras' numbers on them; (3) the yapping detectors + self-tests; (4) brief + the edit of your own recording.
 - **Needs first**: 0.3.5 (describe video, incl. the words of your own recordings for captions).
+- **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
+  video"; not released): `tools\overlays\examples	alking-head-pack` - progress bar, hook title, number pop-ups
+  (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
+  (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
+  `assetseats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
+  `overlay.py fit <folder> --like <video>` takes a video's size / rate / length. First use: the user's
+  `projects	alk_test` (vertical 1080 x 1920, 30 fps): beats on the frames of the spoken words (57 at f1087
+  (00:00:36:07), the list's points at f1524 / f1601 / f1692), with the speech captions underneath; a 720p preview
+  went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
+  styles per category.
 
 ## 0.3.5 - planned - Describe video: videos as information
 
