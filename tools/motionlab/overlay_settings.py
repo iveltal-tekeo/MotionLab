@@ -22,6 +22,7 @@ import json
 import math
 import os
 import re
+import shutil
 from pathlib import Path
 
 from .timecode import frame_to_tc
@@ -209,7 +210,34 @@ def status(folder: Path) -> dict:
             "thumb": rel(thumb) if thumb.exists() else None,
             "thumb_v": int(thumb.stat().st_mtime) if thumb.exists() else 0, "problem": problem,
             "captions": c.get("captions"),
+            "resolve_clips": [rel(p) for p in resolve_copies(folder)[:3]],
             "srt": rel(folder / f"{c['name']}.srt") if (folder / f"{c['name']}.srt").exists() else None}
+
+
+def resolve_copy(folder: Path) -> Path:
+    """The clip DaVinci Resolve gets: a numbered copy of the current render, <folder>\\resolve\\<name>_<id>.mov.
+    Resolve keeps the files it uses open and Windows then refuses to replace them (measured 2026-10-12), so the lab's
+    own <name>.mov must stay free for the next render; `overlay.py refresh` moves Resolve onto the newest copy."""
+    folder = Path(folder)
+    c = conf(folder)
+    mov = folder / f"{c['name']}.mov"
+    if not mov.exists():
+        raise ValueError(f"{c['name']}: not rendered yet")
+    st = mov.stat()
+    rid = hashlib.sha1(f"{st.st_size}:{st.st_mtime_ns}".encode()).hexdigest()[:8]     # one per render
+    dst = folder / "resolve" / f"{c['name']}_{rid}.mov"
+    if not dst.exists():
+        dst.parent.mkdir(exist_ok=True)
+        tmp = dst.with_name(dst.name + ".part")
+        shutil.copy2(mov, tmp)
+        os.replace(tmp, dst)
+    return dst
+
+
+def resolve_copies(folder: Path) -> list[Path]:
+    """The copies made for Resolve, newest first."""
+    d = Path(folder) / "resolve"
+    return sorted(d.glob("*.mov"), key=lambda p: p.stat().st_mtime, reverse=True) if d.is_dir() else []
 
 
 def project_overlays(project: str) -> list[dict]:

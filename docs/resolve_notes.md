@@ -39,9 +39,14 @@ care and test in a scratch project.
   tags - HyperFrames' own MOV is BT.601 untagged, so the lab encodes it) is imported into the bin "Overlays" and
   appended as a plain clip (unit kind `"media"`, clip colour Pink) on its own track; Alpha mode set to Straight;
   composite mode Screen / Add for light. No Fusion. `--doctor` / `--diff` check placement, length and composite
-  mode. Not yet run inside Resolve (written 2026-10-09 without Resolve open). The test exists since 2026-10-12 and
-  waits for a run: `tools\dev\resolve_overlay_test.py` (scratch project only; docs\plans.md 0.3.2 item 2) - read
-  its report before relying on overlays in Resolve.
+  mode. **Measured 2026-10-12** (`tools\dev\resolve_overlay_test.py`, docs\plans.md 0.3.2 item 2): same frames as the
+  lab within 2.3/255 in DaVinci YRGB, frame-exact, Normal / Screen / Add as the compositor. Resolve LOCKS the files it
+  uses: it always gets a numbered copy `<overlay folder>\resolve\<name>_<id>.mov` (`overlay_settings.resolve_copy`,
+  also in resolve_build), and `overlay.py refresh <folder>` = `MediaPoolItem.ReplaceClip` onto the newest copy in
+  the open project - hand edits (transform, opacity, composite mode, placement) stay. Under Resolve Color
+  Management the overlay changes like all Rec.709 clips (up to 41/255 from the lab). A Resolve RGBA export is
+  premultiplied. A project still at Resolve's unsaved "Untitled Project": never `SaveProject()` it from a script -
+  Resolve opens a "name it" dialog that blocks scripting (seen 2026-10-12; the tests skip it).
 - Drift check: the manifest + `comps\imported\<sha1>.comp` record exactly what each timeline got; `--diff` compares
   every comp input (static ones at first/middle/last frame, keyed ones on every frame), connections, expressions,
   added/deleted tools, Edit-page transform, in-point, LUT, extra Color nodes, opacity/composite/enabled, missing or

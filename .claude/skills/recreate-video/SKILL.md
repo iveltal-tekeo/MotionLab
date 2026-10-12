@@ -79,7 +79,9 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
 3. `tools\overlay.py render <folder>` (prints the plan layer), `tools\overlay.py stills <folder> 0,10,40` and look at
    those stills (frame + timecode on a checkerboard) - fix, render again.
 4. Plan layer: `{"type": "overlay", "id": ..., "start": f0, "end": f1, "file": "<the .mov>", "blend": "normal"}`
-   (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track.
+   (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track
+   (a numbered copy - Resolve locks the files it uses; after a new render `overlay.py refresh <folder>` swaps it and
+   keeps the user's edits; measured 2026-10-12: same frames as the lab within 2.3/255).
 5. One the user approves: `overlay.py save <folder> [--name N]` -> `library\graphics\<N>\` (or their Save to library
    button), so other videos can start from it.
 6. Captions: `overlay.py captions build\overlays\captions --from <.srt | .vtt | transcript.json> --render` (styled,

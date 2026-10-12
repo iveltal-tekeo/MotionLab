@@ -194,16 +194,27 @@ in this order:
    compare with the lab render frame by frame, and measure colour (overlays are sRGB, a Resolve timeline usually
    Rec.709 gamma 2.4). Then *refresh in place*: re-render a changed overlay and swap it into the open timeline
    (Resolve's replace-clip), keeping the user's hand edits (position, trims, opacity).
-   **Status 2026-10-12: the test is written, NOT RUN YET - to review.** `tools\dev\resolve_overlay_test.py` (checked
-   without Resolve: overlays, plate and the comparison give 0/255 against themselves) renders 4AM's title + clock and
-   a colour check (patches at 100/75/50/25 % alpha, alpha ramps, a soft glow, the frame number as 8 bits) and puts
-   them in the throwaway project `motionlab_scratch` over a gradient plate. It measures: (1) every frame vs the lab
-   compositor, Normal / Screen / Add; (2) alpha export; (3) whether Resolve locks the clip file; (4) refresh: hand
-   edits (Pan, Opacity) kept by `MediaPoolItem.ReplaceClip`, and whether a re-render written over the same file shows
-   up; (5) Resolve Color Management (SDR). Claude's permission check refused to start Resolve, so the user runs it:
-   open Resolve, then `! .venv/Scripts/python tools/dev/resolve_overlay_test.py` (3-5 min; report in
-   `.app\dev\resolve-overlay\report.json` + the worst frame per case as PNG). Its numbers decide refresh in place
-   (the same file or a new file per render) and any colour / alpha fix in `overlay.py` / `resolve_build.py`.
+   **Done 2026-10-12** (Resolve Studio 21.1.0.14, the user opened it; `tools\dev\resolve_overlay_test.py`, scratch
+   project `motionlab_scratch`, deleted afterwards; report `.app\dev\resolve-overlay\report.json`):
+   - **Same pictures as the lab** in Resolve's default colour science (DaVinci YRGB): 4AM's title + clock and a
+     colour check (patches at 100/75/50/25 % alpha, alpha ramps, a glow) over a gradient plate, every frame: max
+     1.65-2.28/255, mean 0.5-0.66 - the plate alone differs as much (1.65 / 0.66: Resolve's and ffmpeg's decode).
+     Frame-exact (the frame number coded in the graphic matched on every frame). Normal, Screen and Add match the lab
+     compositor; Resolve reads the clips as Alpha mode Straight by itself.
+   - **Resolve locks the files it uses** (Windows: access denied on replace), so a graphic in an open project could
+     not be rendered again. Now Resolve always gets a numbered copy, `<folder>\resolve\<name>_<id>.mov`
+     (`overlay_settings.resolve_copy`; resolve_build imports that too), and the lab's `<name>.mov` stays free.
+   - **Refresh in place works**: `MediaPoolItem.ReplaceClip` keeps position, length, Pan / Opacity edits and the
+     composite mode (also on Screen / Add clips). `overlay.py refresh <folder>` swaps every clip of a graphic in the
+     open project for the newest copy; measured end to end: a setting changed, rendered while Resolve used the old
+     copy, swapped, the hand edits (Pan -30, Opacity 70) kept, Resolve's frames = the lab's new render (max
+     1.65/255). App: Videos > Graphics > *Clip for Resolve (.mov)* and *Swap in DaVinci Resolve* (UI test 6/6).
+   - **Resolve Color Management** (YRGB Color Managed v2, SDR auto) changes every Rec.709 clip alike - overlay and
+     footage stay consistent with each other, but differ from the lab by up to 41/255 (mid-tones darker). No
+     per-clip Input Color Space makes it exact (closest: "Rec.709 (Scene)", mean 3.7, max 24/255); the projects the
+     lab builds use DaVinci YRGB.
+   - Alpha export (TIFF RGBA) from Resolve is premultiplied even with AlphaMode = straight (0.9-2.3/255 against
+     premultiplied, ~110/255 against straight).
 3. **Editable overlays + a graphics library**: an overlay's text, colours and timing as settings in its
    `overlay.json` that the app edits (Videos page) -> a re-render job -> refresh in Resolve. Approved overlays saved
    like the effect library (`library\`, the Library page) and imported into a Resolve **Power Bin**, so every project

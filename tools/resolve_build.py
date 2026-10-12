@@ -49,6 +49,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from motionlab import graphics as G  # noqa: E402
+from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab.compose import Curve  # noqa: E402
 from motionlab.fusion import (Comp, Conn, Expr, FuID, Path as FPath, Raw, Spline, media_in, parse_comp,  # noqa: E402
                               spline_at)
@@ -1002,6 +1003,12 @@ def clip_pieces(L: dict, ctx: Ctx) -> list:
     return out
 
 
+def resolve_media(mov: Path) -> Path:
+    """A lab overlay (its folder has overlay.json) goes in as a numbered copy: Resolve locks the files it uses, and the
+    lab's <name>.mov must stay free to render again (overlay.py refresh swaps the copy later)."""
+    return OS.resolve_copy(mov.parent) if (mov.parent / "overlay.json").exists() else mov
+
+
 def make_units(plan: dict, ctx: Ctx, sections: set) -> list:
     units: list[Unit] = []
     layers = plan["layers"]
@@ -1056,7 +1063,7 @@ def make_units(plan: dict, ctx: Ctx, sections: set) -> list:
                                           "render the overlay at the plan's size instead")
             units.append(Unit(L["id"], i, a, b, "media", composite=L.get("blend", "normal"), color="Pink",
                               note="HyperFrames overlay (ProRes 4444 + alpha), a plain clip - no Fusion",
-                              media=str(L["file"]), src_in=int(L.get("in", 0))))
+                              media=str(resolve_media(Path(L["file"]))), src_in=int(L.get("in", 0))))
         else:
             comp_unit(L, i, by_type, (t, L), f"{t} (Fusion)")
     mg = plan.get("master_gain")

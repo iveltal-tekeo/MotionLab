@@ -109,8 +109,9 @@ def colour_html(name: str, version: int) -> str:
 def overlay_folder(name: str, frames: int, html: str) -> Path:
     d = WORK / "overlays" / name
     d.mkdir(parents=True, exist_ok=True)
-    (d / "index.html").write_text(html, encoding="utf-8")
-    shutil.copy2(GSAP, d / "gsap.min.js")
+    write_if_changed(d / "index.html", html)                     # unchanged -> the earlier render is kept
+    if not (d / "gsap.min.js").exists():
+        shutil.copy2(GSAP, d / "gsap.min.js")
     (d / "hyperframes.json").write_text(json.dumps({"paths": {"assets": "assets"}}, indent=1), encoding="utf-8")
     (d / "overlay.json").write_text(json.dumps({"name": name, "frames": frames, "fps": FPS, "width": W, "height": H},
                                                indent=1), encoding="utf-8")
@@ -216,7 +217,8 @@ def render(p, tl, a: int, b: int, folder: Path, name: str, alpha: bool = False) 
     codec = ([c for d, c in c16 if alpha and "RGBA" in d.upper()] or [c for d, c in c16] or list(codecs.values()))[0]
     if not p.SetCurrentRenderFormatAndCodec("tif", codec):
         raise SystemExit(f"Resolve refused TIFF / {codec} (codecs: {codecs})")
-    for k, v in (("SelectAllFrames", False), ("MarkIn", a), ("MarkOut", b), ("TargetDir", str(folder)),
+    p.SetRenderSettings({"SelectAllFrames": False})          # optional: Resolve 21.1 refuses it, MarkIn / Out suffice
+    for k, v in (("MarkIn", a), ("MarkOut", b), ("TargetDir", str(folder)),
                  ("CustomName", name), ("ExportVideo", True), ("ExportAudio", False)):
         if not p.SetRenderSettings({k: v}):
             raise SystemExit(f"render setting refused: {k} = {v!r}")
@@ -289,7 +291,9 @@ def main() -> int:
     pm = r.GetProjectManager()
     cur = pm.GetCurrentProject()
     back = cur.GetName() if cur else None
-    if cur:
+    if back and back.startswith("Untitled Project"):
+        back = None                      # Resolve's unsaved default: SaveProject would open a "name it" dialog that
+    elif cur:                            # blocks scripting (seen 2026-10-12 with Resolve at the Project Manager)
         pm.SaveProject()
     if back == SCRATCH:
         back = None
@@ -495,6 +499,46 @@ def main() -> int:
             print("   ", same, flush=True)
             report["same_path"] = same
 
+        # ---- 4c. the real flow: Resolve on the numbered copy, a setting changed, render (must not be locked),
+        #          overlay.py refresh, the hand edits kept, Resolve shows the new graphic
+        print("4c. overlay.py refresh: settings changed, render, refresh ...", flush=True)
+        import overlay as OVL
+        from motionlab import overlay_settings as OS
+        rf = WORK / "overlays" / "refresh_title"
+        shutil.rmtree(rf, ignore_errors=True)
+        subprocess.run([PY, str(LAB / "tools" / "overlay.py"), "new", str(rf), "--from", "pixel-title", "--render"],
+                       check=True, capture_output=True)
+        first = OS.resolve_copy(rf)
+        rmi = mp.ImportMedia([str(first)])[0]
+        tlr = mp.CreateEmptyTimeline("refresh_test")
+        p.SetCurrentTimeline(tlr)
+        tlr.SetStartTimecode("00:00:00:00")
+        tlr.AddTrack("video")
+        put(items[plate_mov], 30, 1, 0)
+        ti = put(rmi, 30, 2, 0)
+        ti.SetProperties({"Pan": -30.0})
+        ti.SetProperties({"Opacity": 70.0})
+        props = lambda it: {k: (it.GetProperties() or {}).get(k) for k in keys} | {    # noqa: E731
+            "start": it.GetStart(), "dur": it.GetDuration(), "left": it.GetLeftOffset()}
+        before = props(ti)
+        OS.set_values(rf, {"text": "REFRESHED", "color": "#22cc88"})
+        rr = subprocess.run([PY, str(LAB / "tools" / "overlay.py"), "render", str(rf)], capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
+        pname, newcopy, swaps = OVL.refresh(rf, r)
+        after = props(ti)
+        rep4c = {"render_ok": rr.returncode == 0, "render_tail": (rr.stdout + rr.stderr)[-300:], "project": pname,
+                 "first_copy": first.name, "new_copy": newcopy.name, "swaps": swaps, "kept": before == after,
+                 "before": before, "after": after}
+        print(f"   render while Resolve uses the copy: {'ok' if rr.returncode == 0 else 'FAILED'}; refresh: "
+              f"{sum(w['ok'] for w in swaps)}/{len(swaps)} swapped {first.name} -> {newcopy.name}; hand edits kept: "
+              f"{before == after}", flush=True)
+        report["refresh_tool"] = rep4c
+        d4c = WORK / "r_refresh_tool"
+        frames_dirs.append(d4c)
+        compare("refresh_tool", render(p, tlr, 0, 29, d4c, "rt"), 0,
+                [dict(name="refresh_title", mov=rf / "refresh_title.mov", a=0, n=30, dx=-30, opacity=0.7)])
+        p.SetCurrentTimeline(tl)
+
         # ---- 5. Resolve Color Management (what a colour-managed project does to the overlay)
         print("5. Resolve Color Management (SDR Rec.709) ...", flush=True)
         items[col1].ReplaceClip(str(col1))
@@ -518,6 +562,22 @@ def main() -> int:
         fr5b = render(p, tl, 128, 128, WORK / "r_rcm_plate", "cp")
         frames_dirs.append(WORK / "r_rcm_plate")
         compare("rcm_plate", fr5b, 128, segs)
+
+        # ---- 5b. which per-clip Input Color Space makes a colour-managed project show the files as they are
+        print("5b. Color Management: per-clip Input Color Space ...", flush=True)
+        report["rcm_fix"] = {}
+        for cs in ("Rec.709 Gamma 2.4", "Rec.709-A", "sRGB", "Gamma 2.4", "Rec.709 (Scene)"):
+            took = [bool(items[m].SetClipProperty("Input Color Space", cs)) for m in (plate_mov, col1)]
+            got = items[col1].GetClipProperty("Input Color Space")
+            if not all(took):
+                print(f"   {cs!r}: refused (the clip says {got!r})", flush=True)
+                report["rcm_fix"][cs] = {"refused": True, "now": got}
+                continue
+            key = "rcm_" + "".join(ch if ch.isalnum() else "_" for ch in cs).strip("_")
+            dd = WORK / f"r_{key}"
+            frames_dirs.append(dd)
+            compare(key, render(p, tl, 92, 103, dd, "cs"), 92, segs)
+            report["rcm_fix"][cs] = report["cases"][key]
     finally:
         try:
             pm.SaveProject()

@@ -1110,7 +1110,9 @@ def test(only: list | None = None) -> int:
     pm = r.GetProjectManager()
     cur = pm.GetCurrentProject()
     back = cur.GetName() if cur else None
-    if cur:
+    if back and back.startswith("Untitled Project"):
+        back = None                      # Resolve's unsaved default: SaveProject would open a blocking "name it" dialog
+    elif cur:
         pm.SaveProject()
     if back == "motionlab_scratch":
         back = "test_4am"
@@ -1440,7 +1442,9 @@ def verify_install() -> int:
     pm = r.GetProjectManager()
     cur = pm.GetCurrentProject()
     back = cur.GetName() if cur else None
-    if cur:
+    if back and back.startswith("Untitled Project"):
+        back = None                      # Resolve's unsaved default: SaveProject would open a blocking "name it" dialog
+    elif cur:
         pm.SaveProject()
     if back == "motionlab_scratch":
         back = None

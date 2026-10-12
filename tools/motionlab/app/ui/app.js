@@ -1188,7 +1188,9 @@ function projGraphics(el, P) {
             <button class="btn sm" data-glib ${o.current ? '' : 'disabled title="render it first"'}>Save to library…</button>
             ${o.srt ? `<button class="btn sm" data-open="${esc(o.srt)}" data-reveal title="the same captions as subtitles: import it into DaVinci Resolve's subtitle track and correct them there">Subtitles for Resolve (.srt)</button>` : ''}
             <button class="btn sm" data-open="${esc(o.folder)}">Folder</button></div>
-          <div class="hint" style="margin-top:6px">Swapping a re-rendered graphic into an open DaVinci Resolve timeline comes after the Resolve test.</div>
+          <div class="row" style="margin-top:8px"><span class="small muted">DaVinci Resolve:</span>
+            <button class="btn sm" data-gclip ${o.rendered ? '' : 'disabled'} title="a numbered copy of this render to drag into Resolve's media pool - Resolve locks the files it uses, so the graphic itself stays free to render again">Clip for Resolve (.mov)</button>
+            <button class="btn sm" data-gswap ${o.rendered ? '' : 'disabled'} title="after a new render: replaces this graphic in the project open in Resolve - position, length, size, opacity and blend mode on your timeline stay">Swap in DaVinci Resolve</button></div>
           <pre class="log" hidden></pre></div></div>`;
     }).join('')}</div>`;
   captionsBtn(el, P);
@@ -1201,14 +1203,27 @@ function projGraphics(el, P) {
       try { await api(`/api/project/${encodeURIComponent(P.name)}/overlay`, {overlay: name, values}); toast(`${name}: settings saved - render it to see them`, 'ok'); route(); }
       catch (e) { toast(e.message, 'err'); }
     };
-    const run = async (kind, args, btn) => {
+    const run = async (kind, args, btn, then) => {
       if (save && !save.disabled) { toast('Save the settings first', 'err'); return; }
       const j = await startJob(kind, {project: P.name, overlay: name, ...args}, false);
       if (!j) return;
       btn.disabled = true; pre.hidden = false; pre.textContent = '';
-      followJob(j.id, pre, jj => { toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err'); if (jj.status === 'done') route(); else btn.disabled = false; });
+      followJob(j.id, pre, jj => {
+        toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err');
+        if (jj.status !== 'done') { btn.disabled = false; return; }
+        if (then) then(); else route();
+      });
     };
     $('[data-grender]', card).onclick = e => run('overlay_render', {}, e.target);
+    $('[data-gswap]', card).onclick = e => run('overlay_refresh', {}, e.target, () => { e.target.disabled = false; });
+    $('[data-gclip]', card).onclick = e => run('overlay_resolve_clip', {}, e.target, async () => {
+      e.target.disabled = false;
+      try {
+        const NP = await api('/api/project/' + encodeURIComponent(P.name));
+        const o2 = (NP.overlays || []).find(x => x.name === name);
+        if (o2 && o2.resolve_clips && o2.resolve_clips[0]) openPath(o2.resolve_clips[0], true);
+      } catch (err) { toast(err.message, 'err'); }
+    });
     $('[data-glib]', card).onclick = e => modal(`<h2>Save “${esc(name)}” to the graphics library</h2>
       <div class="small muted">The library keeps its HTML, its settings as they are now and the rendered clip. Every video can use it (Library → Graphics), and you can drag the clip into a Power Bin in DaVinci Resolve.</div>
       <div class="row" style="margin-top:12px"><label>Name <input id="glname" value="${esc(name)}" style="width:220px"></label>

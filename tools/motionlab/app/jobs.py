@@ -105,6 +105,12 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         return (f"Save the graphic {f.name} to the library as {name}",
                 [PY, str(TOOLS / "overlay.py"), "save", str(f), "--name", name] + (["--force"] if a.get("replace") else []),
                 "light")
+    if kind in ("overlay_refresh", "overlay_resolve_clip"):    # Videos > Graphics > DaVinci Resolve
+        f = data.overlay_folder(str(a.get("project", "")), str(a.get("overlay", "")))
+        if kind == "overlay_refresh":
+            return (f"Swap the graphic {f.name} in DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "refresh", str(f)],
+                    "resolve")
+        return f"A clip of {f.name} for DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "resolve-clip", str(f)], "light"
     if kind == "overlay_captions":           # Videos > Graphics > Captions from a subtitle file (a captions graphic)
         p = data.safe_name(str(a.get("project", "")))
         _latest_plan(p)                                             # rate / size / length come from the edit plan

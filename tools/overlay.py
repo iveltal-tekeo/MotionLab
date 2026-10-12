@@ -16,6 +16,10 @@ particles) are written this way since 0.3.0.
     .venv\\Scripts\\python tools\\overlay.py set <folder> text="NEW" color=#ff0000     then render again
     .venv\\Scripts\\python tools\\overlay.py save <folder> [--name N]     a rendered, approved overlay -> library\\graphics\\
     .venv\\Scripts\\python tools\\overlay.py graphics                    the graphics library (yours + the examples)
+    .venv\\Scripts\\python tools\\overlay.py refresh <folder>        swap it in the project open in DaVinci Resolve
+          (MediaPoolItem.ReplaceClip; position, length, transform, opacity, composite mode stay). Resolve locks the
+          files it uses, so it always gets a numbered copy <folder>\\resolve\\<name>_<id>.mov (resolve-clip <folder>
+          makes one to drag in by hand); <name>.mov stays free to render again
     .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json> [--render]
           captions timed to the words (styles + settings like any graphic) + <name>.srt for Resolve's subtitle track;
           rate / size / length from the project's newest edit plan (or --fps --width --height --frames)
@@ -298,7 +302,13 @@ def cmd_render(a) -> int:
     out = folder / f"{c['name']}.mov"
     tmp = folder / f"{c['name']}.part.mov"
     encode_prores(frames_dir / "frame_%06d.png", fps, tmp)
-    os.replace(tmp, out)
+    try:
+        os.replace(tmp, out)
+    except PermissionError:
+        tmp.unlink(missing_ok=True)
+        raise SystemExit(f"{out.name} is open in another program - DaVinci Resolve keeps the clips it uses open, so it "
+                         f"cannot be replaced. Run `overlay.py refresh {folder}` (or the Graphics tab's Swap in "
+                         f"DaVinci Resolve): Resolve moves to a numbered copy and {out.name} is free; then render again.")
 
     def frames():
         for p in pngs:
@@ -498,6 +508,70 @@ def cmd_captions(a) -> int:
     print(f"for DaVinci Resolve's subtitle track: {srt}")
     if a.render:
         return cmd_render(argparse.Namespace(folder=str(folder), workers=None, mp4=False))
+    return 0
+
+
+def refresh(folder: Path, r=None) -> tuple[str, Path, list[dict]]:
+    """Swap every clip of this overlay in the project open in DaVinci Resolve for a numbered copy of its newest
+    render (MediaPoolItem.ReplaceClip): the timeline items keep position, length, transform, opacity and composite
+    mode (measured 2026-10-12). Acts on the open project only; any clip whose file lies in <folder> counts."""
+    import resolve_build as rb
+    new = OS.resolve_copy(folder)
+    r = r or rb.connect(20)
+    p = r.GetProjectManager().GetCurrentProject()
+    if not p:
+        raise SystemExit("no project is open in DaVinci Resolve")
+    key, newkey = str(folder.resolve()).lower() + os.sep, str(new.resolve()).lower()
+
+    def walk(fo):
+        for it in fo.GetClipList() or []:
+            fp = str(it.GetClipProperty("File Path") or "")
+            if fp.lower().startswith(key) and fp.lower() != newkey:
+                yield it, fp
+        for sub in fo.GetSubFolderList() or []:
+            yield from walk(sub)
+
+    new_frames = OV.probe(new)["frames"]
+    out = []
+    for it, fp in list(walk(p.GetMediaPool().GetRootFolder())):
+        old_frames = int(it.GetClipProperty("Frames") or 0)
+        ok = bool(it.ReplaceClip(str(new)))
+        if ok and it.GetClipProperty("Alpha mode") != "Straight":
+            it.SetClipProperty("Alpha mode", "Straight")
+        out.append({"clip": it.GetName(), "was": fp, "ok": ok, "used": it.GetClipProperty("Usage"),
+                    "frames": [old_frames, new_frames]})
+    return p.GetName(), new, out
+
+
+def cmd_refresh(a) -> int:
+    folder = guard(Path(a.folder))
+    s = OS.status(folder)
+    if not s["rendered"]:
+        raise SystemExit(f"{s['name']}: not rendered yet")
+    if not s["current"]:
+        log(f"  note: the settings changed since the last render - Resolve gets the last render ({s['rendered_at']})")
+    name, new, swaps = refresh(folder)
+    if not swaps:
+        print(f"DaVinci Resolve's open project '{name}' has no clip of {s['name']} (or already the newest: {new.name}). "
+              f"To add it, drag {new} into its media pool.")
+        return 0
+    for w in swaps:
+        print(f"  {'swapped' if w['ok'] else 'FAILED  '} {w['clip']}: {Path(w['was']).name} -> {new.name}"
+              + (f" (used {w['used']}x)" if w["used"] else ""))
+        if w["ok"] and w["frames"][1] < w["frames"][0]:
+            print(f"    NOTE: the new render has {w['frames'][1]} frames, the old {w['frames'][0]}: timeline clips "
+                  "longer than that now run past its end")
+    print(f"project '{name}': {sum(w['ok'] for w in swaps)} of {len(swaps)} clip(s) now use {new.name}; the timeline "
+          "keeps position, length, transform, opacity and composite mode")
+    return 0 if all(w["ok"] for w in swaps) else 1
+
+
+def cmd_resolve_clip(a) -> int:
+    folder = guard(Path(a.folder))
+    try:
+        print(OS.resolve_copy(folder))
+    except ValueError as e:
+        raise SystemExit(str(e))
     return 0
 
 
@@ -746,6 +820,10 @@ def main() -> int:
     s.add_argument("--name")
     s.add_argument("--force", action="store_true")
     sub.add_parser("graphics", help="the graphics library (yours + the examples)")
+    s = sub.add_parser("refresh", help="swap this graphic in the project open in DaVinci Resolve (keeps your edits)")
+    s.add_argument("folder")
+    s = sub.add_parser("resolve-clip", help="the numbered copy to drag into DaVinci Resolve (it locks what it uses)")
+    s.add_argument("folder")
     s = sub.add_parser("captions", help="captions timed to the words from an .srt / .vtt / transcript.json")
     s.add_argument("folder")
     s.add_argument("--from", dest="from_", required=True, metavar="FILE")
@@ -773,6 +851,7 @@ def main() -> int:
     a = ap.parse_args()
     return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check, "settings": cmd_settings,
             "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions,
+            "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
             "pin": cmd_pin}[a.cmd](a)
 

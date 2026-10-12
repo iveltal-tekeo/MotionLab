@@ -89,7 +89,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills` (graphics
   as HTML via HyperFrames, pinned in `tools\overlays\`; `settings | set` = the values the user can change, `save |
   graphics` = the graphics library; `captions <folder> --from <.srt|.vtt|transcript.json>` = styled captions + an
-  .srt for Resolve; `versions | upgrade-test | pin` = adopt a newer one only after its frames match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
+  .srt for Resolve; `refresh` = swap it in the open Resolve project (Resolve gets numbered copies: it locks files); `versions | upgrade-test | pin` = adopt a newer one only after its frames match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
   `library.py build | test | title | install`, `resolve_mcp.py install | status | remove` (optional Resolve MCP for
   Claude Code, this PC only)
 - `storage.py` disk report by category; `--prune <name|all> --what cache,checks,finals --yes` deletes only what the
