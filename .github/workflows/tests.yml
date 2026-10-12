@@ -89,10 +89,16 @@ jobs:
 
       - name: Self-test (synthetic videos with known effects, --extended)
         if: steps.scope.outputs.full == 'true'
-        run: python tools/selftest.py --extended
+        shell: bash
+        run: |
+          set -o pipefail
+          python tools/selftest.py --extended 2>&1 | tee selftest.log
 
       - name: App smoke test (modules, server routes, every page in Edge, MCP server)
-        run: python tools/dev/smoke.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python tools/dev/smoke.py 2>&1 | tee smoke.log
 
       - name: Mark as tested + tag a new version
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -113,12 +119,35 @@ jobs:
             git tag "v$v" "$head" && git push origin "refs/tags/v$v"
           fi
 
+      # Job logs are only readable by the repo's admins (API) - the error notes ("annotations") are public, so a failed
+      # test copies its important lines and its last lines there: Claude and anyone helping can read the cause.
+      - name: Why it failed (public error notes)
+        if: failure()
+        shell: bash
+        run: |
+          python - <<'EOF'
+          import pathlib
+          KEYS = ("FAIL", "Error", "error:", "Traceback", "SCORE", "OVERALL", "WRONG", "MISS", "expected", "Exception")
+          enc = lambda s: s.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+          for f in ("selftest.log", "smoke.log"):
+              p = pathlib.Path(f)
+              if not p.exists():
+                  continue
+              lines = [l[:220] for l in p.read_text(encoding="utf-8", errors="replace").splitlines()]
+              key = [l for l in lines if any(k in l for k in KEYS)][-40:]
+              if key:
+                  print(f"::error title={f}: the important lines::" + enc("\n".join(key)))
+              print(f"::error title={f}: the last 60 lines::" + enc("\n".join(lines[-60:])))
+          EOF
+
       - name: Keep the scores and logs of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: |
+            selftest.log
+            smoke.log
             analysis/synthetic_*/selftest_score.json
             analysis/synthetic_*/events.json
             .app/server.log

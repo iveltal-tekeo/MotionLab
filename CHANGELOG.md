@@ -20,8 +20,10 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   call to action); *Write one like this* opens Claude Code, which writes three new prompts for your need in a
   structure that already worked. Text only - you paste the prompt into the site, nothing is paid or sent - then rate
   what it made (Good / OK / Bad + a note), and the best-rated ones become the first examples next time. A shot
-  prompt can also be filled from a reference's frames (its measured camera move and look). Your prompts stay on your
-  PC for now.
+  prompt can also be filled from a reference's frames (its measured camera move and look). Image prompts (Nano
+  Banana, GPT Image, Kling Image) have their own tab; prompts collected from creators get Claude's review - 0 to 5
+  stars, why, and what to fix - next to your own rating of what a model really made, and recipes in several steps
+  (an image prompt, then a video prompt) show their steps. Your prompts stay on your PC for now.
 - **HyperFrames kept current, safely**: HyperFrames (the HTML graphics) now uses 0.8.149 and GSAP 3.15.0 - tested
   first: the 4AM title and clock come out identical, the 10-second What's new clip within 2/255. HyperFrames releases
   several times a day, so MotionLab never upgrades by itself: *Settings > Programs* shows the version in use and the

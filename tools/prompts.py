@@ -1,16 +1,20 @@
-"""The prompt library (0.4): proven prompts for video models (shots), hooks and talking scripts, split into their
-structure, so `/write-prompt` can write new ones in a structure that worked. Text only - no model, no API, no cost.
+"""The prompt library (0.4): proven prompts for video models (shots), image models (stills / start frames), hooks
+and talking scripts, split into their structure, so `/write-prompt` can write new ones in a structure that worked.
+Text only - no model, no API, no cost.
 
-    .venv\\Scripts\\python tools\\prompts.py list [shot|hook|script]
+    .venv\\Scripts\\python tools\\prompts.py list [shot|image|hook|script]
     .venv\\Scripts\\python tools\\prompts.py show <id>                    e.g. shot-001
     .venv\\Scripts\\python tools\\prompts.py import <file>                the paste format (`template`) or a JSON list
-    .venv\\Scripts\\python tools\\prompts.py annotate <id> <file.json>    Claude's split: {title, structure, pattern, tags, model}
-    .venv\\Scripts\\python tools\\prompts.py rate <id> good|ok|bad|none [--note "..."]
+    .venv\\Scripts\\python tools\\prompts.py annotate <id> <file.json>    Claude's split: {title, structure, pattern, tags,
+                                                                       model, review, workflow, step, notes}
+    .venv\\Scripts\\python tools\\prompts.py rate <id> good|ok|bad|none [--note "..."]     the user's result
     .venv\\Scripts\\python tools\\prompts.py template                     print the paste format
 
 Writes only knowledge\\local\\prompts\\<kind>\\<id>.json (private to this PC). A JSON import = a list of records
-{kind, text, source: {type: tested|creator|written, creator?, link?}, title?, model?, result?, structure?,
-pattern?, tags?, made_from?} - how Claude saves the prompts it wrote (`written`, made_from = the examples used).
+{kind, text, source: {type: tested|creator|written, creator?, link?, file?}, title?, model?, result?, structure?,
+pattern?, tags?, made_from?, review?: {stars 0-5, why, fix}, workflow?, step?, notes?} - how Claude saves the prompts
+it wrote (`written`, made_from = the examples used) or collected ones the user handed over (`creator`). Two ratings,
+never mixed: `review` = Claude's reading of the text (will a model do what it asks?), `result` = what the user saw.
 """
 from __future__ import annotations
 
@@ -33,7 +37,8 @@ def main() -> int:
                                                                                   choices=["", *P.KINDS])
     sub.add_parser("show", help="one prompt in full").add_argument("id")
     sub.add_parser("import", help="save prompts from a paste (.txt) or a JSON list").add_argument("file")
-    a = sub.add_parser("annotate", help="set title / structure / pattern / tags / model from a JSON file")
+    a = sub.add_parser("annotate", help="set title / structure / pattern / tags / model / review / workflow / step / "
+                                        "notes from a JSON file")
     a.add_argument("id")
     a.add_argument("file")
     r = sub.add_parser("rate", help="how the result turned out")
@@ -68,8 +73,8 @@ def main() -> int:
             print(f"not split into structure yet: {', '.join(todo)} (annotate)")
     elif args.cmd == "annotate":
         ch = read_json(Path(args.file))
-        print(P.describe(P.update(args.id, **{k: ch.get(k) for k in ("title", "structure", "pattern", "tags", "model")}),
-                         full=True))
+        keys = ("title", "structure", "pattern", "tags", "model", "review", "workflow", "step", "notes")
+        print(P.describe(P.update(args.id, **{k: ch.get(k) for k in keys}), full=True))
     elif args.cmd == "rate":
         print(P.describe(P.update(args.id, rating=None if args.rating == "none" else args.rating, note=args.note)))
     elif args.cmd == "template":

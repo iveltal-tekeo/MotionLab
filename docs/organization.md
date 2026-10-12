@@ -77,7 +77,9 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
 - **Tags**: the first passing run of a new `__version__` tags that commit `v<version>`. Older releases, once, by
   hand: `git tag v0.2.0 cee5485`, `git tag v0.2.5 9334caa`, `git tag v0.3.0 82642a1`, `git push origin --tags`.
 - **When a run is red**: the Actions tab shows the failing step; a failed run keeps the scores and logs as the
-  artifact "test-results". Fix and push again - friends keep the last tested version meanwhile. Only if the
+  artifact "test-results", and copies the important + last lines of `selftest.log` / `smoke.log` into public error
+  notes (annotations) - job logs need repo-admin rights, the notes don't: `api.github.com/repos/<owner>/MotionLab/
+  check-runs/<job id>/annotations` (the job id from `actions/runs/<run id>/jobs`). Fix and push again - friends keep the last tested version meanwhile. Only if the
   workflow itself is broken (not the lab) and an update must go out anyway: `git push origin main:tested`.
 
 ## 4. Fix before a repo or before friends use it (judgement)

@@ -1205,12 +1205,16 @@ async function pagePrompts(main, kind) {
   const items = R.items.filter(p => p.kind === K.id);
   const unsplit = items.filter(p => !p.structure).map(p => p.id);
   const src = p => { const s = p.source || {};
-    return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}`
+    return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
       : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(esc).join(', ')}</span>` : ''}`; };
-  const card = p => { const res = p.result || {};
+  const stars = n => `<span class="stars" title="Claude's review of the prompt text: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
+  const card = p => { const res = p.result || {}, rv = p.review || {};
     return `<div class="panel pcard" data-id="${esc(p.id)}">
       <div class="row phead"><b class="mono">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
-        <span class="grow"></span><span class="small dim">${esc(p.updated || p.added || '')}</span></div>
+        ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
+        <span class="grow"></span>${rv.stars != null ? stars(rv.stars) : ''}<span class="small dim">${esc(p.updated || p.added || '')}</span></div>
+      ${rv.stars != null && rv.why ? `<div class="small prev"><b>Claude's review ${rv.stars}/5:</b> ${esc(rv.why)}${rv.fix ? ` <span class="amber">Fix: ${esc(rv.fix)}</span>` : ''}</div>` : ''}
+      ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
       <pre class="ptext">${esc(p.text)}</pre>
       ${p.structure ? `<div class="pslots">${p.structure.map(x => `<span class="pslot"><b>${esc(x.slot)}</b> ${esc(x.text)}</span>`).join('')}</div>`
         : '<div class="small muted">Not split into its structure yet.</div>'}
@@ -1219,9 +1223,10 @@ async function pagePrompts(main, kind) {
         <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}">
         <span class="grow"></span><button class="btn sm" data-copy>Copy</button>
         ${claudeBtn(`/write-prompt ${p.kind} like ${p.id}`, 'Write one like this', 'prompt', p.id)}</div></div>`; };
-  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Prompts that worked - for video models, hooks and talking scripts - each split into its
+  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Prompts that worked - for video and image models, hooks and talking scripts - each split into its
       structure, so Claude writes a new one for your need in a structure that already worked. Text only: paste the prompt into the site
-      (Higgsfield, Seedance, ...), then rate what it made - the best-rated ones are the first examples next time.</div></div>
+      (Higgsfield, Seedance, Kling, ...), then rate what it made. ★ = Claude's review of the text (will a model do what it asks?);
+      your Good / OK / Bad on a real result always counts more.</div></div>
       <div class="row"><button class="btn pri" id="padd">Add prompts</button>${claudeBtn(`/write-prompt ${K.id}`, 'Write a new prompt', 'prompt', K.id, 'cl')}
         ${R.items.length ? `<button class="btn" data-open="${esc(R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
     <div class="tabs">${R.kinds.map(k => `<a href="#/prompts/${k.id}" class="${k.id === K.id ? 'on' : ''}">${esc(k.label)} <span class="dim">${k.count}</span></a>`).join('')}</div>

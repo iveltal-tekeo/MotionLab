@@ -178,9 +178,9 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.4 prompt library + the "yapping" method for talking-head
-  videos, 0.5 templates by feel + macOS, 0.6 collections and topics, 0.7 AI B-roll and cinematics), also shown in the
-  app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.3.2 motion graphics <-> DaVinci Resolve, 0.3.5 describe
+  video: what videos say and show, 0.4 yapping mode for talking-to-camera videos, 0.4.1 prompt generator for every
+  model, 0.5 templates by feel + macOS, 0.7 AI B-roll and cinematics), also shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

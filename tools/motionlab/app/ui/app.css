@@ -383,3 +383,5 @@ tr.sel td { background: #221d0d; }
 .prate .btn.on[data-r=ok] { background: #3a2f05; border-color: var(--amber); color: var(--amber); }
 .prate .btn.on[data-r=bad] { background: #3a1515; border-color: var(--red); color: var(--red); }
 .upstream { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.stars { color: var(--amber); letter-spacing: 1px; font-size: 14px; } .stars .off { color: var(--line2); }
+.pcard .prev { color: var(--muted); }

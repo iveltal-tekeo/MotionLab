@@ -18,7 +18,7 @@ from motionlab import graphics as G  # noqa: E402
 from motionlab.util import LAB, setup_console  # noqa: E402
 
 OUT = LAB / "docs" / "roadmap.png"
-DATE = "2026-10-11"
+DATE = "2026-10-12"
 W, H = 1920, 1080
 BG = (13, 13, 15)
 WHITE, GREY, DIM = (236, 236, 236), (128, 128, 132), (58, 58, 62)
@@ -37,12 +37,12 @@ STAGES = [
      "Recipes + Fusion macros checked in Resolve against 4AM. Later: install them as Resolve templates."),
     ("MVP for friends", "DONE", 4, "v0.2.5", "on GitHub",
      "Setup, sharing, review tab, Delete, Claude buttons with effort per task."),
-    ("Rebuild toolkit", "DONE", 3, "v0.3.1", "ready: you upload it",
-     "Update button, colour, 3x renders, HTML graphics, MCP. 0.3.1: every push tested on GitHub before friends get it."),
+    ("Rebuild toolkit", "DONE", 3, "v0.3.1", "on GitHub",
+     "Update button, colour, 3x renders, HTML graphics, MCP, Prompts page. Every push tested on GitHub first."),
     ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",
      "7 lessons from 1 round, cards shared through GitHub. Next: 10 videos each > category profiles."),
-    ("Prompts + yapping", "STARTED", 1, "1/5", "v0.4 steps built",
-     "Prompts page in v0.3.1: your proven prompts > Claude writes new ones like them. Next: hooks, talking-head edits."),
+    ("Describe + yap", "STARTED", 1, "v0.3.5", "> v0.4 > v0.4.1",
+     "What videos say and show (topics, 10 per subject). Then yapping mode (HEIT, validated topics) + prompts."),
     ("Templates + macOS", "LATER", 0, "v0.5", "planned",
      "A reference as a template: its feel, pacing and structure with your own story and music. A macOS app."),
     ("AI B-roll + cinematics", "LATER", 0, "v0.7", "planned",
@@ -52,8 +52,8 @@ VERDICT = [
     ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
              "per category."),
-    ("NEXT", "You push v0.3.1 (+ Prompts)  >  GitHub's tests turn green  >  friends click Update  >  ~10 prompts per kind "
-             "+ talking references  |  v0.4 hooks + yapping  |  v0.5 templates by feel + macOS  |  v0.6 collections  |  v0.7 AI B-roll."),
+    ("NEXT", "v0.3.2 graphics <-> Resolve  |  v0.3.5 describe video  |  v0.4 yapping mode (HEIT)  |  v0.4.1 prompt "
+             "generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll.  You: your prompts + 3-5 talking videos."),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")

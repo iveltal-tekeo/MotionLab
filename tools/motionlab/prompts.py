@@ -18,13 +18,18 @@ from .util import LAB, read_json, write_json
 
 FOLDER = "knowledge/local/prompts"                      # relative to the lab (the app's "Folder" button)
 HOME = LAB / FOLDER
-KINDS = {"shot": "Video-model shot", "hook": "Hook (first 3 s)", "script": "Talking script"}
+KINDS = {"shot": "Video-model shot", "image": "Image (still / start frame)", "hook": "Hook (first 3 s)",
+         "script": "Talking script"}
 SOURCES = ("tested", "creator", "written")
 RATINGS = ("good", "ok", "bad")
-# the slots Claude splits a prompt into (a guide, not a schema: a prompt may skip some or need another)
+# the slots Claude splits a prompt into (a guide, not a schema: a prompt may skip some or need another). "references"
+# = what each uploaded file is for, "keep" = what must not change, "change" = the transformation (lock first, then
+# change - the order the guides that work use)
 SLOTS = {
-    "shot": ["subject", "action", "setting", "camera", "lens", "light", "look", "motion", "audio", "length / aspect",
-             "avoid"],
+    "shot": ["references", "keep", "change", "subject", "action", "setting", "camera", "lens", "light", "look",
+             "motion", "beats", "audio", "length / aspect", "avoid"],
+    "image": ["references", "keep", "change", "subject", "setting", "composition", "light", "look", "materials",
+              "avoid"],
     "hook": ["pattern", "opening line", "on screen", "promise"],
     "script": ["hook", "problem", "points", "proof", "call to action"],
 }
@@ -37,9 +42,9 @@ def _today() -> str:
 
 
 def _path(pid: str) -> Path:
-    m = re.fullmatch(r"(shot|hook|script)-(\d{3,})", str(pid))
+    m = re.fullmatch(r"(shot|image|hook|script)-(\d{3,})", str(pid))
     if not m:
-        raise ValueError(f"not a prompt id: {pid!r} (like shot-001, hook-002, script-003)")
+        raise ValueError(f"not a prompt id: {pid!r} (like shot-001, image-002, hook-003, script-004)")
     return HOME / m[1] / f"{pid}.json"
 
 
@@ -64,12 +69,15 @@ def get(pid: str) -> dict:
 
 
 def rank(r: dict) -> tuple:
-    """Sort key - the examples Claude should copy first: rated good (tested before written before creator), then
-    unrated creators' prompts, ok, unrated rest, bad last."""
+    """Sort key - the examples Claude should copy first: what the user rated good (tested before written before
+    creator), then unrated creators' prompts, ok, unrated rest, bad last; inside each group Claude's review stars
+    (more first). The user's rating of a real result always outranks Claude's reading of the text."""
     rating = (r.get("result") or {}).get("rating")
     src = (r.get("source") or {}).get("type")
     order = {"good": 0, "ok": 2, "bad": 4}.get(rating, 3 if src != "creator" else 1)
-    return (order, {"tested": 0, "written": 1, "creator": 2}.get(src, 3), r.get("id", ""))
+    stars = (r.get("review") or {}).get("stars")
+    return (order, -(stars if stars is not None else -1), {"tested": 0, "written": 1, "creator": 2}.get(src, 3),
+            r.get("id", ""))
 
 
 def next_id(kind: str) -> str:
@@ -91,16 +99,34 @@ def _check(r: dict) -> None:
     for x in r.get("structure") or []:
         if not (isinstance(x, dict) and x.get("slot") and "text" in x):
             raise ValueError("structure = a list of {slot, text}")
+    rv = r.get("review")
+    if rv is not None:
+        if not (isinstance(rv, dict) and isinstance(rv.get("stars"), int) and 0 <= rv["stars"] <= 5):
+            raise ValueError("review = {stars: 0-5, why, fix}")
+    if r.get("step") is not None and not (isinstance(r["step"], int) and r["step"] >= 1):
+        raise ValueError("step = 1, 2, ... (its place in the workflow)")
+
+
+def _review(rv: dict | None) -> dict | None:
+    """Claude's review of the TEXT (0-5 stars: will a model do what it asks?) - not a result; the user's own
+    rating of what the model made lives in `result`."""
+    if not rv:
+        return None
+    return {"stars": rv.get("stars"), "why": str(rv.get("why") or "").strip(), "fix": str(rv.get("fix") or "").strip(),
+            "by": rv.get("by") or "claude", "date": rv.get("date") or _today()}
 
 
 def add(rec: dict) -> dict:
-    """Save a new prompt (gets the next id of its kind). rec: kind, text, source {type, creator?, link?}, and
-    optionally title, model, result {rating, note}, structure [{slot, text}], pattern, tags, made_from [ids]."""
+    """Save a new prompt (gets the next id of its kind). rec: kind, text, source {type, creator?, link?, file?}, and
+    optionally title, model, result {rating, note}, structure [{slot, text}], pattern, tags, made_from [ids],
+    review {stars 0-5, why, fix}, workflow (name of a multi-step recipe) + step (1, 2, ...), notes (how to use it)."""
     r = {"kind": rec.get("kind"), "title": str(rec.get("title") or "").strip(), "text": str(rec.get("text") or "").strip(),
          "model": str(rec.get("model") or "").strip(), "source": dict(rec.get("source") or {}),
          "result": {"rating": None, "note": "", **(rec.get("result") or {})},
          "structure": rec.get("structure") or None, "pattern": rec.get("pattern") or "",
          "tags": list(rec.get("tags") or []), "made_from": list(rec.get("made_from") or []),
+         "review": _review(rec.get("review")), "workflow": str(rec.get("workflow") or "").strip(),
+         "step": rec.get("step"), "notes": str(rec.get("notes") or "").strip(),
          "added": _today(), "updated": _today()}
     _check(r)
     with _LOCK:
@@ -110,13 +136,15 @@ def add(rec: dict) -> dict:
 
 
 def update(pid: str, **changes) -> dict:
-    """Change fields of a saved prompt: title, model, structure, pattern, tags, rating, note (the text and the source
-    stay as they were added)."""
+    """Change fields of a saved prompt: title, model, structure, pattern, tags, workflow, step, notes, review (Claude's
+    stars), rating + note (the user's) - the text and the source stay as they were added."""
     with _LOCK:
         r = get(pid)
-        for k in ("title", "model", "structure", "pattern", "tags"):
+        for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes"):
             if k in changes and changes[k] is not None:
                 r[k] = changes[k]
+        if changes.get("review") is not None:
+            r["review"] = _review(changes["review"])
         res = r.setdefault("result", {"rating": None, "note": ""})
         if "rating" in changes:
             res["rating"] = changes["rating"] or None
@@ -192,7 +220,8 @@ def parse_paste(text: str) -> list[dict]:
                 kv[m[1].lower()] = m[2].strip()
         try:
             kind = kv.get("kind", "").lower().strip()
-            kind = {"shots": "shot", "video": "shot", "hooks": "hook", "scripts": "script"}.get(kind, kind)
+            kind = {"shots": "shot", "video": "shot", "images": "image", "photo": "image", "hooks": "hook",
+                    "scripts": "script"}.get(kind, kind)
             rec = {"kind": kind, "title": kv.get("title", ""), "model": kv.get("model", "").strip(" -") or "",
                    "source": _source(kv.get("source", "")), "result": _result(kv.get("result", "")),
                    "text": body.strip(), "tags": [t.strip() for t in kv.get("tags", "").split(",") if t.strip()]}
@@ -226,11 +255,17 @@ def describe(r: dict, full: bool = False) -> str:
     who = {"tested": "tested by the user", "written": "written by Claude" + (
         f" from {', '.join(r.get('made_from') or [])}" if r.get("made_from") else ""),
            "creator": f"creator {src.get('creator') or '?'} {src.get('link') or ''}".strip()}.get(src.get("type"), "?")
-    res = r.get("result") or {}
+    res, rv = r.get("result") or {}, r.get("review") or {}
     L = [f"{r['id']} [{r['kind']}] {r.get('title') or '(no title)'} | {who}"
          + (f" | model {r['model']}" if r.get("model") else "")
-         + f" | rating {res.get('rating') or 'none'}" + (f" ({res['note']})" if res.get("note") else "")
-         + (f" | pattern {r['pattern']}" if r.get("pattern") else "")]
+         + f" | user's rating {res.get('rating') or 'none'}" + (f" ({res['note']})" if res.get("note") else "")
+         + (f" | Claude's review {rv['stars']}/5" if rv.get("stars") is not None else "")
+         + (f" | pattern {r['pattern']}" if r.get("pattern") else "")
+         + (f" | workflow '{r['workflow']}' step {r.get('step') or '?'}" if r.get("workflow") else "")]
+    if rv.get("why") and full:
+        L.append(f"  review: {rv['why']}" + (f" Fix: {rv['fix']}" if rv.get("fix") else ""))
+    if r.get("notes") and full:
+        L.append(f"  how to use: {r['notes']}")
     if r.get("structure"):
         L.append("  structure: " + " > ".join(f"{x['slot']}: {x['text']}" for x in r["structure"]))
     elif full:
