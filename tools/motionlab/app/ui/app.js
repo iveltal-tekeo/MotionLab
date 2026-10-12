@@ -1550,15 +1550,16 @@ const PURPOSES = ['vlog', 'talking head', 'music video', 'ad / product', 'cinema
                   'captions', 'motion graphics', 'colour', 'tutorial', 'storytelling'];
 const ASPECTS = [['sound', 'Sound & music'], ['sfx', 'SFX'], ['colour', 'Colour'], ['captions', 'Captions'],
                  ['graphics', 'Motion graphics'], ['effects', 'Effects & transitions'], ['pacing', 'Pacing & cuts'], ['overall', 'Overall']];
-async function pagePrompts(main, kind) {
+const KSHORT = {shot: 'Video shot', image: 'Image', hook: 'Hook', script: 'Script'};
+async function pagePrompts(main, kind) {               // one page for every kind (0.3.3); #/prompts/<kind> preselects it
   const R = await api('/api/prompts');
-  const K = R.kinds.find(x => x.id === kind) || R.kinds.find(x => x.count) || R.kinds[0];
-  const all = R.items.filter(p => p.kind === K.id), used = R.used || {};
+  const all = R.items, used = R.used || {};
   const unsplit = all.filter(p => !p.structure).map(p => p.id);
   const fors = Object.entries(all.flatMap(p => p.tags || []).reduce((a, x) => (a[x] = (a[x] || 0) + 1, a), {})).sort((a, b) => b[1] - a[1]);
-  let want = '', q = '';
-  try { want = localStorage.getItem('ml.pfor.' + K.id) || ''; } catch (e) { /* no storage: show all */ }
+  let want = '', q = '', kf = R.kinds.some(k => k.id === kind) ? kind : '';
+  try { want = localStorage.getItem('ml.pfor') || ''; if (!kind) kf = localStorage.getItem('ml.pkind') || ''; } catch (e) { /* no storage: show all */ }
   if (want && !fors.some(([x]) => x === want)) want = '';
+  if (kf && !R.kinds.some(k => k.id === kf)) kf = '';
   const main_ = fors.filter(([x, n]) => PURPOSES.includes(x) || n > 1).slice(0, 14), rest = fors.filter(f => !main_.includes(f));
   const src = p => { const s = p.source || {};
     return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
@@ -1569,7 +1570,7 @@ async function pagePrompts(main, kind) {
     : ' - <span class="muted">not rated yet (the video\'s Overview: “How did it turn out?”)</span>'}</div>`;
   const card = p => { const res = p.result || {}, rv = p.review || {};
     return `<div class="panel pcard" data-id="${esc(p.id)}">
-      <div class="row phead"><b class="mono pid">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
+      <div class="row phead"><span class="kbadge k-${esc(p.kind)}">${esc(KSHORT[p.kind] || p.kind)}</span><b class="mono pid">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
         ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
         <span class="grow"></span>${rv.stars != null ? stars(rv.stars) : ''}<span class="small dim">${esc(p.updated || p.added || '')}</span></div>
       <div class="row pfor"><span class="small muted">For:</span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join('') || '<span class="small dim">not set</span>'}
@@ -1590,9 +1591,10 @@ async function pagePrompts(main, kind) {
       structure, so Claude writes a new one for your need in a structure that already worked. Text only: paste the prompt into the site
       (Higgsfield, Seedance, Kling, ...), then rate what it made. ★ = Claude's review of the text (will a model do what it asks?);
       your Good / OK / Bad on a real result always counts more.</div></div>
-      <div class="row"><button class="btn pri" id="padd">Add prompts</button>${claudeBtn(`/write-prompt ${K.id}`, 'Write a new prompt', 'prompt', K.id, 'cl')}
+      <div class="row"><button class="btn pri" id="padd">Add prompts</button>${claudeBtn('/write-prompt', 'Write a new prompt', 'prompt', 'new', 'cl')}
         ${R.items.length ? `<button class="btn" data-open="${esc(R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
-    <div class="tabs">${R.kinds.map(k => `<a href="#/prompts/${k.id}" class="${k.id === K.id ? 'on' : ''}">${esc(k.label)} <span class="dim">${k.count}</span></a>`).join('')}</div>
+    <div class="row pkinds"><button class="fchip${kf ? '' : ' on'}" data-k="">all kinds <span class="dim">${all.length}</span></button>${R.kinds.map(k =>
+      `<button class="fchip${k.id === kf ? ' on' : ''}" data-k="${k.id}"><i class="kdot k-${k.id}"></i>${esc(KSHORT[k.id] || k.label)} <span class="dim">${k.count}</span></button>`).join('')}</div>
     ${all.length ? `<div class="row pfilter"><input type="search" id="pq" placeholder="Search: words, title, model, creator…">
       <span class="small muted">For:</span><button class="fchip${want ? '' : ' on'}" data-f="">all</button>${main_.map(([x, n]) => `<button class="fchip${x === want ? ' on' : ''}" data-f="${esc(x)}">${esc(x)} <span class="dim">${n}</span></button>`).join('')}
       ${rest.length ? `<select id="pmore" class="fsel"><option value="">more… (${rest.length})</option>${rest.map(([x, n]) => `<option value="${esc(x)}"${x === want ? ' selected' : ''}>${esc(x)} (${n})</option>`).join('')}</select>` : ''}
@@ -1601,13 +1603,15 @@ async function pagePrompts(main, kind) {
       ${claudeBtn(`/write-prompt split ${unsplit.join(' ')}`, 'Review and split them in Claude Code', 'prompt', 'split')}</div>` : ''}
     <div id="plist"></div>`;
   $('#padd').onclick = () => addPromptsModal();
-  const match = p => (!want || (p.tags || []).includes(want)) && (!q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, ...(p.tags || [])]
+  const match = p => (!kf || p.kind === kf) && (!want || (p.tags || []).includes(want)) && (!q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, ...(p.tags || [])]
     .join(' ').toLowerCase().includes(q));
   const draw = () => {
     const items = all.filter(match), list = $('#plist', main);
-    list.innerHTML = items.map(card).join('') || (all.length ? '<div class="empty">No prompt matches - clear the search or pick “all”.</div>'
-      : `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
-      or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`);
+    const K = R.kinds.find(k => k.id === kf);
+    list.innerHTML = items.map(card).join('') || (K && !K.count ? `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
+      or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`
+      : all.length ? '<div class="empty">No prompt matches - clear the search or pick “all”.</div>'
+      : '<div class="empty">No prompts yet. <b>Add prompts</b>: paste the ones you tested (with how they turned out) or a creator\'s guide - about 10 per kind is a good start.</div>');
     $$('.pcard', list).forEach(c => {
       const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
       const save = async (rating, msg) => {
@@ -1628,9 +1632,18 @@ async function pagePrompts(main, kind) {
   const setWant = w => {
     want = w; $$('[data-f]', main).forEach(x => x.classList.toggle('on', x.dataset.f === w));
     const more = $('#pmore', main); if (more) more.value = rest.some(([x]) => x === w) ? w : '';
-    try { localStorage.setItem('ml.pfor.' + K.id, want); } catch (e) { /* not remembered */ }
+    try { localStorage.setItem('ml.pfor', want); } catch (e) { /* not remembered */ }
     draw();
   };
+  const wbtn = $('.head [data-claude]', main);
+  const setKind = k => {
+    kf = k; $$('[data-k]', main).forEach(x => x.classList.toggle('on', x.dataset.k === k));
+    if (wbtn) wbtn.dataset.claude = k ? `/write-prompt ${k}` : '/write-prompt';   // a new prompt of the kind shown
+    try { localStorage.setItem('ml.pkind', kf); } catch (e) { /* not remembered */ }
+    draw();
+  };
+  $$('[data-k]', main).forEach(b => b.onclick = () => setKind(b.dataset.k));
+  if (wbtn && kf) wbtn.dataset.claude = `/write-prompt ${kf}`;
   $$('[data-f]', main).forEach(b => b.onclick = () => setWant(b.dataset.f));
   if ($('#pmore', main)) $('#pmore', main).onchange = e => setWant(e.target.value);
   draw();

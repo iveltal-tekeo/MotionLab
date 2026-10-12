@@ -41,7 +41,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
-  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
+  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts, 0.4; one list of every kind since 0.3.3 - kind chips + a badge per card, #/prompts/<kind> preselects a kind; cards with source, model,
   structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = any text or attached
   files since 0.3.3 (`addPromptsModal`: the kind guessed - POST `/api/prompts/guess`, editable; .txt / .md / .docx
   read by POST `/api/prompts/file` (base64, up to 30 MB, kept in `knowledge\local\prompts\files\`), a PDF goes to

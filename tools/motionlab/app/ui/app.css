@@ -493,3 +493,11 @@ input:focus, textarea:focus, select:focus { border-color: var(--acc); box-shadow
 .vrb.on.bad { background: #3a1515; border-color: var(--red); color: var(--red); }
 @media (max-width: 1100px) { .ogrid { grid-template-columns: 1fr; } .cvchoice { grid-template-columns: 1fr; } }
 .fsel { width: auto; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; background: #131317; color: var(--muted); }
+/* prompts on one page: a colour per kind (badge on the card, dot on the filter) */
+.pkinds { gap: 6px; margin: 0 0 10px; }
+.kbadge { font-size: 11px; font-weight: 600; letter-spacing: .03em; padding: 1px 9px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.kdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.kbadge.k-shot { color: var(--cyan); border-color: #38d6f566; background: #38d6f514; } .kdot.k-shot { background: var(--cyan); }
+.kbadge.k-image { color: var(--violet); border-color: #a78bfa66; background: #a78bfa14; } .kdot.k-image { background: var(--violet); }
+.kbadge.k-hook { color: var(--pink); border-color: #ff6fae66; background: #ff6fae14; } .kdot.k-hook { background: var(--pink); }
+.kbadge.k-script { color: var(--green); border-color: #3ecf8e66; background: #3ecf8e14; } .kdot.k-script { background: var(--green); }

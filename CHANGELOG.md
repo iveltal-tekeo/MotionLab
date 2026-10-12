@@ -25,8 +25,9 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 - **Add prompts without a format**: paste a prompt as it is, or attach a .txt, .md, .docx or PDF. MotionLab guesses
   its kind (you can change it), *Let Claude sort it* reads a whole guide and saves every prompt in it, and Claude
   reviews and splits the new prompts by itself.
-- **Prompts: what each one is for, and Delete**: mark a prompt for vlog, talking head, SFX, transitions, colour...
-  (or your own words); the page filters by it and has a search. *Use it, change…* asks Claude for a new prompt that
+- **Prompts on one page**: video shots, images, hooks and scripts in one list, each with a coloured badge; filter by
+  kind and by what a prompt is for - mark it for vlog, talking head, SFX, transitions, colour... (or your own
+  words) - and search. *Use it, change…* asks Claude for a new prompt that
   keeps what worked and changes what you say. *Delete* moves a prompt to the Recycle Bin.
 - **Create video** (*Videos*): start a video from a reference (its edit with your clips) or from a prompt in your
   library, with your clips or a new folder for them; Claude Code does the work.
