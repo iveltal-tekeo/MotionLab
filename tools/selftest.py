@@ -269,6 +269,24 @@ def check_titles() -> dict:
         check(got == real and DL.saved_file({"path": str(real), "id": ""}, folder) == real
               and DL.saved_file({"path": printed, "id": "999"}, folder) is None,
               "downloads: an emoji lost from the printed path - the file is still found by its id")
+
+    from motionlab.app import system
+    f1080 = system.PRESETS["mp4_1080"][1]
+    sort = f1080[f1080.index("-S") + 1] if "-S" in f1080 else ""
+    check(sort.startswith("res:1080") and "height<=" not in " ".join(f1080) and "vcodec!=none" in system.VIDEO_F
+          and system.VIDEO_F in system.PRESETS["mp4_best"][1],
+          "downloads: 1080p = the short side (vertical TikToks / Reels / Shorts in full size), never sound only")
+    errors = {  # yt-dlp 2026.08.19's own ERROR lines (2026-10-12) -> the hint's first words
+        "ERROR: [soundcloud] 293: Requested format is not available. Use --list-formats": "this link has no video",
+        "ERROR: [youtube] VLDJ_-wrwj8: Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies":
+            "the site is blocking",
+        "ERROR: [Instagram] C5Rq: Instagram sent an empty media response. ... --cookies ... yt-dlp -U":
+            "the site wants you logged in",
+        "ERROR: [vimeo] 76979871: The web client only works when logged-in. Use --cookies": "the site wants you",
+        "ERROR: Unsupported URL: https://example.com/x": "yt-dlp does not know",
+    }
+    check(all(DL.hint(["[info] x", e]).startswith(h) for e, h in errors.items()) and DL.hint(["WARNING: login"]) == "",
+          "downloads: yt-dlp's errors are explained in words (no video, blocked, login, unknown link)")
     return {"passed": all(passed)}
 
 

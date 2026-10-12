@@ -13,6 +13,7 @@ can start: Claude Code in a new console ("Open in Claude", or when a lab pass st
 ends), Explorer / the default viewer for lab files, and the shortcut maker - each only on a click."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import mimetypes
@@ -40,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 7                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 8                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -201,9 +202,9 @@ class Handler(BaseHTTPRequestHandler):
     def _err(self, code: int, msg: str):
         self._json({"error": msg}, code)
 
-    def _body(self) -> dict:
+    def _body(self, limit: int = 5_000_000) -> dict:
         n = int(self.headers.get("Content-Length") or 0)
-        if n > 5_000_000:
+        if n > limit:
             raise ValueError("request too large")
         raw = self.rfile.read(n) if n else b""
         obj = json.loads(raw.decode("utf-8") or "{}")
@@ -396,7 +397,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self):
         path = urllib.parse.urlsplit(self.path).path
-        body = self._body()
+        body = self._body(45_000_000 if path == "/api/prompts/file" else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
         if not secrets.compare_digest(str(tok), S.token):
             raise PermissionError("missing or wrong session token")
@@ -464,8 +465,23 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(r)
         if path == "/api/upstream/check":                 # Settings > Programs: newer HyperFrames / GSAP now
             return self._json(UP.check(force=True))
-        if path == "/api/prompts/import":                 # the Prompts page's Add dialog (the paste format)
-            return self._json({"saved": PR.import_paste(str(body.get("text", "")))})
+        if path == "/api/prompts/import":                 # the Prompts page's Add dialog: any text (0.3.3)
+            src = body.get("source") if isinstance(body.get("source"), dict) else None
+            if src:
+                src = {k: str(src.get(k) or "").strip()[:500] for k in ("type", "creator", "link")
+                       if src.get(k) or k == "type" or src.get("type") == "creator"}
+            return self._json({"saved": PR.import_paste(str(body.get("text", "")), str(body.get("kind") or ""), src,
+                                                         str(body.get("file") or "")[:200])})
+        if path == "/api/prompts/guess":                  # the Add dialog's kind, while the user types
+            return self._json({"kind": PR.guess_kind(str(body.get("text", ""))[:200_000])})
+        if path == "/api/prompts/file":                   # an attached .txt / .md / .docx / .pdf -> its text
+            try:
+                raw = base64.b64decode(str(body.get("data", "")), validate=True)
+            except ValueError:
+                raise ValueError("the file did not arrive whole - attach it again") from None
+            if len(raw) > 30_000_000:
+                raise ValueError("files up to 30 MB")
+            return self._json(PR.save_file(str(body.get("name", "")), raw))
         if path == "/api/prompts/rate":
             return self._json(PR.update(str(body.get("id", "")), rating=body.get("rating") or None,
                                         note=body.get("note")))

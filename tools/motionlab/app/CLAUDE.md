@@ -29,7 +29,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
   Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
-  structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = the paste format;
+  structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = any text or attached
+  files since 0.3.3 (`addPromptsModal`: the kind guessed - POST `/api/prompts/guess`, editable; .txt / .md / .docx
+  read by POST `/api/prompts/file` (base64, up to 30 MB, kept in `knowledge\local\prompts\files\`), a PDF goes to
+  Claude; *Let Claude sort it* = `/write-prompt import <files>`; after Save Claude reviews + splits unless unticked);
   `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates).
@@ -56,7 +59,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Claude with `/analyze-reference "<video>" - the lab pass is done: analysis\<name>` (`data.review_prompt`; the skill
   then skips the pipeline). "Lab pass only" = the job alone.
 - Downloads = `tools\download.py` around yt-dlp (`system.PRESETS`: MP4 <=1080p / best / MP3; one video, no
-  playlists; the final path is printed last so the dialog offers "Analyse it").
+  playlists; the final path is printed last so the dialog offers "Analyse it"). Since 0.3.3: `-S res:1080` = the
+  short side (vertical videos in full size), video presets never take sound only (`VIDEO_F`), `--encoding utf-8`
+  (emoji in titles), the file found by `[<id>]` if the printed path is off, `download.HINTS` = yt-dlp's errors in
+  words. Tested 2026-10-12 on TikTok, YouTube, SoundCloud (refused: no video), Vimeo / Instagram (login wanted).
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
   DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
@@ -93,7 +99,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

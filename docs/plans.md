@@ -123,6 +123,42 @@ talking-head creators AND edit the user's own recording that way.)
   went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
   styles per category.
 
+## 0.3.7 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+
+**The user's note (2026-10-12):** "a color correction focused version since i think it kinda weak in that point
+(regarding davinci, LUTs and stuff)". Placed after 0.3.5 and before 0.4 because 0.4's talking videos need it too
+(phone footage: white balance, exposure, skin) - the user can move it.
+
+**Where the lab stands**: since 0.3.0 rebuilds are in colour (each clip decoded with its own colour settings, within
+1/255); a plan's grade = levels / gamma / output range per channel + saturation (`compose.grade_lut`); the Resolve
+build turns each grade into a .cube LUT on the Color page. Missing: measuring a reference's look, matching it,
+grades that stay adjustable in Resolve (a LUT is fixed), white balance / exposure for the user's own clips, HDR and
+log footage, and a number for "how close". The user's clips so far: the talking video = phone H.264, full range
+(`yuvj420p`), bt709 with sRGB tags; test_4am = DJI 10-bit HEVC 3840x2880, bt709.
+
+- **Measure a reference's look** (per shot, from frames the lab already extracts; numpy, a few frames per shot):
+  black / white point and contrast, saturation, white balance, the colour of shadows / mids / highlights (split
+  toning), skin tones against the skin line, vignette, grain, bloom -> a *look card* in plain words ("teal shadows,
+  warm highlights, blacks lifted to 6 %, saturation 80 %"); numbers only in the shared reference card.
+- **Match it on the user's footage**: a colour transfer from a reference shot to their clip -> a 33-point .cube LUT
+  for the lab's renders, Resolve, CapCut / Premiere, with before / after stills (frame + timecode).
+- **Correct the user's own clips first**: white balance, exposure and contrast per clip, one look across the clips of
+  a scene (shot matching); full-range phone video, HDR and log footage (iPhone HLG / Dolby Vision, Apple Log, D-Log M,
+  S-Log3) detected from the file and converted the documented way (Resolve's Color Space Transform or the maker's
+  LUT), never guessed.
+- **DaVinci Resolve, adjustable**: a correction node (CDL: slope / offset / power + saturation, the API's `SetCDL`)
+  and a look node (the LUT), so the wheels still work after the build; LUTs installed under Resolve's LUT folder
+  `MotionLab\` per look; the project's colour management stated (Resolve Color Management changed every Rec.709 clip
+  in 0.3.2's test, docs\resolve_notes.md) and checked by `--doctor`.
+- **Looks library**: looks the user liked (from references or their own grades) saved like effects - name, .cube,
+  before / after stills, where it came from -> *Library > Looks*, *Use in a video*; shareable (a .cube is text).
+- **App**: a *Colour* tab on the analysis page (the look card, the shots' colours as a strip, a waveform /
+  vectorscope picture of any frame); *Videos > a video > Colour*: clips before / after, the look picked, *Make LUT*,
+  *Send to Resolve*. **Claude**: `/recreate-video` uses the look card; a look is reviewed Correct / Partly / Wrong.
+- **Measure first** (light and tested first): transfer methods (Reinhard, histogram matching, MKL - all light numpy)
+  on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
+  project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
+
 ## 0.3.5 - planned - Describe video: videos as information
 
 **Carried over from 0.3.2** (released 2026-10-12, see CHANGELOG.md; its Resolve measurements: docs\resolve_notes.md):
@@ -201,3 +237,35 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
   - Other engines seen 2026-10-09: HyperFrames (in `tools\overlays\`, optional, needs Node) has a whisper.cpp
     `transcribe` command; ffmpeg's `whisper` filter is in BtbN builds but NOT in Gyan's essentials build (CI's; winget's
     full build: unchecked).
+
+## 0.3.3 - planned - Fixes and soft edges: titles, downloads, prompts, the app's layout
+
+**The user's notes (2026-10-12):** "lets do a little step back and focus on bugs and fixing some soft edges focusing
+on the entire workflow", then "continue with the v0.3.3 bug oriented version". On GitHub as they are done; listed in
+CHANGELOG.md `## Unreleased` until 0.3.3 ships.
+
+- **Done - odd titles** (a friend's report): "..." in a title made an analysis no page opened (folders renamed at
+  start: `util.fix_dotted_names`); an emoji made a saved download "fail" (yt-dlp `--encoding utf-8`, the file found
+  by its `[id]`). Regression checks: `selftest.py` `check_titles`.
+- **Done - downloads from other sites** (reviewed with yt-dlp 2026.08.19): 1080p = the short side (a vertical TikTok
+  came at 576x1024 although 720x1280 was there; 1080x1920 Reels / Shorts were capped at 608x1080), then the highest
+  frame rate, then H.264 + AAC; a link without video (SoundCloud) is refused clearly instead of putting a sound file
+  in refs\; yt-dlp's errors in words (no video, blocked / bot check, login, unknown link, ffmpeg missing, outdated).
+- **Done - adding prompts**: *Add prompts* takes any text or files (.txt / .md / .docx read by the app; a PDF goes
+  to Claude), the kind guessed (28 of the 29 saved prompts right), *Let Claude sort it* for a guide (`/write-prompt
+  import`), Claude reviews and splits afterwards; `prompts.py kind` fixes a wrong kind. The old format still works.
+- **Asked 2026-10-12, in progress**: Delete for prompts; prompts by purpose (vlog, talking head, SFX, transitions...)
+  and "use this prompt but change ..."; *Create video* on the Videos page (from a reference or a prompt); after a
+  video is made, "how did it turn out?" per part (sound, colour, SFX, captions, motion graphics, effects) so the lab
+  learns what worked; the sidebar regrouped (Home, Videos | Media: References, Prompts | Library, Knowledge | Tools:
+  Jobs, Settings - Storage inside Settings); livelier colours and dialogs without making the app heavier.
+- **Open - found in the review, the user decides**:
+  - Logins: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once here: HTTP 429 + "Sign in to
+    confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;
+    Chrome / Edge lock and encrypt their cookies). It is the user's login: a setting only with their OK.
+  - HEVC (TikTok's best format) plays in the app only where Windows has the HEVC Video Extension (this PC has it): a
+    small H.264 copy for the player when it is missing.
+  - yt-dlp out of date breaks TikTok / Instagram first: its age in Settings + an *Update yt-dlp* button (`yt-dlp -U`;
+    winget copies: `winget upgrade yt-dlp.yt-dlp`). Recent yt-dlp uses a JavaScript runtime (deno) for YouTube -
+    installed here; Settings could check for it.
+  - Instagram carousels / TikTok photo posts give several files or sound only; the app records only the last file.

@@ -82,6 +82,34 @@ def check_prompts() -> None:
     except ValueError:
         refused = True
     ok(good and refused, "prompt library: the paste format parses (and refuses an unknown kind)")
+    # 0.3.3: any text, no format (0.3.2 said "prompt 1: no 'text:' line"); the kind is guessed; .docx files are read
+    import tempfile
+    import zipfile
+    try:
+        one = P.parse_paste("Nobody tells you this about editing.")
+        two = P.parse_paste("A chef in slow motion, the camera dollies in, 50mm\n---\nPortrait photo, studio light, 8k")
+        old = P.parse_paste("PROMPT 1\nkind: hook\nsource: tested by me\nNobody tells you this.")
+        creator = P.parse_paste("x y z", "script", {"type": "creator", "creator": "Ana", "link": ""}, "guide.pdf")
+        good = ([(r["kind"], r["source"]) for r in one] == [("hook", {"type": "tested"})]
+                and [r["kind"] for r in two] == ["shot", "image"] and old[0]["text"] == "Nobody tells you this."
+                and creator[0]["kind"] == "script" and creator[0]["source"]["file"] == "guide.pdf"
+                and P.guess_kind("Hey guys, today I show you why most people quit editing. " * 8) == "script")
+        W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / "guide.docx"
+            with zipfile.ZipFile(d, "w") as z:
+                z.writestr("word/document.xml", f"<w:document {W}><w:body><w:p><w:r><w:t>Line one</w:t></w:r></w:p>"
+                                                "<w:p><w:r><w:t>Line</w:t><w:tab/><w:t>two</w:t></w:r></w:p></w:body></w:document>")
+            good = good and P.file_text(d) == "Line one\nLine\ttwo"
+    except ValueError as e:
+        good = False
+        print("      ", e)
+    try:
+        P.parse_paste(" \n---\n ")
+        refused = False
+    except ValueError:
+        refused = True
+    ok(good and refused, "prompt library: any pasted text saves (kind guessed, --- separates), .docx text is read")
 
 
 def check_graphics() -> None:

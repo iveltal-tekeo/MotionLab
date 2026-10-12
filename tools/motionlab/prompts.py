@@ -14,7 +14,7 @@ import re
 import threading
 from pathlib import Path
 
-from .util import LAB, read_json, write_json
+from .util import LAB, read_json, safe_name, write_json
 
 FOLDER = "knowledge/local/prompts"                      # relative to the lab (the app's "Folder" button)
 HOME = LAB / FOLDER
@@ -156,6 +156,23 @@ def update(pid: str, **changes) -> dict:
     return r
 
 
+def set_kind(pid: str, kind: str) -> dict:
+    """A prompt saved under the wrong kind (the Add dialog guesses it) -> the right kind: a new id of that kind, the old
+    file goes (ids carry the kind)."""
+    if kind not in KINDS:
+        raise ValueError(f"kind must be one of {', '.join(KINDS)} (got {kind!r})")
+    with _LOCK:
+        r = get(pid)
+        if r["kind"] == kind:
+            return r
+        old = _path(pid)
+        r.update(kind=kind, id=next_id(kind), updated=_today())
+        _check(r)
+        write_json(_path(r["id"]), r, indent=1)
+        old.unlink()
+    return r
+
+
 # ------------------------------------------------------------------------------------------------ the paste format
 TEMPLATE = """PROMPT 1
 kind: shot
@@ -203,27 +220,74 @@ def _result(v: str) -> dict:
     return {"rating": None, "note": s}
 
 
-def parse_paste(text: str) -> list[dict]:
-    """The user's paste (TEMPLATE: blocks that start with 'PROMPT <n>', key: value lines, then 'text:' and the prompt
-    until the next block) -> records for `add`. Raises ValueError naming the block that is wrong."""
-    blocks = re.split(r"(?im)^\s*PROMPT\s*#?\s*\d*\s*:?\s*$", str(text).replace("\r", ""))
+_HEAD = re.compile(r"(?im)^\s*PROMPT\s*#?\s*\d*\s*:?\s*$")
+_KEY = re.compile(r"\s*(kind|title|model|source|result|tags)\s*:\s*(.*)$", re.I)
+# words that say what a text is for (guess_kind): movement = a video model's shot, still words = an image, the look
+# (camera, light) = either, a person talking = a hook or a script. Some Spanish: creators' guides mix languages.
+_MOTION = re.compile(r"\b(dolly|dollies|pan|pans|panning|tilts?|tracking|handheld|drone|zoom(s|ing)?|orbit(s|ing)?|"
+                     r"slow[- ]motion|fps|seconds?|\d+\s?s|cut to|transition|moves?|moving|movement|walks?|walking|"
+                     r"runs?|running|turns?|clips?|footage|videos?|v[ií]deo|movimiento|graba[rn]?|c[aá]mara lenta)\b|"
+                     r"@video", re.I)
+_LOOK = re.compile(r"\b(camera|c[aá]mara|shots?|close-?ups?|wide|lens|\d{2,3}\s?mm|cinematic|scene|light(ing)?|"
+                   r"iluminaci[oó]n|9:16|16:9)\b", re.I)
+_STILL = re.compile(r"\b(photo(graph)?s?|portrait|image|still|render(ed)?|illustration|poster|thumbnail|8k|"
+                    r"composition|texture|studio|depth of field|bokeh|foto|imagen)\b", re.I)
+_SPOKEN = re.compile(r"\b(i|i'm|i've|you|you're|your|we|my|me|today|guys|subscribe|follow|comment)\b", re.I)
+
+
+def guess_kind(text: str) -> str:
+    """shot / image / hook / script from the words - the Add dialog's default; the user can pick another
+    (2026-10-12, the 29 prompts in the library: 28 right)."""
+    motion, look, still, spoken = (len(rx.findall(text or "")) for rx in (_MOTION, _LOOK, _STILL, _SPOKEN))
+    if motion + look + still >= max(2, spoken):                 # a description for a model
+        return "image" if still and not motion else "shot"
+    return "hook" if len((text or "").split()) <= 40 else "script"
+
+
+def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str = "") -> list[dict]:
+    """What the Add dialog gets -> records for `add`. Any text (0.3.3): one prompt, or several when lines of only
+    '---' separate them; kind = `kind` or guessed from the words; source = `source` (default: tested by you) + the
+    attached `file`. The older format still works - blocks that start with 'PROMPT <n>', `key: value` lines (kind,
+    model, source, result, title, tags), then the prompt (after a 'text:' line, or simply after the key lines).
+    Raises ValueError naming the prompt that is wrong; nothing is saved then."""
+    text = str(text or "").replace("\r", "")
+    if kind and kind not in KINDS:
+        raise ValueError(f"kind must be one of {', '.join(KINDS)} (got {kind!r})")
+    src = {**(source or {"type": "tested"}), **({"file": file} if file else {})}
+    if not _HEAD.search(text):
+        parts = [p.strip() for p in re.split(r"(?m)^\s*-{3,}\s*$", text) if p.strip()]
+        out = [{"kind": kind or guess_kind(p), "text": p, "source": dict(src)} for p in parts]
+        for n, r in enumerate(out, 1):
+            try:
+                _check(r)
+            except ValueError as e:
+                raise ValueError(f"prompt {n}: {e}") from None
+        if not out:
+            raise ValueError("nothing to save - paste a prompt or attach a file")
+        return out
     out = []
-    for n, b in enumerate([b for b in blocks if b.strip()], 1):
+    for n, b in enumerate([b for b in _HEAD.split(text) if b.strip()], 1):
         m = re.search(r"(?im)^\s*(?:prompt )?text\s*:", b)
-        if not m:
-            raise ValueError(f"prompt {n}: no 'text:' line")
-        head, body = b[:m.start()], b[m.end():]
+        if m:
+            head, body = b[:m.start()], b[m.end():]
+        else:                                                   # no 'text:' line: the key lines, then the prompt
+            lines = b.split("\n")
+            i = 0
+            while i < len(lines) and (not lines[i].strip() or _KEY.match(lines[i])):
+                i += 1
+            head, body = "\n".join(lines[:i]), "\n".join(lines[i:])
         kv = {}
         for line in head.splitlines():
             m = re.match(r"\s*([a-z ]+?)\s*:\s*(.*)$", line, re.I)
             if m:
                 kv[m[1].lower()] = m[2].strip()
         try:
-            kind = kv.get("kind", "").lower().strip()
-            kind = {"shots": "shot", "video": "shot", "images": "image", "photo": "image", "hooks": "hook",
-                    "scripts": "script"}.get(kind, kind)
-            rec = {"kind": kind, "title": kv.get("title", ""), "model": kv.get("model", "").strip(" -") or "",
-                   "source": _source(kv.get("source", "")), "result": _result(kv.get("result", "")),
+            k = kv.get("kind", "").lower().strip()
+            k = {"shots": "shot", "video": "shot", "images": "image", "photo": "image", "hooks": "hook",
+                 "scripts": "script"}.get(k, k) or kind or guess_kind(body)
+            rec = {"kind": k, "title": kv.get("title", ""), "model": kv.get("model", "").strip(" -") or "",
+                   "source": {**_source(kv["source"]), **({"file": file} if file else {})} if kv.get("source")
+                   else dict(src), "result": _result(kv.get("result", "")),
                    "text": body.strip(), "tags": [t.strip() for t in kv.get("tags", "").split(",") if t.strip()]}
             if rec["model"].lower() in ("none", "n/a"):
                 rec["model"] = ""
@@ -231,14 +295,57 @@ def parse_paste(text: str) -> list[dict]:
         except ValueError as e:
             raise ValueError(f"prompt {n}: {e}") from None
         out.append(rec)
-    if not out:
-        raise ValueError("no prompts found - start each one with a line 'PROMPT 1', 'PROMPT 2', ...")
     return out
 
 
-def import_paste(text: str) -> list[dict]:
-    """Parse the whole paste first (nothing is saved when one block is wrong), then save every prompt."""
-    return [add(r) for r in parse_paste(text)]
+def import_paste(text: str, kind: str = "", source: dict | None = None, file: str = "") -> list[dict]:
+    """Parse the whole paste first (nothing is saved when one prompt is wrong), then save every prompt."""
+    return [add(r) for r in parse_paste(text, kind, source, file)]
+
+
+# ------------------------------------------------------------------------------------------------ attached files
+FILES = HOME / "files"                                  # what the user attached (the prompts' `source.file`)
+FILE_TYPES = (".txt", ".md", ".docx", ".pdf")
+_W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def file_text(p: Path) -> str:
+    """The text of a .txt / .md / .docx file ("" for a PDF - Claude reads those: no PDF library in the lab)."""
+    ext = p.suffix.lower()
+    if ext in (".txt", ".md"):
+        return p.read_bytes().decode("utf-8-sig", errors="replace").replace("\r", "").strip()
+    if ext == ".docx":                                  # a zip; the text is in word/document.xml, one <w:p> per paragraph
+        import xml.etree.ElementTree as ET
+        import zipfile
+        try:
+            with zipfile.ZipFile(p) as z:
+                if z.getinfo("word/document.xml").file_size > 50_000_000:
+                    raise ValueError("this .docx is too big to read")
+                root = ET.fromstring(z.read("word/document.xml"))
+        except (zipfile.BadZipFile, KeyError, ET.ParseError):
+            raise ValueError(f"{p.name} is not a Word document that can be read") from None
+        paras = ["".join((e.text or "") if e.tag == _W + "t" else "\t" if e.tag == _W + "tab" else
+                         "\n" if e.tag in (_W + "br", _W + "cr") else "" for e in para.iter())
+                 for para in root.iter(_W + "p")]
+        return re.sub(r"\n{3,}", "\n\n", "\n".join(paras)).strip()
+    return ""
+
+
+def save_file(name: str, data: bytes) -> dict:
+    """An attached file -> knowledge\\local\\prompts\\files\\ (the same file again is not stored twice) ->
+    {file, rel, text}: `text` = what file_text() reads ("" for a PDF)."""
+    ext = Path(name).suffix.lower()
+    if ext not in FILE_TYPES:
+        raise ValueError(f"attach a {', '.join(FILE_TYPES)} file (got {Path(name).name!r})")
+    stem = safe_name(Path(name).stem)
+    with _LOCK:
+        FILES.mkdir(parents=True, exist_ok=True)
+        dest, n = FILES / f"{stem}{ext}", 2
+        while dest.exists() and dest.read_bytes() != data:
+            dest, n = FILES / f"{stem}_{n}{ext}", n + 1
+        if not dest.exists():
+            dest.write_bytes(data)
+    return {"file": dest.name, "rel": f"{FOLDER}/files/{dest.name}", "text": file_text(dest)}
 
 
 def overview() -> dict:

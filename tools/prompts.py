@@ -4,9 +4,11 @@ Text only - no model, no API, no cost.
 
     .venv\\Scripts\\python tools\\prompts.py list [shot|image|hook|script]
     .venv\\Scripts\\python tools\\prompts.py show <id>                    e.g. shot-001
-    .venv\\Scripts\\python tools\\prompts.py import <file>                the paste format (`template`) or a JSON list
+    .venv\\Scripts\\python tools\\prompts.py import <file>                any text (one prompt; --- lines separate several;
+                                                                       `template` = the older format) or a JSON list
     .venv\\Scripts\\python tools\\prompts.py annotate <id> <file.json>    Claude's split: {title, structure, pattern, tags,
                                                                        model, review, workflow, step, notes}
+    .venv\\Scripts\\python tools\\prompts.py kind <id> <kind>              a wrong (guessed) kind -> the right one (new id)
     .venv\\Scripts\\python tools\\prompts.py rate <id> good|ok|bad|none [--note "..."]     the user's result
     .venv\\Scripts\\python tools\\prompts.py template                     print the paste format
 
@@ -45,6 +47,9 @@ def main() -> int:
     r.add_argument("id")
     r.add_argument("rating", choices=[*P.RATINGS, "none"])
     r.add_argument("--note")
+    k = sub.add_parser("kind", help="move a prompt saved under the wrong kind (it gets a new id)")
+    k.add_argument("id")
+    k.add_argument("kind", choices=list(P.KINDS))
     sub.add_parser("template", help="print the paste format")
     args = ap.parse_args()
 
@@ -77,6 +82,10 @@ def main() -> int:
         print(P.describe(P.update(args.id, **{k: ch.get(k) for k in keys}), full=True))
     elif args.cmd == "rate":
         print(P.describe(P.update(args.id, rating=None if args.rating == "none" else args.rating, note=args.note)))
+    elif args.cmd == "kind":
+        r = P.set_kind(args.id, args.kind)
+        print(f"{args.id} -> {r['id']}")
+        print(P.describe(r, full=True))
     elif args.cmd == "template":
         print(P.TEMPLATE)
     return 0

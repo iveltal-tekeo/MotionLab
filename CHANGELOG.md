@@ -10,6 +10,13 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   hashtags) was analysed, but its page never opened ("bad name"). Such analyses are renamed when MotionLab starts,
   and new ones never get "..". *Download from a link* also said "download failed" for a title with an emoji (🎬),
   though the video had downloaded. Now it is found and listed.
+- **Vertical videos download in full size**: "best up to 1080p" counts the short side now, so TikToks, Reels and
+  Shorts come at their real size (a TikTok came at 576x1024 although 720x1280 was there). A link with no video (a
+  SoundCloud track) now says to pick *MP3 audio only*, and a failed download says why in words (the site blocks
+  this PC for a while, wants a login, does not know the link, or yt-dlp is out of date).
+- **Add prompts without a format**: paste a prompt as it is, or attach a .txt, .md, .docx or PDF. MotionLab guesses
+  its kind (you can change it), *Let Claude sort it* reads a whole guide and saves every prompt in it, and Claude
+  reviews and splits the new prompts by itself.
 
 ## 0.3.2 - 2026-10-12 - Graphics you can edit, captions, and graphics in DaVinci Resolve
 

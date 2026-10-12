@@ -23,6 +23,29 @@ MARK = "MLDL|"
 FIELDS = ("path", "platform", "id", "duration", "uploader")   # free text last: an uploader may contain "|"
 PRINT = f"after_move:{MARK}%(filepath)s|%(extractor_key)s|%(id)s|%(duration)s|%(uploader)s"
 MEDIA = (".mp4", ".mp3", ".mkv", ".webm", ".m4a", ".mov")
+# yt-dlp's ERROR line -> what it means, in words (the first match wins; measured 2026-10-12 with yt-dlp 2026.08.19)
+HINTS = [
+    (("requested format is not available",),
+     "this link has no video picture (a SoundCloud track, a photo post?) - pick 'MP3 audio only' to keep its sound"),
+    (("not a bot", "http error 429", "too many requests", "rate-limit", "rate limit"),
+     "the site is blocking downloads from this PC for a while (bot check / too many requests) - try again later, "
+     "or save the video from your browser and drop it into refs\\"),
+    (("login", "logged-in", "empty media response", "registered users", "private", "cookies"),
+     "the site wants you logged in for this video, and MotionLab cannot pass your browser's login to yt-dlp - "
+     "save the video from your browser and drop it into refs\\"),
+    (("unsupported url",), "yt-dlp does not know this kind of link - paste the video's own page link"),
+    (("video unavailable", "has been removed", "not available in your country", "no longer available"),
+     "the video was removed or is not available here"),
+    (("ffmpeg not found", "ffmpeg is not installed"), "ffmpeg is missing (Settings > Programs): yt-dlp needs it to join picture and sound"),
+    (("unable to extract", "yt-dlp -u", "latest version"),
+     "yt-dlp is probably out of date for this site - update it (yt-dlp -U, or: winget upgrade yt-dlp.yt-dlp)"),
+]
+
+
+def hint(lines: list[str]) -> str:
+    """Why yt-dlp failed, in words: from its last ERROR line ("" when nothing known matches)."""
+    err = next((ln for ln in reversed(lines) if ln.startswith("ERROR")), "").lower()
+    return next((h for words, h in HINTS if err and any(w in err for w in words)), "")
 
 
 def with_fields(cmd: list[str]) -> list[str]:
@@ -70,7 +93,7 @@ def main() -> int:
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
                             errors="replace", env=env, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    info = None
+    info, lines = None, []
     for line in proc.stdout:
         line = line.rstrip("\r\n")
         if line.startswith(MARK):
@@ -78,10 +101,12 @@ def main() -> int:
             continue
         if line.strip() and not line.strip().lower().endswith(MEDIA):
             print(line, flush=True)
+            lines.append(line)
     rc = proc.wait()
     p = saved_file(info, folder) if rc == 0 else None
     if p is None:
-        print(f"download failed (yt-dlp exit code {rc})" if rc else
+        why = hint(lines)
+        print((f"download failed (yt-dlp exit code {rc})" + (f": {why}" if why else "")) if rc else
               "download failed: yt-dlp ended well, but the saved file was not found in " + str(folder), flush=True)
         return rc or 1
     idx_path = REFS / "downloads.json"

@@ -43,11 +43,13 @@ TASKS = {
     "plan": ("high", "MotionLab next steps"),          # /whats-next: where the lab stands, options, a recommendation
 }
 # preset id -> (label, yt-dlp arguments, folder inside the lab)
+VIDEO_F = "bv*+ba/b[vcodec!=none]/bv*"       # never a sound-only file in refs\ (a SoundCloud link fails clearly)
 PRESETS = {
+    # -S res:1080 = the SHORT side up to 1080: a vertical 1080x1920 TikTok / Reel / Short is 1080p (0.3.2's height
+    # filter took 576x1024 when 720x1280 was there); then the highest frame rate; then H.264 + AAC at the same size
     "mp4_1080": ("MP4 video, best up to 1080p (recommended)",
-                 ["-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080][ext=mp4]/bv*[height<=1080]+ba/"
-                        "b[height<=1080]", "--merge-output-format", "mp4"], "refs"),
-    "mp4_best": ("MP4 video, best quality (can be 4K)", ["-f", "bv*+ba/b", "--merge-output-format", "mp4"], "refs"),
+                 ["-f", VIDEO_F, "-S", "res:1080,fps,vcodec:h264,acodec:aac", "--merge-output-format", "mp4"], "refs"),
+    "mp4_best": ("MP4 video, best quality (can be 4K)", ["-f", VIDEO_F, "--merge-output-format", "mp4"], "refs"),
     "mp3": ("MP3 audio only (e.g. the song)", ["-x", "--audio-format", "mp3", "--audio-quality", "0"], "refs/audio"),
 }
 HOW = {

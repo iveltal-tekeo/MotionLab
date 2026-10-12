@@ -1,13 +1,17 @@
 ---
 name: write-prompt
 description: MotionLab - the prompt library (0.4). Save the user's proven or collected prompts (video-model shots for Seedance / Higgsfield / Kling, image prompts for Nano Banana / GPT Image, hooks, talking scripts), split each into its structure, review them (0-5 stars), and write new prompts that follow a structure that worked. Use for "/write-prompt ...", when the user pastes or uploads prompts (text, PDFs, docs), or asks for a Seedance / video / image prompt, a hook or a script.
-argument-hint: split <ids> | <shot|image|hook|script> [like <id>] | shot <reference> f<a>-<b>
+argument-hint: split <ids> | import <files> | <shot|image|hook|script> [like <id>] | shot <reference> f<a>-<b>
 ---
 
 # /write-prompt
 
 `$ARGUMENTS`:
-- `split <id> <id> ...` -> split those prompts into structure (section 2)
+- `split <id> <id> ...` -> split those prompts into structure and review them (sections 2 and 1 "Reviewing")
+- `import <file> ... [- kind <k>] [- source: ...]` -> the app's *Let Claude sort it*: files the user attached or
+  pasted, in `knowledge\local\prompts\files\` (.txt / .md / .docx / .pdf). Read each whole and save every usable
+  prompt in it ("Collected files" in section 1; `source.file` = the file's name; the source the user picked, else
+  ask once), then split and review the new ones. Tell the user the new ids per kind.
 - `<kind>` or `<kind> like <id>` -> write a new prompt (section 3; `like` = start from that example)
 - `shot <reference> f<a>-<b>` -> a shot prompt filled from a reference's frames (section 4)
 - empty -> ask what they need: a new prompt (which kind) or adding examples
@@ -27,9 +31,9 @@ The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scri
 
 ## 1. The user pastes prompts
 Save their text unchanged to a file in your scratchpad, then
-`.venv\Scripts\python tools\prompts.py import <file>` (format: `prompts.py template`; one bad block = nothing saved,
-the error names it - fix only the format with the user, never their prompt text). Then split the new ones
-(section 2). Missing info (model, how it turned out) -> ask once, in one message, or leave it empty.
+`.venv\Scripts\python tools\prompts.py import <file>` (any text = one prompt, its kind guessed; lines of only `---`
+separate several; the older `prompts.py template` format with kind / source / result lines still works; one bad
+prompt = nothing saved, the error names it - never change their prompt text). Then split the new ones (section 2). Missing info (model, how it turned out) -> ask once, in one message, or leave it empty.
 
 **Collected files (PDFs, docs) from creators**: read every file; one record per usable prompt (a guide with 10
 templates = 10 records), text copied as written (no translation - say in the review when it should be translated),
@@ -61,6 +65,10 @@ For each id: read it (`prompts(id=...)`), then write a JSON file and run
   each upload is for, `keep` = what must not change, `change` = the transformation. Add a slot only when none fits.
 - Hooks: `pattern` = question, bold claim, number, story, contrarian, demo, curiosity gap or call-out.
 - Title: up to 6 words, what it makes. Afterwards one line per prompt in the chat: id, title, the slot order.
+- Put your `review` (section 1, "Reviewing") in the same JSON when the prompt has none yet.
+- Prompts added in the app have a GUESSED kind (and maybe no title / model): when the kind is wrong (an image prompt
+  saved as a shot), move it first - `.venv\Scripts\python tools\prompts.py kind <id> <right kind>` (it gets a new id;
+  say so) - then annotate the new id.
 
 ## 3. Write a new prompt
 1. What they need - ask only for what is missing, in one message: shot = subject / story, model, length and aspect;

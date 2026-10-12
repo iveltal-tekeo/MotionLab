@@ -53,8 +53,8 @@ VERDICT = [
     ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
              "per category."),
-    ("NEXT", "v0.3.5 describe video (+ your own words as captions)  |  v0.4 yapping mode (HEIT)  |  v0.4.1 prompt "
-             "generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll.  You: your prompts + 3-5 talking videos."),
+    ("NEXT", "v0.3.3 fixes + soft edges  |  v0.3.5 describe video  |  v0.3.7 colour (looks, LUTs, Resolve)  |  v0.4 "
+             "yapping mode (HEIT)  |  v0.4.1 prompt generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll."),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")

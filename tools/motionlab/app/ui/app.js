@@ -178,7 +178,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 7;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 8;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1474,7 +1474,7 @@ async function pagePrompts(main, kind) {
       ${claudeBtn(`/write-prompt split ${unsplit.join(' ')}`, 'Split them in Claude Code', 'prompt', 'split')}</div>` : ''}
     ${items.map(card).join('') || `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
       or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`}`;
-  $('#padd').onclick = () => addPromptsModal(R.template);
+  $('#padd').onclick = () => addPromptsModal();
   $$('.pcard', main).forEach(c => {
     const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
     const save = async (rating, msg) => {
@@ -1487,23 +1487,89 @@ async function pagePrompts(main, kind) {
     $('[data-copy]', c).onclick = () => copy(p.text);
   });
 }
-function addPromptsModal(template) {
+// Add prompts (0.3.3): paste any text or attach files - no format to follow. One text = one prompt (lines of only
+// --- separate several); the kind is guessed from the words (/api/prompts/guess) and can be changed. A guide with
+// many prompts, or a PDF (the lab reads no PDFs), goes to Claude: "Let Claude sort it" = /write-prompt import <files>.
+const b64 = buf => { const u = new Uint8Array(buf); let s = '';
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+function addPromptsModal() {
+  const KN = {shot: 'Video-model shot', image: 'Image (still / start frame)', hook: 'Hook (first 3 s)', script: 'Talking script'};
+  const files = [];                                          // attached here: {file, rel, text}
   modal(`<h2>Add prompts</h2>
-    <div class="small muted">Paste one or more prompts in this format - start each with <code>PROMPT 1</code>, <code>PROMPT 2</code>, ...; <code>kind</code> = shot, hook or script;
-      <code>source</code> = <code>tested by me</code> or <code>creator: name link</code>; <code>result</code> = good / ok / bad and a note (or <code>-</code>). Everything after
-      <code>text:</code> is the prompt. A creator's prompt stays on this PC.</div>
-    <textarea id="ptxt" rows="18" class="mono" style="width:100%;margin-top:10px" spellcheck="false">${esc(template)}</textarea>
-    <div class="row" style="margin-top:10px"><button class="btn pri" id="psave">Save</button><span id="pres" class="small"></span></div>`, el => {
+    <div class="small muted">Paste a prompt as it is, or attach a file (.txt, .md, .docx, .pdf). One text = one prompt; for several at once put a line with only
+      <code>---</code> between them - or let Claude sort a whole guide. Prompts stay on this PC.</div>
+    <textarea id="ptxt" rows="14" style="width:100%;margin-top:10px" spellcheck="false" placeholder="Paste your prompt here…"></textarea>
+    <div class="row" style="margin-top:6px"><label class="btn sm">Attach a file
+      <input type="file" id="pfile" accept=".txt,.md,.docx,.pdf" multiple hidden></label><span id="pfiles" class="small muted"></span></div>
+    <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px">
+      <label class="small">Kind <select id="pkind"><option value="">guess from the text</option>${Object.entries(KN).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label>
+      <label class="small">Where from <select id="psrc"><option value="tested">tested by me</option><option value="creator">a creator's (name / link)</option><option value="found">found somewhere</option></select></label>
+      <input type="text" id="pwho" placeholder="creator name and/or link" hidden style="min-width:260px"></div>
+    <label class="small" style="display:block;margin-top:10px"><input type="checkbox" id="prv" checked> Then let Claude review it and split it into its structure (opens Claude Code)</label>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="psave">Save</button>
+      <button class="btn" id="psort" title="A guide or a file with several prompts, or a PDF: Claude reads it and saves every prompt in it">Let Claude sort it</button>
+      <span id="pres" class="small"></span></div>`, el => {
+    const txt = $('#ptxt', el), kind = $('#pkind', el), src = $('#psrc', el), who = $('#pwho', el), res = $('#pres', el);
+    const say = (html, cls = '') => { res.innerHTML = cls ? `<span class="${cls}">${html}</span>` : html; };
+    txt.focus();
+    const guess = debounce(async () => {                    // the first option shows the guess
+      const t = txt.value.trim();
+      let k = '';
+      try { if (t) k = (await api('/api/prompts/guess', {text: t})).kind; } catch (e) { /* keep "guess" */ }
+      kind.options[0].textContent = k ? `guess: ${KN[k]}` : 'guess from the text';
+    }, 400);
+    txt.oninput = guess;
+    src.onchange = () => { who.hidden = src.value !== 'creator'; if (!who.hidden) who.focus(); };
+    const source = () => {
+      if (src.value === 'tested') return {type: 'tested'};
+      const w = who.value.trim(), link = (w.match(/https?:\/\/\S+/) || [''])[0];
+      return {type: 'creator', creator: src.value === 'creator' ? w.replace(link, '').replace(/[\s,-]+$/, '').trim() : '', link: src.value === 'creator' ? link : ''};
+    };
+    const showFiles = () => { $('#pfiles', el).innerHTML = files.map(f => `<span class="tag">${esc(f.file)}</span>${f.text ? '' : ' <span class="amber">Claude reads it</span>'}`).join(' '); };
+    $('#pfile', el).onchange = async e => {
+      for (const f of [...e.target.files]) {
+        if (f.size > 30e6) { say(`${esc(f.name)}: files up to 30 MB`, 'bad'); continue; }
+        say(`reading ${esc(f.name)}…`);
+        try {
+          const r = await api('/api/prompts/file', {name: f.name, data: b64(await f.arrayBuffer())});
+          files.push(r);
+          if (r.text) { txt.value = (txt.value.trim() ? txt.value.trim() + '\n---\n' : '') + r.text; guess(); }
+          say(r.text ? `${esc(r.file)}: its text is above - <b>Save</b> keeps it as one prompt; several prompts in it? <b>Let Claude sort it</b>`
+            : `${esc(r.file)}: the lab reads no PDFs - <b>Let Claude sort it</b> reads it and saves its prompts`);
+        } catch (err) { say(esc(err.message), 'bad'); }
+      }
+      e.target.value = ''; showFiles();
+    };
+    const done = (ids, kindOf) => {                          // saved: show them, maybe open Claude for the review
+      say(`Saved ${plural(ids.length, 'prompt')}: ${ids.map(esc).join(', ')}`, 'ok');
+      $('#psave', el).remove(); $('#psort', el).remove();
+      if ($('#prv', el).checked) openClaude(`/write-prompt split ${ids.join(' ')}`, 'prompt', 'split');
+      else res.insertAdjacentHTML('beforeend', ' ' + claudeBtn(`/write-prompt split ${ids.join(' ')}`, 'Review and split them in Claude Code', 'prompt', 'split'));
+      const h = '#/prompts/' + kindOf;                       // the page behind the dialog shows them
+      if (location.hash === h) route(); else location.hash = h;
+    };
     $('#psave', el).onclick = async () => {
+      if (!txt.value.trim()) { say(files.length ? 'A PDF has no text here - use <b>Let Claude sort it</b>' : 'Paste a prompt or attach a file first', 'bad'); return; }
       try {
-        const r = await api('/api/prompts/import', {text: $('#ptxt', el).value});
-        const ids = r.saved.map(x => x.id);
-        $('#pres', el).innerHTML = `<span class="ok">Saved ${plural(ids.length, 'prompt')}: ${ids.map(esc).join(', ')}</span>`;
-        $('.row', el).insertAdjacentHTML('beforeend', claudeBtn(`/write-prompt split ${ids.join(' ')}`, 'Split them in Claude Code', 'prompt', 'split'));
-        $('#psave', el).remove();
-        const h = '#/prompts/' + r.saved[0].kind;           // the page behind the dialog shows them
-        if (location.hash === h) route(); else location.hash = h;
-      } catch (e) { $('#pres', el).innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+        const r = await api('/api/prompts/import', {text: txt.value, kind: kind.value, source: source(), file: files.length === 1 ? files[0].file : ''});
+        done(r.saved.map(x => x.id), r.saved[0].kind);
+      } catch (e) { say(esc(e.message), 'bad'); }
+    };
+    $('#psort', el).onclick = async () => {
+      try {
+        const rels = files.map(f => f.rel);
+        const typed = txt.value.trim(), fromFiles = files.map(f => f.text).filter(Boolean).join('\n---\n').trim();
+        if (typed && typed !== fromFiles) {                  // pasted text: a file Claude can read
+          const r = await api('/api/prompts/file', {name: `pasted ${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.txt`,
+                                                     data: b64(new TextEncoder().encode(typed))});
+          rels.push(r.rel);
+        }
+        if (!rels.length) { say('Paste a guide or attach a file first', 'bad'); return; }
+        const s = source(), from = s.type === 'tested' ? 'tested by me' : s.creator || s.link ? `creator ${s.creator} ${s.link}`.trim() : '';
+        openClaude(`/write-prompt import ${rels.join(' ')}${kind.value ? ` - kind ${kind.value}` : ''}${from ? ` - source: ${from}` : ''}`, 'prompt', 'import');
+        say('Claude Code opened: it reads the file(s), saves every prompt in them and reviews them. The Prompts page shows them when it is done.', 'ok');
+        $('#psave', el).remove(); $('#psort', el).remove();
+      } catch (e) { say(esc(e.message), 'bad'); }
     };
   });
 }
