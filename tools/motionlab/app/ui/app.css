@@ -311,6 +311,17 @@ tr.sel td { background: #221d0d; }
 .upd-open.kn { background: #1b1810; color: var(--amber); border-color: var(--amber-d); animation: none; }
 #side .upd-open.kn .ic { color: var(--amber); }
 @keyframes updpulse { 0% { box-shadow: 0 0 0 0 #ffc40088; } 100% { box-shadow: 0 0 0 12px #ffc40000; } }
+.chk-open { margin: 8px 0 0; display: flex; gap: 9px; align-items: center; background: transparent; color: var(--muted);
+  border: 1px solid var(--line2); border-radius: 8px; padding: 7px 10px; cursor: pointer; font: inherit; text-align: left; width: 100%; }
+.chk-open:hover { color: var(--text); border-color: var(--dim); }
+.chk-open:disabled { opacity: .7; cursor: default; }
+.chk-open span { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.chk-open b { font-size: 13px; font-weight: 500; }
+.chk-open small { font-size: 11px; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chk-open small:empty { display: none; }
+.chk-open.avail { background: var(--amber); color: #111; border-color: var(--amber); }
+.chk-open.avail b { font-weight: 700; }
+#side .chk-open.avail .ic { color: #111; }
 .news-open { margin: 8px 0 0; display: flex; gap: 9px; align-items: center; background: transparent; color: var(--muted);
   border: 1px solid var(--line2); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13.5px; cursor: pointer; }
 .news-open:hover { color: var(--text); border-color: var(--dim); }

@@ -76,7 +76,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `app.py --wait-port`, the window shows "Updating..." and reloads; knowledge-only updates need no restart).
   Settings `update_mode` (0.3.0; 0.2.x had update_check / update_auto, migrated to "ask"): "ask" (default) = the
   sidebar's bright **Update available** button (calmer "New from friends" for knowledge) -> a dialog with the new
-  CHANGELOG sections -> Update now; "auto" = installs at start-up (3 s in, only within 180 s and with no job);
+  CHANGELOG sections -> Update now; bottom left, always there (any mode): **Check for updates** (`#side-check`,
+  `checkUpdates`) = POST `/api/update/check` now -> the same dialog, or "up to date · 14:05 · N in tests" / "can't
+  check" (reason in its tooltip; ping carries `update_checked / _testing / _error`); amber "Update available" once found; "auto" = installs at start-up (3 s in, only within 180 s and with no job);
   "off". Checks at start-up and hourly. After an update `.app\update_last.json` (`from_version`, `whats_new`,
   `seen`) makes the window show "What's new" once (POST `/api/update/seen`; records written by 0.2.x are completed
   from git). The sidebar's What's new button (`newsModal`) shows CHANGELOG.md (`/api/text`) as a timeline. Tested 2026-10-09 against a fake GitHub incl. a real 0.2.5 copy updating itself to 0.3. A local change that clashes with an update (e.g. a threshold tuned in

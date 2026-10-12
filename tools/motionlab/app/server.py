@@ -324,7 +324,8 @@ class Handler(BaseHTTPRequestHandler):
                                "resolve": S.resolve, "phase": S.phase, "api": API_LEVEL,
                                "update": bool(u.get("can_update")), "update_kind": u.get("kind"),
                                "update_version": u.get("new_version"), "update_cards": u.get("new_cards", 0),
-                               "update_lessons": u.get("new_lessons", 0)})
+                               "update_lessons": u.get("new_lessons", 0), "update_checked": u.get("checked"),
+                               "update_testing": u.get("testing", 0), "update_error": u.get("error")})
         if path == "/api/status":
             return self._json(status())
         if path == "/api/references":

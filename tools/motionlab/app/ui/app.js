@@ -87,6 +87,7 @@ document.addEventListener('click', e => {
 });
 $('#side-claude').onclick = () => openClaude('');
 $('#side-update').onclick = () => updateModal();
+$('#side-check').onclick = () => checkUpdates();
 $('#side-news').onclick = () => newsModal();
 function md(src) {                                     // small Markdown subset for the lab's reports
   const out = []; let para = [], list = null, table = false, pre = null, li = null;
@@ -531,15 +532,42 @@ function testingText(u) { return u && u.testing ? ` · ${plural(u.testing, 'newe
 function knowledgeText(cards, lessons) {             // "2 reference cards and 1 lesson"
   return [cards ? plural(cards, 'reference card') : '', lessons ? plural(lessons, 'lesson') : ''].filter(Boolean).join(' and ');
 }
-function sideUpdate(p) {                             // from the heartbeat: show / label the sidebar button
-  const b = $('#side-update'); if (!b) return;
-  b.hidden = !p.update;
-  if (!p.update) return;
+function sideUpdate(p) {                             // from the heartbeat: show / label the sidebar buttons
   const kn = p.update_kind === 'knowledge';
-  b.classList.toggle('kn', kn);
-  $('b', b).textContent = kn ? 'New from friends' : 'Update available';
-  $('small', b).textContent = kn ? (knowledgeText(p.update_cards || 0, p.update_lessons || 0) || 'shared knowledge')
+  const what = kn ? (knowledgeText(p.update_cards || 0, p.update_lessons || 0) || 'shared knowledge')
     : p.update_kind === 'version' && p.update_version ? 'MotionLab ' + p.update_version : 'changes on GitHub';
+  const b = $('#side-update');
+  if (b) {
+    b.hidden = !p.update;
+    if (p.update) { b.classList.toggle('kn', kn); $('b', b).textContent = kn ? 'New from friends' : 'Update available'; $('small', b).textContent = what; }
+  }
+  const c = $('#side-check');                        // bottom left: always there - check now, or install what was found
+  if (!c || c.dataset.busy) return;
+  c.classList.toggle('avail', !!p.update);
+  $('b', c).textContent = p.update ? (kn ? 'New from friends' : 'Update available') : 'Check for updates';
+  const hm = String(p.update_checked || '').slice(11, 16);
+  $('small', c).textContent = p.update ? what : p.update_error ? "can't check - click for why"
+    : hm ? `up to date · ${hm}${p.update_testing ? ` · ${p.update_testing} in tests` : ''}` : '';
+  c.title = p.update ? 'See what changed and install it'
+    : (p.update_error ? "Can't check: " + p.update_error + '\n\n' : '') + 'Ask GitHub for a newer MotionLab (or new knowledge from your friends) and install it'
+      + (p.update_testing ? `\n${plural(p.update_testing, 'newer change')} still being tested on GitHub - offered when the tests pass` : '');
+}
+async function checkUpdates() {                      // the sidebar's Check for updates: ask GitHub now, then offer it
+  const c = $('#side-check');
+  if (c.classList.contains('avail')) { updateModal(); return; }
+  if (c.dataset.busy) return;
+  c.dataset.busy = '1'; c.disabled = true;
+  $('b', c).textContent = 'Checking…'; $('small', c).textContent = 'asking GitHub';
+  let u = null;
+  try { u = await api('/api/update/check', {}); }
+  catch (e) { toast(e.message, 'err'); }
+  delete c.dataset.busy; c.disabled = false;
+  await ping();
+  if (!u) return;
+  if (u.error) toast("Can't check for updates: " + u.error, 'err');
+  else if (u.restart_needed) banner('restart', `MotionLab ${esc(u.disk_version || '')} is installed - restart to use it. <button class="btn sm pri">Restart now</button>`, restartApp);
+  else if (u.can_update) updateModal();
+  else toast(`MotionLab ${u.version} is up to date` + (u.testing ? ` - ${plural(u.testing, 'newer change')} still being tested on GitHub` : ''), 'ok');
 }
 // update banner (home + settings): new version on GitHub, or the result of the last update
 function updateBox(u, res) {
