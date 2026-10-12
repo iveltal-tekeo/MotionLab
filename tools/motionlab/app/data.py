@@ -579,11 +579,17 @@ def project(name: str) -> dict:
         if (b / "resolve" / "checks").exists() else []
     picks = read_json(library_picks_path(name), {}) or {}
     overlays = OS.project_overlays(d.name)
+    media = [{"label": f"render {p.name}", "path": str(p)} for p in sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime,
+                                                                         reverse=True)] if b.exists() else []
+    media += [{"label": f"your clip {p.name}", "path": str(p)} for p in sorted(d.iterdir())
+              if p.is_file() and p.suffix.lower() in VIDEO_EXT]
+    from motionlab import speech as SP
     used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
     for o in overlays:
         o["used_in"] = used.get(str((LAB / o["folder"] / f"{o['name']}.mov").resolve()).lower(), [])
     return {"name": d.name, "sources": sources, "plans": plans, "renders": renders, "compares": compares,
-            "overlays": overlays,
+            "overlays": overlays, "media": media,
+            "speech": {"available": SP.available(), "small": SP.model_ready("small"), "base": SP.model_ready("base")},
             "verifies": verifies, "resolve": resolve, "check_sheets": sheets,
             "boards": [rel(p) for p in sorted((b / "boards").glob("*.jpg"))] if (b / "boards").exists() else [],
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],

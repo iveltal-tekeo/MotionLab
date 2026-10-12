@@ -20,7 +20,8 @@ particles) are written this way since 0.3.0.
           (MediaPoolItem.ReplaceClip; position, length, transform, opacity, composite mode stay). Resolve locks the
           files it uses, so it always gets a numbered copy <folder>\\resolve\\<name>_<id>.mov (resolve-clip <folder>
           makes one to drag in by hand); <name>.mov stays free to render again
-    .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json> [--render]
+    .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json | a video>
+          [--names "MotionLab, 4AM"] [--model small|base] [--render]   (a video = its words by speech to text)
           captions timed to the words (styles + settings like any graphic) + <name>.srt for Resolve's subtitle track;
           rate / size / length from the project's newest edit plan (or --fps --width --height --frames)
     .venv\\Scripts\\python tools\\overlay.py stills <folder> 0,12,40     PNGs of rendered frames on a checkerboard,
@@ -463,25 +464,36 @@ def cmd_captions(a) -> int:
     an SRT / WebVTT / lab transcript.json; writes assets\\captions.js, <name>.srt (for Resolve's subtitle track) and
     sets the rate, size and length (default: the project's newest edit plan - captions over the whole edit)."""
     from motionlab import captions as CAP
+    from motionlab import speech as SP
     folder = guard(Path(a.folder))
     plan = _plan_of(folder)
+    src = Path(a.from_)
+    vid = {}
+    if src.suffix.lower() not in (".srt", ".vtt", ".json"):           # a video / audio: its words, by speech to text
+        if not src.is_file():
+            raise SystemExit(f"no such file: {src}")
+        import speech as SPT                                            # tools\speech.py (cached per settings)
+        tj, _ = SPT.transcript(src, a.model, a.names or "", a.lang)
+        vid = SP.probe(src)
+        src = tj
     new = not (folder / "index.html").exists()
     if new:
         copy_sources(OS.EXAMPLES / "captions", folder, folder.name, {"from": "captions"})
     c = read_conf(folder)
     if "captions" not in c and not new:
         raise SystemExit(f"{folder.name} is not a captions graphic (make a new folder for the captions)")
-    fps = float(a.fps or plan.get("fps") or c.get("fps") or 25)
-    W = int(a.width or plan.get("width") or c.get("width") or 1920)
-    H = int(a.height or plan.get("height") or c.get("height") or 1080)
+    fps = float(a.fps or plan.get("fps") or vid.get("fps") or c.get("fps") or 25)
+    W = int(a.width or plan.get("width") or (vid.get("width") if vid.get("has_video") else 0) or c.get("width") or 1920)
+    H = int(a.height or plan.get("height") or (vid.get("height") if vid.get("has_video") else 0) or c.get("height")
+            or 1080)
     try:
-        words, est, what = CAP.load(a.from_)
+        words, est, what = CAP.load(src)
     except ValueError as e:
         raise SystemExit(str(e))
     cues = CAP.in_frames(CAP.group(words, max_chars=a.max_chars, max_words=a.max_words), fps, a.offset)
     if not cues:
         raise SystemExit("no words to show")
-    frames = int(a.frames or plan.get("frames") or cues[-1]["f1"] + 1)
+    frames = int(a.frames or plan.get("frames") or vid.get("frames") or cues[-1]["f1"] + 1)
     cues = [q for q in cues if q["f0"] < frames]
     if cues and cues[-1]["f1"] >= frames:
         cues[-1]["f1"] = frames - 1
@@ -495,7 +507,8 @@ def cmd_captions(a) -> int:
     retime(folder, fps, frames, W, H)
     c.update({"fps": fps, "frames": frames, "width": W, "height": H,
               "captions": {"from": str(Path(a.from_).resolve()), "what": what, "words": sum(len(q["words"]) for q in cues),
-                           "cues": len(cues), "estimated": est, "offset": a.offset}})
+                           "cues": len(cues), "estimated": est, "offset": a.offset,
+                           **({"speech": {"model": a.model, "names": a.names or ""}} if vid else {})}})
     (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
     log(f"{folder.name}: {len(cues)} captions, {c['captions']['words']} words from the {what}"
         + (" (word times ESTIMATED: the file has one time per line)" if est else "")
@@ -826,7 +839,11 @@ def main() -> int:
     s.add_argument("folder")
     s = sub.add_parser("captions", help="captions timed to the words from an .srt / .vtt / transcript.json")
     s.add_argument("folder")
-    s.add_argument("--from", dest="from_", required=True, metavar="FILE")
+    s.add_argument("--from", dest="from_", required=True, metavar="FILE",
+                   help=".srt / .vtt / transcript.json, or a video / audio file (speech to text: tools\\speech.py)")
+    s.add_argument("--model", default="small", choices=("small", "base"), help="speech to text model (a video)")
+    s.add_argument("--names", help="names / words in the video, comma separated (speech to text gets them right)")
+    s.add_argument("--lang", help="the video's language code (default: detected)")
     s.add_argument("--fps", type=float)
     s.add_argument("--width", type=int)
     s.add_argument("--height", type=int)

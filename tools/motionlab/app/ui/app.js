@@ -1194,7 +1194,7 @@ const gthumb = g => g.thumb ? `<img src="${fileUrl(g.thumb)}?v=${g.thumb_v}" alt
 function projGraphics(el, P) {
   const O = P.overlays || [];
   const top = `<div class="row sp" style="margin-bottom:12px"><div class="hint">Titles, clocks, captions and other graphics are small HTML pages rendered into transparent clips (ProRes 4444) for the lab render and for DaVinci Resolve. Change a setting, Save, then Render: the next render of the edit uses the new clip.</div>
-    <button class="btn sm" id="gcap" ${P.plans.length ? '' : 'disabled title="needs an edit version first (its size, rate and length)"'}>Captions from a subtitle file…</button></div>`;
+    <button class="btn sm" id="gcap">Captions…</button></div>`;
   if (!O.length) {
     el.innerHTML = top + `<div class="empty">No graphics in this video yet. Add one from the <a href="#/library">Library</a> (Graphics → Use in a video), make captions from a subtitle file, or ask Claude for a new one when you recreate a video.</div>`;
     captionsBtn(el, P);
@@ -1263,17 +1263,33 @@ function projGraphics(el, P) {
 }
 
 function captionsBtn(el, P) {
+  // captions from a video's own words (speech to text, faster-whisper) or from a subtitle file (.srt / .vtt)
   const b = $('#gcap', el);
   if (!b) return;
-  b.onclick = () => modal(`<h2>Captions from a subtitle file</h2>
-    <div class="small muted">An .srt or .vtt file of this video's words (from YouTube, CapCut, DaVinci Resolve's “Create Subtitles from Audio”…) or a lab transcript.json. MotionLab makes styled captions timed to the words (change the style afterwards on this tab) and an .srt for Resolve's subtitle track. Size, frame rate and length come from the newest edit version. Your file is only read.</div>
-    <div class="col" style="margin-top:12px"><label>File <input id="gcf" placeholder="C:\\...\\my video.srt"></label>
+  const SPc = P.speech || {}, media = P.media || [];
+  b.onclick = () => modal(`<h2>Captions</h2>
+    <div class="small muted">Styled captions timed to the words (change the style afterwards on this tab) and the same captions as an .srt for DaVinci Resolve's subtitle track. Your files are only read.</div>
+    <div class="col" style="margin-top:12px">
+      <label class="chk"><input type="radio" name="gcsrc" value="video" ${SPc.available && media.length ? 'checked' : 'disabled'}> <b>From the words in a video</b> (speech to text, on this PC)</label>
+      <div class="col" id="gcvid" style="margin-left:24px">${SPc.available ? (media.length ? `
+        <label>Video <select id="gcm">${media.map(m => `<option value="${esc(m.path)}">${esc(m.label)}</option>`).join('')}</select></label>
+        <div class="hint">Pick the render of your edit, so the captions follow its cuts - or one of your clips.</div>
+        <label>Names and words it might not know <input id="gcnames" placeholder="e.g. MotionLab, 4AM, Nemzzz, DaVinci Resolve"></label>
+        <label>Model <select id="gcmod"><option value="small">small - the most accurate</option><option value="base">base - lighter, for slow laptops (ignores the names)</option></select></label>`
+        : '<div class="hint">This video has no render or clip yet.</div>')
+        : '<div class="hint">Speech to text is not installed yet: <a href="#/settings">Settings → Programs → Speech to text → Install</a> (one time, about 520 MB).</div>'}</div>
+      <label class="chk"><input type="radio" name="gcsrc" value="file" ${SPc.available && media.length ? '' : 'checked'} ${P.plans.length ? '' : 'disabled'}> <b>From a subtitle file</b> (.srt / .vtt from YouTube, CapCut, Resolve's “Create Subtitles from Audio”)${P.plans.length ? '' : ' - needs an edit version (its size, rate and length)'}</label>
+      <div style="margin-left:24px"><input id="gcf" placeholder="C:\\...\\my video.srt"></div>
       <label>Name <input id="gcn" value="captions" style="width:200px"></label></div>
     <div class="hint" style="margin-top:6px">The same name again replaces the words of those captions and keeps their style.</div>
     <div class="row" style="margin-top:12px"><button class="btn pri" id="gcgo">Make the captions</button><span id="gcmsg" class="small"></span></div><pre class="log" hidden></pre>`, m => {
     $('#gcgo', m).onclick = async () => {
-      const go = $('#gcgo', m);
-      const j = await startJob('overlay_captions', {project: P.name, file: $('#gcf', m).value.trim(), name: $('#gcn', m).value.trim()}, false);
+      const go = $('#gcgo', m), src = ($('input[name=gcsrc]:checked', m) || {}).value;
+      if (!src) { toast('Pick where the words come from', 'err'); return; }
+      const args = {project: P.name, name: $('#gcn', m).value.trim()};
+      if (src === 'video') Object.assign(args, {file: $('#gcm', m).value, names: $('#gcnames', m).value.trim(), model: $('#gcmod', m).value});
+      else args.file = $('#gcf', m).value.trim();
+      const j = await startJob('overlay_captions', args, false);
       if (!j) return;
       go.disabled = true; const pre = $('pre.log', m); pre.hidden = false;
       followJob(j.id, pre, jj => {
@@ -1634,7 +1650,8 @@ async function pageSettings(main) {
     ${S.tools.map(t => `<tr><td><b>${esc(t.label)}</b><div class="need">${esc(t.need)}</div></td>
       <td class="st">${t.found ? '<span class="tag done">found</span>' : `<span class="tag ${t.need === 'required' ? 'failed' : ''}">missing</span>`}</td>
       <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}</td><td class="small muted">${esc(t.how)}${t.name === 'hyperframes' && (!t.found || /not downloaded/.test(t.version || ''))
-        ? ((S.tools.find(x => x.name === 'node') || {}).found ? ' <button class="btn sm" data-hfinst>Install</button>' : ' <b>Install Node.js first.</b>') : ''}</td></tr>`).join('')}
+        ? ((S.tools.find(x => x.name === 'node') || {}).found ? ' <button class="btn sm" data-hfinst>Install</button>' : ' <b>Install Node.js first.</b>') : ''}${t.name === 'speech' && (!t.found || /not downloaded/.test(t.version || ''))
+        ? ' <button class="btn sm" data-spinst>Install</button>' : ''}</td></tr>`).join('')}
     </tbody></table>${upstreamBox(S)}</div>
   <div class="grid g2" style="margin-top:14px">
     <div class="panel"><h2>Downloads (yt-dlp)</h2><div class="form">
@@ -1688,6 +1705,10 @@ async function pageSettings(main) {
   const upc = $('#upnpm', main); if (upc) upc.onclick = async e => {
     e.preventDefault();
     try { await api('/api/upstream/check', {}); route(); } catch (err) { toast(err.message, 'err'); }
+  };
+  const spb = $('[data-spinst]', main); if (spb) spb.onclick = async () => {
+    spb.disabled = true;
+    try { await startJob('speech_install', {}); } catch (e) { toast(e.message, 'err'); spb.disabled = false; }
   };
   const hfb = $('[data-hfinst]', main); if (hfb) hfb.onclick = async () => {
     hfb.disabled = true;

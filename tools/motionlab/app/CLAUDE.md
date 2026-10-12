@@ -60,7 +60,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
   DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
-  overlay_new / overlay_captions / overlay_refresh (group resolve) / overlay_resolve_clip = Graphics; captions read the user's .srt / .vtt / transcript.json, never change
+  overlay_new / overlay_captions (a subtitle file, or a video's words = speech to text) / overlay_refresh (group
+  resolve) / overlay_resolve_clip = Graphics; speech_install = Settings > Programs > Speech to text; captions read the user's .srt / .vtt / transcript.json, never change
   it), one per group (cpu / resolve / light / net). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.

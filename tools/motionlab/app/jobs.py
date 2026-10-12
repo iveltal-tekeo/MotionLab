@@ -111,20 +111,35 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
             return (f"Swap the graphic {f.name} in DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "refresh", str(f)],
                     "resolve")
         return f"A clip of {f.name} for DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "resolve-clip", str(f)], "light"
-    if kind == "overlay_captions":           # Videos > Graphics > Captions from a subtitle file (a captions graphic)
+    if kind == "overlay_captions":           # Videos > Graphics > Captions (a subtitle file, or a video's words)
         p = data.safe_name(str(a.get("project", "")))
-        _latest_plan(p)                                             # rate / size / length come from the edit plan
         src = Path(str(a.get("file", "")).strip().strip('"')).expanduser()
-        if not src.is_file() or src.suffix.lower() not in (".srt", ".vtt", ".json"):
-            raise JobError(f"not a subtitle file (.srt / .vtt / a lab transcript.json): {src}")
+        speech = src.suffix.lower() in data.VIDEO_EXT or src.suffix.lower() in (".wav", ".mp3", ".m4a", ".aac")
+        if not src.is_file() or not (speech or src.suffix.lower() in (".srt", ".vtt", ".json")):
+            raise JobError(f"not a subtitle file (.srt / .vtt / a lab transcript.json) or a video: {src}")
+        if speech:
+            from motionlab import speech as SP
+            if not SP.available():
+                raise JobError("speech to text is not installed: Settings > Programs > Speech to text > Install")
+        else:
+            _latest_plan(p)                                         # rate / size / length come from the edit plan
+        extra = []
+        if speech:
+            model = str(a.get("model") or "small")
+            if model not in ("small", "base"):
+                raise JobError(f"unknown model {model}")
+            names = re.sub(r"[\r\n\"]", " ", str(a.get("names") or ""))[:300]
+            extra = ["--model", model] + (["--names", names] if names.strip() else [])
         name = str(a.get("name") or "captions")
         if not re.fullmatch(r"[\w.-]+", name):
             raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
         dst = data.PROJECTS / p / "build" / "overlays" / name
         if dst.exists() and not (OS.conf(dst).get("captions")):
             raise JobError(f"{p} already has a graphic called {name} that is not captions: pick another name")
-        return (f"Captions for {p} from {src.name}",
-                [PY, str(TOOLS / "overlay.py"), "captions", str(dst), "--from", str(src), "--render"], "cpu")
+        return (f"Captions for {p} from {src.name}" + (" (speech to text)" if speech else ""),
+                [PY, str(TOOLS / "overlay.py"), "captions", str(dst), "--from", str(src), "--render", *extra], "cpu")
+    if kind == "speech_install":                               # Settings > Programs > Speech to text > Install
+        return "Install speech to text (faster-whisper + the small model)", [PY, str(TOOLS / "speech.py"), "install"], "net"
     if kind == "overlay_new":                       # Library > Graphics > Use in a video: a copy, rendered right away
         p = data.safe_name(str(a.get("project", "")))
         if not (data.PROJECTS / p).is_dir():

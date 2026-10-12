@@ -6,6 +6,7 @@ page. Settings live in settings.json in the lab folder (personal: not in the rep
 Nothing here installs anything: missing programs are reported with how to get them."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
@@ -61,6 +62,8 @@ HOW = {
     "node": "optional, for graphics written as HTML (HyperFrames overlays) when rebuilding a video - install: winget "
             "install OpenJS.NodeJS.LTS, then run setup.bat again (it installs HyperFrames into tools\\overlays)",
     "edge": "the app window (comes with Windows)",
+    "speech": "optional, the words of your own videos for captions (faster-whisper on the CPU, ~60 MB + the model "
+              "small 464 MB, or base 141 MB for slow laptops) - Install below",
 }
 _versions: dict[tuple, str | None] = {}
 
@@ -152,6 +155,10 @@ def find(name: str, s: dict | None = None) -> str | None:
     if name == "hyperframes":
         p = LAB / "tools" / "overlays" / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs"
         return str(p) if p.is_file() else None
+    if name == "speech":
+        from motionlab import speech as SP
+        spec = importlib.util.find_spec("faster_whisper") if SP.available() else None
+        return str(Path(spec.origin).parent) if spec and spec.origin else None
     if name == "resolve":
         p = Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Blackmagic Design" / "DaVinci Resolve" / "Resolve.exe"
         return str(p) if p.is_file() else None
@@ -201,6 +208,7 @@ def tools(full: bool = False) -> list[dict]:
                            ("node", "Node.js (HTML overlays)", "optional"),
                            ("hyperframes", "HyperFrames (HTML overlays)", "optional"),
                            ("resolve", "DaVinci Resolve", "optional"),
+                           ("speech", "Speech to text (captions)", "optional"),
                            ("edge", "Microsoft Edge", "required")):
         p = find(n, s)
         v = None
@@ -212,6 +220,9 @@ def tools(full: bool = False) -> list[dict]:
                 chrome = Path.home() / ".cache" / "hyperframes" / "chrome"
                 v = f"{v}" + ("" if chrome.is_dir() and any(chrome.rglob("chrome-headless-shell.exe"))
                               else " (its Chrome not downloaded yet)")
+            if n == "speech":
+                from motionlab import speech as SP
+                v = f"{SP.version()} - model small {'ready' if SP.model_ready('small') else 'not downloaded yet'}"
             if n == "ffmpeg" and v:
                 v = v.replace("ffmpeg version ", "").split(" Copyright")[0]
         out.append({"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need,

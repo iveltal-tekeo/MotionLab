@@ -82,6 +82,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
 - `prompts.py list | show | import | annotate | rate | template` the prompt library (0.4; MCP `prompts`)
+- `speech.py install | status | transcribe <video> [--names "..."] [--model small|base]` speech to text for your
+  own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
+  timecode in `projects\<p>\build\speech\`; `overlay.py captions --from <video>` uses it
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);

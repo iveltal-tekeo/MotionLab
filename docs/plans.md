@@ -120,7 +120,23 @@ captions from the user's own recordings - captions from any .srt / .vtt work sin
 one the lab needs speech to text: measure the engines on the user's talking video (script:
 `.app\dev\whisper\script_v1.txt`, the recording into `projects\talk_test\`; HyperFrames' `transcribe` = local
 whisper.cpp / Parakeet with `--to srt`, and faster-whisper `tools\dev\whisper_bench.py`, tiny / base / small, also on
-a laptop setting), the user picks one, then `overlay.py captions` takes a recording directly. Also: the SRT onto
+a laptop setting), the user picks one, then `overlay.py captions` takes a recording directly.
+**Measured 2026-10-12** on the user's recording (72 s, phone, read from the script with own changes - so every
+engine's error rate below includes those; `tools\dev\speech_bench.py`, report `projects\talk_test\build\speech\`):
+faster-whisper int8 on 4 threads: tiny 39.9 % (2 s, 75 MB), base 28.4 % (3.4 s, 141 MB, 360 MB RAM), small 26.1 %
+(12.9 s + 5 s load, 464 MB, 730 MB RAM) and **21.1 % with the video's names as a prompt** (MotionLab, 4AM, Nemzzz
+right - base with a prompt dropped a whole paragraph); Parakeet (HyperFrames, `models install parakeet`: 640 MB,
+5 s here, ~20 CPU-seconds, 1.15 GB RAM, 25 European languages, no names prompt) 26.1 %. HyperFrames' whisper
+engine needs whisper.cpp built by hand on Windows - out. Word starts agree within 0.02-0.12 s (median) between
+engines. Names are what every engine gets wrong without help.
+**Decided + built 2026-10-12** (the user picked faster-whisper small, base as the light option; not released):
+`motionlab\speech.py` + `tools\speech.py install | status | transcribe` (optional: Settings > Programs > Speech to
+text > Install = the pinned faster-whisper 1.2.1 in the lab's venv + the small model; names via --names / the
+dialog, ignored by base); `overlay.py captions --from <a video>` (size / rate / length from the plan or the video -
+phone videos stored lying with a 90 deg flag count as upright); App: Graphics > *Captions...* = from the words in a
+video (a render of the edit or a clip) or from a subtitle file. Measured on the user's recording: 214 words in
+14.5 s, captions at 1080 x 1920, 30 fps, 2159 frames (UI test 9/9). Still open here: references without subtitles
+(content.py transcript falling back to speech), Parakeet as a later option. Also: the SRT onto
 Resolve's subtitle track by script (test in the scratch project); the HTML clock's grain tuned to the lab's texture.
 
 **The user's notes (2026-10-09, again 2026-10-12):** "describe video: instead of focusing on our already existing
