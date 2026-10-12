@@ -177,7 +177,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 5;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 6;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1053,7 +1053,8 @@ async function pageProjects(main) {
 
 async function pageProject(main, name, tab = 'overview') {
   const P = await api('/api/project/' + encodeURIComponent(name));
-  const tabs = [['overview', 'Overview'], ['renders', 'Renders'], ['timing', 'Timing check'], ['resolve', 'Resolve & library']];
+  const tabs = [['overview', 'Overview'], ['renders', 'Renders'], ['graphics', `Graphics${P.overlays && P.overlays.length ? ` (${P.overlays.length})` : ''}`],
+                ['timing', 'Timing check'], ['resolve', 'Resolve & library']];
   main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/projects">Videos</a> /</div><h1>${esc(P.name)}</h1>
     <div class="sub">${P.sources.length} clips · ${P.plans.length} edit version(s) · ${P.renders.length} render(s)</div></div>
     <div class="row"><button class="btn" data-open="${esc('projects/' + P.name)}">Folder</button>${delBtn('project', P.name, '#/projects', ' Delete…')}</div></div>
@@ -1061,6 +1062,7 @@ async function pageProject(main, name, tab = 'overview') {
     <div id="tab"></div>`;
   const el = $('#tab');
   if (tab === 'renders') return projRenders(el, P);
+  if (tab === 'graphics') return projGraphics(el, P);
   if (tab === 'timing') return projTiming(el, P);
   if (tab === 'resolve') return projResolve(el, P);
   return projOverview(el, P);
@@ -1094,6 +1096,68 @@ function projRenders(el, P) {
   P.renders.forEach((r, i) => new Player($('#pl' + i, el), r.rel, fpsOf(), frames));
   P.compares.forEach((r, i) => new Player($('#cp' + i, el), r.rel, fpsOf(), frames));
   if (!vids.length) el.innerHTML = '<div class="empty">No renders yet.</div>';
+}
+
+// ---- Videos > Graphics (0.3.2): the video's HTML graphics (tools\overlay.py): settings, render, save to the library
+function gsetInput(s) {
+  const a = `data-set="${esc(s.id)}" data-type="${esc(s.type)}"`, v = s.value;
+  if (s.type === 'color') return `<input type="color" ${a} value="${esc(v)}">`;
+  if (s.type === 'boolean') return `<input type="checkbox" ${a} ${v ? 'checked' : ''}>`;
+  if (s.type === 'enum') return `<select ${a}>${(s.options || []).map(o => `<option value="${esc(o.value)}" ${o.value === v ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
+  if (s.type === 'number') return `<input type="number" ${a} value="${esc(v)}"${s.min != null ? ` min="${s.min}"` : ''}${s.max != null ? ` max="${s.max}"` : ''} step="${s.step ?? 'any'}">`;
+  return `<input type="text" ${a} value="${esc(v)}">`;
+}
+const gsetValue = i => i.dataset.type === 'boolean' ? i.checked : i.dataset.type === 'number' ? Number(i.value) : i.value;
+const gthumb = g => g.thumb ? `<img src="${fileUrl(g.thumb)}?v=${g.thumb_v}" alt="" loading="lazy">` : '<div class="muted small">no picture yet</div>';
+
+function projGraphics(el, P) {
+  const O = P.overlays || [];
+  if (!O.length) {
+    el.innerHTML = `<div class="empty">No graphics in this video yet. Add one from the <a href="#/library">Library</a> (Graphics → Use in a video), or ask Claude for a new one when you recreate a video.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="hint" style="margin-bottom:12px">Titles, clocks and other graphics are small HTML pages rendered into transparent clips (ProRes 4444) for the lab render and for DaVinci Resolve. Change a setting, Save, then Render: the next render of the edit uses the new clip.</div>
+    <div class="col">${O.map(o => {
+      const st = o.current ? `<span class="ok">rendered ✓</span> <span class="muted">${esc(o.rendered_at)}</span>`
+        : o.rendered ? '<span class="amber">settings changed: render it again</span>' : '<span class="amber">not rendered yet</span>';
+      return `<div class="gcard" data-g="${esc(o.name)}"><div class="gthumb">${gthumb(o)}</div>
+        <div><div class="row sp"><b style="font-size:15px">${esc(o.name)}</b><span class="small muted">${o.frames} frames ${frange(0, o.frames - 1, o.fps)} · ${o.width}×${o.height} · ${o.fps} fps</span></div>
+          <div class="small" style="margin:4px 0 10px">${st} · ${o.used_in.length ? `in the edit: ${o.used_in.map(esc).join(', ')}` : '<span class="muted">not in an edit version yet</span>'}</div>
+          ${o.problem ? `<div class="bad small">${esc(o.problem)}</div>` : ''}
+          ${o.settings.length ? `<div class="gset">${o.settings.map(s => `<label title="${esc(s.id)}">${esc(s.label || s.id)}</label><div>${gsetInput(s)}</div>`).join('')}</div>`
+            : '<div class="muted small">This graphic has no settings yet (Claude can add them: text, colours, timing).</div>'}
+          <div class="row" style="margin-top:10px">${o.settings.length ? '<button class="btn sm" data-gsave disabled>Save settings</button>' : ''}
+            <button class="btn sm ${o.current ? '' : 'pri'}" data-grender>Render</button>
+            <button class="btn sm" data-glib ${o.current ? '' : 'disabled title="render it first"'}>Save to library…</button>
+            <button class="btn sm" data-open="${esc(o.folder)}">Folder</button></div>
+          <div class="hint" style="margin-top:6px">Swapping a re-rendered graphic into an open DaVinci Resolve timeline comes after the Resolve test.</div>
+          <pre class="log" hidden></pre></div></div>`;
+    }).join('')}</div>`;
+  $$('.gcard', el).forEach(card => {
+    const name = card.dataset.g, pre = $('pre.log', card), save = $('[data-gsave]', card);
+    $$('[data-set]', card).forEach(i => { i.oninput = i.onchange = () => { if (save) save.disabled = false; }; });
+    if (save) save.onclick = async () => {
+      const values = {};
+      $$('[data-set]', card).forEach(i => { values[i.dataset.set] = gsetValue(i); });
+      try { await api(`/api/project/${encodeURIComponent(P.name)}/overlay`, {overlay: name, values}); toast(`${name}: settings saved - render it to see them`, 'ok'); route(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    const run = async (kind, args, btn) => {
+      if (save && !save.disabled) { toast('Save the settings first', 'err'); return; }
+      const j = await startJob(kind, {project: P.name, overlay: name, ...args}, false);
+      if (!j) return;
+      btn.disabled = true; pre.hidden = false; pre.textContent = '';
+      followJob(j.id, pre, jj => { toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err'); if (jj.status === 'done') route(); else btn.disabled = false; });
+    };
+    $('[data-grender]', card).onclick = e => run('overlay_render', {}, e.target);
+    $('[data-glib]', card).onclick = e => modal(`<h2>Save “${esc(name)}” to the graphics library</h2>
+      <div class="small muted">The library keeps its HTML, its settings as they are now and the rendered clip. Every video can use it (Library → Graphics), and you can drag the clip into a Power Bin in DaVinci Resolve.</div>
+      <div class="row" style="margin-top:12px"><label>Name <input id="glname" value="${esc(name)}" style="width:220px"></label>
+        <label class="chk"><input type="checkbox" id="glrep"> replace one with that name</label></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="glgo">Save to library</button></div>`, m => {
+      $('#glgo', m).onclick = () => { const nm = $('#glname', m).value.trim(), rep = $('#glrep', m).checked; closeModal(); run('overlay_save', {name: nm, replace: rep}, e.target); };
+    });
+  });
 }
 
 function projTiming(el, P) {
@@ -1180,7 +1244,7 @@ function projResolve(el, P) {
 async function pageLibrary(main) {
   const L = await api('/api/library');
   const say = 'Save the library picks as Fusion macros + recipes in library\\';
-  main.innerHTML = `<div class="head"><div><h1>Library</h1><div class="sub">Effects you approved, saved for reuse: a Fusion macro (.setting) and a recipe (.md) each.</div></div></div>
+  main.innerHTML = `<div class="head"><div><h1>Library</h1><div class="sub">What you approved, saved for reuse: graphics (HTML, with settings) and effects (a Fusion macro + a recipe each).</div></div></div>
     <div class="grid g2"><div class="panel"><h2>Saved effects</h2>${L.items.length ? `<table class="t"><thead><tr><th>Effect</th><th>Recipe</th><th>Macros</th><th>Check in Resolve</th><th>Saved</th></tr></thead><tbody>
       ${L.items.map(i => `<tr><td><b>${esc(i.title)}</b></td><td><a href="#" data-open="${esc(i.recipe)}">${esc(i.name)}.md</a></td>
         <td>${i.macros.map(m => `<a href="#" data-open="${esc(m)}" data-reveal>${esc(m.split('/').pop())}</a>`).join(', ') || '<span class="muted small">recipe only</span>'}</td>
@@ -1193,6 +1257,42 @@ async function pageLibrary(main) {
       <div class="claude" style="margin-top:6px"><span>${esc(say)}</span><span class="row">${claudeBtn(say, 'Open in Claude Code', 'library')}<button class="btn sm" id="cs">Copy</button></span></div>`
       : `<div class="empty">Nothing picked yet. Open one of your videos (Videos page) → “Resolve &amp; library” and tick the effects you want.</div>`}</div></div>`;
   const cs = $('#cs'); if (cs) cs.onclick = () => copy(say);
+  // graphics (0.3.2): yours (library\graphics) + the examples that come with MotionLab
+  const G = L.graphics || [];
+  $('.head', main).insertAdjacentHTML('afterend', `<h2 style="margin:4px 0 4px">Graphics</h2>
+    <div class="hint" style="margin-bottom:10px">HTML graphics (titles, clocks, lower thirds…) whose text, colours and timing you change per video (Videos → Graphics). “Yours” are the ones you saved from a video; the examples come with MotionLab. A saved one keeps its rendered clip: drag that .mov into a Power Bin in DaVinci Resolve to have it in every project.</div>
+    <div class="glib">${G.map(g => `<div class="gl"><div class="gthumb">${gthumb(g)}</div>
+      <div class="row sp" style="margin-top:8px"><b>${esc(g.name)}</b><span class="tag">${g.kind === 'yours' ? 'yours' : 'example'}</span></div>
+      <div class="small muted">${g.frames} frames · ${g.width}×${g.height} · ${g.fps} fps · ${plural(g.settings.length, 'setting')}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" data-use="${esc(g.name)}">Use in a video…</button>
+        ${g.mov ? `<button class="btn sm" data-open="${esc(g.mov)}" data-reveal>The clip (.mov)</button>` : ''}</div></div>`).join('') || '<div class="empty">No graphics.</div>'}</div>`);
+  $$('[data-use]', main).forEach(b => b.onclick = () => {
+    const g = G.find(x => x.name === b.dataset.use), V = L.videos || [];
+    const fits = v => !v.width || (v.width === g.width && v.height === g.height && Math.abs((v.fps || 0) - g.fps) < 0.01);
+    modal(`<h2>Use “${esc(g.name)}” in a video</h2>
+      <div class="small muted">A copy goes into the video's build\\overlays folder and is rendered right away; then change its settings on the video's Graphics tab.</div>
+      ${V.length ? `<div class="row" style="margin-top:12px"><label>Video <select id="guv">${V.map(v => `<option value="${esc(v.name)}" ${fits(v) ? '' : 'disabled'}>${esc(v.name)}${fits(v) ? '' : ` (its edit is ${v.width}×${v.height} at ${v.fps} fps)`}</option>`).join('')}</select></label>
+        <label>Name <input id="gun" value="${esc(g.name)}" style="width:200px"></label></div>
+        <div class="hint" style="margin-top:6px">${esc(g.width + '×' + g.height)} at ${g.fps} fps: a video whose edit has another size or rate needs Claude to adapt the graphic.</div>
+        <div class="row" style="margin-top:12px"><button class="btn pri" id="gugo">Add and render</button><span id="gumsg" class="small"></span></div><pre class="log" hidden></pre>`
+      : '<div class="empty" style="margin-top:12px">No videos yet (Videos page).</div>'}`, m => {
+      const go = $('#gugo', m);
+      if (!go) return;
+      const sel = $('#guv', m);
+      const first = [...sel.options].find(o => !o.disabled);
+      if (first) sel.value = first.value; else go.disabled = true;
+      go.onclick = async () => {
+        const project = sel.value, name = $('#gun', m).value.trim();
+        const j = await startJob('overlay_new', {project, graphic: g.name, name}, false);
+        if (!j) return;
+        go.disabled = true; const pre = $('pre.log', m); pre.hidden = false;
+        followJob(j.id, pre, jj => {
+          if (jj.status === 'done') { closeModal(); location.hash = `#/project/${encodeURIComponent(project)}/graphics`; }
+          else { $('#gumsg', m).innerHTML = '<span class="bad">did not work - see the log</span>'; go.disabled = false; }
+        });
+      };
+    });
+  });
 }
 
 // ============================================================================================ prompts (0.4)

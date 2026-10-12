@@ -13,6 +13,7 @@ from pathlib import Path
 
 from motionlab import taxonomy
 from motionlab import knowledge as KN
+from motionlab import overlay_settings as OS
 from motionlab.styles import fmt as video_format, label as style_label
 from motionlab.timecode import frame_to_tc
 from motionlab.util import ANALYSIS, LAB
@@ -491,6 +492,34 @@ def save_library_picks(name: str, body: dict) -> dict:
     return out
 
 
+def overlay_folder(project: str, overlay: str) -> Path:
+    """projects\\<project>\\build\\overlays\\<overlay>\\ (an HTML graphic) - names checked, the folder must exist."""
+    if not re.fullmatch(r"[\w.-]+", overlay or ""):
+        raise ValueError(f"bad graphic name: {overlay!r}")
+    f = PROJECTS / safe_name(project) / "build" / "overlays" / overlay
+    if not (f / "index.html").exists():
+        raise FileNotFoundError(f"{project}: no graphic {overlay}")
+    return f
+
+
+def save_overlay_values(project: str, overlay: str, values) -> dict:
+    """The Graphics tab's Save: the user's settings into the overlay's overlay.json (validated against what its
+    index.html declares); the render job then uses them."""
+    return OS.set_values(overlay_folder(project, overlay), values if isinstance(values, dict) else {})
+
+
+def _overlays_in_plans(plans: list[Path]) -> dict:
+    """overlay .mov (lower-case path) -> where the edit versions show it, e.g. ["v1 f0-29"]."""
+    used: dict[str, list[str]] = {}
+    for p in plans:
+        pl = read_json(p, {}) or {}
+        for L in pl.get("layers", []):
+            if L.get("type") == "overlay" and L.get("file"):
+                key = str(Path(L["file"]).resolve()).lower()
+                used.setdefault(key, []).append(f"{p.stem.split('_')[-1]} f{L.get('start')}-{L.get('end')}")
+    return used
+
+
 def project(name: str) -> dict:
     d = PROJECTS / safe_name(name)
     if not d.is_dir():
@@ -536,7 +565,12 @@ def project(name: str) -> dict:
     sheets = [rel(p) for p in sorted((b / "resolve" / "checks").glob("*_sheet_*.jpg"))] \
         if (b / "resolve" / "checks").exists() else []
     picks = read_json(library_picks_path(name), {}) or {}
+    overlays = OS.project_overlays(d.name)
+    used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
+    for o in overlays:
+        o["used_in"] = used.get(str((LAB / o["folder"] / f"{o['name']}.mov").resolve()).lower(), [])
     return {"name": d.name, "sources": sources, "plans": plans, "renders": renders, "compares": compares,
+            "overlays": overlays,
             "verifies": verifies, "resolve": resolve, "check_sheets": sheets,
             "boards": [rel(p) for p in sorted((b / "boards").glob("*.jpg"))] if (b / "boards").exists() else [],
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],
@@ -557,11 +591,15 @@ def library() -> dict:
             chk = p.parent / "check.png"
             items.append({"name": p.stem, "title": first, "recipe": rel(p), "macros": macros,
                           "check": rel(chk) if chk.exists() else None, "modified": stamp(p.stat().st_mtime)})
-    picks = []
+    picks, videos = [], []
     for pr in list_projects():
         pk = (read_json(library_picks_path(pr["name"]), {}) or {}).get("picks", {})
         picks += [{"project": pr["name"], "effect": k, **v} for k, v in pk.items() if v.get("pick")]
-    return {"items": items, "picks": picks}
+        last = PROJECTS / pr["name"] / "build" / f"{pr['plans'][-1]}.json" if pr["plans"] else None
+        pl = (read_json(last, {}) or {}) if last else {}
+        videos.append({"name": pr["name"], "width": pl.get("width"), "height": pl.get("height"), "fps": pl.get("fps"),
+                       "overlays": [s["name"] for s in OS.project_overlays(pr["name"])]})
+    return {"items": items, "picks": picks, "graphics": OS.library(), "videos": videos}
 
 
 def text_file(relpath: str, limit: int = 400_000) -> str:

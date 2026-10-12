@@ -31,6 +31,7 @@ from pathlib import Path
 
 from motionlab import __version__
 from motionlab import knowledge as KN
+from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
 from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
@@ -39,7 +40,7 @@ from motionlab.util import LAB, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 5                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 6                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -309,7 +310,13 @@ class Handler(BaseHTTPRequestHandler):
                 raise PermissionError(path)
             return self._file(p)
         if path.startswith("/files/"):
-            return self._file(lab_file(path[len("/files/"):]))
+            rp = path[len("/files/"):]
+            if urllib.parse.unquote(rp).startswith("tools/overlays/examples/"):    # the examples' thumbnails only
+                p = lab_file(rp, {"tools"})
+                if OS.EXAMPLES.resolve() not in p.parents or p.suffix.lower() != ".png":
+                    raise PermissionError(rp)
+                return self._file(p)
+            return self._file(lab_file(rp))
         if path == "/api/ping":
             S.last_ping = time.time()
             u = S.update or {}
@@ -404,6 +411,10 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/picks", path)
         if m:
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
+        m = re.fullmatch(r"/api/project/([^/]+)/overlay", path)            # Videos > Graphics: Save settings
+        if m:
+            return self._json(data.save_overlay_values(urllib.parse.unquote(m[1]), str(body.get("overlay", "")),
+                                                       body.get("values")))
         if path == "/api/jobs":
             return self._json(S.runner.start(str(body.get("kind", "")), body.get("args") or {}).info(0))
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)

@@ -84,6 +84,24 @@ def check_prompts() -> None:
     ok(good and refused, "prompt library: the paste format parses (and refuses an unknown kind)")
 
 
+def check_graphics() -> None:
+    """Overlay settings (0.3.2): every example declares settings that parse, bad values are refused (read-only)."""
+    from motionlab import overlay_settings as OS
+    try:
+        items = {g["name"]: g for g in OS.library() if g["kind"] == "example"}
+        title = items["pixel-title"]
+        decl = OS.declared(OS.EXAMPLES / "pixel-title")
+        _, bad = OS.check(decl, {"color": "red", "letter_height": 1, "text": "OK"})
+        clean, none = OS.check(decl, {"color": "#ABC", "text": "HI", "show_from": "3"})
+        good = (len(title["settings"]) >= 5 and len(items["seven-segment-clock"]["settings"]) >= 5 and len(bad) == 2
+                and not none and clean == {"color": "#aabbcc", "text": "HI", "show_from": 3}
+                and all(g["thumb"] for g in items.values()))
+    except (KeyError, ValueError, OSError) as e:
+        good = False
+        print("      ", type(e).__name__, e)
+    ok(good, "graphics: the examples' settings parse, bad values are refused, thumbnails exist")
+
+
 def get(base: str, path: str, timeout: float = 60):
     with urllib.request.urlopen(base + path, timeout=timeout) as r:
         return r.status, r.read()
@@ -197,6 +215,7 @@ def main() -> int:
     compile_all()
     import_all()
     check_prompts()
+    check_graphics()
     sj = LAB / ".app" / "server.json"                      # a test server writes it; the user's app reads it
     before = sj.read_bytes() if sj.exists() else None
     srv = subprocess.Popen([PY, str(TOOLS / "app.py"), "--no-window", "--stay", "--no-update", "--port", str(args.port)],

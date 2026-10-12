@@ -7,12 +7,14 @@ from __future__ import annotations
 
 import itertools
 import os
+import re
 import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
 
+from motionlab import overlay_settings as OS
 from motionlab.styles import CATEGORIES, LEGACY, clean_tags
 from motionlab.util import ANALYSIS, LAB
 
@@ -85,6 +87,30 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "overlays_upgrade_test":            # Settings > Programs > HyperFrames > Test it (scratch install)
         return ("Test the newest HyperFrames + GSAP on the overlay examples",
                 [PY, str(TOOLS / "overlay.py"), "upgrade-test", "--gsap", "latest"], "cpu")
+    if kind in ("overlay_render", "overlay_save"):                 # Videos > Graphics: Render / Save to library
+        f = data.overlay_folder(str(a.get("project", "")), str(a.get("overlay", "")))
+        if kind == "overlay_render":
+            return f"Render the graphic {f.name} ({a['project']})", [PY, str(TOOLS / "overlay.py"), "render", str(f)], "cpu"
+        name = str(a.get("name") or f.name)
+        if not re.fullmatch(r"[\w.-]+", name):
+            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
+        return (f"Save the graphic {f.name} to the library as {name}",
+                [PY, str(TOOLS / "overlay.py"), "save", str(f), "--name", name] + (["--force"] if a.get("replace") else []),
+                "light")
+    if kind == "overlay_new":                       # Library > Graphics > Use in a video: a copy, rendered right away
+        p = data.safe_name(str(a.get("project", "")))
+        if not (data.PROJECTS / p).is_dir():
+            raise JobError(f"no video project {p}")
+        graphic = str(a.get("graphic", ""))
+        OS.find_graphic(graphic)                                    # ValueError when it does not exist
+        name = str(a.get("name") or graphic)
+        if not re.fullmatch(r"[\w.-]+", name):
+            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
+        dst = data.PROJECTS / p / "build" / "overlays" / name
+        if dst.exists():
+            raise JobError(f"{p} already has a graphic called {name}: pick another name")
+        return (f"Add the graphic {graphic} to {p} as {name}",
+                [PY, str(TOOLS / "overlay.py"), "new", str(dst), "--from", graphic, "--render"], "cpu")
     if kind in ("resolve_mcp_install", "resolve_mcp_remove"):      # Settings > Claude Code > DaVinci Resolve (MCP)
         install = kind == "resolve_mcp_install"
         return ("Connect Claude Code to DaVinci Resolve (MCP)" if install else "Disconnect the Resolve MCP",

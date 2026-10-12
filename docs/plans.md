@@ -187,10 +187,32 @@ in this order:
    compare with the lab render frame by frame, and measure colour (overlays are sRGB, a Resolve timeline usually
    Rec.709 gamma 2.4). Then *refresh in place*: re-render a changed overlay and swap it into the open timeline
    (Resolve's replace-clip), keeping the user's hand edits (position, trims, opacity).
+   **Status 2026-10-12: the test is written, NOT RUN YET - to review.** `tools\dev\resolve_overlay_test.py` (checked
+   without Resolve: overlays, plate and the comparison give 0/255 against themselves) renders 4AM's title + clock and
+   a colour check (patches at 100/75/50/25 % alpha, alpha ramps, a soft glow, the frame number as 8 bits) and puts
+   them in the throwaway project `motionlab_scratch` over a gradient plate. It measures: (1) every frame vs the lab
+   compositor, Normal / Screen / Add; (2) alpha export; (3) whether Resolve locks the clip file; (4) refresh: hand
+   edits (Pan, Opacity) kept by `MediaPoolItem.ReplaceClip`, and whether a re-render written over the same file shows
+   up; (5) Resolve Color Management (SDR). Claude's permission check refused to start Resolve, so the user runs it:
+   open Resolve, then `! .venv/Scripts/python tools/dev/resolve_overlay_test.py` (3-5 min; report in
+   `.app\dev\resolve-overlay\report.json` + the worst frame per case as PNG). Its numbers decide refresh in place
+   (the same file or a new file per render) and any colour / alpha fix in `overlay.py` / `resolve_build.py`.
 3. **Editable overlays + a graphics library**: an overlay's text, colours and timing as settings in its
    `overlay.json` that the app edits (Videos page) -> a re-render job -> refresh in Resolve. Approved overlays saved
    like the effect library (`library\`, the Library page) and imported into a Resolve **Power Bin**, so every project
    has them.
+   **Built 2026-10-12** (not released): settings = HyperFrames' own composition variables (`data-composition-variables`
+   on `<html>`, `--variables-file --strict-variables` at render; string / color / number / boolean / enum checked);
+   `motionlab\overlay_settings.py` (stdlib: declared settings, validation, render state = a hash of index.html +
+   values + size, the library), `overlay.py new --from | settings | set | save | graphics`, render writes
+   `render.json` + `thumb.png`. 4AM's title and clock draw from their settings in JS (pixel font / seven segment
+   ported from `graphics.py`): at their defaults **0/255** against the 0.3.0 versions on every frame
+   (`tools\dev\examples_compare.py`). App: Videos > **Graphics** tab (thumbnail, rendered / settings changed, a form
+   per setting, Save, Render, Save to library) and Library > **Graphics** (yours + the examples, *Use in a video* =
+   a copy rendered right away; only videos whose edit has the graphic's size and rate). UI test on a test server
+   18/18. Power Bin: Resolve's scripting API has no Power Bin calls (21.1), so the library keeps the rendered .mov
+   for the user to drag in once. Still open: refresh in an open Resolve timeline (waits for item 2's test); a
+   graphic for another size / rate needs Claude to adapt it.
 4. **Captions both ways** (toward 0.4's yapping edit): styled / animated captions as a HyperFrames clip timed to the
    words, or plain captions on Resolve's subtitle track (SRT) that the user can correct in Resolve.
 

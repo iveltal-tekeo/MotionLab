@@ -39,7 +39,9 @@ care and test in a scratch project.
   tags - HyperFrames' own MOV is BT.601 untagged, so the lab encodes it) is imported into the bin "Overlays" and
   appended as a plain clip (unit kind `"media"`, clip colour Pink) on its own track; Alpha mode set to Straight;
   composite mode Screen / Add for light. No Fusion. `--doctor` / `--diff` check placement, length and composite
-  mode. Not yet run inside Resolve (written 2026-10-09 without Resolve open): test in the scratch project first.
+  mode. Not yet run inside Resolve (written 2026-10-09 without Resolve open). The test exists since 2026-10-12 and
+  waits for a run: `tools\dev\resolve_overlay_test.py` (scratch project only; docs\plans.md 0.3.2 item 2) - read
+  its report before relying on overlays in Resolve.
 - Drift check: the manifest + `comps\imported\<sha1>.comp` record exactly what each timeline got; `--diff` compares
   every comp input (static ones at first/middle/last frame, keyed ones on every frame), connections, expressions,
   added/deleted tools, Edit-page transform, in-point, LUT, extra Color nodes, opacity/composite/enabled, missing or

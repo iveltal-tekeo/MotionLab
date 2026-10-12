@@ -11,7 +11,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
   refs, docs, library, knowledge only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
-  `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), and - on a click - a Desktop / Start-menu shortcut, git pull
+  `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
+  (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below).
 - Delete (v0.2.5, `trash.py`): the user's Delete buttons on References (a reference = its analysis folder + its video
   when that lies in `refs\`; a download nobody analysed), Videos (a whole `projects\<name>\`) and Renders (one render
@@ -24,10 +25,12 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Pages (routes keep their old names #/refs, #/projects): Home (status, update banner, next steps = each reference's
   next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
-  (#/projects: the user's own footage - versions, renders, timing check, Resolve check-up / what changed by hand /
-  library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
+  (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
+  `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
+  Render / Save to library = jobs), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts/<kind>, 0.4: tabs shot / hook / script, cards with source, model,
   structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = the paste format;
-  `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, Library, Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
+  `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
+  first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates).
 - The analysis page (#/ref/<name>, `?e=E004` selects an effect, `?misses` opens the misses tab), the user's
   2026-10-07 layout: header + workflow strip (`data.flow`: download > lab pass > Claude checks > your verdicts >
@@ -51,7 +54,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   playlists; the final path is printed last so the dialog offers "Analyse it").
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
-  DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs), one per group (cpu / resolve / light / net). Claude's
+  DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
+  overlay_new = Graphics), one per group (cpu / resolve / light / net). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.
 - Updates (`updater.py`, git only - no GitHub API, no tokens in the lab): `check` = `git fetch` + behind / ahead /
@@ -79,7 +83,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Versions: `server.VERSION` = `__version__`; the page carries `<meta name="ml-version">` and `API_LEVEL` (app.js)
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
-  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts).
+  server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
+  6 since 0.3.2: graphics). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).
 - Testing after a change: start `app.py --no-window --stay --no-update --port 879x` (NOT 8765: the user's own app

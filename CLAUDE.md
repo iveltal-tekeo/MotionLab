@@ -52,7 +52,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `<name>_vN.mp4`, `compare\`, `stills\`, `sheets\`, `resolve\` (option 2), `<name>_resolve_vN.mp4`,
   `library_picks.json` (the user's picks in the app), `pruned.json`
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
-  `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`
+  `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
+  graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
 - `tools\` the pipeline (Python 3.12 venv at `.venv\`, `requirements.txt`; ffmpeg on PATH); `tools\motionlab\` the
   package (`compose.py` compositor, `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
   .comp text, `knowledge.py`, `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
@@ -84,8 +85,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `knowledge.py cards | summary | pending | next-lesson-id | share | export | import <pack>`
 - `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
-  `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new | render | stills` (graphics as HTML via
-  HyperFrames, pinned in `tools\overlays\`; `versions | upgrade-test | pin` = adopt a newer one only after its frames
+  `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills` (graphics
+  as HTML via HyperFrames, pinned in `tools\overlays\`; `settings | set` = the values the user can change, `save |
+  graphics` = the graphics library; `versions | upgrade-test | pin` = adopt a newer one only after its frames
   match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
   `library.py build | test | title | install`, `resolve_mcp.py install | status | remove` (optional Resolve MCP for
   Claude Code, this PC only)
@@ -99,7 +101,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
 `MotionLab.bat` = a local server + an Edge app window: Home, References (download, analyse, the review page with
-verdicts and possible misses, Delete), Videos (the user's edits, renders, Resolve check-up, library picks), Prompts, Library,
+verdicts and possible misses, Delete), Videos (the user's edits, renders, graphics + their settings, Resolve check-up, library picks), Prompts, Library,
 Knowledge (Share), Jobs, Storage, Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude
 Code windows the app opens with a fixed first message and an effort level per task (Settings > Claude Code).
 

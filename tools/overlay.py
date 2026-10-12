@@ -10,6 +10,12 @@ particles) are written this way since 0.3.0.
           -> <folder>\\<name>.mov (ProRes 4444 + alpha, exactly --frames frames) + its decoded cache; prints the plan
           layer to add: {"type": "overlay", "file": ..., "start": ..., "end": ...}; --mp4 = a stand-alone motion
           graphic that paints its own background -> <folder>\\<name>.mp4
+    .venv\\Scripts\\python tools\\overlay.py new <folder> --from <graphic>   a copy of a library graphic or an example
+    .venv\\Scripts\\python tools\\overlay.py settings <folder>           what the user can change (declared on <html>,
+          data-composition-variables; render passes overlay.json's "values"; render.json + thumb.png record it)
+    .venv\\Scripts\\python tools\\overlay.py set <folder> text="NEW" color=#ff0000     then render again
+    .venv\\Scripts\\python tools\\overlay.py save <folder> [--name N]     a rendered, approved overlay -> library\\graphics\\
+    .venv\\Scripts\\python tools\\overlay.py graphics                    the graphics library (yours + the examples)
     .venv\\Scripts\\python tools\\overlay.py stills <folder> 0,12,40     PNGs of rendered frames on a checkerboard,
           frame number + timecode burned in (look at these instead of the video)
     .venv\\Scripts\\python tools\\overlay.py check <folder>               HyperFrames lint
@@ -42,6 +48,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import overlays as OV  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
@@ -53,7 +60,10 @@ GSAP = OVL / "node_modules" / "gsap" / "dist" / "gsap.min.js"
 RATIONAL = {23.976: "24000/1001", 29.97: "30000/1001", 59.94: "60000/1001", 47.952: "48000/1001"}
 
 TEMPLATE = """<!doctype html>
-<html lang="en">
+<html lang="en" data-composition-variables='[
+  {"id": "color", "type": "color", "label": "Colour", "default": "#ffc400"},
+  {"id": "pop_in", "type": "number", "label": "Pops in at frame", "default": 5, "min": 0, "max": __LAST__, "step": 1}
+]'>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=__W__, height=__H__">
@@ -61,7 +71,9 @@ TEMPLATE = """<!doctype html>
      .venv\\Scripts\\python tools\\overlay.py render <this folder>
      Rules: transparent background (never paint html / body / #root); everything absolutely positioned in output
      pixels; animate only on the paused GSAP timeline below (no CSS animations, timers, Date or Math.random -
-     use rnd(seed) for noise); times in frames with F(n) / AT(n). -->
+     use rnd(seed) for noise); times in frames with F(n) / AT(n).
+     Settings the user can change in the app (Videos > Graphics): declare them on <html> above
+     (data-composition-variables: string / color / number / boolean / enum; times in frames) and read them from V. -->
 <script src="./gsap.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -82,10 +94,12 @@ TEMPLATE = """<!doctype html>
   const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
   const AT = n => (n - 0.5) / FPS;        // a jump (tl.set) that shows from frame n on, never on frame n - 1
   const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const V = window.__hyperframes.getVariables();   // the settings (declared defaults + the user's values)
   const tl = gsap.timeline({ paused: true });
-  // example (replace): pops in at frame 5, slides 120 px over 10 frames (slow end), gone from frame 60 on
-  tl.set("#box", { opacity: 1 }, AT(5));
-  tl.to("#box", { x: 120, duration: F(10), ease: "power2.out" }, F(5));
+  // example (replace): pops in at frame V.pop_in, slides 120 px over 10 frames (slow end), gone from frame 60 on
+  document.getElementById("box").style.background = V.color;
+  tl.set("#box", { opacity: 1 }, AT(V.pop_in));
+  tl.to("#box", { x: 120, duration: F(10), ease: "power2.out" }, F(V.pop_in));
   tl.set("#box", { opacity: 0 }, AT(60));
   tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
   window.__timelines = window.__timelines || {};
@@ -138,16 +152,48 @@ def read_conf(folder: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def copy_sources(src: Path, dst: Path, name: str, extra: dict | None = None) -> dict:
+    """An overlay's sources (index.html, hyperframes.json, assets\\ + the pinned GSAP) and its overlay.json -> dst."""
+    c = OS.conf(src)
+    dst.mkdir(parents=True, exist_ok=True)
+    for f in OS.SOURCES:
+        if f != "overlay.json" and (src / f).exists():
+            shutil.copy2(src / f, dst / f)
+    if GSAP.exists():
+        shutil.copy2(GSAP, dst / "gsap.min.js")
+    if (src / "assets").is_dir():
+        shutil.copytree(src / "assets", dst / "assets", dirs_exist_ok=True)
+    if not (dst / "hyperframes.json").exists():
+        (dst / "hyperframes.json").write_text(json.dumps({"paths": {"assets": "assets"}}, indent=1), encoding="utf-8")
+    c = {**c, "name": name, **(extra or {})}
+    (dst / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+    return c
+
+
 def cmd_new(a) -> int:
     folder = guard(Path(a.folder))
     if (folder / "index.html").exists() and not a.force:
         raise SystemExit(f"{folder / 'index.html'} exists (--force replaces it)")
+    if a.from_:
+        try:
+            src = OS.find_graphic(a.from_)
+        except ValueError as e:
+            raise SystemExit(str(e))
+        c = copy_sources(src, folder, folder.name, {"from": a.from_})
+        log(f"{folder.name}: a copy of the graphic '{a.from_}' ({c['frames']} frames at {float(c['fps']):g} fps, "
+            f"{c['width']}x{c['height']}); change its settings in the app or with overlay.py set, then render")
+        print(folder / "index.html")
+        if a.render:
+            return cmd_render(argparse.Namespace(folder=str(folder), workers=None, mp4=False))
+        return 0
+    if not a.frames:
+        raise SystemExit("--frames N is needed (or --from <graphic>)")
     folder.mkdir(parents=True, exist_ok=True)
     name = folder.name
     secs = a.frames / a.fps
     html = (TEMPLATE.replace("__NAME__", name).replace("__FRAMES__", str(a.frames)).replace("__FPSJS__", fps_arg(a.fps))
             .replace("__FPS__", f"{a.fps:g}").replace("__W__", str(a.width)).replace("__H__", str(a.height))
-            .replace("__SECS__", f"{secs:.6f}".rstrip("0").rstrip(".")))
+            .replace("__SECS__", f"{secs:.6f}".rstrip("0").rstrip(".")).replace("__LAST__", str(a.frames - 1)))
     (folder / "index.html").write_text(html, encoding="utf-8")
     shutil.copy2(GSAP, folder / "gsap.min.js")
     (folder / "hyperframes.json").write_text(json.dumps({"paths": {"assets": "assets"}}, indent=1), encoding="utf-8")
@@ -171,16 +217,62 @@ def encode_prores(pattern: Path, fps: float, out: Path):
         raise SystemExit(f"ProRes encode failed: {r.stderr[-600:]}")
 
 
+def variables_args(folder: Path) -> tuple[list[str], dict, Path | None]:
+    """--variables-file for HyperFrames when the composition declares settings: (args, values, temp file)."""
+    try:
+        decl = OS.declared(folder)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    if not decl:
+        return [], {}, None
+    vals = OS.values(folder)
+    _, bad = OS.check(decl, read_conf(folder).get("values") or {})
+    if bad:
+        log("  WARNING: overlay.json values not used: " + "; ".join(bad))
+    vf = folder / ".values.json"
+    vf.write_text(json.dumps(vals, ensure_ascii=False), encoding="utf-8")
+    return ["--variables-file", str(vf), "--strict-variables"], vals, vf
+
+
+def write_thumb(folder: Path, png: Path, crop: list[int], box=(480, 270)) -> None:
+    """thumb.png: one rendered frame on a checkerboard, cut to the area that is ever visible (+ a margin)."""
+    im = np.asarray(Image.open(png).convert("RGBA"), np.float32) / 255.0
+    x, y, w, h = crop
+    m = 24
+    x0, y0 = max(0, x - m), max(0, y - m)
+    x1, y1 = min(im.shape[1], x + w + m), min(im.shape[0], y + h + m)
+    fr = im[y0:y1, x0:x1]
+    bg = checker(fr.shape[0], fr.shape[1])
+    out = bg * (1 - fr[..., 3:]) + fr[..., :3] * fr[..., 3:]
+    t = Image.fromarray((out * 255 + 0.5).astype(np.uint8))
+    t.thumbnail(box, Image.LANCZOS)
+    t.save(folder / "thumb.png")
+
+
+def write_render_info(folder: Path, vals: dict, frames: int) -> None:
+    from motionlab import upstream as UP
+    pins = UP.pinned()
+    (folder / "render.json").write_text(json.dumps({
+        "inputs": OS.inputs_hash(folder), "values": vals, "frames": frames, "date": time.strftime("%Y-%m-%d %H:%M"),
+        "hyperframes": pins.get("hyperframes"), "gsap": pins.get("gsap")}, indent=1, ensure_ascii=False),
+        encoding="utf-8")
+
+
 def cmd_render(a) -> int:
     folder = guard(Path(a.folder))
     c = read_conf(folder)
     W, H, fps = int(c["width"]), int(c["height"]), float(c["fps"])
+    vargs, vals, vfile = variables_args(folder)
+    if vals:
+        log("settings: " + ", ".join(f"{k} = {v!r}" for k, v in vals.items()))
     if a.mp4:                     # a stand-alone motion graphic (it paints its own background): just an MP4
         out = folder / f"{c['name']}.mp4"
         log(f"rendering {folder.name} as an MP4: {c['frames']} frames at {fps:g} fps, {W}x{H}")
         r = hf("render", str(folder), "--format", "mp4", "--fps", fps_arg(fps), "--output", str(out), "--quality",
                "delivery", "--quiet", "--workers", str(a.workers) if a.workers else "auto", "--strict",
-               "--frames-cache-dir", "off")
+               "--frames-cache-dir", "off", *vargs)
+        if vfile:
+            vfile.unlink(missing_ok=True)
         if r.returncode or not out.exists():
             raise SystemExit(f"HyperFrames render failed (exit {r.returncode}) - run: overlay.py check {folder}")
         info = OV.probe(out)
@@ -191,7 +283,10 @@ def cmd_render(a) -> int:
     shutil.rmtree(frames_dir, ignore_errors=True)
     log(f"rendering {folder.name}: {c['frames']} frames at {fps:g} fps, {W}x{H}")
     r = hf("render", str(folder), "--format", "png-sequence", "--fps", fps_arg(fps), "--output", str(frames_dir),
-           "--quiet", "--workers", str(a.workers) if a.workers else "auto", "--strict", "--frames-cache-dir", "off")
+           "--quiet", "--workers", str(a.workers) if a.workers else "auto", "--strict", "--frames-cache-dir", "off",
+           *vargs)
+    if vfile:
+        vfile.unlink(missing_ok=True)
     pngs = sorted(frames_dir.glob("frame_*.png"))
     if r.returncode or not pngs:
         raise SystemExit(f"HyperFrames render failed (exit {r.returncode}) - run: overlay.py check {folder}")
@@ -218,6 +313,8 @@ def cmd_render(a) -> int:
             vis = png[..., 3] > 250
             if vis.any():
                 worst = max(worst, int(np.abs(fr.astype(np.int16)[vis] - png[vis]).max()))
+    write_thumb(folder, pngs[len(pngs) // 2], m["crop"])
+    write_render_info(folder, vals, len(pngs))
     shutil.rmtree(frames_dir, ignore_errors=True)
     x, y, w, h = m["crop"]
     log(f"{out.name}: {m['frames']} frames, visible area {w}x{h} at {x},{y}; ProRes 4444 vs the frames: max "
@@ -253,6 +350,80 @@ def cmd_stills(a) -> int:
         p = out / f"{c['name']}_f{f:04d}.png"
         im.save(p)
         print(p)
+    return 0
+
+
+def cmd_settings(a) -> int:
+    folder = guard(Path(a.folder))
+    s = OS.status(folder)
+    if not s["settings"]:
+        print(f"{s['name']}: no settings declared (data-composition-variables on <html> in index.html)")
+    for d in s["settings"]:
+        extra = f"  (one of {', '.join(str(o['value']) for o in d['options'])})" if d["type"] == "enum" else ""
+        dflt = "" if d["value"] == d.get("default") else f"   (default {d.get('default')!r})"
+        print(f"  {d['id']:16s} {d['type']:8s} {d.get('label', ''):28s} = {d['value']!r}{dflt}{extra}")
+    state = "up to date" if s["current"] else ("needs a re-render" if s["rendered"] else "not rendered yet")
+    print(f"render: {state}")
+    return 0
+
+
+def cmd_set(a) -> int:
+    folder = guard(Path(a.folder))
+    decl = {d["id"]: d for d in OS.declared(folder)}
+    new = {}
+    for kv in a.values:
+        k, sep, v = kv.partition("=")
+        if not sep or k not in decl:
+            raise SystemExit(f"'{kv}': use id=value with one of: {', '.join(decl) or '(none declared)'}")
+        new[k] = v
+    try:
+        s = OS.set_values(folder, new)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    print(f"{s['name']}: saved {', '.join(f'{k}={v}' for k, v in new.items())} - render it again "
+          f"(overlay.py render {folder})")
+    return 0
+
+
+def cmd_save(a) -> int:
+    """An approved overlay -> library\\graphics\\<name>\\ (sources + the rendered .mov + thumb)."""
+    folder = guard(Path(a.folder))
+    s = OS.status(folder)
+    if not s["current"]:
+        raise SystemExit(f"{s['name']}: render it first (overlay.py render {folder}) - the library keeps the "
+                         "rendered clip next to its sources")
+    name = a.name or s["name"]
+    if not re.fullmatch(r"[\w.-]+", name):
+        raise SystemExit(f"not a usable name: {name!r} (letters, digits, - _ .)")
+    dst = OS.LIBRARY / name
+    if dst.exists() and not a.force:
+        raise SystemExit(f"library\\graphics\\{name} exists (--force replaces it, or --name another)")
+    tmp = OS.LIBRARY / f".{name}.part"
+    shutil.rmtree(tmp, ignore_errors=True)
+    c = read_conf(folder)
+    copy_sources(folder, tmp, name, {"saved_from": OS.rel(folder), "saved": time.strftime("%Y-%m-%d %H:%M")})
+    shutil.copy2(folder / f"{c['name']}.mov", tmp / f"{name}.mov")
+    for f in ("thumb.png", "render.json"):
+        if (folder / f).exists():
+            shutil.copy2(folder / f, tmp / f)
+    if (tmp / "render.json").exists():              # the copy is current: the same inputs under its new name
+        rj = json.loads((tmp / "render.json").read_text(encoding="utf-8"))
+        rj["inputs"] = OS.inputs_hash(tmp)
+        (tmp / "render.json").write_text(json.dumps(rj, indent=1, ensure_ascii=False), encoding="utf-8")
+    shutil.rmtree(dst, ignore_errors=True)
+    os.replace(tmp, dst)
+    log(f"saved to the graphics library: {dst} ({s['frames']} frames, {s['width']}x{s['height']} at {s['fps']:g} fps)")
+    print(f"In DaVinci Resolve: drag {dst / (name + '.mov')} into a Power Bin to have it in every project.")
+    return 0
+
+
+def cmd_graphics(a) -> int:
+    items = OS.library()
+    if not items:
+        print("no graphics yet")
+    for g in items:
+        print(f"  {g['kind']:8s} {g['name']:24s} {g['frames']:4d} frames  {g['fps']:g} fps  {g['width']}x{g['height']}"
+              f"  settings: {', '.join(d['id'] for d in g['settings']) or '-'}")
     return 0
 
 
@@ -339,7 +510,7 @@ def _side_by_side(pa: Path, pb: Path, out: Path) -> None:
     imgs = []
     for p in (pa, pb):
         a = np.asarray(Image.open(p).convert("RGBA")).astype(np.float32) / 255
-        bg = checker(a.shape[0], a.shape[1]).astype(np.float32) / 255
+        bg = checker(a.shape[0], a.shape[1])                       # already 0..1
         imgs.append(((a[..., :3] * a[..., 3:] + bg * (1 - a[..., 3:])) * 255 + 0.5).astype(np.uint8))
     d = np.clip(np.abs(_premul(pa) - _premul(pb))[..., :3] * 8, 0, 255).astype(np.uint8)
     Image.fromarray(np.hstack([imgs[0], imgs[1], d])).save(out)
@@ -466,7 +637,9 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("new")
     s.add_argument("folder")
-    s.add_argument("--frames", type=int, required=True)
+    s.add_argument("--frames", type=int)
+    s.add_argument("--from", dest="from_", metavar="GRAPHIC", help="start from a library graphic or an example")
+    s.add_argument("--render", action="store_true", help="with --from: render it right away")
     s.add_argument("--fps", type=float, default=25.0)
     s.add_argument("--width", type=int, default=1520)
     s.add_argument("--height", type=int, default=1080)
@@ -480,6 +653,16 @@ def main() -> int:
     s.add_argument("frames")
     s = sub.add_parser("check")
     s.add_argument("folder")
+    s = sub.add_parser("settings", help="the settings an overlay declares and their values")
+    s.add_argument("folder")
+    s = sub.add_parser("set", help="change settings: id=value ... (then render again)")
+    s.add_argument("folder")
+    s.add_argument("values", nargs="+")
+    s = sub.add_parser("save", help="an approved, rendered overlay -> library\\graphics\\<name>")
+    s.add_argument("folder")
+    s.add_argument("--name")
+    s.add_argument("--force", action="store_true")
+    sub.add_parser("graphics", help="the graphics library (yours + the examples)")
     sub.add_parser("install")
     s = sub.add_parser("doctor")
     s.add_argument("--fix", action="store_true", help="download HyperFrames' Chrome if missing")
@@ -494,7 +677,8 @@ def main() -> int:
     s.add_argument("--gsap")
     s.add_argument("--force", action="store_true")
     a = ap.parse_args()
-    return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check,
+    return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check, "settings": cmd_settings,
+            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
             "pin": cmd_pin}[a.cmd](a)
 
