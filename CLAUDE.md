@@ -159,7 +159,7 @@ Code windows the app opens with a fixed first message and an effort level per ta
 - Any change to `config.json` or `tools\motionlab\` must be followed by `selftest.py --extended` (all PASS).
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` all PASS, raise
   `__version__` in `tools\motionlab\__init__.py`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
-  update banner shows it), raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits
+  update banner shows it; it takes in the `## Unreleased` lines - the app shows only version sections), raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits
   and pushes. GitHub's tests (self-test + `tools\dev\smoke.py`) must turn green: they move the `tested` branch, which
   is what the Update button installs, and tag `v<version>` (docs\organization.md "Tests on GitHub").
 

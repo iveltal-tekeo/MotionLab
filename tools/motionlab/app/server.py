@@ -35,7 +35,7 @@ from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
 from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
-from motionlab.util import LAB, tool
+from motionlab.util import LAB, fix_dotted_names, tool
 
 from . import data, jobs, system, trash, updater
 
@@ -632,6 +632,10 @@ def make(port: int, auto_exit: bool, check_updates: bool = True) -> ThreadingHTT
     S.server = srv
     S.check_updates = check_updates
     APPDIR.mkdir(exist_ok=True)
+    try:                                    # analyses named by 0.3.2 with ".." (a title with "..."): no page opens them
+        fix_dotted_names(log=log_error)
+    except OSError as e:
+        log_error(f"renaming analyses with '..' in their name: {e}")
     # for tools\\app.py: which server runs here (version, token) - it replaces an older one after an update
     (APPDIR / "server.json").write_text(json.dumps({"port": S.port, "pid": os.getpid(), "token": S.token,
                                                     "version": VERSION, "started": data.stamp()}), encoding="utf-8")

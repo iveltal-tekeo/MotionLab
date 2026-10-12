@@ -261,8 +261,8 @@ def list_references(include_tests: bool = False) -> list[dict]:
     pend = share_pending()
     for d in sorted(ANALYSIS.iterdir(), key=lambda p: p.name.lower()):
         ev = read_json(d / "events.json", None) if d.is_dir() else None
-        if not ev:
-            continue
+        if not ev or ".." in d.name:        # a 0.3.2 ".." name still in use (renamed at the next start): skipped, so it
+            continue                        # cannot break the whole list
         test = d.name.startswith("synthetic_")
         if test and not include_tests:
             continue

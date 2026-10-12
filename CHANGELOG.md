@@ -4,6 +4,13 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## Unreleased
+
+- **Fixed: videos with odd titles** (reported by a friend): a video whose title was cut short with "..." (TikTok
+  hashtags) was analysed, but its page never opened ("bad name"). Such analyses are renamed when MotionLab starts,
+  and new ones never get "..". *Download from a link* also said "download failed" for a title with an emoji (🎬),
+  though the video had downloaded. Now it is found and listed.
+
 ## 0.3.2 - 2026-10-12 - Graphics you can edit, captions, and graphics in DaVinci Resolve
 
 - **Graphics with settings** (*Videos > your video > Graphics*): every HTML graphic of a video - titles, clocks,

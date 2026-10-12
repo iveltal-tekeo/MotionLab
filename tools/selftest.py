@@ -12,6 +12,7 @@ Scoring (automatic detector output only - blind to the ground truth):
   beats       BPM within 1 of truth; on-beat flags of events and cuts correct
   false pos.  detected events that match no ground-truth effect
 PASS = every effect found with correct type and frames, every cut exact, BPM/beat checks pass, 0 false positives.
+First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles).
 """
 from __future__ import annotations
 
@@ -199,6 +200,78 @@ def run_one(video: Path, truth_path: Path, name: str, gen_cmd: list[str], rebuil
     return res
 
 
+def check_titles() -> dict:
+    """Odd titles, no video needed (two 0.3.2 bugs a friend reported): a folder name made from a title must open in the
+    app (no "..": a title yt-dlp shortened with "..."), an old ".." folder is renamed everywhere the lab wrote its name,
+    and a download whose title has an emoji is found (yt-dlp.exe dropped the emoji from the path it printed)."""
+    import tempfile
+    import download as DL
+    from motionlab import util
+    from motionlab.app import data as appdata
+    passed = []
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+
+    def opens(name):
+        try:
+            return appdata.safe_name(name) == name
+        except ValueError:
+            return False
+
+    sandwich = "#fyp #foryou #foryoupage #harleyquinn #birdsofprey #breakfast #sandwi... [6988538288978054401]"
+    cooking = "Where cooking meets cinematography \U0001F3AC #filmmaking #cinema #cooking #pi... [7636117427524291861]"
+    titles = [sandwich, cooking, "a....b", "\U0001F3AC\U0001F3AC", "..hidden", "a" * 79 + ".b",
+              "Ünïcødé – test. "]
+    names = [util.safe_name(t) for t in titles]
+    check(all(opens(n) and ".." not in n and not n.endswith(".") for n in names)
+          and not opens(util._safe_name_032(sandwich)),
+          "titles: every folder name made from an odd title opens in the app (no '..', no dot at the end)")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ana, cards = Path(tmp) / "analysis", Path(tmp) / "cards"
+        old, new = util._safe_name_032(sandwich), util.safe_name(sandwich)
+        src = "C:\\MotionLab\\refs\\" + sandwich + ".mp4"
+        (ana / old).mkdir(parents=True)
+        cards.mkdir()
+        (ana / old / "events.json").write_text(json.dumps({"name": old, "analysis_id": old + "-20261012-120000",
+                                                           "source": {"path": src}}), encoding="utf-8")
+        (ana / old / "report.html").write_text(f"<h1>{old}</h1><span>{old}-20261012-120000</span>", encoding="utf-8")
+        (cards / "c.json").write_text(json.dumps({"analysis": old, "title": sandwich}), encoding="utf-8")
+        moved = util.fix_dotted_names(ana, cards, log=lambda m: None)
+        try:
+            ev = json.loads((ana / new / "events.json").read_text(encoding="utf-8"))
+            html = (ana / new / "report.html").read_text(encoding="utf-8")
+            card = json.loads((cards / "c.json").read_text(encoding="utf-8"))
+        except OSError:
+            ev, html, card = {"source": {}}, old, {}
+        check(moved == [(old, new)] and not (ana / old).exists() and ev.get("name") == new
+              and ev.get("analysis_id") == new + "-20261012-120000" and ev["source"].get("path") == src
+              and old not in html and html.count(new) == 2 and card == {"analysis": new, "title": sandwich},
+              "titles: a 0.3.2 folder with '..' is renamed (events, report, card), the video's path is kept")
+
+    cmd = DL.with_fields(["yt-dlp", "-P", "refs", "-o", "%(title)s [%(id)s].%(ext)s", "--", "https://x"])
+    enc = cmd.index("--encoding") if "--encoding" in cmd else None
+    utf8 = enc is not None and cmd[enc + 1] == "utf-8" and enc < cmd.index("--")
+    info = DL.parse(DL.MARK + "C:\\refs\\a [1].mp4|TikTok|7636117427524291861|41.0|Name | with bar")
+    check(utf8 and info["path"] == "C:\\refs\\a [1].mp4"
+          and info["uploader"] == "Name | with bar" and info["duration"] == "41.0"
+          and DL.parse(DL.MARK + "p|NA|NA|NA|NA")["platform"] == "",
+          "downloads: yt-dlp prints in UTF-8, the saved-file line parses (a '|' in the uploader too)")
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        real = folder / (cooking + ".mp4")
+        for f in (real, folder / (cooking + ".mp4.part"), folder / "other [123].mp4"):
+            f.write_bytes(b"x")
+        printed = str(folder / (cooking.replace("\U0001F3AC", "") + ".mp4"))       # what 0.3.2 got from yt-dlp.exe
+        got = DL.saved_file({"path": printed, "id": "7636117427524291861"}, folder)
+        check(got == real and DL.saved_file({"path": str(real), "id": ""}, folder) == real
+              and DL.saved_file({"path": printed, "id": "999"}, folder) is None,
+              "downloads: an emoji lost from the printed path - the file is still found by its id")
+    return {"passed": all(passed)}
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser()
@@ -207,7 +280,7 @@ def main() -> int:
     ap.add_argument("--only-extended", action="store_true")
     args = ap.parse_args()
     st = HERE / "selftest"
-    results = {}
+    results = {"titles": check_titles()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

@@ -31,12 +31,12 @@ from motionlab import media as ME  # noqa: E402
 from motionlab import overview as OV  # noqa: E402
 from motionlab import probe as PR  # noqa: E402
 from motionlab import signals as SG  # noqa: E402
-from motionlab.util import (ANALYSIS, SourceGuard, load_config, log, read_json, safe_name,  # noqa: E402
-                            setup_console, sha256_file, write_json)
+from motionlab.util import (ANALYSIS, SourceGuard, fix_dotted_names, load_config, log, read_json,  # noqa: E402
+                            safe_name, setup_console, sha256_file, write_json)
 
 
 def pick_out_dir(src: Path, name: str | None) -> tuple[str, Path]:
-    base = name or safe_name(src.stem)
+    base = safe_name(name or src.stem)
     out = ANALYSIS / base
     sj = out / "source.json"
     if not name and sj.exists():
@@ -66,6 +66,7 @@ def main() -> int:
     if not src.is_file():
         print(f"ERROR: video not found: {src}")
         return 2
+    fix_dotted_names(log=log)                                  # folders named by 0.3.2 with ".." (the app refused them)
     name, out = pick_out_dir(src, args.name)
     out.mkdir(parents=True, exist_ok=True)
     guard = SourceGuard(src, out)

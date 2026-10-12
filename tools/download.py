@@ -20,6 +20,41 @@ from motionlab.app import system  # noqa: E402
 from motionlab.util import REFS, setup_console  # noqa: E402
 
 MARK = "MLDL|"
+FIELDS = ("path", "platform", "id", "duration", "uploader")   # free text last: an uploader may contain "|"
+PRINT = f"after_move:{MARK}%(filepath)s|%(extractor_key)s|%(id)s|%(duration)s|%(uploader)s"
+MEDIA = (".mp4", ".mp3", ".mkv", ".webm", ".m4a", ".mov")
+
+
+def with_fields(cmd: list[str]) -> list[str]:
+    """yt-dlp's command + the line that reports the saved file. `--encoding utf-8`: yt-dlp.exe otherwise prints in the
+    console's code page and drops what it cannot show - an emoji in a title vanished from the path (0.3.2 said
+    "download failed" for a video that was saved)."""
+    i = cmd.index("--")
+    return cmd[:i] + ["--encoding", "utf-8", "--print", PRINT] + cmd[i:]
+
+
+def parse(line: str) -> dict | None:
+    """The MARK line -> {path, platform, id, duration, uploader} ("" where yt-dlp has none: it prints "NA");
+    None for any other line."""
+    if not line.startswith(MARK):
+        return None
+    parts = line[len(MARK):].split("|", len(FIELDS) - 1) + [""] * len(FIELDS)
+    return {k: "" if v == "NA" else v for k, v in zip(FIELDS, parts)}
+
+
+def saved_file(info: dict | None, folder: Path) -> Path | None:
+    """The downloaded file: the printed path, else the newest file in the download folder whose name ends with
+    "[<id>].<ext>" (the name template ends with the video's id) - in case a character still got lost in printing."""
+    if not info:
+        return None
+    p = Path(info["path"]) if info["path"] else None
+    if p and p.is_file():
+        return p
+    if not info["id"] or not folder.is_dir():
+        return None
+    tail = f"[{info['id']}]"
+    hits = [f for f in folder.iterdir() if f.is_file() and f.suffix.lower() in MEDIA and f.stem.endswith(tail)]
+    return max(hits, key=lambda f: f.stat().st_mtime) if hits else None
 
 
 def main() -> int:
@@ -29,8 +64,8 @@ def main() -> int:
     url = sys.argv[1]
     preset = sys.argv[2] if len(sys.argv) > 2 else ""
     title, cmd = system.download_cmd(url, preset)
-    i = cmd.index("--")                                   # extra fields printed after the file is in place
-    cmd[i:i] = ["--print", f"after_move:{MARK}%(filepath)s|%(extractor_key)s|%(uploader)s|%(id)s|%(duration)s"]
+    cmd = with_fields(cmd)                                # extra fields printed after the file is in place
+    folder = Path(cmd[cmd.index("-P") + 1])
     print(title, flush=True)
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
@@ -39,16 +74,16 @@ def main() -> int:
     for line in proc.stdout:
         line = line.rstrip("\r\n")
         if line.startswith(MARK):
-            parts = line[len(MARK):].split("|")
-            info = dict(zip(("path", "platform", "uploader", "id", "duration"), parts + [""] * 5))
+            info = parse(line)
             continue
-        if line.strip() and not line.strip().lower().endswith((".mp4", ".mp3", ".mkv", ".webm", ".m4a", ".mov")):
+        if line.strip() and not line.strip().lower().endswith(MEDIA):
             print(line, flush=True)
     rc = proc.wait()
-    if rc != 0 or not info or not Path(info["path"]).is_file():
-        print(f"download failed (yt-dlp exit code {rc})", flush=True)
+    p = saved_file(info, folder) if rc == 0 else None
+    if p is None:
+        print(f"download failed (yt-dlp exit code {rc})" if rc else
+              "download failed: yt-dlp ended well, but the saved file was not found in " + str(folder), flush=True)
         return rc or 1
-    p = Path(info["path"])
     idx_path = REFS / "downloads.json"
     try:
         idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {}
