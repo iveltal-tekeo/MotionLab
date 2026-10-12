@@ -305,6 +305,18 @@ def _kind(name: str, ev: dict, v: dict) -> dict:
             "pacing": KN.pacing(ev)}
 
 
+def content_info(d: Path) -> dict:
+    """The analysis page's Content tab (0.3.5): the transcript (tools\\content.py transcript) and the video's public
+    numbers (content.py stats). Both stay on this PC."""
+    tj = read_json(d / "content" / "transcript.json", None) or {}
+    st = read_json(d / "content" / "stats.json", None)
+    tr = None
+    if tj.get("lines"):
+        tr = {k: tj.get(k) for k in ("source", "kind", "lang", "fetched", "words", "word_timings", "title")}
+        tr["lines"] = [{"start": ln["start"], "end": ln["end"], "text": ln["text"]} for ln in tj["lines"]]
+    return {"transcript": tr, "stats": st}
+
+
 def reference(name: str) -> dict:
     d = ANALYSIS / safe_name(name)
     ev = read_json(d / "events.json", None)
@@ -363,6 +375,7 @@ def reference(name: str) -> dict:
         "flow": flow(d.name, ev, load_verdicts(name), share_pending()),
         "review_prompt": review_prompt(src or d.name, d.name),
         "projects": [p["name"] for p in list_projects()],
+        "content": content_info(d),
     }
 
 

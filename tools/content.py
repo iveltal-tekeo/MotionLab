@@ -6,6 +6,10 @@ Whisper for videos without subtitles comes later, only after it is measured (doc
 
     .venv\\Scripts\\python tools\\content.py transcript <name | video> [--url <link>] [--lang en] [--force]
     .venv\\Scripts\\python tools\\content.py show <name> [<start frame> <end frame>]
+    .venv\\Scripts\\python tools\\content.py stats <name | video> [--url <link>]
+          how the video performs (0.3.5): views, likes, comments, the channel's followers, the upload date ->
+          analysis\\<name>\\content\\stats.json; views / followers = the outperformer score; every fetch is kept
+          in its history. The transcript fetch saves them too (the same request).
 
 <name> = the analysis folder (References); a video that has no analysis yet works too (its frame rate is probed).
 The link comes from refs\\downloads.json (the app's downloads), else from a YouTube id in the file name
@@ -124,6 +128,55 @@ def choose_track(info: dict, want: str | None) -> tuple[str, str] | None:
     return ("auto", hit) if hit else None
 
 
+def save_stats(ref: dict, info: dict, url: str) -> dict:
+    """yt-dlp's info (-J) -> analysis\\<name>\\content\\stats.json: the public numbers, the outperformer score
+    (views / the channel's followers) and the history of every fetch."""
+    out = ref["dir"] / "content"
+    out.mkdir(parents=True, exist_ok=True)
+    p = out / "stats.json"
+    old = _load(p) or {}
+    num = lambda k: int(info[k]) if isinstance(info.get(k), (int, float)) else None      # noqa: E731
+    up = str(info.get("upload_date") or "")
+    now = time.strftime("%Y-%m-%d %H:%M")
+    s = {"schema": 1, "url": url, "platform": info.get("extractor_key"), "id": info.get("id"),
+         "title": info.get("title"), "uploader": info.get("uploader") or info.get("channel"),
+         "channel_url": info.get("channel_url") or info.get("uploader_url"),
+         "views": num("view_count"), "likes": num("like_count"), "comments": num("comment_count"),
+         "followers": num("channel_follower_count"),
+         "upload_date": f"{up[:4]}-{up[4:6]}-{up[6:8]}" if len(up) == 8 else None,
+         "duration_s": info.get("duration"), "fetched": now}
+    if s["views"] is not None and s["followers"]:
+        s["outperformer"] = round(s["views"] / s["followers"], 2)
+    if s["views"] is not None and s["upload_date"]:
+        days = max(1.0, (time.time() - time.mktime(time.strptime(s["upload_date"], "%Y-%m-%d"))) / 86400)
+        s["days_online"] = int(days)
+        s["views_per_day"] = int(round(s["views"] / days))
+    s["history"] = (old.get("history") or []) + [{k: s[k] for k in ("fetched", "views", "likes", "comments",
+                                                                     "followers")}]
+    p.write_text(json.dumps(s, indent=1, ensure_ascii=False), encoding="utf-8")
+    return s
+
+
+def stats_line(s: dict) -> str:
+    n = lambda v: "-" if v is None else f"{v:,}"                                        # noqa: E731
+    return (f"{n(s.get('views'))} views · {n(s.get('likes'))} likes · {n(s.get('comments'))} comments · "
+            f"{n(s.get('followers'))} followers"
+            + (f" · {s['outperformer']}x its followers" if s.get("outperformer") is not None else "")
+            + (f" · online since {s['upload_date']} ({s.get('views_per_day', 0):,} views/day)" if s.get("upload_date")
+               else ""))
+
+
+def stats(args) -> int:
+    ref = resolve(args.target)
+    url = find_url(ref, args.url)
+    print(f"{ref['name']}: asking {url} for its numbers ...", flush=True)
+    info = json.loads(run([ytdlp(), "-J", "--skip-download", "--no-playlist", "--no-warnings", url]))
+    s = save_stats(ref, info, url)
+    print(stats_line(s))
+    print(ref["dir"] / "content" / "stats.json")
+    return 0
+
+
 def transcript(args) -> int:
     ref = resolve(args.target)
     out = ref["dir"] / "content"
@@ -135,6 +188,7 @@ def transcript(args) -> int:
     exe = ytdlp()
     print(f"{ref['name']}: asking {url} for subtitles ...", flush=True)
     info = json.loads(run([exe, "-J", "--skip-download", "--no-playlist", "--no-warnings", url]))
+    print(stats_line(save_stats(ref, info, url)), flush=True)          # the same answer has the video's numbers
     track = choose_track(info, args.lang)
     if not track:
         langs = sorted(set(info.get("subtitles") or {}) | {k for k in (info.get("automatic_captions") or {}) if k.endswith("-orig")})
@@ -201,6 +255,9 @@ def main() -> int:
     t.add_argument("--url", help="the video's link, if the lab cannot tell")
     t.add_argument("--lang", help="language code, e.g. en (default: the video's own)")
     t.add_argument("--force", action="store_true", help="fetch again")
+    st = sub.add_parser("stats", help="views, likes, comments, followers, upload date -> content\\stats.json")
+    st.add_argument("target")
+    st.add_argument("--url")
     s = sub.add_parser("show", help="print the transcript (or a frame range of it)")
     s.add_argument("target")
     s.add_argument("start", nargs="?", type=int)
@@ -208,6 +265,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.cmd == "transcript":
         return transcript(args)
+    if args.cmd == "stats":
+        return stats(args)
     ref = resolve(args.target)
     data = _load(ref["dir"] / "content" / "transcript.json")
     if not data:

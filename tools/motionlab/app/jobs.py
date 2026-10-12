@@ -69,6 +69,14 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         flag = "--doctor" if kind == "resolve_doctor" else "--diff"
         what = "Resolve check-up" if kind == "resolve_doctor" else "Resolve: what changed by hand"
         return f"{what} ({a['project']})", [PY, str(TOOLS / "resolve_build.py"), str(plan), flag], "resolve"
+    if kind in ("content_transcript", "content_stats"):         # analysis page > Content (0.3.5)
+        n = data.safe_name(str(a.get("name", "")))
+        if not (ANALYSIS / n / "events.json").exists():
+            raise JobError(f"no analysis {n}")
+        if kind == "content_transcript":
+            return (f"Transcript of {n}", [PY, str(TOOLS / "content.py"), "transcript", n]
+                    + (["--force"] if a.get("again") else []), "net")
+        return f"Views and followers of {n}", [PY, str(TOOLS / "content.py"), "stats", n], "net"
     if kind == "storage":
         return "Storage report", [PY, str(TOOLS / "storage.py")], "light"
     if kind == "prune":

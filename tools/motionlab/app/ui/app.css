@@ -236,6 +236,10 @@ details.fold > .in { padding: 4px 10px 10px; }
 .tabs a:hover { text-decoration: none; color: var(--text); }
 
 /* ---------------- effects (library picks) */
+.contentarea { margin-top: 10px; }
+.cgrid .stats { gap: 10px; flex-wrap: wrap; }
+.tlines { max-height: 460px; overflow: auto; }
+.tlines td.fr, .tlines td.tc { white-space: nowrap; width: 1%; }
 .gcard { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 .gthumb { display: flex; align-items: center; justify-content: center; min-height: 90px; background: #1b1b20; border-radius: 6px; overflow: hidden; }
 .gthumb img { max-width: 100%; display: block; }

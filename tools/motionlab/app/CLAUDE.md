@@ -32,6 +32,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates).
+- The analysis page's **Content** tab (0.3.5, `contentTab`, `data.content_info`): how the video performs
+  (`content\stats.json`: views, views ÷ followers, views a day, likes, comments, followers; job `content_stats`) and
+  what it says (`content\transcript.json` lines with frame + timecode - a click moves the player, the line being
+  said is marked, search; job `content_transcript`). Both jobs = `tools\content.py` (group net), nothing downloaded.
 - The analysis page (#/ref/<name>, `?e=E004` selects an effect, `?misses` opens the misses tab), the user's
   2026-10-07 layout: header + workflow strip (`data.flow`: download > lab pass > Claude checks > your verdicts >
   feedback > share, with the next step's button); the full-width frame-accurate player + two timelines (red dashed
@@ -85,7 +89,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

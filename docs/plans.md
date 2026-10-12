@@ -125,6 +125,13 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
 
 - **Done (0.3.1)**: what is said - `tools\content.py transcript <name>` (the platform's subtitles, frame + timecode
   per line and word), MCP `transcript`.
+- **Built 2026-10-12** (not released): **performance** - `content.py stats <name>` (one `yt-dlp -J` request, no
+  download; the transcript fetch saves them too) -> `content\stats.json`: views, likes, comments, the channel's
+  followers, upload date, **views ÷ followers** (the outperformer score), views a day, and a history of every fetch.
+  4AM: 3,434,506 views, 768,000 followers = 4.47x, 56,722 views a day since 2026-08-13. **App: a Content tab** on
+  the analysis page (the numbers + *Update the numbers*; the transcript with frame + timecode, a click moves the
+  player, the line being said is marked, search, *Get the transcript* / *Fetch again*). UI test 12/12. Not yet:
+  saving the numbers at download time, the numbers in shared cards, topics / shots / OCR / collections.
 - **Audio = what is said**: the transcript (local Whisper for videos without subtitles - measured first, see below),
   split into topics, with the claims, numbers, tools / products, steps, the hook (first 3 s) and the call to action.
 - **Video = what is shown**: per shot (the lab already finds every cut) a short description by Claude - setting /

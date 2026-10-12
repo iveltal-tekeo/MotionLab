@@ -77,8 +77,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `report.py <name>` merge `review.json` into `events.json` and re-render `report.html`
 - `feedback.py <name> <file>` parse feedback text, archive it, map verdicts (and possible-miss answers) to events
 - `sheet.py <name> <start> <end>` contact sheet + preview for any frame range (missed effects)
-- `content.py transcript <name> | show <name> [a b]` what a video says (0.4, step 1): the platform's subtitles ->
-  `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); stays local
+- `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
+  -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
+  views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
 - `prompts.py list | show | import | annotate | rate | template` the prompt library (0.4; MCP `prompts`)
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth

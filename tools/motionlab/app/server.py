@@ -40,7 +40,7 @@ from motionlab.util import LAB, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 6                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 7                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"

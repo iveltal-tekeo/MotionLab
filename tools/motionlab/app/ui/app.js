@@ -177,7 +177,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 6;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 7;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -321,6 +321,55 @@ class Player {
   step(d) { this.v.pause(); this.seek(this.frame + d); }
   toggle() { if (this.v.paused) this.v.play().catch(() => {}); else this.v.pause(); }
   playRange(a, b) { this.range = [a, b]; this.seek(a); this.v.play().catch(() => {}); }
+}
+
+// ---- the analysis page's Content tab (0.3.5): what the video says (transcript, clickable frame + timecode) and how it
+// performs (views against the channel's followers). tools\content.py writes both; they stay on this PC.
+function contentTab(el, R, P) {
+  el.dataset.done = '1';
+  const C = R.content || {}, T = C.transcript, S = C.stats, fps = R.video.fps;
+  const n = v => v == null ? '–' : Number(v).toLocaleString('en-US');
+  const big = (v, l, t = '') => `<div class="stat" title="${esc(t)}"><div class="n">${v}</div><div class="l">${esc(l)}</div></div>`;
+  el.innerHTML = `<div class="grid g2 cgrid"><div class="panel"><div class="row sp"><h2>How it performs</h2>
+      <button class="btn sm" data-cjob="content_stats">${S ? 'Update the numbers' : 'Get the numbers'}</button></div>
+      ${S ? `<div class="row stats">${big(n(S.views), 'views')}${big(S.outperformer != null ? S.outperformer + '×' : '–', 'views ÷ followers', 'the outperformer score: views against the channel\'s followers (above 1 = it reached beyond the channel)')}
+          ${big(n(S.views_per_day), 'views a day', S.days_online ? `over ${S.days_online} days online` : '')}${big(n(S.likes), 'likes')}${big(n(S.comments), 'comments')}${big(n(S.followers), 'followers')}</div>
+        <div class="small muted" style="margin-top:8px">${esc(S.uploader || '')} · ${esc(S.platform || '')} · online since ${esc(S.upload_date || '?')} · numbers from ${esc(S.fetched)}${(S.history || []).length > 1 ? ` · ${S.history.length} fetches kept` : ''}</div>`
+        : '<div class="muted small">Not fetched yet: one quick request to the video\'s page (no download).</div>'}
+      <pre class="log" hidden></pre></div>
+    <div class="panel"><h2>Coming with 0.3.5</h2><div class="small muted">Topics, claims, the hook (first 3 s) and the call to action, every shot described, text on screen, your notes per video, and collections of ~10 videos per subject with their common topics - see What's new / docs\\plans.md.</div></div></div>
+    <div class="panel" style="margin-top:14px"><div class="row sp"><h2>What it says</h2>
+      <div class="row">${T ? `<input type="search" id="cq" placeholder="Search the words…" style="width:240px">` : ''}
+        <button class="btn sm" data-cjob="content_transcript">${T ? 'Fetch again' : 'Get the transcript'}</button></div></div>
+      ${T ? `<div class="small muted" style="margin-bottom:8px">${plural(T.lines.length, 'line')} · ${plural(T.words || 0, 'word')} · ${T.kind === 'auto' ? 'the platform\'s automatic captions' : 'uploaded subtitles'} (${esc(T.lang || '?')})${T.word_timings ? ', timed per word' : ''} · fetched ${esc(T.fetched || '')} · click a line to see it in the player</div>
+        <div class="tlines"><table class="t click"><tbody id="clines">${T.lines.map((l, i) => `<tr data-i="${i}" data-f="${l.start}"><td class="fr">f${l.start}</td><td class="tc">${tc(l.start, fps)}</td><td>${esc(l.text)}</td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="muted small">No transcript yet: the platform\'s own subtitles are fetched (a few seconds, no download). Videos without subtitles wait for the lab\'s own speech-to-text (planned).</div>'}
+      <pre class="log" hidden></pre></div>`;
+  $$('[data-cjob]', el).forEach(b => b.onclick = async () => {
+    const pre = b.closest('.panel').querySelector('pre.log');
+    const j = await startJob(b.dataset.cjob, {name: R.name, again: !!T}, false);
+    if (!j) return;
+    b.disabled = true; pre.hidden = false; pre.textContent = '';
+    followJob(j.id, pre, jj => {
+      toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err');
+      if (jj.status === 'done') api('/api/reference/' + encodeURIComponent(R.name)).then(NR => { R.content = NR.content; contentTab(el, R, P); });
+      else b.disabled = false;
+    });
+  });
+  if (!T) return;
+  const rows = $$('#clines tr', el);
+  rows.forEach(tr => tr.onclick = () => { if (P) { P.v.pause(); P.seek(+tr.dataset.f); $('#player').scrollIntoView({behavior: 'smooth', block: 'center'}); } });
+  const q = $('#cq', el);
+  q.oninput = () => { const s = q.value.toLowerCase(); rows.forEach((tr, i) => { tr.hidden = !!s && !T.lines[i].text.toLowerCase().includes(s); }); };
+  let last = -1;
+  if (P) P.on(f => {                                        // the line being said is marked while the video plays
+    let k = -1;
+    for (let i = 0; i < T.lines.length && T.lines[i].start <= f; i++) if (f <= T.lines[i].end) k = i;
+    if (k === last) return;
+    if (last >= 0 && rows[last]) rows[last].classList.remove('sel');
+    if (k >= 0 && rows[k]) rows[k].classList.add('sel');
+    last = k;
+  });
 }
 
 // ============================================================================================ timeline
@@ -824,6 +873,7 @@ async function pageRef(main, name, selId, openMisses) {
   </div>
   <div class="rtabs" id="rtabs"><button class="rtab" data-tab="review">Review effects <span class="cnt" id="cnt-review"></span></button>
     ${NM.length ? '<button class="rtab misstab" data-tab="misses">Possible misses <span class="cnt" id="cnt-misses"></span></button>' : ''}
+    <button class="rtab" data-tab="content" title="what the video says and how it performs (0.3.5)">Content</button>
     <div class="grow"></div><span class="hint">Your verdicts are saved as you go <span id="saved"></span></span></div>
   <div class="review" id="tab-review">
     <div class="rlist">
@@ -841,6 +891,7 @@ async function pageRef(main, name, selId, openMisses) {
       explains - places where the lab may have missed an effect. Most are nothing, but only you can say. For each one: look at the frames
       (before · at · after - click one to show it in the player), read Claude's check, then answer.</div>
     <div class="misses" id="misses"></div></div>` : ''}
+  <div class="contentarea" id="tab-content" hidden></div>
   <div class="fbbar"><div class="prog"><div class="row sp small"><span id="progt"></span></div><div class="bar"><i id="progb"></i></div></div>
     <button class="btn" id="missedb">Missed effects / general notes</button>
     ${nfa ? '<button class="btn ghost" id="agreefa" title="optional: tells Claude its “not an effect” calls were right">Agree with all false alarms</button>' : ''}
@@ -1001,6 +1052,8 @@ async function pageRef(main, name, selId, openMisses) {
     tab = t;
     $$('#rtabs .rtab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
     $('#tab-review').hidden = t !== 'review'; if ($('#tab-misses')) $('#tab-misses').hidden = t !== 'misses';
+    $('#tab-content').hidden = t !== 'content';
+    if (t === 'content' && !$('#tab-content').dataset.done) contentTab($('#tab-content'), R, P);
     if (scroll) $('#rtabs').scrollIntoView({behavior: 'smooth', block: 'start'});
   };
   $$('#rtabs .rtab').forEach(b => b.onclick = () => showTab(b.dataset.tab, true));
