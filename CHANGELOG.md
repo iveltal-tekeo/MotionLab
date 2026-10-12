@@ -17,6 +17,16 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 - **Add prompts without a format**: paste a prompt as it is, or attach a .txt, .md, .docx or PDF. MotionLab guesses
   its kind (you can change it), *Let Claude sort it* reads a whole guide and saves every prompt in it, and Claude
   reviews and splits the new prompts by itself.
+- **Prompts: what each one is for, and Delete**: mark a prompt for vlog, talking head, SFX, transitions, colour...
+  (or your own words); the page filters by it and has a search. *Use it, change…* asks Claude for a new prompt that
+  keeps what worked and changes what you say. *Delete* moves a prompt to the Recycle Bin.
+- **Create video** (*Videos*): start a video from a reference (its edit with your clips) or from a prompt in your
+  library, with your clips or a new folder for them; Claude Code does the work.
+- **How did it turn out?** (a video's *Overview*): Good / OK / Bad and a note for the sound, SFX, colour, captions,
+  motion graphics, effects, pacing and overall. Claude reads it next time (*Improve it with Claude* fixes the parts
+  you marked), and the prompt the video came from shows it as "Used in".
+- **A tidier, livelier app**: the sidebar is grouped (Home, Videos · Media · Additional · Tools), Storage moved into
+  Settings, and every section has its own colour, softer cards and dialogs that pop in. It stays as light as before.
 
 ## 0.3.2 - 2026-10-12 - Graphics you can edit, captions, and graphics in DaVinci Resolve
 

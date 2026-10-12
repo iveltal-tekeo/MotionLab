@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 8                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 9                                       # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -364,7 +364,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/knowledge/card":
             return self._json(KN.card_detail(arg("id", "")))
         if path == "/api/prompts":
-            return self._json(PR.overview())
+            return self._json({**PR.overview(), "used": data.prompt_uses()})
         if path == "/api/text":
             return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
         if path == "/api/thumb":
@@ -413,6 +413,14 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/picks", path)
         if m:
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
+        if path == "/api/projects/new":                   # Videos > Create video: an empty folder for the clips
+            return self._json(data.new_project(str(body.get("name", ""))))
+        m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)   # how it turned out / what it is made from
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2] == "outcome":
+                return self._json(data.save_outcome(name, body))
+            return self._json({"made_from": data.add_made_from(name, str(body.get("kind", "")), str(body.get("id", "")))})
         m = re.fullmatch(r"/api/project/([^/]+)/overlay", path)            # Videos > Graphics: Save settings
         if m:
             return self._json(data.save_overlay_values(urllib.parse.unquote(m[1]), str(body.get("overlay", "")),
@@ -470,8 +478,21 @@ class Handler(BaseHTTPRequestHandler):
             if src:
                 src = {k: str(src.get(k) or "").strip()[:500] for k in ("type", "creator", "link")
                        if src.get(k) or k == "type" or src.get("type") == "creator"}
+            tags = [str(x)[:40] for x in body.get("tags") or [] if isinstance(x, str)]
             return self._json({"saved": PR.import_paste(str(body.get("text", "")), str(body.get("kind") or ""), src,
-                                                         str(body.get("file") or "")[:200])})
+                                                         str(body.get("file") or "")[:200], tags)})
+        if path == "/api/prompts/tags":                   # a card's "for": what the prompt is for (vlog, SFX, ...)
+            tags = [str(x).strip().lower()[:40] for x in body.get("tags") or [] if isinstance(x, str) and x.strip()]
+            return self._json(PR.update(str(body.get("id", "")), tags=tags[:12]))
+        if path == "/api/prompts/delete":                 # a card's Delete (the user's click, after a confirm)
+            pid = str(body.get("id", ""))
+            r = trash.recycle([PR.path_of(pid)])
+            with open(APPDIR / "deleted.log", "a", encoding="utf-8") as f:
+                f.write(f"{data.stamp()} prompt {pid} moved to the Recycle Bin: {r['moved']}"
+                        + (f" - not moved: {r['left']}" if r["left"] else "") + "\n")
+            if r["left"]:
+                raise ValueError(r["why"] or "the prompt could not be moved to the Recycle Bin")
+            return self._json({"deleted": pid})
         if path == "/api/prompts/guess":                  # the Add dialog's kind, while the user types
             return self._json({"kind": PR.guess_kind(str(body.get("text", ""))[:200_000])})
         if path == "/api/prompts/file":                   # an attached .txt / .md / .docx / .pdf -> its text

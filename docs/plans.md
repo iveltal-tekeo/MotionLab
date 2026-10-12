@@ -254,11 +254,16 @@ CHANGELOG.md `## Unreleased` until 0.3.3 ships.
 - **Done - adding prompts**: *Add prompts* takes any text or files (.txt / .md / .docx read by the app; a PDF goes
   to Claude), the kind guessed (28 of the 29 saved prompts right), *Let Claude sort it* for a guide (`/write-prompt
   import`), Claude reviews and splits afterwards; `prompts.py kind` fixes a wrong kind. The old format still works.
-- **Asked 2026-10-12, in progress**: Delete for prompts; prompts by purpose (vlog, talking head, SFX, transitions...)
-  and "use this prompt but change ..."; *Create video* on the Videos page (from a reference or a prompt); after a
-  video is made, "how did it turn out?" per part (sound, colour, SFX, captions, motion graphics, effects) so the lab
-  learns what worked; the sidebar regrouped (Home, Videos | Media: References, Prompts | Library, Knowledge | Tools:
-  Jobs, Settings - Storage inside Settings); livelier colours and dialogs without making the app heavier.
+- **Done - asked 2026-10-12**: Delete for prompts (Recycle Bin); what a prompt is for (its tags: purpose chips +
+  search on the page, *For: Edit*) and *Use it, change…* (`/write-prompt <kind> like <id> - change: ...`); *Create
+  video* on the Videos page (a reference or a prompt -> your clips / a new folder -> `/recreate-video <ref> <p>` or
+  `prompt:<id> <p>`, recorded in `build\made_from.json`); "How did it turn out?" per part (sound, SFX, colour,
+  captions, motion graphics, effects, pacing, overall) -> `build\outcome.json`, read by Claude
+  (`/recreate-video improve <p>`) and shown on the prompt it came from; the sidebar regrouped (Home, Videos | Media:
+  References, Prompts | Additional: Library, Knowledge | Tools: Jobs, Settings - Storage is a Settings tab); a colour
+  per section, softer cards, dialogs that pop in (CSS only). UI test 16/16 in headless Edge.
+- **Next for prompts (0.4.1)**: a structure per purpose (a vlog prompt is built differently from a talking-head, SFX
+  or transition prompt) learned from the "how did it turn out?" answers - needs a few made videos rated first.
 - **Open - found in the review, the user decides**:
   - Logins: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once here: HTTP 429 + "Sign in to
     confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;

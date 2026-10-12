@@ -593,7 +593,78 @@ def project(name: str) -> dict:
             "verifies": verifies, "resolve": resolve, "check_sheets": sheets,
             "boards": [rel(p) for p in sorted((b / "boards").glob("*.jpg"))] if (b / "boards").exists() else [],
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],
-            "library_picks": picks.get("picks", {}), "picks_updated": picks.get("updated")}
+            "library_picks": picks.get("picks", {}), "picks_updated": picks.get("updated"),
+            "made_from": read_json(b / "made_from.json", []) or [], "outcome": read_json(b / "outcome.json", {}) or {}}
+
+
+# ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out
+ASPECTS = ("sound", "sfx", "colour", "captions", "graphics", "effects", "pacing", "overall")
+
+
+def new_project(name: str) -> dict:
+    """Videos > Create video: an empty projects\\<name>\\ for the user's clips (nothing else is written)."""
+    name = safe_name(str(name).strip())
+    if name.startswith((".", " ")) or name.endswith((".", " ")):
+        raise ValueError("a name cannot start or end with a dot or a space")
+    d = PROJECTS / name
+    if d.exists():
+        raise ValueError(f"projects\\{name} exists already - pick it in the list")
+    d.mkdir(parents=True)
+    return {"name": name, "folder": rel(d)}
+
+
+def add_made_from(name: str, kind: str, ref: str) -> list:
+    """What a video is made from (Create video): a reference (an analysis) or a prompt - build\\made_from.json."""
+    if kind not in ("reference", "prompt"):
+        raise ValueError("made from a reference or a prompt")
+    ref = safe_name(ref) if kind == "reference" else ref
+    if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script)-\d{3,}", ref):
+        raise ValueError(f"not a prompt id: {ref!r}")
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    p = d / "build" / "made_from.json"
+    items = [x for x in (read_json(p, []) or []) if not (x.get("kind") == kind and x.get("id") == ref)]
+    items.append({"kind": kind, "id": ref, "date": stamp()})
+    write_json_atomic(p, items)
+    return items
+
+
+def save_outcome(name: str, body: dict) -> dict:
+    """How a finished video turned out, per part (sound, SFX, colour, captions, graphics, effects, pacing, overall):
+    good / ok / bad + a note -> build\\outcome.json. Claude reads it (what worked); the prompts it was made from show
+    it on their cards."""
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    p = d / "build" / "outcome.json"
+    cur = read_json(p, {}) or {}
+    asp = cur.get("aspects", {})
+    for k, v in (body.get("aspects") or {}).items():
+        if k not in ASPECTS or not isinstance(v, dict):
+            continue
+        rating = v.get("rating") or None
+        if rating not in (None, "good", "ok", "bad"):
+            raise ValueError(f"rating: good, ok or bad (got {rating!r})")
+        asp[k] = {"rating": rating, "note": str(v.get("note") or "").strip()[:500]}
+    out = {"aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp()}
+    write_json_atomic(p, out)
+    return out
+
+
+def prompt_uses() -> dict:
+    """prompt id -> the videos made from it and how they turned out (the Prompts page's 'Used in')."""
+    out: dict = {}
+    for d in sorted(PROJECTS.iterdir()) if PROJECTS.exists() else []:
+        b = d / "build"
+        made = read_json(b / "made_from.json", []) if (b / "made_from.json").exists() else []
+        if not made:
+            continue
+        asp = (read_json(b / "outcome.json", {}) or {}).get("aspects", {})
+        for x in made or []:
+            if x.get("kind") == "prompt":
+                out.setdefault(x.get("id"), []).append({"project": d.name, "aspects": asp})
+    return out
 
 
 # ================================================================================================= library / docs

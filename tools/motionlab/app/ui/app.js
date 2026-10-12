@@ -157,7 +157,7 @@ const PAGES = [
   [/^#?\/?$/, pageHome, 'home'], [/^#\/refs$/, pageRefs, 'refs'],
   [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)))?$/, pageRef, 'refs'], [/^#\/projects$/, pageProjects, 'projects'],
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'projects'], [/^#\/library$/, pageLibrary, 'library'],
-  [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'storage'],
+  [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/knowledge$/, pageKnowledge, 'knowledge'],
   [/^#\/prompts(?:\/(\w+))?$/, pagePrompts, 'prompts']];
 async function route() {
@@ -167,6 +167,7 @@ async function route() {
     const m = h.match(rx);
     if (!m) continue;
     $$('#side a[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
+    document.body.dataset.page = nav;                         // the section's accent colour (app.css)
     const main = $('#main'); main.scrollTop = 0; main.innerHTML = '<div class="loading">Loading…</div>';
     try { await fn(main, ...m.slice(1).map(x => x && decodeURIComponent(x))); }
     catch (e) { main.innerHTML = `<div class="empty">This page could not load: ${esc(e.message)}</div>`; }
@@ -178,7 +179,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 8;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 9;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -819,7 +820,9 @@ function recreateModal(R) {
     const say = () => `/recreate-video ${R.name} ${($('#rcp', el) || {}).value || ''}`.trim();
     const upd = () => { $('#rcsay', el).textContent = say(); };
     if ($('#rcp', el)) { $('#rcp', el).onchange = upd; upd(); }
-    if ($('#rcgo', el)) $('#rcgo', el).onclick = () => { openClaude(say(), 'recreate', `${R.title} with ${$('#rcp', el).value}`); closeModal(); };
+    if ($('#rcgo', el)) $('#rcgo', el).onclick = async () => {
+      try { await api(`/api/project/${encodeURIComponent($('#rcp', el).value)}/made_from`, {kind: 'reference', id: R.name}); } catch (e) { /* the recipe still opens */ }
+      openClaude(say(), 'recreate', `${R.title} with ${$('#rcp', el).value}`); closeModal(); };
   });
 }
 
@@ -1122,14 +1125,89 @@ async function pageRef(main, name, selId, openMisses) {
 // ============================================================================================ projects
 async function pageProjects(main) {
   const ps = await api('/api/projects');
-  main.innerHTML = `<div class="head"><div><h1>Videos</h1><div class="sub">Your own footage, edited in the style of a reference - rendered by the lab (option 1) and rebuilt in DaVinci Resolve (option 2).</div></div></div>
+  main.innerHTML = `<div class="head"><div><h1>Videos</h1><div class="sub">Your own videos: made from a reference (its edit with your clips) or from a prompt in your library - rendered by the lab and rebuilt in DaVinci Resolve.</div></div>
+      <div class="row"><button class="btn pri" id="cvnew"><svg class="i"><use href="#i-claude"/></svg>Create video</button><button class="btn" data-open="projects">Folder</button></div></div>
     ${ps.length ? `<div class="cards">${ps.map(p => `<div class="card refcard"><a class="clink" href="#/project/${encodeURIComponent(p.name)}">
       ${p.thumb ? `<img class="thumb" src="${fileUrl(p.thumb)}" loading="lazy">` : ''}
       <div class="cb"><div class="ct">${esc(p.name)}</div>
       <div class="small muted">${p.clips} clips · ${bytes(p.footage_bytes)} of footage</div>
       <div class="small">${p.plans.length} edit version${p.plans.length === 1 ? '' : 's'} · ${p.renders.length} render${p.renders.length === 1 ? '' : 's'}${p.resolve.length ? ' · in Resolve: ' + esc(p.resolve.join(', ')) : ''}</div></div></a>
       <div class="cact"><a class="btn sm" href="#/project/${encodeURIComponent(p.name)}">Open</a><div class="grow"></div>${delBtn('project', p.name)}</div></div>`).join('')}</div>`
-      : '<div class="empty">No videos yet. They are made with Claude: put your clips in projects\\&lt;name&gt;\\, open a reference and click “Recreate with my footage”.</div>'}`;
+      : '<div class="empty">No videos yet. <b>Create video</b> starts one - from a reference you analysed or from a prompt in your library.</div>'}`;
+  $('#cvnew', main).onclick = () => createVideoModal();
+}
+
+// Create video (0.3.3): from a reference (its edit, 1:1, with your clips) or from a prompt (a script, a hook, a shot);
+// the video's folder records what it is made from (build\made_from.json) and Claude Code does the work
+async function createVideoModal(pre = {}) {
+  const [refs, PRM, ps] = await Promise.all([api('/api/references'), api('/api/prompts'), api('/api/projects')]);
+  const KL = Object.fromEntries(PRM.kinds.map(k => [k.id, k.label]));
+  let from = pre.from || '', pick = pre.pick || '';
+  modal(`<h2>Create a video</h2>
+    <div class="cvchoice">
+      <button class="cvopt" data-from="reference"><svg class="ic"><use href="#i-refs"/></svg><b>Use a reference</b>
+        <span>Recreate a video you analysed - its cuts, effects and timing - with your own clips</span></button>
+      <button class="cvopt" data-from="prompt"><svg class="ic"><use href="#i-prompts"/></svg><b>Use a prompt</b>
+        <span>Start from a prompt in your library - a talking script, a hook, a shot for a video model</span></button></div>
+    <div id="cvpick"></div>
+    <div id="cvclips" hidden><h3>Your clips</h3>
+      <div class="row"><select id="cvp" style="max-width:320px">${ps.map(x => `<option value="${esc(x.name)}">${esc(x.name)} (${x.clips} clips)</option>`).join('')}<option value="">+ a new video…</option></select>
+        <input type="text" id="cvname" placeholder="name, e.g. cooking vlog 1" hidden style="max-width:260px"><button class="btn sm" id="cvmk" hidden>Create the folder</button></div>
+      <div class="small muted" id="cvhint" style="margin-top:6px"></div></div>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Start in Claude Code</button>
+      <span class="small muted mono" id="cvsay"></span></div>`, el => {
+    const sel = $('#cvp', el), name = $('#cvname', el), mk = $('#cvmk', el);
+    const say = () => from === 'reference' ? `/recreate-video ${pick} ${sel.value}` : `/recreate-video prompt:${pick} ${sel.value}`;
+    const upd = () => {
+      const ready = from && pick && sel.value;
+      $('#cvgo', el).disabled = !ready; $('#cvsay', el).textContent = ready ? say() : '';
+      const nw = !sel.value; name.hidden = mk.hidden = !nw;
+      const P = ps.find(x => x.name === sel.value);
+      $('#cvhint', el).innerHTML = nw ? 'A new folder in <code>projects\\</code> - copy your clips into it after creating it.'
+        : P && !P.clips ? `<span class="amber">No clips in projects\\${esc(P.name)} yet</span> - copy them in (Folder), then start.` : 'Your clips are only read, never changed.';
+    };
+    const showPick = () => {
+      $$('.cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.from === from));
+      const box = $('#cvpick', el);
+      if (from === 'reference') {
+        const rs = refs.filter(r => !r.test);
+        box.innerHTML = `<h3>Which reference?</h3>${rs.length ? `<div class="cvlist">${rs.map(r => `<label class="cvitem${r.name === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(r.name)}" ${r.name === pick ? 'checked' : ''}>
+          ${r.thumb ? `<img src="${fileUrl(r.thumb)}" loading="lazy">` : ''}<span><b>${esc(r.title)}</b><br><span class="small muted">${esc(r.category_label || '')} · ${r.events} effects · ${(r.duration_s || 0).toFixed(0)} s</span></span></label>`).join('')}</div>`
+          : '<div class="empty">No analysed reference yet - <a href="#/refs">References</a>: download and analyse one first.</div>'}`;
+      } else if (from === 'prompt') {
+        box.innerHTML = `<h3>Which prompt?</h3><input type="search" id="cvq" placeholder="Search your prompts…" style="max-width:340px">
+          <div class="cvlist" id="cvpl"></div>`;
+        const draw = q => { $('#cvpl', box).innerHTML = PRM.items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60)
+          .map(x => `<label class="cvitem${x.id === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === pick ? 'checked' : ''}>
+            <span><b class="mono">${esc(x.id)}</b> ${esc(x.title || '')} <span class="tag">${esc(KL[x.kind] || x.kind)}</span>${(x.tags || []).map(g => ` <span class="fchip sm">${esc(g)}</span>`).join('')}<br>
+            <span class="small muted">${esc(x.text.slice(0, 150))}${x.text.length > 150 ? '…' : ''}</span></span></label>`).join('') || '<div class="empty">No prompt matches.</div>'; wire(); };
+        $('#cvq', box).oninput = debounce(e => draw(e.target.value.trim().toLowerCase()), 150);
+        draw('');
+      }
+      wire();
+      $('#cvclips', el).hidden = !from; upd();
+    };
+    const wire = () => $$('input[name=cvr]', el).forEach(r => r.onchange = () => {
+      pick = r.value; $$('.cvitem', el).forEach(x => x.classList.toggle('on', $('input', x).checked)); upd(); });
+    $$('.cvopt', el).forEach(b => b.onclick = () => { if (from !== b.dataset.from) pick = ''; from = b.dataset.from; showPick(); });
+    sel.onchange = upd;
+    mk.onclick = async () => {
+      try {
+        const r = await api('/api/projects/new', {name: name.value});
+        ps.push({name: r.name, clips: 0});
+        sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${esc(r.name)} (new)</option>`); sel.value = r.name;
+        openPath(r.folder); upd(); toast(`projects\\${r.name} created - copy your clips into it`, 'ok');
+      } catch (e) { toast(e.message, 'err'); }
+    };
+    $('#cvgo', el).onclick = async () => {
+      try {
+        await api(`/api/project/${encodeURIComponent(sel.value)}/made_from`, {kind: from, id: pick});
+        openClaude(say(), 'recreate', `${from === 'reference' ? pick : 'prompt ' + pick} → ${sel.value}`);
+        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
+      } catch (e) { toast(e.message, 'err'); }
+    };
+    if (from) showPick(); else upd();
+  });
 }
 
 async function pageProject(main, name, tab = 'overview') {
@@ -1149,8 +1227,35 @@ async function pageProject(main, name, tab = 'overview') {
   return projOverview(el, P);
 }
 
+function outcomePanel(P) {
+  const O = (P.outcome || {}).aspects || {}, mf = P.made_from || [];
+  return `<div class="panel outcome"><div class="row sp"><h2>How did it turn out?</h2><span class="small muted">${(P.outcome || {}).updated
+      ? 'saved ' + esc(P.outcome.updated) : 'tell the lab what worked - Claude reads it next time, and the prompt it came from shows it'}</span></div>
+    ${mf.length ? `<div class="small" style="margin-bottom:8px">Made from: ${mf.map(x => x.kind === 'reference'
+      ? `<a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : `<a href="#/prompts/${esc(x.id.split('-')[0])}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
+    <div class="ogrid">${ASPECTS.map(([k, l]) => { const a = O[k] || {};
+      return `<div class="orow" data-k="${k}"><span class="olab">${esc(l)}</span><span class="row" style="gap:4px">${['good', 'ok', 'bad'].map(r =>
+        `<button class="btn sm vrb ${r}${a.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</span>
+        <input type="text" class="onote" placeholder="what to keep or change (Enter saves)" value="${esc(a.note || '')}"></div>`; }).join('')}</div>
+    <div class="row" style="margin-top:10px">${claudeBtn(`/recreate-video improve ${P.name}`, 'Improve it with Claude (the parts marked OK / Bad)', 'recreate', P.name)}</div></div>`;
+}
+function wireOutcome(el, P) {
+  const save = async (k, rating, note, msg) => {
+    try { P.outcome = await api(`/api/project/${encodeURIComponent(P.name)}/outcome`, {aspects: {[k]: {rating, note}}}); toast(msg, 'ok'); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  $$('.orow', el).forEach(row => {
+    const k = row.dataset.k, note = $('.onote', row);
+    $$('[data-r]', row).forEach(b => b.onclick = () => {
+      const was = b.classList.contains('on');
+      $$('[data-r]', row).forEach(x => x.classList.toggle('on', x === b && !was));
+      save(k, was ? null : b.dataset.r, note.value, was ? 'Removed' : 'Saved');
+    });
+    note.onkeydown = e => { if (e.key === 'Enter') save(k, ($('[data-r].on', row) || {dataset: {}}).dataset.r || null, note.value, 'Note saved'); };
+  });
+}
 function projOverview(el, P) {
-  el.innerHTML = `<div class="grid g2"><div class="panel"><h2>Your footage (read-only)</h2>
+  el.innerHTML = `${outcomePanel(P)}<div class="grid g2" style="margin-top:14px"><div class="panel"><h2>Your footage (read-only)</h2>
     <table class="t"><thead><tr><th>ID</th><th>File</th><th>Format</th><th class="num">Length</th><th class="num">Size</th></tr></thead><tbody>
     ${P.sources.map(s => `<tr><td class="mono amber">${s.id}</td><td>${esc(s.name)}${s.exists ? '' : ' <span class="bad">missing</span>'}</td>
       <td class="small muted">${esc(s.resolution || '')} · ${s.fps || '?'} fps</td>
@@ -1162,6 +1267,7 @@ function projOverview(el, P) {
     <h3>Storyboards (one frame per second of every clip)</h3>
     <div class="sheets" style="grid-template-columns:repeat(3,1fr)">${P.boards.map((b, i) => `<img src="${fileUrl(b)}" data-i="${i}" loading="lazy">`).join('')}</div>`;
   $$('.sheets img', el).forEach(img => img.onclick = () => lightbox(P.boards.map(b => ({src: b})), +img.dataset.i));
+  wireOutcome(el, P);
 }
 
 function projRenders(el, P) {
@@ -1439,30 +1545,47 @@ async function pageLibrary(main) {
 // the prompt library: proven prompts per kind, split into their structure; Claude writes new ones like them
 // (/write-prompt). One file per prompt in knowledge\local\prompts\ - the ratings live there too.
 const PSRC = {tested: 'tested by you', creator: 'creator', written: 'written by Claude'};
+// what a prompt is for (its tags): the page filters by it, /write-prompt copies examples made for the same thing first
+const PURPOSES = ['vlog', 'talking head', 'music video', 'ad / product', 'cinematic b-roll', 'transitions', 'sfx',
+                  'captions', 'motion graphics', 'colour', 'tutorial', 'storytelling'];
+const ASPECTS = [['sound', 'Sound & music'], ['sfx', 'SFX'], ['colour', 'Colour'], ['captions', 'Captions'],
+                 ['graphics', 'Motion graphics'], ['effects', 'Effects & transitions'], ['pacing', 'Pacing & cuts'], ['overall', 'Overall']];
 async function pagePrompts(main, kind) {
   const R = await api('/api/prompts');
   const K = R.kinds.find(x => x.id === kind) || R.kinds.find(x => x.count) || R.kinds[0];
-  const items = R.items.filter(p => p.kind === K.id);
-  const unsplit = items.filter(p => !p.structure).map(p => p.id);
+  const all = R.items.filter(p => p.kind === K.id), used = R.used || {};
+  const unsplit = all.filter(p => !p.structure).map(p => p.id);
+  const fors = Object.entries(all.flatMap(p => p.tags || []).reduce((a, x) => (a[x] = (a[x] || 0) + 1, a), {})).sort((a, b) => b[1] - a[1]);
+  let want = '', q = '';
+  try { want = localStorage.getItem('ml.pfor.' + K.id) || ''; } catch (e) { /* no storage: show all */ }
+  if (want && !fors.some(([x]) => x === want)) want = '';
+  const main_ = fors.filter(([x, n]) => PURPOSES.includes(x) || n > 1).slice(0, 14), rest = fors.filter(f => !main_.includes(f));
   const src = p => { const s = p.source || {};
     return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
       : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(esc).join(', ')}</span>` : ''}`; };
   const stars = n => `<span class="stars" title="Claude's review of the prompt text: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
+  const usedLine = u => `<div class="small pused">Used in <a href="#/project/${encodeURIComponent(u.project)}">${esc(u.project)}</a>${Object.keys(u.aspects || {}).length
+    ? ': ' + ASPECTS.filter(([k]) => (u.aspects[k] || {}).rating).map(([k, l]) => `<span class="vr ${u.aspects[k].rating}">${esc(l)} ${u.aspects[k].rating === 'ok' ? 'OK' : u.aspects[k].rating}</span>`).join(' ')
+    : ' - <span class="muted">not rated yet (the video\'s Overview: “How did it turn out?”)</span>'}</div>`;
   const card = p => { const res = p.result || {}, rv = p.review || {};
     return `<div class="panel pcard" data-id="${esc(p.id)}">
-      <div class="row phead"><b class="mono">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
+      <div class="row phead"><b class="mono pid">${esc(p.id)}</b><b>${esc(p.title || '')}</b>${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
         ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
         <span class="grow"></span>${rv.stars != null ? stars(rv.stars) : ''}<span class="small dim">${esc(p.updated || p.added || '')}</span></div>
+      <div class="row pfor"><span class="small muted">For:</span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join('') || '<span class="small dim">not set</span>'}
+        <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
       ${rv.stars != null && rv.why ? `<div class="small prev"><b>Claude's review ${rv.stars}/5:</b> ${esc(rv.why)}${rv.fix ? ` <span class="amber">Fix: ${esc(rv.fix)}</span>` : ''}</div>` : ''}
       ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
       <pre class="ptext">${esc(p.text)}</pre>
       ${p.structure ? `<div class="pslots">${p.structure.map(x => `<span class="pslot"><b>${esc(x.slot)}</b> ${esc(x.text)}</span>`).join('')}</div>`
         : '<div class="small muted">Not split into its structure yet.</div>'}
+      ${(used[p.id] || []).map(usedLine).join('')}
       <div class="row prate"><span class="small muted">What it made:</span>
         ${['good', 'ok', 'bad'].map(r => `<button class="btn sm${res.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}
         <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}">
         <span class="grow"></span><button class="btn sm" data-copy>Copy</button>
-        ${claudeBtn(`/write-prompt ${p.kind} like ${p.id}`, 'Write one like this', 'prompt', p.id)}</div></div>`; };
+        <button class="btn sm cl" data-remix title="Claude keeps what worked in this prompt and changes what you say"><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>
+        <button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button></div></div>`; };
   main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Prompts that worked - for video and image models, hooks and talking scripts - each split into its
       structure, so Claude writes a new one for your need in a structure that already worked. Text only: paste the prompt into the site
       (Higgsfield, Seedance, Kling, ...), then rate what it made. ★ = Claude's review of the text (will a model do what it asks?);
@@ -1470,21 +1593,87 @@ async function pagePrompts(main, kind) {
       <div class="row"><button class="btn pri" id="padd">Add prompts</button>${claudeBtn(`/write-prompt ${K.id}`, 'Write a new prompt', 'prompt', K.id, 'cl')}
         ${R.items.length ? `<button class="btn" data-open="${esc(R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
     <div class="tabs">${R.kinds.map(k => `<a href="#/prompts/${k.id}" class="${k.id === K.id ? 'on' : ''}">${esc(k.label)} <span class="dim">${k.count}</span></a>`).join('')}</div>
+    ${all.length ? `<div class="row pfilter"><input type="search" id="pq" placeholder="Search: words, title, model, creator…">
+      <span class="small muted">For:</span><button class="fchip${want ? '' : ' on'}" data-f="">all</button>${main_.map(([x, n]) => `<button class="fchip${x === want ? ' on' : ''}" data-f="${esc(x)}">${esc(x)} <span class="dim">${n}</span></button>`).join('')}
+      ${rest.length ? `<select id="pmore" class="fsel"><option value="">more… (${rest.length})</option>${rest.map(([x, n]) => `<option value="${esc(x)}"${x === want ? ' selected' : ''}>${esc(x)} (${n})</option>`).join('')}</select>` : ''}
+      ${fors.length ? '' : '<span class="small dim">nothing set yet - a card\'s “For: Edit”</span>'}</div>` : ''}
     ${unsplit.length ? `<div class="claude" style="margin-bottom:12px"><span>${plural(unsplit.length, 'prompt')} not split into structure yet: ${unsplit.map(esc).join(', ')}</span>
-      ${claudeBtn(`/write-prompt split ${unsplit.join(' ')}`, 'Split them in Claude Code', 'prompt', 'split')}</div>` : ''}
-    ${items.map(card).join('') || `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
-      or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`}`;
+      ${claudeBtn(`/write-prompt split ${unsplit.join(' ')}`, 'Review and split them in Claude Code', 'prompt', 'split')}</div>` : ''}
+    <div id="plist"></div>`;
   $('#padd').onclick = () => addPromptsModal();
-  $$('.pcard', main).forEach(c => {
-    const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
-    const save = async (rating, msg) => {
-      try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
-        p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); }
+  const match = p => (!want || (p.tags || []).includes(want)) && (!q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, ...(p.tags || [])]
+    .join(' ').toLowerCase().includes(q));
+  const draw = () => {
+    const items = all.filter(match), list = $('#plist', main);
+    list.innerHTML = items.map(card).join('') || (all.length ? '<div class="empty">No prompt matches - clear the search or pick “all”.</div>'
+      : `<div class="empty">No ${esc(K.label.toLowerCase())} prompts yet. Add the ones you tested (with how they turned out)
+      or a creator's public prompt with its link - about 10 per kind is a good start.<div class="small muted" style="margin-top:6px">Structure Claude splits them into: ${K.slots.map(esc).join(' · ')}</div></div>`);
+    $$('.pcard', list).forEach(c => {
+      const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
+      const save = async (rating, msg) => {
+        try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
+          p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); }
+        catch (e) { toast(e.message, 'err'); }
+      };
+      $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
+      note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
+      $('[data-copy]', c).onclick = () => copy(p.text);
+      $('[data-remix]', c).onclick = () => remixModal(p);
+      $('[data-for]', c).onclick = () => forModal(p, () => route());
+      $('[data-pdel]', c).onclick = () => delPromptModal(p);
+    });
+  };
+  const pq = $('#pq', main);
+  if (pq) pq.oninput = debounce(() => { q = pq.value.trim().toLowerCase(); draw(); }, 150);
+  const setWant = w => {
+    want = w; $$('[data-f]', main).forEach(x => x.classList.toggle('on', x.dataset.f === w));
+    const more = $('#pmore', main); if (more) more.value = rest.some(([x]) => x === w) ? w : '';
+    try { localStorage.setItem('ml.pfor.' + K.id, want); } catch (e) { /* not remembered */ }
+    draw();
+  };
+  $$('[data-f]', main).forEach(b => b.onclick = () => setWant(b.dataset.f));
+  if ($('#pmore', main)) $('#pmore', main).onchange = e => setWant(e.target.value);
+  draw();
+}
+// "Use it, change...": Claude keeps what worked in a prompt (structure, wording) and changes what the user says
+function remixModal(p) {
+  modal(`<h2>Use ${esc(p.id)}, change…</h2>
+    <p class="hint">Claude keeps what worked in ${esc(p.id)} - its structure and wording - and changes what you write here. Leave it empty for a new one just like it.</p>
+    <pre class="ptext" style="max-height:150px">${esc(p.text)}</pre>
+    <textarea id="rmx" rows="4" style="width:100%" placeholder="e.g. the same camera move, but a cooking vlog at night - 9:16, 8 seconds"></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="rmgo"><svg class="i"><use href="#i-claude"/></svg>Open in Claude Code</button></div>`, el => {
+    $('#rmx', el).focus();
+    $('#rmgo', el).onclick = () => {
+      const c = $('#rmx', el).value.trim().replace(/\s+/g, ' ');
+      openClaude(`/write-prompt ${p.kind} like ${p.id}${c ? ' - change: ' + c : ''}`, 'prompt', p.id); closeModal();
+    };
+  });
+}
+function forModal(p, done) {
+  const own = (p.tags || []).filter(x => !PURPOSES.includes(x));
+  modal(`<h2>What is ${esc(p.id)} for?</h2>
+    <p class="hint">Pick or type: the Prompts page filters by it, and Claude copies examples made for the same thing first.</p>
+    <div class="row">${PURPOSES.map(x => `<button class="fchip${(p.tags || []).includes(x) ? ' on' : ''}" data-t="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+    <input type="text" id="fown" style="margin-top:10px" placeholder="your own, comma-separated - e.g. make money online, fitness" value="${esc(own.join(', '))}">
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="fsave">Save</button></div>`, el => {
+    $$('[data-t]', el).forEach(b => b.onclick = () => b.classList.toggle('on'));
+    $('#fsave', el).onclick = async () => {
+      const tags = [...$$('[data-t].on', el).map(b => b.dataset.t), ...$('#fown', el).value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)];
+      try { const r = await api('/api/prompts/tags', {id: p.id, tags}); p.tags = r.tags; closeModal(); toast('Saved', 'ok'); done(); }
       catch (e) { toast(e.message, 'err'); }
     };
-    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
-    note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
-    $('[data-copy]', c).onclick = () => copy(p.text);
+  });
+}
+function delPromptModal(p) {
+  modal(`<h2>Delete ${esc(p.id)}?</h2>
+    <p>${esc(p.title || p.text.slice(0, 160) + (p.text.length > 160 ? '…' : ''))}</p>
+    <p class="hint">It goes to the Windows Recycle Bin - restore it from there if you change your mind.</p>
+    <div class="row" style="margin-top:10px"><button class="btn danger" id="pdel">Delete</button><button class="btn" data-close>Cancel</button></div>`, el => {
+    $('[data-close]', el).onclick = closeModal;
+    $('#pdel', el).onclick = async () => {
+      try { await api('/api/prompts/delete', {id: p.id}); closeModal(); toast(`${p.id} moved to the Recycle Bin`, 'ok'); route(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
   });
 }
 // Add prompts (0.3.3): paste any text or attach files - no format to follow. One text = one prompt (lines of only
@@ -1505,6 +1694,7 @@ function addPromptsModal() {
       <label class="small">Kind <select id="pkind"><option value="">guess from the text</option>${Object.entries(KN).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label>
       <label class="small">Where from <select id="psrc"><option value="tested">tested by me</option><option value="creator">a creator's (name / link)</option><option value="found">found somewhere</option></select></label>
       <input type="text" id="pwho" placeholder="creator name and/or link" hidden style="min-width:260px"></div>
+    <div class="row" style="margin-top:8px;gap:6px"><span class="small muted">For:</span>${PURPOSES.map(x => `<button class="fchip sm" data-t="${esc(x)}">${esc(x)}</button>`).join('')}</div>
     <label class="small" style="display:block;margin-top:10px"><input type="checkbox" id="prv" checked> Then let Claude review it and split it into its structure (opens Claude Code)</label>
     <div class="row" style="margin-top:10px"><button class="btn pri" id="psave">Save</button>
       <button class="btn" id="psort" title="A guide or a file with several prompts, or a PDF: Claude reads it and saves every prompt in it">Let Claude sort it</button>
@@ -1519,6 +1709,8 @@ function addPromptsModal() {
       kind.options[0].textContent = k ? `guess: ${KN[k]}` : 'guess from the text';
     }, 400);
     txt.oninput = guess;
+    $$('[data-t]', el).forEach(b => b.onclick = () => b.classList.toggle('on'));
+    const tags = () => $$('[data-t].on', el).map(b => b.dataset.t);
     src.onchange = () => { who.hidden = src.value !== 'creator'; if (!who.hidden) who.focus(); };
     const source = () => {
       if (src.value === 'tested') return {type: 'tested'};
@@ -1551,7 +1743,7 @@ function addPromptsModal() {
     $('#psave', el).onclick = async () => {
       if (!txt.value.trim()) { say(files.length ? 'A PDF has no text here - use <b>Let Claude sort it</b>' : 'Paste a prompt or attach a file first', 'bad'); return; }
       try {
-        const r = await api('/api/prompts/import', {text: txt.value, kind: kind.value, source: source(), file: files.length === 1 ? files[0].file : ''});
+        const r = await api('/api/prompts/import', {text: txt.value, kind: kind.value, source: source(), file: files.length === 1 ? files[0].file : '', tags: tags()});
         done(r.saved.map(x => x.id), r.saved[0].kind);
       } catch (e) { say(esc(e.message), 'bad'); }
     };
@@ -1566,7 +1758,7 @@ function addPromptsModal() {
         }
         if (!rels.length) { say('Paste a guide or attach a file first', 'bad'); return; }
         const s = source(), from = s.type === 'tested' ? 'tested by me' : s.creator || s.link ? `creator ${s.creator} ${s.link}`.trim() : '';
-        openClaude(`/write-prompt import ${rels.join(' ')}${kind.value ? ` - kind ${kind.value}` : ''}${from ? ` - source: ${from}` : ''}`, 'prompt', 'import');
+        openClaude(`/write-prompt import ${rels.join(' ')}${kind.value ? ` - kind ${kind.value}` : ''}${from ? ` - source: ${from}` : ''}${tags().length ? ` - for: ${tags().join(', ')}` : ''}`, 'prompt', 'import');
         say('Claude Code opened: it reads the file(s), saves every prompt in them and reviews them. The Prompts page shows them when it is done.', 'ok');
         $('#psave', el).remove(); $('#psort', el).remove();
       } catch (e) { say(esc(e.message), 'bad'); }
@@ -1602,14 +1794,17 @@ async function pageJobs(main, id) {
 }
 
 // ============================================================================================ storage
+// Settings has two tabs since 0.3.3: General (#/settings) and Storage (#/storage - the old page, out of the sidebar)
+const setTabs = cur => `<div class="tabs">${[['#/settings', 'General'], ['#/storage', 'Storage']].map(([h, l]) =>
+  `<a href="${h}" class="${h === cur ? 'on' : ''}">${l}</a>`).join('')}</div>`;
 async function pageStorage(main) {
-  main.innerHTML = '<div class="loading">Measuring every folder of the lab… (a few seconds)</div>';
+  main.innerHTML = `<div class="head"><div><h1>Settings</h1></div></div>${setTabs('#/storage')}<div class="loading">Measuring every folder of the lab… (a few seconds)</div>`;
   const S = await api('/api/storage');
   const COL = {source: '#4fb3ff', keep: '#3ecf8e', cache: '#ffc400', checks: '#ff9f43', finals: '#c56bff', env: '#5c5c66'};
   const used = S.units.reduce((a, u) => a + u.total, 0);
   const target = u => u === 'tools\\selftest' ? 'selftest' : u.split('\\').pop();
-  main.innerHTML = `<div class="head"><div><h1>Storage</h1><div class="sub">The lab uses ${bytes(used)} · ${bytes(S.free_bytes)} free of ${bytes(S.total_bytes)} on this drive.
-    Only data the lab can rebuild can be freed; your videos and everything learned are never touched.</div></div></div>
+  main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">Storage: the lab uses ${bytes(used)} · ${bytes(S.free_bytes)} free of ${bytes(S.total_bytes)} on this drive.
+    Only data the lab can rebuild can be freed; your videos and everything learned are never touched.</div></div></div>${setTabs('#/storage')}
     <div class="row small" style="margin-bottom:10px">${S.cats.map(c => `<span class="chip"><i class="sw" style="background:${COL[c]}"></i>${c}</span>`).join('')}
       <span class="hint">source = your videos · keep = results and knowledge · cache = rebuildable · checks = comparison videos · finals = full renders</span></div>
     <div class="panel"><table class="t"><thead><tr><th>Folder</th><th></th>${S.cats.map(c => `<th class="num">${c}</th>`).join('')}<th class="num">total</th><th></th></tr></thead><tbody>
@@ -1710,7 +1905,7 @@ async function pageSettings(main) {
   const S = await api('/api/settings');
   const st = S.settings;
   main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">The programs the lab uses and your download preferences -
-    saved in <span class="mono">settings.json</span> in the lab folder (yours, not part of the shared app).</div></div></div>
+    saved in <span class="mono">settings.json</span> in the lab folder (yours, not part of the shared app).</div></div></div>${setTabs('#/settings')}
   <div class="panel"><div class="row sp"><h2>Programs</h2><button class="btn sm" id="recheck">Check again</button></div>
     <table class="t tools"><thead><tr><th>Program</th><th></th><th>Found at</th><th>Version</th><th>What for · how to get it</th></tr></thead><tbody>
     ${S.tools.map(t => `<tr><td><b>${esc(t.label)}</b><div class="need">${esc(t.need)}</div></td>

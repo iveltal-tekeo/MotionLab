@@ -1,7 +1,7 @@
 ---
 name: recreate-video
-description: MotionLab - recreate a reference video's edit 1:1 with the user's own footage (same song, same cuts, effects and timing) as a lab render, then optionally as an editable DaVinci Resolve Studio project. Use for "/recreate-video <reference> <project>" or when the user asks to rebuild / remake / recreate a reference with their clips.
-argument-hint: <reference analysis name> <project folder name>
+description: MotionLab - recreate a reference video's edit 1:1 with the user's own footage (same song, same cuts, effects and timing) as a lab render, then optionally as an editable DaVinci Resolve Studio project; also make a video from a prompt of the library, and improve a made video from the user's "how did it turn out?". Use for "/recreate-video <reference> <project>", "/recreate-video prompt:<id> <project>", "/recreate-video improve <project>", or when the user asks to rebuild / remake / recreate a reference with their clips.
+argument-hint: <reference analysis name> <project folder name> | prompt:<id> <project> | improve <project>
 ---
 
 # /recreate-video
@@ -9,6 +9,20 @@ argument-hint: <reference analysis name> <project folder name>
 Arguments: `$ARGUMENTS` = the reference (a folder in `analysis\`) and the project (a folder in `projects\` with the
 user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work from `C:\MotionLab` with
 `.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh.
+
+Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 0.3.3):
+- `prompt:<id> <project>` - a video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is
+  for). By kind: **script / hook** = a talking video - the user records it (or has: clips in the project), then
+  speech to text (`tools\speech.py`), captions (`overlay.py captions`) and graphics from the words (the
+  `talking-head-pack` example: beats from the transcript, `overlay.py fit`), an edit plan; **shot / image** = for a
+  video / image model - write the variants with `/write-prompt` (text only, the user generates them on the site),
+  then edit what they drop into the project. Ask once what is missing (length, format, music). Same hard rules.
+- `improve <project>` - read `projects\<project>\build\outcome.json` (the user's good / ok / bad + notes per part:
+  sound, sfx, colour, captions, graphics, effects, pacing, overall) and `made_from.json`; keep what was rated good,
+  change what was rated OK / bad as the notes say (a new edit version, never overwrite the last one); when the video
+  came from a prompt, add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
+- In every mode, read `build\outcome.json` of the user's earlier videos made from the same reference / prompt first:
+  repeat what they liked, avoid what they rated bad.
 
 Only "1:1" exists today (same song, same frames). "By feel" (use the reference as a template for the user's own
 story, length and music) is planned for v0.5 - say so if the user asks for it, and offer 1:1 or a free edit.

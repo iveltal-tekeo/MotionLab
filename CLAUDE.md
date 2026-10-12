@@ -108,9 +108,11 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (edit its STAGES / VERDICT when the state changes)
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
-`MotionLab.bat` = a local server + an Edge app window: Home, References (download, analyse, the review page with
-verdicts and possible misses, Delete), Videos (the user's edits, renders, graphics + their settings, Resolve check-up, library picks), Prompts, Library,
-Knowledge (Share), Jobs, Storage, Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude
+`MotionLab.bat` = a local server + an Edge app window, sidebar in the user's order (0.3.3): Home, Videos (Create
+video from a reference or a prompt, renders, graphics + their settings, Resolve check-up, library picks, "How did it
+turn out?" per part -> `build\outcome.json`) | Media: References (download, analyse, the review page with verdicts
+and possible misses, Delete), Prompts (purposes, Use it change…, Delete) | Additional: Library, Knowledge (Share) |
+Tools: Jobs, Settings (+ Storage tab). The app runs the lab's own tools as jobs; Claude's parts run in Claude
 Code windows the app opens with a fixed first message and an effort level per task (Settings > Claude Code).
 
 ## Conventions

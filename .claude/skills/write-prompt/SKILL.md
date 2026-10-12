@@ -13,6 +13,11 @@ argument-hint: split <ids> | import <files> | <shot|image|hook|script> [like <id
   prompt in it ("Collected files" in section 1; `source.file` = the file's name; the source the user picked, else
   ask once), then split and review the new ones. Tell the user the new ids per kind.
 - `<kind>` or `<kind> like <id>` -> write a new prompt (section 3; `like` = start from that example)
+  - `... like <id> - change: <what>` (the app's *Use it, change…*): keep that prompt's structure, wording and what
+    worked; change only what the user wrote; say in one line what changed.
+- A prompt's `tags` = what it is for (vlog, talking head, sfx, transitions, colour, ... or the user's own): copy
+  examples with the same tags and model first. Videos made from a prompt keep how they turned out per part in
+  `projects\<p>\build\outcome.json` (the Prompts page shows it as "Used in"): repeat the parts rated good, fix bad.
 - `shot <reference> f<a>-<b>` -> a shot prompt filled from a reference's frames (section 4)
 - empty -> ask what they need: a new prompt (which kind) or adding examples
 The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scripts\python`; don't explore the lab.

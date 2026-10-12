@@ -12,8 +12,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   refs, docs, library, knowledge only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
-  (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), and - on a click - a Desktop / Start-menu shortcut, git pull
-  (Update) / commit + push of `knowledge\` only (Share), and Delete (below).
+  (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
+  `projects\<name>\` (*Create video*), `projects\<p>\build\made_from.json` + `outcome.json`, and - on a click - a Desktop / Start-menu shortcut, git pull
+  (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
+  `/api/prompts/delete`, the one file to the Recycle Bin, logged).
 - Delete (v0.2.5, `trash.py`): the user's Delete buttons on References (a reference = its analysis folder + its video
   when that lies in `refs\`; a download nobody analysed), Videos (a whole `projects\<name>\`) and Renders (one render
   / side-by-side in `build\`). GET `/api/delete?kind=&name=` = the plan the dialog shows (every item, size, warnings:
@@ -22,6 +24,17 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   FOF_ALLOWUNDO; Windows asks before deleting for good when something does not fit). Refused while a job runs; only
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
   logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
+- Sidebar (the user's order, 0.3.3): Home, Videos | Media: References, Prompts | Additional: Library, Knowledge |
+  Tools: Jobs, Settings (Storage = Settings' second tab, `setTabs`; #/storage still works). Each page sets
+  `body[data-page]` -> its accent colour (`--acc`, app.css "0.3.3: a livelier look": CSS only, no images / scripts,
+  motion off with prefers-reduced-motion). Videos: **Create video** (`createVideoModal`: Use a reference | Use a
+  prompt -> your clips (a project, or *+ a new video* = POST `/api/projects/new`, an empty folder) -> POST
+  `/api/project/<p>/made_from` + Claude `/recreate-video <ref> <p>` or `/recreate-video prompt:<id> <p>`); a video's
+  Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
+  overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
+  `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
+  Prompts: what each is for (its tags; purpose chips + search filter the page, *For: Edit* = POST
+  `/api/prompts/tags`), *Use it, change…* = `/write-prompt <kind> like <id> - change: ...`, Delete. API_LEVEL 9.
 - Pages (routes keep their old names #/refs, #/projects): Home (status, update banner, next steps = each reference's
   next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**

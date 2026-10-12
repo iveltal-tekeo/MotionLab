@@ -244,19 +244,21 @@ def guess_kind(text: str) -> str:
     return "hook" if len((text or "").split()) <= 40 else "script"
 
 
-def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str = "") -> list[dict]:
+def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str = "",
+                tags: list | None = None) -> list[dict]:
     """What the Add dialog gets -> records for `add`. Any text (0.3.3): one prompt, or several when lines of only
     '---' separate them; kind = `kind` or guessed from the words; source = `source` (default: tested by you) + the
-    attached `file`. The older format still works - blocks that start with 'PROMPT <n>', `key: value` lines (kind,
+    attached `file`; `tags` = what it is for (vlog, talking head, SFX, transitions...). The older format still works - blocks that start with 'PROMPT <n>', `key: value` lines (kind,
     model, source, result, title, tags), then the prompt (after a 'text:' line, or simply after the key lines).
     Raises ValueError naming the prompt that is wrong; nothing is saved then."""
     text = str(text or "").replace("\r", "")
     if kind and kind not in KINDS:
         raise ValueError(f"kind must be one of {', '.join(KINDS)} (got {kind!r})")
     src = {**(source or {"type": "tested"}), **({"file": file} if file else {})}
+    tags = [str(x).strip().lower() for x in (tags or []) if str(x).strip()][:12]
     if not _HEAD.search(text):
         parts = [p.strip() for p in re.split(r"(?m)^\s*-{3,}\s*$", text) if p.strip()]
-        out = [{"kind": kind or guess_kind(p), "text": p, "source": dict(src)} for p in parts]
+        out = [{"kind": kind or guess_kind(p), "text": p, "source": dict(src), "tags": list(tags)} for p in parts]
         for n, r in enumerate(out, 1):
             try:
                 _check(r)
@@ -288,7 +290,8 @@ def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str
             rec = {"kind": k, "title": kv.get("title", ""), "model": kv.get("model", "").strip(" -") or "",
                    "source": {**_source(kv["source"]), **({"file": file} if file else {})} if kv.get("source")
                    else dict(src), "result": _result(kv.get("result", "")),
-                   "text": body.strip(), "tags": [t.strip() for t in kv.get("tags", "").split(",") if t.strip()]}
+                   "text": body.strip(),
+                   "tags": [t.strip() for t in kv.get("tags", "").split(",") if t.strip()] + list(tags)}
             if rec["model"].lower() in ("none", "n/a"):
                 rec["model"] = ""
             _check(rec)
@@ -298,9 +301,18 @@ def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str
     return out
 
 
-def import_paste(text: str, kind: str = "", source: dict | None = None, file: str = "") -> list[dict]:
+def import_paste(text: str, kind: str = "", source: dict | None = None, file: str = "",
+                 tags: list | None = None) -> list[dict]:
     """Parse the whole paste first (nothing is saved when one prompt is wrong), then save every prompt."""
-    return [add(r) for r in parse_paste(text, kind, source, file)]
+    return [add(r) for r in parse_paste(text, kind, source, file, tags)]
+
+
+def path_of(pid: str) -> Path:
+    """The file of a saved prompt (the app's Delete moves it to the Recycle Bin)."""
+    p = _path(pid)
+    if not p.exists():
+        raise ValueError(f"no prompt {pid}")
+    return p
 
 
 # ------------------------------------------------------------------------------------------------ attached files
