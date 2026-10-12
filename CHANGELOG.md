@@ -4,6 +4,23 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## 0.3.4 - 2026-10-12 - Prompts you can check, improve and run
+
+- **A new kind: Brief for Claude** - a prompt that tells Claude how to make or edit a whole video (length, feel,
+  footage, colour, pacing, SFX, graphics...). Until now such a prompt landed under "Talking script", which is
+  something else: the words you say on camera. MotionLab recognises briefs (in Spanish too), and you can change any
+  prompt's kind by clicking its badge.
+- **Claude's check, in plain words**: on every prompt, *Claude's check* lists each part - for a brief: long or short
+  and how long, story & hook, feel, footage, order, pacing & cuts, colour grading, music, SFX, motion graphics,
+  transitions, captions, where it ends up, what to ask you first - marked ✓ clear, ~ vague or ✗ missing, with a tip.
+  Write what you want next to any part and click **Optimize with Claude**: it writes a better version (the original
+  stays) - then **Run it** (a brief makes the video through *Create video*; a shot or image prompt is copied for the
+  site) and rate what it made.
+- **Tidier cards**: the kind as a coloured badge, a title, the prompt folded to a few lines (*Show all*), the check
+  folded into one line until you open it.
+- **Add prompts** asks first: *1. I have a prompt* (paste it or attach a file; Claude checks it) or *2. Generate a
+  new prompt from zero* (say what you want to make; Claude writes it from the best examples in your library).
+
 ## 0.3.3 - 2026-10-12 - Fixes, Create video, captions from your own words, a livelier app
 
 - **Captions from your own recordings** (*Videos > your video > Graphics > Captions...*): pick a video and MotionLab

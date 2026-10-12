@@ -34,7 +34,16 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
   `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
   Prompts: what each is for (its tags; purpose chips + search filter the page, *For: Edit* = POST
-  `/api/prompts/tags`), *Use it, change…* = `/write-prompt <kind> like <id> - change: ...`, Delete. API_LEVEL 9.
+  `/api/prompts/tags`), *Use it, change…* = `/write-prompt <kind> like <id> - change: ...`, Delete.
+  0.3.4 (the user: "make it more user friendly"): kind `brief` (Brief for Claude: how to make / edit a whole video)
+  first; the card = kind badge (click = `kindModal`, POST `/api/prompts/kind`) + title, the text folded (Show all),
+  **Claude's check** folded with counts (✓ clear / ~ vague / ✗ missing): a row per part in plain words
+  (`SLOT_LABEL`) - what the prompt says, Claude's tip, *what you want* (POST `/api/prompts/wishes` on change) -
+  then *Optimize with Claude* = `/write-prompt optimize <id>` (a new prompt, `made_from`; the card shows
+  "Optimized: ..."), *Check it again* = `/write-prompt analyse <id>`; *Run it* (brief / script / hook = Create video
+  with it picked; shot / image = copy for the site). *Add prompts* = 1) I have a prompt (the paste / file form;
+  Claude checks it after Save) 2) Generate a new prompt from zero (kind, what you want, for, model ->
+  `/write-prompt <kind> - want: ...`). API_LEVEL 10.
 - Pages (routes keep their old names #/refs, #/projects): Home (status, update banner, next steps = each reference's
   next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**

@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 9                                       # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 10                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -484,6 +484,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts/tags":                   # a card's "for": what the prompt is for (vlog, SFX, ...)
             tags = [str(x).strip().lower()[:40] for x in body.get("tags") or [] if isinstance(x, str) and x.strip()]
             return self._json(PR.update(str(body.get("id", "")), tags=tags[:12]))
+        if path == "/api/prompts/wishes":                 # Claude's check: what the user wants per item (then Optimize)
+            w = body.get("wishes") if isinstance(body.get("wishes"), dict) else {}
+            w = {str(k)[:40]: str(v).strip()[:1000] for k, v in list(w.items())[:30] if str(v).strip()}
+            return self._json(PR.update(str(body.get("id", "")), wishes=w))
+        if path == "/api/prompts/kind":                   # a card's kind, changed by the user (a new id of that kind)
+            return self._json(PR.set_kind(str(body.get("id", "")), str(body.get("kind", ""))))
         if path == "/api/prompts/delete":                 # a card's Delete (the user's click, after a confirm)
             pid = str(body.get("id", ""))
             r = trash.recycle([PR.path_of(pid)])

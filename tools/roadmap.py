@@ -37,7 +37,7 @@ STAGES = [
      "Recipes + Fusion macros checked in Resolve against 4AM. Later: install them as Resolve templates."),
     ("MVP for friends", "DONE", 4, "v0.2.5", "on GitHub",
      "Setup, sharing, review tab, Delete, Claude buttons with effort per task."),
-    ("Rebuild toolkit", "DONE", 3, "v0.3.3", "on GitHub",
+    ("Rebuild toolkit", "DONE", 3, "v0.3.4", "on GitHub",
      "Update button, colour, 3x renders, HTML graphics (settings, library, captions from your words), Create video, "
      "Prompts. Tested on GitHub."),
     ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",

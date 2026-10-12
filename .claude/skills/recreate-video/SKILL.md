@@ -12,7 +12,12 @@ user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work f
 
 Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 0.3.3):
 - `prompt:<id> <project>` - a video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is
-  for). By kind: **script / hook** = a talking video - the user records it (or has: clips in the project), then
+  for). By kind: **brief** = the user's own instructions for the whole video (length, feel, footage, order, pacing,
+  colour, music, SFX, graphics, transitions, captions, where it ends up): follow it part by part with the lab's
+  tools, ask its "questions first" part (and anything it leaves vague - its check on the Prompts page lists them)
+  in one message before building, say plainly what the lab cannot do yet instead of faking it, and write the
+  result where the brief says (a Resolve project only through `resolve_build.py`, docs\resolve_notes.md);
+  **script / hook** = a talking video - the user records it (or has: clips in the project), then
   speech to text (`tools\speech.py`), captions (`overlay.py captions`) and graphics from the words (the
   `talking-head-pack` example: beats from the transcript, `overlay.py fit`), an edit plan; **shot / image** = for a
   video / image model - write the variants with `/write-prompt` (text only, the user generates them on the site),

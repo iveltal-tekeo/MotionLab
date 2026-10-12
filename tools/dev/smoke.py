@@ -110,6 +110,27 @@ def check_prompts() -> None:
     except ValueError:
         refused = True
     ok(good and refused, "prompt library: any pasted text saves (kind guessed, --- separates), .docx text is read")
+    # 0.3.4: a brief for Claude (make / edit a whole video) is its own kind; Claude's check = slots with a status
+    brief_es = ("Quiero que crees una linea de tiempo en da vinci resolve y edites el video al estilo vlog con un mismo "
+                "lut, elimina silencios, añade b-roll, efectos de sonido y música, cortes dinámicos, 10-15 minutos")
+    brief_en = "Edit my Paris vlog in DaVinci Resolve: 8 minutes, fast cuts, a warm LUT, whoosh SFX, captions, music."
+    rec = {"kind": "brief", "text": "x", "source": {"type": "tested"}, "result": {},
+           "structure": [{"slot": "colour", "text": "one LUT", "status": "vague", "tip": "pick one"},
+                         {"slot": "sfx", "text": "", "status": "missing"}], "wishes": {"colour": "one warm LUT"}}
+    try:
+        P._check(rec)
+        P._check({**rec, "structure": [{"slot": "sfx", "text": "", "status": "maybe"}]})
+        statuses = False
+    except ValueError:
+        statuses = True
+    try:
+        P._check({**rec, "wishes": ["not", "a", "map"]})
+        wishes = False
+    except ValueError:
+        wishes = True
+    ok(P.guess_kind(brief_es) == "brief" and P.guess_kind(brief_en) == "brief" and "brief" in P.KINDS
+       and len(P.SLOTS["brief"]) >= 12 and statuses and wishes,
+       "prompt library: briefs for Claude are their own kind; the check's clear / vague / missing and wishes validate")
 
 
 def check_graphics() -> None:

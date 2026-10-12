@@ -62,6 +62,10 @@ prompts we have given and you have analysed structurally so we can generate good
 - **To do**:
   - **Text-model prompts** (Claude, ChatGPT, agents): a kind `agent` with its own slots - role, context, task, steps,
     constraints, output format, examples - so a prompt that worked in one chat becomes a template for the next.
+    **First part built in 0.3.4** (the user's Spanish London vlog brief had landed under "script"): kind `brief` =
+    the user tells Claude how to make / edit a whole video, 14 parts (format & length ... questions first); Claude's
+    check marks each part clear / vague / missing with a tip, the user writes what they want per part, *Optimize
+    with Claude* writes a new version (`made_from`), *Run it* = Create video. Still open: other agent prompts.
   - **Per category / specialty**: every prompt gets a specialty (the lab's categories - music video, vlog, cooking,
     ... - plus your own, e.g. "make money online", "fitness"); the page filters by it and `/write-prompt` copies
     examples of the same specialty and the same model first.

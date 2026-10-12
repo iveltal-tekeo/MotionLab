@@ -618,7 +618,7 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     if kind not in ("reference", "prompt"):
         raise ValueError("made from a reference or a prompt")
     ref = safe_name(ref) if kind == "reference" else ref
-    if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script)-\d{3,}", ref):
+    if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", ref):
         raise ValueError(f"not a prompt id: {ref!r}")
     d = PROJECTS / safe_name(name)
     if not d.is_dir():

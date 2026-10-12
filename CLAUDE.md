@@ -64,7 +64,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `recreate-video\`, `write-prompt\`, `whats-next\`
-- Repo files (v0.3.3): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
+- Repo files (v0.3.4): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
@@ -81,7 +81,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
-- `prompts.py list | show | import | annotate | rate | template` the prompt library (0.4; MCP `prompts`)
+- `prompts.py list | show | import | annotate | kind | rate | template` the prompt library (0.4; MCP `prompts`; kinds
+  brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's check per part)
 - `speech.py install | status | transcribe <video> [--names "..."] [--model small|base]` speech to text for your
   own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
   timecode in `projects\<p>\build\speech\`; `overlay.py captions --from <video>` uses it

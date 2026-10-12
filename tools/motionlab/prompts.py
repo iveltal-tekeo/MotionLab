@@ -18,8 +18,14 @@ from .util import LAB, read_json, safe_name, write_json
 
 FOLDER = "knowledge/local/prompts"                      # relative to the lab (the app's "Folder" button)
 HOME = LAB / FOLDER
-KINDS = {"shot": "Video-model shot", "image": "Image (still / start frame)", "hook": "Hook (first 3 s)",
-         "script": "Talking script"}
+KINDS = {"brief": "Brief for Claude", "shot": "Video-model shot", "image": "Image (still / start frame)",
+         "hook": "Hook (first 3 s)", "script": "Talking script"}      # brief first: the user's main use (0.3.4)
+# what each kind is, in words (the Add dialog and the kind chips' tooltips)
+KIND_HELP = {"shot": "one shot of AI video - for Seedance, Kling, Higgsfield...",
+             "image": "a still or a start frame - for Nano Banana, GPT Image, Kling Image...",
+             "hook": "the first 3 seconds you say or show",
+             "script": "the words you say on camera",
+             "brief": "you tell Claude how to make or edit a video: length, feel, colour, pacing, SFX, graphics..."}
 SOURCES = ("tested", "creator", "written")
 RATINGS = ("good", "ok", "bad")
 # the slots Claude splits a prompt into (a guide, not a schema: a prompt may skip some or need another). "references"
@@ -32,7 +38,12 @@ SLOTS = {
               "avoid"],
     "hook": ["pattern", "opening line", "on screen", "promise"],
     "script": ["hook", "problem", "points", "proof", "call to action"],
+    # 0.3.4: a brief = what Claude needs to make a whole video; Claude's check marks each clear / vague / missing
+    "brief": ["format & length", "story & hook", "feel / style", "footage", "order & structure", "pacing & cuts",
+              "colour", "music", "sfx", "motion graphics", "transitions", "captions & text", "deliverable",
+              "questions first"],
 }
+STATUSES = ("clear", "vague", "missing")                # Claude's check of one slot (structure[i].status)
 HOOK_PATTERNS = ["question", "bold claim", "number", "story", "contrarian", "demo", "curiosity gap", "call-out"]
 _LOCK = threading.RLock()
 
@@ -42,7 +53,7 @@ def _today() -> str:
 
 
 def _path(pid: str) -> Path:
-    m = re.fullmatch(r"(shot|image|hook|script)-(\d{3,})", str(pid))
+    m = re.fullmatch(r"(shot|image|hook|script|brief)-(\d{3,})", str(pid))
     if not m:
         raise ValueError(f"not a prompt id: {pid!r} (like shot-001, image-002, hook-003, script-004)")
     return HOME / m[1] / f"{pid}.json"
@@ -98,7 +109,11 @@ def _check(r: dict) -> None:
         raise ValueError(f"rating must be one of {', '.join(RATINGS)} (got {rating!r})")
     for x in r.get("structure") or []:
         if not (isinstance(x, dict) and x.get("slot") and "text" in x):
-            raise ValueError("structure = a list of {slot, text}")
+            raise ValueError("structure = a list of {slot, text} (+ status: clear / vague / missing, tip)")
+        if x.get("status") not in (None, *STATUSES):
+            raise ValueError(f"structure status: {', '.join(STATUSES)} (got {x.get('status')!r})")
+    if not isinstance(r.get("wishes") or {}, dict):
+        raise ValueError("wishes = {slot: what the user wants}")
     rv = r.get("review")
     if rv is not None:
         if not (isinstance(rv, dict) and isinstance(rv.get("stars"), int) and 0 <= rv["stars"] <= 5):
@@ -136,11 +151,13 @@ def add(rec: dict) -> dict:
 
 
 def update(pid: str, **changes) -> dict:
-    """Change fields of a saved prompt: title, model, structure, pattern, tags, workflow, step, notes, review (Claude's
-    stars), rating + note (the user's) - the text and the source stay as they were added."""
+    """Change fields of a saved prompt: title, model, structure (Claude's check: per slot what the prompt says +
+    status clear / vague / missing + a tip), pattern, tags, workflow, step, notes, review (Claude's stars), wishes
+    (the user's: {slot: what I want} - read by `/write-prompt optimize`), rating + note (the user's) - the text and
+    the source stay as they were added."""
     with _LOCK:
         r = get(pid)
-        for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes"):
+        for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes", "wishes"):
             if k in changes and changes[k] is not None:
                 r[k] = changes[k]
         if changes.get("review") is not None:
@@ -232,13 +249,23 @@ _LOOK = re.compile(r"\b(camera|c[aá]mara|shots?|close-?ups?|wide|lens|\d{2,3}\s
                    r"iluminaci[oó]n|9:16|16:9)\b", re.I)
 _STILL = re.compile(r"\b(photo(graph)?s?|portrait|image|still|render(ed)?|illustration|poster|thumbnail|8k|"
                     r"composition|texture|studio|depth of field|bokeh|foto|imagen)\b", re.I)
+_BRIEF = re.compile(r"\b(timeline|l[ií]nea de tiempo|resolve|da ?vinci|premiere|capcut|edit|edits|editing|edita|"
+                    r"edites|editar|edici[oó]n|b-?roll|luts?|grad(e|ing)|etalonaje|subt[ií]tulos|captions|cortes|"
+                    r"cuts|montaje|transitions?|transiciones|sfx|efectos de sonido|sound effects|m[uú]sica|music|"
+                    r"render|export(ar)?|proyecto|project|clips|footage|grabaciones|tomas|vlog|storytelling|"
+                    r"motion ?graphics|motion labs?|gui[oó]n|hook|retenci[oó]n|retention)\b", re.I)
 _SPOKEN = re.compile(r"\b(i|i'm|i've|you|you're|your|we|my|me|today|guys|subscribe|follow|comment)\b", re.I)
 
 
 def guess_kind(text: str) -> str:
-    """shot / image / hook / script from the words - the Add dialog's default; the user can pick another
-    (2026-10-12, the 29 prompts in the library: 28 right)."""
+    """shot / image / hook / script / brief from the words - the Add dialog's default; the user can pick another
+    (2026-10-12, the 29 prompts in the library: 28 right; the user's Spanish vlog brief: brief)."""
     motion, look, still, spoken = (len(rx.findall(text or "")) for rx in (_MOTION, _LOOK, _STILL, _SPOKEN))
+    hits = [m.group(0).lower() for m in _BRIEF.finditer(text or "")]
+    # instructions to make / edit a whole video: several different editing words, more than words said to a viewer
+    # (a talking script about editing says "editing" a lot, to "you guys")
+    if len(set(hits)) >= 4 and len(hits) > spoken and len(hits) >= motion + still:
+        return "brief"
     if motion + look + still >= max(2, spoken):                 # a description for a model
         return "image" if still and not motion else "shot"
     return "hook" if len((text or "").split()) <= 40 else "script"
@@ -365,7 +392,7 @@ def overview() -> dict:
     items = load_all()
     return {"kinds": [{"id": k, "label": v, "count": sum(1 for r in items if r["kind"] == k),
                        "slots": SLOTS[k]} for k, v in KINDS.items()],
-            "items": items, "template": TEMPLATE, "folder": FOLDER}
+            "items": items, "template": TEMPLATE, "folder": FOLDER, "help": KIND_HELP, "statuses": list(STATUSES)}
 
 
 def describe(r: dict, full: bool = False) -> str:
