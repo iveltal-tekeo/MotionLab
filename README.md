@@ -7,10 +7,11 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.3.1 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
-> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and an *Update available* button that
-> only offers versions GitHub's automatic tests passed. New in 0.3.1: a *Prompts* page - your proven prompts for
-> video models, hooks and scripts, and Claude writing new ones in the same structure.
+> **Status: v0.3.2 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
+> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and updates that only offer versions
+> GitHub's automatic tests passed. New in 0.3.2: graphics you edit in the app (text, colours, timing), a graphics
+> library, captions timed to the words, graphics tested inside DaVinci Resolve (swap in place), a *Content* tab
+> (transcript, views vs followers) and *Check for updates*. Since 0.3.1: a *Prompts* page.
 > Detection was tuned on music videos; other categories work and get better with every verdict you give.
 
 ## Contents
@@ -178,8 +179,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.3.2 motion graphics <-> DaVinci Resolve, 0.3.5 describe
-  video: what videos say and show, 0.4 yapping mode for talking-to-camera videos, 0.4.1 prompt generator for every
+- [docs/plans.md](docs/plans.md) - the planned versions (0.3.5 describe video: what videos say and show, 0.4 yapping mode for talking-to-camera videos, 0.4.1 prompt generator for every
   model, 0.5 templates by feel + macOS, 0.7 AI B-roll and cinematics), also shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 

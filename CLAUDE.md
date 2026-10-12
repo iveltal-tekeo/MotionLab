@@ -25,6 +25,7 @@ explore the whole lab:
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | recreate a reference with the user's footage (lab render, then Resolve) | the `/recreate-video` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), hooks, scripts | the `/write-prompt` skill |
+| what to do next: status, unreleased changes, roadmap, plans, ideas, what waits on the user | the `/whats-next` skill |
 | anything in DaVinci Resolve (resolve_build.py, Fusion comps, library.py test / install) | `docs\resolve_notes.md` |
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
 | knowledge sharing (cards, lessons, packs) | `docs\knowledge_sharing.md`, `knowledge\README.md` |
@@ -62,8 +63,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `organization.md` (repo/versioning plan), `roadmap.png` (`tools\roadmap.py` redraws it)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
-  `recreate-video\`, `write-prompt\`
-- Repo files (v0.3.1): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
+  `recreate-video\`, `write-prompt\`, `whats-next\`
+- Repo files (v0.3.2): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
@@ -81,6 +82,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
 - `prompts.py list | show | import | annotate | rate | template` the prompt library (0.4; MCP `prompts`)
+- `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
+  roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth
 - `knowledge.py cards | summary | pending | next-lesson-id | share | export | import <pack>`

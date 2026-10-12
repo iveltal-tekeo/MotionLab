@@ -111,9 +111,17 @@ talking-head creators AND edit the user's own recording that way.)
 - **Steps**: (1) 3-5 influential talking videos you pick, analysed by 0.3.5; Whisper measured on one of them
   (`tools\dev\whisper_bench.py`, tiny / base / small on a laptop setting) -> you pick the engine; (2) HEIT labels +
   the extras' numbers on them; (3) the yapping detectors + self-tests; (4) brief + the edit of your own recording.
-- **Needs first**: 0.3.5 (describe video), 0.3.2's captions.
+- **Needs first**: 0.3.5 (describe video, incl. the words of your own recordings for captions).
 
 ## 0.3.5 - planned - Describe video: videos as information
+
+**Carried over from 0.3.2** (released 2026-10-12, see CHANGELOG.md; its Resolve measurements: docs\resolve_notes.md):
+captions from the user's own recordings - captions from any .srt / .vtt work since 0.3.2; for a recording without
+one the lab needs speech to text: measure the engines on the user's talking video (script:
+`.app\dev\whisper\script_v1.txt`, the recording into `projects\talk_test\`; HyperFrames' `transcribe` = local
+whisper.cpp / Parakeet with `--to srt`, and faster-whisper `tools\dev\whisper_bench.py`, tiny / base / small, also on
+a laptop setting), the user picks one, then `overlay.py captions` takes a recording directly. Also: the SRT onto
+Resolve's subtitle track by script (test in the scratch project); the HTML clock's grain tuned to the lab's texture.
 
 **The user's notes (2026-10-09, again 2026-10-12):** "describe video: instead of focusing on our already existing
 analyze video for effects, transitions and pacing, we focus on analysing videos informatively (the content inside
@@ -125,7 +133,7 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
 
 - **Done (0.3.1)**: what is said - `tools\content.py transcript <name>` (the platform's subtitles, frame + timecode
   per line and word), MCP `transcript`.
-- **Built 2026-10-12** (not released): **performance** - `content.py stats <name>` (one `yt-dlp -J` request, no
+- **Shipped in 0.3.2** (2026-10-12): **performance** - `content.py stats <name>` (one `yt-dlp -J` request, no
   download; the transcript fetch saves them too) -> `content\stats.json`: views, likes, comments, the channel's
   followers, upload date, **views ÷ followers** (the outperformer score), views a day, and a history of every fetch.
   4AM: 3,434,506 views, 768,000 followers = 4.47x, 56,722 views a day since 2026-08-13. **App: a Content tab** on
@@ -167,86 +175,3 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
   - Other engines seen 2026-10-09: HyperFrames (in `tools\overlays\`, optional, needs Node) has a whisper.cpp
     `transcribe` command; ffmpeg's `whisper` filter is in BtbN builds but NOT in Gyan's essentials build (CI's; winget's
     full build: unchecked).
-
-## 0.3.2 - planned - Motion graphics <-> DaVinci Resolve, HyperFrames kept current
-
-(0.3.1 shipped the automatic tests on GitHub and the Prompts page: CHANGELOG.md.) **The user's picks (2026-10-11)**,
-in this order:
-
-1. **HyperFrames update check**: HyperFrames releases several times a day (0.8.142 pinned 2026-10-08, 0.8.149 on
-   2026-10-11), so never upgrade blindly. The app asks npm once a day (one small request: `registry.npmjs.org`) and
-   *Settings > Programs* shows the pinned and the newest version + a link to the release notes (GSAP too).
-   `overlay.py upgrade-test [<version>]` installs the candidate in a scratch folder (`.app\dev\`), renders the
-   examples in `tools\overlays\examples\` with it and with the pinned version, compares every frame (max 4/255, like
-   the 0.3.0 check) and the render time; only on PASS `overlay.py pin <version>` changes package.json / lock, then
-   the self-test + smoke, and the upgrade reaches friends through GitHub's tests like any change. No automatic
-   upgrades. Worth a look in the notes since the pin: `transcribe --to srt|vtt` + as a function (0.4 Whisper
-   decision), `render --gpu` (measure on a laptop setting too), A/V sync and clip-past-the-end fixes, and
-   HyperFrames' captions workflow for talking heads (0.4 yapping).
-   **Built 2026-10-11**: `motionlab\upstream.py` (npm dist-tags, `.app\upstream.json`; skipped when Settings'
-   update_mode is "off" and on test servers), `overlay.py versions | upgrade-test | pin`, Settings > Programs
-   ("HTML overlay packages": versions, *Test it* = job `overlays_upgrade_test`, *Adopt it (repo owner)*). First run:
-   HyperFrames 0.8.142 -> 0.8.149 + GSAP 3.14.2 -> 3.15.0 = PASS - the 4AM title and clock identical (0/255), the
-   10 s What's new clip max 2/255; render times the same. Pinned and shipped with 0.3.1 (the user's OK, 2026-10-11);
-   the Update button's `npm ci` now also fetches HyperFrames' Chrome when a new version wants another one.
-2. **Real Resolve test + refresh in place**: the overlays have never run inside a real Resolve build - place 4AM's
-   title and clock in a scratch Resolve project (none of the user's projects touched; ask when Resolve is free),
-   compare with the lab render frame by frame, and measure colour (overlays are sRGB, a Resolve timeline usually
-   Rec.709 gamma 2.4). Then *refresh in place*: re-render a changed overlay and swap it into the open timeline
-   (Resolve's replace-clip), keeping the user's hand edits (position, trims, opacity).
-   **Done 2026-10-12** (Resolve Studio 21.1.0.14, the user opened it; `tools\dev\resolve_overlay_test.py`, scratch
-   project `motionlab_scratch`, deleted afterwards; report `.app\dev\resolve-overlay\report.json`):
-   - **Same pictures as the lab** in Resolve's default colour science (DaVinci YRGB): 4AM's title + clock and a
-     colour check (patches at 100/75/50/25 % alpha, alpha ramps, a glow) over a gradient plate, every frame: max
-     1.65-2.28/255, mean 0.5-0.66 - the plate alone differs as much (1.65 / 0.66: Resolve's and ffmpeg's decode).
-     Frame-exact (the frame number coded in the graphic matched on every frame). Normal, Screen and Add match the lab
-     compositor; Resolve reads the clips as Alpha mode Straight by itself.
-   - **Resolve locks the files it uses** (Windows: access denied on replace), so a graphic in an open project could
-     not be rendered again. Now Resolve always gets a numbered copy, `<folder>\resolve\<name>_<id>.mov`
-     (`overlay_settings.resolve_copy`; resolve_build imports that too), and the lab's `<name>.mov` stays free.
-   - **Refresh in place works**: `MediaPoolItem.ReplaceClip` keeps position, length, Pan / Opacity edits and the
-     composite mode (also on Screen / Add clips). `overlay.py refresh <folder>` swaps every clip of a graphic in the
-     open project for the newest copy; measured end to end: a setting changed, rendered while Resolve used the old
-     copy, swapped, the hand edits (Pan -30, Opacity 70) kept, Resolve's frames = the lab's new render (max
-     1.65/255). App: Videos > Graphics > *Clip for Resolve (.mov)* and *Swap in DaVinci Resolve* (UI test 6/6).
-   - **Resolve Color Management** (YRGB Color Managed v2, SDR auto) changes every Rec.709 clip alike - overlay and
-     footage stay consistent with each other, but differ from the lab by up to 41/255 (mid-tones darker). No
-     per-clip Input Color Space makes it exact (closest: "Rec.709 (Scene)", mean 3.7, max 24/255); the projects the
-     lab builds use DaVinci YRGB.
-   - Alpha export (TIFF RGBA) from Resolve is premultiplied even with AlphaMode = straight (0.9-2.3/255 against
-     premultiplied, ~110/255 against straight).
-3. **Editable overlays + a graphics library**: an overlay's text, colours and timing as settings in its
-   `overlay.json` that the app edits (Videos page) -> a re-render job -> refresh in Resolve. Approved overlays saved
-   like the effect library (`library\`, the Library page) and imported into a Resolve **Power Bin**, so every project
-   has them.
-   **Built 2026-10-12** (not released): settings = HyperFrames' own composition variables (`data-composition-variables`
-   on `<html>`, `--variables-file --strict-variables` at render; string / color / number / boolean / enum checked);
-   `motionlab\overlay_settings.py` (stdlib: declared settings, validation, render state = a hash of index.html +
-   values + size, the library), `overlay.py new --from | settings | set | save | graphics`, render writes
-   `render.json` + `thumb.png`. 4AM's title and clock draw from their settings in JS (pixel font / seven segment
-   ported from `graphics.py`): at their defaults **0/255** against the 0.3.0 versions on every frame
-   (`tools\dev\examples_compare.py`). App: Videos > **Graphics** tab (thumbnail, rendered / settings changed, a form
-   per setting, Save, Render, Save to library) and Library > **Graphics** (yours + the examples, *Use in a video* =
-   a copy rendered right away; only videos whose edit has the graphic's size and rate). UI test on a test server
-   18/18. Power Bin: Resolve's scripting API has no Power Bin calls (21.1), so the library keeps the rendered .mov
-   for the user to drag in once. Still open: refresh in an open Resolve timeline (waits for item 2's test); a
-   graphic for another size / rate needs Claude to adapt it.
-4. **Captions both ways** (toward 0.4's yapping edit): styled / animated captions as a HyperFrames clip timed to the
-   words, or plain captions on Resolve's subtitle track (SRT) that the user can correct in Resolve.
-   **Built 2026-10-12, the part that needs no speech-to-text** (not released): `motionlab\captions.py` (the SRT /
-   WebVTT parser moved here from content.py, unchanged: 4AM's 72 lines identical; words -> short cues: sentence
-   ends, pauses, max 32 characters / 6 words, ~3 s; a plain SRT keeps its own lines, a much longer line is split in
-   even parts; [Music]-style tags dropped; frames + SRT out), `overlay.py captions <folder> --from <.srt | .vtt |
-   transcript.json>` (rate / size / length from the newest edit plan; writes assets\captions.js + <name>.srt), the
-   example graphic `tools\overlays\examples\captions\` (size-independent; styles: line with the spoken word
-   highlighted / words pop in / plain line; font, size, capitals, colours, outline, box, height, width, pop
-   length). Highlight timing checked frame by frame (the spoken word f8-17 (00:00:00:08 - 00:00:00:17) exactly).
-   App: Videos > Graphics > *Captions from a subtitle file* (job `overlay_captions`; the same name again = new
-   words, style kept) and a *Subtitles for Resolve (.srt)* button. UI test 12/12.
-   **Still open**: (a) the words of the user's own recordings - the engine is chosen after measuring on a talking
-   video the user picks (0.3.5 / 0.4; HyperFrames' `transcribe` = local whisper.cpp / Parakeet with `--to srt` is a
-   candidate next to faster-whisper); until then any SRT works (Resolve Studio's *Create Subtitles from Audio*,
-   CapCut, YouTube); (b) importing the SRT onto Resolve's subtitle track by script - with item 2's Resolve test.
-
-Also: tune the HTML clock's grain to the lab's texture (geometry and timing already match); whatever friends report
-after updating. Ideas still to test: [ideas.md](ideas.md).

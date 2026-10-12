@@ -4,6 +4,41 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## 0.3.2 - 2026-10-12 - Graphics you can edit, captions, and graphics in DaVinci Resolve
+
+- **Graphics with settings** (*Videos > your video > Graphics*): every HTML graphic of a video - titles, clocks,
+  lower thirds - shows a picture of itself and a form with what you can change: text, colours, size, position and
+  timing in frames. *Save*, then *Render*, and the next render of your edit uses it; the card says when a graphic
+  needs rendering again. 4AM's pixel title and seven-segment clock are now editable too (any text, any colour),
+  and at their old settings they come out pixel for pixel as before.
+- **A graphics library** (*Library > Graphics*, at the top): the graphics you saved from a video (*Save to
+  library*) and the examples that come with MotionLab. *Use in a video* copies one into a video and renders it.
+- **Captions** (*Graphics > Captions from a subtitle file*): give it an .srt or .vtt of your video's words (from
+  YouTube, CapCut, or DaVinci Resolve's *Create Subtitles from Audio*) and MotionLab makes styled captions timed to
+  the words - the spoken word highlighted, words popping in, or a plain line; font, size, colours, outline, a box
+  and the height on screen are settings - plus the same captions as an .srt for Resolve's subtitle track
+  (*Subtitles for Resolve*). The word highlight changes on exactly the right frame. Captions straight from your own
+  recordings (speech to text) come with 0.3.5.
+- **Graphics in DaVinci Resolve - tested inside Resolve**: the graphics look the same in Resolve as in the lab's
+  renders (within 2/255, frame-exact, normal / screen / add blending). Resolve keeps the files it uses open, so
+  *Clip for Resolve* gives it a numbered copy to drag into your project, and after you change and render a graphic,
+  *Swap in DaVinci Resolve* replaces it in the open project - its place, length, size, opacity and blend mode on
+  your timeline stay. (A project with Resolve's Color Management on shows every Rec.709 clip a little darker, the
+  graphics as much as your footage.)
+- **Content tab** on every analysed video (a first part of 0.3.5): how it performs - views, likes, comments, the
+  channel's followers and *views ÷ followers* (above 1 = it reached past the channel) - and what it says: the
+  transcript with frame + timecode, a click moves the player, the line being said is marked, and a search.
+- **Check for updates**, bottom left, always there: asks GitHub now and offers the update, or says you are up to
+  date (and when it last checked).
+- **What next?** (*Home > Roadmap*): Claude reviews what changed, where every planned version stands and what waits
+  on you, and suggests what to do next (`/whats-next`).
+- For developers: `tools\motionlab\overlay_settings.py` (settings = HyperFrames' `data-composition-variables`),
+  `tools\motionlab\captions.py`, `overlay.py new --from | settings | set | save | graphics | captions | refresh |
+  resolve-clip`, `content.py stats`, `tools\whatsnext.py`; the page needs `API_LEVEL` 7. Resolve test:
+  `tools\dev\resolve_overlay_test.py` (scratch project; results in `docs\resolve_notes.md`), examples:
+  `tools\dev\examples_compare.py`. Scripts never save Resolve's unsaved "Untitled Project" (its name dialog blocks
+  scripting). GitHub's "mark as tested" step retries its push and writes its errors into the public notes.
+
 ## 0.3.1 - 2026-10-12 - Tested on GitHub first, and a prompt library
 
 - **Every change is tested first**: each change pushed to GitHub is now tested automatically on a clean Windows

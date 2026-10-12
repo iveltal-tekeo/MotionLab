@@ -48,8 +48,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `--- possible misses ---` section that `tools\feedback.py` parses). False alarms stay hidden unless asked for.
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
-  review / feedback / lessons / library / recreate / prompt / free) that picks `--effort` (Settings > Claude Code >
-  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, prompt medium; or
+  review / feedback / lessons / library / recreate / prompt / plan / free) that picks `--effort` (Settings > Claude Code >
+  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, prompt medium, plan (Home > Roadmap > What next? = /whats-next) high; or
   one level for all) and
   `--name "MotionLab <task> <video>"` (shown by /resume) - both only when `claude --help` lists them (older
   versions). "Analyse with Claude" = an analyze job with `claude: true`: when the lab pass ends well the job opens

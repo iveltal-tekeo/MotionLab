@@ -509,7 +509,7 @@ async function pageHome(main) {
       request and a fitting effort level, so it does not have to learn MotionLab first. One window per task, then close it.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>
   </div>
-  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="hint">click to enlarge</span></div>
+  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="row"><span class="hint">click to enlarge</span>${claudeBtn('/whats-next', 'What next? Ask Claude', 'plan', '', 'sm cl')}</span></div>
     <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}`;
   $('#an').onclick = () => analyseModal();
   $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
@@ -1644,7 +1644,7 @@ async function pageSettings(main) {
       <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div></div></div>
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
-      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}</option>
+      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, what next ${esc(S.tasks.plan || 'high')}</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
       <span></span><div class="small muted">How hard Claude thinks in the windows the app opens. Higher = more careful, slower, and it uses more of
         your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div>
