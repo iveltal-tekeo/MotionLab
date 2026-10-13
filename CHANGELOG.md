@@ -4,6 +4,29 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## 0.4.1 - 2026-10-13 - Fixes after 0.4.0: quick drafts, waiting jobs, new videos never overwrite old ones
+
+- **Quick draft of a talking video**: when a clip's sound starts a little before or after its picture (common on
+  phones), the cuts used to move the wrong way and could clip the first or last word - they now land on the voice.
+- **Quick draft with short clips** no longer stops with "no clip is long enough for a shot": a shot longer than
+  every clip uses the longest one and holds its last frame (the draft's notes say so), speed ramps go only where
+  the clip has the frames they need, and B-roll cutaways are never longer than the clip (none at all from clips
+  under a second, rather than a flicker).
+- **A quick draft started while the lab is busy (an analysis, a render, another draft) now waits its turn**
+  instead of being refused with "... is still running" - and so does *Measure the colour*. The Jobs page shows a
+  waiting job as *waiting its turn* with **Remove from the queue**, and no running time for it in the list.
+- Jobs waiting in line: one that cannot start no longer leaves the ones behind it stuck, and a job removed just
+  as its turn comes no longer runs anyway.
+- The *Working on* panels (Analyze, a video's page in Edit) refresh when any job ends - a download that started
+  its analysis, or a draft followed by the next one, used to leave the page out of date until you reloaded it.
+- **Generate never overwrites a video**: the name it suggests is always a free one (after a deleted video it could
+  suggest the name of one that exists), and a name that is already a video is refused with "give this one another
+  name".
+- **Claude's memory** shows a friend's new lesson and an analysis you added or deleted at once (it needed the app
+  to restart), and Claude reading it through MotionLab's MCP server no longer rewrites `memory.md`.
+- *What's new* lists the planned versions with their new numbers: 0.4.2 describe video, 0.4.3 colour (your own
+  clips, grades in Resolve), 0.4.4 yapping mode, 0.4.5 prompt generator - each says what 0.4.0 already shipped.
+
 ## 0.4.0 - 2026-10-13 - Analyze, Edit, Generate: three ways in, Claude's memory, quick drafts, colour
 
 - **Three ways in**: the sidebar is now Home, **1 Analyze**, **2 Edit**, **3 Generate** and **Claude's memory**,

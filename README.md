@@ -7,7 +7,7 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.4.0 - Analyze, Edit, Generate** ([what's new](CHANGELOG.md)): three ways in - **Analyze** videos you
+> **Status: v0.4.1 - Analyze, Edit, Generate** ([what's new](CHANGELOG.md)): three ways in - **Analyze** videos you
 > like (several at once, by focus: content creation, cinematic or both - colour grading included), **Edit** your clips
 > like up to three of them or the way you say (a quick draft in minutes, then Claude makes it great), **Generate** a
 > video from zero (a motion-graphics video, or every prompt for AI video tools) - and **Claude's memory**: everything
