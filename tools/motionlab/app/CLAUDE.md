@@ -76,7 +76,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   = `ptool(p)`: a known paid / separate tool in the model or text, every shot / image / No other tool / Not checked
   yet + *Check these with Claude*), `ptoolChip` (amber). User-facing words: no paths, versions, SHA-256, effort
   levels; "lab pass" = Measure. Tested with a second test server on an empty copy of the app code (no user data).
-- Pages (routes keep their old names #/refs, #/projects): Home (update banner, counts, setup warnings when a program
+  Then: the prompt pop-up redesigned ("too ambiguous, hard on the eye"): `.pm2` = header in the kind's colour
+  (`--kc`: title, needs, Run it, Copy text), `PSTEPS` + `pstate()` (check / want / opt / run / rate, the current one
+  lit, a Next box with its button), `.pmgrid` two columns: the prompt (`.ptext2`, sans) + `pcheckBlock` (a `.cpart`
+  card per part coloured by status, tip, wish input; `.seg` Needs work / All parts hides clear parts) | rating
+  (`.rb` big buttons, note = textarea saved on change), What it makes, `pstyleBlock`, Details (+ Use it, change… /
+  Delete). The sidebar says **Claude skills**. Home starts with `heroAnim()`: a CSS-only motion graphic (24 s loop
+  of 4 scenes, transform + opacity only - measured 1 layout and 10 ms main-thread work in 6 s; reduced motion = a
+  still scene) with *Paste a link* (`downloadModal`).
+- Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
   is missing, Where to start = the 6 steps, roadmap, then status), **References** (#/refs: downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in

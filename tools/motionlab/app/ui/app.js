@@ -141,6 +141,21 @@ const FAM = {
   'Split screen / mirror': '#2ec4b6', 'Text / graphics': '#e76f51', 'Wipe / mask / shape reveal': '#8ac926',
   'Unknown / other': '#8e8e98'};
 const VCOL = {correct: '#3ecf8e', partly: '#ffc400', wrong: '#ff5a5a'};
+// Home's motion graphic: how MotionLab is used, in four slow scenes (24 s loop). Pure CSS - only transform and opacity
+// move, so the graphics card does it; nothing runs while the window is hidden; still with reduced motion (app.css)
+const HERO_LINES = [['Like a video?', 'Paste its link.'], ['Use it as a reference.', 'MotionLab finds every cut and effect.'],
+                    ['Claude names each one.', 'You say if it is right.'], ['Make yours.', 'The same rhythm, with your own clips.']];
+const heroAnim = () => `<div class="hero"><div class="hero-text">
+    <div class="hero-lines">${HERO_LINES.map(([h, sub], i) => `<div class="hero-line hl${i + 1}"><b>${h}</b><span>${sub}</span></div>`).join('')}</div>
+    <button class="btn pri" id="hero-go"><svg class="i"><use href="#i-download"/></svg>Paste a link</button></div>
+  <div class="hero-stage" aria-hidden="true">
+    <div class="hs-mon"><i class="hs-b b1"></i><i class="hs-b b2"></i><i class="hs-b b3"></i><i class="hs-tint"></i>
+      <span class="hs-lab l-ref">reference</span><span class="hs-lab l-you">your clips</span><span class="hs-play">▶</span></div>
+    <div class="hs-tags">${['zoom', 'flash', 'whip pan'].map((t, i) => `<span class="hs-tag t${i + 1}">${t} <b>✓</b></span>`).join('')}</div>
+    <div class="hs-track">${[13, 9, 16, 8, 14, 11, 17, 12].map((w, i) => `<i class="hs-clip" style="flex:${w}"><i class="hs-you" style="animation-delay:${(i * 0.22).toFixed(2)}s"></i></i>`).join('')}
+      ${[13, 22, 38, 46, 60, 71, 88].map((x, i) => `<i class="hs-mark" style="left:${x}%;animation-delay:${(i * 0.3).toFixed(1)}s"></i>`).join('')}
+      <i class="hs-head"><i></i></i></div>
+    <span class="hs-done">▶ your video</span></div></div>`;
 // an empty page: what goes here, and the one button that starts it, in the middle (no "No ... yet" line)
 const emptyHero = (icon, title, text, btns) => `<div class="ehero"><svg class="ic"><use href="#i-${icon}"/></svg><h2>${title}</h2>
   <p>${text}</p><div class="row">${btns}</div></div>`;
@@ -493,7 +508,7 @@ async function pageHome(main) {
   const s = await api('/api/status');
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   main.innerHTML = `
-  <div class="head"><div><h1>MotionLab</h1></div></div>
+  ${heroAnim()}
   ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <div class="grid g5">
     <a class="stat card" href="#/refs"><div class="n">${s.references}</div><div class="l">references · ${s.events} effects found</div></a>
@@ -518,6 +533,7 @@ async function pageHome(main) {
       already written. Use one window per task and close it when it is done.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
   wireFlowHow(main);
+  $('#hero-go', main).onclick = () => downloadModal();
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
   api('/api/knowledge').then(K => {
@@ -1616,29 +1632,37 @@ function pstyleBlock(p, R) {                           // after 0.3.4: "al estil
       <button class="btn sm" data-suse="${esc(x.name)}">Use its style</button></div>`).join('')}
     ${linked.length ? '<div class="small muted">Claude reads its measured style when it checks, optimizes or runs this prompt - click <b>Optimize with Claude</b> to write it into the prompt.</div>' : ''}</div>`;
 }
-function pcheckBlock(p, R) {                           // Claude's check: a row per part, grouped for briefs, + what you want
+function pcheckBlock(p, R) {                           // Claude's check: a card per part (grouped for briefs) + what you want
   const rv = p.review || {}, st = p.structure || [], w = p.wishes || {}, checked = st.some(x => x.status);
-  if (!st.length && rv.stars == null) return `<div class="pcheck none"><b>Not checked by Claude yet.</b> ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it with Claude', 'prompt', p.id)}
-    <span class="small muted">Claude looks at each part (${(R.kinds.find(k => k.id === p.kind) || {slots: []}).slots.slice(0, 7).map(slotLabel).join(', ').toLowerCase()}…) and marks it clear, vague or missing, with a tip.</span></div>`;
-  const rowH = x => { const [ic] = STAT[x.status] || ['•'];
-    return `<div class="crow ${esc(x.status || 'plain')}"><span class="cic">${ic}</span><span class="clab">${esc(slotLabel(x.slot))}</span>
-      <span class="csay">${x.text ? esc(x.text) : '<i class="dim">not said</i>'}${x.tip ? `<span class="ctip">${esc(x.tip)}</span>` : ''}</span>
-      <input type="text" class="cwish" data-slot="${esc(x.slot)}" placeholder="what you want here…" value="${esc(w[x.slot] || '')}"></div>`; };
-  let rows = st.map(rowH).join('');
+  const slots = (R.kinds.find(k => k.id === p.kind) || {slots: []}).slots;
+  if (!st.length && rv.stars == null) return `<div class="pchk none"><div class="pchk-h"><h3>Claude's check</h3></div>
+    <p>Claude reads each part of this prompt and tells you what is <b class="ok">clear</b>, <b class="amber">vague</b> or <b class="bad">missing</b> - with a tip for each.</p>
+    <div class="pchips">${slots.map(s => `<span class="pgneed">${esc(slotLabel(s))}</span>`).join('')}</div>
+    <div class="row" style="margin-top:12px">${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it with Claude', 'prompt', p.id, 'pri')}</div></div>`;
+  const n = k => st.filter(x => x.status === k).length;
+  const isWork = x => x.status === 'vague' || x.status === 'missing' || !x.status || (w[x.slot] || '').trim();
+  const work = st.filter(isWork).length;
+  const part = x => { const [ic, lab] = STAT[x.status] || ['•', ''];
+    return `<div class="cpart st-${esc(x.status || 'plain')}"${isWork(x) ? '' : ' data-clear'}>
+      <div class="cpart-h"><span class="cdot">${ic}</span><b>${esc(slotLabel(x.slot))}</b>${lab ? `<span class="cstat">${lab}</span>` : ''}</div>
+      <div class="cpart-says">${x.text ? `“${esc(x.text)}”` : '<i>Not in your prompt</i>'}</div>
+      ${x.tip ? `<div class="cpart-tip"><b>Tip</b> ${esc(x.tip)}</div>` : ''}
+      <input type="text" class="cwish" data-slot="${esc(x.slot)}" placeholder="${x.status === 'clear' ? 'Anything to change? (optional)' : 'What you want here (optional)'}" value="${esc(w[x.slot] || '')}"></div>`; };
+  const group = (g, xs) => xs.length ? `<div class="cgrp"${xs.some(isWork) ? '' : ' data-clear'}><div class="cgrp-h">${esc(g)}</div>${xs.map(part).join('')}</div>` : '';
+  let rows = group('', st);
   if (p.kind === 'brief') {
     const seen = new Set();
-    rows = BRIEF_GROUPS.map(([g, slots]) => { const xs = slots.flatMap(s => st.filter(x => x.slot === s)); xs.forEach(x => seen.add(x));
-      return xs.length ? `<div class="cgroup">${esc(g)}</div>${xs.map(rowH).join('')}` : ''; }).join('');
-    const rest = st.filter(x => !seen.has(x));
-    if (rest.length) rows += `<div class="cgroup">Other</div>${rest.map(rowH).join('')}`;
+    rows = BRIEF_GROUPS.map(([g, sl]) => { const xs = sl.flatMap(s => st.filter(x => x.slot === s)); xs.forEach(x => seen.add(x)); return group(g, xs); }).join('')
+      + group('Other', st.filter(x => !seen.has(x)));
   }
-  return `<div class="pcheck flat"><div class="pchead"><b>Claude's check</b>${rv.stars != null ? pstars(rv.stars) : ''}${checked ? pcounts(st) : ''}
-      <span class="small muted">${checked ? '- say what you want next to any part, then Optimize' : ''}</span></div>
-    ${rv.why ? `<div class="small pwhy">${esc(rv.why)}</div>` : ''}${rv.fix ? `<div class="small pfix"><b>Claude suggests:</b> ${esc(rv.fix)}</div>` : ''}
-    ${rows ? `<div class="clist"><div class="crow chead"><span></span><span>Part</span><span>What your prompt says · Claude's tip</span><span>What you want</span></div>${rows}</div>` : ''}
-    <div class="row" style="margin-top:10px">${checked ? '' : '<span class="small muted">An older check without clear / vague / missing -</span>'}
-      <button class="btn sm pri" data-opt title="Claude writes a better version from its check and what you want (a new prompt; this one stays)"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
-      ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved></span></div></div>`;
+  const nw = Object.keys(w).length;
+  return `<div class="pchk"><div class="pchk-h"><h3>Claude's check</h3>${rv.stars != null ? pstars(rv.stars) : ''}<span class="grow"></span>
+      ${checked && work && work < st.length ? `<div class="seg"><button class="on" data-cv="work">Needs work <span>${work}</span></button><button data-cv="all">All parts <span>${st.length}</span></button></div>` : ''}</div>
+    ${checked ? `<div class="pchk-sum"><span class="pill clear">✓ ${n('clear')} clear</span><span class="pill vague">~ ${n('vague')} vague</span><span class="pill missing">✗ ${n('missing')} missing</span></div>` : ''}
+    ${rv.why || rv.fix ? `<div class="pchk-verdict">${rv.why ? `<p>${esc(rv.why)}</p>` : ''}${rv.fix ? `<p class="fix"><b>Most important:</b> ${esc(rv.fix)}</p>` : ''}</div>` : ''}
+    <div class="cparts" data-view="${checked && work && work < st.length ? 'work' : 'all'}">${rows}</div>
+    <div class="pchk-foot"><button class="btn pri" data-opt title="Claude writes a better version from its check and what you wrote - this one stays"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
+      ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved>${nw ? `${nw} wish${nw === 1 ? '' : 'es'} saved` : ''}</span></div></div>`;
 }
 const PFILTERS = [['', 'All'], ['tool', 'Needs another tool'], ['own', 'No other tool'], ['todo', 'Not checked yet']];
 const pfilterOk = (p, f) => !f || (f === 'tool' ? !!ptool(p) : f === 'own' ? !ptool(p) : !p.structure && !p.review);
@@ -1690,70 +1714,113 @@ async function pagePrompts(main, arg) {               // every kind in one grid;
     promptModal(arg, ctx);
   }
 }
-// one prompt in focus: the whole text, Style like, Claude's check with what you want, Optimize, Run it, your rating
+// one prompt in focus: a header in the kind's colour (what it is, what it needs, Run it), five steps with the next one
+// to do, then two columns - the prompt and Claude's check | your rating, what it makes, Style like, details
+const PSTEPS = [['check', 'Claude checks it'], ['want', 'You say what you want'], ['opt', 'Claude improves it'],
+                ['run', 'Run it'], ['rate', 'Rate the result']];
+function pstate(p, R) {
+  const st = p.structure || [], checked = st.some(x => x.status) || (p.review || {}).stars != null;
+  const versions = R.items.filter(x => (x.made_from || []).includes(p.id));
+  const isOpt = !!(p.made_from || []).length && (p.source || {}).type === 'written';
+  const rated = !!(p.result || {}).rating, used = ((R.used || {})[p.id] || []).length > 0;
+  const better = versions.length > 0;
+  const done = {check: checked || isOpt, want: isOpt || better || Object.keys(p.wishes || {}).length > 0, opt: isOpt || better,
+                run: used || rated, rate: rated};
+  return {done, now: PSTEPS.map(([k]) => k).find(k => !done[k]) || '', versions, isOpt};
+}
 function promptModal(id, ctx) {
   const R = ctx.R, all = R.items, p = all.find(x => x.id === id);
   if (!p) { toast(`${id} is not in your prompts any more`, 'err'); return; }
-  const res = p.result || {}, rv = p.review || {}, help = R.help || {};
-  const versions = all.filter(x => (x.made_from || []).includes(p.id));
-  const shot = p.kind === 'shot' || p.kind === 'image';
-  modal(`<div class="pm">
-    <div class="row phead"><button class="kbadge k-${esc(p.kind)}" data-kind title="${esc(help[p.kind] || '')} - click to change the kind">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
-      <h2 class="ptitle">${esc(ptitle(p))}</h2><span class="mono small dim">${esc(p.id)}</span><span class="grow"></span>${rv.stars != null ? pstars(rv.stars) : ''}
-      <span class="small dim">${esc(p.updated || p.added || '')}</span></div>
-    <div class="row pfor small">${psource(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
-      ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
-      <span class="muted">For:</span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join('') || '<span class="dim">not set</span>'}
-      <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
-    <div class="ptextwrap"><pre class="ptext">${esc(p.text)}</pre></div>
-    ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
-    <div class="row pfor small"><span class="muted">Needs:</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}
-      ${ptool(p) ? '<span class="muted">- the first is a separate tool: an account, credits or a setup</span>' : ''}</div>
-    <div class="pex"><div class="row"><span class="psl2">What it makes</span>${(p.examples || []).length ? '' : '<span class="small muted">a picture or clip of the result - yours, or the creator\'s example. The first one is the card\'s picture.</span>'}
-        <span class="grow"></span><label class="btn sm ghost">+ Add a picture or clip<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
-      ${(p.examples || []).length ? `<div class="pexlist">${p.examples.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
-        ? `<video src="${pexUrl(R, f)}" controls muted loop playsinline preload="metadata"></video>` : `<img src="${pexUrl(R, f)}" alt="" loading="lazy" data-exview>`}
-        <button class="btn sm ghost" data-exdel="${esc(f)}" title="Remove it (Recycle Bin)">✕</button></figure>`).join('')}</div>` : ''}</div>
-    ${pstyleBlock(p, R)}
-    ${pcheckBlock(p, R)}
-    ${versions.length ? `<div class="small pver">Optimized: ${versions.map(x => `<a href="#" data-goto="${esc(x.id)}">${esc(x.id)}${x.title ? ' - ' + esc(x.title) : ''}</a>`).join(', ')}</div>` : ''}
-    ${((R.used || {})[p.id] || []).map(pusedLine).join('')}
-    <div class="row prate"><button class="btn sm run" data-run title="${shot ? 'Copies it - paste it into the site (Higgsfield, Seedance, Kling...)' : 'Create video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>
-      <button class="btn sm" data-copy>Copy</button>
-      <button class="btn sm cl" data-remix title="Claude keeps what worked in this prompt and changes what you say"><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>
-      <button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button>
-      <span class="grow"></span><span class="small muted">What it made:</span>
-      ${['good', 'ok', 'bad'].map(r => `<button class="btn sm${res.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}
-      <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}"></div></div>`, c => {
+  const res = p.result || {}, help = R.help || {}, S = pstate(p, R), cat = pcategory(p);
+  const shot = p.kind === 'shot' || p.kind === 'image', ex = p.examples || [];
+  const newest = S.versions[S.versions.length - 1];
+  const long = p.text.split('\n').length > 9 || p.text.length > 700;
+  const analyse = `/write-prompt analyse ${p.id}`;
+  const runBtn = (cls, attr = 'data-run') => `<button class="btn ${cls}" ${attr} title="${shot ? 'Copies it - paste it into the site' : 'Create a video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>`;
+  const NEXT = {
+    check: `<span>Claude reads each part and marks what is clear, vague or missing.</span>${claudeBtn(analyse, 'Check it with Claude', 'prompt', p.id, 'pri')}`,
+    want: `<span>Write what you want next to the parts below - or let Claude decide.</span><button class="btn" data-gosec="pm-check">Show the parts</button>
+      <button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
+    opt: `<span>Your wishes are saved. Claude writes a better version - this one stays.</span><button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
+    run: newest && !S.isOpt ? `<span>Claude made a better version: <b>${esc(ptitle(newest))}</b></span><button class="btn pri" data-goto="${esc(newest.id)}">Open it</button>${runBtn('', 'data-run')}`
+      : `<span>Ready. ${shot ? 'Copy it into the site, then come back to rate what it made.' : 'Create a video with it, then come back to rate it.'}</span>${runBtn('pri')}`,
+    rate: `<span>How did it turn out? Your rating makes Claude's next prompts better.</span><button class="btn pri" data-gosec="pm-rate">Rate it</button>`,
+    '': `<span>Done - you rated it <b>${esc(res.rating === 'ok' ? 'OK' : res.rating || '')}</b>. Another take?</span><button class="btn" data-remix><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>`,
+  };
+  const sec = {check: 'pm-check', want: 'pm-check', opt: 'pm-check', run: 'pm-top', rate: 'pm-rate'};
+  modal(`<div class="pm2 k-${esc(p.kind)}" id="pm-top">
+    <div class="pmh"><div class="pmh-main">
+        <div class="pmh-tags"><button class="kbadge k-${esc(p.kind)}" data-kind title="${esc(help[p.kind] || '')} - click to change the kind">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
+          ${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}${S.isOpt ? '<span class="tag done">optimized by Claude</span>' : ''}</div>
+        <h2 class="pmh-title">${esc(ptitle(p))}</h2>
+        <div class="pmh-needs"><span class="small muted">Needs</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
+      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy>Copy text</button></div></div>
+    <ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}</span></li>`).join('')}</ol>
+    <div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>
+    <div class="pmgrid"><div class="pmcol">
+        <section class="pms"><div class="pms-h"><h3>The prompt</h3><span class="grow"></span>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
+          <div class="ptext2${long ? ' clamp' : ''}">${esc(p.text)}</div>${p.notes ? `<div class="pnotes"><b>How to use</b> ${esc(p.notes)}</div>` : ''}</section>
+        <section class="pms" id="pm-check">${pcheckBlock(p, R)}</section></div>
+      <div class="pmcol side">
+        <section class="pms prate2" id="pm-rate"><h3>How did it turn out?</h3>
+          <div class="rbtns">${[['good', 'Good'], ['ok', 'OK'], ['bad', 'Bad']].map(([r, l]) => `<button class="btn rb ${r}${res.rating === r ? ' on' : ''}" data-r="${r}">${l}</button>`).join('')}</div>
+          <textarea class="pnote" rows="2" placeholder="A note on what it made (saved when you click away)">${esc(res.note || '')}</textarea>
+          ${((R.used || {})[p.id] || []).map(pusedLine).join('')}</section>
+        <section class="pms"><div class="pms-h"><h3>What it makes</h3><span class="grow"></span><label class="btn sm ghost">+ Add<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
+          ${ex.length ? `<div class="pexlist">${ex.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
+            ? `<video src="${pexUrl(R, f)}" controls muted loop playsinline preload="metadata"></video>` : `<img src="${pexUrl(R, f)}" alt="" loading="lazy" data-exview>`}
+            <button class="btn sm ghost" data-exdel="${esc(f)}" title="Remove it (Recycle Bin)">✕</button></figure>`).join('')}</div>`
+            : '<div class="small muted">A picture or clip of the result - yours, or the creator\'s example. The first one shows on the card.</div>'}</section>
+        ${pstyleBlock(p, R)}
+        <section class="pms pdet"><h3>Details</h3><div class="kv small">
+          <b>From</b><span>${psource(p)}</span>
+          ${p.model ? `<b>Model</b><span>${esc(p.model)}</span>` : ''}
+          ${p.pattern ? `<b>Kind of hook</b><span>${esc(p.pattern)}</span>` : ''}
+          ${p.workflow ? `<b>Recipe</b><span>${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
+          <b>For</b><span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join(' ') || '<span class="dim">not set</span>'} <button class="btn sm ghost" data-for>Edit</button></span>
+          ${S.versions.length ? `<b>Better versions</b><span>${S.versions.map(x => `<a href="#" data-goto="${esc(x.id)}">${esc(ptitle(x))}</a>`).join(', ')}</span>` : ''}
+          <b>Saved</b><span>${esc(p.added || '')}${p.updated && p.updated !== p.added ? ` · changed ${esc(p.updated)}` : ''} · <span class="mono dim">${esc(p.id)}</span></span></div>
+          <div class="row" style="margin-top:10px"><button class="btn sm cl" data-remix title="Claude keeps what worked in this prompt and changes what you say"><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>
+            <span class="grow"></span><button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button></div></section>
+      </div></div></div>`, c => {
     const reopen = async () => { await ctx.reload(); promptModal(p.id, ctx); };
+    const redraw = () => { const y = $('#modal .mbox').scrollTop; promptModal(p.id, ctx); $('#modal .mbox').scrollTop = y; };
+    const back = () => promptModal(p.id, ctx);
     const note = $('.pnote', c);
-    const save = async (rating, msg) => {
+    const save = async (rating, msg, again = false) => {
       try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
-        p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); ctx.draw(); }
+        p.result = r.result; toast(msg, 'ok'); ctx.draw(); if (again) redraw(); }
       catch (e) { toast(e.message, 'err'); }
     };
-    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
-    note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
+    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved', true); });
+    note.onchange = () => save((p.result || {}).rating || null, 'Note saved');
     $('[data-copy]', c).onclick = () => copy(p.text);
-    const back = () => promptModal(p.id, ctx);
-    $('[data-remix]', c).onclick = () => { remixModal(p); modalBack(back); };
+    $$('[data-remix]', c).forEach(b => b.onclick = () => { remixModal(p); modalBack(back); });
     $('[data-for]', c).onclick = () => { forModal(p, reopen); modalBack(back); };
     $('[data-pdel]', c).onclick = () => { delPromptModal(p); modalBack(back); };
     $('[data-kind]', c).onclick = () => { kindModal(p, R); modalBack(back); };
-    $('[data-run]', c).onclick = () => {
-      if (shot) { copy(p.text); toast('Copied - paste it into the site (Higgsfield, Seedance, Kling…), then rate what it made here', 'ok'); }
+    $$('[data-run]', c).forEach(b => b.onclick = () => {
+      if (shot) { copy(p.text); toast('Copied - paste it into the site, then rate what it made here', 'ok'); }
       else createVideoModal({from: 'prompt', pick: p.id}).then(() => modalBack(back));
-    };
+    });
     $$('[data-goto]', c).forEach(a => a.onclick = e => { e.preventDefault(); promptModal(a.dataset.goto, ctx); });
+    $$('[data-gosec]', c).forEach(b => b.onclick = () => {
+      const t = document.getElementById(b.dataset.gosec); if (!t) return;
+      t.scrollIntoView({behavior: 'smooth', block: 'start'});
+      if (b.dataset.gosec === 'pm-check') { const i = $$('.cwish', t).find(x => x.offsetParent); if (i) setTimeout(() => i.focus({preventScroll: true}), 400); }
+    });
+    const more = $('[data-more]', c);
+    if (more) more.onclick = () => { const t = $('.ptext2', c); t.classList.toggle('clamp'); more.textContent = t.classList.contains('clamp') ? 'Show all' : 'Show less'; };
+    $$('[data-cv]', c).forEach(b => b.onclick = () => {
+      $('.cparts', c).dataset.view = b.dataset.cv; $$('[data-cv]', c).forEach(x => x.classList.toggle('on', x === b)); });
     const saveWishes = async () => {                       // the wishes go with the prompt (Optimize reads them)
       const wishes = Object.fromEntries($$('.cwish', c).map(i => [i.dataset.slot, i.value.trim()]).filter(([, v]) => v));
-      try { const r = await api('/api/prompts/wishes', {id: p.id, wishes}); p.wishes = r.wishes;
-        const s = $('[data-wsaved]', c); if (s) s.textContent = Object.keys(wishes).length ? `your wishes saved (${Object.keys(wishes).length})` : ''; }
+      try { const r = await api('/api/prompts/wishes', {id: p.id, wishes}); p.wishes = r.wishes; const n = Object.keys(wishes).length;
+        const s = $('[data-wsaved]', c); if (s) s.textContent = n ? `${n} wish${n === 1 ? '' : 'es'} saved` : ''; }
       catch (e) { toast(e.message, 'err'); }
     };
     $$('.cwish', c).forEach(i => { i.onchange = saveWishes; i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; });
-    const opt = $('[data-opt]', c);
-    if (opt) opt.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); };
+    $$('[data-opt]', c).forEach(b => b.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); });
     const setStyle = async (refs, msg) => {
       try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); await reopen(); }
       catch (e) { toast(e.message, 'err'); }
@@ -1772,7 +1839,7 @@ function promptModal(id, ctx) {
       catch (e) { toast(e.message, 'err'); }
     });
     $$('[data-exview]', c).forEach(im => im.onclick = () => {
-      const pics = (p.examples || []).filter(f => !/\.(mp4|webm)$/i.test(f));
+      const pics = ex.filter(f => !/\.(mp4|webm)$/i.test(f));
       lightbox(pics.map(f => ({src: `${R.folder}/examples/${f}`, cap: ptitle(p)})), Math.max(0, pics.indexOf(im.closest('figure').dataset.ex)));
     });
     const linkMsg = (p.structure || []).length ? 'Linked - now click Optimize with Claude so its measured style goes into the prompt'
@@ -2001,7 +2068,7 @@ function havePromptForm(box, R) {
 // Tools > Skills: the project's Claude Code commands - what each does, how to type it, where the app runs it for you
 async function pageSkills(main) {
   const S = await api('/api/skills');
-  main.innerHTML = `<div class="head"><div><h1>Skills</h1><div class="sub">The commands you can type in Claude Code for MotionLab.
+  main.innerHTML = `<div class="head"><div><h1>Claude skills</h1><div class="sub">The commands you can type in Claude Code for MotionLab.
       The app's <svg class="i"><use href="#i-claude"/></svg> buttons run them for you.</div></div></div>
     <div class="skgrid">${S.map(k => `<div class="panel skill${k.dev ? ' dev' : ''}"><div class="row sp"><b class="mono skname">/${esc(k.name)}</b>${k.dev ? '<span class="tag">for developers</span>' : ''}</div>
       <div class="skbrief">${esc(k.brief)}</div>

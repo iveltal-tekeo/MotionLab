@@ -6,6 +6,16 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Home moves**: a small, slow animation at the top shows how MotionLab is used - *Like a video? / Use it as a
+  reference. / Claude names each one. / Make yours.* - with a timeline whose cuts light up, effect tags that pop in
+  and your clips that slide in. It is drawn by the graphics card (no video, no script running), stops while the
+  window is hidden and stays still if Windows animations are off. *Paste a link* starts right there.
+- **A prompt, opened, is easier to read and to act on**: a header in the kind's colour with the title, what it
+  needs and **Run it**; five steps (Claude checks it, you say what you want, Claude improves it, run it, rate the
+  result) with the one to do now lit and a **Next** box holding its button; then two columns - the prompt in
+  readable text and Claude's check as a coloured card per part (✓ clear green, ~ vague amber, ✗ missing red, a tip,
+  and a box for what you want; *Needs work* shows only what needs it) | big Good / OK / Bad buttons, what it makes,
+  Style like and the details. **Claude skills** is the new name of the Skills page.
 - **Skills** (sidebar, Tools): the commands you can type in Claude Code for MotionLab - `/analyze-reference`,
   `/recreate-video`, `/write-prompt`, `/whats-next` - each with what it does in a line, how to type it (Copy), where
   the app runs it for you, and *Open in Claude Code*. Home lost its top-right buttons (*Analyse a video* lives on
