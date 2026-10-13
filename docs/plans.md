@@ -73,7 +73,7 @@ prompts we have given and you have analysed structurally so we can generate good
     words, Claude's tags...); a new prompt for another model says what it changed.
   - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
     structure a script example (0.3.5 / 0.4), with the link and frame + timecode.
-  - **Sharing** your own prompts and ratings through *Knowledge > Share* (text); creators' prompts stay on the PC.
+  - **Sharing** your own prompts and ratings through *Claude's memory > Share* (text); creators' prompts stay on the PC.
   - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
     0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
     shown on the prompt as "Used in"); learn from those answers which structure works per purpose - needs a few
@@ -82,7 +82,7 @@ prompts we have given and you have analysed structurally so we can generate good
     Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
     references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
     look measured too (0.3.7), and several references of one creator averaged into one style.
-- **Needs**: your prompts (the Prompts page or pasted in the chat).
+- **Needs**: your prompts (the prompt library or pasted in the chat).
 
 ## 0.4.0 - planned - Yapping mode: the yap-maxing framework
 

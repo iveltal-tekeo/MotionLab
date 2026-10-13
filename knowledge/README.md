@@ -9,7 +9,7 @@
 
 The reviewed rules themselves are in `.claude\skills\analyze-reference\lessons.md` (shared).
 
-**How it moves**: in the app, *Knowledge > Share my knowledge* commits your new cards and lessons to GitHub; everyone
+**How it moves**: in the app, *Claude's memory > Share my knowledge* commits your new cards and lessons to GitHub; everyone
 else gets them with their next update (automatic at start-up). Without GitHub access the app writes a pack file to
 `outbox\` - send it to someone who can upload it; they drop it in their `inbox\` and click *Import*.
 

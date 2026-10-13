@@ -6,8 +6,8 @@ so videos can seek; /api/ returns JSON. Every request that changes something (ve
 session token embedded in the page, so other web pages cannot use the server. The only writes: the user's
 verdicts / exported feedback (analysis\\<name>\\feedback\\), library picks (projects\\<name>\\build\\), and the app's
 own .app\\ folder (logs, job logs, video thumbnails), settings.json (Settings page), downloads into refs\\
-(yt-dlp, started from the References page) and the prompt library (knowledge\\local\\prompts\\: added and rated on
-the Prompts page). Deleting = the user's Delete buttons only (trash.py): after a dialog
+(yt-dlp, started from the Analyze page) and the prompt library (knowledge\\local\\prompts\\: added and rated in
+Generate > Prompt library). Deleting = the user's Delete buttons only (trash.py): after a dialog
 listing every item, references / downloads / video projects / renders go to the Windows Recycle Bin. Programs it
 can start: Claude Code in a new console ("Open in Claude", or when a lab pass started with "Analyse with Claude"
 ends), Explorer / the default viewer for lab files, and the shortcut maker - each only on a click."""
@@ -112,12 +112,12 @@ def status() -> dict:
             nxt.append({"text": f"Send your verdicts on {r['title']} to Claude (Send feedback to Claude): it turns them "
                                 f"into lessons" + (" - exported, waiting for Claude" if fl["sent"] else ""), "go": go})
     if projs and not lib["items"]:
-        nxt.append({"text": "Pick the effects to save in the library (your video's page, Resolve tab)",
+        nxt.append({"text": "Pick the effects to save in the library (Edit > your video > Resolve & library)",
                     "go": f"#/project/{projs[0]['name']}/resolve"})
     setup = [t for t in system.tools() if not t["found"] and t["need"] in ("required", "recommended")]
     if not refs:
-        nxt.insert(0, {"text": "Start here: download a reference video (References > Download from a link) or drop "
-                               "one into the refs folder, then click Analyse a video", "go": "#/refs"})
+        nxt.insert(0, {"text": "Start here: analyse a video you like (Analyze > Download from a link) or drop "
+                               "one into the refs folder, then click Analyse a video", "go": "#/analyze"})
     return {"version": VERSION, "lab": str(LAB), "references": len(refs), "events": sum(r["events"] for r in refs),
             "reviewed": sum(r["reviewed"] for r in refs), "verdicts": verdicts, "projects": len(projs),
             "library": len(lib["items"]), "picks": len(lib["picks"]), "free_bytes": du.free, "total_bytes": du.total,
@@ -125,7 +125,7 @@ def status() -> dict:
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
             "projects_list": projs, "references_list": refs, "setup": setup,
             "claude": bool(system.find("claude")), "update": S.update, "update_result": S.update_result,
-            "author": KN.author()}
+            "author": KN.author(), "prompts": PR.count(), "lessons": KN.lesson_count()}
 
 
 def storage_summary() -> dict:
@@ -476,7 +476,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(r)
         if path == "/api/upstream/check":                 # Settings > Programs: newer HyperFrames / GSAP now
             return self._json(UP.check(force=True))
-        if path == "/api/prompts/import":                 # the Prompts page's Add dialog: any text (0.3.3)
+        if path == "/api/prompts/import":                 # the prompt library's Add dialog: any text (0.3.3)
             src = body.get("source") if isinstance(body.get("source"), dict) else None
             if src:
                 src = {k: str(src.get(k) or "").strip()[:500] for k in ("type", "creator", "link")

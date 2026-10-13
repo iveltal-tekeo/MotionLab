@@ -28,24 +28,25 @@
   <symbol id="i-news" viewBox="0 0 24 24"><circle cx="6" cy="5.5" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="18.5" r="1.6"/><path d="M6 7.1v3.3M6 13.6v3.3M10.5 5.5H20M10.5 12H18M10.5 18.5H16"/></symbol>
   <symbol id="i-skills" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m10.5 15.5 3-7"/></symbol>
   <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><rect x="9" y="2.5" width="6" height="4" rx="1"/><path d="M9 11.5h6M9 15.5h4"/></symbol>
+  <symbol id="i-analyze" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8"/><path d="m15.4 15.4 5.1 5.1"/><path d="M6.6 10.9h1.7l1.2-2.7 1.9 5.2 1.3-2.5h1.6"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><circle cx="6.2" cy="6.5" r="2.6"/><circle cx="6.2" cy="17.5" r="2.6"/><path d="M8.4 7.9 20 16.8M8.4 16.1 20 7.2"/></symbol>
+  <symbol id="i-generate" viewBox="0 0 24 24"><path d="m3.8 20.2 10.6-10.6"/><path d="m12.9 8.1 3 3"/><path d="M18 2.8v3.4M16.3 4.5h3.4M20.3 10v2.2M19.2 11.1h2.2M9.8 3.2v2.2M8.7 4.3h2.2"/></symbol>
+  <symbol id="i-memory" viewBox="0 0 24 24"><path d="M11.2 4.6A3.2 3.2 0 0 0 6 6.8a3.1 3.1 0 0 0-1.6 5.4 3.2 3.2 0 0 0 1.8 5 3.2 3.2 0 0 0 5 2.2z"/><path d="M12.8 4.6A3.2 3.2 0 0 1 18 6.8a3.1 3.1 0 0 1 1.6 5.4 3.2 3.2 0 0 1-1.8 5 3.2 3.2 0 0 1-5 2.2z"/><path d="M8.2 9.6c1 .2 1.9.9 2.2 1.9M15.8 9.6c-1 .2-1.9.9-2.2 1.9M7.6 14.6c.9-.4 2-.3 2.8.3M16.4 14.6c-.9-.4-2-.3-2.8.3"/></symbol>
   <symbol id="i-update" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16.5V7.8M8.3 11.3 12 7.6l3.7 3.7"/></symbol>
 </svg>
 <nav id="side">
   <a class="logo" href="#/"><img src="/ui/logo.png" alt="MotionLab"></a>
   <button class="upd-open" id="side-update" hidden title="See what changed and update"><svg class="ic"><use href="#i-update"/></svg><span><b>Update available</b><small></small></span></button>
   <a href="#/" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
-  <a href="#/projects" data-nav="projects" title="Your own videos"><svg class="ic"><use href="#i-videos"/></svg>Videos</a>
-  <div class="navgrp">Media</div>
-  <a href="#/refs" data-nav="refs" title="Videos by other creators, broken down cut by cut"><svg class="ic"><use href="#i-refs"/></svg>References</a>
-  <a href="#/prompts" data-nav="prompts" title="Your prompts for Claude and for AI video and image tools"><svg class="ic"><use href="#i-prompts"/></svg>Prompts</a>
-  <div class="navgrp">Additional</div>
-  <a href="#/library" data-nav="library" title="Graphics and effects you saved"><svg class="ic"><use href="#i-library"/></svg>Library</a>
-  <a href="#/knowledge" data-nav="knowledge" title="What you and your friends learned"><svg class="ic"><use href="#i-knowledge"/></svg>Knowledge</a>
-  <div class="navgrp">Tools</div>
-  <a href="#/jobs" data-nav="jobs"><svg class="ic"><use href="#i-jobs"/></svg>Jobs <b id="jobcount"></b></a>
-  <a href="#/skills" data-nav="skills" title="The commands for Claude Code in MotionLab"><svg class="ic"><use href="#i-skills"/></svg>Claude skills</a>
-  <a href="#/settings" data-nav="settings" title="Programs, downloads, Claude Code, updates, storage"><svg class="ic"><use href="#i-settings"/></svg>Settings</a>
+  <div class="navgrp">Make a video</div>
+  <a href="#/analyze" data-nav="analyze" title="Learn from videos you like: every cut, effect, caption and colour, measured - Claude remembers the style"><svg class="ic"><use href="#i-analyze"/></svg>Analyze<span class="nstep">1</span></a>
+  <a href="#/edit" data-nav="edit" title="Your clips, edited in the style of videos you analysed - or from a prompt"><svg class="ic"><use href="#i-edit"/></svg>Edit<span class="nstep">2</span></a>
+  <a href="#/generate" data-nav="generate" title="A video from zero: prompts for AI video tools, or a motion-graphics video"><svg class="ic"><use href="#i-generate"/></svg>Generate<span class="nstep">3</span></a>
+  <div class="navsep"></div>
+  <a href="#/memory" data-nav="memory" title="What Claude learned from your videos - the styles, effects, graphics and lessons it uses when it edits or generates"><svg class="ic"><use href="#i-memory"/></svg>Claude's memory</a>
   <div class="grow"></div>
+  <a href="#/jobs" data-nav="jobs" title="What MotionLab is working on right now"><svg class="ic"><use href="#i-jobs"/></svg>Jobs <b id="jobcount"></b></a>
+  <a href="#/settings" data-nav="settings" title="Programs, downloads, Claude Code, updates, storage, Claude skills"><svg class="ic"><use href="#i-settings"/></svg>Settings</a>
   <button class="chk-open" id="side-check" title="Ask GitHub for a newer MotionLab (or new knowledge from your friends) and install it"><svg class="ic"><use href="#i-update"/></svg><span><b>Check for updates</b><small></small></span></button>
   <button class="news-open" id="side-news" title="Every MotionLab version and what it changed (CHANGELOG.md)"><svg class="ic"><use href="#i-news"/></svg>What's new</button>
   <button class="claude-open" id="side-claude" title="Open Claude Code in the MotionLab folder"><svg class="ic"><use href="#i-claude"/></svg>Open Claude Code</button>

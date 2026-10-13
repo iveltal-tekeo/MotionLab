@@ -146,7 +146,7 @@ Claude** (it opens a new Claude Code window with the feedback - this chat can be
    category tag only when the rule is specific to that kind of video (format at the top of the shared lessons.md).
    Example: "crossfade vs luma fade: check whether the highlights transition first - if the bright areas of the
    outgoing shot switch to the new shot before the dark areas, it is a luma fade, not a crossfade."
-   The lesson applies on this PC right away; the user shares it with *Knowledge > Share my knowledge* in the app.
+   The lesson applies on this PC right away; the user shares it with *Claude's memory > Share my knowledge* in the app.
 5. If config or code changed: re-run `.venv\Scripts\python tools\analyze.py "<source path>" --redetect`, then
    `.venv\Scripts\python tools\selftest.py --extended` - **all four self-tests must still PASS**; if one fails,
    rework or revert the change before continuing.
@@ -154,7 +154,7 @@ Claude** (it opens a new Claude Code window with the feedback - this chat can be
    sheets, update `review.json`, run `tools\report.py <name>`.
 7. Tell the user exactly what changed: each lesson added (quoted), each config key `old -> new` and why, any code
    change, each re-checked event (old -> new type / frames, with timecodes), and the self-test result. Remind them
-   that *Knowledge > Share my knowledge* sends the new lessons and the updated reference card to their friends.
+   that *Claude's memory > Share my knowledge* sends the new lessons and the updated reference card to their friends.
 
 ---
 
@@ -165,5 +165,5 @@ Claude** (it opens a new Claude Code window with the feedback - this chat can be
    `category: <id>`). Merge duplicates; rewrite unclear wording; drop guesses.
 3. Append the kept ones to the shared `.claude\skills\analyze-reference\lessons.md` with the next `L0NN` number;
    keep the source note and add `from <author> <local id>` to it.
-4. Delete the processed incoming files. Tell the user what was kept / merged / dropped, and that *Knowledge > Share
+4. Delete the processed incoming files. Tell the user what was kept / merged / dropped, and that *Claude's memory > Share
    my knowledge* puts the reviewed lessons.md on GitHub for everyone.

@@ -77,6 +77,11 @@ def load_all(kind: str = "") -> list[dict]:
     return sorted(out, key=rank)
 
 
+def count() -> int:
+    """How many prompts the library has (file count, nothing parsed - Home's Generate card)."""
+    return sum(len(list((HOME / k).glob(f"{k}-*.json"))) for k in KINDS)
+
+
 def get(pid: str) -> dict:
     p = _path(pid)
     if not p.exists():

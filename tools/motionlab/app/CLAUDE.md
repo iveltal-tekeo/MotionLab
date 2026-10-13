@@ -24,12 +24,18 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   FOF_ALLOWUNDO; Windows asks before deleting for good when something does not fit). Refused while a job runs; only
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
   logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
-- Sidebar (the user's order, 0.3.3): Home, Videos | Media: References, Prompts | Additional: Library, Knowledge |
-  Tools: Jobs, Skills (#/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type
-  it = `SKILL_INFO`; /whats-next is marked "for developers" - the Roadmap's "What next?" button moved there),
-  Settings (Storage = Settings' second tab, `setTabs`; #/storage still works). Each page sets
-  `body[data-page]` -> its accent colour (`--acc`, app.css "0.3.3: a livelier look": CSS only, no images / scripts,
-  motion off with prefers-reduced-motion). Videos: **Create video** (`createVideoModal`: Use a reference | Use a
+- Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"): Home, *Make a video*: **Analyze** (#/analyze
+  = 0.3's References, `pageRefs`; #/ref/<name> = one analysis), **Edit** (#/edit = Videos, `pageProjects`;
+  #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it), each with
+  its step number (`.nstep`), then **Claude's memory** (#/memory/learned = 0.3's Knowledge, `memLearned`;
+  #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
+  skills = #/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type it =
+  `SKILL_INFO`; /whats-next is marked "for developers"). `ALIASES` rewrites the 0.3 addresses (#/refs, #/projects,
+  #/knowledge, #/library). Home = the hero animation, **What do you want to do?** (`WAYS`: three cards with their
+  buttons and counts - `status()` carries `prompts` and `lessons`), the Claude's memory line, setup warnings, roadmap,
+  status; *Prompts for AI tools* = `aiPromptsModal` (Generate a new prompt, a shot picked). Each page sets
+  `body[data-page]` (analyze / edit / generate / memory / jobs / settings) -> its accent colour (`--acc`: cyan / amber
+  / pink / violet / blue; CSS only, motion off with prefers-reduced-motion). Edit: **New edit** (`createVideoModal`: Use a reference | Use a
   prompt -> your clips (a project, or *+ a new video* = POST `/api/projects/new`, an empty folder) -> POST
   `/api/project/<p>/made_from` + Claude `/recreate-video <ref> <p>` or `/recreate-video prompt:<id> <p>`); a video's
   Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,

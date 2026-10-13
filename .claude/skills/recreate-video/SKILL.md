@@ -14,7 +14,7 @@ Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 
 - `prompt:<id> <project>` - a video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is
   for). By kind: **brief** = the user's own instructions for the whole video (length, feel, footage, order, pacing,
   colour, music, SFX, graphics, transitions, captions, where it ends up): follow it part by part with the lab's
-  tools, ask its "questions first" part (and anything it leaves vague - its check on the Prompts page lists them)
+  tools, ask its "questions first" part (and anything it leaves vague - its check in the prompt library lists them)
   in one message before building, say plainly what the lab cannot do yet instead of faking it, and write the
   result where the brief says (a Resolve project only through `resolve_build.py`, docs\resolve_notes.md); a
   `style from your reference <name>` line (the card's *Style like*) = match that analysis' measured pacing (cuts /

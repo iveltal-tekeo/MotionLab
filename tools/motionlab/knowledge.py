@@ -363,6 +363,12 @@ def local_lessons() -> list[tuple[str, str]]:
     return parse_lessons(LOCAL_LESSONS.read_text(encoding="utf-8")) if LOCAL_LESSONS.exists() else []
 
 
+def lesson_count() -> int:
+    """How many lessons Claude follows: the shared rules (lessons.md) + this PC's new ones (Home's Claude's memory)."""
+    shared = parse_lessons(SHARED_LESSONS.read_text(encoding="utf-8")) if SHARED_LESSONS.exists() else []
+    return len(shared) + len(local_lessons())
+
+
 def ensure_local_lessons() -> Path:
     if not LOCAL_LESSONS.exists():
         LOCAL_LESSONS.parent.mkdir(parents=True, exist_ok=True)

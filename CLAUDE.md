@@ -111,12 +111,15 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (edit its STAGES / VERDICT when the state changes)
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
-`MotionLab.bat` = a local server + an Edge app window, sidebar in the user's order (0.3.3): Home, Videos (Create
-video from a reference or a prompt, renders, graphics + their settings, Resolve check-up, library picks, "How did it
-turn out?" per part -> `build\outcome.json`) | Media: References (download, analyse, the review page with verdicts
-and possible misses, Delete), Prompts (purposes, Use it change…, Delete) | Additional: Library, Knowledge (Share) |
-Tools: Jobs, Claude skills (the project's Claude Code commands, what each does), Settings (+ Storage tab). The app runs the lab's own tools as jobs; Claude's parts run in Claude
-Code windows the app opens with a fixed first message and an effort level per task (Settings > Claude Code).
+`MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's three ways in: Home ("What do
+you want to do?"), **1 Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
+misses, Delete), **2 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
+their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **3 Generate**
+(#/generate: prompts for AI video tools, motion-graphics videos; the prompt library #/prompts), **Claude's memory**
+(#/memory: what Claude learned - cards, pacing, lessons, Share - and the saved effects + graphics), then Jobs and Settings
+(General, Storage, Claude skills). The 0.3 addresses (#/refs, #/projects, #/knowledge, #/library) still work. The app
+runs the lab's own tools as jobs; Claude's parts run in Claude Code windows the app opens with a fixed first message and
+an effort level per task (Settings > Claude Code).
 
 ## Conventions
 - Frames are 0-based (frame 0 = first frame of the analyzed video); ranges are inclusive.
@@ -141,13 +144,13 @@ Code windows the app opens with a fixed first message and an effort level per ta
 ## Workflow
 - A reference goes through six steps (the app shows them): download > lab pass (`analyze.py`) > Claude checks
   (`/analyze-reference`: read EVERY contact sheet, write `review.json`, `report.py`; auto-detected types are drafts
-  until reviewed) > the user's verdicts (app) > feedback to Claude > Share (Knowledge page).
+  until reviewed) > the user's verdicts (app) > feedback to Claude > Share (Claude's memory).
 - When the user pastes text starting with `MOTIONLAB FEEDBACK` (or says they gave feedback in the app: newest
   `analysis\<name>\feedback\app_*.txt`), follow "Applying feedback" in the skill: new lessons go to
   `knowledge\local\lessons.md` (id from `tools\knowledge.py next-lesson-id`), threshold changes in `config.json`,
   re-check the WRONG/PARTLY events and the possible misses marked EFFECT, run the self-test, and report exactly what
   changed. Also import pasted feedback into verdicts.json (`feedback.parse` + `motionlab.app.data.save_verdicts`).
-  Afterwards remind the user of Knowledge > Share my knowledge.
+  Afterwards remind the user of Claude's memory > Share my knowledge.
 - Reviewing incoming lessons (`knowledge\incoming\*.md`): skill section "Reviewing incoming lessons"; each becomes a
   shared `L###` rule in `lessons.md` or is dropped with a reason; delete the reviewed incoming file.
 - Measured help for reviews (evidence only, never changes events): every flash gets a "flash look" line

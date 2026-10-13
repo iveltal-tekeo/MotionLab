@@ -717,17 +717,17 @@ SKILL_INFO = {
     "analyze-reference": {"brief": "Claude checks a video you analysed: it looks at every effect and names it - and "
                                    "learns from your verdicts when you send feedback.",
                           "uses": ["/analyze-reference <video name or file>"], "task": "review",
-                          "where": "References - Send to Claude, Send feedback to Claude"},
+                          "where": "Analyze - Send to Claude, Send feedback to Claude"},
     "recreate-video": {"brief": "Claude makes a video with your clips - the edit of a reference, or from one of your "
                                 "prompts - first as a preview, then in DaVinci Resolve.",
                        "uses": ["/recreate-video <reference> <your video>", "/recreate-video prompt:<prompt id> <your video>",
                                 "/recreate-video improve <your video>"], "task": "recreate",
-                       "where": "Videos - Create video, How did it turn out?"},
+                       "where": "Edit - New edit, How did it turn out?"},
     "write-prompt": {"brief": "Claude checks, improves or writes prompts: briefs, AI video and image prompts, hooks "
                               "and scripts.",
                      "uses": ["/write-prompt analyse <prompt id>", "/write-prompt optimize <prompt id>",
                               "/write-prompt brief - want: <what you want to make>"], "task": "prompt",
-                     "where": "Prompts - Check it, Optimize, Add prompts"},
+                     "where": "Generate - Prompts for AI tools; the prompt library: Optimize, Add prompts"},
     "whats-next": {"brief": "Where MotionLab stands and what to build next.", "uses": ["/whats-next"], "task": "plan",
                    "dev": True},
 }

@@ -28,14 +28,14 @@ Cards carry the name you set in *Settings > Sharing & updates* - not your email 
 
 1. You analyse a video (category + tags in the dialog) and review it with Claude; your verdicts in the app go into its
    card. Claude writes new lessons into `knowledge\local\lessons.md` - they work on your PC at once.
-2. **Knowledge > Share my knowledge**: the app copies your new or changed cards to `knowledge\references\` and your new
+2. **Claude's memory > Share my knowledge**: the app copies your new or changed cards to `knowledge\references\` and your new
    lessons to `knowledge\incoming\`, commits only those knowledge paths and pushes them to GitHub. If somebody shared
    first, it pulls their work and pushes again; if the push fails (no access, offline) it undoes the commit and leaves
    a pack file instead.
 3. Everybody else gets them with their next update - MotionLab updates itself from GitHub when it starts (git pull;
    the app restarts on the new version). Their `summary.md` now includes your cards.
 4. **Review**: lessons in `knowledge\incoming\` do not change anybody's analyser until someone (normally the repo
-   owner) clicks *Review them in Claude Code* on the Knowledge page. Claude keeps the concrete, checkable ones, merges
+   owner) clicks *Review them in Claude Code* in Claude's memory. Claude keeps the concrete, checkable ones, merges
    duplicates, tags category-specific ones (`category: cooking`) and appends them to the shared `lessons.md` as the
    next `L0NN`; the next *Share* publishes that. One wrong rule cannot silently change everybody's analyser.
 5. **Friends without write access** (or without git): *Share* writes `knowledge\outbox\<name>-<time>.mlpack.json`;

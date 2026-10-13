@@ -24,9 +24,9 @@ verdicts, lessons, edits), so nothing is lost when you start fresh.
 |---|---|---|
 | check every effect of a reference | `/analyze-reference "C:\MotionLab\refs\<video>.mp4"` (the app's Send to Claude) | high |
 | apply your verdicts | `Apply the MOTIONLAB FEEDBACK in <file>` (the app's Send feedback to Claude) | high |
-| review friends' lessons | the Knowledge page's button | high |
+| review friends' lessons | the button in Claude's memory | high |
 | recreate a reference with your clips | `/recreate-video <reference> <your project>` (the app's Recreate button) | xhigh |
-| save library effects | the Library page's button | high |
+| save library effects | the button in Claude's memory > Saved effects & graphics | high |
 | questions, small fixes | just ask | medium |
 
 ## Effort levels

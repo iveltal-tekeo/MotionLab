@@ -56,7 +56,7 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 - **Review** with Claude Code: what happens, timing and easing, camera or post, and how to rebuild it.
 - **Teach it**: your verdicts in the app's review tab (and your answers on the "possible misses") -> Claude turns
   them into rules, checked by a self-test.
-- **Share it**: *Knowledge > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
+- **Share it**: *Claude's memory > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
   back with the next update. The *Knowledge* page compares pacing and effects per category across everybody.
 - **Rebuild it** with your own clips, in colour, as a lab render or as an editable DaVinci Resolve project.
 - **Prompts**: keep the prompts that worked for you (Seedance / Higgsfield / Kling shots, hooks, talking scripts) or
@@ -101,9 +101,9 @@ Microsoft Edge (the app window) comes with Windows.
 3. Open the reference: **Review effects** - Correct / Partly / Wrong (keys 1 2 3) and a note where needed - then the
    red **Possible misses** tab.
 4. **Send feedback to Claude**: a new Claude Code window turns your verdicts into lessons.
-5. **Knowledge > Share my knowledge.**
+5. **Claude's memory > Share my knowledge.**
 
-The References page shows these steps and where each video stands. Every frame number comes with its timecode
+The Analyze page shows these steps and where each video stands. Every frame number comes with its timecode
 (`f480 (00:00:16:00)`), so you can check anything in your editor. New to Claude Code? Read
 [docs/claude_tips.md](docs/claude_tips.md) (also in the app: *Tips for working with Claude*): one chat per task,
 which effort level, how to use fewer tokens.
@@ -160,7 +160,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
   time (in the browser).
 - To push, a friend needs write access: on GitHub, *Settings > Collaborators > Add people*. Friends without access
   get a pack file (`knowledge\outbox\*.mlpack.json`) to send to you; you drop it in `knowledge\inbox\` and *Import*.
-- Lessons from others wait in `knowledge\incoming\` until someone reviews them (*Knowledge > Review them in Claude
+- Lessons from others wait in `knowledge\incoming\` until someone reviews them (*Claude's memory > Review them in Claude
   Code*), so one wrong rule cannot silently change everybody's analyser.
 - Only text and numbers about videos are shared - never videos, frames or file paths. Why no cloud database:
   [docs/knowledge_sharing.md](docs/knowledge_sharing.md).

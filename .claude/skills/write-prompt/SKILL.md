@@ -24,7 +24,7 @@ argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|imag
     worked; change only what the user wrote; say in one line what changed.
 - A prompt's `tags` = what it is for (vlog, talking head, sfx, transitions, colour, ... or the user's own): copy
   examples with the same tags and model first. Videos made from a prompt keep how they turned out per part in
-  `projects\<p>\build\outcome.json` (the Prompts page shows it as "Used in"): repeat the parts rated good, fix bad.
+  `projects\<p>\build\outcome.json` (the prompt library shows it as "Used in"): repeat the parts rated good, fix bad.
 - `shot <reference> f<a>-<b>` -> a shot prompt filled from a reference's frames (section 4)
 - empty -> ask what they need: a new prompt (which kind) or adding examples
 The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scripts\python`; don't explore the lab.
@@ -35,7 +35,7 @@ The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scri
 - **One home**: `knowledge\local\prompts\<kind>\<id>.json`, written only through `tools\prompts.py` (import /
   annotate / rate). Read with the MCP tool `prompts(kind)` / `prompts(id=...)` (or `prompts.py list / show`).
 - Never invent a source or a result. Two ratings, never mixed: `result` = the user's Good / OK / Bad of what a model
-  made (the Prompts page or `prompts.py rate`); `review` = YOUR reading of the text, 0-5 stars + why + fix (will a
+  made (the prompt library or `prompts.py rate`); `review` = YOUR reading of the text, 0-5 stars + why + fix (will a
   model do what it asks?). The user's rating always outranks your stars. Creators' prompts stay on this PC; keep
   their link or the file they came from (`source.file`).
 - Frames you mention: frame number + timecode, e.g. `f480 (00:00:16:00)` (hard rule 2).
@@ -103,7 +103,7 @@ For each id: read it (`prompts(id=...)`), then write a JSON file and run
   slot order.
 - Put your `review` (section 1, "Reviewing") in the same JSON: `why` = the main point in two sentences, `fix` =
   the one change that helps most. In the chat afterwards: one line per prompt - id, title, n clear / vague /
-  missing - and "write what you want next to the parts on the Prompts page, then click Optimize with Claude".
+  missing - and "write what you want next to the parts in the prompt library (Generate), then click Optimize with Claude".
 
 ## 2a. Style from an analysed reference
 "al estilo de Clavero", "like this creator's vlogs": when the user analysed one of their videos, use what the lab
@@ -160,7 +160,7 @@ site) and to rate what it made.
 4. Save them: a JSON list -> `prompts.py import <file>.json`, each with `"source": {"type": "written"}`,
    `"made_from": [example ids]`, kind, title, model, structure, review (your stars for your own text, honestly).
    Tell the user the new ids and: paste one into the
-   site, then rate it on the Prompts page (Good / OK / Bad + a note) - good ones become the first examples.
+   site, then rate it in the prompt library (Good / OK / Bad + a note) - good ones become the first examples.
 
 ## 4. A shot from a reference (`shot <reference> f<a>-<b>`)
 Fill the slots from the analysis instead of guessing: `frame_info` / `events(reference, start=a, end=b)` (camera

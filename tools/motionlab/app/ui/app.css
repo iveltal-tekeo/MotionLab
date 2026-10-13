@@ -283,7 +283,6 @@ pre.log { background: #0a0a0c; border: 1px solid var(--line); border-radius: 6px
   .rlist { border-right: 0; border-bottom: 1px solid var(--line2); } .g4 { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------------- v0.2: updates, restarts, knowledge */
-.grid.g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .banner { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 95; background: #1f1a0c; border: 1px solid var(--amber-d);
   border-left: 3px solid var(--amber); border-radius: 8px; padding: 9px 14px; font-size: 13px; display: flex; gap: 12px; align-items: center; box-shadow: 0 8px 26px #000a; }
 #overlay { position: fixed; inset: 0; z-index: 99; background: #0b0b0dcc; display: flex; align-items: center; justify-content: center; }
@@ -348,12 +347,9 @@ tr.sel td { background: #221d0d; }
 
 /* ---------------- v0.2.5: workflow steps, cards with actions, delete, analyse choice */
 .flow { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
-.flow.how { margin: 0 0 14px; }
-.flow.how .fstep { flex: 1 1 150px; display: flex; gap: 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
 .flow .fstep > b { flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
   font: 700 12px var(--mono); background: var(--panel2); border: 1px solid var(--line2); color: var(--muted); }
 .flow .ft { font-weight: 600; font-size: 13px; }
-.flow .fd { font-size: 11.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
 .flow.strip { align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; gap: 6px; }
 .flow.strip .fstep { display: inline-flex; gap: 6px; align-items: center; color: var(--dim); font-size: 13px; }
 .flow.strip .fstep.done { color: var(--muted); }
@@ -398,10 +394,9 @@ tr.sel td { background: #221d0d; }
 /* ---------------- 0.3.3: a livelier look, CSS only (no images, no scripts): a colour per section (body[data-page],
    set by route()), soft gradients, a little motion on cards / dialogs / toasts - off with prefers-reduced-motion */
 :root { --violet: #a78bfa; --cyan: #38d6f5; --pink: #ff6fae; --acc: var(--amber); --acc-soft: #ffc4001c; }
-body[data-page=refs] { --acc: var(--cyan); --acc-soft: #38d6f51c; }
-body[data-page=prompts] { --acc: var(--pink); --acc-soft: #ff6fae1c; }
-body[data-page=library] { --acc: var(--green); --acc-soft: #3ecf8e1c; }
-body[data-page=knowledge] { --acc: var(--violet); --acc-soft: #a78bfa1c; }
+body[data-page=analyze] { --acc: var(--cyan); --acc-soft: #38d6f51c; }
+body[data-page=generate] { --acc: var(--pink); --acc-soft: #ff6fae1c; }
+body[data-page=memory] { --acc: var(--violet); --acc-soft: #a78bfa1c; }
 body[data-page=jobs], body[data-page=settings] { --acc: var(--blue); --acc-soft: #4fb3ff1c; }
 main { background: radial-gradient(1100px 340px at 18% -140px, var(--acc-soft), transparent 70%), var(--bg); }
 #side { background: linear-gradient(180deg, #15151a, #0f0f12); }
@@ -409,9 +404,8 @@ main { background: radial-gradient(1100px 340px at 18% -140px, var(--acc-soft), 
 #side a[data-nav] { transition: background .15s, color .15s; }
 #side a[data-nav].on { background: linear-gradient(90deg, var(--acc-soft), transparent 85%); box-shadow: inset 3px 0 0 var(--acc); }
 #side a.on .ic { color: var(--acc); }
-#side a[data-nav=projects]:hover .ic { color: var(--amber); } #side a[data-nav=refs]:hover .ic { color: var(--cyan); }
-#side a[data-nav=prompts]:hover .ic { color: var(--pink); } #side a[data-nav=library]:hover .ic { color: var(--green); }
-#side a[data-nav=knowledge]:hover .ic { color: var(--violet); }
+#side a[data-nav=edit]:hover .ic { color: var(--amber); } #side a[data-nav=analyze]:hover .ic { color: var(--cyan); }
+#side a[data-nav=generate]:hover .ic { color: var(--pink); } #side a[data-nav=memory]:hover .ic { color: var(--violet); }
 .head h1 { display: flex; align-items: center; gap: 10px; }
 .head h1::before { content: ""; width: 4px; height: 22px; border-radius: 2px; background: linear-gradient(180deg, var(--acc), transparent); }
 .tabs a.on { border-bottom-color: var(--acc); }
@@ -535,8 +529,6 @@ button.kbadge:hover { filter: brightness(1.25); }
 .ehero p { margin: 0 0 14px; color: var(--muted); max-width: 520px; }
 .ehero .row { justify-content: center; gap: 10px; }
 /* Home > Where to start: the six steps are buttons */
-button.fstep { text-align: left; color: inherit; font: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
-.flow.how button.fstep:hover { border-color: var(--acc); background: var(--acc-soft); }
 /* the prompt pop-up (redesigned): kind-coloured header, steps + next, two columns of sections */
 .pm2 { --kc: var(--acc); display: flex; flex-direction: column; gap: 12px; }
 .pm2.k-brief { --kc: var(--amber); } .pm2.k-shot { --kc: var(--cyan); } .pm2.k-image { --kc: var(--violet); }
@@ -686,3 +678,35 @@ button.cvitem:hover { border-color: var(--cyan); }
 @media (prefers-reduced-motion: reduce) {        /* one still scene: the reference with its cuts and named effects */
   .hero-line.hl2, .hs-mark, .hs-tag { opacity: 1; transform: none; }
 }
+
+/* ---------------- 0.4: three ways in - the sidebar's numbered steps, Home's "What do you want to do?", Generate's ways */
+#side .nstep { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line2);
+  display: grid; place-items: center; font: 600 10.5px var(--mono); color: var(--dim); }
+#side a.on .nstep { border-color: var(--acc); color: var(--acc); }
+#side .navsep { height: 1px; background: var(--line); margin: 10px 8px 8px; }
+.ways-q { font-size: 18px; margin: 20px 0 10px; }
+.ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.way { --wc: var(--amber); display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--line);
+  border-radius: 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--wc) 9%, var(--panel)), var(--panel) 62%);
+  transition: border-color .15s, transform .15s; }
+.way:hover { border-color: color-mix(in srgb, var(--wc) 55%, var(--line)); transform: translateY(-2px); }
+.w-analyze { --wc: var(--cyan); } .w-edit { --wc: var(--amber); } .w-generate { --wc: var(--pink); }
+.way-top { display: flex; align-items: center; gap: 10px; }
+.way-n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--wc); color: #111;
+  font-weight: 700; font-size: 13.5px; }
+.way .ic, .gway .ic, .memline .ic { width: 26px; height: 26px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round; }
+.way .ic { color: var(--wc); }
+.way h3 { margin: 2px 0 0; font-size: 17px; color: var(--text); text-transform: none; letter-spacing: 0; }
+.way p { margin: 0; color: var(--muted); font-size: 13.5px; flex: 1; }
+.way-act { margin-top: 4px; }
+.way-foot { font-size: 12.5px; color: var(--wc); margin-top: 2px; }
+.memline { display: flex; align-items: center; gap: 12px; margin-top: 14px; color: var(--text); }
+.memline:hover { text-decoration: none; border-color: var(--violet); }
+.memline .ic { color: var(--violet); }
+.gways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.gway { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); display: flex; flex-direction: column; gap: 10px; }
+.gway h2 { margin: 0; }
+.gway p { margin: 0; color: var(--muted); }
+.gway .ic { color: var(--acc); }
+@media (max-width: 1150px) { .ways, .gways { grid-template-columns: 1fr; } }
