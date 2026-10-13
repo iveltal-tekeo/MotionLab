@@ -78,6 +78,10 @@ prompts we have given and you have analysed structurally so we can generate good
     0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
     shown on the prompt as "Used in"); learn from those answers which structure works per purpose - needs a few
     made videos rated first.
+  - **Style from analysed references** (built 2026-10-13, after 0.3.4: "the optimized prompt asks for a link to a
+    Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
+    references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
+    look measured too (0.3.7), and several references of one creator averaged into one style.
 - **Needs**: your prompts (the Prompts page or pasted in the chat).
 
 ## 0.4.0 - planned - Yapping mode: the yap-maxing framework

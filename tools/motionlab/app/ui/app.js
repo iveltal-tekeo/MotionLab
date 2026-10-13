@@ -179,7 +179,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 10;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 11;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1180,7 +1180,8 @@ async function createVideoModal(pre = {}) {
         const draw = q => { $('#cvpl', box).innerHTML = PRM.items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60)
           .map(x => `<label class="cvitem${x.id === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === pick ? 'checked' : ''}>
             <span><b class="mono">${esc(x.id)}</b> ${esc(x.title || '')} <span class="tag">${esc(KL[x.kind] || x.kind)}</span>${(x.tags || []).map(g => ` <span class="fchip sm">${esc(g)}</span>`).join('')}<br>
-            <span class="small muted">${esc(x.text.slice(0, 150))}${x.text.length > 150 ? '…' : ''}</span></span></label>`).join('') || '<div class="empty">No prompt matches.</div>'; wire(); };
+            <span class="small muted">${esc(x.text.slice(0, 150))}${x.text.length > 150 ? '…' : ''}</span>${(x.style_refs || []).length
+              ? `<br><span class="small">Style like: ${x.style_refs.map(n => esc(((PRM.styles || {})[n] || {}).title || n)).join(', ')}</span>` : ''}</span></label>`).join('') || '<div class="empty">No prompt matches.</div>'; wire(); };
         $('#cvq', box).oninput = debounce(e => draw(e.target.value.trim().toLowerCase()), 150);
         draw('');
       }
@@ -1600,6 +1601,23 @@ async function pagePrompts(main, kind) {               // one page for every kin
         <button class="btn sm pri" data-opt title="Claude writes a better version from its check and what you want (a new prompt; this one stays)"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
         ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved></span></div></details>`;
   };
+  const SR = R.styles || {}, SUG = R.suggest || {};
+  const styleBlock = p => {                            // 0.3.5: "al estilo de Clavero" = a reference you analysed, measured
+    if (!STYLE_KINDS.includes(p.kind)) return '';
+    const linked = p.style_refs || [], sug = SUG[p.id] || [];
+    const one = n => { const s = SR[n];
+      return `<div class="psref">${s && s.thumb ? `<img src="${fileUrl(s.thumb)}" loading="lazy" alt="">` : '<span></span>'}
+        <div><a href="#/ref/${encodeURIComponent(n)}"><b>${esc(s ? s.title : n)}</b></a>${s && s.uploader ? ` <span class="small muted">by ${esc(s.uploader)}</span>` : ''}
+          <div class="small">${s ? esc(s.line) : '<span class="bad">not analysed on this PC any more</span>'}</div></div>
+        <button class="btn sm ghost" data-sdel="${esc(n)}" title="Unlink - Claude no longer copies its style">✕</button></div>`; };
+    if (!linked.length && !sug.length && !Object.keys(SR).length) return '';
+    return `<div class="pstyle"><div class="row"><span class="psl">Style like</span>${linked.length ? '' : '<span class="small muted">a video you analysed - Claude copies its measured pacing, effects and look</span>'}
+        <span class="grow"></span><button class="btn sm ghost" data-spick>+ ${linked.length ? 'another reference' : 'pick from your references'}</button></div>
+      ${linked.map(one).join('')}
+      ${sug.map(x => `<div class="pssug small"><span>Found in your references: <b>${esc((SR[x.name] || {}).title || x.name)}</b> <span class="muted">(${esc(x.why)})</span></span>
+        <button class="btn sm" data-suse="${esc(x.name)}">Use its style</button></div>`).join('')}
+      ${linked.length ? '<div class="small muted">Claude reads its measured style when it checks, optimizes or runs this prompt - click <b>Optimize with Claude</b> to write it into the prompt.</div>' : ''}</div>`;
+  };
   const card = p => { const res = p.result || {}, rv = p.review || {};
     const title = p.title || p.text.trim().split(/\s+/).slice(0, 10).join(' ') + (p.text.trim().split(/\s+/).length > 10 ? '…' : '');
     const versions = all.filter(x => (x.made_from || []).includes(p.id));
@@ -1614,6 +1632,7 @@ async function pagePrompts(main, kind) {               // one page for every kin
         <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
       <div class="ptextwrap"><pre class="ptext${long ? ' clamp' : ''}">${esc(p.text)}</pre>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
       ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
+      ${styleBlock(p)}
       ${checkBlock(p)}
       ${versions.length ? `<div class="small pver">Optimized: ${versions.map(x => `<a href="#" data-goto="${esc(x.id)}">${esc(x.id)}${x.title ? ' - ' + esc(x.title) : ''}</a>`).join(', ')}</div>` : ''}
       ${(used[p.id] || []).map(usedLine).join('')}
@@ -1682,6 +1701,16 @@ async function pagePrompts(main, kind) {               // one page for every kin
       $$('.cwish', c).forEach(i => { i.onchange = saveWishes; i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; });
       const opt = $('[data-opt]', c);
       if (opt) opt.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); };
+      const setStyle = async (refs, msg) => {
+        try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); route(); }
+        catch (e) { toast(e.message, 'err'); }
+      };
+      const linkMsg = (p.structure || []).length ? 'Linked - now click Optimize with Claude so its measured style goes into the prompt'
+        : 'Linked - Claude uses its measured style when it checks this prompt';
+      $$('[data-suse]', c).forEach(b => b.onclick = () => setStyle([...(p.style_refs || []), b.dataset.suse], linkMsg));
+      $$('[data-sdel]', c).forEach(b => b.onclick = () => setStyle((p.style_refs || []).filter(n => n !== b.dataset.sdel), 'Unlinked'));
+      const sp = $('[data-spick]', c);
+      if (sp) sp.onclick = () => styleModal(p, R, n => setStyle([...(p.style_refs || []), n], linkMsg));
     });
   };
   if (pq) pq.oninput = debounce(() => { q = pq.value.trim().toLowerCase(); draw(); }, 150);
@@ -1700,6 +1729,30 @@ async function pagePrompts(main, kind) {               // one page for every kin
   };
   $$('[data-k]', main).forEach(b => b.onclick = () => setKind(b.dataset.k));
   draw();
+}
+const STYLE_KINDS = ['brief', 'script', 'hook'];           // prompts that make a video (prompts.STYLE_KINDS)
+// pick an analysed reference whose measured style a prompt follows (the ones its words seem to mean first)
+function styleModal(p, R, done) {
+  const SR = R.styles || {}, sug = ((R.suggest || {})[p.id] || []).map(x => x.name), have = p.style_refs || [];
+  const names = [...sug, ...Object.keys(SR).filter(n => !sug.includes(n))].filter(n => !have.includes(n) && SR[n]);
+  const why = Object.fromEntries(((R.suggest || {})[p.id] || []).map(x => [x.name, x.why]));
+  modal(`<h2>Style like…</h2>
+    <p class="hint">A video you analysed: Claude copies what the lab measured in it - cuts per minute, shot lengths, the first 3 seconds, its effects, the beat - and looks at its frames for the colour.
+      Not there? <a href="#/refs">References</a>: download it and click Analyse first.</p>
+    ${names.length > 6 ? '<input type="search" id="stq" placeholder="Search: title, creator…" style="max-width:340px">' : ''}
+    <div class="cvlist" id="stl"></div>`, el => {
+    const draw = q => {
+      $('#stl', el).innerHTML = names.filter(n => !q || [n, SR[n].title, SR[n].uploader, SR[n].category_label].join(' ').toLowerCase().includes(q))
+        .map(n => { const s = SR[n];
+          return `<button class="cvitem" data-n="${esc(n)}">${s.thumb ? `<img src="${fileUrl(s.thumb)}" loading="lazy" alt="">` : ''}<span><b>${esc(s.title)}</b>${s.uploader ? ` <span class="small muted">by ${esc(s.uploader)}</span>` : ''}
+            ${why[n] ? ` <span class="tag done">${esc(why[n])}</span>` : ''}<br><span class="small muted">${esc(s.category_label || '')} · ${esc(s.line)}</span></span></button>`; }).join('')
+        || `<div class="empty">${Object.keys(SR).length ? 'Nothing more to pick.' : 'No analysed reference yet - <a href="#/refs">References</a>: download one and click Analyse.'}</div>`;
+      $$('[data-n]', el).forEach(b => b.onclick = () => { closeModal(); done(b.dataset.n); });
+    };
+    const q = $('#stq', el);
+    if (q) { q.oninput = debounce(() => draw(q.value.trim().toLowerCase()), 150); q.focus(); }
+    draw('');
+  });
 }
 // "Use it, change...": Claude keeps what worked in a prompt (structure, wording) and changes what the user says
 function remixModal(p) {
@@ -1785,16 +1838,22 @@ function newPromptForm(box, R) {
     <textarea id="nwant" rows="5" style="width:100%" placeholder="e.g. a 10-15 min vlog of my first day in London from my Osmo Pocket 3 + Nano clips: chronological, a warm cinematic grade, whooshes on the transitions, a hook from my best line"></textarea>
     <div class="row" style="margin-top:8px;gap:6px"><span class="small muted">For:</span>${PURPOSES.map(x => `<button class="fchip sm" data-t="${esc(x)}">${esc(x)}</button>`).join('')}</div>
     <div class="row" style="margin-top:8px"><input type="text" id="nmodel" placeholder="for which model or tool? (optional - Claude Code, Seedance 2.0, Kling 3.0, Nano Banana…)" style="max-width:520px"></div>
+    ${Object.keys(R.styles || {}).length ? `<div class="row" id="nstyle" style="margin-top:8px"><label class="small">In the style of <select id="nsty"><option value="">- none -</option>${Object.entries(R.styles).map(([n, s]) =>
+      `<option value="${esc(n)}">${esc(s.title)}${s.uploader ? ' - ' + esc(s.uploader) : ''}</option>`).join('')}</select></label>
+      <span class="small muted">a video you analysed: Claude copies its measured pacing and effects</span></div>` : ''}
     <div class="row" style="margin-top:12px"><button class="btn pri" id="ngo"><svg class="i"><use href="#i-claude"/></svg>Generate it in Claude Code</button>
       <span class="small muted">Claude asks what is missing, writes it, checks it and saves it here.</span></div>`;
-  $$('input[name=nk]', box).forEach(r => r.onchange = () => $$('.kopt', box).forEach(x => x.classList.toggle('on', $('input', x).checked)));
+  const nst = () => { const k = $('input[name=nk]:checked', box).value; if ($('#nstyle', box)) $('#nstyle', box).hidden = !STYLE_KINDS.includes(k); };
+  $$('input[name=nk]', box).forEach(r => r.onchange = () => { $$('.kopt', box).forEach(x => x.classList.toggle('on', $('input', x).checked)); nst(); });
+  nst();
   $$('[data-t]', box).forEach(b => b.onclick = () => b.classList.toggle('on'));
   $('#nwant', box).focus();
   $('#ngo', box).onclick = () => {
     const k = $('input[name=nk]:checked', box).value, w = $('#nwant', box).value.trim().replace(/\s+/g, ' ');
     const tags = $$('[data-t].on', box).map(b => b.dataset.t), m = $('#nmodel', box).value.trim();
+    const sty = $('#nsty', box) && STYLE_KINDS.includes(k) ? $('#nsty', box).value : '';
     if (!w) { toast('Say what you want to make first', 'err'); $('#nwant', box).focus(); return; }
-    openClaude(`/write-prompt ${k} - want: ${w}${tags.length ? ' - for: ' + tags.join(', ') : ''}${m ? ' - model: ' + m : ''}`, 'prompt', 'new');
+    openClaude(`/write-prompt ${k} - want: ${w}${tags.length ? ' - for: ' + tags.join(', ') : ''}${m ? ' - model: ' + m : ''}${sty ? ' - style: ' + sty : ''}`, 'prompt', 'new');
     closeModal();
   };
 }

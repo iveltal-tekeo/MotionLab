@@ -12,6 +12,7 @@ from __future__ import annotations
 import datetime as _dt
 import re
 import threading
+import unicodedata
 from pathlib import Path
 
 from .util import LAB, read_json, safe_name, write_json
@@ -114,6 +115,10 @@ def _check(r: dict) -> None:
             raise ValueError(f"structure status: {', '.join(STATUSES)} (got {x.get('status')!r})")
     if not isinstance(r.get("wishes") or {}, dict):
         raise ValueError("wishes = {slot: what the user wants}")
+    refs = r.get("style_refs") or []
+    if not (isinstance(refs, list) and len(refs) <= 5 and all(isinstance(x, str) and x and safe_name(x) == x
+                                                                for x in refs)):
+        raise ValueError("style_refs = up to 5 analysed references (their folder names in analysis)")
     rv = r.get("review")
     if rv is not None:
         if not (isinstance(rv, dict) and isinstance(rv.get("stars"), int) and 0 <= rv["stars"] <= 5):
@@ -134,7 +139,8 @@ def _review(rv: dict | None) -> dict | None:
 def add(rec: dict) -> dict:
     """Save a new prompt (gets the next id of its kind). rec: kind, text, source {type, creator?, link?, file?}, and
     optionally title, model, result {rating, note}, structure [{slot, text}], pattern, tags, made_from [ids],
-    review {stars 0-5, why, fix}, workflow (name of a multi-step recipe) + step (1, 2, ...), notes (how to use it)."""
+    review {stars 0-5, why, fix}, workflow (name of a multi-step recipe) + step (1, 2, ...), notes (how to use it),
+    style_refs (analysed references whose measured style it follows)."""
     r = {"kind": rec.get("kind"), "title": str(rec.get("title") or "").strip(), "text": str(rec.get("text") or "").strip(),
          "model": str(rec.get("model") or "").strip(), "source": dict(rec.get("source") or {}),
          "result": {"rating": None, "note": "", **(rec.get("result") or {})},
@@ -142,7 +148,7 @@ def add(rec: dict) -> dict:
          "tags": list(rec.get("tags") or []), "made_from": list(rec.get("made_from") or []),
          "review": _review(rec.get("review")), "workflow": str(rec.get("workflow") or "").strip(),
          "step": rec.get("step"), "notes": str(rec.get("notes") or "").strip(),
-         "added": _today(), "updated": _today()}
+         "style_refs": list(rec.get("style_refs") or []), "added": _today(), "updated": _today()}
     _check(r)
     with _LOCK:
         r["id"] = next_id(r["kind"])
@@ -153,11 +159,13 @@ def add(rec: dict) -> dict:
 def update(pid: str, **changes) -> dict:
     """Change fields of a saved prompt: title, model, structure (Claude's check: per slot what the prompt says +
     status clear / vague / missing + a tip), pattern, tags, workflow, step, notes, review (Claude's stars), wishes
-    (the user's: {slot: what I want} - read by `/write-prompt optimize`), rating + note (the user's) - the text and
-    the source stay as they were added."""
+    (the user's: {slot: what I want} - read by `/write-prompt optimize`), style_refs (analysed references whose
+    measured style the prompt follows), rating + note (the user's) - the text and the source stay as they were
+    added."""
     with _LOCK:
         r = get(pid)
-        for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes", "wishes"):
+        for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes", "wishes",
+                  "style_refs"):
             if k in changes and changes[k] is not None:
                 r[k] = changes[k]
         if changes.get("review") is not None:
@@ -188,6 +196,100 @@ def set_kind(pid: str, kind: str) -> dict:
         write_json(_path(r["id"]), r, indent=1)
         old.unlink()
     return r
+
+
+# ------------------------------------------------------------------------------------------------ style references
+# 0.3.5: "al estilo vlog de Clavero" - when a Clavero video is analysed already, its measured style (pacing, effects,
+# words) goes into the prompt instead of "give a link". The user links it on the card (or Claude, on a clear match).
+STYLE_KINDS = ("brief", "script", "hook")              # prompts that make a whole video / its talking (Run it)
+# words in titles that name no one (they would match half the prompts)
+_GENERIC = set("""vlog vlogs video videos official music edit edits short shorts reel reels tiktok youtube instagram
+day days dia dias part parte episode episodio trailer teaser live full version remix lyric lyrics letra audio prod feat
+with from this that what when your about como para with sobre todo toda todos cinematic cinematico travel viaje viajes
+daily week semana first primer primera nuevo nueva new best mejor mejores review tutorial highlights recap part1 part2
+""".split())
+
+
+def _fold(s: str) -> str:
+    """Lower case without accents, so "Día" finds "dia" and "CLAVERO" finds "Clavero"."""
+    return "".join(c for c in unicodedata.normalize("NFKD", str(s)) if not unicodedata.combining(c)).lower()
+
+
+def _words(s: str) -> set[str]:
+    return set(re.findall(r"\w+", _fold(s)))
+
+
+def suggest_refs(text: str, styles: list[dict], have=()) -> list[dict]:
+    """Analysed references a prompt seems to mean: the one who made it named in the prompt ("made by Clavero"),
+    else a distinctive word of its title. styles = knowledge.style() of each reference. Best first, at most 4;
+    the ones already linked (have) are left out."""
+    words, folded = _words(text), " " + " ".join(re.findall(r"\w+", _fold(text))) + " "
+    out = []
+    for s in styles:
+        if not s or s.get("test") or s["name"] in have:
+            continue
+        up = " ".join(re.findall(r"\w+", _fold(s.get("uploader") or "")))
+        if up and len(up) >= 3 and f" {up} " in folded:
+            out.append((0, {"name": s["name"], "why": f"made by {s['uploader']}"}))
+            continue
+        upw = {w for w in up.split() if len(w) >= 4 and w not in _GENERIC}
+        hit = sorted(upw & words)
+        if hit:
+            out.append((1, {"name": s["name"], "why": f"made by {s['uploader']}"}))
+            continue
+        tw = {w for w in _words(s.get("title") or "") if len(w) >= 4 and not w.isdigit() and w not in _GENERIC}
+        hit = sorted(tw & words)
+        if hit:
+            out.append((2 if len(hit) == 1 else 1.5, {"name": s["name"], "why": "its title says " +
+                                                      ", ".join(f"'{w}'" for w in hit[:3])}))
+    if any(rk <= 1 for rk, _ in out):                  # the creator found: title-only matches would be noise
+        out = [t for t in out if t[0] <= 1]
+    return [x for _, x in sorted(out, key=lambda t: t[0])][:4]
+
+
+def style_text(r: dict) -> list[str]:
+    """The lines MCP prompts(id) / prompts.py show adds for a prompt's style: each linked reference measured, or the
+    analysed references it seems to mean."""
+    from . import knowledge as KN
+    L = []
+    for n in r.get("style_refs") or []:
+        s = KN.style(n)
+        L.append(f"  style from your reference {n}: " + (f"{s['title']}" + (f" by {s['uploader']}" if s.get("uploader")
+                                                                             else "") + f" ({s['category_label']}) | "
+                                                         f"{s['line']} | Claude reviewed {s['reviewed']}/{s['effects']}"
+                                                         f" effects, the user gave {s['verdicts']} verdicts"
+                                                         if s else "(not analysed on this PC any more)"))
+    if r.get("kind") in STYLE_KINDS:
+        sug = suggest_refs(r.get("text", ""), all_styles(), r.get("style_refs") or [])
+        if sug:
+            L.append("  analysed references it may mean (not linked): "
+                     + "; ".join(f"{x['name']} ({x['why']})" for x in sug))
+    return L
+
+
+def all_styles() -> list[dict]:
+    """knowledge.style() of every analysed reference (self-test videos left out)."""
+    from . import knowledge as KN
+    from .util import ANALYSIS
+    if not ANALYSIS.exists():
+        return []
+    out = []
+    for d in sorted(ANALYSIS.iterdir(), key=lambda p: p.name.lower()):
+        if d.is_dir() and not d.name.startswith("synthetic_") and ".." not in d.name:
+            s = KN.style(d.name)
+            if s:
+                out.append(s)
+    return out
+
+
+def set_style(pid: str, names: list[str]) -> dict:
+    """Link analysed references to a prompt as its style (the card's *Style like*; [] = none)."""
+    from . import knowledge as KN
+    names = [str(n) for n in dict.fromkeys(names or []) if str(n).strip()]
+    for n in names:
+        if not KN.style(n):
+            raise ValueError(f"no analysed reference {n!r} - analyse it first (References)")
+    return update(pid, style_refs=names[:5])
 
 
 # ------------------------------------------------------------------------------------------------ the paste format
@@ -412,10 +514,21 @@ def describe(r: dict, full: bool = False) -> str:
         L.append(f"  review: {rv['why']}" + (f" Fix: {rv['fix']}" if rv.get("fix") else ""))
     if r.get("notes") and full:
         L.append(f"  how to use: {r['notes']}")
-    if r.get("structure"):
+    if r.get("structure") and full and any(x.get("status") for x in r["structure"]):
+        L.append("  Claude's check (part: status - what it says - tip):")      # 0.3.4: what Optimize starts from
+        L += [f"    {x['slot']}: {x.get('status') or '-'} - {x['text'] or '(not said)'}"
+              + (f" - tip: {x['tip']}" if x.get("tip") else "") for x in r["structure"]]
+    elif r.get("structure"):
         L.append("  structure: " + " > ".join(f"{x['slot']}: {x['text']}" for x in r["structure"]))
     elif full:
         L.append("  structure: not split yet")
+    if full:
+        if r.get("wishes"):
+            L.append("  what the user wants (wins over the tips): "
+                     + " | ".join(f"{k}: {v}" for k, v in r["wishes"].items()))
+        L += style_text(r)
+    elif r.get("style_refs"):
+        L.append("  style from: " + ", ".join(r["style_refs"]))
     text = r.get("text", "")
     L.append("  text: " + (text if full or len(text) <= 300 else text[:300] + " ..."))
     return "\n".join(L)

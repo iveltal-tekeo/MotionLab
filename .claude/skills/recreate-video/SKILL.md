@@ -16,7 +16,10 @@ Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 
   colour, music, SFX, graphics, transitions, captions, where it ends up): follow it part by part with the lab's
   tools, ask its "questions first" part (and anything it leaves vague - its check on the Prompts page lists them)
   in one message before building, say plainly what the lab cannot do yet instead of faking it, and write the
-  result where the brief says (a Resolve project only through `resolve_build.py`, docs\resolve_notes.md);
+  result where the brief says (a Resolve project only through `resolve_build.py`, docs\resolve_notes.md); a
+  `style from your reference <name>` line (the card's *Style like*) = match that analysis' measured pacing (cuts /
+  min, typical shot, the first 3 s), its effect families (copy the ones the user marked correct: `events(<name>)`)
+  and its look (`frames(<name>, ...)`) with the user's own clips - its style, never its content;
   **script / hook** = a talking video - the user records it (or has: clips in the project), then
   speech to text (`tools\speech.py`), captions (`overlay.py captions`) and graphics from the words (the
   `talking-head-pack` example: beats from the transcript, `overlay.py fit`), an edit plan; **shot / image** = for a

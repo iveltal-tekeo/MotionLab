@@ -44,6 +44,13 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   with it picked; shot / image = copy for the site). *Add prompts* = 1) I have a prompt (the paste / file form;
   Claude checks it after Save) 2) Generate a new prompt from zero (kind, what you want, for, model ->
   `/write-prompt <kind> - want: ...`). API_LEVEL 10.
+  After 0.3.4 (the user: "the optimized prompt asks for a link to a Clavero vlog - what if I analysed one?"): brief /
+  script / hook cards have **Style like** (`styleBlock`): linked references (`style_refs`, POST `/api/prompts/style`)
+  with their measured line (`knowledge.style()`: format, cuts/min, typical shot, first 3 s, effects/min per family,
+  BPM, words; cached per file change), "Found in your references: ... *Use its style*" (`prompts.suggest_refs`: who
+  made it named in the prompt, else a distinctive title word; GET `/api/prompts` carries `styles` + `suggest`), *+ pick
+  from your references* (`styleModal`); Generate from zero has *In the style of* (`- style: <name>`); Create video's
+  prompt list shows it. API_LEVEL 11.
 - Pages (routes keep their old names #/refs, #/projects): Home (status, update banner, next steps = each reference's
   next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
@@ -121,7 +128,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

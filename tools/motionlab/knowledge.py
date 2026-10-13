@@ -147,6 +147,82 @@ def pacing(ev: dict) -> dict:
     }
 
 
+# ================================================================================================= style of a reference
+_STYLE: dict = {}
+_STYLE_LOCK = threading.Lock()
+
+
+def _sig(*files: Path) -> tuple:
+    out = []
+    for p in files:
+        try:
+            out.append(p.stat().st_mtime_ns)
+        except OSError:
+            out.append(None)
+    return tuple(out)
+
+
+def style(name: str) -> dict | None:
+    """What an analysed reference measures about style - a prompt's style reference (0.3.5): title, who made it,
+    link, category, format, pacing (cuts / min, shot lengths, the first 3 s, effects per family, BPM), how far it was
+    checked (Claude's review, the user's verdicts) and whether its words are there (content\\transcript.json). None
+    for a missing analysis. Cached until one of its files changes (events.json can be MBs)."""
+    d = ANALYSIS / str(name)
+    if not name or ".." in str(name) or "/" in str(name) or "\\" in str(name):
+        return None
+    files = (d / "events.json", d / "meta.json", d / "feedback" / "verdicts.json", d / "content" / "transcript.json",
+             DOWNLOADS)
+    sig = _sig(*files)
+    if sig[0] is None:
+        return None
+    with _STYLE_LOCK:
+        hit = _STYLE.get(name)
+        if hit and hit[0] == sig:
+            return hit[1]
+    try:
+        ev = read_json(files[0])
+    except (OSError, ValueError):
+        return None
+    m = meta(name, ev)
+    v = ev.get("video") or {}
+    w, h = v.get("display_width") or v.get("width"), v.get("display_height") or v.get("height")
+    evs = ev.get("events", [])
+    S = _verdicts(name).get("events", {})
+    pc = pacing(ev)
+    thumb = None                         # a real frame ~40 % in (like the References cards), lab-relative
+    for e in sorted(evs, key=lambda e: abs(e.get("key", e["start"]) - 0.4 * (v.get("frames") or 0)))[:12]:
+        f = d / "frames" / f"f{int(e.get('key', e['start'])):06d}.jpg"
+        if f.exists():
+            thumb = f.relative_to(LAB).as_posix()
+            break
+    s = {"name": name, "thumb": thumb, "title": m["title"], "uploader": m["uploader"], "url": m["url"], "platform": m["platform"],
+         "category": m["category"], "category_label": category_label(m["category"]), "tags": m["tags"],
+         "format": fmt(w, h, v.get("duration_s")), "fps": v.get("fps"), "pacing": pc,
+         "reviewed": sum(1 for e in evs if e.get("review")), "effects": len(evs),
+         "verdicts": sum(1 for x in S.values() if x.get("v")),
+         "transcript": sig[3] is not None, "test": str(name).startswith("synthetic_")}
+    s["line"] = style_line(s)
+    with _STYLE_LOCK:
+        _STYLE[name] = (sig, s)
+    return s
+
+
+def style_line(s: dict) -> str:
+    """One reference's measured style in a line (prompt cards, MCP prompts(), the /write-prompt skill)."""
+    p = s.get("pacing") or {}
+    fams = ", ".join(f"{k.split(' /')[0].lower()} {n}" for k, n in list((p.get("families") or {}).items())[:4])
+    bits = [s["format"]["label"],
+            f"{p['cuts_per_min']:g} cuts/min" if p.get("cuts_per_min") is not None else "",
+            f"shots {p['median_shot_s']:g} s typical ({p['p10_shot_s']:g}-{p['p90_shot_s']:g} s)"
+            if p.get("median_shot_s") is not None else "",
+            f"{p['hook_cuts_3s']} cut{'s' if p['hook_cuts_3s'] != 1 else ''} in the first 3 s"
+            if p.get("hook_cuts_3s") is not None and p.get("shots") else "",
+            f"effects {p['effects_per_min']:g}/min ({fams})" if p.get("effects") else "no effects found",
+            f"{p['bpm']:g} BPM" if p.get("bpm") else "",
+            "words: yes" if s.get("transcript") else ""]
+    return " · ".join(b for b in bits if b)
+
+
 # ================================================================================================= cards
 def _verdicts(name: str) -> dict:
     p = ANALYSIS / name / "feedback" / "verdicts.json"

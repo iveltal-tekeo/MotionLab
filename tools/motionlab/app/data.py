@@ -14,6 +14,7 @@ from pathlib import Path
 from motionlab import taxonomy
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
+from motionlab import prompts as PR
 from motionlab.styles import fmt as video_format, label as style_label
 from motionlab.timecode import frame_to_tc
 from motionlab.util import ANALYSIS, LAB
@@ -650,6 +651,22 @@ def save_outcome(name: str, body: dict) -> dict:
     out = {"aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp()}
     write_json_atomic(p, out)
     return out
+
+
+def prompt_styles(items: list[dict]) -> dict:
+    """The Prompts page's *Style like* (0.3.5): every analysed reference's measured style (a short line, its frame)
+    and, per brief / script / hook, the references its words seem to mean (who made it, its title)."""
+    st = PR.all_styles()
+    keep = ("name", "title", "uploader", "category_label", "format", "line", "thumb", "reviewed", "effects",
+            "verdicts", "transcript")
+    styles = {s["name"]: {k: s.get(k) for k in keep} for s in st}
+    for r in items:                                  # a linked self-test copy (zz tests) still shows
+        for n in r.get("style_refs") or []:
+            if n not in styles and (s := KN.style(n)):
+                styles[n] = {k: s.get(k) for k in keep}
+    sug = {r["id"]: x for r in items if r.get("kind") in PR.STYLE_KINDS
+           and (x := PR.suggest_refs(r.get("text", ""), st, r.get("style_refs") or []))}
+    return {"styles": styles, "suggest": sug}
 
 
 def prompt_uses() -> dict:

@@ -542,3 +542,12 @@ button.kbadge:hover { filter: brightness(1.25); }
 .cvopt.on[data-m] { border-color: var(--acc); background: var(--acc-soft); }
 .cvopt[data-m] .ic { color: var(--acc); }
 @media (max-width: 1100px) { .crow { grid-template-columns: 26px 1fr; } .crow .csay, .crow .cwish { grid-column: 2; } }
+/* 0.3.5: Style like - a prompt follows the measured style of a reference you analysed */
+.pstyle { border: 1px solid var(--line2); border-left: 3px solid var(--cyan); border-radius: 10px; background: #111619; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.pstyle .psl { font-weight: 600; color: var(--cyan); }
+.psref { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.psref img { width: 88px; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; background: #000; }
+.psref a { color: var(--text); }
+.pssug { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 6px 8px; border-radius: 8px; background: #38d6f512; border: 1px dashed #38d6f560; }
+button.cvitem { text-align: left; color: inherit; font: inherit; width: 100%; }
+button.cvitem:hover { border-color: var(--cyan); }

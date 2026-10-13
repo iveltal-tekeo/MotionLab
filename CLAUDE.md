@@ -81,8 +81,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
-- `prompts.py list | show | import | annotate | kind | rate | template` the prompt library (0.4; MCP `prompts`; kinds
-  brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's check per part)
+- `prompts.py list | show | import | annotate | kind | style | rate | template` the prompt library (0.4; MCP
+  `prompts`; kinds brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's
+  check per part; style = analysed references whose measured style a prompt follows, `knowledge.style()`)
 - `speech.py install | status | transcribe <video> [--names "..."] [--model small|base]` speech to text for your
   own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
   timecode in `projects\<p>\build\speech\`; `overlay.py captions --from <video>` uses it

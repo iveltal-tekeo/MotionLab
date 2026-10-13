@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 10                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 11                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -364,7 +364,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/knowledge/card":
             return self._json(KN.card_detail(arg("id", "")))
         if path == "/api/prompts":
-            return self._json({**PR.overview(), "used": data.prompt_uses()})
+            ov = PR.overview()
+            return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"])})
         if path == "/api/text":
             return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
         if path == "/api/thumb":
@@ -488,6 +489,9 @@ class Handler(BaseHTTPRequestHandler):
             w = body.get("wishes") if isinstance(body.get("wishes"), dict) else {}
             w = {str(k)[:40]: str(v).strip()[:1000] for k, v in list(w.items())[:30] if str(v).strip()}
             return self._json(PR.update(str(body.get("id", "")), wishes=w))
+        if path == "/api/prompts/style":                  # a card's Style like: analysed references (0.3.5)
+            refs = [str(x)[:200] for x in body.get("refs") or [] if isinstance(x, str)]
+            return self._json(PR.set_style(str(body.get("id", "")), refs[:5]))
         if path == "/api/prompts/kind":                   # a card's kind, changed by the user (a new id of that kind)
             return self._json(PR.set_kind(str(body.get("id", "")), str(body.get("kind", ""))))
         if path == "/api/prompts/delete":                 # a card's Delete (the user's click, after a confirm)

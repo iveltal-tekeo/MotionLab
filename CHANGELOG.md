@@ -4,6 +4,16 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## Unreleased
+
+- **Style like - a video you analysed** (Prompts): a brief that says "in the style of Clavero's vlogs" now finds
+  the Clavero video you analysed in References (by who made it or its title) and offers *Use its style*; or pick
+  any analysed video with *+ pick from your references*, also in *Generate a new prompt from zero*. Claude then
+  writes what the lab measured in it - cuts per minute, shot lengths, the first 3 seconds, its effects, the beat,
+  and its look from its frames - into the prompt when it checks or optimizes it, and follows it when the prompt
+  makes a video. No more "send a link to measure the style" when you already analysed one.
+- Claude's check and what you wrote per part now reach Claude in one read when it optimizes a prompt.
+
 ## 0.3.4 - 2026-10-12 - Prompts you can check, improve and run
 
 - **A new kind: Brief for Claude** - a prompt that tells Claude how to make or edit a whole video (length, feel,

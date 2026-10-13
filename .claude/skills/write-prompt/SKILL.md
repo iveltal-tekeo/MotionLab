@@ -1,7 +1,7 @@
 ---
 name: write-prompt
 description: MotionLab - the prompt library (0.4). Save the user's proven or collected prompts (briefs that tell Claude how to make a video, video-model shots for Seedance / Higgsfield / Kling, image prompts for Nano Banana / GPT Image, hooks, talking scripts), check each part by part (clear / vague / missing + tips, 0-5 stars), optimize it from the user's wishes, and write new prompts from zero or like one that worked. Use for "/write-prompt ...", when the user pastes or uploads prompts (text, PDFs, docs), or asks for a brief, a Seedance / video / image prompt, a hook or a script.
-argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|image|hook|script> [like <id>] [- want: ...] | shot <reference> f<a>-<b>
+argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|image|hook|script> [like <id>] [- want: ...] [- style: <reference>] | shot <reference> f<a>-<b>
 ---
 
 # /write-prompt
@@ -16,8 +16,9 @@ argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|imag
   prompt in it ("Collected files" in section 1; `source.file` = the file's name; the source the user picked, else
   ask once), then split and review the new ones. Tell the user the new ids per kind.
 - `<kind>` or `<kind> like <id>` -> write a new prompt (section 3; `like` = start from that example)
-  - `<kind> - want: <what> [- for: <purposes>] [- model: <model>]` (the app's *Generate a new prompt from zero*):
-    the user's need in their words; ask once for what is missing, then write it (section 3).
+  - `<kind> - want: <what> [- for: <purposes>] [- model: <model>] [- style: <reference>]` (the app's *Generate a
+    new prompt from zero*): the user's need in their words; ask once for what is missing, then write it (section 3).
+    `style` = an analysed reference to copy the style of (section 2a).
   - `... like <id> - change: <what>` (the app's *Use it, change…*): keep that prompt's structure, wording and what
     worked; change only what the user wrote; say in one line what changed.
 - A prompt's `tags` = what it is for (vlog, talking head, sfx, transitions, colour, ... or the user's own): copy
@@ -96,16 +97,36 @@ For each id: read it (`prompts(id=...)`), then write a JSON file and run
   the one change that helps most. In the chat afterwards: one line per prompt - id, title, n clear / vague /
   missing - and "write what you want next to the parts on the Prompts page, then click Optimize with Claude".
 
+## 2a. Style from an analysed reference
+"al estilo de Clavero", "like this creator's vlogs": when the user analysed one of their videos, use what the lab
+MEASURED instead of asking for a link. `prompts(id=...)` shows it: `style from your reference <name>: ...` (linked
+on the card's *Style like*, or `- style:`) or `analysed references it may mean (not linked)` (matched by who made it
+/ its title).
+- Check (section 2): a clear match (made by the creator the prompt names) -> link it,
+  `.venv\Scripts\python tools\prompts.py style <id> <name>`, and say so; the feel / style row is then `clear`
+  ("measured from <title>"). A weaker match (a title word) -> don't link; the tip names it ("Analysed: <title> - link
+  it under Style like if that is the style"). Nothing analysed -> tip: "Download one of their videos in References
+  and Analyse it, then link it under Style like" (not "give a link": a link alone measures nothing).
+- Optimize / write (2b, 3): turn the measurements into instructions in the prompt's language, in a "feel / style"
+  section that names the reference (`analysis\<name>`, so the Claude that runs it can open it): cuts per minute and
+  the typical shot (median, short-long range) -> pacing & cuts; cuts in the first 3 s -> the hook's rhythm; effects
+  per family and per minute -> transitions / motion graphics / SFX moments; BPM -> music. Effects the user marked
+  correct are safe to copy (`events(<name>)`, the reviewed labels); say which. Colour: not measured yet (0.3.7) -
+  look at 4-6 frames spread over it (`frames(<name>, "a,b,c,d")`) and describe the grade in words (warm / cool,
+  contrast, saturation, skin, blacks), frame + timecode for each you cite. Words (`words: yes`): how it talks in
+  the hook (`transcript(<name>, 0, <3 s>)`) - its rhythm, never its sentences.
+- Copy the style, never the content: no clips, music, words or graphics of the creator in the prompt.
+
 ## 2b. Optimize (`optimize <id>`)
-Read the prompt (`prompts(id=...)`): its check (`structure` with status / tip), its `review` and the user's
-`wishes` ({slot: what they want}). Write ONE better version: the user's wishes win over your tips; every vague /
-missing part gets fixed (wish, else your tip; when neither and it matters, ask once - or pick a sensible default
+Read the prompt (`prompts(id=...)`): its check (each part's status / tip), its `review`, the user's wishes
+("what the user wants") and its style references (section 2a - link a clear match first). Write ONE better
+version: the user's wishes win over your tips; every vague / missing part gets fixed (wish, else your tip; when neither and it matters, ask once - or pick a sensible default
 and say so); keep their language, voice and every good part word for word. A brief is written in clear sections, one
 per part (short headings), so the Claude that runs it cannot misread it; drop asks the lab cannot do (say so).
 Save it as a NEW prompt (the original stays): a JSON list -> `prompts.py import <file>.json` with the same kind,
-tags and model, `"source": {"type": "written"}`, `"made_from": ["<id>"]`, title "<old title> - optimized", and its
-own `structure` (statuses - mostly clear now) + `review`. Then tell the user the new id, the 3-5 changes that
-matter, and how to run it (a brief or script: *Run it* on its card = Create video; a shot / image: copy it into the
+tags, model and `style_refs`, `"source": {"type": "written"}`, `"made_from": ["<id>"]`, title "<old title> -
+optimized" (optimizing an optimized one: "- optimized 2"), and its own `structure` (statuses - mostly clear now) +
+`review`. Then tell the user the new id, the 3-5 changes that matter, and how to run it (a brief or script: *Run it* on its card = Create video; a shot / image: copy it into the
 site) and to rate what it made.
 - Prompts added in the app have a GUESSED kind (and maybe no title / model): when the kind is wrong (an image prompt
   saved as a shot), move it first - `.venv\Scripts\python tools\prompts.py kind <id> <right kind>` (it gets a new id;
@@ -113,8 +134,8 @@ site) and to rate what it made.
 
 ## 3. Write a new prompt
 1. What they need - ask only for what is missing, in one message: brief = the footage (project folder, cameras),
-   long / short form and length, the feel (a reference link or an analysed reference), where it ends up (Resolve
-   project name); shot = subject / story, model, length and aspect; hook = topic, audience, platform; script =
+   long / short form and length, the feel (an analysed reference - `- style:` or one it names, section 2a - else
+   a link to analyse first), where it ends up (Resolve project name); shot = subject / story, model, length and aspect; hook = topic, audience, platform; script =
    topic, audience, length. A brief from zero: write every part of section 2's brief list, in sections.
 2. Examples: `prompts(kind)` - best first (the user's good ratings, then your stars). Pick 1-2 and say so:
    "built on shot-003's structure, camera wording from shot-007". With `like <id>` start from that one, and apply its

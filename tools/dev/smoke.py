@@ -131,6 +131,27 @@ def check_prompts() -> None:
     ok(P.guess_kind(brief_es) == "brief" and P.guess_kind(brief_en) == "brief" and "brief" in P.KINDS
        and len(P.SLOTS["brief"]) >= 12 and statuses and wishes,
        "prompt library: briefs for Claude are their own kind; the check's clear / vague / missing and wishes validate")
+    # 0.3.5: "al estilo vlog de Clavero" finds the Clavero video the user analysed (creator first, accents ignored);
+    # its measured style reaches Claude with the check and the wishes (MCP prompts(id) / prompts.py show)
+    from motionlab import knowledge as KN
+    fake = [{"name": "Clavero_Londres", "title": "UN DÍA EN LONDRES | Clavero", "uploader": "Jaime Clavero"},
+            {"name": "Osmo_review", "title": "Osmo Pocket 3 review", "uploader": "TechGuy"},
+            {"name": "NEMZZZ_4AM", "title": "NEMZZZ - 4AM [OFFICIAL VIDEO]", "uploader": None}]
+    sug = P.suggest_refs("Edita Londres Día 1 al estilo vlog de CLAVERO con la Osmo Pocket 3", fake)
+    title_only = P.suggest_refs("a music video like nemzzz", fake)
+    bad_refs = 0
+    for refs in (["../x"], ["a b"], [f"r{i}" for i in range(6)], "Clavero"):
+        try:
+            P._check({**rec, "style_refs": refs})
+        except ValueError:
+            bad_refs += 1
+    txt = P.describe({**rec, "id": "brief-999", "style_refs": []}, full=True)
+    st = KN.style("synthetic_test") if (KN.ANALYSIS / "synthetic_test" / "events.json").exists() else {"line": "cuts/min"}
+    ok([x["name"] for x in sug] == ["Clavero_Londres"] and sug[0]["why"] == "made by Jaime Clavero"
+       and [x["name"] for x in title_only] == ["NEMZZZ_4AM"] and not P.suggest_refs("a cooking talking head", fake)
+       and bad_refs == 4 and "colour: vague - one LUT - tip: pick one" in txt and "colour: one warm LUT" in txt
+       and st and "cuts/min" in st["line"] and KN.style("../analysis") is None,
+       "prompt library: a style reference - the analysed video a prompt names is found, measured and handed to Claude")
 
 
 def check_graphics() -> None:

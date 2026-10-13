@@ -405,10 +405,13 @@ def transcript(reference: str, start: int | None = None, end: int | None = None,
 
 
 def prompts(kind: str = "", id: str = "") -> str:
-    """The prompt library (knowledge\\local\\prompts): proven prompts for video models (kind 'shot'), hooks ('hook')
-    and talking scripts ('script'), best examples first - rated good, then creators' unrated, ok, unrated, bad - each
-    with its source, model, the user's rating + note and its structure (slots). id = one prompt in full. Written by
-    `tools\\prompts.py import / annotate / rate` in the shell (the /write-prompt skill)."""
+    """The prompt library (knowledge\\local\\prompts): briefs for Claude to make a video ('brief'), prompts for video
+    models ('shot') and image models ('image'), hooks ('hook') and talking scripts ('script'), best examples first -
+    rated good, then creators' unrated, ok, unrated, bad - each with its source, model, the user's rating + note and
+    its structure (slots). id = one prompt in full: Claude's check per part (clear / vague / missing + tip), what the
+    user wants per part, and its style references (analysed references, measured: pacing, effects, BPM) or the ones
+    its words seem to mean. Written by `tools\\prompts.py import / annotate / style / rate` in the shell (the
+    /write-prompt skill)."""
     from motionlab import prompts as P
     if id:
         return P.describe(P.get(id), full=True)

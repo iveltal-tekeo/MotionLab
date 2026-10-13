@@ -9,6 +9,8 @@ Text only - no model, no API, no cost.
     .venv\\Scripts\\python tools\\prompts.py annotate <id> <file.json>    Claude's split: {title, structure, pattern, tags,
                                                                        model, review, workflow, step, notes}
     .venv\\Scripts\\python tools\\prompts.py kind <id> <kind>              a wrong (guessed) kind -> the right one (new id)
+    .venv\\Scripts\\python tools\\prompts.py style <id> [<reference> ...] [--clear]   the style of analysed references
+                                                                       (no names: what is linked + suggested)
     .venv\\Scripts\\python tools\\prompts.py rate <id> good|ok|bad|none [--note "..."]     the user's result
     .venv\\Scripts\\python tools\\prompts.py template                     print the paste format
 
@@ -50,6 +52,11 @@ def main() -> int:
     k = sub.add_parser("kind", help="move a prompt saved under the wrong kind (it gets a new id)")
     k.add_argument("id")
     k.add_argument("kind", choices=list(P.KINDS))
+    st = sub.add_parser("style", help="link analysed references as the prompt's style (no names: show linked + "
+                                      "suggested)")
+    st.add_argument("id")
+    st.add_argument("names", nargs="*", help="analysis folder names (References)")
+    st.add_argument("--clear", action="store_true", help="unlink every style reference")
     sub.add_parser("template", help="print the paste format")
     args = ap.parse_args()
 
@@ -86,6 +93,10 @@ def main() -> int:
         r = P.set_kind(args.id, args.kind)
         print(f"{args.id} -> {r['id']}")
         print(P.describe(r, full=True))
+    elif args.cmd == "style":
+        r = P.set_style(args.id, []) if args.clear else P.set_style(args.id, args.names) if args.names else P.get(args.id)
+        print(f"{r['id']} style from: {', '.join(r.get('style_refs') or []) or 'nothing linked'}")
+        print("\n".join(P.style_text(r)) or "  no analysed reference matches its words (References > analyse one)")
     elif args.cmd == "template":
         print(P.TEMPLATE)
     return 0
