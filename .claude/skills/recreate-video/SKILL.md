@@ -47,6 +47,9 @@ story, length and music) is planned for v0.5 - say so if the user asks for it, a
    unreviewed drafts copies their mistakes - suggest `/analyze-reference` first.
 3. Lessons that concern rebuilding: the shared `.claude\skills\analyze-reference\lessons.md` and
    `knowledge\local\lessons.md` (e.g. over-exposed flashes are Gain on the picture, not a white solid - L001).
+   Claude's memory: `.venv\Scripts\python tools\knowledge.py memory` (or MCP `knowledge(category="memory")`) = every
+   analysed video's style in one line and every effect seen with how it was made (the user's confirmed ones first,
+   friends' cards included) - when an effect of the reference was rebuilt before, start from that recipe.
 4. The worked example - copy its structure, not its numbers: `projects\test_4am\build\` = `edit_v1.py` (the edit as
    code -> `plan_v1.json`, 65 layers), `ref_timing.py` (measures the reference's per-frame curves ->
    `ref_timing.json`), `verify_timing.py` (does the render change picture on the reference's key frames). The plan

@@ -361,6 +361,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({**(S.update or {}), "version": VERSION, "phase": S.phase, "result": S.update_result})
         if path == "/api/skills":                         # Tools > Skills: the project's Claude Code commands
             return self._json(data.skills())
+        if path == "/api/memory":                         # Claude's memory (0.4): videos, effects, lessons, saved
+            return self._json(data.memory())
         if path == "/api/knowledge":
             return self._json(KN.overview())
         if path == "/api/knowledge/card":

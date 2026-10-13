@@ -47,7 +47,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `feedback.py` when Claude applied them)
 - `knowledge\` what installs share: `references\` = SHARED reference cards `<video id>--<author>.json`, `incoming\` =
   SHARED lessons waiting for review; private: `local\` (this PC's cards, `lessons.md` = new lessons `local-N`,
-  `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review, `prompts\<kind>\<id>.json`
+  `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review, `memory.md` = Claude's
+  memory (0.4: every video's style in one line, the effects seen and how they were made - read before an edit or a
+  prompt; `knowledge.py memory` rebuilds + prints it), `prompts\<kind>\<id>.json`
   = the prompt library, ratings included), `inbox\` / `outbox\`
   (`*.mlpack.json` packs for friends without push access)
 - `projects\<name>\` the user's footage (read-only, top level); everything we make goes to `build\`: `sources.json`
@@ -97,7 +99,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth
-- `knowledge.py cards | summary | pending | next-lesson-id | share | export | import <pack>`
+- `knowledge.py cards | summary | memory | pending | next-lesson-id | share | export | import <pack>` (`memory` = Claude's
+  memory, also MCP `knowledge(category="memory")`)
 - `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
   `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills` (graphics
@@ -121,7 +124,8 @@ you want to do?"), **1 Analyze** (#/analyze: download / pick videos, analyse, th
 misses, Delete), **2 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
 their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **3 Generate**
 (#/generate: prompts for AI video tools, motion-graphics videos; the prompt library #/prompts), **Claude's memory**
-(#/memory: what Claude learned - cards, pacing, lessons, Share - and the saved effects + graphics), then Jobs and Settings
+(#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,
+saved graphics + effects, Share with friends), then Jobs and Settings
 (General, Storage, Claude skills). The 0.3 addresses (#/refs, #/projects, #/knowledge, #/library) still work. The app
 runs the lab's own tools as jobs; Claude's parts run in Claude Code windows the app opens with a fixed first message and
 an effort level per task (Settings > Claude Code).

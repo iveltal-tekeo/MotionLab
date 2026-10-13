@@ -27,7 +27,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"): Home, *Make a video*: **Analyze** (#/analyze
   = 0.3's References, `pageRefs`; #/ref/<name> = one analysis), **Edit** (#/edit = Videos, `pageProjects`;
   #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it), each with
-  its step number (`.nstep`), then **Claude's memory** (#/memory/learned = 0.3's Knowledge, `memLearned`;
+  its step number (`.nstep`), then **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
   #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
   skills = #/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type it =
   `SKILL_INFO`; /whats-next is marked "for developers"). `ALIASES` rewrites the 0.3 addresses (#/refs, #/projects,
@@ -98,6 +98,17 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Effects, Possible misses, What it says (the Content tab). The step strip: Download > Measure > Claude checks |
   *Teach Claude (optional)*: Your verdicts > Feedback > Share; a video with no effects (a talking head) shows "No
   effects" instead of crashing. Timelines fix their canvas height at creation (no ResizeObserver loop when shown).
+- **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
+  use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = Overview (one search `#mq` over
+  videos / effects / lessons, counts that link to their tab, *How Claude uses it* + *What Claude reads (memory.md)* /
+  *Rebuild it* = POST `/api/knowledge/summary`, effects seen most, the latest videos), Videos (`memVideoCard`: focus,
+  kind, rhythm, the profile's lines, Claude's breakdown summary, *Open* / *Edit like this*; filters focus / kind /
+  yours-friends'), Effects (`memEffectRow`: per type how often, in how many videos, a bar of the user's verdicts, the
+  best examples - correct first - with what happens and how it was made, f<frame> links to the effect), Lessons
+  (this PC's, shared, incoming + *Review them in Claude Code*), Graphics & saved effects (`memSaved`), Share with
+  friends (`memLearned`). GET `/api/memory` = `data.memory()` = `knowledge.memory()` (cached on the cards' and lessons'
+  mtimes; friends' cards too) + saved counts + prompts; it rewrites `knowledge\local\memory.md`
+  (`knowledge.memory_index()`, also rebuilt with the summary) when a card is newer - the file the skills read.
 - Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
   is missing, the three ways in, roadmap, then status), **Analyze** (#/analyze, above), **Edit**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in

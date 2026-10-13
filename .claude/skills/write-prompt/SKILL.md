@@ -39,6 +39,9 @@ The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scri
   model do what it asks?). The user's rating always outranks your stars. Creators' prompts stay on this PC; keep
   their link or the file they came from (`source.file`).
 - Frames you mention: frame number + timecode, e.g. `f480 (00:00:16:00)` (hard rule 2).
+- Before writing or optimizing (sections 2b, 3, 4) read Claude's memory: `.venv\Scripts\python tools\knowledge.py
+  memory` (or MCP `knowledge(category="memory")`) - every analysed video's style in one line (rhythm, hook, captions,
+  signature effects) and the effects seen; a video the user names, or one that fits the want, beats an adjective.
 - No likeness of a real person without their consent; no logos / brands the user has no rights to.
 
 ## 1. The user pastes prompts

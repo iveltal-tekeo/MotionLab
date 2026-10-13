@@ -2,6 +2,9 @@
 
     .venv\\Scripts\\python tools\\knowledge.py cards              (re)build the reference cards of this PC's analyses
     .venv\\Scripts\\python tools\\knowledge.py summary            rebuild knowledge\\local\\summary.md (what Claude reads)
+    .venv\\Scripts\\python tools\\knowledge.py memory             rebuild + print knowledge\\local\\memory.md: Claude's memory
+                                                               (every video's style, the effects seen and how they were
+                                                               made) - read it before an edit or a prompt
     .venv\\Scripts\\python tools\\knowledge.py pending            what "Share my knowledge" would send now
     .venv\\Scripts\\python tools\\knowledge.py next-lesson-id     the id for a new local lesson (local-N)
     .venv\\Scripts\\python tools\\knowledge.py share              share: commit + push to GitHub (or write a pack)
@@ -24,8 +27,8 @@ from motionlab.util import LAB, setup_console  # noqa: E402
 
 def main() -> int:
     setup_console()
-    if len(sys.argv) < 2 or sys.argv[1] not in ("cards", "summary", "pending", "next-lesson-id", "share", "export",
-                                                  "import"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("cards", "summary", "memory", "pending", "next-lesson-id", "share",
+                                                  "export", "import"):
         print(__doc__)
         return 2
     cmd = sys.argv[1]
@@ -36,6 +39,8 @@ def main() -> int:
     elif cmd == "summary":
         KN.summary()
         print(KN.SUMMARY)
+    elif cmd == "memory":
+        print(KN.memory_index())
     elif cmd == "pending":
         p = KN.pending()
         print(f"{len(p['cards'])} card(s): " + ", ".join(c["title"] for c in p["cards"]))

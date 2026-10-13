@@ -6,6 +6,21 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Claude's memory** (sidebar): everything Claude learned in one place with one search - every video you and your
+  friends analysed with its style (rhythm, hook, talking, captions, signature effects, Claude's breakdown), every
+  effect seen with how often, your verdicts and how each was made (the ones you confirmed first), the lessons, your
+  saved graphics and effects, and sharing with friends. Claude reads the same before an edit or a prompt, so a
+  video you liked shapes what it makes for you.
+- **Analyze several videos at once, the way you want**: *Add videos* takes up to 10 links (one per line) and files;
+  pick what to look at - **Content creation** (what is said, the hook, captions, text on screen), **Cinematic**
+  (effects, transitions, camera, colour) or **both** - and whether Claude checks each one. They queue up and run one
+  after another (links download first); a panel shows what runs and what waits. Each analysed video opens on an
+  **Overview** for its mode: the rhythm, the content or cinematic numbers, Claude's breakdown of what makes it work
+  and *Use it*: edit my clips like this, prompts for AI tools like this. Talking videos without subtitles get their
+  words by speech to text when it is installed.
+- **Three ways in**: the sidebar is now Home, **1 Analyze**, **2 Edit**, **3 Generate** and **Claude's memory**,
+  with Jobs and Settings at the bottom (Claude skills is a Settings tab). Home asks *What do you want to do?* with
+  one card per way, its buttons and counts. Old links keep working.
 - **Fixed: the analysis stopped at the audio step on PCs without the Microsoft Visual C++ Redistributable**
   ("DLL load failed while importing _typeconv"): the audio analysis needs it and some Windows PCs do not have
   it. The job now ends with one plain line saying what to install

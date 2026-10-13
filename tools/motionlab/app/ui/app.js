@@ -1640,17 +1640,135 @@ function projResolve(el, P) {
 }
 
 // ============================================================================================ Claude's memory
-// (0.4) what Claude learned (the reference cards, pacing per category, sharing with friends) and what you saved
-// (graphics, effects for DaVinci Resolve) - Claude reads it when it edits or generates
-const MEM_TABS = [['learned', 'What Claude learned'], ['saved', 'Saved effects & graphics']];
-async function pageMemory(main, tab = 'learned') {
-  if (!MEM_TABS.some(([k]) => k === tab)) tab = 'learned';
-  main.innerHTML = `<div class="head"><div><h1>Claude's memory</h1><div class="sub">Everything Claude learned from the videos you analysed - their style, effects and your lessons -
-      and the effects and graphics you saved. Claude reads it when it edits or generates for you.</div></div></div>
+// (0.4, the user: "once analysed it is stored in the database / mind of Claude, so when I edit or generate it can use
+// those effects and that knowledge") - one place: every analysed video's style, every effect seen and how it was made,
+// the lessons, the saved graphics and effects, sharing with friends; one search over all of it. Claude reads the same
+// as knowledge\local\memory.md (knowledge.memory_index) before an edit or a prompt.
+const MEM_TABS = [['overview', 'Overview'], ['videos', 'Videos'], ['effects', 'Effects'], ['lessons', 'Lessons'],
+                  ['saved', 'Graphics & saved effects'], ['learned', 'Share with friends']];
+async function pageMemory(main, tab = 'overview') {
+  if (!MEM_TABS.some(([k]) => k === tab)) tab = 'overview';
+  main.innerHTML = `<div class="head"><div><h1>Claude's memory</h1><div class="sub">Everything Claude learned from the videos you and your friends analysed - their style,
+      the effects and how they were made, your lessons - and the graphics and effects you saved. Claude reads it when it edits or generates for you.</div></div></div>
     <div class="tabs">${MEM_TABS.map(([k, l]) => `<a href="#/memory/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>
     <div id="memtab"></div>`;
   const el = $('#memtab', main);
-  return tab === 'saved' ? memSaved(el) : memLearned(el);
+  if (tab === 'saved') return memSaved(el);
+  if (tab === 'learned') return memLearned(el);
+  const M = await api('/api/memory');
+  return ({overview: memOverview, videos: memVideos, effects: memEffects, lessons: memLessons})[tab](el, M);
+}
+const memFind = (q, ...xs) => !q || xs.join(' ').toLowerCase().includes(q);
+const lessonText = t => String(t || '').replace(/^- \[[^\]]+\]\s*/, '');
+function memVideoCard(v) {
+  const P = v.pacing || {}, L = v.lines || {};
+  return `<div class="card mvid"><div class="cb">
+    <div class="row sp"><b class="ct">${esc(v.title)}</b>${v.origin === 'local' ? '<span class="tag">yours</span>' : `<span class="tag" title="shared by a friend">${esc(v.author || 'friend')}</span>`}</div>
+    <div class="small">${focusChip(v.focus)} ${v.category_label ? `<span class="tag">${esc(v.category_label)}</span>` : ''} <span class="muted">${esc(v.format || '')}</span></div>
+    <div class="small">${P.cuts_per_min ?? '–'} cuts/min · shots ${P.avg_shot_s ?? '–'} s · ${P.hook_cuts_3s ?? 0} cuts in 3 s · ${P.effects_per_min ?? '–'} effects/min${P.bpm ? ` · ${P.bpm} BPM` : ''}</div>
+    ${[L.content, L.cinematic, L.colour].filter(Boolean).map(x => `<div class="small muted pline">${esc(x)}</div>`).join('')}
+    ${v.summary ? `<div class="small mvsum">${esc(v.summary)}</div>` : '<div class="small dim">No breakdown from Claude yet.</div>'}</div>
+    <div class="cact">${v.analysis ? `<a class="btn sm" href="#/ref/${encodeURIComponent(v.analysis)}">Open</a><button class="btn sm cl" data-like="${esc(v.analysis)}"><svg class="i"><use href="#i-edit"/></svg>Edit like this</button>` : '<span class="small dim">its analysis is on your friend\'s PC - Claude uses its style card</span>'}</div></div>`;
+}
+function wireMemCards(el) { $$('[data-like]', el).forEach(b => b.onclick = () => createVideoModal({from: 'reference', pick: b.dataset.like})); }
+function memEffectRow(g) {
+  const V = g.verdicts || {}, tot = (V.correct || 0) + (V.partly || 0) + (V.wrong || 0);
+  const same = String(g.family || '').toLowerCase().startsWith(String(g.label || '').toLowerCase());   // "Wipe" in "Wipe / mask / shape reveal"
+  return `<details class="meff" data-type="${esc(g.type)}"><summary><span class="grow"><i class="sw" style="background:${FAM[g.family] || '#888'}"></i><b>${esc(g.label)}</b>${same ? '' : ` <span class="small muted">${esc(g.family)}</span>`}</span>
+      <span class="small muted">${plural(g.count, 'time')} in ${plural(g.videos, 'video')}${g.reviewed < g.count ? ` · ${g.count - g.reviewed} not checked by Claude` : ''}</span>
+      <span class="vbar" title="your verdicts: ${V.correct || 0} correct, ${V.partly || 0} partly, ${V.wrong || 0} wrong">${tot ? `<i class="c" style="flex:${V.correct}"></i><i class="p" style="flex:${V.partly}"></i><i class="w" style="flex:${V.wrong}"></i>` : '<i class="n"></i>'}</span></summary>
+    <div class="mex">${g.examples.map(x => `<div class="mexi"><div class="row sp"><span><b>${esc(x.title)}</b> ${x.analysis
+        ? `<a class="fr" href="#/ref/${encodeURIComponent(x.analysis)}?e=${esc(x.id)}">f${x.start}</a>` : `<span class="fr">f${x.start}</span>`} <span class="tc">(${esc(x.tc || '')})</span></span>
+        ${x.verdict ? `<span class="small"><span class="vdot ${esc(x.verdict)}"></span> ${esc(x.verdict)}</span>` : x.reviewed ? '<span class="small dim">checked by Claude</span>' : '<span class="small amber">a guess</span>'}</div>
+      ${x.what ? `<div class="small">${esc(x.what)}</div>` : ''}${x.rebuild ? `<div class="small muted"><b>How it was made:</b> ${esc(x.rebuild)}</div>` : ''}${x.note ? `<div class="small amber">note: ${esc(x.note)}</div>` : ''}</div>`).join('')}</div></details>`;
+}
+function memOverview(el, M) {
+  const S = M.stats, F = S.focus || {}, sv = M.saved || {};
+  const tile = (n, l, href, t = '') => `<a class="stat card" href="${href}" title="${esc(t)}"><div class="n">${n}</div><div class="l">${l}</div></a>`;
+  el.innerHTML = `<div class="msearch"><input type="search" id="mq" placeholder="Search everything Claude knows - a video, an effect (zoom, whip…), a word of a lesson"></div>
+    <div id="mres"></div>
+    <div id="mhome"><div class="mstats">
+      ${tile(S.videos, `videos analysed${S.friends ? ` · ${S.friends} from friends` : ''}`, '#/memory/videos')}
+      ${tile(`${F.content || 0} · ${F.cinematic || 0} · ${F.both || 0}`, 'content · cinematic · both', '#/memory/videos')}
+      ${tile(S.types, `kinds of effects · ${S.effects} seen`, '#/memory/effects')}
+      ${tile(S.confirmed, 'effects you confirmed', '#/memory/effects', 'your Correct verdicts')}
+      ${tile(S.breakdowns, "Claude's breakdowns", '#/memory/videos', 'what makes each video work')}
+      ${tile(S.lessons, 'lessons', '#/memory/lessons')}
+      ${tile((sv.graphics || 0) + (sv.effects || 0), 'graphics & effects saved', '#/memory/saved')}
+      ${tile(M.prompts || 0, 'prompts', '#/prompts')}</div>
+    <div class="grid g2" style="margin-top:14px"><div class="panel"><h2>How Claude uses it</h2><ul class="small mhow">
+        <li><b>When you edit</b> your clips like a video, Claude reads that video's style - rhythm, the hook, captions, signature effects, transitions, colour - and how its effects were made.</li>
+        <li><b>When you generate</b>, Claude writes the prompts in the style of the videos you name, with the structure of your best-rated prompts.</li>
+        <li><b>When it analyses</b> a new video, the lessons from your verdicts decide how effects are judged.</li></ul>
+        <div class="row" style="margin-top:8px"><button class="btn sm" data-open="${esc((M.memory_md || '').replace(/\\/g, '/'))}">What Claude reads (memory.md)</button><button class="btn sm ghost" id="mreb">Rebuild it</button></div></div>
+      <div class="panel"><h2>Effects seen most</h2>${M.effects.length ? `<div class="row" style="gap:6px">${M.effects.slice(0, 10).map(g => `<a class="chip" href="#/memory/effects" title="${esc(g.family)}">${esc(g.label)} <b>${g.count}</b></a>`).join('')}</div>`
+        : '<div class="small dim">Nothing yet - analyse a video (Analyze) and let Claude check it.</div>'}</div></div>
+    ${M.videos.length ? `<div class="row sp" style="margin-top:18px"><h3 style="margin:0">Latest videos</h3><a class="small" href="#/memory/videos">all ${M.videos.length} →</a></div>
+      <div class="cards">${M.videos.slice(-4).reverse().map(memVideoCard).join('')}</div>`
+      : emptyHero('memory', 'Claude learns from the videos you analyse', 'Analyse a video you like - its style, effects and Claude\'s breakdown land here, ready for your edits.', '<a class="btn pri big" href="#/analyze">Analyze a video</a>')}</div>`;
+  wireMemCards(el);
+  $('#mreb', el).onclick = async () => { try { await api('/api/knowledge/summary', {}); toast('Rebuilt what Claude reads', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+  const q = $('#mq', el);
+  q.oninput = debounce(() => {
+    const t = q.value.trim().toLowerCase(), res = $('#mres', el);
+    $('#mhome', el).hidden = !!t;
+    if (!t) { res.innerHTML = ''; return; }
+    const vs = M.videos.filter(v => memFind(t, v.title, v.category_label, v.focus_label, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author));
+    const fx = M.effects.filter(g => memFind(t, g.label, g.family, g.type, g.examples.map(x => x.what + ' ' + x.rebuild + ' ' + x.note).join(' ')));
+    const ls = [...M.lessons.shared, ...M.lessons.local].filter(x => memFind(t, x.id, x.text));
+    res.innerHTML = `<div class="small muted" style="margin:8px 0">${plural(vs.length, 'video')} · ${plural(fx.length, 'effect')} · ${plural(ls.length, 'lesson')}</div>
+      ${vs.length ? `<h3>Videos</h3><div class="cards">${vs.slice(0, 12).map(memVideoCard).join('')}</div>` : ''}
+      ${fx.length ? `<h3>Effects</h3>${fx.slice(0, 12).map(memEffectRow).join('')}` : ''}
+      ${ls.length ? `<h3>Lessons</h3>${ls.slice(0, 12).map(x => `<div class="panel mles"><span class="tag">${esc(x.id)}</span> ${esc(lessonText(x.text))}</div>`).join('')}` : ''}
+      ${vs.length + fx.length + ls.length ? '' : '<div class="empty">Nothing in Claude\'s memory matches.</div>'}`;
+    wireMemCards(res);
+  }, 150);
+}
+function memVideos(el, M) {
+  let q = '', foc = '', org = '';
+  const cats = [...new Set(M.videos.map(v => v.category_label).filter(Boolean))].sort();
+  let cat = '';
+  el.innerHTML = `<div class="row" style="margin-bottom:12px"><input type="search" id="mvq" placeholder="Search videos…" style="max-width:280px">
+      <select id="mvf" class="ffil"><option value="">Every focus</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
+      <select id="mvc" class="ffil"><option value="">Every kind</option>${cats.map(c => `<option>${esc(c)}</option>`).join('')}</select>
+      <select id="mvo" class="ffil"><option value="">Yours and friends'</option><option value="local">Yours</option><option value="shared">Friends'</option></select></div>
+    <div id="mvl"></div>`;
+  const draw = () => {
+    const vs = M.videos.filter(v => (!foc || v.focus === foc) && (!cat || v.category_label === cat) && (!org || (org === 'local' ? v.origin === 'local' : v.origin !== 'local'))
+      && memFind(q, v.title, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author));
+    $('#mvl', el).innerHTML = vs.length ? `<div class="cards">${vs.slice().reverse().map(memVideoCard).join('')}</div>`
+      : M.videos.length ? '<div class="empty">No video matches.</div>'
+      : emptyHero('memory', 'No videos yet', 'Analyse a video you like (Analyze) - its style lands here.', '<a class="btn pri big" href="#/analyze">Analyze a video</a>');
+    wireMemCards(el);
+  };
+  $('#mvq', el).oninput = debounce(e => { q = e.target.value.trim().toLowerCase(); draw(); }, 150);
+  $('#mvf', el).onchange = e => { foc = e.target.value; draw(); };
+  $('#mvc', el).onchange = e => { cat = e.target.value; draw(); };
+  $('#mvo', el).onchange = e => { org = e.target.value; draw(); };
+  draw();
+}
+function memEffects(el, M) {
+  let q = '', fam = '';
+  const fams = [...new Set(M.effects.map(g => g.family))].sort();
+  el.innerHTML = `<div class="row" style="margin-bottom:12px"><input type="search" id="meq" placeholder="Search effects - a name, a word of how it was made…" style="max-width:340px">
+      <select id="mef" class="ffil"><option value="">Every family</option>${fams.map(f => `<option>${esc(f)}</option>`).join('')}</select>
+      <span class="small muted">Click an effect for its examples and how each was made.</span></div><div id="mel"></div>`;
+  const draw = () => {
+    const fx = M.effects.filter(g => (!fam || g.family === fam) && memFind(q, g.label, g.family, g.type, g.examples.map(x => x.what + ' ' + x.rebuild + ' ' + x.note).join(' ')));
+    $('#mel', el).innerHTML = fx.map(memEffectRow).join('') || (M.effects.length ? '<div class="empty">No effect matches.</div>'
+      : emptyHero('memory', 'No effects yet', 'Every effect Claude finds in your analysed videos - with how it was made - is listed here.', '<a class="btn pri big" href="#/analyze">Analyze a video</a>'));
+  };
+  $('#meq', el).oninput = debounce(e => { q = e.target.value.trim().toLowerCase(); draw(); }, 150);
+  $('#mef', el).onchange = e => { fam = e.target.value; draw(); };
+  draw();
+}
+function memLessons(el, M) {
+  const L = M.lessons, item = x => `<div class="panel mles"><span class="tag">${esc(x.id)}</span> ${esc(lessonText(x.text))}</div>`;
+  el.innerHTML = `<div class="small muted" style="margin-bottom:10px">Rules Claude follows when it analyses and rebuilds - written from your verdicts and feedback (and your friends', after a review).</div>
+    <h3>From this PC (${L.local.length})</h3>${L.local.map(item).join('') || '<div class="small dim">None yet - give verdicts on a video, then Send feedback to Claude.</div>'}
+    <h3>Shared rules (${L.shared.length})</h3>${L.shared.map(item).join('') || '<div class="small dim">None.</div>'}
+    ${L.incoming.length ? `<h3>From friends, waiting for a review</h3><div class="small">${L.incoming.map(x => `${esc(x.file)} (${x.lessons})`).join(' · ')}</div>
+      <div class="row" style="margin-top:8px">${claudeBtn('Review the incoming lessons in knowledge\\incoming\\ (see Reviewing incoming lessons in the analyze-reference skill) and merge the good ones into the shared lessons.md', 'Review them in Claude Code', 'lessons')}</div>` : ''}`;
 }
 async function memSaved(main) {
   const L = await api('/api/library');

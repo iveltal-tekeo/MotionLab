@@ -689,6 +689,23 @@ def prompt_uses() -> dict:
 
 
 # ================================================================================================= library / docs
+def memory() -> dict:
+    """Claude's memory page (0.4): knowledge.memory() (videos, effects, lessons) + what was saved (effects for
+    DaVinci Resolve, graphics) and how many prompts there are. memory.md is rewritten when the cards changed."""
+    M = dict(KN.memory())
+    if not KN.MEMORY.exists() or KN.MEMORY.stat().st_mtime < max(
+            [p.stat().st_mtime for d in (KN.LOCAL_REFS, KN.SHARED_REFS) if d.exists() for p in d.glob("*.json")] or [0]):
+        try:
+            KN.memory_index()
+        except OSError:
+            pass
+    lib = library()
+    M["saved"] = {"effects": len(lib["items"]), "graphics": sum(1 for g in lib["graphics"] if g.get("kind") == "yours"),
+                  "examples": sum(1 for g in lib["graphics"] if g.get("kind") != "yours"), "picks": len(lib["picks"])}
+    M["prompts"] = PR.count()
+    return M
+
+
 def library() -> dict:
     items = []
     if LIBRARY.exists():
