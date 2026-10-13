@@ -50,8 +50,8 @@ def make_assets(plates):
         d = ImageDraw.Draw(im)
         try:
             f = ImageFont.truetype(r"C:\Windows\Fonts\segoeuib.ttf", 120)
-        except OSError:
-            f = ImageFont.load_default()
+        except OSError:                              # not Windows (a cloud session): Pillow's own font, same size
+            f = ImageFont.load_default(120)
         msg = "MOTION LAB"
         tw = d.textlength(msg, font=f)
         d.text(((W - tw) / 2, 470), msg, font=f, fill=(255, 255, 255, 255), stroke_width=6,

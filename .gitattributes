@@ -3,6 +3,8 @@
 # cmd.exe misreads labels / goto in batch files with LF endings: always CRLF on disk
 *.bat text eol=crlf
 *.cmd text eol=crlf
+# bash scripts (the cloud setup, Claude Code hooks) break with CRLF: always LF
+*.sh text eol=lf
 # never touch binary files
 *.png binary
 *.ico binary

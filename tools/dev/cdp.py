@@ -22,7 +22,8 @@ import urllib.request
 from pathlib import Path
 
 EDGE = [Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Microsoft/Edge/Application/msedge.exe",
-        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Microsoft/Edge/Application/msedge.exe"]
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Microsoft/Edge/Application/msedge.exe",
+        Path("/opt/pw-browsers/chromium")]                  # a Claude Code cloud session (Linux): Playwright's Chromium
 PROFILE = Path(__file__).resolve().parents[2] / ".app" / "dev" / "edge-profile"   # scratch, not in git
 
 
@@ -93,7 +94,8 @@ class Browser:
         shutil.rmtree(PROFILE, ignore_errors=True)
         self.proc = subprocess.Popen([str(edge), "--headless=new", f"--remote-debugging-port={port}",
                                       f"--user-data-dir={PROFILE}", f"--window-size={width},{height}",
-                                      "--no-first-run", "--disable-extensions", "about:blank"])
+                                      "--no-first-run", "--disable-extensions"]
+                                     + (["--no-sandbox"] if os.name != "nt" else []) + ["about:blank"])
         for _ in range(60):
             try:
                 tabs = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/json/list", timeout=2))

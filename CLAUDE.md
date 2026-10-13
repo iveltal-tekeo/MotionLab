@@ -30,6 +30,7 @@ explore the whole lab:
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
 | knowledge sharing (cards, lessons, packs) | `docs\knowledge_sharing.md`, `knowledge\README.md` |
 | questions about working with Claude, effort levels, tokens | `docs\claude_tips.md` |
+| a Claude Code cloud session (Linux, no videos): what works, the setup hook | `docs\cloud.md` |
 | what comes next (planned versions and their design notes) | `docs\plans.md` (the app's What's new shows it); ideas not picked yet: `docs\ideas.md` |
 
 Every tool starts with a usage docstring: read its first lines (or run it without arguments), not the whole file.
@@ -65,7 +66,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `recreate-video\`, `write-prompt\`, `whats-next\`
 - Repo files (v0.3.4): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
-  it), `.mcp.json` (MotionLab's MCP server), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
+  it), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
   version is `tools\motionlab\__init__.py` `__version__`. The USER creates and uploads the repo - never `git init` /
@@ -164,8 +165,9 @@ Code windows the app opens with a fixed first message and an effort level per ta
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` all PASS, raise
   `__version__` in `tools\motionlab\__init__.py`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
   update banner shows it; it takes in the `## Unreleased` lines - the app shows only version sections), raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits
-  and pushes. GitHub's tests (self-test + `tools\dev\smoke.py`) must turn green: they move the `tested` branch, which
-  is what the Update button installs, and tag `v<version>` (docs\organization.md "Tests on GitHub").
+  and pushes. GitHub's tests (self-test + `tools\dev\smoke.py`) run only for a new `x.y.0`, by hand (Actions > Run
+  workflow) or with `[tests]` in a commit message; they must turn green: they move the `tested` branch, which is what
+  the Update button installs, and tag `v<version>` (docs\organization.md "Tests on GitHub").
 
 ## Environment gotchas (learned while building the lab)
 - ffmpeg's `drawtext` filter segfaults on this Gyan build (no fontconfig file): draw labels with Pillow.

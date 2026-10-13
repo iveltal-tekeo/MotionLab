@@ -11,6 +11,13 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   it. The job now ends with one plain line saying what to install
   (`winget install --id Microsoft.VCRedist.2015+.x64 -e`, or https://aka.ms/vs/17/release/vc_redist.x64.exe),
   and `setup.bat` checks for it and offers to install it.
+- **GitHub's tests run less often**: the 15-minute test run no longer starts on every push - only for a new
+  `x.y.0` version (until it passes), when started by hand (Actions > tests > Run workflow) or with `[tests]` in a
+  commit message. Updates still come only from tested pushes; friends' shared cards and lessons are released
+  within a minute as before. *Settings > Sharing & updates* now says "not released yet" for newer, untested
+  changes on GitHub.
+- **Claude Code on the web**: a cloud session sets itself up for MotionLab (Python packages, ffmpeg 9) so Claude
+  can run the self-test and the app's checks there - see `docs/cloud.md`.
 - **Home moves**: a small, slow animation at the top shows how MotionLab is used - *Like a video? / Use it as a
   reference. / Claude names each one. / Make yours.* - with a timeline whose cuts light up, effect tags that pop in
   and your clips that slide in. It is drawn by the graphics card (no video, no script running), stops while the

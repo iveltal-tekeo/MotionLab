@@ -63,17 +63,23 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
 
 ### Tests on GitHub (since 0.3.1)
 
-- `.github\workflows\tests.yml` runs on every push to main and every pull request, on GitHub's Windows machine:
-  Python 3.12 + `requirements.txt` + Gyan's ffmpeg (`FFMPEG_VERSION`, the build `setup.bat` installs through winget -
-  raise it when winget's moves), then `selftest.py --extended` (the synthetic videos are generated there) and
-  `tools\dev\smoke.py` (every file compiles, every module imports, the app server's read-only routes, every page in
-  headless Edge, the MCP server). Free for a public repo; ~15 minutes per full run.
-- **The `tested` branch is the gate**: when a push to main passes, the workflow moves `tested` to it, and the app's
-  Update button installs only what is on `tested` (`updater._upstream`). A push that is still being tested, or
-  failed, shows as "waiting for GitHub's tests" in Settings > Sharing & updates and is never offered. Share still
-  pushes to main. A push that only touches shared knowledge (`knowledge\references`, `knowledge\incoming`,
-  `lessons.md`) skips the self-test (smoke test only, ~3 minutes). Runs on main go one after another in order; a
-  re-run of an old commit never moves `tested` back.
+- `.github\workflows\tests.yml`, on GitHub's Windows machine: Python 3.12 + `requirements.txt` + Gyan's ffmpeg
+  (`FFMPEG_VERSION`, the build `setup.bat` installs through winget - raise it when winget's moves), then
+  `selftest.py --extended` (the synthetic videos are generated there) and `tools\dev\smoke.py` (every file compiles,
+  every module imports, the app server's read-only routes, every page in headless Edge, the MCP server). ~15 minutes.
+- **When it runs (since 0.3.5 - not on every push)**: a few-second Linux job ("scope") decides per push to main:
+  the full run happens only when it is started by hand (GitHub > Actions > tests > **Run workflow**, any branch), when
+  a commit message of the push contains `[tests]`, or when `__version__` is a new `x.y.0` (0.5.0, 0.6.0...) without
+  its `v<version>` tag yet - that repeats on every push until the version passes and is tagged. Anything else runs
+  nothing. Pull requests run nothing by themselves (Run workflow on their branch if wanted).
+- **The `tested` branch is the gate**: when a full run on main passes, `tested` moves to it, and the app's Update
+  button installs only what is on `tested` (`updater._upstream`). So code pushed between versions reaches friends
+  only after a run by hand or a push with `[tests]`; until then Settings > Sharing & updates says those changes are
+  "not released yet". Share still pushes to main. A push that only touches shared knowledge (`knowledge\references`,
+  `knowledge\incoming`, `lessons.md`) since the last tested commit needs no Windows machine: the "knowledge" job
+  checks that every card / lesson reads (JSON, UTF-8) and moves `tested` within a minute. (If untested code sits on
+  main in between, friends' cards wait for the next tested run too.) Runs on main go one after another in order; a
+  re-run of an old commit never moves `tested` back. Moving `tested` / tagging = `.github\scripts\mark_tested.sh`.
 - **Tags**: the first passing run of a new `__version__` tags that commit `v<version>`. Older releases, once, by
   hand: `git tag v0.2.0 cee5485`, `git tag v0.2.5 9334caa`, `git tag v0.3.0 82642a1`, `git push origin --tags`.
 - **When a run is red**: the Actions tab shows the failing step; a failed run keeps the scores and logs as the

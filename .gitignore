@@ -27,9 +27,11 @@ __pycache__/
 /tools/selftest/
 /tools/bin/
 
-# --- Claude Code local state (keep the skill + lessons, which are shared knowledge)
+# --- Claude Code local state (keep the skills + lessons = shared knowledge, and the cloud-session hook)
 /.claude/*
 !/.claude/skills/
+!/.claude/settings.json
+!/.claude/hooks/
 /.claude/settings.local.json
 
 # --- Windows
