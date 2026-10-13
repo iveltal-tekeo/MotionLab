@@ -69,12 +69,15 @@ written), `vague` (said, but open to guessing or self-contradicting) or `missing
 prompt), and `tip` = the concrete change, one sentence (for clear parts only when something small would still
 help). `text` = the prompt's own words for that part (verbatim, in its language, shortened with ...; "" when
 missing). A part that does not apply to this prompt (no transitions in a single-shot prompt) gets no row.
-- **Briefs** (kind `brief` = the user tells Claude how to make / edit a whole video): the parts are format & length
-  (long / short form, minutes, aspect), story & hook, feel / style (a reference the lab can measure beats an
-  adjective), footage (folders, cameras, log profiles), order & structure, pacing & cuts, colour (one base LUT or
-  per scene - never both), music (licensed or made where), sfx, motion graphics, transitions, captions & text,
-  deliverable (Resolve project name, export), questions first (what Claude must ask before starting). Mark what the
-  lab cannot do or measure today as vague with the tip (e.g. "a style no one has analysed - give a link").
+- **Briefs** (kind `brief` = the user tells Claude how to make / edit a whole video), in the order a video is made
+  (the app groups them): *the plan* - format & length (long / short form, minutes, aspect, platform), story & hook,
+  feel / style (an analysed reference beats an adjective, section 2a), footage (folders, cameras, log profiles,
+  b-roll: what covers what), order & structure; *the edit* - pacing & cuts, transitions, effects (zooms / punch-ins,
+  speed ramps, shake, freeze frames); *sound* - voice & audio (silences cut, noise, levels, the voice over the
+  music), music (licensed or made where), sfx; *look & text* - colour (one base LUT or per scene - never both),
+  motion graphics, captions & text; *finish* - ending (outro, call to action, end screen), deliverable (Resolve
+  project name, export), questions first (what Claude must ask before starting). Mark what the lab cannot do or
+  measure today as vague with the tip. Skip parts that do not apply (no music in a silent edit).
 - Wrong kind (a brief saved as a talking script): move it first - `prompts.py kind <id> <kind>` - and say the new id.
 For each id: read it (`prompts(id=...)`), then write a JSON file and run
 `.venv\Scripts\python tools\prompts.py annotate <id> <file>`:
@@ -85,14 +88,18 @@ For each id: read it (`prompts(id=...)`), then write a JSON file and run
 - `structure` items: `{"slot": "colour", "text": "un mismo lut ... luts acorde a la escena", "status": "vague",
   "tip": "Pick one: one base LUT for the D-Log M clips + per-scene exposure / white balance, or a LUT per scene"}`.
   Slot names (`prompts()` lists them): brief = format & length, story & hook, feel / style, footage, order &
-  structure, pacing & cuts, colour, music, sfx, motion graphics, transitions, captions & text, deliverable,
-  questions first; shot = references, keep, change, subject, action, setting, camera,
+  structure, pacing & cuts, transitions, effects, voice & audio, music, sfx, colour, motion graphics, captions &
+  text, ending, deliverable, questions first; shot = references, keep, change, subject, action, setting, camera,
   lens, light, look, motion, beats, audio, length / aspect, avoid; image = references, keep, change, subject,
   setting, composition, light, look, materials, avoid; hook = pattern, opening line, on screen, promise; script =
   hook, problem, points, proof, call to action (+ seconds per part when the script has them). `references` = what
   each upload is for, `keep` = what must not change, `change` = the transformation. Add a slot only when none fits.
 - Hooks: `pattern` = question, bold claim, number, story, contrarian, demo, curiosity gap or call-out.
-- Title: up to 6 words, what it makes. Afterwards one line per prompt in the chat: id, title, the slot order.
+- Title (the card shows only the title, so it must say which prompt this is): 3-6 words in the prompt's language -
+  what it makes + what sets it apart, e.g. "Londres día 1 · vlog estilo Clavero", "FPV drone around the subject",
+  "Hook: nobody tells you this". Never "Prompt for...", an id or the model name. Replace the automatic title
+  (first words of the text) when you check a prompt. Afterwards one line per prompt in the chat: id, title, the
+  slot order.
 - Put your `review` (section 1, "Reviewing") in the same JSON: `why` = the main point in two sentences, `fix` =
   the one change that helps most. In the chat afterwards: one line per prompt - id, title, n clear / vague /
   missing - and "write what you want next to the parts on the Prompts page, then click Optimize with Claude".

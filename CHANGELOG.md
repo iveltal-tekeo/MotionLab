@@ -6,6 +6,22 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Home, calmer**: no "Next steps" list and no "Updated to ..." box any more (the What's new window still opens
+  once after an update); Status sits below the roadmap. Missing programs still show, only when something is missing.
+- **Prompts page, calmer**: no filter rows any more - cards, 3 per row, newest first, each with only its title, the
+  rating (yours, else Claude's ★), what it needs (Claude + Resolve, Seedance on Higgsfield...; your clips, your
+  photo, you on camera, or text only) and one category - plus a search box. Prompts nobody titled yet get a readable
+  title (a brief: its footage folder, format and style, e.g. "Londres Día 1 · vlog · estilo Clavero"). **Click a
+  prompt** and it opens in a pop-up with everything about it: the whole text, *What it makes* (add a picture or
+  clip of the result - it becomes the card's picture), Style like, Claude's check with *what you want* per part,
+  Optimize, Run it, your rating. Dialogs opened from there (For, kind, Delete, Run it...) have **← Back** - so do
+  Esc and the ✕.
+- **Add prompts in steps**: choose *1. I have a prompt* or *2. Generate a new prompt from zero* and the next screen
+  shows only that, with **← Back** to change your mind.
+- **A brief's check covers more of the video**, grouped in the order a video is made - the plan (format, story &
+  hook, feel, footage & b-roll, order), the edit (pacing, transitions, and now **effects**: zooms, speed ramps,
+  shake), sound (now **voice & audio clean-up**: silences, noise, levels; music, SFX), look & text (colour, motion
+  graphics, captions) and finish (now **ending & call to action**; where it ends up, questions first).
 - **Style like - a video you analysed** (Prompts): a brief that says "in the style of Clavero's vlogs" now finds
   the Clavero video you analysed in References (by who made it or its title) and offers *Use its style*; or pick
   any analysed video with *+ pick from your references*, also in *Generate a new prompt from zero*. Claude then

@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 11                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 12                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -398,7 +398,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self):
         path = urllib.parse.urlsplit(self.path).path
-        body = self._body(45_000_000 if path == "/api/prompts/file" else 5_000_000)   # a file = base64 (+1/3)
+        body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example") else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
         if not secrets.compare_digest(str(tok), S.token):
             raise PermissionError("missing or wrong session token")
@@ -492,6 +492,22 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts/style":                  # a card's Style like: analysed references (0.3.5)
             refs = [str(x)[:200] for x in body.get("refs") or [] if isinstance(x, str)]
             return self._json(PR.set_style(str(body.get("id", "")), refs[:5]))
+        if path == "/api/prompts/example":                # the pop-up's "What it makes": add / remove a picture or clip
+            pid = str(body.get("id", ""))
+            if body.get("remove"):
+                r, f = PR.remove_example(pid, str(body["remove"]))
+                if f:
+                    t = trash.recycle([f])
+                    with open(APPDIR / "deleted.log", "a", encoding="utf-8") as lf:
+                        lf.write(f"{data.stamp()} prompt {pid} example moved to the Recycle Bin: {t['moved']}\n")
+                return self._json(r)
+            try:
+                raw = base64.b64decode(str(body.get("data", "")), validate=True)
+            except ValueError:
+                raise ValueError("the file did not arrive whole - add it again") from None
+            if len(raw) > 30_000_000:
+                raise ValueError("pictures and clips up to 30 MB")
+            return self._json(PR.add_example(pid, str(body.get("name", "")), raw))
         if path == "/api/prompts/kind":                   # a card's kind, changed by the user (a new id of that kind)
             return self._json(PR.set_kind(str(body.get("id", "")), str(body.get("kind", ""))))
         if path == "/api/prompts/delete":                 # a card's Delete (the user's click, after a confirm)

@@ -44,11 +44,19 @@ function toast(msg, kind = '') {
   const t = document.createElement('div'); t.className = 'toast ' + kind; t.textContent = msg;
   $('#toasts').append(t); setTimeout(() => t.remove(), kind === 'err' ? 9000 : 4500);
 }
-function modal(html, init) {
-  const m = $('#modal'); $('.mbody', m).innerHTML = html; m.hidden = false; if (init) init($('.mbody', m));
+let MODAL_BACK = null;                 // where Back / Esc / x / a click outside return to (a dialog opened from another)
+function modal(html, init, cls = '') {
+  const m = $('#modal'); MODAL_BACK = null; $('.mbox', m).className = 'mbox' + (cls ? ' ' + cls : '');
+  $('.mbody', m).innerHTML = html; m.hidden = false; $('.mbox', m).scrollTop = 0; if (init) init($('.mbody', m));
 }
-function closeModal() { $('#modal').hidden = true; $('#modal .mbody').innerHTML = ''; }
-$('#modal').addEventListener('mousedown', e => { if (e.target.id === 'modal' || e.target.closest('.mclose')) closeModal(); });
+function modalBack(fn) {               // call right after modal(): a "Back" to the dialog this one came from
+  MODAL_BACK = fn;
+  const b = document.createElement('button'); b.className = 'btn sm ghost mback'; b.textContent = '← Back'; b.onclick = dismissModal;
+  $('#modal .mbody').prepend(b);
+}
+function closeModal() { MODAL_BACK = null; $('#modal').hidden = true; $('#modal .mbody').innerHTML = ''; }
+function dismissModal() { const back = MODAL_BACK; closeModal(); if (back) back(); }
+$('#modal').addEventListener('mousedown', e => { if (e.target.id === 'modal' || e.target.closest('.mclose')) dismissModal(); });
 let LB = {list: [], i: 0};
 function lightbox(list, i) { LB = {list, i}; showLB(); }
 function showLB() {
@@ -145,7 +153,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { LB.i = clamp(LB.i + (e.key === 'ArrowRight' ? 1 : -1), 0, LB.list.length - 1); showLB(); }
     e.preventDefault(); return;
   }
-  if (e.key === 'Escape' && !$('#modal').hidden) { closeModal(); return; }
+  if (e.key === 'Escape' && !$('#modal').hidden) { dismissModal(); return; }
   if (KEYS && $('#modal').hidden) KEYS(e);
 });
 document.addEventListener('click', e => {
@@ -159,7 +167,7 @@ const PAGES = [
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'projects'], [/^#\/library$/, pageLibrary, 'library'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/knowledge$/, pageKnowledge, 'knowledge'],
-  [/^#\/prompts(?:\/(\w+))?$/, pagePrompts, 'prompts']];
+  [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'prompts']];
 async function route() {
   CLEAN.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); CLEAN = []; KEYS = null; hideTip();
   const h = location.hash || '#/';
@@ -179,7 +187,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 11;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 12;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -484,7 +492,7 @@ async function pageHome(main) {
   main.innerHTML = `
   <div class="head"><div><h1>MotionLab</h1><div class="sub">Your local lab in ${esc(s.lab)} · your videos stay on this PC; only what you share goes to GitHub</div></div>
     <div class="row"><button class="btn pri" id="an">＋ Analyse a video</button><button class="btn" data-open=".">Open lab folder</button></div></div>
-  ${updateBox(s.update, s.update_result)}
+  ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <div class="grid g5">
     <a class="stat card" href="#/refs"><div class="n">${s.references}</div><div class="l">references analysed · ${s.events} effects found</div></a>
     <a class="stat card" href="#/refs"><div class="n">${s.verdicts}<span class="muted" style="font-size:18px"> / ${s.events}</span></div>
@@ -493,13 +501,11 @@ async function pageHome(main) {
     <a class="stat card" href="#/library"><div class="n">${s.library}</div><div class="l">library effects · ${s.picks} picked for saving</div></a>
     <a class="stat card" href="#/knowledge"><div class="n" id="kn-n">…</div><div class="l" id="kn-l">references known (yours + friends')</div></a>
   </div>
-  <div class="grid g2" style="margin-top:14px">
-    <div class="panel"><h2>Next steps</h2>${s.next.length ? `<ul class="next">${s.next.map(n => `<li><a href="${esc(n.go)}">${esc(n.text)}</a>
-      ${n.claude ? `<div class="claude" style="margin-top:4px"><span>${esc(n.claude)}</span><span class="row">${claudeBtn(n.claude, 'Send to Claude', n.task || 'free', n.label || '', 'sm pri')}<button class="btn sm" data-copy="${esc(n.claude)}">Copy</button></span></div>` : ''}</li>`).join('')}</ul>`
-      : '<div class="muted">Nothing waiting.</div>'}
-      ${s.setup.length ? `<h3>Setup</h3><ul class="next">${s.setup.map(t => `<li><b>${esc(t.label)}</b> not found <span class="dim small">(${esc(t.need)})</span><div class="small muted">${esc(t.how)}</div></li>`).join('')}</ul>
-        <a href="#/settings">Settings → programs</a>` : ''}</div>
-    <div class="panel"><h2>Status</h2><div class="kv">
+  ${s.setup.length ? `<div class="panel upd" style="margin-top:14px"><h2>Setup</h2><ul class="next">${s.setup.map(t => `<li><b>${esc(t.label)}</b> not found <span class="dim small">(${esc(t.need)})</span><div class="small muted">${esc(t.how)}</div></li>`).join('')}</ul>
+    <a href="#/settings">Settings → programs</a></div>` : ''}
+  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="row"><span class="hint">click to enlarge</span>${claudeBtn('/whats-next', 'What next? Ask Claude', 'plan', '', 'sm cl')}</span></div>
+    <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}
+  <div class="panel" style="margin-top:14px"><h2>Status</h2><div class="kv">
       <b>Resolve</b><span>${esc(s.resolve.state)}${s.resolve.checked ? ` <span class="dim small">(checked ${esc(s.resolve.checked)})</span>` : ''}</span>
       <b>Disk</b><span>${bytes(s.free_bytes)} free of ${bytes(s.total_bytes)} · <a href="#/storage">storage</a></span>
       <b>Jobs</b><span>${s.jobs_running.length ? s.jobs_running.map(j => `<a href="#/jobs/${j.id}">${esc(j.title)}</a>`).join(', ') : 'none running'}</span>
@@ -508,10 +514,7 @@ async function pageHome(main) {
       pass, the reports and the Resolve check-ups run from here; checking the sheets, learning from your feedback and building
       in Resolve happen in Claude Code - the <b class="amber">Claude</b> buttons start a new Claude Code window with the exact
       request and a fitting effort level, so it does not have to learn MotionLab first. One window per task, then close it.</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>
-  </div>
-  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="row"><span class="hint">click to enlarge</span>${claudeBtn('/whats-next', 'What next? Ask Claude', 'plan', '', 'sm cl')}</span></div>
-    <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}`;
+      <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
   $('#an').onclick = () => analyseModal();
   $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
   wireUpdateBox(main, s.update_result);
@@ -520,9 +523,6 @@ async function pageHome(main) {
     const n = $('#kn-n', main), l = $('#kn-l', main); if (!n) return;
     n.textContent = K.cards.length;
     l.textContent = `references known · ${K.cards.filter(c => c.origin === 'shared').length} from friends · ${K.pending.cards + K.pending.lessons} to share`;
-    const ul = $('ul.next', main);
-    if (ul && (K.pending.cards || K.pending.lessons)) ul.insertAdjacentHTML('beforeend', `<li><a href="#/knowledge">Share what you learned: ${K.pending.cards} reference(s), ${K.pending.lessons} lesson(s) not shared yet</a></li>`);
-    if (ul && !K.author) ul.insertAdjacentHTML('beforeend', '<li><a href="#/settings">Set your name for sharing knowledge with friends (Settings)</a></li>');
   }).catch(() => {});
 }
 
@@ -1233,7 +1233,7 @@ function outcomePanel(P) {
   return `<div class="panel outcome"><div class="row sp"><h2>How did it turn out?</h2><span class="small muted">${(P.outcome || {}).updated
       ? 'saved ' + esc(P.outcome.updated) : 'tell the lab what worked - Claude reads it next time, and the prompt it came from shows it'}</span></div>
     ${mf.length ? `<div class="small" style="margin-bottom:8px">Made from: ${mf.map(x => x.kind === 'reference'
-      ? `<a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : `<a href="#/prompts/${esc(x.id.split('-')[0])}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
+      ? `<a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : `<a href="#/prompts/${esc(x.id)}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
     <div class="ogrid">${ASPECTS.map(([k, l]) => { const a = O[k] || {};
       return `<div class="orow" data-k="${k}"><span class="olab">${esc(l)}</span><span class="row" style="gap:4px">${['good', 'ok', 'bad'].map(r =>
         `<button class="btn sm vrb ${r}${a.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</span>
@@ -1559,176 +1559,219 @@ const SLOT_LABEL = {references: 'Uploads (what each is for)', keep: 'What stays 
   materials: 'Materials', pattern: 'Kind of hook', 'opening line': 'First line', 'on screen': 'On screen', promise: 'Promise',
   hook: 'Hook', problem: 'Problem', points: 'Main points', proof: 'Proof', 'call to action': 'Call to action',
   'format & length': 'Long or short, length & format', 'story & hook': 'Story & hook', 'feel / style': 'Feel & style reference',
-  footage: 'Footage (which clips)', 'order & structure': 'Order & structure', 'pacing & cuts': 'Pacing & cuts', colour: 'Colour grading',
+  footage: 'Footage & b-roll', 'order & structure': 'Order & structure', 'pacing & cuts': 'Pacing & cuts', colour: 'Colour grading',
   music: 'Music', sfx: 'SFX', 'motion graphics': 'Motion graphics', transitions: 'Transitions', 'captions & text': 'Captions & text',
+  effects: 'Effects (zooms, speed ramps, shake)', 'voice & audio': 'Voice & audio clean-up', ending: 'Ending & call to action',
   deliverable: 'Where it ends up', 'questions first': 'Questions to ask you first'};
 const slotLabel = s => SLOT_LABEL[s] || (s ? s[0].toUpperCase() + s.slice(1) : '');
 const STAT = {clear: ['✓', 'clear'], vague: ['~', 'vague'], missing: ['✗', 'missing']};
-const PCHECK_OPEN = new Set();                             // checklists the user opened (kept while the app runs)
-async function pagePrompts(main, kind) {               // one page for every kind (0.3.3); #/prompts/<kind> preselects it
-  const R = await api('/api/prompts');
-  const all = R.items, used = R.used || {}, help = R.help || {};
-  const unchecked = all.filter(p => !p.structure && !p.review).map(p => p.id);
-  const fors = Object.entries(all.flatMap(p => p.tags || []).reduce((a, x) => (a[x] = (a[x] || 0) + 1, a), {})).sort((a, b) => b[1] - a[1]);
-  let want = '', q = '', kf = R.kinds.some(k => k.id === kind) ? kind : '';
-  try { want = localStorage.getItem('ml.pfor') || ''; if (!kind) kf = localStorage.getItem('ml.pkind') || ''; } catch (e) { /* no storage: show all */ }
-  if (want && !fors.some(([x]) => x === want)) want = '';
-  if (kf && !R.kinds.some(k => k.id === kf)) kf = '';
-  const main_ = fors.filter(([x, n]) => PURPOSES.includes(x) || n > 1).slice(0, 14), rest = fors.filter(f => !main_.includes(f));
-  const src = p => { const s = p.source || {};
-    return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
-      : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(x => `<a href="#" data-goto="${esc(x)}">${esc(x)}</a>`).join(', ')}</span>` : ''}`; };
-  const stars = n => `<span class="stars" title="Claude's review of the prompt: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
-  const usedLine = u => `<div class="small pused">Used in <a href="#/project/${encodeURIComponent(u.project)}">${esc(u.project)}</a>${Object.keys(u.aspects || {}).length
-    ? ': ' + ASPECTS.filter(([k]) => (u.aspects[k] || {}).rating).map(([k, l]) => `<span class="vr ${u.aspects[k].rating}">${esc(l)} ${u.aspects[k].rating === 'ok' ? 'OK' : u.aspects[k].rating}</span>`).join(' ')
-    : ' - <span class="muted">not rated yet (the video\'s Overview: “How did it turn out?”)</span>'}</div>`;
-  const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use it in a video', shot: 'Run it on the site', image: 'Run it on the site'};
-  const checkBlock = p => {
-    const rv = p.review || {}, st = p.structure || [], w = p.wishes || {}, checked = st.some(x => x.status);
-    if (!st.length && rv.stars == null) return `<div class="pcheck none"><b>Not checked by Claude yet.</b> ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it with Claude', 'prompt', p.id)}
-      <span class="small muted">Claude looks at each part (${(R.kinds.find(k => k.id === p.kind) || {slots: []}).slots.slice(0, 7).map(slotLabel).join(', ').toLowerCase()}…) and marks it clear, vague or missing, with a tip.</span></div>`;
-    const n = k => st.filter(x => x.status === k).length;
-    const sum = checked ? Object.entries(STAT).map(([k, [ic, l]]) => n(k) ? `<span class="cs ${k}">${ic} ${n(k)} ${l}</span>` : '').join('') : '';
-    const rows = st.map(x => { const [ic] = STAT[x.status] || ['•'];
-      return `<div class="crow ${esc(x.status || 'plain')}"><span class="cic">${ic}</span><span class="clab">${esc(slotLabel(x.slot))}</span>
-        <span class="csay">${x.text ? esc(x.text) : '<i class="dim">not said</i>'}${x.tip ? `<span class="ctip">${esc(x.tip)}</span>` : ''}</span>
-        <input type="text" class="cwish" data-slot="${esc(x.slot)}" placeholder="what you want here…" value="${esc(w[x.slot] || '')}"></div>`; }).join('');
-    return `<details class="pcheck"${PCHECK_OPEN.has(p.id) ? ' open' : ''}><summary><b>Claude's check</b>${rv.stars != null ? stars(rv.stars) : ''}${sum}
-        <span class="small muted csum">${checked ? '- open it, say what you want, then Optimize' : '- open it to see each part'}</span></summary>
-      ${rv.why ? `<div class="small pwhy">${esc(rv.why)}</div>` : ''}${rv.fix ? `<div class="small pfix"><b>Claude suggests:</b> ${esc(rv.fix)}</div>` : ''}
-      ${rows ? `<div class="clist"><div class="crow chead"><span></span><span>Part</span><span>What your prompt says · Claude's tip</span><span>What you want</span></div>${rows}</div>` : ''}
-      <div class="row" style="margin-top:10px">${checked ? '' : '<span class="small muted">An older check without clear / vague / missing -</span>'}
-        <button class="btn sm pri" data-opt title="Claude writes a better version from its check and what you want (a new prompt; this one stays)"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
-        ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved></span></div></details>`;
-  };
-  const SR = R.styles || {}, SUG = R.suggest || {};
-  const styleBlock = p => {                            // 0.3.5: "al estilo de Clavero" = a reference you analysed, measured
-    if (!STYLE_KINDS.includes(p.kind)) return '';
-    const linked = p.style_refs || [], sug = SUG[p.id] || [];
-    const one = n => { const s = SR[n];
-      return `<div class="psref">${s && s.thumb ? `<img src="${fileUrl(s.thumb)}" loading="lazy" alt="">` : '<span></span>'}
-        <div><a href="#/ref/${encodeURIComponent(n)}"><b>${esc(s ? s.title : n)}</b></a>${s && s.uploader ? ` <span class="small muted">by ${esc(s.uploader)}</span>` : ''}
-          <div class="small">${s ? esc(s.line) : '<span class="bad">not analysed on this PC any more</span>'}</div></div>
-        <button class="btn sm ghost" data-sdel="${esc(n)}" title="Unlink - Claude no longer copies its style">✕</button></div>`; };
-    if (!linked.length && !sug.length && !Object.keys(SR).length) return '';
-    return `<div class="pstyle"><div class="row"><span class="psl">Style like</span>${linked.length ? '' : '<span class="small muted">a video you analysed - Claude copies its measured pacing, effects and look</span>'}
-        <span class="grow"></span><button class="btn sm ghost" data-spick>+ ${linked.length ? 'another reference' : 'pick from your references'}</button></div>
-      ${linked.map(one).join('')}
-      ${sug.map(x => `<div class="pssug small"><span>Found in your references: <b>${esc((SR[x.name] || {}).title || x.name)}</b> <span class="muted">(${esc(x.why)})</span></span>
-        <button class="btn sm" data-suse="${esc(x.name)}">Use its style</button></div>`).join('')}
-      ${linked.length ? '<div class="small muted">Claude reads its measured style when it checks, optimizes or runs this prompt - click <b>Optimize with Claude</b> to write it into the prompt.</div>' : ''}</div>`;
-  };
-  const card = p => { const res = p.result || {}, rv = p.review || {};
-    const title = p.title || p.text.trim().split(/\s+/).slice(0, 10).join(' ') + (p.text.trim().split(/\s+/).length > 10 ? '…' : '');
-    const versions = all.filter(x => (x.made_from || []).includes(p.id));
-    const long = p.text.split('\n').length > 7 || p.text.length > 520;
-    return `<div class="panel pcard" data-id="${esc(p.id)}">
-      <div class="row phead"><button class="kbadge k-${esc(p.kind)}" data-kind title="${esc(help[p.kind] || '')} - click to change the kind">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
-        <b class="ptitle">${esc(title)}</b><span class="mono small dim">${esc(p.id)}</span>
-        <span class="grow"></span>${rv.stars != null ? stars(rv.stars) : ''}<span class="small dim">${esc(p.updated || p.added || '')}</span></div>
-      <div class="row pfor small">${src(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
-        ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
-        <span class="muted">For:</span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join('') || '<span class="dim">not set</span>'}
-        <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
-      <div class="ptextwrap"><pre class="ptext${long ? ' clamp' : ''}">${esc(p.text)}</pre>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
-      ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
-      ${styleBlock(p)}
-      ${checkBlock(p)}
-      ${versions.length ? `<div class="small pver">Optimized: ${versions.map(x => `<a href="#" data-goto="${esc(x.id)}">${esc(x.id)}${x.title ? ' - ' + esc(x.title) : ''}</a>`).join(', ')}</div>` : ''}
-      ${(used[p.id] || []).map(usedLine).join('')}
-      <div class="row prate"><button class="btn sm run" data-run title="${p.kind === 'shot' || p.kind === 'image' ? 'Copies it - paste it into the site (Higgsfield, Seedance, Kling...)' : 'Create video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>
-        <button class="btn sm" data-copy>Copy</button>
-        <button class="btn sm cl" data-remix title="Claude keeps what worked in this prompt and changes what you say"><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>
-        <button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button>
-        <span class="grow"></span><span class="small muted">What it made:</span>
-        ${['good', 'ok', 'bad'].map(r => `<button class="btn sm${res.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}
-        <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}"></div></div>`; };
-  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Your prompts - for Claude (briefs to make a video), video and image models, hooks and talking scripts.
-      Add one, let Claude check it part by part (clear, vague or missing), say what you want, and Claude optimizes it. Then run it and rate what it made -
-      your Good / OK / Bad always counts more than Claude's ★.</div></div>
-      <div class="row"><button class="btn pri" id="padd">Add prompts</button>
-        ${R.items.length ? `<button class="btn" data-open="${esc(R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
-    <div class="row pkinds"><button class="fchip${kf ? '' : ' on'}" data-k="">all kinds <span class="dim">${all.length}</span></button>${R.kinds.map(k =>
-      `<button class="fchip${k.id === kf ? ' on' : ''}" data-k="${k.id}" title="${esc(help[k.id] || '')}"><i class="kdot k-${k.id}"></i>${esc(KSHORT[k.id] || k.label)} <span class="dim">${k.count}</span></button>`).join('')}</div>
-    ${all.length ? `<div class="row pfilter"><input type="search" id="pq" placeholder="Search: words, title, model, creator…">
-      <span class="small muted">For:</span><button class="fchip${want ? '' : ' on'}" data-f="">all</button>${main_.map(([x, n]) => `<button class="fchip${x === want ? ' on' : ''}" data-f="${esc(x)}">${esc(x)} <span class="dim">${n}</span></button>`).join('')}
-      ${rest.length ? `<select id="pmore" class="fsel"><option value="">more… (${rest.length})</option>${rest.map(([x, n]) => `<option value="${esc(x)}"${x === want ? ' selected' : ''}>${esc(x)} (${n})</option>`).join('')}</select>` : ''}
-      ${fors.length ? '' : '<span class="small dim">nothing set yet - a card\'s “For: Edit”</span>'}</div>` : ''}
-    ${unchecked.length ? `<div class="claude" style="margin-bottom:12px"><span>${plural(unchecked.length, 'prompt')} not checked by Claude yet: ${unchecked.map(esc).join(', ')}</span>
-      ${claudeBtn(`/write-prompt analyse ${unchecked.join(' ')}`, 'Check them with Claude', 'prompt', 'analyse')}</div>` : ''}
-    <div id="plist"></div>`;
-  $('#padd').onclick = () => addPromptsModal(R);
-  const match = p => (!kf || p.kind === kf) && (!want || (p.tags || []).includes(want)) && (!q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, ...(p.tags || [])]
-    .join(' ').toLowerCase().includes(q));
-  const pq = $('#pq', main);
+// a brief's check in the order a video is made (prompts.SLOTS["brief"]): the plan, the edit, sound, look, finish
+const BRIEF_GROUPS = [['The plan', ['format & length', 'story & hook', 'feel / style', 'footage', 'order & structure']],
+  ['The edit', ['pacing & cuts', 'transitions', 'effects']], ['Sound', ['voice & audio', 'music', 'sfx']],
+  ['Look & text', ['colour', 'motion graphics', 'captions & text']], ['Finish', ['ending', 'deliverable', 'questions first']]];
+const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use it in a video', shot: 'Run it on the site', image: 'Run it on the site'};
+const pstars = n => `<span class="stars" title="Claude's review of the prompt: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
+const ptitle = p => p.title || p.title_auto || p.text.trim().split(/\s+/).slice(0, 8).join(' ') + (p.text.trim().split(/\s+/).length > 8 ? '…' : '');
+// what a prompt needs, in two words: the tool / model, and what you bring (your clips, a photo, you on camera)
+function pneeds(p) {
+  const t = p.text || '', refs = ((p.structure || []).find(x => x.slot === 'references') || {}).text || '';
+  const out = [];
+  if (p.kind === 'brief') out.push(/resolve|da ?vinci/i.test(t) ? 'Claude + Resolve' : 'Claude');
+  else if (p.model) out.push(p.model);
+  if (p.kind === 'brief') out.push('your clips');
+  else if (p.kind === 'script' || p.kind === 'hook') out.push('you on camera');
+  else {
+    const both = t + ' ' + refs;
+    if (/@video\d*|source clip|tripod clip|your (clip|video|footage)|upload(ed)? (a |your )?(clip|video)|video[- ]to[- ]video/i.test(both)) out.push('your clip');
+    else if (/@image\d*|reference (image|photo|picture)|your (photo|picture|selfie)|upload(ed)? (a |your )?(photo|image|picture)|image[- ]to[- ]video|start frame/i.test(both)) out.push('your photo');
+    else out.push('text only');
+  }
+  return out;
+}
+const pcategory = p => (p.tags || []).find(x => PURPOSES.includes(x)) || (p.tags || [])[0] || '';
+const pexUrl = (R, f) => fileUrl(`${R.folder}/examples/${f}`);
+const pexMedia = (R, f, cls = '') => /\.(mp4|webm)$/i.test(f)
+  ? `<video class="${cls}" src="${pexUrl(R, f)}#t=0.5" preload="metadata" muted playsinline></video>` : `<img class="${cls}" src="${pexUrl(R, f)}" loading="lazy" alt="">`;
+const pcounts = st => Object.entries(STAT).map(([k, [ic, l]]) => { const n = st.filter(x => x.status === k).length;
+  return n ? `<span class="cs ${k}" title="${n} ${l}">${ic} ${n}</span>` : ''; }).join('');
+function psource(p) {
+  const s = p.source || {};
+  return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
+    : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(x => `<a href="#" data-goto="${esc(x)}">${esc(x)}</a>`).join(', ')}</span>` : ''}`;
+}
+const pusedLine = u => `<div class="small pused">Used in <a href="#/project/${encodeURIComponent(u.project)}">${esc(u.project)}</a>${Object.keys(u.aspects || {}).length
+  ? ': ' + ASPECTS.filter(([k]) => (u.aspects[k] || {}).rating).map(([k, l]) => `<span class="vr ${u.aspects[k].rating}">${esc(l)} ${u.aspects[k].rating === 'ok' ? 'OK' : u.aspects[k].rating}</span>`).join(' ')
+  : ' - <span class="muted">not rated yet (the video\'s Overview: “How did it turn out?”)</span>'}</div>`;
+function pstyleBlock(p, R) {                           // after 0.3.4: "al estilo de Clavero" = a reference you analysed, measured
+  const SR = R.styles || {};
+  if (!STYLE_KINDS.includes(p.kind)) return '';
+  const linked = p.style_refs || [], sug = (R.suggest || {})[p.id] || [];
+  const one = n => { const s = SR[n];
+    return `<div class="psref">${s && s.thumb ? `<img src="${fileUrl(s.thumb)}" loading="lazy" alt="">` : '<span></span>'}
+      <div><a href="#/ref/${encodeURIComponent(n)}"><b>${esc(s ? s.title : n)}</b></a>${s && s.uploader ? ` <span class="small muted">by ${esc(s.uploader)}</span>` : ''}
+        <div class="small">${s ? esc(s.line) : '<span class="bad">not analysed on this PC any more</span>'}</div></div>
+      <button class="btn sm ghost" data-sdel="${esc(n)}" title="Unlink - Claude no longer copies its style">✕</button></div>`; };
+  if (!linked.length && !sug.length && !Object.keys(SR).length) return '';
+  return `<div class="pstyle"><div class="row"><span class="psl">Style like</span>${linked.length ? '' : '<span class="small muted">a video you analysed - Claude copies its measured pacing, effects and look</span>'}
+      <span class="grow"></span><button class="btn sm ghost" data-spick>+ ${linked.length ? 'another reference' : 'pick from your references'}</button></div>
+    ${linked.map(one).join('')}
+    ${sug.map(x => `<div class="pssug small"><span>Found in your references: <b>${esc((SR[x.name] || {}).title || x.name)}</b> <span class="muted">(${esc(x.why)})</span></span>
+      <button class="btn sm" data-suse="${esc(x.name)}">Use its style</button></div>`).join('')}
+    ${linked.length ? '<div class="small muted">Claude reads its measured style when it checks, optimizes or runs this prompt - click <b>Optimize with Claude</b> to write it into the prompt.</div>' : ''}</div>`;
+}
+function pcheckBlock(p, R) {                           // Claude's check: a row per part, grouped for briefs, + what you want
+  const rv = p.review || {}, st = p.structure || [], w = p.wishes || {}, checked = st.some(x => x.status);
+  if (!st.length && rv.stars == null) return `<div class="pcheck none"><b>Not checked by Claude yet.</b> ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it with Claude', 'prompt', p.id)}
+    <span class="small muted">Claude looks at each part (${(R.kinds.find(k => k.id === p.kind) || {slots: []}).slots.slice(0, 7).map(slotLabel).join(', ').toLowerCase()}…) and marks it clear, vague or missing, with a tip.</span></div>`;
+  const rowH = x => { const [ic] = STAT[x.status] || ['•'];
+    return `<div class="crow ${esc(x.status || 'plain')}"><span class="cic">${ic}</span><span class="clab">${esc(slotLabel(x.slot))}</span>
+      <span class="csay">${x.text ? esc(x.text) : '<i class="dim">not said</i>'}${x.tip ? `<span class="ctip">${esc(x.tip)}</span>` : ''}</span>
+      <input type="text" class="cwish" data-slot="${esc(x.slot)}" placeholder="what you want here…" value="${esc(w[x.slot] || '')}"></div>`; };
+  let rows = st.map(rowH).join('');
+  if (p.kind === 'brief') {
+    const seen = new Set();
+    rows = BRIEF_GROUPS.map(([g, slots]) => { const xs = slots.flatMap(s => st.filter(x => x.slot === s)); xs.forEach(x => seen.add(x));
+      return xs.length ? `<div class="cgroup">${esc(g)}</div>${xs.map(rowH).join('')}` : ''; }).join('');
+    const rest = st.filter(x => !seen.has(x));
+    if (rest.length) rows += `<div class="cgroup">Other</div>${rest.map(rowH).join('')}`;
+  }
+  return `<div class="pcheck flat"><div class="pchead"><b>Claude's check</b>${rv.stars != null ? pstars(rv.stars) : ''}${checked ? pcounts(st) : ''}
+      <span class="small muted">${checked ? '- say what you want next to any part, then Optimize' : ''}</span></div>
+    ${rv.why ? `<div class="small pwhy">${esc(rv.why)}</div>` : ''}${rv.fix ? `<div class="small pfix"><b>Claude suggests:</b> ${esc(rv.fix)}</div>` : ''}
+    ${rows ? `<div class="clist"><div class="crow chead"><span></span><span>Part</span><span>What your prompt says · Claude's tip</span><span>What you want</span></div>${rows}</div>` : ''}
+    <div class="row" style="margin-top:10px">${checked ? '' : '<span class="small muted">An older check without clear / vague / missing -</span>'}
+      <button class="btn sm pri" data-opt title="Claude writes a better version from its check and what you want (a new prompt; this one stays)"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
+      ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved></span></div></div>`;
+}
+async function pagePrompts(main, arg) {               // one list of every kind (0.3.4: no filters); a click opens the prompt
+  const ctx = {R: await api('/api/prompts')};
+  let q = '';
+  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Your prompts - briefs for Claude, video and image models, hooks and talking scripts.
+      Click one to see Claude's check, say what you want, optimize it and run it.</div></div>
+      <div class="row"><input type="search" id="pq" placeholder="Search your prompts…" style="width:230px"><button class="btn pri" id="padd">Add prompts</button>
+        ${ctx.R.items.length ? `<button class="btn" data-open="${esc(ctx.R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
+    <div id="pbanner"></div><div id="plist" class="pgrid"></div>`;
+  $('#padd', main).onclick = () => addPromptsModal(ctx.R);
+  const row = p => { const res = (p.result || {}).rating, rv = p.review || {}, ex = (p.examples || [])[0], cat = pcategory(p);
+    const rating = res ? `<span class="vr ${res}" title="what it made - your rating">${res === 'ok' ? 'OK' : res[0].toUpperCase() + res.slice(1)}</span>`
+      : rv.stars != null ? pstars(rv.stars) : '<span class="small amber">not checked yet</span>';
+    return `<button class="pgc k-${esc(p.kind)}" data-id="${esc(p.id)}" title="${esc(KSHORT[p.kind] || p.kind)} · ${esc(p.id)} - click to open">
+      ${ex ? `<span class="pgthumb">${pexMedia(ctx.R, ex)}</span>` : ''}
+      <span class="pgtop"><span class="kbadge k-${esc(p.kind)}">${esc(KSHORT[p.kind] || p.kind)}</span>${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}</span>
+      <b class="pgtitle">${esc(ptitle(p))}</b>
+      <span class="pgfoot"><span class="pgneeds">${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</span>${rating}</span></button>`; };
   const draw = () => {
-    const items = all.filter(match), list = $('#plist', main);
-    const K = R.kinds.find(k => k.id === kf);
-    list.innerHTML = items.map(card).join('') || (K && !K.count ? `<div class="empty">No ${esc((KSHORT[K.id] || K.label).toLowerCase())} prompts yet - ${esc(help[K.id] || '')}.
-      <div style="margin-top:10px"><button class="btn pri" data-addk>Add prompts</button></div><div class="small muted" style="margin-top:6px">Claude checks these parts: ${K.slots.map(slotLabel).map(esc).join(' · ')}</div></div>`
-      : all.length ? '<div class="empty">No prompt matches - clear the search or pick “all”.</div>'
+    const all = ctx.R.items, list = $('#plist', main);
+    const unchecked = all.filter(p => !p.structure && !p.review).map(p => p.id);
+    $('#pbanner', main).innerHTML = unchecked.length ? `<div class="claude" style="margin-bottom:12px"><span>${plural(unchecked.length, 'prompt')} not checked by Claude yet: ${unchecked.map(esc).join(', ')}</span>
+      ${claudeBtn(`/write-prompt analyse ${unchecked.join(' ')}`, 'Check them with Claude', 'prompt', 'analyse')}</div>` : '';
+    const items = all.filter(p => !q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, KSHORT[p.kind], ...(p.tags || [])].join(' ').toLowerCase().includes(q))
+      .sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
+    list.innerHTML = items.map(row).join('') || (all.length ? '<div class="empty">No prompt matches the search.</div>'
       : '<div class="empty">No prompts yet. <b>Add prompts</b>: paste one you use, attach a creator\'s guide, or let Claude generate one from zero.</div>');
-    if ($('[data-addk]', list)) $('[data-addk]', list).onclick = () => addPromptsModal(R);
-    $$('.pcard', list).forEach(c => {
-      const p = items.find(x => x.id === c.dataset.id), note = $('.pnote', c);
-      const save = async (rating, msg) => {
-        try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
-          p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); }
-        catch (e) { toast(e.message, 'err'); }
-      };
-      $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
-      note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
-      $('[data-copy]', c).onclick = () => copy(p.text);
-      $('[data-remix]', c).onclick = () => remixModal(p);
-      $('[data-for]', c).onclick = () => forModal(p, () => route());
-      $('[data-pdel]', c).onclick = () => delPromptModal(p);
-      $('[data-kind]', c).onclick = () => kindModal(p, R);
-      $('[data-run]', c).onclick = () => {
-        if (p.kind === 'shot' || p.kind === 'image') { copy(p.text); toast('Copied - paste it into the site (Higgsfield, Seedance, Kling…), then rate what it made here', 'ok'); }
-        else createVideoModal({from: 'prompt', pick: p.id});
-      };
-      const more = $('[data-more]', c);
-      if (more) more.onclick = () => { const pre = $('.ptext', c); pre.classList.toggle('clamp'); more.textContent = pre.classList.contains('clamp') ? 'Show all' : 'Show less'; };
-      $$('[data-goto]', c).forEach(a => a.onclick = e => { e.preventDefault(); kf = ''; want = ''; if (pq) pq.value = a.dataset.goto; q = a.dataset.goto.toLowerCase(); draw(); });
-      const det = $('details.pcheck', c);
-      if (det) det.ontoggle = () => { if (det.open) PCHECK_OPEN.add(p.id); else PCHECK_OPEN.delete(p.id); };
-      const saveWishes = async () => {                       // the wishes go with the prompt (Optimize reads them)
-        const wishes = Object.fromEntries($$('.cwish', c).map(i => [i.dataset.slot, i.value.trim()]).filter(([, v]) => v));
-        try { const r = await api('/api/prompts/wishes', {id: p.id, wishes}); p.wishes = r.wishes;
-          const s = $('[data-wsaved]', c); if (s) s.textContent = Object.keys(wishes).length ? `your wishes saved (${Object.keys(wishes).length})` : ''; }
-        catch (e) { toast(e.message, 'err'); }
-      };
-      $$('.cwish', c).forEach(i => { i.onchange = saveWishes; i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; });
-      const opt = $('[data-opt]', c);
-      if (opt) opt.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); };
-      const setStyle = async (refs, msg) => {
-        try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); route(); }
-        catch (e) { toast(e.message, 'err'); }
-      };
-      const linkMsg = (p.structure || []).length ? 'Linked - now click Optimize with Claude so its measured style goes into the prompt'
-        : 'Linked - Claude uses its measured style when it checks this prompt';
-      $$('[data-suse]', c).forEach(b => b.onclick = () => setStyle([...(p.style_refs || []), b.dataset.suse], linkMsg));
-      $$('[data-sdel]', c).forEach(b => b.onclick = () => setStyle((p.style_refs || []).filter(n => n !== b.dataset.sdel), 'Unlinked'));
-      const sp = $('[data-spick]', c);
-      if (sp) sp.onclick = () => styleModal(p, R, n => setStyle([...(p.style_refs || []), n], linkMsg));
-    });
+    $$('.pgc', list).forEach(c => c.onclick = () => promptModal(c.dataset.id, ctx));
   };
-  if (pq) pq.oninput = debounce(() => { q = pq.value.trim().toLowerCase(); draw(); }, 150);
-  const setWant = w => {
-    want = w; $$('[data-f]', main).forEach(x => x.classList.toggle('on', x.dataset.f === w));
-    const more = $('#pmore', main); if (more) more.value = rest.some(([x]) => x === w) ? w : '';
-    try { localStorage.setItem('ml.pfor', want); } catch (e) { /* not remembered */ }
-    draw();
-  };
-  $$('[data-f]', main).forEach(b => b.onclick = () => setWant(b.dataset.f));
-  if ($('#pmore', main)) $('#pmore', main).onchange = e => setWant(e.target.value);
-  const setKind = k => {
-    kf = k; $$('[data-k]', main).forEach(x => x.classList.toggle('on', x.dataset.k === k));
-    try { localStorage.setItem('ml.pkind', kf); } catch (e) { /* not remembered */ }
-    draw();
-  };
-  $$('[data-k]', main).forEach(b => b.onclick = () => setKind(b.dataset.k));
+  ctx.draw = draw;
+  ctx.reload = async () => { ctx.R = await api('/api/prompts'); draw(); };
+  const pq = $('#pq', main);
+  pq.oninput = debounce(() => { q = pq.value.trim().toLowerCase(); draw(); }, 150);
   draw();
+  if (arg && /^[a-z]+-\d+$/.test(arg)) {               // #/prompts/<id> (a link from a video, an optimized version): open it
+    history.replaceState(null, '', '#/prompts');
+    promptModal(arg, ctx);
+  }
+}
+// one prompt in focus: the whole text, Style like, Claude's check with what you want, Optimize, Run it, your rating
+function promptModal(id, ctx) {
+  const R = ctx.R, all = R.items, p = all.find(x => x.id === id);
+  if (!p) { toast(`${id} is not in your prompts any more`, 'err'); return; }
+  const res = p.result || {}, rv = p.review || {}, help = R.help || {};
+  const versions = all.filter(x => (x.made_from || []).includes(p.id));
+  const shot = p.kind === 'shot' || p.kind === 'image';
+  modal(`<div class="pm">
+    <div class="row phead"><button class="kbadge k-${esc(p.kind)}" data-kind title="${esc(help[p.kind] || '')} - click to change the kind">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
+      <h2 class="ptitle">${esc(ptitle(p))}</h2><span class="mono small dim">${esc(p.id)}</span><span class="grow"></span>${rv.stars != null ? pstars(rv.stars) : ''}
+      <span class="small dim">${esc(p.updated || p.added || '')}</span></div>
+    <div class="row pfor small">${psource(p)}${p.model ? `<span class="chip">${esc(p.model)}</span>` : ''}${p.pattern ? `<span class="chip">${esc(p.pattern)}</span>` : ''}
+      ${p.workflow ? `<span class="chip" title="one step of a multi-step recipe">${esc(p.workflow)}${p.step ? ` · step ${p.step}` : ''}</span>` : ''}
+      <span class="muted">For:</span>${(p.tags || []).map(x => `<span class="fchip sm">${esc(x)}</span>`).join('') || '<span class="dim">not set</span>'}
+      <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
+    <div class="ptextwrap"><pre class="ptext">${esc(p.text)}</pre></div>
+    ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
+    <div class="row pfor small"><span class="muted">Needs:</span>${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div>
+    <div class="pex"><div class="row"><span class="psl2">What it makes</span>${(p.examples || []).length ? '' : '<span class="small muted">a picture or clip of the result - yours, or the creator\'s example. The first one is the card\'s picture.</span>'}
+        <span class="grow"></span><label class="btn sm ghost">+ Add a picture or clip<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
+      ${(p.examples || []).length ? `<div class="pexlist">${p.examples.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
+        ? `<video src="${pexUrl(R, f)}" controls muted loop playsinline preload="metadata"></video>` : `<img src="${pexUrl(R, f)}" alt="" loading="lazy" data-exview>`}
+        <button class="btn sm ghost" data-exdel="${esc(f)}" title="Remove it (Recycle Bin)">✕</button></figure>`).join('')}</div>` : ''}</div>
+    ${pstyleBlock(p, R)}
+    ${pcheckBlock(p, R)}
+    ${versions.length ? `<div class="small pver">Optimized: ${versions.map(x => `<a href="#" data-goto="${esc(x.id)}">${esc(x.id)}${x.title ? ' - ' + esc(x.title) : ''}</a>`).join(', ')}</div>` : ''}
+    ${((R.used || {})[p.id] || []).map(pusedLine).join('')}
+    <div class="row prate"><button class="btn sm run" data-run title="${shot ? 'Copies it - paste it into the site (Higgsfield, Seedance, Kling...)' : 'Create video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>
+      <button class="btn sm" data-copy>Copy</button>
+      <button class="btn sm cl" data-remix title="Claude keeps what worked in this prompt and changes what you say"><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>
+      <button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button>
+      <span class="grow"></span><span class="small muted">What it made:</span>
+      ${['good', 'ok', 'bad'].map(r => `<button class="btn sm${res.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}
+      <input type="text" class="pnote" placeholder="a note on the result (Enter saves)" value="${esc(res.note || '')}"></div></div>`, c => {
+    const reopen = async () => { await ctx.reload(); promptModal(p.id, ctx); };
+    const note = $('.pnote', c);
+    const save = async (rating, msg) => {
+      try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
+        p.result = r.result; $$('[data-r]', c).forEach(b => b.classList.toggle('on', b.dataset.r === (r.result || {}).rating)); toast(msg, 'ok'); ctx.draw(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved'); });
+    note.onkeydown = e => { if (e.key === 'Enter') save((p.result || {}).rating || null, 'Note saved'); };
+    $('[data-copy]', c).onclick = () => copy(p.text);
+    const back = () => promptModal(p.id, ctx);
+    $('[data-remix]', c).onclick = () => { remixModal(p); modalBack(back); };
+    $('[data-for]', c).onclick = () => { forModal(p, reopen); modalBack(back); };
+    $('[data-pdel]', c).onclick = () => { delPromptModal(p); modalBack(back); };
+    $('[data-kind]', c).onclick = () => { kindModal(p, R); modalBack(back); };
+    $('[data-run]', c).onclick = () => {
+      if (shot) { copy(p.text); toast('Copied - paste it into the site (Higgsfield, Seedance, Kling…), then rate what it made here', 'ok'); }
+      else createVideoModal({from: 'prompt', pick: p.id}).then(() => modalBack(back));
+    };
+    $$('[data-goto]', c).forEach(a => a.onclick = e => { e.preventDefault(); promptModal(a.dataset.goto, ctx); });
+    const saveWishes = async () => {                       // the wishes go with the prompt (Optimize reads them)
+      const wishes = Object.fromEntries($$('.cwish', c).map(i => [i.dataset.slot, i.value.trim()]).filter(([, v]) => v));
+      try { const r = await api('/api/prompts/wishes', {id: p.id, wishes}); p.wishes = r.wishes;
+        const s = $('[data-wsaved]', c); if (s) s.textContent = Object.keys(wishes).length ? `your wishes saved (${Object.keys(wishes).length})` : ''; }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    $$('.cwish', c).forEach(i => { i.onchange = saveWishes; i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; });
+    const opt = $('[data-opt]', c);
+    if (opt) opt.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); };
+    const setStyle = async (refs, msg) => {
+      try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); await reopen(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    const exIn = $('[data-exadd]', c);
+    exIn.onchange = async () => {
+      for (const f of [...exIn.files]) {
+        if (f.size > 30e6) { toast(`${f.name}: pictures and clips up to 30 MB`, 'err'); continue; }
+        try { await api('/api/prompts/example', {id: p.id, name: f.name, data: b64(await f.arrayBuffer())}); }
+        catch (e) { toast(e.message, 'err'); }
+      }
+      await reopen();
+    };
+    $$('[data-exdel]', c).forEach(bt => bt.onclick = async () => {
+      try { await api('/api/prompts/example', {id: p.id, remove: bt.dataset.exdel}); toast('Removed (Recycle Bin)', 'ok'); await reopen(); }
+      catch (e) { toast(e.message, 'err'); }
+    });
+    $$('[data-exview]', c).forEach(im => im.onclick = () => {
+      const pics = (p.examples || []).filter(f => !/\.(mp4|webm)$/i.test(f));
+      lightbox(pics.map(f => ({src: `${R.folder}/examples/${f}`, cap: ptitle(p)})), Math.max(0, pics.indexOf(im.closest('figure').dataset.ex)));
+    });
+    const linkMsg = (p.structure || []).length ? 'Linked - now click Optimize with Claude so its measured style goes into the prompt'
+      : 'Linked - Claude uses its measured style when it checks this prompt';
+    $$('[data-suse]', c).forEach(b => b.onclick = () => setStyle([...(p.style_refs || []), b.dataset.suse], linkMsg));
+    $$('[data-sdel]', c).forEach(b => b.onclick = () => setStyle((p.style_refs || []).filter(n => n !== b.dataset.sdel), 'Unlinked'));
+    const sp = $('[data-spick]', c);
+    if (sp) sp.onclick = () => { styleModal(p, R, n => setStyle([...(p.style_refs || []), n], linkMsg)); modalBack(back); };
+  }, 'wide');
 }
 const STYLE_KINDS = ['brief', 'script', 'hook'];           // prompts that make a video (prompts.STYLE_KINDS)
 // pick an analysed reference whose measured style a prompt follows (the ones its words seem to mean first)
@@ -1804,7 +1847,7 @@ function delPromptModal(p) {
     <p>${esc(p.title || p.text.slice(0, 160) + (p.text.length > 160 ? '…' : ''))}</p>
     <p class="hint">It goes to the Windows Recycle Bin - restore it from there if you change your mind.</p>
     <div class="row" style="margin-top:10px"><button class="btn danger" id="pdel">Delete</button><button class="btn" data-close>Cancel</button></div>`, el => {
-    $('[data-close]', el).onclick = closeModal;
+    $('[data-close]', el).onclick = dismissModal;
     $('#pdel', el).onclick = async () => {
       try { await api('/api/prompts/delete', {id: p.id}); closeModal(); toast(`${p.id} moved to the Recycle Bin`, 'ok'); route(); }
       catch (e) { toast(e.message, 'err'); }
@@ -1816,18 +1859,21 @@ function delPromptModal(p) {
 const b64 = buf => { const u = new Uint8Array(buf); let s = '';
   for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
 function addPromptsModal(R) {
-  modal(`<h2>Add prompts</h2>
+  R = R || {kinds: [], help: {}};
+  const start = () => modal(`<h2>Add prompts</h2>
     <div class="cvchoice">
       <button class="cvopt" data-m="have"><svg class="ic"><use href="#i-prompts"/></svg><b>1. I have a prompt</b>
         <span>Paste it or attach a file. Claude then checks it - what is clear, vague or missing - and you say what you want.</span></button>
       <button class="cvopt" data-m="new"><svg class="ic"><use href="#i-claude"/></svg><b>2. Generate a new prompt from zero</b>
-        <span>Tell Claude what you want to make - it writes the prompt from the best examples in your library.</span></button></div>
-    <div id="amode" style="margin-top:6px"></div>`, el => {
-    $$('.cvopt', el).forEach(b => b.onclick = () => {
-      $$('.cvopt', el).forEach(x => x.classList.toggle('on', x === b));
-      (b.dataset.m === 'have' ? havePromptForm : newPromptForm)($('#amode', el), R || {kinds: [], help: {}});
+        <span>Tell Claude what you want to make - it writes the prompt from the best examples in your library.</span></button></div>`, el => {
+    $$('.cvopt', el).forEach(b => b.onclick = () => {           // the next step on its own screen; Back returns here
+      const have = b.dataset.m === 'have';
+      modal(`<h2>${have ? '1. I have a prompt' : '2. Generate a new prompt from zero'}</h2><div id="amode"></div>`,
+        m => (have ? havePromptForm : newPromptForm)($('#amode', m), R));
+      modalBack(start);
     });
   });
+  start();
 }
 function newPromptForm(box, R) {
   const kinds = (R.kinds || []).length ? R.kinds.map(k => k.id) : Object.keys(KSHORT);
@@ -1913,7 +1959,7 @@ function havePromptForm(box, R) {
     $('#psave', el).remove(); $('#psort', el).remove();
     if ($('#prv', el).checked) openClaude(`/write-prompt analyse ${ids.join(' ')}`, 'prompt', 'analyse');
     else res.insertAdjacentHTML('beforeend', ' ' + claudeBtn(`/write-prompt analyse ${ids.join(' ')}`, 'Check them with Claude', 'prompt', 'analyse'));
-    const h = '#/prompts/' + kindOf;                         // the page behind the dialog shows them
+    const h = '#/prompts';                                   // the page behind the dialog shows them
     if (location.hash === h) route(); else location.hash = h;
   };
   $('#psave', el).onclick = async () => {

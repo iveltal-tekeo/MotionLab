@@ -33,7 +33,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
   overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
   `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
-  Prompts: what each is for (its tags; purpose chips + search filter the page, *For: Edit* = POST
+  Prompts: what each is for (its tags; *For: Edit* = POST
   `/api/prompts/tags`), *Use it, change…* = `/write-prompt <kind> like <id> - change: ...`, Delete.
   0.3.4 (the user: "make it more user friendly"): kind `brief` (Brief for Claude: how to make / edit a whole video)
   first; the card = kind badge (click = `kindModal`, POST `/api/prompts/kind`) + title, the text folded (Show all),
@@ -51,13 +51,28 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   made it named in the prompt, else a distinctive title word; GET `/api/prompts` carries `styles` + `suggest`), *+ pick
   from your references* (`styleModal`); Generate from zero has *In the style of* (`- style: <name>`); Create video's
   prompt list shows it. API_LEVEL 11.
-- Pages (routes keep their old names #/refs, #/projects): Home (status, update banner, next steps = each reference's
-  next workflow step, setup warnings, roadmap), **References** (#/refs: the 6-step workflow, downloads not analysed
+  Then (the user, still 0.3.4: "too crowded - remove the filters; a click on a prompt = a pop-up; Add prompts should
+  go forward, with back"): no kind / purpose chips (search only), one `.prow` per prompt, newest first; a click =
+  `promptModal` (`.mbox.wide`: text, Style like `pstyleBlock`, the check `pcheckBlock` - a brief's rows grouped by
+  `BRIEF_GROUPS`: the plan / the edit / sound / look & text / finish - wishes, Optimize, Run it, rating);
+  `#/prompts/<id>` opens one. `modalBack(fn)` after `modal()` = a *← Back* button, and Esc / ✕ / a click outside go
+  back too (`dismissModal`; a plain `closeModal()` does not): the dialogs opened from the pop-up, and Add prompts'
+  second screen (1 / 2 = its own screen). Brief parts + effects, voice & audio, ending (`prompts.SLOTS`).
+  Then ("3 per row, just the title, the rating, if I need Higgsfield / clips, the category - the tags are noise"):
+  `.pgrid` of `.pgc` cards = kind badge + one category (`pcategory`: the first purpose tag), the title (`title` or
+  `title_auto` = `prompts.auto_title`, also saved on paste), what it needs (`pneeds`: tool / model + your clips /
+  photo / you on camera / text only), the rating (the user's, else Claude's ★); *What it makes* in the pop-up =
+  pictures / clips of the result (POST `/api/prompts/example` add (base64) / remove (Recycle Bin);
+  `knowledge\local\prompts\examples\`, record `examples`), the first one = the card's picture. API_LEVEL 12.
+  Home (same day): no Next steps, no "Updated to" box (kept only when an update set aside local changes), Setup
+  warnings only when a program is missing, Status below the roadmap.
+- Pages (routes keep their old names #/refs, #/projects): Home (update banner, counts, setup warnings when a program
+  is missing, roadmap, then status; each reference's next step lives on References now), **References** (#/refs: the 6-step workflow, downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
-  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts, 0.4; one list of every kind since 0.3.3 - kind chips + a badge per card, #/prompts/<kind> preselects a kind; cards with source, model,
+  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts, 0.4; one list of every kind since 0.3.3, a row per prompt, a click opens it - see above; cards with source, model,
   structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = any text or attached
   files since 0.3.3 (`addPromptsModal`: the kind guessed - POST `/api/prompts/guess`, editable; .txt / .md / .docx
   read by POST `/api/prompts/file` (base64, up to 30 MB, kept in `knowledge\local\prompts\files\`), a PDF goes to
@@ -128,7 +143,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

@@ -39,10 +39,14 @@ SLOTS = {
               "avoid"],
     "hook": ["pattern", "opening line", "on screen", "promise"],
     "script": ["hook", "problem", "points", "proof", "call to action"],
-    # 0.3.4: a brief = what Claude needs to make a whole video; Claude's check marks each clear / vague / missing
-    "brief": ["format & length", "story & hook", "feel / style", "footage", "order & structure", "pacing & cuts",
-              "colour", "music", "sfx", "motion graphics", "transitions", "captions & text", "deliverable",
-              "questions first"],
+    # 0.3.4: a brief = what Claude needs to make a whole video; Claude's check marks each clear / vague / missing.
+    # In the order a video is made (the app groups them: the plan, the edit, sound, look & text, finish); effects,
+    # voice & audio and ending added after the user asked "what other parts should Claude check?"
+    "brief": ["format & length", "story & hook", "feel / style", "footage", "order & structure",
+              "pacing & cuts", "transitions", "effects",
+              "voice & audio", "music", "sfx",
+              "colour", "motion graphics", "captions & text",
+              "ending", "deliverable", "questions first"],
 }
 STATUSES = ("clear", "vague", "missing")                # Claude's check of one slot (structure[i].status)
 HOOK_PATTERNS = ["question", "bold claim", "number", "story", "contrarian", "demo", "curiosity gap", "call-out"]
@@ -115,6 +119,10 @@ def _check(r: dict) -> None:
             raise ValueError(f"structure status: {', '.join(STATUSES)} (got {x.get('status')!r})")
     if not isinstance(r.get("wishes") or {}, dict):
         raise ValueError("wishes = {slot: what the user wants}")
+    ex = r.get("examples") or []
+    if not (isinstance(ex, list)
+            and all(isinstance(x, str) and x.strip(".") and not set(x) & set("/\\:") for x in ex)):
+        raise ValueError("examples = file names in knowledge\\local\\prompts\\examples")
     refs = r.get("style_refs") or []
     if not (isinstance(refs, list) and len(refs) <= 5 and all(isinstance(x, str) and x and safe_name(x) == x
                                                                 for x in refs)):
@@ -165,7 +173,7 @@ def update(pid: str, **changes) -> dict:
     with _LOCK:
         r = get(pid)
         for k in ("title", "model", "structure", "pattern", "tags", "workflow", "step", "notes", "wishes",
-                  "style_refs"):
+                  "style_refs", "examples"):
             if k in changes and changes[k] is not None:
                 r[k] = changes[k]
         if changes.get("review") is not None:
@@ -359,6 +367,52 @@ _BRIEF = re.compile(r"\b(timeline|l[ií]nea de tiempo|resolve|da ?vinci|premiere
 _SPOKEN = re.compile(r"\b(i|i'm|i've|you|you're|your|we|my|me|today|guys|subscribe|follow|comment)\b", re.I)
 
 
+_ES = re.compile(r"\b(quiero|que|el|la|los|las|con|para|una?|estilo|video|crees|edita|haz)\b", re.I)
+_FILLER = re.compile(r"^(quiero que|quiero|necesito que|necesito|me gustar[ií]a que|i want you to|i want|i'd like you to|"
+                     r"please|por favor|can you|could you|you are|eres|act as|create|generate|make|write|haz|crea|"
+                     r"genera|escribe|edita|edit)\b[\s,:]*", re.I)
+_FORMATS = ["music video", "talking head", "videoclip", "vlog", "reel", "short", "tiktok", "tutorial", "trailer",
+            "documental", "documentary", "anuncio", "ad", "podcast", "intro", "story", "storytime"]
+
+
+def auto_title(text: str, kind: str = "") -> str:
+    """A short title for a prompt nobody titled yet (Claude's check writes a better one): for a brief the footage
+    folder, the format and the style it names ("Londres Día 1 · vlog · estilo Clavero"), else the first words that
+    say what it makes, without "I want you to" / "Quiero que" / "@video1:"."""
+    t = re.sub(r"https?://\S+|@\w+\s*:?", " ", str(text or "")).strip()
+    if not t:
+        return "Untitled prompt"
+    es = len(_ES.findall(t[:600])) >= 4
+    if kind == "brief":
+        parts = []
+        m = re.search(r"(\w+)\s*[\\/]\s*(\w+(?:[ _-]\d+)?)", t)           # a footage folder: Londres\Día 1
+        if m:
+            parts.append(f"{m[1]} {m[2]}")
+        low = t.lower()
+        fmt = next((f for f in _FORMATS if re.search(rf"\b{re.escape(f)}\b", low)), "")
+        if fmt:
+            parts.append(fmt)
+        m = re.search(r"(?:al estilo|en el estilo|con el estilo|in the style|style)(?: (?:vlog|video|de los videos|of the videos))?"
+                      r" (?:de|of|like)\s+(?:la |el |los |the )?([\w][\w'-]*(?: [A-Z][\w'-]*)?)", t, re.I)
+        if m:
+            parts.append(("estilo " if es else "style ") + m[1][:1].upper() + m[1][1:])
+        if len(parts) >= 2:
+            s = " · ".join(parts)[:70]
+            return s[:1].upper() + s[1:]
+    first = re.split(r"(?<=[.!?])\s|\n", t, maxsplit=1)[0]
+    first = re.sub(r"[\"“”*#_>\[\]{}]", "", first).strip()
+    for _ in range(3):
+        first = _FILLER.sub("", first).strip()
+    head = re.split(r"[:;—–]| - ", first, maxsplit=1)[0].strip()      # "Edita mi viaje a Roma: un reel..." -> the part
+    if len(head.split()) >= 2:                                          # before the colon names it best
+        first = head
+    words = first.split()
+    s = " ".join(words[:8]).strip(" ,.;:-")
+    if len(words) > 8:
+        s += "…"
+    return (s[:1].upper() + s[1:]) if s else "Untitled prompt"
+
+
 def guess_kind(text: str) -> str:
     """shot / image / hook / script / brief from the words - the Add dialog's default; the user can pick another
     (2026-10-12, the 29 prompts in the library: 28 right; the user's Spanish vlog brief: brief)."""
@@ -416,7 +470,7 @@ def parse_paste(text: str, kind: str = "", source: dict | None = None, file: str
             k = kv.get("kind", "").lower().strip()
             k = {"shots": "shot", "video": "shot", "images": "image", "photo": "image", "hooks": "hook",
                  "scripts": "script"}.get(k, k) or kind or guess_kind(body)
-            rec = {"kind": k, "title": kv.get("title", ""), "model": kv.get("model", "").strip(" -") or "",
+            rec = {"kind": k, "title": kv.get("title", "") or auto_title(body, k), "model": kv.get("model", "").strip(" -") or "",
                    "source": {**_source(kv["source"]), **({"file": file} if file else {})} if kv.get("source")
                    else dict(src), "result": _result(kv.get("result", "")),
                    "text": body.strip(),
@@ -489,9 +543,47 @@ def save_file(name: str, data: bytes) -> dict:
     return {"file": dest.name, "rel": f"{FOLDER}/files/{dest.name}", "text": file_text(dest)}
 
 
+# what a prompt makes - a picture or clip of the result (the user's, or the creator's example): the pop-up shows them,
+# the first is the card's picture. knowledge\local\prompts\examples\, private like the prompts.
+EXAMPLES = HOME / "examples"
+EXAMPLE_TYPES = (".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm")
+MAX_EXAMPLES = 6
+
+
+def add_example(pid: str, name: str, data: bytes) -> dict:
+    ext = Path(name).suffix.lower()
+    if ext not in EXAMPLE_TYPES:
+        raise ValueError(f"a picture or clip: {', '.join(EXAMPLE_TYPES)} (got {Path(name).name!r})")
+    if not data:
+        raise ValueError("the file is empty")
+    with _LOCK:
+        r = get(pid)
+        ex = list(r.get("examples") or [])
+        if len(ex) >= MAX_EXAMPLES:
+            raise ValueError(f"up to {MAX_EXAMPLES} per prompt - remove one first")
+        EXAMPLES.mkdir(parents=True, exist_ok=True)
+        dest = EXAMPLES / f"{pid}_{_dt.datetime.now():%Y%m%d-%H%M%S}_{safe_name(Path(name).stem)[:40] or 'example'}{ext}"
+        dest.write_bytes(data)
+        return update(pid, examples=ex + [dest.name])
+
+
+def remove_example(pid: str, file: str) -> tuple[dict, Path | None]:
+    """Takes it off the prompt; returns the file (the app moves it to the Recycle Bin)."""
+    with _LOCK:
+        ex = list(get(pid).get("examples") or [])
+        if file not in ex:
+            raise ValueError(f"{file!r} is not an example of {pid}")
+        r = update(pid, examples=[x for x in ex if x != file])
+    p = EXAMPLES / Path(file).name
+    return r, p if p.exists() else None
+
+
 def overview() -> dict:
     """What the app's Prompts page shows."""
     items = load_all()
+    for r in items:                                     # older prompts saved without a title (Claude's check adds one)
+        if not r.get("title"):
+            r["title_auto"] = auto_title(r.get("text", ""), r.get("kind", ""))
     return {"kinds": [{"id": k, "label": v, "count": sum(1 for r in items if r["kind"] == k),
                        "slots": SLOTS[k]} for k, v in KINDS.items()],
             "items": items, "template": TEMPLATE, "folder": FOLDER, "help": KIND_HELP, "statuses": list(STATUSES)}

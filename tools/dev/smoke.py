@@ -152,6 +152,21 @@ def check_prompts() -> None:
        and bad_refs == 4 and "colour: vague - one LUT - tip: pick one" in txt and "colour: one warm LUT" in txt
        and st and "cuts/min" in st["line"] and KN.style("../analysis") is None,
        "prompt library: a style reference - the analysed video a prompt names is found, measured and handed to Claude")
+    # 0.3.4 navigation: cards show only the title -> a readable automatic one until Claude's check titles it; the
+    # pictures / clips of what a prompt makes are plain file names in examples\
+    bad_ex = 0
+    for ex in (["../x.jpg"], ["a\\b.jpg"], "x.jpg"):
+        try:
+            P._check({**rec, "examples": ex})
+        except ValueError:
+            bad_ex += 1
+    london = ("Quiero que Londres\\Día 1 crees una linea de tiempo en da vinci resolve y edites el video al estilo vlog de "
+              "clavero, con un mismo lut")
+    ok(P.auto_title(london, "brief") == "Londres Día 1 · vlog · estilo Clavero"
+       and P.auto_title("I want you to create a slow dolly-in on a chef at night: 50mm, neon", "shot") == "A slow dolly-in on a chef at night"
+       and P.auto_title("@video1: ", "shot") == "Untitled prompt" and bad_ex == 3
+       and "brief" in P.SLOTS and {"effects", "voice & audio", "ending"} <= set(P.SLOTS["brief"]),
+       "prompt library: automatic titles name the prompt; a brief's check covers effects, voice & audio, the ending")
 
 
 def check_graphics() -> None:
