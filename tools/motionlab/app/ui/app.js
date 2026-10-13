@@ -563,12 +563,12 @@ class Timeline {
 // (only when a program is missing), the roadmap and the status
 const WAYS = [
   ['analyze', 'Analyze a video', 'Paste a link or pick a file. MotionLab measures every cut, effect and beat; Claude names them and remembers the style for your edits.'],
-  ['edit', 'Edit my clips', 'Your clips, cut in the style of up to three videos you analysed - or from a prompt like “hook first, 3 s cuts, fast”.'],
-  ['generate', 'Generate a video', 'From zero, no clips: Claude writes the prompts for AI video tools (Higgsfield, Kling, Seedance…) or makes a motion-graphics video.']];
+  ['edit', 'Edit my clips', 'Your clips, cut in the style of up to three videos you analysed - or your way: “hook first, 3 s cuts, fast”. A quick draft takes minutes.'],
+  ['generate', 'Generate a video', 'From zero, no clips: a motion-graphics video Claude writes and renders, or a plan with every prompt for AI video tools (Higgsfield, Kling, Seedance…).']];
 function wayActs(k) {
   if (k === 'analyze') return '<button class="btn pri" data-way="link"><svg class="i"><use href="#i-download"/></svg>Paste a link</button><button class="btn" data-way="file">Pick a file</button>';
-  if (k === 'edit') return '<button class="btn pri" data-way="edit"><svg class="i"><use href="#i-claude"/></svg>Start an edit</button>';
-  return '<button class="btn pri" data-way="ai"><svg class="i"><use href="#i-claude"/></svg>Prompts for AI tools</button><a class="btn" href="#/generate">Other ways</a>';
+  if (k === 'edit') return '<button class="btn pri" data-way="edit"><svg class="i"><use href="#i-edit"/></svg>Start an edit</button>';
+  return '<button class="btn pri" data-way="gfx"><svg class="i"><use href="#i-claude"/></svg>Motion graphics</button><button class="btn" data-way="ai">AI video tools</button>';
 }
 async function pageHome(main) {
   const s = await api('/api/status');
@@ -597,7 +597,8 @@ async function pageHome(main) {
       already written. Use one window per task and close it when it is done.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
   $('#hero-go', main).onclick = () => addVideosModal();
-  const WAY_GO = {link: () => addVideosModal(), file: () => addVideosModal({pick: true}), edit: () => createVideoModal(), ai: () => aiPromptsModal()};
+  const WAY_GO = {link: () => addVideosModal(), file: () => addVideosModal({pick: true}), edit: () => createVideoModal(),
+                  gfx: () => generateModal('graphics'), ai: () => generateModal('ai')};
   $$('[data-way]', main).forEach(b => b.onclick = () => WAY_GO[b.dataset.way]());
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
@@ -2054,24 +2055,91 @@ function promptCard(p, R) {
 // Generate (0.4): a video from zero - prompts for AI video and image tools (Claude writes them, you paste them into the
 // tool and bring the clips to Edit) or a motion-graphics video; the prompt library is one click away
 async function pageGenerate(main) {
-  const R = await api('/api/prompts');
+  const [R, G, ps] = await Promise.all([api('/api/prompts'), api('/api/generate/options'), api('/api/projects')]);
   const recent = [...R.items].sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id)).slice(0, 6);
+  const made = ps.filter(x => !x.clips && (x.renders.length || x.plans.length));        // videos made from zero
   main.innerHTML = `<div class="head"><div><h1>Generate</h1><div class="sub">A video from zero - no clips of your own needed.</div></div>
       <div class="row"><a class="btn" href="#/prompts">Prompt library (${R.items.length})</a></div></div>
     <div class="gways">
+      <div class="gway"><div class="row"><svg class="ic"><use href="#i-library"/></svg><h2>A motion-graphics video</h2></div>
+        <p>Kinetic text, titles, numbers, shapes and charts - written by Claude as HTML and rendered to a video (HyperFrames), timed to your song.
+          Every text, colour and timing stays editable afterwards.</p>
+        <div class="row"><button class="btn pri" id="ggfx"${G.hyperframes ? '' : ' disabled'}><svg class="i"><use href="#i-claude"/></svg>Make a motion-graphics video</button>
+          <a class="btn ghost" href="#/memory/saved">Your graphics</a></div>
+        <div class="small ${G.hyperframes ? 'muted' : 'amber'}">${G.hyperframes ? 'Claude writes it with you, then renders it - you watch it under Edit.'
+          : `Needs ${G.node ? '' : 'Node.js and '}HyperFrames first - <a href="#/settings">Settings → Programs</a> installs it.`}</div></div>
       <div class="gway"><div class="row"><svg class="ic"><use href="#i-generate"/></svg><h2>With AI video tools</h2></div>
-        <p>Higgsfield, Seedance, Kling, Runway, Veo, InVideo… Tell Claude your idea: it writes the shot prompts - and image prompts for the first
-          frames - in the structure that worked best in your library. You paste them into the tool, then bring the clips to <a href="#/edit">Edit</a>.</p>
-        <div class="row"><button class="btn pri" id="gai"><svg class="i"><use href="#i-claude"/></svg>Write the prompts with Claude</button></div>
-        <div class="small muted">Nothing is paid here - the tool's own plan or credits pay for the clips.</div></div>
-      <div class="gway"><div class="row"><svg class="ic"><use href="#i-library"/></svg><h2>Motion-graphics video</h2></div>
-        <p>Kinetic text, titles, numbers and charts, made as HTML (HyperFrames) and rendered to a video - no camera needed.</p>
-        <div class="row"><a class="btn" href="#/memory/saved">See your graphics</a></div>
-        <div class="small muted">Graphics are made with Node.js + HyperFrames (Settings → Programs).</div></div></div>
+        <p>Higgsfield, Seedance, Kling, Runway, Veo, Sora, InVideo… Tell Claude your idea: it plans the shots and writes every prompt - in the
+          structure that worked best in your library, in the style of videos you analysed. You generate them on the tool's site, then <a href="#/edit">Edit</a> cuts them.</p>
+        <div class="row"><button class="btn pri" id="gai"><svg class="i"><use href="#i-claude"/></svg>Plan a video with Claude</button>
+          <button class="btn ghost" id="gone">Just one prompt</button></div>
+        <div class="small muted">Nothing is paid here - the tool's own plan or credits pay for the clips.</div></div></div>
+    ${made.length ? `<div class="row sp" style="margin-top:20px"><h3 style="margin:0">Made from zero</h3></div>
+      <div class="cards" style="margin-top:8px">${made.map(x => `<a class="card" href="#/project/${encodeURIComponent(x.name)}"><div class="cb"><b class="ct">${esc(x.name)}</b>
+        <span class="small muted">${plural(x.plans.length, 'version')} · ${plural(x.renders.length, 'render')}</span></div></a>`).join('')}</div>` : ''}
     ${recent.length ? `<div class="row sp" style="margin-top:20px"><h3 style="margin:0">Your latest prompts</h3><a class="small" href="#/prompts">all ${R.items.length} →</a></div>
       <div class="pgrid" style="margin-top:8px">${recent.map(p => promptCard(p, R)).join('')}</div>` : ''}`;
-  $('#gai', main).onclick = () => aiPromptsModal();
+  $('#ggfx', main).onclick = () => generateModal('graphics');
+  $('#gai', main).onclick = () => generateModal('ai');
+  $('#gone', main).onclick = () => aiPromptsModal();
   $$('.pgc', main).forEach(c => c.onclick = () => { location.hash = '#/prompts/' + c.dataset.id; });
+}
+
+// ---- Generate (0.4, the user: "generate a video from zero - mostly with external tools like Higgsfield, InVideo... or a
+// whole motion-graphics video with HyperFrames"): one dialog for both ways -> POST /api/generate/request (the video's
+// folder + build\generate_request.json) -> Claude Code /generate-video request <name>
+async function generateModal(kind, pre = {}) {
+  const [G, MEM, ps] = await Promise.all([api('/api/generate/options'), api('/api/memory'), api('/api/projects')]);
+  const gfx = kind === 'graphics', st = {like: [], length: gfx ? '30' : '30', format: '', music: ''};
+  const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
+  const n0 = (gfx ? 'motion graphic' : 'ai video') + ' ' + (ps.filter(x => x.name.startsWith(gfx ? 'motion graphic' : 'ai video')).length + 1);
+  modal(`<h2>${gfx ? 'A motion-graphics video' : 'A video for AI video tools'}</h2>
+    <div class="small muted" style="margin-top:-4px">${gfx ? 'Claude writes it as HTML (HyperFrames) with you and renders it to a video - every text and colour stays editable.'
+      : 'Claude plans the shots and writes every prompt into your prompt library - you generate the clips on the tool\'s site.'}</div>
+    <div class="nestep"><b>1</b>What is it about?</div>
+    <textarea id="gwant" rows="3" style="width:100%" placeholder="${gfx ? 'e.g. a 30 s reel announcing my new course: the problem, 3 things it teaches, the price, sign up - bold, fast, on the beat'
+      : 'e.g. a 20 s cinematic ad for my coffee brand: morning light, slow pours, steam, the cup in hands, the logo at the end'}">${esc(pre.want || '')}</textarea>
+    ${gfx ? `<div class="small muted" style="margin:10px 0 4px">The words on screen <span class="dim">(optional - one per line, in order)</span></div>
+      <textarea id="gtext" rows="4" style="width:100%" placeholder="Stop scrolling.&#10;3 things nobody tells you&#10;…"></textarea>`
+      : `<div class="row" style="margin-top:10px"><label class="small">Tool <select id="gtool"><option value="">- Claude asks -</option>${G.tools.map(t => `<option>${esc(t)}</option>`).join('')}<option value="other">another…</option></select></label>
+        <input type="text" id="gtool2" placeholder="which tool?" hidden style="max-width:220px"></div>`}
+    <div class="nestep"><b>2</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 videos you analysed)</span></div>
+    ${vids.length ? `<div class="gstyle">${vids.slice(0, 30).map(v => `<button class="fchip" data-k="${esc(v.key)}" title="${esc((Object.values(v.lines || {}).filter(Boolean).join(' · ')) || v.title)}">${esc(v.title)}</button>`).join('')}</div>`
+      : '<div class="small dim">No analysed video yet - Analyze one and Claude follows its rhythm and text style.</div>'}
+    <div class="nestep"><b>3</b>Length, format${gfx ? ', song' : ''}</div>
+    <div class="nedet"><label>Length</label><div class="seg" id="glen">${[['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+      <label>Format</label><div class="seg" id="gfmt">${[['', 'Claude picks'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+      ${gfx ? `<label>Song</label><select id="gsong" style="max-width:420px"><option value="">no song / I put one in the folder later</option>${G.songs.map(x => `<option value="${esc(x.rel)}">${esc(x.name)}</option>`).join('')}</select>
+      <label>Colours</label><input type="text" id="gcol" placeholder="optional - e.g. black, white and my orange #ff6a00; font: Inter" style="max-width:420px">` : ''}</div>
+    <div class="nestep"><b>4</b>Its name</div>
+    <div class="row"><input type="text" id="gname" value="${esc(pre.name || n0)}" style="max-width:320px"><span class="small muted">a folder in projects\ - a logo or a song you put there, Claude can use</span></div>
+    <div class="row" style="margin-top:16px"><button class="btn pri big" id="ggo"><svg class="i"><use href="#i-claude"/></svg>${gfx ? 'Make it with Claude' : 'Plan it with Claude'}</button>
+      <span class="small muted">${gfx ? 'Claude shows you the scenes first, then renders it. It can take an hour or more.' : 'Claude shows you the shot list first, then writes the prompts.'}</span></div>`, el => {
+    const seg = (id, key) => { const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === st[key]));
+      $$('button', b).forEach(x => x.onclick = () => { st[key] = x.dataset.v; paint(); }); paint(); };
+    seg('#glen', 'length'); seg('#gfmt', 'format');
+    $$('.gstyle .fchip', el).forEach(b => b.onclick = () => {
+      const k = b.dataset.k;
+      if (st.like.includes(k)) st.like = st.like.filter(x => x !== k);
+      else if (st.like.length < 3) st.like.push(k);
+      else { toast('At most 3 videos', 'err'); return; }
+      $$('.gstyle .fchip', el).forEach(x => x.classList.toggle('on', st.like.includes(x.dataset.k)));
+    });
+    if ($('#gtool', el)) $('#gtool', el).onchange = e => { $('#gtool2', el).hidden = e.target.value !== 'other'; };
+    $('#gwant', el).focus();
+    $('#ggo', el).onclick = async () => {
+      const want = $('#gwant', el).value.trim();
+      if (!want) { toast('Say what the video is about first', 'err'); $('#gwant', el).focus(); return; }
+      const tool = $('#gtool', el) ? ($('#gtool', el).value === 'other' ? $('#gtool2', el).value : $('#gtool', el).value) : '';
+      try {
+        const r = await api('/api/generate/request', {kind, name: $('#gname', el).value, want, text: $('#gtext', el) ? $('#gtext', el).value : '',
+          like: st.like, length_s: st.length || null, format: st.format || null, music: $('#gsong', el) ? $('#gsong', el).value : '',
+          tool, colours: $('#gcol', el) ? $('#gcol', el).value : ''});
+        openClaude(r.command, 'generate', r.project);
+        closeModal(); location.hash = '#/project/' + encodeURIComponent(r.project);
+      } catch (e) { toast(e.message, 'err'); }
+    };
+  }, 'wide');
 }
 const PFILTERS = [['', 'All'], ['tool', 'Needs another tool'], ['own', 'No other tool'], ['todo', 'Not checked yet']];
 const pfilterOk = (p, f) => !f || (f === 'tool' ? !!ptool(p) : f === 'own' ? !ptool(p) : !p.structure && !p.review);

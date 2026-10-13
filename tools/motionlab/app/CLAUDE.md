@@ -107,6 +107,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Effects, Possible misses, What it says (the Content tab). The step strip: Download > Measure > Claude checks |
   *Teach Claude (optional)*: Your verdicts > Feedback > Share; a video with no effects (a talking head) shows "No
   effects" instead of crashing. Timelines fix their canvas height at creation (no ResizeObserver loop when shown).
+- **Generate** (0.4, the user: "a video from zero - mostly external tools like Higgsfield, InVideo... or a whole
+  motion-graphics video with HyperFrames"): `pageGenerate` = two ways - *A motion-graphics video* (disabled with a
+  pointer to Settings > Programs until Node.js + HyperFrames are found) and *With AI video tools* (*Plan a video with
+  Claude*; *Just one prompt* = `aiPromptsModal`), the videos made from zero (projects without clips), the latest
+  prompts. Both open `generateModal(kind)`: what it is about, the words on screen (graphics) or the tool (ai), up to
+  3 analysed videos as style chips, length, format, a song (graphics: `refs\audio\` downloads), colours, its name ->
+  POST `/api/generate/request` (`data.save_generate_request`: checked; makes `projects\<name>\` when new; saves
+  `build\generate_request.json`; made_from kind `generated`) -> Claude `/generate-video request <name>` (task
+  `generate`, effort xhigh). GET `/api/generate/options` = the tools, the downloaded songs, HyperFrames found.
 - **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
   use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = Overview (one search `#mq` over
   videos / effects / lessons, counts that link to their tab, *How Claude uses it* + *What Claude reads (memory.md)* /
@@ -146,7 +155,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
   review / feedback / lessons / library / recreate / prompt / plan / free) that picks `--effort` (Settings > Claude Code >
-  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, prompt medium, plan (Home > Roadmap > What next? = /whats-next) high; or
+  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, generate xhigh, prompt medium, plan (Home > Roadmap > What next? = /whats-next) high; or
   one level for all) and
   `--name "MotionLab <task> <video>"` (shown by /resume) - both only when `claude --help` lists them (older
   versions). "Analyse with Claude" = an analyze job with `claude: true`: when the lab pass ends well the job opens

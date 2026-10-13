@@ -35,7 +35,7 @@ PAGES = ["#/", "#/analyze", "#/edit", "#/generate", "#/prompts", "#/memory", "#/
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
           "/api/storage", "/api/jobs", "/api/skills", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
           "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts", "/api/memory",
-          "/api/edit/options"]
+          "/api/edit/options", "/api/generate/options"]
 
 
 def ok(cond, what: str) -> bool:

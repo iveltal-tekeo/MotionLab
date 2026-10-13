@@ -341,6 +341,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.list_projects())
         if path == "/api/edit/options":                  # New edit (0.4): presets, how many videos a style mixes
             return self._json(data.edit_options())
+        if path == "/api/generate/options":              # Generate (0.4): AI tools, downloaded songs, HyperFrames
+            return self._json(data.generate_options())
         if path == "/api/library":
             return self._json(data.library())
         if path == "/api/storage":
@@ -422,6 +424,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
         if path == "/api/projects/new":                   # Videos > Create video: an empty folder for the clips
             return self._json(data.new_project(str(body.get("name", ""))))
+        if path == "/api/generate/request":              # Generate (0.4): a video from zero -> its folder + request
+            return self._json(data.save_generate_request(body))
         m = re.fullmatch(r"/api/project/([^/]+)/edit_request", path)       # New edit (0.4): what the user picked
         if m:
             return self._json(data.save_edit_request(urllib.parse.unquote(m[1]), body))

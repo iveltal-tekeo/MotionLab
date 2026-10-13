@@ -38,6 +38,7 @@ TASKS = {
     "lessons": ("high", "MotionLab lessons"),          # review friends' incoming lessons
     "library": ("high", "MotionLab library"),          # save library picks as Fusion macros (needs Resolve)
     "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
+    "generate": ("xhigh", "MotionLab generate"),       # /generate-video: a video from zero (graphics / AI prompts)
     "prompt": ("medium", "MotionLab prompt"),          # /write-prompt: split examples, write new prompts (text only)
     "plan": ("high", "MotionLab next steps"),          # /whats-next: where the lab stands, options, a recommendation
 }

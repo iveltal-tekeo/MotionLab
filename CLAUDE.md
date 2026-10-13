@@ -23,8 +23,9 @@ explore the whole lab:
 | task | read first |
 |---|---|
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
-| recreate a reference with the user's footage (lab render, then Resolve) | the `/recreate-video` skill |
+| edit the user's footage like references (1:1 or by feel, a quick draft) or from their words; then Resolve | the `/recreate-video` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), hooks, scripts | the `/write-prompt` skill |
+| a video from zero: a motion-graphics video (HyperFrames), a plan + prompts for AI video tools | the `/generate-video` skill |
 | what to do next: status, unreleased changes, roadmap, plans, ideas, what waits on the user | the `/whats-next` skill |
 | anything in DaVinci Resolve (resolve_build.py, Fusion comps, library.py test / install) | `docs\resolve_notes.md` |
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
@@ -56,7 +57,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (IDs A, B, ... + SHA-256), `cache\` (grey frame caches), `boards\`, `edit_vN.py` -> `plan_vN.json` (the edit),
   `<name>_vN.mp4`, `compare\`, `stills\`, `sheets\`, `resolve\` (option 2), `<name>_resolve_vN.mp4`,
   `library_picks.json` (the user's picks in the app), `pruned.json`, `edit_request.json` (0.4: what *New edit*
-  asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound)
+  asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound),
+  `generate_request.json` (0.4: a video from zero, Generate) + `ai_plan.md` (the shots for AI tools)
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
@@ -68,7 +70,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `organization.md` (repo/versioning plan), `roadmap.png` (`tools\roadmap.py` redraws it)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
-  `recreate-video\`, `write-prompt\`, `whats-next\`
+  `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
 - Repo files (v0.3.4): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
@@ -102,6 +104,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   [--sound talk|clips|music] [--render]` a quick first edit by rules (0.4, the app's *Quick draft now*): beat-cut
   shots, the best moments, the style's effects; talking mode cuts the pauses -> `build\plan_vN.json` +
   `draft_vN.md`; Claude refines it (`/recreate-video` section 6)
+- `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
+  a motion-graphics video, `/generate-video`)
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
@@ -130,7 +134,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 you want to do?"), **1 Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
 misses, Delete), **2 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
 their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **3 Generate**
-(#/generate: prompts for AI video tools, motion-graphics videos; the prompt library #/prompts), **Claude's memory**
+(#/generate: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
+#/prompts), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,
 saved graphics + effects, Share with friends), then Jobs and Settings
 (General, Storage, Claude skills). The 0.3 addresses (#/refs, #/projects, #/knowledge, #/library) still work. The app

@@ -799,3 +799,8 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .negoc { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #131317; }
 .negoc[hidden] { display: none; }
 @media (max-width: 1100px) { .cvchoice.three, .nepre, .nego { grid-template-columns: 1fr; } }
+
+/* 0.4 phase 5: Generate's dialog - the videos whose style to follow, as chips */
+.gstyle { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow: auto; }
+.gstyle .fchip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
+.nedet > input[type=text] { justify-self: stretch; }

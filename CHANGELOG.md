@@ -6,6 +6,14 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Generate - a video from zero**: **A motion-graphics video** - say what it is about (and, if you like, the words
+  on screen, a song, your colours, up to three analysed videos whose style to follow); Claude shows you the scenes,
+  writes the video as HTML (HyperFrames), times it to the song's beats and renders it - every text, colour and
+  timing stays editable in the video's Graphics tab. **With AI video tools** - your idea, the tool (Higgsfield,
+  Seedance, Kling, Runway, Veo, Sora, InVideo AI…) and a style: Claude plans the shots and writes every prompt into
+  your prompt library, in order, ready to copy into the tool's site; the clips you make come back to Edit. Nothing
+  is paid in MotionLab. A new Claude Code command does both: `/generate-video`.
+- A render whose song is a WAV or FLAC file now gets AAC sound (it used to fail: an MP4 cannot hold WAV sound).
 - **New edit - your clips, cut the way you want**: *Edit > New edit* asks four things: your clips; how - **like
   videos you analysed** (up to three: their rhythm, hook, effects and captions mixed, with your music and length -
   or an exact copy of one, frame by frame), **with your words** (ready-made styles: fast & hooky, 3-second cuts,

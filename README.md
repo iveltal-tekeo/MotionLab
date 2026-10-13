@@ -178,7 +178,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 | Folder | What | In the repo? |
 |---|---|---|
 | `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder, MotionLab's MCP server, HTML overlays (`tools\overlays\`: HyperFrames, versions pinned; its `node_modules` stays on your PC) | yes |
-| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`, `write-prompt`) | yes |
+| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`, `generate-video`, `write-prompt`, `whats-next`) | yes |
 | `knowledge\` | shared reference cards and lessons waiting for review (`local\`, `inbox\`, `outbox\` are private) | partly |
 | `docs\` | roadmap, plans, ideas, guides, design notes | yes |
 | `refs\` | reference videos (read-only for the lab) | no - yours |

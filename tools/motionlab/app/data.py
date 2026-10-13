@@ -627,8 +627,8 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     """What a video is made from (New edit): a reference copied 1:1 (an analysis), up to three videos' style
     ("style": names joined by ", "), the user's words ("words": presets / their words) or a prompt -
     build\\made_from.json."""
-    if kind not in ("reference", "prompt", "style", "words"):
-        raise ValueError("made from a reference, videos' style, your words or a prompt")
+    if kind not in ("reference", "prompt", "style", "words", "generated"):
+        raise ValueError("made from a reference, videos' style, your words, a prompt or from zero")
     ref = safe_name(ref) if kind == "reference" else " ".join(str(ref).split())[:300]
     if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", ref):
         raise ValueError(f"not a prompt id: {ref!r}")
@@ -723,6 +723,74 @@ def save_edit_request(name: str, body: dict) -> dict:
            else f"/recreate-video prompt:{prompt} {d.name}" if how == "prompt" and " " not in d.name
            else f"/recreate-video request {d.name}")
     return {"request": req, "made_from": made, "command": cmd}
+
+
+# ------------------------------------------------------------------ 0.4: Generate - a video from zero
+GEN_KINDS = ("graphics", "ai")
+AI_TOOLS = ["Higgsfield", "Seedance", "Kling", "Runway", "Veo", "Sora", "Hailuo", "Pika", "Luma", "InVideo AI",
+            "Pictory", "HeyGen", "Synthesia"]
+
+
+def generate_options() -> dict:
+    """Generate's dialogs: the AI tools offered, the songs downloaded (refs\\audio\\), HyperFrames ready or not."""
+    from . import system
+    songs = [{"name": p.name, "rel": rel(p)} for p in sorted((LAB / "refs" / "audio").glob("*"))
+             if p.is_file() and p.suffix.lower() in AUDIO_EXT] if (LAB / "refs" / "audio").exists() else []
+    return {"tools": AI_TOOLS, "songs": songs, "hyperframes": bool(system.find("hyperframes")),
+            "node": bool(system.find("node"))}
+
+
+def _song(d: Path, music: str) -> str | None:
+    """A song for Generate: a file in the video's folder (a name) or a download in refs\\audio\\ (lab-relative)."""
+    if not music or music == "none":
+        return None
+    if Path(music).name == music and (d / music).is_file() and (d / music).suffix.lower() in AUDIO_EXT:
+        return str(d / music)
+    p = (LAB / music).resolve()
+    if p.parent == (LAB / "refs" / "audio").resolve() and p.is_file() and p.suffix.lower() in AUDIO_EXT:
+        return str(p)
+    raise ValueError(f"{music}: not a song in the video's folder or in refs\\audio")
+
+
+def save_generate_request(body: dict) -> dict:
+    """Generate (0.4): a video from zero - a motion-graphics video (HyperFrames) or the plan + every prompt for AI
+    video tools. The video gets its folder (projects\\<name>\\, made empty when new: a song or a logo can go
+    there) and the request, checked, is saved as build\\generate_request.json for /generate-video request <name>."""
+    from motionlab import style as ST
+    kind = str(body.get("kind") or "")
+    if kind not in GEN_KINDS:
+        raise ValueError("kind: graphics or ai")
+    name = safe_name(" ".join(str(body.get("name") or "").split()))
+    want = " ".join(str(body.get("want") or "").split())[:3000]
+    if not want:
+        raise ValueError("say what the video is about")
+    text = "\n".join(" ".join(ln.split()) for ln in str(body.get("text") or "").splitlines() if ln.strip())[:3000]
+    like = [" ".join(str(x).split()) for x in (body.get("like") or []) if str(x).strip()]
+    if len(like) > ST.MAX_REFS:
+        raise ValueError(f"at most {ST.MAX_REFS} videos for one style")
+    for x in like:
+        if len(x) > 160 or ST.find(x) is None:
+            raise ValueError(f"no analysed video called {x!r}")
+    length = body.get("length_s")
+    length = float(length) if length not in (None, "") else None
+    if length is not None and not 3 <= length <= 900:
+        raise ValueError("length: 3 to 900 seconds")
+    fmt = body.get("format") or None
+    if fmt is not None and fmt not in ST.SIZES:
+        raise ValueError(f"format: one of {', '.join(ST.SIZES)}")
+    tool = " ".join(str(body.get("tool") or "").split())[:60]
+    extra = {k: " ".join(str(body.get(k) or "").split())[:120] for k in ("colours", "font")}
+    d = PROJECTS / name
+    song = _song(d, str(body.get("music") or ""))         # checked before a new folder is made
+    if not d.exists():
+        new_project(name)
+    req = {"kind": kind, "want": want, "text": text if kind == "graphics" else "", "like": like, "length_s": length,
+           "format": fmt, "music": song, "tool": tool if kind == "ai" else "", **(extra if kind == "graphics" else {}),
+           "date": stamp()}
+    write_json_atomic(d / "build" / "generate_request.json", req)
+    made = add_made_from(d.name, "generated", "a motion-graphics video" if kind == "graphics"
+                         else f"AI video tools{': ' + tool if tool else ''}")
+    return {"request": req, "project": d.name, "made_from": made, "command": f"/generate-video request {d.name}"}
 
 
 def draft_args(req: dict) -> list[str]:
@@ -859,6 +927,11 @@ SKILL_INFO = {
                                 "/recreate-video prompt:<prompt id> <your video>", "/recreate-video improve <your video>"],
                        "task": "recreate",
                        "where": "Edit - New edit, How did it turn out?"},
+    "generate-video": {"brief": "Claude makes a video from zero: a motion-graphics video written as HTML and rendered "
+                                "to your song, or the plan of a video for AI video tools with every prompt.",
+                       "uses": ["/generate-video graphics <name> - want: <what it is about>",
+                                "/generate-video ai <name> - want: <your idea> - tool: Higgsfield"], "task": "generate",
+                       "where": "Generate - A motion-graphics video, With AI video tools"},
     "write-prompt": {"brief": "Claude checks, improves or writes prompts: briefs, AI video and image prompts, hooks "
                               "and scripts.",
                      "uses": ["/write-prompt analyse <prompt id>", "/write-prompt optimize <prompt id>",
@@ -867,7 +940,7 @@ SKILL_INFO = {
     "whats-next": {"brief": "Where MotionLab stands and what to build next.", "uses": ["/whats-next"], "task": "plan",
                    "dev": True},
 }
-SKILL_ORDER = ["analyze-reference", "recreate-video", "write-prompt", "whats-next"]
+SKILL_ORDER = ["analyze-reference", "recreate-video", "generate-video", "write-prompt", "whats-next"]
 
 
 def skills() -> list[dict]:

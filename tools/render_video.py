@@ -44,6 +44,15 @@ def _guard(out: Path, plan_path: Path, plan: dict) -> Path:
     return out
 
 
+COPY_AUDIO = {".mp4", ".m4a", ".m4v", ".mov", ".aac", ".mp3"}    # their AAC / MP3 sound goes into the MP4 as it is
+
+
+def audio_codec(audio: dict) -> list[str]:
+    """Copy the plan's sound when an MP4 can hold it (a reference's AAC, an MP3), else AAC (a song as WAV / FLAC)."""
+    return ["-c:a", "copy"] if Path(str(audio["path"])).suffix.lower() in COPY_AUDIO else ["-c:a", "aac", "-b:a",
+                                                                                          "192k"]
+
+
 def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, crf: int, preset: str,
             threads: int | None = None):
     cmd = [tool("ffmpeg"), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
@@ -54,7 +63,7 @@ def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, 
             "-crf", str(crf), "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
             "-color_range", "tv", "-movflags", "+faststart"]
     if audio and audio.get("path"):
-        cmd += ["-c:a", "copy", "-shortest"] if audio.get("trim_to_video", True) else ["-c:a", "copy"]
+        cmd += audio_codec(audio) + (["-shortest"] if audio.get("trim_to_video", True) else [])
     if threads:
         cmd += ["-threads", str(threads)]
     cmd += [str(out)]
@@ -132,8 +141,8 @@ def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf:
     audio = plan.get("audio") or {}
     cmd = [tool("ffmpeg"), "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst)]
     if audio.get("path"):
-        cmd += ["-ss", f"{a / fps:.6f}", "-i", str(audio["path"]), "-map", "0:v", "-map", "1:a:0", "-c:v", "copy",
-                "-c:a", "copy"] + (["-shortest"] if audio.get("trim_to_video", True) else [])
+        cmd += ["-ss", f"{a / fps:.6f}", "-i", str(audio["path"]), "-map", "0:v", "-map", "1:a:0", "-c:v", "copy"] \
+            + audio_codec(audio) + (["-shortest"] if audio.get("trim_to_video", True) else [])
     else:
         cmd += ["-map", "0:v", "-c:v", "copy"]
     cmd += ["-movflags", "+faststart", str(out)]
