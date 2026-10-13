@@ -9,7 +9,8 @@ smooth (S-curve), in (accelerating / slow start), out (decelerating / slow end).
 Clip sources are the frame caches written by tools/prep_footage.py (full range, cover-fit at 1x): colour (plan
 source "format": "i420", the default since 0.3.0) or grey ("gray"; test_4am) - see motionlab/footage.py. Grades
 (plan["grades"]) are levels / gamma / output range per channel (grade_lut) plus "saturation" (1 = as shot, 0 = grey;
-colour sources only).
+colour sources only); since 0.4 also "lut3d" (a .cube applied first - colour.match_lut: the footage moved toward a
+reference's look) and "tint" (per-channel multipliers, applied last like a layer's own "tint").
 """
 from __future__ import annotations
 
@@ -110,11 +111,23 @@ def grade_lut(black=40, white=245, gamma=1.5, out_black=0.03, out_white=0.85) ->
     return (out_black + (out_white - out_black) * x ** gamma).astype(np.float32)
 
 
+LEVELS = ("black", "white", "gamma", "out_black", "out_white")
+
+
 def grade_parts(g: dict) -> tuple[np.ndarray, float]:
-    """A plan grade -> (the levels LUT, saturation)."""
+    """A plan grade -> (the levels LUT, saturation); "lut3d" / "tint" are read by the clip layer."""
     g = dict(g or {})
-    sat = float(g.pop("saturation", 1.0))
-    return grade_lut(**g), sat
+    return grade_lut(**{k: g[k] for k in LEVELS if k in g}), float(g.get("saturation", 1.0))
+
+
+def lut3d_table(path: str) -> np.ndarray:
+    """A .cube as a (128, 128, 128, 3) uint8 table indexed [r >> 1, g >> 1, b >> 1] (6 MB; within 1/255 of the
+    trilinear result) - fast enough to grade every cached frame."""
+    from . import colour as CO
+    lut = CO.read_cube(Path(path))
+    v = np.arange(0, 256, 2, dtype=np.uint8)
+    R, G, B = np.meshgrid(v, v, v, indexing="ij")
+    return CO.apply_lut(np.stack([R, G, B], axis=-1), lut)
 
 
 def saturate(patch: np.ndarray, sat: float) -> np.ndarray:
@@ -234,6 +247,7 @@ class ClipLayer(Layer):
         self.gain = Curve(spec.get("gain"), R.curves, 1.0)
         g = {**R.grades.get(spec.get("grade", "default"), {}), **spec.get("grade_override", {})}
         self.lut, self.sat = grade_parts(g)
+        self.lut3d = R.lut3d(g["lut3d"]) if g.get("lut3d") else None
         self.speed = float(spec.get("speed", 1.0))
         self.hold = bool(spec.get("hold", False))
         self.jumps = sorted([[int(a), int(b)] for a, b in spec.get("jumps", [[self.start, spec.get("in", 0)]])])
@@ -241,7 +255,8 @@ class ClipLayer(Layer):
         self.flash_white = set(int(v) for v in spec.get("flash_white", []))
         self.black = set(int(v) for v in spec.get("black", []))
         self.mirror = bool(spec.get("mirror", False))
-        self.tint = spec.get("tint")
+        t1, t2 = spec.get("tint"), g.get("tint")                # the layer's own tint (RGB split) x the grade's
+        self.tint = [a * b for a, b in zip(t1, t2)] if t1 and t2 else (t1 or t2)
 
     def src_index(self, f: int) -> int:
         j = self.jumps[0]
@@ -264,6 +279,8 @@ class ClipLayer(Layer):
                 blend(canvas, np.full(cov.shape, R.bg, np.float32), cov * op, X0, Y0)
             return
         src = R.frame(self.src, self.src_index(f))
+        if self.lut3d is not None and src.ndim == 3:
+            src = self.lut3d[src[..., 0] >> 1, src[..., 1] >> 1, src[..., 2] >> 1]
         res = sample_patch(src, self.lut, x, y, w, h, self.zoom(f), self.ax(f), self.ay(f), R.W, R.H, self.mirror)
         if res is None:
             return
@@ -710,7 +727,14 @@ class Renderer:
             self._src[sid] = FC.open_memmap(s["cache"], s["frames"], s["width"], s["height"], fmt)
             self._conv[sid] = level_conversion(cache_levels(s["cache"]), self.levels)
         self._vign = {}
+        self._lut3d: dict = {}
         self.layers = [LAYERS[sp["type"]](sp, self) for sp in plan["layers"]]
+
+    def lut3d(self, path: str) -> np.ndarray:
+        """A grade's match LUT, built once per render process."""
+        if path not in self._lut3d:
+            self._lut3d[path] = lut3d_table(path)
+        return self._lut3d[path]
 
     def is_color(self, sid: str) -> bool:
         return self._fmt.get(sid) == "i420"

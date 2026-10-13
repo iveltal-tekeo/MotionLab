@@ -114,6 +114,15 @@ def find(name: str) -> dict | None:
     return None
 
 
+def _pool_lab(stats: list) -> dict | None:
+    """The references' colour (Lab mean / spread, colour.lab_stats) pooled: means averaged, spreads as RMS."""
+    xs = [s for s in stats if s and s.get("mean") and s.get("std")]
+    if not xs:
+        return None
+    return {"mean": [round(sum(s["mean"][i] for s in xs) / len(xs), 3) for i in range(3)],
+            "std": [round(math.sqrt(sum(s["std"][i] ** 2 for s in xs) / len(xs)), 3) for i in range(3)]}
+
+
 def _energy(cuts_per_min, effects_per_min) -> str:
     c, e = cuts_per_min or 0, effects_per_min or 0
     return "high" if c >= 30 or e >= 15 else "calm" if c <= 10 and e <= 4 else "medium"
@@ -194,6 +203,8 @@ def merge(cards: list[dict]) -> dict:
         "colour": [(p.get("lines") or {}).get("colour") for p in prof if (p.get("lines") or {}).get("colour")],
         "grade": next((((p.get("colour") or {}).get("grade")) for p in prof if (p.get("colour") or {}).get("grade")),
                       None),
+        "lab": _pool_lab([(p.get("colour") or {}).get("lab") for p in prof]),
+        "palette": [c for p in prof for c in ((p.get("colour") or {}).get("palette") or [])[:3]][:6],
         "breakdowns": [{"title": c.get("title"), **(c.get("breakdown") or {})} for c in cards if c.get("breakdown")],
         "want": "",
     }

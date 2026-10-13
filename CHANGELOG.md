@@ -6,6 +6,12 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Colour & look** (the cinematic focus): every analysed video now says what its colour grade is - per shot and for
+  the whole video: warm or cool, teal & orange, contrast, lifted or crushed blacks, saturation, vignette, letterbox,
+  its main colours - shown on the video's Overview as words, a palette and a strip of every shot's colour (with
+  frame and timecode). An edit **in its style** matches your footage to that look automatically: a match LUT (.cube)
+  that also works on DaVinci Resolve's Color page, with how close your clips get (0-100). Videos analysed before:
+  *Measure the colour* on their Overview (a few seconds).
 - **Generate - a video from zero**: **A motion-graphics video** - say what it is about (and, if you like, the words
   on screen, a song, your colours, up to three analysed videos whose style to follow); Claude shows you the scenes,
   writes the video as HTML (HyperFrames), times it to the song's beats and renders it - every text, colour and

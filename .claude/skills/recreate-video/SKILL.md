@@ -87,6 +87,11 @@ style of up to three videos, or the user's words, with their music and length).
   footage.plan_sources(BUILD)` (colour caches; `color=False` for grey). Grades (`plan["grades"]`): levels / gamma /
   output range per channel + `"saturation"` (1 = as shot, 0 = black and white) - the Resolve build turns each into
   the same LUT. test_4am is a grey edit: its grades were tuned on grey caches.
+- Colour (0.4): `.venv\Scripts\python tools\colour.py match <project> --like <reference>` = a .cube that moves the
+  user's footage toward the reference's measured look (`build\colour\match_*.cube`, closeness before / after,
+  0-100); put it in the plan's grade as `"lut3d": "<the .cube>"` (applied first; `"tint"` = per-channel multipliers,
+  last) - the lab render and the Resolve build's LUTs both apply it. The look in words per shot: `tools\colour.py
+  <reference>`. Phone / log footage that looks wrong after the match: fix exposure / white balance first, say so.
 - Map every reference shot to the user's footage and show the user the mapping as a table (reference shot
   `fA-fB (timecodes)` -> clip ID + in-point -> why it fits). Where the footage has nothing comparable, say so and
   propose the closest option instead of inventing.

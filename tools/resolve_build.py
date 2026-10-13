@@ -218,6 +218,9 @@ class Luts:
                 c = 255.0 * Y
             if self.double:                                            # the old lab cache's second tv->full step
                 c = np.clip((c - 16.0) * 255.0 / 219.0, 0.0, 255.0)
+            if color and g.get("lut3d"):                     # 0.4: a match LUT first, as compose applies it
+                from motionlab import colour as CO
+                c = CO.apply_lut(np.clip(c + 0.5, 0, 255).astype(np.uint8), CO.read_cube(Path(g["lut3d"]))).astype(float)
             x = np.clip((c - g["black"]) / max(1.0, g["white"] - g["black"]), 0.0, 1.0)
             v = g["out_black"] + (g["out_white"] - g["out_black"]) * x ** g["gamma"]
             if color and float(g.get("saturation", 1.0)) != 1.0:      # compose.saturate (Rec.709 luma)
@@ -228,6 +231,8 @@ class Luts:
                 v = v + flash_over * (1.0 - v)
             if flash_white:
                 v = 0.86 + 0.06 * v
+            if color and g.get("tint"):                      # 0.4: the grade's tint, last (compose: in the blend)
+                v = v * np.asarray(g["tint"], float)
             p = self.dir / f"{k}.cube"
             self.dir.mkdir(parents=True, exist_ok=True)
             with open(p, "w", newline="\n") as f:

@@ -18,12 +18,12 @@ from motionlab import graphics as G  # noqa: E402
 from motionlab.util import LAB, setup_console  # noqa: E402
 
 OUT = LAB / "docs" / "roadmap.png"
-DATE = "2026-10-12"
+DATE = "2026-10-13"
 W, H = 1920, 1080
 BG = (13, 13, 15)
 WHITE, GREY, DIM = (236, 236, 236), (128, 128, 132), (58, 58, 62)
 AMBER = (255, 196, 0)
-YOU_ARE_HERE_AFTER = 6                      # the marker sits between this stage and the next
+YOU_ARE_HERE_AFTER = 7                      # the marker sits between this stage and the next
 
 # (title, status, maturity 0-5, big number, caption, details)
 STAGES = [
@@ -42,19 +42,21 @@ STAGES = [
      "Prompts. Tested on GitHub."),
     ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",
      "7 lessons from 1 round, cards shared through GitHub. Next: 10 videos each > category profiles."),
-    ("Describe + yap", "STARTED", 1, "v0.3.5", "> v0.4 > v0.4.1",
-     "Content tab: transcript + views vs followers. Next: topics, shots, 10 per subject; then yapping (HEIT)."),
-    ("Templates + macOS", "LATER", 0, "v0.5", "planned",
-     "A reference as a template: its feel, pacing and structure with your own story and music. A macOS app."),
+    ("Analyze, Edit, Generate", "DONE", 3, "v0.4.0", "three ways in",
+     "Analyse by focus (content, cinematic, colour), Claude's memory, edits like up to 3 videos or your words "
+     "(a quick draft in minutes), videos from zero."),
+    ("Templates + macOS", "STARTED", 1, "v0.5", "by feel: first part in 0.4",
+     "The style of up to 3 videos + a quick draft shipped. Next: the story (HEIT) with your words and music. macOS."),
     ("AI B-roll + cinematics", "LATER", 0, "v0.7", "planned",
      "Missing shots, B-roll or whole sequences generated (Higgsfield: Seedance and more), used like your clips."),
 ]
 VERDICT = [
-    ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve."),
+    ("STRONG", "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve; 0.4 adds "
+               "quick drafts and colour matching."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
-             "per category."),
-    ("NEXT", "v0.3.5 describe video  |  v0.3.7 colour (looks, LUTs, Resolve)  |  v0.4 yapping mode (HEIT)  |  v0.4.1 "
-             "prompt generator  |  v0.5 templates by feel + macOS  |  v0.7 AI B-roll.  You: try 0.3.3, rate your videos."),
+             "per category. A quick draft picks moments by how they look, not by the story."),
+    ("NEXT", "v0.4.1 prompt generator  |  v0.5 by feel: the story (HEIT) + macOS  |  v0.3.7 colour: correct your "
+             "clips, CDL in Resolve  |  v0.7 AI B-roll.  You: try 0.4 - New edit > Quick draft on your clips."),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")

@@ -439,6 +439,7 @@ function overviewTab(el, R, showTab) {
       ${kvRow('Speed', listOf(K.speed))}
       ${PF.colour ? kvRow('Colour', esc(PF.colour.line || '')) : ''}</div></div>` : ''}
   </div>
+  ${showK || R.colour ? colourPanel(R) : ''}
   <div class="panel bd"><div class="row sp"><h2>What makes it work <span class="small muted">· Claude's breakdown</span></h2>${B.summary ? '' : ''}</div>
     ${Object.keys(B).length ? `${B.summary ? `<p class="bdsum">${linkify(B.summary)}</p>` : ''}<div class="bdgrid">${BD.filter(([k]) => B[k]).map(([k, l]) => `<div class="bdi"><h3>${l}</h3>${bdVal(B[k])}</div>`).join('')}</div>`
       : `<div class="small muted">${reviewed ? 'Claude checked the effects before 0.4 - ask it again for the breakdown:' : 'Claude has not checked this video yet. It looks at every effect and writes what makes the video work:'}</div>
@@ -449,9 +450,44 @@ function overviewTab(el, R, showTab) {
     <button class="btn ghost" data-use="again" title="the same video again with another focus - the measurements are re-used">Analyse again with another focus…</button></div>
     <div class="small muted" style="margin-top:8px">Claude also reads it from its memory when you edit or generate - nothing to copy.</div></div>`;
   $$('[data-ovgo]', el).forEach(b => b.onclick = () => showTab(b.dataset.ovgo, true));
+  wireColour(el, R);
   $('[data-use=edit]', el).onclick = () => createVideoModal({from: 'reference', pick: R.name});
   $('[data-use=prompts]', el).onclick = () => aiPromptsModal('shot', R.name);
   $('[data-use=again]', el).onclick = () => addVideosModal({files: R.source ? [R.source] : [], focus: f === 'both' ? 'content' : 'both', pick: true, again: true});
+}
+
+// ---- the Overview's Colour & look (0.4, the cinematic focus: "colour grading"): colour\colour.json (motionlab.colour)
+function colourPanel(R) {
+  const C = R.colour;
+  if (!C) return `<div class="panel colour"><h2>Colour &amp; look</h2><div class="small muted">Not measured yet - it takes a few seconds (no new decoding).</div>
+    <div class="row" style="margin-top:8px"><button class="btn sm" id="colgo">Measure the colour</button></div></div>`;
+  const S = C.summary || {}, N = Math.max(1, (C.shots[C.shots.length - 1] || {}).end + 1 || 1);
+  const num = (v, u = '') => v == null ? '–' : `${Math.round(v * 10) / 10}${u}`;
+  const warm = S.warmth == null ? '–' : S.warmth > 6 ? `warm (${num(S.warmth)})` : S.warmth < -4 ? `cool (${num(S.warmth)})` : `neutral (${num(S.warmth)})`;
+  return `<div class="panel colour"><div class="row sp"><h2>Colour &amp; look</h2><span class="small muted">${esc(C.made_from || '')}</span></div>
+    <div class="row" style="gap:6px;margin-bottom:10px">${(S.words || []).map(w => `<span class="chip">${esc(w)}</span>`).join('') || '<span class="chip">natural</span>'}${S.consistent === false ? '<span class="small amber">changes from shot to shot</span>' : ''}</div>
+    ${(S.palette || []).length ? `<div class="cpal">${S.palette.map(([c, w]) => `<div class="cpc" style="flex:${Math.max(0.06, w)};background:${esc(c)}" title="${esc(c)} · ${Math.round(w * 100)} %"><span>${esc(c)}</span></div>`).join('')}</div>` : ''}
+    <div class="cstrip" title="every shot's main colour, in order">${C.shots.map(x => `<i style="flex:${x.end - x.start + 1};background:${esc(((x.palette || [])[0] || ['#333'])[0])}" data-f="${x.start}"
+      data-tip="${esc(`f${x.start}-${x.end} (${x.tc}-${x.tc_end})${x.words.length ? ': ' + x.words.join(', ') : ''}`)}"></i>`).join('')}</div>
+    <div class="kv" style="margin-top:10px">
+      ${kvRow('Brightness', `${num(S.brightness, ' %')} · blacks ${num(S.black, ' %')} · whites ${num(S.white, ' %')} · contrast ${num(S.contrast)}`)}
+      ${kvRow('Colour', S.bw ? 'black &amp; white' : `saturation ${num(S.saturation, ' %')} · ${warm} · tint ${num(S.tint)}${S.shadows && S.highlights ? ` · shadows ${hueWord(S.shadows)}, highlights ${hueWord(S.highlights)}` : ''}`)}
+      ${S.letterbox || (S.vignette != null && S.vignette < 0.85) ? kvRow('Frame', [S.letterbox ? `letterbox ${esc(S.letterbox)}` : '', S.vignette != null && S.vignette < 0.85 ? `vignette (corners ${Math.round(S.vignette * 100)} % of the centre)` : ''].filter(Boolean).join(' · ')) : ''}</div>
+    <div class="small muted" style="margin-top:8px">An edit <b>in its style</b> matches your footage to this look (a match LUT - also for DaVinci Resolve).</div></div>`;
+}
+function hueWord(ab) {
+  const [a, b] = ab, c = Math.hypot(a, b);
+  if (c < 3) return 'neutral';
+  const h = (Math.atan2(b, a) * 180 / Math.PI + 360) % 360;
+  return [[20, 'red'], [50, 'orange'], [75, 'yellow'], [165, 'green'], [200, 'teal'], [260, 'blue'], [300, 'purple'], [345, 'magenta'], [360, 'red']].find(([l]) => h <= l)[1];
+}
+function wireColour(el, R) {
+  $$('.cstrip i', el).forEach(i => { i.onmousemove = e => showTip(esc(i.dataset.tip), e.clientX, e.clientY); i.onmouseleave = hideTip; });
+  const go = $('#colgo', el);
+  if (go) go.onclick = async () => {
+    try { await api('/api/jobs', {kind: 'colour', args: {name: R.name}}); toast('Measuring the colour - a few seconds', 'ok'); setTimeout(route, 4000); }
+    catch (e) { toast(e.message, 'err'); }
+  };
 }
 
 // ============================================================================================ timeline

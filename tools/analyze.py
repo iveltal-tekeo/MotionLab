@@ -242,6 +242,12 @@ def main() -> int:
         import content as CT                         # tools\content.py: never raises, says what it could not do
         for note in CT.auto(name, log):
             log(f"content: {note}")
+    if data["focus"] in ("cinematic", "both"):       # the colour and look (colour\colour.json), from the metrics
+        from motionlab import colour as CO
+        try:
+            CO.analyse(name, log)
+        except Exception as e:                       # noqa: BLE001 - the analysis itself is done
+            log(f"colour: not measured ({e})")
     KN.build_local_cards([name])                     # the shareable reference card (knowledge\local\references)
     if not data["source"]["unchanged"]:
         log("WARNING: the source file changed during analysis!")

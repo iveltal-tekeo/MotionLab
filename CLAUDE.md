@@ -43,6 +43,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   reviews), `review_todo.md`, `events\<ID>\sheet_NN.jpg + preview.mp4`, `frames\`, `cuts\`, `metrics.csv`,
   `overview.png`, `audio.wav`, `proxy_cfr.mp4` (only for VFR sources), `cache\` (re-usable metrics), `inspect\`,
   `meta.json` (category, tags, focus, link - the user's choice, kept across re-runs), `content\` (transcript, stats),
+  `colour\colour.json` (0.4: the look per shot + summary, `motionlab\colour.py`),
   `feedback\` (`verdicts.json` = the
   user's verdicts, their ONE home; `app_<date>.txt` = exports from the app; `feedback_<date>.txt/.json` = archived by
   `feedback.py` when Claude applied them)
@@ -57,7 +58,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (IDs A, B, ... + SHA-256), `cache\` (grey frame caches), `boards\`, `edit_vN.py` -> `plan_vN.json` (the edit),
   `<name>_vN.mp4`, `compare\`, `stills\`, `sheets\`, `resolve\` (option 2), `<name>_resolve_vN.mp4`,
   `library_picks.json` (the user's picks in the app), `pruned.json`, `edit_request.json` (0.4: what *New edit*
-  asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound),
+  asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound), `colour\`
+  (match LUTs `match_*.cube`),
   `generate_request.json` (0.4: a video from zero, Generate) + `ai_plan.md` (the shots for AI tools)
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
@@ -104,6 +106,10 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   [--sound talk|clips|music] [--render]` a quick first edit by rules (0.4, the app's *Quick draft now*): beat-cut
   shots, the best moments, the style's effects; talking mode cuts the pauses -> `build\plan_vN.json` +
   `draft_vN.md`; Claude refines it (`/recreate-video` section 6)
+- `colour.py <analysis> | match <project> --like <videos> [--strength 0.8]` the colour and look (0.4): per shot and for
+  the video in words + numbers -> `analysis\<name>\colour\colour.json` (analyze.py does it for the cinematic / both
+  focus); `match` = a .cube that moves the footage toward the videos' look (`build\colour\`, Resolve's Color page, a
+  plan grade `"lut3d"`) + how close (0-100)
 - `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
   a motion-graphics video, `/generate-video`)
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,

@@ -804,3 +804,12 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .gstyle { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow: auto; }
 .gstyle .fchip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
 .nedet > input[type=text] { justify-self: stretch; }
+
+/* 0.4 phase 6: Colour & look - the main colours and every shot's colour in order */
+.panel.colour { margin-top: 14px; }
+.cpal { display: flex; height: 38px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.cpc { display: flex; align-items: flex-end; padding: 3px 6px; min-width: 0; }
+.cpc span { font: 10.5px var(--mono); color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; white-space: nowrap; overflow: hidden; }
+.cstrip { display: flex; height: 16px; border-radius: 4px; overflow: hidden; margin-top: 8px; border: 1px solid var(--line); }
+.cstrip i { display: block; min-width: 1px; }
+.cstrip i:hover { outline: 2px solid #fff; outline-offset: -2px; }

@@ -104,7 +104,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   under the step strip - **Overview** (default; `overviewTab`: Rhythm, Content creation and / or Cinematic panels for
   the focus from `profile.py`, Claude's breakdown (events.json `breakdown` = review.json `_breakdown`), Use it: Edit
   my clips like this / Prompts for AI tools like this / Analyse again with another focus; the player is hidden),
-  Effects, Possible misses, What it says (the Content tab). The step strip: Download > Measure > Claude checks |
+  then **Colour & look** for the cinematic / both focus (`colourPanel`, `data.colour_info` from
+  `colour\colour.json`: the look's words, the five main colours, every shot's main colour as a strip with frame +
+  timecode tooltips, brightness / colour / frame in words; not measured yet = *Measure the colour* = job `colour`
+  (`tools\colour.py <name>`, group light, no decoding)), Effects, Possible misses, What it says (the Content tab). The step strip: Download > Measure > Claude checks |
   *Teach Claude (optional)*: Your verdicts > Feedback > Share; a video with no effects (a talking head) shows "No
   effects" instead of crashing. Timelines fix their canvas height at creation (no ResizeObserver loop when shown).
 - **Generate** (0.4, the user: "a video from zero - mostly external tools like Higgsfield, InVideo... or a whole
@@ -205,7 +208,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

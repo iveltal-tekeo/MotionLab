@@ -380,7 +380,7 @@ def reference(name: str) -> dict:
         "review_prompt": review_prompt(src or d.name, d.name),
         "projects": [p["name"] for p in list_projects()],
         "content": content_info(d),
-        "profile": PF.profile(d.name), "breakdown": ev.get("breakdown"),
+        "profile": PF.profile(d.name), "breakdown": ev.get("breakdown"), "colour": colour_info(d),
     }
 
 
@@ -869,6 +869,18 @@ def prompt_uses() -> dict:
 
 
 # ================================================================================================= library / docs
+def colour_info(d: Path) -> dict | None:
+    """The Overview's Colour & look (0.4): colour\\colour.json's summary + per shot its frames, words, colours."""
+    c = read_json(d / "colour" / "colour.json", None) if (d / "colour" / "colour.json").exists() else None
+    if not c:
+        return None
+    fps = float(c.get("fps") or 25)
+    return {"summary": c.get("summary") or {}, "made_from": c.get("made_from"),
+            "shots": [{"start": x["start"], "end": x["end"], "tc": frame_to_tc(x["start"], fps),
+                       "tc_end": frame_to_tc(x["end"], fps), "words": x.get("words") or [],
+                       "palette": x.get("palette") or []} for x in c.get("shots", [])]}
+
+
 def memory() -> dict:
     """Claude's memory page (0.4): knowledge.memory() (videos, effects, lessons) + what was saved (effects for
     DaVinci Resolve, graphics) and how many prompts there are. memory.md is rewritten when the cards changed."""

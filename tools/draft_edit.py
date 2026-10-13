@@ -12,6 +12,8 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
   --music-start auto  seconds into the song (auto: the strongest part - a drop - comes right after the hook)
   --sound auto        music | clips (the clips' own sound, shot by shot) | talk (the clips' own sound in order, the
                       pauses cut out); auto = talk for a talking style, else music when there is a song, else clips
+  --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
+                      also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
   --render            render <project>_vN.mp4 too; the frame caches (prep_footage.py) are made first when missing
 Writes only into projects\\<project>\\build\\: plan_vN.json (a normal plan: render_video.py renders it, Claude refines
@@ -30,6 +32,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+import cv2
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -256,14 +259,39 @@ def write_sound(prj: Project, d: Path, v: int, y: np.ndarray) -> Path:
     return m4a
 
 
-def notes(prj, v, style, D, clips, fps, W, H, orient, sound_line, music_note, args_line) -> str:
+def match_colour(prj: Project, v: int, clips: list[dict], style: dict, strength: float) -> tuple[dict, str]:
+    """The footage's colour (6 frames a clip) moved toward the references' (style "lab") - a match LUT for the plan's
+    grade and for DaVinci Resolve, with how close the looks are before / after (colour.closeness, 0-100)."""
+    from motionlab import colour as CO
+    px = []
+    for c in clips:
+        m, arr = FC.load(prj.cache, c["id"])
+        for i in np.linspace(c["frames"] * 0.1, c["frames"] * 0.9, 6).astype(int):
+            im = FC.image(m, arr, int(i))
+            im = im if im.ndim == 3 else np.repeat(im[..., None], 3, axis=2)
+            px.append(cv2.resize(im, (160, max(1, int(160 * im.shape[0] / im.shape[1]))),
+                                 interpolation=cv2.INTER_AREA).reshape(-1, 3))
+    px = np.concatenate(px)
+    src, ref = CO.lab_stats(px), style["lab"]
+    lut = CO.match_lut(src, ref, 33, strength)
+    out = prj.check(prj.build / "colour" / f"match_v{v}.cube")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    CO.write_cube(out, lut, f"MotionLab match {prj.name} v{v}")
+    after = CO.lab_stats(CO.apply_lut(px.reshape(-1, 1, 3), lut))
+    return ({**DR.NEUTRAL, "lut3d": str(out)},
+            f"matched to the references' colour - closeness {CO.closeness(src, ref):g} -> {CO.closeness(after, ref):g} "
+            f"of 100 (build\\colour\\match_v{v}.cube, also for DaVinci Resolve's Color page)")
+
+
+def notes(prj, v, style, D, clips, fps, W, H, orient, sound_line, music_note, args_line, colour_line=None) -> str:
     tc = lambda f: frame_to_tc(f, fps)  # noqa: E731
     N = D["frames"]
     L = [f"# Draft v{v} of {prj.name} - {ST.summary(style)}", "",
          f"Made by `tools\\draft_edit.py` ({time.strftime('%Y-%m-%d %H:%M')}) by rules, no Claude: {N} frames = "
          f"{N / fps:.1f} s at {fps:g} fps, {W}x{H} ({orient}), {len(D['shots'])} shots, {len(D['effects'])} effects. "
          f"Frames are 0-based (f0 = 00:00:00:00); a Resolve timeline starts at 01:00:00:00.", "",
-         f"- Sound: {sound_line}"] + ([f"- {music_note}"] if music_note else []) + [
+         f"- Sound: {sound_line}"] + ([f"- {music_note}"] if music_note else []) + (
+         [f"- Colour: {colour_line}"] if colour_line else []) + [
          f"- Arguments: `{args_line}`", f"- The plan: `build\\plan_v{v}.json`; render: "
          f"`.venv\\Scripts\\python tools\\render_video.py projects\\{prj.name}\\build\\plan_v{v}.json`", "",
          "## Shots", "", "| # | in the edit | clip | from the clip | why this moment |", "|---|---|---|---|---|"]
@@ -311,6 +339,8 @@ def main() -> int:
     ap.add_argument("--music")
     ap.add_argument("--music-start")
     ap.add_argument("--sound", choices=["auto", "music", "clips", "talk"], default="auto")
+    ap.add_argument("--colour", choices=["match", "grade", "none"], default="match")
+    ap.add_argument("--colour-strength", type=float, default=0.8, help="how far toward the references' colour (0-1)")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--render", action="store_true")
     ap.add_argument("--presets", action="store_true", help="list the presets")
@@ -404,9 +434,19 @@ def main() -> int:
         sound = write_sound(prj, d, v, cut_sound(D["sound"], by_id, fps, d))
         sound_line = ("the clips' own sound in order, pauses cut out" if mode == "talk"
                       else "the clips' own sound, shot by shot (no song in the project folder)")
+    grade, colour_line = (D["grade"] if a.colour != "none" else dict(DR.NEUTRAL)), None
+    if a.colour == "match" and style.get("lab") and color:
+        try:
+            grade, colour_line = match_colour(prj, v, clips, style, max(0.0, min(1.0, a.colour_strength)))
+        except (OSError, ValueError) as e:
+            colour_line = f"not matched ({e}) - the style's starting grade instead"
+    elif a.colour != "none" and style.get("grade"):
+        colour_line = "the style's starting grade (levels, saturation, a tint)"
+    if colour_line:
+        log(f"colour: {colour_line}")
     plan = {"name": f"{prj.name}_v{v}", "width": W, "height": H, "fps": fps, "frames": D["frames"],
             "background": 0.0, "levels": "single", "seed": a.seed, "sources": srcs,
-            "grades": {"default": D["grade"]}, "layers": D["layers"], "audio": {"path": str(sound)},
+            "grades": {"default": grade}, "layers": D["layers"], "audio": {"path": str(sound)},
             "output": f"{prj.name}_v{v}.mp4",
             "made_by": {"tool": "draft_edit.py", "like": a.like, "presets": a.preset, "want": a.want,
                         "sound": mode, "music": str(music) if music else None, "music_start_s": start,
@@ -414,7 +454,7 @@ def main() -> int:
     plan_p = prj.check(prj.build / f"plan_v{v}.json")
     write_json(plan_p, plan)
     args_line = " ".join(sys.argv[1:])
-    md = notes(prj, v, style, D, by_id, fps, W, H, orient, sound_line, music_note, args_line)
+    md = notes(prj, v, style, D, by_id, fps, W, H, orient, sound_line, music_note, args_line, colour_line)
     prj.check(prj.build / f"draft_v{v}.md").write_text(md, encoding="utf-8")
     write_json(prj.check(d / f"draft_v{v}.json"), {k: D[k] for k in ("frames", "shots", "effects", "skipped", "broll")}
                | {"style": style, "sound": sound_line, "mode": mode})

@@ -168,6 +168,11 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"
+    if kind == "colour":                         # an analysis' Overview > Measure the colour (0.4): no decoding
+        n = data.safe_name(str(a.get("name", "")))
+        if not (ANALYSIS / n / "events.json").exists():
+            raise JobError(f"no analysis {n}")
+        return f"Colour of {n}", [PY, str(TOOLS / "colour.py"), n], "light"
     if kind == "draft":             # Edit > New edit > Quick draft (0.4): build\\edit_request.json -> draft_edit.py
         p = data.safe_name(str(a.get("project", "")))
         if not (data.PROJECTS / p).is_dir():

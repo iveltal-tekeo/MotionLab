@@ -146,6 +146,15 @@ talking-head creators AND edit the user's own recording that way.)
 (regarding davinci, LUTs and stuff)". Placed after 0.3.5 and before 0.4 because 0.4's talking videos need it too
 (phone footage: white balance, exposure, skin) - the user can move it.
 
+**First part shipped in 0.4.0** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
+grading"): `motionlab\colour.py` measures a reference's look per shot from the analysis' own metrics and thumbnails
+(black / white point, contrast, saturation, white balance, split toning, vignette, letterbox, main colours) -> a look
+in words (`colour\colour.json`, the analysis' Overview, cards, Claude's memory, styles); a Reinhard transfer in Lab
+-> a 33-point .cube (`tools\colour.py match`, the quick draft) used by the lab renders (grade `"lut3d"`) and the
+Resolve build's LUTs, with closeness 0-100. Still open below: correcting the user's own clips (white balance,
+exposure, log / HDR), adjustable CDL nodes in Resolve, a looks library, skin / grain / bloom, waveform and
+vectorscope, the transfer methods measured on real shots (ΔE2000).
+
 **Where the lab stands**: since 0.3.0 rebuilds are in colour (each clip decoded with its own colour settings, within
 1/255); a plan's grade = levels / gamma / output range per channel + saturation (`compose.grade_lut`); the Resolve
 build turns each grade into a .cube LUT on the Color page. Missing: measuring a reference's look, matching it,

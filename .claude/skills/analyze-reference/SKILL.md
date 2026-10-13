@@ -90,8 +90,10 @@ read the whole `events.json` (~0.7 MB). For **each** event, in order:
      `analysis\<name>\content\transcript.txt` when it exists (frame + timecode per line); quote at most a few words -
      they are other people's words and the breakdown goes into the shareable card.
    - **cinematic**: `summary`, `transitions` (which, where, how they are built), `camera` (moves; real or in post),
-     `grade` (the look: contrast, colour, highlights / shadows - from the frames, and `colour\colour.json` when the
-     colour pass ran), `rhythm` (cuts vs beats and drops, speed changes), `sound`, `rebuild_tips`.
+     `grade` (the look: contrast, colour, highlights / shadows - from the frames and `colour\colour.json`:
+     `.venv\Scripts\python tools\colour.py <name>` prints the measured look per shot with frame + timecode; say
+     where the measured words are wrong - a warm set can read as a warm grade), `rhythm` (cuts vs beats and drops,
+     speed changes), `sound`, `rebuild_tips`.
    - **both**: every key that applies.
    Only these keys count: summary hook structure captions text_graphics broll sound cta transitions camera grade
    rhythm rebuild_tips. `tools\report.py <name>` puts it on the video's Overview page in the app.

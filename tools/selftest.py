@@ -355,6 +355,54 @@ def check_draft() -> dict:
     return {"passed": all(passed)}
 
 
+def check_colour(analysed: bool) -> dict:
+    """The colour and look (0.4, motionlab.colour): words from known numbers, a match LUT that brings footage nearer a
+    warmer, lifted look, a .cube written and read back the same - and, when synthetic_test was analysed in this run
+    (focus cinematic), that analyze.py wrote its colour.json with one entry per shot."""
+    import tempfile
+    import numpy as np
+    from motionlab import colour as CO
+    from motionlab.util import ANALYSIS
+    passed = []
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+
+    w = CO.words({"warmth": 12, "tint": 0, "saturation": 12, "brightness": 22, "contrast": 85, "black": 12, "white": 95,
+                  "shadows": [-3, -6], "highlights": [4, 12], "letterbox": "2.39:1"})
+    check(w == ["warm", "teal & orange", "desaturated", "dark (low-key)", "high contrast", "lifted blacks",
+                "letterbox 2.39:1"] and CO.words({"bw": True, "brightness": 50, "contrast": 60}) == ["black & white"],
+          "colour: the look in words (warm, teal & orange, low-key, lifted blacks, letterbox; black & white)")
+    rng = np.random.default_rng(3)
+    foot = rng.integers(20, 236, (4000, 1, 3)).astype(np.uint8)
+    lab = CO.to_lab(foot)
+    lab[..., 0] = lab[..., 0] * 0.7 + 22                       # the reference: lifted, flatter and warmer
+    lab[..., 2] += 14
+    ref = CO.lab_stats((CO.from_lab(lab) * 255 + 0.5).astype(np.uint8))
+    src = CO.lab_stats(foot)
+    lut = CO.match_lut(src, ref, 33)
+    after = CO.lab_stats(CO.apply_lut(foot, lut))
+    b0, b1 = CO.closeness(src, ref), CO.closeness(after, ref)
+    with tempfile.TemporaryDirectory() as tmp:
+        back = CO.read_cube(CO.write_cube(Path(tmp) / "m.cube", lut, "test"))
+    g = CO.grade({"black": 12, "white": 95, "brightness": 30, "saturation": 20, "warmth": 12, "tint": 0})
+    check(b1 >= 90 and b1 > b0 + 10 and np.allclose(back, lut, atol=1e-5) and g["out_black"] > 0
+          and g["saturation"] < 1 and g["tint"][0] > 1 > g["tint"][2],
+          f"colour: a match LUT brings the footage nearer the look (closeness {b0:g} -> {b1:g}), .cube round trip, "
+          "a starting grade")
+    if analysed:
+        cj = ANALYSIS / "synthetic_test" / "colour" / "colour.json"
+        try:
+            c = json.loads(cj.read_text(encoding="utf-8"))
+            ev = json.loads((ANALYSIS / "synthetic_test" / "events.json").read_text(encoding="utf-8"))
+            ok = len(c["shots"]) == len(ev.get("shots", [])) and c["summary"]["line"].startswith("look:")
+        except (OSError, ValueError, KeyError):
+            ok = False
+        check(ok, "colour: analyze.py measured the look of synthetic_test (focus cinematic) - one entry per shot")
+    return {"passed": all(passed)}
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser()
@@ -367,6 +415,7 @@ def main() -> int:
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)
+    results["colour"] = check_colour(not args.only_extended)
     if args.extended or args.only_extended:
         results["synthetic_extended"] = run_one(
             st / "synthetic_extended.mp4", st / "synthetic_extended_truth.json", "synthetic_extended",
