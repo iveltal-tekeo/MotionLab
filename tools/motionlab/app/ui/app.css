@@ -357,8 +357,6 @@ tr.sel td { background: #221d0d; }
   font: 700 12px var(--mono); background: var(--panel2); border: 1px solid var(--line2); color: var(--muted); }
 .flow .ft { font-weight: 600; font-size: 13px; }
 .flow .fd { font-size: 11.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
-.flow.how .fstep:nth-child(3) { border-color: var(--amber-d); }
-.flow.how .fstep:nth-child(3) > b { background: var(--amber); color: #111; border-color: var(--amber); }
 .flow.strip { align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; gap: 6px; }
 .flow.strip .fstep { display: inline-flex; gap: 6px; align-items: center; color: var(--dim); font-size: 13px; }
 .flow.strip .fstep.done { color: var(--muted); }
@@ -587,6 +585,19 @@ button.kbadge:hover { filter: brightness(1.25); }
 .pexlist img, .pexlist video { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: #000; display: block; }
 .pexlist img { cursor: zoom-in; }
 .pexlist [data-exdel] { position: absolute; top: 4px; right: 4px; background: #000a; }
+.pgneed.pgtool { color: var(--amber); background: #ffc4001a; border: 1px solid #ffc40055; }
+.pfilters { gap: 6px; margin: 0 0 12px; }
+.pftodo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: -4px 0 12px; }
+/* an empty page: what goes here + the one button that starts it, in the middle */
+.ehero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 70px 24px; margin-top: 10px;
+  border: 1px dashed var(--line2); border-radius: 16px; background: radial-gradient(ellipse at top, var(--acc-soft), transparent 70%); }
+.ehero .ic { width: 44px; height: 44px; color: var(--acc); stroke: currentColor; fill: none; stroke-width: 1.5; margin-bottom: 6px; }
+.ehero h2 { margin: 0; font-size: 20px; }
+.ehero p { margin: 0 0 14px; color: var(--muted); max-width: 520px; }
+.ehero .row { justify-content: center; gap: 10px; }
+/* Home > Where to start: the six steps are buttons */
+button.fstep { text-align: left; color: inherit; font: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
+.flow.how button.fstep:hover { border-color: var(--acc); background: var(--acc-soft); }
 .pm { display: flex; flex-direction: column; gap: 10px; }
 .pm .phead { gap: 10px; padding-right: 28px; }
 .pm .ptitle { margin: 0; font-size: 18px; }

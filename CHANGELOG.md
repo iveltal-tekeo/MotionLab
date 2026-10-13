@@ -6,6 +6,15 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **More like a real app**: Home starts with **Where to start** - the six steps from a video you like to what your
+  friends learn, each one a button (Download, Measure, Claude checks, your verdicts, feedback, share); they moved
+  there from References. An empty page shows what goes there and one button in the middle (*Download from a link* /
+  *Analyse a video*, *Create video*, *Add prompts*) instead of a "No ... yet" line. Plainer words everywhere: no
+  file paths, version numbers, checksums or effort levels where you work; "lab pass" is now *Measure*.
+  *Recreate with my footage* opens the same *Create video* window as the Videos page.
+- **Prompt filters**: *Needs another tool* (a prompt that runs on Higgsfield, Kling, InVideo... - an account,
+  credits or a setup; the card shows the tool in amber), *No other tool*, and *Not checked yet* - which replaces
+  the "not checked by Claude" alert and has the *Check with Claude* button next to it.
 - **Home, calmer**: no "Next steps" list and no "Updated to ..." box any more (the What's new window still opens
   once after an update); Status sits below the roadmap. Missing programs still show, only when something is missing.
 - **Prompts page, calmer**: no filter rows any more - cards, 3 per row, newest first, each with only its title, the

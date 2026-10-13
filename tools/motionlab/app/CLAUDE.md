@@ -66,8 +66,16 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `knowledge\local\prompts\examples\`, record `examples`), the first one = the card's picture. API_LEVEL 12.
   Home (same day): no Next steps, no "Updated to" box (kept only when an update set aside local changes), Setup
   warnings only when a program is missing, Status below the roadmap.
+  Then ("let's start becoming a real app"): Home has no subtitle and a **Where to start** panel = the six `FLOW`
+  steps as buttons (`flowHow` + `wireFlowHow`: download / measure open their dialogs, the rest go to References /
+  Knowledge) - References no longer shows them; empty References / Videos / Prompts = `emptyHero` (icon, title,
+  one line, the page's add button in the middle; the header buttons hide); `recreateModal` is gone - *Recreate with
+  my footage* = `createVideoModal({from: 'reference', pick})`; prompt filters `PFILTERS` (All / Needs another tool
+  = `ptool(p)`: a known paid / separate tool in the model or text, every shot / image / No other tool / Not checked
+  yet + *Check these with Claude*), `ptoolChip` (amber). User-facing words: no paths, versions, SHA-256, effort
+  levels; "lab pass" = Measure. Tested with a second test server on an empty copy of the app code (no user data).
 - Pages (routes keep their old names #/refs, #/projects): Home (update banner, counts, setup warnings when a program
-  is missing, roadmap, then status; each reference's next step lives on References now), **References** (#/refs: the 6-step workflow, downloads not analysed
+  is missing, Where to start = the 6 steps, roadmap, then status), **References** (#/refs: downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,

@@ -141,6 +141,9 @@ const FAM = {
   'Split screen / mirror': '#2ec4b6', 'Text / graphics': '#e76f51', 'Wipe / mask / shape reveal': '#8ac926',
   'Unknown / other': '#8e8e98'};
 const VCOL = {correct: '#3ecf8e', partly: '#ffc400', wrong: '#ff5a5a'};
+// an empty page: what goes here, and the one button that starts it, in the middle (no "No ... yet" line)
+const emptyHero = (icon, title, text, btns) => `<div class="ehero"><svg class="ic"><use href="#i-${icon}"/></svg><h2>${title}</h2>
+  <p>${text}</p><div class="row">${btns}</div></div>`;
 const chip = fam => `<span class="chip"><i class="sw" style="background:${FAM[fam] || '#888'}"></i>${esc(fam)}</span>`;
 
 // ============================================================================================ app shell
@@ -347,13 +350,13 @@ function contentTab(el, R, P) {
         <div class="small muted" style="margin-top:8px">${esc(S.uploader || '')} · ${esc(S.platform || '')} · online since ${esc(S.upload_date || '?')} · numbers from ${esc(S.fetched)}${(S.history || []).length > 1 ? ` · ${S.history.length} fetches kept` : ''}</div>`
         : '<div class="muted small">Not fetched yet: one quick request to the video\'s page (no download).</div>'}
       <pre class="log" hidden></pre></div>
-    <div class="panel"><h2>Coming with 0.3.5</h2><div class="small muted">Topics, claims, the hook (first 3 s) and the call to action, every shot described, text on screen, your notes per video, and collections of ~10 videos per subject with their common topics - see What's new / docs\\plans.md.</div></div></div>
+    <div class="panel"><h2>Coming soon</h2><div class="small muted">The topics, the hook and the call to action, every shot described, the text on screen, and what ~10 videos on one subject have in common.</div></div></div>
     <div class="panel" style="margin-top:14px"><div class="row sp"><h2>What it says</h2>
       <div class="row">${T ? `<input type="search" id="cq" placeholder="Search the words…" style="width:240px">` : ''}
         <button class="btn sm" data-cjob="content_transcript">${T ? 'Fetch again' : 'Get the transcript'}</button></div></div>
       ${T ? `<div class="small muted" style="margin-bottom:8px">${plural(T.lines.length, 'line')} · ${plural(T.words || 0, 'word')} · ${T.kind === 'auto' ? 'the platform\'s automatic captions' : 'uploaded subtitles'} (${esc(T.lang || '?')})${T.word_timings ? ', timed per word' : ''} · fetched ${esc(T.fetched || '')} · click a line to see it in the player</div>
         <div class="tlines"><table class="t click"><tbody id="clines">${T.lines.map((l, i) => `<tr data-i="${i}" data-f="${l.start}"><td class="fr">f${l.start}</td><td class="tc">${tc(l.start, fps)}</td><td>${esc(l.text)}</td></tr>`).join('')}</tbody></table></div>`
-        : '<div class="muted small">No transcript yet: the platform\'s own subtitles are fetched (a few seconds, no download). Videos without subtitles wait for the lab\'s own speech-to-text (planned).</div>'}
+        : '<div class="muted small">No transcript yet: the platform\'s own subtitles are fetched in a few seconds, nothing is downloaded. Videos without subtitles cannot be read yet.</div>'}
       <pre class="log" hidden></pre></div>`;
   $$('[data-cjob]', el).forEach(b => b.onclick = async () => {
     const pre = b.closest('.panel').querySelector('pre.log');
@@ -490,19 +493,21 @@ async function pageHome(main) {
   const s = await api('/api/status');
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   main.innerHTML = `
-  <div class="head"><div><h1>MotionLab</h1><div class="sub">Your local lab in ${esc(s.lab)} · your videos stay on this PC; only what you share goes to GitHub</div></div>
-    <div class="row"><button class="btn pri" id="an">＋ Analyse a video</button><button class="btn" data-open=".">Open lab folder</button></div></div>
+  <div class="head"><div><h1>MotionLab</h1></div>
+    <div class="row"><button class="btn pri" id="an">＋ Analyse a video</button><button class="btn" data-open=".">Open folder</button></div></div>
   ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <div class="grid g5">
-    <a class="stat card" href="#/refs"><div class="n">${s.references}</div><div class="l">references analysed · ${s.events} effects found</div></a>
+    <a class="stat card" href="#/refs"><div class="n">${s.references}</div><div class="l">references · ${s.events} effects found</div></a>
     <a class="stat card" href="#/refs"><div class="n">${s.verdicts}<span class="muted" style="font-size:18px"> / ${s.events}</span></div>
-      <div class="l">your verdicts · the lab learns from these</div><div class="bar" style="margin-top:8px"><i style="width:${pct(s.verdicts, s.events)}%"></i></div></a>
-    <a class="stat card" href="#/projects"><div class="n">${s.projects}</div><div class="l">your videos (your footage, edited in a reference's style)</div></a>
-    <a class="stat card" href="#/library"><div class="n">${s.library}</div><div class="l">library effects · ${s.picks} picked for saving</div></a>
-    <a class="stat card" href="#/knowledge"><div class="n" id="kn-n">…</div><div class="l" id="kn-l">references known (yours + friends')</div></a>
+      <div class="l">effects you checked</div><div class="bar" style="margin-top:8px"><i style="width:${pct(s.verdicts, s.events)}%"></i></div></a>
+    <a class="stat card" href="#/projects"><div class="n">${s.projects}</div><div class="l">your videos</div></a>
+    <a class="stat card" href="#/library"><div class="n">${s.library}</div><div class="l">saved effects${s.picks ? ` · ${s.picks} picked` : ''}</div></a>
+    <a class="stat card" href="#/knowledge"><div class="n" id="kn-n">…</div><div class="l" id="kn-l">reference cards</div></a>
   </div>
   ${s.setup.length ? `<div class="panel upd" style="margin-top:14px"><h2>Setup</h2><ul class="next">${s.setup.map(t => `<li><b>${esc(t.label)}</b> not found <span class="dim small">(${esc(t.need)})</span><div class="small muted">${esc(t.how)}</div></li>`).join('')}</ul>
-    <a href="#/settings">Settings → programs</a></div>` : ''}
+    <a href="#/settings">Settings → Programs</a></div>` : ''}
+  <div class="panel" style="margin-top:14px"><h2>Where to start</h2>
+    <div class="small muted" style="margin-bottom:10px">Learn from a video you like, in six steps - click a step to do it.</div>${flowHow()}</div>
   ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="row"><span class="hint">click to enlarge</span>${claudeBtn('/whats-next', 'What next? Ask Claude', 'plan', '', 'sm cl')}</span></div>
     <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}
   <div class="panel" style="margin-top:14px"><h2>Status</h2><div class="kv">
@@ -510,19 +515,18 @@ async function pageHome(main) {
       <b>Disk</b><span>${bytes(s.free_bytes)} free of ${bytes(s.total_bytes)} · <a href="#/storage">storage</a></span>
       <b>Jobs</b><span>${s.jobs_running.length ? s.jobs_running.map(j => `<a href="#/jobs/${j.id}">${esc(j.title)}</a>`).join(', ') : 'none running'}</span>
       <b>Your videos</b><span>${s.projects_list.map(p => `<a href="#/project/${encodeURIComponent(p.name)}">${esc(p.name)}</a>`).join(', ') || '–'}</span></div>
-      <h3>Good to know</h3><div class="small muted">Verdicts you give here are saved in the lab right away. Downloads, the lab
-      pass, the reports and the Resolve check-ups run from here; checking the sheets, learning from your feedback and building
-      in Resolve happen in Claude Code - the <b class="amber">Claude</b> buttons start a new Claude Code window with the exact
-      request and a fitting effort level, so it does not have to learn MotionLab first. One window per task, then close it.</div>
+      <h3>Good to know</h3><div class="small muted">Buttons with <svg class="i"><use href="#i-claude"/></svg> open Claude Code in a new window with the request
+      already written. Use one window per task and close it when it is done.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
   $('#an').onclick = () => analyseModal();
-  $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
+  wireFlowHow(main);
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
   api('/api/knowledge').then(K => {
     const n = $('#kn-n', main), l = $('#kn-l', main); if (!n) return;
+    const fr = K.cards.filter(c => c.origin === 'shared').length;
     n.textContent = K.cards.length;
-    l.textContent = `references known · ${K.cards.filter(c => c.origin === 'shared').length} from friends · ${K.pending.cards + K.pending.lessons} to share`;
+    l.textContent = 'reference cards' + (fr ? ` · ${fr} from friends` : '');
   }).catch(() => {});
 }
 
@@ -664,8 +668,8 @@ async function analyseModal(prefill = '') {
   const cl = ST.tools.find(t => t.name === 'claude') || {};
   const eff = ST.settings.claude_effort === 'auto' ? ST.tasks.review : ST.settings.claude_effort;
   modal(`<h2>Analyse a video</h2>
-    <p class="hint">The lab only reads the video (it checks the SHA-256 before and after). Put new videos in <code>refs\\</code> or paste a full path.</p>
-    ${c.length ? `<table class="t click" style="margin-bottom:10px"><thead><tr><th>In refs\\</th><th class="num">Size</th><th></th></tr></thead><tbody>
+    <p class="hint">Your video is only read, never changed. Pick one below or paste the full path of a video file.</p>
+    ${c.length ? `<table class="t click" style="margin-bottom:10px"><thead><tr><th>Your downloaded videos</th><th class="num">Size</th><th></th></tr></thead><tbody>
       ${c.map(v => `<tr data-p="${esc(v.path)}" class="${v.path === prefill ? 'sel' : ''}"><td>${esc(v.name)}</td><td class="num">${bytes(v.size)}</td><td>${v.analysed ? '<span class="tag done">analysed</span>' : '<span class="tag">new</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
     <input type="text" id="vpath" placeholder="C:\\path\\to\\video.mp4">
     <div class="form" style="margin-top:10px"><label for="vcat">Category</label>
@@ -674,13 +678,12 @@ async function analyseModal(prefill = '') {
       <span></span><span class="small dim">Pacing, effects and lessons are kept per category, so cooking shorts don't change how music videos are judged.</span></div>
     <div class="choice">
       <div><button class="btn pri big" id="goc" ${cl.found ? '' : 'disabled'}><svg class="i"><use href="#i-claude"/></svg>Analyse with Claude</button>
-        <div class="small">Recommended. The lab pass runs here (see Jobs, about 1–2 min per minute of video), then <b>Claude Code opens by
-          itself</b> and checks every effect on the contact sheets${eff ? ` (effort: ${esc(eff)})` : ''}. After that you give your verdicts.
+        <div class="small">Recommended. MotionLab measures the video (about 1–2 minutes per minute of video), then <b>Claude Code opens by
+          itself</b> and names every effect. After that you give your verdicts.
           ${cl.found ? '' : '<div class="bad">Claude Code was not found - <a href="#/settings" onclick="closeModal()">Settings</a>.</div>'}</div></div>
-      <div><button class="btn" id="go">Lab pass only</button>
-        <div class="small muted">Only the automatic pass, no Claude: the effect names stay the lab's guesses until you send it to Claude
-          (the video's page has the button).</div></div></div>
-    <label class="chk small" style="margin-top:8px"><input type="checkbox" id="redet"> re-use cached measurements (after threshold changes)</label>`, el => {
+      <div><button class="btn" id="go">Measure only</button>
+        <div class="small muted">No Claude for now: the effect names stay guesses until you send it to Claude from the video's page.</div></div></div>
+    <label class="chk small" style="margin-top:8px"><input type="checkbox" id="redet"> re-use the earlier measurements (faster)</label>`, el => {
     const inp = $('#vpath', el);
     if (prefill) inp.value = prefill;
     $$('tr[data-p]', el).forEach(r => r.onclick = () => { inp.value = r.dataset.p; $$('tr[data-p]', el).forEach(x => x.classList.toggle('sel', x === r)); });
@@ -690,7 +693,7 @@ async function analyseModal(prefill = '') {
                                            tags: $('#vtags', el).value, claude});
       if (!j) return;
       closeModal();
-      if (claude) toast('The lab pass is running. Claude Code opens by itself when it is done.', 'ok');
+      if (claude) toast('Measuring the video. Claude Code opens by itself when it is done.', 'ok');
     };
     $('#goc', el).onclick = () => go(true);
     $('#go', el).onclick = () => go(false);
@@ -699,14 +702,21 @@ async function analyseModal(prefill = '') {
 
 // ============================================================================================ the workflow of a reference
 const FLOW = [
-  ['download', 'Download', 'Get a reference video: Download from a link, or drop it into refs\\'],
-  ['lab', 'Lab pass', 'The lab measures every frame and finds cuts, effects and beats - automatic, about 1–2 min per minute of video'],
-  ['claude', 'Claude checks', 'Claude looks at every contact sheet and names each effect; until then the names are the lab\'s guesses'],
-  ['verdicts', 'Your verdicts', 'You mark every effect Correct / Partly / Wrong and answer the possible misses'],
-  ['feedback', 'Feedback → lessons', 'Send feedback to Claude: it turns your verdicts into lessons and better thresholds'],
-  ['share', 'Share', 'Knowledge → Share my knowledge: your friends get your cards and lessons'],
+  ['download', 'Download', 'Paste a link to a video you like (YouTube, TikTok, Instagram…)'],
+  ['lab', 'Measure', 'MotionLab finds every cut, effect and beat - about 1–2 minutes per minute of video'],
+  ['claude', 'Claude checks', 'Claude looks at every effect and names it'],
+  ['verdicts', 'Your verdicts', 'You mark each effect Correct, Partly or Wrong'],
+  ['feedback', 'Feedback', 'Claude learns from your verdicts for the next video'],
+  ['share', 'Share', 'Your friends get what you learned'],
 ];
-const flowHow = () => `<div class="flow how">${FLOW.map(([, t, d], i) => `<div class="fstep"><b>${i + 1}</b><div><div class="ft">${t}</div><div class="fd">${esc(d)}</div></div></div>`).join('')}</div>`;
+const flowHow = () => `<div class="flow how">${FLOW.map(([k, t, d], i) => `<button class="fstep" data-step="${k}"><b>${i + 1}</b><div><div class="ft">${t}</div><div class="fd">${esc(d)}</div></div></button>`).join('')}</div>`;
+function wireFlowHow(el) {
+  $$('.flow.how [data-step]', el).forEach(b => b.onclick = () => {
+    const k = b.dataset.step;
+    if (k === 'download') downloadModal(); else if (k === 'lab') analyseModal();
+    else location.hash = k === 'share' ? '#/knowledge' : '#/refs';
+  });
+}
 const flowDots = fl => `<span class="fdots" title="${esc(FLOW.map(([k, t], i) => `${i + 1} ${t}${fl.done.includes(k) ? ' ✓' : ''}`).join(' · '))}">${FLOW.map(([k]) => `<i class="${fl.done.includes(k) ? 'd' : k === fl.next ? 'n' : ''}"></i>`).join('')}</span>`;
 function flowNext(fl) {
   const left = fl.events - fl.reviewed, open = fl.misses - fl.misses_checked;
@@ -802,30 +812,6 @@ document.addEventListener('click', e => {
 });
 const delBtn = (kind, name, after = '', label = '') => `<button class="btn sm ${label ? 'danger' : 'ghost icon'}" data-del="${kind}" data-name="${esc(name)}" data-after="${esc(after)}" title="Delete… (to the Recycle Bin)"><svg class="i"><use href="#i-trash"/></svg>${label}</button>`;
 
-function recreateModal(R) {
-  const projs = R.projects || [];
-  modal(`<h2>Recreate “${esc(R.title)}” with your footage</h2>
-    <p class="hint">Claude rebuilds this video's edit with your own clips - the same cuts, effects and timing, frame for frame - first
-    as a lab render you can check side by side with the reference, then (if you want) as an editable DaVinci Resolve project.
-    Your clips are only read. It is a long job for Claude (effort: xhigh): plan an hour or more and keep the Claude window open.</p>
-    <div class="form"><label for="rcp">Your clips</label>
-      ${projs.length ? `<select id="rcp">${projs.map(p => `<option>${esc(p)}</option>`).join('')}</select>` : '<span class="small">No folder with clips yet.</span>'}
-      <span></span><span class="small muted">A folder in <code>projects\\</code> with your clips in it. New one? Create <code>projects\\&lt;name&gt;\\</code>, copy your clips
-        into it and open this again. <a href="#" data-open="projects">Open the projects folder</a></span>
-      <label>How</label><div class="col" style="gap:4px">
-        <label class="chk"><input type="radio" name="rcm" checked> 1:1 - the same edit, frame for frame (same song)</label>
-        <label class="chk dim"><input type="radio" name="rcm" disabled> By feel - use it as a template: its pacing and style, your own story <span class="tag">v0.5</span></label></div></div>
-    <div class="row" style="margin-top:14px">${projs.length ? `<button class="btn pri" id="rcgo"><svg class="i"><use href="#i-claude"/></svg>Open in Claude Code</button>` : ''}
-      <span class="small muted mono" id="rcsay"></span></div>`, el => {
-    const say = () => `/recreate-video ${R.name} ${($('#rcp', el) || {}).value || ''}`.trim();
-    const upd = () => { $('#rcsay', el).textContent = say(); };
-    if ($('#rcp', el)) { $('#rcp', el).onchange = upd; upd(); }
-    if ($('#rcgo', el)) $('#rcgo', el).onclick = async () => {
-      try { await api(`/api/project/${encodeURIComponent($('#rcp', el).value)}/made_from`, {kind: 'reference', id: R.name}); } catch (e) { /* the recipe still opens */ }
-      openClaude(say(), 'recreate', `${R.title} with ${$('#rcp', el).value}`); closeModal(); };
-  });
-}
-
 // ============================================================================================ videos (analyses)
 async function pageRefs(main) {
   let tests = false, cat = '', tag = '';
@@ -835,11 +821,11 @@ async function pageRefs(main) {
     const tags = [...new Set(all.flatMap(r => r.tags || []))].sort();
     const refs = all.filter(r => (!cat || r.category === cat) && (!tag || (r.tags || []).includes(tag)));
     const pct = (a, b) => b ? Math.round(100 * a / b) : 100;
-    main.innerHTML = `<div class="head"><div><h1>References</h1><div class="sub">Videos by others that the lab breaks down: download one, analyse it, then check every effect and give your verdict.</div></div>
-      <div class="row"><label class="chk small"><input type="checkbox" id="tests" ${tests ? 'checked' : ''}> show self-test videos</label>
-      <button class="btn" id="dl"><svg class="i"><use href="#i-download"/></svg>Download from a link</button>
-      <button class="btn pri" id="an">＋ Analyse a video</button></div></div>
-      ${flowHow()}
+    const none = !all.length && !wait.length;
+    const btns = big => `<button class="btn${big ? ' big' : ''}" id="dl"><svg class="i"><use href="#i-download"/></svg>Download from a link</button>
+      <button class="btn pri${big ? ' big' : ''}" id="an">＋ Analyse a video</button>`;
+    main.innerHTML = `<div class="head"><div><h1>References</h1><div class="sub">Videos by other creators, broken down cut by cut and effect by effect.</div></div>
+      ${none ? '' : `<div class="row">${btns(false)}</div>`}</div>
       ${wait.length ? `<div class="panel waiting"><h2>Downloaded, not analysed yet</h2><table class="t"><tbody>${wait.map(w => `<tr>
         <td>${w.audio ? '<span class="tag">audio</span>' : '<span class="tag">video</span>'}</td><td><b>${esc(w.title || w.name)}</b><div class="small dim mono">${esc(w.name)}</div></td>
         <td class="small muted">${w.url ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.platform || 'link')}</a> · ` : ''}${esc(w.modified)}</td><td class="num small">${bytes(w.size)}</td>
@@ -858,7 +844,9 @@ async function pageRefs(main) {
         <div class="small fnl">${flowDots(fl)} <span class="${fl.next ? '' : 'ok'}">${esc(flowNext(fl))}</span></div>
         </div></a>
         <div class="cact">${flowAction(r, fl)}<div class="grow"></div>${delBtn('reference', r.name)}</div></div>`; }).join('')}</div>`
-        : '<div class="empty">No references yet. Click “Download from a link” (or drop a video into the refs folder), then “Analyse a video”.</div>'}`;
+        : none ? emptyHero('refs', 'Learn from a video you like', 'Download it from a link or pick a video file - MotionLab finds every cut and effect, and Claude names them.', btns(true))
+        : '<div class="empty">No reference in this category.</div>'}
+      <label class="chk small dim" style="margin-top:18px"><input type="checkbox" id="tests" ${tests ? 'checked' : ''}> show the test videos</label>`;
     $('#an').onclick = () => analyseModal();
     $('#dl').onclick = downloadModal;
     $('#tests').onchange = e => { tests = e.target.checked; draw(); };
@@ -904,7 +892,7 @@ async function pageRef(main, name, selId, openMisses) {
   </div>
   <div class="rtabs" id="rtabs"><button class="rtab" data-tab="review">Review effects <span class="cnt" id="cnt-review"></span></button>
     ${NM.length ? '<button class="rtab misstab" data-tab="misses">Possible misses <span class="cnt" id="cnt-misses"></span></button>' : ''}
-    <button class="rtab" data-tab="content" title="what the video says and how it performs (0.3.5)">Content</button>
+    <button class="rtab" data-tab="content" title="what the video says and how it performs">Content</button>
     <div class="grow"></div><span class="hint">Your verdicts are saved as you go <span id="saved"></span></span></div>
   <div class="review" id="tab-review">
     <div class="rlist">
@@ -973,8 +961,8 @@ async function pageRef(main, name, selId, openMisses) {
     const el = $('#detail');
     el.innerHTML = `<div class="rbody"><div class="rhead"><div class="evhead"><span class="id">${e.id}</span><span class="ty">${esc(e.label)}</span>${chip(e.family)}</div>
         <span class="small muted">${i >= 0 ? `${i + 1} of ${shown.length}` : ''}</span></div>
-      ${e.relabelled ? `<div class="relab">the lab guessed <s>${esc(e.auto_label)}</s> · renamed by Claude</div>` : ''}
-      ${!e.reviewed ? '<div class="small warnline">Not checked by Claude yet: the name is the lab\'s guess.</div>' : ''}
+      ${e.relabelled ? `<div class="relab">first guess <s>${esc(e.auto_label)}</s> · renamed by Claude</div>` : ''}
+      ${!e.reviewed ? '<div class="small warnline">Not checked by Claude yet: the name is a guess.</div>' : ''}
       ${e.false_alarm ? '<div class="bad small">a false alarm (not an edit effect) - a verdict is optional</div>' : ''}
       ${e.preview ? `<div class="pvbox"><video class="pv" src="${fileUrl(e.preview)}" autoplay loop playsinline ${sound ? '' : 'muted'}></video>
         <div class="pvbar"><span class="small muted">loop ${e.preview_range ? `f${e.preview_range[0]}–${e.preview_range[1]}` : ''} · frame + timecode in the picture</span><div class="grow"></div>
@@ -1103,7 +1091,7 @@ async function pageRef(main, name, selId, openMisses) {
     $('#mok', el).onclick = () => { S.missed = $('#mt', el).value; changed(); closeModal(); };
   });
   $('#exp').onclick = () => feedbackModal(name);
-  $('#recreate').onclick = () => recreateModal(R);
+  $('#recreate').onclick = () => createVideoModal({from: 'reference', pick: R.name});
   $('#editmeta', main).onclick = e => { e.preventDefault(); metaModal(R); };
   KEYS = e => {
     if (e.target.matches('input, textarea, select')) return;
@@ -1125,15 +1113,16 @@ async function pageRef(main, name, selId, openMisses) {
 // ============================================================================================ projects
 async function pageProjects(main) {
   const ps = await api('/api/projects');
-  main.innerHTML = `<div class="head"><div><h1>Videos</h1><div class="sub">Your own videos: made from a reference (its edit with your clips) or from a prompt in your library - rendered by the lab and rebuilt in DaVinci Resolve.</div></div>
-      <div class="row"><button class="btn pri" id="cvnew"><svg class="i"><use href="#i-claude"/></svg>Create video</button><button class="btn" data-open="projects">Folder</button></div></div>
+  const cv = big => `<button class="btn pri${big ? ' big' : ''}" id="cvnew"><svg class="i"><use href="#i-claude"/></svg>Create video</button>`;
+  main.innerHTML = `<div class="head"><div><h1>Videos</h1><div class="sub">Your own videos, made from a reference or a prompt.</div></div>
+      ${ps.length ? `<div class="row">${cv(false)}<button class="btn" data-open="projects">Folder</button></div>` : ''}</div>
     ${ps.length ? `<div class="cards">${ps.map(p => `<div class="card refcard"><a class="clink" href="#/project/${encodeURIComponent(p.name)}">
       ${p.thumb ? `<img class="thumb" src="${fileUrl(p.thumb)}" loading="lazy">` : ''}
       <div class="cb"><div class="ct">${esc(p.name)}</div>
       <div class="small muted">${p.clips} clips · ${bytes(p.footage_bytes)} of footage</div>
       <div class="small">${p.plans.length} edit version${p.plans.length === 1 ? '' : 's'} · ${p.renders.length} render${p.renders.length === 1 ? '' : 's'}${p.resolve.length ? ' · in Resolve: ' + esc(p.resolve.join(', ')) : ''}</div></div></a>
       <div class="cact"><a class="btn sm" href="#/project/${encodeURIComponent(p.name)}">Open</a><div class="grow"></div>${delBtn('project', p.name)}</div></div>`).join('')}</div>`
-      : '<div class="empty">No videos yet. <b>Create video</b> starts one - from a reference you analysed or from a prompt in your library.</div>'}`;
+      : emptyHero('videos', 'Make your first video', 'Use the edit of a reference you analysed, or one of your prompts - with your own clips.', cv(true))}`;
   $('#cvnew', main).onclick = () => createVideoModal();
 }
 
@@ -1146,25 +1135,25 @@ async function createVideoModal(pre = {}) {
   modal(`<h2>Create a video</h2>
     <div class="cvchoice">
       <button class="cvopt" data-from="reference"><svg class="ic"><use href="#i-refs"/></svg><b>Use a reference</b>
-        <span>Recreate a video you analysed - its cuts, effects and timing - with your own clips</span></button>
+        <span>The cuts, effects and timing of a video you analysed, with your own clips</span></button>
       <button class="cvopt" data-from="prompt"><svg class="ic"><use href="#i-prompts"/></svg><b>Use a prompt</b>
-        <span>Start from a prompt in your library - a talking script, a hook, a shot for a video model</span></button></div>
+        <span>A brief, a talking script or a hook from your Prompts</span></button></div>
     <div id="cvpick"></div>
     <div id="cvclips" hidden><h3>Your clips</h3>
       <div class="row"><select id="cvp" style="max-width:320px">${ps.map(x => `<option value="${esc(x.name)}">${esc(x.name)} (${x.clips} clips)</option>`).join('')}<option value="">+ a new video…</option></select>
         <input type="text" id="cvname" placeholder="name, e.g. cooking vlog 1" hidden style="max-width:260px"><button class="btn sm" id="cvmk" hidden>Create the folder</button></div>
       <div class="small muted" id="cvhint" style="margin-top:6px"></div></div>
     <div class="row" style="margin-top:14px"><button class="btn pri" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Start in Claude Code</button>
-      <span class="small muted mono" id="cvsay"></span></div>`, el => {
+      <span class="small muted">Claude makes it with you - first a preview, then, if you want, a DaVinci Resolve project. It can take an hour or more.</span></div>`, el => {
     const sel = $('#cvp', el), name = $('#cvname', el), mk = $('#cvmk', el);
     const say = () => from === 'reference' ? `/recreate-video ${pick} ${sel.value}` : `/recreate-video prompt:${pick} ${sel.value}`;
     const upd = () => {
       const ready = from && pick && sel.value;
-      $('#cvgo', el).disabled = !ready; $('#cvsay', el).textContent = ready ? say() : '';
+      $('#cvgo', el).disabled = !ready;
       const nw = !sel.value; name.hidden = mk.hidden = !nw;
       const P = ps.find(x => x.name === sel.value);
-      $('#cvhint', el).innerHTML = nw ? 'A new folder in <code>projects\\</code> - copy your clips into it after creating it.'
-        : P && !P.clips ? `<span class="amber">No clips in projects\\${esc(P.name)} yet</span> - copy them in (Folder), then start.` : 'Your clips are only read, never changed.';
+      $('#cvhint', el).innerHTML = nw ? 'A new folder for this video - copy your clips into it.'
+        : P && !P.clips ? `<span class="amber">No clips in ${esc(P.name)} yet</span> - copy them into its folder, then start.` : 'Your clips are only read, never changed.';
     };
     const showPick = () => {
       $$('.cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.from === from));
@@ -1173,7 +1162,7 @@ async function createVideoModal(pre = {}) {
         const rs = refs.filter(r => !r.test);
         box.innerHTML = `<h3>Which reference?</h3>${rs.length ? `<div class="cvlist">${rs.map(r => `<label class="cvitem${r.name === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(r.name)}" ${r.name === pick ? 'checked' : ''}>
           ${r.thumb ? `<img src="${fileUrl(r.thumb)}" loading="lazy">` : ''}<span><b>${esc(r.title)}</b><br><span class="small muted">${esc(r.category_label || '')} · ${r.events} effects · ${(r.duration_s || 0).toFixed(0)} s</span></span></label>`).join('')}</div>`
-          : '<div class="empty">No analysed reference yet - <a href="#/refs">References</a>: download and analyse one first.</div>'}`;
+          : '<div class="empty">No reference yet - download and analyse one first (<a href="#/refs" onclick="closeModal()">References</a>).</div>'}`;
       } else if (from === 'prompt') {
         box.innerHTML = `<h3>Which prompt?</h3><input type="search" id="cvq" placeholder="Search your prompts…" style="max-width:340px">
           <div class="cvlist" id="cvpl"></div>`;
@@ -1197,7 +1186,7 @@ async function createVideoModal(pre = {}) {
         const r = await api('/api/projects/new', {name: name.value});
         ps.push({name: r.name, clips: 0});
         sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${esc(r.name)} (new)</option>`); sel.value = r.name;
-        openPath(r.folder); upd(); toast(`projects\\${r.name} created - copy your clips into it`, 'ok');
+        openPath(r.folder); upd(); toast(`Folder “${r.name}” created - copy your clips into it`, 'ok');
       } catch (e) { toast(e.message, 'err'); }
     };
     $('#cvgo', el).onclick = async () => {
@@ -1231,7 +1220,7 @@ async function pageProject(main, name, tab = 'overview') {
 function outcomePanel(P) {
   const O = (P.outcome || {}).aspects || {}, mf = P.made_from || [];
   return `<div class="panel outcome"><div class="row sp"><h2>How did it turn out?</h2><span class="small muted">${(P.outcome || {}).updated
-      ? 'saved ' + esc(P.outcome.updated) : 'tell the lab what worked - Claude reads it next time, and the prompt it came from shows it'}</span></div>
+      ? 'saved ' + esc(P.outcome.updated) : 'tell Claude what worked - it reads this next time'}</span></div>
     ${mf.length ? `<div class="small" style="margin-bottom:8px">Made from: ${mf.map(x => x.kind === 'reference'
       ? `<a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : `<a href="#/prompts/${esc(x.id)}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
     <div class="ogrid">${ASPECTS.map(([k, l]) => { const a = O[k] || {};
@@ -1278,7 +1267,7 @@ function projRenders(el, P) {
       <span class="small muted">${esc(r.name)} · ${bytes(r.size)} · ${esc(r.modified)}</span></div><div id="pl${i}"></div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-open="${esc(r.rel)}">Open in player</button><button class="btn sm" data-open="${esc(r.rel)}" data-reveal>Show in folder</button>
         <div class="grow"></div>${delBtn('file', r.rel, '', ' Delete…')}</div></div>`).join('')}</div>
-    <h3>Side by side (made by render_video.py --compare)</h3>
+    <h3>Side by side with the reference</h3>
     <div class="grid g2">${P.compares.map((r, i) => `<div class="panel"><div class="row sp" style="margin-bottom:6px"><span class="small muted">${esc(r.name)} · ${bytes(r.size)}</span>${delBtn('file', r.rel, '', ' Delete…')}</div><div id="cp${i}"></div></div>`).join('')
       || '<div class="muted">none</div>'}</div>`;
   P.renders.forEach((r, i) => new Player($('#pl' + i, el), r.rel, fpsOf(), frames));
@@ -1300,7 +1289,7 @@ const gthumb = g => g.thumb ? `<img src="${fileUrl(g.thumb)}?v=${g.thumb_v}" alt
 
 function projGraphics(el, P) {
   const O = P.overlays || [];
-  const top = `<div class="row sp" style="margin-bottom:12px"><div class="hint">Titles, clocks, captions and other graphics are small HTML pages rendered into transparent clips (ProRes 4444) for the lab render and for DaVinci Resolve. Change a setting, Save, then Render: the next render of the edit uses the new clip.</div>
+  const top = `<div class="row sp" style="margin-bottom:12px"><div class="hint">Titles, clocks, captions and other graphics, rendered as see-through clips for your video and for DaVinci Resolve. Change a setting, Save, then Render.</div>
     <button class="btn sm" id="gcap">Captions…</button></div>`;
   if (!O.length) {
     el.innerHTML = top + `<div class="empty">No graphics in this video yet. Add one from the <a href="#/library">Library</a> (Graphics → Use in a video), make captions from a subtitle file, or ask Claude for a new one when you recreate a video.</div>`;
@@ -1422,7 +1411,7 @@ function projTiming(el, P) {
 }
 
 function projResolve(el, P) {
-  if (!P.resolve.length) { el.innerHTML = '<div class="empty">This video has no DaVinci Resolve rebuild yet (option 2, made with Claude).</div>'; return; }
+  if (!P.resolve.length) { el.innerHTML = '<div class="empty">No DaVinci Resolve version of this video yet - Claude makes one when it recreates a video.</div>'; return; }
   const fps = (P.plans[0] || {}).fps || 25;
   const render = P.renders.find(r => r.kind === 'resolve') || P.renders[0];
   const picks = Object.assign({}, P.library_picks || {});
@@ -1491,7 +1480,7 @@ function projResolve(el, P) {
 async function pageLibrary(main) {
   const L = await api('/api/library');
   const say = 'Save the library picks as Fusion macros + recipes in library\\';
-  main.innerHTML = `<div class="head"><div><h1>Library</h1><div class="sub">What you approved, saved for reuse: graphics (HTML, with settings) and effects (a Fusion macro + a recipe each).</div></div></div>
+  main.innerHTML = `<div class="head"><div><h1>Library</h1><div class="sub">Graphics and effects you saved, ready for any of your videos.</div></div></div>
     <div class="grid g2"><div class="panel"><h2>Saved effects</h2>${L.items.length ? `<table class="t"><thead><tr><th>Effect</th><th>Recipe</th><th>Macros</th><th>Check in Resolve</th><th>Saved</th></tr></thead><tbody>
       ${L.items.map(i => `<tr><td><b>${esc(i.title)}</b></td><td><a href="#" data-open="${esc(i.recipe)}">${esc(i.name)}.md</a></td>
         <td>${i.macros.map(m => `<a href="#" data-open="${esc(m)}" data-reveal>${esc(m.split('/').pop())}</a>`).join(', ') || '<span class="muted small">recipe only</span>'}</td>
@@ -1573,11 +1562,21 @@ const RUN = {brief: 'Run it - make the video', script: 'Record it - make the vid
 const pstars = n => `<span class="stars" title="Claude's review of the prompt: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
 const ptitle = p => p.title || p.title_auto || p.text.trim().split(/\s+/).slice(0, 8).join(' ') + (p.text.trim().split(/\s+/).length > 8 ? '…' : '');
 // what a prompt needs, in two words: the tool / model, and what you bring (your clips, a photo, you on camera)
+// a site or app outside MotionLab that the prompt runs on (an account, credits, a setup): the "Needs another tool" filter
+const TOOLS = /higgsfield|invideo|kling|runway|pika|luma|hailuo|minimax|sora|veo|midjourney|nano ?banana|gpt[- ]?image|chatgpt|dall-?e|seedance|flux|leonardo|ideogram|krea|capcut|hedra|heygen|elevenlabs|suno|wan ?2/i;
+function ptool(p) {
+  if (p.model && TOOLS.test(p.model)) return p.model;
+  if (p.kind !== 'shot' && p.kind !== 'image') return '';
+  if (p.model) return p.model;
+  const m = (p.text || '').match(TOOLS);
+  return m ? m[0][0].toUpperCase() + m[0].slice(1) : p.kind === 'shot' ? 'an AI video tool' : 'an AI image tool';
+}
+const ptoolChip = p => { const t = ptool(p);
+  return t ? `<span class="pgneed pgtool" title="Runs on ${esc(t)} - a separate tool (an account, credits or a setup)">${esc(t)}</span>` : ''; };
+// what you bring: your clips, a photo, you on camera - or nothing (text only)
 function pneeds(p) {
   const t = p.text || '', refs = ((p.structure || []).find(x => x.slot === 'references') || {}).text || '';
   const out = [];
-  if (p.kind === 'brief') out.push(/resolve|da ?vinci/i.test(t) ? 'Claude + Resolve' : 'Claude');
-  else if (p.model) out.push(p.model);
   if (p.kind === 'brief') out.push('your clips');
   else if (p.kind === 'script' || p.kind === 'hook') out.push('you on camera');
   else {
@@ -1643,14 +1642,25 @@ function pcheckBlock(p, R) {                           // Claude's check: a row 
       <button class="btn sm pri" data-opt title="Claude writes a better version from its check and what you want (a new prompt; this one stays)"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
       ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved></span></div></div>`;
 }
-async function pagePrompts(main, arg) {               // one list of every kind (0.3.4: no filters); a click opens the prompt
+const PFILTERS = [['', 'All'], ['tool', 'Needs another tool'], ['own', 'No other tool'], ['todo', 'Not checked yet']];
+const pfilterOk = (p, f) => !f || (f === 'tool' ? !!ptool(p) : f === 'own' ? !ptool(p) : !p.structure && !p.review);
+async function pagePrompts(main, arg) {               // every kind in one grid; a click opens the prompt
   const ctx = {R: await api('/api/prompts')};
-  let q = '';
-  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Your prompts - briefs for Claude, video and image models, hooks and talking scripts.
-      Click one to see Claude's check, say what you want, optimize it and run it.</div></div>
-      <div class="row"><input type="search" id="pq" placeholder="Search your prompts…" style="width:230px"><button class="btn pri" id="padd">Add prompts</button>
-        ${ctx.R.items.length ? `<button class="btn" data-open="${esc(ctx.R.folder)}" data-reveal>Folder</button>` : ''}</div></div>
-    <div id="pbanner"></div><div id="plist" class="pgrid"></div>`;
+  let q = '', pf = '';
+  try { pf = localStorage.getItem('ml.pfilter') || ''; } catch (e) { /* no storage: all */ }
+  if (!PFILTERS.some(([k]) => k === pf)) pf = '';
+  const any = ctx.R.items.length;
+  main.innerHTML = `<div class="head"><div><h1>Prompts</h1><div class="sub">Briefs for Claude, prompts for AI video and image tools, hooks and scripts. Click one to open it.</div></div>
+      ${any ? `<div class="row"><input type="search" id="pq" placeholder="Search your prompts…" style="width:230px"><button class="btn pri" id="padd">Add prompts</button>
+        <button class="btn" data-open="${esc(ctx.R.folder)}" data-reveal>Folder</button></div>` : ''}</div>
+    ${any ? '<div class="row pfilters" id="pfil"></div><div id="ptodo"></div>' : ''}<div id="plist" class="pgrid"></div>`;
+  if (!any) {
+    $('#plist', main).className = '';
+    $('#plist', main).innerHTML = emptyHero('prompts', 'Keep your best prompts here', 'Paste one you use, attach a creator\'s guide, or let Claude write one from zero. Claude checks each part and helps you improve it.',
+      '<button class="btn pri big" id="padd">Add prompts</button>');
+    $('#padd', main).onclick = () => addPromptsModal(ctx.R);
+    return;
+  }
   $('#padd', main).onclick = () => addPromptsModal(ctx.R);
   const row = p => { const res = (p.result || {}).rating, rv = p.review || {}, ex = (p.examples || [])[0], cat = pcategory(p);
     const rating = res ? `<span class="vr ${res}" title="what it made - your rating">${res === 'ok' ? 'OK' : res[0].toUpperCase() + res.slice(1)}</span>`
@@ -1659,16 +1669,17 @@ async function pagePrompts(main, arg) {               // one list of every kind 
       ${ex ? `<span class="pgthumb">${pexMedia(ctx.R, ex)}</span>` : ''}
       <span class="pgtop"><span class="kbadge k-${esc(p.kind)}">${esc(KSHORT[p.kind] || p.kind)}</span>${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}</span>
       <b class="pgtitle">${esc(ptitle(p))}</b>
-      <span class="pgfoot"><span class="pgneeds">${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</span>${rating}</span></button>`; };
+      <span class="pgfoot"><span class="pgneeds">${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</span>${rating}</span></button>`; };
   const draw = () => {
     const all = ctx.R.items, list = $('#plist', main);
-    const unchecked = all.filter(p => !p.structure && !p.review).map(p => p.id);
-    $('#pbanner', main).innerHTML = unchecked.length ? `<div class="claude" style="margin-bottom:12px"><span>${plural(unchecked.length, 'prompt')} not checked by Claude yet: ${unchecked.map(esc).join(', ')}</span>
-      ${claudeBtn(`/write-prompt analyse ${unchecked.join(' ')}`, 'Check them with Claude', 'prompt', 'analyse')}</div>` : '';
-    const items = all.filter(p => !q || [p.id, p.title, p.text, p.model, (p.source || {}).creator, KSHORT[p.kind], ...(p.tags || [])].join(' ').toLowerCase().includes(q))
+    $('#pfil', main).innerHTML = PFILTERS.map(([k, l]) => { const n = all.filter(p => pfilterOk(p, k)).length;
+      return k && !n ? '' : `<button class="fchip${k === pf ? ' on' : ''}" data-pf="${k}">${l} <span class="dim">${n}</span></button>`; }).join('');
+    $$('[data-pf]', main).forEach(b => b.onclick = () => { pf = b.dataset.pf; try { localStorage.setItem('ml.pfilter', pf); } catch (e) { /* not kept */ } draw(); });
+    const todo = all.filter(p => pfilterOk(p, 'todo')).map(p => p.id);
+    $('#ptodo', main).innerHTML = pf === 'todo' && todo.length ? `<div class="small muted pftodo">Claude reads each one and marks what is clear, vague or missing, with a tip. ${claudeBtn(`/write-prompt analyse ${todo.join(' ')}`, todo.length === 1 ? 'Check it with Claude' : `Check these ${todo.length} with Claude`, 'prompt', 'analyse')}</div>` : '';
+    const items = all.filter(p => pfilterOk(p, pf) && (!q || [p.id, p.title, p.title_auto, p.text, p.model, (p.source || {}).creator, KSHORT[p.kind], ...(p.tags || [])].join(' ').toLowerCase().includes(q)))
       .sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
-    list.innerHTML = items.map(row).join('') || (all.length ? '<div class="empty">No prompt matches the search.</div>'
-      : '<div class="empty">No prompts yet. <b>Add prompts</b>: paste one you use, attach a creator\'s guide, or let Claude generate one from zero.</div>');
+    list.innerHTML = items.map(row).join('') || `<div class="empty">${q ? 'No prompt matches the search.' : 'Nothing here.'}</div>`;
     $$('.pgc', list).forEach(c => c.onclick = () => promptModal(c.dataset.id, ctx));
   };
   ctx.draw = draw;
@@ -1698,7 +1709,8 @@ function promptModal(id, ctx) {
       <button class="btn sm ghost" data-for title="What is it for? (vlog, talking head, SFX, transitions...)">Edit</button></div>
     <div class="ptextwrap"><pre class="ptext">${esc(p.text)}</pre></div>
     ${p.notes ? `<div class="small muted"><b>How to use:</b> ${esc(p.notes)}</div>` : ''}
-    <div class="row pfor small"><span class="muted">Needs:</span>${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div>
+    <div class="row pfor small"><span class="muted">Needs:</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}
+      ${ptool(p) ? '<span class="muted">- the first is a separate tool: an account, credits or a setup</span>' : ''}</div>
     <div class="pex"><div class="row"><span class="psl2">What it makes</span>${(p.examples || []).length ? '' : '<span class="small muted">a picture or clip of the result - yours, or the creator\'s example. The first one is the card\'s picture.</span>'}
         <span class="grow"></span><label class="btn sm ghost">+ Add a picture or clip<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
       ${(p.examples || []).length ? `<div class="pexlist">${p.examples.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
@@ -1906,8 +1918,8 @@ function newPromptForm(box, R) {
 function havePromptForm(box, R) {
   const files = [];                                          // attached here: {file, rel, text}
   const kinds = (R.kinds || []).length ? R.kinds.map(k => k.id) : Object.keys(KSHORT);
-  box.innerHTML = `<div class="small muted">Paste a prompt as it is, or attach a file (.txt, .md, .docx, .pdf). One text = one prompt; for several at once put a line with only
-      <code>---</code> between them - or let Claude sort a whole guide. Prompts stay on this PC.</div>
+  box.innerHTML = `<div class="small muted">Paste a prompt, or attach a file (.txt, .md, .docx, .pdf). Several prompts? Put a line with only
+      <code>---</code> between them, or let Claude sort the file. Your prompts stay on this PC.</div>
     <textarea id="ptxt" rows="12" style="width:100%;margin-top:10px" spellcheck="false" placeholder="Paste your prompt here…"></textarea>
     <div class="row" style="margin-top:6px"><label class="btn sm">Attach a file
       <input type="file" id="pfile" accept=".txt,.md,.docx,.pdf" multiple hidden></label><span id="pfiles" class="small muted"></span></div>
@@ -1990,7 +2002,7 @@ function havePromptForm(box, R) {
 // ============================================================================================ jobs
 async function pageJobs(main, id) {
   const list = await api('/api/jobs');
-  main.innerHTML = `<div class="head"><div><h1>Jobs</h1><div class="sub">Tasks the app runs for you with the lab's own tools. They keep running if you switch pages.</div></div>
+  main.innerHTML = `<div class="head"><div><h1>Jobs</h1><div class="sub">What MotionLab is working on. Jobs keep running when you switch pages.</div></div>
     <div class="row"><button class="btn" data-k="selftest">Run the self-test</button><button class="btn" data-k="storage">Storage report</button></div></div>
     <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
       <div class="panel"><table class="t click"><thead><tr><th>#</th><th>Job</th><th>Status</th><th class="num">Time</th></tr></thead><tbody>
@@ -2005,7 +2017,7 @@ async function pageJobs(main, id) {
   if (!j) { $('#jd').innerHTML = '<div class="muted">This job is not in this session.</div>'; return; }
   $('#jd').innerHTML = `<div class="row sp"><h2>${esc(j.title)}</h2><span class="tag ${j.status}" id="jst">${j.status}</span></div>
     <div class="small muted mono" style="margin-bottom:8px">${esc(j.command)}</div>
-    ${j.then_claude ? `<div class="small amber" style="margin-bottom:8px"><svg class="i"><use href="#i-claude"/></svg>Analyse with Claude: Claude Code opens by itself when this lab pass ends well.</div>` : ''}<pre class="log" id="jlog"></pre>
+    ${j.then_claude ? `<div class="small amber" style="margin-bottom:8px"><svg class="i"><use href="#i-claude"/></svg>Claude Code opens by itself when this measuring is done.</div>` : ''}<pre class="log" id="jlog"></pre>
     <div class="row" style="margin-top:8px"><button class="btn danger" id="jc" ${j.status === 'running' ? '' : 'hidden'}>Stop this job</button></div>`;
   $('#jc').onclick = async () => { if (!confirm('Stop this job?')) return; try { await api(`/api/jobs/${id}/cancel`, {}); } catch (e) { toast(e.message, 'err'); } };
   followJob(+id, $('#jlog'), jj => {
@@ -2024,7 +2036,7 @@ async function pageStorage(main) {
   const COL = {source: '#4fb3ff', keep: '#3ecf8e', cache: '#ffc400', checks: '#ff9f43', finals: '#c56bff', env: '#5c5c66'};
   const used = S.units.reduce((a, u) => a + u.total, 0);
   const target = u => u === 'tools\\selftest' ? 'selftest' : u.split('\\').pop();
-  main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">Storage: the lab uses ${bytes(used)} · ${bytes(S.free_bytes)} free of ${bytes(S.total_bytes)} on this drive.
+  main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">Storage: MotionLab uses ${bytes(used)} · ${bytes(S.free_bytes)} free of ${bytes(S.total_bytes)} on this drive.
     Only data the lab can rebuild can be freed; your videos and everything learned are never touched.</div></div></div>${setTabs('#/storage')}
     <div class="row small" style="margin-bottom:10px">${S.cats.map(c => `<span class="chip"><i class="sw" style="background:${COL[c]}"></i>${c}</span>`).join('')}
       <span class="hint">source = your videos · keep = results and knowledge · cache = rebuildable · checks = comparison videos · finals = full renders</span></div>
@@ -2084,11 +2096,9 @@ async function downloadModal() {
   const S = await api('/api/settings');
   const yt = S.tools.find(t => t.name === 'yt-dlp') || {};
   modal(`<h2>Download from a link</h2>
-    <p class="hint">${yt.found ? `yt-dlp ${esc(yt.version || '')} · <span class="mono small">${esc(yt.path)}</span>`
-      : `<b class="bad">yt-dlp not found.</b> ${esc(yt.how || '')} · <a href="#/settings">Settings</a>`}<br>
-      Videos are saved in <code>refs\</code>, audio in <code>refs\audio\</code>. One video per link (no playlists).
-      Only download what you are allowed to use.</p>
-    <input type="text" id="durl" placeholder="https://www.youtube.com/watch?v=…  (YouTube, Vimeo, TikTok, Instagram … anything yt-dlp supports)">
+    <p class="hint">${yt.found ? '' : `<b class="bad">The downloader (yt-dlp) was not found.</b> ${esc(yt.how || '')} · <a href="#/settings">Settings</a><br>`}
+      One video per link. Only download what you are allowed to use.</p>
+    <input type="text" id="durl" placeholder="Paste a link - YouTube, TikTok, Instagram, Vimeo…">
     <div class="row" style="margin-top:10px"><select id="dpre">${S.presets.map(o => `<option value="${o.id}" ${o.id === S.settings.download_preset ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>
       <button class="btn pri" id="dgo" ${yt.found ? '' : 'disabled'}><svg class="i"><use href="#i-download"/></svg>Download</button>
       <span id="dst" class="small muted"></span></div>
@@ -2125,8 +2135,7 @@ async function downloadModal() {
 async function pageSettings(main) {
   const S = await api('/api/settings');
   const st = S.settings;
-  main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">The programs the lab uses and your download preferences -
-    saved in <span class="mono">settings.json</span> in the lab folder (yours, not part of the shared app).</div></div></div>${setTabs('#/settings')}
+  main.innerHTML = `<div class="head"><div><h1>Settings</h1><div class="sub">Programs, downloads, Claude Code and updates. Your settings stay on this PC.</div></div></div>${setTabs('#/settings')}
   <div class="panel"><div class="row sp"><h2>Programs</h2><button class="btn sm" id="recheck">Check again</button></div>
     <table class="t tools"><thead><tr><th>Program</th><th></th><th>Found at</th><th>Version</th><th>What for · how to get it</th></tr></thead><tbody>
     ${S.tools.map(t => `<tr><td><b>${esc(t.label)}</b><div class="need">${esc(t.need)}</div></td>
@@ -2254,8 +2263,8 @@ async function pageKnowledge(main) {
   const pend = K.pending.cards + K.pending.lessons;
   const draw = () => {
     const cards = K.cards.filter(c => !cat || (c.category || 'unset') === cat);
-    main.innerHTML = `<div class="head"><div><h1>Knowledge</h1><div class="sub">What everyone's MotionLab has learned: one card per analysed reference (yours and your friends'),
-      pacing per category, and lessons. Shared through GitHub - only text and numbers, never videos or frames.</div></div>
+    main.innerHTML = `<div class="head"><div><h1>Knowledge</h1><div class="sub">What you and your friends learned from references: a card per video, pacing per category, and lessons.
+      Only text and numbers are shared - never videos.</div></div>
       <div class="row">${K.summary ? `<button class="btn" data-open="${esc(K.summary.replace(/\\/g, '/'))}">Summary Claude reads</button>` : ''}<button class="btn" id="resum">Rebuild summary</button></div></div>
     <div class="grid g2">
       <div class="panel"><h2>Share what you learned</h2>
