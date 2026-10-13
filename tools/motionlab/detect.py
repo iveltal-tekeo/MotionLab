@@ -1342,7 +1342,6 @@ def near_misses(ctx: Ctx, events: list[dict], cut_frames: list[int]) -> list[dic
 
 def detect_unknown(ctx: Ctx, cut_frames: set, claimed: np.ndarray) -> list[Comp]:
     uc = ctx.cfg["unknown"]
-    N = ctx.N
     z, which = surprise(ctx)
     mask = (z >= uc["z_min"]) & ~claimed & ~ctx.trans
     for c in cut_frames:

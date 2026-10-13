@@ -244,7 +244,7 @@ class Luts:
 
     def install(self):
         self.rdir.mkdir(parents=True, exist_ok=True)
-        for k, p in self.made.items():
+        for p in self.made.values():
             shutil.copy2(p, self.rdir / p.name)
 
     def resolve_path(self, k: str) -> str:            # Color page (relative to the master LUT folder)
@@ -1550,7 +1550,7 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
     bg = sess.append(car, 0, N, 1, 0)
     bg.SetName("background 0.045")
     if ref:
-        a1 = sess.append(ref, 0, N, 1, 0, media_type=2)
+        sess.append(ref, 0, N, 1, 0, media_type=2)
         log(f"A1: reference audio f0-{N - 1}")
     for k, (a, b, what) in SECTIONS.items():
         if not sections or k in sections:

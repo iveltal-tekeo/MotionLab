@@ -547,7 +547,7 @@ async function pageHome(main) {
 // ---- updates: the sidebar's Update button, its dialog (the CHANGELOG sections newer than this copy), "What's new"
 function plural(n, w) { return `${n} ${w}${n === 1 ? '' : 's'}`; }
 // updates come from GitHub's "tested" branch: newer pushes wait until the automatic tests pass (updater.check)
-function testingText(u) { return u && u.testing ? ` · ${plural(u.testing, 'newer change')} waiting for GitHub's tests` : ''; }
+function testingText(u) { return u && u.testing ? ` · ${plural(u.testing, 'newer change')} on GitHub not released yet` : ''; }
 function knowledgeText(cards, lessons) {             // "2 reference cards and 1 lesson"
   return [cards ? plural(cards, 'reference card') : '', lessons ? plural(lessons, 'lesson') : ''].filter(Boolean).join(' and ');
 }
@@ -566,10 +566,10 @@ function sideUpdate(p) {                             // from the heartbeat: show
   $('b', c).textContent = p.update ? (kn ? 'New from friends' : 'Update available') : 'Check for updates';
   const hm = String(p.update_checked || '').slice(11, 16);
   $('small', c).textContent = p.update ? what : p.update_error ? "can't check - click for why"
-    : hm ? `up to date · ${hm}${p.update_testing ? ` · ${p.update_testing} in tests` : ''}` : '';
+    : hm ? `up to date · ${hm}${p.update_testing ? ` · ${p.update_testing} not released yet` : ''}` : '';
   c.title = p.update ? 'See what changed and install it'
     : (p.update_error ? "Can't check: " + p.update_error + '\n\n' : '') + 'Ask GitHub for a newer MotionLab (or new knowledge from your friends) and install it'
-      + (p.update_testing ? `\n${plural(p.update_testing, 'newer change')} still being tested on GitHub - offered when the tests pass` : '');
+      + (p.update_testing ? `\n${plural(p.update_testing, 'newer change')} on GitHub not released yet - offered once GitHub's tests pass (they run for a new version)` : '');
 }
 async function checkUpdates() {                      // the sidebar's Check for updates: ask GitHub now, then offer it
   const c = $('#side-check');
@@ -586,7 +586,7 @@ async function checkUpdates() {                      // the sidebar's Check for 
   if (u.error) toast("Can't check for updates: " + u.error, 'err');
   else if (u.restart_needed) banner('restart', `MotionLab ${esc(u.disk_version || '')} is installed - restart to use it. <button class="btn sm pri">Restart now</button>`, restartApp);
   else if (u.can_update) updateModal();
-  else toast(`MotionLab ${u.version} is up to date` + (u.testing ? ` - ${plural(u.testing, 'newer change')} still being tested on GitHub` : ''), 'ok');
+  else toast(`MotionLab ${u.version} is up to date` + (u.testing ? ` - ${plural(u.testing, 'newer change')} on GitHub not released yet` : ''), 'ok');
 }
 // update banner (home + settings): new version on GitHub, or the result of the last update
 function updateBox(u, res) {
@@ -1572,7 +1572,7 @@ const STAT = {clear: ['✓', 'clear'], vague: ['~', 'vague'], missing: ['✗', '
 const BRIEF_GROUPS = [['The plan', ['format & length', 'story & hook', 'feel / style', 'footage', 'order & structure']],
   ['The edit', ['pacing & cuts', 'transitions', 'effects']], ['Sound', ['voice & audio', 'music', 'sfx']],
   ['Look & text', ['colour', 'motion graphics', 'captions & text']], ['Finish', ['ending', 'deliverable', 'questions first']]];
-const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use it in a video', shot: 'Run it on the site', image: 'Run it on the site'};
+const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use current version in a video', shot: 'Run it on the site', image: 'Run it on the site'};
 const pstars = n => `<span class="stars" title="Claude's review of the prompt: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
 const ptitle = p => p.title || p.title_auto || p.text.trim().split(/\s+/).slice(0, 8).join(' ') + (p.text.trim().split(/\s+/).length > 8 ? '…' : '');
 // what a prompt needs, in two words: the tool / model, and what you bring (your clips, a photo, you on camera)
@@ -1605,8 +1605,6 @@ const pcategory = p => (p.tags || []).find(x => PURPOSES.includes(x)) || (p.tags
 const pexUrl = (R, f) => fileUrl(`${R.folder}/examples/${f}`);
 const pexMedia = (R, f, cls = '') => /\.(mp4|webm)$/i.test(f)
   ? `<video class="${cls}" src="${pexUrl(R, f)}#t=0.5" preload="metadata" muted playsinline></video>` : `<img class="${cls}" src="${pexUrl(R, f)}" loading="lazy" alt="">`;
-const pcounts = st => Object.entries(STAT).map(([k, [ic, l]]) => { const n = st.filter(x => x.status === k).length;
-  return n ? `<span class="cs ${k}" title="${n} ${l}">${ic} ${n}</span>` : ''; }).join('');
 function psource(p) {
   const s = p.source || {};
   return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
@@ -1636,9 +1634,9 @@ function pcheckBlock(p, R) {                           // Claude's check: a card
   const rv = p.review || {}, st = p.structure || [], w = p.wishes || {}, checked = st.some(x => x.status);
   const slots = (R.kinds.find(k => k.id === p.kind) || {slots: []}).slots;
   if (!st.length && rv.stars == null) return `<div class="pchk none"><div class="pchk-h"><h3>Claude's check</h3></div>
-    <p>Claude reads each part of this prompt and tells you what is <b class="ok">clear</b>, <b class="amber">vague</b> or <b class="bad">missing</b> - with a tip for each.</p>
+    <p>Claude reviews each part of this prompt - what is <b class="ok">clear</b>, <b class="amber">vague</b> or <b class="bad">missing</b>, with a tip for each - and writes an improved version. This one stays as it is.</p>
     <div class="pchips">${slots.map(s => `<span class="pgneed">${esc(slotLabel(s))}</span>`).join('')}</div>
-    <div class="row" style="margin-top:12px">${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it with Claude', 'prompt', p.id, 'pri')}</div></div>`;
+    <div class="row" style="margin-top:12px">${claudeBtn(`/write-prompt optimize ${p.id}`, 'Optimize with Claude', 'prompt', p.id, 'pri')}</div></div>`;
   const n = k => st.filter(x => x.status === k).length;
   const isWork = x => x.status === 'vague' || x.status === 'missing' || !x.status || (w[x.slot] || '').trim();
   const work = st.filter(isWork).length;
@@ -1698,7 +1696,7 @@ async function pagePrompts(main, arg) {               // every kind in one grid;
       return k && !n ? '' : `<button class="fchip${k === pf ? ' on' : ''}" data-pf="${k}">${l} <span class="dim">${n}</span></button>`; }).join('');
     $$('[data-pf]', main).forEach(b => b.onclick = () => { pf = b.dataset.pf; try { localStorage.setItem('ml.pfilter', pf); } catch (e) { /* not kept */ } draw(); });
     const todo = all.filter(p => pfilterOk(p, 'todo')).map(p => p.id);
-    $('#ptodo', main).innerHTML = pf === 'todo' && todo.length ? `<div class="small muted pftodo">Claude reads each one and marks what is clear, vague or missing, with a tip. ${claudeBtn(`/write-prompt analyse ${todo.join(' ')}`, todo.length === 1 ? 'Check it with Claude' : `Check these ${todo.length} with Claude`, 'prompt', 'analyse')}</div>` : '';
+    $('#ptodo', main).innerHTML = pf === 'todo' && todo.length ? `<div class="small muted pftodo">Claude reads each one and marks what is clear, vague or missing, with a tip. ${todo.length === 1 ? claudeBtn(`/write-prompt optimize ${todo[0]}`, 'Optimize with Claude', 'prompt', todo[0]) : claudeBtn(`/write-prompt analyse ${todo.join(' ')}`, `Check these ${todo.length} with Claude`, 'prompt', 'analyse')}</div>` : '';
     const items = all.filter(p => pfilterOk(p, pf) && (!q || [p.id, p.title, p.title_auto, p.text, p.model, (p.source || {}).creator, KSHORT[p.kind], ...(p.tags || [])].join(' ').toLowerCase().includes(q)))
       .sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
     list.innerHTML = items.map(row).join('') || `<div class="empty">${q ? 'No prompt matches the search.' : 'Nothing here.'}</div>`;
@@ -1735,10 +1733,9 @@ function promptModal(id, ctx) {
   const shot = p.kind === 'shot' || p.kind === 'image', ex = p.examples || [];
   const newest = S.versions[S.versions.length - 1];
   const long = p.text.split('\n').length > 9 || p.text.length > 700;
-  const analyse = `/write-prompt analyse ${p.id}`;
   const runBtn = (cls, attr = 'data-run') => `<button class="btn ${cls}" ${attr} title="${shot ? 'Copies it - paste it into the site' : 'Create a video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>`;
   const NEXT = {
-    check: `<span>Claude reads each part and marks what is clear, vague or missing.</span>${claudeBtn(analyse, 'Check it with Claude', 'prompt', p.id, 'pri')}`,
+    check: `<span>Claude reviews each part (clear, vague or missing) and writes an improved version - this one stays.</span>${claudeBtn(`/write-prompt optimize ${p.id}`, 'Optimize with Claude', 'prompt', p.id, 'pri')}`,
     want: `<span>Write what you want next to the parts below - or let Claude decide.</span><button class="btn" data-gosec="pm-check">Show the parts</button>
       <button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
     opt: `<span>Your wishes are saved. Claude writes a better version - this one stays.</span><button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
@@ -1754,7 +1751,7 @@ function promptModal(id, ctx) {
           ${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}${S.isOpt ? '<span class="tag done">optimized by Claude</span>' : ''}</div>
         <h2 class="pmh-title">${esc(ptitle(p))}</h2>
         <div class="pmh-needs"><span class="small muted">Needs</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
-      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy>Copy text</button></div></div>
+      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="Copies this prompt's text"><svg class="i"><use href="#i-clipboard"/></svg>Copy Prompt</button></div></div>
     <ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}</span></li>`).join('')}</ol>
     <div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>
     <div class="pmgrid"><div class="pmcol">
@@ -1766,11 +1763,11 @@ function promptModal(id, ctx) {
           <div class="rbtns">${[['good', 'Good'], ['ok', 'OK'], ['bad', 'Bad']].map(([r, l]) => `<button class="btn rb ${r}${res.rating === r ? ' on' : ''}" data-r="${r}">${l}</button>`).join('')}</div>
           <textarea class="pnote" rows="2" placeholder="A note on what it made (saved when you click away)">${esc(res.note || '')}</textarea>
           ${((R.used || {})[p.id] || []).map(pusedLine).join('')}</section>
-        <section class="pms"><div class="pms-h"><h3>What it makes</h3><span class="grow"></span><label class="btn sm ghost">+ Add<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
+        <section class="pms"><div class="pms-h"><h3>What it makes</h3><span class="grow"></span><label class="btn sm ghost" title="Add a screenshot or clip of what this prompt made - your own result or the creator's example. It is only kept on this PC (never shared); the first one becomes the card's picture.">+ Add picture / clip<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
           ${ex.length ? `<div class="pexlist">${ex.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
             ? `<video src="${pexUrl(R, f)}" controls muted loop playsinline preload="metadata"></video>` : `<img src="${pexUrl(R, f)}" alt="" loading="lazy" data-exview>`}
             <button class="btn sm ghost" data-exdel="${esc(f)}" title="Remove it (Recycle Bin)">✕</button></figure>`).join('')}</div>`
-            : '<div class="small muted">A picture or clip of the result - yours, or the creator\'s example. The first one shows on the card.</div>'}</section>
+            : ''}<div class="small muted"${ex.length ? ' style="margin-top:6px"' : ''}>Pictures or clips of what this prompt made - yours, or the creator's example - so you see at a glance what it gives and can compare versions. The first one shows on the card. Kept on this PC only.</div></section>
         ${pstyleBlock(p, R)}
         <section class="pms pdet"><h3>Details</h3><div class="kv small">
           <b>From</b><span>${psource(p)}</span>

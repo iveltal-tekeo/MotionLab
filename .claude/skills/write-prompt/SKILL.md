@@ -10,7 +10,8 @@ argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|imag
 - `analyse <id> <id> ...` (old name: `split`) -> Claude's check of each prompt, part by part (section 2): what it
   says per part, clear / vague / missing, a tip, the stars. The app shows it as a checklist where the user writes
   what they want per part.
-- `optimize <id>` -> a better version from your check + the user's wishes (section 2b); the original stays.
+- `optimize <id>` -> a better version from your check + the user's wishes (section 2b); the original stays. Not
+  checked yet (the app's first *Optimize with Claude*): check it first (section 2, saved), then optimize.
 - `import <file> ... [- kind <k>] [- source: ...]` -> the app's *Let Claude sort it*: files the user attached or
   pasted, in `knowledge\local\prompts\files\` (.txt / .md / .docx / .pdf). Read each whole and save every usable
   prompt in it ("Collected files" in section 1; `source.file` = the file's name; the source the user picked, else
@@ -125,7 +126,8 @@ on the card's *Style like*, or `- style:`) or `analysed references it may mean (
 - Copy the style, never the content: no clips, music, words or graphics of the creator in the prompt.
 
 ## 2b. Optimize (`optimize <id>`)
-Read the prompt (`prompts(id=...)`): its check (each part's status / tip), its `review`, the user's wishes
+No check on it yet (no part has a status): do the check of section 2 first and save it (`annotate`), so the card shows
+it, then go on here. Read the prompt (`prompts(id=...)`): its check (each part's status / tip), its `review`, the user's wishes
 ("what the user wants") and its style references (section 2a - link a clear match first). Write ONE better
 version: the user's wishes win over your tips; every vague / missing part gets fixed (wish, else your tip; when neither and it matters, ask once - or pick a sensible default
 and say so); keep their language, voice and every good part word for word. A brief is written in clear sections, one

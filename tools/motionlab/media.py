@@ -184,7 +184,8 @@ def extract_and_render(video: Path, info: dict, events: list[dict], plans: dict,
     log(f"extracting {len(need)} sheet frames and {len(events)} previews at {w}x{h}")
     q = ex["jpeg_quality"]
     for i, frame in iter_frames(video, w, h, v.get("hdr", False)):
-        rgb = np.ascontiguousarray(frame[..., ::-1])
+        # the RGB copy only for sheet frames and preview frames - most decoded frames are neither
+        rgb = np.ascontiguousarray(frame[..., ::-1]) if i in need or i in starts or open_pipes else None
         if i in need:
             Image.fromarray(rgb).save(frames_dir / f"f{i:06d}.jpg", quality=q)
         if i in befores or i in looks:

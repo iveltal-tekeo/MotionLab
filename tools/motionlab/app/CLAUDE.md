@@ -35,67 +35,59 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
   overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
   `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
-  Prompts: what each is for (its tags; *For: Edit* = POST
-  `/api/prompts/tags`), *Use it, change…* = `/write-prompt <kind> like <id> - change: ...`, Delete.
-  0.3.4 (the user: "make it more user friendly"): kind `brief` (Brief for Claude: how to make / edit a whole video)
-  first; the card = kind badge (click = `kindModal`, POST `/api/prompts/kind`) + title, the text folded (Show all),
-  **Claude's check** folded with counts (✓ clear / ~ vague / ✗ missing): a row per part in plain words
-  (`SLOT_LABEL`) - what the prompt says, Claude's tip, *what you want* (POST `/api/prompts/wishes` on change) -
-  then *Optimize with Claude* = `/write-prompt optimize <id>` (a new prompt, `made_from`; the card shows
-  "Optimized: ..."), *Check it again* = `/write-prompt analyse <id>`; *Run it* (brief / script / hook = Create video
-  with it picked; shot / image = copy for the site). *Add prompts* = 1) I have a prompt (the paste / file form;
-  Claude checks it after Save) 2) Generate a new prompt from zero (kind, what you want, for, model ->
-  `/write-prompt <kind> - want: ...`). API_LEVEL 10.
-  After 0.3.4 (the user: "the optimized prompt asks for a link to a Clavero vlog - what if I analysed one?"): brief /
-  script / hook cards have **Style like** (`styleBlock`): linked references (`style_refs`, POST `/api/prompts/style`)
-  with their measured line (`knowledge.style()`: format, cuts/min, typical shot, first 3 s, effects/min per family,
-  BPM, words; cached per file change), "Found in your references: ... *Use its style*" (`prompts.suggest_refs`: who
-  made it named in the prompt, else a distinctive title word; GET `/api/prompts` carries `styles` + `suggest`), *+ pick
-  from your references* (`styleModal`); Generate from zero has *In the style of* (`- style: <name>`); Create video's
-  prompt list shows it. API_LEVEL 11.
-  Then (the user, still 0.3.4: "too crowded - remove the filters; a click on a prompt = a pop-up; Add prompts should
-  go forward, with back"): no kind / purpose chips (search only), one `.prow` per prompt, newest first; a click =
-  `promptModal` (`.mbox.wide`: text, Style like `pstyleBlock`, the check `pcheckBlock` - a brief's rows grouped by
-  `BRIEF_GROUPS`: the plan / the edit / sound / look & text / finish - wishes, Optimize, Run it, rating);
-  `#/prompts/<id>` opens one. `modalBack(fn)` after `modal()` = a *← Back* button, and Esc / ✕ / a click outside go
-  back too (`dismissModal`; a plain `closeModal()` does not): the dialogs opened from the pop-up, and Add prompts'
-  second screen (1 / 2 = its own screen). Brief parts + effects, voice & audio, ending (`prompts.SLOTS`).
-  Then ("3 per row, just the title, the rating, if I need Higgsfield / clips, the category - the tags are noise"):
-  `.pgrid` of `.pgc` cards = kind badge + one category (`pcategory`: the first purpose tag), the title (`title` or
-  `title_auto` = `prompts.auto_title`, also saved on paste), what it needs (`pneeds`: tool / model + your clips /
-  photo / you on camera / text only), the rating (the user's, else Claude's ★); *What it makes* in the pop-up =
-  pictures / clips of the result (POST `/api/prompts/example` add (base64) / remove (Recycle Bin);
-  `knowledge\local\prompts\examples\`, record `examples`), the first one = the card's picture. API_LEVEL 12.
-  Home (same day): no Next steps, no "Updated to" box (kept only when an update set aside local changes), Setup
-  warnings only when a program is missing, Status below the roadmap.
-  Then ("let's start becoming a real app"): Home has no subtitle and a **Where to start** panel = the six `FLOW`
-  steps as buttons (`flowHow` + `wireFlowHow`: download / measure open their dialogs, the rest go to References /
-  Knowledge) - References no longer shows them; empty References / Videos / Prompts = `emptyHero` (icon, title,
-  one line, the page's add button in the middle; the header buttons hide); `recreateModal` is gone - *Recreate with
-  my footage* = `createVideoModal({from: 'reference', pick})`; prompt filters `PFILTERS` (All / Needs another tool
-  = `ptool(p)`: a known paid / separate tool in the model or text, every shot / image / No other tool / Not checked
-  yet + *Check these with Claude*), `ptoolChip` (amber). User-facing words: no paths, versions, SHA-256, effort
-  levels; "lab pass" = Measure. Tested with a second test server on an empty copy of the app code (no user data).
-  Then: the prompt pop-up redesigned ("too ambiguous, hard on the eye"): `.pm2` = header in the kind's colour
-  (`--kc`: title, needs, Run it, Copy text), `PSTEPS` + `pstate()` (check / want / opt / run / rate, the current one
-  lit, a Next box with its button), `.pmgrid` two columns: the prompt (`.ptext2`, sans) + `pcheckBlock` (a `.cpart`
-  card per part coloured by status, tip, wish input; `.seg` Needs work / All parts hides clear parts) | rating
-  (`.rb` big buttons, note = textarea saved on change), What it makes, `pstyleBlock`, Details (+ Use it, change… /
-  Delete). The sidebar says **Claude skills**. Home starts with `heroAnim()`: a CSS-only motion graphic (24 s loop
-  of 4 scenes, transform + opacity only - measured 1 layout and 10 ms main-thread work in 6 s; reduced motion = a
-  still scene) with *Paste a link* (`downloadModal`).
+  **Prompts** - the current state (the user's wishes, 0.3.4: "more user friendly", "too crowded", "3 per row, just
+  the title, the rating, if I need Higgsfield / clips, the category - the tags are noise", "too ambiguous, hard on
+  the eye"; 2026-10-13: "tell the user it reviews and improves"):
+  - List: search + `PFILTERS` (All / Needs another tool = `ptool(p)`: a known paid / separate tool in the model or
+    text, every shot / image / No other tool / Not checked yet + *Check these with Claude*, one prompt = *Optimize
+    with Claude*), newest first; `.pgrid` of `.pgc` cards, 3 per row = kind badge + one category (`pcategory`: the
+    first purpose tag), the title (`title` or `title_auto` = `prompts.auto_title`, also saved on paste), what it
+    needs (`pneeds`: tool / model + your clips / photo / you on camera / text only; `ptoolChip` amber), the rating
+    (the user's, else Claude's ★), the first example as its picture. Kind `brief` (Brief for Claude: how to make /
+    edit a whole video) comes first; brief parts in `prompts.SLOTS`.
+  - A click (or `#/prompts/<id>`) = `promptModal`: `.pm2` header in the kind's colour (`--kc`: kind badge =
+    `kindModal` / POST `/api/prompts/kind`, title, needs, *Run it* (`RUN`: brief / script = Create video with it
+    picked, a hook = *Use current version in a video*; shot / image = copy for the site), *Copy Prompt* (clipboard
+    icon)); `PSTEPS` + `pstate()` (check / want / opt / run / rate, the current one lit, a Next box with its
+    button); `.pmgrid` two columns: the prompt (`.ptext2`) + **Claude's check** `pcheckBlock` (unchecked: *Optimize
+    with Claude* = `/write-prompt optimize <id>`, which checks it first; checked: a `.cpart` card per part coloured
+    by status - ✓ clear / ~ vague / ✗ missing, plain words `SLOT_LABEL`, a brief's grouped by `BRIEF_GROUPS`: the
+    plan / the edit / sound / look & text / finish - with the tip and *what you want* (POST `/api/prompts/wishes` on
+    change), `.seg` Needs work / All parts; *Optimize with Claude* = a new prompt with `made_from`, "optimized by
+    Claude"; *Check it again* = `/write-prompt analyse <id>`) | rating (`.rb` Good / OK / Bad, a note saved on
+    change, "Used in"), **What it makes** (pictures / clips of the result, explained in the section: *+ Add picture /
+    clip* = POST `/api/prompts/example` add (base64) / remove (Recycle Bin); `knowledge\local\prompts\examples\`,
+    record `examples`; the first = the card's picture), **Style like** `pstyleBlock` (brief / script / hook: linked
+    references `style_refs`, POST `/api/prompts/style`, each with its measured line `knowledge.style()` - format,
+    cuts/min, typical shot, first 3 s, effects/min per family, BPM, words, cached per file change; "Found in your
+    references: ... *Use its style*" = `prompts.suggest_refs`: who made it named in the prompt, else a distinctive
+    title word; GET `/api/prompts` carries `styles` + `suggest`; *+ pick from your references* = `styleModal`),
+    Details (source, model, *For: Edit* = POST `/api/prompts/tags`, better versions, *Use it, change…* =
+    `/write-prompt <kind> like <id> - change: ...`, Delete). `modalBack(fn)` after `modal()` = a *← Back* button;
+    Esc / ✕ / a click outside go back too (`dismissModal`; a plain `closeModal()` does not) - the dialogs opened
+    from the pop-up and Add prompts' second screen use it.
+  - *Add prompts*, two screens: 1) I have a prompt (paste / file form; Claude checks it after Save) 2) Generate a new
+    prompt from zero (kind, what you want, for, model, *In the style of* -> `/write-prompt <kind> - want: ... -
+    style: <name>`). Create video's prompt list shows each prompt's style.
+  **Home**: `heroAnim()` first (a CSS-only motion graphic: 24 s loop of 4 scenes, transform + opacity only - measured
+  1 layout and 10 ms main-thread work in 6 s; reduced motion = a still scene) with *Paste a link* (`downloadModal`);
+  no subtitle; **Where to start** = the six `FLOW` steps as buttons (`flowHow` + `wireFlowHow`: download / measure
+  open their dialogs, the rest go to References / Knowledge); setup warnings only when a program is missing; no "Updated
+  to" box (only when an update set aside local changes); Status below the roadmap. Empty References / Videos / Prompts
+  = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). *Recreate with
+  my footage* = `createVideoModal({from: 'reference', pick})`. User-facing words: no paths, versions, SHA-256, effort
+  levels; "lab pass" = Measure. UI changes are tested with a second test server on an empty copy of the app code.
 - Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
   is missing, Where to start = the 6 steps, roadmap, then status), **References** (#/refs: downloads not analysed
   yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
-  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts, 0.4; one list of every kind since 0.3.3, a row per prompt, a click opens it - see above; cards with source, model,
-  structure slots, Good / OK / Bad + a note, Copy, *Write one like this* and *Add prompts* = any text or attached
-  files since 0.3.3 (`addPromptsModal`: the kind guessed - POST `/api/prompts/guess`, editable; .txt / .md / .docx
-  read by POST `/api/prompts/file` (base64, up to 30 MB, kept in `knowledge\local\prompts\files\`), a PDF goes to
-  Claude; *Let Claude sort it* = `/write-prompt import <files>`; after Save Claude reviews + splits unless unticked);
-  `motionlab.prompts`, GET `/api/prompts`, POST `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
+  Resolve (.mov)* = a numbered copy, revealed; *Swap in DaVinci Resolve* = `overlay.py refresh`), timing check, Resolve check-up / what changed by hand / library picks, Delete), **Prompts** (#/prompts, see above; *Add prompts* = `addPromptsModal`: the kind guessed - POST `/api/prompts/guess`,
+  editable; .txt / .md / .docx read by POST `/api/prompts/file` (base64, up to 30 MB, kept in
+  `knowledge\local\prompts\files\`), a PDF goes to Claude; *Let Claude sort it* = `/write-prompt import <files>`;
+  after Save Claude reviews + splits unless unticked; `motionlab.prompts`, GET `/api/prompts`, POST
+  `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates).
 - The analysis page's **Content** tab (0.3.5, `contentTab`, `data.content_info`): how the video performs
@@ -139,14 +131,14 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   (`updater.whats_new`: `## x.y.z - date - title` headings). Since 0.3.1 updates come from `origin/tested` when the
   repo has it (`updater._upstream`; GitHub's tests move it to each passing push to main, docs\organization.md "Tests
   on GitHub"): `behind` / the new version / What's new are read from there, `ahead` and Share stay on
-  `origin/<branch>`, `testing` = pushes on main not tested yet (the page says "waiting for GitHub's tests"). Tested
+  `origin/<branch>`, `testing` = pushes on main not tested yet (the page says "not released yet": since 0.3.5 the tests run only for x.y.0, by hand or with `[tests]`). Tested
   2026-10-09 against a fake GitHub with the workflow's own bash steps. `apply` = `git pull --rebase --autostash`, `pip install
   -r requirements.txt` if it changed, then the server restarts itself when code changed (`restart_soon`: a new
   `app.py --wait-port`, the window shows "Updating..." and reloads; knowledge-only updates need no restart).
   Settings `update_mode` (0.3.0; 0.2.x had update_check / update_auto, migrated to "ask"): "ask" (default) = the
   sidebar's bright **Update available** button (calmer "New from friends" for knowledge) -> a dialog with the new
   CHANGELOG sections -> Update now; bottom left, always there (any mode): **Check for updates** (`#side-check`,
-  `checkUpdates`) = POST `/api/update/check` now -> the same dialog, or "up to date · 14:05 · N in tests" / "can't
+  `checkUpdates`) = POST `/api/update/check` now -> the same dialog, or "up to date · 14:05 · N not released yet" / "can't
   check" (reason in its tooltip; ping carries `update_checked / _testing / _error`); amber "Update available" once found; "auto" = installs at start-up (3 s in, only within 180 s and with no job);
   "off". Checks at start-up and hourly. After an update `.app\update_last.json` (`from_version`, `whats_new`,
   `seen`) makes the window show "What's new" once (POST `/api/update/seen`; records written by 0.2.x are completed

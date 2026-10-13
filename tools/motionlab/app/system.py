@@ -7,7 +7,6 @@ Nothing here installs anything: missing programs are reported with how to get th
 from __future__ import annotations
 
 import importlib.util
-import json
 import os
 import re
 import shutil

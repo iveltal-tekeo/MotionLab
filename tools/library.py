@@ -1123,7 +1123,7 @@ def test(only: list | None = None) -> int:
     p = pm.CreateProject("motionlab_scratch")
     if not p:
         raise SystemExit("Resolve refused to create the scratch project 'motionlab_scratch'")
-    results, slots = {}, []
+    slots = []
     try:
         for k, v in (("timelineResolutionWidth", "1520"), ("timelineResolutionHeight", "1080"),
                      ("timelineFrameRate", "25")):

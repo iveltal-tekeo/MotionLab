@@ -16,6 +16,10 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   commit message. Updates still come only from tested pushes; friends' shared cards and lessons are released
   within a minute as before. *Settings > Sharing & updates* now says "not released yet" for newer, untested
   changes on GitHub.
+- **Prompts, clearer buttons**: a prompt Claude has not looked at yet shows **Optimize with Claude** - Claude
+  reviews each part and writes an improved version in one go (yours stays). A hook's run button says *Use current
+  version in a video*, *Copy text* is now **Copy Prompt** with a clipboard icon, and *What it makes* explains its
+  *+ Add picture / clip* button: pictures or clips of what the prompt made, kept on your PC, the first one on the card.
 - **Claude Code on the web**: a cloud session sets itself up for MotionLab (Python packages, ffmpeg 9) so Claude
   can run the self-test and the app's checks there - see `docs/cloud.md`.
 - **Home moves**: a small, slow animation at the top shows how MotionLab is used - *Like a video? / Use it as a

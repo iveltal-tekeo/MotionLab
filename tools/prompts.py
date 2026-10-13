@@ -23,7 +23,6 @@ never mixed: `review` = Claude's reading of the text (will a model do what it as
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
