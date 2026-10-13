@@ -29,9 +29,10 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(HERE))
 PY = sys.executable
 FAILED: list[str] = []
-PAGES = ["#/", "#/refs", "#/projects", "#/prompts", "#/library", "#/knowledge", "#/jobs", "#/storage", "#/settings"]
+PAGES = ["#/", "#/refs", "#/projects", "#/prompts", "#/library", "#/knowledge", "#/jobs", "#/skills", "#/storage",
+         "#/settings"]
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
-          "/api/storage", "/api/jobs", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
+          "/api/storage", "/api/jobs", "/api/skills", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
           "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts"]
 
 

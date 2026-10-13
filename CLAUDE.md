@@ -114,7 +114,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 video from a reference or a prompt, renders, graphics + their settings, Resolve check-up, library picks, "How did it
 turn out?" per part -> `build\outcome.json`) | Media: References (download, analyse, the review page with verdicts
 and possible misses, Delete), Prompts (purposes, Use it change…, Delete) | Additional: Library, Knowledge (Share) |
-Tools: Jobs, Settings (+ Storage tab). The app runs the lab's own tools as jobs; Claude's parts run in Claude
+Tools: Jobs, Skills (the project's Claude Code commands, what each does), Settings (+ Storage tab). The app runs the lab's own tools as jobs; Claude's parts run in Claude
 Code windows the app opens with a fixed first message and an effort level per task (Settings > Claude Code).
 
 ## Conventions

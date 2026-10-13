@@ -599,6 +599,17 @@ button.kbadge:hover { filter: brightness(1.25); }
 button.fstep { text-align: left; color: inherit; font: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
 .flow.how button.fstep:hover { border-color: var(--acc); background: var(--acc-soft); }
 .pm { display: flex; flex-direction: column; gap: 10px; }
+/* Tools > Skills */
+.skgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .skgrid { grid-template-columns: minmax(0, 1fr); } }
+.skill { display: flex; flex-direction: column; gap: 8px; }
+.skill.dev { opacity: .8; }
+.skname { font-size: 16px; color: var(--acc); }
+.skbrief { color: #d4d4da; }
+.skuses { display: flex; flex-direction: column; gap: 4px; }
+.skuse { display: flex; gap: 8px; align-items: center; justify-content: space-between; background: #101013; border: 1px solid var(--line); border-radius: 6px; padding: 4px 4px 4px 10px; }
+.skuse code { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skfoot { margin-top: auto; gap: 10px; }
 .pm .phead { gap: 10px; padding-right: 28px; }
 .pm .ptitle { margin: 0; font-size: 18px; }
 .pm .ptext { max-height: 300px; }

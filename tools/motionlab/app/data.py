@@ -709,6 +709,53 @@ def library() -> dict:
     return {"items": items, "picks": picks, "graphics": OS.library(), "videos": videos}
 
 
+# ================================================================================================= skills (Tools > Skills)
+SKILLS = LAB / ".claude" / "skills"
+# what each skill does in the app's words (the SKILL.md descriptions are written for Claude), how to type it, where the
+# app runs it for you; a skill missing here shows the first sentence of its description
+SKILL_INFO = {
+    "analyze-reference": {"brief": "Claude checks a video you analysed: it looks at every effect and names it - and "
+                                   "learns from your verdicts when you send feedback.",
+                          "uses": ["/analyze-reference <video name or file>"], "task": "review",
+                          "where": "References - Send to Claude, Send feedback to Claude"},
+    "recreate-video": {"brief": "Claude makes a video with your clips - the edit of a reference, or from one of your "
+                                "prompts - first as a preview, then in DaVinci Resolve.",
+                       "uses": ["/recreate-video <reference> <your video>", "/recreate-video prompt:<prompt id> <your video>",
+                                "/recreate-video improve <your video>"], "task": "recreate",
+                       "where": "Videos - Create video, How did it turn out?"},
+    "write-prompt": {"brief": "Claude checks, improves or writes prompts: briefs, AI video and image prompts, hooks "
+                              "and scripts.",
+                     "uses": ["/write-prompt analyse <prompt id>", "/write-prompt optimize <prompt id>",
+                              "/write-prompt brief - want: <what you want to make>"], "task": "prompt",
+                     "where": "Prompts - Check it, Optimize, Add prompts"},
+    "whats-next": {"brief": "Where MotionLab stands and what to build next.", "uses": ["/whats-next"], "task": "plan",
+                   "dev": True},
+}
+SKILL_ORDER = ["analyze-reference", "recreate-video", "write-prompt", "whats-next"]
+
+
+def skills() -> list[dict]:
+    """The project's Claude Code skills (.claude\\skills\\<name>\\SKILL.md): name, what it does, how to type it."""
+    out = []
+    for f in sorted(SKILLS.glob("*/SKILL.md")):
+        meta: dict = {}
+        lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+        if lines and lines[0].strip() == "---":
+            for ln in lines[1:]:
+                if ln.strip() == "---":
+                    break
+                k, _, v = ln.partition(":")
+                meta[k.strip()] = v.strip().strip('"')
+        name = meta.get("name") or f.parent.name
+        info = SKILL_INFO.get(name, {})
+        desc = re.sub(r"^MotionLab\s*-\s*", "", meta.get("description", ""))
+        out.append({"name": name, "brief": info.get("brief") or re.split(r"(?<=[.:])\s", desc, maxsplit=1)[0][:220],
+                    "uses": info.get("uses") or [f"/{name} {meta.get('argument-hint', '')}".strip()],
+                    "task": info.get("task", "free"), "where": info.get("where", ""), "dev": bool(info.get("dev"))})
+    return sorted(out, key=lambda s: (s["dev"], SKILL_ORDER.index(s["name"]) if s["name"] in SKILL_ORDER else 99,
+                                      s["name"]))
+
+
 def text_file(relpath: str, limit: int = 400_000) -> str:
     p = (LAB / relpath).resolve()
     if LAB not in p.parents or p.suffix.lower() not in (".md", ".txt", ".json", ".comp", ".py", ".csv", ".setting"):

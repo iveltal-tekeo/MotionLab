@@ -170,7 +170,7 @@ const PAGES = [
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'projects'], [/^#\/library$/, pageLibrary, 'library'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/knowledge$/, pageKnowledge, 'knowledge'],
-  [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'prompts']];
+  [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'prompts'], [/^#\/skills$/, pageSkills, 'skills']];
 async function route() {
   CLEAN.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); CLEAN = []; KEYS = null; hideTip();
   const h = location.hash || '#/';
@@ -190,7 +190,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 12;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 13;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -493,8 +493,7 @@ async function pageHome(main) {
   const s = await api('/api/status');
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   main.innerHTML = `
-  <div class="head"><div><h1>MotionLab</h1></div>
-    <div class="row"><button class="btn pri" id="an">＋ Analyse a video</button><button class="btn" data-open=".">Open folder</button></div></div>
+  <div class="head"><div><h1>MotionLab</h1></div></div>
   ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <div class="grid g5">
     <a class="stat card" href="#/refs"><div class="n">${s.references}</div><div class="l">references · ${s.events} effects found</div></a>
@@ -508,7 +507,7 @@ async function pageHome(main) {
     <a href="#/settings">Settings → Programs</a></div>` : ''}
   <div class="panel" style="margin-top:14px"><h2>Where to start</h2>
     <div class="small muted" style="margin-bottom:10px">Learn from a video you like, in six steps - click a step to do it.</div>${flowHow()}</div>
-  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="row"><span class="hint">click to enlarge</span>${claudeBtn('/whats-next', 'What next? Ask Claude', 'plan', '', 'sm cl')}</span></div>
+  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="hint">click to enlarge</span></div>
     <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}
   <div class="panel" style="margin-top:14px"><h2>Status</h2><div class="kv">
       <b>Resolve</b><span>${esc(s.resolve.state)}${s.resolve.checked ? ` <span class="dim small">(checked ${esc(s.resolve.checked)})</span>` : ''}</span>
@@ -518,7 +517,6 @@ async function pageHome(main) {
       <h3>Good to know</h3><div class="small muted">Buttons with <svg class="i"><use href="#i-claude"/></svg> open Claude Code in a new window with the request
       already written. Use one window per task and close it when it is done.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
-  $('#an').onclick = () => analyseModal();
   wireFlowHow(main);
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
@@ -1997,6 +1995,20 @@ function havePromptForm(box, R) {
       $('#psave', el).remove(); $('#psort', el).remove();
     } catch (e) { say(esc(e.message), 'bad'); }
   };
+}
+
+// ============================================================================================ skills
+// Tools > Skills: the project's Claude Code commands - what each does, how to type it, where the app runs it for you
+async function pageSkills(main) {
+  const S = await api('/api/skills');
+  main.innerHTML = `<div class="head"><div><h1>Skills</h1><div class="sub">The commands you can type in Claude Code for MotionLab.
+      The app's <svg class="i"><use href="#i-claude"/></svg> buttons run them for you.</div></div></div>
+    <div class="skgrid">${S.map(k => `<div class="panel skill${k.dev ? ' dev' : ''}"><div class="row sp"><b class="mono skname">/${esc(k.name)}</b>${k.dev ? '<span class="tag">for developers</span>' : ''}</div>
+      <div class="skbrief">${esc(k.brief)}</div>
+      <div class="skuses">${k.uses.map(u => `<div class="skuse"><code>${esc(u)}</code><button class="btn sm ghost" data-copy="${esc(u)}" title="Copy it, then paste it into Claude Code">Copy</button></div>`).join('')}</div>
+      <div class="row sp skfoot">${k.where ? `<span class="small muted">In the app: ${esc(k.where)}</span>` : '<span></span>'}${claudeBtn('/' + k.name, 'Open in Claude Code', k.task, k.name)}</div></div>`).join('')
+      || '<div class="empty">No skills in this copy of MotionLab.</div>'}</div>`;
+  $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
 }
 
 // ============================================================================================ jobs

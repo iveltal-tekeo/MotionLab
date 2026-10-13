@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 12                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 13                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -359,6 +359,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(system.downloads())
         if path == "/api/update":
             return self._json({**(S.update or {}), "version": VERSION, "phase": S.phase, "result": S.update_result})
+        if path == "/api/skills":                         # Tools > Skills: the project's Claude Code commands
+            return self._json(data.skills())
         if path == "/api/knowledge":
             return self._json(KN.overview())
         if path == "/api/knowledge/card":

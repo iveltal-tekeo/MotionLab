@@ -25,7 +25,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
   logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
 - Sidebar (the user's order, 0.3.3): Home, Videos | Media: References, Prompts | Additional: Library, Knowledge |
-  Tools: Jobs, Settings (Storage = Settings' second tab, `setTabs`; #/storage still works). Each page sets
+  Tools: Jobs, Skills (#/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type
+  it = `SKILL_INFO`; /whats-next is marked "for developers" - the Roadmap's "What next?" button moved there),
+  Settings (Storage = Settings' second tab, `setTabs`; #/storage still works). Each page sets
   `body[data-page]` -> its accent colour (`--acc`, app.css "0.3.3: a livelier look": CSS only, no images / scripts,
   motion off with prefers-reduced-motion). Videos: **Create video** (`createVideoModal`: Use a reference | Use a
   prompt -> your clips (a project, or *+ a new video* = POST `/api/projects/new`, an empty folder) -> POST
@@ -151,7 +153,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

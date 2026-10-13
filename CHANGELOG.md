@@ -6,6 +6,11 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Skills** (sidebar, Tools): the commands you can type in Claude Code for MotionLab - `/analyze-reference`,
+  `/recreate-video`, `/write-prompt`, `/whats-next` - each with what it does in a line, how to type it (Copy), where
+  the app runs it for you, and *Open in Claude Code*. Home lost its top-right buttons (*Analyse a video* lives on
+  References and in Where to start) and the roadmap's *What next? Ask Claude* (a developer's command - it is on the
+  Skills page now).
 - **More like a real app**: Home starts with **Where to start** - the six steps from a video you like to what your
   friends learn, each one a button (Download, Measure, Claude checks, your verdicts, feedback, share); they moved
   there from References. An empty page shows what goes there and one button in the middle (*Download from a link* /
