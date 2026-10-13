@@ -1,8 +1,9 @@
 """Content analysis, step 1 (0.4): what a reference SAYS - its transcript, every line with frame + timecode.
 
 Source: the platform's own subtitles through yt-dlp - uploaded ones first, else the auto-generated captions in the
-video's own language (YouTube's carry word timings). No model, nothing heavy, a few seconds per video. Local
-Whisper for videos without subtitles comes later, only after it is measured (docs\\plans.md 0.4).
+video's own language (YouTube's carry word timings): no model, a few seconds per video. Without subtitles (or without
+a known link) speech to text hears the analysis' audio when it is installed (Settings > Programs > Speech to text;
+`auto()` = what analyze.py --focus content / both runs after the lab pass).
 
     .venv\\Scripts\\python tools\\content.py transcript <name | video> [--url <link>] [--lang en] [--force]
     .venv\\Scripts\\python tools\\content.py show <name> [<start frame> <end frame>]
@@ -11,7 +12,7 @@ Whisper for videos without subtitles comes later, only after it is measured (doc
           analysis\\<name>\\content\\stats.json; views / followers = the outperformer score; every fetch is kept
           in its history. The transcript fetch saves them too (the same request).
 
-<name> = the analysis folder (References); a video that has no analysis yet works too (its frame rate is probed).
+<name> = the analysis folder (Analyze); a video that has no analysis yet works too (its frame rate is probed).
 The link comes from refs\\downloads.json (the app's downloads), else from a YouTube id in the file name
 ("... [VLDJ_-wrwj8].mp4"), else --url. Writes only analysis\\<name>\\content\\: subs\\ (the caption file as
 downloaded), transcript.json (lines + word timings), transcript.txt (one line per caption with
@@ -193,7 +194,7 @@ def transcript(args) -> int:
     if not track:
         langs = sorted(set(info.get("subtitles") or {}) | {k for k in (info.get("automatic_captions") or {}) if k.endswith("-orig")})
         raise SystemExit("this video has no subtitles or captions" + (f" in '{args.lang}' (it has: {', '.join(langs)})"
-                         if args.lang and langs else "") + " - a local transcription (Whisper) comes later in 0.4")
+                         if args.lang and langs else "") + " - speech to text can hear it instead (Settings > Programs)")
     kind, key = track
     dur = info.get("duration")
     vid_dur = ref["frames"] / ref["fps"]
@@ -232,6 +233,85 @@ def transcript(args) -> int:
     print(f"{len(rows)} lines, {data['words']} words ({'uploaded subtitles' if kind == 'manual' else 'auto captions'} "
           f"'{key}'{', word timings' if has_words else ''}) -> {tj}")
     return show_lines(ref, data, None, None, limit=8)
+
+
+def speech_transcript(ref: dict, log=print) -> dict | None:
+    """The transcript by speech to text (faster-whisper, when it is installed with its model - Settings > Programs >
+    Speech to text): for a video whose platform has no subtitles, or that has no known link. The analysis' own
+    audio.wav is heard (the source is never touched); the times follow the video (the audio's start offset added)."""
+    from motionlab import speech as SP
+    if not SP.available() or not SP.model_ready("small"):
+        return None
+    d = ref["dir"]
+    ev = _load(d / "events.json") or {}
+    off = float(((ev.get("audio") or {}).get("offset_s")) or 0.0)
+    media = d / "audio.wav" if (d / "audio.wav").exists() else ref["video"]
+    if not media or not Path(media).exists():
+        return None
+    log(f"{ref['name']}: no subtitles - listening (speech to text, small) ...")
+    t0 = time.time()
+    sp = SP.transcribe(media, "small", log=log)
+    fps, n, drop = ref["fps"], ref["frames"], ref["drop"]
+
+    def fr(t):
+        return max(0, min(n - 1, int(round((t + off) * fps))))
+    rows = []
+    for l in sp["lines"]:
+        a, b = fr(l["t0"]), fr(max(l["t1"], l["t0"]))
+        rows.append({"start": a, "end": max(a, b), "start_tc": frame_to_tc(a, fps, drop),
+                     "end_tc": frame_to_tc(max(a, b), fps, drop), "t0": round(l["t0"] + off, 3),
+                     "t1": round(l["t1"] + off, 3), "text": l["text"],
+                     "words": [{"f": fr(w["t"]), "t": round(w["t"] + off, 3), "w": w["w"]} for w in l["words"]]})
+    data = {"schema": SCHEMA, "name": ref["name"], "source": "speech", "kind": sp.get("kind"), "lang": sp.get("lang"),
+            "word_timings": True, "fetched": time.strftime("%Y-%m-%d %H:%M"), "fps": fps, "frames": n,
+            "drop_frame": drop, "seconds": round(time.time() - t0, 1),
+            "words": sum(len(r["text"].split()) for r in rows), "lines": rows}
+    out = d / "content"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "transcript.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    txt = [f"# {ref['name']} - transcript (speech to text, {data['kind']}, {data['lang']}), {fps:g} fps, frame + timecode "
+           "per line", ""] + [f"{label(r['start'], fps, drop)}  {r['text']}" for r in rows]
+    (out / "transcript.txt").write_text("\n".join(txt) + "\n", encoding="utf-8")
+    log(f"{len(rows)} lines, {data['words']} words by speech to text in {data['seconds']} s -> {out / 'transcript.json'}")
+    return data
+
+
+def auto(name: str, log=print) -> list[str]:
+    """After a content-creation analysis (analyze.py --focus content / both): the transcript - the platform's
+    subtitles when the video's link is known, else speech to text when it is installed - and the video's numbers
+    (views, followers). Never raises and never fails the analysis: what could not be done comes back as notes."""
+    notes = []
+    try:
+        ref = resolve(name)
+    except SystemExit as e:
+        return [str(e)]
+    out = ref["dir"] / "content"
+    try:
+        url = find_url(ref, None)
+    except SystemExit:
+        url = None
+    if not (out / "transcript.json").exists() and url:
+        try:
+            transcript(argparse.Namespace(target=name, url=url, lang=None, force=False))
+        except SystemExit as e:
+            notes.append(f"subtitles: {e}")
+        except Exception as e:                                  # noqa: BLE001 - a network hiccup, an odd caption file
+            notes.append(f"subtitles: {type(e).__name__}: {e}")
+    if not (out / "transcript.json").exists():
+        try:
+            if speech_transcript(ref, log) is None:
+                notes.append("no transcript: " + ("the platform has no subtitles for it" if url else "no link known")
+                             + " and speech to text is not installed (Settings > Programs > Speech to text)")
+        except Exception as e:                                  # noqa: BLE001
+            notes.append(f"speech to text: {type(e).__name__}: {e}")
+    if url and not (out / "stats.json").exists():
+        try:
+            stats(argparse.Namespace(target=name, url=url))
+        except SystemExit as e:
+            notes.append(f"views / followers: {e}")
+        except Exception as e:                                  # noqa: BLE001
+            notes.append(f"views / followers: {type(e).__name__}: {e}")
+    return notes
 
 
 def show_lines(ref: dict, data: dict, a: int | None, b: int | None, limit: int = 0) -> int:

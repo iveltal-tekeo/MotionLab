@@ -30,6 +30,22 @@ STYLES = CATEGORIES                # v0.2.0 name (events.json "style", lesson ta
 LEGACY = {"short": "other"}        # an early v0.2 category that became a format
 
 
+# what the user asked an analysis to look at (0.4, the Analyze page's three modes; analysis\\<name>\\meta.json "focus")
+FOCUS = {"content": "Content creation", "cinematic": "Cinematic", "both": "Content + cinematic"}
+FOCUS_HELP = {
+    "content": "talking, hooks, captions and on-screen text, pacing, motion graphics - TikToks, Reels, YouTube",
+    "cinematic": "effects, transitions, camera moves, speed and colour grading - music videos, edits, trailers",
+    "both": "everything (the transcript and the colour take a little longer)",
+}
+DEFAULT_FOCUS = "both"
+
+
+def norm_focus(v) -> str | None:
+    """'content' / 'cinematic' / 'both', or None for anything else (analyses made before 0.4 have none)."""
+    v = str(v or "").strip().lower()
+    return v if v in FOCUS else None
+
+
 def norm(category: str | None) -> str | None:
     if not category:
         return None

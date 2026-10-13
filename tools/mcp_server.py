@@ -302,7 +302,7 @@ def knowledge(category: str = "") -> str:
     category."""
     p = KNOWLEDGE / "summary" / f"{category}.md" if category else KNOWLEDGE / "summary.md"
     if not p.exists():
-        return f"no {p.relative_to(LAB)} yet (Knowledge page > rebuild, or tools\\knowledge.py summary)"
+        return f"no {p.relative_to(LAB)} yet (Claude's memory > Rebuild it, or tools\\knowledge.py summary)"
     return p.read_text(encoding="utf-8")
 
 
@@ -417,7 +417,7 @@ def prompts(kind: str = "", id: str = "") -> str:
         return P.describe(P.get(id), full=True)
     items = P.load_all(kind)
     if not items:
-        return f"no {kind + ' ' if kind else ''}prompts yet in {P.FOLDER} (the user adds them on the Prompts page " \
+        return f"no {kind + ' ' if kind else ''}prompts yet in {P.FOLDER} (the user adds them in the prompt library (Generate) " \
                "or pastes them in the chat: tools\\prompts.py template)"
     L = [f"{len(items)} {kind + ' ' if kind else ''}prompt(s), best examples first; slots to use: "
          + "; ".join(f"{k}: {', '.join(v)}" for k, v in P.SLOTS.items() if not kind or k == kind)]
@@ -447,7 +447,9 @@ def build():
 def selftest() -> int:
     """Call every tool on this PC's data and print a short result (no MCP client needed)."""
     from motionlab.app import data
-    refs = [r["name"] for r in data.list_references()]
+    listed = data.list_references()
+    # a video with effects first (a talking head can have none: its event / sheet calls are skipped)
+    refs = [r["name"] for r in sorted(listed, key=lambda r: not r.get("events"))]
     projs = [p.name for p in PROJECTS.iterdir() if p.is_dir()] if PROJECTS.exists() else []
     print(references()[:400], "\n")
     if refs:
@@ -455,12 +457,15 @@ def selftest() -> int:
         out = events(r)
         print(out.splitlines()[0], f"({len(out)} chars, events.json {(_ref_dir(r) / 'events.json').stat().st_size} "
                                     f"bytes)")
-        eid = out.splitlines()[1].split(" | ")[0]
-        print(event(r, eid)[:300], "\n")
+        rows = out.splitlines()[1:]
+        eid = rows[0].split(" | ")[0] if rows else None
+        if eid:
+            print(event(r, eid)[:300], "\n")
         print(frame_info(r, 480), "\n")
         print(verdicts(r)[:300], "\n")
         print(transcript(r, 0, 500)[:300], "\n")
-        print([type(x).__name__ for x in sheet(r, eid)], [type(x).__name__ for x in frames(r, "0-100:25")])
+        print([type(x).__name__ for x in sheet(r, eid)] if eid else "no effects: no sheet",
+              [type(x).__name__ for x in frames(r, "0-100:25")])
     print(knowledge()[:200], "\n")
     print(prompts()[:300], "\n")
     if projs:

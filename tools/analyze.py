@@ -3,6 +3,9 @@
     .venv\\Scripts\\python tools\\analyze.py <video>              full analysis
     .venv\\Scripts\\python tools\\analyze.py <video> --redetect   reuse cached per-frame metrics (after config tweaks)
     .venv\\Scripts\\python tools\\analyze.py <video> --force      recompute everything
+    .venv\\Scripts\\python tools\\analyze.py <video> --focus content|cinematic|both   what to look at (0.4, kept per video):
+          content = + the transcript (the platform's subtitles, else speech to text if installed) and the views;
+          cinematic = + the colour look; both = everything (the default for a new video)
 
 Writes everything to analysis\\<video name>\\ : report.html, events.json, metrics.csv, overview.png,
 events\\<ID>\\sheet_NN.jpg + preview.mp4, frames\\, cuts\\, review_todo.md. The source video is only read.
@@ -22,7 +25,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from motionlab import __version__  # noqa: E402
 from motionlab import knowledge as KN  # noqa: E402
-from motionlab.styles import CATEGORIES, DEFAULT as CATEGORY_DEFAULT, LEGACY, clean_tags, label as category_label  # noqa: E402
+from motionlab.styles import (CATEGORIES, DEFAULT as CATEGORY_DEFAULT, DEFAULT_FOCUS, FOCUS, LEGACY,  # noqa: E402
+                              clean_tags, label as category_label)
 from motionlab import assemble as AS  # noqa: E402
 from motionlab import audio as AU  # noqa: E402
 from motionlab import describe as DE  # noqa: E402
@@ -58,6 +62,9 @@ def main() -> int:
     ap.add_argument("--category", "--style", dest="category", choices=list(CATEGORIES) + list(LEGACY),
                     help="what kind of video it is (default: the previous analysis of this video, else music_video)")
     ap.add_argument("--tags", help="comma-separated free tags, e.g. \"instagram, asmr\" (kept on re-runs)")
+    ap.add_argument("--focus", choices=list(FOCUS),
+                    help="what to look at: content (talking, hooks, captions), cinematic (effects, transitions, colour) "
+                         "or both (default: the previous analysis of this video, else both)")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -203,7 +210,8 @@ def main() -> int:
     m = read_json(out / "meta.json") if (out / "meta.json").exists() else {}
     old = read_json(out / "events.json") if (out / "events.json").exists() else {}
     changes = {"category": args.category or m.get("category") or (old or {}).get("category")
-               or (old or {}).get("style") or CATEGORY_DEFAULT}
+               or (old or {}).get("style") or CATEGORY_DEFAULT,
+               "focus": args.focus or m.get("focus") or (old or {}).get("focus") or DEFAULT_FOCUS}
     if args.tags is not None:
         changes["tags"] = clean_tags(args.tags)
     dl = KN.download_info(src.name)
@@ -213,11 +221,13 @@ def main() -> int:
     m = KN.save_meta(name, **changes) if (out / "events.json").exists() else {**m, **changes}
     data["category"] = data["style"] = m.get("category") or CATEGORY_DEFAULT
     data["tags"] = clean_tags(m.get("tags") or [])
-    log(f"category: {data['category']} ({category_label(data['category'])})"
+    data["focus"] = m.get("focus") or DEFAULT_FOCUS
+    log(f"focus: {FOCUS[data['focus']]} · category: {data['category']} ({category_label(data['category'])})"
         + (f", tags: {', '.join(data['tags'])}" if data["tags"] else ""))
     data["near_misses"] = [{**n, "frames": [f"frames/f{f:06d}.jpg" for f in (n["frame"] - 1, n["frame"], n["frame"] + 1)
                                             if not args.no_media]} for n in near]
     AS.attach_miss_checks(data, read_json(review_p) if review_p.exists() else {})
+    AS.attach_breakdown(data, read_json(review_p) if review_p.exists() else {})
 
     # ---- 8. verify the source was not touched ---------------------------------------------------------------
     sha_after = sha256_file(src)
@@ -225,7 +235,13 @@ def main() -> int:
     AS.write_all(out, data)
     if not (out / "meta.json").exists():
         KN.save_meta(name, **{k: v for k, v in m.items() if k in ("category", "tags", "url", "platform", "uploader",
-                                                                   "title")})
+                                                                   "title", "focus")})
+
+    # ---- 9. what the focus adds: the transcript + the video's numbers (content creation) -----------------------
+    if data["focus"] in ("content", "both"):
+        import content as CT                         # tools\content.py: never raises, says what it could not do
+        for note in CT.auto(name, log):
+            log(f"content: {note}")
     KN.build_local_cards([name])                     # the shareable reference card (knowledge\local\references)
     if not data["source"]["unchanged"]:
         log("WARNING: the source file changed during analysis!")

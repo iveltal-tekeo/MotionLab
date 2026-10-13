@@ -83,9 +83,23 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). *Recreate with
   my footage* = `createVideoModal({from: 'reference', pick})`. User-facing words: no paths, versions, SHA-256, effort
   levels; "lab pass" = Measure. UI changes are tested with a second test server on an empty copy of the app code.
+- **Analyze** (0.4, the user: "pass videos downloaded or pasted as a link, analysed in a concrete way I select:
+  content creation / cinematic / both"): *Add videos* = `addVideosModal` (links one per line + files from refs\ or a
+  path, up to `AV_MAX` 10; the focus `FOCUS_OPTS`; kind of video; "Claude checks each video when it is measured" =
+  claude:true per analyze job, or Measure only) -> POST `/api/analyze/batch` (`server.analyze_batch`: everything is
+  checked before anything starts; files -> queued analyze jobs, links -> queued download jobs whose `then` starts
+  the analysis of the saved file; `system` remembers `default_focus`). The page's in-progress panel
+  (`progressPanel`, every 2 s while jobs are active: running first, then waiting, *Remove* = cancel a queued one,
+  finished ones for 15 min) redraws the cards when one ends. Cards: focus chip, the profile's lines (`focusLines`),
+  the flow; filters focus / category / tag. One analysis (#/ref/<name>, `?verdicts` = the Effects tab): tabs right
+  under the step strip - **Overview** (default; `overviewTab`: Rhythm, Content creation and / or Cinematic panels for
+  the focus from `profile.py`, Claude's breakdown (events.json `breakdown` = review.json `_breakdown`), Use it: Edit
+  my clips like this / Prompts for AI tools like this / Analyse again with another focus; the player is hidden),
+  Effects, Possible misses, What it says (the Content tab). The step strip: Download > Measure > Claude checks |
+  *Teach Claude (optional)*: Your verdicts > Feedback > Share; a video with no effects (a talking head) shows "No
+  effects" instead of crashing. Timelines fix their canvas height at creation (no ResizeObserver loop when shown).
 - Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
-  is missing, Where to start = the 6 steps, roadmap, then status), **References** (#/refs: downloads not analysed
-  yet, cards with the next step's button + Delete, filters by category / tag; then the analysis page), **Videos**
+  is missing, the three ways in, roadmap, then status), **Analyze** (#/analyze, above), **Edit**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
@@ -128,7 +142,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
   overlay_new / overlay_captions (a subtitle file, or a video's words = speech to text) / overlay_refresh (group
   resolve) / overlay_resolve_clip = Graphics; speech_install = Settings > Programs > Speech to text; captions read the user's .srt / .vtt / transcript.json, never change
-  it), one per group (cpu / resolve / light / net). Claude's
+  it), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
+  status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
+  holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
+  `saved_file` = download.py's last line). Claude's
   parts stay in Claude Code: reviewing sheets, applying feedback, reviewing incoming lessons, building in Resolve,
   saving library macros.
 - Updates (`updater.py`, git only - no GitHub API, no tokens in the lab): `check` = `git fetch` + behind / ahead /

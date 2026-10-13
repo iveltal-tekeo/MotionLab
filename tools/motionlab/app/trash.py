@@ -122,7 +122,7 @@ def plan_reference(name: str) -> dict:
         notes.append(f"The video stays where it is ({src}): only videos inside the lab's refs folder are deleted here.")
     elif src_s:
         notes.append("The video file is not there any more.")
-    keeps = ["what the lab learned from it: its card on the Knowledge page (pacing + every reviewed effect) and "
+    keeps = ["what the lab learned from it: its card in Claude's memory (pacing + every reviewed effect) and "
              "the lessons"]
     return {"kind": "reference", "name": d.name, "title": Path(src_s).stem if src_s else d.name, "items": items,
             "notes": notes, "keeps": keeps}

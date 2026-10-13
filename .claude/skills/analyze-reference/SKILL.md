@@ -36,7 +36,7 @@ step 2 (re-run only when the user asks or the config changed since). Otherwise:
 ```
 .venv\Scripts\python tools\analyze.py "<path>"
 ```
-Quote the path; add `--category <id>` / `--tags "a, b"` when the request names them. It prints progress and ends with
+Quote the path; add `--category <id>` / `--tags "a, b"` / `--focus content|cinematic|both` when the request names them. It prints progress and ends with
 `REPORT:` and counts. Expect roughly 1-2 minutes per minute of 1080p30 video - for videos longer than ~4 minutes run
 it in the background and wait for it. It probes (CFR/VFR - VFR gets a CFR proxy), analyzes audio (BPM, beats,
 downbeats, drops, builds), measures every frame, detects events, extracts frames, builds contact sheets + looping
@@ -76,6 +76,26 @@ read the whole `events.json` (~0.7 MB). For **each** event, in order:
    `"_near_misses": {"270": "EFFECT ...: what it is" | "not an effect: why"}`; a real miss also goes into the nearest
    event's `notes` and your summary. The report shows these next to each candidate.
 
+6. **The focus** - what the user asked this analysis to look at (meta.json / events.json `focus`, picked in the app:
+   `content` = content creation, `cinematic`, `both`; analyses made before 0.4 have none - treat them as `both`).
+   After the events, write the whole-video breakdown into review.json `"_breakdown"`: what makes this video work, so
+   you can reuse it when you edit or generate for the user later. Start from the measured lines at the top of
+   `review_todo.md` (rhythm, hook, talking, text on screen, signature effects, transitions). Text, or lists of short
+   lines; every frame with its timecode; leave out the keys that do not apply:
+   - **content**: `summary` (2-4 sentences), `hook` (f0 to 3 s: what is seen, said and written - why it stops the
+     scroll), `structure` (the parts in order, e.g. "f0-89 (00:00:00:00-00:00:02:29) hook: ...", setup, payoff, CTA),
+     `captions` (their look: font style, size, position, colours, outline, animation, words per caption - from the
+     frames), `text_graphics` (titles, numbers, stickers, lower thirds), `broll` (how cutaways are used), `sound`
+     (music, SFX, voice), `cta`, `rebuild_tips` (3-6 concrete steps to make one like it with the user's clips). Read
+     `analysis\<name>\content\transcript.txt` when it exists (frame + timecode per line); quote at most a few words -
+     they are other people's words and the breakdown goes into the shareable card.
+   - **cinematic**: `summary`, `transitions` (which, where, how they are built), `camera` (moves; real or in post),
+     `grade` (the look: contrast, colour, highlights / shadows - from the frames, and `colour\colour.json` when the
+     colour pass ran), `rhythm` (cuts vs beats and drops, speed changes), `sound`, `rebuild_tips`.
+   - **both**: every key that applies.
+   Only these keys count: summary hook structure captions text_graphics broll sound cta transitions camera grade
+   rhythm rebuild_tips. `tools\report.py <name>` puts it on the video's Overview page in the app.
+
 Long videos have many events: you may batch the work, but every sheet of every event must be read.
 If `review.json` already has reviews (an earlier chat stopped half-way), keep them and continue with the events that
 have none - don't redo finished ones unless the user asks.
@@ -95,7 +115,10 @@ Plain hard cuts are NOT reviewed visually (they are listed in the cuts table wit
     "confidence": "high",
     "rebuild": "Cut at 480 on the drop; white Solid Color on V2 480-482, Opacity 100% > 0% by 483, linear ...",
     "notes": "optional"
-  }
+  },
+  "_near_misses": {"270": "not an effect: the singer turns into the light"},
+  "_breakdown": {"summary": "...", "hook": "f0-89 (00:00:00:00-00:00:02:29): ...", "structure": ["...", "..."],
+                 "rebuild_tips": ["...", "..."]}
 }
 ```
 Optional keys: `"false_alarm": true`, `"evidence": [...]` (only to ADD observations; measured evidence is kept),
@@ -114,9 +137,10 @@ unknown`
 ## 3. Report back to the user
 Give: video facts (fps, CFR/VFR, duration), BPM and drops, counts per effect family, the most notable events (with
 frame + timecode), the low-confidence events worth checking first, and the possible misses you think are real.
-Then tell them the next step, in the MotionLab app: References > this video > **Review effects** (Correct / Partly /
-Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses** tab, then **Send feedback to
-Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
+Say in one line what the breakdown found (the hook / the signature). Then tell them the video is ready for their edits
+(Edit > New edit can use it), and the optional next step that teaches you, in the MotionLab app: Analyze > this video >
+**Effects** (Correct / Partly / Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses**
+tab, then **Send feedback to Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
 `analysis\<name>\report.html` > Generate feedback > Copy, and paste it into a chat.
 
 ---

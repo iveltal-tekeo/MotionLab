@@ -1,4 +1,4 @@
-"""MotionLab shared knowledge from the command line (the app's Knowledge page does the same).
+"""MotionLab shared knowledge from the command line (the app's Claude's memory page does the same).
 
     .venv\\Scripts\\python tools\\knowledge.py cards              (re)build the reference cards of this PC's analyses
     .venv\\Scripts\\python tools\\knowledge.py summary            rebuild knowledge\\local\\summary.md (what Claude reads)

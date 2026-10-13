@@ -149,11 +149,41 @@ def write_all(out_dir: Path, data: dict) -> None:
     write_todo(out_dir, data)
 
 
+FOCUS_TODO = {   # what the user asked this analysis to look at (meta.json "focus") -> review.json "_breakdown"
+    "content": "Focus: CONTENT CREATION - also write `_breakdown` (SKILL.md \"Focus\"): summary, hook (first 3 s), "
+               "structure, captions, text_graphics, broll, sound, cta, rebuild_tips. Read content/transcript.txt.",
+    "cinematic": "Focus: CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\"): summary, transitions, camera, grade, "
+                 "rhythm, sound, rebuild_tips.",
+    "both": "Focus: CONTENT + CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\") with every key that applies: "
+            "summary, hook, structure, captions, text_graphics, broll, sound, cta, transitions, camera, grade, rhythm, "
+            "rebuild_tips. Read content/transcript.txt if there is one.",
+}
+
+
+def measured_lines(data: dict) -> list[str]:
+    """The video in measured lines for the reviewer (profile.py: rhythm, hook, talking, text, signature effects)."""
+    try:
+        from .profile import profile                          # reads the events.json written just before
+        pf = profile(data["name"], data.get("focus")) or {}
+    except Exception:                                       # noqa: BLE001 - the todo must be written anyway
+        return []
+    p, ln = pf.get("pacing") or {}, pf.get("lines") or {}
+    out = ["", "Measured (for the breakdown):",
+           f"- rhythm: {p.get('cuts_per_min', '-')} cuts/min, shots {p.get('avg_shot_s', '-')} s (median "
+           f"{p.get('median_shot_s', '-')} s), {p.get('hook_cuts_3s', 0)} cut(s) in the first 3 s, "
+           f"{p.get('effects_per_min', '-')} effects/min"
+           + (f", {p['cuts_on_beat_pct']} % of plain cuts on the beat" if p.get("cuts_on_beat_pct") is not None else "")]
+    out += [f"- {k}: {v}" for k, v in ln.items() if v]
+    return out
+
+
 def write_todo(out_dir: Path, data: dict) -> None:
     lines = [f"# Review todo - {data['name']}", "",
              "1. Read `.claude/skills/analyze-reference/lessons.md` first and apply every rule.",
              "2. Open every sheet below (Read tool). Classify from what you SEE, using the measured evidence.",
              "3. Write `review.json` in this folder (format in SKILL.md), then run `tools/report.py " + data["name"] + "`.",
+             "4. " + FOCUS_TODO.get(data.get("focus") or "both", FOCUS_TODO["both"]),
+             *measured_lines(data),
              "", "| ID | auto type | frames | timecode | reviewed | sheets | first evidence line |",
              "|---|---|---|---|---|---|---|"]
     for ev in data["events"]:
@@ -185,8 +215,36 @@ def rerender(out_dir: Path) -> dict:
     data["counts"], data["family_counts"] = counts(data["events"], plain)
     data["review_unmatched"] = unmatched
     attach_miss_checks(data, review)
+    attach_breakdown(data, review)
     write_all(out_dir, data)
     return data
+
+
+BREAKDOWN_KEYS = ("summary", "hook", "structure", "captions", "text_graphics", "broll", "sound", "cta", "transitions",
+                  "camera", "grade", "rhythm", "rebuild_tips")
+
+
+def attach_breakdown(data: dict, review: dict) -> None:
+    """Claude's breakdown of the whole video for its focus (review.json "_breakdown", 0.4): what makes it work - the
+    hook, the structure, the captions (content creation) or the transitions, camera and grade (cinematic). Only the
+    known keys, as text or lists of text; shown on the analysis page's Overview and kept in the reference card."""
+    b = review.get("_breakdown")
+    if not isinstance(b, dict):
+        data.pop("breakdown", None)
+        return
+    out = {}
+    for k in BREAKDOWN_KEYS:
+        v = b.get(k)
+        if isinstance(v, str) and v.strip():
+            out[k] = v.strip()[:2500]
+        elif isinstance(v, list):
+            items = [str(x).strip()[:600] for x in v if str(x).strip()][:40]
+            if items:
+                out[k] = items
+    if out:
+        data["breakdown"] = out
+    else:
+        data.pop("breakdown", None)
 
 
 def attach_miss_checks(data: dict, review: dict) -> None:

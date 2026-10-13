@@ -14,8 +14,9 @@ from pathlib import Path
 from motionlab import taxonomy
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
+from motionlab import profile as PF
 from motionlab import prompts as PR
-from motionlab.styles import fmt as video_format, label as style_label
+from motionlab.styles import FOCUS, fmt as video_format, label as style_label
 from motionlab.timecode import frame_to_tc
 from motionlab.util import ANALYSIS, LAB
 
@@ -291,6 +292,7 @@ def list_references(include_tests: bool = False) -> list[dict]:
             "report": rel(d / "report.html") if (d / "report.html").exists() else None,
             "feedback_files": sorted(p.name for p in (d / "feedback").glob("*.txt")) if (d / "feedback").exists() else [],
             "source": src, "flow": flow(d.name, ev, S, pend), "review_prompt": review_prompt(src or d.name, d.name),
+            "lines": (PF.profile(d.name) or {}).get("lines", {}), "breakdown": bool(ev.get("breakdown")),
         })
     return out
 
@@ -299,6 +301,7 @@ def _kind(name: str, ev: dict, v: dict) -> dict:
     """Category, tags, link, format and pacing of an analysis (for the cards, filters and the analysis page)."""
     m = KN.meta(name, ev)
     return {"category": m["category"], "category_label": style_label(m["category"]), "tags": m["tags"],
+            "focus": m["focus"], "focus_label": FOCUS.get(m["focus"] or "", ""),
             "url": m["url"], "platform": m["platform"],
             "style": m["category"], "style_label": style_label(m["category"]),            # v0.2.0 names
             "format": video_format(v.get("display_width") or v.get("width"), v.get("display_height") or v.get("height"),
@@ -377,6 +380,7 @@ def reference(name: str) -> dict:
         "review_prompt": review_prompt(src or d.name, d.name),
         "projects": [p["name"] for p in list_projects()],
         "content": content_info(d),
+        "profile": PF.profile(d.name), "breakdown": ev.get("breakdown"),
     }
 
 
@@ -654,7 +658,7 @@ def save_outcome(name: str, body: dict) -> dict:
 
 
 def prompt_styles(items: list[dict]) -> dict:
-    """The Prompts page's *Style like* (0.3.5): every analysed reference's measured style (a short line, its frame)
+    """The prompt library's *Style like* (0.3.5): every analysed reference's measured style (a short line, its frame)
     and, per brief / script / hook, the references its words seem to mean (who made it, its title)."""
     st = PR.all_styles()
     keep = ("name", "title", "uploader", "category_label", "format", "line", "thumb", "reviewed", "effects",
@@ -670,7 +674,7 @@ def prompt_styles(items: list[dict]) -> dict:
 
 
 def prompt_uses() -> dict:
-    """prompt id -> the videos made from it and how they turned out (the Prompts page's 'Used in')."""
+    """prompt id -> the videos made from it and how they turned out (the prompt library's 'Used in')."""
     out: dict = {}
     for d in sorted(PROJECTS.iterdir()) if PROJECTS.exists() else []:
         b = d / "build"

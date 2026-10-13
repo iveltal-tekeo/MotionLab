@@ -138,7 +138,7 @@ def lab() -> list[str]:
     from motionlab.app import data
     out = ["## The lab now (what waits on the user or on Claude)"]
     steps = {"claude": "Claude's review (/analyze-reference)", "verdicts": "your verdicts in the app",
-             "feedback": "feedback to Claude", "share": "Share (Knowledge page)", None: "all steps done"}
+             "feedback": "feedback to Claude", "share": "Share (Claude's memory)", None: "all steps done"}
     refs = data.list_references()
     for r in refs:
         fl = r["flow"]

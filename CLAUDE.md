@@ -41,7 +41,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `analysis\<video name>\` one per analyzed video: `events.json` (all data), `report.html`, `review.json` (Claude's
   reviews), `review_todo.md`, `events\<ID>\sheet_NN.jpg + preview.mp4`, `frames\`, `cuts\`, `metrics.csv`,
   `overview.png`, `audio.wav`, `proxy_cfr.mp4` (only for VFR sources), `cache\` (re-usable metrics), `inspect\`,
-  `meta.json` (category, tags, link - the user's choice, kept across re-runs), `feedback\` (`verdicts.json` = the
+  `meta.json` (category, tags, focus, link - the user's choice, kept across re-runs), `content\` (transcript, stats),
+  `feedback\` (`verdicts.json` = the
   user's verdicts, their ONE home; `app_<date>.txt` = exports from the app; `feedback_<date>.txt/.json` = archived by
   `feedback.py` when Claude applied them)
 - `knowledge\` what installs share: `references\` = SHARED reference cards `<video id>--<author>.json`, `incoming\` =
@@ -74,14 +75,18 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 
 ## Tools (run from C:\MotionLab as `.venv\Scripts\python tools\<tool>.py`)
 - `analyze.py "<video>"` full pipeline (`--redetect` re-uses cached metrics after config changes, `--force` redo all,
-  `--category <id>` (alias `--style`; ids in `tools\motionlab\styles.py`) and `--tags "a, b"` - both kept on re-runs
-  in `meta.json`; afterwards it refreshes this video's reference card in `knowledge\local\references\`)
+  `--category <id>` (alias `--style`; ids in `tools\motionlab\styles.py`), `--tags "a, b"` and `--focus
+  content|cinematic|both` (0.4: what the user asked to look at; content adds the transcript + views via
+  `content.py auto`) - all kept on re-runs in `meta.json`; afterwards it refreshes this video's reference card in
+  `knowledge\local\references\`). `motionlab\profile.py` = the video in numbers per focus (rhythm, hook, talking,
+  text on screen, signature effects, transitions) - the app's Overview, the cards and `review_todo.md` use it
 - `report.py <name>` merge `review.json` into `events.json` and re-render `report.html`
 - `feedback.py <name> <file>` parse feedback text, archive it, map verdicts (and possible-miss answers) to events
 - `sheet.py <name> <start> <end>` contact sheet + preview for any frame range (missed effects)
 - `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
-  views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: Content tab)
+  views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: What it says
+  tab); no subtitles or no link -> speech to text of the analysis' audio when installed (`auto` / `speech_transcript`)
 - `prompts.py list | show | import | annotate | kind | style | rate | template` the prompt library (0.4; MCP
   `prompts`; kinds brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's
   check per part; style = analysed references whose measured style a prompt follows, `knowledge.style()`)
@@ -142,9 +147,10 @@ an effort level per task (Settings > Claude Code).
   (docs\knowledge_sharing.md). Cards carry the author name from Settings, never an email.
 
 ## Workflow
-- A reference goes through six steps (the app shows them): download > lab pass (`analyze.py`) > Claude checks
-  (`/analyze-reference`: read EVERY contact sheet, write `review.json`, `report.py`; auto-detected types are drafts
-  until reviewed) > the user's verdicts (app) > feedback to Claude > Share (Claude's memory).
+- A reference: download > lab pass (`analyze.py`, with the user's focus) > Claude checks (`/analyze-reference`: read
+  EVERY contact sheet, write `review.json` incl. the `_breakdown` for the focus, `report.py`; auto-detected types are
+  drafts until reviewed) = ready for edits; then, optional ("Teach Claude" in the app): the user's verdicts > feedback
+  to Claude > Share (Claude's memory). The app's Add videos queues up to 10 videos (links download first).
 - When the user pastes text starting with `MOTIONLAB FEEDBACK` (or says they gave feedback in the app: newest
   `analysis\<name>\feedback\app_*.txt`), follow "Applying feedback" in the skill: new lessons go to
   `knowledge\local\lessons.md` (id from `tools\knowledge.py next-lesson-id`), threshold changes in `config.json`,

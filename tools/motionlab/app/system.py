@@ -25,7 +25,7 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
             "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_mode": "ask",
-            "claude_effort": "auto"}
+            "claude_effort": "auto", "default_focus": "both"}
 # a new version on GitHub: "ask" = the sidebar's Update button + what's new, one click installs it (since 0.3.0;
 # 0.2.x installed by itself at start-up), "auto" = install it when MotionLab starts, "off" = never look
 UPDATE_MODES = ("ask", "auto", "off")
@@ -108,6 +108,8 @@ def save(body: dict) -> dict:
                 raise ValueError("unknown category")
         if k == "claude_effort" and v not in ("auto", *EFFORTS):
             raise ValueError(f"unknown effort {v}")
+        if k == "default_focus" and v not in ("content", "cinematic", "both"):
+            raise ValueError(f"unknown focus {v}")
         s[k] = v
     data.write_json_atomic(SETTINGS, s)
     return s

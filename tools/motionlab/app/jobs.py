@@ -1,8 +1,10 @@
 """Long tasks started from the app. Each job is one of the lab's own tools (or yt-dlp for a download) run as a child
 process (no console window), its output kept for the Jobs page and in .app\\jobs\\<id>.log. Only the kinds in `make`
-exist: the app cannot run arbitrary commands. One job at a time per group (cpu / resolve / light / net).
-"Analyse with Claude" = an analyze job with claude=true: when the lab pass ends well, Claude Code opens with
-/analyze-reference for that video (the user's click started it; Claude spends nothing while the pass runs)."""
+exist: the app cannot run arbitrary commands. One job at a time per group (cpu / resolve / light / net); since 0.4 a
+job can wait its turn ("queued", Analyze > Add videos: several videos at once) and a download can be followed by its
+analysis (`then`: the saved video is analysed with those settings). "Analyse with Claude" = an analyze job with
+claude=true: when the lab pass ends well, Claude Code opens with /analyze-reference for that video (the user's click
+started it; Claude spends nothing while the pass runs)."""
 from __future__ import annotations
 
 import itertools
@@ -15,7 +17,7 @@ import time
 from pathlib import Path
 
 from motionlab import overlay_settings as OS
-from motionlab.styles import CATEGORIES, LEGACY, clean_tags
+from motionlab.styles import CATEGORIES, FOCUS, LEGACY, clean_tags
 from motionlab.util import ANALYSIS, LAB
 
 from . import data, system
@@ -57,6 +59,11 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
             extra += ["--category", cat]
         if "tags" in a:
             extra += ["--tags", ", ".join(clean_tags(a.get("tags") or ""))]
+        focus = str(a.get("focus") or "")
+        if focus:
+            if focus not in FOCUS:
+                raise JobError(f"unknown focus {focus} (content, cinematic or both)")
+            extra += ["--focus", focus]
         return f"Analyse {v.name}", [PY, str(TOOLS / "analyze.py"), str(v)] + (
             ["--redetect"] if a.get("redetect") else []) + extra, "cpu"
     if kind == "report":
@@ -171,6 +178,15 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     raise JobError(f"unknown job kind {kind!r}")
 
 
+def saved_file(lines: list[str]) -> Path | None:
+    """The file a download saved: tools\\download.py prints its path as the last line."""
+    for ln in reversed(lines[-40:]):
+        p = Path(ln.strip().strip('"'))
+        if p.suffix.lower() in data.VIDEO_EXT | data.AUDIO_EXT and p.is_file():
+            return p
+    return None
+
+
 class Job:
     def __init__(self, jid: int, kind: str, args: dict, title: str, cmd: list[str], group: str):
         self.id, self.kind, self.args, self.title, self.cmd, self.group = jid, kind, args, title, cmd, group
@@ -181,13 +197,17 @@ class Job:
         self.log = LOGS / f"{jid:04d}_{kind}.log"
         self.then_claude = kind == "analyze" and bool(args.get("claude"))      # open Claude when it ends well
         self.claude: dict | None = None                                         # what was opened afterwards
+        self.then: dict | None = None          # a download followed by its analysis: the analyze job's settings
+        self.batch: int | None = None          # the jobs of one Add videos share it
 
     def info(self, since: int | None = None) -> dict:
         d = {"id": self.id, "kind": self.kind, "args": self.args, "title": self.title, "group": self.group,
              "status": self.status, "rc": self.rc, "started": data.stamp(self.started),
              "seconds": round((self.ended or time.time()) - self.started, 1),
              "command": " ".join(Path(c).name if i < 2 else c for i, c in enumerate(self.cmd)),
-             "lines": len(self.lines), "then_claude": self.then_claude, "claude": self.claude}
+             "lines": len(self.lines), "then_claude": self.then_claude, "claude": self.claude,
+             "then": bool(self.then), "batch": self.batch,
+             "ended_ago_s": round(time.time() - self.ended) if self.ended else None}
         if since is not None:
             d["log"] = self.lines[since:since + 5000]
             d["since"] = since
@@ -203,24 +223,51 @@ class Runner:
     def running(self) -> list[Job]:
         return [j for j in self.jobs.values() if j.status in ("running", "cancelling")]
 
-    def start(self, kind: str, args: dict) -> Job:
+    def queued(self) -> list[Job]:
+        return sorted((j for j in self.jobs.values() if j.status == "queued"), key=lambda j: j.id)
+
+    def active(self) -> list[Job]:
+        """Running or waiting their turn: the server stays up, updates and deletes wait."""
+        return self.running() + self.queued()
+
+    def start(self, kind: str, args: dict, queue: bool = False, then: dict | None = None,
+              batch: int | None = None) -> Job:
+        """Start a job now; queue=True: it waits its turn when its group is busy (or has others waiting) instead of
+        being refused. then (a download only): analyse the saved video with these settings when it ends well."""
         title, cmd, group = make(kind, args or {})
+        if then is not None:                                  # checked now, not when the download has ended
+            if kind != "download":
+                raise JobError("only a download can be followed by an analysis")
+            if str(then.get("focus") or "") not in ("", *FOCUS):
+                raise JobError(f"unknown focus {then.get('focus')} (content, cinematic or both)")
+            cat = str(then.get("category") or "")
+            if cat and cat not in CATEGORIES and cat not in LEGACY:
+                raise JobError(f"unknown category {cat}")
         with self.lock:
             busy = self.running()
-            if group == "exclusive" and busy:
+            if group == "exclusive" and (busy or self.queued()):
                 raise JobError("wait until the running jobs finish")
             clash = [j for j in busy if j.group in (group, "exclusive")]
-            if clash:
-                raise JobError(f"'{clash[0].title}' is still running")
+            waiting = [j for j in self.queued() if j.group == group]
+            if (clash or waiting) and not queue:
+                raise JobError(f"'{(clash or waiting)[0].title}' is still running")
             job = Job(next(self.ids), kind, args or {}, title, cmd, group)
+            job.then, job.batch = (dict(then) if then else None), batch
             self.jobs[job.id] = job
+            if clash or waiting:
+                job.status = "queued"
+                return job
+        self._launch(job)
+        return job
+
+    def _launch(self, job: Job) -> None:
+        job.status, job.started = "running", time.time()
         LOGS.mkdir(parents=True, exist_ok=True)
         env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
-        job.proc = subprocess.Popen(cmd, cwd=str(LAB), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        job.proc = subprocess.Popen(job.cmd, cwd=str(LAB), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace",
                                     env=env, creationflags=NO_WINDOW)
         threading.Thread(target=self._pump, args=(job,), daemon=True).start()
-        return job
 
     def _pump(self, job: Job):
         with open(job.log, "w", encoding="utf-8") as f:
@@ -237,6 +284,42 @@ class Runner:
             job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
             if job.then_claude and job.status == "done":
                 self._hand_to_claude(job, f)
+            if job.then and job.status == "done":
+                self._then_analyse(job, f)
+        self._next()
+
+    def _then_analyse(self, job: Job, f) -> None:
+        """Add videos: the download ended well - its saved video is analysed next (queued behind the others)."""
+        saved = saved_file(job.lines)
+        try:
+            if saved is None:
+                msg = "the saved file was not found - analyse it from the Analyze page (Downloaded, not analysed yet)"
+            elif saved.suffix.lower() not in data.VIDEO_EXT:
+                msg = f"{saved.name} is audio only - it waits for an edit (Edit), nothing to analyse"
+            else:
+                nj = self.start("analyze", {**job.then, "video": str(saved)}, queue=True, batch=job.batch)
+                msg = f"Next: analysing {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
+        except Exception as e:                                  # noqa: BLE001 - the download itself succeeded
+            msg = f"Could not start the analysis of {saved.name if saved else 'the video'}: {e}"
+        job.lines.append(msg)
+        f.write(msg + "\n")
+
+    def _next(self) -> None:
+        """Start the queued jobs whose group is free now (oldest first)."""
+        go = []
+        with self.lock:
+            for j in self.queued():
+                busy = self.running() + go
+                if any(b.group in (j.group, "exclusive") for b in busy):
+                    continue
+                j.status = "running"                          # claimed: no other thread starts it
+                go.append(j)
+        for j in go:
+            try:
+                self._launch(j)
+            except Exception as e:                              # noqa: BLE001 - e.g. the program vanished
+                j.status, j.ended, j.rc = "failed", time.time(), -1
+                j.lines.append(f"could not start: {e}")
 
     @staticmethod
     def _hand_to_claude(job: Job, f) -> None:
@@ -257,6 +340,10 @@ class Runner:
         job = self.jobs.get(jid)
         if not job:
             raise JobError(f"no job {jid}")
+        with self.lock:
+            if job.status == "queued":                        # never started: it just leaves the queue
+                job.status, job.ended = "cancelled", time.time()
+                return job
         if job.status == "running" and job.proc:
             job.status = "cancelling"
             job.proc.terminate()

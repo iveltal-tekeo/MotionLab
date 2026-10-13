@@ -189,7 +189,8 @@ def run_one(video: Path, truth_path: Path, name: str, gen_cmd: list[str], rebuil
     if rebuild or not video.exists() or not truth_path.exists():
         print(f"generating {video.name} ...")
         subprocess.run(gen_cmd, check=True)
-    r = subprocess.run([PY, str(HERE / "analyze.py"), str(video), "--name", name, "--force"])
+    # cinematic: no transcript (the test videos say nothing; a PC with speech to text would listen to click tracks)
+    r = subprocess.run([PY, str(HERE / "analyze.py"), str(video), "--name", name, "--force", "--focus", "cinematic"])
     if r.returncode != 0:
         raise SystemExit("analysis failed")
     data = json.loads((ANALYSIS / name / "events.json").read_text(encoding="utf-8"))

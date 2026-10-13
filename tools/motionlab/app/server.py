@@ -121,7 +121,7 @@ def status() -> dict:
     return {"version": VERSION, "lab": str(LAB), "references": len(refs), "events": sum(r["events"] for r in refs),
             "reviewed": sum(r["reviewed"] for r in refs), "verdicts": verdicts, "projects": len(projs),
             "library": len(lib["items"]), "picks": len(lib["picks"]), "free_bytes": du.free, "total_bytes": du.total,
-            "resolve": S.resolve, "jobs_running": [j.info() for j in S.runner.running()],
+            "resolve": S.resolve, "jobs_running": [j.info() for j in S.runner.active()],
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
             "projects_list": projs, "references_list": refs, "setup": setup,
             "claude": bool(system.find("claude")), "update": S.update, "update_result": S.update_result,
@@ -321,7 +321,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/ping":
             S.last_ping = time.time()
             u = S.update or {}
-            return self._json({"app": "motionlab", "version": VERSION, "running": len(S.runner.running()),
+            return self._json({"app": "motionlab", "version": VERSION, "running": len(S.runner.active()),
                                "resolve": S.resolve, "phase": S.phase, "api": API_LEVEL,
                                "update": bool(u.get("can_update")), "update_kind": u.get("kind"),
                                "update_version": u.get("new_version"), "update_cards": u.get("new_cards", 0),
@@ -430,18 +430,20 @@ class Handler(BaseHTTPRequestHandler):
                                                        body.get("values")))
         if path == "/api/jobs":
             return self._json(S.runner.start(str(body.get("kind", "")), body.get("args") or {}).info(0))
+        if path == "/api/analyze/batch":                # Analyze > Add videos (0.4): links + files, one focus
+            return self._json(analyze_batch(body))
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)
         if m:
             return self._json(S.runner.cancel(int(m[1])).info())
         if path == "/api/settings":
             return self._json({"settings": system.save(body.get("settings") or {})})
         if path == "/api/quit":
-            if S.runner.running() and not body.get("force"):
+            if S.runner.active() and not body.get("force"):
                 raise jobs.JobError("a job is still running")
             threading.Timer(0.4, S.server.shutdown).start()
             return self._json({"ok": True})
         if path == "/api/restart":
-            if S.runner.running():
+            if S.runner.active():
                 raise jobs.JobError("wait until the running jobs finish")
             restart_soon()
             return self._json({"ok": True, "phase": S.phase})
@@ -538,7 +540,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(system.open_claude(str(body.get("prompt", "")), str(body.get("task") or "free"),
                                                  str(body.get("label", ""))))
         if path == "/api/delete":                        # the user's Delete button, after the dialog
-            if S.runner.running():
+            if S.runner.active():
                 raise jobs.JobError("wait until the running jobs finish, then delete")
             r = trash.delete(str(body.get("kind", "")), str(body.get("name", "")), body.get("keys") or [],
                              S.resolve.get("state", ""))
@@ -562,6 +564,45 @@ class Handler(BaseHTTPRequestHandler):
 
 
 
+BATCH_MAX = 10                                     # videos per Add videos (each one is a lab pass, maybe a Claude check)
+
+
+def analyze_batch(body: dict) -> dict:
+    """Analyze > Add videos: every link is downloaded and then analysed, every file analysed - one after another
+    (queued jobs), all with the same focus / category / tags / Claude check. Nothing starts if anything is wrong."""
+    links = [str(u).strip() for u in body.get("links") or [] if str(u).strip()]
+    files = [str(f).strip().strip('"') for f in body.get("files") or [] if str(f).strip()]
+    if not links and not files:
+        raise ValueError("paste a link or pick a video first")
+    if len(links) + len(files) > BATCH_MAX:
+        raise ValueError(f"at most {BATCH_MAX} videos at a time - add the rest when these are done")
+    focus = str(body.get("focus") or "both")
+    if focus not in ("content", "cinematic", "both"):
+        raise ValueError(f"unknown focus {focus}")
+    opts = {"focus": focus, "claude": bool(body.get("claude"))}
+    if body.get("category"):
+        opts["category"] = str(body["category"])
+    if body.get("tags"):
+        opts["tags"] = str(body["tags"])
+    st = system.load()
+    preset = st.get("download_preset") if st.get("download_preset") in ("mp4_1080", "mp4_best") else "mp4_1080"
+    for u in links:                                     # check everything before anything starts
+        if not re.match(r"https?://\S+$", u):
+            raise ValueError(f"not a link: {u} (a full link starts with https://)")
+        system.download_cmd(u, preset)
+    for f in files:
+        jobs.make("analyze", {**opts, "video": f, "redetect": bool(body.get("redetect"))})
+    system.save({"default_focus": focus})
+    batch = int(time.time() * 1000) % 10_000_000
+    started = []
+    for f in files:
+        started.append(S.runner.start("analyze", {**opts, "video": f, "redetect": bool(body.get("redetect"))},
+                                      queue=True, batch=batch))
+    for u in links:
+        started.append(S.runner.start("download", {"url": u, "preset": preset}, queue=True, then=opts, batch=batch))
+    return {"batch": batch, "jobs": [j.info() for j in started]}
+
+
 def restart_soon() -> None:
     """Start a new app server for the same port (it waits until this one has let go of it), then stop this one.
     The window keeps polling /api/ping and reloads when the new server answers."""
@@ -579,7 +620,7 @@ def restart_soon() -> None:
 
 
 def apply_update() -> dict:
-    if S.runner.running():
+    if S.runner.active():
         raise jobs.JobError("wait until the running jobs finish, then update")
     S.phase = "updating"
     try:
@@ -621,7 +662,7 @@ def share_knowledge() -> dict:
             if r.get("pushed"):
                 KN.mark_shared(pack, "github")
                 S.update = updater.check(fetch=False)
-                if r.get("code_updated") and not S.runner.running():      # sharing pulled in a new version
+                if r.get("code_updated") and not S.runner.active():      # sharing pulled in a new version
                     KN.summary()
                     out["restarting"] = True
                     restart_soon()
@@ -647,7 +688,7 @@ def startup_update() -> None:
         if not updater.is_repo():
             return
         S.update = updater.check(fetch=True)
-        if (mode == "auto" and S.update.get("can_update") and not S.runner.running()
+        if (mode == "auto" and S.update.get("can_update") and not S.runner.active()
                 and time.time() - S.started < 180):
             apply_update()
     except Exception:                                           # noqa: BLE001 - never break the app over an update
@@ -670,7 +711,7 @@ def watcher(server: ThreadingHTTPServer):
             UP.check()                                          # newer HyperFrames / GSAP: asks npm once a day
         n += 1
         time.sleep(5)
-        if not S.auto_exit or S.runner.running():
+        if not S.auto_exit or S.runner.active():
             continue
         now, last = time.time(), (S.last_ping or S.started)
         if (S.bye and S.bye >= last and now - S.bye > 10) or now - last > (180 if S.last_ping else 300):

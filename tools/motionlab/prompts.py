@@ -5,7 +5,7 @@ One home: knowledge\\local\\prompts\\<kind>\\<id>.json (private to this PC; shar
 A prompt = the text, where it came from (`tested` by you, a `creator`'s public prompt + link, or `written` by
 Claude from examples), the model (shots), your rating of what it made (good / ok / bad + a note), and its structure
 (ordered slots with the words that filled them; Claude writes it when the prompt is added). Used by
-tools\\prompts.py, the app's Prompts page and MCP `prompts()`.
+tools\\prompts.py, the app's prompt library (Generate) and MCP `prompts()`.
 """
 from __future__ import annotations
 
@@ -584,7 +584,7 @@ def remove_example(pid: str, file: str) -> tuple[dict, Path | None]:
 
 
 def overview() -> dict:
-    """What the app's Prompts page shows."""
+    """What the app's prompt library shows."""
     items = load_all()
     for r in items:                                     # older prompts saved without a title (Claude's check adds one)
         if not r.get("title"):

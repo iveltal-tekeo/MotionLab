@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 
 from . import __version__, taxonomy
-from .styles import CATEGORIES, clean_tags, fmt, label as category_label, norm as norm_category
+from .styles import CATEGORIES, clean_tags, fmt, label as category_label, norm as norm_category, norm_focus
 from .util import ANALYSIS, LAB, REFS, read_json
 
 KDIR = LAB / "knowledge"
@@ -84,6 +84,7 @@ def meta(name: str, ev: dict | None = None) -> dict:
     src = Path(((ev or {}).get("source") or {}).get("path", ""))
     dl = download_info(src.name) if src.name else {}
     return {"category": cat, "tags": clean_tags(m.get("tags") or ev.get("tags") or []),
+            "focus": norm_focus(m.get("focus") or (ev or {}).get("focus")),
             "url": m.get("url") or dl.get("url"), "platform": m.get("platform") or dl.get("platform"),
             "uploader": m.get("uploader") or dl.get("uploader"),
             "title": m.get("title") or (dl.get("title") if dl else None) or (src.stem if src.name else name)}
@@ -101,6 +102,11 @@ def save_meta(name: str, **changes) -> dict:
         m["category"] = c
     if "tags" in changes:
         m["tags"] = clean_tags(changes["tags"])
+    if changes.get("focus"):
+        f = norm_focus(changes["focus"])
+        if not f:
+            raise ValueError(f"unknown focus {changes['focus']} (content, cinematic or both)")
+        m["focus"] = f
     for k in ("url", "platform", "uploader", "title"):
         if changes.get(k):
             m[k] = str(changes[k])[:500]
@@ -269,10 +275,18 @@ def card(name: str) -> dict | None:
             "verdict": s.get("v"), "note": (s.get("note") or "")[:800],
         })
     given = [x for x in effects if x["verdict"]]
+    from .profile import profile                            # (late: profile reads meta() / pacing() from here)
+    pf = profile(name) or {}
+    prof = {"content": pf.get("content"), "cinematic": pf.get("cinematic"), "colour": pf.get("colour"),
+            "lines": pf.get("lines")}
+    if (prof.get("content") or {}).get("hook"):             # the transcript stays on this PC: no frame of its lines
+        prof["content"] = {**prof["content"], "hook": {k: v for k, v in prof["content"]["hook"].items()
+                                                       if k != "first_line_frame"}}
     return {
         "schema": SCHEMA, "video_id": sha[:12], "title": m["title"], "url": m["url"], "platform": m["platform"],
         "uploader": m["uploader"], "category": m["category"], "category_label": category_label(m["category"]),
-        "tags": m["tags"], "format": fmt(w, h, v.get("duration_s")),
+        "tags": m["tags"], "format": fmt(w, h, v.get("duration_s")), "focus": m["focus"],
+        "profile": prof, "breakdown": ev.get("breakdown"),
         "video": {"duration_s": v.get("duration_s"), "fps": fps, "width": w, "height": h, "frames": v.get("frames")},
         "pacing": pacing(ev), "effects": effects,
         "verdicts": {"given": len(given), "events": len(effects),
@@ -612,7 +626,7 @@ def summary() -> str:
 
 
 def overview() -> dict:
-    """Everything the app's Knowledge page shows."""
+    """Everything the app's Claude's memory > Share with friends tab shows."""
     cards = all_cards()
     pend = pending()
     st = _state()

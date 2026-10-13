@@ -234,13 +234,13 @@ def check_server(base: str) -> list[str]:
         except Exception as e:                                  # noqa: BLE001
             ok(False, f"GET {path}: {type(e).__name__}: {e}")
     test_refs = [r for r in refs if r.startswith("synthetic_")]
-    for r in test_refs[:1]:
+    for r in test_refs:                     # every self-test analysis: synthetic_negative has no effects at all
         try:
             st, body = get(base, "/api/reference/" + r)
             ok(st == 200 and json.loads(body).get("events") is not None, f"GET /api/reference/{r}")
         except Exception as e:                                  # noqa: BLE001
             ok(False, f"GET /api/reference/{r}: {type(e).__name__}: {e}")
-    return test_refs[:1]
+    return test_refs
 
 
 def check_pages(base: str, test_refs: list[str], cdp_port: int) -> None:

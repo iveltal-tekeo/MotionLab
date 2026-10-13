@@ -185,7 +185,7 @@ document.addEventListener('click', e => {
 const ALIASES = {'#/refs': '#/analyze', '#/projects': '#/edit', '#/knowledge': '#/memory/learned', '#/library': '#/memory/saved'};
 const PAGES = [
   [/^#?\/?$/, pageHome, 'home'], [/^#\/analyze$/, pageRefs, 'analyze'],
-  [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)))?$/, pageRef, 'analyze'], [/^#\/edit$/, pageProjects, 'edit'],
+  [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)|(verdicts)))?$/, pageRef, 'analyze'], [/^#\/edit$/, pageProjects, 'edit'],
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/generate$/, pageGenerate, 'generate'],
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
@@ -405,6 +405,55 @@ function contentTab(el, R, P) {
   });
 }
 
+// ---- one analysis > Overview (0.4): the rhythm, the content side (hook, talking, text) and / or the cinematic side
+// (signature effects, transitions, camera, speed, colour) for the video's focus, Claude's breakdown, and Use it
+const BD = [['hook', 'The hook (first 3 s)'], ['structure', 'Structure'], ['captions', 'Captions'], ['text_graphics', 'Text & graphics'],
+  ['broll', 'B-roll'], ['sound', 'Sound'], ['cta', 'Call to action'], ['transitions', 'Transitions'], ['camera', 'Camera'],
+  ['grade', 'Colour grade'], ['rhythm', 'Rhythm'], ['rebuild_tips', 'To make one like it']];
+const kvRow = (k, v) => v == null || v === '' ? '' : `<b>${esc(k)}</b><span>${v}</span>`;
+function overviewTab(el, R, showTab) {
+  el.dataset.done = '1';
+  const PF = R.profile || {}, P = PF.pacing || R.pacing || {}, C = PF.content || {}, K = PF.cinematic || {}, B = R.breakdown || {};
+  const f = R.focus || 'both', showC = f !== 'cinematic', showK = f !== 'content';
+  const H = C.hook || {}, SP = C.speech, TX = C.text, n = (o, w) => plural(o || 0, w);
+  const listOf = o => Object.entries(o || {}).map(([k, v]) => `<span class="chip">${esc(k)} <b>${v}</b></span>`).join(' ') || '<span class="dim">none</span>';
+  const bdVal = v => Array.isArray(v) ? `<ul>${v.map(x => `<li>${linkify(x)}</li>`).join('')}</ul>` : `<div>${linkify(v)}</div>`;
+  const reviewed = R.flow && R.flow.done.includes('claude');
+  el.innerHTML = `<div class="ovgrid">
+    <div class="panel"><h2>Rhythm</h2><div class="kv">
+      ${kvRow('Cuts', P.cuts_per_min != null ? `<b>${P.cuts_per_min}</b> per minute` : '')}
+      ${kvRow('Shots', P.avg_shot_s != null ? `${P.avg_shot_s} s on average (median ${P.median_shot_s ?? '–'} s · shortest 10 % under ${P.p10_shot_s ?? '–'} s · longest 10 % over ${P.p90_shot_s ?? '–'} s)` : '')}
+      ${kvRow('First 3 s', `${n(P.hook_cuts_3s, 'cut')}${P.first_cut_s != null ? ` · first cut at ${P.first_cut_s} s` : ''}`)}
+      ${kvRow('On the beat', P.cuts_on_beat_pct != null ? `${P.cuts_on_beat_pct} % of the plain cuts${R.audio.bpm ? ` · ${R.audio.bpm.toFixed(1)} BPM` : ''}` : (R.audio.bpm ? `${R.audio.bpm.toFixed(1)} BPM` : ''))}
+      ${kvRow('Effects', P.effects_per_min != null ? `${P.effects_per_min} per minute` : '')}</div></div>
+    ${showC ? `<div class="panel"><h2>Content creation</h2><div class="kv">
+      ${kvRow('The hook (3 s)', [n(H.cuts, 'cut'), H.words != null ? n(H.words, 'word') + ' spoken' : '', H.text_on_screen ? 'text on screen' : ''].filter(Boolean).join(' · '))}
+      ${SP ? kvRow('Talking', `${SP.words_per_min} words a minute · talking ${SP.talk_pct} % of the time · ${n(SP.words, 'word')} <span class="dim">(${esc(SP.source === 'speech' ? 'speech to text' : 'the platform\'s subtitles')})</span>`)
+        : kvRow('Talking', '<span class="dim">no transcript yet</span> <button class="btn sm ghost" data-ovgo="content">What it says →</button>')}
+      ${TX ? kvRow('Text on screen', `${TX.appearances ? `pops up ${n(TX.appearances, 'time')} (${TX.per_min}/min, ${TX.avg_on_s ?? '–'} s each)` : 'no text pops up'}${TX.captions_likely ? ' · <b>burned-in captions</b>' : ''}${TX.visible_pct != null ? ` <span class="dim">· text-like shapes ${TX.visible_pct} % of the time</span>` : ''}`) : ''}
+      </div></div>` : ''}
+    ${showK ? `<div class="panel"><h2>Cinematic</h2><div class="kv">
+      ${kvRow('Signature', (K.signature || []).map(chip).join(' ') || '<span class="dim">no effects besides cuts</span>')}
+      ${kvRow('Transitions', listOf(K.transitions))}
+      ${kvRow('Camera', listOf(K.camera))}
+      ${kvRow('Speed', listOf(K.speed))}
+      ${PF.colour ? kvRow('Colour', esc(PF.colour.line || '')) : ''}</div></div>` : ''}
+  </div>
+  <div class="panel bd"><div class="row sp"><h2>What makes it work <span class="small muted">· Claude's breakdown</span></h2>${B.summary ? '' : ''}</div>
+    ${Object.keys(B).length ? `${B.summary ? `<p class="bdsum">${linkify(B.summary)}</p>` : ''}<div class="bdgrid">${BD.filter(([k]) => B[k]).map(([k, l]) => `<div class="bdi"><h3>${l}</h3>${bdVal(B[k])}</div>`).join('')}</div>`
+      : `<div class="small muted">${reviewed ? 'Claude checked the effects before 0.4 - ask it again for the breakdown:' : 'Claude has not checked this video yet. It looks at every effect and writes what makes the video work:'}</div>
+         <div class="row" style="margin-top:8px">${claudeBtn(R.review_prompt, reviewed ? 'Ask Claude for the breakdown' : 'Send to Claude', 'review', R.title, 'pri')}</div>`}</div>
+  <div class="panel useit"><h2>Use it</h2><div class="row">
+    <button class="btn pri" data-use="edit"><svg class="i"><use href="#i-edit"/></svg>Edit my clips like this…</button>
+    <button class="btn" data-use="prompts"><svg class="i"><use href="#i-generate"/></svg>Prompts for AI tools like this…</button>
+    <button class="btn ghost" data-use="again" title="the same video again with another focus - the measurements are re-used">Analyse again with another focus…</button></div>
+    <div class="small muted" style="margin-top:8px">Claude also reads it from its memory when you edit or generate - nothing to copy.</div></div>`;
+  $$('[data-ovgo]', el).forEach(b => b.onclick = () => showTab(b.dataset.ovgo, true));
+  $('[data-use=edit]', el).onclick = () => createVideoModal({from: 'reference', pick: R.name});
+  $('[data-use=prompts]', el).onclick = () => aiPromptsModal('shot', R.name);
+  $('[data-use=again]', el).onclick = () => addVideosModal({files: R.source ? [R.source] : [], focus: f === 'both' ? 'content' : 'both', pick: true, again: true});
+}
+
 // ============================================================================================ timeline
 class Timeline {
   /* events (lanes by overlap), hard cuts, shots, beats, drops; zoom = frames each side of the playhead (0 = all) */
@@ -413,6 +462,7 @@ class Timeline {
     this.opts = opts; this.play = 0; this.sel = null; this.v0 = 0; this.v1 = this.N - 1;
     this.lanes = Timeline.pack(R.events, Math.max(2, this.N / 600));
     this.H = this.c.height;
+    this.c.style.height = this.H + 'px';     // fixed now: a draw never resizes it (no ResizeObserver loop when shown later)
     this.c.addEventListener('mousemove', e => this.hover(e));
     this.c.addEventListener('mouseleave', hideTip);
     this.c.addEventListener('click', e => this.click(e));
@@ -438,7 +488,7 @@ class Timeline {
   draw() {
     const c = this.c, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = this.H;
     if (!W) return;
-    this.W = W; c.width = W * dpr; c.height = H * dpr; c.style.height = H + 'px';
+    this.W = W; c.width = W * dpr; c.height = H * dpr;
     const g = c.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
     const R = this.R, vis = (a, b) => b >= this.v0 && a <= this.v1, ppf = W / (this.v1 - this.v0 + 1);
     R.shots.forEach((s, i) => { if (vis(s.start, s.end)) { g.fillStyle = i % 2 ? '#141418' : '#101013'; g.fillRect(this.x(s.start), 12, this.x(s.end + 1) - this.x(s.start), H - 30); } });
@@ -546,20 +596,20 @@ async function pageHome(main) {
       <h3>Good to know</h3><div class="small muted">Buttons with <svg class="i"><use href="#i-claude"/></svg> open Claude Code in a new window with the request
       already written. Use one window per task and close it when it is done.</div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
-  $('#hero-go', main).onclick = () => downloadModal();
-  const WAY_GO = {link: () => downloadModal(), file: () => analyseModal(), edit: () => createVideoModal(), ai: () => aiPromptsModal()};
+  $('#hero-go', main).onclick = () => addVideosModal();
+  const WAY_GO = {link: () => addVideosModal(), file: () => addVideosModal({pick: true}), edit: () => createVideoModal(), ai: () => aiPromptsModal()};
   $$('[data-way]', main).forEach(b => b.onclick = () => WAY_GO[b.dataset.way]());
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
 }
 // Generate > AI video tools: Claude writes the prompts (the prompt library's "Generate a new prompt", a shot first)
-async function aiPromptsModal(kind = 'shot') {
+async function aiPromptsModal(kind = 'shot', style = '') {
   let R;
   try { R = await api('/api/prompts'); } catch (e) { toast(e.message, 'err'); return; }
   modal(`<h2>Prompts for AI video and image tools</h2>
     <p class="hint">Tell Claude what you want to make. It writes the prompts in the structure that worked best in your library, checks them and
       saves them in your <a href="#/prompts" onclick="closeModal()">prompt library</a>. You paste them into the tool, then bring the clips to <a href="#/edit" onclick="closeModal()">Edit</a>.</p>
-    <div id="amode"></div>`, m => newPromptForm($('#amode', m), R, kind));
+    <div id="amode"></div>`, m => newPromptForm($('#amode', m), R, kind, style));
 }
 
 // ---- updates: the sidebar's Update button, its dialog (the CHANGELOG sections newer than this copy), "What's new"
@@ -695,43 +745,79 @@ async function updateNow() {
   } catch (e) { $('#overlay').hidden = true; toast(e.message, 'err'); }
 }
 
-async function analyseModal(prefill = '') {
-  const [c, ST] = await Promise.all([api('/api/candidates'), api('/api/settings')]);
-  const cl = ST.tools.find(t => t.name === 'claude') || {};
-  const eff = ST.settings.claude_effort === 'auto' ? ST.tasks.review : ST.settings.claude_effort;
-  modal(`<h2>Analyse a video</h2>
-    <p class="hint">Your video is only read, never changed. Pick one below or paste the full path of a video file.</p>
-    ${c.length ? `<table class="t click" style="margin-bottom:10px"><thead><tr><th>Your downloaded videos</th><th class="num">Size</th><th></th></tr></thead><tbody>
-      ${c.map(v => `<tr data-p="${esc(v.path)}" class="${v.path === prefill ? 'sel' : ''}"><td>${esc(v.name)}</td><td class="num">${bytes(v.size)}</td><td>${v.analysed ? '<span class="tag done">analysed</span>' : '<span class="tag">new</span>'}</td></tr>`).join('')}</tbody></table>` : ''}
-    <input type="text" id="vpath" placeholder="C:\\path\\to\\video.mp4">
-    <div class="form" style="margin-top:10px"><label for="vcat">Category</label>
-      <select id="vcat">${ST.categories.map(o => `<option value="${o.id}" ${o.id === ST.settings.default_category ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>
-      <label for="vtags">Tags (optional)</label><input type="text" id="vtags" placeholder="e.g. instagram, asmr, recipe">
-      <span></span><span class="small dim">Pacing, effects and lessons are kept per category, so cooking shorts don't change how music videos are judged.</span></div>
-    <div class="choice">
-      <div><button class="btn pri big" id="goc" ${cl.found ? '' : 'disabled'}><svg class="i"><use href="#i-claude"/></svg>Analyse with Claude</button>
-        <div class="small">Recommended. MotionLab measures the video (about 1–2 minutes per minute of video), then <b>Claude Code opens by
-          itself</b> and names every effect. After that you give your verdicts.
-          ${cl.found ? '' : '<div class="bad">Claude Code was not found - <a href="#/settings" onclick="closeModal()">Settings</a>.</div>'}</div></div>
-      <div><button class="btn" id="go">Measure only</button>
-        <div class="small muted">No Claude for now: the effect names stay guesses until you send it to Claude from the video's page.</div></div></div>
-    <label class="chk small" style="margin-top:8px"><input type="checkbox" id="redet"> re-use the earlier measurements (faster)</label>`, el => {
-    const inp = $('#vpath', el);
-    if (prefill) inp.value = prefill;
-    $$('tr[data-p]', el).forEach(r => r.onclick = () => { inp.value = r.dataset.p; $$('tr[data-p]', el).forEach(x => x.classList.toggle('sel', x === r)); });
-    const go = async claude => {
-      if (!inp.value.trim()) { toast('Pick or paste a video first', 'err'); return; }
-      const j = await startJob('analyze', {video: inp.value.trim(), redetect: $('#redet', el).checked, category: $('#vcat', el).value,
-                                           tags: $('#vtags', el).value, claude});
-      if (!j) return;
-      closeModal();
-      if (claude) toast('Measuring the video. Claude Code opens by itself when it is done.', 'ok');
+// Analyze > Add videos (0.4): links and / or files (up to 10), what Claude should look at (content creation,
+// cinematic, both), and whether Claude checks each one when it is measured - then they are analysed one after another
+const FOCUS_OPTS = [
+  ['content', 'Content creation', 'Talking, the hook, captions and on-screen text, pacing, motion graphics.', 'TikToks, Reels, YouTube, vlogs, podcasts', '+ the transcript and the views'],
+  ['cinematic', 'Cinematic', 'Effects, transitions, camera moves, speed ramps and the colour grade.', 'music videos, edits, trailers, ads', '+ the colour look'],
+  ['both', 'Both', 'Everything - the content and the cinematic side.', 'when you are not sure', 'takes a little longer']];
+const AV_MAX = 10;
+async function addVideosModal(pre = {}) {
+  const [cands, ST] = await Promise.all([api('/api/candidates'), api('/api/settings')]);
+  const cl = ST.tools.find(t => t.name === 'claude') || {}, yt = ST.tools.find(t => t.name === 'yt-dlp') || {};
+  const picked = new Set(pre.files || []);
+  let focus = pre.focus || ST.settings.default_focus || 'both';
+  const fresh = cands.filter(c => !c.analysed), done = cands.filter(c => c.analysed);
+  const elsewhere = (pre.files || []).filter(p => !cands.some(c => c.path === p)).map(p => ({path: p, name: p, size: null, analysed: true}));
+  const fileRow = c => `<label class="avfile"><input type="checkbox" value="${esc(c.path)}" ${picked.has(c.path) ? 'checked' : ''}>
+    <span class="grow">${esc(c.name)}</span><span class="small dim">${bytes(c.size)}</span>${c.analysed ? '<span class="tag done">analysed - again</span>' : '<span class="tag">new</span>'}</label>`;
+  modal(`<h2>Analyze videos</h2>
+    <div class="avstep"><b>1</b><span>Which videos?</span><span class="small muted">up to ${AV_MAX} at a time - they are analysed one after another</span></div>
+    <textarea id="avl" rows="3" placeholder="Paste links, one per line - YouTube, TikTok, Instagram, Vimeo…">${esc((pre.links || []).join('\n'))}</textarea>
+    ${yt.found ? '' : '<div class="small amber">Links need the downloader (yt-dlp): <a href="#/settings" onclick="closeModal()">Settings → Programs</a>. Files work without it.</div>'}
+    <div class="small muted" style="margin:8px 0 4px">or pick videos you already have (in the refs folder):</div>
+    <div class="avfiles" id="avfiles">${[...elsewhere, ...fresh, ...done].map(fileRow).join('') || '<div class="small dim">No videos in refs yet - paste a link, or the path of a video below.</div>'}</div>
+    <div class="row" style="margin-top:6px"><input type="text" id="avpath" placeholder="…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4" style="flex:1"><button class="btn sm" id="avadd">Add</button></div>
+    <div class="avstep"><b>2</b><span>What should Claude look at?</span></div>
+    <div class="avmodes">${FOCUS_OPTS.map(([k, t, d, ex, extra]) => `<label class="avmode${k === focus ? ' on' : ''}"><input type="radio" name="avf" value="${k}" ${k === focus ? 'checked' : ''}>
+      <b>${t}</b><span>${d}</span><span class="small dim">${ex}</span><span class="small acc">${extra}</span></label>`).join('')}</div>
+    <div class="row small" style="margin-top:8px"><label>Kind of video <select id="avcat">${ST.categories.map(o => `<option value="${o.id}" ${o.id === ST.settings.default_category ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select></label>
+      <span class="dim">pacing and lessons are compared within a kind</span></div>
+    <div class="avstep"><b>3</b><span>Claude's check</span></div>
+    <label class="chk avclaude"><input type="radio" name="avc" value="1" ${cl.found ? 'checked' : 'disabled'}><span><b>Claude checks each video when it is measured</b> (recommended) - a Claude Code window opens per video:
+      it names every effect and writes what makes the video work, so it can use it in your edits.${cl.found ? '' : ' <span class="bad">Claude Code was not found - Settings.</span>'}</span></label>
+    <label class="chk avclaude"><input type="radio" name="avc" value="0" ${cl.found ? '' : 'checked'}><span><b>Measure only</b> - send them to Claude later (each video gets a <i>Send to Claude</i> button).</span></label>
+    <details class="fold" style="margin-top:10px"><summary>More options</summary><div class="in"><div class="form">
+      <label for="avtags">Tags (optional)</label><input type="text" id="avtags" placeholder="e.g. instagram, asmr, recipe">
+      <span></span><label class="chk small"><input type="checkbox" id="avre"> re-use the earlier measurements of videos analysed before (faster)</label></div></div></details>
+    <div class="row" style="margin-top:14px"><button class="btn pri big" id="avgo" disabled><svg class="i"><use href="#i-analyze"/></svg>Analyze</button>
+      <span id="avsum" class="small muted"></span></div>`, el => {
+    const links = () => $('#avl', el).value.split(/\s+/).map(x => x.trim()).filter(Boolean);
+    const files = () => $$('#avfiles input:checked', el).map(x => x.value);
+    const upd = () => {
+      const L = links(), F = files(), n = L.length + F.length, bad = L.filter(u => !/^https?:\/\/\S+$/i.test(u));
+      const b = $('#avgo', el);
+      b.disabled = !n || n > AV_MAX || bad.length > 0 || (L.length && !yt.found);
+      b.innerHTML = `<svg class="i"><use href="#i-analyze"/></svg>Analyze ${n > 1 ? n + ' videos' : n === 1 ? 'the video' : ''}`;
+      $('#avsum', el).innerHTML = bad.length ? `<span class="bad">not a link: ${esc(bad[0])}</span>` : n > AV_MAX ? `<span class="bad">at most ${AV_MAX} at a time</span>`
+        : n ? `${L.length ? plural(L.length, 'link') + ' (downloaded first)' : ''}${L.length && F.length ? ' + ' : ''}${F.length ? plural(F.length, 'file') : ''} · about 1–2 minutes per minute of video${focus !== 'cinematic' ? ', + the transcript' : ''}` : 'Paste a link or pick a video.';
     };
-    $('#goc', el).onclick = () => go(true);
-    $('#go', el).onclick = () => go(false);
-  });
+    $('#avl', el).oninput = upd;
+    $('#avfiles', el).onchange = upd;
+    $$('input[name=avf]', el).forEach(r => r.onchange = () => { focus = r.value; $$('.avmode', el).forEach(x => x.classList.toggle('on', $('input', x).checked)); upd(); });
+    $('#avadd', el).onclick = () => {
+      const v = $('#avpath', el).value.trim().replace(/^"|"$/g, '');
+      if (!v) return;
+      const box = $('#avfiles', el);
+      if (box.querySelector('.dim')) box.innerHTML = '';
+      box.insertAdjacentHTML('afterbegin', fileRow({path: v, name: v, size: null, analysed: false}));
+      box.querySelector('input').checked = true; $('#avpath', el).value = ''; upd();
+    };
+    $('#avgo', el).onclick = async () => {
+      const b = $('#avgo', el); b.disabled = true;
+      try {
+        const r = await api('/api/analyze/batch', {links: links(), files: files(), focus, category: $('#avcat', el).value,
+          tags: $('#avtags', el).value, claude: ($('input[name=avc]:checked', el) || {}).value === '1', redetect: $('#avre', el).checked});
+        closeModal(); ping();
+        toast(`Analysing ${plural(r.jobs.length, 'video')} - follow them on the Analyze page`, 'ok');
+        if (location.hash !== '#/analyze') location.hash = '#/analyze'; else route();
+      } catch (e) { toast(e.message, 'err'); b.disabled = false; }
+    };
+    if (pre.again) $('#avre', el).checked = true;           // another focus for a video analysed before: re-use its measurements
+    if (pre.pick) $('#avfiles', el).scrollIntoView({block: 'center'}); else $('#avl', el).focus();
+    upd();
+  }, 'wide');
 }
-
 // ============================================================================================ the workflow of a reference
 const FLOW = [
   ['download', 'Download', 'Paste a link to a video you like (YouTube, TikTok, Instagram…)'],
@@ -742,15 +828,16 @@ const FLOW = [
   ['share', 'Share', 'Your friends get what you learned'],
 ];
 const flowDots = fl => `<span class="fdots" title="${esc(FLOW.map(([k, t], i) => `${i + 1} ${t}${fl.done.includes(k) ? ' ✓' : ''}`).join(' · '))}">${FLOW.map(([k]) => `<i class="${fl.done.includes(k) ? 'd' : k === fl.next ? 'n' : ''}"></i>`).join('')}</span>`;
+// since 0.4 a video is ready for edits once Claude checked it; verdicts, feedback and sharing teach Claude (optional)
 function flowNext(fl) {
   const left = fl.events - fl.reviewed, open = fl.misses - fl.misses_checked;
   switch (fl.next) {
     case 'claude': return `Next: send it to Claude - ${left} effect${left === 1 ? '' : 's'} not checked yet`;
-    case 'verdicts': return fl.given >= fl.real && open ? `Next: check ${open} possible miss${open === 1 ? '' : 'es'}`
-      : `Next: your verdicts - ${fl.given} / ${fl.real} effects` + (fl.misses ? `, ${fl.misses_checked} / ${fl.misses} possible misses` : '');
-    case 'feedback': return fl.sent ? 'Next: your feedback is exported - let Claude apply it' : 'Next: send your feedback to Claude';
-    case 'share': return "Next: share what you learned (Claude's memory)";
-    default: return 'All steps done ✓';
+    case 'verdicts': return fl.given >= fl.real && open ? `Ready ✓ · optional: check ${open} possible miss${open === 1 ? '' : 'es'}`
+      : `Ready ✓ · optional: your verdicts teach Claude (${fl.given} / ${fl.real})`;
+    case 'feedback': return fl.sent ? 'Ready ✓ · your feedback is exported - let Claude apply it' : 'Ready ✓ · optional: send your verdicts to Claude';
+    case 'share': return 'Ready ✓ · optional: share it with your friends';
+    default: return 'Ready ✓ · all steps done';
   }
 }
 function flowAction(r, fl, onPage = false) {         // the button for a reference's next step
@@ -760,14 +847,16 @@ function flowAction(r, fl, onPage = false) {         // the button for a referen
     case 'verdicts':
       if (fl.given >= fl.real && open) return onPage ? `<button class="btn ${sz} missbtn" data-tabgo="misses">Check the possible misses</button>`
         : `<a class="btn ${sz} missbtn" href="#/ref/${encodeURIComponent(r.name)}?misses">Check ${open} possible miss${open === 1 ? '' : 'es'}</a>`;
-      return onPage ? `<button class="btn ${sz}" data-tabgo="review">Give your verdicts ↓</button>` : `<a class="btn ${sz}" href="#/ref/${encodeURIComponent(r.name)}">Give your verdicts</a>`;
-    case 'feedback': return `<button class="btn ${sz} pri" data-feedback="${esc(r.name)}"><svg class="i"><use href="#i-claude"/></svg>Send feedback to Claude</button>`;
+      return onPage ? `<button class="btn ${sz}" data-tabgo="review">Give your verdicts ↓</button>` : `<a class="btn ${sz}" href="#/ref/${encodeURIComponent(r.name)}?verdicts">Give your verdicts</a>`;
+    case 'feedback': return `<button class="btn ${sz}" data-feedback="${esc(r.name)}"><svg class="i"><use href="#i-claude"/></svg>Send feedback to Claude</button>`;
     case 'share': return `<a class="btn ${sz}" href="#/memory/learned">Share my knowledge</a>`;
     default: return '';
   }
 }
-function flowStrip(r, fl) {                           // the reference page: the six steps, this video's state, the next one
-  return `<div class="flow strip">${FLOW.map(([k, t, d], i) => `<div class="fstep ${fl.done.includes(k) ? 'done' : k === fl.next ? 'next' : ''}" title="${esc(d)}"><b>${fl.done.includes(k) ? '✓' : i + 1}</b><span class="ft">${t}</span></div>`).join('<i class="farr">›</i>')}
+function flowStrip(r, fl) {                           // the video's page: download > measure > Claude | teach Claude (optional)
+  const step = ([k, t, d], i) => `<div class="fstep ${fl.done.includes(k) ? 'done' : k === fl.next ? 'next' : ''}" title="${esc(d)}"><b>${fl.done.includes(k) ? '✓' : i + 1}</b><span class="ft">${t}</span></div>`;
+  return `<div class="flow strip">${FLOW.slice(0, 3).map(step).join('<i class="farr">›</i>')}
+    <span class="fopt">Teach Claude <i>(optional)</i></span>${FLOW.slice(3).map((x, i) => step(x, i + 3)).join('<i class="farr">›</i>')}
     <div class="grow"></div><div class="fnext"><span class="small">${esc(flowNext(fl))}</span>${flowAction(r, fl, true)}</div></div>`;
 }
 
@@ -837,32 +926,69 @@ document.addEventListener('click', e => {
 const delBtn = (kind, name, after = '', label = '') => `<button class="btn sm ${label ? 'danger' : 'ghost icon'}" data-del="${kind}" data-name="${esc(name)}" data-after="${esc(after)}" title="Delete… (to the Recycle Bin)"><svg class="i"><use href="#i-trash"/></svg>${label}</button>`;
 
 // ============================================================================================ videos (analyses)
+const FOCUS_SHORT = {content: 'Content', cinematic: 'Cinematic', both: 'Content + cinematic'};
+const focusChip = f => f ? `<span class="fchip sm focus-${esc(f)}" title="what Claude looked at">${esc(FOCUS_SHORT[f] || f)}</span>` : '';
+// the lines a card shows for its focus (profile.py: the hook / talking / text; the signature effects / transitions)
+const focusLines = r => { const L = r.lines || {}, f = r.focus || 'both';
+  return [f !== 'cinematic' && L.content, f !== 'content' && L.cinematic, f !== 'content' && L.colour].filter(Boolean)
+    .map(x => `<div class="small muted pline">${esc(x)}</div>`).join(''); };
+// Analyze > in progress: the downloads and analyses running or waiting their turn (queued jobs), and the ones that
+// just ended in this session - refreshed every 2 s while any is active
+function progressPanel(el, onEnd) {
+  let stop = false, last = '';
+  const tick = async () => {
+    if (stop) return;
+    let list = [];
+    try { list = (await api('/api/jobs')).filter(j => ['download', 'analyze'].includes(j.kind)); } catch (e) { /* the next tick */ }
+    const act = list.filter(j => j.status === 'running' || j.status === 'queued' || j.status === 'cancelling')
+      .sort((a, b) => (a.status === 'queued') - (b.status === 'queued') || a.id - b.id);   // running first, then in turn
+    const recent = list.filter(j => !act.includes(j) && j.ended_ago_s != null && j.ended_ago_s < 900).slice(0, 4);
+    const sig = act.map(j => j.id + j.status).join() + '|' + recent.map(j => j.id + j.status).join();
+    if (sig !== last) {
+      if (last && act.length < (last.split('|')[0].split(',').filter(Boolean).length)) onEnd();
+      last = sig;
+      el.innerHTML = act.length || recent.length ? `<div class="panel progress"><div class="row sp"><h2>${act.length ? `Working on ${plural(act.length, 'job')}` : 'Done'}</h2><a class="small" href="#/jobs">all jobs →</a></div>
+        ${[...act, ...recent].map(j => `<div class="pjob ${esc(j.status)}"><span class="tag ${esc(j.status)}">${j.status === 'queued' ? 'waiting' : esc(j.status)}</span>
+          <span class="grow">${esc(j.title)}${j.then ? ' <span class="small dim">→ then analysed</span>' : ''}${j.then_claude ? ' <span class="small amber">→ then Claude checks it</span>' : ''}</span>
+          <a class="small" href="#/jobs/${j.id}">log</a>${j.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${j.id}">Remove</button>` : ''}</div>`).join('')}</div>` : '';
+      $$('[data-cancel]', el).forEach(b => b.onclick = async () => { try { await api(`/api/jobs/${b.dataset.cancel}/cancel`, {}); tick(); } catch (e) { toast(e.message, 'err'); } });
+    }
+    if (act.length) setTimeout(tick, 2000);
+  };
+  tick();
+  return () => { stop = true; };
+}
 async function pageRefs(main) {
-  let tests = false, cat = '', tag = '';
+  let tests = false, cat = '', tag = '', foc = '';
+  let stopProgress = null;
+  onCleanup(() => stopProgress && stopProgress());
   const draw = async () => {
     const [all, wait] = await Promise.all([api('/api/references' + (tests ? '?tests=1' : '')), api('/api/waiting').catch(() => [])]);
     const cats = [...new Map(all.filter(r => r.category).map(r => [r.category, r.category_label])).entries()];
     const tags = [...new Set(all.flatMap(r => r.tags || []))].sort();
-    const refs = all.filter(r => (!cat || r.category === cat) && (!tag || (r.tags || []).includes(tag)));
+    const refs = all.filter(r => (!cat || r.category === cat) && (!tag || (r.tags || []).includes(tag)) && (!foc || r.focus === foc));
     const pct = (a, b) => b ? Math.round(100 * a / b) : 100;
     const none = !all.length && !wait.length;
-    const btns = big => `<button class="btn${big ? ' big' : ''}" id="dl"><svg class="i"><use href="#i-download"/></svg>Download from a link</button>
-      <button class="btn pri${big ? ' big' : ''}" id="an">＋ Analyse a video</button>`;
+    const btns = big => `<button class="btn ghost${big ? ' big' : ''}" id="dl" title="Only download - e.g. a song (MP3) for an edit"><svg class="i"><use href="#i-download"/></svg>Download only…</button>
+      <button class="btn pri${big ? ' big' : ''}" id="an"><svg class="i"><use href="#i-analyze"/></svg>Add videos</button>`;
     main.innerHTML = `<div class="head"><div><h1>Analyze</h1><div class="sub">Videos you like, broken down cut by cut and effect by effect - Claude remembers their style for your edits.</div></div>
       ${none ? '' : `<div class="row">${btns(false)}</div>`}</div>
+      <div id="avprog"></div>
       ${wait.length ? `<div class="panel waiting"><h2>Downloaded, not analysed yet</h2><table class="t"><tbody>${wait.map(w => `<tr>
         <td>${w.audio ? '<span class="tag">audio</span>' : '<span class="tag">video</span>'}</td><td><b>${esc(w.title || w.name)}</b><div class="small dim mono">${esc(w.name)}</div></td>
         <td class="small muted">${w.url ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.platform || 'link')}</a> · ` : ''}${esc(w.modified)}</td><td class="num small">${bytes(w.size)}</td>
-        <td class="row" style="justify-content:flex-end">${w.audio ? '<span class="small dim">music for an edit (Edit)</span>' : `<button class="btn sm pri" data-an="${esc(w.path)}">Analyse…</button>`}${delBtn('file', w.rel, '', ' Delete')}</td></tr>`).join('')}</tbody></table></div>` : ''}
-      ${all.length ? `<div class="row" style="margin:12px 0"><select id="fcat"><option value="">All categories (${all.length})</option>${cats.map(([k, l]) => `<option value="${k}" ${k === cat ? 'selected' : ''}>${esc(l)} (${all.filter(r => r.category === k).length})</option>`).join('')}</select>
-        ${tags.length ? `<select id="ftag"><option value="">All tags</option>${tags.map(t => `<option ${t === tag ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}</div>` : ''}
+        <td class="row" style="justify-content:flex-end">${w.audio ? '<span class="small dim">music for an edit (Edit)</span>' : `<button class="btn sm pri" data-an="${esc(w.path)}">Analyze…</button>`}${delBtn('file', w.rel, '', ' Delete')}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      ${all.length ? `<div class="row" style="margin:12px 0"><select id="ffoc" class="ffil"><option value="">Every focus</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}" ${k === foc ? 'selected' : ''}>${l} (${all.filter(r => r.focus === k).length})</option>`).join('')}</select>
+        <select id="fcat" class="ffil"><option value="">All categories (${all.length})</option>${cats.map(([k, l]) => `<option value="${k}" ${k === cat ? 'selected' : ''}>${esc(l)} (${all.filter(r => r.category === k).length})</option>`).join('')}</select>
+        ${tags.length ? `<select id="ftag" class="ffil"><option value="">All tags</option>${tags.map(t => `<option ${t === tag ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}</div>` : ''}
       ${refs.length ? `<div class="cards">${refs.map(r => { const fl = r.flow; return `<div class="card refcard ${fl.next ? 'n-' + fl.next : 'n-done'}">
         <a class="clink" href="#/ref/${encodeURIComponent(r.name)}">
         ${r.thumb ? `<img class="thumb" src="${fileUrl(r.thumb)}" loading="lazy">` : ''}
         <div class="cb"><div class="ct">${esc(r.title)}</div>
         <div class="small muted">${tc((r.frames || 1) - 1, r.fps)} · ${r.fps} fps · ${r.width}×${r.height}${r.bpm ? ` · ${r.bpm.toFixed(1)} BPM` : ''} · analysed ${esc(r.generated || '')}</div>
-        <div class="small">${r.category ? `<span class="tag">${esc(r.category_label)}</span> ` : ''}${(r.tags || []).map(t => `<span class="tag dim">${esc(t)}</span> `).join('')}<span class="muted">${esc((r.format || {}).label || '')}</span></div>
+        <div class="small">${focusChip(r.focus)} ${r.category ? `<span class="tag">${esc(r.category_label)}</span> ` : ''}${(r.tags || []).map(t => `<span class="tag dim">${esc(t)}</span> `).join('')}<span class="muted">${esc((r.format || {}).label || '')}</span></div>
         <div class="small">${r.events} effects · ${r.cuts} hard cuts${r.pacing && r.pacing.cuts_per_min != null ? ` · <b>${r.pacing.cuts_per_min}</b> cuts/min · shots ${r.pacing.avg_shot_s} s` : ''}</div>
+        ${focusLines(r)}
         <div class="small muted pgl"><span>Claude checked <b>${fl.reviewed} / ${fl.events}</b></span><span>your verdicts <b>${fl.given} / ${fl.real}</b>${fl.misses ? ` · misses <b class="${fl.misses_checked < fl.misses ? 'bad' : ''}">${fl.misses_checked} / ${fl.misses}</b>` : ''}</span></div>
         <div class="bar duo"><i style="width:${pct(fl.reviewed, fl.events)}%;background:#4fb3ff"></i><i style="width:${pct(fl.given, fl.real)}%"></i></div>
         <div class="small fnl">${flowDots(fl)} <span class="${fl.next ? '' : 'ok'}">${esc(flowNext(fl))}</span></div>
@@ -871,17 +997,20 @@ async function pageRefs(main) {
         : none ? emptyHero('analyze', 'Learn from a video you like', 'Download it from a link or pick a video file - MotionLab finds every cut and effect, Claude names them and remembers the style.', btns(true))
         : '<div class="empty">No reference in this category.</div>'}
       <label class="chk small dim" style="margin-top:18px"><input type="checkbox" id="tests" ${tests ? 'checked' : ''}> show the test videos</label>`;
-    $('#an').onclick = () => analyseModal();
+    $('#an').onclick = () => addVideosModal();
     $('#dl').onclick = downloadModal;
     $('#tests').onchange = e => { tests = e.target.checked; draw(); };
-    $$('[data-an]', main).forEach(b => b.onclick = () => analyseModal(b.dataset.an));
+    $$('[data-an]', main).forEach(b => b.onclick = () => addVideosModal({files: [b.dataset.an], pick: true}));
+    const ff = $('#ffoc', main); if (ff) ff.onchange = e => { foc = e.target.value; draw(); };
     const fc = $('#fcat', main); if (fc) fc.onchange = e => { cat = e.target.value; draw(); };
+    if (stopProgress) stopProgress();
+    stopProgress = progressPanel($('#avprog', main), () => draw());
     const ft = $('#ftag', main); if (ft) ft.onchange = e => { tag = e.target.value; draw(); };
   };
   await draw();
 }
 
-async function pageRef(main, name, selId, openMisses) {
+async function pageRef(main, name, selId, openMisses, openReview) {
   const R = await api('/api/reference/' + encodeURIComponent(name));
   const fps = R.video.fps, N = R.video.frames, evs = R.events, NM = R.near_misses || [];
   const byId = Object.fromEntries(evs.map(e => [e.id, e]));
@@ -894,17 +1023,21 @@ async function pageRef(main, name, selId, openMisses) {
   const pref = (k, d) => { try { const v = localStorage.getItem('ml.' + k); return v === null ? d : v; } catch (e) { return d; } };
   const setPref = (k, v) => { try { localStorage.setItem('ml.' + k, v); } catch (e) { /* private window */ } };
   let autoNext = pref('autoNext', '1') === '1', sound = pref('previewSound', '0') === '1', rate = +pref('previewRate', '1') || 1;
-  let shown = evs, tab = openMisses && NM.length ? 'misses' : 'review';
+  let shown = evs, tab = openMisses && NM.length ? 'misses' : selId || openReview ? 'review' : 'overview';
   main.innerHTML = `
   <div class="head"><div><div class="crumb"><a href="#/analyze">Analyze</a> / video</div><h1>${esc(R.title)}</h1>
-    <div class="sub"><span class="tag">${esc(R.category_label)}</span> ${(R.tags || []).map(t => `<span class="tag dim">${esc(t)}</span> `).join('')}<a href="#" id="editmeta" class="small">edit</a>
+    <div class="sub">${focusChip(R.focus || '')}${R.focus ? '' : '<span class="fchip sm" title="analysed before 0.4">focus not set</span>'} <span class="tag">${esc(R.category_label)}</span> ${(R.tags || []).map(t => `<span class="tag dim">${esc(t)}</span> `).join('')}<a href="#" id="editmeta" class="small">edit</a>
       ${R.url ? ` · <a href="${esc(R.url)}" target="_blank" rel="noopener">${esc(R.platform || 'source')}</a>` : ''} · ${R.video.width}×${R.video.height} · ${fps} fps · ${N} frames (f0–${N - 1}, 00:00:00:00 – ${R.video.end_tc})${R.audio.bpm ? ` · ${R.audio.bpm.toFixed(1)} BPM` : ''}
       · ${evs.length} effects, ${R.cuts.length} hard cuts · analysed ${esc(R.generated || '')}${R.source_unchanged ? ' · source unchanged ✓' : ''}</div>
     ${R.pacing ? `<div class="small pacing">Pacing: <b>${R.pacing.cuts_per_min ?? '–'}</b> cuts/min · shots avg <b>${R.pacing.avg_shot_s ?? '–'} s</b> (median ${R.pacing.median_shot_s ?? '–'} s) · <b>${R.pacing.hook_cuts_3s}</b> cut(s) in the first 3 s · <b>${R.pacing.effects_per_min ?? '–'}</b> effects/min${R.pacing.cuts_on_beat_pct != null ? ` · ${R.pacing.cuts_on_beat_pct} % of plain cuts on the beat` : ''}</div>` : ''}</div>
-    <div class="row"><button class="btn cl" id="recreate" title="Claude rebuilds this edit with your own clips"><svg class="i"><use href="#i-claude"/></svg>Recreate with my footage…</button>
+    <div class="row"><button class="btn cl" id="recreate" title="Claude edits your own clips like this video"><svg class="i"><use href="#i-edit"/></svg>Edit my clips like this…</button>
       ${R.report ? `<button class="btn" data-open="${esc(R.report)}">Open full report</button>` : ''}
       <button class="btn" data-open="${esc('analysis/' + R.name)}">Folder</button>${delBtn('reference', R.name, '#/analyze', ' Delete…')}</div></div>
   <div id="flow">${flowStrip(R, R.flow)}</div>
+  <div class="rtabs" id="rtabs"><button class="rtab" data-tab="overview">Overview</button><button class="rtab" data-tab="review">Effects <span class="cnt" id="cnt-review"></span></button>
+    ${NM.length ? '<button class="rtab misstab" data-tab="misses">Possible misses <span class="cnt" id="cnt-misses"></span></button>' : ''}
+    <button class="rtab" data-tab="content" title="what the video says and how it performs">What it says</button>
+    <div class="grow"></div><span class="hint">Your verdicts are saved as you go <span id="saved"></span></span></div>
   <div class="watch">
     <div id="player"></div>
     <div class="tl" id="tl1"><canvas height="100"></canvas></div>
@@ -914,10 +1047,6 @@ async function pageRef(main, name, selId, openMisses) {
       keys: <span class="kbd">←</span><span class="kbd">→</span> frame, <span class="kbd">Shift</span> ten, <span class="kbd">Space</span> play,
       <span class="kbd">J</span><span class="kbd">K</span> previous / next effect, <span class="kbd">N</span> next without verdict, <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span> correct / partly / wrong</div>
   </div>
-  <div class="rtabs" id="rtabs"><button class="rtab" data-tab="review">Review effects <span class="cnt" id="cnt-review"></span></button>
-    ${NM.length ? '<button class="rtab misstab" data-tab="misses">Possible misses <span class="cnt" id="cnt-misses"></span></button>' : ''}
-    <button class="rtab" data-tab="content" title="what the video says and how it performs">Content</button>
-    <div class="grow"></div><span class="hint">Your verdicts are saved as you go <span id="saved"></span></span></div>
   <div class="review" id="tab-review">
     <div class="rlist">
       <div class="filters"><input type="search" id="q" placeholder="Search effects, notes…">
@@ -935,6 +1064,7 @@ async function pageRef(main, name, selId, openMisses) {
       (before · at · after - click one to show it in the player), read Claude's check, then answer.</div>
     <div class="misses" id="misses"></div></div>` : ''}
   <div class="contentarea" id="tab-content" hidden></div>
+  <div class="overview" id="tab-overview" hidden></div>
   <div class="fbbar"><div class="prog"><div class="row sp small"><span id="progt"></span></div><div class="bar"><i id="progb"></i></div></div>
     <button class="btn" id="missedb">Missed effects / general notes</button>
     ${nfa ? '<button class="btn ghost" id="agreefa" title="optional: tells Claude its “not an effect” calls were right">Agree with all false alarms</button>' : ''}
@@ -1041,6 +1171,7 @@ async function pageRef(main, name, selId, openMisses) {
     const eo = $('#endopen'); if (eo) eo.onclick = nextOpen;
   };
   const setVerdict = v => {
+    if (!cur) return;
     const st = S.events[cur.id] = S.events[cur.id] || {};
     st.v = st.v === v ? '' : v; changed();
     if (st.v === 'correct' && autoNext) { move(1); return; }
@@ -1056,11 +1187,13 @@ async function pageRef(main, name, selId, openMisses) {
     if (seek && P) { P.range = [e.start, e.end]; P.v.pause(); P.seek(e.start); }
   };
   const move = d => {
+    if (!cur) return;
     const i = shown.indexOf(cur);
     if (d > 0 && i === shown.length - 1) { endCard(); return; }
     select(shown[i < 0 ? 0 : clamp(i + d, 0, shown.length - 1)], true);
   };
   const nextOpen = () => {
+    if (!cur) return;
     const i = Math.max(0, shown.indexOf(cur));
     const e = [...shown.slice(i + 1), ...shown.slice(0, i + 1)].find(x => !x.false_alarm && !vOf(x.id) && x !== cur);
     if (e) select(e, true); else endCard();
@@ -1095,8 +1228,12 @@ async function pageRef(main, name, selId, openMisses) {
     tab = t;
     $$('#rtabs .rtab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
     $('#tab-review').hidden = t !== 'review'; if ($('#tab-misses')) $('#tab-misses').hidden = t !== 'misses';
-    $('#tab-content').hidden = t !== 'content';
+    $('#tab-content').hidden = t !== 'content'; $('#tab-overview').hidden = t !== 'overview';
+    $('.watch', main).hidden = t === 'overview';          // the Overview needs no player (it pauses)
+    if (t === 'overview' && P) P.v.pause();
+    $('.fbbar', main).hidden = t === 'overview' || t === 'content';
     if (t === 'content' && !$('#tab-content').dataset.done) contentTab($('#tab-content'), R, P);
+    if (t === 'overview' && !$('#tab-overview').dataset.done) overviewTab($('#tab-overview'), R, showTab);
     if (scroll) $('#rtabs').scrollIntoView({behavior: 'smooth', block: 'start'});
   };
   $$('#rtabs .rtab').forEach(b => b.onclick = () => showTab(b.dataset.tab, true));
@@ -1129,8 +1266,10 @@ async function pageRef(main, name, selId, openMisses) {
     else if (k === 'n' || k === 'N') nextOpen();
     else if (k === '1' || k === '2' || k === '3') setVerdict(['correct', 'partly', 'wrong'][+k - 1]);
   };
-  drawMisses(); progress(); showTab(tab); select(cur, false);
-  if (P && selId) P.seek(cur.start);
+  drawMisses(); progress(); showTab(tab);
+  if (cur) select(cur, false);               // a video without effects (a talking head: only cuts) has nothing to select
+  else $('#detail').innerHTML = '<div class="empty">No effects in this video - only plain cuts (the Overview has its rhythm). Nothing to check here.</div>';
+  if (P && selId && cur) P.seek(cur.start);
   if (tab === 'misses') setTimeout(() => $('#rtabs').scrollIntoView({block: 'start'}), 50);
 }
 
@@ -1997,7 +2136,7 @@ function addPromptsModal(R) {
   });
   start();
 }
-function newPromptForm(box, R, pick = '') {
+function newPromptForm(box, R, pick = '', style = '') {
   const kinds = (R.kinds || []).length ? R.kinds.map(k => k.id) : Object.keys(KSHORT);
   const first = kinds.includes(pick) ? pick : kinds[0];
   box.innerHTML = `<h3>What kind of prompt?</h3>
@@ -2012,7 +2151,8 @@ function newPromptForm(box, R, pick = '') {
       <span class="small muted">a video you analysed: Claude copies its measured pacing and effects</span></div>` : ''}
     <div class="row" style="margin-top:12px"><button class="btn pri" id="ngo"><svg class="i"><use href="#i-claude"/></svg>Generate it in Claude Code</button>
       <span class="small muted">Claude asks what is missing, writes it, checks it and saves it here.</span></div>`;
-  const nst = () => { const k = $('input[name=nk]:checked', box).value; if ($('#nstyle', box)) $('#nstyle', box).hidden = !STYLE_KINDS.includes(k); };
+  const nst = () => { const k = $('input[name=nk]:checked', box).value; if ($('#nstyle', box)) $('#nstyle', box).hidden = !STYLE_KINDS.includes(k) && !style; };
+  if (style && $('#nsty', box)) $('#nsty', box).value = style;          // "like this" from an analysed video
   $$('input[name=nk]', box).forEach(r => r.onchange = () => { $$('.kopt', box).forEach(x => x.classList.toggle('on', $('input', x).checked)); nst(); });
   nst();
   $$('[data-t]', box).forEach(b => b.onclick = () => b.classList.toggle('on'));
@@ -2020,7 +2160,7 @@ function newPromptForm(box, R, pick = '') {
   $('#ngo', box).onclick = () => {
     const k = $('input[name=nk]:checked', box).value, w = $('#nwant', box).value.trim().replace(/\s+/g, ' ');
     const tags = $$('[data-t].on', box).map(b => b.dataset.t), m = $('#nmodel', box).value.trim();
-    const sty = $('#nsty', box) && STYLE_KINDS.includes(k) ? $('#nsty', box).value : '';
+    const sty = $('#nsty', box) && (STYLE_KINDS.includes(k) || style) ? $('#nsty', box).value : '';
     if (!w) { toast('Say what you want to make first', 'err'); $('#nwant', box).focus(); return; }
     openClaude(`/write-prompt ${k} - want: ${w}${tags.length ? ' - for: ' + tags.join(', ') : ''}${m ? ' - model: ' + m : ''}${sty ? ' - style: ' + sty : ''}`, 'prompt', 'new');
     closeModal();
@@ -2249,7 +2389,7 @@ async function downloadModal() {
         box.innerHTML = `<div class="small">Saved: <span class="mono">${esc(file)}</span></div>
           <div class="row" style="margin-top:8px">${isVideo ? '<button class="btn pri" id="dan">Analyse it</button>' : ''}
           ${rel ? '<button class="btn" id="dop">Show in folder</button>' : ''}</div>`;
-        if (isVideo) $('#dan', el).onclick = () => { closeModal(); analyseModal(file); };
+        if (isVideo) $('#dan', el).onclick = () => { closeModal(); addVideosModal({files: [file], pick: true}); };
         if (rel) $('#dop', el).onclick = () => openPath(rel, true);
       });
     };
