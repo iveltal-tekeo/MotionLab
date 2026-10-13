@@ -5,7 +5,8 @@
 For every video file directly inside projects\\<name>\\ it writes, into projects\\<name>\\build\\:
   sources.json                     stable source IDs (A, B, ...) and the SHA-256 of every file
   cache\\<ID>.color.yuv + .json     colour frames (YUV 4:2:0, ~3.9 GB per minute of footage at 1520x1140) at the
-                                   target fps, scaled so one frame covers the output frame - the default since 0.3.0
+                                   target fps, scaled so one frame covers the output frame (never above the clip's
+                                   own size) - the default since 0.3.0
   cache\\<ID>.u8 + .json            --grey: grey frames (~2.6 GB per minute) for black-and-white edits (test_4am)
   cache\\<ID>_stats.npz             per cache frame: luma mean/p05/p95, motion, sharpness, global shift (pan) in % of
                                    width
@@ -40,7 +41,10 @@ KEEP_FREE = 2e9                                   # bytes that must stay free on
 
 
 def cache_size(w: int, h: int, ow: int, oh: int) -> tuple[int, int]:
-    s = max(ow / w, oh / h)                       # cover-fit: one cached frame covers the output frame at 1x
+    """Cover-fit: one cached frame covers the output frame at 1x - but never above the clip's own size (0.4: a
+    horizontal clip in a vertical edit would be cached 1.8x up, ~3x the disk, for no detail; the compositor scales
+    up when it draws)."""
+    s = min(1.0, max(ow / w, oh / h))
     return int(round(w * s / 2)) * 2, int(round(h * s / 2)) * 2
 
 

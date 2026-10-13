@@ -210,7 +210,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 13;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 14;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -934,12 +934,12 @@ const focusLines = r => { const L = r.lines || {}, f = r.focus || 'both';
     .map(x => `<div class="small muted pline">${esc(x)}</div>`).join(''); };
 // Analyze > in progress: the downloads and analyses running or waiting their turn (queued jobs), and the ones that
 // just ended in this session - refreshed every 2 s while any is active
-function progressPanel(el, onEnd) {
+function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () => true) {
   let stop = false, last = '';
   const tick = async () => {
     if (stop) return;
     let list = [];
-    try { list = (await api('/api/jobs')).filter(j => ['download', 'analyze'].includes(j.kind)); } catch (e) { /* the next tick */ }
+    try { list = (await api('/api/jobs')).filter(j => kinds.includes(j.kind) && match(j)); } catch (e) { /* the next tick */ }
     const act = list.filter(j => j.status === 'running' || j.status === 'queued' || j.status === 'cancelling')
       .sort((a, b) => (a.status === 'queued') - (b.status === 'queued') || a.id - b.id);   // running first, then in turn
     const recent = list.filter(j => !act.includes(j) && j.ended_ago_s != null && j.ended_ago_s < 900).slice(0, 4);
@@ -1276,8 +1276,8 @@ async function pageRef(main, name, selId, openMisses, openReview) {
 // ============================================================================================ projects
 async function pageProjects(main) {
   const ps = await api('/api/projects');
-  const cv = big => `<button class="btn pri${big ? ' big' : ''}" id="cvnew"><svg class="i"><use href="#i-claude"/></svg>New edit</button>`;
-  main.innerHTML = `<div class="head"><div><h1>Edit</h1><div class="sub">Your clips, edited in the style of videos you analysed - or from a prompt.</div></div>
+  const cv = big => `<button class="btn pri${big ? ' big' : ''}" id="cvnew"><svg class="i"><use href="#i-edit"/></svg>New edit</button>`;
+  main.innerHTML = `<div class="head"><div><h1>Edit</h1><div class="sub">Your clips, cut like videos you analysed, the way you say - or from a prompt.</div></div>
       ${ps.length ? `<div class="row">${cv(false)}<button class="btn" data-open="projects">Folder</button></div>` : ''}</div>
     ${ps.length ? `<div class="cards">${ps.map(p => `<div class="card refcard"><a class="clink" href="#/project/${encodeURIComponent(p.name)}">
       ${p.thumb ? `<img class="thumb" src="${fileUrl(p.thumb)}" loading="lazy">` : ''}
@@ -1285,82 +1285,173 @@ async function pageProjects(main) {
       <div class="small muted">${p.clips} clips · ${bytes(p.footage_bytes)} of footage</div>
       <div class="small">${p.plans.length} edit version${p.plans.length === 1 ? '' : 's'} · ${p.renders.length} render${p.renders.length === 1 ? '' : 's'}${p.resolve.length ? ' · in Resolve: ' + esc(p.resolve.join(', ')) : ''}</div></div></a>
       <div class="cact"><a class="btn sm" href="#/project/${encodeURIComponent(p.name)}">Open</a><div class="grow"></div>${delBtn('project', p.name)}</div></div>`).join('')}</div>`
-      : emptyHero('edit', 'Make your first edit', 'Give Claude your clips and a style: a video you analysed, or a prompt - it cuts them for you.', cv(true))}`;
+      : emptyHero('edit', 'Make your first edit', 'Your clips and a style - up to three videos you analysed, or your own words. A quick draft takes minutes; Claude makes it great.', cv(true))}`;
   $('#cvnew', main).onclick = () => createVideoModal();
 }
 
-// Create video (0.3.3): from a reference (its edit, 1:1, with your clips) or from a prompt (a script, a hook, a shot);
-// the video's folder records what it is made from (build\made_from.json) and Claude Code does the work
+// ---- Edit > New edit (0.4, the user: "give the clips and use a reference video (previously analysed) or even more -
+// max 3 - or edit it with a given prompt: hooks, 3 s cuts, very fast paced... or slower, transitions, captions").
+// Four steps in one dialog: 1 your clips, 2 how (like analysed videos | your words | a saved prompt), 3 length /
+// format / sound, 4 a quick draft now (job "draft": rules, no Claude) or Claude (/recreate-video ...). What was picked
+// is saved as build\edit_request.json (POST /api/project/<p>/edit_request) - Claude and the draft both read it.
+const NE_HOW = [
+  ['like', 'i-analyze', 'Like videos you analysed', 'Up to 3 - their rhythm, effects and captions, or an exact copy of one'],
+  ['words', 'i-edit', 'With your words', 'A ready-made style - fast hooks, 3 s cuts, slow and cinematic… - or say what you want'],
+  ['prompt', 'i-prompts', 'From a saved prompt', 'A brief, a talking script or a hook from your prompts']];
 async function createVideoModal(pre = {}) {
-  const [refs, PRM, ps] = await Promise.all([api('/api/references'), api('/api/prompts'), api('/api/projects')]);
+  const [MEM, refs, PRM, ps, OPT] = await Promise.all([api('/api/memory'), api('/api/references'), api('/api/prompts'),
+    api('/api/projects'), api('/api/edit/options')]);
   const KL = Object.fromEntries(PRM.kinds.map(k => [k.id, k.label]));
-  let from = pre.from || '', pick = pre.pick || '';
-  modal(`<h2>Create a video</h2>
-    <div class="cvchoice">
-      <button class="cvopt" data-from="reference"><svg class="ic"><use href="#i-refs"/></svg><b>Use a reference</b>
-        <span>The cuts, effects and timing of a video you analysed, with your own clips</span></button>
-      <button class="cvopt" data-from="prompt"><svg class="ic"><use href="#i-prompts"/></svg><b>Use a prompt</b>
-        <span>A brief, a talking script or a hook from your Prompts</span></button></div>
+  const thumbs = Object.fromEntries(refs.map(r => [r.name, r.thumb]));
+  const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id, thumb: v.analysis ? thumbs[v.analysis] : null}));
+  const st = {how: pre.from === 'prompt' ? 'prompt' : pre.from === 'words' ? 'words' : pre.from === 'reference' || pre.pick ? 'like' : '',
+              like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false, presets: [], want: '', prompt: pre.from === 'prompt' ? pre.pick || '' : '',
+              length: '', format: '', sound: 'auto', music: '', resolve: false};
+  modal(`<h2>New edit</h2><div class="small muted" style="margin-top:-4px">Your clips, cut the way you want. Your clips are only read, never changed.</div>
+    <div class="nestep"><b>1</b>Your clips</div>
+    <div class="row"><select id="cvp" style="max-width:340px">${ps.map(x => `<option value="${esc(x.name)}">${esc(x.name)} (${plural(x.clips, 'clip')})</option>`).join('')}<option value="">+ a new video…</option></select>
+      <input type="text" id="cvname" placeholder="name, e.g. cooking vlog 1" hidden style="max-width:260px"><button class="btn sm" id="cvmk" hidden>Create the folder</button></div>
+    <div class="small muted" id="cvhint" style="margin-top:6px"></div>
+    <div class="nestep"><b>2</b>How should it be cut?</div>
+    <div class="cvchoice three">${NE_HOW.map(([k, ic, t, s]) => `<button class="cvopt" data-m="${k}"><svg class="ic"><use href="#${ic}"/></svg><b>${t}</b><span>${s}</span></button>`).join('')}</div>
     <div id="cvpick"></div>
-    <div id="cvclips" hidden><h3>Your clips</h3>
-      <div class="row"><select id="cvp" style="max-width:320px">${ps.map(x => `<option value="${esc(x.name)}">${esc(x.name)} (${x.clips} clips)</option>`).join('')}<option value="">+ a new video…</option></select>
-        <input type="text" id="cvname" placeholder="name, e.g. cooking vlog 1" hidden style="max-width:260px"><button class="btn sm" id="cvmk" hidden>Create the folder</button></div>
-      <div class="small muted" id="cvhint" style="margin-top:6px"></div></div>
-    <div class="row" style="margin-top:14px"><button class="btn pri" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Start in Claude Code</button>
-      <span class="small muted">Claude makes it with you - first a preview, then, if you want, a DaVinci Resolve project. It can take an hour or more.</span></div>`, el => {
+    <div id="nedet" hidden><div class="nestep"><b>3</b>Length, format, sound</div>
+      <div class="nedet"><label>Length</label><div class="seg" id="nelen">${[['', 'Auto'], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+        <label>Format</label><div class="seg" id="nefmt">${[['', 'Auto'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+        <label>Sound</label><select id="nesnd" style="max-width:420px"></select></div></div>
+    <div class="nestep"><b id="nego-n">4</b>Make it</div>
+    <div class="nego"><div class="negoc" id="nedraft"><button class="btn big" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>Quick draft now</button>
+        <span class="small muted">A first version in a few minutes, by rules - no Claude. Watch it, then let Claude make it better.</span></div>
+      <div class="negoc"><button class="btn pri big" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Make it with Claude</button>
+        <span class="small muted">Claude plans it with you and renders a preview - it can take an hour or more.</span>
+        <label class="small"><input type="checkbox" id="neres"> then build it as a DaVinci Resolve project</label></div></div>
+    <div class="small amber" id="nemsg" style="margin-top:8px"></div>`, el => {
     const sel = $('#cvp', el), name = $('#cvname', el), mk = $('#cvmk', el);
-    const say = () => from === 'reference' ? `/recreate-video ${pick} ${sel.value}` : `/recreate-video prompt:${pick} ${sel.value}`;
+    if (pre.project && ps.some(x => x.name === pre.project)) sel.value = pre.project;
+    const P = () => ps.find(x => x.name === sel.value);
+    const ready = () => {
+      if (!sel.value || !P() || !P().clips) return '';
+      if (st.how === 'like') return st.like.length ? (st.exact ? 'copy' : 'style') : '';
+      if (st.how === 'words') return st.presets.length || st.want.trim() ? 'words' : '';
+      if (st.how === 'prompt') return st.prompt ? 'prompt' : '';
+      return '';
+    };
     const upd = () => {
-      const ready = from && pick && sel.value;
-      $('#cvgo', el).disabled = !ready;
       const nw = !sel.value; name.hidden = mk.hidden = !nw;
-      const P = ps.find(x => x.name === sel.value);
-      $('#cvhint', el).innerHTML = nw ? 'A new folder for this video - copy your clips into it.'
-        : P && !P.clips ? `<span class="amber">No clips in ${esc(P.name)} yet</span> - copy them into its folder, then start.` : 'Your clips are only read, never changed.';
+      $('#cvhint', el).innerHTML = nw ? 'A new folder for this video - copy your clips (and a song, if you have one) into it.'
+        : P() && !P().clips ? `<span class="amber">No clips in ${esc(P().name)} yet</span> - copy them into its folder, then come back.`
+        : P() ? `${plural(P().clips, 'clip')}${(P().songs || []).length ? ` · ${plural(P().songs.length, 'song')}: ${P().songs.map(esc).join(', ')}` : ' · no song in the folder (an .mp3 there is used as the music)'}` : '';
+      const how = ready();
+      const det = how === 'style' || how === 'words';
+      $('#nedet', el).hidden = !(st.how === 'like' && !st.exact || st.how === 'words');
+      $('#nego-n', el).textContent = $('#nedet', el).hidden ? '3' : '4';
+      $('#nedraft', el).hidden = !(st.how === 'words' || st.how === 'like' && !st.exact);
+      $('#cvdraft', el).disabled = !det;
+      $('#cvgo', el).disabled = !how;
+      const snd = $('#nesnd', el), songs = (P() || {}).songs || [];
+      const cur = snd.value || 'auto';
+      snd.innerHTML = `<option value="auto">Automatic - the song in the folder if there is one</option>${songs.map(s => `<option value="music:${esc(s)}">The song: ${esc(s)}</option>`).join('')}
+        <option value="clips">The clips' own sound</option><option value="talk">Talking - keep what is said, cut the pauses</option><option value="none">No song (the clips' own sound)</option>`;
+      snd.value = [...snd.options].some(o => o.value === cur) ? cur : 'auto';
+      $('#nemsg', el).textContent = st.how === 'like' && st.like.length > OPT.max_refs ? `At most ${OPT.max_refs} videos.` : '';
     };
     const showPick = () => {
-      $$('.cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.from === from));
+      $$('.cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.m === st.how));
       const box = $('#cvpick', el);
-      if (from === 'reference') {
-        const rs = refs.filter(r => !r.test);
-        box.innerHTML = `<h3>Which reference?</h3>${rs.length ? `<div class="cvlist">${rs.map(r => `<label class="cvitem${r.name === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(r.name)}" ${r.name === pick ? 'checked' : ''}>
-          ${r.thumb ? `<img src="${fileUrl(r.thumb)}" loading="lazy">` : ''}<span><b>${esc(r.title)}</b><br><span class="small muted">${esc(r.category_label || '')} · ${r.events} effects · ${(r.duration_s || 0).toFixed(0)} s</span></span></label>`).join('')}</div>`
-          : '<div class="empty">No analysed video yet - download and analyse one first (<a href="#/analyze" onclick="closeModal()">Analyze</a>).</div>'}`;
-      } else if (from === 'prompt') {
-        box.innerHTML = `<h3>Which prompt?</h3><input type="search" id="cvq" placeholder="Search your prompts…" style="max-width:340px">
+      if (st.how === 'like') {
+        box.innerHTML = `<div class="row sp" style="margin-top:12px"><h3 style="margin:0">Which videos? <span class="small muted">(up to ${OPT.max_refs} - Claude mixes their style)</span></h3><input type="search" id="cvq" placeholder="Search…" style="max-width:240px"></div>
+          ${vids.length ? '<div class="cvlist" id="cvvl"></div>' : '<div class="empty">No analysed video yet - analyse one first (<a href="#/analyze" onclick="closeModal()">Analyze</a>).</div>'}
+          <div id="neexact"></div>`;
+        const draw = q => {
+          const l = $('#cvvl', box); if (!l) return;
+          l.innerHTML = vids.filter(v => !q || [v.title, v.category_label, v.focus_label, v.author, ...(v.tags || [])].join(' ').toLowerCase().includes(q)).map(v => {
+            const on = st.like.includes(v.key), full = !on && st.like.length >= OPT.max_refs;
+            return `<label class="cvitem${on ? ' on' : ''}${full ? ' off' : ''}"><input type="checkbox" value="${esc(v.key)}" ${on ? 'checked' : ''} ${full ? 'disabled' : ''}>
+              ${v.thumb ? `<img src="${fileUrl(v.thumb)}" loading="lazy">` : '<span class="cvnoimg"></span>'}<span class="grow"><b>${esc(v.title)}</b> ${focusChip(v.focus)}${v.origin === 'local' ? '' : ` <span class="tag" title="shared by a friend">${esc(v.author || 'friend')}</span>`}<br>
+              <span class="small muted">${esc(v.category_label || '')} · ${(v.pacing || {}).cuts_per_min ?? '–'} cuts/min · ${plural(v.effects || 0, 'effect')}${v.summary ? ' · ' + esc(v.summary.slice(0, 110)) + (v.summary.length > 110 ? '…' : '') : ''}</span></span></label>`; }).join('') || '<div class="empty">No video matches.</div>';
+          $$('input', l).forEach(c => c.onchange = () => {
+            st.like = c.checked ? [...st.like, c.value].slice(0, OPT.max_refs) : st.like.filter(x => x !== c.value);
+            draw(q); exact(); upd(); });
+        };
+        const exact = () => {
+          const one = st.like.length === 1 && vids.find(v => v.key === st.like[0] && v.analysis);
+          if (!one) st.exact = false;
+          $('#neexact', box).innerHTML = st.like.length ? `<div class="neexact"><label class="kopt${!st.exact ? ' on' : ''}"><input type="radio" name="nex" value="0" ${!st.exact ? 'checked' : ''}><span><b>In ${st.like.length > 1 ? 'their' : 'its'} style</b> - your music, your length; Claude copies the rhythm, the effects and how they were made</span></label>
+            <label class="kopt${st.exact ? ' on' : ''}${one ? '' : ' off'}"><input type="radio" name="nex" value="1" ${st.exact ? 'checked' : ''} ${one ? '' : 'disabled'}><span><b>An exact copy</b> - the same song, the same cuts and effects, frame by frame, with your clips${one ? '' : ' <span class="small muted">(one video analysed on this PC)</span>'}</span></label></div>` : '';
+          $$('input[name=nex]', box).forEach(r => r.onchange = () => { st.exact = r.value === '1'; exact(); upd(); });
+        };
+        if ($('#cvq', box)) $('#cvq', box).oninput = debounce(e => draw(e.target.value.trim().toLowerCase()), 150);
+        draw(''); exact();
+      } else if (st.how === 'words') {
+        box.innerHTML = `<h3 style="margin:12px 0 6px">A ready-made style <span class="small muted">(pick one or more, or none)</span></h3>
+          <div class="nepre">${OPT.presets.map(p => `<button class="nep${st.presets.includes(p.id) ? ' on' : ''}" data-p="${esc(p.id)}"><b>${esc(p.label)}</b><span>${esc(p.help)}</span></button>`).join('')}</div>
+          <h3 style="margin:14px 0 6px">In your words <span class="small muted">(optional - Claude reads every word)</span></h3>
+          <textarea id="newant" rows="3" placeholder="e.g. a hook in the first second, 3 s cuts, very fast paced, bold captions word by word, slow zooms while I talk">${esc(st.want)}</textarea>`;
+        $$('.nep', box).forEach(b => b.onclick = () => {
+          const id = b.dataset.p; st.presets = st.presets.includes(id) ? st.presets.filter(x => x !== id) : [...st.presets, id];
+          b.classList.toggle('on', st.presets.includes(id));
+          const tk = OPT.presets.find(p => p.id === id);
+          if (tk && tk.talk && st.presets.includes(id)) { $('#nesnd', el).value = 'talk'; st.sound = 'talk'; }
+          upd(); });
+        $('#newant', box).oninput = e => { st.want = e.target.value; upd(); };
+      } else if (st.how === 'prompt') {
+        box.innerHTML = `<div class="row sp" style="margin-top:12px"><h3 style="margin:0">Which prompt?</h3><input type="search" id="cvq" placeholder="Search your prompts…" style="max-width:280px"></div>
           <div class="cvlist" id="cvpl"></div>`;
-        const draw = q => { $('#cvpl', box).innerHTML = PRM.items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60)
-          .map(x => `<label class="cvitem${x.id === pick ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === pick ? 'checked' : ''}>
-            <span><b class="mono">${esc(x.id)}</b> ${esc(x.title || '')} <span class="tag">${esc(KL[x.kind] || x.kind)}</span>${(x.tags || []).map(g => ` <span class="fchip sm">${esc(g)}</span>`).join('')}<br>
+        const items = PRM.items.filter(x => ['brief', 'script', 'hook'].includes(x.kind));
+        const draw = q => { $('#cvpl', box).innerHTML = items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60)
+          .map(x => `<label class="cvitem${x.id === st.prompt ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === st.prompt ? 'checked' : ''}>
+            <span><b>${esc(x.title || x.title_auto || x.id)}</b> <span class="tag">${esc(KL[x.kind] || x.kind)}</span><br>
             <span class="small muted">${esc(x.text.slice(0, 150))}${x.text.length > 150 ? '…' : ''}</span>${(x.style_refs || []).length
-              ? `<br><span class="small">Style like: ${x.style_refs.map(n => esc(((PRM.styles || {})[n] || {}).title || n)).join(', ')}</span>` : ''}</span></label>`).join('') || '<div class="empty">No prompt matches.</div>'; wire(); };
+              ? `<br><span class="small">Style like: ${x.style_refs.map(n => esc(((PRM.styles || {})[n] || {}).title || n)).join(', ')}</span>` : ''}</span></label>`).join('')
+            || `<div class="empty">${items.length ? 'No prompt matches.' : 'No brief, script or hook yet - <a href="#/prompts" onclick="closeModal()">Prompts</a>.'}</div>`;
+          $$('input[name=cvr]', box).forEach(r => r.onchange = () => { st.prompt = r.value; $$('.cvitem', box).forEach(x => x.classList.toggle('on', $('input', x).checked)); upd(); }); };
         $('#cvq', box).oninput = debounce(e => draw(e.target.value.trim().toLowerCase()), 150);
         draw('');
-      }
-      wire();
-      $('#cvclips', el).hidden = !from; upd();
+      } else box.innerHTML = '';
+      upd();
     };
-    const wire = () => $$('input[name=cvr]', el).forEach(r => r.onchange = () => {
-      pick = r.value; $$('.cvitem', el).forEach(x => x.classList.toggle('on', $('input', x).checked)); upd(); });
-    $$('.cvopt', el).forEach(b => b.onclick = () => { if (from !== b.dataset.from) pick = ''; from = b.dataset.from; showPick(); });
+    const segPick = (id, key) => {
+      const seg = $(id, el);
+      const paint = () => $$('button', seg).forEach(b => b.classList.toggle('on', b.dataset.v === st[key]));
+      $$('button', seg).forEach(b => b.onclick = () => { st[key] = b.dataset.v; paint(); });
+      paint();
+    };
+    segPick('#nelen', 'length'); segPick('#nefmt', 'format');
+    $('#nesnd', el).onchange = e => { st.sound = e.target.value; };
+    $$('.cvopt', el).forEach(b => b.onclick = () => { st.how = b.dataset.m; showPick(); });
     sel.onchange = upd;
     mk.onclick = async () => {
       try {
         const r = await api('/api/projects/new', {name: name.value});
-        ps.push({name: r.name, clips: 0});
+        ps.push({name: r.name, clips: 0, songs: []});
         sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${esc(r.name)} (new)</option>`); sel.value = r.name;
         openPath(r.folder); upd(); toast(`Folder “${r.name}” created - copy your clips into it`, 'ok');
       } catch (e) { toast(e.message, 'err'); }
     };
+    const request = async () => {
+      const how = ready(), snd = $('#nesnd', el).value;
+      const body = {how, like: st.like, presets: st.presets, want: st.want, prompt: st.prompt, length_s: st.length || null,
+                    format: st.format || null, music: snd.startsWith('music:') ? snd.slice(6) : snd === 'none' ? 'none' : '',
+                    sound: snd.startsWith('music:') ? 'music' : snd === 'none' ? 'clips' : snd, resolve: $('#neres', el).checked};
+      return api(`/api/project/${encodeURIComponent(sel.value)}/edit_request`, body);
+    };
     $('#cvgo', el).onclick = async () => {
       try {
-        await api(`/api/project/${encodeURIComponent(sel.value)}/made_from`, {kind: from, id: pick});
-        openClaude(say(), 'recreate', `${from === 'reference' ? pick : 'prompt ' + pick} → ${sel.value}`);
+        const r = await request();
+        openClaude(r.command, 'recreate', `${ready()} → ${sel.value}`);
         closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
       } catch (e) { toast(e.message, 'err'); }
     };
-    if (from) showPick(); else upd();
-  });
+    $('#cvdraft', el).onclick = async () => {
+      try {
+        await request();
+        await api('/api/jobs', {kind: 'draft', args: {project: sel.value}});
+        toast('The quick draft is on its way - it shows up here when it is ready', 'ok');
+        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
+      } catch (e) { toast(e.message, 'err'); }
+    };
+    showPick();
+  }, 'wide');
 }
 
 async function pageProject(main, name, tab = 'overview') {
@@ -1369,9 +1460,14 @@ async function pageProject(main, name, tab = 'overview') {
                 ['timing', 'Timing check'], ['resolve', 'Resolve & library']];
   main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/edit">Edit</a> /</div><h1>${esc(P.name)}</h1>
     <div class="sub">${P.sources.length} clips · ${P.plans.length} edit version(s) · ${P.renders.length} render(s)</div></div>
-    <div class="row"><button class="btn" data-open="${esc('projects/' + P.name)}">Folder</button>${delBtn('project', P.name, '#/edit', ' Delete…')}</div></div>
+    <div class="row"><button class="btn pri" id="pjnew"><svg class="i"><use href="#i-edit"/></svg>New edit…</button><button class="btn" data-open="${esc('projects/' + P.name)}">Folder</button>${delBtn('project', P.name, '#/edit', ' Delete…')}</div></div>
+    <div id="pjprog"></div>
     <div class="tabs">${tabs.map(([k, l]) => `<a href="#/project/${encodeURIComponent(name)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>
     <div id="tab"></div>`;
+  $('#pjnew').onclick = () => createVideoModal({project: P.name});
+  const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
+                                 ['draft'], j => (j.args || {}).project === P.name);
+  onCleanup(stopProg);
   const el = $('#tab');
   if (tab === 'renders') return projRenders(el, P);
   if (tab === 'graphics') return projGraphics(el, P);
@@ -1385,7 +1481,8 @@ function outcomePanel(P) {
   return `<div class="panel outcome"><div class="row sp"><h2>How did it turn out?</h2><span class="small muted">${(P.outcome || {}).updated
       ? 'saved ' + esc(P.outcome.updated) : 'tell Claude what worked - it reads this next time'}</span></div>
     ${mf.length ? `<div class="small" style="margin-bottom:8px">Made from: ${mf.map(x => x.kind === 'reference'
-      ? `<a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : `<a href="#/prompts/${esc(x.id)}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
+      ? `an exact copy of <a href="#/ref/${encodeURIComponent(x.id)}">${esc(x.id)}</a>` : x.kind === 'style' ? `the style of ${esc(x.id)}`
+      : x.kind === 'words' ? `your words (${esc(x.id)})` : `<a href="#/prompts/${esc(x.id)}">prompt ${esc(x.id)}</a>`).join(', ')}</div>` : ''}
     <div class="ogrid">${ASPECTS.map(([k, l]) => { const a = O[k] || {};
       return `<div class="orow" data-k="${k}"><span class="olab">${esc(l)}</span><span class="row" style="gap:4px">${['good', 'ok', 'bad'].map(r =>
         `<button class="btn sm vrb ${r}${a.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</span>
@@ -1413,12 +1510,13 @@ function projOverview(el, P) {
     ${P.sources.map(s => `<tr><td class="mono amber">${s.id}</td><td>${esc(s.name)}${s.exists ? '' : ' <span class="bad">missing</span>'}</td>
       <td class="small muted">${esc(s.resolution || '')} · ${s.fps || '?'} fps</td>
       <td class="num">${s.duration_s ? s.duration_s.toFixed(1) + ' s' : '–'}</td><td class="num">${bytes(s.size)}</td></tr>`).join('')}</tbody></table></div>
-    <div class="panel"><h2>Edit versions</h2><table class="t"><thead><tr><th>Version</th><th>Length</th><th class="num">Layers</th><th>Levels</th></tr></thead><tbody>
+    <div class="panel"><h2>Edit versions</h2><table class="t"><thead><tr><th>Version</th><th>Length</th><th>Made</th><th class="num">Layers</th></tr></thead><tbody>
     ${P.plans.map(p => `<tr><td class="mono amber">${esc(p.version)}</td><td>${p.frames} frames · f0–${p.frames - 1} <span class="tc">(00:00:00:00 – ${esc(p.duration_tc)})</span> · ${p.fps} fps</td>
-      <td class="num">${p.layers}</td><td class="small muted">${esc(p.levels)}</td></tr>`).join('')}</tbody></table>
+      <td class="small">${p.made_by === 'draft_edit.py' ? `quick draft${p.style ? ': ' + esc(p.style) : ''}${p.notes ? ` · <a href="#" data-open="${esc(p.notes)}">notes</a>` : ''}` : '<span class="muted">by Claude</span>'}</td>
+      <td class="num">${p.layers}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">none yet - <b>New edit…</b> above</td></tr>'}</tbody></table>
     <div class="small muted" style="margin-top:8px">Edit scripts: ${P.edit_scripts.map(s => `<a href="#" data-open="${esc(s)}" data-reveal>${esc(s.split('/').pop())}</a>`).join(', ') || '–'}</div></div></div>
-    <h3>Storyboards (one frame per second of every clip)</h3>
-    <div class="sheets" style="grid-template-columns:repeat(3,1fr)">${P.boards.map((b, i) => `<img src="${fileUrl(b)}" data-i="${i}" loading="lazy">`).join('')}</div>`;
+    ${P.boards.length ? `<h3>Storyboards (one frame per second of every clip)</h3>
+    <div class="sheets" style="grid-template-columns:repeat(3,1fr)">${P.boards.map((b, i) => `<img src="${fileUrl(b)}" data-i="${i}" loading="lazy">`).join('')}</div>` : ''}`;
   $$('.sheets img', el).forEach(img => img.onclick = () => lightbox(P.boards.map(b => ({src: b})), +img.dataset.i));
   wireOutcome(el, P);
 }
@@ -1433,7 +1531,8 @@ function projRenders(el, P) {
     <h3>Side by side with the reference</h3>
     <div class="grid g2">${P.compares.map((r, i) => `<div class="panel"><div class="row sp" style="margin-bottom:6px"><span class="small muted">${esc(r.name)} · ${bytes(r.size)}</span>${delBtn('file', r.rel, '', ' Delete…')}</div><div id="cp${i}"></div></div>`).join('')
       || '<div class="muted">none</div>'}</div>`;
-  P.renders.forEach((r, i) => new Player($('#pl' + i, el), r.rel, fpsOf(), frames));
+  const planOf = r => P.plans.find(p => p.name && r.name.replace(/\.mp4$/i, '') === p.name) || {};      // zz_v2.mp4 <- plan_v2
+  P.renders.forEach((r, i) => new Player($('#pl' + i, el), r.rel, planOf(r).fps || fpsOf(), planOf(r).frames || frames));
   P.compares.forEach((r, i) => new Player($('#cp' + i, el), r.rel, fpsOf(), frames));
   if (!vids.length) el.innerHTML = '<div class="empty">No renders yet.</div>';
 }

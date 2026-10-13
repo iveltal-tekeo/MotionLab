@@ -35,9 +35,18 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   buttons and counts - `status()` carries `prompts` and `lessons`), the Claude's memory line, setup warnings, roadmap,
   status; *Prompts for AI tools* = `aiPromptsModal` (Generate a new prompt, a shot picked). Each page sets
   `body[data-page]` (analyze / edit / generate / memory / jobs / settings) -> its accent colour (`--acc`: cyan / amber
-  / pink / violet / blue; CSS only, motion off with prefers-reduced-motion). Edit: **New edit** (`createVideoModal`: Use a reference | Use a
-  prompt -> your clips (a project, or *+ a new video* = POST `/api/projects/new`, an empty folder) -> POST
-  `/api/project/<p>/made_from` + Claude `/recreate-video <ref> <p>` or `/recreate-video prompt:<id> <p>`); a video's
+  / pink / violet / blue; CSS only, motion off with prefers-reduced-motion). Edit: **New edit** (0.4, `createVideoModal`,
+  four steps in one dialog: 1 your clips (a project, or *+ a new video* = POST `/api/projects/new`; its songs =
+  `list_projects` `songs`), 2 how (`NE_HOW`: *Like videos you analysed* = up to `max_refs` 3 from Claude's memory -
+  this PC's analyses and friends' cards - then *In its / their style* or *An exact copy* (one local analysis) |
+  *With your words* = the presets of `style.PRESETS` (GET `/api/edit/options`) + a text | *From a saved prompt*),
+  3 length / format / sound (style and words only), 4 *Quick draft now* (job `draft` = `draft_edit.py <p> ...
+  --render`; the video's page follows it with `progressPanel(el, onEnd, ['draft'], match)`) or *Make it with Claude*
+  (+ "then a DaVinci Resolve project") -> POST `/api/project/<p>/edit_request` (`data.save_edit_request`: checked,
+  saved as `build\edit_request.json`, appended to `made_from.json` - kinds reference / style / words / prompt; the
+  answer's `command` = `/recreate-video <ref> <p>` for a copy, `prompt:<id>`, else `/recreate-video request <p>`, so
+  the user's words never pass through cmd). A video's page has *New edit…*; Edit versions say how each was made (a
+  quick draft: its style + *notes* = `draft_vN.md`; `_plan_info` `made_by` / `style` / `notes`); a video's
   Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
   overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
   `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").

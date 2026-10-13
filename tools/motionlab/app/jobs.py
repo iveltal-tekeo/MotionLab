@@ -168,6 +168,15 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"
+    if kind == "draft":             # Edit > New edit > Quick draft (0.4): build\\edit_request.json -> draft_edit.py
+        p = data.safe_name(str(a.get("project", "")))
+        if not (data.PROJECTS / p).is_dir():
+            raise JobError(f"no project {p}")
+        try:
+            extra = data.draft_args(data.edit_request(p))
+        except (FileNotFoundError, ValueError) as e:
+            raise JobError(str(e))
+        return f"Quick draft of {p}", [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"
     if kind == "verify_timing":
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"

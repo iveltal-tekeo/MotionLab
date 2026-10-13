@@ -6,6 +6,20 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **New edit - your clips, cut the way you want**: *Edit > New edit* asks four things: your clips; how - **like
+  videos you analysed** (up to three: their rhythm, hook, effects and captions mixed, with your music and length -
+  or an exact copy of one, frame by frame), **with your words** (ready-made styles: fast & hooky, 3-second cuts,
+  talking + captions, slow & cinematic, transition-driven, music montage - and / or what you want, e.g. "a hook in
+  the first second, 2 s cuts, captions word by word") or **from a saved prompt**; length, format and sound; then
+  **Quick draft now** or **Make it with Claude**. The quick draft is made by rules in a few minutes, no Claude:
+  cuts on the beat of your song with the style's shot lengths, the best moments of your clips (sharp, well exposed,
+  each used once), the style's effects (crossfades, dips, flashes on the drops, zoom-throughs, pushes, whips,
+  push-ins, shakes, freezes, stutters, speed ramps, RGB splits, light leaks); a talking video keeps what is said
+  and cuts the pauses, with a punch-in every other cut and B-roll over the talking. Its notes list every shot with
+  frame and timecode. Claude then makes it great - a story, captions, graphics - and, if you want, a DaVinci
+  Resolve project.
+- Frame caches are never bigger than the clip itself: a horizontal clip in a vertical edit used to be cached at
+  1.8x its size (about 3x the disk) for no extra detail.
 - **Claude's memory** (sidebar): everything Claude learned in one place with one search - every video you and your
   friends analysed with its style (rhythm, hook, talking, captions, signature effects, Claude's breakdown), every
   effect seen with how often, your verdicts and how each was made (the ones you confirmed first), the lessons, your

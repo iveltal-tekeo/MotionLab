@@ -416,7 +416,10 @@ def _plan_info(p: Path) -> dict:
             "frames": pl.get("frames"), "fps": pl.get("fps"), "width": pl.get("width"), "height": pl.get("height"),
             "layers": len(pl.get("layers", [])), "levels": pl.get("levels", "single"),
             "duration_tc": frame_to_tc(max(0, int(pl.get("frames") or 1) - 1), float(pl.get("fps") or 25)),
-            "reference": rel(pl["reference"]) if pl.get("reference") and Path(pl["reference"]).exists() else None}
+            "reference": rel(pl["reference"]) if pl.get("reference") and Path(pl["reference"]).exists() else None,
+            "made_by": (pl.get("made_by") or {}).get("tool"), "style": (pl.get("made_by") or {}).get("style"),
+            "notes": rel(p.with_name(f"draft_{p.stem.split('_')[-1]}.md"))
+            if p.with_name(f"draft_{p.stem.split('_')[-1]}.md").exists() else None}
 
 
 def _video(p: Path, kind: str) -> dict:
@@ -437,6 +440,7 @@ def list_projects() -> list[dict]:
         boards = sorted((b / "boards").glob("*.jpg")) if (b / "boards").exists() else []
         out.append({
             "name": d.name, "clips": len(clips), "footage_bytes": sum(p.stat().st_size for p in clips),
+            "songs": sorted(p.name for p in d.iterdir() if p.is_file() and p.suffix.lower() in AUDIO_EXT),
             "plans": [p.stem for p in plans],
             "renders": [p.name for p in sorted(b.glob("*.mp4"))] if b.exists() else [],
             "resolve": sorted(m.name[:-len("_build.json")] for m in (b / "resolve").glob("*_build.json"))
@@ -546,7 +550,8 @@ def project(name: str) -> dict:
     srcs = (read_json(b / "sources.json", {}) or {}).get("sources", {})
     sources = []
     for sid, s in sorted(srcs.items()):
-        meta = read_json(b / "cache" / f"{sid}.json", {}) or {}
+        meta = (read_json(b / "cache" / f"{sid}.color.json", {}) or read_json(b / "cache" / f"{sid}.json", {})
+                or {})                                    # colour caches (0.3.0+) or grey ones
         p = Path(s["path"])
         sources.append({"id": sid, "name": s["name"], "size": p.stat().st_size if p.exists() else None,
                         "exists": p.exists(), "fps": meta.get("src_fps"), "frames": meta.get("src_frames"),
@@ -619,10 +624,12 @@ def new_project(name: str) -> dict:
 
 
 def add_made_from(name: str, kind: str, ref: str) -> list:
-    """What a video is made from (Create video): a reference (an analysis) or a prompt - build\\made_from.json."""
-    if kind not in ("reference", "prompt"):
-        raise ValueError("made from a reference or a prompt")
-    ref = safe_name(ref) if kind == "reference" else ref
+    """What a video is made from (New edit): a reference copied 1:1 (an analysis), up to three videos' style
+    ("style": names joined by ", "), the user's words ("words": presets / their words) or a prompt -
+    build\\made_from.json."""
+    if kind not in ("reference", "prompt", "style", "words"):
+        raise ValueError("made from a reference, videos' style, your words or a prompt")
+    ref = safe_name(ref) if kind == "reference" else " ".join(str(ref).split())[:300]
     if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", ref):
         raise ValueError(f"not a prompt id: {ref!r}")
     d = PROJECTS / safe_name(name)
@@ -633,6 +640,111 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     items.append({"kind": kind, "id": ref, "date": stamp()})
     write_json_atomic(p, items)
     return items
+
+
+# ------------------------------------------------------------------ 0.4: New edit - what the user asked for
+EDIT_HOW = ("copy", "style", "words", "prompt")
+EDIT_SOUND = ("auto", "music", "clips", "talk")
+
+
+def edit_options() -> dict:
+    """The New edit dialog's choices: the presets of "With your words", how many videos a style may mix."""
+    from motionlab import style as ST
+    return {"presets": ST.presets_info(), "max_refs": ST.MAX_REFS, "formats": sorted(ST.SIZES)}
+
+
+def edit_request(name: str) -> dict:
+    p = PROJECTS / safe_name(name) / "build" / "edit_request.json"
+    if not p.exists():
+        raise FileNotFoundError(f"{name}: no edit request yet (Edit > New edit)")
+    return read_json(p, {}) or {}
+
+
+def save_edit_request(name: str, body: dict) -> dict:
+    """New edit (0.4): what the user picked - copy one analysed video 1:1, mix the style of up to three, a preset
+    or their own words, or a saved prompt; length, format, sound, Resolve or not - checked, then saved as
+    build\\edit_request.json. Claude (/recreate-video request <p>) and the quick draft (job "draft") both read it, so
+    the user's words never pass through a command line."""
+    from motionlab import style as ST
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    how = str(body.get("how") or "")
+    if how not in EDIT_HOW:
+        raise ValueError(f"how: one of {', '.join(EDIT_HOW)}")
+    like = [" ".join(str(x).split()) for x in (body.get("like") or []) if str(x).strip()]
+    if len(like) > ST.MAX_REFS:
+        raise ValueError(f"at most {ST.MAX_REFS} videos for one edit")
+    for x in like:
+        if x.startswith("-") or len(x) > 160 or ST.find(x) is None:
+            raise ValueError(f"no analysed video called {x!r}")
+    if how in ("copy", "style") and not like:
+        raise ValueError("pick at least one analysed video")
+    if how == "copy" and (len(like) != 1 or not re.fullmatch(r"[\w.\- \[\]()&'+,]+", like[0]) or ".." in like[0]
+                          or not (ANALYSIS / like[0] / "events.json").exists()):
+        raise ValueError("an exact copy needs one video analysed on this PC")
+    presets = [str(x) for x in (body.get("presets") or [])]
+    bad = [x for x in presets if x not in ST.PRESETS]
+    if bad:
+        raise ValueError(f"unknown preset {bad[0]!r}")
+    want = " ".join(str(body.get("want") or "").split())[:1500]
+    if how == "words" and not presets and not want:
+        raise ValueError("pick a style or write what you want")
+    prompt = str(body.get("prompt") or "")
+    if how == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", prompt):
+        raise ValueError(f"not a prompt id: {prompt!r}")
+    length = body.get("length_s")
+    if length not in (None, ""):
+        length = float(length)
+        if not 3 <= length <= 900:
+            raise ValueError("length: 3 to 900 seconds")
+    else:
+        length = None
+    fmt = body.get("format") or None
+    if fmt is not None and fmt not in ST.SIZES:
+        raise ValueError(f"format: one of {', '.join(ST.SIZES)}")
+    music = str(body.get("music") or "")
+    if music and music != "none":
+        if Path(music).name != music or not (d / music).is_file() or (d / music).suffix.lower() not in AUDIO_EXT:
+            raise ValueError(f"{music}: not a song in projects\\{d.name}")
+    sound = str(body.get("sound") or "auto")
+    if sound not in EDIT_SOUND:
+        raise ValueError(f"sound: one of {', '.join(EDIT_SOUND)}")
+    req = {"how": how, "like": like if how in ("copy", "style") else [], "presets": presets if how in (
+        "words", "style") else [], "want": want if how != "prompt" else "", "prompt": prompt if how == "prompt" else None,
+        "length_s": length, "format": fmt, "music": music or None, "sound": sound,
+        "resolve": bool(body.get("resolve")), "date": stamp()}
+    write_json_atomic(d / "build" / "edit_request.json", req)
+    kind, ref = {"copy": ("reference", like[0] if like else ""), "style": ("style", ", ".join(like)),
+                 "words": ("words", ", ".join(ST.PRESETS[x]["label"] for x in presets) or want[:120]),
+                 "prompt": ("prompt", prompt)}[how]
+    made = add_made_from(d.name, kind, ref)
+    cmd = (f"/recreate-video {like[0]} {d.name}" if how == "copy" and " " not in like[0] + d.name
+           else f"/recreate-video prompt:{prompt} {d.name}" if how == "prompt" and " " not in d.name
+           else f"/recreate-video request {d.name}")
+    return {"request": req, "made_from": made, "command": cmd}
+
+
+def draft_args(req: dict) -> list[str]:
+    """draft_edit.py's arguments for a saved edit request (the quick draft job)."""
+    if req.get("how") not in ("style", "words"):
+        raise ValueError("a quick draft is made from videos' style or your words (an exact copy or a prompt: Claude)")
+    out: list[str] = []
+    for x in req.get("like") or []:
+        out += ["--like", x]
+    for x in req.get("presets") or []:
+        out += ["--preset", x]
+    if req.get("want"):
+        out += ["--want", req["want"]]
+    if req.get("length_s"):
+        out += ["--length", f"{float(req['length_s']):g}"]
+    if req.get("format"):
+        out += ["--format", req["format"]]
+    if req.get("music"):
+        out += ["--music", req["music"]]
+    if req.get("sound") and req["sound"] != "auto":
+        out += ["--sound", req["sound"]]
+    return out
 
 
 def save_outcome(name: str, body: dict) -> dict:
@@ -739,10 +851,13 @@ SKILL_INFO = {
                                    "learns from your verdicts when you send feedback.",
                           "uses": ["/analyze-reference <video name or file>"], "task": "review",
                           "where": "Analyze - Send to Claude, Send feedback to Claude"},
-    "recreate-video": {"brief": "Claude makes a video with your clips - the edit of a reference, or from one of your "
-                                "prompts - first as a preview, then in DaVinci Resolve.",
-                       "uses": ["/recreate-video <reference> <your video>", "/recreate-video prompt:<prompt id> <your video>",
-                                "/recreate-video improve <your video>"], "task": "recreate",
+    "recreate-video": {"brief": "Claude edits your clips - an exact copy of a video you analysed, in the style of up "
+                                "to three, from your words or one of your prompts - first as a preview, then in "
+                                "DaVinci Resolve.",
+                       "uses": ["/recreate-video <reference> <your video>", "/recreate-video feel:<video>,<video> <your video>",
+                                "/recreate-video want:fast_hook <your video> - want: <your words>",
+                                "/recreate-video prompt:<prompt id> <your video>", "/recreate-video improve <your video>"],
+                       "task": "recreate",
                        "where": "Edit - New edit, How did it turn out?"},
     "write-prompt": {"brief": "Claude checks, improves or writes prompts: briefs, AI video and image prompts, hooks "
                               "and scripts.",

@@ -55,7 +55,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `projects\<name>\` the user's footage (read-only, top level); everything we make goes to `build\`: `sources.json`
   (IDs A, B, ... + SHA-256), `cache\` (grey frame caches), `boards\`, `edit_vN.py` -> `plan_vN.json` (the edit),
   `<name>_vN.mp4`, `compare\`, `stills\`, `sheets\`, `resolve\` (option 2), `<name>_resolve_vN.mp4`,
-  `library_picks.json` (the user's picks in the app), `pruned.json`
+  `library_picks.json` (the user's picks in the app), `pruned.json`, `edit_request.json` (0.4: what *New edit*
+  asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound)
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
@@ -95,6 +96,12 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `speech.py install | status | transcribe <video> [--names "..."] [--model small|base]` speech to text for your
   own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
   timecode in `projects\<p>\build\speech\`; `overlay.py captions --from <video>` uses it
+- `style.py <video> [<video> <video>] [--preset id] [--want "..."]` the style of up to 3 analysed videos merged (0.4):
+  rhythm, hook, effects per minute with examples (frame + timecode, how made, verdicts), talking / captions, colour
+- `draft_edit.py <project> --like <videos> | --preset <id> [--want "..."] [--length s] [--format ...] [--music f]
+  [--sound talk|clips|music] [--render]` a quick first edit by rules (0.4, the app's *Quick draft now*): beat-cut
+  shots, the best moments, the style's effects; talking mode cuts the pauses -> `build\plan_vN.json` +
+  `draft_vN.md`; Claude refines it (`/recreate-video` section 6)
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
@@ -169,8 +176,10 @@ an effort level per task (Settings > Claude Code).
 - Report and app layout follow the user's notes (2026-10-06/07): per effect the preview, "What happens" and
   "Measured evidence" are open; timing / origin / rebuild ("In depth") and the contact sheets ("Frame list") are
   folded; false alarms are folded (verdict optional); possible misses are red until answered.
-- Recreating a reference 1:1 with the user's footage: the `/recreate-video` skill (option 1 = lab render, option 2 =
-  the same edit as a DaVinci Resolve Studio project). "By feel" (a template, not 1:1) is planned for v0.5.
+- Editing the user's footage like a reference: the `/recreate-video` skill - 1:1 (option 1 = lab render, option 2 =
+  the same edit as a DaVinci Resolve Studio project) or, since 0.4, by feel (the style of up to 3 videos or the
+  user's words; `style.py` + the quick draft `draft_edit.py`, then Claude refines). The app's *New edit* saves the
+  request in `build\edit_request.json` (`/recreate-video request <project>`).
 - Saving library effects: start from `projects\<name>\build\library_picks.json` and `[save to library]` notes; add a
   builder + `META` entry + test `CASES` in `tools\library.py`, then `library.py build` and `library.py test` (every
   macro must render in Resolve; `docs\resolve_notes.md`).

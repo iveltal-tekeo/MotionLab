@@ -108,11 +108,19 @@ The Analyze page shows these steps and where each video stands. Every frame numb
 [docs/claude_tips.md](docs/claude_tips.md) (also in the app: *Tips for working with Claude*): one chat per task,
 which effort level, how to use fewer tokens.
 
-## Rebuilding a video with your footage
+## Editing your footage like a video you liked
 
-Put your clips in `projects\<name>\` and click *Recreate with my footage* on a reference (or ask Claude Code for
-`/recreate-video <reference> <project>`). Claude maps every shot of the reference to your clips and writes the edit;
-the lab renders it frame-accurately.
+Put your clips (and a song, if you have one) in `projects\<name>\` and click *Edit > New edit*. Pick how:
+
+- **Like videos you analysed** - up to three: Claude mixes their rhythm, hook, effects and captions with your music
+  and length (*by feel*), or copies one of them exactly - same song, same cuts and effects, frame by frame (1:1).
+- **With your words** - a ready-made style (fast & hooky, 3-second cuts, talking + captions, slow & cinematic,
+  transition-driven, music montage) and / or what you want in your own words.
+- **From a saved prompt** - a brief, a talking script or a hook.
+
+*Quick draft now* makes a first version by rules in a few minutes - cuts on the beat, the best moments of your
+clips, the style's effects; for a talking video the pauses are cut out (`tools\draft_edit.py`). *Make it with
+Claude* plans the whole edit with you (`/recreate-video`), and the lab renders it frame-accurately.
 
 - **In colour**, with each clip's own colour settings and grades you can tune (saturation included); black-and-white
   edits stay grey.

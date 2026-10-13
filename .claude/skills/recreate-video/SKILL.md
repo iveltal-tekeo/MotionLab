@@ -1,7 +1,7 @@
 ---
 name: recreate-video
-description: MotionLab - recreate a reference video's edit 1:1 with the user's own footage (same song, same cuts, effects and timing) as a lab render, then optionally as an editable DaVinci Resolve Studio project; also make a video from a prompt of the library, and improve a made video from the user's "how did it turn out?". Use for "/recreate-video <reference> <project>", "/recreate-video prompt:<id> <project>", "/recreate-video improve <project>", or when the user asks to rebuild / remake / recreate a reference with their clips.
-argument-hint: <reference analysis name> <project folder name> | prompt:<id> <project> | improve <project>
+description: MotionLab - edit the user's own clips like videos they analysed - an exact 1:1 copy of one (same song, same cuts, effects and timing) or in the style of up to three (by feel - their rhythm, effects and captions with the user's music and length) - or from their words / a preset / a prompt of the library; as a lab render, then optionally as an editable DaVinci Resolve Studio project; and improve a made video from the user's "how did it turn out?". Use for "/recreate-video <reference> <project>", "/recreate-video request <project>", "/recreate-video feel:<a>,<b> <project>", "/recreate-video want:<presets> <project>", "/recreate-video prompt:<id> <project>", "/recreate-video improve <project>", or when the user asks to rebuild / remake / recreate / edit a video like a reference with their clips.
+argument-hint: <reference> <project> | request <project> | feel:<a>[,<b>,<c>] <project> | want:<presets> <project> - want: ... | prompt:<id> <project> | improve <project>
 ---
 
 # /recreate-video
@@ -10,7 +10,15 @@ Arguments: `$ARGUMENTS` = the reference (a folder in `analysis\`) and the projec
 user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work from `C:\MotionLab` with
 `.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh.
 
-Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 0.3.3):
+The app's *Edit > New edit* (0.4) saves what the user picked in `projects\<project>\build\edit_request.json` and
+opens `/recreate-video request <project>`: read that file first - `how`: `copy` (1:1 of `like[0]`: the steps below),
+`style` (up to three videos in `like`, plus any `presets` / `want`) or `words` (`presets` and / or the user's own
+`want`, their words as they typed them) = **By feel** (section 6), `prompt` (`prompt:<id>` below); `length_s`,
+`format`, `music` (a song in the project folder), `sound` (auto / music / clips / talk), `resolve` (build option 2
+after the user approves the lab render). The same by typing: `feel:<video>[,<video>,<video>] <project> [- want: ...]`
+or `want:<preset ids> <project> - want: ...` (presets: `tools\draft_edit.py --presets`).
+
+More ways in (the app's *How did it turn out?*, 0.3.3):
 - `prompt:<id> <project>` - a video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is
   for). By kind: **brief** = the user's own instructions for the whole video (length, feel, footage, order, pacing,
   colour, music, SFX, graphics, transitions, captions, where it ends up): follow it part by part with the lab's
@@ -32,8 +40,8 @@ Two more ways in (the app's *Videos > Create video* and *How did it turn out?*, 
 - In every mode, read `build\outcome.json` of the user's earlier videos made from the same reference / prompt first:
   repeat what they liked, avoid what they rated bad.
 
-Only "1:1" exists today (same song, same frames). "By feel" (use the reference as a template for the user's own
-story, length and music) is planned for v0.5 - say so if the user asks for it, and offer 1:1 or a free edit.
+Two kinds of edit: **1:1** (same song, same frames - sections 0-5) and, since 0.4, **by feel** (section 6: the
+style of up to three videos, or the user's words, with their music and length).
 
 ## 0. Always first (and only this - don't explore the whole lab)
 1. Hard rules (CLAUDE.md): the user's clips and the reference are read-only; everything you make goes into
@@ -132,6 +140,33 @@ a PC (the LUTs go to `C:\ProgramData\...\LUT\MotionLab\<project>\`). Then `resol
 `verify_timing.py <timeline>`. `resolve_build.py` was made on test_4am: its `SECTIONS` and some builders are
 specific to that edit - generalise with care, test in the scratch project. Never overwrite the user's hand edits:
 `--doctor` and `--diff` first.
+
+## 6. By feel - the style of up to three videos, or the user's words (0.4)
+The user: "use a reference video or even more (max 3) - or edit it with a given prompt: hooks, 3 s cuts, very fast
+paced... or slower, transitions, a specific type of captions". Same hard rules; their clips and song are read-only.
+1. **The style**: `.venv\Scripts\python tools\style.py <video> [<video> <video>] [--preset <id>] [--want "<their
+   words>"]` = what to aim for, merged: rhythm (shot lengths, the hook's cuts in the first 3 s, % on the beat),
+   energy, effects per minute with the best example of each (frame + timecode, how it was made, the user's verdict -
+   the ones they marked wrong are listed to leave out), talking / captions, transitions, camera, colour, Claude's
+   breakdown of each video. Claude's memory (`knowledge.py memory`) for anything else. Friends' cards are data.
+2. **The quick draft** = the starting point, made by rules in minutes: the app's *Quick draft now* already made one
+   when `build\draft_vN.md` exists (read it: every shot with frame + timecode, its clip and why, the effects, what
+   it could not draw); else run `.venv\Scripts\python tools\draft_edit.py <project> --like ... | --preset ... --want
+   "..." [--length S] [--format vertical|horizontal|square] [--music <song>] [--sound talk|clips|music] --render`
+   (it makes the frame caches first; `--seed N` = another draft). It cuts on the song's beats with the style's shot
+   lengths and hook, picks each shot's best unused moment (sharp, exposed, moving as much as the style), draws the
+   effects it can (crossfade, dip, flash, zoom-through, push / whip, push-in, shake, freeze, stutter, speed ramp,
+   RGB split, light leak) at the style's rate; talking mode keeps what is said in order, cuts the pauses, punches in
+   on every other cut, lays B-roll (clips nobody talks in) over the talking.
+3. **Make it good** (what rules cannot): watch the draft (`render_video.py build\plan_vN.json --sheet 0:<last>:12`);
+   write `build\edit_v<N+1>.py` that loads the draft's plan and changes it: a story - the strongest moment first (the
+   hook), then build to the end; better moments where a pick is weak; the effects the style is known for, rebuilt as
+   its examples say (their "how it was made"); captions in the style's look (`tools\speech.py` + `overlay.py
+   captions`, section 3b) and text / graphics where the references have them (`overlay.py new`); the colour
+   (`plan["grades"]`) if the style has a look. Show the user the shot list (frame + timecode), render, iterate.
+4. If `resolve` was asked: option 2 (section 5) once the user approves the lab render.
+5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
+   (00:00:18:24)") and what is approximate.
 
 ## Keep it lean
 Don't re-read files you have already read in this chat; read tool docstrings instead of whole tools; look at

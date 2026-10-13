@@ -774,3 +774,28 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .mexi { border-left: 2px solid var(--line2); padding-left: 10px; display: flex; flex-direction: column; gap: 3px; }
 .mles { margin-bottom: 8px; font-size: 13px; color: #c9c9d0; }
 @media (max-width: 1100px) { .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 0.4 phase 4: New edit - four steps in one dialog */
+.nestep { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; font-weight: 600; font-size: 14.5px; }
+.nestep > b { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12px;
+  background: var(--acc-soft); color: var(--acc); border: 1px solid var(--acc); }
+.cvchoice.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cvitem.off { opacity: .45; cursor: not-allowed; }
+.cvnoimg { width: 96px; aspect-ratio: 16/9; border-radius: 4px; flex: none; background: repeating-linear-gradient(135deg, #1b1b21 0 8px, #16161b 8px 16px); }
+.neexact { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.kopt.off { opacity: .5; }
+.nepre { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nep { text-align: left; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: #131317; border: 1px solid var(--line2);
+  border-radius: 10px; color: var(--text); font: inherit; cursor: pointer; transition: border-color .15s, background .15s; }
+.nep b { font-size: 13.5px; } .nep span { color: var(--muted); font-size: 12px; }
+.nep:hover { border-color: var(--dim); }
+.nep.on { border-color: var(--acc); background: var(--acc-soft); }
+#newant { width: 100%; resize: vertical; }
+.nedet { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px 14px; align-items: center; }
+.nedet label { font-size: 13px; color: var(--muted); }
+.nedet > .seg, .nedet > select { justify-self: start; }
+.nedet .seg button.on { background: var(--acc); color: #111; font-weight: 600; }
+.nego { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.negoc { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #131317; }
+.negoc[hidden] { display: none; }
+@media (max-width: 1100px) { .cvchoice.three, .nepre, .nego { grid-template-columns: 1fr; } }

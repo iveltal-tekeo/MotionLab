@@ -247,10 +247,11 @@ def _lesson_ids_for(title: str) -> list[str]:
     return ids
 
 
-def card(name: str) -> dict | None:
-    """The shareable card of one analysis (None for self-test videos or broken analyses)."""
+def card(name: str, test: bool = False) -> dict | None:
+    """The shareable card of one analysis (None for broken analyses and - unless test - self-test videos: an
+    edit's style (style.py) may come from them, a shared card never)."""
     d = ANALYSIS / name
-    if name.startswith("synthetic_") or not (d / "events.json").exists():
+    if (name.startswith("synthetic_") and not test) or not (d / "events.json").exists():
         return None
     ev = read_json(d / "events.json")
     src = ev.get("source") or {}

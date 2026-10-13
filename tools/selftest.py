@@ -291,6 +291,70 @@ def check_titles() -> dict:
     return {"passed": all(passed)}
 
 
+def check_draft() -> dict:
+    """The quick draft's rules (0.4, tools\\draft_edit.py), no video needed: clip stats made up so the right answer is
+    known - a blurry start and a cut inside clip A, a 120 BPM song (12.5 frames a beat at 25 fps) with a drop at f400
+    (00:00:16:00) - and a talking clip whose spoken parts are known."""
+    import numpy as np
+    from motionlab import compose, draft as DR, style as ST
+    passed = []
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+
+    rng = np.random.default_rng(7)
+
+    def clip(cid, n, blur=(0, 0), spike=None, speech=None):
+        sharp = 100 + rng.normal(0, 5, n)
+        sharp[blur[0]:blur[1]] = 5
+        motion = 3 + rng.normal(0, 0.3, n)
+        if spike is not None:
+            motion[spike] = 60
+        return {"id": cid, "frames": n, "fps": 25.0, "speech": speech,
+                "stats": {"sharp": sharp, "motion": motion, "luma": np.full(n, 50.0), "p95": np.full(n, 75.0)}}
+    clips = [clip("A", 600, blur=(0, 100), spike=300), clip("B", 400), clip("C", 300)]
+    beats = [12.5 * k for k in range(1, 60)]
+    S = ST.presets(["beat_montage"])
+    D = DR.make(S, clips, 25.0, 1080, 1920, 750, "music", beats, {int(b) for b in beats[::4]}, [400.0], seed=1)
+    sh = D["shots"]
+    cuts = [x["start"] for x in sh[1:]]
+    contiguous = sh[0]["start"] == 0 and sh[-1]["end"] == 749 and all(a["end"] + 1 == b["start"] for a, b in zip(sh, sh[1:]))
+    fits = all(x["in"] >= 0 and x["in"] + (x["end"] - x["start"]) < next(c["frames"] for c in clips if c["id"] == x["sid"])
+               for x in sh)
+    check(contiguous and fits and D["frames"] == 750,
+          "draft: the shots cover the whole edit, one after another, each inside its clip")
+    on_beat = sum(1 for c in cuts if min(abs(c - b) for b in beats) <= 1) / max(1, len(cuts))
+    check(on_beat >= 0.9 and 400 in cuts and any(e["frame"] == 400 and e["type"] == "flash_white" for e in D["effects"])
+          and sum(1 for c in cuts if c < 75) >= 2,
+          f"draft: cuts on the beat ({on_beat:.0%}), a cut + flash on the drop f400 (00:00:16:00), the hook's cuts in 3 s")
+    bad = [x for x in sh if x["sid"] == "A" and (min(x["in"] + x["end"] - x["start"], 99) - x["in"] > 0.2 * (
+        x["end"] - x["start"] + 1) or x["in"] < 300 <= x["in"] + x["end"] - x["start"] and x["in"] != 300)]
+    check(not bad, "draft: the blurry start of a clip and a cut inside it are not used")
+    try:
+        for L in D["layers"]:
+            for k in ("zoom", "opacity", "dx", "dy"):
+                if k in L:
+                    compose.Curve(L[k])
+            for a in L.get("anchor") or []:
+                compose.Curve(a)
+        curves_ok = True
+    except Exception:                                          # noqa: BLE001 - reported as a FAIL
+        curves_ok = False
+    check(curves_ok and all(L["type"] in compose.LAYERS for L in D["layers"]),
+          "draft: every layer and animated value is one the compositor reads")
+    talk = [clip("T", 500, speech=[(0, 99), (130, 229), (260, 359)]), clip("R", 300)]
+    T = DR.make(ST.presets(["talking"]), talk, 25.0, 1080, 1920, None, "talk", seed=1)
+    check([(x["in"], x["end"] - x["start"] + 1) for x in T["shots"]] == [(0, 100), (130, 100), (260, 100)]
+          and T["frames"] == 300 and T["sound"] == [("T", 0, 99), ("T", 130, 229), ("T", 260, 359)]
+          and [L.get("zoom", 1.0) for L in T["layers"][:3]] == [1.0, 1.12, 1.0],
+          "draft: talking - the spoken parts in order, pauses cut, the sound with them, a punch-in every other cut")
+    W = ST.presets(["three_sec"], "fast paced, 2 s cuts, captions word by word")
+    check(W["rhythm"]["median_shot_s"] == 2.0 and W.get("captions") and W["energy"] == "high",
+          "draft: the user's words - '2 s cuts', 'fast paced', 'captions' - change the style")
+    return {"passed": all(passed)}
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser()
@@ -299,7 +363,7 @@ def main() -> int:
     ap.add_argument("--only-extended", action="store_true")
     args = ap.parse_args()
     st = HERE / "selftest"
-    results = {"titles": check_titles()}
+    results = {"titles": check_titles(), "draft": check_draft()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

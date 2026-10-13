@@ -41,7 +41,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 13                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 14                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -339,6 +339,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(trash.plan(arg("kind", ""), arg("name", ""), S.resolve.get("state", "")))
         if path == "/api/projects":
             return self._json(data.list_projects())
+        if path == "/api/edit/options":                  # New edit (0.4): presets, how many videos a style mixes
+            return self._json(data.edit_options())
         if path == "/api/library":
             return self._json(data.library())
         if path == "/api/storage":
@@ -420,6 +422,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
         if path == "/api/projects/new":                   # Videos > Create video: an empty folder for the clips
             return self._json(data.new_project(str(body.get("name", ""))))
+        m = re.fullmatch(r"/api/project/([^/]+)/edit_request", path)       # New edit (0.4): what the user picked
+        if m:
+            return self._json(data.save_edit_request(urllib.parse.unquote(m[1]), body))
         m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)   # how it turned out / what it is made from
         if m:
             name = urllib.parse.unquote(m[1])

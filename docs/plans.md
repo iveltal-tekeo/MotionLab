@@ -44,6 +44,11 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   structure of what is said (0.4's HEIT structure, the yapping profile) - with your own story, length
   and music instead of a 1:1 copy. Builds on the
   pacing numbers (`knowledge.pacing`), the effect library and the HTML graphics (0.3).
+  **First part shipped in 0.4.0** (2026-10-13, the user's overhaul): *Edit > New edit* takes the style of up to three
+  analysed videos or the user's words / presets (`tools\style.py`), a quick draft by rules (`tools\draft_edit.py`:
+  beat-cut shots, the best moments, the style's effects, a talking mode) and `/recreate-video` section 6 for Claude
+  to refine it. Still open: the story (HEIT structure of what is said), captions and graphics made by the draft
+  itself, a colour match (0.4's colour analysis).
 - **A macOS version** of the app (the lab is Python + a browser window; Edge-only parts, the Recycle Bin, `.bat`
   files and the Windows paths need macOS twins; DaVinci Resolve's scripting paths differ).
 
