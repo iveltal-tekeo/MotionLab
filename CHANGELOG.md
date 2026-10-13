@@ -6,6 +6,11 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Fixed: the analysis stopped at the audio step on PCs without the Microsoft Visual C++ Redistributable**
+  ("DLL load failed while importing _typeconv"): the audio analysis needs it and some Windows PCs do not have
+  it. The job now ends with one plain line saying what to install
+  (`winget install --id Microsoft.VCRedist.2015+.x64 -e`, or https://aka.ms/vs/17/release/vc_redist.x64.exe),
+  and `setup.bat` checks for it and offers to install it.
 - **Home moves**: a small, slow animation at the top shows how MotionLab is used - *Like a video? / Use it as a
   reference. / Claude names each one. / Make yours.* - with a timeline whose cuts light up, effect tags that pop in
   and your clips that slide in. It is drawn by the graphics card (no video, no script running), stops while the

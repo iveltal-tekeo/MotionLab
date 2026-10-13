@@ -128,7 +128,11 @@ def main() -> int:
             ok = True
         if ok:
             off = (info_a["audio"].get("start_time") or 0.0) - (info_a["video"].get("start_time") or 0.0)
-            audio = AU.analyze(wav, fps, N, off, cfg["audio"])
+            try:
+                audio = AU.analyze(wav, fps, N, off, cfg["audio"])
+            except AU.VCRedistMissing as e:            # the app's Jobs page shows this as the job's last line
+                log(f"ERROR: {e}")
+                return 1
             if audio.get("available"):
                 pf = audio["per_frame"]
                 metrics["audio_rms_db"] = np.asarray(pf["rms_db"], float)

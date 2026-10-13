@@ -84,6 +84,7 @@ turns on updates and sharing.
 |---|---|---|
 | Python 3.12 (64-bit) | everything | `winget install Python.Python.3.12` or python.org (tick "Add to PATH") |
 | ffmpeg | every analysis | `winget install Gyan.FFmpeg` |
+| Microsoft Visual C++ Redistributable (x64) | the audio step of every analysis (beats, drops) - many PCs have it already, `setup.bat` checks | `winget install --id Microsoft.VCRedist.2015+.x64 -e` (as administrator) or https://aka.ms/vs/17/release/vc_redist.x64.exe |
 | Git | updates + sharing knowledge | `winget install Git.Git` |
 | Claude Code | reviews, learning from feedback, rebuilds | https://claude.com/claude-code (your own Claude plan) |
 | yt-dlp | *Download from a link* (optional) | `winget install yt-dlp.yt-dlp`, or any `yt-dlp.exe` + its path in Settings |

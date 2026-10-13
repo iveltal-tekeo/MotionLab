@@ -10,6 +10,28 @@ import numpy as np
 
 from .util import log, run, tool
 
+VCREDIST_MSG = ("Audio analysis needs the Microsoft Visual C++ Redistributable (x64). Install it: "
+                "winget install --id Microsoft.VCRedist.2015+.x64 -e (or download "
+                "https://aka.ms/vs/17/release/vc_redist.x64.exe), then run the analysis again.")
+
+
+class VCRedistMissing(RuntimeError):
+    """librosa's numba could not load its DLLs: the Visual C++ runtime (msvcp140.dll) is not installed."""
+
+
+def _librosa():
+    """librosa with the submodules analyze() uses (they import numba); a missing VC++ runtime = one plain error."""
+    try:
+        import librosa
+        import librosa.beat  # noqa: F401 - librosa loads its submodules lazily, so numba fails on first use
+        import librosa.feature  # noqa: F401
+        import librosa.onset  # noqa: F401
+    except ImportError as e:
+        if "DLL load failed" in str(e):
+            raise VCRedistMissing(VCREDIST_MSG) from e
+        raise
+    return librosa
+
 
 def extract_wav(src: Path, dst: Path, sr: int) -> bool:
     r = run([tool("ffmpeg"), "-y", "-v", "error", "-i", str(src), "-map", "0:a:0", "-vn", "-ac", "1",
@@ -33,7 +55,7 @@ def _z(x: np.ndarray) -> np.ndarray:
 
 
 def analyze(wav: Path, fps: float, n_frames: int, offset_s: float, cfg: dict) -> dict:
-    import librosa
+    librosa = _librosa()
     import soundfile as sf
 
     y, sr = sf.read(str(wav), dtype="float32", always_2d=False)

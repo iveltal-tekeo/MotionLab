@@ -26,6 +26,17 @@ echo      installing the Python packages from requirements.txt (a few minutes th
 ".venv\Scripts\python.exe" -m pip install --disable-pip-version-check -q -r requirements.txt || goto :fail
 echo [ok] Python packages installed
 
+rem ---- 2b. Microsoft Visual C++ Redistributable (x64): the audio analysis (librosa uses numba) needs msvcp140.dll
+if exist "%SystemRoot%\System32\msvcp140.dll" goto :vcok
+echo [!]  Microsoft Visual C++ Redistributable (x64) not found - REQUIRED for the audio analysis (beats, drops):
+echo      without it every analysis stops at the audio step ("DLL load failed"). It needs an administrator.
+echo      Download: https://aka.ms/vs/17/release/vc_redist.x64.exe
+call :offer "Microsoft.VCRedist.2015+.x64" "the Visual C++ Redistributable x64"
+goto :folders
+:vcok
+echo [ok] Microsoft Visual C++ Redistributable found
+
+:folders
 rem ---- 3. data folders (never uploaded)
 if not exist refs mkdir refs
 if not exist analysis mkdir analysis
