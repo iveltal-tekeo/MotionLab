@@ -4,6 +4,9 @@ What comes next and how it should plug into the lab. The app shows these under *
 plan on top); the release itself goes into `CHANGELOG.md` when it ships (never put planned versions there: the
 Update button treats every version heading in CHANGELOG.md as released). Headings: `## x.y.z - planned - title`.
 Written 2026-10-09 from the user's notes (re-planned 2026-10-11 and, from the user's notes, 2026-10-12); the user decides scope and order - ask before starting a plan.
+Renumbered 2026-10-13, when 0.4.0 shipped the user's overhaul (Analyze / Edit / Generate, Claude's memory, quick
+drafts, colour): the plans that were 0.3.5, 0.3.7, 0.4.0 and 0.4.1 are now 0.4.2, 0.4.3, 0.4.4 and 0.4.5 - the same
+order - and 0.4.1 is the fixes after 0.4.0. Older notes and code comments keep the old numbers.
 
 ## 0.7.0 - planned - AI B-roll and cinematics
 
@@ -41,18 +44,20 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
 ## 0.5.0 - planned - Templates by feel + macOS
 
 - **Use a reference as a template**: its feel and pacing - shot lengths, cuts on the beat, effect families, the
-  structure of what is said (0.4's HEIT structure, the yapping profile) - with your own story, length
+  structure of what is said (0.4.4's HEIT structure, the yapping profile) - with your own story, length
   and music instead of a 1:1 copy. Builds on the
   pacing numbers (`knowledge.pacing`), the effect library and the HTML graphics (0.3).
   **First part shipped in 0.4.0** (2026-10-13, the user's overhaul): *Edit > New edit* takes the style of up to three
   analysed videos or the user's words / presets (`tools\style.py`), a quick draft by rules (`tools\draft_edit.py`:
   beat-cut shots, the best moments, the style's effects, a talking mode) and `/recreate-video` section 6 for Claude
-  to refine it. Still open: the story (HEIT structure of what is said), captions and graphics made by the draft
-  itself, a colour match (0.4's colour analysis).
+  to refine it - and its colour matched to the references (0.4.0's colour analysis, a match LUT). Still open: the
+  story (the HEIT structure of what is said), captions and graphics made by the draft itself.
 - **A macOS version** of the app (the lab is Python + a browser window; Edge-only parts, the Recycle Bin, `.bat`
   files and the Windows paths need macOS twins; DaVinci Resolve's scripting paths differ).
 
-## 0.4.1 - planned - Prompt generator: every model, every specialty
+## 0.4.5 - planned - Prompt generator: every model, every specialty
+
+(Planned as 0.4.1 until 2026-10-13; 0.4.1 became the fixes after 0.4.0.)
 
 **The user's notes (2026-10-12):** "prompt generator (easier): we should have a 'database' of good prompts based on
 prompts we have given and you have analysed structurally so we can generate good prompts for our model agents
@@ -77,7 +82,7 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Per model**: the model a prompt was written for stays part of its structure (Seedance's lengths and camera
     words, Claude's tags...); a new prompt for another model says what it changed.
   - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
-    structure a script example (0.3.5 / 0.4), with the link and frame + timecode.
+    structure a script example (0.4.2 / 0.4.4), with the link and frame + timecode.
   - **Sharing** your own prompts and ratings through *Claude's memory > Share* (text); creators' prompts stay on the PC.
   - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
     0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
@@ -86,10 +91,19 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Style from analysed references** (built 2026-10-13, after 0.3.4: "the optimized prompt asks for a link to a
     Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
     references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
-    look measured too (0.3.7), and several references of one creator averaged into one style.
+    look measured too (0.4.3), and several references of one creator averaged into one style.
 - **Needs**: your prompts (the prompt library or pasted in the chat).
 
-## 0.4.0 - planned - Yapping mode: the yap-maxing framework
+## 0.4.4 - planned - Yapping mode: the yap-maxing framework
+
+(Planned as 0.4.0 until 2026-10-13, when 0.4.0 became the Analyze / Edit / Generate overhaul. The user's "v0.3.5"
+below = describe video, now 0.4.2.)
+**Shipped in 0.4.0** (2026-10-13): first pieces of *Make* - the quick draft's talking mode (`draft_edit.py --sound
+talk`, New edit's *Talking + captions* preset: the spoken parts in order, the pauses cut - by loudness, not yet on
+word boundaries -, a punch-in every other cut, B-roll over the talking) and Claude's breakdown of a talking video
+(hook, structure, captions). Still open: HEIT labels, validated topics, delivery / environment numbers, the yapping
+detectors with self-tests, cuts on word boundaries with the user approving the cut list, the beats writer for the
+talking-head pack.
 
 **The user's notes (2026-10-12):** "using the v0.3.5 as an exceptional tool when creating a video: 'yapping mode' or
 talking to the camera. Focused on content creators: yap maxing framework. Influential videos, lots of views videos.
@@ -100,14 +114,14 @@ talking-head creators AND edit the user's own recording that way.)
 
 - **Goal**: learn from talking-to-camera videos that work (many views) and make your own - short or long form - in
   the same proven structure, from the topic to the finished edit in the lab and in DaVinci Resolve.
-- **Learn** (from 0.3.5's analyses of influential videos):
+- **Learn** (from 0.4.2's analyses of influential videos):
   - **Validated topics**: topics of videos that outperform (views against the channel's followers / usual views,
-    0.3.5), per niche - not just any topic, the ones the audience already proved.
+    0.4.2), per niche - not just any topic, the ones the audience already proved.
   - **HEIT structure**: every talk split into Hook / Explain / Illustrate / Teach parts with frame + timecode and
     seconds; per format (short <= 90 s, mid, long; vertical / horizontal - measured already) the usual order and
     share of each part = the structure to copy and learn.
-  - **The four extras, measured per video**: *text on screen* (how often, how many words, where - 0.3.5's on-screen
-    text); *environment* (the setting of each shot - 0.3.5's descriptions; your own videos log theirs, so trying
+  - **The four extras, measured per video**: *text on screen* (how often, how many words, where - 0.4.2's on-screen
+    text); *environment* (the setting of each shot - 0.4.2's descriptions; your own videos log theirs, so trying
     different environments becomes a comparison); *delivery* (words per minute, pauses, energy = loudness changes,
     looking at the camera - light numbers + Claude's notes on how authentic it feels); *graphics / visual hooks*
     (what happens on screen in the first 3 s: a cut, a zoom, a text pop, a graphic - from the edit analysis).
@@ -116,7 +130,7 @@ talking-head creators AND edit the user's own recording that way.)
     self-test video and ground truth first.
 - **Make (yapping mode)**:
   1. **Topic + script**: pick a validated topic (or yours); `/write-prompt` writes the hook and a HEIT script in the
-     structure of the best videos of your format (0.4.1's database).
+     structure of the best videos of your format (0.4.5's database).
   2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
      to try.
   3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
@@ -125,10 +139,10 @@ talking-head creators AND edit the user's own recording that way.)
      hook in the first 3 s, B-roll slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build.
      You approve the cut list (every removed part with frame + timecode) before anything renders.
   4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
-- **Steps**: (1) 3-5 influential talking videos you pick, analysed by 0.3.5; Whisper measured on one of them
+- **Steps**: (1) 3-5 influential talking videos you pick, analysed by 0.4.2; Whisper measured on one of them
   (`tools\dev\whisper_bench.py`, tiny / base / small on a laptop setting) -> you pick the engine; (2) HEIT labels +
   the extras' numbers on them; (3) the yapping detectors + self-tests; (4) brief + the edit of your own recording.
-- **Needs first**: 0.3.5 (describe video, incl. the words of your own recordings for captions).
+- **Needs first**: 0.4.2 (describe video, incl. the words of your own recordings for captions).
 - **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
   video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
   (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
@@ -140,10 +154,12 @@ talking-head creators AND edit the user's own recording that way.)
   went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
   styles per category.
 
-## 0.3.7 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+## 0.4.3 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+
+(Planned as 0.3.7 until 2026-10-13.)
 
 **The user's note (2026-10-12):** "a color correction focused version since i think it kinda weak in that point
-(regarding davinci, LUTs and stuff)". Placed after 0.3.5 and before 0.4 because 0.4's talking videos need it too
+(regarding davinci, LUTs and stuff)". Placed after describe video and before yapping mode because talking videos need it too
 (phone footage: white balance, exposure, skin) - the user can move it.
 
 **First part shipped in 0.4.0** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
@@ -185,7 +201,16 @@ log footage, and a number for "how close". The user's clips so far: the talking 
   on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
   project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
 
-## 0.3.5 - planned - Describe video: videos as information
+## 0.4.2 - planned - Describe video: videos as information
+
+(Planned as 0.3.5 until 2026-10-13 - older notes and code comments that say 0.3.5 mean this plan.)
+**Shipped in 0.4.0** (2026-10-13, the user's overhaul): the *content creation* focus of Analyze - references
+without subtitles get their words by speech to text when it is installed (`content.py auto`); the analysis
+Overview's Content creation panel (`motionlab\profile.py`: the hook - cuts, words, text in the first 3 s; words per
+minute and how much is talked; text on screen per minute; captions likely); Claude's breakdown per focus (review.json
+`_breakdown`: hook, structure, captions, text & graphics, B-roll, sound, CTA); all searchable in Claude's memory.
+Still open below: topics and claims, the shots described, OCR, notes, collections, the numbers saved at download and
+in cards, an `/analyze-content` skill.
 
 **Carried over from 0.3.2** (released 2026-10-12, see CHANGELOG.md; its Resolve measurements: docs\resolve_notes.md):
 captions from the user's own recordings - captions from any .srt / .vtt work since 0.3.2; for a recording without
@@ -227,8 +252,8 @@ analyze video for effects, transitions and pacing, we focus on analysing videos 
 the video) so we can get all the information from audio and video and generate notes accordingly in our UI to
 correctly apply to video recreation or other tools. So if we analyse 10 videos related to making money online we can
 get common topics, add notes, ask about it... similar UI as references but dedicated to content as information
-instead of filmmaking / effects." Planned as 0.4 (2026-10-09), then 0.6 (2026-10-11); 0.3.5 since the user's notes
-of 2026-10-12: it is the base tool of 0.4's yapping mode.
+instead of filmmaking / effects." Planned as 0.4 (2026-10-09), then 0.6 (2026-10-11), 0.3.5 since the user's notes
+of 2026-10-12, 0.4.2 since 0.4.0 shipped (2026-10-13): it is the base tool of 0.4.4's yapping mode.
 
 - **Done (0.3.1)**: what is said - `tools\content.py transcript <name>` (the platform's subtitles, frame + timecode
   per line and word), MCP `transcript`.
@@ -248,7 +273,7 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
   text on screen).
 - **Performance**: views, likes, comments, the channel's followers and the upload date, saved by the download
   (yt-dlp knows them; today `refs\downloads.json` keeps link, platform, uploader, id, duration) -> an outperformer
-  score (views against followers) that 0.4 turns into validated topics.
+  score (views against followers) that 0.4.4 turns into validated topics.
 - **Notes**: your notes per video and per topic (one home), read by `/recreate-video`, `/write-prompt` and 0.4.
 - **Collections**: a tag (e.g. `make-money-online`, ~10 videos) groups references; `content.py collection <tag>`
   counts the topics across them with links to the exact frames, agreements, contradictions and gaps ->
@@ -270,7 +295,7 @@ of 2026-10-12: it is the base tool of 0.4's yapping mode.
     each model in its own process, `--threads 4` ~ a laptop; WER and word-timing difference against the subtitles).
     First run, mechanics only (4AM is rap over a beat, so its WER says nothing about talking videos): tiny = 75 MB
     model, 318 MB RAM, 27x real time on 4 threads of the RTX 4070 PC's CPU (a laptop core is slower). Still to do:
-    tiny / base / small on a talking video the user picks (0.4 step 1), then the user decides.
+    tiny / base / small on a talking video the user picks (0.4.4 step 1), then the user decides.
   - Other engines seen 2026-10-09: HyperFrames (in `tools\overlays\`, optional, needs Node) has a whisper.cpp
     `transcribe` command; ffmpeg's `whisper` filter is in BtbN builds but NOT in Gyan's essentials build (CI's; winget's
     full build: unchecked).

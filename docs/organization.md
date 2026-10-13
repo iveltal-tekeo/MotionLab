@@ -49,7 +49,7 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
 
 ## 3. Versions
 
-- **The lab**: semantic versions in `CHANGELOG.md` (`0.4.0` = Resolve rebuild + drift check). Minor = new
+- **The lab**: semantic versions in `CHANGELOG.md` (`0.4.0` = Analyze / Edit / Generate). Minor = new
   capability, patch = fix. Tag a release when the self-tests (and the Resolve test) pass.
 - **Edits**: already versioned: `edit_vN.py` -> `plan_vN.json` -> `<name>_vN.mp4` / `<name>_resolve_vN`.
   Keep that; record in each plan which lab version made it (`"lab_version"`), so a render can be reproduced.
@@ -67,7 +67,7 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
   (`FFMPEG_VERSION`, the build `setup.bat` installs through winget - raise it when winget's moves), then
   `selftest.py --extended` (the synthetic videos are generated there) and `tools\dev\smoke.py` (every file compiles,
   every module imports, the app server's read-only routes, every page in headless Edge, the MCP server). ~15 minutes.
-- **When it runs (since 0.3.5 - not on every push)**: a few-second Linux job ("scope") decides per push to main:
+- **When it runs (since 0.4.0 - not on every push)**: a few-second Linux job ("scope") decides per push to main:
   the full run happens only when it is started by hand (GitHub > Actions > tests > **Run workflow**, any branch), when
   a commit message of the push contains `[tests]`, or when `__version__` is a new `x.y.0` (0.5.0, 0.6.0...) without
   its `v<version>` tag yet - that repeats on every push until the version passes and is tagged. Anything else runs

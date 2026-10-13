@@ -190,8 +190,10 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.3.5 describe video: what videos say and show, 0.4 yapping mode for talking-to-camera videos, 0.4.1 prompt generator for every
-  model, 0.5 templates by feel + macOS, 0.7 AI B-roll and cinematics), also shown in the app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.4.2 describe video: what videos say and show, 0.4.3 colour:
+  correct your own clips, adjustable grades in Resolve, 0.4.4 yapping mode for talking-to-camera videos, 0.4.5 prompt
+  generator for every model, 0.5 templates by feel: the story + macOS, 0.7 AI B-roll and cinematics), also shown in
+  the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

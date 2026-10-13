@@ -10,7 +10,8 @@ Prefer CPU-friendly models and options that run only when asked.
 
 ## Liked - test first (2026-10-09)
 
-Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md). Moved into a plan: **match the reference's colour grade** -> 0.3.7 (2026-10-12).
+Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md). Moved into a plan: **match the reference's colour grade** -> 0.3.7 (2026-10-12; now 0.4.3, its first part shipped
+in 0.4.0).
 
 | Idea | Why | Cost to check |
 |---|---|---|

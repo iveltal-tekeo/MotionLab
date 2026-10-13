@@ -55,8 +55,8 @@ VERDICT = [
                "quick drafts and colour matching."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
              "per category. A quick draft picks moments by how they look, not by the story."),
-    ("NEXT", "v0.4.1 prompt generator  |  v0.5 by feel: the story (HEIT) + macOS  |  v0.3.7 colour: correct your "
-             "clips, CDL in Resolve  |  v0.7 AI B-roll.  You: try 0.4 - New edit > Quick draft on your clips."),
+    ("NEXT", "v0.4.2 describe video  |  v0.4.3 colour: your clips, CDL in Resolve  |  v0.4.4 yapping (HEIT)  |  "
+             "v0.4.5 prompt generator  |  v0.5 the story + macOS  |  v0.7 AI B-roll.  You: try 0.4 - New edit > Quick draft."),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")
