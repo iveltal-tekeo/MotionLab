@@ -271,16 +271,26 @@ class Runner:
             if clash or waiting:
                 job.status = "queued"
                 return job
-        self._launch(job)
+        try:
+            self._launch(job)
+        except Exception:                                       # noqa: BLE001 - not left "running" for ever
+            job.status, job.ended, job.rc = "failed", time.time(), -1
+            raise
         return job
 
     def _launch(self, job: Job) -> None:
-        job.status, job.started = "running", time.time()
+        with self.lock:
+            if job.status == "cancelling":                    # Remove clicked while _next was starting it
+                job.status, job.ended = "cancelled", time.time()
+                return
+            job.status, job.started = "running", time.time()
         LOGS.mkdir(parents=True, exist_ok=True)
         env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
         job.proc = subprocess.Popen(job.cmd, cwd=str(LAB), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace",
                                     env=env, creationflags=NO_WINDOW)
+        if job.status == "cancelling":                        # Remove clicked while it was starting
+            job.proc.terminate()
         threading.Thread(target=self._pump, args=(job,), daemon=True).start()
 
     def _pump(self, job: Job):
@@ -319,16 +329,15 @@ class Runner:
         f.write(msg + "\n")
 
     def _next(self) -> None:
-        """Start the queued jobs whose group is free now (oldest first)."""
-        go = []
-        with self.lock:
-            for j in self.queued():
-                busy = self.running() + go
-                if any(b.group in (j.group, "exclusive") for b in busy):
-                    continue
+        """Start the queued jobs whose group is free now (oldest first). One that cannot start fails and the next one
+        of its group gets its turn at once (else the group would wait for ever and hold back updates / deletes)."""
+        while True:
+            with self.lock:
+                busy = self.running()
+                j = next((q for q in self.queued() if not any(b.group in (q.group, "exclusive") for b in busy)), None)
+                if j is None:
+                    return
                 j.status = "running"                          # claimed: no other thread starts it
-                go.append(j)
-        for j in go:
             try:
                 self._launch(j)
             except Exception as e:                              # noqa: BLE001 - e.g. the program vanished
@@ -357,6 +366,9 @@ class Runner:
         with self.lock:
             if job.status == "queued":                        # never started: it just leaves the queue
                 job.status, job.ended = "cancelled", time.time()
+                return job
+            if job.status == "running" and job.proc is None:  # claimed by _next, not started yet: _launch stops it
+                job.status = "cancelling"
                 return job
         if job.status == "running" and job.proc:
             job.status = "cancelling"

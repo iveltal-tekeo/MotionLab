@@ -781,6 +781,10 @@ def save_generate_request(body: dict) -> dict:
     tool = " ".join(str(body.get("tool") or "").split())[:60]
     extra = {k: " ".join(str(body.get(k) or "").split())[:120] for k in ("colours", "font")}
     d = PROJECTS / name
+    b = d / "build"
+    if b.exists() and not body.get("reuse") and (any(b.glob("plan_v*.json")) or any(b.glob("*.mp4")) or any(
+            (b / f).exists() for f in ("generate_request.json", "edit_request.json"))):
+        raise ValueError(f"{name} is already a video - give this one another name")
     song = _song(d, str(body.get("music") or ""))         # checked before a new folder is made
     if not d.exists():
         new_project(name)

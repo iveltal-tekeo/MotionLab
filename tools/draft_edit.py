@@ -138,7 +138,7 @@ def music_start(info: dict, T: float, fps: float, arg: str | None) -> float:
 
 def speech(wav: Path, fps: float, n: int, offset_s: float) -> list[tuple[int, int]] | None:
     """Spoken parts of a clip (cache frames): loud 10 ms windows, pauses under 0.25 s kept, 0.08 s around each part;
-    None when nobody talks (B-roll)."""
+    None when nobody talks (B-roll). offset_s = the video's start minus the sound's (video time = wav time - it)."""
     import soundfile as sf
     y, sr = sf.read(str(wav), dtype="float32", always_2d=True)
     y = y.mean(axis=1)
@@ -396,7 +396,7 @@ def main() -> int:
             c["offset_s"] = float(info["video"].get("start_time") or 0) - float((info["audio"] or {}).get("start_time")
                                                                                 or 0)
             if mode == "talk" and c["wav"]:
-                c["speech"] = speech(Path(c["wav"]), fps, c["frames"], -c["offset_s"])
+                c["speech"] = speech(Path(c["wav"]), fps, c["frames"], c["offset_s"])    # video t = wav t - offset
             log(f"{c['id']} {c['name']}: " + ("no sound" if not c["wav"] else
                                              f"{len(c['speech'])} spoken part(s)" if c.get("speech") else
                                              "nobody talks (B-roll)" if mode == "talk" else "sound kept"))

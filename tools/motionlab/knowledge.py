@@ -661,7 +661,9 @@ def _cards_sig() -> tuple:
             except OSError:
                 pass
     lessons = tuple(p.stat().st_mtime_ns if p.exists() else None for p in (SHARED_LESSONS, LOCAL_LESSONS))
-    return tuple(files) + lessons
+    inc = tuple((p.name, p.stat().st_mtime_ns) for p in sorted(INCOMING.glob("*.md"))) if INCOMING.exists() else ()
+    here = tuple(sorted(p.name for p in ANALYSIS.iterdir() if p.is_dir())) if ANALYSIS.exists() else ()
+    return tuple(files) + lessons + (inc, here)              # friends' incoming lessons; analyses deleted / added
 
 
 def _short(t, n: int) -> str:

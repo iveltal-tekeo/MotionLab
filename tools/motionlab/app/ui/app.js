@@ -279,8 +279,8 @@ async function startJob(kind, args, follow = true) {
     return j;
   } catch (e) { toast(e.message, 'err'); return null; }
 }
-function followJob(id, pre, onDone) {
-  let since = 0, stop = false;
+function followJob(id, pre, onDone, onStatus) {     // onStatus(job): a waiting job starts, a running one stops
+  let since = 0, stop = false, last = '';
   const tick = async () => {
     if (stop) return;
     try {
@@ -290,7 +290,8 @@ function followJob(id, pre, onDone) {
         pre.textContent += j.log.join('\n') + '\n'; since += j.log.length;
         if (atEnd) pre.scrollTop = pre.scrollHeight;
       }
-      if (j.status === 'running' || j.status === 'cancelling') setTimeout(tick, 700);
+      if (j.status !== last) { last = j.status; if (onStatus) onStatus(j); }
+      if (['running', 'cancelling', 'queued'].includes(j.status)) setTimeout(tick, j.status === 'queued' ? 1500 : 700);
       else { ping(); if (onDone) onDone(j); }
     } catch (e) { setTimeout(tick, 2000); }
   };
@@ -485,7 +486,7 @@ function wireColour(el, R) {
   $$('.cstrip i', el).forEach(i => { i.onmousemove = e => showTip(esc(i.dataset.tip), e.clientX, e.clientY); i.onmouseleave = hideTip; });
   const go = $('#colgo', el);
   if (go) go.onclick = async () => {
-    try { await api('/api/jobs', {kind: 'colour', args: {name: R.name}}); toast('Measuring the colour - a few seconds', 'ok'); setTimeout(route, 4000); }
+    try { await api('/api/jobs', {kind: 'colour', args: {name: R.name}, queue: true}); toast('Measuring the colour - a few seconds', 'ok'); setTimeout(route, 4000); }
     catch (e) { toast(e.message, 'err'); }
   };
 }
@@ -972,7 +973,7 @@ const focusLines = r => { const L = r.lines || {}, f = r.focus || 'both';
 // Analyze > in progress: the downloads and analyses running or waiting their turn (queued jobs), and the ones that
 // just ended in this session - refreshed every 2 s while any is active
 function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () => true) {
-  let stop = false, last = '';
+  let stop = false, last = '', was = new Set();      // was = the jobs active at the last tick
   const tick = async () => {
     if (stop) return;
     let list = [];
@@ -981,8 +982,10 @@ function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () =>
       .sort((a, b) => (a.status === 'queued') - (b.status === 'queued') || a.id - b.id);   // running first, then in turn
     const recent = list.filter(j => !act.includes(j) && j.ended_ago_s != null && j.ended_ago_s < 900).slice(0, 4);
     const sig = act.map(j => j.id + j.status).join() + '|' + recent.map(j => j.id + j.status).join();
+    const now = new Set(act.map(j => j.id));
+    if ([...was].some(id => !now.has(id))) onEnd();     // one ended (a download that queued its analysis too)
+    was = now;
     if (sig !== last) {
-      if (last && act.length < (last.split('|')[0].split(',').filter(Boolean).length)) onEnd();
       last = sig;
       el.innerHTML = act.length || recent.length ? `<div class="panel progress"><div class="row sp"><h2>${act.length ? `Working on ${plural(act.length, 'job')}` : 'Done'}</h2><a class="small" href="#/jobs">all jobs →</a></div>
         ${[...act, ...recent].map(j => `<div class="pjob ${esc(j.status)}"><span class="tag ${esc(j.status)}">${j.status === 'queued' ? 'waiting' : esc(j.status)}</span>
@@ -1482,7 +1485,7 @@ async function createVideoModal(pre = {}) {
     $('#cvdraft', el).onclick = async () => {
       try {
         await request();
-        await api('/api/jobs', {kind: 'draft', args: {project: sel.value}});
+        await api('/api/jobs', {kind: 'draft', args: {project: sel.value}, queue: true});
         toast('The quick draft is on its way - it shows up here when it is ready', 'ok');
         closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
       } catch (e) { toast(e.message, 'err'); }
@@ -2128,7 +2131,9 @@ async function generateModal(kind, pre = {}) {
   const [G, MEM, ps] = await Promise.all([api('/api/generate/options'), api('/api/memory'), api('/api/projects')]);
   const gfx = kind === 'graphics', st = {like: [], length: gfx ? '30' : '30', format: '', music: ''};
   const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
-  const n0 = (gfx ? 'motion graphic' : 'ai video') + ' ' + (ps.filter(x => x.name.startsWith(gfx ? 'motion graphic' : 'ai video')).length + 1);
+  const taken = new Set(ps.map(x => x.name.toLowerCase())), base = gfx ? 'motion graphic' : 'ai video';
+  let k = 1; while (taken.has(`${base} ${k}`)) k++;
+  const n0 = `${base} ${k}`;                          // a free name: an existing video is never taken over
   modal(`<h2>${gfx ? 'A motion-graphics video' : 'A video for AI video tools'}</h2>
     <div class="small muted" style="margin-top:-4px">${gfx ? 'Claude writes it as HTML (HyperFrames) with you and renders it to a video - every text and colour stays editable.'
       : 'Claude plans the shots and writes every prompt into your prompt library - you generate the clips on the tool\'s site.'}</div>
@@ -2593,7 +2598,7 @@ async function pageJobs(main, id) {
     <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
       <div class="panel"><table class="t click"><thead><tr><th>#</th><th>Job</th><th>Status</th><th class="num">Time</th></tr></thead><tbody>
       ${list.map(j => `<tr data-id="${j.id}" class="${+id === j.id ? 'sel' : ''}"><td class="mono">${j.id}</td><td>${esc(j.title)}<div class="small dim">${esc(j.started)}</div></td>
-        <td><span class="tag ${j.status}">${j.status}</span></td><td class="num">${j.seconds}s</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No jobs yet in this session.</td></tr>'}
+        <td><span class="tag ${j.status}">${j.status}</span></td><td class="num">${j.status === 'queued' ? '–' : j.seconds + 's'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No jobs yet in this session.</td></tr>'}
       </tbody></table></div>
       <div class="panel" id="jd">${id ? '' : '<div class="muted">Select a job to see its output.</div>'}</div></div>`;
   $$('[data-k]', main).forEach(b => b.onclick = () => startJob(b.dataset.k, {}));
@@ -2604,11 +2609,16 @@ async function pageJobs(main, id) {
   $('#jd').innerHTML = `<div class="row sp"><h2>${esc(j.title)}</h2><span class="tag ${j.status}" id="jst">${j.status}</span></div>
     <div class="small muted mono" style="margin-bottom:8px">${esc(j.command)}</div>
     ${j.then_claude ? `<div class="small amber" style="margin-bottom:8px"><svg class="i"><use href="#i-claude"/></svg>Claude Code opens by itself when this measuring is done.</div>` : ''}<pre class="log" id="jlog"></pre>
-    <div class="row" style="margin-top:8px"><button class="btn danger" id="jc" ${j.status === 'running' ? '' : 'hidden'}>Stop this job</button></div>`;
-  $('#jc').onclick = async () => { if (!confirm('Stop this job?')) return; try { await api(`/api/jobs/${id}/cancel`, {}); } catch (e) { toast(e.message, 'err'); } };
+    <div class="row" style="margin-top:8px"><button class="btn danger" id="jc" ${['running', 'queued'].includes(j.status) ? '' : 'hidden'}>${j.status === 'queued' ? 'Remove from the queue' : 'Stop this job'}</button></div>`;
+  $('#jc').onclick = async () => { if (!confirm($('#jc').textContent + '?')) return; try { await api(`/api/jobs/${id}/cancel`, {}); } catch (e) { toast(e.message, 'err'); } };
+  const shown = s => s === 'queued' ? 'waiting its turn' : s;
   followJob(+id, $('#jlog'), jj => {
-    $('#jst').className = 'tag ' + jj.status; $('#jst').textContent = jj.status; $('#jc').hidden = true;
+    $('#jst').className = 'tag ' + jj.status; $('#jst').textContent = shown(jj.status); $('#jc').hidden = true;
     toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err');
+  }, jj => {
+    $('#jst').className = 'tag ' + jj.status; $('#jst').textContent = shown(jj.status);
+    $('#jc').textContent = jj.status === 'queued' ? 'Remove from the queue' : 'Stop this job';
+    $('#jc').hidden = !['running', 'queued'].includes(jj.status);
   });
 }
 

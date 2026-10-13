@@ -303,7 +303,7 @@ def knowledge(category: str = "") -> str:
     how they were made, the lessons - read it before an edit or a prompt)."""
     if category == "memory":
         from motionlab import knowledge as KN
-        return KN.memory_index()
+        return KN.memory_index(write=False)                 # read-only: memory.md is written by the app / knowledge.py
     p = KNOWLEDGE / "summary" / f"{category}.md" if category else KNOWLEDGE / "summary.md"
     if not p.exists():
         return f"no {p.relative_to(LAB)} yet (Claude's memory > Rebuild it, or tools\\knowledge.py summary)"

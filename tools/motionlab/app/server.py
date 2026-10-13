@@ -439,8 +439,9 @@ class Handler(BaseHTTPRequestHandler):
         if m:
             return self._json(data.save_overlay_values(urllib.parse.unquote(m[1]), str(body.get("overlay", "")),
                                                        body.get("values")))
-        if path == "/api/jobs":
-            return self._json(S.runner.start(str(body.get("kind", "")), body.get("args") or {}).info(0))
+        if path == "/api/jobs":                          # queue: true = wait its turn (0.4.1: the quick draft)
+            return self._json(S.runner.start(str(body.get("kind", "")), body.get("args") or {},
+                                             queue=bool(body.get("queue"))).info(0))
         if path == "/api/analyze/batch":                # Analyze > Add videos (0.4): links + files, one focus
             return self._json(analyze_batch(body))
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)

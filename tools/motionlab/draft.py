@@ -148,8 +148,10 @@ def _budget(style: dict, minutes: float, talk: bool, rng) -> tuple[list, list]:
 
 
 def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: list[float], downbeats: set,
-                  drops: list[float], rng, talk: bool = False) -> tuple[dict, dict, list, list]:
-    """(effects per cut index, per shot index, at the edges, skipped types). A cut i = shots[i][0] (i >= 1)."""
+                  drops: list[float], rng, talk: bool = False,
+                  max_src: int | None = None) -> tuple[dict, dict, list, list]:
+    """(effects per cut index, per shot index, at the edges, skipped types). A cut i = shots[i][0] (i >= 1).
+    max_src = the longest clip: a speed ramp only where the clip can give the frames it reads."""
     N = shots[-1][1] + 1
     want, skipped = _budget(style, N / fps / 60, talk, rng)
     at_cut: dict[int, dict] = {}
@@ -200,6 +202,8 @@ def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: 
             else:
                 for i, (s, en) in enumerate(shots):
                     if i in at_shot or lens[i] < need:
+                        continue
+                    if t == "speed_ramp" and max_src and lens[i] + (lens[i] - lens[i] // 2) + 16 > max_src:
                         continue
                     if t in ZOOMY and any((at_cut.get(j) or {}).get("type") in ZOOMY for j in (i, i + 1)):
                         continue
@@ -299,11 +303,13 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
             j = int(np.argmax(score))
             if best is None or score[j] > best[0]:
                 best = (float(score[j]), c, int(A[j]))
-        if best is None:
-            raise ValueError("no clip is long enough for a shot")
+        if best is None:                     # no clip is long enough: the longest one from its start, its end holds
+            c = max(clips, key=lambda c: c["frames"])
+            best = (0.0, c, 0)
         _, c, a = best
         used[c["id"]][a:a + need] = True
-        picks.append({"sid": c["id"], "in": a + pre, "why": _why(c, a + pre, L)})
+        why = _why(c, a + pre, L) if c["frames"] >= need else "the longest clip - shorter than the shot, its end holds"
+        picks.append({"sid": c["id"], "in": a + pre, "why": why})
         prev = c["id"]
     return picks
 
@@ -513,8 +519,11 @@ def broll_layers(shots, clips, every_s: float, fps, W, H, energy, rng) -> tuple[
     N = shots[-1][1] + 1 if shots else 0
     if not pool or not every_s or N < _f(HOOK_S + every_s, fps):
         return [], []
+    longest = max(c["frames"] for c in pool) - 2
+    if longest < _f(1.0, fps):                        # cutaways under a second: none rather than a flicker
+        return [], []
     starts = list(range(_f(HOOK_S + every_s * 0.5, fps), N - _f(2.0, fps), _f(every_s, fps)))
-    needs = [(0, min(_f(rng.uniform(1.5, 2.5), fps), N - f - 1), 0) for f in starts]
+    needs = [(0, min(_f(rng.uniform(1.5, 2.5), fps), N - f - 1, longest), 0) for f in starts]
     picks = pick_windows(needs, pool, energy, fps, rng)
     layers, notes = [], []
     for k, (f, (_, L, _), p) in enumerate(zip(starts, needs, picks)):
@@ -551,7 +560,8 @@ def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | No
         cuts = fit_to_clips(cuts, N, max(_f(0.5, fps), longest))
         bounds = [0] + cuts + [N]
         shots = [(bounds[k], bounds[k + 1] - 1) for k in range(len(bounds) - 1)]
-        at_cut, at_shot, edges, skipped = place_effects(shots, style, fps, beats, downbeats, drops, rng)
+        at_cut, at_shot, edges, skipped = place_effects(shots, style, fps, beats, downbeats, drops, rng,
+                                                        max_src=max(c["frames"] for c in usable))
         needs = source_need(shots, at_cut, at_shot, fps)
         picks = pick_windows(needs, usable, energy, fps, rng)
     layers, placed = build_layers(shots, picks, at_cut, at_shot, edges, W, H, fps, rng,

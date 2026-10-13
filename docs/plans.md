@@ -47,7 +47,7 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   structure of what is said (0.4.4's HEIT structure, the yapping profile) - with your own story, length
   and music instead of a 1:1 copy. Builds on the
   pacing numbers (`knowledge.pacing`), the effect library and the HTML graphics (0.3).
-  **First part shipped in 0.4.0** (2026-10-13, the user's overhaul): *Edit > New edit* takes the style of up to three
+  **Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul): *Edit > New edit* takes the style of up to three
   analysed videos or the user's words / presets (`tools\style.py`), a quick draft by rules (`tools\draft_edit.py`:
   beat-cut shots, the best moments, the style's effects, a talking mode) and `/recreate-video` section 6 for Claude
   to refine it - and its colour matched to the references (0.4.0's colour analysis, a match LUT). Still open: the
@@ -162,7 +162,7 @@ talking-head creators AND edit the user's own recording that way.)
 (regarding davinci, LUTs and stuff)". Placed after describe video and before yapping mode because talking videos need it too
 (phone footage: white balance, exposure, skin) - the user can move it.
 
-**First part shipped in 0.4.0** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
+**Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
 grading"): `motionlab\colour.py` measures a reference's look per shot from the analysis' own metrics and thumbnails
 (black / white point, contrast, saturation, white balance, split toning, vignette, letterbox, main colours) -> a look
 in words (`colour\colour.json`, the analysis' Overview, cards, Claude's memory, styles); a Reinhard transfer in Lab
