@@ -7,12 +7,13 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.3.4 - rebuild toolkit** ([what's new](CHANGELOG.md)): colour rebuilds, 3x faster renders, graphics
-> written as HTML, Claude Code connected to the lab and to DaVinci Resolve, and updates that only offer versions
-> GitHub's automatic tests passed. New in 0.3.4: prompts checked part by part (clear / vague / missing), optimized and run - with briefs for Claude as their own kind. 0.3.3: *Create video* from a reference or a prompt, "how did it turn out?"
-> per part, captions from your own recordings (speech to text), a talking-head graphics pack, prompts added as any
-> text or file, vertical downloads in full size, and a regrouped, livelier app. 0.3.2: graphics you edit in the
-> app, a graphics library, captions, graphics inside DaVinci Resolve, a *Content* tab and *Check for updates*.
+> **Status: v0.4.0 - Analyze, Edit, Generate** ([what's new](CHANGELOG.md)): three ways in - **Analyze** videos you
+> like (several at once, by focus: content creation, cinematic or both - colour grading included), **Edit** your clips
+> like up to three of them or the way you say (a quick draft in minutes, then Claude makes it great), **Generate** a
+> video from zero (a motion-graphics video, or every prompt for AI video tools) - and **Claude's memory**: everything
+> it learned, in one place, used when it edits or generates for you. Since 0.3: colour rebuilds, 3x faster renders,
+> graphics written as HTML, Claude Code connected to the lab and to DaVinci Resolve, updates that only offer versions
+> GitHub's automatic tests passed.
 > Detection was tuned on music videos; other categories work and get better with every verdict you give.
 
 ## Contents
@@ -21,7 +22,7 @@ pop and transition, frame-accurately - so you can learn its style and pacing and
 - [What it does](#what-it-does)
 - [Install (Windows 10 / 11)](#install-windows-10--11)
 - [First steps](#first-steps)
-- [Rebuilding a video with your footage](#rebuilding-a-video-with-your-footage)
+- [Editing your footage like a video you liked](#editing-your-footage-like-a-video-you-liked)
 - [Claude Code in MotionLab](#claude-code-in-motionlab)
 - [Updates](#updates)
 - [Sharing knowledge - how it works](#sharing-knowledge---how-it-works)

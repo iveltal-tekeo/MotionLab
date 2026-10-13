@@ -4,22 +4,23 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
-## Unreleased
+## 0.4.0 - 2026-10-13 - Analyze, Edit, Generate: three ways in, Claude's memory, quick drafts, colour
 
-- **Colour & look** (the cinematic focus): every analysed video now says what its colour grade is - per shot and for
-  the whole video: warm or cool, teal & orange, contrast, lifted or crushed blacks, saturation, vignette, letterbox,
-  its main colours - shown on the video's Overview as words, a palette and a strip of every shot's colour (with
-  frame and timecode). An edit **in its style** matches your footage to that look automatically: a match LUT (.cube)
-  that also works on DaVinci Resolve's Color page, with how close your clips get (0-100). Videos analysed before:
-  *Measure the colour* on their Overview (a few seconds).
-- **Generate - a video from zero**: **A motion-graphics video** - say what it is about (and, if you like, the words
-  on screen, a song, your colours, up to three analysed videos whose style to follow); Claude shows you the scenes,
-  writes the video as HTML (HyperFrames), times it to the song's beats and renders it - every text, colour and
-  timing stays editable in the video's Graphics tab. **With AI video tools** - your idea, the tool (Higgsfield,
-  Seedance, Kling, Runway, Veo, Sora, InVideo AI…) and a style: Claude plans the shots and writes every prompt into
-  your prompt library, in order, ready to copy into the tool's site; the clips you make come back to Edit. Nothing
-  is paid in MotionLab. A new Claude Code command does both: `/generate-video`.
-- A render whose song is a WAV or FLAC file now gets AAC sound (it used to fail: an MP4 cannot hold WAV sound).
+- **Three ways in**: the sidebar is now Home, **1 Analyze**, **2 Edit**, **3 Generate** and **Claude's memory**,
+  with Jobs and Settings at the bottom (Claude skills is a Settings tab). Home asks *What do you want to do?* with
+  one card per way, its buttons and counts. Old links keep working.
+- **Analyze several videos at once, the way you want**: *Add videos* takes up to 10 links (one per line) and files;
+  pick what to look at - **Content creation** (what is said, the hook, captions, text on screen), **Cinematic**
+  (effects, transitions, camera, colour) or **both** - and whether Claude checks each one. They queue up and run one
+  after another (links download first); a panel shows what runs and what waits. Each analysed video opens on an
+  **Overview** for its mode: the rhythm, the content or cinematic numbers, Claude's breakdown of what makes it work
+  and *Use it*: edit my clips like this, prompts for AI tools like this. Talking videos without subtitles get their
+  words by speech to text when it is installed.
+- **Claude's memory** (sidebar): everything Claude learned in one place with one search - every video you and your
+  friends analysed with its style (rhythm, hook, talking, captions, signature effects, Claude's breakdown), every
+  effect seen with how often, your verdicts and how each was made (the ones you confirmed first), the lessons, your
+  saved graphics and effects, and sharing with friends. Claude reads the same before an edit or a prompt, so a
+  video you liked shapes what it makes for you.
 - **New edit - your clips, cut the way you want**: *Edit > New edit* asks four things: your clips; how - **like
   videos you analysed** (up to three: their rhythm, hook, effects and captions mixed, with your music and length -
   or an exact copy of one, frame by frame), **with your words** (ready-made styles: fast & hooky, 3-second cuts,
@@ -32,23 +33,22 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   and cuts the pauses, with a punch-in every other cut and B-roll over the talking. Its notes list every shot with
   frame and timecode. Claude then makes it great - a story, captions, graphics - and, if you want, a DaVinci
   Resolve project.
+- **Generate - a video from zero**: **A motion-graphics video** - say what it is about (and, if you like, the words
+  on screen, a song, your colours, up to three analysed videos whose style to follow); Claude shows you the scenes,
+  writes the video as HTML (HyperFrames), times it to the song's beats and renders it - every text, colour and
+  timing stays editable in the video's Graphics tab. **With AI video tools** - your idea, the tool (Higgsfield,
+  Seedance, Kling, Runway, Veo, Sora, InVideo AI…) and a style: Claude plans the shots and writes every prompt into
+  your prompt library, in order, ready to copy into the tool's site; the clips you make come back to Edit. Nothing
+  is paid in MotionLab. A new Claude Code command does both: `/generate-video`.
+- **Colour & look** (the cinematic focus): every analysed video now says what its colour grade is - per shot and for
+  the whole video: warm or cool, teal & orange, contrast, lifted or crushed blacks, saturation, vignette, letterbox,
+  its main colours - shown on the video's Overview as words, a palette and a strip of every shot's colour (with
+  frame and timecode). An edit **in its style** matches your footage to that look automatically: a match LUT (.cube)
+  that also works on DaVinci Resolve's Color page, with how close your clips get (0-100). Videos analysed before:
+  *Measure the colour* on their Overview (a few seconds).
+- A render whose song is a WAV or FLAC file now gets AAC sound (it used to fail: an MP4 cannot hold WAV sound).
 - Frame caches are never bigger than the clip itself: a horizontal clip in a vertical edit used to be cached at
   1.8x its size (about 3x the disk) for no extra detail.
-- **Claude's memory** (sidebar): everything Claude learned in one place with one search - every video you and your
-  friends analysed with its style (rhythm, hook, talking, captions, signature effects, Claude's breakdown), every
-  effect seen with how often, your verdicts and how each was made (the ones you confirmed first), the lessons, your
-  saved graphics and effects, and sharing with friends. Claude reads the same before an edit or a prompt, so a
-  video you liked shapes what it makes for you.
-- **Analyze several videos at once, the way you want**: *Add videos* takes up to 10 links (one per line) and files;
-  pick what to look at - **Content creation** (what is said, the hook, captions, text on screen), **Cinematic**
-  (effects, transitions, camera, colour) or **both** - and whether Claude checks each one. They queue up and run one
-  after another (links download first); a panel shows what runs and what waits. Each analysed video opens on an
-  **Overview** for its mode: the rhythm, the content or cinematic numbers, Claude's breakdown of what makes it work
-  and *Use it*: edit my clips like this, prompts for AI tools like this. Talking videos without subtitles get their
-  words by speech to text when it is installed.
-- **Three ways in**: the sidebar is now Home, **1 Analyze**, **2 Edit**, **3 Generate** and **Claude's memory**,
-  with Jobs and Settings at the bottom (Claude skills is a Settings tab). Home asks *What do you want to do?* with
-  one card per way, its buttons and counts. Old links keep working.
 - **Fixed: the analysis stopped at the audio step on PCs without the Microsoft Visual C++ Redistributable**
   ("DLL load failed while importing _typeconv"): the audio analysis needs it and some Windows PCs do not have
   it. The job now ends with one plain line saying what to install
@@ -75,17 +75,13 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   readable text and Claude's check as a coloured card per part (✓ clear green, ~ vague amber, ✗ missing red, a tip,
   and a box for what you want; *Needs work* shows only what needs it) | big Good / OK / Bad buttons, what it makes,
   Style like and the details. **Claude skills** is the new name of the Skills page.
-- **Skills** (sidebar, Tools): the commands you can type in Claude Code for MotionLab - `/analyze-reference`,
-  `/recreate-video`, `/write-prompt`, `/whats-next` - each with what it does in a line, how to type it (Copy), where
-  the app runs it for you, and *Open in Claude Code*. Home lost its top-right buttons (*Analyse a video* lives on
-  References and in Where to start) and the roadmap's *What next? Ask Claude* (a developer's command - it is on the
-  Skills page now).
-- **More like a real app**: Home starts with **Where to start** - the six steps from a video you like to what your
-  friends learn, each one a button (Download, Measure, Claude checks, your verdicts, feedback, share); they moved
-  there from References. An empty page shows what goes there and one button in the middle (*Download from a link* /
-  *Analyse a video*, *Create video*, *Add prompts*) instead of a "No ... yet" line. Plainer words everywhere: no
-  file paths, version numbers, checksums or effort levels where you work; "lab pass" is now *Measure*.
-  *Recreate with my footage* opens the same *Create video* window as the Videos page.
+- **Claude skills** (Settings > Claude skills): the commands you can type in Claude Code for MotionLab -
+  `/analyze-reference`, `/recreate-video`, `/generate-video`, `/write-prompt`, `/whats-next` - each with what it
+  does in a line, how to type it (Copy), where the app runs it for you, and *Open in Claude Code*. The roadmap's
+  *What next? Ask Claude* (a developer's command) is there too.
+- **Plainer**: an empty page shows what goes there and one button in the middle instead of a "No ... yet" line.
+  Plainer words everywhere: no file paths, version numbers, checksums or effort levels where you work; "lab pass"
+  is now *Measure*.
 - **Prompt filters**: *Needs another tool* (a prompt that runs on Higgsfield, Kling, InVideo... - an account,
   credits or a setup; the card shows the tool in amber), *No other tool*, and *Not checked yet* - which replaces
   the "not checked by Claude" alert and has the *Check with Claude* button next to it.

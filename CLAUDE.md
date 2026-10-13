@@ -73,7 +73,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
-- Repo files (v0.3.4): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
+- Repo files (v0.4.0): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
