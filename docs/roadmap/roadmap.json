@@ -1,0 +1,49 @@
+{
+  "_help": [
+    "MotionLab's roadmap - the one file to edit. docs/roadmap/index.html draws it as a motion graphic (the app's Home plays it",
+    "live); tools/roadmap.py render makes docs/roadmap.png (README) and, with --video, docs/roadmap.mp4 from it.",
+    "versions: one line each, any order (sorted by number). Majors = x.y.0: a big badge with an icon on the main line;",
+    "every other number (0.4.2, 0.4.1.1, 0.6.5) hangs below the major of its x.y. Keys: v, label (<= 24 characters),",
+    "icon + line (majors: one sentence <= 110 characters), items (optional chips, <= 5 x <= 22 characters), title (the",
+    "heading in plans.md / CHANGELOG.md - written by sync, shown on hover), status (optional: done | next | planned |",
+    "later - normally derived: up to 'here' done, the first after it next, then planned up to the next major, later after).",
+    "icons: analyze prepare edit generate memory library knowledge home videos prompts claude update news settings.",
+    "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
+  ],
+  "date": "2026-10-14",
+  "here": "0.4.1.1",
+  "versions": [
+    {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
+    {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
+    {"v": "0.2.5", "label": "Review tab, Delete", "title": "Review tab, possible misses, Delete, Claude effort"},
+    {"v": "0.3.0", "label": "Rebuild toolkit", "icon": "library", "line": "Update button, colour rebuilds, 3x faster renders, HTML graphics, Claude + Resolve.", "title": "Update button, colour rebuilds, HTML graphics, Claude + Resolve"},
+    {"v": "0.3.1", "label": "Tested on GitHub", "title": "Tested on GitHub first, and a prompt library"},
+    {"v": "0.3.2", "label": "Editable graphics", "title": "Graphics you can edit, captions, and graphics in DaVinci Resolve"},
+    {"v": "0.3.3", "label": "Create video, captions", "title": "Fixes, Create video, captions from your own words, a livelier app"},
+    {"v": "0.3.4", "label": "Prompts you can check", "title": "Prompts you can check, improve and run"},
+    {"v": "0.4.0", "label": "Four ways in", "icon": "home", "line": "Analyze, Prepare, Edit, Generate - with Claude's memory, quick drafts and colour.", "title": "Analyze, Edit, Generate: three ways in, Claude's memory, quick drafts, colour"},
+    {"v": "0.4.1", "label": "Fixes after 0.4.0", "title": "Fixes after 0.4.0: quick drafts, waiting jobs, new videos never overwrite old ones"},
+    {"v": "0.4.1.1", "label": "Section feel, Prepare", "title": "Each section its own feel, Prepare, sound effects, check before you render"},
+    {"v": "0.4.2", "label": "Check before render", "status": "next", "title": "Check before you render: drafts, feel tests, your ratings as rules"},
+    {"v": "0.4.2.1", "label": "Downloads + reports", "status": "next", "title": "Downloads that keep working, and Report a problem"},
+    {"v": "0.4.3", "label": "Title + thumbnail", "title": "Title + thumbnail: packaging for clicks (horizontal and vertical)"},
+    {"v": "0.4.4", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
+    {"v": "0.4.5", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
+    {"v": "0.4.6", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
+    {"v": "0.5.0", "label": "Content generation", "icon": "generate", "line": "Videos from zero that come out right - faster, and with fewer Claude tokens.", "items": ["Building blocks", "Sound effects", "Formats", "Preview first", "AI clips back in"], "title": "Content generation: videos from zero that come out right"},
+    {"v": "0.6.5", "label": "Templates by feel", "title": "Templates by feel"},
+    {"v": "0.7.0", "label": "AI B-roll", "icon": "videos", "line": "Missing shots or whole sequences made by video models, used like your own clips.", "title": "AI B-roll and cinematics"},
+    {"v": "0.7.5", "label": "macOS", "title": "macOS"},
+    {"v": "0.8.0", "label": "Describe video", "icon": "memory", "line": "What videos say and show: topics, shots described, text on screen, collections.", "title": "Describe video: videos as information"}
+  ],
+  "stats": [
+    {"value": "4/4", "label": "self-tests pass"},
+    {"value": "40%", "label": "effect types right before review", "weak": true},
+    {"value": "53/54", "label": "key frames on time in a rebuild"},
+    {"value": "14", "label": "effects saved in the library"},
+    {"value": "44", "label": "verdicts given (4AM)", "weak": true}
+  ],
+  "strong": "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve; 0.4 adds quick drafts and colour matching.",
+  "weak": "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 per category. A quick draft picks moments by how they look, not by the story.",
+  "risks": "heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  |  HyperFrames + Resolve MCP are young: versions pinned"
+}

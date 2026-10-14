@@ -24,6 +24,7 @@ __pycache__/
 
 # --- generated / caches
 /.app/
+/docs/roadmap.mp4
 /tools/selftest/
 /tools/bin/
 

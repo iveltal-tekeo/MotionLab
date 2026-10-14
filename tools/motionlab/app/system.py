@@ -1,6 +1,7 @@
 """The app's settings and the outside programs it works with: ffmpeg (required), yt-dlp (downloads), Claude Code
-(the "Open in Claude" buttons: each asks for one task - TASKS - with its recommended effort level unless Settings
-picks one), DaVinci Resolve and Microsoft Edge. Everything is found automatically; paths can be set on the Settings
+(the "Open in Claude" buttons: each asks for one task - TASKS - and shows a dialog with the model - MODELS, Opus
+by default - and the task's recommended effort level, unless Settings fixes them), DaVinci Resolve and Microsoft
+Edge. Everything is found automatically; paths can be set on the Settings
 page. Settings live in settings.json in the lab folder (personal: not in the repo).
 
 Nothing here installs anything: missing programs are reported with how to get them."""
@@ -25,24 +26,32 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
             "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_mode": "ask",
-            "claude_effort": "auto", "default_focus": "both"}
+            "claude_effort": "auto", "claude_model": "opus", "claude_ask": True, "default_focus": "both"}
 # a new version on GitHub: "ask" = the sidebar's Update button + what's new, one click installs it (since 0.3.0;
 # 0.2.x installed by itself at start-up), "auto" = install it when MotionLab starts, "off" = never look
 UPDATE_MODES = ("ask", "auto", "off")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-# what the app's Claude buttons ask for -> (effort used when Settings says "recommended", session name)
+# the model the app's Claude windows start on: "opus" = Claude Code's default model, on every plan (the default here
+# too, so a friend on a Pro plan never meets a "requires usage credits" prompt), "fable" = Anthropic's strongest
+# model (Max plans: its own weekly limit; elsewhere Claude Code asks before billing credits), "auto" = whatever the
+# user chose in Claude Code (/model). Every button shows a dialog with the model + effort unless Settings says not to.
+MODELS = ("opus", "fable", "auto")
+# what the app's Claude buttons ask for -> (effort used when Settings says "recommended", session name,
+# "Fable fits": long, ambiguous or image-heavy work where Fable is clearly stronger - the dialog says so)
 TASKS = {
-    "free": (None, "MotionLab"),                      # sidebar / Settings: Claude Code's own default
-    "review": ("high", "MotionLab review"),            # /analyze-reference: read every contact sheet, name each effect
-    "feedback": ("high", "MotionLab feedback"),        # apply MOTIONLAB FEEDBACK: lessons, thresholds, re-check
-    "lessons": ("high", "MotionLab lessons"),          # review friends' incoming lessons
-    "library": ("high", "MotionLab library"),          # save library picks as Fusion macros (needs Resolve)
-    "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
-    "generate": ("xhigh", "MotionLab generate"),       # /generate-video: a video from zero (graphics / AI prompts)
-    "prompt": ("medium", "MotionLab prompt"),          # /write-prompt: split examples, write new prompts (text only)
-    "script": ("high", "MotionLab script"),            # /write-script: check, improve or write what you say on camera
-    "plan": ("high", "MotionLab next steps"),          # /whats-next: where the lab stands, options, a recommendation
+    "free": (None, "MotionLab", False),               # sidebar / Settings: Claude Code's own default
+    "review": ("high", "MotionLab review", True),      # /analyze-reference: read every contact sheet, name each effect
+    "feedback": ("high", "MotionLab feedback", False), # apply MOTIONLAB FEEDBACK: lessons, thresholds, re-check
+    "lessons": ("high", "MotionLab lessons", False),   # review friends' incoming lessons
+    "library": ("high", "MotionLab library", False),   # save library picks as Fusion macros (needs Resolve)
+    "recreate": ("xhigh", "MotionLab recreate", True), # /recreate-video: a whole edit with your footage
+    "generate": ("xhigh", "MotionLab generate", True), # /generate-video: a video from zero (graphics / AI prompts)
+    "prompt": ("medium", "MotionLab prompt", False),   # /write-prompt: split examples, write new prompts (text only)
+    "script": ("high", "MotionLab script", False),     # /write-script: check, improve or write what you say on camera
+    "plan": ("medium", "MotionLab next steps", False), # /whats-next: where the lab stands, options, a recommendation
 }
+# on Fable one level less is enough: Anthropic's guidance puts Fable at "high" where Opus needed "xhigh"
+FABLE_EFFORT = {"xhigh": "high", "max": "xhigh"}
 # preset id -> (label, yt-dlp arguments, folder inside the lab)
 VIDEO_F = "bv*+ba/b[vcodec!=none]/bv*"       # never a sound-only file in refs\ (a SoundCloud link fails clearly)
 PRESETS = {
@@ -110,6 +119,10 @@ def save(body: dict) -> dict:
                 raise ValueError("unknown category")
         if k == "claude_effort" and v not in ("auto", *EFFORTS):
             raise ValueError(f"unknown effort {v}")
+        if k == "claude_model" and v not in MODELS:
+            raise ValueError(f"unknown model {v}")
+        if k == "claude_ask":
+            v = bool(v)
         if k == "default_focus" and v not in ("content", "cinematic", "both"):
             raise ValueError(f"unknown focus {v}")
         s[k] = v
@@ -287,19 +300,48 @@ def _cmd_text(s: str, n: int) -> str:
     return re.sub(r" {2,}", " ", re.sub(r'[%^&|<>\r\n`]', " ", str(s).replace('"', "'")))[:n].strip()
 
 
-def claude_effort(task: str, s: dict | None = None) -> str | None:
-    """The effort level for one of the app's Claude buttons: Settings > Claude Code, or the task's recommendation."""
+def claude_model(task: str, s: dict | None = None) -> str | None:
+    """The model one of the app's Claude buttons starts on: Settings > Claude Code ("auto" = none = Claude Code's
+    own choice). The task only changes the dialog's hint (TASKS "Fable fits"), never the default."""
+    s = s or load()
+    chosen = s.get("claude_model") or "opus"
+    return chosen if chosen in MODELS and chosen != "auto" else None
+
+
+def claude_effort(task: str, s: dict | None = None, model: str | None = None) -> str | None:
+    """The effort level for one of the app's Claude buttons: Settings > Claude Code, or the task's recommendation
+    (one level lower on Fable, FABLE_EFFORT)."""
     s = s or load()
     chosen = s.get("claude_effort") or "auto"
-    return chosen if chosen in EFFORTS else TASKS.get(task, TASKS["free"])[0]
+    if chosen in EFFORTS:
+        return chosen
+    rec = TASKS.get(task, TASKS["free"])[0]
+    return FABLE_EFFORT.get(rec, rec) if model == "fable" and rec else rec
 
 
-def claude_launcher(prompt: str = "", task: str = "free", label: str = "") -> tuple[str, str, str | None]:
-    """(cleaned prompt, .cmd text, effort used) that opens Claude Code in the lab folder with an optional first
-    message, the task's effort level (--effort) and a session name (--name, shown by /resume). The prompt loses the
-    characters cmd would interpret (quotes, %, ^, &, |, <, >)."""
+def claude_options(task: str = "free", s: dict | None = None) -> dict:
+    """What the app's dialog shows before it opens Claude Code: the model and effort it would use, the choices, and
+    whether the task is one where Fable is clearly stronger."""
+    s = s or load()
+    task = task if task in TASKS else "free"
+    model = claude_model(task, s)
+    return {"model": model or "auto", "effort": claude_effort(task, s, model), "models": list(MODELS),
+            "efforts": list(EFFORTS), "fable_fits": TASKS[task][2], "ask": bool(s.get("claude_ask", True)),
+            "recommended": {m: claude_effort(task, {**s, "claude_effort": "auto"}, m) for m in ("opus", "fable")}}
+
+
+def claude_launcher(prompt: str = "", task: str = "free", label: str = "", model: str | None = None,
+                    effort: str | None = None) -> tuple[str, str, str | None, str | None]:
+    """(cleaned prompt, .cmd text, effort used, model used) that opens Claude Code in the lab folder with an optional
+    first message, the model (--model) and effort level (--effort) - the dialog's choice, else Settings / the task's
+    recommendation - and a session name (--name, shown by /resume). The prompt loses the characters cmd would
+    interpret (quotes, %, ^, &, |, <, >). Older Claude Codes without a flag get the command without it."""
     if task not in TASKS:
         raise ValueError(f"unknown task {task!r}")
+    if model is not None and model not in MODELS:
+        raise ValueError(f"unknown model {model!r}")
+    if effort is not None and effort not in EFFORTS:
+        raise ValueError(f"unknown effort {effort!r}")
     s = load()
     exe = find("claude", s)
     if not exe:
@@ -307,7 +349,12 @@ def claude_launcher(prompt: str = "", task: str = "free", label: str = "") -> tu
     clean = _cmd_text(prompt, 600)
     help_text = claude_flags(exe)
     args = []
-    effort = claude_effort(task, s) if "--effort" in help_text else None
+    model = claude_model(task, s) if model is None else (None if model == "auto" else model)
+    if model and "--model" not in help_text:
+        model = None
+    if model:
+        args.append(f"--model {model}")
+    effort = (effort or claude_effort(task, s, model)) if "--effort" in help_text else None
     if effort:
         args.append(f"--effort {effort}")
     name = _cmd_text(f"{TASKS[task][1]} {label}", 60)
@@ -315,18 +362,20 @@ def claude_launcher(prompt: str = "", task: str = "free", label: str = "") -> tu
         args.append(f'--name "{name}"')
     lines = ["@echo off", "title MotionLab - Claude Code", f'cd /d "{LAB}"',
              f'call "{exe}"' + "".join(" " + a for a in args) + (f' "{clean}"' if clean else "")]
-    return clean, "\r\n".join(lines) + "\r\n", effort
+    return clean, "\r\n".join(lines) + "\r\n", effort, model
 
 
-def open_claude(prompt: str = "", task: str = "free", label: str = "") -> dict:
+def open_claude(prompt: str = "", task: str = "free", label: str = "", model: str | None = None,
+                effort: str | None = None) -> dict:
     """Open Claude Code in a new console in the lab folder, optionally with a first message (the app's fixed
-    hand-off texts: /analyze-reference ..., apply the feedback in ...) and the task's effort level."""
-    clean, text, effort = claude_launcher(prompt, task, label)
+    hand-off texts: /analyze-reference ..., apply the feedback in ...), the model and the effort level (the
+    dialog's choice, else Settings / the task's recommendation)."""
+    clean, text, effort, model = claude_launcher(prompt, task, label, model, effort)
     APPDIR.mkdir(exist_ok=True)
     launcher = APPDIR / "open_claude.cmd"
     launcher.write_text(text, encoding="utf-8")
     subprocess.Popen(["cmd", "/c", str(launcher)], cwd=str(LAB), creationflags=NEW_CONSOLE)
-    return {"ok": True, "prompt": clean, "effort": effort}
+    return {"ok": True, "prompt": clean, "effort": effort, "model": model}
 
 
 # ------------------------------------------------------------------------------------------------- shortcuts

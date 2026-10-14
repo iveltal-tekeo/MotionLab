@@ -299,8 +299,9 @@ def verdicts(reference: str) -> str:
 def knowledge(category: str = "") -> str:
     """What MotionLab knows from everyone's analysed references: the short summary (pacing norms, effects seen,
     corrections per category), with a category id (music_video, vlog, cooking, ...) every reviewed effect of that
-    category, or with category="memory" Claude's memory (0.4: every video's style in one line, the effects seen and
-    how they were made, the lessons - read it before an edit or a prompt)."""
+    category, or with category="memory" Claude's memory (0.4: the user's ratings of all their videos as rules - a
+    part rated bad once is a default for every new video -, every video's style in one line, the effects seen and how
+    they were made, the lessons incl. those on making videos - read it before an edit or a prompt)."""
     if category == "memory":
         from motionlab import knowledge as KN
         return KN.memory_index(write=False)                 # read-only: memory.md is written by the app / knowledge.py

@@ -10,13 +10,16 @@ Prefer CPU-friendly models and options that run only when asked.
 
 ## Liked - test first (2026-10-09)
 
-Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md). Moved into a plan: **match the reference's colour grade** -> 0.3.7 (2026-10-12; now 0.4.5, its first part shipped
-in 0.4.0).
+Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md); **transcription with word timings** (the
+platform's subtitles 0.3.1, faster-whisper small chosen after measuring 0.3.3, references without subtitles 0.4.0);
+**beat-sync auto-cut** (0.4.0's quick draft: shots cut on the beats at a reference's pacing). Moved into a plan:
+**match the reference's colour grade** -> 0.3.7 (2026-10-12; now 0.4.6, its first part shipped in 0.4.0);
+**on-screen text (OCR)** -> yapping mode's content foundations, 0.4.5 (2026-10-14, measure first); **Report a
+problem** from the app -> 0.4.2.1 (2026-10-14).
 
 | Idea | Why | Cost to check |
 |---|---|---|
-| **Find footage that matches a shot** (image embeddings - CLIP / SigLIP - of every clip, compared with each reference shot) | the slowest manual step of `/recreate-video`; "templates by feel" needs it too | an embedding pass per clip: test a small CPU model vs the GPU, time per minute of footage, and whether its top-3 picks beat Claude reading storyboards |
-| **Transcription with word timings** (platform subtitles via yt-dlp first; faster-whisper / WhisperX otherwise) | the base of 0.4 content intelligence; also word-by-word captions as HTML overlays | Whisper can be heavy: compare the small / base models on CPU (laptop) vs large on GPU - minutes per minute of audio and errors |
+| **Find footage that matches a shot** (image embeddings - CLIP / SigLIP - of every clip, compared with each reference shot) | the slowest manual step of `/recreate-video`; "templates by feel" (0.6.5) needs it too | an embedding pass per clip: test a small CPU model vs the GPU, time per minute of footage, and whether its top-3 picks beat Claude reading storyboards |
 
 ## Later / not now
 
@@ -26,10 +29,8 @@ in 0.4.0).
 - **Separate music from voice** (Demucs stems) - cleaner beats / drops and cleaner speech for transcripts. Heavy on CPU.
 - **A small classifier trained on the verdicts** - once friends have given ~300+ verdicts.
 - **Auto-reframe 16:9 -> 9:16** following the subject (MediaPipe / YOLO) - for shorts.
-- **Beat-sync auto-cut** - a song + clips cut on the beats with a reference's pacing (a first step to 0.5).
-- **On-screen text (OCR)** - text pops of a reference; feeds 0.4.
-- **For 0.7**: upscaling (Real-ESRGAN), smooth slow motion (RIFE), voice-over (ElevenLabs / local TTS), music
-  generation only with clear licences.
+- **Proposed for 0.5.0** (content generation, 2026-10-14 - in its plan as step 5, measure first; the user confirms):
+  voice-over (ElevenLabs / local TTS), music only with clear licences.
+- **For 0.7**: upscaling (Real-ESRGAN), smooth slow motion (RIFE).
 - **Background analyses** with Claude Code headless (`claude -p`) for a 10-video collection - with a per-batch limit,
   since it spends the plan without anyone watching.
-- **Report a problem** from the app (a GitHub issue with the log attached).

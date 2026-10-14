@@ -20,22 +20,38 @@ out what you mean. A command or an app button avoids that. The lab keeps all the
 verdicts, lessons, edits), so nothing is lost when you start fresh.
 
 ## The commands
-| what | in Claude Code | effort |
-|---|---|---|
-| check every effect of a reference | `/analyze-reference "C:\MotionLab\refs\<video>.mp4"` (the app's Send to Claude) | high |
-| apply your verdicts | `Apply the MOTIONLAB FEEDBACK in <file>` (the app's Send feedback to Claude) | high |
-| review friends' lessons | the button in Claude's memory | high |
-| recreate a reference with your clips | `/recreate-video <reference> <your project>` (the app's Recreate button) | xhigh |
-| save library effects | the button in Claude's memory > Saved effects & graphics | high |
-| questions, small fixes | just ask | medium |
+| what | in Claude Code | model | effort |
+|---|---|---|---|
+| check every effect of a reference | `/analyze-reference "C:\MotionLab\refs\<video>.mp4"` (the app's Send to Claude) | Opus; Fable is stronger | high |
+| recreate a reference with your clips | `/recreate-video <reference> <your project>` (the app's Recreate button) | Opus; Fable is stronger | xhigh (high on Fable) |
+| a video from zero | `/generate-video request <project>` (Generate) | Opus; Fable is stronger | xhigh (high on Fable) |
+| apply your verdicts | `Apply the MOTIONLAB FEEDBACK in <file>` (the app's Send feedback to Claude) | Opus | high |
+| review friends' lessons | the button in Claude's memory | Opus | high |
+| save library effects | the button in Claude's memory > Saved effects & graphics | Opus | high |
+| improve or write a script | `/write-script ...` (Prepare) | Opus | high |
+| prompts: split, check, write | `/write-prompt ...` (Generate > prompts) | Opus | medium |
+| what to do next | `/whats-next` (Home > Roadmap) | Opus | medium |
+| questions, small fixes | just ask | Opus | medium |
+
+## Which model: Opus or Fable
+- **Opus** is the model every Claude plan includes and the right one for most tasks; it is the app's default.
+- **Fable** is Anthropic's strongest model, made for long, open-ended work: checking a whole video sheet by sheet,
+  recreating or generating one. On Max plans it has its own weekly limit, so using it there does not eat the
+  normal one; on Pro, Claude Code asks before it bills usage credits at API rates (about 2.5x Opus). The app never
+  picks Fable by itself: every button shows a small dialog with the model and the effort, pre-filled with Opus and
+  the task's effort; the tasks where Fable is clearly stronger say so. *Don't ask again* keeps your choice;
+  Settings > Claude Code changes it or brings the dialog back.
+- On Fable one effort level less is enough: the dialog drops recreating / generating from xhigh to high.
+- For your own work on the lab: Fable for a new feature, Opus for fixes, docs and releases. The planner/executor
+  split by hand: plan in Fable, then `/model opus` before the build.
 
 ## Effort levels
 - `low`, `medium`, `high`, `xhigh`, `max` = how much Claude thinks before it acts. Higher is more careful and slower,
   and uses more of your plan: roughly, `xhigh` takes 1.5-2.5x the tokens of `high`, and `max` about 2x or more.
 - What the app uses (Settings > Claude Code > Effort, "recommended"): **high** for checking contact sheets and
-  applying feedback, **xhigh** for recreating a video. Use **max** only when Claude is stuck on a hard problem;
-  **medium** (Claude Code's usual default) is fine for questions.
-- Change it in any chat with `/effort high` (etc.).
+  applying feedback, **xhigh** for recreating a video (high on Fable). Use **max** only when Claude is stuck on a
+  hard problem; **medium** is fine for questions, prompts and what's next.
+- Change them in any chat with `/effort high` and `/model opus` (etc.).
 
 ## Habits that save tokens
 - One task per chat; `/clear` or a new window between tasks. A long chat re-sends everything on every turn.

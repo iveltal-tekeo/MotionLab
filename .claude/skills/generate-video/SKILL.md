@@ -20,8 +20,12 @@ effort xhigh (graphics) / medium (ai).
 - Hard rules (CLAUDE.md): never change a file the user gave (songs, logos, footage) - read only; everything you make
   goes to `projects\<project>\build\`; every frame you mention: frame number + timecode, e.g. `f480 (00:00:16:00)`.
 - The style: `like` -> `.venv\Scripts\python tools\style.py <video> [<video> <video>]` (rhythm, the hook, how text
-  appears, effects per minute, colour, Claude's breakdown); Claude's memory: `tools\knowledge.py memory`. Copy the
-  style, never the content (no one else's words, logos, characters or footage).
+  appears, effects per minute, colour, Claude's breakdown); Claude's memory: `tools\knowledge.py memory` - it starts
+  with the user's ratings of all their videos as rules (a part rated bad once is a default now: follow them). Copy
+  the style, never the content (no one else's words, logos, characters or footage).
+- Lessons on making videos: read `.claude\skills\recreate-video\lessons.md` (M###) and
+  `knowledge\local\lessons_making.md` (this PC's, if there) and apply every rule. Something new learned here -> a
+  lesson in the local file (id: `tools\knowledge.py next-lesson-id --kind making`, the shared file's format).
 - Ask once, in one message, for what is missing (what it should say, length, format, the song, brand colours) - then
   build. Say plainly what the lab cannot do instead of faking it.
 
@@ -30,6 +34,12 @@ Needs Node.js + HyperFrames (`tools\overlay.py doctor`; missing -> the app's Set
 `tools\overlay.py install`). The graphics rules are the ones of `/recreate-video` section 3b (read it): HTML / CSS /
 SVG / GSAP on a paused timeline, times in frames (`F(n)`, `AT(n)`), no timers / `Math.random` (`rnd(seed)`), system
 fonts or font files in the folder, settings the user can change in `data-composition-variables`.
+**Cheapest check first** (the first video's ~29 min of renders mostly went on bugs a 1-second snapshot shows). The
+user approves each step in plain words; no polish before step 3 is approved:
+(1) the plan in words and numbers - the scene table with frame + timecode and the feel as numbers ("a cut every
+0.5 s, moves over 4-6 frames, a whoosh on each") - seconds; (2) a sheet at every scene change: `overlay.py snap
+<folder> <frames>` (no render, ~5 s for 10 frames -> `snap\sheet.png`) - seconds; (3) the motion: a plain render (~2
+min for 25 s), no motion blur; (4) the final with the polish (motion blur, the sound mix, Resolve) - once.
 1. **Timing**: with a song, `.venv\Scripts\python tools\beats.py <song> --fps 30 [--start S] [--length L]` = every
    beat (downbeats marked) and the drops as frame + timecode from the video's frame 0 - scene changes on downbeats,
    the biggest change on the drop, text hits on beats (`--start`: the part of the song to use). Without a song: the
@@ -40,17 +50,23 @@ fonts or font files in the folder, settings the user can change in `data-composi
    (1080x1920 vertical, 1920x1080 horizontal, 1080x1080 square; 30 fps unless the style says otherwise), or several
    compositions (one per scene) when it helps; a background that paints the whole frame (it is a video, not an
    overlay). Start from an example when one fits (`overlay.py graphics`; `whats-new-0.3.0` is a 10-second stand-alone
-   video, `talking-head-pack` kinetic captions). Expose the texts, colours and timings as settings.
-4. **Check**: `overlay.py stills <folder> <frames>` at every scene change and text hit - look at them, fix, repeat.
+   video, `talking-head-pack` kinetic captions). Expose the texts, colours and timings as settings. Animate only
+   with the template's helpers (`set` / `to` / `ft`, `bump` = a camera jolt, `smear` for moves over ~60 px a frame):
+   they keep a plain render, a motion-blur render and a snapshot the same (M003, M004).
+4. **Check** (steps 2-3 above): `overlay.py snap <folder> <frames>` at every scene change and text hit (a cut as
+   n-1, n, n+1) - look at the sheet, show it, fix, repeat; then the plain render and `overlay.py stills`.
    What the user rated "clunky" (2026-10-14, a UI-motion reel): UI drawn too small for the frame, nothing moving
    between the big moves, no motion blur. Draw it at the reference's size (measure it on `frames(<ref>, ...)`), give
    it a camera (push-ins, a jolt on hits, a slow drift), curved cursor paths with a press, and render fast moves with
-   `overlay.py render <folder> --motion-blur 5` (5 sub-frames averaged, ~5x the render time; tweens must end half a
-   frame before a set on the same property). **Sound effects**: none was rated bad - synthesise them (whooshes on
-   moves, clicks, keys, pops, impacts; no samples to license) on the graphic's frames, levelled against the song
-   under each one (it is quiet in an intro, loud after a drop), mix into a WAV in `build\audio\` for the plan, and
-   keep the effects alone as a stem for Resolve. Worked example on the PC where it was made:
-   `projects\illdari_test_copy_1\build\sfx_v2.py` + `overlays\kidwild_top3_v2\`.
+   `overlay.py render <folder> --motion-blur 5` in the final (5 sub-frames averaged, ~5x the render time).
+   **Sound effects** (none was rated bad - always add them): while writing the graphic, give each move its cue in
+   overlay.json `"cues"` (`{"f": <frame or a formula of the settings>, "kind": ..., "what": ...}`; typed text = one
+   key per character, `"repeat": "len(<setting>)"`; kinds: `tools\sfx.py kinds`). Check them with `tools\sfx.py cues
+   <folder>` against the snapshots at the same frames, then `tools\sfx.py make <folder> --song <song> [--song-start
+   s]`: synthesised (no samples to license), each effect levelled against the song under it. Its
+   `sfx\<name>_mix.wav` is the plan's `"audio"`; `<name>_sfx.wav` goes on its own track in Resolve at 01:00:00:00.
+   Read the printed levels (song / floor / peak cap, the limiter); to change one set the cue's `"db"` or `"level"` -
+   never guess a volume.
 5. **Render**: `overlay.py render <folder>` (the .mov), then the video with its song through a plan:
    `build\plan_vN.json` = `{"name": "<p>_vN", "width": W, "height": H, "fps": fps, "frames": N, "sources": {},
    "grades": {}, "layers": [{"type": "overlay", "id": "<name>", "file": "<the .mov>", "start": 0, "end": N - 1}],

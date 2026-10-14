@@ -4,7 +4,8 @@ transparent ProRes 4444 clips that both the lab compositor (plan layer type "ove
 particles) are written this way since 0.3.0.
 
     .venv\\Scripts\\python tools\\overlay.py new <folder> --frames 75 [--fps 25 --width 1520 --height 1080]
-          a composition to edit: <folder>\\index.html (timing helpers in frames), gsap.min.js, overlay.json.
+          a composition to edit: <folder>\\index.html (timing helpers in frames: set / to / ft / bump / smear, which
+          keep a render with motion blur and a snapshot the same as a plain render), gsap.min.js, overlay.json.
           <folder> = projects\\<project>\\build\\overlays\\<name> (size and fps = the plan's)
     .venv\\Scripts\\python tools\\overlay.py render <folder> [--workers N] [--motion-blur 5]
           -> <folder>\\<name>.mov (ProRes 4444 + alpha, exactly --frames frames) + its decoded cache; prints the plan
@@ -28,7 +29,14 @@ particles) are written this way since 0.3.0.
           captions timed to the words (styles + settings like any graphic) + <name>.srt for Resolve's subtitle track;
           rate / size / length from the project's newest edit plan (or --fps --width --height --frames)
     .venv\\Scripts\\python tools\\overlay.py stills <folder> 0,12,40     PNGs of rendered frames on a checkerboard,
-          frame number + timecode burned in (look at these instead of the video)
+          frame number + timecode burned in (look at these instead of the video); ranges too: 0,38,113-116
+    .venv\\Scripts\\python tools\\overlay.py snap <folder> 0,38,113-116   the same straight from the HTML, NO render
+          (HyperFrames' snapshot at each frame's time, in ascending order, with overlay.json's values) ->
+          <folder>\\snap\\<name>_fNNNN.png + snap\\sheet.png (all of them on one page): ~3 s for 1 frame, ~7 s for 10
+          (2026-10-14, 1080x1080; a 750-frame render: 79-89 s plain, 6.5-9 min with motion blur 5). The cheapest check
+          of a graphic: every scene change before any render. A snapshot is one instant (no motion blur) and matches
+          the plain render frame by frame when tweens end half a frame early (the `new` template's helpers); check a
+          cut as n-1, n, n+1
     .venv\\Scripts\\python tools\\overlay.py check <folder>               HyperFrames lint
     .venv\\Scripts\\python tools\\overlay.py doctor                       Node.js, HyperFrames, its Chrome
     .venv\\Scripts\\python tools\\overlay.py install                      npm ci in tools\\overlays (the pinned versions) +
@@ -78,40 +86,83 @@ TEMPLATE = """<!doctype html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=__W__, height=__H__">
-<!-- MotionLab overlay "__NAME__": __FRAMES__ frames at __FPS__ fps, __W__ x __H__ px (the plan's frame). Render:
-     .venv\\Scripts\\python tools\\overlay.py render <this folder>
+<!-- MotionLab overlay "__NAME__": __FRAMES__ frames at __FPS__ fps, __W__ x __H__ px (the plan's frame).
+     Check first (no render, seconds): .venv\\Scripts\\python tools\\overlay.py snap <this folder> 0,10,40
+     Render: .venv\\Scripts\\python tools\\overlay.py render <this folder>   (fast moves: --motion-blur 5)
      Rules: transparent background (never paint html / body / #root); everything absolutely positioned in output
      pixels; animate only on the paused GSAP timeline below (no CSS animations, timers, Date or Math.random -
-     use rnd(seed) for noise); times in frames with F(n) / AT(n).
+     use rnd(seed) for noise); times in frames, through the helpers set / to / ft (+ bump, smear) instead of tl.set /
+     tl.to: they end every tween half a frame early and set a tween's start pose at AT(f0), so a plain render, a
+     render with motion blur and a snapshot show the same frame. Moves over ~60 px a frame: smear() them.
      Settings the user can change in the app (Videos > Graphics): declare them on <html> above
-     (data-composition-variables: string / color / number / boolean / enum; times in frames) and read them from V. -->
+     (data-composition-variables: string / color / number / boolean / enum; times in frames) and read them from V.
+     Sound effects: list them in overlay.json "cues" next to the settings - [{"f": <a frame, or a formula of the
+     settings like "pop_in + 10">, "kind": "pop"}, ...]; tools\\sfx.py cues <this folder> lists them with frame +
+     timecode, tools\\sfx.py make <this folder> --song <song> makes the effects track + the mix (sfx.py kinds). -->
 <script src="./gsap.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: __W__px; height: __H__px; overflow: hidden; background: transparent; }
   #root { position: relative; width: __W__px; height: __H__px; overflow: hidden; }
   .abs { position: absolute; }
+  .full { position: absolute; left: 0; top: 0; width: __W__px; height: __H__px; }
   /* the graphic: */
   #box { left: 660px; top: 440px; width: 200px; height: 200px; background: #ffc400; opacity: 0; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute">
+  <!-- smear(): one filter per smear that runs at the same time as another (id "smear2", its blur "smear2B") -->
+  <filter id="smear" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur id="smearB" stdDeviation="0.01 0.01"/></filter>
+</svg>
 <div id="root" data-composition-id="main" data-start="0" data-duration="__SECS__" data-width="__W__"
      data-height="__H__">
-  <div id="box" class="abs"></div>
+  <div id="cam" class="full">             <!-- the camera: bump() jolts everything in it -->
+    <div id="box" class="abs"></div>
+  </div>
 </div>
 <script>
   const FPS = __FPSJS__, FRAMES = __FRAMES__;
-  const F = n => n / FPS;                 // frames -> seconds: tween positions and durations
-  const AT = n => (n - 0.5) / FPS;        // a jump (tl.set) that shows from frame n on, never on frame n - 1
+  const F = n => n / FPS;                 // frames -> seconds
+  const AT = n => (n - 0.5) / FPS;        // a jump that shows from frame n on, never on frame n - 1
   const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
   const V = window.__hyperframes.getVariables();   // the settings (declared defaults + the user's values)
   const tl = gsap.timeline({ paused: true });
-  // example (replace): pops in at frame V.pop_in, slides 120 px over 10 frames (slow end), gone from frame 60 on
+  // ---- the helpers (times in frames) ----
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));       // a jump: shows from frame f on
+  // a tween from frame f0 to f1 reaches its end half a frame early: motion blur samples each frame at +-0.4 frame,
+  // and a tween still running after a set at AT(n) on the same property would undo the set
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  // from a to b: the start pose a is also set at AT(f0), so the sub-frames just before f0 already show it
+  const ft = (t, a, b, f0, f1, ease = "none") => {
+    set(t, a, f0);
+    return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0));
+  };
+  // a camera bump: everything in #cam jolts (scale s, y px) and settles over len frames - hits, slams, clicks
+  const bump = (f, s = 1.035, y = 0, len = 9) => ft("#cam", { scale: s, y }, { scale: 1, y: 0 }, f, f + len, "expo.out");
+  // a smear for a move over ~60 px a frame (motion blur's sub-frames alone would show separate copies): a blur along
+  // the move ("y" or "x") that grows to px at frame fp and is gone at frame f1
+  const smear = (t, f0, fp, f1, px, dir = "y", id = "smear") => {
+    const s = dir === "x" ? `${px} 0.01` : `0.01 ${px}`, z = "0.01 0.01", b = `#${id}B`;
+    set(t, { filter: `url(#${id})` }, f0); set(t, { filter: "none" }, f1);
+    ft(b, { attr: { stdDeviation: z } }, { attr: { stdDeviation: s } }, f0, fp, "power2.in");
+    ft(b, { attr: { stdDeviation: s } }, { attr: { stdDeviation: z } }, fp, f1, "power2.out");
+  };
+  // ---- example (replace): pops in at frame V.pop_in, slides 120 px (slow end), the camera bumps as it lands; a
+  // pulse that snaps back on the frame the pulse ends (safe: to() ends half a frame early); a 300 px drop in 4
+  // frames (up to ~170 px a frame: smeared); gone 55 frames after it popped in
+  const P = V.pop_in;
   document.getElementById("box").style.background = V.color;
-  tl.set("#box", { opacity: 1 }, AT(V.pop_in));
-  tl.to("#box", { x: 120, duration: F(10), ease: "power2.out" }, F(V.pop_in));
-  tl.set("#box", { opacity: 0 }, AT(60));
+  set("#box", { opacity: 1 }, P);
+  to("#box", { x: 120 }, P, P + 10, "power2.out");
+  bump(P + 10);
+  to("#box", { scale: 1.3 }, P + 12, P + 18, "power2.in");
+  set("#box", { scale: 1 }, P + 18);
+  to("#box", { y: 300 }, P + 22, P + 26, "power3.in");
+  smear("#box", P + 22, P + 26, P + 29, 40);
+  set("#box", { opacity: 0 }, P + 55);
   tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
   window.__timelines = window.__timelines || {};
   window.__timelines["main"] = tl;
@@ -240,8 +291,12 @@ def cmd_new(a) -> int:
     (folder / "index.html").write_text(html, encoding="utf-8")
     shutil.copy2(GSAP, folder / "gsap.min.js")
     (folder / "hyperframes.json").write_text(json.dumps({"paths": {"assets": "assets"}}, indent=1), encoding="utf-8")
+    cues = [{"f": "pop_in", "kind": "pop", "what": "the box pops in"},       # the example's sounds (tools\sfx.py)
+            {"f": "pop_in", "kind": "whoosh", "dur": "10 / fps", "what": "it slides 120 px"},
+            {"f": "pop_in + 10", "kind": "thump", "what": "the camera bumps as it lands"},
+            {"f": "pop_in + 22", "kind": "whoosh", "dur": "4 / fps", "what": "the 300 px drop"}]
     (folder / "overlay.json").write_text(json.dumps({"name": name, "frames": a.frames, "fps": a.fps,
-                                                     "width": a.width, "height": a.height}, indent=1),
+                                                     "width": a.width, "height": a.height, "cues": cues}, indent=1),
                                          encoding="utf-8")
     print(folder / "index.html")
     return 0
@@ -424,6 +479,135 @@ def checker(h: int, w: int, s: int = 16) -> np.ndarray:
     return np.where(((yy // s + xx // s) % 2)[..., None] == 0, 0.32, 0.22).astype(np.float32) * np.ones(3, np.float32)
 
 
+def parse_frames(spec: str, frames: int | None = None) -> list[int]:
+    """'0,12,40' / '0,38,113-116' -> sorted frame numbers without repeats (clamped to 0 .. frames - 1 if given)."""
+    out = set()
+    for part in str(spec).replace(" ", "").split(","):
+        if not part:
+            continue
+        a, sep, b = part.partition("-")
+        try:
+            lo, hi = int(a), int(b) if sep else int(a)
+        except ValueError:
+            raise SystemExit(f"'{part}': frames are numbers or ranges, e.g. 0,38,113-116")
+        out.update(range(min(lo, hi), max(lo, hi) + 1))
+    if frames:
+        out = {min(max(f, 0), frames - 1) for f in out}
+    if not out:
+        raise SystemExit("no frames given, e.g. 0,38,113-116")
+    return sorted(out)
+
+
+def exact_fps(fps: float) -> float:
+    """23.976 -> 24000/1001 etc. (frame times must be the render's, not a rounded rate's)."""
+    num, _, den = fps_arg(fps).partition("/")
+    return float(num) / float(den or 1)
+
+
+def label(im: Image.Image, text: str, F: dict) -> None:
+    """The frame number + timecode burned into a still (Pillow: ffmpeg's drawtext crashes on this build)."""
+    d = ImageDraw.Draw(im)
+    x0, y0, x1, y1 = d.textbbox((12, 10), text, font=F["mono_b"])
+    d.rectangle((x0 - 6, y0 - 4, x1 + 6, y1 + 4), fill=(0, 0, 0))
+    d.text((12, 10), text, fill=(255, 196, 0), font=F["mono_b"])
+
+
+def on_checker(rgba: np.ndarray) -> Image.Image:
+    fr = rgba.astype(np.float32) / 255.0
+    img = checker(fr.shape[0], fr.shape[1])
+    return Image.fromarray(((img * (1 - fr[..., 3:]) + fr[..., :3] * fr[..., 3:]) * 255 + 0.5).astype(np.uint8))
+
+
+def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndarray], float]:
+    """HyperFrames' snapshot of <folder> at each frame's time (frame / fps, ascending), with the values a render
+    uses: RGBA arrays (H x W x 4) and the seconds it took. work = a scratch folder (a copy of the sources: the
+    settings go into its index.html as window.__hfVariables, the folder itself is never written)."""
+    folder, work = Path(folder).resolve(), Path(work).resolve()       # HyperFrames runs in tools\overlays
+    c = read_conf(folder)
+    fps = exact_fps(float(c["fps"]))
+    src, raw = work / "comp", work / "raw"
+    shutil.rmtree(work, ignore_errors=True)
+    src.mkdir(parents=True)
+    for f in OS.SOURCES:
+        if (folder / f).exists():
+            shutil.copy2(folder / f, src / f)
+    if (folder / "assets").is_dir():
+        shutil.copytree(folder / "assets", src / "assets")
+    try:
+        decl = OS.declared(folder)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    if decl:                                  # what the runtime's getVariables() reads (render: --variables-file)
+        js = json.dumps(OS.values(folder), ensure_ascii=True).replace("</", "<\\/")
+        html = (src / "index.html").read_text(encoding="utf-8")
+        m = re.search(r"<head[^>]*>", html, re.I)
+        if not m:
+            raise SystemExit(f"{folder.name}: index.html has no <head>")
+        html = html[:m.end()] + f"\n<script>window.__hfVariables = {js};</script>" + html[m.end():]
+        (src / "index.html").write_text(html, encoding="utf-8")
+    t0 = time.time()
+    r = hf("snapshot", str(src), "--at", ",".join(f"{f / fps:.9f}" for f in frames), "--no-end",
+           "--describe", "false", "--output", str(raw), capture=True)
+    secs = time.time() - t0
+    pngs = sorted(raw.glob("frame-*.png"), key=lambda p: int(p.name.split("-")[1]))
+    if r.returncode or len(pngs) != len(frames):
+        raise SystemExit(f"HyperFrames snapshot failed (exit {r.returncode}, {len(pngs)} of {len(frames)} frames): "
+                         f"{(r.stderr or r.stdout or '')[-500:]} - run: overlay.py check {folder}")
+    W, H = int(c["width"]), int(c["height"])
+    out = []
+    for p in pngs:
+        im = Image.open(p).convert("RGBA")
+        if im.size != (W, H):
+            raise SystemExit(f"{p.name}: {im.size[0]}x{im.size[1]}, expected {W}x{H}")
+        out.append(np.asarray(im))
+    return out, secs
+
+
+def sheet(tiles: list[tuple[str, Image.Image]], path: Path, cols: int = 4, width: int = 400) -> None:
+    """One page of stills (each labelled) - what Claude and the user look at first."""
+    F = fonts(1.0)
+    w = width
+    h = round(w * tiles[0][1].height / tiles[0][1].width)
+    rows = (len(tiles) + cols - 1) // cols
+    page = Image.new("RGB", (cols * (w + 8) + 8, rows * (h + 8) + 8), (16, 16, 16))
+    for i, (text, im) in enumerate(tiles):
+        t = im.resize((w, h), Image.LANCZOS)
+        label(t, text, F)
+        page.paste(t, (8 + (i % cols) * (w + 8), 8 + (i // cols) * (h + 8)))
+    page.save(path)
+
+
+def cmd_snap(a) -> int:
+    """Stills straight from the HTML (no render): <folder>\\snap\\<name>_fNNNN.png + sheet.png."""
+    folder = guard(Path(a.folder))
+    c = read_conf(folder)
+    fps = float(c["fps"])
+    frames = parse_frames(a.frames, int(c["frames"]))
+    out = folder / "snap"
+    out.mkdir(exist_ok=True)
+    work = out / ".work"
+    try:
+        arrs, secs = snapshots(folder, frames, work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    F = fonts(1.0)
+    tiles = []
+    for f, arr in zip(frames, arrs):
+        text = f"{c['name']}  f{f}  ({frame_to_tc(f, fps)})"
+        im = on_checker(arr)
+        tiles.append((f"f{f} ({frame_to_tc(f, fps)})", im.copy()))
+        label(im, text + "  snapshot", F)
+        p = out / f"{c['name']}_f{f:04d}.png"
+        im.save(p)
+        print(p)
+    if len(tiles) > 1:
+        sheet(tiles, out / "sheet.png")
+        print(out / "sheet.png")
+    log(f"{len(frames)} snapshot(s) in {secs:.1f} s ({secs / len(frames):.2f} s each) - no render; a snapshot has no "
+        "motion blur")
+    return 0
+
+
 def cmd_stills(a) -> int:
     folder = guard(Path(a.folder))
     c = read_conf(folder)
@@ -433,7 +617,7 @@ def cmd_stills(a) -> int:
     out = folder / "stills"
     out.mkdir(exist_ok=True)
     x, y, w, h = m["crop"]
-    for f in [int(v) for v in a.frames.split(",")]:
+    for f in parse_frames(a.frames):
         fr = np.asarray(arr[min(max(f, 0), m["frames"] - 1)], np.float32) / 255.0
         img = checker(m["height"], m["width"])
         reg = img[y:y + h, x:x + w]
@@ -897,6 +1081,67 @@ def cmd_pin(a) -> int:
     return 0
 
 
+def selfcheck_template(verbose: bool = True) -> dict:
+    """The `new` template is safe by default (needs Node.js + HyperFrames; skipped without them): its example, 64
+    frames at 1080x1080, rendered plain and with motion blur 3 and snapped at every frame (in order) - a snapshot =
+    the plain render on every frame; with motion blur the same picture wherever nothing moves (incl. f23, a set on
+    the frame a tween ends) and a blurred one on the fast drop. ~30 s; scratch in .app\\dev\\selfcheck_template."""
+    t0 = time.time()
+    if not HF.exists() or not shutil.which("node"):
+        return {"pass": True, "skipped": "Node.js / HyperFrames not installed", "lines": []}
+    lines, ok = [], True
+
+    def check(cond, msg):
+        nonlocal ok
+        ok &= bool(cond)
+        lines.append(("PASS " if cond else "FAIL ") + msg)
+    root = LAB / ".app" / "dev" / "selfcheck_template"
+    g = root / "tpl"
+    shutil.rmtree(root, ignore_errors=True)
+    N = 64
+    try:
+        with open(os.devnull, "w") as nul:                        # cmd_new prints the path
+            so, sys.stdout = sys.stdout, nul
+            try:
+                cmd_new(argparse.Namespace(folder=str(g), frames=N, fps=30.0, width=1080, height=1080, force=True,
+                                           from_=None, render=False))
+            finally:
+                sys.stdout = so
+        c = read_conf(g)
+        got = {}
+        for n in (1, 3):
+            sub_render(g, c, 30.0, n, root / f"mb{n}", [], None)
+            got[n] = [np.asarray(Image.open(p).convert("RGBA")) for p in sorted((root / f"mb{n}").glob("frame_*.png"))]
+        snaps, secs = snapshots(g, list(range(N)), root / "snap")
+
+        def d(a, b):
+            return int(np.abs(_premul_arr(a) - _premul_arr(b)).max())
+        check(len(got[1]) == len(got[3]) == len(snaps) == N, f"{N} frames each (plain, motion blur 3, snapshots)")
+        sd = [d(got[1][f], snaps[f]) for f in range(N)]
+        check(max(sd) <= 2, f"snapshot = plain render on every frame (max {max(sd)}/255; {N} snapshots in {secs:.1f} s)")
+        still = list(range(0, 5)) + [23] + list(range(34, N))           # P = 5: nothing moves (f23: the pulse's set)
+        md = {f: d(got[1][f], got[3][f]) for f in range(N)}
+        check(max(md[f] for f in still) <= 2, "motion blur 3 = plain where nothing moves, incl. f23 (00:00:00:23), "
+              f"the frame a set lands on a tween's end (max {max(md[f] for f in still)}/255)")
+        check(min(md[f] for f in (28, 29, 30)) > 20, "motion blur shows on the fast drop f28-f30 "
+              f"(00:00:00:28-00:00:01:00): {[md[f] for f in (28, 29, 30)]}/255")
+    except SystemExit as e:
+        check(False, f"render / snapshot failed: {e}")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    lines.append(f"({time.time() - t0:.0f} s)")
+    if verbose:
+        print("\n".join(lines))
+    return {"pass": ok, "lines": lines}
+
+
+def _premul_arr(a: np.ndarray) -> np.ndarray:
+    a = a.astype(np.int32)
+    out = a.copy()
+    out[..., :3] = (a[..., :3] * a[..., 3:] + 127) // 255
+    return out
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -917,6 +1162,9 @@ def main() -> int:
     s.add_argument("--motion-blur", type=int, help="N sub-frames per frame, averaged (odd, 3-9; kept in overlay.json; "
                                                    "1 = off); N times the render time")
     s = sub.add_parser("stills")
+    s.add_argument("folder")
+    s.add_argument("frames")
+    s = sub.add_parser("snap", help="stills straight from the HTML at these frames (no render): 0,38,113-116")
     s.add_argument("folder")
     s.add_argument("frames")
     s = sub.add_parser("check")
@@ -967,7 +1215,8 @@ def main() -> int:
     s.add_argument("--gsap")
     s.add_argument("--force", action="store_true")
     a = ap.parse_args()
-    return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "check": cmd_check, "settings": cmd_settings,
+    return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "snap": cmd_snap, "check": cmd_check,
+            "settings": cmd_settings,
             "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions,
             "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip, "fit": cmd_fit,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,

@@ -37,11 +37,21 @@ More ways in (the app's *How did it turn out?*, 0.3.3):
   sound, sfx, colour, captions, graphics, effects, pacing, overall) and `made_from.json`; keep what was rated good,
   change what was rated OK / bad as the notes say (a new edit version, never overwrite the last one); when the video
   came from a prompt, add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
-- In every mode, read `build\outcome.json` of the user's earlier videos made from the same reference / prompt first:
-  repeat what they liked, avoid what they rated bad.
+- In every mode, Claude's memory (section 0) starts with the user's ratings of ALL their videos as rules: a part
+  rated bad once is a default for every new video ("Sound effects: rated bad once -> always add sound effects"),
+  good = keep doing it. Follow them; `build\outcome.json` of a video holds its notes.
 
 Two kinds of edit: **1:1** (same song, same frames - sections 0-5) and, since 0.4, **by feel** (section 6: the
 style of up to three videos, or the user's words, with their music and length).
+
+**Cheapest check first** (every mode; renders cost minutes, a wrong guess costs a round). The user approves each
+step in plain words; no polish before step 3 is approved:
+1. The plan in words and numbers: the shots / scenes with frame + timecode, the feel as numbers ("a cut every
+   0.5 s, moves over 4-6 frames, a whoosh on each") - seconds.
+2. A sheet at every scene change: `render_video.py <plan> --stills a,b,c` / `--sheet`, graphics with `overlay.py snap
+   <folder> <frames>` (no render) - seconds.
+3. The motion: the quick draft (section 6) or a plain render.
+4. The final with the polish (motion blur, the sound mix, colour, Resolve) - once.
 
 ## 0. Always first (and only this - don't explore the whole lab)
 1. Hard rules (CLAUDE.md): the user's clips and the reference are read-only; everything you make goes into
@@ -53,7 +63,10 @@ style of up to three videos, or the user's words, with their music and length).
    notes in `analysis\<ref>\feedback\verdicts.json` win over Claude's review (WRONG / PARTLY notes say what is
    really there). If the reference was never reviewed by Claude (no `review` on the events), say so: rebuilding
    unreviewed drafts copies their mistakes - suggest `/analyze-reference` first.
-3. Lessons that concern rebuilding: the shared `.claude\skills\analyze-reference\lessons.md` and
+3. Lessons on making videos: `.claude\skills\recreate-video\lessons.md` (M###, next to this file) and this PC's
+   `knowledge\local\lessons_making.md` - read both and apply every rule; something new learned while making ->
+   a lesson in the local file (id: `tools\knowledge.py next-lesson-id --kind making`, the shared file's format).
+   Lessons that concern rebuilding an analysed effect: the shared `.claude\skills\analyze-reference\lessons.md` and
    `knowledge\local\lessons.md` (e.g. over-exposed flashes are Gain on the picture, not a white solid - L001).
    Claude's memory: `.venv\Scripts\python tools\knowledge.py memory` (or MCP `knowledge(category="memory")`) = every
    analysed video's style in one line and every effect seen with how it was made (the user's confirmed ones first,
@@ -105,8 +118,10 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    `--from <graphic>` = a copy of one in the graphics library (`overlay.py graphics`: the user's `library\graphics\`
    + `tools\overlays\examples\`) - then change only its settings.
 2. Edit `index.html`, keeping the rules in its header: transparent background, absolute positions in output pixels,
-   animation only on the paused GSAP timeline, times in frames (`F(n)` for tweens, `AT(n)` for jumps that show from
-   frame n), no timers / `Math.random` (`rnd(seed)`). Fonts: system fonts or files in the overlay folder.
+   animation only on the paused GSAP timeline, times in frames through the template's helpers (`set` = a jump that
+   shows from frame n, `to` / `ft` = tweens that end half a frame early, `bump` = a camera jolt, `smear` for moves
+   over ~60 px a frame - so a render with motion blur and a snapshot match the plain render), no timers /
+   `Math.random` (`rnd(seed)`). Fonts: system fonts or files in the overlay folder.
    Geometry of the lab's own looks: `graphics.text_layout` (pixel font) and `graphics.seg_layout` (seven segment)
    give SVG-ready points; worked examples: `tools\overlays\examples\` (4AM's title and clock, drawn from their
    settings in JS - the same pixels as the hard-coded 0.3.0 versions).
@@ -114,8 +129,9 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    goes into `data-composition-variables` on `<html>` (types string / color / number with min / max / step / boolean
    / enum with options `[{"value", "label"}]`) and is read from `V = window.__hyperframes.getVariables()`; the app's
    Videos > Graphics tab edits them (overlay.json `values`), `overlay.py settings | set` from here.
-3. `tools\overlay.py render <folder>` (prints the plan layer), `tools\overlay.py stills <folder> 0,10,40` and look at
-   those stills (frame + timecode on a checkerboard) - fix, render again.
+3. First `tools\overlay.py snap <folder> 0,10,40` (no render, seconds: stills straight from the HTML + `snap\sheet.png`;
+   a cut as n-1, n, n+1) - look, fix; then `tools\overlay.py render <folder>` (prints the plan layer) and
+   `tools\overlay.py stills <folder> 0,10,40` (rendered frames, frame + timecode on a checkerboard) - fix, render again.
 4. Plan layer: `{"type": "overlay", "id": ..., "start": f0, "end": f1, "file": "<the .mov>", "blend": "normal"}`
    (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track
    (a numbered copy - Resolve locks the files it uses; after a new render `overlay.py refresh <folder>` swaps it and
@@ -129,6 +145,10 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
 Measured on 4AM's title and clock (2026-10-09): same frames as the lab's layers, title within 4/255 (99.9 %).
 
 ## 4. Render and verify
+- Sound effects (a part rated bad once is a default - see the ratings in Claude's memory): `tools\sfx.py plan
+  build\plan_vN.json` (+ `--song <file>` when the plan's sound is not the song) puts a whoosh / hit / riser on the
+  plan's zooms, whips, flashes and speed-ups and the cues of its graphics, levelled against the sound under each;
+  make the plan change it prints (the mix as `"audio"`; the effects alone = their own Resolve track).
 - `tools\render_video.py build\plan_v1.json` -> `build\<project>_v1.mp4` (renders in parallel processes: ~3x
   faster, `--workers 1` = one process; any frame looks the same alone, in a range or in a chunk); `--compare` ->
   reference | render side by side in `build\compare\` (frame numbers burned in).

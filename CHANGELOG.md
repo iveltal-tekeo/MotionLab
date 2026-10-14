@@ -2,10 +2,34 @@
 
 What changed in each version of MotionLab, newest first. When a new version is on GitHub, MotionLab shows an
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
-Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
+Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
+between them (fixes, upkeep, polish).
 
-## Unreleased
+## 0.4.1.1 - 2026-10-14 - Each section its own feel, Prepare, sound effects, check before you render
 
+- **Each section has its own feel**: Analyze, Prepare, Edit, Generate and Claude's memory open with their title on
+  a band in the section's colour - like the card you clicked on Home, with its big icon - over a faint pattern of
+  its own (a measuring grid, ruled script lines, film-strip holes, sparkles, a constellation). The main buttons and
+  the panels' edges take the section's colour too, and so does each section's row in the sidebar, so you always
+  know where you are. Generate is fuchsia now. The sections lost their numbers: they are not steps you have to take
+  in order.
+- **Which Claude, how hard** - every button that opens Claude Code first shows a small dialog: the model (Opus, the
+  one every plan includes and the default; Fable, the strongest, for checking, recreating or generating a video -
+  the dialog says where it is stronger; or what you set in Claude Code) and the effort, pre-filled for the task.
+  *Don't ask again* keeps your choice; Settings > Claude Code has the defaults and brings the dialog back.
+- **Check before you render**: Claude can look at any moment of a motion graphic in seconds, without rendering it,
+  and works in steps you approve - the plan, then pictures of every scene change, then the motion, and only then
+  the final polish. New motion graphics start from a safer template: they look the same with motion blur, without
+  it and in a quick preview - no more vanishing logos or moves that get stuck.
+- **Claude remembers how you rated every video**: a part you rated bad (for example "no sound effects") becomes a
+  rule for every video after it, and what you rated good is kept. Lessons on making videos are kept and shared with
+  friends like the analysis lessons.
+- **Sound effects, made by the lab**: whooshes, clicks, key taps, pops and hits are made by MotionLab itself (no
+  samples, nothing to license), placed on the exact frames of a graphic or an edit, and each one set against the
+  music under it - heard, without drowning the song (a sound in a short quiet gap is set against the gap, not the
+  loud part after it). A graphic lists its sounds next to its settings, so changing
+  the typed text moves the key taps with it; an edit's zooms, whips, flashes and speed-ups get their sounds the same
+  way. You get the effects on their own (a track for DaVinci Resolve) and mixed with the song, never clipping.
 - **Prepare a video - the script, before you film** (a new section between Analyze and Edit, also on Home):
   *Improve my script* - paste or attach the script you have; MotionLab checks it on the spot (the hook in the
   first 3 seconds, the length, dead stretches with nothing new, filler words, "you" vs "I", the call to
@@ -22,6 +46,15 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 - **Motion graphics with real motion blur**: Claude can render a graphic with motion blur - five in-between
   moments blended into every frame, so fast moves smear like a camera's instead of jumping from frame to frame.
   Later renders of that graphic (Edit > the video > Graphics) keep it; they take about five times as long.
+- **A new roadmap on Home**: it moves now - the line draws itself, each version pops in, a light runs along what
+  has shipped to *you are here*. The big versions (0.4.0, 0.5.0...) are badges with an icon; the smaller ones hang
+  below them. Click it to see it full size, and hover a version for its full name.
+- *What's new* shows the plans in their new order: **0.5.0 is about videos made from zero** (Generate) - ready-made
+  building blocks for motion graphics, sound effects, formats you can reuse, a preview before the long render, and
+  clips made with AI video tools brought back in to be finished. Templates by feel moved to 0.6.5, macOS to 0.7.5
+  and describe video to 0.8.0. Next come **check before you render** (0.4.2: stills of the key moments before the
+  long render, your ratings remembered for every later video) and **downloads that keep working** (0.4.2.1, with a
+  *Report a problem* button); title + thumbnail, the prompt generator, yapping mode and colour follow as 0.4.3-0.4.6.
 
 ## 0.4.1 - 2026-10-13 - Fixes after 0.4.0: quick drafts, waiting jobs, new videos never overwrite old ones
 

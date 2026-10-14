@@ -18,6 +18,8 @@ Revisit a database at around 1,000 references, or when you want search like "fin
 | **Reference card** per video and person: category, tags, format (vertical / horizontal, length), link, BPM, **pacing** (cuts/min, average / median / p10 / p90 shot, cuts in the first 3 s, first cut, % of cuts on the beat, effects/min, effect families), every reviewed effect (type, frames + timecode, what happens, timing, easing, origin, rebuild notes) with the person's verdict and note | 5-70 KB (a 3-min music video with 57 effects: 65 KB) | `knowledge\references\<video id>--<name>.json` | yes |
 | **New lessons** from your feedback | ~1 KB each | `knowledge\local\lessons.md` (ids `local-N`) -> `knowledge\incoming\<name>-<time>.md` | yes, **reviewed first** |
 | **Reviewed rules** every MotionLab applies | a few dozen paragraphs | `.claude\skills\analyze-reference\lessons.md` (L001 ...) | yes |
+| **Lessons on making videos** (since 2026-10-14: edits, graphics, generated videos - not how a reference is judged) | ~1 KB each | `knowledge\local\lessons_making.md` (ids `local-make-N`) -> `knowledge\incoming\<name>-<time>-making.md` -> `.claude\skills\recreate-video\lessons.md` (M001 ...) | yes, **reviewed first** |
+| Your ratings of your own videos (*How did it turn out?*) | a few lines | `projects\<video>\build\outcome.json` -> the first section of Claude's memory (`knowledge\local\memory.md`) | no |
 | Thresholds (`tools\config.json`), code | a few KB | the repo | yes, with the self-test |
 | Videos, frames, contact sheets, previews, file paths, your settings | GBs | `refs\`, `analysis\`, `projects\`, `settings.json` | **never** |
 | Transcripts (other people's words, 0.4) | KBs per video | `analysis\<name>\content\` | **never** - later only topic summaries, counts and short quotes in cards |
@@ -41,8 +43,17 @@ Cards carry the name you set in *Settings > Sharing & updates* - not your email 
 5. **Friends without write access** (or without git): *Share* writes `knowledge\outbox\<name>-<time>.mlpack.json`;
    they send it to you, you drop it in `knowledge\inbox\` and click *Import* - its cards and lessons are shared with
    your next *Share*.
+6. **Two kinds of lessons** (since 2026-10-14): lessons on *analysing* (how effects are judged; ids `local-N` ->
+   `L###`, read whole before every analysis) and lessons on *making videos* (edits, graphics, generated videos; ids
+   `local-make-N` from `tools\knowledge.py next-lesson-id --kind making` -> `M###`, read by `/recreate-video` and
+   `/generate-video`), so neither skill reads the other's rules. They move the same way: one pack, one *Share*; the
+   making lessons land in their own `knowledge\incoming\<name>-<time>-making.md`, whose header says to review them
+   into `.claude\skills\recreate-video\lessons.md` with the next M number. The id says the kind (`local-make-N` /
+   `M###` = making), so a pack carries both in one list.
 
-What Claude reads: the shared `lessons.md`, your own `knowledge\local\lessons.md`, `summary.md` - per category the
+What Claude reads before an edit or a generated video: Claude's memory (`knowledge\local\memory.md`, which starts with
+your ratings of all your videos as rules: a part rated bad once is a default from then on) and both making-lessons
+files. Before an analysis: the shared `lessons.md`, your own `knowledge\local\lessons.md`, `summary.md` - per category the
 typical pacing (median and range), the effects found by everybody and the corrections people gave - and, for the
 category it works on, `summary\<category>.md` with every reviewed effect and its verdict. The short file stays
 small however many references there are, so 30 or 300 cards cost Claude about the same to read. A cooking short is judged against the cooking

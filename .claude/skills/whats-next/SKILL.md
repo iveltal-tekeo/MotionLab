@@ -14,7 +14,7 @@ This skill only looks and advises. It starts no work, and changes files only whe
 
 ## 1. Gather (cheap first)
 - Run `.venv\Scripts\python tools\whatsnext.py --fetch` - one digest: version, commits since the last release,
-  GitHub's main / tested, uncommitted files, every plans.md section's status lines, the roadmap stages, ideas,
+  GitHub's main / tested, uncommitted files, every plans.md section's status lines, the roadmap (+ its check), ideas,
   the lab's state (each reference's next workflow step, videos, prompts, friends' lessons, last self-test).
 - Read more only where the digest is unclear or the argument asks for it: one section of `docs\plans.md`,
   `docs\ideas.md`, the top of `CHANGELOG.md`. Not the whole lab.
@@ -43,6 +43,8 @@ whether something planned needs it. Suggest at most 2 worth a small test. Ideas 
 ## 4. When the user decides
 - Picks an option: say what you will do first, then do it in this chat (or say which skill / chat fits better).
 - Moves an idea into a version: add it to that version's section in `docs\plans.md` (`## x.y.z - planned - title`
-  headings), take it out of `docs\ideas.md`, and redraw the roadmap if a stage changes (`tools\roadmap.py`: STAGES /
-  VERDICT, then run it). Planned versions never go into CHANGELOG.md.
-- Re-orders versions: update `docs\plans.md`, `tools\roadmap.py` (VERDICT "NEXT") and redraw.
+  headings), take it out of `docs\ideas.md`. Planned versions never go into CHANGELOG.md.
+- Adds, moves or re-orders versions: update `docs\plans.md`, then the roadmap - `tools\roadmap.py sync` (adds /
+  drops versions to match plans.md and CHANGELOG.md), a short label for each new one and an icon + line for a new
+  major (x.y.0) in `docs\roadmap\roadmap.json`, `roadmap.py check`, `roadmap.py render`. The app's Home reads the
+  JSON live; the render is for README's picture.

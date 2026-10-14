@@ -80,12 +80,46 @@ async function openPath(path, reveal = false) {
   try { await api('/api/open', {path, reveal}); } catch (e) { toast(e.message, 'err'); }
 }
 // Claude Code in a new console in the lab folder, with an optional first message (the app's hand-off texts). task =
-// what it is for (system.TASKS: review, feedback, lessons, library, recreate, prompt, free) - it picks the effort level
-async function openClaude(prompt = '', task = 'free', label = '') {
+// what it is for (system.TASKS: review, feedback, lessons, library, recreate, prompt, free). First a small dialog:
+// the model (Opus = every plan, the default; Fable = the strongest, Max plans; or Claude Code's own choice) and the
+// effort, pre-filled from Settings and the task - "Don't ask again" saves them (Settings > Claude Code brings it back).
+const MODEL_WORDS = {
+  opus: ['Opus', 'the model every Claude plan includes - the right one for most tasks'],
+  fable: ['Fable', 'the strongest model, for long or open-ended work. Max plans have their own weekly limit for it; on other plans Claude Code asks before it bills credits'],
+  auto: ['As set in Claude Code', 'whatever you chose there with /model'],
+};
+async function launchClaude(body) {
   try {
-    const r = await api('/api/claude', {prompt, task, label});
-    toast('Claude Code is opening in a new window' + (r.effort ? ` (effort: ${r.effort})` : ''), 'ok');
+    const r = await api('/api/claude', body);
+    toast('Claude Code is opening in a new window' + (r.model || r.effort ? ` (${[r.model ? MODEL_WORDS[r.model][0] : '', r.effort ? 'effort ' + r.effort : ''].filter(Boolean).join(', ')})` : ''), 'ok');
   } catch (e) { toast(e.message, 'err'); }
+}
+async function openClaude(prompt = '', task = 'free', label = '') {
+  let o;
+  try { o = await api('/api/claude', {task, options: true}); } catch (e) { toast(e.message, 'err'); return; }
+  if (!o.ask) return launchClaude({prompt, task, label});
+  modal(`<h2>Open in Claude Code</h2>
+    ${prompt ? `<div class="claude" style="margin-bottom:12px"><span class="mono small">${esc(prompt.length > 220 ? prompt.slice(0, 220) + '…' : prompt)}</span></div>` : '<p class="small muted">A free chat in the lab folder.</p>'}
+    <div class="cmodels">${o.models.map(m => `<label class="chk-open cmodel"><input type="radio" name="cmodel" value="${m}" ${m === o.model ? 'checked' : ''}><span><b>${MODEL_WORDS[m][0]}${m === 'fable' && o.fable_fits ? ' <em class="tag">stronger for this task</em>' : ''}</b><small>${MODEL_WORDS[m][1]}</small></span></label>`).join('')}</div>
+    <div class="row" style="margin-top:12px;gap:14px;align-items:center"><label for="ceff" class="small muted">Effort</label>
+      <select id="ceff">${o.efforts.map(x => `<option value="${x}">${x}</option>`).join('')}</select>
+      <span class="small muted" id="cefh"></span></div>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="cask"><span>Don't ask again - use this every time (Settings > Claude Code brings the question back)</span></label>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="cgo"><svg class="i"><use href="#i-claude"/></svg>Open in Claude Code</button><button class="btn" id="cno">Cancel</button></div>`, el => {
+    const eff = $('#ceff', el), hint = $('#cefh', el);
+    const sync = () => {
+      const m = $('input[name=cmodel]:checked', el).value, rec = o.recommended[m === 'auto' ? 'opus' : m];
+      hint.textContent = rec ? `recommended for this: ${rec}` : '';
+    };
+    eff.value = o.effort || 'high';
+    $$('input[name=cmodel]', el).forEach(i => i.onchange = () => { const m = i.value, rec = o.recommended[m === 'auto' ? 'opus' : m]; if (rec) eff.value = rec; sync(); });
+    sync();
+    $('#cno', el).onclick = closeModal;
+    $('#cgo', el).onclick = () => {
+      const model = $('input[name=cmodel]:checked', el).value, effort = eff.value, remember = $('#cask', el).checked;
+      closeModal(); launchClaude({prompt, task, label, model, effort, remember});
+    };
+  });
 }
 const claudeBtn = (prompt, label = 'Open in Claude Code', task = 'free', name = '', cls = 'sm cl') =>
   `<button class="btn ${cls}" data-claude="${esc(prompt)}" data-task="${task}" data-label="${esc(name)}"><svg class="i"><use href="#i-claude"/></svg>${label}</button>`;
@@ -215,7 +249,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 15;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 16;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -622,7 +656,7 @@ async function pageHome(main) {
   ${heroAnim()}
   ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <h2 class="ways-q">What do you want to do?</h2>
-  <div class="ways">${WAYS.map(([k, t, d], i) => `<div class="way w-${k}"><div class="way-top"><span class="way-n">${i + 1}</span><svg class="ic"><use href="#i-${k}"/></svg></div>
+  <div class="ways">${WAYS.map(([k, t, d]) => `<div class="way w-${k}"><div class="way-top"><svg class="ic"><use href="#i-${k}"/></svg></div>
       <h3>${t}</h3><p>${d}</p><div class="row way-act">${wayActs(k)}</div><a class="way-foot" href="#/${k}">${foot[k]} →</a></div>`).join('')}</div>
   <a class="panel memline" href="#/memory"><svg class="ic"><use href="#i-memory"/></svg>
     <div><b>Claude's memory</b><span class="muted"> · ${plural(s.references, 'video')} · ${plural(s.events, 'effect')} · ${plural(s.lessons || 0, 'lesson')}</span>
@@ -630,7 +664,10 @@ async function pageHome(main) {
     <span class="grow"></span><span class="muted">→</span></a>
   ${s.setup.length ? `<div class="panel upd" style="margin-top:14px"><h2>Setup</h2><ul class="next">${s.setup.map(t => `<li><b>${esc(t.label)}</b> not found <span class="dim small">(${esc(t.need)})</span><div class="small muted">${esc(t.how)}</div></li>`).join('')}</ul>
     <a href="#/settings">Settings → Programs</a></div>` : ''}
-  ${s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="hint">click to enlarge</span></div>
+  ${s.roadmap_live ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="hint">click to enlarge</span></div>
+    <div class="rmlive"><iframe src="${fileUrl(s.roadmap_live)}" title="MotionLab roadmap" loading="lazy" tabindex="-1"></iframe>
+      <button class="rmhit" aria-label="Enlarge the roadmap"></button></div></div>`
+  : s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>Roadmap</h2><span class="hint">click to enlarge</span></div>
     <img src="${fileUrl(s.roadmap)}" alt="roadmap"></div>` : ''}
   <div class="panel" style="margin-top:14px"><h2>Status</h2><div class="kv">
       <b>Resolve</b><span>${esc(s.resolve.state)}${s.resolve.checked ? ` <span class="dim small">(checked ${esc(s.resolve.checked)})</span>` : ''}</span>
@@ -646,6 +683,19 @@ async function pageHome(main) {
   $$('[data-way]', main).forEach(b => b.onclick = () => WAY_GO[b.dataset.way]());
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
+  const rh = $('.rmhit', main); if (rh) rh.onclick = () => roadmapBig(fileUrl(s.roadmap_live));
+}
+// the roadmap = docs/roadmap/index.html, a motion graphic drawn live from docs/roadmap/roadmap.json (tools/roadmap.py):
+// small on Home (no clicks inside), full size on a click - there you can hover a version for its full name
+function roadmapBig(src) {
+  const el = document.createElement('div'); el.id = 'rmbig';
+  el.innerHTML = `<button class="btn sm rmx" aria-label="Close">✕</button><iframe src="${src}" title="MotionLab roadmap"></iframe>
+    <div class="lbcap">hover a version for its full name · Esc or a click outside closes it</div>`;
+  const close = () => { el.remove(); document.removeEventListener('keydown', esc, true); };
+  const esc = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } };
+  el.onclick = e => { if (e.target === el || e.target.closest('.rmx')) close(); };
+  document.addEventListener('keydown', esc, true);
+  document.body.append(el);
 }
 // Generate > AI video tools: Claude writes the prompts (the prompt library's "Generate a new prompt", a shot first)
 async function aiPromptsModal(kind = 'shot', style = '') {
@@ -2941,10 +2991,13 @@ async function pageSettings(main) {
       <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div></div></div>
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
-      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, writing scripts ${esc(S.tasks.script || 'high')}, what next ${esc(S.tasks.plan || 'high')}</option>
+      <label for="clm">Model</label><select id="clm">${(S.models || ['opus', 'fable', 'auto']).map(m => `<option value="${m}" ${(st.claude_model || 'opus') === m ? 'selected' : ''}>${esc(MODEL_WORDS[m][0])} - ${esc(MODEL_WORDS[m][1])}</option>`).join('')}</select>
+      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, writing scripts ${esc(S.tasks.script || 'high')}, what next ${esc(S.tasks.plan || 'medium')} (one level less on Fable)</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
-      <span></span><div class="small muted">How hard Claude thinks in the windows the app opens. Higher = more careful, slower, and it uses more of
-        your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div>
+      <span></span><label class="chk"><input type="checkbox" id="cla" ${st.claude_ask === false ? '' : 'checked'}><span>Ask me which model and effort every time a button opens Claude Code (the dialog)</span></label>
+      <span></span><div class="small muted">Opus works on every Claude plan; Fable is the strongest model for long or open-ended work (checking a video, recreating
+        or generating one) and on Max plans has its own weekly limit. Effort = how hard Claude thinks: higher is more careful, slower, and uses more of
+        your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change them with <code>/model</code> and <code>/effort</code>.</div>
       <label>DaVinci Resolve</label><div>${(S.resolve_mcp || {}).registered
           ? `<span class="ok">Claude Code can look into DaVinci Resolve</span> <span class="small muted">(MCP ${esc(S.resolve_mcp.version || '')}, this PC, safe mode on)</span> <button class="btn sm" data-rmcp="resolve_mcp_remove">Disconnect</button>`
           : `<button class="btn sm" data-rmcp="resolve_mcp_install">Connect Claude Code to DaVinci Resolve (MCP)</button>`}
@@ -3016,7 +3069,8 @@ async function pageSettings(main) {
     try {
       await api('/api/settings', {settings: {ytdlp_path: $('#ytp').value, download_preset: $('#pre').value,
                                              download_name: $('#nm').value, claude_path: $('#clp').value,
-                                             claude_effort: $('#cle').value,
+                                             claude_effort: $('#cle').value, claude_model: $('#clm').value,
+                                             claude_ask: $('#cla').checked,
                                              author: $('#who').value,
                                              update_mode: ($('input[name=upm]:checked') || {}).value || 'ask'}});
       $('#sv').textContent = 'saved ✓'; toast('Settings saved', 'ok'); setTimeout(route, 500);

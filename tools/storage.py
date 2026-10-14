@@ -116,7 +116,11 @@ def scan():
                 continue
             rel = fp.relative_to(LAB)
             cat, what = classify(rel, used)
-            files.append((rel, fp.stat().st_size, cat, what))
+            try:
+                size = fp.stat().st_size
+            except OSError:                              # gone between the listing and now (a browser's temp file)
+                continue
+            files.append((rel, size, cat, what))
     return files
 
 

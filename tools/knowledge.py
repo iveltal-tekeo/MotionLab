@@ -3,10 +3,13 @@
     .venv\\Scripts\\python tools\\knowledge.py cards              (re)build the reference cards of this PC's analyses
     .venv\\Scripts\\python tools\\knowledge.py summary            rebuild knowledge\\local\\summary.md (what Claude reads)
     .venv\\Scripts\\python tools\\knowledge.py memory             rebuild + print knowledge\\local\\memory.md: Claude's memory
-                                                               (every video's style, the effects seen and how they were
-                                                               made) - read it before an edit or a prompt
+                                                               (your ratings of all your videos as rules, every video's
+                                                               style, the effects seen and how they were made) - read
+                                                               it before an edit or a prompt
     .venv\\Scripts\\python tools\\knowledge.py pending            what "Share my knowledge" would send now
     .venv\\Scripts\\python tools\\knowledge.py next-lesson-id     the id for a new local lesson (local-N)
+    .venv\\Scripts\\python tools\\knowledge.py next-lesson-id --kind making    ... on making videos (local-make-N, in
+                                                               knowledge\\local\\lessons_making.md; reviewed = M###)
     .venv\\Scripts\\python tools\\knowledge.py share              share: commit + push to GitHub (or write a pack)
     .venv\\Scripts\\python tools\\knowledge.py export             only write a pack to knowledge\\outbox\\
     .venv\\Scripts\\python tools\\knowledge.py import <pack>      import a friend's pack (cards + lessons to review)
@@ -44,9 +47,14 @@ def main() -> int:
     elif cmd == "pending":
         p = KN.pending()
         print(f"{len(p['cards'])} card(s): " + ", ".join(c["title"] for c in p["cards"]))
-        print(f"{len(p['lessons'])} lesson(s): " + ", ".join(i for i, _ in p["lessons"]))
+        for k in KN.KINDS:
+            ids = [i for i, _ in p["lessons"] if KN.lesson_kind(i) == k]
+            print(f"{len(ids)} lesson(s) on {'making videos' if k == 'making' else 'analysis'}: " + ", ".join(ids))
     elif cmd == "next-lesson-id":
-        print(KN.next_lesson_id())
+        kind = sys.argv[sys.argv.index("--kind") + 1] if "--kind" in sys.argv[:-1] else "analysis"
+        if kind not in KN.KINDS:
+            raise SystemExit(f"--kind: {' or '.join(KN.KINDS)}")
+        print(KN.next_lesson_id(kind))
     elif cmd == "export":
         pack = KN.make_pack()
         print(KN.write_pack(pack))

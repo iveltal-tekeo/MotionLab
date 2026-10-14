@@ -49,7 +49,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   user's verdicts, their ONE home; `app_<date>.txt` = exports from the app; `feedback_<date>.txt/.json` = archived by
   `feedback.py` when Claude applied them)
 - `knowledge\` what installs share: `references\` = SHARED reference cards `<video id>--<author>.json`, `incoming\` =
-  SHARED lessons waiting for review; private: `local\` (this PC's cards, `lessons.md` = new lessons `local-N`,
+  SHARED lessons waiting for review; private: `local\` (this PC's cards, `lessons.md` = new lessons `local-N`, `lessons_making.md` = lessons on making
+  videos `local-make-N`,
   `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review, `memory.md` = Claude's
   memory (0.4: every video's style in one line, the effects seen and how they were made - read before an edit or a
   prompt; `knowledge.py memory` rebuilds + prints it), `prompts\<kind>\<id>.json`
@@ -70,7 +71,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   .comp text, `knowledge.py`, `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
   explain units)
 - `docs\` hand-offs: `resolve_notes.md`, `option2_resolve.md`, `claude_tips.md`, `knowledge_sharing.md`,
-  `organization.md` (repo/versioning plan), `roadmap.png` (`tools\roadmap.py` redraws it)
+  `organization.md` (repo/versioning plan), `roadmap\` (`roadmap.json` = the roadmap's ONE data file, `index.html` =
+  the motion graphic drawn from it, played live on the app's Home) -> `roadmap.png` (README; `roadmap.mp4` stays local)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `write-script\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
@@ -116,15 +118,24 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   plan grade `"lut3d"`) + how close (0-100)
 - `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
   a motion-graphics video, `/generate-video`)
+- `sfx.py cues <graphic|cues.json|plan.json> [--set id=v] | make <...> --song <audio|none> | plan <plan.json> | kinds |
+  selfcheck` sound effects (built 2026-10-14 for 0.5.0): synthesised, seeded; a graphic's cues = overlay.json "cues"
+  (formulas of its settings), a plan's zooms / whips / flashes become cues; each effect levelled against the song where
+  it sounds -> `build\sfx\<name>_sfx.wav` (Resolve track), `_mix.wav` (the plan's "audio"), `_sfx.json`; never guess a
+  volume
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth
-- `knowledge.py cards | summary | memory | pending | next-lesson-id | share | export | import <pack>` (`memory` = Claude's
-  memory, also MCP `knowledge(category="memory")`)
+- `knowledge.py cards | summary | memory | pending | next-lesson-id [--kind making] | share | export | import <pack>`
+  (`memory` = Claude's memory, also MCP `knowledge(category="memory")`; it starts with the user's ratings of all their
+  videos (`build\outcome.json`) as rules; lessons on making videos: `local-make-N` -> M### in
+  `.claude\skills\recreate-video\lessons.md`, shared as `knowledge\incoming\*-making.md`)
 - `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
-  `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills` (graphics
+  `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills | snap
+  <folder> 0,38,113-116` (snap = stills straight from the HTML, no render, ~3 s for 1, ~7 s for 10 - the cheapest
+  check; `new`'s helpers set / to / ft / bump / smear keep a motion-blur render and a snapshot = a plain render) (graphics
   as HTML via HyperFrames, pinned in `tools\overlays\`; `settings | set` = the values the user can change, `save |
   graphics` = the graphics library; `fit <folder> --like <video>` = a size-independent graphic takes a video's size; `captions <folder> --from
   <.srt|.vtt|transcript.json|video>` = styled captions + an
@@ -136,22 +147,35 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   caches are the big item: ~3.9 GB per minute of footage in colour (2.6 grey).
 - `mcp_server.py` MotionLab's MCP server (`.mcp.json`; read-only: events, sheets, frames, verdicts, projects,
   stills - prefer its tools to reading events.json)
-- `app.py` the app (`--no-window --stay --no-update --port N` = a test server); `roadmap.py` redraws `docs\roadmap.png`
-  (edit its STAGES / VERDICT when the state changes)
+- `app.py` the app (`--no-window --stay --no-update --port N` = a test server); `roadmap.py check | sync | show |
+  render [--video]` = the roadmap: after plans.md / CHANGELOG.md change, `sync` (adds / drops versions, "here"), edit
+  labels / a new major's icon + line in `docs\roadmap\roadmap.json`, `check`, `render` (majors = x.y.0)
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
 `MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's ways in: Home ("What do
-you want to do?"), **1 Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
-misses, Delete), **2 Prepare** (#/prepare: the script before filming - *Improve my
-script* / *Write one from zero* -> `/write-script`; scripts live in the prompt library), **3 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
-their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **4 Generate**
+you want to do?"), **Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
+misses, Delete), **Prepare** (#/prepare: the script before filming - *Improve my
+script* / *Write one from zero* -> `/write-script`; scripts live in the prompt library), **Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
+their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **Generate**
 (#/generate: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
 #/prompts), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,
 saved graphics + effects, Share with friends), then Jobs and Settings
 (General, Storage, Claude skills). The 0.3 addresses (#/refs, #/projects, #/knowledge, #/library) still work. The app
-runs the lab's own tools as jobs; Claude's parts run in Claude Code windows the app opens with a fixed first message and
-an effort level per task (Settings > Claude Code).
+runs the lab's own tools as jobs; Claude's parts run in Claude Code windows the app opens with a fixed first message, a
+model (Opus by default, Fable for the long tasks when the user picks it) and an effort level per task - a dialog on
+every button, or fixed in Settings > Claude Code.
+
+## Working style (Fable and Opus)
+- You get the outcome and the constraints, not the steps. The skills describe what a good result is; decide the
+  order and the tools yourself. When you have enough information to act, act: don't re-derive what the lab already
+  measured or re-open a decision the user made.
+- Before reporting progress, check each claim against a tool result from this chat. If the self-test fails, say so
+  with its output; if a step was skipped, say that.
+- Do the task, not the tidying: no refactors, helpers or extra checks beyond what the task needs.
+- Verify your own work; nobody asks you to and you don't need a subagent for it. Delegate only when several
+  independent, sizeable pieces can run in parallel (many sheets, many clips), never to split one small job.
+- A question or a description of a problem gets an assessment, not a fix.
 
 ## Conventions
 - Frames are 0-based (frame 0 = first frame of the analyzed video); ranges are inclusive.

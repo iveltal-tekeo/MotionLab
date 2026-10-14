@@ -44,6 +44,9 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 
 ![roadmap](docs/roadmap.png)
 
+*The roadmap moves in the app (Home). Its data is [docs/roadmap/roadmap.json](docs/roadmap/roadmap.json): the big
+badges are the major versions (x.y.0), the smaller versions hang below them.*
+
 ## What it does
 
 - **Download** a reference from a link (YouTube, Vimeo, TikTok, Instagram ... via yt-dlp: MP4 up to 1080p, best
@@ -190,11 +193,13 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.4.1.1 each section its own feel, 0.4.2 title + thumbnail
-  for clicks, horizontal and vertical, 0.4.3 prompt generator for every model, 0.4.4 yapping mode for talking-to-camera
-  videos, 0.4.5 colour: correct your own clips, adjustable grades in Resolve, 0.4.6 check before you render, 0.4.7
-  describe video: what videos say and show, 0.5 templates by feel: the story + macOS, 0.7 AI B-roll and cinematics),
-  also shown in the app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.4.2 check before you render: drafts, feel tests, notes on
+  moments, 0.4.2.1 downloads that keep working + report a problem, 0.4.3 title + thumbnail for clicks, horizontal and
+  vertical, 0.4.4 prompt generator for every model, 0.4.5 yapping mode for talking-to-camera videos, 0.4.6 colour:
+  correct your own clips, adjustable grades in Resolve, 0.5 content generation: videos from zero that come out
+  right - building blocks, sound effects, formats, a preview before the render, AI clips back into the lab, 0.6.5
+  templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS, 0.8 describe video: what videos say and
+  show), also shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

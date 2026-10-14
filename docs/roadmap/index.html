@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>MotionLab roadmap</title>
+<!-- MotionLab's roadmap as a motion graphic: 1920 x 1080, 12 s at 30 fps (a 4.5 s build-up, then a 7.5 s loop).
+     The DATA is roadmap.json next to this file - edit that, not this page (see its "_help").
+     - The app's Home shows this page in a frame and plays it live (it fetches roadmap.json).
+     - tools\roadmap.py render: HyperFrames renders the same page (the data inlined below) -> docs\roadmap.png (the
+       frame at 4.5 s) and, with --video, docs\roadmap.mp4.
+     Rules (HyperFrames): everything moves on the paused GSAP timeline `tl` - no CSS animations, timers or
+     Math.random; the build-up ends at INTRO, the loop repeats seamlessly from INTRO to SECONDS.
+     Look: the 4AM palette (near-black, white, amber #ffc400, greys), the lab's pixel font (motionlab\graphics.py
+     GLYPHS) and seven-segment digits, grain + vignette; icons = the app's own (ui\index.html). -->
+<script src="./gsap.min.js"></script>
+<style>
+  :root { --bg: #0d0d0f; --panel: #141417; --white: #ececec; --text: #a9a9af; --grey: #808084; --dim: #3a3a3e;
+          --amber: #ffc400; --amber-dim: rgba(255, 196, 0, .55); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  #root { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+          transform-origin: 0 0; color: var(--white); font-family: "Segoe UI", system-ui, sans-serif; }
+  .abs { position: absolute; }
+  svg.abs { overflow: visible; }
+  #vignette { inset: 0; background: radial-gradient(ellipse 75% 70% at 50% 46%, transparent 55%, rgba(0,0,0,.42) 100%); }
+  #grain { inset: 0; opacity: .07; }
+  /* a major's words, under its badge */
+  .mj { width: 192px; }
+  .mj .lb { font: 700 17px/22px "Segoe UI", sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+  .mj .ln { margin-top: 6px; font: 400 14px/19px "Segoe UI", sans-serif; color: var(--text); }
+  .mj .its { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .mj .its span { font: 600 12px/18px "Segoe UI", sans-serif; padding: 0 7px; border-radius: 4px; border: 1px solid var(--amber-dim);
+                  color: var(--amber); white-space: nowrap; }
+  .later .lb { color: #a2a2a8; } .later .ln { color: #77777d; } .later .its span { border-color: var(--dim); color: var(--grey); }
+  .nextmajor .lb { color: var(--amber); }
+  /* a smaller version, on its major's branch */
+  .row { width: 184px; height: 40px; }
+  .row .vn { font: 400 12px/14px Consolas, monospace; color: var(--grey); letter-spacing: .02em; }
+  .row .rl { font: 400 15px/20px "Segoe UI", sans-serif; color: #d6d6da; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.next .vn { color: var(--amber); } .row.next .rl { color: var(--white); font-weight: 600; }
+  .row.planned .vn { color: var(--amber-dim); } .row.planned .rl { color: #c4c4c8; }
+  .row.later .vn { color: #616166; } .row.later .rl { color: #8a8a90; }
+  .tag { font: 700 11px/18px Consolas, monospace; letter-spacing: .08em; padding: 0 7px; border-radius: 4px; white-space: nowrap; }
+  .tag.shipped { border: 1px solid #5a5a60; color: #b8b8be; }
+  .tag.nextmajor { background: var(--amber); color: var(--bg); }
+  .tag.later { border: 1px solid var(--dim); color: var(--grey); }
+  .eraghost { font: 400 13px/16px Consolas, monospace; color: #6a6a70; }
+  /* header, band, footer */
+  #sub { right: 70px; top: 150px; font: 400 15px/18px Consolas, monospace; color: var(--grey); text-align: right; }
+  #legend { right: 70px; top: 176px; display: flex; gap: 18px; font: 400 13px/16px Consolas, monospace; color: var(--grey); }
+  #legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; border-radius: 50%; }
+  #band { left: 70px; top: 812px; width: 1780px; height: 192px; background: var(--panel); border-left: 6px solid var(--amber); }
+  .vrow { left: 34px; width: 1000px; display: flex; gap: 20px; align-items: flex-start; }
+  .vrow .chip { flex: none; width: 78px; text-align: center; font: 700 14px/24px Consolas, monospace; border-radius: 5px; }
+  .vrow .chip.s { border: 2px solid var(--white); color: var(--white); }
+  .vrow .chip.w { background: var(--amber); color: var(--bg); border: 2px solid var(--amber); }
+  .vrow p { font: 300 19px/26px "Segoe UI", sans-serif; color: #e2e2e6; }
+  .vrow.weak p { color: #ece2c8; }
+  #stats { left: 1080px; top: 26px; width: 670px; display: flex; gap: 16px; }
+  .st { flex: 1; }
+  .st b { display: block; font: 400 36px/48px Bahnschrift, "Segoe UI", sans-serif; color: var(--white); white-space: nowrap; }
+  .st.weak b { color: var(--amber); }
+  .st span { display: block; margin-top: 4px; font: 600 12.5px/16px "Segoe UI", sans-serif; color: var(--text); }
+  #foot { left: 96px; top: 1034px; width: 1728px; display: flex; justify-content: space-between; font: 400 14px/18px Consolas, monospace; color: #8e8e94; }
+  #msg { left: 96px; top: 480px; font: 400 22px/30px "Segoe UI", sans-serif; color: var(--grey); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="12" data-width="1920" data-height="1080">
+  <svg id="lines" class="abs" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs>
+      <filter id="glowA" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7"/></filter>
+      <filter id="glowS" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4"/></filter>
+      <clipPath id="lineclip"><rect id="lineclipr" x="0" y="0" width="0" height="1080"/></clipPath>
+    </defs>
+  </svg>
+  <div id="html" class="abs" style="inset:0"></div>
+  <svg id="grain" class="abs" width="1920" height="1080">
+    <filter id="noise" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="406" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.45"/>
+    </filter>
+    <rect width="1920" height="1080" filter="url(#noise)"/>
+  </svg>
+  <div id="vignette" class="abs"></div>
+</div>
+<!-- ROADMAP DATA -->
+<script>
+(function () {
+  const FPS = 30, SECONDS = 12, INTRO = 4.5;          // the build-up ends at INTRO; INTRO..SECONDS loops
+  const W = 1920, LINE_Y = 268, ROW_TOP = 462, ROW_H = 40, HERE_H = 34, MX = 96;
+  const HF = !!window.__hyperframes;                  // rendered by HyperFrames (else: a live page in the app)
+  const root = document.getElementById("root"), lines = document.getElementById("lines"),
+        html = document.getElementById("html");
+  const NS = "http://www.w3.org/2000/svg";
+  const C = { bg: "#0d0d0f", white: "#ececec", grey: "#808084", dim: "#3a3a3e", amber: "#ffc400", later: "#5c5c62" };
+
+  // ---- the app's icons (ui\index.html symbols, 24 x 24, stroked)
+  const ICONS = {
+    analyze: '<circle cx="10.5" cy="10.5" r="6.8"/><path d="m15.4 15.4 5.1 5.1"/><path d="M6.6 10.9h1.7l1.2-2.7 1.9 5.2 1.3-2.5h1.6"/>',
+    prepare: '<path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-10z"/><path d="M14 3.5v5h5"/><path d="M8.5 12.5h7M8.5 16h4.5"/>',
+    edit: '<circle cx="6.2" cy="6.5" r="2.6"/><circle cx="6.2" cy="17.5" r="2.6"/><path d="M8.4 7.9 20 16.8M8.4 16.1 20 7.2"/>',
+    generate: '<path d="m3.8 20.2 10.6-10.6"/><path d="m12.9 8.1 3 3"/><path d="M18 2.8v3.4M16.3 4.5h3.4M20.3 10v2.2M19.2 11.1h2.2M9.8 3.2v2.2M8.7 4.3h2.2"/>',
+    memory: '<path d="M11.2 4.6A3.2 3.2 0 0 0 6 6.8a3.1 3.1 0 0 0-1.6 5.4 3.2 3.2 0 0 0 1.8 5 3.2 3.2 0 0 0 5 2.2z"/><path d="M12.8 4.6A3.2 3.2 0 0 1 18 6.8a3.1 3.1 0 0 1 1.6 5.4 3.2 3.2 0 0 1-1.8 5 3.2 3.2 0 0 1-5 2.2z"/><path d="M8.2 9.6c1 .2 1.9.9 2.2 1.9M15.8 9.6c-1 .2-1.9.9-2.2 1.9M7.6 14.6c.9-.4 2-.3 2.8.3M16.4 14.6c-.9-.4-2-.3-2.8.3"/>',
+    library: '<path d="m12 3.5 2.6 5.3 5.9.8-4.3 4.2 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.2 5.9-.8z"/>',
+    knowledge: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.9 7.6-3.8M8.2 13.1l7.6 3.8"/>',
+    home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h5v-6h3v6h5V10"/>',
+    videos: '<rect x="2.5" y="6" width="13.5" height="12" rx="2"/><path d="m16 10.5 5.5-3v9l-5.5-3z"/>',
+    prompts: '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m7 10 3 2.5L7 15M12.5 15.5H17"/>',
+    claude: '<path d="m11 3 1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="m18.5 14.5.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>',
+    update: '<circle cx="12" cy="12" r="9"/><path d="M12 16.5V7.8M8.3 11.3 12 7.6l3.7 3.7"/>',
+    news: '<circle cx="6" cy="5.5" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="6" cy="18.5" r="1.6"/><path d="M6 7.1v3.3M6 13.6v3.3M10.5 5.5H20M10.5 12H18M10.5 18.5H16"/>',
+    settings: '<path d="M4 6.5h9M17 6.5h3M4 12h3M11 12h9M4 17.5h11M19 17.5h1"/><circle cx="15" cy="6.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17.5" r="2"/>',
+  };
+
+  // ---- the lab's boxy pixel font (motionlab\graphics.py GLYPHS / text_layout, the same geometry)
+  const GLYPHS = {
+    A: [[[0,6],[0,0],[4,0],[4,6]], [[0,3],[4,3]]], B: [[[0,0],[0,6],[4,6],[4,3],[0,3]], [[0,0],[3,0],[3,3]]],
+    C: [[[4,0],[0,0],[0,6],[4,6]]], D: [[[0,0],[0,6],[3,6],[4,5],[4,1],[3,0],[0,0]]],
+    E: [[[4,0],[0,0],[0,6],[4,6]], [[0,3],[3,3]]], F: [[[4,0],[0,0],[0,6]], [[0,3],[3,3]]],
+    G: [[[4,0],[0,0],[0,6],[4,6],[4,3],[2,3]]], H: [[[0,0],[0,6]], [[4,0],[4,6]], [[0,3],[4,3]]],
+    I: [[[0,0],[0,6]]], J: [[[4,0],[4,6],[0,6],[0,4]]],
+    K: [[[0,0],[0,6]], [[0,3],[3,3]], [[3,3],[4,2],[4,0]], [[3,3],[4,4],[4,6]]], L: [[[0,0],[0,6],[4,6]]],
+    M: [[[0,6],[0,0],[4,0],[4,6]], [[2,0],[2,4]]], N: [[[0,6],[0,0],[4,0],[4,6]]],
+    O: [[[0,0],[4,0],[4,6],[0,6],[0,0]]], P: [[[0,6],[0,0],[4,0],[4,3],[0,3]]],
+    R: [[[0,6],[0,0],[4,0],[4,3],[0,3]], [[2,3],[4,4],[4,6]]],
+    S: [[[4,0],[0,0],[0,3],[4,3],[4,6],[0,6]]], T: [[[0,0],[4,0]], [[2,0],[2,6]]], U: [[[0,0],[0,6],[4,6],[4,0]]],
+    V: [[[0,0],[0,4],[2,6],[4,4],[4,0]]], W: [[[0,0],[0,6],[4,6],[4,0]], [[2,2],[2,6]]],
+    X: [[[0,0],[4,6]], [[4,0],[0,6]]], Y: [[[0,0],[0,3],[4,3]], [[4,0],[4,6],[0,6]]], Z: [[[0,0],[4,0],[0,6],[4,6]]],
+    "0": [[[0,0],[4,0],[4,6],[0,6],[0,0]]], "1": [[[1,1],[2,0],[2,6]]], "2": [[[0,0],[4,0],[4,3],[0,3],[0,6],[4,6]]],
+    "3": [[[0,0],[4,0],[4,6],[0,6]], [[1,3],[4,3]]], "4": [[[0,0],[0,3],[4,3]], [[4,0],[4,6]]],
+    "5": [[[4,0],[0,0],[0,3],[4,3],[4,6],[0,6]]], "6": [[[4,0],[0,0],[0,6],[4,6],[4,3],[0,3]]],
+    "7": [[[0,0],[4,0],[4,6]]], "8": [[[0,0],[4,0],[4,6],[0,6],[0,0]], [[0,3],[4,3]]],
+    "9": [[[4,3],[0,3],[0,0],[4,0],[4,6],[0,6]]], "-": [[[0,3],[4,3]]], ".": [[[0,6],[0.01,6]]], "'": [[[0,0],[0,1.5]]],
+  };
+  const NARROW = "I1.'";
+  function pixelLayout(text, height, wscale = 1.5, tracking = 0.55) {
+    text = text.toUpperCase();
+    const u = height / 6, ux = u * wscale, st = Math.max(1, height * 0.085), pad = st * 2;
+    const widths = [...text].map(ch => ch === " " ? 2.2 * ux : (NARROW.includes(ch) ? st : 4 * ux + st));
+    const total = widths.reduce((a, b) => a + b, 0) + tracking * ux * 2 * Math.max(0, text.length - 1);
+    const lines_ = [], dots = [];
+    let x = pad + st / 2;
+    [...text].forEach((ch, i) => {
+      for (const poly of GLYPHS[ch] || []) {
+        const pts = poly.map(([px, py]) => [x + px * ux, pad + st / 2 + py * u]);
+        if (pts.length === 2 && Math.abs(pts[0][0] - pts[1][0]) < 0.5 && Math.abs(pts[0][1] - pts[1][1]) < 0.5) dots.push(pts[0]);
+        else lines_.push(pts);
+      }
+      x += widths[i] + tracking * ux * 2;
+    });
+    return { lines: lines_, dots, st, W: Math.ceil(total + 2 * pad), H: Math.ceil(height + st + 2 * pad) };
+  }
+  // ---- seven segments per digit (graphics.py SEGMENTS)
+  const SEGMENTS = { "0": "abcdef", "1": "bc", "2": "abged", "3": "abgcd", "4": "fgbc", "5": "afgcd", "6": "afgedc",
+                     "7": "abc", "8": "abcdefg", "9": "abcdfg", "-": "g", " ": "" };
+  function segPoly(seg, x, y, w, h, t, gap) {
+    const hh = h / 2;
+    if ("agd".includes(seg)) {
+      const yc = { a: y + t / 2, g: y + hh, d: y + h - t / 2 }[seg], x0 = x + gap, x1 = x + w - gap;
+      return [[x0, yc], [x0 + t / 2, yc - t / 2], [x1 - t / 2, yc - t / 2], [x1, yc], [x1 - t / 2, yc + t / 2], [x0 + t / 2, yc + t / 2]];
+    }
+    const xc = "fe".includes(seg) ? x + t / 2 : x + w - t / 2;
+    const [y0, y1] = "fb".includes(seg) ? [y + t / 2 + gap, y + hh - gap] : [y + hh + gap, y + h - t / 2 - gap];
+    return [[xc, y0], [xc + t / 2, y0 + t / 2], [xc + t / 2, y1 - t / 2], [xc, y1], [xc - t / 2, y1 - t / 2], [xc - t / 2, y0 + t / 2]];
+  }
+  function segLayout(text, h) {
+    const w = 0.56 * h, t = 0.15 * h, gap = 0.035 * h, pad = 0.08 * h, sp = 0.16 * h, polys = [];
+    let x = pad;
+    for (const ch of text) { for (const s of SEGMENTS[ch] || "") polys.push(segPoly(s, x, pad, w, h, t, gap)); x += w + sp; }
+    return { polys, W: Math.ceil(x - sp + pad), H: Math.ceil(h + 2 * pad) };
+  }
+
+  // ---- helpers
+  const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || lines).appendChild(e); return e; };
+  const div = (cls, css, inner, parent) => { const e = document.createElement("div"); if (cls) e.className = cls; Object.assign(e.style, css || {});
+                                             if (inner != null) e.innerHTML = inner; (parent || html).appendChild(e); return e; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const vt = v => { const p = String(v).split(".").map(Number); while (p.length < 4) p.push(0); return p; };
+  const cmp = (a, b) => { const x = vt(a), y = vt(b); for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return x[i] - y[i]; return 0; };
+  const eraOf = v => String(v).split(".").slice(0, 2).join(".");
+  const isMajor = v => /^\d+\.\d+\.0$/.test(v);
+  function pixel(text, height, x, y, color, parent, opts = {}) {          // pixel text with a glow; returns its group
+    const L = pixelLayout(text, height, opts.wscale || 1.5);
+    const g = svgEl("g", { transform: `translate(${opts.anchor === "end" ? x - L.W : opts.anchor === "middle" ? x - L.W / 2 : x},${y})` }, parent);
+    const draw = (p, glow) => {
+      const s = svgEl("g", { fill: "none", stroke: color, "stroke-width": L.st, "stroke-linecap": "square", "stroke-linejoin": "round" }, p);
+      if (glow) { s.setAttribute("filter", "url(#glowS)"); s.setAttribute("opacity", glow); }
+      for (const pts of L.lines) svgEl("polyline", { points: pts.map(q => q.join(",")).join(" "), pathLength: 1, "stroke-dasharray": "1 1" }, s);
+      for (const [px, py] of L.dots) svgEl("rect", { x: px - 0.6 * L.st, y: py - 0.6 * L.st, width: 1.2 * L.st, height: 1.2 * L.st, fill: color, stroke: "none" }, s);
+      return s;
+    };
+    const glow = opts.glow ? draw(g, opts.glow) : null;
+    const body = draw(g, 0);
+    return { g, glow, body, W: L.W, H: L.H };
+  }
+
+  // ---- the data -> eras (a major + the versions below it)
+  function prepare(D) {
+    const vs = [...D.versions].sort((a, b) => cmp(a.v, b.v));
+    const here = D.here, nextV = vs.find(x => cmp(x.v, here) > 0);
+    const nextMajor = vs.find(x => cmp(x.v, here) > 0 && isMajor(x.v));
+    for (const x of vs) {
+      x.major = isMajor(x.v); x.era = eraOf(x.v);
+      x.st = x.status || (cmp(x.v, here) <= 0 ? "done" : x === nextV ? "next"
+             : !nextMajor || cmp(x.v, nextMajor.v) <= 0 ? "planned" : "later");
+      x.isNextMajor = x === nextMajor;
+    }
+    const eras = [];
+    for (const x of vs) {
+      let e = eras.find(e => e.era === x.era);
+      if (!e) eras.push(e = { era: x.era, major: null, minors: [] });
+      if (x.major) e.major = x; else e.minors.push(x);
+    }
+    const hereEra = eraOf(here);
+    for (const e of eras) {
+      e.rows = e.minors.map(x => ({ kind: "v", x }));
+      if (e.era === hereEra) {
+        const i = e.rows.findIndex(r => r.x.v === here);
+        e.rows.splice(i + 1, 0, { kind: "here" });
+      }
+      const sts = [e.major, ...e.minors].filter(Boolean).map(x => x.st);
+      e.st = sts.includes("done") ? "done" : sts.includes("next") || sts.includes("planned") ? "planned" : "later";
+    }
+    return { vs, eras, here, nextMajor };
+  }
+
+  function build(D) {
+    const P = prepare(D), n = P.eras.length, colW = (W - 2 * MX) / n;
+    const tl = gsap.timeline({ paused: true });
+    const defs = lines.querySelector("defs");
+
+    // ---- header: MOTIONLAB (pixel), ROADMAP, the date in seven segments, a line, the legend
+    const title = pixel("MOTIONLAB", 62, 70, 46, C.white, null, { glow: 0.55 });
+    const road = pixel("ROADMAP", 26, 74, 46 + title.H + 6, C.amber, null, { glow: 0.7 });
+    const date = segLayout(D.date || "", 50), dateX = W - 70 - date.W;
+    const dg = svgEl("g", { transform: `translate(${dateX},56)` });
+    const ghost = svgEl("g", { fill: C.amber, opacity: 0.1 }, dg);
+    for (const p of segLayout("8888-88-88", 50).polys) svgEl("polygon", { points: p.map(q => q.join(",")).join(" ") }, ghost);
+    const dglow = svgEl("g", { fill: C.amber, filter: "url(#glowS)", opacity: 0.8 }, dg), dbody = svgEl("g", { fill: C.amber }, dg);
+    const segs = [];
+    for (const p of date.polys) { const pts = p.map(q => q.join(",")).join(" ");
+      segs.push(svgEl("polygon", { points: pts, opacity: 0 }, dbody)); segs.push(svgEl("polygon", { points: pts, opacity: 0 }, dglow)); }
+    const sub = div("abs", {}, "where it stands and where it goes"); sub.id = "sub";
+    const legend = div("abs", {}, [
+      `<span><i style="background:${C.white}"></i>done</span>`,
+      `<span><i style="background:${C.amber};box-shadow:0 0 8px ${C.amber}"></i>you are here / next</span>`,
+      `<span><i style="border:2px solid ${C.amber}"></i>planned</span>`,
+      `<span><i style="border:2px dotted ${C.grey}"></i>later</span>`,
+      `<span><i style="border-radius:3px;background:${C.white};width:14px;height:14px;vertical-align:-3px"></i>major x.y.0</span>`].join(""));
+    legend.id = "legend";
+
+    // ---- the main line: shipped (solid white) -> up to the next major (dashed amber) -> later (dotted grey)
+    const xs = P.eras.map((e, i) => MX + colW * i + 18 + (e.major ? 20 : 0));
+    const iHere = P.eras.findIndex(e => e.era === eraOf(P.here));
+    const iNextMajor = P.nextMajor ? P.eras.findIndex(e => e.major === P.nextMajor) : -1;
+    const mainG = svgEl("g", { "clip-path": "url(#lineclip)" });
+    const seg = (x0, x1, kind) => {
+      if (x1 <= x0) return null;
+      const a = { x1: x0, y1: LINE_Y, x2: x1, y2: LINE_Y, "stroke-width": 3, fill: "none" };
+      if (kind === "done") Object.assign(a, { stroke: C.white });
+      if (kind === "planned") Object.assign(a, { stroke: C.amber, "stroke-dasharray": "10 8" });
+      if (kind === "later") Object.assign(a, { stroke: C.later, "stroke-dasharray": "2 10", "stroke-linecap": "round" });
+      return svgEl("line", a, mainG);
+    };
+    const xFirst = xs[0], xLast = xs[n - 1] + 30;
+    const xHere = xs[Math.max(0, iHere)], xNext = iNextMajor >= 0 ? xs[iNextMajor] : xHere;
+    seg(xFirst, xHere, "done");
+    const planLine = seg(xHere, xNext, "planned");
+    const laterLine = seg(xNext, xLast, "later");
+    svgEl("line", { x1: xFirst, y1: LINE_Y, x2: xHere, y2: LINE_Y, stroke: C.white, "stroke-width": 6,
+                                     filter: "url(#glowS)", opacity: 0.35 }, mainG);
+
+    // the comet: a light that runs along what shipped down to "you are here" (behind the badges)
+    const comet = svgEl("g", { opacity: 0 });
+    svgEl("circle", { r: 13, fill: C.amber, filter: "url(#glowA)", opacity: 0.9 }, comet);
+    svgEl("circle", { r: 4.5, fill: "#fff8e0" }, comet);
+
+    // ---- per era: the badge (major) or a junction, the words, the branch with its versions
+    const LINE_START = 0.9, LINE_DUR = 2.2, clipX = xFirst - 40, clipW = xLast + 40 - clipX;
+    // when the growing line (sine.inOut) reaches x: ease(p) = (1 - cos(pi p)) / 2 = f  ->  p = acos(1 - 2 f) / pi
+    const lineT = x => { const f = Math.min(1, Math.max(0, (x - clipX) / clipW)); return LINE_START + LINE_DUR * Math.acos(1 - 2 * f) / Math.PI; };
+    tl.set("#lineclipr", { attr: { x: clipX, width: 0 } }, 0);
+    tl.to("#lineclipr", { attr: { width: clipW }, duration: LINE_DUR, ease: "sine.inOut" }, LINE_START);
+    let hereRow = null, hereBranch = null, ring = null, nextGlow = null;
+    P.eras.forEach((e, i) => {
+      const colL = MX + colW * i, gx = colL + 18, t0 = lineT(xs[i]);
+      const st = e.major ? (e.major.isNextMajor ? "nextmajor" : e.major.st) : e.st;
+      let textBottom = LINE_Y + 18;
+      if (e.major) {
+        const M = e.major, cx = gx + 20, later = M.st === "later", done = M.st === "done", hot = M.isNextMajor;
+        const bg = svgEl("g", { transform: `translate(${cx},${LINE_Y})` });
+        const badge = svgEl("g", {}, bg);
+        if (hot) nextGlow = svgEl("rect", { x: -44, y: -44, width: 88, height: 88, rx: 20, fill: C.amber, filter: "url(#glowA)", opacity: 0.55 }, badge);
+        else if (done) svgEl("rect", { x: -40, y: -40, width: 80, height: 80, rx: 18, fill: C.white, filter: "url(#glowA)", opacity: 0.12 }, badge);
+        svgEl("rect", { x: -38, y: -38, width: 76, height: 76, rx: 16, fill: hot ? C.amber : done ? "#1d1d21" : C.bg,
+                        stroke: hot ? C.amber : done ? C.white : later ? C.later : C.amber, "stroke-width": hot ? 0 : 2.5,
+                        "stroke-dasharray": later ? "6 5" : "none" }, badge);
+        const ic = svgEl("g", { transform: "translate(-20,-20) scale(1.6667)", fill: "none", stroke: hot ? C.bg : done ? C.white : later ? C.grey : C.amber,
+                                "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round" }, badge);
+        ic.innerHTML = ICONS[M.icon] || ICONS.update;
+        svgEl("title", {}, badge).textContent = `${M.v} - ${M.title || M.label} (${hot ? "next major" : M.st})`;
+        const num = pixel(M.era, 26, cx + 52, LINE_Y - 50, hot ? C.amber : done ? C.white : C.grey, null, { glow: later ? 0 : 0.6 });
+        const tag = div("abs tag " + (hot ? "nextmajor" : done ? "shipped" : "later"), { left: (cx + 54) + "px", top: (LINE_Y + 12) + "px" },
+                        hot ? "NEXT MAJOR" : done ? "SHIPPED" : M.st === "later" ? "LATER" : "PLANNED");
+        const words = div("abs mj " + st, { left: (gx + 12) + "px", top: (LINE_Y + 56) + "px" },
+          `<div class="lb">${esc(M.label)}</div>${M.line ? `<div class="ln">${esc(M.line)}</div>` : ""}` +
+          (M.items && M.items.length ? `<div class="its">${M.items.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""));
+        words.title = `${M.v} - ${M.title || M.label}`;
+        textBottom = LINE_Y + 56 + words.offsetHeight;
+        // motion: the badge pops when the line reaches it, the number draws, the words rise
+        tl.set(badge, { scale: 0, transformOrigin: "50% 50%" }, 0);
+        tl.to(badge, { scale: 1, duration: 0.42, ease: "back.out(2.2)" }, t0 - 0.08);
+        tl.set([num.g, tag, words], { opacity: 0 }, 0);
+        tl.set(num.g.querySelectorAll("polyline"), { attr: { "stroke-dashoffset": 1 } }, 0);
+        tl.to(num.g, { opacity: 1, duration: 0.01 }, t0 + 0.05);
+        tl.to(num.g.querySelectorAll("polyline"), { attr: { "stroke-dashoffset": 0 }, duration: 0.3, stagger: 0.015, ease: "power1.out" }, t0 + 0.05);
+        tl.fromTo(tag, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }, t0 + 0.2);
+        tl.fromTo(words, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t0 + 0.14);
+      } else {
+        const dot = svgEl("circle", { cx: gx, cy: LINE_Y, r: 6, fill: e.st === "later" ? C.bg : C.amber, stroke: e.st === "later" ? C.later : C.amber, "stroke-width": 2.5 });
+        const lab = div("abs eraghost", { left: (gx + 12) + "px", top: (LINE_Y - 26) + "px" }, esc(e.era));
+        tl.set([dot, lab], { opacity: 0 }, 0);
+        tl.to([dot, lab], { opacity: 1, duration: 0.25 }, t0);
+      }
+      if (!e.rows.length) return;
+      // the branch: from the badge (or the junction) down to the last row, each piece styled like the row below it
+      const top = Math.max(ROW_TOP, textBottom + 14);
+      let y = top;
+      const rowsY = e.rows.map(r => { const yy = y; y += r.kind === "here" ? HERE_H : ROW_H; return yy; });
+      const yStart = e.major ? LINE_Y + 38 : LINE_Y + 6;
+      const branch = svgEl("g", {});
+      let yPrev = yStart;
+      e.rows.forEach((r, k) => {
+        const yNode = rowsY[k] + (r.kind === "here" ? HERE_H / 2 : 26);
+        const kind = r.kind === "here" ? "done" : r.x.st === "done" ? "done" : r.x.st === "later" ? "later" : "planned";
+        const a = { x1: gx, y1: yPrev, x2: gx, y2: yNode, "stroke-width": 2.5 };
+        if (kind === "done") a.stroke = C.white;
+        if (kind === "planned") Object.assign(a, { stroke: C.amber, "stroke-dasharray": "7 6" });
+        if (kind === "later") Object.assign(a, { stroke: C.later, "stroke-dasharray": "2 8", "stroke-linecap": "round" });
+        svgEl("line", a, branch);
+        yPrev = yNode;
+      });
+      tl.set(branch, { opacity: 0 }, 0);
+      const tb = t0 + 0.25;
+      tl.fromTo(branch, { opacity: 1, scaleY: 0, svgOrigin: `${gx} ${yStart}` },
+                { scaleY: 1, duration: 0.25 + 0.05 * e.rows.length, ease: "power2.out" }, tb);
+      e.rows.forEach((r, k) => {
+        const yr = rowsY[k], tr = tb + 0.12 + 0.06 * k;
+        if (r.kind === "here") {
+          const yc = yr + HERE_H / 2;
+          hereBranch = { gx, yc, e };
+          const g = svgEl("g", {});
+          ring = svgEl("circle", { cx: gx, cy: yc, r: 7, fill: "none", stroke: C.amber, "stroke-width": 2, opacity: 0 }, g);
+          svgEl("circle", { cx: gx, cy: yc, r: 10, fill: C.amber, filter: "url(#glowA)", opacity: 0.8 }, g);
+          svgEl("circle", { cx: gx, cy: yc, r: 6, fill: C.amber }, g);
+          svgEl("path", { d: `M ${gx + 14} ${yc - 7} L ${gx + 24} ${yc} L ${gx + 14} ${yc + 7} Z`, fill: C.amber }, g);
+          const yah = pixel("YOU ARE HERE", 11, gx + 30, yc - 10, C.amber, g, { glow: 0.8, wscale: 1.3 });
+          hereRow = g;
+          tl.set(g, { opacity: 0 }, 0);
+          tl.set(yah.g.querySelectorAll("polyline"), { attr: { "stroke-dashoffset": 1 } }, 0);
+          const th = Math.max(tr, 3.15);
+          tl.fromTo(g, { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.35, ease: "back.out(2)" }, th);
+          tl.to(yah.g.querySelectorAll("polyline"), { attr: { "stroke-dashoffset": 0 }, duration: 0.35, stagger: 0.006 }, th + 0.05);
+          return;
+        }
+        const x = r.x, cls = x.st;
+        const node = x.st === "done" ? svgEl("circle", { cx: gx, cy: yr + 26, r: 5, fill: C.white })
+          : x.st === "next" ? svgEl("circle", { cx: gx, cy: yr + 26, r: 6, fill: C.amber, stroke: C.bg, "stroke-width": 2 })
+          : svgEl("circle", { cx: gx, cy: yr + 26, r: 5, fill: C.bg, stroke: x.st === "later" ? C.later : C.amber, "stroke-width": 2 });
+        const row = div("abs row " + cls, { left: (gx + 14) + "px", top: yr + "px" },
+                        `<div class="vn">${esc(x.v)}${x.st === "next" ? "  · NEXT" : ""}</div><div class="rl">${esc(x.label)}</div>`);
+        row.title = `${x.v} - ${x.title || x.label}`;
+        tl.set([node, row], { opacity: 0 }, 0);
+        tl.fromTo(node, { opacity: 0, scale: 0, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2.5)" }, tr);
+        tl.fromTo(row, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }, tr + 0.03);
+      });
+    });
+
+    // ---- the band: strong / weak + the numbers, the footer
+    const band = div("abs", {}, ""); band.id = "band";
+    const vr = (tag, cls, text, top) => div("abs vrow " + cls, { top: top + "px" }, `<span class="chip ${tag}">${cls.toUpperCase()}</span><p>${esc(text)}</p>`, band);
+    const strong = vr("s", "strong", D.strong || "", 30);
+    const weak = vr("w", "weak", D.weak || "", 30 + strong.offsetHeight + 18);
+    const stats = div("abs", {}, "", band); stats.id = "stats";
+    const nums = [];
+    for (const s of D.stats || []) {
+      const m = /^(\d+)(.*)$/.exec(String(s.value));
+      const el = div("st" + (s.weak ? " weak" : ""), {}, `<b>${m ? `<em style="font-style:normal">0</em>${esc(m[2])}` : esc(s.value)}</b><span>${esc(s.label)}</span>`, stats);
+      if (m) nums.push([el.querySelector("em"), +m[1]]);
+    }
+    const foot = div("abs", {}, `<span>risks: ${esc(D.risks || "")}</span><span>MotionLab · ${esc(D.date || "")}</span>`); foot.id = "foot";
+
+    // ---- the build-up (0 .. INTRO)
+    const strokes = el => el.g.querySelectorAll("polyline");
+    tl.set([title.g, road.g], { opacity: 0 }, 0);
+    tl.set([...strokes(title), ...strokes(road)], { attr: { "stroke-dashoffset": 1 } }, 0);
+    tl.to(title.g, { opacity: 1, duration: 0.01 }, 0.05);
+    tl.to(strokes(title), { attr: { "stroke-dashoffset": 0 }, duration: 0.55, stagger: 0.0125, ease: "power1.inOut" }, 0.05);
+    tl.to(road.g, { opacity: 1, duration: 0.01 }, 0.45);
+    tl.to(strokes(road), { attr: { "stroke-dashoffset": 0 }, duration: 0.4, stagger: 0.015 }, 0.45);
+    tl.set(ghost, { opacity: 0 }, 0); tl.to(ghost, { opacity: 0.1, duration: 0.3 }, 0.2);
+    let s = 406; const rnd = () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+    for (let k = 0; k < segs.length; k += 2) tl.set([segs[k], segs[k + 1]], { attr: { opacity: 1 } }, 0.3 + 0.6 * rnd());
+    tl.fromTo([sub, legend], { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.9);
+    tl.set(comet, { opacity: 0 }, 0);
+    tl.fromTo(band, { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power2.inOut" }, 3.3);
+    tl.fromTo([strong, weak], { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.12 }, 3.55);
+    tl.fromTo(stats.children, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.07 }, 3.6);
+    nums.forEach(([el, v], k) => tl.fromTo(el, { innerText: 0 }, { innerText: v, snap: { innerText: 1 }, duration: 0.7, ease: "power2.out" }, 3.62 + 0.07 * k));
+    tl.fromTo(foot, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9);
+
+    // ---- the loop (INTRO .. SECONDS, 7.5 s): every part repeats a whole number of times, so the end = INTRO
+    const LOOP = SECONDS - INTRO;
+    if (hereBranch) {                                  // the light runs along what shipped, to "you are here"
+      const hx = xs[iHere], p = [[xFirst, LINE_Y], [hx, LINE_Y], [hereBranch.gx, LINE_Y + 38], [hereBranch.gx, hereBranch.yc]];
+      const run = gsap.timeline({ repeat: 2 });        // 3 x 2.5 s
+      run.set(comet, { x: p[0][0], y: p[0][1], opacity: 0 }, 0);
+      run.to(comet, { opacity: 1, duration: 0.2 }, 0);
+      run.to(comet, { x: p[1][0], duration: 1.35, ease: "power1.in" }, 0);
+      run.to(comet, { x: p[2][0], y: p[2][1], duration: 0.12, ease: "none" }, 1.35);
+      run.to(comet, { y: p[3][1], duration: 0.38, ease: "power2.out" }, 1.47);
+      run.to(comet, { opacity: 0, duration: 0.35 }, 1.85);
+      run.set({}, {}, 2.5);
+      tl.add(run, INTRO);
+      tl.fromTo(ring, { attr: { r: 7 }, opacity: 0.9 }, { attr: { r: 22 }, opacity: 0, duration: 1.5, ease: "power1.out", repeat: 4 }, INTRO);
+    }
+    if (nextGlow) tl.fromTo(nextGlow, { opacity: 0.55 }, { opacity: 0.95, duration: LOOP / 6, ease: "sine.inOut", repeat: 5, yoyo: true }, INTRO);
+    if (planLine) tl.fromTo(planLine, { attr: { "stroke-dashoffset": 0 } }, { attr: { "stroke-dashoffset": -18 * 10 }, duration: LOOP, ease: "none" }, INTRO);
+    if (laterLine) tl.fromTo(laterLine, { attr: { "stroke-dashoffset": 0 } }, { attr: { "stroke-dashoffset": -12 * 8 }, duration: LOOP, ease: "none" }, INTRO);
+    tl.set({}, {}, SECONDS);                            // the timeline's length = the video's
+    return tl;
+  }
+
+  function fit() {                                     // the 1920 x 1080 stage, scaled into the window
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    root.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+  }
+  function boot(D) {
+    const tl = build(D);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+    if (HF) return;                                    // HyperFrames seeks the timeline frame by frame
+    fit(); addEventListener("resize", fit);
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still) { tl.seek(INTRO); return; }             // reduced motion: the finished picture, no loop
+    let loops = 0, seen = true;
+    tl.eventCallback("onComplete", () => { if (++loops < 6 && seen) tl.play(INTRO); else tl.pause(INTRO); });
+    root.addEventListener("mouseenter", () => { if (!tl.isActive() && tl.time() >= INTRO) { loops = 0; tl.play(INTRO); } });
+    new IntersectionObserver(es => { seen = es[0].isIntersecting; if (!seen) tl.pause(); else if (tl.time() < SECONDS && loops < 6) tl.resume(); })
+      .observe(root);
+    tl.play(0);
+  }
+  function fail(why) {
+    const m = document.createElement("div"); m.id = "msg"; m.className = "abs";
+    m.textContent = "The roadmap could not be read (" + why + "). Open it from the app, or run tools\\roadmap.py check.";
+    html.appendChild(m); if (!HF) fit();
+  }
+  if (window.ROADMAP) boot(window.ROADMAP);            // roadmap.py render inlines the data
+  else fetch("roadmap.json", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(boot).catch(e => fail(e));
+})();
+</script>
+</body>
+</html>

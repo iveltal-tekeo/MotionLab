@@ -32,7 +32,8 @@ from motionlab.util import LAB
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 CACHE = LAB / ".app" / "update.json"
 LAST = LAB / ".app" / "update_last.json"                 # the last apply(), shown by the restarted app
-KNOWLEDGE_PATHS = ("knowledge/references", "knowledge/incoming", ".claude/skills/analyze-reference/lessons.md")
+KNOWLEDGE_PATHS = ("knowledge/references", "knowledge/incoming", ".claude/skills/analyze-reference/lessons.md",
+                   ".claude/skills/recreate-video/lessons.md")    # analysis lessons L###, lessons on making videos M###
 GATE = "tested"                                          # the branch GitHub's tests move forward (tests.yml)
 
 
@@ -124,7 +125,7 @@ def _incoming(a: str, b: str) -> dict:
     return {"files": files, "knowledge_only": bool(files) and all(_is_knowledge(f) for f in files),
             "new_cards": sum(f.startswith("knowledge/references/") and f.endswith(".json") for f in added),
             "new_lessons": sum(f.startswith("knowledge/incoming/") and f.endswith(".md") for f in added),
-            "lessons_changed": ".claude/skills/analyze-reference/lessons.md" in files}
+            "lessons_changed": any(f in files for f in KNOWLEDGE_PATHS[2:])}
 
 
 def local_version() -> str:

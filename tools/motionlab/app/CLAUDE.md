@@ -27,16 +27,24 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"; Prepare added after 0.4.1 at the user's ask):
   Home, *Make a video*: **Analyze** (#/analyze = 0.3's References, `pageRefs`; #/ref/<name> = one analysis),
   **Prepare** (#/prepare, `pagePrepare`, green; below), **Edit** (#/edit = Videos, `pageProjects`;
-  #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it), each with
-  its step number (`.nstep`), then **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
+  #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it) - no
+  numbers (the user, 2026-10-14: they are not steps in an order), each row in its section's colour (`--rc`) - then
+  **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
   #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
   skills = #/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type it =
   `SKILL_INFO`; /whats-next is marked "for developers"). `ALIASES` rewrites the 0.3 addresses (#/refs, #/projects,
   #/knowledge, #/library). Home = the hero animation, **What do you want to do?** (`WAYS`: three cards with their
-  buttons and counts - `status()` carries `prompts` and `lessons`), the Claude's memory line, setup warnings, roadmap,
-  status; *Prompts for AI tools* = `aiPromptsModal` (Generate a new prompt, a shot picked). Each page sets
+  buttons and counts - `status()` carries `prompts` and `lessons`), the Claude's memory line, setup warnings, roadmap
+  (`roadmap_live` = `docs\roadmap\index.html` in an iframe - a motion graphic that fetches `roadmap.json` and plays
+  live, paused off screen, still with reduced motion; no clicks inside on Home, `.rmhit` = `roadmapBig()` full size;
+  the PNG lightbox only when the page is missing), status; *Prompts for AI tools* = `aiPromptsModal` (Generate a new prompt, a shot picked). Each page sets
   `body[data-page]` (analyze / edit / generate / memory / jobs / settings) -> its accent colour (`--acc`: cyan / amber
-  / pink / violet / blue; CSS only, motion off with prefers-reduced-motion). Edit: **New edit** (0.4, `createVideoModal`,
+  / fuchsia (`--gen`, the user's pick 2026-10-14; pink before) / violet / blue; Prepare green; CSS only, motion off
+  with prefers-reduced-motion); since 0.4.1.1 (the user's pick "Bold
+  band", the end of app.css) the five sections' top pages (`.head:not(:has(.crumb))`) put the title on a band like
+  Home's card - an icon tile (`--sf-icon`), no number - over a faint texture of their own (`--sf-tex`,
+  `main::before`), panel edges / hover glows / `.btn.pri` in `--acc`; sub-pages keep the bar + texture only; no
+  markup. Edit: **New edit** (0.4, `createVideoModal`,
   four steps in one dialog: 1 your clips (a project, or *+ a new video* = POST `/api/projects/new`; its songs =
   `list_projects` `songs`), 2 how (`NE_HOW`: *Like videos you analysed* = up to `max_refs` 3 from Claude's memory -
   this PC's analyses and friends' cards - then *In its / their style* or *An exact copy* (one local analysis) |
@@ -180,9 +188,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `--- possible misses ---` section that `tools\feedback.py` parses). False alarms stay hidden unless asked for.
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
-  review / feedback / lessons / library / recreate / prompt / plan / free) that picks `--effort` (Settings > Claude Code >
-  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, generate xhigh, prompt medium, script high, plan (Home > Roadmap > What next? = /whats-next) high; or
-  one level for all) and
+  review / feedback / lessons / library / recreate / prompt / plan / free). First a dialog (`openClaude`, unless
+  Settings `claude_ask` is off: then straight away): the model (`system.MODELS`: opus = the default on every plan,
+  fable = the strongest for long / open-ended work - the dialog marks it "stronger for this task" for review /
+  recreate / generate (`TASKS[..][2]`), auto = Claude Code's own `/model`) and the effort, pre-filled from Settings
+  (`claude_model`, `claude_effort` "recommended" = review high, feedback high, lessons high, library high, recreate
+  xhigh, generate xhigh, prompt medium, script high, plan (Home > Roadmap > What next? = /whats-next) medium; one
+  level less on Fable, `FABLE_EFFORT`; or one level for all); *Don't ask again* saves the choice (POST `/api/claude`
+  `remember`; `options: true` = the dialog's data, nothing opens). The launcher adds `--model` / `--effort` only
+  when this Claude Code's `--help` lists them, and
   `--name "MotionLab <task> <video>"` (shown by /resume) - both only when `claude --help` lists them (older
   versions). "Analyse with Claude" = an analyze job with `claude: true`: when the lab pass ends well the job opens
   Claude with `/analyze-reference "<video>" - the lab pass is done: analysis\<name>` (`data.review_prompt`; the skill
@@ -232,7 +246,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
   6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
-  check / improve / request / requests / forget). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

@@ -59,7 +59,7 @@ jobs:
             run=tests; why="version $v is new (no tag v$v yet)"
           elif git rev-parse -q --verify origin/tested >/dev/null && git merge-base --is-ancestor origin/tested HEAD; then
             changed=$(git diff --name-only origin/tested HEAD)
-            other=$(printf '%s\n' "$changed" | grep -v -E '^(knowledge/references/|knowledge/incoming/|\.claude/skills/analyze-reference/lessons\.md$)' | grep -v '^$' || true)
+            other=$(printf '%s\n' "$changed" | grep -v -E '^(knowledge/references/|knowledge/incoming/|\.claude/skills/(analyze-reference|recreate-video)/lessons\.md$)' | grep -v '^$' || true)
             if [ -n "$changed" ] && [ -z "$other" ]; then
               run=knowledge; why="only shared knowledge since the last tested commit"
             fi
@@ -98,7 +98,7 @@ jobs:
               print(f"::error title=shared knowledge::{b}")
           sys.exit(1 if bad else 0)
           EOF
-          python3 -c "open('.claude/skills/analyze-reference/lessons.md', encoding='utf-8').read()"
+          python3 -c "[open(f, encoding='utf-8').read() for f in ('.claude/skills/analyze-reference/lessons.md', '.claude/skills/recreate-video/lessons.md')]"
 
       - name: Mark as tested
         shell: bash

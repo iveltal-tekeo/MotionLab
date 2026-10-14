@@ -1,6 +1,6 @@
 """Where MotionLab stands, in one short digest for deciding what to do next (the /whats-next skill reads it):
 the version and what changed since the last release, GitHub's tested state, every planned version's status lines
-(docs\\plans.md), the roadmap stages (tools\\roadmap.py), ideas not picked yet (docs\\ideas.md), the lab's own state
+(docs\\plans.md), the roadmap (docs\\roadmap\\roadmap.json via tools\\roadmap.py), ideas not picked yet (docs\\ideas.md), the lab's own state
 (references and their next workflow step, videos, prompts, friends' lessons, library picks) and the last self-test.
 
     .venv\\Scripts\\python tools\\whatsnext.py [--fetch] [--section version|plans|roadmap|ideas|lab]
@@ -106,14 +106,11 @@ def plans() -> list[str]:
 def roadmap() -> list[str]:
     try:
         import roadmap as RM
+        out = RM.summary()
+        err, warn = RM.problems(RM.load())
     except Exception as e:                                      # noqa: BLE001 - the digest must still print
-        return ["## Roadmap", f"- tools\\roadmap.py not readable: {e}"]
-    out = [f"## Roadmap (tools\\roadmap.py, drawn {RM.DATE}; docs\\roadmap.png)"]
-    for title, status, _mat, big, cap, body in RM.STAGES:
-        out.append(f"- {title} - {status} - {big} {cap}: {short(body, 150)}")
-    for tag, text in RM.VERDICT:
-        out.append(f"- {tag}: {short(text, 220)}")
-    return out
+        return ["## Roadmap", f"- docs\\roadmap\\roadmap.json not readable (tools\\roadmap.py): {e}"]
+    return out + [f"- roadmap.py check: {short(m, 200)}" for m in err + warn]
 
 
 def ideas() -> list[str]:

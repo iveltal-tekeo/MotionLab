@@ -191,5 +191,7 @@ tab, then **Send feedback to Claude** (it opens a new Claude Code window with th
    `category: <id>`). Merge duplicates; rewrite unclear wording; drop guesses.
 3. Append the kept ones to the shared `.claude\skills\analyze-reference\lessons.md` with the next `L0NN` number;
    keep the source note and add `from <author> <local id>` to it.
+   Files named `*-making.md` hold lessons on MAKING videos (rebuilds, generated videos): review them the same way into
+   `.claude\skills\recreate-video\lessons.md` with the next `M###` (format in its header) - never into this lessons.md.
 4. Delete the processed incoming files. Tell the user what was kept / merged / dropped, and that *Claude's memory > Share
    my knowledge* puts the reviewed lessons.md on GitHub for everyone.

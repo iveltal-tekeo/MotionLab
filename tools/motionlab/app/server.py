@@ -42,7 +42,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 15                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 16                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -124,6 +124,7 @@ def status() -> dict:
             "library": len(lib["items"]), "picks": len(lib["picks"]), "free_bytes": du.free, "total_bytes": du.total,
             "resolve": S.resolve, "jobs_running": [j.info() for j in S.runner.active()],
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
+            "roadmap_live": "docs/roadmap/index.html" if (LAB / "docs" / "roadmap" / "index.html").exists() else None,
             "projects_list": projs, "references_list": refs, "setup": setup,
             "claude": bool(system.find("claude")), "update": S.update, "update_result": S.update_result,
             "author": KN.author(), "prompts": PR.count(), "scripts": PR.count(("script", "hook")),
@@ -357,7 +358,7 @@ class Handler(BaseHTTPRequestHandler):
                                                                for k, v in system.PRESETS.items()],
                                "categories": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
                                "styles": [{"id": k, "label": v} for k, v in CATEGORIES.items()],
-                               "efforts": list(system.EFFORTS), "upstream": UP.state(),
+                               "efforts": list(system.EFFORTS), "models": list(system.MODELS), "upstream": UP.state(),
                                "tasks": {k: v[0] for k, v in system.TASKS.items()},
                                "resolve_mcp": system.resolve_mcp_state(),
                                "update": {**(S.update or {}), "phase": S.phase}})
@@ -572,9 +573,15 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts/rate":
             return self._json(PR.update(str(body.get("id", "")), rating=body.get("rating") or None,
                                         note=body.get("note")))
-        if path == "/api/claude":
-            return self._json(system.open_claude(str(body.get("prompt", "")), str(body.get("task") or "free"),
-                                                 str(body.get("label", ""))))
+        if path == "/api/claude":                        # options = the dialog's choices (nothing opens)
+            task = str(body.get("task") or "free")
+            if body.get("options"):
+                return self._json(system.claude_options(task))
+            model, effort = body.get("model") or None, body.get("effort") or None
+            if body.get("remember"):                     # "Don't ask again": the dialog's choice becomes Settings
+                system.save({"claude_model": model or "auto", "claude_effort": effort or "auto", "claude_ask": False})
+            return self._json(system.open_claude(str(body.get("prompt", "")), task, str(body.get("label", "")),
+                                                 model, effort))
         if path == "/api/delete":                        # the user's Delete button, after the dialog
             if S.runner.active():
                 raise jobs.JobError("wait until the running jobs finish, then delete")

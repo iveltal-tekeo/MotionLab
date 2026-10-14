@@ -12,7 +12,9 @@ Scoring (automatic detector output only - blind to the ground truth):
   beats       BPM within 1 of truth; on-beat flags of events and cuts correct
   false pos.  detected events that match no ground-truth effect
 PASS = every effect found with correct type and frames, every cut exact, BPM/beat checks pass, 0 false positives.
-First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles).
+First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles),
+the quick draft's rules (check_draft), sound effects on known frames and levels (check_sfx), ratings as rules and the
+two kinds of lessons (check_lessons_ratings); --extended also renders the starter graphic (check_template).
 """
 from __future__ import annotations
 
@@ -403,6 +405,31 @@ def check_colour(analysed: bool) -> dict:
     return {"passed": all(passed)}
 
 
+def check_sfx() -> dict:
+    """Sound effects (0.5.0, tools\\sfx.py), no video: a synthetic song and cues at known frames - onsets, levels
+    against the song, the ceiling, the same output twice, cues that follow a setting, a plan's effects as cues."""
+    from motionlab import sfx as SFX
+    print("\n=== sound effects ===")
+    r = SFX.selfcheck()
+    return {"passed": r["passed"], "seconds": r["seconds"]}
+
+
+def check_lessons_ratings() -> dict:
+    """Claude's memory (0.4.2): the user's ratings of every video as rules, and the two kinds of lessons (analysis L###,
+    making videos M###) - in a temp folder, no video."""
+    from motionlab import knowledge as KN
+    print("\n=== ratings as rules, lessons on making videos ===")
+    return {"passed": KN.selfcheck()["pass"]}
+
+
+def check_template() -> dict:
+    """The starter graphic (0.4.2, overlay.py new): a snapshot, a plain render and a motion-blur render agree where
+    nothing moves (~45 s; needs Node.js + HyperFrames, else skipped)."""
+    import overlay as OVL
+    print("\n=== the starter graphic: snapshot = render ===")
+    return {"passed": OVL.selfcheck_template()["pass"]}
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser()
@@ -411,7 +438,7 @@ def main() -> int:
     ap.add_argument("--only-extended", action="store_true")
     args = ap.parse_args()
     st = HERE / "selftest"
-    results = {"titles": check_titles(), "draft": check_draft()}
+    results = {"titles": check_titles(), "draft": check_draft(), "sfx": check_sfx(), "memory": check_lessons_ratings()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)
@@ -426,6 +453,7 @@ def main() -> int:
         results["synthetic_vfr"] = run_one(
             st / "synthetic_vfr.mp4", st / "synthetic_vfr_truth.json", "synthetic_vfr",
             [PY, str(HERE / "make_testvideo.py"), "--vfr"], args.rebuild)
+        results["template"] = check_template()
     ok = all(r["passed"] for r in results.values())
     print("\nOVERALL:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
