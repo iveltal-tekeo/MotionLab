@@ -92,7 +92,11 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   to" box (only when an update set aside local changes); Status below the roadmap. Empty References / Videos / Prompts
   = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). Analyze and
   Edit (the user, 2026-10-14) put their actions in a first row under the title, on the left (`.toprow`: *Download from
-  link* + *Add videos*; *New edit* + *Folder*), not in the header's corner. *Recreate with
+  link* + *Add videos*; *New edit* + *Folder*), not in the header's corner. **Optional steps** (the user,
+  2026-10-14: numbered like the required ones they look obligatory): a grey dashed number + a bold OPTIONAL tag
+  (`optTag(hint)`; `.nestep.opt` in the dialogs, `.fstep.opt` = a video's *Teach Claude* steps, `PSTEP_OPT` = a
+  prompt's *You say what you want* / *Rate the result*); required steps keep the solid number in the section colour.
+  A new step that can be skipped (or has a default) gets the same. *Recreate with
   my footage* = `createVideoModal({from: 'reference', pick})`. User-facing words: no paths, versions, SHA-256, effort
   levels; "lab pass" = Measure. UI changes are tested with a second test server on an empty copy of the app code.
 - **Analyze** (0.4, the user: "pass videos downloaded or pasted as a link, analysed in a concrete way I select:

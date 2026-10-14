@@ -18,7 +18,7 @@ from motionlab import graphics as G  # noqa: E402
 from motionlab.util import LAB, setup_console  # noqa: E402
 
 OUT = LAB / "docs" / "roadmap.png"
-DATE = "2026-10-13"
+DATE = "2026-10-14"
 W, H = 1920, 1080
 BG = (13, 13, 15)
 WHITE, GREY, DIM = (236, 236, 236), (128, 128, 132), (58, 58, 62)
@@ -42,9 +42,9 @@ STAGES = [
      "Prompts. Tested on GitHub."),
     ("Learn + share", "STARTED", 2, "44", "verdicts given (4AM)",
      "7 lessons from 1 round, cards shared through GitHub. Next: 10 videos each > category profiles."),
-    ("Analyze, Edit, Generate", "DONE", 3, "v0.4.0", "three ways in",
-     "Analyse by focus (content, cinematic, colour), Claude's memory, edits like up to 3 videos or your words "
-     "(a quick draft in minutes), videos from zero."),
+    ("Four ways in", "DONE", 3, "v0.4", "+ Prepare: scripts",
+     "Analyse by focus, Claude's memory, scripts written for reach, edits like 3 videos or your words, videos "
+     "from zero."),
     ("Templates + macOS", "STARTED", 1, "v0.5", "by feel: first part in 0.4",
      "The style of up to 3 videos + a quick draft shipped. Next: the story (HEIT) with your words and music. macOS."),
     ("AI B-roll + cinematics", "LATER", 0, "v0.7", "planned",
@@ -55,8 +55,8 @@ VERDICT = [
                "quick drafts and colour matching."),
     ("WEAK", "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 "
              "per category. A quick draft picks moments by how they look, not by the story."),
-    ("NEXT", "v0.4.2 describe video  |  v0.4.3 colour: your clips, CDL in Resolve  |  v0.4.4 yapping (HEIT)  |  "
-             "v0.4.5 prompt generator  |  v0.5 the story + macOS  |  v0.7 AI B-roll.  You: try 0.4 - New edit > Quick draft."),
+    ("NEXT", "v0.4.1.1 section feel | v0.4.2 title + thumbnail | v0.4.3 prompts | v0.4.4 yapping | v0.4.5 colour | "
+             "v0.4.6 check first | v0.4.7 describe | v0.5 macOS | v0.7 AI B-roll"),
 ]
 FOOTER = ("risks: heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  "
           "|  HyperFrames + Resolve MCP are young: versions pinned  |  drawn by tools\\roadmap.py")

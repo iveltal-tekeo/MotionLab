@@ -162,6 +162,9 @@ const heroAnim = () => `<div class="hero"><div class="hero-text">
 // an empty page: what goes here, and the one button that starts it, in the middle (no "No ... yet" line)
 const emptyHero = (icon, title, text, btns) => `<div class="ehero"><svg class="ic"><use href="#i-${icon}"/></svg><h2>${title}</h2>
   <p>${text}</p><div class="row">${btns}</div></div>`;
+// an optional step: a bold OPTIONAL tag (+ a hint); its number is grey and dashed (.opt) - the user, 2026-10-14: optional
+// steps numbered like the required ones look obligatory
+const optTag = (hint = '') => `<span class="optag" title="You can skip this step">Optional</span>${hint ? `<span class="nehint">${hint}</span>` : ''}`;
 const chip = fam => `<span class="chip"><i class="sw" style="background:${FAM[fam] || '#888'}"></i>${esc(fam)}</span>`;
 
 // ============================================================================================ app shell
@@ -820,7 +823,7 @@ async function addVideosModal(pre = {}) {
       it names every effect and writes what makes the video work, so it can use it in your edits.${cl.found ? '' : ' <span class="bad">Claude Code was not found - Settings.</span>'}</span></label>
     <label class="chk avclaude"><input type="radio" name="avc" value="0" ${cl.found ? '' : 'checked'}><span><b>Measure only</b> - send them to Claude later (each video gets a <i>Send to Claude</i> button).</span></label>
     <details class="fold" style="margin-top:10px"><summary>More options</summary><div class="in"><div class="form">
-      <label for="avtags">Tags (optional)</label><input type="text" id="avtags" placeholder="e.g. instagram, asmr, recipe">
+      <label for="avtags">Tags ${optTag()}</label><input type="text" id="avtags" placeholder="e.g. instagram, asmr, recipe">
       <span></span><label class="chk small"><input type="checkbox" id="avre"> re-use the earlier measurements of videos analysed before (faster)</label></div></div></details>
     <div class="row" style="margin-top:14px"><button class="btn pri big" id="avgo" disabled><svg class="i"><use href="#i-analyze"/></svg>Analyze</button>
       <span id="avsum" class="small muted"></span></div>`, el => {
@@ -896,9 +899,9 @@ function flowAction(r, fl, onPage = false) {         // the button for a referen
   }
 }
 function flowStrip(r, fl) {                           // the video's page: download > measure > Claude | teach Claude (optional)
-  const step = ([k, t, d], i) => `<div class="fstep ${fl.done.includes(k) ? 'done' : k === fl.next ? 'next' : ''}" title="${esc(d)}"><b>${fl.done.includes(k) ? '✓' : i + 1}</b><span class="ft">${t}</span></div>`;
+  const step = ([k, t, d], i) => `<div class="fstep${i >= 3 ? ' opt' : ''} ${fl.done.includes(k) ? 'done' : k === fl.next ? 'next' : ''}" title="${esc(d)}${i >= 3 ? ' (optional)' : ''}"><b>${fl.done.includes(k) ? '✓' : i + 1}</b><span class="ft">${t}</span></div>`;
   return `<div class="flow strip">${FLOW.slice(0, 3).map(step).join('<i class="farr">›</i>')}
-    <span class="fopt">Teach Claude <i>(optional)</i></span>${FLOW.slice(3).map((x, i) => step(x, i + 3)).join('<i class="farr">›</i>')}
+    <span class="fopt">Teach Claude ${optTag()}</span>${FLOW.slice(3).map((x, i) => step(x, i + 3)).join('<i class="farr">›</i>')}
     <div class="grow"></div><div class="fnext"><span class="small">${esc(flowNext(fl))}</span>${flowAction(r, fl, true)}</div></div>`;
 }
 
@@ -1360,7 +1363,7 @@ async function createVideoModal(pre = {}) {
     <div class="nestep"><b>2</b>How should it be cut?</div>
     <div class="cvchoice three">${NE_HOW.map(([k, ic, t, s]) => `<button class="cvopt" data-m="${k}"><svg class="ic"><use href="#${ic}"/></svg><b>${t}</b><span>${s}</span></button>`).join('')}</div>
     <div id="cvpick"></div>
-    <div id="nedet" hidden><div class="nestep"><b>3</b>Length, format, sound</div>
+    <div id="nedet" hidden><div class="nestep opt"><b>3</b>Length, format, sound ${optTag('automatic unless you pick')}</div>
       <div class="nedet"><label>Length</label><div class="seg" id="nelen">${[['', 'Auto'], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
         <label>Format</label><div class="seg" id="nefmt">${[['', 'Auto'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
         <label>Sound</label><select id="nesnd" style="max-width:420px"></select></div></div>
@@ -1430,7 +1433,7 @@ async function createVideoModal(pre = {}) {
       } else if (st.how === 'words') {
         box.innerHTML = `<h3 style="margin:12px 0 6px">A ready-made style <span class="small muted">(pick one or more, or none)</span></h3>
           <div class="nepre">${OPT.presets.map(p => `<button class="nep${st.presets.includes(p.id) ? ' on' : ''}" data-p="${esc(p.id)}"><b>${esc(p.label)}</b><span>${esc(p.help)}</span></button>`).join('')}</div>
-          <h3 style="margin:14px 0 6px">In your words <span class="small muted">(optional - Claude reads every word)</span></h3>
+          <h3 style="margin:14px 0 6px">In your words ${optTag('Claude reads every word')}</h3>
           <textarea id="newant" rows="3" placeholder="e.g. a hook in the first second, 3 s cuts, very fast paced, bold captions word by word, slow zooms while I talk">${esc(st.want)}</textarea>`;
         $$('.nep', box).forEach(b => b.onclick = () => {
           const id = b.dataset.p; st.presets = st.presets.includes(id) ? st.presets.filter(x => x !== id) : [...st.presets, id];
@@ -2157,7 +2160,7 @@ async function pagePrepare(main) {
             Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.</p>
           <div class="row"><button class="btn pri" id="sp-imp"><svg class="i"><use href="#i-claude"/></svg>Improve a script</button></div>
           <div class="small muted">Your script stays as it is - the new version is saved next to it.</div></div>
-        <div class="gway"><div class="row"><svg class="ic"><use href="#i-script"/></svg><h2>Write one from zero</h2></div>
+        <div class="gway"><div class="row"><svg class="ic"><use href="#i-prepare"/></svg><h2>Write one from zero</h2></div>
           <p>Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script,
             timed to your length, with what goes on screen - in the style of talking videos you analysed.</p>
           <div class="row"><button class="btn pri" id="sp-new"><svg class="i"><use href="#i-claude"/></svg>Write a script with Claude</button></div>
@@ -2196,11 +2199,11 @@ async function scriptImproveModal(ctx, pre = {}) {
       <div class="nestep"><b>1</b>Your script</div>
       <textarea id="stext" rows="13" style="width:100%" placeholder="Paste your script here…&#10;&#10;Notes for the camera can go in brackets: [TEXT: 3 mistakes] [B-ROLL: my desk]">${esc(pre.text || '')}</textarea>
       <div class="row" style="margin-top:6px"><label class="btn sm ghost">Attach a file (.txt, .md, .docx)<input type="file" id="sfile" accept=".txt,.md,.docx" hidden></label><span class="small muted" id="sfname"></span></div>
-      <div class="nestep"><b>2</b>What you want <span class="small muted" style="font-weight:400">(optional)</span></div>
+      <div class="nestep opt"><b>2</b>What you want ${optTag()}</div>
       <div class="nedet spf"><label>Where it goes</label><div class="seg" id="swhere"><button data-v="">Claude picks</button><button data-v="vertical">TikTok · Reels · Shorts</button><button data-v="youtube">YouTube</button></div>
         <label>Length</label><div class="seg" id="slen"><button data-v="">Keep its length</button>${SP_LENGTHS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
         <label>Anything else</label><input type="text" id="swant" placeholder="e.g. more energy, less about me, end with my course" style="max-width:460px"></div>
-      <div class="nestep"><b>3</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 talking videos you analysed: their pace and structure)</span></div>
+      <div class="nestep opt"><b>3</b>In the style of ${optTag('up to 3 talking videos you analysed: their pace and structure')}</div>
       ${spChipsHtml(vids)}
     </div><div class="spcheck"><div class="row sp"><h3 style="margin:0">The check</h3><span class="small muted">instant · no Claude</span></div><div id="schk"></div></div></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="sgo"><svg class="i"><use href="#i-claude"/></svg>Improve it with Claude</button>
@@ -2244,17 +2247,17 @@ async function scriptNewModal(ctx, pre = {}) {
     <div class="nedet spq"><label>What is it about?</label><textarea id="qtopic" rows="2" placeholder="e.g. how I edit a talking video in 20 minutes on my phone">${esc(pre.topic || '')}</textarea>
       <label>Who is it for?</label><input type="text" id="qaud" placeholder="e.g. small creators who film on their phone and hate editing">
       <label>What do they get by the end?</label><input type="text" id="qtake" placeholder="e.g. a 3-step routine they can copy today"></div>
-    <div class="nestep"><b>2</b>Your angle <span class="small muted" style="font-weight:400">(optional - the best hooks come from here)</span></div>
+    <div class="nestep opt"><b>2</b>Your angle ${optTag('the best hooks come from here')}</div>
     <div class="nedet spq"><label>Your story, result or opinion</label><textarea id="qangle" rows="2" placeholder="e.g. I went from 200 to 40,000 views in two months doing this - I used to spend 3 hours per video"></textarea>
       <label>Must-say points</label><textarea id="qpoints" rows="2" placeholder="one per line, in any order"></textarea></div>
-    <div class="nestep"><b>3</b>Format</div>
+    <div class="nestep opt"><b>3</b>Format ${optTag('a 30 s short unless you change it')}</div>
     <div class="nedet spf"><label>Where it goes</label><div class="seg" id="qwhere"><button data-v="vertical">TikTok · Reels · Shorts</button><button data-v="youtube">YouTube</button><button data-v="">Claude picks</button></div>
       <label>Length</label><div class="seg" id="qlen">${SP_LENGTHS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       <label>Tone</label><div class="seg" id="qtone"><button data-v="">Claude picks</button>${Object.entries(Q.tones).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div>
       <label>Ask at the end</label><div class="row"><div class="seg" id="qcta"><button data-v="">Claude picks</button>${Object.entries(Q.ctas).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div></div>
       <label></label><input type="text" id="qctat" placeholder="optional - e.g. comment GUIDE and I send you my presets" style="max-width:460px">
       <label>Language</label><div class="seg" id="qlang"><button data-v="">The one I write in</button>${Object.entries(Q.langs).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div></div>
-    <div class="nestep"><b>4</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 talking videos you analysed)</span></div>
+    <div class="nestep opt"><b>4</b>In the style of ${optTag('up to 3 talking videos you analysed')}</div>
     ${spChipsHtml(vids)}
     <div class="nedet spf" style="margin-top:10px"><label>Anything else</label><input type="text" id="qextra" placeholder="optional - e.g. no swearing, mention my course at the end" style="max-width:460px"></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="qgo"><svg class="i"><use href="#i-claude"/></svg>Write it with Claude</button>
@@ -2326,14 +2329,14 @@ async function generateModal(kind, pre = {}) {
     <div class="nestep"><b>1</b>What is it about?</div>
     <textarea id="gwant" rows="3" style="width:100%" placeholder="${gfx ? 'e.g. a 30 s reel announcing my new course: the problem, 3 things it teaches, the price, sign up - bold, fast, on the beat'
       : 'e.g. a 20 s cinematic ad for my coffee brand: morning light, slow pours, steam, the cup in hands, the logo at the end'}">${esc(pre.want || '')}</textarea>
-    ${gfx ? `<div class="small muted" style="margin:10px 0 4px">The words on screen <span class="dim">(optional - one per line, in order)</span></div>
+    ${gfx ? `<div class="small muted" style="margin:10px 0 4px">The words on screen ${optTag('one per line, in order')}</div>
       <textarea id="gtext" rows="4" style="width:100%" placeholder="Stop scrolling.&#10;3 things nobody tells you&#10;…"></textarea>`
       : `<div class="row" style="margin-top:10px"><label class="small">Tool <select id="gtool"><option value="">- Claude asks -</option>${G.tools.map(t => `<option>${esc(t)}</option>`).join('')}<option value="other">another…</option></select></label>
         <input type="text" id="gtool2" placeholder="which tool?" hidden style="max-width:220px"></div>`}
-    <div class="nestep"><b>2</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 videos you analysed)</span></div>
+    <div class="nestep opt"><b>2</b>In the style of ${optTag('up to 3 videos you analysed')}</div>
     ${vids.length ? `<div class="gstyle">${vids.slice(0, 30).map(v => `<button class="fchip" data-k="${esc(v.key)}" title="${esc((Object.values(v.lines || {}).filter(Boolean).join(' · ')) || v.title)}">${esc(v.title)}</button>`).join('')}</div>`
       : '<div class="small dim">No analysed video yet - Analyze one and Claude follows its rhythm and text style.</div>'}
-    <div class="nestep"><b>3</b>Length, format${gfx ? ', song' : ''}</div>
+    <div class="nestep opt"><b>3</b>Length, format${gfx ? ', song' : ''} ${optTag('30 s, Claude picks the format unless you change it')}</div>
     <div class="nedet"><label>Length</label><div class="seg" id="glen">${[['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       <label>Format</label><div class="seg" id="gfmt">${[['', 'Claude picks'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       ${gfx ? `<label>Song</label><select id="gsong" style="max-width:420px"><option value="">no song / I put one in the folder later</option>${G.songs.map(x => `<option value="${esc(x.rel)}">${esc(x.name)}</option>`).join('')}</select>
@@ -2415,6 +2418,7 @@ async function pagePrompts(main, arg) {               // every kind in one grid;
 // to do, then two columns - the prompt and Claude's check | your rating, what it makes, Style like, details
 const PSTEPS = [['check', 'Claude checks it'], ['want', 'You say what you want'], ['opt', 'Claude improves it'],
                 ['run', 'Run it'], ['rate', 'Rate the result']];
+const PSTEP_OPT = new Set(['want', 'rate']);          // optional steps: a dashed number + OPTIONAL (optTag)
 function pstate(p, R) {
   const st = p.structure || [], checked = st.some(x => x.status) || (p.review || {}).stars != null;
   const versions = R.items.filter(x => (x.made_from || []).includes(p.id));
@@ -2451,7 +2455,7 @@ function promptModal(id, ctx) {
         <h2 class="pmh-title">${esc(ptitle(p))}</h2>
         <div class="pmh-needs"><span class="small muted">Needs</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
       <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="Copies this ${isTalk(p) ? 'script' : 'prompt'}'s text"><svg class="i"><use href="#i-clipboard"/></svg>Copy ${isTalk(p) ? 'Script' : 'Prompt'}</button></div></div>
-    <ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}</span></li>`).join('')}</ol>
+    <ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${PSTEP_OPT.has(k) ? 'opt ' : ''}${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}${PSTEP_OPT.has(k) ? ' ' + optTag() : ''}</span></li>`).join('')}</ol>
     <div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>
     <div class="pmgrid"><div class="pmcol">
         <section class="pms"><div class="pms-h"><h3>${isTalk(p) ? 'The script' : 'The prompt'}</h3><span class="grow"></span>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>

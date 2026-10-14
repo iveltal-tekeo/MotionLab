@@ -844,3 +844,21 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .spq textarea, .spq input { width: 100%; max-width: 620px; }
 /* a page's main actions: a first row under the title, on the left (Analyze, Edit - the user, 2026-10-14) */
 .toprow { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 10px; margin: 2px 0 18px; }
+/* optional steps look different from the required ones (the user, 2026-10-14: "some people would think it's
+   obligatory"): a grey dashed number + a bold OPTIONAL tag (optTag) - dialogs (.nestep), a video's step strip (.fstep),
+   a prompt's steps (.pmsteps); required steps keep the solid number in the section's colour */
+.optag { display: inline-flex; align-items: center; padding: 0 7px; border-radius: 999px; border: 1px solid var(--line2);
+  background: var(--panel2); color: var(--muted); font: 700 10px var(--ui); letter-spacing: .08em; text-transform: uppercase;
+  line-height: 17px; white-space: nowrap; vertical-align: middle; }
+.nehint { font-weight: 400; font-size: 12.5px; color: var(--muted); text-transform: none; letter-spacing: 0; }
+h3 .optag, h3 .nehint, label .optag, .small > .optag, .small > .nehint { margin-left: 6px; }   /* inline: no flex gap there */
+.nestep.opt > b { background: transparent; color: var(--muted); border: 1px dashed var(--muted); }
+.flow .fopt .optag { margin-left: 4px; }
+.flow.strip .fstep.opt > b { background: transparent; border-style: dashed; }
+.flow.strip .fstep.opt.done > b { background: #12352a; border-style: solid; }
+.flow.strip .fstep.opt.next > b { background: transparent; border: 1px dashed var(--amber); color: var(--amber); box-shadow: none; }
+.pmsteps li.opt > b { border-style: dashed; }
+.pmsteps li.opt.now > b { background: transparent; color: var(--kc); border: 1px dashed var(--kc); box-shadow: none; }
+.pmsteps li.opt.done > b { border-style: solid; }
+.pmsteps .optag { margin-left: 4px; font-size: 9px; line-height: 15px; padding: 0 5px; font-weight: 700; }
+

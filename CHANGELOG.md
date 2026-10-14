@@ -16,6 +16,9 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
   rate them, and *Record it* starts the edit.
 - **Analyze and Edit**: their main buttons sit in the first row under the title (*Download from link* - before
   "Download only" - and *Add videos*; *New edit* and *Folder*).
+- **Optional steps look optional**: in every dialog (Add videos, Prepare, New edit, Generate), on a video's step
+  strip (*Teach Claude*) and in a prompt's steps, a step you can skip has a grey dashed number and an **OPTIONAL**
+  tag; the steps you need keep their coloured number.
 - **Motion graphics with real motion blur**: Claude can render a graphic with motion blur - five in-between
   moments blended into every frame, so fast moves smear like a camera's instead of jumping from frame to frame.
   Later renders of that graphic (Edit > the video > Graphics) keep it; they take about five times as long.
