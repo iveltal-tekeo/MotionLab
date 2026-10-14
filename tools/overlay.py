@@ -6,10 +6,13 @@ particles) are written this way since 0.3.0.
     .venv\\Scripts\\python tools\\overlay.py new <folder> --frames 75 [--fps 25 --width 1520 --height 1080]
           a composition to edit: <folder>\\index.html (timing helpers in frames), gsap.min.js, overlay.json.
           <folder> = projects\\<project>\\build\\overlays\\<name> (size and fps = the plan's)
-    .venv\\Scripts\\python tools\\overlay.py render <folder> [--workers N]
+    .venv\\Scripts\\python tools\\overlay.py render <folder> [--workers N] [--motion-blur 5]
           -> <folder>\\<name>.mov (ProRes 4444 + alpha, exactly --frames frames) + its decoded cache; prints the plan
           layer to add: {"type": "overlay", "file": ..., "start": ..., "end": ...}; --mp4 = a stand-alone motion
-          graphic that paints its own background -> <folder>\\<name>.mp4
+          graphic that paints its own background -> <folder>\\<name>.mp4; --motion-blur N (odd, 3-9; kept in
+          overlay.json, 1 = off) = real motion blur: N sub-frames per frame averaged, a shutter of (N-1)/N frame
+          centred on the frame - N times the render time (2026-10-14: 750 frames 1080x1080 = 79 s, N=5 ~6.5 min).
+          A jump at AT(n) never leaks into frame n-1; a tween on the same property must end half a frame before it
     .venv\\Scripts\\python tools\\overlay.py new <folder> --from <graphic>   a copy of a library graphic or an example
     .venv\\Scripts\\python tools\\overlay.py settings <folder>           what the user can change (declared on <html>,
           data-composition-variables; render passes overlay.json's "values"; render.json + thumb.png record it)
@@ -133,6 +136,38 @@ def fps_arg(fps: float) -> str:
         if abs(fps - k) < 2e-3:
             return v
     return f"{fps:g}"
+
+
+def sub_fps_arg(fps: float, n: int) -> str:
+    """The render rate for n sub-frames per frame (HyperFrames takes integers or ffmpeg rationals, at most 240)."""
+    for k, v in RATIONAL.items():
+        if abs(fps - k) < 2e-3:
+            num, den = v.split("/")
+            return f"{int(num) * n}/{den}"
+    return f"{fps * n:g}"
+
+
+def blur_frames(sub: list[Path], n: int, frames: int, out_dir: Path) -> None:
+    """Motion blur: frame i (frame_<i+1>.png in out_dir) = the average of the sub-frames i*n - n//2 .. i*n + n//2
+    (premultiplied alpha), clamped at both ends. The offsets stay inside +-0.5 frame, so a jump placed at AT(i) shows
+    in frame i only."""
+    from concurrent.futures import ThreadPoolExecutor
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    def one(i: int) -> None:
+        acc = None
+        for j in range(-(n // 2), n // 2 + 1):
+            im = np.asarray(Image.open(sub[min(max(i * n + j, 0), len(sub) - 1)]).convert("RGBA"), np.float32)
+            a = im[..., 3:] / 255.0
+            part = np.concatenate([im[..., :3] * a, a], axis=2)
+            acc = part if acc is None else acc + part
+        a = acc[..., 3:]
+        rgb = np.where(a > 0, acc[..., :3] / np.maximum(a, 1e-6), 0.0)
+        out = np.concatenate([rgb, a / n * 255.0], axis=2)
+        Image.fromarray(np.clip(out + 0.5, 0, 255).astype(np.uint8), "RGBA").save(out_dir / f"frame_{i + 1:06d}.png",
+                                                                                 compress_level=1)
+    with ThreadPoolExecutor(max(1, (os.cpu_count() or 2) // 2)) as ex:
+        list(ex.map(one, range(frames)))
 
 
 def env() -> dict:
@@ -266,13 +301,62 @@ def write_render_info(folder: Path, vals: dict, frames: int) -> None:
         encoding="utf-8")
 
 
+def sub_render(folder: Path, c: dict, fps: float, n: int, frames_dir: Path, vargs: list[str],
+               workers: int | None) -> None:
+    """HyperFrames -> frames_dir\\frame_000001.png ...; n > 1 = n sub-frames per frame, averaged (blur_frames)."""
+    shutil.rmtree(frames_dir, ignore_errors=True)
+    out_dir = folder / "frames_sub" if n > 1 else frames_dir
+    shutil.rmtree(out_dir, ignore_errors=True)
+    W, H = int(c["width"]), int(c["height"])
+    log(f"rendering {folder.name}: {c['frames']} frames at {fps:g} fps, {W}x{H}"
+        + (f", motion blur {n} ({c['frames'] * n} sub-frames)" if n > 1 else ""))
+    t0 = time.time()
+    r = hf("render", str(folder), "--format", "png-sequence", "--fps", sub_fps_arg(fps, n) if n > 1 else fps_arg(fps),
+           "--output", str(out_dir), "--quiet", "--workers", str(workers) if workers else "auto", "--strict",
+           "--frames-cache-dir", "off", *vargs)
+    pngs = sorted(out_dir.glob("frame_*.png"))
+    if r.returncode or not pngs:
+        raise SystemExit(f"HyperFrames render failed (exit {r.returncode}) - run: overlay.py check {folder}")
+    if n > 1:
+        log(f"  {len(pngs)} sub-frames in {time.time() - t0:.0f} s; averaging {n} per frame")
+        blur_frames(pngs, n, int(c["frames"]), frames_dir)
+        shutil.rmtree(out_dir, ignore_errors=True)
+
+
 def cmd_render(a) -> int:
     folder = guard(Path(a.folder))
     c = read_conf(folder)
     W, H, fps = int(c["width"]), int(c["height"]), float(c["fps"])
+    n = a.motion_blur or int(c.get("motion_blur") or 1)
+    if n > 1 and (n % 2 == 0 or n > 9 or fps * n > 240.01):
+        raise SystemExit(f"--motion-blur {n}: an odd number 3-9 with {fps:g} x N at most 240 sub-frames per second")
+    if a.motion_blur:             # kept for the next render (the app's Graphics tab renders without the flag)
+        c["motion_blur"] = n
+        (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
     vargs, vals, vfile = variables_args(folder)
     if vals:
         log("settings: " + ", ".join(f"{k} = {v!r}" for k, v in vals.items()))
+    if a.mp4 and n > 1:           # motion blur: sub-frames -> blurred PNGs -> an MP4 (Rec.709, like HyperFrames')
+        out = folder / f"{c['name']}.mp4"
+        frames_dir = folder / "frames"
+        try:
+            sub_render(folder, c, fps, n, frames_dir, vargs, a.workers)
+        finally:
+            if vfile:
+                vfile.unlink(missing_ok=True)
+        r = subprocess.run([tool("ffmpeg"), "-v", "error", "-y", "-framerate", fps_arg(fps), "-start_number", "1",
+                            "-i", str(frames_dir / "frame_%06d.png"),
+                            "-vf", f"scale=out_color_matrix=bt709:out_range=tv:flags={OV.ACCURATE},format=yuv420p",
+                            "-c:v", "libx264", "-crf", "16", "-preset", "slow", "-colorspace", "bt709",
+                            "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
+                            "-movflags", "+faststart", str(out)], capture_output=True, text=True)
+        shutil.rmtree(frames_dir, ignore_errors=True)
+        if r.returncode:
+            raise SystemExit(f"MP4 encode failed: {r.stderr[-600:]}")
+        info = OV.probe(out)
+        log(f"{out.name}: {info['frames']} frames ({info['frames'] / fps:.2f} s), motion blur {n}")
+        print(out)
+        return 0
     if a.mp4:                     # a stand-alone motion graphic (it paints its own background): just an MP4
         out = folder / f"{c['name']}.mp4"
         log(f"rendering {folder.name} as an MP4: {c['frames']} frames at {fps:g} fps, {W}x{H}")
@@ -288,16 +372,12 @@ def cmd_render(a) -> int:
         print(out)
         return 0
     frames_dir = folder / "frames"
-    shutil.rmtree(frames_dir, ignore_errors=True)
-    log(f"rendering {folder.name}: {c['frames']} frames at {fps:g} fps, {W}x{H}")
-    r = hf("render", str(folder), "--format", "png-sequence", "--fps", fps_arg(fps), "--output", str(frames_dir),
-           "--quiet", "--workers", str(a.workers) if a.workers else "auto", "--strict", "--frames-cache-dir", "off",
-           *vargs)
-    if vfile:
-        vfile.unlink(missing_ok=True)
+    try:
+        sub_render(folder, c, fps, n, frames_dir, vargs, a.workers)
+    finally:
+        if vfile:
+            vfile.unlink(missing_ok=True)
     pngs = sorted(frames_dir.glob("frame_*.png"))
-    if r.returncode or not pngs:
-        raise SystemExit(f"HyperFrames render failed (exit {r.returncode}) - run: overlay.py check {folder}")
     if len(pngs) != c["frames"]:
         log(f"  WARNING: {len(pngs)} frames rendered, expected {c['frames']} - check data-duration in index.html")
     out = folder / f"{c['name']}.mov"
@@ -834,6 +914,8 @@ def main() -> int:
     s.add_argument("folder")
     s.add_argument("--workers", type=int)
     s.add_argument("--mp4", action="store_true", help="an opaque MP4 (stand-alone motion graphic), no overlay clip")
+    s.add_argument("--motion-blur", type=int, help="N sub-frames per frame, averaged (odd, 3-9; kept in overlay.json; "
+                                                   "1 = off); N times the render time")
     s = sub.add_parser("stills")
     s.add_argument("folder")
     s.add_argument("frames")

@@ -42,6 +42,15 @@ fonts or font files in the folder, settings the user can change in `data-composi
    overlay). Start from an example when one fits (`overlay.py graphics`; `whats-new-0.3.0` is a 10-second stand-alone
    video, `talking-head-pack` kinetic captions). Expose the texts, colours and timings as settings.
 4. **Check**: `overlay.py stills <folder> <frames>` at every scene change and text hit - look at them, fix, repeat.
+   What the user rated "clunky" (2026-10-14, a UI-motion reel): UI drawn too small for the frame, nothing moving
+   between the big moves, no motion blur. Draw it at the reference's size (measure it on `frames(<ref>, ...)`), give
+   it a camera (push-ins, a jolt on hits, a slow drift), curved cursor paths with a press, and render fast moves with
+   `overlay.py render <folder> --motion-blur 5` (5 sub-frames averaged, ~5x the render time; tweens must end half a
+   frame before a set on the same property). **Sound effects**: none was rated bad - synthesise them (whooshes on
+   moves, clicks, keys, pops, impacts; no samples to license) on the graphic's frames, levelled against the song
+   under each one (it is quiet in an intro, loud after a drop), mix into a WAV in `build\audio\` for the plan, and
+   keep the effects alone as a stem for Resolve. Worked example on the PC where it was made:
+   `projects\illdari_test_copy_1\build\sfx_v2.py` + `overlays\kidwild_top3_v2\`.
 5. **Render**: `overlay.py render <folder>` (the .mov), then the video with its song through a plan:
    `build\plan_vN.json` = `{"name": "<p>_vN", "width": W, "height": H, "fps": fps, "frames": N, "sources": {},
    "grades": {}, "layers": [{"type": "overlay", "id": "<name>", "file": "<the .mov>", "start": 0, "end": N - 1}],

@@ -7,6 +7,7 @@ Written 2026-10-09 from the user's notes (re-planned 2026-10-11 and, from the us
 Renumbered 2026-10-13, when 0.4.0 shipped the user's overhaul (Analyze / Edit / Generate, Claude's memory, quick
 drafts, colour): the plans that were 0.3.5, 0.3.7, 0.4.0 and 0.4.1 are now 0.4.2, 0.4.3, 0.4.4 and 0.4.5 - the same
 order - and 0.4.1 is the fixes after 0.4.0. Older notes and code comments keep the old numbers.
+Added 2026-10-14: 0.4.6 (check before you render), from the rebuild of the first generated video.
 
 ## 0.7.0 - planned - AI B-roll and cinematics
 
@@ -54,6 +55,80 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   story (the HEIT structure of what is said), captions and graphics made by the draft itself.
 - **A macOS version** of the app (the lab is Python + a browser window; Edge-only parts, the Recycle Bin, `.bat`
   files and the Windows paths need macOS twins; DaVinci Resolve's scripting paths differ).
+
+## 0.4.6 - planned - Check before you render: drafts, feel tests, your ratings as rules
+
+**The user's words (2026-10-14)**, after rating the first generated video (illdari_test_copy_1) and its rebuild:
+"it took too much time to recreate a 'simple' motion graphics 25 second video (with a full reference to 1:1 copy)",
+"would it be better to have a general draft before actually going to render 'blindly'?", and "learn from this
+analyze / recreation / re-recreation ... applied to the entire workflow for future videos where we go blind or have
+a totally different feeling".
+
+**What happened (measured 2026-10-14)**: v1 was rated graphics OK "motion graphics feel too clunky", sound effects
+bad "no sfx at all". All three causes could be checked before building: the app drawn ~40 % smaller than in
+illdari's reel, no sound effects, no motion blur. The rebuild rendered 79 s (a speed test) + 2 min (a plain check) +
+7.9 + 7.6 + 9.2 min (three renders with motion blur) = ~29 min, of which only the last 9 min were needed: the first
+two motion-blur renders found a bug a 1-second snapshot shows (the logo's badge missing at f38 (00:00:01:08)) and
+copies on moves too fast for 5 sub-frames (f113-f116 (00:00:03:23-00:00:03:26)), which a speed calculation predicts.
+Claude sees stills and cannot hear: every guess (one fixed volume for all effects, 5 sub-frames being enough) cost a
+round; every measurement (each effect against the song under it, pixels moved per frame) worked first time.
+**Done 2026-10-14** (Unreleased): real motion blur, `overlay.py render --motion-blur N` (kept in overlay.json);
+a note in `/generate-video` (size, camera, motion blur, sound effects); the worked example
+`projects\illdari_test_copy_1\build\` (`sfx_v2.py`, `overlays\kidwild_top3_v2`, on the user's PC only).
+
+1. **Cheapest check first** (Edit and Generate): (1) the plan in words and numbers - the scenes with frame +
+   timecode, the feel as numbers ("a cut every 0.5 s, moves over 4-6 frames, a whoosh on each") - seconds;
+   (2) a sheet of stills at every scene change - seconds; (3) the motion: a quick draft (Edit already has one) or a
+   plain render (~2 min for 25 s) or the live preview (item 11); (4) the final with the polish (motion blur, sound
+   mix, Resolve) - once. The user approves each step in plain words; no polish before step 3 is approved. Needs
+   `overlay.py snap <folder> <frames>`: HyperFrames' `snapshot` at those frames' times, frame + timecode burned in,
+   no render (stills today come from a finished render). Snapshots seek straight to a time, so they match the render
+   only with the helpers of item 7.
+2. **Feel tests when starting blind** (no reference, only words): first try to stop being blind - Claude suggests the
+   analysed videos closest to the words (Claude's memory, `style.py`); one analysed reference in the right feel
+   turns guessing into measuring. Otherwise 2-3 hooks (the first 3 s) in different feels, e.g. clean and slick / raw
+   and glitchy / slow and cinematic: Edit = quick drafts with different presets or seeds and `--length 3` (made by
+   rules, no Claude tokens); Generate = the hook as stills in 2-3 looks (costs Claude tokens: only when there is no
+   reference and the words are vague). The user picks or mixes ("B's pacing with A's colours") - that is the plan.
+3. **Fix this version, or start over**: *How did it turn out?* asks which one. Fix = a new version with the notes
+   (the feel is right, details are wrong); start over = back to step 1 or to feel tests - never a v2 of a feel the
+   user did not want.
+4. **Notes on moments**: a render's page takes a note on any moment, like the review page takes verdicts (frame +
+   timecode, saved with the ratings in `build\outcome.json`); `/recreate-video improve` fixes exactly those moments
+   instead of interpreting one word per part.
+5. **Your ratings as rules**: Claude's memory (`knowledge.py memory`, read before every edit and generated video)
+   gets what the user rated in all their videos; a part rated bad becomes a default for every later video (no sound
+   effects rated bad -> sound effects always). Today only the ratings of videos from the same reference are read.
+6. **Lessons on making videos**: a shared, reviewed file of their own (`.claude\skills\recreate-video\lessons.md`,
+   ids M###), read by `/recreate-video` and `/generate-video` - not the analysis lessons file, which the analysis
+   reads whole every time. Same flow as the analysis lessons (local -> incoming -> reviewed; `knowledge.py share`
+   and `next-lesson-id` learn the second kind). First entries from this rebuild: draw at the reference's measured
+   size; sound effects levelled against the song under each; with motion blur, tweens end half a frame early and
+   their start pose is set at AT(n); moves over ~60 px a frame need a smear.
+7. **A starter graphic that is safe by default**: `overlay.py new`'s template gets the helpers of
+   `kidwild_top3_v2` (tweens end half a frame early, start pose set early, a vertical smear, a camera bump), so a
+   new graphic renders the same with or without motion blur and in snapshots.
+8. **Sound effects as a lab tool** (`tools\sfx.py`, from `sfx_v2.py`): a graphic lists its cues (frame + kind:
+   whoosh, click, key, pop, hit...) next to its settings, so the sound follows when a setting moves the timing
+   (the typed text); each effect levelled against the song under it; the effects alone as a stem for Resolve + the
+   mix for the plan. The quick draft's effects (zooms, whips, flashes) become cues the same way.
+9. **Ask about sound in the review**: Claude cannot hear, so an analysis asks the user "sound effects: none / some /
+   many - where?" like a possible miss; the rebuild reads the answer.
+10. **Checks before the final render** (scripts on a plain render or snapshots, no guessing): frames where most of
+    the picture vanishes for 1-2 frames (the f38 badge), the fastest moves in pixels per frame (a smear above ~60),
+    every sound effect's level against the song. Sizes against the reference stay Claude's check on its frames.
+11. **Live preview in the app** - measure first: HyperFrames has a live preview (`hyperframes preview`, in the
+    pinned 0.8.149); not yet tried: does the 3D lyric part play smoothly on a laptop, does it play the song. If it
+    does: Edit > the video > Graphics > *Play* - the graphic live with the song and its sound effects, a scrub bar,
+    frame + timecode, settings change at once without a render (no motion blur in the preview; the render is the
+    final word).
+12. **Faster motion blur** - measure first: sub-frames only for frames that move (HyperFrames found about a third of
+    this video's frames static); the 9 min could drop a lot - not measured.
+13. **Templates**: once the user approves v2, `overlay.py save` it as a "top 3 tracks" reel - the next one is new
+    settings, covers and lyrics, no new code (the biggest saving in Claude's tokens).
+
+**Order** (the user decides; it could also come before 0.4.2, since it saves time on every video after it): 1, 7,
+5, 6 first (rules and small changes); then 3, 4, 9 (the app); 8 and 10; 11 and 12 after measuring.
 
 ## 0.4.5 - planned - Prompt generator: every model, every specialty
 

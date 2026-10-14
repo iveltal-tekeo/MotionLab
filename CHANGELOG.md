@@ -4,6 +4,12 @@ What changed in each version of MotionLab, newest first. When a new version is o
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
+## Unreleased
+
+- **Motion graphics with real motion blur**: Claude can render a graphic with motion blur - five in-between
+  moments blended into every frame, so fast moves smear like a camera's instead of jumping from frame to frame.
+  Later renders of that graphic (Edit > the video > Graphics) keep it; they take about five times as long.
+
 ## 0.4.1 - 2026-10-13 - Fixes after 0.4.0: quick drafts, waiting jobs, new videos never overwrite old ones
 
 - **Quick draft of a talking video**: when a clip's sound starts a little before or after its picture (common on
