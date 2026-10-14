@@ -24,8 +24,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   FOF_ALLOWUNDO; Windows asks before deleting for good when something does not fit). Refused while a job runs; only
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
   logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
-- Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"): Home, *Make a video*: **Analyze** (#/analyze
-  = 0.3's References, `pageRefs`; #/ref/<name> = one analysis), **Edit** (#/edit = Videos, `pageProjects`;
+- Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"; Prepare added after 0.4.1 at the user's ask):
+  Home, *Make a video*: **Analyze** (#/analyze = 0.3's References, `pageRefs`; #/ref/<name> = one analysis),
+  **Prepare** (#/prepare, `pagePrepare`, green; below), **Edit** (#/edit = Videos, `pageProjects`;
   #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it), each with
   its step number (`.nstep`), then **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
   #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
@@ -89,7 +90,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   no subtitle; **Where to start** = the six `FLOW` steps as buttons (`flowHow` + `wireFlowHow`: download / measure
   open their dialogs, the rest go to References / Knowledge); setup warnings only when a program is missing; no "Updated
   to" box (only when an update set aside local changes); Status below the roadmap. Empty References / Videos / Prompts
-  = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). *Recreate with
+  = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). Analyze and
+  Edit (the user, 2026-10-14) put their actions in a first row under the title, on the left (`.toprow`: *Download from
+  link* + *Add videos*; *New edit* + *Folder*), not in the header's corner. *Recreate with
   my footage* = `createVideoModal({from: 'reference', pick})`. User-facing words: no paths, versions, SHA-256, effort
   levels; "lab pass" = Measure. UI changes are tested with a second test server on an empty copy of the app code.
 - **Analyze** (0.4, the user: "pass videos downloaded or pasted as a link, analysed in a concrete way I select:
@@ -119,6 +122,22 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   POST `/api/generate/request` (`data.save_generate_request`: checked; makes `projects\<name>\` when new; saves
   `build\generate_request.json`; made_from kind `generated`) -> Claude `/generate-video request <name>` (task
   `generate`, effort xhigh). GET `/api/generate/options` = the tools, the downloaded songs, HyperFrames found.
+- **Prepare** (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it
+  with more potential to go viral - or generate one from zero from a few questions; hooks, structure"):
+  `pagePrepare` = two ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`),
+  *How Claude writes for reach* (`SP_RULES`: the six rules of `.claude\skills\write-script\guidelines.md`),
+  *Waiting for Claude* (requests with nothing written from them yet: *Open in Claude Code again*, ✕ = POST
+  `/api/script/forget`, the request file to the Recycle Bin, logged), *Your scripts and hooks* (prompt cards ->
+  `promptModal`). Scripts live in the prompt library (kind script / hook); the requests in
+  `knowledge\local\prompts\requests\req-NNN.json` (`motionlab\script.py`). Improve: paste / attach (.txt .md .docx via
+  `/api/prompts/file`), where it goes, length, a wish, up to 3 analysed videos -> POST `/api/script/improve` (the
+  script saved as the user's own + an `improve` request) -> Claude `/write-script improve <id>` (task `script`, effort
+  high). From zero: topic (required), viewer, takeaway, angle, must-say points, where, length, tone, the ask at the
+  end, language, style, anything else -> POST `/api/script/request` -> `/write-script request <req>`; Claude saves
+  the script with `"request": "<req>"`. **The script check** (`script.check`, POST `/api/script/check`, no Claude):
+  live in the Improve dialog (`scriptCheckHtml`, debounced) and on every script / hook pop-up (*The check*); the
+  speaking rate is measured on the picked videos (`style.build(...)["talk"]`) when they have talking. A script / hook
+  card's *Optimize* / *Check it again* go to `/write-script` (`optCmd`, `chkCmd`), other prompts to `/write-prompt`.
 - **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
   use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = Overview (one search `#mq` over
   videos / effects / lessons, counts that link to their tab, *How Claude uses it* + *What Claude reads (memory.md)* /
@@ -158,7 +177,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
   review / feedback / lessons / library / recreate / prompt / plan / free) that picks `--effort` (Settings > Claude Code >
-  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, generate xhigh, prompt medium, plan (Home > Roadmap > What next? = /whats-next) high; or
+  Effort: "recommended" = review high, feedback high, lessons high, library high, recreate xhigh, generate xhigh, prompt medium, script high, plan (Home > Roadmap > What next? = /whats-next) high; or
   one level for all) and
   `--name "MotionLab <task> <video>"` (shown by /resume) - both only when `claude --help` lists them (older
   versions). "Analyse with Claude" = an analyze job with `claude: true`: when the lab pass ends well the job opens
@@ -208,7 +227,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
-  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
+  check / improve / request / requests / forget). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
   report.html starts from it and keeps local changes in the browser under the video name).

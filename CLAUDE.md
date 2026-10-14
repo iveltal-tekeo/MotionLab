@@ -24,7 +24,8 @@ explore the whole lab:
 |---|---|
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | edit the user's footage like references (1:1 or by feel, a quick draft) or from their words; then Resolve | the `/recreate-video` skill |
-| prompts: the user pastes / asks for video-model shots (Seedance...), hooks, scripts | the `/write-prompt` skill |
+| a script to say on camera: improve one for reach or write one from zero (Prepare), hooks | the `/write-script` skill |
+| prompts: the user pastes / asks for video-model shots (Seedance...), briefs, image prompts | the `/write-prompt` skill |
 | a video from zero: a motion-graphics video (HyperFrames), a plan + prompts for AI video tools | the `/generate-video` skill |
 | what to do next: status, unreleased changes, roadmap, plans, ideas, what waits on the user | the `/whats-next` skill |
 | anything in DaVinci Resolve (resolve_build.py, Fusion comps, library.py test / install) | `docs\resolve_notes.md` |
@@ -52,7 +53,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `shared.json`, `summary.md` + `summary\<category>.md` - Claude reads both before a review, `memory.md` = Claude's
   memory (0.4: every video's style in one line, the effects seen and how they were made - read before an edit or a
   prompt; `knowledge.py memory` rebuilds + prints it), `prompts\<kind>\<id>.json`
-  = the prompt library, ratings included), `inbox\` / `outbox\`
+  = the prompt library, ratings included; `prompts\requests\req-NNN.json` = Prepare's script requests), `inbox\` / `outbox\`
   (`*.mlpack.json` packs for friends without push access)
 - `projects\<name>\` the user's footage (read-only, top level); everything we make goes to `build\`: `sources.json`
   (IDs A, B, ... + SHA-256), `cache\` (grey frame caches), `boards\`, `edit_vN.py` -> `plan_vN.json` (the edit),
@@ -72,7 +73,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `organization.md` (repo/versioning plan), `roadmap.png` (`tools\roadmap.py` redraws it)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
-  `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
+  `write-script\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
 - Repo files (v0.4.1): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
@@ -94,6 +95,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: What it says
   tab); no subtitles or no link -> speech to text of the analysis' audio when installed (`auto` / `speech_transcript`)
+- `script.py check <file|script id> [--length s] [--like ...] | show <id|req-NNN> | requests` Prepare's script check
+  (no Claude: hook, length at a measured speaking rate, flat stretches, fillers, CTA...; rules in
+  `.claude\skills\write-script\guidelines.md`) and the app's requests, for `/write-script`
 - `prompts.py list | show | import | annotate | kind | style | rate | template` the prompt library (0.4; MCP
   `prompts`; kinds brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's
   check per part; style = analysed references whose measured style a prompt follows, `knowledge.style()`)
@@ -136,10 +140,11 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (edit its STAGES / VERDICT when the state changes)
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
-`MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's three ways in: Home ("What do
+`MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's ways in: Home ("What do
 you want to do?"), **1 Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
-misses, Delete), **2 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
-their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **3 Generate**
+misses, Delete), **2 Prepare** (#/prepare: the script before filming - *Improve my
+script* / *Write one from zero* -> `/write-script`; scripts live in the prompt library), **3 Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
+their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **4 Generate**
 (#/generate: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
 #/prompts), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,

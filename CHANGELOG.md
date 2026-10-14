@@ -6,6 +6,16 @@ Version numbers: `0.x.0` adds features, `0.x.y` fixes things.
 
 ## Unreleased
 
+- **Prepare a video - the script, before you film** (a new section between Analyze and Edit, also on Home):
+  *Improve my script* - paste or attach the script you have; MotionLab checks it on the spot (the hook in the
+  first 3 seconds, the length, dead stretches with nothing new, filler words, "you" vs "I", the call to
+  action, the last line, what is on screen), then Claude marks every part as clear, vague or missing and rewrites
+  it in your voice for more reach. *Write one from zero* - answer a few questions (what it is about, who it is
+  for, what they get, your story, length, tone, the ask at the end, the style of talking videos you analysed);
+  Claude writes three hooks and the whole script with what goes on screen. Scripts sit with your prompts:
+  rate them, and *Record it* starts the edit.
+- **Analyze and Edit**: their main buttons sit in the first row under the title (*Download from link* - before
+  "Download only" - and *Add videos*; *New edit* and *Folder*).
 - **Motion graphics with real motion blur**: Claude can render a graphic with motion blur - five in-between
   moments blended into every frame, so fast moves smear like a camera's instead of jumping from frame to frame.
   Later renders of that graphic (Edit > the video > Graphics) keep it; they take about five times as long.

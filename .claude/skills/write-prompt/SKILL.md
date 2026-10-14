@@ -43,6 +43,10 @@ The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scri
   memory` (or MCP `knowledge(category="memory")`) - every analysed video's style in one line (rhythm, hook, captions,
   signature effects) and the effects seen; a video the user names, or one that fits the want, beats an adjective.
 - No likeness of a real person without their consent; no logos / brands the user has no rights to.
+- **Talking scripts and hooks** (kinds `script` / `hook`) are `/write-script`'s job: its guidelines
+  (`.claude\skills\write-script\guidelines.md`: hook, structure, re-hooks, payoff, CTA) and its check
+  (`tools\script.py check`). The app sends a script's *Optimize* there. When one reaches you here (an import, a mixed
+  `analyse`), check it by those guidelines.
 
 ## 1. The user pastes prompts
 Save their text unchanged to a file in your scratchpad, then
@@ -96,7 +100,7 @@ For each id: read it (`prompts(id=...)`), then write a JSON file and run
   text, ending, deliverable, questions first; shot = references, keep, change, subject, action, setting, camera,
   lens, light, look, motion, beats, audio, length / aspect, avoid; image = references, keep, change, subject,
   setting, composition, light, look, materials, avoid; hook = pattern, opening line, on screen, promise; script =
-  hook, problem, points, proof, call to action (+ seconds per part when the script has them). `references` = what
+  hook, promise, problem, points, re-hooks, proof, payoff, call to action, on screen (`/write-script` section 2). `references` = what
   each upload is for, `keep` = what must not change, `change` = the transformation. Add a slot only when none fits.
 - Hooks: `pattern` = question, bold claim, number, story, contrarian, demo, curiosity gap or call-out.
 - Title (the card shows only the title, so it must say which prompt this is): 3-6 words in the prompt's language -
@@ -158,8 +162,7 @@ site) and to rate what it made.
    copy) with one line of slots under it.
    - Shots: one shot per prompt, one camera move (or timed beats with seconds); lock what stays before describing
      the change; length / aspect the model offers (check the site's options). Images: references + locks first.
-   - Hooks: the first 3 s = about 7-9 spoken words; name the pattern.
-   - Scripts: seconds per part; ~2.5 spoken words per second.
+   - Hooks and scripts: follow `/write-script` (its guidelines.md and `tools\script.py check`).
 4. Save them: a JSON list -> `prompts.py import <file>.json`, each with `"source": {"type": "written"}`,
    `"made_from": [example ids]`, kind, title, model, structure, review (your stars for your own text, honestly).
    Tell the user the new ids and: paste one into the

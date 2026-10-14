@@ -935,6 +935,12 @@ SKILL_INFO = {
                                    "learns from your verdicts when you send feedback.",
                           "uses": ["/analyze-reference <video name or file>"], "task": "review",
                           "where": "Analyze - Send to Claude, Send feedback to Claude"},
+    "write-script": {"brief": "Claude prepares what you say on camera: it checks a script you have against what makes "
+                              "talking videos hold attention (hook, structure, re-hooks, call to action) and rewrites "
+                              "it in your voice - or writes one from zero from your answers to a few questions.",
+                     "uses": ["/write-script improve <script id>", "/write-script request <request id>",
+                              "/write-script check <script id>", "/write-script hooks <script id>", "/write-script"],
+                     "task": "script", "where": "Prepare - Improve my script, Write one from zero"},
     "recreate-video": {"brief": "Claude edits your clips - an exact copy of a video you analysed, in the style of up "
                                 "to three, from your words or one of your prompts - first as a preview, then in "
                                 "DaVinci Resolve.",
@@ -956,7 +962,7 @@ SKILL_INFO = {
     "whats-next": {"brief": "Where MotionLab stands and what to build next.", "uses": ["/whats-next"], "task": "plan",
                    "dev": True},
 }
-SKILL_ORDER = ["analyze-reference", "recreate-video", "generate-video", "write-prompt", "whats-next"]
+SKILL_ORDER = ["analyze-reference", "write-script", "recreate-video", "generate-video", "write-prompt", "whats-next"]
 
 
 def skills() -> list[dict]:

@@ -38,7 +38,8 @@ SLOTS = {
     "image": ["references", "keep", "change", "subject", "setting", "composition", "light", "look", "materials",
               "avoid"],
     "hook": ["pattern", "opening line", "on screen", "promise"],
-    "script": ["hook", "problem", "points", "proof", "call to action"],
+    # a talking script (Prepare, `/write-script`: .claude\skills\write-script\guidelines.md): in the order it is said
+    "script": ["hook", "promise", "problem", "points", "re-hooks", "proof", "payoff", "call to action", "on screen"],
     # 0.3.4: a brief = what Claude needs to make a whole video; Claude's check marks each clear / vague / missing.
     # In the order a video is made (the app groups them: the plan, the edit, sound, look & text, finish); effects,
     # voice & audio and ending added after the user asked "what other parts should Claude check?"
@@ -77,9 +78,9 @@ def load_all(kind: str = "") -> list[dict]:
     return sorted(out, key=rank)
 
 
-def count() -> int:
-    """How many prompts the library has (file count, nothing parsed - Home's Generate card)."""
-    return sum(len(list((HOME / k).glob(f"{k}-*.json"))) for k in KINDS)
+def count(kinds=None) -> int:
+    """How many prompts the library has (file count, nothing parsed - Home's cards; kinds = only those)."""
+    return sum(len(list((HOME / k).glob(f"{k}-*.json"))) for k in (kinds or KINDS))
 
 
 def get(pid: str) -> dict:
@@ -138,6 +139,8 @@ def _check(r: dict) -> None:
             raise ValueError("review = {stars: 0-5, why, fix}")
     if r.get("step") is not None and not (isinstance(r["step"], int) and r["step"] >= 1):
         raise ValueError("step = 1, 2, ... (its place in the workflow)")
+    if r.get("request") and not re.fullmatch(r"req-\d{3,}", str(r["request"])):
+        raise ValueError("request = the Prepare request it was written from (req-001, ...)")
 
 
 def _review(rv: dict | None) -> dict | None:
@@ -153,7 +156,8 @@ def add(rec: dict) -> dict:
     """Save a new prompt (gets the next id of its kind). rec: kind, text, source {type, creator?, link?, file?}, and
     optionally title, model, result {rating, note}, structure [{slot, text}], pattern, tags, made_from [ids],
     review {stars 0-5, why, fix}, workflow (name of a multi-step recipe) + step (1, 2, ...), notes (how to use it),
-    style_refs (analysed references whose measured style it follows)."""
+    style_refs (analysed references whose measured style it follows), request (a script written from the user's
+    answers in Prepare: its req-NNN)."""
     r = {"kind": rec.get("kind"), "title": str(rec.get("title") or "").strip(), "text": str(rec.get("text") or "").strip(),
          "model": str(rec.get("model") or "").strip(), "source": dict(rec.get("source") or {}),
          "result": {"rating": None, "note": "", **(rec.get("result") or {})},
@@ -162,6 +166,8 @@ def add(rec: dict) -> dict:
          "review": _review(rec.get("review")), "workflow": str(rec.get("workflow") or "").strip(),
          "step": rec.get("step"), "notes": str(rec.get("notes") or "").strip(),
          "style_refs": list(rec.get("style_refs") or []), "added": _today(), "updated": _today()}
+    if rec.get("request"):
+        r["request"] = str(rec["request"]).strip()
     _check(r)
     with _LOCK:
         r["id"] = next_id(r["kind"])

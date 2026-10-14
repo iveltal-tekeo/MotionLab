@@ -34,6 +34,7 @@ from motionlab import __version__
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
+from motionlab import script as SC
 from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
 from motionlab.util import LAB, fix_dotted_names, tool
@@ -41,7 +42,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 14                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 15                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -125,7 +126,8 @@ def status() -> dict:
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
             "projects_list": projs, "references_list": refs, "setup": setup,
             "claude": bool(system.find("claude")), "update": S.update, "update_result": S.update_result,
-            "author": KN.author(), "prompts": PR.count(), "lessons": KN.lesson_count()}
+            "author": KN.author(), "prompts": PR.count(), "scripts": PR.count(("script", "hook")),
+            "lessons": KN.lesson_count()}
 
 
 def storage_summary() -> dict:
@@ -374,6 +376,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts":
             ov = PR.overview()
             return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"])})
+        if path == "/api/script/requests":               # Prepare (0.4.x): what the two dialogs asked Claude for
+            return self._json({"items": SC.requests(), "where": SC.WHERE, "tones": SC.TONES, "ctas": SC.CTAS,
+                               "langs": SC.LANGS})
         if path == "/api/text":
             return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
         if path == "/api/thumb":
@@ -424,6 +429,25 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
         if path == "/api/projects/new":                   # Videos > Create video: an empty folder for the clips
             return self._json(data.new_project(str(body.get("name", ""))))
+        if path == "/api/script/check":                   # Prepare: the script check while you type (no Claude)
+            like = [str(x)[:160] for x in body.get("like") or [] if isinstance(x, str)][:3]
+            ln = body.get("length_s")
+            return self._json(SC.check(str(body.get("text", ""))[:200_000], float(ln) if ln not in (None, "") else None,
+                                       like))
+        if path == "/api/script/improve":                 # Prepare > Improve my script: saved + what you want
+            r = SC.save_improve(body)
+            return self._json({**r, "command": f"/write-script improve {r['script']['id']}"})
+        if path == "/api/script/request":                 # Prepare > Write one from zero: the answers
+            r = SC.save_new(body)
+            return self._json({"request": r, "command": f"/write-script request {r['id']}"})
+        if path == "/api/script/forget":                  # a request nobody wants any more (Recycle Bin, logged)
+            rid = str(body.get("id", ""))
+            r = trash.recycle([SC.request_path(rid)])
+            with open(APPDIR / "deleted.log", "a", encoding="utf-8") as f:
+                f.write(f"{data.stamp()} script request {rid} moved to the Recycle Bin: {r['moved']}\n")
+            if r["left"]:
+                raise ValueError(r["why"] or "the request could not be moved to the Recycle Bin")
+            return self._json({"forgotten": rid})
         if path == "/api/generate/request":              # Generate (0.4): a video from zero -> its folder + request
             return self._json(data.save_generate_request(body))
         m = re.fullmatch(r"/api/project/([^/]+)/edit_request", path)       # New edit (0.4): what the user picked

@@ -40,6 +40,7 @@ TASKS = {
     "recreate": ("xhigh", "MotionLab recreate"),       # /recreate-video: a whole edit with your footage
     "generate": ("xhigh", "MotionLab generate"),       # /generate-video: a video from zero (graphics / AI prompts)
     "prompt": ("medium", "MotionLab prompt"),          # /write-prompt: split examples, write new prompts (text only)
+    "script": ("high", "MotionLab script"),            # /write-script: check, improve or write what you say on camera
     "plan": ("high", "MotionLab next steps"),          # /whats-next: where the lab stands, options, a recommendation
 }
 # preset id -> (label, yt-dlp arguments, folder inside the lab)

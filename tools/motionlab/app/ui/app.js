@@ -1,5 +1,6 @@
-/* MotionLab app - plain JavaScript, no build step. Since 0.4 three ways in: Analyze (#/analyze: other people's
-   videos - download, analyse, Claude's check, your verdicts; #/ref/<name> = one analysis), Edit (#/edit: your clips -
+/* MotionLab app - plain JavaScript, no build step. Since 0.4 the ways in: Analyze (#/analyze: other people's
+   videos - download, analyse, Claude's check, your verdicts; #/ref/<name> = one analysis), Prepare (#/prepare: the
+   script - improve yours or write one from zero, /write-script), Edit (#/edit: your clips -
    a new edit, renders, graphics, Resolve; #/project/<name>), Generate (#/generate + the prompt library #/prompts), then
    Claude's memory (#/memory: what Claude learned + the saved effects and graphics), Jobs and Settings (+ Storage and
    Claude skills). The 0.3 routes (#/refs, #/projects, #/knowledge, #/library) still work. Every frame shown = number +
@@ -186,7 +187,8 @@ const ALIASES = {'#/refs': '#/analyze', '#/projects': '#/edit', '#/knowledge': '
 const PAGES = [
   [/^#?\/?$/, pageHome, 'home'], [/^#\/analyze$/, pageRefs, 'analyze'],
   [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)|(verdicts)))?$/, pageRef, 'analyze'], [/^#\/edit$/, pageProjects, 'edit'],
-  [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/generate$/, pageGenerate, 'generate'],
+  [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/prepare$/, pagePrepare, 'prepare'],
+  [/^#\/generate$/, pageGenerate, 'generate'],
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/skills$/, pageSkills, 'settings']];
@@ -210,7 +212,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 14;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 15;               // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -596,20 +598,22 @@ class Timeline {
 }
 
 // ============================================================================================ home
-// Home (0.4): one question - what do you want to do? - and the three ways in, then Claude's memory, setup warnings
+// Home (0.4): one question - what do you want to do? - and the ways in (Prepare added after 0.4.1), then Claude's memory, setup warnings
 // (only when a program is missing), the roadmap and the status
 const WAYS = [
   ['analyze', 'Analyze a video', 'Paste a link or pick a file. MotionLab measures every cut, effect and beat; Claude names them and remembers the style for your edits.'],
+  ['prepare', 'Prepare a video', 'What you say on camera: improve a script you have, or answer a few questions and Claude writes one - a hook in the first 3 s, a structure that holds, one clear ask.'],
   ['edit', 'Edit my clips', 'Your clips, cut in the style of up to three videos you analysed - or your way: “hook first, 3 s cuts, fast”. A quick draft takes minutes.'],
   ['generate', 'Generate a video', 'From zero, no clips: a motion-graphics video Claude writes and renders, or a plan with every prompt for AI video tools (Higgsfield, Kling, Seedance…).']];
 function wayActs(k) {
   if (k === 'analyze') return '<button class="btn pri" data-way="link"><svg class="i"><use href="#i-download"/></svg>Paste a link</button><button class="btn" data-way="file">Pick a file</button>';
+  if (k === 'prepare') return '<button class="btn pri" data-way="simp"><svg class="i"><use href="#i-scriptok"/></svg>Improve a script</button><button class="btn" data-way="snew">From zero</button>';
   if (k === 'edit') return '<button class="btn pri" data-way="edit"><svg class="i"><use href="#i-edit"/></svg>Start an edit</button>';
   return '<button class="btn pri" data-way="gfx"><svg class="i"><use href="#i-claude"/></svg>Motion graphics</button><button class="btn" data-way="ai">AI video tools</button>';
 }
 async function pageHome(main) {
   const s = await api('/api/status');
-  const foot = {analyze: `${plural(s.references, 'video')} analysed`, edit: plural(s.projects, 'edit'),
+  const foot = {analyze: `${plural(s.references, 'video')} analysed`, prepare: plural(s.scripts || 0, 'script'), edit: plural(s.projects, 'edit'),
                 generate: `${plural(s.prompts || 0, 'prompt')} in your library`};
   main.innerHTML = `
   ${heroAnim()}
@@ -635,7 +639,7 @@ async function pageHome(main) {
       <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>Tips for working with Claude</button></div></div>`;
   $('#hero-go', main).onclick = () => addVideosModal();
   const WAY_GO = {link: () => addVideosModal(), file: () => addVideosModal({pick: true}), edit: () => createVideoModal(),
-                  gfx: () => generateModal('graphics'), ai: () => generateModal('ai')};
+                  gfx: () => generateModal('graphics'), ai: () => generateModal('ai'), simp: () => scriptImproveModal(), snew: () => scriptNewModal()};
   $$('[data-way]', main).forEach(b => b.onclick = () => WAY_GO[b.dataset.way]());
   wireUpdateBox(main, s.update_result);
   const rm = $('.roadmap img', main); if (rm) rm.onclick = () => lightbox([{src: s.roadmap, cap: 'MotionLab roadmap'}], 0);
@@ -1009,10 +1013,11 @@ async function pageRefs(main) {
     const refs = all.filter(r => (!cat || r.category === cat) && (!tag || (r.tags || []).includes(tag)) && (!foc || r.focus === foc));
     const pct = (a, b) => b ? Math.round(100 * a / b) : 100;
     const none = !all.length && !wait.length;
-    const btns = big => `<button class="btn ghost${big ? ' big' : ''}" id="dl" title="Only download - e.g. a song (MP3) for an edit"><svg class="i"><use href="#i-download"/></svg>Download only…</button>
+    const btns = big => `<button class="btn ghost${big ? ' big' : ''}" id="dl" title="Download a video or a song (MP3) from a link without analysing it - e.g. music for an edit"><svg class="i"><use href="#i-download"/></svg>Download from link</button>
       <button class="btn pri${big ? ' big' : ''}" id="an"><svg class="i"><use href="#i-analyze"/></svg>Add videos</button>`;
-    main.innerHTML = `<div class="head"><div><h1>Analyze</h1><div class="sub">Videos you like, broken down cut by cut and effect by effect - Claude remembers their style for your edits.</div></div>
-      ${none ? '' : `<div class="row">${btns(false)}</div>`}</div>
+    // the page's actions: a first row under the title, on the left (the user, 2026-10-14), not the header's corner
+    main.innerHTML = `<div class="head"><div><h1>Analyze</h1><div class="sub">Videos you like, broken down cut by cut and effect by effect - Claude remembers their style for your edits.</div></div></div>
+      ${none ? '' : `<div class="toprow">${btns(true)}</div>`}
       <div id="avprog"></div>
       ${wait.length ? `<div class="panel waiting"><h2>Downloaded, not analysed yet</h2><table class="t"><tbody>${wait.map(w => `<tr>
         <td>${w.audio ? '<span class="tag">audio</span>' : '<span class="tag">video</span>'}</td><td><b>${esc(w.title || w.name)}</b><div class="small dim mono">${esc(w.name)}</div></td>
@@ -1317,8 +1322,8 @@ async function pageRef(main, name, selId, openMisses, openReview) {
 async function pageProjects(main) {
   const ps = await api('/api/projects');
   const cv = big => `<button class="btn pri${big ? ' big' : ''}" id="cvnew"><svg class="i"><use href="#i-edit"/></svg>New edit</button>`;
-  main.innerHTML = `<div class="head"><div><h1>Edit</h1><div class="sub">Your clips, cut like videos you analysed, the way you say - or from a prompt.</div></div>
-      ${ps.length ? `<div class="row">${cv(false)}<button class="btn" data-open="projects">Folder</button></div>` : ''}</div>
+  main.innerHTML = `<div class="head"><div><h1>Edit</h1><div class="sub">Your clips, cut like videos you analysed, the way you say - or from a prompt.</div></div></div>
+    ${ps.length ? `<div class="toprow">${cv(true)}<button class="btn big" data-open="projects">Folder</button></div>` : ''}
     ${ps.length ? `<div class="cards">${ps.map(p => `<div class="card refcard"><a class="clink" href="#/project/${encodeURIComponent(p.name)}">
       ${p.thumb ? `<img class="thumb" src="${fileUrl(p.thumb)}" loading="lazy">` : ''}
       <div class="cb"><div class="ct">${esc(p.name)}</div>
@@ -2026,7 +2031,7 @@ const pexMedia = (R, f, cls = '') => /\.(mp4|webm)$/i.test(f)
 function psource(p) {
   const s = p.source || {};
   return s.type === 'creator' ? `<span class="tag">${esc(s.creator || 'creator')}</span>${s.link ? ` <a href="${esc(s.link)}" target="_blank" rel="noopener" class="small">link</a>` : ''}${s.file ? ` <span class="small dim" title="the file it came from">${esc(s.file)}</span>` : ''}`
-    : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(x => `<a href="#" data-goto="${esc(x)}">${esc(x)}</a>`).join(', ')}</span>` : ''}`;
+    : `<span class="tag${s.type === 'tested' ? ' done' : ''}">${esc(isTalk(p) && s.type === 'tested' ? 'yours' : PSRC[s.type] || s.type)}</span>${p.made_from && p.made_from.length ? ` <span class="small muted">from ${p.made_from.map(x => `<a href="#" data-goto="${esc(x)}">${esc(x)}</a>`).join(', ')}</span>` : ''}`;
 }
 const pusedLine = u => `<div class="small pused">Used in <a href="#/project/${encodeURIComponent(u.project)}">${esc(u.project)}</a>${Object.keys(u.aspects || {}).length
   ? ': ' + ASPECTS.filter(([k]) => (u.aspects[k] || {}).rating).map(([k, l]) => `<span class="vr ${u.aspects[k].rating}">${esc(l)} ${u.aspects[k].rating === 'ok' ? 'OK' : u.aspects[k].rating}</span>`).join(' ')
@@ -2054,7 +2059,7 @@ function pcheckBlock(p, R) {                           // Claude's check: a card
   if (!st.length && rv.stars == null) return `<div class="pchk none"><div class="pchk-h"><h3>Claude's check</h3></div>
     <p>Claude reviews each part of this prompt - what is <b class="ok">clear</b>, <b class="amber">vague</b> or <b class="bad">missing</b>, with a tip for each - and writes an improved version. This one stays as it is.</p>
     <div class="pchips">${slots.map(s => `<span class="pgneed">${esc(slotLabel(s))}</span>`).join('')}</div>
-    <div class="row" style="margin-top:12px">${claudeBtn(`/write-prompt optimize ${p.id}`, 'Optimize with Claude', 'prompt', p.id, 'pri')}</div></div>`;
+    <div class="row" style="margin-top:12px">${claudeBtn(optCmd(p), 'Optimize with Claude', optTask(p), p.id, 'pri')}</div></div>`;
   const n = k => st.filter(x => x.status === k).length;
   const isWork = x => x.status === 'vague' || x.status === 'missing' || !x.status || (w[x.slot] || '').trim();
   const work = st.filter(isWork).length;
@@ -2078,7 +2083,7 @@ function pcheckBlock(p, R) {                           // Claude's check: a card
     ${rv.why || rv.fix ? `<div class="pchk-verdict">${rv.why ? `<p>${esc(rv.why)}</p>` : ''}${rv.fix ? `<p class="fix"><b>Most important:</b> ${esc(rv.fix)}</p>` : ''}</div>` : ''}
     <div class="cparts" data-view="${checked && work && work < st.length ? 'work' : 'all'}">${rows}</div>
     <div class="pchk-foot"><button class="btn pri" data-opt title="Claude writes a better version from its check and what you wrote - this one stays"><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>
-      ${claudeBtn(`/write-prompt analyse ${p.id}`, 'Check it again', 'prompt', p.id)}<span class="small muted" data-wsaved>${nw ? `${nw} wish${nw === 1 ? '' : 'es'} saved` : ''}</span></div></div>`;
+      ${claudeBtn(chkCmd(p), 'Check it again', optTask(p), p.id)}<span class="small muted" data-wsaved>${nw ? `${nw} wish${nw === 1 ? '' : 'es'} saved` : ''}</span></div></div>`;
 }
 // one prompt as a card (the prompt library's grid, Generate's latest prompts): kind, category, title, needs, rating
 function promptCard(p, R) {
@@ -2091,6 +2096,187 @@ function promptCard(p, R) {
     <b class="pgtitle">${esc(ptitle(p))}</b>
     <span class="pgfoot"><span class="pgneeds">${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</span>${rating}</span></button>`;
 }
+// ============================================================================================ prepare
+// Prepare (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it with
+// more potential to go viral - or generate one from zero from a few questions; hooks, structure"): what you say on
+// camera. The scripts live in the prompt library (kind script / hook, so rating, Style like and Record it work as
+// for any prompt); the two dialogs save a request (script.py: knowledge\local\prompts\requests\) and open Claude
+// with /write-script (its guidelines.md = the viral rules). The script check (POST /api/script/check) needs no Claude.
+const isTalk = p => p.kind === 'script' || p.kind === 'hook';
+// a script / hook goes to /write-script (the viral-script guidelines), any other prompt to /write-prompt
+const optCmd = p => isTalk(p) ? `/write-script improve ${p.id}` : `/write-prompt optimize ${p.id}`;
+const chkCmd = p => isTalk(p) ? `/write-script check ${p.id}` : `/write-prompt analyse ${p.id}`;
+const optTask = p => isTalk(p) ? 'script' : 'prompt';
+// what Claude follows when it writes for reach (.claude\skills\write-script\guidelines.md, in six lines)
+const SP_RULES = [['Hook in 3 seconds', 'The most interesting line first - said, written on screen and shown. Never “hey guys”.'],
+  ['One idea, one promise', 'Who it is for and what they get by the end - the reason to stay.'],
+  ['Something new every few seconds', 'A turn, a question, a number or a new picture - no flat stretch.'],
+  ['Short spoken lines', 'One idea a sentence, no fillers, talks to “you”. Specific beats vague.'],
+  ['Payoff and one ask', 'The promise kept, then one call to action with a reason. A strong last line.'],
+  ['What is on screen', '[TEXT] and [B-ROLL] notes next to the words - the edit uses them.']];
+const SP_LENGTHS = [['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30'], ['180', '3 min'], ['600', '10 min']];
+const SC_MARK = {ok: ['✓', 'ok'], warn: ['~', 'amber'], bad: ['✗', 'bad']};
+const fmtSecs = s => s < 90 ? `${Math.round(s)} s` : `${Math.floor(s / 60)}:${pad(Math.round(s % 60))} min`;
+function scriptCheckHtml(c) {                         // the script check: n of 11, the length, one line per rule
+  if (!c || !c.words) return '<div class="small dim">The check runs as you type: the hook, the length, dead seconds, fillers, the call to action.</div>';
+  const cls = c.passed >= c.total - 1 ? 'ok' : c.passed >= c.total / 2 ? 'amber' : 'bad';
+  return `<div class="scsum"><b class="scscore ${cls}">${c.passed}<small>/${c.total}</small></b>
+      <span><b>≈ ${fmtSecs(c.seconds)}</b> · ${c.words} words<br><span class="small muted">at ${c.wpm} words a minute (${esc(c.rate_from)})</span></span></div>
+    <ul class="sclist">${c.checks.map(x => `<li><b class="${SC_MARK[x.status][1]}">${SC_MARK[x.status][0]}</b><span><b>${esc(x.label)}</b> <span class="muted">${esc(x.detail)}</span></span></li>`).join('')}</ul>`;
+}
+// up to 3 analysed videos as chips (their measured speaking rate and style); st.like = the picked keys
+function spStyleChips(el, vids, st, onChange = () => {}) {
+  $$('.gstyle .fchip', el).forEach(b => b.onclick = () => {
+    const k = b.dataset.k;
+    if (st.like.includes(k)) st.like = st.like.filter(x => x !== k);
+    else if (st.like.length < 3) st.like.push(k);
+    else { toast('At most 3 videos', 'err'); return; }
+    $$('.gstyle .fchip', el).forEach(x => x.classList.toggle('on', st.like.includes(x.dataset.k)));
+    onChange();
+  });
+}
+const spChipsHtml = vids => vids.length ? `<div class="gstyle">${vids.slice(0, 30).map(v => `<button class="fchip" data-k="${esc(v.key)}" title="${esc((Object.values(v.lines || {}).filter(Boolean).join(' · ')) || v.title)}">${esc(v.title)}</button>`).join('')}</div>`
+  : '<div class="small dim">No analysed video yet - Analyze a talking video you like and Claude follows its pace and structure.</div>';
+function spSeg(el, id, st, key, onChange = () => {}) {
+  const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === st[key]));
+  $$('button', b).forEach(x => x.onclick = () => { st[key] = x.dataset.v; paint(); onChange(); }); paint();
+}
+async function pagePrepare(main) {
+  const ctx = {};
+  const load = async () => { [ctx.R, ctx.Q] = await Promise.all([api('/api/prompts'), api('/api/script/requests')]); };
+  await load();
+  const draw = () => {
+    const R = ctx.R, Q = ctx.Q, byId = Object.fromEntries(R.items.map(p => [p.id, p]));
+    const mine = R.items.filter(isTalk).sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
+    const waiting = Q.items.filter(r => !(r.made || []).length && (r.kind === 'new' || byId[r.script])).slice(0, 8);
+    main.innerHTML = `<div class="head"><div><h1>Prepare</h1><div class="sub">What you say on camera, before you film - a hook in the first 3 seconds, a structure that holds, one clear ask at the end.</div></div>
+        ${mine.length ? `<div class="row"><a class="btn" href="#/prompts">Prompt library</a></div>` : ''}</div>
+      <div class="gways">
+        <div class="gway"><div class="row"><svg class="ic"><use href="#i-scriptok"/></svg><h2>Improve my script</h2></div>
+          <p>Paste the script you have. MotionLab checks it on the spot - the hook, the length, dead seconds, fillers, the call to action.
+            Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.</p>
+          <div class="row"><button class="btn pri" id="sp-imp"><svg class="i"><use href="#i-claude"/></svg>Improve a script</button></div>
+          <div class="small muted">Your script stays as it is - the new version is saved next to it.</div></div>
+        <div class="gway"><div class="row"><svg class="ic"><use href="#i-script"/></svg><h2>Write one from zero</h2></div>
+          <p>Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script,
+            timed to your length, with what goes on screen - in the style of talking videos you analysed.</p>
+          <div class="row"><button class="btn pri" id="sp-new"><svg class="i"><use href="#i-claude"/></svg>Write a script with Claude</button></div>
+          <div class="small muted">Then film it and bring the clips to <a href="#/edit">Edit</a>.</div></div></div>
+      <div class="sprules"><div class="row sp"><h3>How Claude writes for reach</h3><span class="small muted">every script is checked against these - the ones that can be counted, instantly</span></div>
+        <ol>${SP_RULES.map(([t, d]) => `<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join('')}</ol></div>
+      ${waiting.length ? `<h3 style="margin:22px 0 8px">Waiting for Claude</h3><div class="spwait">${waiting.map(r => {
+        const what = r.kind === 'new' ? `<b>${esc(r.topic.split('\n')[0].slice(0, 90))}</b> <span class="muted">· a script from zero</span>`
+          : `<b>${esc(ptitle(byId[r.script]))}</b> <span class="muted">· improve it</span>`;
+        const cmd = r.kind === 'new' ? `/write-script request ${r.id}` : `/write-script improve ${r.script}`;
+        return `<div class="spw"><span class="grow">${what} <span class="small dim">${esc(String(r.date || '').slice(0, 16).replace('T', ' '))}</span></span>
+          ${claudeBtn(cmd, 'Open in Claude Code again', 'script', r.id)}<button class="btn sm ghost" data-forget="${esc(r.id)}" title="Forget this request (your script stays)">✕</button></div>`; }).join('')}</div>` : ''}
+      ${mine.length ? `<div class="row sp" style="margin:22px 0 8px"><h3 style="margin:0">Your scripts and hooks</h3><span class="small muted">click one: Claude's check, your rating, <b>Record it</b> = make the video</span></div>
+        <div class="pgrid">${mine.map(p => promptCard(p, R)).join('')}</div>` : ''}`;
+    $('#sp-imp', main).onclick = () => scriptImproveModal(ctx);
+    $('#sp-new', main).onclick = () => scriptNewModal(ctx);
+    $$('.pgc', main).forEach(c => c.onclick = () => promptModal(c.dataset.id, ctx));
+    $$('[data-forget]', main).forEach(b => b.onclick = async () => {
+      try { await api('/api/script/forget', {id: b.dataset.forget}); toast('Forgotten', 'ok'); await ctx.reload(); }
+      catch (e) { toast(e.message, 'err'); }
+    });
+  };
+  ctx.draw = draw;
+  ctx.reload = async () => { await load(); draw(); };
+  draw();
+}
+// Prepare > Improve my script: paste (or attach) it, the check while you type, what you want -> the prompt library
+// (kind script, yours) + a request -> Claude Code /write-script improve <id>
+async function scriptImproveModal(ctx, pre = {}) {
+  const MEM = await api('/api/memory');
+  const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
+  const st = {like: [], length: '', where: '', file: ''};
+  modal(`<h2>Improve my script</h2>
+    <div class="small muted" style="margin-top:-4px">Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version next to yours.</div>
+    <div class="spgrid"><div>
+      <div class="nestep"><b>1</b>Your script</div>
+      <textarea id="stext" rows="13" style="width:100%" placeholder="Paste your script here…&#10;&#10;Notes for the camera can go in brackets: [TEXT: 3 mistakes] [B-ROLL: my desk]">${esc(pre.text || '')}</textarea>
+      <div class="row" style="margin-top:6px"><label class="btn sm ghost">Attach a file (.txt, .md, .docx)<input type="file" id="sfile" accept=".txt,.md,.docx" hidden></label><span class="small muted" id="sfname"></span></div>
+      <div class="nestep"><b>2</b>What you want <span class="small muted" style="font-weight:400">(optional)</span></div>
+      <div class="nedet spf"><label>Where it goes</label><div class="seg" id="swhere"><button data-v="">Claude picks</button><button data-v="vertical">TikTok · Reels · Shorts</button><button data-v="youtube">YouTube</button></div>
+        <label>Length</label><div class="seg" id="slen"><button data-v="">Keep its length</button>${SP_LENGTHS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+        <label>Anything else</label><input type="text" id="swant" placeholder="e.g. more energy, less about me, end with my course" style="max-width:460px"></div>
+      <div class="nestep"><b>3</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 talking videos you analysed: their pace and structure)</span></div>
+      ${spChipsHtml(vids)}
+    </div><div class="spcheck"><div class="row sp"><h3 style="margin:0">The check</h3><span class="small muted">instant · no Claude</span></div><div id="schk"></div></div></div>
+    <div class="row" style="margin-top:16px"><button class="btn pri big" id="sgo"><svg class="i"><use href="#i-claude"/></svg>Improve it with Claude</button>
+      <span class="small muted">Claude Code opens in a new window: it checks every part, then writes the new version - you find it here under Prepare.</span></div>`, el => {
+    const txt = $('#stext', el);
+    const run = debounce(async () => {
+      try { $('#schk', el).innerHTML = scriptCheckHtml(await api('/api/script/check', {text: txt.value, length_s: st.length || null, like: st.like})); }
+      catch (e) { $('#schk', el).innerHTML = `<div class="small bad">${esc(e.message)}</div>`; }
+    }, 300);
+    spSeg(el, '#swhere', st, 'where'); spSeg(el, '#slen', st, 'length', run); spStyleChips(el, vids, st, run);
+    txt.oninput = run; run(); txt.focus();
+    $('#sfile', el).onchange = async e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      if (f.size > 30e6) { toast('Files up to 30 MB', 'err'); return; }
+      try {
+        const r = await api('/api/prompts/file', {name: f.name, data: b64(await f.arrayBuffer())});
+        if (!r.text) { toast(`${f.name}: no text found in it`, 'err'); return; }
+        txt.value = r.text; st.file = r.file; $('#sfname', el).textContent = r.file; run();
+      } catch (err) { toast(err.message, 'err'); }
+    };
+    $('#sgo', el).onclick = async () => {
+      try {
+        const r = await api('/api/script/improve', {text: txt.value, file: st.file, where: st.where, length_s: st.length || null,
+                                                    want: $('#swant', el).value, like: st.like});
+        openClaude(r.command, 'script', r.script.id);
+        closeModal();
+        if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
+      } catch (e) { toast(e.message, 'err'); }
+    };
+  }, 'wide');
+}
+// Prepare > Write one from zero: the questions -> a request -> Claude Code /write-script request <id>
+async function scriptNewModal(ctx, pre = {}) {
+  const [MEM, Q] = await Promise.all([api('/api/memory'), api('/api/script/requests')]);
+  const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
+  const st = {like: [], length: '30', where: 'vertical', tone: '', cta: '', lang: ''};
+  modal(`<h2>Write a script from zero</h2>
+    <div class="small muted" style="margin-top:-4px">The more you tell, the more it sounds like you. Only the first question is needed - Claude asks for what is missing.</div>
+    <div class="nestep"><b>1</b>The idea</div>
+    <div class="nedet spq"><label>What is it about?</label><textarea id="qtopic" rows="2" placeholder="e.g. how I edit a talking video in 20 minutes on my phone">${esc(pre.topic || '')}</textarea>
+      <label>Who is it for?</label><input type="text" id="qaud" placeholder="e.g. small creators who film on their phone and hate editing">
+      <label>What do they get by the end?</label><input type="text" id="qtake" placeholder="e.g. a 3-step routine they can copy today"></div>
+    <div class="nestep"><b>2</b>Your angle <span class="small muted" style="font-weight:400">(optional - the best hooks come from here)</span></div>
+    <div class="nedet spq"><label>Your story, result or opinion</label><textarea id="qangle" rows="2" placeholder="e.g. I went from 200 to 40,000 views in two months doing this - I used to spend 3 hours per video"></textarea>
+      <label>Must-say points</label><textarea id="qpoints" rows="2" placeholder="one per line, in any order"></textarea></div>
+    <div class="nestep"><b>3</b>Format</div>
+    <div class="nedet spf"><label>Where it goes</label><div class="seg" id="qwhere"><button data-v="vertical">TikTok · Reels · Shorts</button><button data-v="youtube">YouTube</button><button data-v="">Claude picks</button></div>
+      <label>Length</label><div class="seg" id="qlen">${SP_LENGTHS.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+      <label>Tone</label><div class="seg" id="qtone"><button data-v="">Claude picks</button>${Object.entries(Q.tones).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div>
+      <label>Ask at the end</label><div class="row"><div class="seg" id="qcta"><button data-v="">Claude picks</button>${Object.entries(Q.ctas).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div></div>
+      <label></label><input type="text" id="qctat" placeholder="optional - e.g. comment GUIDE and I send you my presets" style="max-width:460px">
+      <label>Language</label><div class="seg" id="qlang"><button data-v="">The one I write in</button>${Object.entries(Q.langs).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div></div>
+    <div class="nestep"><b>4</b>In the style of <span class="small muted" style="font-weight:400">(optional - up to 3 talking videos you analysed)</span></div>
+    ${spChipsHtml(vids)}
+    <div class="nedet spf" style="margin-top:10px"><label>Anything else</label><input type="text" id="qextra" placeholder="optional - e.g. no swearing, mention my course at the end" style="max-width:460px"></div>
+    <div class="row" style="margin-top:16px"><button class="btn pri big" id="qgo"><svg class="i"><use href="#i-claude"/></svg>Write it with Claude</button>
+      <span class="small muted">Claude Code opens in a new window with your answers: three hooks, then the script - you find it here under Prepare.</span></div>`, el => {
+    for (const [id, key] of [['#qwhere', 'where'], ['#qlen', 'length'], ['#qtone', 'tone'], ['#qcta', 'cta'], ['#qlang', 'lang']]) spSeg(el, id, st, key);
+    spStyleChips(el, vids, st);
+    $('#qtopic', el).focus();
+    $('#qgo', el).onclick = async () => {
+      const topic = $('#qtopic', el).value.trim();
+      if (!topic) { toast('Say what the video is about first', 'err'); $('#qtopic', el).focus(); return; }
+      try {
+        const r = await api('/api/script/request', {topic, audience: $('#qaud', el).value, takeaway: $('#qtake', el).value,
+          angle: $('#qangle', el).value, points: $('#qpoints', el).value, length_s: st.length || null, where: st.where,
+          tone: st.tone, cta: st.cta, cta_text: $('#qctat', el).value, lang: st.lang, like: st.like, extra: $('#qextra', el).value});
+        openClaude(r.command, 'script', r.request.id);
+        closeModal();
+        if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
+      } catch (e) { toast(e.message, 'err'); }
+    };
+  }, 'wide');
+}
+
 // Generate (0.4): a video from zero - prompts for AI video and image tools (Claude writes them, you paste them into the
 // tool and bring the clips to Edit) or a motion-graphics video; the prompt library is one click away
 async function pageGenerate(main) {
@@ -2209,7 +2395,7 @@ async function pagePrompts(main, arg) {               // every kind in one grid;
       return k && !n ? '' : `<button class="fchip${k === pf ? ' on' : ''}" data-pf="${k}">${l} <span class="dim">${n}</span></button>`; }).join('');
     $$('[data-pf]', main).forEach(b => b.onclick = () => { pf = b.dataset.pf; try { localStorage.setItem('ml.pfilter', pf); } catch (e) { /* not kept */ } draw(); });
     const todo = all.filter(p => pfilterOk(p, 'todo')).map(p => p.id);
-    $('#ptodo', main).innerHTML = pf === 'todo' && todo.length ? `<div class="small muted pftodo">Claude reads each one and marks what is clear, vague or missing, with a tip. ${todo.length === 1 ? claudeBtn(`/write-prompt optimize ${todo[0]}`, 'Optimize with Claude', 'prompt', todo[0]) : claudeBtn(`/write-prompt analyse ${todo.join(' ')}`, `Check these ${todo.length} with Claude`, 'prompt', 'analyse')}</div>` : '';
+    $('#ptodo', main).innerHTML = pf === 'todo' && todo.length ? `<div class="small muted pftodo">Claude reads each one and marks what is clear, vague or missing, with a tip. ${todo.length === 1 ? claudeBtn(optCmd({id: todo[0], kind: todo[0].split('-')[0]}), 'Optimize with Claude', optTask({kind: todo[0].split('-')[0]}), todo[0]) : claudeBtn(`/write-prompt analyse ${todo.join(' ')}`, `Check these ${todo.length} with Claude`, 'prompt', 'analyse')}</div>` : '';
     const items = all.filter(p => pfilterOk(p, pf) && (!q || [p.id, p.title, p.title_auto, p.text, p.model, (p.source || {}).creator, KSHORT[p.kind], ...(p.tags || [])].join(' ').toLowerCase().includes(q)))
       .sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
     list.innerHTML = items.map(row).join('') || `<div class="empty">${q ? 'No prompt matches the search.' : 'Nothing here.'}</div>`;
@@ -2248,7 +2434,7 @@ function promptModal(id, ctx) {
   const long = p.text.split('\n').length > 9 || p.text.length > 700;
   const runBtn = (cls, attr = 'data-run') => `<button class="btn ${cls}" ${attr} title="${shot ? 'Copies it - paste it into the site' : 'Create a video with this prompt'}">▶ ${RUN[p.kind] || 'Run it'}</button>`;
   const NEXT = {
-    check: `<span>Claude reviews each part (clear, vague or missing) and writes an improved version - this one stays.</span>${claudeBtn(`/write-prompt optimize ${p.id}`, 'Optimize with Claude', 'prompt', p.id, 'pri')}`,
+    check: `<span>Claude reviews each part (clear, vague or missing) and writes an improved version - this one stays.</span>${claudeBtn(optCmd(p), 'Optimize with Claude', optTask(p), p.id, 'pri')}`,
     want: `<span>Write what you want next to the parts below - or let Claude decide.</span><button class="btn" data-gosec="pm-check">Show the parts</button>
       <button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
     opt: `<span>Your wishes are saved. Claude writes a better version - this one stays.</span><button class="btn pri" data-opt><svg class="i"><use href="#i-claude"/></svg>Optimize with Claude</button>`,
@@ -2264,12 +2450,13 @@ function promptModal(id, ctx) {
           ${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}${S.isOpt ? '<span class="tag done">optimized by Claude</span>' : ''}</div>
         <h2 class="pmh-title">${esc(ptitle(p))}</h2>
         <div class="pmh-needs"><span class="small muted">Needs</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
-      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="Copies this prompt's text"><svg class="i"><use href="#i-clipboard"/></svg>Copy Prompt</button></div></div>
+      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="Copies this ${isTalk(p) ? 'script' : 'prompt'}'s text"><svg class="i"><use href="#i-clipboard"/></svg>Copy ${isTalk(p) ? 'Script' : 'Prompt'}</button></div></div>
     <ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}</span></li>`).join('')}</ol>
     <div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>
     <div class="pmgrid"><div class="pmcol">
-        <section class="pms"><div class="pms-h"><h3>The prompt</h3><span class="grow"></span>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
-          <div class="ptext2${long ? ' clamp' : ''}">${esc(p.text)}</div>${p.notes ? `<div class="pnotes"><b>How to use</b> ${esc(p.notes)}</div>` : ''}</section>
+        <section class="pms"><div class="pms-h"><h3>${isTalk(p) ? 'The script' : 'The prompt'}</h3><span class="grow"></span>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
+          <div class="ptext2${long ? ' clamp' : ''}">${esc(p.text)}</div>${p.notes ? `<div class="pnotes"><b>${isTalk(p) ? 'Notes' : 'How to use'}</b> ${esc(p.notes)}</div>` : ''}</section>
+        ${isTalk(p) ? '<section class="pms spcheck"><div class="pms-h"><h3>The check</h3><span class="grow"></span><span class="small muted">measured · no Claude</span></div><div id="pm-sc"><div class="small dim">Checking…</div></div></section>' : ''}
         <section class="pms" id="pm-check">${pcheckBlock(p, R)}</section></div>
       <div class="pmcol side">
         <section class="pms prate2" id="pm-rate"><h3>How did it turn out?</h3>
@@ -2294,6 +2481,8 @@ function promptModal(id, ctx) {
             <span class="grow"></span><button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button></div></section>
       </div></div></div>`, c => {
     const reopen = async () => { await ctx.reload(); promptModal(p.id, ctx); };
+    if (isTalk(p)) api('/api/script/check', {text: p.text, like: p.style_refs || []})
+      .then(r => { const b = $('#pm-sc', c); if (b) b.innerHTML = scriptCheckHtml(r); }).catch(() => { /* the check is extra */ });
     const redraw = () => { const y = $('#modal .mbox').scrollTop; promptModal(p.id, ctx); $('#modal .mbox').scrollTop = y; };
     const back = () => promptModal(p.id, ctx);
     const note = $('.pnote', c);
@@ -2330,7 +2519,7 @@ function promptModal(id, ctx) {
       catch (e) { toast(e.message, 'err'); }
     };
     $$('.cwish', c).forEach(i => { i.onchange = saveWishes; i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; });
-    $$('[data-opt]', c).forEach(b => b.onclick = async () => { await saveWishes(); openClaude(`/write-prompt optimize ${p.id}`, 'prompt', p.id); });
+    $$('[data-opt]', c).forEach(b => b.onclick = async () => { await saveWishes(); openClaude(optCmd(p), optTask(p), p.id); });
     const setStyle = async (refs, msg) => {
       try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); await reopen(); }
       catch (e) { toast(e.message, 'err'); }
@@ -2748,7 +2937,7 @@ async function pageSettings(main) {
       <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div></div></div>
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
-      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, what next ${esc(S.tasks.plan || 'high')}</option>
+      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, writing scripts ${esc(S.tasks.script || 'high')}, what next ${esc(S.tasks.plan || 'high')}</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
       <span></span><div class="small muted">How hard Claude thinks in the windows the app opens. Higher = more careful, slower, and it uses more of
         your Claude plan; “max” is for a problem Claude got stuck on. In a running window you can still change it with <code>/effort</code>.</div>

@@ -8,6 +8,9 @@ Renumbered 2026-10-13, when 0.4.0 shipped the user's overhaul (Analyze / Edit / 
 drafts, colour): the plans that were 0.3.5, 0.3.7, 0.4.0 and 0.4.1 are now 0.4.2, 0.4.3, 0.4.4 and 0.4.5 - the same
 order - and 0.4.1 is the fixes after 0.4.0. Older notes and code comments keep the old numbers.
 Added 2026-10-14: 0.4.6 (check before you render), from the rebuild of the first generated video.
+Built 2026-10-14 (Unreleased), the user's ask: **Prepare** - improve a script or write one from zero for reach
+(`/write-script` + its guidelines.md, `tools\script.py` = the script check). It is 0.4.4's step "Topic + script"
+done early; 0.4.4 adds the validated topics and the HEIT structure measured on analysed talking videos.
 
 ## 0.7.0 - planned - AI B-roll and cinematics
 
@@ -204,8 +207,8 @@ talking-head creators AND edit the user's own recording that way.)
     step, held), word captions, B-roll cutaways over continuing speech - new detectors, each with a synthetic
     self-test video and ground truth first.
 - **Make (yapping mode)**:
-  1. **Topic + script**: pick a validated topic (or yours); `/write-prompt` writes the hook and a HEIT script in the
-     structure of the best videos of your format (0.4.5's database).
+  1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
+     HEIT script in the structure of the best videos of your format (0.4.5's database).
   2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
      to try.
   3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
