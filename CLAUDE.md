@@ -91,7 +91,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `knowledge\local\references\`). `motionlab\profile.py` = the video in numbers per focus (rhythm, hook, talking,
   text on screen, signature effects, transitions) - the app's Overview, the cards and `review_todo.md` use it
 - `report.py <name>` merge `review.json` into `events.json` and re-render `report.html`
-- `feedback.py <name> <file>` parse feedback text, archive it, map verdicts (and possible-miss answers) to events
+- `feedback.py <name> <file> [--import]` parse feedback text, archive it, map verdicts (and possible-miss and
+  sound-effects answers) to events; `--import` also writes them into verdicts.json
 - `sheet.py <name> <start> <end>` contact sheet + preview for any frame range (missed effects)
 - `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
@@ -107,17 +108,25 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
   timecode in `projects\<p>\build\speech\`; `overlay.py captions --from <video>` uses it
 - `style.py <video> [<video> <video>] [--preset id] [--want "..."]` the style of up to 3 analysed videos merged (0.4):
-  rhythm, hook, effects per minute with examples (frame + timecode, how made, verdicts), talking / captions, colour
-- `draft_edit.py <project> --like <videos> | --preset <id> [--want "..."] [--length s] [--format ...] [--music f]
-  [--sound talk|clips|music] [--render]` a quick first edit by rules (0.4, the app's *Quick draft now*): beat-cut
-  shots, the best moments, the style's effects; talking mode cuts the pauses -> `build\plan_vN.json` +
-  `draft_vN.md`; Claude refines it (`/recreate-video` section 6)
+  rhythm, hook, effects per minute with examples (frame + timecode, how made, verdicts), talking / captions, colour;
+  `closest "<words>" [--n 3]` (0.4.2) = the analysed videos (this PC's + friends' cards) whose measured style is
+  nearest the user's words, one line of numbers each (`FEEL_WORDS` in `motionlab\style.py`); `--feels` = the feels
+- `draft_edit.py <project> --like <videos> | --preset <id> | --feel <id> [--want "..."] [--length s] [--format ...]
+  [--music f] [--sound talk|clips|music] [--render]` a quick first edit by rules (0.4, the app's *Quick draft now*):
+  beat-cut shots, the best moments, the style's effects; talking mode cuts the pauses -> `build\plan_vN.json` +
+  `draft_vN.md`; Claude refines it (`/recreate-video` section 6). `--feel-test [--want ...] [--feels a,b,c]`
+  (0.4.2, starting blind) = 2-3 hooks of the first 3 s in different feels, small, side by side ->
+  `build\feel\feel_N\compare.mp4` + `sheet.png` + `feel.md` (~5-10 s, no Claude)
 - `colour.py <analysis> | match <project> --like <videos> [--strength 0.8]` the colour and look (0.4): per shot and for
   the video in words + numbers -> `analysis\<name>\colour\colour.json` (analyze.py does it for the cinematic / both
   focus); `match` = a .cube that moves the footage toward the videos' look (`build\colour\`, Resolve's Color page, a
   plan grade `"lut3d"`) + how close (0-100)
 - `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
   a motion-graphics video, `/generate-video`)
+- `precheck.py <render.mp4 | graphic .mov | snapshot folder> [--sfx <name>_sfx.json] [--motion-blur N]` checks before
+  the final render (0.4.2): parts that vanish for 1-2 frames, moves over 60 px a frame without motion blur (or with
+  copies measured between its sub-frames), sound effects too loud / buried / limited -> `<build>\checks\<name>_precheck
+  .json` + `.png` (frame + timecode per tile); exit 1 = look; footage moves only noted; `selfcheck`
 - `sfx.py cues <graphic|cues.json|plan.json> [--set id=v] | make <...> --song <audio|none> | plan <plan.json> | kinds |
   selfcheck` sound effects (built 2026-10-14 for 0.5.0): synthesised, seeded; a graphic's cues = overlay.json "cues"
   (formulas of its settings), a plan's zooms / whips / flashes become cues; each effect levelled against the song where

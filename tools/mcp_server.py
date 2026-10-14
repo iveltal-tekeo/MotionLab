@@ -274,7 +274,7 @@ def frame_info(reference: str, frame: int) -> str:
 
 def verdicts(reference: str) -> str:
     """The user's verdicts on a reference: counts, every Partly / Wrong with its note, effects they say were
-    missed, and their answers on the possible misses."""
+    missed, their answers on the possible misses, and how many sound effects they hear (Claude cannot hear)."""
     d = _ref_dir(reference)
     ev = _events(d)
     fps = float(ev["video"]["fps"])
@@ -287,8 +287,12 @@ def verdicts(reference: str) -> str:
     for k, x in sorted(evs.items()):
         if x.get("v") in ("partly", "wrong"):
             L.append(f"- {k} {x['v']}: {x.get('note', '')}")
-    for m in V.get("missed", []) or []:
-        L.append(f"- missed: {json.dumps(m)}")
+    missed = V.get("missed") or []                      # the app keeps it as one text, older files as a list
+    for m in ([missed] if isinstance(missed, str) else missed):
+        L.append(f"- missed: {m if isinstance(m, str) else json.dumps(m)}")
+    snd = V.get("sound") or {}
+    if snd.get("amount"):
+        L.append(f"- sound effects (the user's answer): {snd['amount']}" + (f" - {snd['where']}" if snd.get("where") else ""))
     for fr, m in sorted((V.get("misses") or {}).items(), key=lambda kv: int(kv[0])):
         L.append(f"- possible miss {_ftc(int(fr), fps)}: {m.get('v', m) if isinstance(m, dict) else m}"
                  + (f" - {m.get('what') or m.get('note')}" if isinstance(m, dict) and (m.get("what") or m.get("note"))

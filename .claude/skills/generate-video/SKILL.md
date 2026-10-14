@@ -22,7 +22,20 @@ effort xhigh (graphics) / medium (ai).
 - The style: `like` -> `.venv\Scripts\python tools\style.py <video> [<video> <video>]` (rhythm, the hook, how text
   appears, effects per minute, colour, Claude's breakdown); Claude's memory: `tools\knowledge.py memory` - it starts
   with the user's ratings of all their videos as rules (a part rated bad once is a default now: follow them). Copy
-  the style, never the content (no one else's words, logos, characters or footage).
+  the style, never the content (no one else's words, logos, characters or footage). A `like` video's
+  `analysis\<name>\feedback\verdicts.json` `"sound": {"amount": "none|some|many", "where": "..."}` = the user's
+  answer about its sound effects (Claude cannot hear): add cues to match (section 2, step 4).
+- **Starting blind** (no `like`, only words; 0.4.2): first `.venv\Scripts\python tools\style.py closest "<their
+  words>"` - the analysed videos whose measured style fits the words, one line of numbers each; 60 % or more ->
+  suggest it as `like`, else suggest analysing one video in that feel (one analysed reference turns guessing into
+  measuring). Only when there is no reference and the words are vague: the hook (the first 3 s) as `overlay.py
+  snap` stills in 2-3 looks (e.g. clean and slick / raw and glitchy / slow and cinematic: one small composition per
+  look, the same words, snap 4-6 frames each, one sheet labelled A / B / C) - this costs Claude tokens, so keep it
+  to the hook. The user picks or mixes ("B's pacing with A's colours") - that is the plan.
+- **The next version** of a generated video: `build\outcome.json` - `"moments": [{"f", "version", "aspect", "note",
+  "date"}]` = notes on single frames: fix exactly those, each named with frame + timecode; `"next": "fix"` = a new
+  version with the notes, `"start_over"` = back to step (1) below or to the looks above - never a v2 of a feel the
+  user did not want.
 - Lessons on making videos: read `.claude\skills\recreate-video\lessons.md` (M###) and
   `knowledge\local\lessons_making.md` (this PC's, if there) and apply every rule. Something new learned here -> a
   lesson in the local file (id: `tools\knowledge.py next-lesson-id --kind making`, the shared file's format).
@@ -39,7 +52,10 @@ user approves each step in plain words; no polish before step 3 is approved:
 (1) the plan in words and numbers - the scene table with frame + timecode and the feel as numbers ("a cut every
 0.5 s, moves over 4-6 frames, a whoosh on each") - seconds; (2) a sheet at every scene change: `overlay.py snap
 <folder> <frames>` (no render, ~5 s for 10 frames -> `snap\sheet.png`) - seconds; (3) the motion: a plain render (~2
-min for 25 s), no motion blur; (4) the final with the polish (motion blur, the sound mix, Resolve) - once.
+min for 25 s), no motion blur, then `.venv\Scripts\python tools\precheck.py <the .mov | snap folder> [--sfx
+<name>_sfx.json] [--motion-blur N]`: frames where the picture vanishes for 1-2 frames, moves over ~60 px a frame
+without enough blur, effects too loud / buried against the song -> `build\checks\<name>_precheck.json` + `.png`;
+exit 1 = look at the sheet, fix before (4); (4) the final with the polish (motion blur, the sound mix, Resolve) - once.
 1. **Timing**: with a song, `.venv\Scripts\python tools\beats.py <song> --fps 30 [--start S] [--length L]` = every
    beat (downbeats marked) and the drops as frame + timecode from the video's frame 0 - scene changes on downbeats,
    the biggest change on the drop, text hits on beats (`--start`: the part of the song to use). Without a song: the

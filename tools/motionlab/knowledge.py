@@ -915,6 +915,10 @@ def memory_index(write: bool = True) -> str:
                 f"rhythm {p.get('cuts_per_min')} cuts/min, shots {p.get('avg_shot_s')} s, {p.get('hook_cuts_3s')} cuts "
                 f"in 3 s, {p.get('effects_per_min')} effects/min" + (f", {p['bpm']} BPM" if p.get("bpm") else "")]
         bits += [ln[k] for k in ("content", "cinematic", "colour") if ln.get(k)]
+        snd = (_verdicts(v["analysis"]).get("sound") or {}) if v["analysis"] else {}   # Claude cannot hear: the user says
+        if snd.get("amount"):
+            bits.append(f"sound effects: {snd['amount']}" + (f" - {_short(snd.get('where'), 160)}" if snd.get("where")
+                                                             else "") + " (the user's answer)")
         if v["summary"]:
             bits.append("Claude: " + _short(v["summary"], 240))
         who = "this PC" + (f", analysis\\{v['analysis']}" if v["analysis"] else "") if v["origin"] == "local" \

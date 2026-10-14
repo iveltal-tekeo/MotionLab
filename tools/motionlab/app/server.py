@@ -42,7 +42,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 16                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 17                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -454,7 +454,9 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/edit_request", path)       # New edit (0.4): what the user picked
         if m:
             return self._json(data.save_edit_request(urllib.parse.unquote(m[1]), body))
-        m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)   # how it turned out / what it is made from
+        # how it turned out (0.4.2 also: "next" fix / start_over, "moment" / "remove_moment" = notes on moments of a
+        # render) / what it is made from
+        m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)
         if m:
             name = urllib.parse.unquote(m[1])
             if m[2] == "outcome":

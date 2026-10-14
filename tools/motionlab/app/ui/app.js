@@ -249,7 +249,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 16;               // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 17;              // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1112,7 +1112,9 @@ async function pageRef(main, name, selId, openMisses, openReview) {
   const R = await api('/api/reference/' + encodeURIComponent(name));
   const fps = R.video.fps, N = R.video.frames, evs = R.events, NM = R.near_misses || [];
   const byId = Object.fromEntries(evs.map(e => [e.id, e]));
-  const S = {events: R.verdicts.events || {}, cuts: R.verdicts.cuts || {}, misses: R.verdicts.misses || {}, missed: R.verdicts.missed || ''};
+  const S = {events: R.verdicts.events || {}, cuts: R.verdicts.cuts || {}, misses: R.verdicts.misses || {}, missed: R.verdicts.missed || '',
+             sound: R.verdicts.sound || null};
+  const sndDone = () => !!(S.sound && S.sound.amount);     // 0.4.2: "sound effects in this video?" - Claude cannot hear
   const vOf = id => (S.events[id] || {}).v || '';
   const mOf = f => (S.misses[String(f)] || {}).v || '';
   let cur = byId[selId] || evs.find(e => !e.false_alarm && !vOf(e.id)) || evs.find(e => !e.false_alarm) || evs[0];
@@ -1121,7 +1123,7 @@ async function pageRef(main, name, selId, openMisses, openReview) {
   const pref = (k, d) => { try { const v = localStorage.getItem('ml.' + k); return v === null ? d : v; } catch (e) { return d; } };
   const setPref = (k, v) => { try { localStorage.setItem('ml.' + k, v); } catch (e) { /* private window */ } };
   let autoNext = pref('autoNext', '1') === '1', sound = pref('previewSound', '0') === '1', rate = +pref('previewRate', '1') || 1;
-  let shown = evs, tab = openMisses && NM.length ? 'misses' : selId || openReview ? 'review' : 'overview';
+  let shown = evs, tab = openMisses ? 'misses' : selId || openReview ? 'review' : 'overview';
   main.innerHTML = `
   <div class="head"><div><div class="crumb"><a href="#/analyze">Analyze</a> / video</div><h1>${esc(R.title)}</h1>
     <div class="sub">${focusChip(R.focus || '')}${R.focus ? '' : '<span class="fchip sm" title="analysed before 0.4">focus not set</span>'} <span class="tag">${esc(R.category_label)}</span> ${(R.tags || []).map(t => `<span class="tag dim">${esc(t)}</span> `).join('')}<a href="#" id="editmeta" class="small">edit</a>
@@ -1133,7 +1135,7 @@ async function pageRef(main, name, selId, openMisses, openReview) {
       <button class="btn" data-open="${esc('analysis/' + R.name)}">Folder</button>${delBtn('reference', R.name, '#/analyze', ' Delete…')}</div></div>
   <div id="flow">${flowStrip(R, R.flow)}</div>
   <div class="rtabs" id="rtabs"><button class="rtab" data-tab="overview">Overview</button><button class="rtab" data-tab="review">Effects <span class="cnt" id="cnt-review"></span></button>
-    ${NM.length ? '<button class="rtab misstab" data-tab="misses">Possible misses <span class="cnt" id="cnt-misses"></span></button>' : ''}
+    <button class="rtab misstab" data-tab="misses">${NM.length ? 'Possible misses &amp; sound' : 'Sound effects'} <span class="cnt" id="cnt-misses"></span></button>
     <button class="rtab" data-tab="content" title="what the video says and how it performs">What it says</button>
     <div class="grow"></div><span class="hint">Your verdicts are saved as you go <span id="saved"></span></span></div>
   <div class="watch">
@@ -1156,11 +1158,11 @@ async function pageRef(main, name, selId, openMisses, openReview) {
     </div>
     <div class="rcard panel" id="detail"></div>
   </div>
-  ${NM.length ? `<div class="missarea" id="tab-misses" hidden>
-    <div class="missintro"><b>Possible misses are not effects from the list.</b> They are sudden changes in the picture that no effect and no cut
+  <div class="missarea" id="tab-misses" hidden><div id="sndq"></div>
+    ${NM.length ? `<div class="missintro" style="margin-top:14px"><b>Possible misses are not effects from the list.</b> They are sudden changes in the picture that no effect and no cut
       explains - places where the lab may have missed an effect. Most are nothing, but only you can say. For each one: look at the frames
       (before · at · after - click one to show it in the player), read Claude's check, then answer.</div>
-    <div class="misses" id="misses"></div></div>` : ''}
+    <div class="misses" id="misses"></div>` : ''}</div>
   <div class="contentarea" id="tab-content" hidden></div>
   <div class="overview" id="tab-overview" hidden></div>
   <div class="fbbar"><div class="prog"><div class="row sp small"><span id="progt"></span></div><div class="bar"><i id="progb"></i></div></div>
@@ -1187,12 +1189,13 @@ async function pageRef(main, name, selId, openMisses, openReview) {
   const progress = () => {
     const real = evs.filter(e => !e.false_alarm), fas = evs.filter(e => e.false_alarm);
     const n = real.filter(e => vOf(e.id)).length, nf = fas.filter(e => vOf(e.id)).length, mc = NM.filter(m => mOf(m.frame)).length;
+    const sd = sndDone() ? 1 : 0, open = NM.length - mc + 1 - sd;
     $('#progt').textContent = `${n} / ${real.length} effects with your verdict` + (NM.length ? ` · possible misses ${mc} / ${NM.length}` : '')
-      + (fas.length ? ` · false alarms ${nf} / ${fas.length} (optional)` : '');
-    $('#progb').style.width = (100 * (n + mc) / Math.max(1, real.length + NM.length)) + '%';
+      + ` · sound effects ${sd ? 'answered' : 'not answered'}` + (fas.length ? ` · false alarms ${nf} / ${fas.length} (optional)` : '');
+    $('#progb').style.width = (100 * (n + mc + sd) / Math.max(1, real.length + NM.length + 1)) + '%';
     const cr = $('#cnt-review'); cr.textContent = n >= real.length ? 'all done ✓' : `${real.length - n} left`; cr.classList.toggle('ok', n >= real.length);
     const cm = $('#cnt-misses');
-    if (cm) { cm.textContent = mc >= NM.length ? 'all answered ✓' : `${NM.length - mc} to check`; cm.closest('.rtab').classList.toggle('open', mc < NM.length); }
+    if (cm) { cm.textContent = !open ? 'all answered ✓' : NM.length ? `${open} to check` : 'to answer'; cm.closest('.rtab').classList.toggle('open', open > 0); }
   };
   const rows = () => {
     const q = $('#q').value.toLowerCase(), ff = $('#ff').value, fv = $('#fv').value, fa = $('#showfa') && $('#showfa').checked;
@@ -1262,6 +1265,8 @@ async function pageRef(main, name, selId, openMisses, openReview) {
       <div class="muted">${n} / ${real.length} effects with your verdict.</div>
       ${open ? `<div class="missline">Still to check: <b>${open} possible miss${open === 1 ? '' : 'es'}</b> - changes in the picture that no effect explains.</div>
         <button class="btn missbtn" data-tabgo="misses">Check the possible misses</button>` : ''}
+      ${sndDone() ? '' : `<div class="missline">Still to answer: <b>sound effects in this video</b> - Claude cannot hear, only you can say.</div>
+        ${open ? '' : '<button class="btn missbtn" data-tabgo="misses">Answer it</button>'}`}
       <div style="margin-top:14px">Then send everything to Claude: it turns your verdicts into lessons.</div>
       <div class="row" style="margin-top:8px"><button class="btn pri" data-feedback="${esc(name)}"><svg class="i"><use href="#i-claude"/></svg>Send feedback to Claude…</button>
         ${n < real.length ? '<button class="btn" id="endopen">Go to the next effect without a verdict</button>' : ''}<button class="btn ghost" id="endback">◀ Back to the list</button></div></div>`;
@@ -1296,6 +1301,24 @@ async function pageRef(main, name, selId, openMisses, openReview) {
     const e = [...shown.slice(i + 1), ...shown.slice(0, i + 1)].find(x => !x.false_alarm && !vOf(x.id) && x !== cur);
     if (e) select(e, true); else endCard();
   };
+  // ------------------------------------------- sound effects (0.4.2): Claude cannot hear, so the user says - red until answered
+  const drawSound = () => {
+    const box = $('#sndq'); if (!box) return;
+    const st = S.sound || {}, a = st.amount || '';
+    box.innerHTML = `<div class="miss sndcard ${a ? 'm-none' : 'm-open'}"><div class="row sp"><span class="mstate">${a ? '✓ answered' : '● to answer'}</span>
+        <span class="small muted">Claude cannot hear - only you can say</span></div>
+      <h3 style="margin:2px 0 0">Sound effects in this video</h3>
+      <div class="small muted">Whooshes, hits, risers, clicks, pops - sounds added on top of the music or the voice. Play the video above with sound on, then answer.</div>
+      <div class="row mbtns">${[['none', 'None'], ['some', 'Some'], ['many', 'Many']].map(([k, l]) => `<button class="btn sm ${a === k ? 'on' : ''}" data-snd="${k}">${l}</button>`).join('')}</div>
+      <input type="text" id="sndw" placeholder="${a === 'none' ? 'Anything else about the sound? (optional)' : 'Where? (optional) e.g. “a whoosh on every cut, a hit on each title, a riser before the drop at f300”'}" value="${esc(st.where || '')}"></div>`;
+    $$('[data-snd]', box).forEach(b => b.onclick = () => {
+      const s = S.sound = S.sound || {};
+      s.amount = s.amount === b.dataset.snd ? '' : b.dataset.snd; changed(); drawSound();
+      if (s.amount && s.amount !== 'none') $('#sndw').focus();
+    });
+    $('#sndw', box).oninput = ev => { (S.sound = S.sound || {}).where = ev.target.value; $('#saved').textContent = '…'; save(); };
+    $('#sndw', box).onblur = progress;
+  };
   // ---------------------------------------------------------------------------------------- possible misses
   const drawMisses = () => {
     const box = $('#misses'); if (!box) return;
@@ -1322,7 +1345,6 @@ async function pageRef(main, name, selId, openMisses, openReview) {
   };
   const focusMiss = f => { const el = $('#miss-' + f); if (el) { el.scrollIntoView({behavior: 'smooth', block: 'center'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200); } if (P) { P.v.pause(); P.seek(f); } };
   const showTab = (t, scroll = false) => {
-    if (t === 'misses' && !NM.length) t = 'review';
     tab = t;
     $$('#rtabs .rtab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
     $('#tab-review').hidden = t !== 'review'; if ($('#tab-misses')) $('#tab-misses').hidden = t !== 'misses';
@@ -1364,7 +1386,7 @@ async function pageRef(main, name, selId, openMisses, openReview) {
     else if (k === 'n' || k === 'N') nextOpen();
     else if (k === '1' || k === '2' || k === '3') setVerdict(['correct', 'partly', 'wrong'][+k - 1]);
   };
-  drawMisses(); progress(); showTab(tab);
+  drawSound(); drawMisses(); progress(); showTab(tab);
   if (cur) select(cur, false);               // a video without effects (a talking head: only cuts) has nothing to select
   else $('#detail').innerHTML = '<div class="empty">No effects in this video - only plain cuts (the Overview has its rhythm). Nothing to check here.</div>';
   if (P && selId && cur) P.seek(cur.start);
@@ -1575,7 +1597,7 @@ async function pageProject(main, name, tab = 'overview') {
 }
 
 function outcomePanel(P) {
-  const O = (P.outcome || {}).aspects || {}, mf = P.made_from || [];
+  const O = (P.outcome || {}).aspects || {}, mf = P.made_from || [], nx = (P.outcome || {}).next || null;
   return `<div class="panel outcome"><div class="row sp"><h2>How did it turn out?</h2><span class="small muted">${(P.outcome || {}).updated
       ? 'saved ' + esc(P.outcome.updated) : 'tell Claude what worked - it reads this next time'}</span></div>
     ${mf.length ? `<div class="small" style="margin-bottom:8px">Made from: ${mf.map(x => x.kind === 'reference'
@@ -1585,13 +1607,72 @@ function outcomePanel(P) {
       return `<div class="orow" data-k="${k}"><span class="olab">${esc(l)}</span><span class="row" style="gap:4px">${['good', 'ok', 'bad'].map(r =>
         `<button class="btn sm vrb ${r}${a.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</span>
         <input type="text" class="onote" placeholder="what to keep or change (Enter saves)" value="${esc(a.note || '')}"></div>`; }).join('')}</div>
-    <div class="row" style="margin-top:10px">${claudeBtn(`/recreate-video improve ${P.name}`, 'Improve it with Claude (the parts marked OK / Bad)', 'recreate', P.name)}</div></div>`;
+    ${momentsSummary(P)}
+    <h3 style="margin:16px 0 6px">What next?</h3>
+    <div class="onext">${[['fix', 'Fix this version', 'the feel is right, some details are wrong'], ['start_over', 'Start over', 'a different feel - not a new version of this one']]
+      .map(([k, l, h]) => `<button class="onx${nx === k ? ' on' : ''}" data-next="${k}"><b>${l}</b><span>${h}</span></button>`).join('')}</div>
+    <div class="row" style="margin-top:10px">${nx === 'start_over'
+      ? `<button class="btn pri" id="onew"><svg class="i"><use href="#i-edit"/></svg>New edit with these clips…</button><span class="small muted">Pick other videos to take the feel from, or say it in your words - a quick draft shows the feel in a minute, before anything is polished.</span>`
+      : claudeBtn(`/recreate-video improve ${P.name}`, 'Improve it with Claude (the parts marked OK / Bad and your notes on moments)', 'recreate', P.name)}</div></div>`;
+}
+// notes on moments (0.4.2): added under a render on the Renders tab; the Overview lists them
+const aspectLabel = k => (ASPECTS.find(a => a[0] === k) || [k, k])[1];
+const versionFps = (P, v) => (P.plans.find(p => p.version === v) || P.plans[0] || {}).fps || 25;
+function momentsSummary(P) {
+  const ms = (P.outcome || {}).moments || [];
+  if (!ms.length) return `<div class="small muted" style="margin-top:10px">Something off at one exact moment? Pause the render on <a href="#/project/${encodeURIComponent(P.name)}/renders">Renders</a> and add a note there - Claude fixes exactly those moments.</div>`;
+  return `<div class="omoms"><div class="row sp"><b class="small">Notes on moments (${ms.length})</b><a class="small" href="#/project/${encodeURIComponent(P.name)}/renders">see them on Renders →</a></div>
+    ${ms.slice(0, 8).map(m => `<div class="small"><span class="tag">${esc(m.version)}</span> ${ftc(m.f, versionFps(P, m.version))} · <b>${esc(aspectLabel(m.aspect))}</b>: ${esc(m.note)}</div>`).join('')}
+    ${ms.length > 8 ? `<div class="small muted">and ${ms.length - 8} more</div>` : ''}</div>`;
+}
+function momentNotes(box, P, r, pl, fps) {
+  let asp = 'overall';
+  const url = `/api/project/${encodeURIComponent(P.name)}/outcome`;
+  const draw = () => {
+    const ms = ((P.outcome || {}).moments || []).filter(m => m.version === r.version);
+    box.innerHTML = `<div class="mnadd"><span class="small">Note at <span class="mnat">${ftc(pl.frame, fps)}</span></span>
+        <select class="mnasp" title="which part it is about">${ASPECTS.map(([k, l]) => `<option value="${k}" ${k === asp ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+        <input type="text" class="mntext" placeholder="what is wrong or right here" title="Enter adds it"><button class="btn sm mnok">Add note</button></div>
+      ${ms.length ? `<div class="mnlist">${ms.map((m, i) => `<div class="mnrow" data-i="${i}"><a href="#" class="mnseek" title="show this moment">${ftc(m.f, fps)}</a>
+          <span class="tag">${esc(aspectLabel(m.aspect))}</span><span class="grow">${esc(m.note)}</span><span class="small dim">${esc(m.date || '')}</span>
+          <button class="btn sm ghost mndel" title="Remove this note">✕</button></div>`).join('')}</div>`
+        : '<div class="small dim" style="margin-top:6px">Pause where something is off (or just right), pick the part, write it - Claude fixes exactly those moments.</div>'}`;
+    $('.mnasp', box).onchange = e => { asp = e.target.value; };
+    const add = async () => {
+      const t = $('.mntext', box), note = t.value.trim();
+      if (!note) { t.focus(); toast('Write what is wrong or right at this moment', 'err'); return; }
+      pl.v.pause();
+      try { P.outcome = await api(url, {moment: {f: pl.frame, version: r.version, aspect: asp, note}}); toast(`Note saved at f${pl.frame} (${tc(pl.frame, fps)})`, 'ok'); draw(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    $('.mnok', box).onclick = add;
+    $('.mntext', box).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+    $$('.mnrow', box).forEach(row => {
+      const m = ms[+row.dataset.i];
+      $('.mnseek', row).onclick = e => { e.preventDefault(); pl.v.pause(); pl.seek(m.f); };
+      $('.mndel', row).onclick = async () => {
+        try { P.outcome = await api(url, {remove_moment: m}); toast('Note removed', 'ok'); draw(); }
+        catch (e) { toast(e.message, 'err'); }
+      };
+    });
+  };
+  pl.on(f => { const a = $('.mnat', box); if (a) a.innerHTML = ftc(f, fps); });
+  draw();
 }
 function wireOutcome(el, P) {
   const save = async (k, rating, note, msg) => {
     try { P.outcome = await api(`/api/project/${encodeURIComponent(P.name)}/outcome`, {aspects: {[k]: {rating, note}}}); toast(msg, 'ok'); }
     catch (e) { toast(e.message, 'err'); }
   };
+  $$('[data-next]', el).forEach(b => b.onclick = async () => {
+    const v = (P.outcome || {}).next === b.dataset.next ? null : b.dataset.next;
+    try {
+      P.outcome = await api(`/api/project/${encodeURIComponent(P.name)}/outcome`, {next: v});
+      toast(v === 'fix' ? 'Saved: fix this version' : v === 'start_over' ? 'Saved: start over with a different feel' : 'Removed', 'ok');
+      const box = $('.panel.outcome', el); box.outerHTML = outcomePanel(P); wireOutcome(el, P);
+    } catch (e) { toast(e.message, 'err'); }
+  });
+  const nw = $('#onew', el); if (nw) nw.onclick = () => createVideoModal({project: P.name});
   $$('.orow', el).forEach(row => {
     const k = row.dataset.k, note = $('.onote', row);
     $$('[data-r]', row).forEach(b => b.onclick = () => {
@@ -1623,14 +1704,18 @@ function projRenders(el, P) {
   const vids = [...P.renders, ...P.compares];
   const fpsOf = () => (P.plans[0] || {}).fps || 25, frames = (P.plans[0] || {}).frames;
   el.innerHTML = `<div class="grid g2">${P.renders.map((r, i) => `<div class="panel"><div class="row sp"><h2>${r.kind === 'resolve' ? 'From DaVinci Resolve' : 'Lab render'}</h2>
-      <span class="small muted">${esc(r.name)} · ${bytes(r.size)} · ${esc(r.modified)}</span></div><div id="pl${i}"></div>
+      <span class="small muted">${esc(r.name)} · ${bytes(r.size)} · ${esc(r.modified)}</span></div><div id="pl${i}"></div><div class="mnotes" id="mn${i}"></div>
       <div class="row" style="margin-top:8px"><button class="btn sm" data-open="${esc(r.rel)}">Open in player</button><button class="btn sm" data-open="${esc(r.rel)}" data-reveal>Show in folder</button>
         <div class="grow"></div>${delBtn('file', r.rel, '', ' Delete…')}</div></div>`).join('')}</div>
     <h3>Side by side with the reference</h3>
     <div class="grid g2">${P.compares.map((r, i) => `<div class="panel"><div class="row sp" style="margin-bottom:6px"><span class="small muted">${esc(r.name)} · ${bytes(r.size)}</span>${delBtn('file', r.rel, '', ' Delete…')}</div><div id="cp${i}"></div></div>`).join('')
       || '<div class="muted">none</div>'}</div>`;
-  const planOf = r => P.plans.find(p => p.name && r.name.replace(/\.mp4$/i, '') === p.name) || {};      // zz_v2.mp4 <- plan_v2
-  P.renders.forEach((r, i) => new Player($('#pl' + i, el), r.rel, planOf(r).fps || fpsOf(), planOf(r).frames || frames));
+  const planOf = r => P.plans.find(p => p.name && r.name.replace(/\.mp4$/i, '') === p.name)      // zz_v2.mp4 <- plan_v2
+    || P.plans.find(p => p.version === r.version) || {};
+  P.renders.forEach((r, i) => {                  // each render: the player + notes on its moments (0.4.2)
+    const fps = planOf(r).fps || fpsOf(), pl = new Player($('#pl' + i, el), r.rel, fps, planOf(r).frames || frames);
+    momentNotes($('#mn' + i, el), P, r, pl, fps);
+  });
   P.compares.forEach((r, i) => new Player($('#cp' + i, el), r.rel, fpsOf(), frames));
   if (!vids.length) el.innerHTML = '<div class="empty">No renders yet.</div>';
 }
@@ -1879,8 +1964,25 @@ function memEffectRow(g) {
         ${x.verdict ? `<span class="small"><span class="vdot ${esc(x.verdict)}"></span> ${esc(x.verdict)}</span>` : x.reviewed ? '<span class="small dim">checked by Claude</span>' : '<span class="small amber">a guess</span>'}</div>
       ${x.what ? `<div class="small">${esc(x.what)}</div>` : ''}${x.rebuild ? `<div class="small muted"><b>How it was made:</b> ${esc(x.rebuild)}</div>` : ''}${x.note ? `<div class="small amber">note: ${esc(x.note)}</div>` : ''}</div>`).join('')}</div></details>`;
 }
+// 0.4.2: the user's ratings of all their videos (How did it turn out?) as rules for every new video - a part rated bad
+// once stays a default (knowledge.ratings / ratings_lines; memory.md starts with the same rules)
+const RKIND = {bad: ['bad', 'Rule for every new video'], ok: ['amber', 'Could be better'], good: ['ok', 'Keep doing it']};
+function memRules(M) {
+  const R = M.ratings || {}, parts = R.parts || [];
+  const cnt = c => ['bad', 'ok', 'good'].filter(r => c[r]).map(r => `${r === 'ok' ? 'OK' : r} ${c[r]}×`).join(' · ');
+  return `<div class="panel mrules" style="margin-top:14px"><div class="row sp"><h2>Your ratings → rules for every new video</h2>
+      <span class="small muted">${R.videos ? `from ${plural(R.videos, 'rated video')}` : ''}</span></div>
+    ${parts.length ? `<div class="small muted" style="margin-bottom:8px">What you rated in <b>How did it turn out?</b> (Edit → a video). A part you rated bad once stays a rule for every later edit and generated video - Claude reads these first.</div>
+      ${parts.filter(x => x.kind === 'bad' || x.kind === 'ok' && (x.notes || []).length).map(x => `<div class="mrule"><span class="mrk ${RKIND[x.kind][0]}">${RKIND[x.kind][1]}</span>
+        <div><b>${esc(x.label)}</b> <span class="small muted">rated ${cnt(x.counts || {})}</span>
+        <div class="small">→ ${esc(x.rule)}</div>${(x.notes || []).map(q => `<div class="small muted">“${esc(q.note)}” - ${esc(q.video)}</div>`).join('')}</div></div>`).join('')}
+      ${[['ok', 'Fine, not great'], ['good', 'Keep doing it']].map(([k, l]) => { const xs = parts.filter(x => x.kind === k && !(k === 'ok' && (x.notes || []).length));
+        return xs.length ? `<div class="mrule"><span class="mrk ${RKIND[k][0]}">${l}</span><div class="small">${xs.map(x => `<b>${esc(x.label)}</b> <span class="muted">(${cnt(x.counts || {})})</span>`).join(' · ')}</div></div>` : ''; }).join('')}`
+      : `<div class="small muted">Nothing rated yet. When a video of yours is done, open it in <a href="#/edit">Edit</a> and tell Claude how it turned out (sound, colour, graphics…): a part you rate bad becomes a rule for every new video.</div>`}</div>`;
+}
 function memOverview(el, M) {
-  const S = M.stats, F = S.focus || {}, sv = M.saved || {};
+  const S = M.stats, F = S.focus || {}, sv = M.saved || {}, MK = (M.lessons || {}).making || {shared: [], local: []};
+  const mk = (MK.shared || []).length + (MK.local || []).length;
   const tile = (n, l, href, t = '') => `<a class="stat card" href="${href}" title="${esc(t)}"><div class="n">${n}</div><div class="l">${l}</div></a>`;
   el.innerHTML = `<div class="msearch"><input type="search" id="mq" placeholder="Search everything Claude knows - a video, an effect (zoom, whip…), a word of a lesson"></div>
     <div id="mres"></div>
@@ -1890,9 +1992,10 @@ function memOverview(el, M) {
       ${tile(S.types, `kinds of effects · ${S.effects} seen`, '#/memory/effects')}
       ${tile(S.confirmed, 'effects you confirmed', '#/memory/effects', 'your Correct verdicts')}
       ${tile(S.breakdowns, "Claude's breakdowns", '#/memory/videos', 'what makes each video work')}
-      ${tile(S.lessons, 'lessons', '#/memory/lessons')}
+      ${tile(S.lessons + mk, 'lessons', '#/memory/lessons', mk ? `${S.lessons} on analysing, ${mk} on making videos` : '')}
       ${tile((sv.graphics || 0) + (sv.effects || 0), 'graphics & effects saved', '#/memory/saved')}
       ${tile(M.prompts || 0, 'prompts', '#/prompts')}</div>
+    ${memRules(M)}
     <div class="grid g2" style="margin-top:14px"><div class="panel"><h2>How Claude uses it</h2><ul class="small mhow">
         <li><b>When you edit</b> your clips like a video, Claude reads that video's style - rhythm, the hook, captions, signature effects, transitions, colour - and how its effects were made.</li>
         <li><b>When you generate</b>, Claude writes the prompts in the style of the videos you name, with the structure of your best-rated prompts.</li>
@@ -1912,7 +2015,7 @@ function memOverview(el, M) {
     if (!t) { res.innerHTML = ''; return; }
     const vs = M.videos.filter(v => memFind(t, v.title, v.category_label, v.focus_label, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author));
     const fx = M.effects.filter(g => memFind(t, g.label, g.family, g.type, g.examples.map(x => x.what + ' ' + x.rebuild + ' ' + x.note).join(' ')));
-    const ls = [...M.lessons.shared, ...M.lessons.local].filter(x => memFind(t, x.id, x.text));
+    const ls = [...M.lessons.shared, ...M.lessons.local, ...(MK.shared || []), ...(MK.local || [])].filter(x => memFind(t, x.id, x.text));
     res.innerHTML = `<div class="small muted" style="margin:8px 0">${plural(vs.length, 'video')} · ${plural(fx.length, 'effect')} · ${plural(ls.length, 'lesson')}</div>
       ${vs.length ? `<h3>Videos</h3><div class="cards">${vs.slice(0, 12).map(memVideoCard).join('')}</div>` : ''}
       ${fx.length ? `<h3>Effects</h3>${fx.slice(0, 12).map(memEffectRow).join('')}` : ''}
@@ -1960,12 +2063,20 @@ function memEffects(el, M) {
   draw();
 }
 function memLessons(el, M) {
-  const L = M.lessons, item = x => `<div class="panel mles"><span class="tag">${esc(x.id)}</span> ${esc(lessonText(x.text))}</div>`;
-  el.innerHTML = `<div class="small muted" style="margin-bottom:10px">Rules Claude follows when it analyses and rebuilds - written from your verdicts and feedback (and your friends', after a review).</div>
-    <h3>From this PC (${L.local.length})</h3>${L.local.map(item).join('') || '<div class="small dim">None yet - give verdicts on a video, then Send feedback to Claude.</div>'}
-    <h3>Shared rules (${L.shared.length})</h3>${L.shared.map(item).join('') || '<div class="small dim">None.</div>'}
-    ${L.incoming.length ? `<h3>From friends, waiting for a review</h3><div class="small">${L.incoming.map(x => `${esc(x.file)} (${x.lessons})`).join(' · ')}</div>
-      <div class="row" style="margin-top:8px">${claudeBtn('Review the incoming lessons in knowledge\\incoming\\ (see Reviewing incoming lessons in the analyze-reference skill) and merge the good ones into the shared lessons.md', 'Review them in Claude Code', 'lessons')}</div>` : ''}`;
+  const L = M.lessons, MK = L.making || {shared: [], local: []}, item = x => `<div class="panel mles"><span class="tag">${esc(x.id)}</span> ${esc(lessonText(x.text))}</div>`;
+  const inc = k => (L.incoming || []).filter(x => (x.kind || 'analysis') === k);
+  const incLine = xs => xs.length ? `<h3>From friends, waiting for a review</h3><div class="small">${xs.map(x => `${esc(x.file)} (${x.lessons})`).join(' · ')}</div>` : '';
+  // the two kinds (0.4.2): analysing videos (L###, lessons.md of /analyze-reference) and making videos (M###, /recreate-video)
+  el.innerHTML = `<div class="grid g2 mlkinds"><div>
+      <h2>Analysing videos</h2><div class="small muted" style="margin-bottom:10px">How Claude judges and names effects - written from your verdicts and feedback (and your friends', after a review).</div>
+      <h3>From this PC (${L.local.length})</h3>${L.local.map(item).join('') || '<div class="small dim">None yet - give verdicts on a video, then Send feedback to Claude.</div>'}
+      <h3>Shared rules (${L.shared.length})</h3>${L.shared.map(item).join('') || '<div class="small dim">None.</div>'}
+      ${incLine(inc('analysis'))}</div>
+    <div><h2>Making videos</h2><div class="small muted" style="margin-bottom:10px">How Claude edits and generates - learned from rebuilding videos and from how they turned out. Read before every edit and generated video.</div>
+      <h3>From this PC (${(MK.local || []).length})</h3>${(MK.local || []).map(item).join('') || '<div class="small dim">None yet - they come from your ratings and notes on your videos.</div>'}
+      <h3>Shared rules (${(MK.shared || []).length})</h3>${(MK.shared || []).map(item).join('') || '<div class="small dim">None.</div>'}
+      ${incLine(inc('making'))}</div></div>
+    ${(L.incoming || []).length ? `<div class="row" style="margin-top:12px">${claudeBtn('Review the incoming lessons in knowledge\\incoming\\ (see Reviewing incoming lessons in the analyze-reference skill; the *-making.md files are lessons on making videos for .claude\\skills\\recreate-video\\lessons.md) and merge the good ones', 'Review them in Claude Code', 'lessons')}</div>` : ''}`;
 }
 async function memSaved(main) {
   const L = await api('/api/library');

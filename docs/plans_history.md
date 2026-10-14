@@ -106,3 +106,98 @@ to the lab's texture.
 - Other engines seen 2026-10-09: HyperFrames (in `tools\overlays\`, optional, needs Node) has a whisper.cpp
   `transcribe` command; ffmpeg's `whisper` filter is in BtbN builds but NOT in Gyan's essentials build (CI's;
   winget's full build: unchecked).
+
+## Released plans (their text when they shipped)
+
+### 0.4.2 - released 2026-10-14 - Check before you render
+
+**Ships when**: snapshots match the render at the checked frames (the difference measured and stated); a new graphic
+from the starter renders the same with and without motion blur; Claude's memory states every part the user rated bad
+as a default for later videos; the first lessons on making videos (M###) are reviewed; the next generated video needs
+one final render (illdari v1: three motion-blur renders, two thrown away).
+
+**The user's words (2026-10-14)**, after rating the first generated video (illdari_test_copy_1) and its rebuild:
+"it took too much time to recreate a 'simple' motion graphics 25 second video (with a full reference to 1:1 copy)",
+"would it be better to have a general draft before actually going to render 'blindly'?", and "learn from this
+analyze / recreation / re-recreation ... applied to the entire workflow for future videos where we go blind or have
+a totally different feeling".
+
+**What happened (measured 2026-10-14)**: v1 was rated graphics OK "motion graphics feel too clunky", sound effects
+bad "no sfx at all". All three causes could be checked before building: the app drawn ~40 % smaller than in
+illdari's reel, no sound effects, no motion blur. The rebuild rendered 79 s (a speed test) + 2 min (a plain check) +
+7.9 + 7.6 + 9.2 min (three renders with motion blur) = ~29 min, of which only the last 9 min were needed: the first
+two motion-blur renders found a bug a 1-second snapshot shows (the logo's badge missing at f38 (00:00:01:08)) and
+copies on moves too fast for 5 sub-frames (f113-f116 (00:00:03:23-00:00:03:26)), which a speed calculation predicts.
+Claude sees stills and cannot hear: every guess (one fixed volume for all effects, 5 sub-frames being enough) cost a
+round; every measurement (each effect against the song under it, pixels moved per frame) worked first time.
+**Shipped in 0.4.1.1** (2026-10-14): real motion blur, `overlay.py render --motion-blur N` (kept in overlay.json);
+a note in `/generate-video` (size, camera, motion blur, sound effects); the worked example
+`projects\illdari_test_copy_1\build\` (`sfx_v2.py`, `overlays\kidwild_top3_v2`, on the user's PC only).
+**Shipped in 0.4.1.1** (2026-10-14): items 1, 7, 5, 6. `overlay.py snap <folder> <frames>` = HyperFrames'
+snapshot with the user's values, frame + timecode burned in, no render (~3 s for 1 frame, ~7 s for 10; v1's f38
+(00:00:01:08) shows the missing badge in 3.3 s); the cheapest-check-first order in `/recreate-video` and
+`/generate-video`; the `new` template's helpers (`set` / `to` / `ft` / `bump` / `smear`) - a snapshot = a plain
+render on all 75 frames of the test graphic, motion blur = plain wherever nothing moves - with sound cues for
+`tools\sfx.py`; Claude's memory starts with the user's ratings of all their videos as rules (`knowledge.ratings()`);
+lessons on making videos (`.claude\skills\recreate-video\lessons.md`, M001-M004; `next-lesson-id --kind making`;
+shared as `incoming\*-making.md`, released like cards). Measured: snapshots and renders differ only in edge
+anti-aliasing after a jump (<= 0.5 % of pixels), as much as two renders with different worker counts do. Open: items
+2, 3, 4, 8, 9; the app's memory page doesn't show the rules / M lessons yet; the next generated video is the test of
+*Ships when* (illdari_test_copy_2_fable_high still went straight to a motion-blur render, ~26 min).
+
+1. **Cheapest check first** (Edit and Generate): (1) the plan in words and numbers - the scenes with frame +
+   timecode, the feel as numbers ("a cut every 0.5 s, moves over 4-6 frames, a whoosh on each") - seconds;
+   (2) a sheet of stills at every scene change - seconds; (3) the motion: a quick draft (Edit already has one) or a
+   plain render (~2 min for 25 s); (4) the final with the polish (motion blur, sound
+   mix, Resolve) - once. The user approves each step in plain words; no polish before step 3 is approved. Needs
+   `overlay.py snap <folder> <frames>`: HyperFrames' `snapshot` at those frames' times, frame + timecode burned in,
+   no render (stills today come from a finished render). Snapshots seek straight to a time, so they match the render
+   only with the helpers of item 7. (0.5.0 adds an animatic and the live preview to step 3.)
+2. **Feel tests when starting blind** (no reference, only words): first try to stop being blind - Claude suggests the
+   analysed videos closest to the words (Claude's memory, `style.py`); one analysed reference in the right feel
+   turns guessing into measuring. Otherwise 2-3 hooks (the first 3 s) in different feels, e.g. clean and slick / raw
+   and glitchy / slow and cinematic: Edit = quick drafts with different presets or seeds and `--length 3` (made by
+   rules, no Claude tokens); Generate = the hook as stills in 2-3 looks (costs Claude tokens: only when there is no
+   reference and the words are vague). The user picks or mixes ("B's pacing with A's colours") - that is the plan.
+3. **Fix this version, or start over**: *How did it turn out?* asks which one. Fix = a new version with the notes
+   (the feel is right, details are wrong); start over = back to step 1 or to feel tests - never a v2 of a feel the
+   user did not want.
+4. **Notes on moments**: a render's page takes a note on any moment, like the review page takes verdicts (frame +
+   timecode, saved with the ratings in `build\outcome.json`); `/recreate-video improve` fixes exactly those moments
+   instead of interpreting one word per part.
+5. **Your ratings as rules**: Claude's memory (`knowledge.py memory`, read before every edit and generated video)
+   gets what the user rated in all their videos; a part rated bad becomes a default for every later video (no sound
+   effects rated bad -> sound effects always). Today only the ratings of videos from the same reference are read.
+6. **Lessons on making videos**: a shared, reviewed file of their own (`.claude\skills\recreate-video\lessons.md`,
+   ids M###), read by `/recreate-video` and `/generate-video` - not the analysis lessons file, which the analysis
+   reads whole every time. Same flow as the analysis lessons (local -> incoming -> reviewed; `knowledge.py share`
+   and `next-lesson-id` learn the second kind). First entries from this rebuild: draw at the reference's measured
+   size; sound effects levelled against the song under each; with motion blur, tweens end half a frame early and
+   their start pose is set at AT(n); moves over ~60 px a frame need a smear.
+7. **A starter graphic that is safe by default**: `overlay.py new`'s template gets the helpers of
+   `kidwild_top3_v2` (tweens end half a frame early, start pose set early, a vertical smear, a camera bump), so a
+   new graphic renders the same with or without motion blur and in snapshots.
+8. **Ask about sound in the review**: Claude cannot hear, so an analysis asks the user "sound effects: none / some /
+   many - where?" like a possible miss; the rebuild reads the answer.
+9. **Checks before the final render** (scripts on a plain render or snapshots, no guessing): frames where most of
+   the picture vanishes for 1-2 frames (the f38 badge), the fastest moves in pixels per frame (a smear above ~60),
+   every sound effect's level against the song. Sizes against the reference stay Claude's check on its frames.
+
+**Moved to 0.5.0** (2026-10-14, the content generation version): sound effects as a lab tool (`tools\sfx.py`, was
+item 8 - shipped early in 0.4.1.1, see 0.5.0 step 4), the live preview in the app (11), faster motion blur (12) and the
+templates (13, now *formats*). What stays here is the check-first way of working for every video, Edit and Generate
+alike; 0.5.0 builds on it.
+
+**Order** (the user decides): 1, 7, 5, 6 first (rules and small changes - shipped in 0.4.1.1); then 3, 4, 8 (the
+app); 9. **Built 2026-10-14** (night, Unreleased; the user: "plan the next version for 3 sub-agents"): every item.
+The app (API 17): notes on moments under every render (outcome.json `moments`, frame + timecode, click to seek),
+*What next?* fix / start over (outcome.json `next`), the sound question on every analysis (verdicts.json `sound`,
+exported and parsed by feedback.py, `--import`, a line per video in Claude's memory, MCP `verdicts()`), the memory
+page's rating rules and M lessons. `tools\precheck.py`: illdari v1's f38 (00:00:01:08) gap flagged, the f113-f116
+move at its fastest frames f115-f116 (00:00:03:25-00:00:03:26), 90-121 px a frame, on plain snapshots; on v2's
+motion-blur render 7 move runs, 6 real copies, 1 false alarm (a repeating pattern, f547-f549), the drop hit f157
+(00:00:05:07) 7 dB under its level; 16-17 s per minute (41 s on 4 logical CPUs). Feel tests: `style.py closest
+"<words>"` (analysed videos ranked by measured style, reasons in numbers) and `draft_edit.py --feel-test` (2-3 hooks
+of 3 s side by side, test_4am 9.7 s cold / 5.2 s warm, no Claude), `--feel <id>`. Both skills teach starting blind,
+notes on moments, fix or start over, the sound answer and precheck. Self-test: feels, precheck. Open for *Ships
+when*: the next generated video made this way (one final render).

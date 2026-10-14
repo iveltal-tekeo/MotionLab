@@ -342,7 +342,8 @@ def size(orientation: str | None) -> tuple[int, int]:
 
 def summary(s: dict) -> str:
     """One line: what the style is made of and its rhythm."""
-    who = [x["title"] for x in s.get("sources", [])] or [PRESETS[i]["label"] for i in s.get("presets", [])]
+    who = [x["title"] for x in s.get("sources", [])] or ([s["feel_label"]] if s.get("feel_label") else
+                                                          [PRESETS[i]["label"] for i in s.get("presets", [])])
     R = s.get("rhythm") or {}
     bits = [" + ".join(str(w) for w in who) or "a steady rhythm",
             f"shots {R['median_shot_s']:g} s typical" if R.get("median_shot_s") else "",
@@ -431,3 +432,337 @@ def presets_info() -> list[dict]:
 def lognormal_sigma(p10: float, p90: float) -> float:
     """sigma of a log-normal whose 10th / 90th percentiles are p10 / p90 (z(0.9) = 1.2816)."""
     return max(0.05, (math.log(max(p90, 0.05)) - math.log(max(p10, 0.04))) / (2 * 1.2816))
+
+
+# ========================================================================================= starting blind (0.4.2)
+# The user (2026-10-14): "would it be better to have a general draft before actually going to render 'blindly'?" -
+# first try to stop being blind (closest(): the analysed videos nearest to their words), else feel tests (FEELS:
+# 2-3 hooks of the first 3 s in different feels, tools\\draft_edit.py --feel-test).
+
+# the user's words -> what a video's measured numbers say about them. Each key is scored 0-1 by _score() below, with
+# its reason in plain words and numbers. No model: this table IS the understanding - add words here.
+FEEL_WORDS = [
+    ("fast", r"\b(?:very\s+)?fast(?:[- ]paced)?\b|\bquick\b|\bhigh[- ]energy\b|\bhyper\b|\benerg(?:y|etic)\b|"
+             r"\bintense\b|\bfrantic\b|\brapid\b"),
+    ("slow", r"\bslow(?:er)?\b|\bcalm\b|\bchill\b|\brelax(?:ed|ing)?\b|\bpeaceful\b|\bdreamy\b|\bmeditative\b|"
+             r"\blong shots?\b|\bgentle\b"),
+    ("punchy", r"\bpunch(?:y|es)?\b|\bhook(?:s|y)?\b|\bsnappy\b|\bscroll[- ]?stop\w*\b|\bimpact(?:ful)?\b|\bbold\b"),
+    ("glitchy", r"\bglitch\w*\b|\braw\b|\bgritty\b|\bchaotic\b|\bmessy\b|\bgrung\w*\b|\bdistort\w*\b|\bvhs\b|"
+                r"\bstrob\w*\b|\bstutter\w*\b|\bunderground\b"),
+    ("slick", r"\bslick\b|\bclean\b|\bsmooth\b|\bpolish\w*\b|\bsleek\b|\bseamless\b|\bprofessional\b|\bcrisp\b|"
+              r"\bpremium\b|\bmodern\b"),
+    ("cinematic", r"\bcinematic\b|\bfilm(?:ic|like)?\b|\bepic\b|\bmovie\b|\bmoody\b|\batmospher\w*\b|\btrailer\b"),
+    ("transitions", r"\btransitions?\b|\bwhip(?:s|[- ]pans?)?\b|\bzoom[- ]?throughs?\b|\bwipes?\b"),
+    ("beat", r"\bon (?:the )?beats?\b|\bbeat[- ]?sync\w*\b|\brhythm\w*\b|\bmontage\b|\bmusic[- ]?driven\b"),
+    ("talking", r"\btalk\w*\b|\bspeak\w*\b|\bpodcast\b|\binterview\b|\bvoice[- ]?over\b|\bnarrat\w*\b"),
+    ("captions", r"\bcaptions?\b|\bsubtitles?\b|\bsubs\b"),
+    ("text", r"\btext\b|\btypograph\w*\b|\bkinetic\b|\blyrics?\b|\btitles?\b|\bmotion[- ]graphics?\b|\banimat\w*\b|"
+             r"\bui\b"),
+    ("dark", r"\bdark\b|\blow[- ]key\b|\bnight\b|\bnoir\b|\bmoody\b|\bshadow\w*\b"),
+    ("bright", r"\bbright\b|\bcolou?rful\b|\bvibrant\b|\bsaturated\b|\bpoppy\b|\bhigh[- ]key\b|\bsunny\b"),
+    ("warm", r"\bwarm\b|\bgolden\b|\bsunset\b"),
+    ("cold", r"\bcold\b|\bcool[- ]toned\b|\bteal\b|\bblue\b"),
+    ("minimal", r"\bminimal\w*\b|\bsimple\b|\bplain\b|\bno effects\b|\bunderstated\b|\bclean cuts\b"),
+    ("effects", r"\beffects?[- ]heavy\b|\blots of effects\b|\bflashy\b|\bcrazy\b|\bwild\b|\bover the top\b"),
+    ("vertical", r"\bvertical\b|\breels?\b|\btiktoks?\b|\bshorts\b|\b9:16\b|\bportrait\b"),
+    ("horizontal", r"\bhorizontal\b|\blandscape\b|\bwidescreen\b|\b16:9\b|\byoutube video\b"),
+    ("square", r"\bsquare\b|\b1:1\b"),
+]
+GLITCH = ("Stutter / frame repeat / strobe", "RGB split / glitch", "Flash / white frame", "Shake",
+          "Light leak / film burn", "Color flash / invert / saturation pop")
+SMOOTH = ("Whip pan", "Wipe / mask / shape reveal", "Zoom punch in / out", "Crossfade", "Speed ramp")
+SOFT = ("Crossfade", "Dip to black / white", "Speed ramp", "Blur in / out", "Light leak / film burn")
+_STOP = set("a an and the with for from that this like very more less some much make made want video videos edit "
+            "style feel look looks looking kind sort into about over just really quite something".split())
+
+
+def word_keys(words: str) -> list[str]:
+    """The FEEL_WORDS keys the user's words name, in the table's order."""
+    low = " ".join(str(words or "").lower().split())
+    return [k for k, rx in FEEL_WORDS if re.search(rx, low)]
+
+
+def _lin(x, lo: float, hi: float) -> float:
+    """0 at lo, 1 at hi (either direction), clamped; 0 for an unknown x."""
+    if x is None:
+        return 0.0
+    return max(0.0, min(1.0, (float(x) - lo) / (hi - lo)))
+
+
+def measures(c: dict) -> dict:
+    """The numbers of one card (find() / knowledge.all_cards()) that words are scored against."""
+    P = c.get("pacing") or {}
+    prof = c.get("profile") or {}
+    cont = prof.get("content") or {}
+    sp, tx = cont.get("speech") or {}, cont.get("text") or {}
+    cine, col = prof.get("cinematic") or {}, prof.get("colour") or {}
+    dur = P.get("duration_s") or (c.get("video") or {}).get("duration_s")
+    mins = float(dur) / 60 if dur else None
+    fams = P.get("families") or {}
+    fpm = {k: round(v / mins, 1) for k, v in fams.items()} if mins else {}
+    bd = c.get("breakdown") or {}
+    flat = [str(v) for v in bd.values() if isinstance(v, str)] + [str(x) for v in bd.values() if isinstance(v, list)
+                                                                   for x in v]
+    text = " ".join([str(c.get("title") or ""), " ".join(str(t) for t in c.get("tags") or []),
+                     str(c.get("category_label") or ""), *flat]).lower()
+    return {"cpm": P.get("cuts_per_min"), "med": P.get("median_shot_s"), "hook": P.get("hook_cuts_3s"),
+            "epm": P.get("effects_per_min"), "fpm": fpm, "on_beat": P.get("cuts_on_beat_pct"), "bpm": P.get("bpm"),
+            "tpm": cine.get("transitions_per_min"), "talk": sp.get("talk_pct"), "wpm": sp.get("words_per_min"),
+            "text_pm": tx.get("per_min"), "captions": bool(tx.get("captions_likely")),
+            "bright": col.get("brightness"), "sat": col.get("saturation"), "warmth": col.get("warmth"),
+            "colour_words": col.get("words") or [], "orientation": (c.get("format") or {}).get("orientation"),
+            "category": c.get("category"), "tags": [str(t).lower() for t in c.get("tags") or []], "text": text}
+
+
+def _pm(M: dict, fams) -> tuple[float, str]:
+    """Effects per minute of these families, and the top two named."""
+    xs = sorted(((M["fpm"].get(f, 0), f) for f in fams), reverse=True)
+    top = [f"{f.split(' /')[0].lower()} {v:g}/min" for v, f in xs[:2] if v]
+    return round(sum(v for v, _ in xs), 1), ", ".join(top)
+
+
+def _score(key: str, M: dict) -> tuple[float, str]:
+    """How well one video's numbers fit one word key (0-1), and why - in numbers."""
+    cpm, med, epm = M["cpm"], M["med"], M["epm"]
+    pace = (f"{cpm:g} cuts/min" if cpm is not None else "cuts not measured") + (
+        f", a shot {med:g} s typical" if med is not None else "")
+    if key == "fast":
+        return 0.6 * _lin(cpm, 8, 40) + 0.4 * _lin(med, 3.0, 0.8), pace
+    if key == "slow":
+        s = 0.6 * (1 - _lin(cpm, 6, 30)) + 0.4 * _lin(med, 1.5, 5.0) if cpm is not None else 0.0
+        return s * (1 - 0.4 * _lin(epm, 10, 50)), pace + (f", {epm:g} effects/min" if epm is not None else "")
+    if key == "punchy":
+        z, zt = _pm(M, ("Zoom punch in / out", "Flash / white frame", "Shake"))
+        return 0.6 * _lin(M["hook"], 0, 3) + 0.4 * _lin(z, 0, 12), (
+            f"{M['hook'] or 0} cut(s) in the first 3 s" + (f", {zt}" if zt else ""))
+    if key == "glitchy":
+        g, gt = _pm(M, GLITCH)
+        return _lin(g, 0, 15), f"glitch-type effects {g:g}/min" + (f" ({gt})" if gt else "")
+    if key == "slick":
+        s, st = _pm(M, SMOOTH)
+        g, _ = _pm(M, GLITCH)
+        return 0.7 * _lin(s, 0, 15) + 0.3 * (1 - _lin(g, 3, 15)), (
+            f"smooth moves {s:g}/min" + (f" ({st})" if st else "") + f", glitch-type {g:g}/min")
+    if key == "cinematic":
+        soft, _ = _pm(M, SOFT)
+        dark = any(str(w).startswith(("dark", "low contrast", "crushed", "soft")) for w in M["colour_words"])
+        genre = M["category"] in ("music_video", "trailer", "documentary", "travel") or "cinematic" in M["text"]
+        return (0.35 * _lin(med, 1.0, 4.5) + 0.2 * (M["orientation"] == "horizontal") + 0.15 * dark + 0.15 * genre
+                + 0.15 * _lin(soft, 0, 6)), (pace + f", {M['orientation'] or 'format ?'}"
+                                             + (f", look: {', '.join(M['colour_words'][:2])}" if M["colour_words"]
+                                                else ""))
+    if key == "transitions":
+        t, tt = _pm(M, ("Whip pan", "Wipe / mask / shape reveal", "Crossfade", "Dip to black / white"))
+        tpm = M["tpm"] if M["tpm"] is not None else t
+        return _lin(tpm, 0, 15), f"transitions {tpm:g}/min" + (f" ({tt})" if tt else "")
+    if key == "beat":
+        if not M["bpm"] or M["on_beat"] is None:
+            return 0.0, "no beat measured"
+        return _lin(M["on_beat"], 10, 85), f"{M['on_beat']:g} % of the cuts on the beat ({M['bpm']:g} BPM)"
+    if key == "talking":
+        sung = M["category"] == "music_video"
+        s = (0.7 * _lin(M["talk"], 10, 70) + 0.3 * _lin(M["wpm"], 40, 160)) * (0.4 if sung else 1.0)
+        return s, (f"words {M['talk'] or 0:g} % of the time, {M['wpm'] or 0:g} words/min"
+                   + (" (sung - a music video)" if sung else ""))
+    if key == "captions":
+        return (1.0 if M["captions"] else 0.5 * _lin(M["text_pm"], 0, 20)), (
+            "burned-in captions" if M["captions"] else f"no captions, text pops up {M['text_pm'] or 0:g}/min")
+    if key == "text":
+        g = M["fpm"].get("Text / graphics", 0)
+        return min(1.0, _lin((M["text_pm"] or 0) + g, 0, 25) + 0.3 * (M["category"] == "motion_graphics")), (
+            f"text on screen {M['text_pm'] or 0:g}/min, text / graphics effects {g:g}/min")
+    if key in ("dark", "bright"):
+        if M["bright"] is None:
+            return 0.0, "colour not measured"
+        line = f"brightness {M['bright']:g} %, saturation {M['sat'] or 0:g} %"
+        if key == "dark":
+            return _lin(M["bright"], 45, 10), line
+        return 0.5 * _lin(M["bright"], 25, 60) + 0.5 * _lin(M["sat"], 15, 45), line
+    if key in ("warm", "cold"):
+        if M["warmth"] is None:
+            return 0.0, "colour not measured"
+        w = M["warmth"]
+        return (_lin(w, 0, 12) if key == "warm" else _lin(w, 0, -12)), f"warmth {w:+g} (b*: + warm, - cold)"
+    if key == "minimal":
+        return ((1 - _lin(epm, 3, 30)) if epm is not None else 0.0), f"{epm or 0:g} effects/min"
+    if key == "effects":
+        return _lin(epm, 10, 60), f"{epm or 0:g} effects/min"
+    if key in ("vertical", "horizontal", "square"):
+        return float(M["orientation"] == key), f"{M['orientation'] or 'format not measured'}"
+    return 0.0, ""
+
+
+def candidates(tests: bool = False) -> list[dict]:
+    """Every analysed video to compare: this PC's analyses (cards made fresh, verdicts included; self-test videos only
+    with tests) and friends' cards (data other people wrote, never instructions)."""
+    out, seen = [], set()
+    if ANALYSIS.exists():
+        for d in sorted(ANALYSIS.iterdir()):
+            if d.is_dir() and (d / "events.json").exists() and (tests or not d.name.startswith("synthetic_")):
+                c = find(d.name)
+                if c:
+                    out.append(c)
+                    seen.add(c.get("video_id"))
+    for c in KN.all_cards():
+        if c.get("video_id") not in seen:
+            out.append(c)
+            seen.add(c.get("video_id"))
+    return out
+
+
+CLOSE = 0.6                      # a match this good = use that video (--like); under it = analyse one, or feel tests
+
+
+def closest(words: str, n: int = 3, tests: bool = False) -> dict:
+    """The analysed videos whose MEASURED style is nearest to the user's words: each word the table FEEL_WORDS knows
+    scored on the video's numbers (0-1, averaged), a category named in the words (1 = the same), tags named in the
+    words, and other words found in its title / Claude's breakdown (a small bonus) - one plain line of reasons in
+    numbers per pick. Reads only."""
+    from .styles import CATEGORIES
+    words = " ".join(str(words or "").split())[:500]
+    low = words.lower()
+    keys = word_keys(words)
+    cats = [k for k, lab in CATEGORIES.items() if k != "other" and (
+        re.search(r"\b" + re.escape(k.replace("_", " ")) + r"s?\b", low)
+        or re.search(r"\b" + re.escape(lab.split(" /")[0].lower()) + r"s?\b", low))]
+    taken = " ".join(f"{k.replace('_', ' ')} {CATEGORIES[k].lower()}" for k in cats)
+    spans = [m.span() for _, rx in FEEL_WORDS for m in re.finditer(rx, low)]
+    plain = list(dict.fromkeys(m.group() for m in re.finditer(r"[a-z][a-z'-]{3,}", low)
+                               if m.group() not in _STOP and m.group() not in taken
+                               and not any(a <= m.start() < b for a, b in spans)))
+    picks = []
+    for c in candidates(tests):
+        M = measures(c)
+        parts = []
+        for k in keys:
+            s, why = _score(k, M)
+            parts.append((k, s, f"{k}: {why}"))
+        for k in cats:
+            parts.append((f"category:{k}", float(M["category"] == k),
+                          f"category {c.get('category_label') or M['category'] or 'not set'}"))
+        tag_hits = [t for t in M["tags"] if t and re.search(r"\b" + re.escape(t) + r"\b", low)]
+        hits = [w for w in plain if re.search(r"\b" + re.escape(w), M["text"])]
+        base = sum(s for _, s, _ in parts) / len(parts) if parts else 0.0
+        score = min(1.0, base + 0.1 * len(tag_hits) + min(0.15, 0.05 * len(hits)) * (1 if parts else 3))
+        reasons = [why for _, s, why in sorted(parts, key=lambda p: -p[1]) if s >= 0.34]
+        if tag_hits:
+            reasons.append("tags " + ", ".join(tag_hits))
+        if hits:
+            reasons.append("its title / breakdown says " + ", ".join(f'"{h}"' for h in hits[:4]))
+        far = [why if k.startswith("category:") else f"{k} ({why.split(': ', 1)[-1]})" for k, s, why in parts
+               if s < 0.34]
+        if far:
+            reasons.append("far from: " + "; ".join(far))
+        picks.append({"title": c.get("title"), "analysis": c.get("analysis") if c.get("origin") == "local" else None,
+                      "video_id": c.get("video_id"), "origin": c.get("origin"), "author": c.get("author"),
+                      "category": c.get("category_label"), "format": (c.get("format") or {}).get("label"),
+                      "score": round(score, 2), "per_word": {k: round(s, 2) for k, s, _ in parts},
+                      "reasons": reasons})
+    picks.sort(key=lambda p: -p["score"])
+    return {"words": words, "understood": keys + [f"category:{k}" for k in cats], "other_words": plain[:12],
+            "videos": len(picks), "picks": picks[:max(1, n)]}
+
+
+def closest_text(R: dict) -> str:
+    """closest() for Claude and the user: one line per pick with its reasons in numbers, and what to do next."""
+    L = [f"# The analysed videos closest to: \"{R['words']}\"", "",
+         f"Words measured: {', '.join(R['understood']) or 'none'} (the table FEEL_WORDS, tools\\motionlab\\style.py)"
+         + (f"; other words looked for in titles / breakdowns: {', '.join(R['other_words'])}" if R["other_words"]
+            else "") + f". {R['videos']} analysed video(s) compared.", ""]
+    if not R["picks"]:
+        return "\n".join(L + ["No analysed video yet: analyse one in this feel first (Analyze > Add videos)."]) + "\n"
+    for i, p in enumerate(R["picks"], 1):
+        where = f"analysis\\{p['analysis']}" if p.get("analysis") else f"a card from {p.get('author') or 'a friend'}"
+        L.append(f"{i}. **{p['title']}** ({where}; {p.get('category') or 'no category'}, {p.get('format') or '-'}) - "
+                 f"match {round(100 * p['score'])} %: " + "; ".join(
+                     [r for r in p["reasons"] if not r.startswith("far from")][:4]
+                     + [r for r in p["reasons"] if r.startswith("far from")]))
+    best = R["picks"][0]
+    name = best["analysis"] or best["title"]
+    L.append("")
+    if best["score"] >= CLOSE:
+        L.append(f"Closest: `tools\\style.py \"{name}\"` = its style in numbers; Edit: `tools\\draft_edit.py <project> "
+                 f"--like \"{name}\"`; Generate: `like` in the request. One analysed reference in the right feel "
+                 "turns guessing into measuring - another video in this feel, analysed once, makes it surer.")
+    else:
+        L.append(f"None is close (best match under {round(100 * CLOSE)} %): one video in this feel, analysed once "
+                 "(Analyze > Add videos), turns guessing into measuring. Else feel tests: "
+                 f"`tools\\draft_edit.py <project> --feel-test --want \"{R['words']}\"`.")
+    return "\n".join(L) + "\n"
+
+
+# feel tests: 2-3 hooks in different feels, made by the quick draft's rules (tools\\draft_edit.py --feel-test). Each
+# feel = presets + its own numbers; "keys" = the FEEL_WORDS it answers (pick_feels); "hook" = changes for the 3 s test
+# only. Not in PRESETS on purpose (the app's Edit dialog lists those).
+FEELS = {
+    "slick": {
+        "label": "Clean & slick", "presets": ["transitions"], "keys": {"slick", "transitions", "beat", "bright"},
+        "words": "Clean and slick: zoom-throughs, whips and pushes on the beat, crisp bright colour, no grit.",
+        "rhythm": {"median_shot_s": 1.6, "p10_shot_s": 1.0, "p90_shot_s": 2.4, "hook_cuts_3s": 2,
+                   "cuts_on_beat_pct": 95},
+        "effects": {"zoom_transition": 9, "whip_pan": 6, "push_slide": 4, "zoom_in": 3}, "energy": "medium",
+        "grade": {"black": 4, "white": 246, "gamma": 0.94, "out_black": 0.0, "out_white": 1.0, "saturation": 1.12}},
+    "raw": {
+        "label": "Raw & glitchy", "presets": ["beat_montage"], "keys": {"glitchy", "fast", "effects", "dark"},
+        "words": "Raw and glitchy: very short shots, RGB splits, stutters, shakes and hard flashes, contrasty and "
+                 "washed-out colour.",
+        "rhythm": {"median_shot_s": 0.7, "p10_shot_s": 0.35, "p90_shot_s": 1.3, "hook_cuts_3s": 4,
+                   "cuts_on_beat_pct": 70},
+        "effects": {"rgb_split": 8, "stutter": 6, "shake": 6, "flash_white": 5, "flash_black": 3, "light_leak": 1},
+        "energy": "high",
+        "grade": {"black": 20, "white": 232, "gamma": 1.0, "out_black": 0.0, "out_white": 1.0, "saturation": 0.7}},
+    "cinematic": {
+        "label": "Slow & cinematic", "presets": ["slow_cinematic"], "keys": {"cinematic", "slow", "dark", "warm"},
+        "words": "Slow and cinematic: long shots, a fade in, crossfades, slow push-ins, lifted blacks and soft colour.",
+        "hook": {"rhythm": {"hook_cuts_3s": 0, "first_cut_s": 1.6}}},
+    "punchy": {
+        "label": "Fast & punchy", "presets": ["fast_hook"], "keys": {"punchy", "fast", "captions", "talking"},
+        "words": "Fast and punchy: three cuts in the first 3 s, punch-in zooms, flashes and shakes on the beat.",
+        "grade": {"black": 8, "white": 244, "gamma": 0.97, "out_black": 0.0, "out_white": 1.0, "saturation": 1.18}},
+    "steady": {
+        "label": "Calm & steady", "presets": ["three_sec"], "keys": {"minimal", "slow", "beat"},
+        "words": "Calm and steady: a new shot about every 3 s on the beat, clean cuts, a slow push-in."},
+}
+FEEL_ORDER = ["slick", "raw", "cinematic", "punchy", "steady"]       # the contrast order: the first three differ most
+
+
+def pick_feels(want: str = "", n: int = 3) -> list[str]:
+    """n feels for a feel test: the ones the words point to first (at most n - 1, so one always contrasts), then the
+    others in FEEL_ORDER."""
+    keys = set(word_keys(want))
+    hit = sorted((f for f in FEEL_ORDER if keys & FEELS[f]["keys"]), key=lambda f: -len(keys & FEELS[f]["keys"]))
+    first = hit[:max(1, n - 1)]
+    return (first + [f for f in FEEL_ORDER if f not in first])[:n]
+
+
+def hook_style(s: dict, n_top: int = 3, rate: float = 20.0) -> dict:
+    """A style for a 3 s hook test: its first n_top effects at least `rate` per minute, so each shows about once in
+    3 s (the draft places an effect type rate x length times)."""
+    s = {**s, "effects": [dict(e) for e in s.get("effects", [])]}
+    for e in s["effects"][:n_top]:
+        e["per_min"] = max(float(e.get("per_min") or 0), rate)
+    return s
+
+
+def feel_style(fid: str, want: str = "", hook: bool = False) -> dict:
+    """The style of one feel (FEELS): its presets with its own rhythm / effects / grade; hook = for a 3 s test."""
+    if fid not in FEELS:
+        raise ValueError(f"unknown feel {fid!r} (known: {', '.join(FEELS)})")
+    F = FEELS[fid]
+    s = presets(F["presets"])
+    s.update({"kind": "feel", "feel": fid, "feel_label": F["label"], "preset_words": [F["words"]]})
+    if F.get("rhythm"):
+        s["rhythm"] = {**s["rhythm"], **F["rhythm"]}
+    if F.get("effects"):
+        s["effects"] = [{"type": t, "label": taxonomy.label(t), "family": taxonomy.family(t), "per_min": v,
+                         "examples": []} for t, v in sorted(F["effects"].items(), key=lambda kv: -kv[1])]
+        s["effects_per_min"] = round(sum(F["effects"].values()), 1)
+    for k in ("energy", "grade"):
+        if F.get(k):
+            s[k] = dict(F[k]) if isinstance(F[k], dict) else F[k]
+    if hook and (F.get("hook") or {}).get("rhythm"):
+        s["rhythm"] = {**s["rhythm"], **F["hook"]["rhythm"]}
+    if s["rhythm"].get("median_shot_s"):
+        s["rhythm"]["cuts_per_min"] = round(60 / s["rhythm"]["median_shot_s"], 1)
+    s = apply_words(s, want) if want else s
+    return hook_style(s) if hook else s

@@ -4,7 +4,17 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
     .venv\\Scripts\\python tools\\draft_edit.py <project> --like <video> [<video> <video>]   the style of up to 3
                                                                                          analysed videos
     .venv\\Scripts\\python tools\\draft_edit.py <project> --preset fast_hook [--want "3 s cuts, captions"]
+    .venv\\Scripts\\python tools\\draft_edit.py <project> --feel raw [--want "..."]       a feel (style.py --feels)
     .venv\\Scripts\\python tools\\draft_edit.py --presets                                 the presets
+    .venv\\Scripts\\python tools\\draft_edit.py <project> --feel-test [--want "..."] [--like <video>] [--preset id]
+                        [--feels slick,raw,cinematic] [--length 3] [--size 360]
+                      starting blind (0.4.2): 2-3 hooks (the first 3 s) in DIFFERENT feels - Clean & slick / Raw &
+                      glitchy / Slow & cinematic / Fast & punchy / Calm & steady (the words pick which; --like and
+                      each --preset take a place too) - by the same rules, no Claude, rendered small into
+                      build\\feel\\feel_N\\: A_<feel>.mp4 ..., compare.mp4 (A | B | C side by side) + sheet.png, every
+                      tile labelled with its feel and frame + timecode; feel.md (each hook's shots and effects with
+                      frame + timecode, the full-length command). The user picks or mixes ("B's pacing with A's
+                      colours") - that is the plan. ~10-20 s once the frame caches exist.
   --length 30         seconds (default: the style's typical length; at most the music / what is said)
   --format vertical   vertical | horizontal | square (default: the style's, else the clips')
   --music <file>      an audio file in the project folder (a name, or a path; "none" = no music; default: the only
@@ -41,6 +51,7 @@ from motionlab import audio as AU  # noqa: E402
 from motionlab import draft as DR  # noqa: E402
 from motionlab import footage as FC  # noqa: E402
 from motionlab import style as ST  # noqa: E402
+from motionlab import taxonomy  # noqa: E402
 from motionlab.probe import probe  # noqa: E402
 from motionlab.project import Project  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
@@ -247,9 +258,10 @@ def cut_sound(segs: list, clips: dict, fps: float, d: Path) -> np.ndarray:
     return np.concatenate(out) if out else np.zeros((0, 2), np.float32)
 
 
-def write_sound(prj: Project, d: Path, v: int, y: np.ndarray) -> Path:
+def write_sound(prj: Project, d: Path, v, y: np.ndarray, stem: str | None = None) -> Path:
     import soundfile as sf
-    wav, m4a = prj.check(d / f"v{v}_sound.wav"), prj.check(d / f"v{v}_sound.m4a")
+    stem = stem or f"v{v}_sound"
+    wav, m4a = prj.check(d / f"{stem}.wav"), prj.check(d / f"{stem}.m4a")
     sf.write(str(wav), np.clip(y, -1, 1), SR, subtype="PCM_16")
     r = subprocess.run([tool("ffmpeg"), "-y", "-v", "error", "-nostdin", "-i", str(wav), "-c:a", "aac", "-b:a", "192k",
                         str(m4a)], capture_output=True, text=True)
@@ -326,6 +338,361 @@ def notes(prj, v, style, D, clips, fps, W, H, orient, sound_line, music_note, ar
     return "\n".join(L) + "\n"
 
 
+def pick_orientation(prj: Project, fmt: str | None, style: dict | None) -> str:
+    """--format, else the style's, else the clips' most common shape."""
+    files = prj.footage_files()
+    if not files:
+        raise SystemExit(f"no clips in {prj.dir} - copy your videos into that folder first")
+    if fmt:
+        return fmt
+    if style and style.get("format"):
+        return style["format"]
+    shapes = Counter()
+    for f in files[:12]:
+        vv = probe(f)["video"]
+        shapes[orientation(vv["display_width"], vv["display_height"])] += 1
+    return shapes.most_common(1)[0][0]
+
+
+def footage(prj: Project, W: int, H: int) -> tuple[dict, list[dict], bool, float]:
+    """The frame caches (made first when missing) as the draft's clips, at their most common frame rate."""
+    ensure_caches(prj, W, H)
+    srcs, clips, color = load_clips(prj)
+    fps = Counter(c["fps"] for c in clips).most_common(1)[0][0]
+    odd = [c for c in clips if c["fps"] != fps]
+    if odd:
+        log(f"left out (cached at another frame rate): {', '.join(c['id'] for c in odd)}")
+    return srcs, [c for c in clips if c["fps"] == fps], color, fps
+
+
+def clip_sound(prj: Project, clips: list[dict], d: Path, fps: float, mode: str, only: set | None = None,
+               reuse: Path | None = None) -> None:
+    """The clips' own sound (48 kHz stereo, decoded once per clip into d; one already in `reuse` is read from there)
+    and, in talk mode, their spoken parts. only = just these clip IDs."""
+    for c in clips:
+        if only is not None and c["id"] not in only:
+            continue
+        name = f"clip_{c['id']}_{_key(Path(c['source']))}.wav"
+        if reuse is not None and (reuse / name).exists():
+            c["wav"] = str(reuse / name)
+        else:
+            wav = prj.check(d / name)
+            c["wav"] = str(wav) if decode(Path(c["source"]), wav) else None
+        info = probe(Path(c["source"]))
+        c["offset_s"] = float(info["video"].get("start_time") or 0) - float((info["audio"] or {}).get("start_time")
+                                                                            or 0)
+        if mode == "talk" and c["wav"]:
+            c["speech"] = speech(Path(c["wav"]), fps, c["frames"], c["offset_s"])    # video t = wav t - offset
+        log(f"{c['id']} {c['name']}: " + ("no sound" if not c["wav"] else
+                                         f"{len(c['speech'])} spoken part(s)" if c.get("speech") else
+                                         "nobody talks (B-roll)" if mode == "talk" else "sound kept"))
+
+
+# ------------------------------------------------------------------------------------------------ feel test (0.4.2)
+FEEL_MAX_S = 6.0          # a feel test is about the hook; its frames stay in memory (3 x 6 s x 640x360 = ~0.3 GB)
+
+
+def feel_slots(a) -> list[dict]:
+    """The 2-3 hooks of a feel test: --like (the videos' style), each --preset, then feels (--feel / --feels, else
+    picked from the user's words: style.pick_feels), at most three, each with the arguments of its full-length draft."""
+    slots = []
+    try:
+        if a.like:
+            s = ST.build(a.like, [], "")
+            slots.append({"id": "like", "label": "Like " + " + ".join(str(x["title"]).split(" [")[0][:22]
+                                                                    for x in s["sources"]),
+                          "style": ST.hook_style(s), "args": "--like " + " ".join(f'"{x}"' for x in a.like)})
+        for p in a.preset:
+            if p not in ST.PRESETS:
+                raise ValueError(f"unknown preset {p!r} (known: {', '.join(ST.PRESETS)})")
+            slots.append({"id": p, "label": ST.PRESETS[p]["label"], "style": ST.hook_style(ST.presets([p])),
+                          "args": f"--preset {p}"})
+        ids = [x.strip() for x in (a.feels or "").split(",") if x.strip()]
+        if a.feel and a.feel not in ids:
+            ids.insert(0, a.feel)
+        if not ids:
+            ids = ST.pick_feels(a.want, max(0, 3 - len(slots)))
+        for f in ids:
+            slots.append({"id": f, "label": ST.FEELS[f]["label"] if f in ST.FEELS else f,
+                          "style": ST.feel_style(f, hook=True), "args": f"--feel {f}"})
+    except ValueError as e:
+        raise SystemExit(str(e))
+    slots = slots[:3]
+    if len(slots) < 2:
+        raise SystemExit("a feel test needs 2-3 different feels (--feels slick,raw,cinematic)")
+    for letter, s in zip("ABC", slots):
+        s["letter"] = letter
+        s["key"] = f"{letter}_{re.sub(r'[^A-Za-z0-9]+', '_', s['id'])[:20]}"
+    return slots
+
+
+def _encode(frames, fps: float, out: Path, sound: Path | None, size: tuple[int, int]) -> None:
+    """RGB frames (any iterable, streamed) -> an H.264 MP4 with the sound (AAC), small and quick."""
+    w, h = size
+    cmd = [tool("ffmpeg"), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r",
+           f"{fps:g}", "-i", "-"]
+    if sound:
+        cmd += ["-i", str(sound), "-map", "0:v", "-map", "1:a:0", "-c:a", "aac", "-b:a", "160k", "-shortest"]
+    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+            str(out)]
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    try:
+        for fr in frames:
+            p.stdin.write(np.ascontiguousarray(fr).tobytes())
+    finally:
+        p.stdin.close()
+        p.wait()
+    if p.returncode:
+        raise SystemExit(f"ffmpeg could not write {out.name}")
+
+
+def _events(D: dict) -> dict[int, list[str]]:
+    """Frame -> what starts there in a hook (a cut, an effect's name) for the labels."""
+    ev: dict[int, list[str]] = {}
+    for sh in D["shots"][1:]:
+        ev.setdefault(int(sh["start"]), []).append("cut")
+    for e in D["effects"]:
+        ev.setdefault(int(e["frame"]), []).append(taxonomy.label(e["type"]).lower())
+    return ev
+
+
+def _status(D: dict, ev: dict, f: int) -> str:
+    k = sum(1 for sh in D["shots"] if sh["start"] <= f)
+    recent = [", ".join(v) for g, v in sorted(ev.items()) if 0 <= f - g < 8]
+    return f"shot {k}/{len(D['shots'])}" + (f" · {recent[-1]}" if recent else "")
+
+
+def compare_video(slots: list[dict], fps: float, out: Path, sound: Path | None) -> None:
+    """A | B | C side by side, each tile headed by its letter + feel, the frame + timecode and what happens there."""
+    from PIL import Image, ImageDraw
+    from motionlab.media import fonts
+    F = fonts(1.0)
+    n = min(len(s["frames"]) for s in slots)
+    h, w = slots[0]["frames"][0].shape[:2]
+    gap, head = 8, 64
+    Wc = len(slots) * w + (len(slots) + 1) * gap
+    Hc = head + h + gap
+    Wc, Hc = Wc + Wc % 2, Hc + Hc % 2
+
+    def frames():
+        for f in range(n):
+            yield np.asarray(tile(f))
+
+    def tile(f):
+        img = Image.new("RGB", (Wc, Hc), (14, 14, 16))
+        d = ImageDraw.Draw(img)
+        for i, s in enumerate(slots):
+            x = gap + i * (w + gap)
+            img.paste(Image.fromarray(s["frames"][f]), (x, head))
+            d.text((x + 2, 4), f"{s['letter']}  {s['label']}", fill=(255, 255, 255), font=F["title"])
+            d.text((x + 2, 30), f"f{f} ({frame_to_tc(f, fps)})", fill=(255, 196, 0), font=F["mono_b"])
+            d.text((x + 2, 47), _status(s["D"], s["ev"], f), fill=(170, 200, 230), font=F["small"])
+        return img
+    _encode(frames(), fps, out, sound, (Wc, Hc))
+
+
+def compare_sheet(slots: list[dict], fps: float, out: Path, title: str, cols: int = 8) -> None:
+    """One row per hook, `cols` frames across (evenly spaced), each captioned with frame + timecode (a cut in red)."""
+    from PIL import Image, ImageDraw
+    from motionlab.media import fonts
+    F = fonts(1.0)
+    n = min(len(s["frames"]) for s in slots)
+    fr = sorted({int(round(x)) for x in np.linspace(0, n - 1, cols)})
+    h, w = slots[0]["frames"][0].shape[:2]
+    tw = 200 if w >= h else 120
+    th = int(round(tw * h / w))
+    left, top, cap, pad = 210, 44, 20, 6
+    img = Image.new("RGB", (left + len(fr) * (tw + pad) + pad, top + len(slots) * (th + cap + 12) + 4),
+                    (20, 20, 24))
+    d = ImageDraw.Draw(img)
+    d.text((10, 10), title, fill=(255, 255, 255), font=F["body"])
+    for r, s in enumerate(slots):
+        y = top + r * (th + cap + 12)
+        D = s["D"]
+        d.text((10, y + 2), f"{s['letter']}  {s['label']}", fill=(255, 255, 255), font=F["title"])
+        d.text((10, y + 32), f"{len(D['shots'])} shots, {len(D['effects'])} effects", fill=(190, 190, 190),
+               font=F["small"])
+        cuts = [sh["start"] for sh in D["shots"][1:]]
+        d.text((10, y + 50), "cuts: " + (", ".join(f"f{c}" for c in cuts[:5]) or "none"), fill=(190, 190, 190),
+               font=F["small"])
+        for c, f in enumerate(fr):
+            x = left + pad + c * (tw + pad)
+            img.paste(Image.fromarray(s["frames"][f]).resize((tw, th), Image.LANCZOS), (x, y))
+            near_cut = any(0 <= f - k < 3 for k in cuts)
+            d.text((x, y + th + 3), f"f{f} {frame_to_tc(f, fps)}", font=F["small"],
+                   fill=(255, 110, 110) if near_cut else (255, 196, 0))
+    img.save(out)
+
+
+def _sources_unchanged(prj: Project) -> list[str]:
+    """Footage whose size / modified time differs from build\\sources.json (cheap; the render checks SHA-256)."""
+    bad = []
+    for k, ent in prj.manifest().get("sources", {}).items():
+        p, fp = Path(ent["path"]), ent.get("fingerprint") or {}
+        try:
+            st = p.stat()
+        except OSError:
+            bad.append(f"{k} {ent.get('name')} (missing)")
+            continue
+        if fp and (st.st_size != fp.get("size") or st.st_mtime_ns != fp.get("mtime_ns")):
+            bad.append(f"{k} {ent.get('name')}")
+    return bad
+
+
+def feel_notes(prj, run, k, slots, fps, N, w, h, color, sound_line, want, timings) -> str:
+    tc = lambda f: frame_to_tc(f, fps)  # noqa: E731
+    rel = f"build\\feel\\{run.name}"
+    L = [f"# Feel test {k} of {prj.name}: {len(slots)} hooks of {N} frames ({N / fps:.1f} s) at {fps:g} fps", "",
+         f"Made by `tools\\draft_edit.py --feel-test` ({time.strftime('%Y-%m-%d %H:%M')}) by rules, no Claude; "
+         f"{w}x{h} each (a small preview). Frames are 0-based (f0 = 00:00:00:00).",
+         f"- Compare: `{rel}\\compare.mp4` ({' | '.join(s['letter'] for s in slots)} side by side) and "
+         f"`{rel}\\sheet.png`.",
+         f"- Sound: {sound_line}"] + ([f"- The user's words: \"{want}\" (they picked the feels)"] if want else []) + (
+        [] if color else ["- The frame caches are black and white (prep_footage --grey): the hooks differ in contrast "
+                          "and levels here, not in colour."]) + [
+        "- The user picks one, or mixes (\"B's pacing with A's colours\"): that is the plan. Pacing = a hook's rhythm "
+        "line, colours = its grade, effects = its list. A mix = the full-length draft of the pacing's feel, then the "
+        "other hook's grade / effects in the plan (`/recreate-video` section 6).", ""]
+    for s in slots:
+        D, st = s["D"], s["style"]
+        R = st.get("rhythm") or {}
+        cuts = [sh["start"] for sh in D["shots"][1:]]
+        g = D["grade"]
+        L += [f"## {s['letter']} - {s['label']}", ""]
+        L += [f"- The feel: {w_}" for w_ in st.get("preset_words", [])[:1]]
+        L += [f"- The style of: {x['title']}" for x in st.get("sources", [])]
+        L.append(f"- Rhythm aimed for: a shot {R.get('median_shot_s', '?'):g} s typical ({R.get('p10_shot_s', '?')}-"
+                 f"{R.get('p90_shot_s', '?')} s), {R.get('hook_cuts_3s') or 0} cut(s) in the first 3 s"
+                 + (f" (the first at {R['first_cut_s']:g} s)" if R.get("first_cut_s") and not R.get("hook_cuts_3s")
+                    else "")
+                 + (f", {R['cuts_on_beat_pct']:g} % on the beat" if R.get("cuts_on_beat_pct") is not None else "")
+                 if isinstance(R.get("median_shot_s"), (int, float)) else "- Rhythm: the style's")
+        L.append(f"- Here: {len(D['shots'])} shots, cuts at " + (", ".join(f"f{c} ({tc(c)})" for c in cuts)
+                                                               or "none (one shot)"))
+        L.append("- Effects: " + ("; ".join(f"f{e['frame']} ({tc(e['frame'])}) {e['how']}" for e in D["effects"])
+                                  or "none - clean cuts"))
+        L.append(f"- Colour: levels {g.get('black', 0)}-{g.get('white', 255)}, gamma {g.get('gamma', 1.0):g}, "
+                 f"saturation {g.get('saturation', 1.0):g}")
+        L.append(f"- Files: `{rel}\\{s['key']}.mp4`, plan `{rel}\\plan_{s['key']}.json`")
+        L.append(f"- Full length in this feel: `.venv\\Scripts\\python tools\\draft_edit.py {prj.name} {s['args']} "
+                 f"--length 30 --render` (the hook test showed each signature effect at least once in 3 s; the full "
+                 f"draft uses the style's own rates)")
+        L.append("")
+    L += ["## Timings", ""] + [f"- {k_}: {v:.1f} s" for k_, v in timings.items()]
+    return "\n".join(L) + "\n"
+
+
+def feel_test(a, prj: Project, cfg: dict) -> int:
+    """2-3 hooks in different feels, rendered small, side by side (see the docstring)."""
+    from motionlab.compose import Renderer
+    t0 = time.time()
+    timings: dict[str, float] = {}
+    slots = feel_slots(a)
+    log("feel test: " + " | ".join(f"{s['letter']} {s['label']}" for s in slots))
+    like_style = next((s["style"] for s in slots if s["id"] == "like"), None)
+    orient = pick_orientation(prj, a.format, like_style)
+    W, H = ST.size(orient)
+    srcs, clips, color, fps = footage(prj, W, H)
+    k = max(120, int(a.size)) / min(W, H)
+    w, h = int(round(W * k / 2)) * 2, int(round(H * k / 2)) * 2
+    timings["frame caches + clips"] = time.time() - t0
+    base = prj.check(prj.build / "feel")
+    aud = prj.check(base / "audio")
+    aud.mkdir(parents=True, exist_ok=True)
+    nums = [int(m.group(1)) for p in base.glob("feel_*") if (m := re.fullmatch(r"feel_(\d+)", p.name))]
+    k_run = max(nums or [0]) + 1
+    run = prj.check(base / f"feel_{k_run}")
+    run.mkdir(parents=True, exist_ok=False)
+    t1 = time.time()
+    music, music_note = find_music(prj, a.music)
+    mode = a.sound if a.sound != "auto" else "music" if music else "clips"
+    if mode == "music" and not music:
+        raise SystemExit("no song: put an audio file (.mp3, .m4a, .wav) into the project folder or give --music")
+    length = min(FEEL_MAX_S, a.length or 3.0)
+    beats, downbeats, drops, start, info = [], set(), [], 0.0, None
+    if mode == "music":
+        info = music_info(prj, aud, music, fps, cfg)
+        length = min(length, info["duration_s"])
+        start = music_start(info, length, fps, a.music_start)
+        length = min(length, info["duration_s"] - start)
+        sf0 = start * fps
+        beats = [b - sf0 for b in info["beats"] if b - sf0 > 0]
+        downbeats = {int(round(b - sf0)) for b in info["downbeats"]}
+        drops = [x - sf0 for x in info["drops"] if 0 < x - sf0 < length * fps]
+    elif mode == "talk":
+        clip_sound(prj, clips, aud, fps, "talk", reuse=prj.build / "draft")
+    N = int(round(length * fps))
+    for s in slots:
+        try:
+            s["D"] = DR.make(s["style"], clips, fps, w, h, N, "talk" if mode == "talk" else "music", beats, downbeats,
+                             drops, a.seed)
+        except ValueError as e:
+            raise SystemExit(f"{s['label']}: {e}")
+        s["ev"] = _events(s["D"])
+    by_id = {c["id"]: c for c in clips}
+    shared = None
+    if mode == "music":
+        import soundfile as sf
+        y, _ = sf.read(info["wav"], dtype="float32", always_2d=True)
+        s0, n = int(round(start * SR)), int(round(N / fps * SR))
+        y = y[s0:s0 + n, :2] if y.shape[1] >= 2 else np.repeat(y[s0:s0 + n], 2, axis=1)
+        shared = write_sound(prj, run, 0, y.copy(), stem="music")
+        sound_line = (f"{music.name} from {start:g} s" + (f", {info['bpm']:g} BPM" if info.get("bpm") else "")
+                      + f" - the same under every hook ({len(drops)} drop(s) in it)")
+    else:
+        if mode == "clips":
+            clip_sound(prj, clips, aud, fps, "clips", only={x[0] for s in slots for x in s["D"]["sound"]},
+                       reuse=prj.build / "draft")
+        sound_line = ("the clips' own sound in order, pauses cut out - the same under every hook" if mode == "talk"
+                      else "each hook's own clip sound (no song in the project folder); the side by side is silent")
+    timings["sound + plans"] = time.time() - t1
+    for s in slots:
+        t2 = time.time()
+        D = s["D"]
+        snd = shared or write_sound(prj, run, 0, cut_sound(D["sound"], by_id, fps, run), stem=f"{s['key']}_sound")
+        plan = {"name": f"{prj.name}_feel{k_run}_{s['key']}", "width": w, "height": h, "fps": fps,
+                "frames": D["frames"], "background": 0.0, "levels": "single", "seed": a.seed, "sources": srcs,
+                "grades": {"default": D["grade"]}, "layers": D["layers"], "audio": {"path": str(snd)},
+                "output": f"{s['key']}.mp4",
+                "made_by": {"tool": "draft_edit.py --feel-test", "feel": s["id"], "label": s["label"],
+                            "args": s["args"], "want": a.want, "sound": mode, "music": str(music) if music else None,
+                            "music_start_s": start, "seed": a.seed, "date": time.strftime("%Y-%m-%d %H:%M")}}
+        write_json(prj.check(run / f"plan_{s['key']}.json"), plan)
+        R = Renderer(plan)
+        s["frames"] = [R.render(f) for f in range(plan["frames"])]
+        _encode(s["frames"], fps, prj.check(run / plan["output"]), snd, (w, h))
+        if mode == "talk" and not shared:
+            shared = snd                                  # what is said is the same in every hook: the first's sound
+        timings[f"{s['letter']} {s['label']}: {plan['frames']} frames"] = time.time() - t2
+        log(f"{s['letter']} {s['label']}: {len(D['shots'])} shots, {len(D['effects'])} effects - "
+            f"{time.time() - t2:.1f} s")
+    t3 = time.time()
+    cmp_p = prj.check(run / "compare.mp4")
+    compare_video(slots, fps, cmp_p, shared)
+    sheet_p = prj.check(run / "sheet.png")
+    names = " | ".join(f"{s['letter']} {s['label']}" for s in slots)
+    compare_sheet(slots, fps, sheet_p, f"{prj.name} - feel test {k_run}: {names} - {N} frames ({N / fps:.1f} s) "
+                                       f"at {fps:g} fps")
+    timings["side by side + sheet"] = time.time() - t3
+    timings["total"] = time.time() - t0
+    bad = _sources_unchanged(prj)
+    md = feel_notes(prj, run, k_run, slots, fps, N, w, h, color, sound_line, a.want, timings)
+    prj.check(run / "feel.md").write_text(md, encoding="utf-8")
+    write_json(prj.check(run / "feel.json"), {
+        "project": prj.name, "run": run.name, "fps": fps, "frames": N, "size": [w, h], "sound": sound_line,
+        "want": a.want, "colour_caches": color, "timings_s": {k_: round(v, 2) for k_, v in timings.items()},
+        "hooks": [{"letter": s["letter"], "id": s["id"], "label": s["label"], "args": s["args"],
+                   "video": f"{s['key']}.mp4", "plan": f"plan_{s['key']}.json",
+                   "rhythm": s["style"].get("rhythm"), "grade": s["D"]["grade"],
+                   "shots": s["D"]["shots"], "effects": s["D"]["effects"]} for s in slots],
+        "compare": cmp_p.name, "sheet": sheet_p.name})
+    log(f"feel test {k_run}: {time.time() - t0:.1f} s - notes {run / 'feel.md'}")
+    log("sources unchanged (size + time): " + ("yes" if not bad else f"NO - {bad}"))
+    print(sheet_p)
+    print(cmp_p)
+    return 0
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -344,6 +711,10 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--render", action="store_true")
     ap.add_argument("--presets", action="store_true", help="list the presets")
+    ap.add_argument("--feel", help=f"a feel instead of presets: {', '.join(ST.FEEL_ORDER)}")
+    ap.add_argument("--feel-test", action="store_true", help="2-3 hooks in different feels, side by side")
+    ap.add_argument("--feels", help="feel test: which feels, e.g. slick,raw,cinematic (default: from --want)")
+    ap.add_argument("--size", type=int, default=360, help="feel test: the short side of each hook in pixels")
     a = ap.parse_args()
     if a.presets:
         for p in ST.presets_info():
@@ -354,32 +725,22 @@ def main() -> int:
     t0 = time.time()
     prj = Project(a.project)
     cfg = load_config()
+    if a.feel_test:
+        return feel_test(a, prj, cfg)
     try:
-        style = ST.build(a.like, a.preset, a.want)
+        if a.feel:
+            if a.like or a.preset:
+                raise ValueError("--feel is a style of its own (for starting without a reference): leave out --like / "
+                                 "--preset")
+            style = ST.feel_style(a.feel, a.want)
+        else:
+            style = ST.build(a.like, a.preset, a.want)
     except ValueError as e:
         raise SystemExit(str(e))
     log(f"style: {ST.summary(style)}")
-    clip_files = prj.footage_files()
-    if not clip_files:
-        raise SystemExit(f"no clips in {prj.dir} - copy your videos into that folder first")
-    if a.format:
-        orient = a.format
-    elif style.get("format"):
-        orient = style["format"]
-    else:
-        shapes = Counter()
-        for f in clip_files[:12]:
-            vv = probe(f)["video"]
-            shapes[orientation(vv["display_width"], vv["display_height"])] += 1
-        orient = shapes.most_common(1)[0][0]
+    orient = pick_orientation(prj, a.format, style)
     W, H = ST.size(orient)
-    ensure_caches(prj, W, H)
-    srcs, clips, color = load_clips(prj)
-    fps = Counter(c["fps"] for c in clips).most_common(1)[0][0]
-    odd = [c for c in clips if c["fps"] != fps]
-    clips = [c for c in clips if c["fps"] == fps]
-    if odd:
-        log(f"left out (cached at another frame rate): {', '.join(c['id'] for c in odd)}")
+    srcs, clips, color, fps = footage(prj, W, H)
     d = prj.build / "draft"
     d.mkdir(parents=True, exist_ok=True)
     music, music_note = find_music(prj, a.music)
@@ -389,17 +750,7 @@ def main() -> int:
     if mode == "music" and not music:
         raise SystemExit("no song: put an audio file (.mp3, .m4a, .wav) into the project folder or give --music")
     if mode in ("talk", "clips"):
-        for c in clips:                                   # the clips' own sound (48 kHz stereo, once per clip)
-            wav = prj.check(d / f"clip_{c['id']}_{_key(Path(c['source']))}.wav")
-            c["wav"] = str(wav) if decode(Path(c["source"]), wav) else None
-            info = probe(Path(c["source"]))
-            c["offset_s"] = float(info["video"].get("start_time") or 0) - float((info["audio"] or {}).get("start_time")
-                                                                                or 0)
-            if mode == "talk" and c["wav"]:
-                c["speech"] = speech(Path(c["wav"]), fps, c["frames"], c["offset_s"])    # video t = wav t - offset
-            log(f"{c['id']} {c['name']}: " + ("no sound" if not c["wav"] else
-                                             f"{len(c['speech'])} spoken part(s)" if c.get("speech") else
-                                             "nobody talks (B-roll)" if mode == "talk" else "sound kept"))
+        clip_sound(prj, clips, d, fps, mode)
     beats, downbeats, drops, start, info = [], set(), [], 0.0, None
     length = a.length or (style.get("length_s") or {}).get("typical") or 30.0
     if mode == "music":
@@ -450,7 +801,8 @@ def main() -> int:
             "output": f"{prj.name}_v{v}.mp4",
             "made_by": {"tool": "draft_edit.py", "like": a.like, "presets": a.preset, "want": a.want,
                         "sound": mode, "music": str(music) if music else None, "music_start_s": start,
-                        "seed": a.seed, "date": time.strftime("%Y-%m-%d %H:%M"), "style": ST.summary(style)}}
+                        "feel": a.feel, "seed": a.seed, "date": time.strftime("%Y-%m-%d %H:%M"),
+                        "style": ST.summary(style)}}
     plan_p = prj.check(prj.build / f"plan_v{v}.json")
     write_json(plan_p, plan)
     args_line = " ".join(sys.argv[1:])

@@ -5,6 +5,29 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.2 - 2026-10-14 - Check before you render: notes on moments, the sound question, feel tests
+
+- **Notes on exact moments**: under any render of your video, pause where something is off (or just right), pick
+  the part (sound, colour, graphics...) and write it. Claude fixes exactly those moments; a click on a note jumps
+  there.
+- **Fix it, or start over**: *How did it turn out?* now asks what's next - **Fix this version** (the feel is right,
+  details are wrong) or **Start over** (a different feel, with a new edit of the same clips). Claude never makes a
+  second version of a feel you didn't want.
+- **Sound effects - only you can hear them**: each analysed video now asks you "sound effects: none, some or many,
+  and where?". It is red until you answer, goes to Claude with your feedback, and Claude's memory keeps it per video,
+  so a rebuild gets the sound right.
+- **Claude's memory shows your rules**: your ratings as rules for every new video (a part you rated bad once stays a
+  rule), and the lessons on making videos next to the lessons on analysing them.
+- **Checks before the final render**: before the long render with the polish, MotionLab looks at the plain one (or a
+  graphic's quick stills) and points out frames where part of the picture disappears for a frame or two, moves too
+  fast for the motion blur, and sound effects too loud, buried or squeezed - on one sheet, each frame with its number
+  and timecode. Claude fixes those first, so the final render is needed once.
+- **Starting from words only?** MotionLab finds the analysed videos closest to what you describe ("fast, glitchy,
+  dark"), with the numbers that make them close, so you can start from a real reference instead of guessing.
+- **Feel tests**: with only words and no reference, the quick draft makes 2-3 versions of your first 3 seconds in
+  different feels (clean & slick, raw & glitchy, slow & cinematic...) from your own clips - side by side and on one
+  sheet in a few seconds, without Claude. Pick one, or mix them ("B's pacing with A's colours").
+
 ## 0.4.1.1 - 2026-10-14 - Each section its own feel, Prepare, sound effects, check before you render
 
 - **Each section has its own feel**: Analyze, Prepare, Edit, Generate and Claude's memory open with their title on

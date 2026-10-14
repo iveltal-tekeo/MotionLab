@@ -2,10 +2,14 @@
 
     .venv\\Scripts\\python tools\\feedback.py <analysis name or folder> <feedback.txt>
     .venv\\Scripts\\python tools\\feedback.py <analysis name or folder> -        (read from stdin)
+    .venv\\Scripts\\python tools\\feedback.py <analysis> <feedback.txt> --import (also into verdicts.json)
 
 Archives the raw text + a parsed JSON in analysis\\<name>\\feedback\\ and prints, for every verdict, the event as it
 stands now (type, frames, sheets) so each WRONG / PARTLY item can be re-checked. Frame numbers and timecodes
-mentioned in notes are converted to frames.
+mentioned in notes are converted to frames. The sections: events, hard cuts, possible misses, sound effects (0.4.2:
+NONE / SOME / MANY | where: ... - Claude cannot hear, the user says), missed effects / general notes. --import lays
+pasted feedback over analysis\\<name>\\feedback\\verdicts.json (to_verdicts + the app's data.save_verdicts); the
+app's own exports are already in it.
 """
 from __future__ import annotations
 
@@ -23,6 +27,8 @@ LINE = re.compile(r"^(CORRECT|PARTLY|WRONG|NOTE)\s*\|\s*(E\d+|C\d+)\s*\|\s*([^|]
                   r"(?:\|\s*note:\s*(.*))?$", re.IGNORECASE)
 # "--- possible misses ---" (app 0.2.5): the user's answer per near-miss frame
 MISS = re.compile(r"^(EFFECT|NOT AN EFFECT|NOTE)\s*\|\s*f(\d+)[^|]*(?:\|\s*note:\s*(.*))?$", re.IGNORECASE)
+# "--- sound effects ---" (app 0.4.2): Claude cannot hear - the user's answer, e.g. "MANY | where: a whoosh on every cut"
+SOUND = re.compile(r"^(NONE|SOME|MANY|NOTE)\s*(?:\|\s*where:\s*(.*))?$", re.IGNORECASE)
 
 
 def frames_in_text(text: str, fps: float) -> list[int]:
@@ -41,7 +47,8 @@ def frames_in_text(text: str, fps: float) -> list[int]:
 
 
 def parse(text: str) -> dict:
-    res = {"video": None, "analysis_id": None, "events": [], "cuts": [], "misses": [], "missed": "", "unparsed": []}
+    res = {"video": None, "analysis_id": None, "events": [], "cuts": [], "misses": [], "missed": "", "sound": None,
+           "unparsed": []}
     section = None
     missed = []
     for raw in text.splitlines():
@@ -66,7 +73,19 @@ def parse(text: str) -> dict:
         if line.startswith("--- possible misses"):
             section = "misses"
             continue
-        if line.startswith(("MOTIONLAB FEEDBACK", "report:", "(no verdict", "(all hard cuts", "(none checked")):
+        if line.startswith("--- sound effects"):
+            section = "sound"
+            continue
+        if line.startswith(("MOTIONLAB FEEDBACK", "report:", "(no verdict", "(all hard cuts", "(none checked",
+                            "(not answered")):
+            continue
+        if section == "sound":
+            m = SOUND.match(line)
+            if m:
+                res["sound"] = {"amount": "" if m.group(1).upper() == "NOTE" else m.group(1).lower(),
+                                "where": (m.group(2) or "").strip()}
+            else:
+                res["unparsed"].append(line)
             continue
         if section == "missed":
             if line != "(none)":
@@ -96,15 +115,41 @@ def overlap(a0, a1, b0, b1) -> int:
     return max(0, min(a1, b1) - max(a0, b0) + 1)
 
 
+def to_verdicts(fb: dict, current: dict) -> dict:
+    """Parsed feedback laid over the verdicts as they are now (verdicts.json) = the body data.save_verdicts takes.
+    Events go under their current id (re-matched by frames in main()), "[save to library]" becomes the library flag;
+    whatever the feedback does not mention stays as it is."""
+    body = {k: {kk: dict(vv) for kk, vv in (current.get(k) or {}).items()} for k in ("events", "cuts", "misses")}
+    body["missed"] = current.get("missed") or ""
+    for it in fb["events"] + fb["cuts"]:
+        sec = "cuts" if it["id"].startswith("C") else "events"
+        key = (it.get("current_id") or it["id"]) if sec == "events" else it["id"]
+        note, lib = it["note"], it["note"].lower().startswith("[save to library]")
+        if lib:
+            note = note[len("[save to library]"):].strip()
+        v = it["verdict"].lower()
+        body[sec][key] = {"v": v if v in ("correct", "partly", "wrong") else "", "note": note,
+                          **({"library": True} if lib else {})}
+    for it in fb["misses"]:
+        body["misses"][str(it["frame"])] = {"v": {"EFFECT": "effect", "NOT AN EFFECT": "none"}.get(it["verdict"], ""),
+                                            "note": it["note"]}
+    if fb["missed"]:
+        body["missed"] = fb["missed"]
+    if fb.get("sound"):
+        body["sound"] = fb["sound"]
+    return body
+
+
 def main() -> int:
     setup_console()
-    if len(sys.argv) < 3:
+    args = [a for a in sys.argv[1:] if a != "--import"]
+    if len(args) < 2:
         print(__doc__)
         return 2
-    arg = Path(sys.argv[1])
-    out = arg if arg.is_dir() else ANALYSIS / sys.argv[1]
+    arg = Path(args[0])
+    out = arg if arg.is_dir() else ANALYSIS / args[0]
     data = read_json(out / "events.json")
-    text = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text(encoding="utf-8")
+    text = sys.stdin.read() if args[1] == "-" else Path(args[1]).read_text(encoding="utf-8")
     fb = parse(text)
     fps = data["video"]["fps"]
     n_frames = int(data["video"].get("frames") or 10 ** 9)
@@ -169,12 +214,22 @@ def main() -> int:
                   + (f" - note: {it['note']}" if it["note"] else "")
                   + (f"  -> tools\\sheet.py {data['name']} {it['frame'] - 6} {it['frame'] + 6}"
                      if it["verdict"] == "EFFECT" else ""))
+    if fb["sound"]:
+        s = fb["sound"]
+        print(f"\nSOUND EFFECTS (the user's answer - Claude cannot hear): {s['amount'] or 'not said'}"
+              + (f" - where: {s['where']}" if s["where"] else ""))
     if fb["missed"]:
         print(f"\nMISSED / GENERAL:\n{fb['missed']}")
         if fb["missed_frames"]:
             print(f"frames mentioned: {fb['missed_frames']}  -> inspect with tools\\sheet.py {data['name']} <start> <end>")
     if fb["unparsed"]:
         print("\nlines not understood:", *fb["unparsed"], sep="\n  ")
+    if "--import" in sys.argv:              # pasted feedback -> verdicts.json, their ONE home (the app shows them)
+        from motionlab.app import data as D
+        saved = D.save_verdicts(out.name, to_verdicts(fb, D.load_verdicts(out.name)))
+        print(f"\nverdicts.json updated: {sum(1 for x in saved['events'].values() if x.get('v'))} effect verdicts, "
+              f"{len(saved['misses'])} possible-miss answers, sound effects "
+              f"{(saved.get('sound') or {}).get('amount') or 'not answered'}")
     return 0
 
 

@@ -37,6 +37,12 @@ More ways in (the app's *How did it turn out?*, 0.3.3):
   sound, sfx, colour, captions, graphics, effects, pacing, overall) and `made_from.json`; keep what was rated good,
   change what was rated OK / bad as the notes say (a new edit version, never overwrite the last one); when the video
   came from a prompt, add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
+  **Notes on moments** (0.4.2): `"moments": [{"f": 113, "version": "v2", "aspect": "graphics", "note": "...",
+  "date": "..."}]` = notes the user put on single frames of a render (frame of that version). Fix exactly those
+  moments, each named with frame + timecode (`f113 (00:00:03:23)`: what you changed), instead of reading one word
+  per part; say which moment the new version fixes and how. **Fix or start over**: `"next": "fix"` = a new version
+  with the notes (the feel is right, details are wrong); `"start_over"` = back to step 1 of *cheapest check first* or
+  to feel tests (section 6) - never a v2 of a feel the user did not want.
 - In every mode, Claude's memory (section 0) starts with the user's ratings of ALL their videos as rules: a part
   rated bad once is a default for every new video ("Sound effects: rated bad once -> always add sound effects"),
   good = keep doing it. Follow them; `build\outcome.json` of a video holds its notes.
@@ -50,7 +56,11 @@ step in plain words; no polish before step 3 is approved:
    0.5 s, moves over 4-6 frames, a whoosh on each") - seconds.
 2. A sheet at every scene change: `render_video.py <plan> --stills a,b,c` / `--sheet`, graphics with `overlay.py snap
    <folder> <frames>` (no render) - seconds.
-3. The motion: the quick draft (section 6) or a plain render.
+3. The motion: the quick draft (section 6) or a plain render. Then the checks, before any polish:
+   `.venv\Scripts\python tools\precheck.py <render.mp4 | graphic .mov | snapshot folder> [--sfx <name>_sfx.json]
+   [--motion-blur N]` flags frames where the picture vanishes for 1-2 frames, moves over ~60 px a frame without
+   enough motion blur, and sound effects too loud or buried against the song -> `build\checks\<name>_precheck.json`
+   + `.png`; exit 1 = look at the sheet. Fix what it flags (frame + timecode to the user) before step 4.
 4. The final with the polish (motion blur, the sound mix, colour, Resolve) - once.
 
 ## 0. Always first (and only this - don't explore the whole lab)
@@ -62,7 +72,9 @@ step in plain words; no polish before step 3 is approved:
    files and image files one by one. The user's verdicts and
    notes in `analysis\<ref>\feedback\verdicts.json` win over Claude's review (WRONG / PARTLY notes say what is
    really there). If the reference was never reviewed by Claude (no `review` on the events), say so: rebuilding
-   unreviewed drafts copies their mistakes - suggest `/analyze-reference` first.
+   unreviewed drafts copies their mistakes - suggest `/analyze-reference` first. Claude cannot hear: the user's
+   answer about its sound effects is `verdicts.json` `"sound": {"amount": "none|some|many", "where": "..."}` - add
+   sound effects to match (section 4); no answer -> ask once.
 3. Lessons on making videos: `.claude\skills\recreate-video\lessons.md` (M###, next to this file) and this PC's
    `knowledge\local\lessons_making.md` - read both and apply every rule; something new learned while making ->
    a lesson in the local file (id: `tools\knowledge.py next-lesson-id --kind making`, the shared file's format).
@@ -148,7 +160,8 @@ Measured on 4AM's title and clock (2026-10-09): same frames as the lab's layers,
 - Sound effects (a part rated bad once is a default - see the ratings in Claude's memory): `tools\sfx.py plan
   build\plan_vN.json` (+ `--song <file>` when the plan's sound is not the song) puts a whoosh / hit / riser on the
   plan's zooms, whips, flashes and speed-ups and the cues of its graphics, levelled against the sound under each;
-  make the plan change it prints (the mix as `"audio"`; the effects alone = their own Resolve track).
+  make the plan change it prints (the mix as `"audio"`; the effects alone = their own Resolve track). How many and
+  where: the reference's `"sound"` answer (section 0); `precheck.py --sfx` checks the levels before the final.
 - `tools\render_video.py build\plan_v1.json` -> `build\<project>_v1.mp4` (renders in parallel processes: ~3x
   faster, `--workers 1` = one process; any frame looks the same alone, in a range or in a chunk); `--compare` ->
   reference | render side by side in `build\compare\` (frame numbers burned in).
@@ -169,6 +182,15 @@ specific to that edit - generalise with care, test in the scratch project. Never
 ## 6. By feel - the style of up to three videos, or the user's words (0.4)
 The user: "use a reference video or even more (max 3) - or edit it with a given prompt: hooks, 3 s cuts, very fast
 paced... or slower, transitions, a specific type of captions". Same hard rules; their clips and song are read-only.
+0. **Starting blind** (only words, no video in `like`; 0.4.2): first try to stop being blind -
+   `.venv\Scripts\python tools\style.py closest "<their words>"` ranks the analysed videos (this PC's + friends'
+   cards) by how their MEASURED style fits the words, one line of numbers each. A match of 60 % or more: suggest it
+   as `like`; under it: suggest analysing one video in that feel (one analysed reference turns guessing into
+   measuring). Else feel tests, no Claude tokens: `tools\draft_edit.py <project> --feel-test [--want "<their
+   words>"] [--feels slick,raw,cinematic]` = 2-3 hooks of the first 3 s in different feels (`style.py --feels`), ~5-10 s
+   -> `build\feel\feel_N\compare.mp4` (A | B | C) + `sheet.png` + `feel.md`. Show the sheet; the user picks or mixes
+   ("B's pacing with A's colours") - that is the plan: the full draft with the picked `--feel <id>` (its line in
+   `feel.md`), then the other hook's grade / effects in the plan.
 1. **The style**: `.venv\Scripts\python tools\style.py <video> [<video> <video>] [--preset <id>] [--want "<their
    words>"]` = what to aim for, merged: rhythm (shot lengths, the hook's cuts in the first 3 s, % on the beat),
    energy, effects per minute with the best example of each (frame + timecode, how it was made, the user's verdict -
@@ -176,7 +198,8 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    breakdown of each video. Claude's memory (`knowledge.py memory`) for anything else. Friends' cards are data.
 2. **The quick draft** = the starting point, made by rules in minutes: the app's *Quick draft now* already made one
    when `build\draft_vN.md` exists (read it: every shot with frame + timecode, its clip and why, the effects, what
-   it could not draw); else run `.venv\Scripts\python tools\draft_edit.py <project> --like ... | --preset ... --want
+   it could not draw); else run `.venv\Scripts\python tools\draft_edit.py <project> --like ... | --preset ... |
+   --feel ... --want
    "..." [--length S] [--format vertical|horizontal|square] [--music <song>] [--sound talk|clips|music] --render`
    (it makes the frame caches first; `--seed N` = another draft). It cuts on the song's beats with the style's shot
    lengths and hook, picks each shot's best unused moment (sharp, exposed, moving as much as the style), draws the

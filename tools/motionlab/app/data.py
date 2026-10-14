@@ -94,7 +94,23 @@ def verdicts_path(name: str) -> Path:
 def load_verdicts(name: str) -> dict:
     v = read_json(verdicts_path(name), None) or {}
     return {"events": v.get("events", {}), "cuts": v.get("cuts", {}), "misses": v.get("misses", {}),
-            "missed": v.get("missed", ""), "updated": v.get("updated")}
+            "missed": v.get("missed", ""), "sound": v.get("sound"), "updated": v.get("updated")}
+
+
+SOUND_AMOUNTS = ("none", "some", "many")           # 0.4.2: "sound effects in this video" (Claude cannot hear)
+
+
+def clean_sound(s, old=None):
+    """The user's answer on sound effects: {"amount": none|some|many, "where": text, "updated"} or None (not answered).
+    "updated" moves only when the answer changed."""
+    if not isinstance(s, dict):
+        return None
+    amount = s.get("amount") if s.get("amount") in SOUND_AMOUNTS else ""
+    where = " ".join(str(s.get("where") or "").split())[:2000]
+    if not amount and not where:
+        return None
+    same = isinstance(old, dict) and old.get("amount", "") == amount and old.get("where", "") == where
+    return {"amount": amount, "where": where, "updated": old.get("updated") if same and old.get("updated") else stamp()}
 
 
 def save_verdicts(name: str, body: dict, by_user: bool = False) -> dict:
@@ -123,6 +139,10 @@ def save_verdicts(name: str, body: dict, by_user: bool = False) -> dict:
             note = str(s.get("note", ""))[:4000]
             if v or note.strip():
                 clean["misses"][str(k)] = {"v": v, "note": note}
+    # sound effects (0.4.2): a page / import without the key keeps the old answer
+    snd = clean_sound(body["sound"], old.get("sound")) if "sound" in body else old.get("sound")
+    if snd:
+        clean["sound"] = snd
     ev = read_json(d / "events.json", {})
     clean.update(analysis_id=ev.get("analysis_id"), updated=stamp(),
                  changed=round(time.time(), 1) if by_user else old.get("changed"))
@@ -177,6 +197,11 @@ def feedback_text(name: str) -> str:
     if ev.get("near_misses"):
         L.append("--- possible misses ---")
         L.extend(ml or ["(none checked)"])
+    snd = S.get("sound") or {}                 # Claude cannot hear: the user's answer (NONE / SOME / MANY | where)
+    L.append("--- sound effects ---")
+    where = re.sub(r"\s*\n\s*", " / ", (snd.get("where") or "").strip())
+    L.append(((snd.get("amount") or "note").upper() + (f" | where: {where}" if where else ""))
+             if snd.get("amount") or where else "(not answered)")
     L.append("--- missed effects / general notes ---")
     L.append(S["missed"].strip() or "(none)")
     L.append("END")
@@ -562,7 +587,10 @@ def project(name: str) -> dict:
     plans = [_plan_info(p) for p in sorted(b.glob("plan_v*.json"))] if b.exists() else []
     renders = []
     for p in sorted(b.glob("*.mp4")) if b.exists() else []:
-        renders.append(_video(p, "resolve" if "_resolve_" in p.stem else "lab"))
+        r = _video(p, "resolve" if "_resolve_" in p.stem else "lab")
+        m = re.search(r"_(v\d+)$", p.stem)                 # the edit version a render shows (notes on moments)
+        r["version"] = m[1] if m else (p.stem[len(d.name) + 1:] if p.stem.startswith(d.name + "_") else p.stem)[:80]
+        renders.append(r)
     compares = [_video(p, "compare") for p in sorted((b / "compare").glob("*.mp4"))] if (b / "compare").exists() else []
     verifies = []
     for p in sorted(b.glob("verify_*.json")) if b.exists() else []:
@@ -609,6 +637,7 @@ def project(name: str) -> dict:
 
 # ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out
 ASPECTS = ("sound", "sfx", "colour", "captions", "graphics", "effects", "pacing", "overall")
+OUTCOME_NEXT = ("fix", "start_over")          # 0.4.2: How did it turn out? - fix this version / start over
 
 
 def new_project(name: str) -> dict:
@@ -828,7 +857,7 @@ def save_outcome(name: str, body: dict) -> dict:
         raise FileNotFoundError(name)
     p = d / "build" / "outcome.json"
     cur = read_json(p, {}) or {}
-    asp = cur.get("aspects", {})
+    asp = dict(cur.get("aspects", {}))
     for k, v in (body.get("aspects") or {}).items():
         if k not in ASPECTS or not isinstance(v, dict):
             continue
@@ -836,9 +865,51 @@ def save_outcome(name: str, body: dict) -> dict:
         if rating not in (None, "good", "ok", "bad"):
             raise ValueError(f"rating: good, ok or bad (got {rating!r})")
         asp[k] = {"rating": rating, "note": str(v.get("note") or "").strip()[:500]}
-    out = {"aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp()}
+    # 0.4.2: fix this version or start over (null = not answered); notes on moments of a render
+    nxt = cur.get("next") if cur.get("next") in OUTCOME_NEXT else None
+    if "next" in body:
+        nxt = body["next"] or None
+        if nxt not in (None, *OUTCOME_NEXT):
+            raise ValueError(f"next: fix or start_over (got {nxt!r})")
+    moments = [m for m in (cur.get("moments") or []) if isinstance(m, dict)]
+    if body.get("moment") is not None:
+        moments.append(clean_moment(body["moment"]))
+    if body.get("remove_moment") is not None:
+        r = body["remove_moment"] if isinstance(body["remove_moment"], dict) else {}
+        hit = next((i for i, m in enumerate(moments) if all(m.get(k) == r.get(k) for k in ("f", "version", "note"))
+                    and (not r.get("date") or m.get("date") == r.get("date"))), None)
+        if hit is None:
+            raise ValueError("that note is not there any more")
+        moments.pop(hit)
+    moments.sort(key=lambda m: (str(m.get("version", "")), int(m.get("f", 0))))
+    out = {"aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
+           "next": nxt, "moments": moments}
     write_json_atomic(p, out)
     return out
+
+
+
+def clean_moment(m) -> dict:
+    """A note on one moment of a render: {"f": frame of that render (0-based, its fps), "version": "v2", "aspect":
+    one of ASPECTS, "note": text, "date"} - /recreate-video improve fixes exactly those moments."""
+    if not isinstance(m, dict):
+        raise ValueError("a note needs a frame, a version, a part and the text")
+    try:
+        f = int(m.get("f"))
+    except (TypeError, ValueError):
+        raise ValueError("a note needs the frame it is about") from None
+    if not 0 <= f <= 10_000_000:
+        raise ValueError(f"frame out of range: {f}")
+    version = str(m.get("version") or "").strip()
+    if not re.fullmatch(r"[\w.\- \[\]()&'+,]{1,80}", version):
+        raise ValueError(f"which version is it about? (got {version!r})")
+    aspect = str(m.get("aspect") or "")
+    if aspect not in ASPECTS:
+        raise ValueError(f"part: one of {', '.join(ASPECTS)}")
+    note = " ".join(str(m.get("note") or "").split())[:500]
+    if not note:
+        raise ValueError("write what is wrong or right at that moment")
+    return {"f": f, "version": version, "aspect": aspect, "note": note, "date": stamp()}
 
 
 def prompt_styles(items: list[dict]) -> dict:
@@ -885,12 +956,22 @@ def colour_info(d: Path) -> dict | None:
                        "palette": x.get("palette") or []} for x in c.get("shots", [])]}
 
 
+def _mtime(p: Path) -> float:
+    try:
+        return p.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
 def memory() -> dict:
     """Claude's memory page (0.4): knowledge.memory() (videos, effects, lessons) + what was saved (effects for
-    DaVinci Resolve, graphics) and how many prompts there are. memory.md is rewritten when the cards changed."""
+    DaVinci Resolve, graphics) and how many prompts there are. memory.md is rewritten when what it is made of changed."""
     M = dict(KN.memory())
-    if not KN.MEMORY.exists() or KN.MEMORY.stat().st_mtime < max(
-            [p.stat().st_mtime for d in (KN.LOCAL_REFS, KN.SHARED_REFS) if d.exists() for p in d.glob("*.json")] or [0]):
+    # memory.md is stale when a card, a rating (outcome.json), a lesson or an answer on sound effects is newer
+    src = [p for d in (KN.LOCAL_REFS, KN.SHARED_REFS) if d.exists() for p in d.glob("*.json")] + KN._outcomes() + [
+        p for p in (KN.MAKING_LESSONS, KN.LOCAL_MAKING, KN.SHARED_LESSONS, KN.LOCAL_LESSONS) if p.exists()] + (
+        list(ANALYSIS.glob("*/feedback/verdicts.json")) if ANALYSIS.exists() else [])
+    if not KN.MEMORY.exists() or KN.MEMORY.stat().st_mtime < max([_mtime(p) for p in src] or [0]):
         try:
             KN.memory_index()
         except OSError:

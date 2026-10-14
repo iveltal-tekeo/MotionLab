@@ -59,6 +59,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
   overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
   `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
+  0.4.2 (`data.save_outcome` keeps `aspects` + `updated` as they were): *What next?* = **Fix this version** (*Improve
+  it with Claude*) / **Start over** (a different feel: *New edit with these clips…*, no Improve - never a v2 of a feel
+  the user did not want) -> outcome.json `"next": "fix" | "start_over" | null` (a second click clears it); **notes on
+  moments** under every render on Renders (`momentNotes`: the player's frame + timecode, a part of `ASPECTS`, the
+  text, Add note / Enter; listed by frame, a click seeks the player, ✕ removes; a render shows its version's notes;
+  the Overview lists them, `momentsSummary`) -> outcome.json `"moments": [{"f", "version", "aspect", "note",
+  "date"}]` (f = that render's frame, 0-based at its fps; `data.clean_moment`; POST outcome `moment` /
+  `remove_moment` = the note as listed); `project()` renders carry `version` (`_v2` -> "v2", else the name's rest).
+  `/recreate-video improve` fixes exactly those moments.
   **Prompts** - the current state (the user's wishes, 0.3.4: "more user friendly", "too crowded", "3 per row, just
   the title, the rating, if I need Higgsfield / clips, the category - the tags are noise", "too ambiguous, hard on
   the eye"; 2026-10-13: "tell the user it reviews and improves"):
@@ -161,6 +170,11 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   friends (`memLearned`). GET `/api/memory` = `data.memory()` = `knowledge.memory()` (cached on the cards' and lessons'
   mtimes; friends' cards too) + saved counts + prompts; it rewrites `knowledge\local\memory.md`
   (`knowledge.memory_index()`, also rebuilt with the summary) when a card is newer - the file the skills read.
+  0.4.2: also when an `outcome.json` (`KN._outcomes()`), a lessons file of either kind or a `verdicts.json` (the sound
+  answer: memory.md says "sound effects: many - ... (the user's answer)" per video) is newer. Overview: **Your ratings
+  -> rules for every new video** (`memRules`, `knowledge.ratings()`: bad = a rule for every new video, OK with a note,
+  then one line each for fine / keep doing it); Lessons: two columns, *Analysing videos* (L###) and *Making videos*
+  (`lessons.making`, M###), incoming split by `kind`; the lessons tile counts both.
 - Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
   is missing, the three ways in, roadmap, then status), **Analyze** (#/analyze, above), **Edit**
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
@@ -186,6 +200,12 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   the note, Ctrl+Enter moves on; an end card after the last effect) and **Possible misses** (red until answered:
   "It's an effect" + what / "Not an effect"; stored in verdicts.json `misses` by frame and exported as a
   `--- possible misses ---` section that `tools\feedback.py` parses). False alarms stay hidden unless asked for.
+  0.4.2 (plan item 8, Claude cannot hear): the tab is *Possible misses & sound* (*Sound effects* when a video has no
+  possible miss, so every analysis has it) and starts with **Sound effects in this video** (`drawSound`: None / Some /
+  Many + where, red until answered, counted in the tab's badge, the progress line and the end card; not in the
+  workflow strip's verdicts step) -> verdicts.json `sound`, exported as `--- sound effects ---` (`MANY | where: ...`,
+  `(not answered)`); `feedback.py` parses it (`fb["sound"]`) and `--import` lays pasted feedback over verdicts.json
+  (`feedback.to_verdicts` + `data.save_verdicts`).
 - "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
   interpret are stripped, double quotes become single ones) with a fixed first message, a task (`system.TASKS`:
   review / feedback / lessons / library / recreate / prompt / plan / free). First a dialog (`openClaude`, unless
@@ -246,9 +266,11 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
   6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
-  check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data;
+  17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools.
-- The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`;
+- The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
+  `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
   report.html starts from it and keeps local changes in the browser under the video name).
 - Testing after a change: start `app.py --no-window --stay --no-update --port 879x` (NOT 8765: the user's own app
   may run there and a different version would be replaced; `--no-update`: without it the test server checks GitHub

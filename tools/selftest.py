@@ -13,8 +13,9 @@ Scoring (automatic detector output only - blind to the ground truth):
   false pos.  detected events that match no ground-truth effect
 PASS = every effect found with correct type and frames, every cut exact, BPM/beat checks pass, 0 false positives.
 First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles),
-the quick draft's rules (check_draft), sound effects on known frames and levels (check_sfx), ratings as rules and the
-two kinds of lessons (check_lessons_ratings); --extended also renders the starter graphic (check_template).
+the quick draft's rules (check_draft), feel tests (check_feels), sound effects on known frames and levels (check_sfx),
+the checks before the final render (check_precheck), ratings as rules and the two kinds of lessons
+(check_lessons_ratings); --extended also renders the starter graphic (check_template).
 """
 from __future__ import annotations
 
@@ -414,6 +415,28 @@ def check_sfx() -> dict:
     return {"passed": r["passed"], "seconds": r["seconds"]}
 
 
+def check_feels() -> dict:
+    """Feel tests when starting blind (0.4.2, motionlab.style): the default three feels, the words that pick one, and
+    a raw hook that really is busy - no video."""
+    from motionlab import style as ST
+    print("\n=== feel tests ===")
+    ok = (ST.pick_feels("") == ["slick", "raw", "cinematic"] and ST.pick_feels("slow moody")[0] == "cinematic"
+          and ST.pick_feels("fast glitchy")[0] == "raw"
+          and ST.feel_style("raw", hook=True)["effects"][0]["per_min"] >= 20)
+    print(("PASS  " if ok else "FAIL  ") + "feels: slick / raw / cinematic by default, 'slow moody' -> cinematic, "
+          "'fast glitchy' -> raw, a raw hook has >= 20 effects a minute")
+    return {"passed": ok}
+
+
+def check_precheck() -> dict:
+    """Checks before the final render (0.4.2, motionlab.precheck), no video: synthetic frames with a known gap, a known
+    speed, motion-blur copies vs a smear, a clean clip, and a sound report with one loud and one buried cue."""
+    from motionlab import precheck as PC
+    print("\n=== checks before the final render ===")
+    r = PC.selfcheck()
+    return {"passed": r["passed"], "seconds": r["seconds"]}
+
+
 def check_lessons_ratings() -> dict:
     """Claude's memory (0.4.2): the user's ratings of every video as rules, and the two kinds of lessons (analysis L###,
     making videos M###) - in a temp folder, no video."""
@@ -438,7 +461,8 @@ def main() -> int:
     ap.add_argument("--only-extended", action="store_true")
     args = ap.parse_args()
     st = HERE / "selftest"
-    results = {"titles": check_titles(), "draft": check_draft(), "sfx": check_sfx(), "memory": check_lessons_ratings()}
+    results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
+               "precheck": check_precheck(), "memory": check_lessons_ratings()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)
