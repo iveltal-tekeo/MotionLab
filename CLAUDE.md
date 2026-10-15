@@ -25,6 +25,7 @@ explore the whole lab:
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | edit the user's footage like references (1:1 or by feel, a quick draft) or from their words; then Resolve | the `/recreate-video` skill |
 | a script to say on camera: improve one for reach or write one from zero (Prepare), hooks | the `/write-script` skill |
+| titles, thumbnails, a video's package (description, chapters, hashtags), YouTube's A/B test | the `/write-title` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), briefs, image prompts | the `/write-prompt` skill |
 | a video from zero: a motion-graphics video (HyperFrames), a plan + prompts for AI video tools | the `/generate-video` skill |
 | what to do next: status, unreleased changes, roadmap, plans, ideas, what waits on the user | the `/whats-next` skill |
@@ -62,7 +63,10 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `library_picks.json` (the user's picks in the app), `pruned.json`, `edit_request.json` (0.4: what *New edit*
   asked for), `made_from.json`, `draft_vN.md` + `draft\` (the quick draft's notes, beats, sound), `colour\`
   (match LUTs `match_*.cube`),
-  `generate_request.json` (0.4: a video from zero, Generate) + `ai_plan.md` (the shots for AI tools)
+  `generate_request.json` (0.4: a video from zero, Generate) + `ai_plan.md` (the shots for AI tools), `publish\`
+  (0.4.3: the ready-to-post package - `package.json`, title / description / hashtags .txt, `thumb_<A|B|C>_16x9 /
+  _9x16 / _9x16_crops.png`, `thumbs\<id>\` = each thumbnail as an editable graphic, `candidates\`, `images\` =
+  pictures the user brought, e.g. from an AI image tool)
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
@@ -75,7 +79,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   the motion graphic drawn from it, played live on the app's Home) -> `roadmap.png` (README; `roadmap.mp4` stays local)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
-  `write-script\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`, `write-prompt\`, `whats-next\`
+  `write-script\` (+ `guidelines.md`), `write-title\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`,
+  `write-prompt\`, `whats-next\`
 - Repo files (v0.4.1): `README.md`, `setup.bat`, `LICENSE` (MIT), `CHANGELOG.md` (the Update button's dialog shows
   it), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
@@ -97,12 +102,24 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `content.py transcript <name> | show <name> [a b] | stats <name>` what a video says (0.3.5): the platform's subtitles
   -> `analysis\<name>\content\transcript.json`, frame + timecode per line / word (MCP `transcript`); `stats.json` =
   views, likes, comments, followers, upload date, views / followers (+ history); both stay local (app: What it says
-  tab); no subtitles or no link -> speech to text of the analysis' audio when installed (`auto` / `speech_transcript`)
+  tab); no subtitles or no link -> speech to text of the analysis' audio when installed (`auto` / `speech_transcript`);
+  `thumbnail <name>` (0.4.3; `stats` / `transcript` do it too) = the video's own thumbnail -> `content\thumbnail.*`
+- `thumbnail.py candidates <project|video> [--n 12] | make <project> --id A (--frame f [--clip id] | --image file)
+  --words "..." [--template outline|block|split] [--set k=v] | render <project> --id A | check <image|project>
+  [--title] [--script id|file] [--niche] | refs | templates | platforms | selfcheck` thumbnails (0.4.3): candidate
+  frames (sheet with frame + timecode), HTML templates (`tools\overlays\thumbnails\`) as stills at 1280x720 + 1080x1920
+  + the grid-crops preview, the check (PASS / WARN / FAIL per rule with its number; owns package.json "candidates" /
+  "thumbnails"); faces = OpenCV's YuNet model shipped in `tools\models\` (227 KB, MIT; README there)
+- `publish.py chapters <project> [--from plan|transcript] | write <project> --title "..." [--chapters "f|name;..."]
+  [--hashtags "#a #b"] [--titles title-NNN] | show | selfcheck` the ready-to-post words (0.4.3): chapter points with
+  frame + timecode, then title / description (YouTube `0:00` chapters) / hashtags + package.json (its keys only);
+  YouTube's rules checked first (dated in `.claude\skills\write-title\guidelines.md`), nothing written on a FAIL
 - `script.py check <file|script id> [--length s] [--like ...] | show <id|req-NNN> | requests` Prepare's script check
   (no Claude: hook, length at a measured speaking rate, flat stretches, fillers, CTA...; rules in
   `.claude\skills\write-script\guidelines.md`) and the app's requests, for `/write-script`
 - `prompts.py list | show | import | annotate | kind | style | rate | template` the prompt library (0.4; MCP
-  `prompts`; kinds brief (a brief for Claude to make a video) / shot / image / hook / script; annotate = Claude's
+  `prompts`; kinds brief (a brief for Claude to make a video) / shot / image / hook / script / title (0.4.3: titles +
+  thumbnail concepts + hook, from a title request `script.save_title`, kind "title"); annotate = Claude's
   check per part; style = analysed references whose measured style a prompt follows, `knowledge.style()`)
 - `speech.py install | status | transcribe <video> [--names "..."] [--model small|base]` speech to text for your
   own videos (faster-whisper on the CPU, optional install; chosen 2026-10-12 after measuring) -> words with frame +
@@ -166,8 +183,11 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 `MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's ways in: Home ("What do
 you want to do?"), **Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
 misses, Delete), **Prepare** (#/prepare: the script before filming - *Improve my
-script* / *Write one from zero* -> `/write-script`; scripts live in the prompt library), **Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
-their settings, Resolve check-up, library picks, "How did it turn out?" -> `build\outcome.json`), **Generate**
+script* / *Write one from zero* -> `/write-script`, *Title & thumbnail first* -> `/write-title request`; scripts and
+titles live in the prompt library), **Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
+their settings, Resolve check-up, library picks, a video's **Publish** tab (0.4.3: title, thumbnails A / B / C,
+description, chapters, hashtags - `/write-title package` or by hand), "How did it turn out?" -> `build\outcome.json`
+(+ `"packaging"`: CTR per thumbnail variant + the link, typed in after posting)), **Generate**
 (#/generate: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
 #/prompts), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,

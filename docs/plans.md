@@ -14,14 +14,14 @@ another.
 
 ## Where it stands (2026-10-15)
 
-Released last: **0.4.2.1** (2026-10-15, CHANGELOG.md) - downloads that keep working (yt-dlp's age + update, Deno,
-player copies, carousels, the browser login) and *Report a problem*. Before it: 0.4.2 (check before you render)
-and 0.4.1.1 (each section its own feel). The released plans' full text: plans_history.md.
+Released last: **0.4.3** (2026-10-15, CHANGELOG.md) - title + thumbnail: Prepare's *Title & thumbnail first*, a
+video's Publish tab (thumbnails A / B / C, the check, chapters, hashtags), CTR per variant. Before it: 0.4.2.1
+(downloads that keep working, Report a problem) and 0.4.2 (check before you render). The released plans' full
+text: plans_history.md.
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.4.3 | Title + thumbnail | **next** | M |
-| 0.4.4 | Prompt generator | planned - the library, `/write-prompt` and briefs shipped in 0.3.x | M |
+| 0.4.4 | Prompt generator | **next** - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
 | 0.4.5 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations | L |
 | 0.4.6 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
 | 0.5.0 | Content generation | planned - its sound effects tool shipped early in 0.4.1.1 | L, ships in parts |
@@ -410,71 +410,3 @@ prompts we have given and you have analysed structurally so we can generate good
     references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
     look measured too (0.4.6), and several references of one creator averaged into one style.
 - **Needs**: your prompts (the prompt library or pasted in the chat).
-
-## 0.4.3 - planned - Title + thumbnail: packaging for clicks (horizontal and vertical)
-
-**Ships when**: for one of the user's videos, 10 titles and 3 thumbnails (16:9 and the 9:16 cover) land in a
-ready-to-post folder and pass the thumbnail check, whose rules have self-test cases with known answers.
-
-**The user's words (2026-10-14)**: "un apartado de miniatura ... que tuviera opción tanto vertical como horizontal,
-creo que la miniatura también es de lo más importante ya que: el impacto numérico: CTR (click-through rate) - la
-miniatura y el título juntos determinan el CTR. Estaría guay que con Claude pudieras sacar el título y la miniatura
-... para que así estuviera completo el vídeo de YouTube, y ayudara a convertir con más visitas."
-
-**Where it goes in the app** (recommended; the user decides):
-- **Prepare** gets a third way: **Title & thumbnail first**. Many creators decide the packaging before they film, so
-  the video delivers what the title promises. Claude writes about 10 titles in different patterns and 2-3 thumbnail
-  concepts, each with a sketch in words, the 2-4 words on it, and **the shot to film for it**. The hook of the script
-  (`/write-script`) has to agree with the title: what they clicked for, they get in the first 3 s.
-- **Edit > a video > Publish** (a new tab on the finished video, no new sidebar item) makes the final package:
-  - the thumbnail **16:9** (1280×720) and the **9:16 cover** (1080×1920, with the 4:5 / 1:1 grid crops marked)
-  - the title
-  - the description with chapters from the edit or the transcript (YouTube's `0:00` format in the text; the app
-    shows frame + timecode next to each)
-  - hashtags
-  All of it goes in a ready-to-post folder `build\publish\`. Check each platform's current cover / thumbnail options
-  when building, because they change.
-
-**How a thumbnail is made** (two routes, both end in the same check):
-1. **From your own footage** (free, local): the lab picks candidate frames (sharp, still, well lit, and a big subject
-   if a cheap detector proves good enough). Claude looks at them as a contact sheet and picks the expression or the
-   moment. The design is an HTML template (the 0.3.2 graphics pipeline, rendered as a still): big text, outline /
-   shadow, a colour block. Its settings stay editable in the app like any graphic. Cutting the subject out needs a
-   background-removal model (rembg is ~170 MB). Measure it on an ordinary laptop first, or go without it
-   (the lab's rule: light and tested first).
-2. **With an AI image tool**: Claude writes the image prompt (kind `image` in the prompt library: Nano Banana / GPT
-   Image, your photo as the reference). You make it on the site and bring the picture back; the lab adds the text
-   and runs the check.
-
-**The thumbnail check** (no Claude, like the script check):
-- the thumbnail shown at the size of a phone feed: is the text still readable?
-- 2-4 words, at least ~20 % of the height
-- text / background contrast (WCAG ratio)
-- the subject's share of the frame
-- brightness / saturation compared with the outperforming videos of your niche (below)
-- the title's length on a phone (rule of thumb ~50-60 characters before it is cut)
-- the thumbnail text doesn't repeat the title
-- the title's promise shows up in the script's first 3 s
-
-Claude makes **3 variants** for YouTube Studio's own A/B test ("Test & compare"; check its current limits).
-
-**Learning what gets clicks**:
-- From references: downloads also keep the video's thumbnail (yt-dlp `--write-thumbnail`) into
-  `analysis\<name>\content\`. The title is already in `refs\downloads.json`, and the outperformer score (views ÷
-  followers) in `content\stats.json`. The lab measures cheaply: colours (colour.py's palette), contrast, brightness.
-  Claude describes the composition (face, expression, text, arrows). The result is "packaging that worked" per niche
-  in Claude's memory, outperformers first.
-- From your own videos: CTR lives in YouTube Studio, and the lab never logs into accounts (no tokens). After posting,
-  you type in the CTR per variant (or paste a screenshot), and the public views come from `content.py stats` with the
-  link. It is saved with the video's *How did it turn out?* (a new aspect: packaging), and Claude repeats the
-  patterns that won.
-
-**Needs first**: Prepare (built 2026-10-14). The graphics pipeline exists (0.3.2). The content foundations (0.4.5)
-and describe video (0.8.0) make the "what worked" part better later; it works without them. **Size**: medium.
-Order: Prepare's concept card + titles first (text only), then the Publish tab from your frames, then the AI-image
-route, then learning from references.
-**Started 2026-10-15**, in two phases: (1) next to 0.4.2.1 - the thumbnail engine (`tools\thumbnail.py`:
-candidates, HTML templates for 16:9 + the 9:16 cover, the check, reference thumbnails via `content.py`) and the
-packaging (`/write-title` skill, prompt-library kind `title`, title requests, `tools\publish.py`: description,
-chapters, hashtags); (2) after 0.4.2.1 ships - the app (Prepare's *Title & thumbnail first*, Edit > a video >
-*Publish*). The shared file: `build\publish\package.json` (each tool updates only its own keys).

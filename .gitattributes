@@ -11,3 +11,4 @@
 *.jpg binary
 *.mp4 binary
 *.wav binary
+*.onnx binary

@@ -728,7 +728,7 @@ def _short(t, n: int) -> str:
 # "note"}}, "updated": "YYYY-MM-DD HH:MM"} - one per video (project), rewritten on every change
 PARTS = {"sound": "Sound and music", "sfx": "Sound effects", "colour": "Colour", "captions": "Captions",
          "graphics": "Motion graphics", "effects": "Effects and transitions", "pacing": "Pacing and cuts",
-         "overall": "Overall"}
+         "packaging": "Title and thumbnail", "overall": "Overall"}
 BAD_RULE = {                       # a part rated bad once -> the default for every later video, in plain words
     "sound": "always get the music right first (its level, where it starts, cuts on its beats)",
     "sfx": "always add sound effects",
@@ -737,6 +737,8 @@ BAD_RULE = {                       # a part rated bad once -> the default for ev
     "graphics": "always check the graphics on snapshots against the reference (size, speed) before any render",
     "effects": "always only effects the reference really has, rebuilt as its examples say",
     "pacing": "always pace it from measured numbers (cuts per minute, shot lengths, the first 3 s)",
+    "packaging": "always 3 thumbnail variants from the video's best moments, checked before posting, and a title the "
+                 "first 3 s keep",
     "overall": "always agree the plan and a sheet of stills with the user before building"}
 
 
@@ -935,6 +937,14 @@ def memory_index(write: bool = True) -> str:
                      + (f" Rebuild: {best['rebuild']}" if best["rebuild"] else "")
                      + (f" User: {best['note']}" if best["note"] else ""))
         L.append(line)
+    try:                                         # 0.4.3: the references' own thumbnails (content.py saves them)
+        from .thumbnail import packaging_lines
+        pk = packaging_lines()
+    except Exception:                            # noqa: BLE001 - numpy / OpenCV missing or a bad file: no block
+        pk = []
+    if pk:
+        L += ["", "## Packaging that worked (the references' thumbnails per niche, outperformers first; "
+              "tools\\thumbnail.py refs)", ""] + pk
     les = M["lessons"]
     L += ["", "## Lessons", "",
           f"- {len(les['shared'])} shared rules ({', '.join(x['id'] for x in les['shared'])}) in "

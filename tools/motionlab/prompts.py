@@ -20,13 +20,15 @@ from .util import LAB, read_json, safe_name, write_json
 FOLDER = "knowledge/local/prompts"                      # relative to the lab (the app's "Folder" button)
 HOME = LAB / FOLDER
 KINDS = {"brief": "Brief for Claude", "shot": "Video-model shot", "image": "Image (still / start frame)",
-         "hook": "Hook (first 3 s)", "script": "Talking script"}      # brief first: the user's main use (0.3.4)
+         "hook": "Hook (first 3 s)", "script": "Talking script",
+         "title": "Title & thumbnail"}      # brief first: the user's main use (0.3.4); title = 0.4.3 packaging
 # what each kind is, in words (the Add dialog and the kind chips' tooltips)
 KIND_HELP = {"shot": "one shot of AI video - for Seedance, Kling, Higgsfield...",
              "image": "a still or a start frame - for Nano Banana, GPT Image, Kling Image...",
              "hook": "the first 3 seconds you say or show",
              "script": "the words you say on camera",
-             "brief": "you tell Claude how to make or edit a video: length, feel, colour, pacing, SFX, graphics..."}
+             "brief": "you tell Claude how to make or edit a video: length, feel, colour, pacing, SFX, graphics...",
+             "title": "the titles and thumbnail ideas for a video - before you film, or for the final post"}
 SOURCES = ("tested", "creator", "written")
 RATINGS = ("good", "ok", "bad")
 # the slots Claude splits a prompt into (a guide, not a schema: a prompt may skip some or need another). "references"
@@ -48,9 +50,16 @@ SLOTS = {
               "voice & audio", "music", "sfx",
               "colour", "motion graphics", "captions & text",
               "ending", "deliverable", "questions first"],
+    # 0.4.3: a video's packaging (`/write-title`, .claude\skills\write-title\guidelines.md) - the record's own fields
+    # `titles` / `concepts` / `hook` hold the content; these slots are Claude's check of it
+    "title": ["titles", "thumbnail", "words on it", "shot to film", "colours", "hook"],
 }
 STATUSES = ("clear", "vague", "missing")                # Claude's check of one slot (structure[i].status)
 HOOK_PATTERNS = ["question", "bold claim", "number", "story", "contrarian", "demo", "curiosity gap", "call-out"]
+# title patterns (`/write-title`: about 10 titles, each in a different one; a guide, other names are allowed)
+TITLE_PATTERNS = ["curiosity gap", "number / result", "how-to", "warning / mistake", "question", "I tried",
+                  "before -> after", "contrarian", "challenge", "list", "story", "call-out"]
+TITLE_MAX = 100                                         # YouTube refuses a longer title (support.google.com 57404)
 _LOCK = threading.RLock()
 
 
@@ -59,9 +68,9 @@ def _today() -> str:
 
 
 def _path(pid: str) -> Path:
-    m = re.fullmatch(r"(shot|image|hook|script|brief)-(\d{3,})", str(pid))
+    m = re.fullmatch(r"(shot|image|hook|script|brief|title)-(\d{3,})", str(pid))
     if not m:
-        raise ValueError(f"not a prompt id: {pid!r} (like shot-001, image-002, hook-003, script-004)")
+        raise ValueError(f"not a prompt id: {pid!r} (like shot-001, image-002, hook-003, script-004, title-005)")
     return HOME / m[1] / f"{pid}.json"
 
 
@@ -110,7 +119,9 @@ def next_id(kind: str) -> str:
 def _check(r: dict) -> None:
     if r.get("kind") not in KINDS:
         raise ValueError(f"kind must be one of {', '.join(KINDS)} (got {r.get('kind')!r})")
-    if not str(r.get("text", "")).strip():
+    if r.get("kind") == "title":
+        _check_title(r)
+    if not str(r.get("text", "")).strip() and not (r.get("kind") == "title" and (r.get("titles") or r.get("concepts"))):
         raise ValueError("a prompt needs its text")
     s = r.get("source") or {}
     if s.get("type") not in SOURCES:
@@ -141,6 +152,99 @@ def _check(r: dict) -> None:
         raise ValueError("step = 1, 2, ... (its place in the workflow)")
     if r.get("request") and not re.fullmatch(r"req-\d{3,}", str(r["request"])):
         raise ValueError("request = the Prepare request it was written from (req-001, ...)")
+    if r.get("project") and safe_name(str(r["project"])) != r["project"]:
+        raise ValueError("project = the video's folder name in projects (its final package)")
+
+
+# ------------------------------------------------------------------------------------------------ title & thumbnail
+def _check_title(r: dict) -> None:
+    """A title record (0.4.3): titles [{text, pattern, chars}], concepts [{id, sketch, words, shot, colours}], hook,
+    chosen (the final title), and its link: request (req-NNN, *Title & thumbnail first*) and / or project (the video
+    being packaged)."""
+    ts = r.get("titles") or []
+    if not isinstance(ts, list) or not all(isinstance(t, (dict, str)) and str((t.get("text") if isinstance(t, dict)
+                                                                              else t) or "").strip() for t in ts):
+        raise ValueError("titles = a list of {text, pattern}")
+    for t in ts:
+        text = str(t.get("text") if isinstance(t, dict) else t).strip()
+        if len(text) > TITLE_MAX:
+            raise ValueError(f"title over {TITLE_MAX} characters (YouTube refuses it): {text[:60]!r}...")
+    cs = r.get("concepts") or []
+    if not isinstance(cs, list) or not all(isinstance(c, dict) and str(c.get("id") or "").strip() for c in cs):
+        raise ValueError("concepts = a list of {id: A, sketch, words, shot, colours}")
+    ids = [str(c["id"]).strip().upper() for c in cs]
+    if len(set(ids)) != len(ids):
+        raise ValueError("each thumbnail concept needs its own id (A, B, C)")
+    if not isinstance(r.get("hook") or "", str):
+        raise ValueError("hook = the first 3 s, as text")
+
+
+def clean_titles(ts) -> list[dict]:
+    """Titles as saved: text trimmed, the pattern, chars counted here (never trusted from the caller)."""
+    out = []
+    for t in ts or []:
+        if isinstance(t, str):
+            t = {"text": t}
+        if not isinstance(t, dict):
+            continue
+        text = " ".join(str(t.get("text") or "").split())
+        if text:
+            out.append({"text": text, "pattern": str(t.get("pattern") or "").strip(), "chars": len(text),
+                        **({"note": str(t["note"]).strip()} if t.get("note") else {})})
+    return out
+
+
+def clean_concepts(cs) -> list[dict]:
+    out = []
+    for c in cs or []:
+        if isinstance(c, dict):
+            out.append({"id": str(c.get("id") or "").strip().upper(), "sketch": str(c.get("sketch") or "").strip(),
+                        "words": " ".join(str(c.get("words") or "").split()), "shot": str(c.get("shot") or "").strip(),
+                        "colours": str(c.get("colours") or "").strip(),
+                        **({k: str(c[k]).strip() for k in ("for", "title") if c.get(k)})})
+    return out
+
+
+def title_text(r: dict) -> str:
+    """A title record as plain text (its `text`: what the app's card shows and Copy copies)."""
+    L = ["TITLES"] + [f"{i}. {t['text']}" + (f"  ({t['pattern']})" if t.get("pattern") else "")
+                      for i, t in enumerate(r.get("titles") or [], 1)]
+    for c in r.get("concepts") or []:
+        L += ["", f"THUMBNAIL {c['id']}" + (f" - for title {c['title']}" if c.get("title") else ""),
+              f"Sketch: {c.get('sketch') or '-'}", f"Words on it: {c.get('words') or '-'}",
+              f"Shot to film: {c.get('shot') or '-'}", f"Colours: {c.get('colours') or '-'}"]
+    if r.get("hook"):
+        L += ["", "HOOK (first 3 s)", r["hook"]]
+    return "\n".join(L).strip()
+
+
+def describe_title(r: dict) -> list[str]:
+    """The lines describe() prints for a title record: every title with its pattern and length on a phone, the
+    thumbnail concepts, the hook, what it is linked to."""
+    L = []
+    link = [f"request {r['request']}" if r.get("request") else "",
+            f"the video projects\\{r['project']}" if r.get("project") else ""]
+    if any(link):
+        L.append("  for: " + ", ".join(x for x in link if x))
+    if r.get("chosen"):
+        L.append(f"  final title: {r['chosen']} ({len(r['chosen'])} characters)")
+    ts = r.get("titles") or []
+    if ts:
+        L.append(f"  titles ({len(ts)}; a phone shows about 50-60 characters - a rule of thumb):")
+        for i, t in enumerate(ts, 1):
+            n = t.get("chars") or len(t["text"])
+            L.append(f"    {i:2}. {t['text']}  [{t.get('pattern') or 'no pattern'} | {n} chars"
+                     + ("" if n <= 60 else " - may be cut on a phone") + "]" + (f" - {t['note']}" if t.get("note") else ""))
+    for c in r.get("concepts") or []:
+        L.append(f"  thumbnail {c['id']}" + (f" (for title {c['title']})" if c.get("title") else "") + ":")
+        L += [f"      {k}: {c.get(v) or '-'}" for k, v in (("sketch", "sketch"), ("words on it", "words"),
+                                                              ("shot to film", "shot"), ("colours", "colours"))]
+        nw = len(str(c.get("words") or "").split())
+        if nw and not 2 <= nw <= 4:
+            L.append(f"      ({nw} words on it - the rule of thumb is 2-4)")
+    if r.get("hook"):
+        L.append(f"  hook (first 3 s, keeps the title's promise): {r['hook']}")
+    return L
 
 
 def _review(rv: dict | None) -> dict | None:
@@ -168,6 +272,13 @@ def add(rec: dict) -> dict:
          "style_refs": list(rec.get("style_refs") or []), "added": _today(), "updated": _today()}
     if rec.get("request"):
         r["request"] = str(rec["request"]).strip()
+    if r["kind"] == "title":                            # 0.4.3: the packaging's own fields; text = them in words
+        r.update(titles=clean_titles(rec.get("titles")), concepts=clean_concepts(rec.get("concepts")),
+                 hook=str(rec.get("hook") or "").strip(), chosen=" ".join(str(rec.get("chosen") or "").split()))
+        if rec.get("project"):
+            r["project"] = str(rec["project"]).strip()
+        if not r["text"]:
+            r["text"] = title_text(r)
     _check(r)
     with _LOCK:
         r["id"] = next_id(r["kind"])
@@ -189,6 +300,17 @@ def update(pid: str, **changes) -> dict:
                 r[k] = changes[k]
         if changes.get("review") is not None:
             r["review"] = _review(changes["review"])
+        if r.get("kind") == "title":                    # a title record's content (its text follows it)
+            touched = False
+            for k, fn in (("titles", clean_titles), ("concepts", clean_concepts)):
+                if changes.get(k) is not None:
+                    r[k], touched = fn(changes[k]), True
+            for k in ("hook", "chosen", "project"):
+                if changes.get(k) is not None:
+                    r[k] = str(changes[k]).strip() if k == "hook" else " ".join(str(changes[k]).split())
+                    touched = touched or k == "hook"
+            if touched:
+                r["text"] = title_text(r)
         res = r.setdefault("result", {"rating": None, "note": ""})
         if "rating" in changes:
             res["rating"] = changes["rating"] or None
@@ -617,6 +739,8 @@ def describe(r: dict, full: bool = False) -> str:
         L.append(f"  review: {rv['why']}" + (f" Fix: {rv['fix']}" if rv.get("fix") else ""))
     if r.get("notes") and full:
         L.append(f"  how to use: {r['notes']}")
+    if r.get("kind") == "title":
+        L += describe_title(r)
     if r.get("structure") and full and any(x.get("status") for x in r["structure"]):
         L.append("  Claude's check (part: status - what it says - tip):")      # 0.3.4: what Optimize starts from
         L += [f"    {x['slot']}: {x.get('status') or '-'} - {x['text'] or '(not said)'}"
@@ -633,5 +757,7 @@ def describe(r: dict, full: bool = False) -> str:
     elif r.get("style_refs"):
         L.append("  style from: " + ", ".join(r["style_refs"]))
     text = r.get("text", "")
+    if r.get("kind") == "title" and (r.get("titles") or r.get("concepts")):
+        return "\n".join(L)                             # its text = the lines above in other words
     L.append("  text: " + (text if full or len(text) <= 300 else text[:300] + " ..."))
     return "\n".join(L)

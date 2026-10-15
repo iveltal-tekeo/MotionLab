@@ -15,7 +15,8 @@ PASS = every effect found with correct type and frames, every cut exact, BPM/bea
 First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles),
 the quick draft's rules (check_draft), feel tests (check_feels), sound effects on known frames and levels (check_sfx),
 the checks before the final render (check_precheck), ratings as rules and the two kinds of lessons
-(check_lessons_ratings), carousels kept as one post and the scrubbed problem report (check_downloads_report);
+(check_lessons_ratings), carousels kept as one post and the scrubbed problem report (check_downloads_report), the
+thumbnail check's rules (check_thumbnail), YouTube's chapter / hashtag rules and package.json (check_publish);
 --extended also renders the starter graphic (check_template).
 """
 from __future__ import annotations
@@ -431,6 +432,28 @@ def check_downloads_report() -> dict:
     return {"passed": not bad}
 
 
+def check_thumbnail() -> dict:
+    """Thumbnails (0.4.3, motionlab.thumbnail), no video / HyperFrames / face model: every rule of the thumbnail check
+    with a passing and a failing case of known answer, the platforms' crops."""
+    from motionlab import thumbnail as TH
+    print("\n=== the thumbnail check ===")
+    r = TH.selfcheck(verbose=True)
+    print(("PASS  " if r["passed"] else "FAIL  ") + f"thumbnail check: every rule's known answers ({r['seconds']} s)")
+    return {"passed": r["passed"]}
+
+
+def check_publish() -> dict:
+    """The ready-to-post words (0.4.3, motionlab.publish), no video: YouTube's chapter / hashtag / title rules with
+    known answers, chapter points from a synthetic plan and transcript, and the package.json merge that keeps
+    thumbnail.py's keys - in a temp folder."""
+    from motionlab import publish as PB
+    print("\n=== publish: chapters, hashtags, package.json ===")
+    r = PB.selfcheck()
+    for line in r["lines"]:
+        print(line)
+    return {"passed": r["passed"]}
+
+
 def check_feels() -> dict:
     """Feel tests when starting blind (0.4.2, motionlab.style): the default three feels, the words that pick one, and
     a raw hook that really is busy - no video."""
@@ -478,7 +501,8 @@ def main() -> int:
     args = ap.parse_args()
     st = HERE / "selftest"
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
-               "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report()}
+               "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
+               "thumbnail": check_thumbnail(), "publish": check_publish()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

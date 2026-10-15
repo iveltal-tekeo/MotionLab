@@ -203,7 +203,68 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
                 or not src.is_file() or src.suffix.lower() not in data.VIDEO_EXT:
             raise JobError(f"not a video of the lab: {rel}")
         return f"A copy of {src.name} that plays here", [PY, str(JOBTOOLS), "player-copy", str(src)], "cpu"
+    if kind.startswith("thumb_"):           # Edit > a video > Publish (0.4.3): tools\\thumbnail.py, build\\publish\\ only
+        return _thumb_job(kind, a)
     raise JobError(f"unknown job kind {kind!r}")
+
+
+THUMB_TEXT = re.compile(r"[^\r\n\"]{1,200}")
+
+
+def _thumb_job(kind: str, a: dict) -> tuple[str, list[str], str]:
+    """thumb_candidates (good moments: the clips, or the newest render), thumb_make (a template + a frame or a picture +
+    2-4 words -> thumbnail A / B / C, HyperFrames stills, then its check), thumb_render (again after its settings
+    changed), thumb_check (every thumbnail, with the title) - all group cpu, queued like the others."""
+    p = data.safe_name(str(a.get("project", "")))
+    if not (data.PROJECTS / p).is_dir():
+        raise JobError(f"no video project {p}")
+    T = [PY, str(TOOLS / "thumbnail.py")]
+    if kind == "thumb_candidates":
+        n = int(a.get("n") or 12)
+        if not 4 <= n <= 24:
+            raise JobError("between 4 and 24 moments")
+        return (f"Good moments for a thumbnail ({p})", T + ["candidates", p, "--n", str(n)]
+                + (["--render"] if a.get("render") else []), "cpu")
+    tid = str(a.get("id") or "")
+    if kind in ("thumb_make", "thumb_render") and not re.fullmatch(r"[A-Z]", tid):
+        raise JobError("a thumbnail is A, B or C")
+    if kind == "thumb_render":
+        data.thumb_folder(p, tid)                                   # it must exist
+        return f"Thumbnail {tid} again ({p})", T + ["render", p, "--id", tid], "cpu"
+    if kind == "thumb_check":
+        title = " ".join(str(a.get("title") or "").split())
+        if title and not THUMB_TEXT.fullmatch(title):
+            raise JobError("the title: one line, up to 200 characters")
+        return (f"Check the thumbnails ({p})", [PY, str(JOBTOOLS), "thumb-check", p] + (["--title", title] if title else []),
+                "cpu")
+    if kind != "thumb_make":
+        raise JobError(f"unknown job kind {kind!r}")
+    words = " ".join(str(a.get("words") or "").split())
+    if not words or not THUMB_TEXT.fullmatch(words) or len(words) > 80:
+        raise JobError("type the 2-4 words for the thumbnail")
+    template = str(a.get("template") or "outline")
+    if not re.fullmatch(r"[\w-]+", template) or not (TOOLS / "overlays" / "thumbnails" / template / "index.html").exists():
+        raise JobError(f"no design called {template}")
+    cmd = T + ["make", p, "--id", tid, "--words", words, "--template", template]
+    if a.get("image"):
+        img = Path(str(a["image"]).strip().strip('"')).expanduser()
+        if not img.is_file() or img.suffix.lower() not in data.PUB_IMAGE_EXT:
+            raise JobError(f"not a picture (.jpg / .png / .webp): {img}")
+        cmd += ["--image", str(img)]
+    else:
+        try:
+            f = int(a.get("frame"))
+        except (TypeError, ValueError):
+            raise JobError("pick a moment (a frame) or a picture first") from None
+        if f < 0:
+            raise JobError("pick a moment (a frame) or a picture first")
+        cmd += ["--frame", str(f)]
+        clip = str(a.get("clip") or "")
+        if clip:
+            if not re.fullmatch(r"[\w .()\[\]&'+,-]{1,160}", clip):
+                raise JobError(f"not a clip: {clip!r}")
+            cmd += ["--clip", clip]
+    return f"Thumbnail {tid}: {words} ({p})", cmd, "cpu"
 
 
 def saved_file(lines: list[str]) -> Path | None:

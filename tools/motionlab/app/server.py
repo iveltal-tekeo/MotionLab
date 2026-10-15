@@ -34,6 +34,7 @@ from motionlab import __version__
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
+from motionlab import publish as PB
 from motionlab import script as SC
 from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
@@ -42,7 +43,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 18                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 19                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -390,7 +391,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"])})
         if path == "/api/script/requests":               # Prepare (0.4.x): what the two dialogs asked Claude for
             return self._json({"items": SC.requests(), "where": SC.WHERE, "tones": SC.TONES, "ctas": SC.CTAS,
-                               "langs": SC.LANGS})
+                               "langs": SC.LANGS, "platforms": SC.PLATFORMS,
+                               "orientations": SC.ORIENTATIONS})
         if path == "/api/text":
             return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
         if path == "/api/thumb":
@@ -407,6 +409,21 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)", path)
         if m:
             return self._json(data.project(urllib.parse.unquote(m[1])))
+        m = re.fullmatch(r"/api/project/([^/]+)/publish", path)        # Edit > a video > Publish (0.4.3)
+        if m:
+            return self._json(data.publish_info(urllib.parse.unquote(m[1])))
+        m = re.fullmatch(r"/api/project/([^/]+)/chapters", path)       # Publish: chapter points (plan / its words)
+        if m:
+            data.publish_dir(urllib.parse.unquote(m[1]))
+            src = arg("from", "plan")
+            if src not in ("plan", "transcript"):
+                raise ValueError("chapters from the edit (plan) or from the words (transcript)")
+            try:
+                return self._json(PB.chapter_points(data.safe_name(urllib.parse.unquote(m[1])), src))
+            except ValueError:                            # the tool's words name files: the page says it plainly
+                raise ValueError("no edit of this video yet - make one first" if src == "plan" else
+                                 "MotionLab has not heard this video's words yet - make captions from the finished "
+                                 "video first (Graphics > Captions), then try again") from None
         m = re.fullmatch(r"/api/jobs/(\d+)", path)
         if m:
             job = S.runner.jobs.get(int(m[1]))
@@ -423,7 +440,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self):
         path = urllib.parse.urlsplit(self.path).path
-        body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example") else 5_000_000)   # a file = base64 (+1/3)
+        body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example")
+                          or path.endswith("/publish/image") else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
         if not secrets.compare_digest(str(tok), S.token):
             raise PermissionError("missing or wrong session token")
@@ -452,6 +470,35 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/script/request":                 # Prepare > Write one from zero: the answers
             r = SC.save_new(body)
             return self._json({"request": r, "command": f"/write-script request {r['id']}"})
+        if path == "/api/title/request":                  # Prepare > Title & thumbnail first (0.4.3): the answers
+            r = SC.save_title(body)
+            return self._json({"request": r, "command": f"/write-title request {r['id']}"})
+        if path == "/api/prompts/title":                  # a title record: Use this title -> a video (+ its final title)
+            pid = str(body.get("id", ""))
+            if not re.fullmatch(r"title-\d{3,}", pid):
+                raise ValueError(f"not a title record: {pid!r}")
+            proj = str(body.get("project") or "")
+            if proj:
+                data.publish_dir(proj)                    # the video must exist (FileNotFoundError)
+            ch = " ".join(str(body.get("chosen") or "").split())
+            if len(ch) > PR.TITLE_MAX:
+                raise ValueError(f"a title has at most {PR.TITLE_MAX} characters")
+            return self._json(PR.update(pid, project=data.safe_name(proj) if proj else "",
+                                        **({"chosen": ch} if "chosen" in body else {})))
+        m = re.fullmatch(r"/api/project/([^/]+)/publish", path)         # Publish: title, description, chapters, tags
+        if m:
+            return self._json(data.save_publish(urllib.parse.unquote(m[1]), body))
+        m = re.fullmatch(r"/api/project/([^/]+)/thumb", path)           # Publish: a thumbnail's settings (form)
+        if m:
+            return self._json(data.save_thumb_values(urllib.parse.unquote(m[1]), str(body.get("id", "")),
+                                                     body.get("values")))
+        m = re.fullmatch(r"/api/project/([^/]+)/publish/image", path)   # Publish: a picture you made (AI image)
+        if m:
+            try:
+                raw = base64.b64decode(str(body.get("data", "")), validate=True)
+            except ValueError:
+                raise ValueError("the picture did not arrive whole - add it again") from None
+            return self._json(data.save_publish_image(urllib.parse.unquote(m[1]), str(body.get("name", "")), raw))
         if path == "/api/script/forget":                  # a request nobody wants any more (Recycle Bin, logged)
             rid = str(body.get("id", ""))
             r = trash.recycle([SC.request_path(rid)])

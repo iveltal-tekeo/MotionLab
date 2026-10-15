@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "words", "type": "string", "label": "Words (2-4)", "default": "YOUR WORDS HERE"},
+  {"id": "accent_word", "type": "number", "label": "Word in the accent colour (0 = none)", "default": 0, "min": 0, "max": 6, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Impact",
+   "options": [{"value": "Impact", "label": "Impact"}, {"value": "Arial Black", "label": "Arial Black"}, {"value": "Bahnschrift", "label": "Bahnschrift (bold)"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}]},
+  {"id": "size", "type": "number", "label": "Text size (% of the height)", "default": 24, "min": 6, "max": 45, "step": 1},
+  {"id": "uppercase", "type": "boolean", "label": "Capitals", "default": true},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "accent_color", "type": "color", "label": "Accent colour", "default": "#ffd400"},
+  {"id": "outline", "type": "number", "label": "Outline (% of the text size)", "default": 7, "min": 0, "max": 20, "step": 1},
+  {"id": "outline_color", "type": "color", "label": "Outline colour", "default": "#000000"},
+  {"id": "shadow", "type": "boolean", "label": "Drop shadow", "default": true},
+  {"id": "text_pos", "type": "enum", "label": "Where the words go", "default": "auto",
+   "options": [{"value": "auto", "label": "Away from the face"}, {"value": "left", "label": "Left (16:9)"}, {"value": "right", "label": "Right (16:9)"}, {"value": "top", "label": "Top"}, {"value": "bottom", "label": "Bottom"}]},
+  {"id": "shade", "type": "number", "label": "Shade behind the words (0-1)", "default": 0.45, "min": 0, "max": 1, "step": 0.05},
+  {"id": "focus_x", "type": "number", "label": "Photo focus across (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "focus_y", "type": "number", "label": "Photo focus down (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "zoom", "type": "number", "label": "Photo zoom", "default": 1, "min": 1, "max": 3, "step": 0.05},
+  {"id": "brightness", "type": "number", "label": "Photo brightness (1 = as shot)", "default": 1.08, "min": 0.5, "max": 1.6, "step": 0.02},
+  {"id": "saturation", "type": "number", "label": "Photo saturation (1 = as shot)", "default": 1.15, "min": 0, "max": 2, "step": 0.05}
+]'>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, height=720">
+<!-- MotionLab thumbnail template "outline" (0.4.3): the photo full-bleed, big outlined words on the side away from
+     the face (16:9) or in the top / lower third (9:16, clear of the apps' buttons and inside the 3:4 grid crop).
+     Size-independent: tools\thumbnail.py make renders it at 1280x720 and 1080x1920 (overlay.py's retime + snapshot).
+     The photo + its face box come from assets/photo.js (written by thumbnail.py make).
+     Three frames: f0 = the thumbnail; f1 = the same without the words; f2 = the words' fill in the key colour #ff00ff, no outline or shadow.
+     tools\thumbnail.py check measures the text from their differences (size at feed size, contrast). -->
+<script src="./gsap.min.js"></script>
+<script src="./assets/photo.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  .abs { position: absolute; }
+  img.photo { position: absolute; max-width: none; }
+  .box { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .words { line-height: 0.98; text-align: center; text-wrap: balance; overflow-wrap: normal; word-break: keep-all;
+           -webkit-text-stroke-width: var(--sw, 0px); paint-order: stroke fill; text-shadow: var(--sh, none); }
+  .words span { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="0.1" data-width="1280"
+     data-height="720"></div>
+<script>
+  const FPS = 30, FRAMES = 3;
+  const W = 1280, H = 720;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const P = window.PHOTO || { src: "", w: 16, h: 9, face: null };
+  const root = document.getElementById("root");
+  const vertical = H > W;
+
+  // the photo: covers the frame, the focus point (the face's centre unless set) lands on the target point
+  function focus(ph) {
+    const f = ph.face;
+    const fx = V.focus_x >= 0 ? V.focus_x / 100 : (f ? f[0] + f[2] / 2 : 0.5);
+    const fy = V.focus_y >= 0 ? V.focus_y / 100 : (f ? f[1] + f[3] / 2 : 0.45);
+    return [fx, fy];
+  }
+  function place(ph, area, target) {
+    if (!ph.src) return null;
+    const img = document.createElement("img");
+    img.className = "photo";
+    img.src = ph.src;
+    const s = Math.max(area.w / ph.w, area.h / ph.h) * V.zoom;
+    const dw = ph.w * s, dh = ph.h * s;
+    const [fx, fy] = focus(ph);
+    let x = target[0] - fx * dw, y = target[1] - fy * dh;
+    x = Math.min(area.x, Math.max(area.x + area.w - dw, x));
+    y = Math.min(area.y, Math.max(area.y + area.h - dh, y));
+    Object.assign(img.style, { left: x + "px", top: y + "px", width: dw + "px", height: dh + "px",
+                               filter: `brightness(${V.brightness}) saturate(${V.saturation})` });
+    return img;
+  }
+  // the words, shrunk until they fit the box (balanced lines)
+  function words(box) {
+    const wrap = document.createElement("div");
+    wrap.className = "box";
+    Object.assign(wrap.style, { left: box.x + "px", top: box.y + "px", width: box.w + "px", height: box.h + "px" });
+    const el = document.createElement("div");
+    el.className = "words";
+    const list = String(V.words || "").trim().split(/\s+/).filter(Boolean);
+    list.forEach((w, i) => {
+      const s = document.createElement("span");
+      s.textContent = w;
+      s.style.color = i + 1 === V.accent_word ? V.accent_color : V.text_color;
+      el.appendChild(s);
+      if (i < list.length - 1) el.appendChild(document.createTextNode(" "));
+    });
+    Object.assign(el.style, { fontFamily: `"${V.font}", "Arial Black", Impact, sans-serif`, maxWidth: box.w + "px",
+                              fontWeight: V.font === "Impact" || V.font === "Arial Black" ? "400" : "800",
+                              textTransform: V.uppercase ? "uppercase" : "none", WebkitTextStrokeColor: V.outline_color });
+    wrap.appendChild(el);
+    root.appendChild(wrap);
+    let fs = V.size / 100 * H;
+    const apply = () => {
+      el.style.fontSize = fs + "px";
+      el.style.setProperty("--sw", (2 * V.outline / 100 * fs).toFixed(2) + "px");
+      el.style.setProperty("--sh", V.shadow ? `0 ${(0.05 * fs).toFixed(1)}px ${(0.14 * fs).toFixed(1)}px rgba(0,0,0,0.75)` : "none");
+    };
+    apply();
+    for (let i = 0; i < 80 && (el.scrollWidth > box.w + 1 || el.offsetHeight > box.h + 1); i++) { fs *= 0.96; apply(); }
+    return el;
+  }
+
+  // layout
+  const f = P.face, [fx] = focus(P);
+  let pos = V.text_pos;
+  if (vertical && (pos === "left" || pos === "right")) pos = "top";
+  if (pos === "auto") pos = vertical ? "top" : (fx < 0.5 ? "right" : "left");
+  const pad = 0.045 * Math.min(W, H);
+  let box, target, shade;
+  if (vertical) {
+    // 9:16: the profile grids show the middle 3:4 (y 12.5 % .. 87.5 %); the apps' buttons + caption sit low / right
+    if (pos === "bottom") { box = { x: pad, y: 0.53 * H, w: W - 2 * pad, h: 0.24 * H }; target = [W / 2, 0.34 * H];
+                            shade = "to top"; }
+    else { box = { x: pad, y: 0.14 * H, w: W - 2 * pad, h: 0.27 * H }; target = [W / 2, 0.6 * H]; shade = "to bottom"; }
+  } else if (pos === "left" || pos === "right") {
+    const bw = 0.5 * W - 1.5 * pad;
+    box = { x: pos === "left" ? pad : W - pad - bw, y: pad, w: bw, h: H - 2 * pad };
+    target = [pos === "left" ? 0.72 * W : 0.28 * W, 0.45 * H];
+    shade = pos === "left" ? "to right" : "to left";
+  } else {
+    box = { x: pad, y: pos === "top" ? pad : 0.5 * H, w: W - 2 * pad, h: 0.5 * H - pad };
+    target = [W / 2, pos === "top" ? 0.62 * H : 0.4 * H];
+    shade = pos === "top" ? "to bottom" : "to top";
+  }
+  const img = place(P, { x: 0, y: 0, w: W, h: H }, target);
+  if (img) root.appendChild(img);
+  if (V.shade > 0) {
+    const s = document.createElement("div");
+    s.className = "abs";
+    Object.assign(s.style, { left: 0, top: 0, width: W + "px", height: H + "px",
+                             background: `linear-gradient(${shade}, rgba(0,0,0,${V.shade}) 0%, rgba(0,0,0,${V.shade * 0.6}) 35%, rgba(0,0,0,0) 62%)` });
+    root.appendChild(s);
+  }
+  const el = words(box);
+
+  const tl = gsap.timeline({ paused: true });
+  tl.set(el, { opacity: 0 }, AT(1));                                    // f1: without the words
+  tl.set(el, { opacity: 1, "--sw": "0px", "--sh": "none" }, AT(2));      // f2: the words' fill only, in the
+  tl.set(el.querySelectorAll("span"), { color: "#ff00ff" }, AT(2));     //     key colour #ff00ff
+  tl.set({}, {}, FRAMES / FPS);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -11,9 +11,11 @@
           everything Claude needs: the script (or the request = the user's answers), what the user wants from the
           rewrite, the scripts made from it, and the check
     .venv\\Scripts\\python tools\\script.py requests     every request of the app's Prepare page, newest first
+          (kinds: new / improve = a script, title = *Title & thumbnail first*)
 
 Requests: knowledge\\local\\prompts\\requests\\req-NNN.json (the app writes them: *Improve my script* = the script
-saved in the prompt library + what the user wants; *Write one from zero* = the answers). Scripts themselves live in
+saved in the prompt library + what the user wants; *Write one from zero* = the answers; *Title & thumbnail first* =
+the answers for `/write-title request`, motionlab.script.save_title). Scripts themselves live in
 the prompt library (tools\\prompts.py: kind script / hook). Script times are estimates in seconds - there is no video
 yet. Rules behind the check: .claude\\skills\\write-script\\guidelines.md.
 """

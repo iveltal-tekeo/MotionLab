@@ -576,6 +576,121 @@ def save_overlay_values(project: str, overlay: str, values) -> dict:
     return OS.set_values(overlay_folder(project, overlay), values if isinstance(values, dict) else {})
 
 
+# ------------------------------------------------------------------ 0.4.3: Edit > a video > Publish
+# build\publish\package.json belongs to the tools (thumbnail.py: candidates / thumbnails, publish.py: the words); the
+# app reads it, runs the thumbnail jobs and calls publish.write - it never writes package.json itself. Its own writes:
+# a thumbnail's settings (thumbs\<id>\overlay.json "values", validated like any graphic) and a picture the user brings
+# (build\publish\images\, for make --image).
+PUB_IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def publish_dir(name: str) -> Path:
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    return d / "build" / "publish"
+
+
+def thumb_folder(name: str, tid: str) -> Path:
+    if not re.fullmatch(r"[A-Z]", str(tid or "")):
+        raise ValueError("a thumbnail is A, B or C")
+    f = publish_dir(name) / "thumbs" / tid
+    if not (f / "index.html").exists():
+        raise FileNotFoundError(f"{name}: no thumbnail {tid} yet")
+    return f
+
+
+def publish_info(name: str) -> dict:
+    """The Publish tab: package.json as the tools wrote it (each thumbnail + its settings for the form), the title
+    records linked to this video (prompt library kind title, "project"), the edit's rate / length for the chapters,
+    the designs, the pictures the user brought."""
+    from motionlab import publish as PB
+    pub = publish_dir(name)
+    d = pub.parent.parent
+    pkg = PB.read_package(pub) if (pub / "package.json").exists() else {}
+    thumbs = []
+    for t in pkg.get("thumbnails") or []:
+        t = dict(t)
+        files = t.get("files") or {}
+        folder = LAB / files.get("folder", "_") if files.get("folder") else None
+        t["settings"] = OS.status(folder)["settings"] if folder and (folder / "index.html").exists() else []
+        p = LAB / files["16x9"] if files.get("16x9") else None
+        t["v"] = int(p.stat().st_mtime) if p and p.exists() else 0
+        thumbs.append(t)
+    plan = PB.latest_plan(d.name)
+    pl = (read_json(plan, {}) or {}) if plan else {}
+    recs = [{k: r.get(k) for k in ("id", "title", "titles", "concepts", "hook", "chosen", "request", "updated")}
+            for r in PR.load_all("title") if r.get("project") == d.name]
+    try:
+        from motionlab import thumbnail as T                   # numpy / Pillow: only when the tab is opened
+        templates = [{"name": t["name"], "what": t["what"]} for t in T.templates()]
+        face = T.face_model() is not None
+    except Exception:                                           # noqa: BLE001 - the tab still shows the package
+        templates, face = [], False
+    imgs = pub / "images"
+    renders = sorted((p for p in (d / "build").glob("*.mp4") if re.search(r"_v\d+\.mp4$", p.name)),
+                     key=lambda p: p.stat().st_mtime) if (d / "build").exists() else []
+    return {"name": d.name, "folder": rel(pub), "exists": (pub / "package.json").exists(), "package": {**pkg, "thumbnails": thumbs},
+            "records": recs, "fps": pl.get("fps"), "frames": pl.get("frames"), "plan": plan.name if plan else None,
+            "templates": templates, "face_detector": face, "render": renders[-1].name if renders else None,
+            "clips": sum(1 for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT),
+            "images": [{"name": p.name, "path": str(p), "rel": rel(p)} for p in sorted(imgs.iterdir(), key=lambda q: -q.stat().st_mtime)
+                       if p.suffix.lower() in PUB_IMAGE_EXT] if imgs.is_dir() else []}
+
+
+def save_publish(name: str, body: dict) -> dict:
+    """The Publish tab's words -> publish.write (title.txt, description.txt with the chapters, hashtags.txt, its keys
+    in package.json). Left out = kept. Nothing is written when a check FAILs: {ok, checks, description}."""
+    from motionlab import publish as PB
+    publish_dir(name)
+    title = " ".join(str(body.get("title") or "").split())
+    chs = body.get("chapters")
+    if chs is not None:
+        if not isinstance(chs, list):
+            raise ValueError("chapters: a list of [frame, name]")
+        clean = []
+        for c in chs:
+            try:
+                f, n = (c[0], c[1]) if isinstance(c, (list, tuple)) else (c.get("f"), c.get("name"))
+                clean.append((int(f), " ".join(str(n or "").split())[:100]))
+            except (TypeError, ValueError, IndexError, AttributeError):
+                raise ValueError("each chapter needs a frame number and a name") from None
+        chs = sorted(clean)
+    tags = body.get("hashtags")
+    tf = str(body.get("titles_from") or "")
+    if tf and not re.fullmatch(r"title-\d{3,}", tf):
+        raise ValueError(f"not a title record: {tf!r}")
+    r = PB.write(name, title, chapters=chs, hashtags=None if tags is None else str(tags)[:3000],
+                 body=None if body.get("body") is None else str(body["body"])[:6000], titles_from=tf)
+    return {"ok": r["ok"], "checks": r["checks"], "description": r["description"]}
+
+
+def save_thumb_values(name: str, tid: str, values) -> dict:
+    """A thumbnail's settings (the Publish tab's form) -> thumbs\\<id>\\overlay.json "values" (validated against its
+    template); *Render again* = the thumb_render job."""
+    return OS.set_values(thumb_folder(name, tid), values if isinstance(values, dict) else {})
+
+
+def save_publish_image(name: str, filename: str, raw: bytes) -> dict:
+    """*Use a picture you made* (an AI image tool's): the user's picture -> build\\publish\\images\\ (a copy; the
+    thumbnail is then made from it with make --image)."""
+    ext = Path(str(filename or "")).suffix.lower()
+    if ext not in PUB_IMAGE_EXT:
+        raise ValueError("a picture: .jpg, .png or .webp")
+    if len(raw) > 30_000_000:
+        raise ValueError("pictures up to 30 MB")
+    d = publish_dir(name) / "images"
+    d.mkdir(parents=True, exist_ok=True)
+    stem = re.sub(r"[^\w.-]+", "_", Path(filename).stem).strip("._")[:60] or "picture"
+    p, i = d / f"{stem}{ext}", 2
+    while p.exists():
+        p, i = d / f"{stem}_{i}{ext}", i + 1
+    tmp = p.with_name(p.name + ".part")
+    tmp.write_bytes(raw)
+    os.replace(tmp, p)
+    return {"name": p.name, "path": str(p), "rel": rel(p)}
+
+
 def _overlays_in_plans(plans: list[Path]) -> dict:
     """overlay .mov (lower-case path) -> where the edit versions show it, e.g. ["v1 f0-29"]."""
     used: dict[str, list[str]] = {}
@@ -657,8 +772,9 @@ def project(name: str) -> dict:
 
 
 # ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out
-ASPECTS = ("sound", "sfx", "colour", "captions", "graphics", "effects", "pacing", "overall")
+ASPECTS = ("sound", "sfx", "colour", "captions", "graphics", "effects", "pacing", "packaging", "overall")
 OUTCOME_NEXT = ("fix", "start_over")          # 0.4.2: How did it turn out? - fix this version / start over
+CTR_IDS = re.compile(r"[A-Z]")                # 0.4.3: a thumbnail variant (thumbnail.py make --id A / B / C)
 
 
 def new_project(name: str) -> dict:
@@ -680,7 +796,7 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     if kind not in ("reference", "prompt", "style", "words", "generated"):
         raise ValueError("made from a reference, videos' style, your words, a prompt or from zero")
     ref = safe_name(ref) if kind == "reference" else " ".join(str(ref).split())[:300]
-    if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", ref):
+    if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief|title)-\d{3,}", ref):
         raise ValueError(f"not a prompt id: {ref!r}")
     d = PROJECTS / safe_name(name)
     if not d.is_dir():
@@ -741,7 +857,7 @@ def save_edit_request(name: str, body: dict) -> dict:
     if how == "words" and not presets and not want:
         raise ValueError("pick a style or write what you want")
     prompt = str(body.get("prompt") or "")
-    if how == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief)-\d{3,}", prompt):
+    if how == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief|title)-\d{3,}", prompt):
         raise ValueError(f"not a prompt id: {prompt!r}")
     length = body.get("length_s")
     if length not in (None, ""):
@@ -903,10 +1019,42 @@ def save_outcome(name: str, body: dict) -> dict:
             raise ValueError("that note is not there any more")
         moments.pop(hit)
     moments.sort(key=lambda m: (str(m.get("version", "")), int(m.get("f", 0))))
-    out = {"aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
-           "next": nxt, "moments": moments}
+    out = {**cur, "aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
+           "next": nxt, "moments": moments}                  # every other key (0.4.3 "packaging", newer ones) stays
+    if body.get("packaging") is not None:
+        out["packaging"] = clean_packaging(body["packaging"], cur.get("packaging"))
     write_json_atomic(p, out)
     return out
+
+
+def clean_packaging(b, old=None) -> dict:
+    """0.4.3, after posting: the click-through rate the user read in YouTube Studio per thumbnail variant (A / B / C,
+    in %) and the video's link -> outcome.json "packaging": {"ctr": {"A": 4.1}, "link", "updated"}. A key left out
+    keeps its old value; an empty CTR removes that variant."""
+    if not isinstance(b, dict):
+        raise ValueError("packaging: the click-through rates and the link")
+    old = old if isinstance(old, dict) else {}
+    ctr = dict(old.get("ctr") or {})
+    for k, v in (b.get("ctr") or {}).items() if isinstance(b.get("ctr"), dict) else []:
+        k = str(k).strip().upper()
+        if not CTR_IDS.fullmatch(k):
+            raise ValueError(f"a thumbnail is A, B or C (got {k!r})")
+        if v in (None, ""):
+            ctr.pop(k, None)
+            continue
+        try:
+            x = float(str(v).replace(",", ".").replace("%", "").strip())
+        except ValueError:
+            raise ValueError(f"thumbnail {k}: the click-through rate is a number like 4.1") from None
+        if not 0 <= x <= 100:
+            raise ValueError(f"thumbnail {k}: the click-through rate is a percentage between 0 and 100")
+        ctr[k] = round(x, 2)
+    link = old.get("link") or ""
+    if "link" in b:
+        link = str(b.get("link") or "").strip()
+        if link and (not re.fullmatch(r"https?://\S{3,500}", link)):
+            raise ValueError("the video's link starts with https:// (copy it from the platform)")
+    return {"ctr": dict(sorted(ctr.items())), "link": link, "updated": stamp()}
 
 
 
@@ -1043,6 +1191,13 @@ SKILL_INFO = {
                      "uses": ["/write-script improve <script id>", "/write-script request <request id>",
                               "/write-script check <script id>", "/write-script hooks <script id>", "/write-script"],
                      "task": "script", "where": "Prepare - Improve my script, Write one from zero"},
+    "write-title": {"brief": "Claude writes what makes people click - and what the video then keeps: about ten titles, "
+                             "two or three thumbnail ideas with the words on them and the shot to film, the hook that "
+                             "keeps the promise. For a finished video: the title, the description with chapters, "
+                             "hashtags and thumbnails A / B / C, checked before you post.",
+                    "uses": ["/write-title request <request id>", "/write-title package <your video>",
+                             "/write-title ab <your video>", "/write-title"],
+                    "task": "title", "where": "Prepare - Title & thumbnail first; Edit - a video's Publish tab"},
     "recreate-video": {"brief": "Claude edits your clips - an exact copy of a video you analysed, in the style of up "
                                 "to three, from your words or one of your prompts - first as a preview, then in "
                                 "DaVinci Resolve.",
@@ -1064,7 +1219,8 @@ SKILL_INFO = {
     "whats-next": {"brief": "Where MotionLab stands and what to build next.", "uses": ["/whats-next"], "task": "plan",
                    "dev": True},
 }
-SKILL_ORDER = ["analyze-reference", "write-script", "recreate-video", "generate-video", "write-prompt", "whats-next"]
+SKILL_ORDER = ["analyze-reference", "write-script", "write-title", "recreate-video", "generate-video", "write-prompt",
+               "whats-next"]
 
 
 def skills() -> list[dict]:

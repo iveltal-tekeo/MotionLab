@@ -28,6 +28,11 @@ The app opens this with effort high. Work from `C:\MotionLab` with `.venv\Script
   creators (rhythm, structure), never their sentences.
 - Script times are estimates in seconds: there is no video yet. When you cite a moment of an analysed video, give
   frame + timecode, e.g. `f45 (00:00:01:15)` (hard rule 2).
+- **Keep the title's promise.** Before writing, look for the video's packaging: a title & thumbnail record
+  (`prompts.py list title` - the one whose `request` / `project` is this video, or the one the user names) or
+  `projects\<p>\build\publish\package.json` "title". When there is one, read it first: the hook delivers that promise
+  in the first 3 s (said + on screen), confirming the title without repeating it word for word
+  (`.claude\skills\write-title\guidelines.md` section 8).
 - Before writing, read Claude's memory: `.venv\Scripts\python tools\knowledge.py memory` (or MCP
   `knowledge(category="memory")`). It has every analysed video's style in one line. The user's scripts rated good
   (`prompts(kind="script")`, best first) are the first examples of what works for them.

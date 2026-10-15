@@ -1013,3 +1013,53 @@ body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=gene
 .tag.post { color: var(--amber); border-color: var(--amber-d); }
 pre.rpbody { max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin-top: 10px; }
 #rpn { width: 100%; margin-top: 4px; }
+
+/* ---------------- 0.4.3: title & thumbnail - Prepare's third way, a title record's pop-up, Edit > a video > Publish */
+.gways.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kbadge.k-title { color: var(--blue); border-color: #4fb3ff66; background: #4fb3ff14; }
+.pgc.k-title, .pm2.k-title { --kc: var(--blue); }
+.ttlist { display: flex; flex-direction: column; gap: 4px; }
+.ttrow { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--panel2); border: 1px solid transparent; }
+.ttrow.chosen { border-color: var(--kc, var(--acc)); }
+.ttn { font: 600 12px var(--mono); color: var(--dim); width: 18px; text-align: right; }
+.ttx { font-size: 14.5px; }
+.ttpat { color: var(--kc, var(--acc)); }
+.ttch { color: var(--muted); } .ttch.long { color: var(--amber); }
+.tcons { display: flex; flex-direction: column; gap: 10px; }
+.tcon { border: 1px solid var(--line); border-left: 3px solid var(--kc, var(--acc)); border-radius: 8px; padding: 10px 12px; background: var(--panel2); }
+.tcon-h { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tid { font: 700 13px var(--mono); width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: var(--kc, var(--acc)); color: #111; }
+.twords { font-size: 15px; letter-spacing: .03em; }
+.tcon .kv { grid-template-columns: 100px 1fr; }
+.utlist { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow: auto; }
+.pbsec { margin-top: 14px; --kc: var(--acc); }
+.pbtitle { font-size: 19px; font-weight: 600; margin: 2px 0 8px; }
+.pbchoices summary { cursor: pointer; color: var(--acc); margin: 4px 0 6px; }
+.pbthumbs { display: flex; flex-direction: column; gap: 14px; }
+.pbthumb { --kc: var(--acc); border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel2); }
+.pbimgs { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; flex-wrap: wrap; }
+.pbimgs figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.pbimgs img { display: block; height: 220px; border-radius: 6px; border: 1px solid var(--line); cursor: zoom-in; background: #000; }
+.pbimgs figcaption { font-size: 12px; color: var(--muted); }
+.pbck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.pbck > .small.dim { grid-column: 1 / -1; }
+.ckbox { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.ckbox details summary { cursor: pointer; margin-top: 4px; }
+.cklist { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cklist li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 6px; font-size: 12.5px; }
+.ckv { font: 600 12px var(--mono); color: var(--text); background: var(--panel2); border-radius: 4px; padding: 0 5px; }
+.ckres { font-size: 12.5px; font-weight: 600; }
+.pbtiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin: 10px 0 4px; }
+.pbtile { padding: 0; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; background: #000; cursor: pointer; color: var(--text);
+  font: inherit; display: flex; flex-direction: column; text-align: left; }
+.pbtile img { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; display: block; }
+.pbtile span { font-size: 12px; padding: 4px 6px; background: var(--panel); }
+.pbtile:hover { border-color: var(--line2); }
+.pbtile.on { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent); }
+table.pbch td { vertical-align: middle; }
+table.pbch input { padding: 4px 8px; }
+.opack { margin-top: 12px; padding: 8px 12px; border-radius: 6px; background: var(--panel2); border-left: 3px solid var(--blue); }
+.opack .octrl { display: inline-flex; align-items: center; gap: 4px; }
+.opack .octr { width: 58px; padding: 3px 6px; }
+.opack .olink { flex: 1; min-width: 240px; padding: 3px 8px; }
+@media (max-width: 1250px) { .gways.g3 { grid-template-columns: 1fr; } .pbck { grid-template-columns: 1fr; } }

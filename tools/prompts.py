@@ -2,7 +2,7 @@
 and talking scripts, split into their structure, so `/write-prompt` can write new ones in a structure that worked.
 Text only - no model, no API, no cost.
 
-    .venv\\Scripts\\python tools\\prompts.py list [shot|image|hook|script]
+    .venv\\Scripts\\python tools\\prompts.py list [brief|shot|image|hook|script|title]
     .venv\\Scripts\\python tools\\prompts.py show <id>                    e.g. shot-001
     .venv\\Scripts\\python tools\\prompts.py import <file>                any text (one prompt; --- lines separate several;
                                                                        `template` = the older format) or a JSON list
@@ -19,6 +19,10 @@ Writes only knowledge\\local\\prompts\\<kind>\\<id>.json (private to this PC). A
 pattern?, tags?, made_from?, review?: {stars 0-5, why, fix}, workflow?, step?, notes?} - how Claude saves the prompts
 it wrote (`written`, made_from = the examples used) or collected ones the user handed over (`creator`). Two ratings,
 never mixed: `review` = Claude's reading of the text (will a model do what it asks?), `result` = what the user saw.
+A title & thumbnail record (kind `title`, 0.4.3, `/write-title`) has no text of its own: {kind: title, source,
+titles: [{text, pattern}], concepts: [{id: A, sketch, words, shot, colours}], hook, chosen?, request? (req-NNN),
+project? (the video it packages)} - its text is written from them; `show` prints it readably; `annotate` also takes
+titles / concepts / hook / chosen / project.
 """
 from __future__ import annotations
 
@@ -84,7 +88,8 @@ def main() -> int:
             print(f"not split into structure yet: {', '.join(todo)} (annotate)")
     elif args.cmd == "annotate":
         ch = read_json(Path(args.file))
-        keys = ("title", "structure", "pattern", "tags", "model", "review", "workflow", "step", "notes")
+        keys = ("title", "structure", "pattern", "tags", "model", "review", "workflow", "step", "notes",
+                "titles", "concepts", "hook", "chosen", "project")        # the last five: a title record (0.4.3)
         print(P.describe(P.update(args.id, **{k: ch.get(k) for k in keys}), full=True))
     elif args.cmd == "rate":
         print(P.describe(P.update(args.id, rating=None if args.rating == "none" else args.rating, note=args.note)))

@@ -11,7 +11,8 @@ questions -> `/write-script request`).
   user's own results outrank them.
 - Requests = what the app's two dialogs saved: knowledge\\local\\prompts\\requests\\req-NNN.json (private, next to
   the prompt library where the scripts themselves live: kind `script` / `hook`). A script written from a request
-  carries `"request": "req-NNN"` (prompts.add).
+  carries `"request": "req-NNN"` (prompts.add). Since 0.4.3 a third kind: `"kind": "title"` = *Title & thumbnail
+  first* (`save_title`, for `/write-title request`); the record made from it is a prompt of kind `title`.
 
 A script has no video yet, so its times are estimates in seconds; once it is filmed, timestamps follow the lab's
 frame + timecode rule.
@@ -36,6 +37,10 @@ TONES = {"calm": "calm and clear", "energy": "high energy", "funny": "funny", "s
 CTAS = {"follow": "follow for more", "comment": "comment a word", "save": "save / share it", "link": "link in bio",
         "subscribe": "subscribe", "none": "no ask"}
 LANGS = {"es": "Español", "en": "English"}
+# 0.4.3 *Title & thumbnail first* (`/write-title request`): where it goes and which way up
+PLATFORMS = {"youtube": "YouTube (horizontal video)", "shorts": "YouTube Shorts", "tiktok": "TikTok",
+             "instagram": "Instagram Reels"}
+ORIENTATIONS = {"horizontal": "horizontal 16:9", "vertical": "vertical 9:16", "both": "horizontal and vertical"}
 _LOCK = threading.RLock()
 
 # ------------------------------------------------------------------------------------------------ the words
@@ -428,17 +433,57 @@ def save_improve(body: dict) -> dict:
     return {"script": rec, "request": req}
 
 
+def save_title(body: dict) -> dict:
+    """*Title & thumbnail first* (0.4.3, Prepare): the user's answers, checked -> a request with `"kind": "title"`
+    for `/write-title request <id>` (about 10 titles, 2-3 thumbnail concepts with the shot to film, the hook).
+    The script requests stay as they were (kind new / improve).
+
+    body (the app's dialog; only the topic is required):
+      topic        str, what the video is about (required)
+      viewer       str, who it is for
+      angle        str, the user's story / result / opinion - what makes it theirs
+      platforms    list of PLATFORMS keys: youtube / shorts / tiktok / instagram (several allowed; empty = Claude
+                   asks or defaults to youtube)
+      orientation  horizontal / vertical / both (empty = from the platforms: youtube -> horizontal, the rest ->
+                   vertical, both kinds -> both)
+      language     str, e.g. "es", "en" or a name
+      style_refs   list of analysed videos (analysis folder names or friends' cards, style.find), up to style.MAX_REFS
+      notes        str, anything else
+    Returns the saved request {id: req-NNN, kind: title, ..., date}; raises ValueError with a plain message."""
+    topic = _lines(body.get("topic"), 1500)
+    if not topic:
+        raise ValueError("say what the video is about first")
+    plats = body.get("platforms") or []
+    if isinstance(plats, str):
+        plats = [x.strip() for x in plats.replace(",", " ").split() if x.strip()]
+    plats = list(dict.fromkeys(str(x).lower() for x in plats))
+    bad = [x for x in plats if x not in PLATFORMS]
+    if bad:
+        raise ValueError(f"platforms: {', '.join(PLATFORMS)} (got {', '.join(bad)})")
+    orient = str(body.get("orientation") or "").lower()
+    if orient and orient not in ORIENTATIONS:
+        raise ValueError(f"orientation: one of {', '.join(ORIENTATIONS)}")
+    if not orient and plats:
+        h, v = "youtube" in plats, any(x != "youtube" for x in plats)
+        orient = "both" if h and v else "horizontal" if h else "vertical"
+    req = {"kind": "title", "topic": topic, "viewer": _lines(body.get("viewer")), "angle": _lines(body.get("angle"), 3000),
+           "platforms": plats, "orientation": orient, "language": _clean(body.get("language"), 30),
+           "style_refs": _like(body.get("style_refs")), "notes": _lines(body.get("notes"))}
+    return _save(req)
+
+
 def requests() -> list[dict]:
-    """Every saved request, newest first, with the scripts made from it (new: records whose `request` is its id;
-    improve: the script it improves and the versions made from that one)."""
+    """Every saved request, newest first, with what was made from it (new / title: records whose `request` is its
+    id - scripts and hooks, or title & thumbnail records; improve: the script it improves and the versions made from
+    that one)."""
     out = []
-    items = PR.load_all("script") + PR.load_all("hook")
+    items = PR.load_all("script") + PR.load_all("hook") + PR.load_all("title")
     for p in sorted(REQUESTS.glob("req-*.json"), reverse=True):
         try:
             r = read_json(p)
         except (OSError, ValueError):
             continue
-        if r.get("kind") == "new":
+        if r.get("kind") in ("new", "title"):
             r["made"] = [x["id"] for x in items if x.get("request") == r.get("id")]
         else:
             r["made"] = [x["id"] for x in items if r.get("script") in (x.get("made_from") or [])]
@@ -481,6 +526,13 @@ def describe_request(r: dict) -> str:
             ("call to action", " - ".join(x for x in (CTAS.get(r.get("cta") or "", ""), r.get("cta_text")) if x)),
             ("language", LANGS.get(r.get("lang") or "", r.get("lang") or "")), ("style like", ", ".join(r.get("like") or [])),
             ("what the user wants", r.get("want")), ("also", r.get("extra"))]
+    if r.get("kind") == "title":                         # 0.4.3 *Title & thumbnail first*
+        rows = [("about", r.get("topic")), ("for", r.get("viewer")), ("the user's angle", r.get("angle")),
+                ("platforms", ", ".join(PLATFORMS.get(x, x) for x in r.get("platforms") or [])),
+                ("orientation", ORIENTATIONS.get(r.get("orientation") or "", "")),
+                ("language", LANGS.get(r.get("language") or "", r.get("language") or "")),
+                ("style like", ", ".join(r.get("style_refs") or [])), ("also", r.get("notes"))]
     head = (f"{r.get('id')} - write a script from zero" if r.get("kind") == "new"
+            else f"{r.get('id')} - title & thumbnail first (before filming)" if r.get("kind") == "title"
             else f"{r.get('id')} - improve {r.get('script')}") + f" ({str(r.get('date', ''))[:16]})"
     return "\n".join([head] + [f"  {k}: {v}" for k, v in rows if v])

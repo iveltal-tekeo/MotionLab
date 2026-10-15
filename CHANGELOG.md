@@ -5,6 +5,28 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.3 - 2026-10-15 - Title + thumbnail: Title & thumbnail first, the Publish tab, the thumbnail check
+
+- **Prepare: Title & thumbnail first** - a third way, before you film: answer a few questions and Claude writes
+  about ten titles in different styles, two or three thumbnail ideas (the words on them and the shot to film for
+  each) and the first 3 seconds that keep the promise. A title card shows every title with its length on a phone,
+  the ideas and the hook, each with a Copy button; *Use this title* links it to your video, and your script opens by
+  keeping that promise.
+- **Each video has a Publish tab**: the title, thumbnails A / B / C as the YouTube 16:9 thumbnail and the vertical
+  cover for Shorts, Reels and TikTok (with what the apps' grids cut off and where their buttons cover your words),
+  the description with chapters - YouTube's time with the frame and timecode next to it - and hashtags. Everything
+  is checked before you post, with Copy buttons and the folder one click away.
+- **Make the package with Claude, or yourself**: MotionLab finds the sharpest, best-lit moments of your clips (with a
+  face when it sees one) - pick one, type 2-4 words, choose a design (outlined words over the photo, words on a
+  colour block, a raw -> final split). Or bring a picture you made with an AI image tool. Change a thumbnail's words,
+  colours or size and render it again.
+- **The thumbnail check**: readable at phone-feed size, 2-4 words, big enough, enough contrast, a big enough face,
+  the brightness of your niche's best videos, the title's length, no repeating the title, and the title's promise in
+  the first 3 seconds - each with its number. Three variants for YouTube's own A/B test, made for its current limits.
+- **Learning what gets clicks**: *How did it turn out?* now asks about the title and thumbnail; after posting, type
+  each thumbnail's click-through rate and the link, and Claude repeats what won. References keep their thumbnail,
+  and Claude's memory learns what the thumbnails of the videos that beat their channel look like.
+
 ## 0.4.2.1 - 2026-10-15 - Downloads that keep working, Report a problem
 
 - **Your downloader stays up to date**: Settings shows how old the downloader (yt-dlp) is and updates it with one

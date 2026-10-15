@@ -14,7 +14,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
   (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
-  `projects\<name>\` (*Create video*), `projects\<p>\build\made_from.json` + `outcome.json`, and - on a click - a Desktop / Start-menu shortcut, git pull
+  `projects\<name>\` (*Create video*), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
+  (`build\publish\thumbs\<id>\overlay.json` "values") + a picture the user brings (`build\publish\images\`) - never
+  `package.json` itself (the tools own it; the words go through `publish.write`) - and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
   `/api/prompts/delete`, the one file to the Recycle Bin, logged).
 - Delete (v0.2.5, `trash.py`): the user's Delete buttons on References (a reference = its analysis folder + its video
@@ -146,7 +148,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `generate`, effort xhigh). GET `/api/generate/options` = the tools, the downloaded songs, HyperFrames found.
 - **Prepare** (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it
   with more potential to go viral - or generate one from zero from a few questions; hooks, structure"):
-  `pagePrepare` = two ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`),
+  `pagePrepare` = three ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`,
+  0.4.3 *Title & thumbnail first* = `titleFirstModal`, below),
   *How Claude writes for reach* (`SP_RULES`: the six rules of `.claude\skills\write-script\guidelines.md`),
   *Waiting for Claude* (requests with nothing written from them yet: *Open in Claude Code again*, ✕ = POST
   `/api/script/forget`, the request file to the Recycle Bin, logged), *Your scripts and hooks* (prompt cards ->
@@ -160,6 +163,42 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   live in the Improve dialog (`scriptCheckHtml`, debounced) and on every script / hook pop-up (*The check*); the
   speaking rate is measured on the picked videos (`style.build(...)["talk"]`) when they have talking. A script / hook
   card's *Optimize* / *Check it again* go to `/write-script` (`optCmd`, `chkCmd`), other prompts to `/write-prompt`.
+- **Title & thumbnail** (0.4.3; the user: the thumbnail and the title together decide the CTR, "horizontal and
+  vertical"): **Prepare > Title & thumbnail first** (`titleFirstModal`: topic (required), viewer, angle, platforms =
+  check boxes (`script.PLATFORMS`), the thumbnail's orientation derived from them (`TF_ORIENT`) until the user clicks
+  one, language, up to 3 analysed videos, notes -> POST `/api/title/request` = `script.save_title` -> `req-NNN.json`
+  `"kind": "title"` -> Claude `/write-title request <req>` (task `title`, effort high)); *Waiting for Claude* lists
+  title requests too. Title records (prompt library kind `title`, `KSHORT.title`, blue `k-title`) sit with the scripts
+  and hooks; their pop-up is `titleModal` (not the prompt steps): the titles (pattern, characters - `tchars`, amber
+  over `TITLE_PHONE` 60), the thumbnail ideas (words, picture, shot to film, colours), the hook, Copy each / *Copy
+  all*, *Use a title for a video* / *Use this title* = `useTitleModal` (a video + the final title -> POST
+  `/api/prompts/title` = `prompts.update(project=, chosen=)`; *Unlink*), *Write the script* (`scriptNewModal` with the
+  title + hook), the rating, Claude's check read-only, *Write new ones with Claude*. **Edit > a video > Publish**
+  (`projPublish`, the tab after Renders): GET `/api/project/<p>/publish` = `data.publish_info` (package.json as the
+  tools wrote it + each thumbnail's settings `OS.status(thumbs\<id>)`, the title records linked to the video, the
+  edit's fps / frames, the designs `thumbnail.templates()` - imported only here (numpy) - the face finder, the newest
+  render, the brought pictures). Empty = one centred *Make the package with Claude* (`/write-title package <p>`, task
+  title) + *or do it yourself*. Else: **Title** (the chosen one + characters + Copy; the package's titles + the linked
+  records' to choose from; type your own) -> POST `.../publish` = `data.save_publish` = `publish.write` (left out =
+  kept; a FAIL writes nothing and the page lists the checks); **Thumbnails** A / B / C (16:9, the 9:16 cover, the
+  apps' crops - a click = the lightbox; the check per size: WARN / FAIL lines open, the rule in words (`CHECK_WORDS`)
+  + its number, all rules folded, SKIP = "not measured"; *Change it…* = the graphic's settings form (`gsetInput`) ->
+  POST `.../thumb` (`OS.set_values`) then job thumb_render; *Render again*; *Check them*); **Make a thumbnail
+  yourself** (1 *Find good moments* = job thumb_candidates - the clips or the finished video -, tiles with clip +
+  frame + timecode; or *Use a picture you made…* = POST `.../publish/image` -> `build\publish\images\` + a link to
+  Prompts > Image (`aiPromptsModal('image')`); 2 the 2-4 words (the linked records' ideas as chips), the design,
+  A / B / C; *Make* = job thumb_make; `PUBST` keeps the choices within a session); **Description** (the user's words,
+  chapters = YouTube time + frame + timecode, frame and name editable, *suggest from the edit / what is said* = GET
+  `.../chapters?from=plan|transcript` = `publish.chapter_points`, its errors in plain words; hashtags; Copy
+  description / hashtags). Jobs (`jobs._thumb_job`, group cpu, queued): thumb_candidates (`thumbnail.py candidates <p>
+  [--render]`), thumb_make (`make <p> --id X --words .. --template .. --frame f --clip c | --image <file>`, HyperFrames
+  stills + its check, ~15 s), thumb_render, thumb_check (`jobtools.py thumb-check <p> [--title]` = thumbnail.py's
+  `check_project`, exit 0 when a rule FAILs: a result, not a failed job); the page's progress panel follows them
+  (`THUMB_JOBS`) and redraws when one ends. **How did it turn out?** has the part `packaging` (Title & thumbnail) and
+  *After posting* (`packagingBox`: CTR % per thumbnail A / B / C + the video's link -> outcome.json `"packaging":
+  {"ctr": {"A": 4.1}, "link", "updated"}`, `data.clean_packaging`: 0-100, "4,1" accepted, empty = removed; the
+  winner named). The link is only kept: `content.py stats` writes into `analysis\<name>\`, so a project's public
+  numbers need a change there first. `data.save_outcome` keeps every key it does not own.
 - **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
   use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = Overview (one search `#mq` over
   videos / effects / lessons, counts that link to their tab, *How Claude uses it* + *What Claude reads (memory.md)* /
@@ -247,7 +286,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   fable = the strongest for long / open-ended work - the dialog marks it "stronger for this task" for review /
   recreate / generate (`TASKS[..][2]`), auto = Claude Code's own `/model`) and the effort, pre-filled from Settings
   (`claude_model`, `claude_effort` "recommended" = review high, feedback high, lessons high, library high, recreate
-  xhigh, generate xhigh, prompt medium, script high, plan (Home > Roadmap > What next? = /whats-next) medium; one
+  xhigh, generate xhigh, prompt medium, script high, title high, plan (Home > Roadmap > What next? = /whats-next) medium; one
   level less on Fable, `FABLE_EFFORT`; or one level for all); *Don't ask again* saves the choice (POST `/api/claude`
   `remember`; `options: true` = the dialog's data, nothing opens). The launcher adds `--model` / `--effort` only
   when this Claude Code's `--help` lists them, and
@@ -274,7 +313,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   overlay_new / overlay_captions (a subtitle file, or a video's words = speech to text) / overlay_refresh (group
   resolve) / overlay_resolve_clip = Graphics; speech_install = Settings > Programs > Speech to text; captions read the user's .srt / .vtt / transcript.json, never change
   it; 0.4.2.1: ytdlp_update (group net, `dry_run` = print the command, run nothing) and player_copy (group cpu) =
-  `jobtools.py ytdlp-update | player-copy`, the app's own small jobs; `jobtools.py selfcheck` = the report's
+  `jobtools.py ytdlp-update | player-copy`, the app's own small jobs; 0.4.3: thumb_candidates / thumb_make /
+  thumb_render / thumb_check (group cpu, Publish above; thumb_check = `jobtools.py thumb-check`); `jobtools.py selfcheck` = the report's
   scrubbing + link and the install kinds, no network), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
   status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
   holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
@@ -312,7 +352,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
   check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data;
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
-  POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
+  GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

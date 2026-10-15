@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "words", "type": "string", "label": "Words (2-4, with the two labels)", "default": "SAME ROOM"},
+  {"id": "label_a", "type": "string", "label": "Label of the first picture", "default": "RAW"},
+  {"id": "label_b", "type": "string", "label": "Label of the second picture", "default": "FINAL"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Impact",
+   "options": [{"value": "Impact", "label": "Impact"}, {"value": "Arial Black", "label": "Arial Black"}, {"value": "Bahnschrift", "label": "Bahnschrift (bold)"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}]},
+  {"id": "size", "type": "number", "label": "Text size (% of the height)", "default": 20, "min": 6, "max": 40, "step": 1},
+  {"id": "label_size", "type": "number", "label": "Label size (% of the height)", "default": 9, "min": 4, "max": 20, "step": 1},
+  {"id": "uppercase", "type": "boolean", "label": "Capitals", "default": true},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "label_color", "type": "color", "label": "Label colour", "default": "#111111"},
+  {"id": "label_bg", "type": "color", "label": "Label background", "default": "#ffd400"},
+  {"id": "outline", "type": "number", "label": "Outline (% of the text size)", "default": 7, "min": 0, "max": 20, "step": 1},
+  {"id": "outline_color", "type": "color", "label": "Outline colour", "default": "#000000"},
+  {"id": "before_look", "type": "enum", "label": "Look of the first picture", "default": "grey",
+   "options": [{"value": "grey", "label": "Grey and flat (raw)"}, {"value": "dark", "label": "Darker"}, {"value": "none", "label": "As shot"}]},
+  {"id": "arrow", "type": "boolean", "label": "Arrow between them", "default": true},
+  {"id": "divider_color", "type": "color", "label": "Divider colour", "default": "#ffffff"},
+  {"id": "focus_x", "type": "number", "label": "Photo focus across (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "focus_y", "type": "number", "label": "Photo focus down (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "zoom", "type": "number", "label": "Photo zoom", "default": 1, "min": 1, "max": 3, "step": 0.05},
+  {"id": "brightness", "type": "number", "label": "Brightness of the second picture", "default": 1.08, "min": 0.5, "max": 1.6, "step": 0.02},
+  {"id": "saturation", "type": "number", "label": "Saturation of the second picture", "default": 1.25, "min": 0, "max": 2, "step": 0.05}
+]'>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, height=720">
+<!-- MotionLab thumbnail template "split" (0.4.3): a "before -> after" - two pictures side by side (16:9) or one above
+     the other (9:16), a label on each, an arrow and big words over the seam. With one picture (no PHOTO2) the first
+     half shows it raw (grey / dark) and the second as graded.
+     Size-independent: tools\thumbnail.py make renders it at 1280x720 and 1080x1920 (overlay.py's retime + snapshot).
+     The photos + their face boxes come from assets/photo.js (written by thumbnail.py make; --frame2 / --image2).
+     Three frames: f0 = the thumbnail; f1 = the same without the words; f2 = the words' fill in the key colour #ff00ff, no outline or shadow.
+     tools\thumbnail.py check measures the text from their differences (size at feed size, contrast). -->
+<script src="./gsap.min.js"></script>
+<script src="./assets/photo.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  .abs { position: absolute; }
+  .half { position: absolute; overflow: hidden; }
+  img.photo { position: absolute; max-width: none; }
+  .box { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .words { line-height: 1.0; text-align: center; text-wrap: balance; overflow-wrap: normal; word-break: keep-all;
+           -webkit-text-stroke-width: var(--sw, 0px); paint-order: stroke fill; text-shadow: var(--sh, none); }
+  .words span { white-space: nowrap; }
+  .label { position: absolute; padding: 0.06em 0.28em 0.02em; line-height: 1.05; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="0.1" data-width="1280"
+     data-height="720"></div>
+<script>
+  const FPS = 30, FRAMES = 3;
+  const W = 1280, H = 720;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const P = window.PHOTO || { src: "", w: 16, h: 9, face: null };
+  const P2 = window.PHOTO2 || null;
+  const root = document.getElementById("root");
+  const vertical = H > W;
+  const FONT = `"${V.font}", "Arial Black", Impact, sans-serif`;
+  const WEIGHT = V.font === "Impact" || V.font === "Arial Black" ? "400" : "800";
+
+  function focus(ph) {
+    const f = ph.face;
+    const fx = V.focus_x >= 0 ? V.focus_x / 100 : (f ? f[0] + f[2] / 2 : 0.5);
+    const fy = V.focus_y >= 0 ? V.focus_y / 100 : (f ? f[1] + f[3] / 2 : 0.45);
+    return [fx, fy];
+  }
+  function half(ph, area, filter) {
+    const d = document.createElement("div");
+    d.className = "half";
+    Object.assign(d.style, { left: area.x + "px", top: area.y + "px", width: area.w + "px", height: area.h + "px" });
+    root.appendChild(d);
+    if (!ph.src) return d;
+    const img = document.createElement("img");
+    img.className = "photo";
+    img.src = ph.src;
+    const s = Math.max(area.w / ph.w, area.h / ph.h) * V.zoom;
+    const dw = ph.w * s, dh = ph.h * s;
+    const [fx, fy] = focus(ph);
+    let x = area.w / 2 - fx * dw, y = area.h * 0.5 - fy * dh;
+    x = Math.min(0, Math.max(area.w - dw, x));
+    y = Math.min(0, Math.max(area.h - dh, y));
+    Object.assign(img.style, { left: x + "px", top: y + "px", width: dw + "px", height: dh + "px", filter });
+    d.appendChild(img);
+    return d;
+  }
+  function fitText(el, box, fs, apply) {
+    apply(fs);
+    for (let i = 0; i < 80 && (el.scrollWidth > box.w + 1 || el.offsetHeight > box.h + 1); i++) { fs *= 0.96; apply(fs); }
+  }
+
+  const look = { grey: "grayscale(0.85) contrast(0.85) brightness(0.92)", dark: "brightness(0.6) saturate(0.8)",
+                 none: "none" }[V.before_look];
+  const after = `brightness(${V.brightness}) saturate(${V.saturation}) contrast(1.06)`;
+  const A = vertical ? { x: 0, y: 0, w: W, h: H / 2 } : { x: 0, y: 0, w: W / 2, h: H };
+  const B = vertical ? { x: 0, y: H / 2, w: W, h: H / 2 } : { x: W / 2, y: 0, w: W / 2, h: H };
+  half(P, A, look);
+  half(P2 || P, B, P2 ? after : after);
+  const div = document.createElement("div");
+  div.className = "abs";
+  const dv = 0.008 * Math.min(W, H);
+  Object.assign(div.style, vertical ? { left: 0, top: (H / 2 - dv / 2) + "px", width: W + "px", height: dv + "px" }
+                                    : { left: (W / 2 - dv / 2) + "px", top: 0, width: dv + "px", height: H + "px" },
+                { background: V.divider_color });
+  root.appendChild(div);
+
+  const texts = [];
+  // the labels: in a corner of each picture (9:16: inside the 3:4 grid crop, clear of the right-hand buttons)
+  const lfs = V.label_size / 100 * H;
+  [[V.label_a, A], [V.label_b, B]].forEach(([t, ar], i) => {
+    if (!String(t || "").trim()) return;
+    const l = document.createElement("div");
+    l.className = "label";
+    l.textContent = t;
+    const y = vertical ? (i === 0 ? 0.14 * H : 0.6 * H) : 0.06 * H;
+    const m = 0.04 * Math.min(W, H);
+    Object.assign(l.style, { fontFamily: FONT, fontWeight: WEIGHT, fontSize: lfs + "px", color: V.label_color,
+                             background: V.label_bg, textTransform: V.uppercase ? "uppercase" : "none",
+                             top: y + "px" },
+                  !vertical && i === 1 ? { right: m + "px" } : { left: (ar.x + m) + "px" });
+    root.appendChild(l);
+    texts.push(l);
+  });
+  // the arrow on the seam
+  if (V.arrow) {
+    const s = 0.16 * Math.min(W, H);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    Object.assign(svg.style, { position: "absolute", width: s + "px", height: s + "px",
+                               left: (vertical ? W * 0.78 - s / 2 : W / 2 - s / 2) + "px",
+                               top: (vertical ? 0.6 * H + lfs * 0.55 - s / 2 : H * 0.2 - s / 2) + "px",
+                               transform: vertical ? "rotate(90deg)" : "none" });
+    svg.innerHTML = '<circle cx="50" cy="50" r="48" fill="' + V.label_bg + '"/><path d="M24 44h32V28l24 22-24 22V56H24z" fill="' + V.label_color + '"/>';
+    root.appendChild(svg);
+  }
+  // the words: across the bottom (16:9) or over the seam (9:16)
+  const pad = 0.045 * Math.min(W, H);
+  const box = vertical ? { x: pad, y: 0.425 * H, w: W - pad - 0.15 * W, h: 0.15 * H }   // clear of the buttons
+                       : { x: pad, y: 0.58 * H, w: W - 2 * pad, h: 0.38 * H };
+  const wrap = document.createElement("div");
+  wrap.className = "box";
+  Object.assign(wrap.style, { left: box.x + "px", top: box.y + "px", width: box.w + "px", height: box.h + "px" });
+  const el = document.createElement("div");
+  el.className = "words";
+  el.textContent = V.words;
+  Object.assign(el.style, { fontFamily: FONT, fontWeight: WEIGHT, color: V.text_color, maxWidth: box.w + "px",
+                            textTransform: V.uppercase ? "uppercase" : "none", WebkitTextStrokeColor: V.outline_color });
+  wrap.appendChild(el);
+  root.appendChild(wrap);
+  fitText(el, box, V.size / 100 * H, fs => {
+    el.style.fontSize = fs + "px";
+    el.style.setProperty("--sw", (2 * V.outline / 100 * fs).toFixed(2) + "px");
+    el.style.setProperty("--sh", `0 ${(0.05 * fs).toFixed(1)}px ${(0.14 * fs).toFixed(1)}px rgba(0,0,0,0.75)`);
+  });
+  texts.push(el);
+
+  const tl = gsap.timeline({ paused: true });
+  const labels = texts.filter(x => x !== el);
+  tl.set(el, { opacity: 0 }, AT(1));                                     // f1: without the words (the labels'
+  if (labels.length) tl.set(labels, { color: "rgba(0,0,0,0)" }, AT(1));  //     letters too, their boxes stay)
+  tl.set(el, { opacity: 1, color: "#ff00ff", "--sw": "0px", "--sh": "none" }, AT(2));   // f2: the letters' fill
+  if (labels.length) tl.set(labels, { color: "#ff00ff" }, AT(2));     //     only, in the key colour #ff00ff
+  tl.set({}, {}, FRAMES / FPS);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

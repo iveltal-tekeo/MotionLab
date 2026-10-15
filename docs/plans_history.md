@@ -109,6 +109,87 @@ to the lab's texture.
 
 ## Released plans (their text when they shipped)
 
+### 0.4.3 - released 2026-10-15 - Title + thumbnail: packaging for clicks (horizontal and vertical)
+
+**Ships when**: for one of the user's videos, 10 titles and 3 thumbnails (16:9 and the 9:16 cover) land in a
+ready-to-post folder and pass the thumbnail check, whose rules have self-test cases with known answers.
+
+**The user's words (2026-10-14)**: "un apartado de miniatura ... que tuviera opción tanto vertical como horizontal,
+creo que la miniatura también es de lo más importante ya que: el impacto numérico: CTR (click-through rate) - la
+miniatura y el título juntos determinan el CTR. Estaría guay que con Claude pudieras sacar el título y la miniatura
+... para que así estuviera completo el vídeo de YouTube, y ayudara a convertir con más visitas."
+
+**Where it goes in the app** (recommended; the user decides):
+- **Prepare** gets a third way: **Title & thumbnail first**. Many creators decide the packaging before they film, so
+  the video delivers what the title promises. Claude writes about 10 titles in different patterns and 2-3 thumbnail
+  concepts, each with a sketch in words, the 2-4 words on it, and **the shot to film for it**. The hook of the script
+  (`/write-script`) has to agree with the title: what they clicked for, they get in the first 3 s.
+- **Edit > a video > Publish** (a new tab on the finished video, no new sidebar item) makes the final package:
+  - the thumbnail **16:9** (1280×720) and the **9:16 cover** (1080×1920, with the 4:5 / 1:1 grid crops marked)
+  - the title
+  - the description with chapters from the edit or the transcript (YouTube's `0:00` format in the text; the app
+    shows frame + timecode next to each)
+  - hashtags
+  All of it goes in a ready-to-post folder `build\publish\`. Check each platform's current cover / thumbnail options
+  when building, because they change.
+
+**How a thumbnail is made** (two routes, both end in the same check):
+1. **From your own footage** (free, local): the lab picks candidate frames (sharp, still, well lit, and a big subject
+   if a cheap detector proves good enough). Claude looks at them as a contact sheet and picks the expression or the
+   moment. The design is an HTML template (the 0.3.2 graphics pipeline, rendered as a still): big text, outline /
+   shadow, a colour block. Its settings stay editable in the app like any graphic. Cutting the subject out needs a
+   background-removal model (rembg is ~170 MB). Measure it on an ordinary laptop first, or go without it
+   (the lab's rule: light and tested first).
+2. **With an AI image tool**: Claude writes the image prompt (kind `image` in the prompt library: Nano Banana / GPT
+   Image, your photo as the reference). You make it on the site and bring the picture back; the lab adds the text
+   and runs the check.
+
+**The thumbnail check** (no Claude, like the script check):
+- the thumbnail shown at the size of a phone feed: is the text still readable?
+- 2-4 words, at least ~20 % of the height
+- text / background contrast (WCAG ratio)
+- the subject's share of the frame
+- brightness / saturation compared with the outperforming videos of your niche (below)
+- the title's length on a phone (rule of thumb ~50-60 characters before it is cut)
+- the thumbnail text doesn't repeat the title
+- the title's promise shows up in the script's first 3 s
+
+Claude makes **3 variants** for YouTube Studio's own A/B test ("Test & compare"; check its current limits).
+
+**Learning what gets clicks**:
+- From references: downloads also keep the video's thumbnail (yt-dlp `--write-thumbnail`) into
+  `analysis\<name>\content\`. The title is already in `refs\downloads.json`, and the outperformer score (views ÷
+  followers) in `content\stats.json`. The lab measures cheaply: colours (colour.py's palette), contrast, brightness.
+  Claude describes the composition (face, expression, text, arrows). The result is "packaging that worked" per niche
+  in Claude's memory, outperformers first.
+- From your own videos: CTR lives in YouTube Studio, and the lab never logs into accounts (no tokens). After posting,
+  you type in the CTR per variant (or paste a screenshot), and the public views come from `content.py stats` with the
+  link. It is saved with the video's *How did it turn out?* (a new aspect: packaging), and Claude repeats the
+  patterns that won.
+
+**Needs first**: Prepare (built 2026-10-14). The graphics pipeline exists (0.3.2). The content foundations (0.4.5)
+and describe video (0.8.0) make the "what worked" part better later; it works without them. **Size**: medium.
+Order: Prepare's concept card + titles first (text only), then the Publish tab from your frames, then the AI-image
+route, then learning from references.
+**Started 2026-10-15**, in two phases: (1) next to 0.4.2.1 - the thumbnail engine (`tools\thumbnail.py`:
+candidates, HTML templates for 16:9 + the 9:16 cover, the check, reference thumbnails via `content.py`) and the
+packaging (`/write-title` skill, prompt-library kind `title`, title requests, `tools\publish.py`: description,
+chapters, hashtags); (2) after 0.4.2.1 ships - the app (Prepare's *Title & thumbnail first*, Edit > a video >
+*Publish*). The shared file: `build\publish\package.json` (each tool updates only its own keys).
+**Phase 1 built 2026-10-15**: `tools\thumbnail.py` (candidates, 3 templates in `tools\overlays\thumbnails\` rendered at
+1280x720 + 1080x1920, the crops preview, the check - selfcheck every rule PASS / FAIL with known answers, `refs`);
+`content.py thumbnail`; Claude's memory "Packaging that worked"; test_4am A / B / C made and checked (no FAIL). The
+face detector: OpenCV 5 has no Haar cascades; YuNet (227 KB, MIT) measured 15/15 + 26/29 faces, 8-14 ms a frame ->
+shipped in `tools\models\` (the user's choice). Packaging: `/write-title` (request / package / ab), kind `title`,
+`script.save_title`, `tools\publish.py` (YouTube's chapter / hashtag / title rules checked 2026-10-15, selfcheck 22/22);
+dry run req-001 -> title-001. **Phase 2 (the app) built 2026-10-15**: Prepare > *Title & thumbnail first*
+(`script.save_title` -> `/write-title request`), title records in the prompt library (*Use this title* links a
+video), Edit > a video > *Publish* (Claude or by hand: candidates, make A / B / C from a frame or a picture, the
+check, settings + render again, title, chapters with frame + timecode, hashtags), *How did it turn out?* > Title and
+thumbnail (CTR per variant + link in outcome.json `packaging`); API 19. Open: a posted project's public numbers
+(`content.py stats` writes into analyses only). Platform notes: Instagram's grid is 3:4 since 2025 (not 1:1), YouTube now recommends
+4K thumbnails (1280x720 still accepted), Test & compare = up to 3 variants, desktop only, not for Shorts.
+
 ### 0.4.2.1 - released 2026-10-15 - Downloads that keep working, and Report a problem
 
 **Ships when**: on a fresh install, an out-of-date yt-dlp is shown in Settings and updated with one click; a TikTok

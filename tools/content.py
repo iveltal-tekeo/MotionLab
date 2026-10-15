@@ -10,7 +10,11 @@ a known link) speech to text hears the analysis' audio when it is installed (Set
     .venv\\Scripts\\python tools\\content.py stats <name | video> [--url <link>]
           how the video performs (0.3.5): views, likes, comments, the channel's followers, the upload date ->
           analysis\\<name>\\content\\stats.json; views / followers = the outperformer score; every fetch is kept
-          in its history. The transcript fetch saves them too (the same request).
+          in its history. The transcript fetch saves them too (the same request), and both save the video's
+          thumbnail (0.4.3): analysis\\<name>\\content\\thumbnail.<jpg|webp|png> + thumbnail.json (its measures:
+          brightness, saturation, colours, faces - tools\\thumbnail.py refs summarises them per niche)
+    .venv\\Scripts\\python tools\\content.py thumbnail <name | video> [--url <link>]
+          only the thumbnail, for analyses fetched before 0.4.3
 
 <name> = the analysis folder (Analyze); a video that has no analysis yet works too (its frame rate is probed).
 The link comes from refs\\downloads.json (the app's downloads), else from a YouTube id in the file name
@@ -158,6 +162,84 @@ def save_stats(ref: dict, info: dict, url: str) -> dict:
     return s
 
 
+THUMB_EXT = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/webp": ".webp", "image/png": ".png"}
+
+
+def save_thumbnail(ref: dict, info: dict) -> Path:
+    """yt-dlp's info (-J) -> the video's thumbnail as the platform shows it: analysis\\<name>\\content\\thumbnail.<ext>
+    (the biggest one offered) + its measures (thumbnail.json). Raises on a network error."""
+    import urllib.error
+    import urllib.request
+    cands = sorted((t for t in (info.get("thumbnails") or []) if t.get("url")),
+                   key=lambda t: (-(t.get("width") or 0) * (t.get("height") or 0), -(t.get("preference") or -99)))
+    urls = [u for u in [info.get("thumbnail"), *info.get("_urls", []), *(t["url"] for t in cands[:3])] if u]
+    if not urls:
+        raise SystemExit("the platform gives no thumbnail for this video")
+    data, err = None, None
+    for url in dict.fromkeys(urls):                             # yt-dlp's own pick first, then the biggest offered
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = r.read(20_000_000)
+                ctype = (r.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            break
+        except urllib.error.HTTPError as e:                     # e.g. YouTube's maxresdefault missing: the next one
+            err = e
+    if data is None:
+        raise err
+    ext = THUMB_EXT.get(ctype) or next((e for e in (".jpg", ".webp", ".png") if e in url.lower().split("?")[0]), ".jpg")
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        ext = ".webp"
+    elif data[:3] == b"\xff\xd8\xff":
+        ext = ".jpg"
+    elif data[:8] == b"\x89PNG\r\n\x1a\n":
+        ext = ".png"
+    out = ref["dir"] / "content"
+    out.mkdir(parents=True, exist_ok=True)
+    dest = out / f"thumbnail{ext}"
+    tmp = out / f".thumbnail{ext}.part"
+    tmp.write_bytes(data)
+    tmp.replace(dest)
+    for old in out.glob("thumbnail.*"):                         # one thumbnail: an older one in another format goes
+        if old != dest and old.suffix.lower() in (".jpg", ".webp", ".png"):
+            old.unlink()
+    try:
+        from motionlab import thumbnail as TH
+        TH.measure_ref(ref["name"], force=True)
+    except Exception as e:                                      # noqa: BLE001 - the picture is saved; measures later
+        print(f"(thumbnail saved, not measured: {type(e).__name__}: {e})")
+    return dest
+
+
+def _thumb_note(ref: dict, info: dict) -> None:
+    try:
+        p = save_thumbnail(ref, info)
+        print(f"thumbnail: {p}")
+    except SystemExit as e:
+        print(f"thumbnail: {e}")
+    except Exception as e:                                      # noqa: BLE001 - a network hiccup is no failure
+        print(f"thumbnail not saved: {type(e).__name__}: {e}")
+
+
+def thumbnail(args) -> int:
+    ref = resolve(args.target)
+    url = find_url(ref, args.url)
+    print(f"{ref['name']}: asking {url} for its thumbnail ...", flush=True)
+    m = re.search(r"(?:v=|youtu\.be/|shorts/)([A-Za-z0-9_-]{11})", url)
+    try:
+        info = json.loads(run([ytdlp(), "-J", "--skip-download", "--no-playlist", "--no-warnings", url]))
+    except SystemExit as e:
+        if not m:
+            raise
+        # YouTube asks yt-dlp to sign in now and then; its thumbnails sit at a fixed address anyway
+        print(f"({str(e)[:90]}... - taking YouTube's thumbnail address directly)")
+        info = {"_urls": [f"https://i.ytimg.com/vi/{m.group(1)}/{k}.jpg"
+                          for k in ("maxresdefault", "sddefault", "hqdefault")]}
+    p = save_thumbnail(ref, info)
+    print(p)
+    return 0
+
+
 def stats_line(s: dict) -> str:
     n = lambda v: "-" if v is None else f"{v:,}"                                        # noqa: E731
     return (f"{n(s.get('views'))} views · {n(s.get('likes'))} likes · {n(s.get('comments'))} comments · "
@@ -175,6 +257,7 @@ def stats(args) -> int:
     s = save_stats(ref, info, url)
     print(stats_line(s))
     print(ref["dir"] / "content" / "stats.json")
+    _thumb_note(ref, info)
     return 0
 
 
@@ -190,6 +273,7 @@ def transcript(args) -> int:
     print(f"{ref['name']}: asking {url} for subtitles ...", flush=True)
     info = json.loads(run([exe, "-J", "--skip-download", "--no-playlist", "--no-warnings", url]))
     print(stats_line(save_stats(ref, info, url)), flush=True)          # the same answer has the video's numbers
+    _thumb_note(ref, info)                                             # ... and its thumbnail
     track = choose_track(info, args.lang)
     if not track:
         langs = sorted(set(info.get("subtitles") or {}) | {k for k in (info.get("automatic_captions") or {}) if k.endswith("-orig")})
@@ -338,6 +422,9 @@ def main() -> int:
     st = sub.add_parser("stats", help="views, likes, comments, followers, upload date -> content\\stats.json")
     st.add_argument("target")
     st.add_argument("--url")
+    th = sub.add_parser("thumbnail", help="the video's thumbnail -> content\\thumbnail.<ext> (+ its measures)")
+    th.add_argument("target")
+    th.add_argument("--url")
     s = sub.add_parser("show", help="print the transcript (or a frame range of it)")
     s.add_argument("target")
     s.add_argument("start", nargs="?", type=int)
@@ -347,6 +434,8 @@ def main() -> int:
         return transcript(args)
     if args.cmd == "stats":
         return stats(args)
+    if args.cmd == "thumbnail":
+        return thumbnail(args)
     ref = resolve(args.target)
     data = _load(ref["dir"] / "content" / "transcript.json")
     if not data:

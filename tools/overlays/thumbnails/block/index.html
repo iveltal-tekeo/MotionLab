@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "words", "type": "string", "label": "Words (2-4)", "default": "YOUR WORDS HERE"},
+  {"id": "accent_word", "type": "number", "label": "Word in the accent colour (0 = none)", "default": 0, "min": 0, "max": 6, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Arial Black",
+   "options": [{"value": "Arial Black", "label": "Arial Black"}, {"value": "Impact", "label": "Impact"}, {"value": "Bahnschrift", "label": "Bahnschrift (bold)"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}]},
+  {"id": "size", "type": "number", "label": "Text size (% of the height)", "default": 22, "min": 6, "max": 45, "step": 1},
+  {"id": "uppercase", "type": "boolean", "label": "Capitals", "default": true},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "accent_color", "type": "color", "label": "Accent colour", "default": "#111111"},
+  {"id": "block_color", "type": "color", "label": "Block colour", "default": "#c81e24"},
+  {"id": "block_size", "type": "number", "label": "Block size (% of the width on 16:9, of the height on 9:16)", "default": 44, "min": 25, "max": 65, "step": 1},
+  {"id": "slant", "type": "number", "label": "Slanted edge (% of the width)", "default": 6, "min": 0, "max": 15, "step": 1},
+  {"id": "text_side", "type": "enum", "label": "Block side (16:9)", "default": "auto",
+   "options": [{"value": "auto", "label": "Away from the face"}, {"value": "left", "label": "Left"}, {"value": "right", "label": "Right"}]},
+  {"id": "outline", "type": "number", "label": "Outline (% of the text size)", "default": 0, "min": 0, "max": 20, "step": 1},
+  {"id": "outline_color", "type": "color", "label": "Outline colour", "default": "#000000"},
+  {"id": "shadow", "type": "boolean", "label": "Drop shadow", "default": false},
+  {"id": "focus_x", "type": "number", "label": "Photo focus across (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "focus_y", "type": "number", "label": "Photo focus down (%; -1 = the face)", "default": -1, "min": -1, "max": 100, "step": 1},
+  {"id": "zoom", "type": "number", "label": "Photo zoom", "default": 1, "min": 1, "max": 3, "step": 0.05},
+  {"id": "brightness", "type": "number", "label": "Photo brightness (1 = as shot)", "default": 1.08, "min": 0.5, "max": 1.6, "step": 0.02},
+  {"id": "saturation", "type": "number", "label": "Photo saturation (1 = as shot)", "default": 1.15, "min": 0, "max": 2, "step": 0.05}
+]'>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, height=720">
+<!-- MotionLab thumbnail template "block" (0.4.3): big words on a solid colour block next to the subject - the block on
+     the side away from the face with a slanted edge (16:9), a band across the top (9:16, inside the 3:4 grid crop).
+     Size-independent: tools\thumbnail.py make renders it at 1280x720 and 1080x1920 (overlay.py's retime + snapshot).
+     The photo + its face box come from assets/photo.js (written by thumbnail.py make).
+     Three frames: f0 = the thumbnail; f1 = the same without the words; f2 = the words' fill in the key colour #ff00ff, no outline or shadow.
+     tools\thumbnail.py check measures the text from their differences (size at feed size, contrast). -->
+<script src="./gsap.min.js"></script>
+<script src="./assets/photo.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: #000; }
+  .abs { position: absolute; }
+  img.photo { position: absolute; max-width: none; }
+  .box { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .words { line-height: 1.0; text-align: center; text-wrap: balance; overflow-wrap: normal; word-break: keep-all;
+           -webkit-text-stroke-width: var(--sw, 0px); paint-order: stroke fill; text-shadow: var(--sh, none); }
+  .words span { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="0.1" data-width="1280"
+     data-height="720"></div>
+<script>
+  const FPS = 30, FRAMES = 3;
+  const W = 1280, H = 720;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const P = window.PHOTO || { src: "", w: 16, h: 9, face: null };
+  const root = document.getElementById("root");
+  const vertical = H > W;
+
+  function focus(ph) {
+    const f = ph.face;
+    const fx = V.focus_x >= 0 ? V.focus_x / 100 : (f ? f[0] + f[2] / 2 : 0.5);
+    const fy = V.focus_y >= 0 ? V.focus_y / 100 : (f ? f[1] + f[3] / 2 : 0.45);
+    return [fx, fy];
+  }
+  function place(ph, area, target) {
+    if (!ph.src) return null;
+    const img = document.createElement("img");
+    img.className = "photo";
+    img.src = ph.src;
+    const s = Math.max(area.w / ph.w, area.h / ph.h) * V.zoom;
+    const dw = ph.w * s, dh = ph.h * s;
+    const [fx, fy] = focus(ph);
+    let x = target[0] - fx * dw, y = target[1] - fy * dh;
+    x = Math.min(area.x, Math.max(area.x + area.w - dw, x));
+    y = Math.min(area.y, Math.max(area.y + area.h - dh, y));
+    Object.assign(img.style, { left: x + "px", top: y + "px", width: dw + "px", height: dh + "px",
+                               filter: `brightness(${V.brightness}) saturate(${V.saturation})` });
+    return img;
+  }
+  function words(box) {
+    const wrap = document.createElement("div");
+    wrap.className = "box";
+    Object.assign(wrap.style, { left: box.x + "px", top: box.y + "px", width: box.w + "px", height: box.h + "px" });
+    const el = document.createElement("div");
+    el.className = "words";
+    const list = String(V.words || "").trim().split(/\s+/).filter(Boolean);
+    list.forEach((w, i) => {
+      const s = document.createElement("span");
+      s.textContent = w;
+      s.style.color = i + 1 === V.accent_word ? V.accent_color : V.text_color;
+      el.appendChild(s);
+      if (i < list.length - 1) el.appendChild(document.createTextNode(" "));
+    });
+    Object.assign(el.style, { fontFamily: `"${V.font}", "Arial Black", Impact, sans-serif`, maxWidth: box.w + "px",
+                              fontWeight: V.font === "Impact" || V.font === "Arial Black" ? "400" : "800",
+                              textTransform: V.uppercase ? "uppercase" : "none", WebkitTextStrokeColor: V.outline_color });
+    wrap.appendChild(el);
+    root.appendChild(wrap);
+    let fs = V.size / 100 * H;
+    const apply = () => {
+      el.style.fontSize = fs + "px";
+      el.style.setProperty("--sw", (2 * V.outline / 100 * fs).toFixed(2) + "px");
+      el.style.setProperty("--sh", V.shadow ? `0 ${(0.05 * fs).toFixed(1)}px ${(0.14 * fs).toFixed(1)}px rgba(0,0,0,0.75)` : "none");
+    };
+    apply();
+    for (let i = 0; i < 80 && (el.scrollWidth > box.w + 1 || el.offsetHeight > box.h + 1); i++) { fs *= 0.96; apply(); }
+    return el;
+  }
+
+  const [fx] = focus(P);
+  const pad = 0.045 * Math.min(W, H);
+  const slant = V.slant / 100 * W;
+  const block = document.createElement("div");
+  block.className = "abs";
+  let box;
+  if (vertical) {
+    // 9:16: a band from the top down to block_size % (the grid crop starts at 12.5 %), the photo below it
+    const bh = V.block_size / 100 * H;
+    const img = place(P, { x: 0, y: bh - slant, w: W, h: H - bh + slant }, [W / 2, bh + (H - bh) * 0.42]);
+    if (img) root.appendChild(img);
+    Object.assign(block.style, { left: 0, top: 0, width: W + "px", height: bh + "px", background: V.block_color,
+                                 clipPath: `polygon(0 0, 100% 0, 100% ${bh - slant}px, 0 100%)` });
+    root.appendChild(block);
+    box = { x: pad, y: Math.max(0.135 * H, pad), w: W - 2 * pad, h: bh - Math.max(0.135 * H, pad) - slant - pad / 2 };
+  } else {
+    let side = V.text_side === "auto" ? (fx < 0.5 ? "right" : "left") : V.text_side;
+    const bw = V.block_size / 100 * W;
+    const free = { x: side === "left" ? bw - slant : 0, w: W - bw + slant };
+    const img = place(P, { x: free.x, y: 0, w: free.w, h: H }, [free.x + free.w / 2, 0.45 * H]);
+    if (img) root.appendChild(img);
+    const poly = side === "left" ? `polygon(0 0, 100% 0, ${bw - slant}px 100%, 0 100%)`
+                                 : `polygon(${slant}px 0, 100% 0, 100% 100%, 0 100%)`;
+    Object.assign(block.style, { left: (side === "left" ? 0 : W - bw) + "px", top: 0, width: bw + "px",
+                                 height: H + "px", background: V.block_color, clipPath: poly });
+    root.appendChild(block);
+    box = { x: side === "left" ? pad : W - bw + slant + pad / 2, y: pad, w: bw - slant - 1.5 * pad, h: H - 2 * pad };
+  }
+  const el = words(box);
+
+  const tl = gsap.timeline({ paused: true });
+  tl.set(el, { opacity: 0 }, AT(1));                                    // f1: without the words
+  tl.set(el, { opacity: 1, "--sw": "0px", "--sh": "none" }, AT(2));      // f2: the words' fill only, in the
+  tl.set(el.querySelectorAll("span"), { color: "#ff00ff" }, AT(2));     //     key colour #ff00ff
+  tl.set({}, {}, FRAMES / FPS);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

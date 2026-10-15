@@ -55,6 +55,7 @@ TASKS = {
     "generate": ("xhigh", "MotionLab generate", True), # /generate-video: a video from zero (graphics / AI prompts)
     "prompt": ("medium", "MotionLab prompt", False),   # /write-prompt: split examples, write new prompts (text only)
     "script": ("high", "MotionLab script", False),     # /write-script: check, improve or write what you say on camera
+    "title": ("high", "MotionLab title", False),       # /write-title: titles, thumbnails, the package of a video (0.4.3)
     "plan": ("medium", "MotionLab next steps", False), # /whats-next: where the lab stands, options, a recommendation
 }
 # on Fable one level less is enough: Anthropic's guidance puts Fable at "high" where Opus needed "xhigh"

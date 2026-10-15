@@ -2,12 +2,15 @@
 
     .venv\\Scripts\\python tools\\motionlab\\app\\jobtools.py ytdlp-update [--dry-run]
     .venv\\Scripts\\python tools\\motionlab\\app\\jobtools.py player-copy <video>
+    .venv\\Scripts\\python tools\\motionlab\\app\\jobtools.py thumb-check <project> [--title "..."]
     .venv\\Scripts\\python tools\\motionlab\\app\\jobtools.py selfcheck
 
 ytdlp-update = Settings > Programs > *Update yt-dlp*: the way that fits how it was installed (system.install_kind:
 winget / pip / the exe's own -U), then the result in words ("updated: 2026.08.19 -> 2026.10.10" or "already up to
 date"); --dry-run prints the command and runs nothing (the tests). player-copy = a small H.264 copy for the player
-when the browser cannot play a video (player.py). selfcheck = known answers without network (the report's scrubbing
+when the browser cannot play a video (player.py). thumb-check (0.4.3) = Edit > a video > Publish > *Check*: the
+thumbnail check of every thumbnail (tools\\thumbnail.py's rules; it saves the results in package.json) - a rule that
+FAILs is a result to show, not a failed job (thumbnail.py check exits 1 then). selfcheck = known answers without network (the report's scrubbing
 and link, how yt-dlp was installed)."""
 from __future__ import annotations
 
@@ -61,6 +64,24 @@ def ytdlp_update(dry: bool) -> int:
     return 0
 
 
+def thumb_check(project: str, title: str | None) -> int:
+    """thumbnail.py's check of every thumbnail of a video (it writes package.json "thumbnails"[i]["check"])."""
+    from motionlab import thumbnail as T
+    try:
+        res = T.check_project(project, title or None)
+    except SystemExit as e:                                   # its plain message (no thumbnails yet, ...)
+        print(e)
+        return 1
+    for tid, r in res.items():
+        for size in T.SIZES:
+            print(f"{tid} {size.replace('x', ':')}: {T.overall(r[size])}")
+            for x in r[size]:
+                print(f"  {x['status']:4s} {x['rule']:13s} {x['text']}", flush=True)
+    print("checked: " + ", ".join(f"{k} {v['result']}" for k, v in res.items())
+          + (" - the FAIL lines say what to change" if any(v["result"] == "FAIL" for v in res.values()) else ""))
+    return 0
+
+
 def selfcheck() -> list[str]:
     bad = report.selfcheck()
     with tempfile.TemporaryDirectory() as t:
@@ -100,6 +121,8 @@ def main() -> int:
             print(f"could not make the player copy: {e}")
             return 1
         return 0
+    if a[0] == "thumb-check" and len(a) > 1:
+        return thumb_check(a[1], a[a.index("--title") + 1] if "--title" in a[:-1] else None)
     if a[0] == "selfcheck":
         bad = selfcheck()
         print("\n".join(bad) if bad else "jobtools selfcheck: PASS (scrubbing, the issue link, yt-dlp install kinds)")

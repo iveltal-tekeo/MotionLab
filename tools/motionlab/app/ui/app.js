@@ -249,7 +249,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 18;              // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 19;              // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1683,7 +1683,7 @@ async function createVideoModal(pre = {}) {
 
 async function pageProject(main, name, tab = 'overview') {
   const P = await api('/api/project/' + encodeURIComponent(name));
-  const tabs = [['overview', 'Overview'], ['renders', 'Renders'], ['graphics', `Graphics${P.overlays && P.overlays.length ? ` (${P.overlays.length})` : ''}`],
+  const tabs = [['overview', 'Overview'], ['renders', 'Renders'], ['publish', 'Publish'], ['graphics', `Graphics${P.overlays && P.overlays.length ? ` (${P.overlays.length})` : ''}`],
                 ['timing', 'Timing check'], ['resolve', 'Resolve & library']];
   main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/edit">Edit</a> /</div><h1>${esc(P.name)}</h1>
     <div class="sub">${P.sources.length} clips · ${P.plans.length} edit version(s) · ${P.renders.length} render(s)</div></div>
@@ -1693,10 +1693,11 @@ async function pageProject(main, name, tab = 'overview') {
     <div id="tab"></div>`;
   $('#pjnew').onclick = () => createVideoModal({project: P.name});
   const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
-                                 ['draft'], j => (j.args || {}).project === P.name);
+                                 ['draft', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
   onCleanup(stopProg);
   const el = $('#tab');
   if (tab === 'renders') return projRenders(el, P);
+  if (tab === 'publish') return projPublish(el, P);
   if (tab === 'graphics') return projGraphics(el, P);
   if (tab === 'timing') return projTiming(el, P);
   if (tab === 'resolve') return projResolve(el, P);
@@ -1715,12 +1716,25 @@ function outcomePanel(P) {
         `<button class="btn sm vrb ${r}${a.rating === r ? ' on' : ''}" data-r="${r}">${r === 'ok' ? 'OK' : r[0].toUpperCase() + r.slice(1)}</button>`).join('')}</span>
         <input type="text" class="onote" placeholder="what to keep or change (Enter saves)" value="${esc(a.note || '')}"></div>`; }).join('')}</div>
     ${momentsSummary(P)}
+    ${packagingBox(P)}
     <h3 style="margin:16px 0 6px">What next?</h3>
     <div class="onext">${[['fix', 'Fix this version', 'the feel is right, some details are wrong'], ['start_over', 'Start over', 'a different feel - not a new version of this one']]
       .map(([k, l, h]) => `<button class="onx${nx === k ? ' on' : ''}" data-next="${k}"><b>${l}</b><span>${h}</span></button>`).join('')}</div>
     <div class="row" style="margin-top:10px">${nx === 'start_over'
       ? `<button class="btn pri" id="onew"><svg class="i"><use href="#i-edit"/></svg>New edit with these clips…</button><span class="small muted">Pick other videos to take the feel from, or say it in your words - a quick draft shows the feel in a minute, before anything is polished.</span>`
       : claudeBtn(`/recreate-video improve ${P.name}`, 'Improve it with Claude (the parts marked OK / Bad and your notes on moments)', 'recreate', P.name)}</div></div>`;
+}
+// 0.4.3, after posting: the click-through rate per thumbnail (A / B / C, read in YouTube Studio - MotionLab never logs
+// in) and the video's link -> outcome.json "packaging"; Claude repeats what won (/write-title reads it)
+function packagingBox(P) {
+  const pg = (P.outcome || {}).packaging || {}, ctr = pg.ctr || {};
+  const ids = [...new Set(['A', 'B', 'C', ...Object.keys(ctr)])].sort();
+  const got = Object.entries(ctr).sort((a, b) => b[1] - a[1]);
+  return `<div class="opack"><div class="row sp"><b class="small">After posting: which thumbnail got clicked</b><span class="small muted">the click-through rate from YouTube Studio - MotionLab never logs in to your accounts</span></div>
+    <div class="row" style="margin-top:6px">${ids.map(k => `<label class="small octrl">${k} <input type="text" inputmode="decimal" class="octr" data-id="${k}" value="${esc(ctr[k] ?? '')}" placeholder="–"> %</label>`).join('')}
+      <input type="url" class="olink" value="${esc(pg.link || '')}" placeholder="the video's link (https://…)"><button class="btn sm" id="opsave">Save</button></div>
+    ${got.length > 1 ? `<div class="small" style="margin-top:6px"><b class="ok">${esc(got[0][0])}</b> got the most clicks (${got[0][1]} %) - Claude makes the next thumbnails more like it.</div>` : ''}
+    ${pg.link ? `<div class="small" style="margin-top:4px"><a href="${esc(pg.link)}" target="_blank" rel="noopener">Open the posted video</a>${pg.updated ? ` <span class="dim">· saved ${esc(pg.updated)}</span>` : ''}</div>` : ''}</div>`;
 }
 // notes on moments (0.4.2): added under a render on the Renders tab; the Overview lists them
 const aspectLabel = k => (ASPECTS.find(a => a[0] === k) || [k, k])[1];
@@ -1780,6 +1794,15 @@ function wireOutcome(el, P) {
     } catch (e) { toast(e.message, 'err'); }
   });
   const nw = $('#onew', el); if (nw) nw.onclick = () => createVideoModal({project: P.name});
+  const ops = $('#opsave', el);
+  if (ops) ops.onclick = async () => {
+    const ctr = Object.fromEntries($$('.octr', el).map(i => [i.dataset.id, i.value.trim()]));
+    try {
+      P.outcome = await api(`/api/project/${encodeURIComponent(P.name)}/outcome`, {packaging: {ctr, link: $('.olink', el).value.trim()}});
+      toast('Saved', 'ok');
+      const box = $('.panel.outcome', el); box.outerHTML = outcomePanel(P); wireOutcome(el, P);
+    } catch (e) { toast(e.message, 'err'); }
+  };
   $$('.orow', el).forEach(row => {
     const k = row.dataset.k, note = $('.onote', row);
     $$('[data-r]', row).forEach(b => b.onclick = () => {
@@ -1825,6 +1848,219 @@ function projRenders(el, P) {
   });
   P.compares.forEach((r, i) => new Player($('#cp' + i, el), r.rel, fpsOf(), frames));
   if (!vids.length) el.innerHTML = '<div class="empty">No renders yet.</div>';
+}
+
+// ---- Edit > a video > Publish (0.4.3): the ready-to-post package in build\publish\ - the title, thumbnails A / B / C
+// (16:9 + the 9:16 cover, each checked: tools\thumbnail.py), the description with chapters, hashtags (tools\publish.py).
+// The app reads package.json (GET /api/project/<p>/publish), runs the thumbnail jobs and calls publish.write
+// (POST .../publish); Claude does all of it with /write-title package <p>
+const THUMB_JOBS = ['thumb_candidates', 'thumb_make', 'thumb_render', 'thumb_check'];
+const PUBST = {};                 // per video: the *do it yourself* choices survive the redraw when a job ends
+const CHECK_WORDS = {readability: 'Readable on a phone', words: '2-4 words', text_size: 'Text size', contrast: 'Contrast',
+  subject: 'Face size', look: 'Brightness and colour vs your niche', safe_zone: 'Clear of the apps\' buttons and crops',
+  file_size: 'File size', title_length: 'Title length on a phone', title_repeat: 'Adds to the title', promise: 'The title\'s promise in the first 3 s'};
+const CK = {PASS: ['✓', 'ok'], WARN: ['~', 'amber'], FAIL: ['✗', 'bad'], SKIP: ['–', 'dim']};
+const ckLine = x => { const [ic, cls] = CK[x.status] || ['•', ''];
+  return `<li><b class="${cls}" title="${esc(x.status)}">${ic}</b><span><b>${esc(CHECK_WORDS[x.rule] || x.rule)}</b>${x.value != null ? ` <span class="ckv">${esc(x.value)}</span>` : ''}
+    <span class="muted">${x.status === 'SKIP' ? 'not measured - ' : ''}${esc(x.text)}</span></span></li>`; };
+const ckSum = res => res ? `<span class="ckres ${(CK[res] || [])[1] || ''}">${res === 'PASS' ? '✓ passes' : res === 'WARN' ? '~ could be better' : res === 'FAIL' ? '✗ needs a fix' : esc(res)}</span>` : '';
+function ckBlock(t) {
+  const c = t.check || {};
+  if (!c['16x9']) return `<div class="small muted">${c.stale ? 'Changed since the last check' : 'Not checked yet'} - <b>Check them</b> above.</div>`;
+  return [['16x9', 'YouTube 16:9'], ['9x16', 'Cover 9:16']].map(([k, l]) => {
+    const L = c[k] || [], bad = L.filter(x => x.status === 'FAIL' || x.status === 'WARN');
+    return `<div class="ckbox"><div class="row sp"><b class="small">${l}</b><span class="small">${['PASS', 'WARN', 'FAIL', 'SKIP'].map(s => { const n = L.filter(x => x.status === s).length;
+        return n ? `<span class="${CK[s][1]}">${CK[s][0]} ${n}</span>` : ''; }).join(' ')}</span></div>
+      ${bad.length ? `<ul class="cklist">${bad.map(ckLine).join('')}</ul>` : ''}
+      <details><summary class="small muted">All ${L.length} rules</summary><ul class="cklist">${L.map(ckLine).join('')}</ul></details></div>`; }).join('')
+    + `<div class="small dim">checked ${esc(c.date || '')}${c.title ? ` with the title “${esc(c.title)}”` : ''}</div>`;
+}
+const ytOf = (f, fps) => { const s = Math.floor(f / fps + 1e-9); return s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}` : `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+async function projPublish(el, P) {
+  const I = await api(`/api/project/${encodeURIComponent(P.name)}/publish`);
+  const pk = I.package || {}, th = pk.thumbnails || [], cand = pk.candidates || {}, items = cand.items || [];
+  const S = PUBST[P.name] = PUBST[P.name] || {words: '', template: 'outline', id: '', pick: null, self: false, from: 'clips'};
+  const fps = I.fps || (pk.chapters || {}).fps || 30;
+  const url = `/api/project/${encodeURIComponent(P.name)}/publish`;
+  const claude = (cls = 'pri') => claudeBtn(`/write-title package ${P.name}`, 'Make it with Claude', 'title', P.name, cls);
+  const empty = !I.exists && !I.records.length && !S.self;
+  if (empty) {
+    el.innerHTML = emptyHero('thumb', 'Ready to post', 'The title, thumbnails for YouTube and the vertical cover, the description with chapters and hashtags - checked before you post.',
+      claudeBtn(`/write-title package ${P.name}`, 'Make the package with Claude', 'title', P.name, 'pri big'))
+      .replace('</div></div>', '</div><a href="#" class="small" id="pbself">or do it yourself</a></div>');
+    $('#pbself', el).onclick = e => { e.preventDefault(); S.self = true; projPublish(el, P); };
+    return;
+  }
+  // the titles to choose from: the package's own, then the linked title records' (Prepare > Title & thumbnail first)
+  const choices = (pk.titles || []).map(t => ({...t}));
+  I.records.forEach(r => (r.titles || []).forEach(t => { if (!choices.some(c => c.text === t.text)) choices.push({...t, from: r.id}); }));
+  const title = pk.title || '', chs = ((pk.chapters || {}).items || []).map(c => ({f: c.f, name: c.name}));
+  const desc = pk.description || {}, tags = pk.hashtags || {};
+  if (!S.id) S.id = ['A', 'B', 'C'].find(x => !th.some(t => t.id === x)) || 'A';
+  const runJob = async (kind, args) => {
+    try { const j = await api('/api/jobs', {kind, args: {project: P.name, ...args}, queue: true});
+      toast((j.status === 'queued' ? 'Waiting its turn: ' : 'Started: ') + j.title, 'ok'); ping(); route(); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  const concept = I.records.flatMap(r => r.concepts || []);
+  el.innerHTML = `<div class="toprow">${claude()}<button class="btn" data-open="${esc(I.folder)}"${I.exists ? '' : ' disabled title="nothing saved yet"'}>Open the folder</button>
+      <span class="small muted">Claude picks the moments, makes and checks the thumbnails and writes the words. Or do any part yourself below.</span></div>
+    <div class="panel pbsec"><div class="row sp"><h2>Title</h2>${title ? `<span class="row" style="gap:6px">${tchars(title.length)}<button class="btn sm" data-cp="title"><svg class="i"><use href="#i-clipboard"/></svg>Copy</button></span>` : ''}</div>
+      ${title ? `<div class="pbtitle">${esc(title)}</div>` : '<div class="small muted">No title yet - pick one below or type your own.</div>'}
+      ${choices.length ? `<details class="pbchoices"${title ? '' : ' open'}><summary class="small">${plural(choices.length, 'title')} to choose from</summary>
+        <div class="ttlist">${choices.map((t, i) => `<div class="ttrow${t.text === title ? ' chosen' : ''}"><div class="grow"><b class="ttx">${esc(t.text)}</b>
+          <div class="small">${t.pattern ? `<span class="ttpat">${esc(t.pattern)}</span> ` : ''}${tchars(t.chars || t.text.length)}</div></div>
+          ${t.text === title ? '<span class="tag done">chosen</span>' : `<button class="btn sm" data-pick="${i}">Use this</button>`}</div>`).join('')}</div></details>` : ''}
+      <div class="row" style="margin-top:8px"><input type="text" id="pbown" placeholder="or type your own title" maxlength="100" style="flex:1;min-width:260px"><span class="small muted" id="pbownn"></span><button class="btn sm" id="pbownok">Save title</button></div></div>
+    <div class="panel pbsec"><div class="row sp"><h2>Thumbnails</h2><span class="row" style="gap:6px">${th.length ? `<button class="btn sm" id="pbcheck" title="${title ? 'with the title' : 'no title yet: the title rules are skipped'}">Check them</button>` : ''}</span></div>
+      ${th.length ? `<div class="pbthumbs">${th.map(t => { const ph = (t.photos || [])[0] || {}, v = t.v ? `?v=${t.v}` : '';
+        return `<div class="pbthumb" data-t="${esc(t.id)}"><div class="row sp"><span class="row" style="gap:8px"><span class="tid">${esc(t.id)}</span><b>${esc(t.words || '')}</b>
+            <span class="small muted">${esc(t.template || '')}${ph.frame != null ? ` · ${ph.clip ? esc(ph.clip) + ' ' : ''}${ftc(ph.frame, ph.fps || 25)}` : ph.image || ph.file ? ' · your picture' : ''}</span></span>${ckSum((t.check || {}).result)}</div>
+          <div class="pbimgs"><figure><img src="${fileUrl(t.files['16x9'])}${v}" data-lb="16x9" alt=""><figcaption>YouTube 16:9</figcaption></figure>
+            <figure class="tall"><img src="${fileUrl(t.files['9x16'])}${v}" data-lb="9x16" alt=""><figcaption>Cover 9:16</figcaption></figure>
+            ${t.files['9x16_crops'] ? `<figure class="crops"><img src="${fileUrl(t.files['9x16_crops'])}${v}" data-lb="9x16_crops" alt=""><figcaption>How the apps crop it</figcaption></figure>` : ''}</div>
+          <div class="pbck">${ckBlock(t)}</div>
+          <div class="row" style="margin-top:8px">${t.settings.length ? '<button class="btn sm" data-tset>Change it…</button>' : ''}<button class="btn sm" data-trender>Render again</button>
+            <button class="btn sm ghost" data-open="${esc(t.files['16x9'])}" data-reveal>Show in folder</button></div></div>`; }).join('')}</div>`
+        : `<div class="small muted">No thumbnails yet - Claude makes three (A, B, C) for YouTube's own test, or make one yourself below.${I.face_detector ? '' : ' Face sizes are not measured on this PC (the face finder is not installed).'}</div>`}</div>
+    <div class="panel pbsec pbself"><h2>Make a thumbnail yourself</h2>
+      <div class="nestep"><b>1</b>The picture</div>
+      <div class="row"><button class="btn" id="pbcand"><svg class="i"><use href="#i-analyze"/></svg>Find good moments</button>
+        ${I.render && I.clips ? `<div class="seg" id="pbfrom"><button data-v="clips">in your clips</button><button data-v="render">in the finished video</button></div>` : ''}
+        <span class="small muted">or</span><label class="btn ghost">Use a picture you made…<input type="file" id="pbimg" accept=".jpg,.jpeg,.png,.webp" hidden></label>
+        <span class="small muted">The image prompt: <a href="#" id="pbai">write it with Claude</a> (Prompts → Image), make it on the site, bring the picture here.</span></div>
+      ${items.length || I.images.length ? `<div class="pbtiles">${items.map(c => `<button class="pbtile${S.pick && S.pick.c === c.id ? ' on' : ''}" data-c="${esc(c.id)}" title="score ${c.score}${c.face != null ? ` · face ${Math.round(c.face * 100)} % of the height` : ''}">
+          <img src="${fileUrl(c.png)}" loading="lazy" alt=""><span>${esc(c.clip)} ${ftc(c.frame, c.fps)}</span></button>`).join('')}
+        ${I.images.map(m => `<button class="pbtile${S.pick && S.pick.image === m.path ? ' on' : ''}" data-img="${esc(m.path)}" title="${esc(m.name)}"><img src="${fileUrl(m.rel)}" loading="lazy" alt=""><span>your picture</span></button>`).join('')}</div>
+        ${cand.made ? `<div class="small dim">moments found ${esc(cand.made)} in the ${cand.from === 'render' ? 'finished video' : 'clips'}${cand.face_detector ? '' : ' · faces not measured'}</div>` : ''}` : ''}
+      <div class="nestep"><b>2</b>The words and the design</div>
+      <div class="nedet spf"><label>2-4 words</label><div class="row"><input type="text" id="pbwords" value="${esc(S.words)}" maxlength="60" placeholder="e.g. NO STUDIO" style="width:260px"><span class="small" id="pbwn"></span></div>
+        ${concept.length ? `<label></label><div class="row small">Your ideas: ${concept.map(c => `<button class="fchip sm" data-w="${esc(c.words || '')}" title="${esc(c.sketch || '')}">${esc(c.id)}: ${esc(c.words || '')}</button>`).join('')}</div>` : ''}
+        <label>Design</label><div class="seg" id="pbtpl">${(I.templates.length ? I.templates : [{name: 'outline'}]).map(t => `<button data-v="${esc(t.name)}" title="${esc(t.what || '')}">${esc(t.name)}</button>`).join('')}</div>
+        <label>Thumbnail</label><div class="row"><div class="seg" id="pbid">${['A', 'B', 'C'].map(x => `<button data-v="${x}">${x}</button>`).join('')}</div><span class="small muted" id="pbidh"></span></div></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="pbmake">Make it</button><span class="small muted" id="pbpick"></span></div></div>
+    <div class="panel pbsec"><div class="row sp"><h2>Description</h2><span class="row" style="gap:6px">${desc.text ? '<button class="btn sm" data-cp="desc"><svg class="i"><use href="#i-clipboard"/></svg>Copy the description</button>' : ''}${tags.line ? '<button class="btn sm" data-cp="tags"><svg class="i"><use href="#i-clipboard"/></svg>Copy the hashtags</button>' : ''}</span></div>
+      <label class="small muted">Your words (the chapters and hashtags are added under them)</label>
+      <textarea id="pbbody" rows="4" style="width:100%" placeholder="what the video is, in two or three lines">${esc(desc.body || '')}</textarea>
+      <div class="row sp" style="margin-top:10px"><b>Chapters</b><span class="row" style="gap:6px"><span class="small muted">suggest from</span><button class="btn sm" data-sug="plan" ${I.plan ? '' : 'disabled title="no edit yet"'}>the edit</button><button class="btn sm" data-sug="transcript">what is said</button></span></div>
+      <div class="small muted">YouTube wants the first at 0:00, at least three, each 10 seconds or longer. The frame is the finished video's${I.frames ? `, f0–${I.frames - 1} at ${fps} fps` : ''}.</div>
+      <table class="t pbch"><thead><tr><th>YouTube</th><th>Frame</th><th>Timecode</th><th>Name</th><th></th></tr></thead><tbody id="pbchs"></tbody></table>
+      <button class="btn sm ghost" id="pbadd">+ Add a chapter</button>
+      <div class="nedet spf" style="margin-top:10px"><label>Hashtags</label><input type="text" id="pbtags" value="${esc(tags.line || '')}" placeholder="#music #filmmaking - the first three show by the title" style="max-width:560px"></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="pbsave">Save the description</button><span class="small muted">${desc.updated ? 'saved ' + esc(String(desc.updated).replace('T', ' ').slice(0, 16)) : ''}</span></div>
+      <ul class="cklist" id="pbchecks">${(desc.checks || []).filter(c => c.status !== 'PASS').map(c => `<li><b class="${(CK[c.status] || [])[1]}">${(CK[c.status] || ['•'])[0]}</b><span><b>${esc(c.part)}</b>: ${esc(c.rule)} <span class="muted">${esc(c.detail)}</span></span></li>`).join('')}</ul></div>`;
+  // ---- title
+  const own = $('#pbown', el), ownN = $('#pbownn', el);
+  own.oninput = () => { ownN.innerHTML = own.value.trim() ? tchars(own.value.trim().length) : ''; };
+  const saveTitle = async (text, from = '') => {
+    try { const r = await api(url, {title: text, titles_from: (pk.titles || []).length ? '' : from});
+      if (!r.ok) { toast(r.checks.filter(c => c.status === 'FAIL').map(c => `${c.rule}: ${c.detail}`).join(' · '), 'err'); return; }
+      toast('Title saved', 'ok'); projPublish(el, P); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  $$('[data-pick]', el).forEach(b => b.onclick = () => { const t = choices[+b.dataset.pick]; saveTitle(t.text, t.from && /^title-/.test(t.from) ? t.from : ''); });
+  $('#pbownok', el).onclick = () => { const t = own.value.trim(); if (!t) { own.focus(); return; } saveTitle(t, (I.records[0] || {}).id || ''); };
+  $$('[data-cp]', el).forEach(b => b.onclick = () => copy(b.dataset.cp === 'title' ? title : b.dataset.cp === 'desc' ? desc.text : tags.line));
+  // ---- thumbnails
+  const chk = $('#pbcheck', el); if (chk) chk.onclick = () => runJob('thumb_check', {title});
+  $$('.pbthumb', el).forEach(card => {
+    const t = th.find(x => x.id === card.dataset.t);
+    $$('[data-lb]', card).forEach(img => img.onclick = () => {
+      const L = th.flatMap(x => [['16x9', 'YouTube 16:9'], ['9x16', 'cover 9:16'], ['9x16_crops', 'how the apps crop the cover']].filter(([k]) => x.files[k]).map(([k, l]) => ({src: x.files[k], cap: `${x.id} · ${l}`})));
+      lightbox(L, Math.max(0, L.findIndex(x => x.src === t.files[img.dataset.lb])));
+    });
+    $('[data-trender]', card).onclick = () => runJob('thumb_render', {id: t.id});
+    const ts = $('[data-tset]', card);
+    if (ts) ts.onclick = () => modal(`<h2>Thumbnail ${esc(t.id)}: ${esc(t.words || '')}</h2>
+      <div class="small muted" style="margin-top:-4px">Change the words, colours, size or where the photo sits, then render it again (about 15 seconds).</div>
+      <div class="gset" style="margin-top:12px">${t.settings.map(s => `<label title="${esc(s.id)}">${esc(s.label || s.id)}</label><div>${gsetInput(s)}</div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="tsgo">Save and render again</button><button class="btn" id="tsno">Cancel</button></div>`, m => {
+      $('#tsno', m).onclick = closeModal;
+      $('#tsgo', m).onclick = async () => {
+        const values = {}; $$('[data-set]', m).forEach(i => { values[i.dataset.set] = gsetValue(i); });
+        try { await api(`/api/project/${encodeURIComponent(P.name)}/thumb`, {id: t.id, values}); closeModal(); runJob('thumb_render', {id: t.id}); }
+        catch (e) { toast(e.message, 'err'); }
+      };
+    });
+  });
+  // ---- do it yourself
+  const fb = $('#pbfrom', el);
+  if (fb) { const paint = () => $$('button', fb).forEach(x => x.classList.toggle('on', x.dataset.v === S.from)); $$('button', fb).forEach(x => x.onclick = () => { S.from = x.dataset.v; paint(); }); paint(); }
+  $('#pbcand', el).onclick = () => runJob('thumb_candidates', {render: !!fb && S.from === 'render'});
+  $('#pbai', el).onclick = e => { e.preventDefault(); aiPromptsModal('image'); };
+  const pickLine = () => {
+    const c = S.pick && S.pick.c && items.find(x => x.id === S.pick.c);
+    $('#pbpick', el).innerHTML = c ? `from ${esc(c.clip)} ${ftc(c.frame, c.fps)} · about 15 seconds` : S.pick && S.pick.image ? 'from your picture · about 15 seconds' : 'pick a moment or a picture first';
+    const n = $('#pbwords', el).value.trim().split(/\s+/).filter(Boolean).length;
+    $('#pbwn', el).innerHTML = !n ? '' : n >= 2 && n <= 4 ? `<span class="ok">${n} words ✓</span>` : `<span class="amber">${n} word${n === 1 ? '' : 's'} - 2-4 read best on a phone</span>`;
+    $('#pbidh', el).textContent = th.some(t => t.id === S.id) ? `replaces thumbnail ${S.id}` : '';
+    $('#pbmake', el).textContent = `Make thumbnail ${S.id}`;
+  };
+  $$('.pbtile', el).forEach(b => b.onclick = () => {
+    S.pick = b.dataset.c ? {c: b.dataset.c} : {image: b.dataset.img};
+    $$('.pbtile', el).forEach(x => x.classList.toggle('on', x === b)); pickLine();
+  });
+  $('#pbwords', el).oninput = e => { S.words = e.target.value; pickLine(); };
+  $$('[data-w]', el).forEach(b => b.onclick = () => { $('#pbwords', el).value = S.words = b.dataset.w; pickLine(); });
+  const seg = (id, key) => { const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === S[key]));
+    $$('button', b).forEach(x => x.onclick = () => { S[key] = x.dataset.v; paint(); pickLine(); }); paint(); };
+  seg('#pbtpl', 'template'); seg('#pbid', 'id');
+  pickLine();
+  $('#pbimg', el).onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > 30e6) { toast('Pictures up to 30 MB', 'err'); return; }
+    try { const r = await api(`/api/project/${encodeURIComponent(P.name)}/publish/image`, {name: f.name, data: b64(await f.arrayBuffer())});
+      S.pick = {image: r.path}; toast('Picture added - type the words and make it', 'ok'); projPublish(el, P); }
+    catch (err) { toast(err.message, 'err'); }
+  };
+  $('#pbmake', el).onclick = () => {
+    const words = $('#pbwords', el).value.trim();
+    if (!S.pick) { toast('Pick a moment or a picture first', 'err'); return; }
+    if (!words) { $('#pbwords', el).focus(); toast('Type the 2-4 words for the thumbnail', 'err'); return; }
+    const c = S.pick.c && items.find(x => x.id === S.pick.c);
+    runJob('thumb_make', {id: S.id, words, template: S.template, ...(c ? {frame: c.frame, clip: c.clip} : {image: S.pick.image})});
+  };
+  // ---- description: chapters (YouTube time + frame + timecode), hashtags, the words
+  let rows = chs.slice();
+  const tb = $('#pbchs', el);
+  const drawRows = (hints = {}) => {
+    tb.innerHTML = rows.map((c, i) => `<tr data-i="${i}"><td class="mono">${ytOf(c.f, fps)}</td>
+      <td><input type="number" class="chf" min="0" value="${c.f}" style="width:90px"></td><td class="tc">${tc(c.f, fps)}</td>
+      <td><input type="text" class="chn" value="${esc(c.name)}" placeholder="${esc(hints[c.f] || 'a name')}" style="width:100%"></td>
+      <td><button class="btn sm ghost" data-chdel title="Remove this chapter">✕</button></td></tr>`).join('')
+      || '<tr><td colspan="5" class="muted small">No chapters - suggest them from the edit, or add them.</td></tr>';
+    $$('tr[data-i]', tb).forEach(tr => {
+      const i = +tr.dataset.i;
+      $('.chf', tr).oninput = e => { rows[i].f = Math.max(0, parseInt(e.target.value, 10) || 0); tr.cells[0].textContent = ytOf(rows[i].f, fps); tr.cells[2].textContent = tc(rows[i].f, fps); };
+      $('.chn', tr).oninput = e => { rows[i].name = e.target.value; };
+      $('[data-chdel]', tr).onclick = () => { rows.splice(i, 1); drawRows(hints); };
+    });
+  };
+  drawRows();
+  $('#pbadd', el).onclick = () => { const last = rows.length ? rows[rows.length - 1].f : -Math.round(10 * fps); rows.push({f: last + Math.round(10 * fps), name: ''}); drawRows(); };
+  $$('[data-sug]', el).forEach(b => b.onclick = async () => {
+    try {
+      const C = await api(`/api/project/${encodeURIComponent(P.name)}/chapters?from=${b.dataset.sug}`);
+      const hints = Object.fromEntries(C.points.map(x => [x.f, x.hint || '']));
+      const old = Object.fromEntries(rows.map(r => [r.f, r.name]));
+      rows = (C.suggested || []).map(f => ({f, name: old[f] || ''}));
+      drawRows(hints);
+      toast(`${plural(rows.length, 'chapter')} suggested - name each one, then save${(C.warnings || []).length ? ' · ' + C.warnings.join(' ') : ''}`, 'ok');
+    } catch (e) { toast(e.message, 'err'); }
+  });
+  $('#pbsave', el).onclick = async () => {
+    if (!title) { toast('Pick or type the title first (above)', 'err'); own.focus(); return; }
+    rows.sort((a, b) => a.f - b.f);
+    try {
+      const r = await api(url, {title, body: $('#pbbody', el).value, hashtags: $('#pbtags', el).value, chapters: rows.map(c => [c.f, c.name.trim()])});
+      if (!r.ok) {
+        $('#pbchecks', el).innerHTML = r.checks.filter(c => c.status !== 'PASS').map(c => `<li><b class="${(CK[c.status] || [])[1]}">${(CK[c.status] || ['•'])[0]}</b><span><b>${esc(c.part)}</b>: ${esc(c.rule)} <span class="muted">${esc(c.detail)}</span></span></li>`).join('');
+        toast('Not saved - fix what is marked ✗ below', 'err'); return;
+      }
+      toast('Description saved', 'ok'); projPublish(el, P);
+    } catch (e) { toast(e.message, 'err'); }
+  };
 }
 
 // ---- Videos > Graphics (0.3.2): the video's HTML graphics (tools\overlay.py): settings, render, save to the library
@@ -2247,8 +2483,9 @@ const PSRC = {tested: 'tested by you', creator: 'creator', written: 'written by 
 const PURPOSES = ['vlog', 'talking head', 'music video', 'ad / product', 'cinematic b-roll', 'transitions', 'sfx',
                   'captions', 'motion graphics', 'colour', 'tutorial', 'storytelling'];
 const ASPECTS = [['sound', 'Sound & music'], ['sfx', 'SFX'], ['colour', 'Colour'], ['captions', 'Captions'],
-                 ['graphics', 'Motion graphics'], ['effects', 'Effects & transitions'], ['pacing', 'Pacing & cuts'], ['overall', 'Overall']];
-const KSHORT = {shot: 'Video shot', image: 'Image', hook: 'Hook', script: 'Talking script', brief: 'Brief for Claude'};
+                 ['graphics', 'Motion graphics'], ['effects', 'Effects & transitions'], ['pacing', 'Pacing & cuts'], ['packaging', 'Title & thumbnail'],
+                 ['overall', 'Overall']];
+const KSHORT = {shot: 'Video shot', image: 'Image', hook: 'Hook', script: 'Talking script', brief: 'Brief for Claude', title: 'Title & thumbnail'};
 // the parts Claude checks (prompts.SLOTS), in plain words
 const SLOT_LABEL = {references: 'Uploads (what each is for)', keep: 'What stays the same', change: 'What changes', subject: 'Subject',
   action: 'Action', setting: 'Setting', camera: 'Camera', lens: 'Lens', light: 'Light', look: 'Look', motion: 'Motion',
@@ -2259,14 +2496,16 @@ const SLOT_LABEL = {references: 'Uploads (what each is for)', keep: 'What stays 
   footage: 'Footage & b-roll', 'order & structure': 'Order & structure', 'pacing & cuts': 'Pacing & cuts', colour: 'Colour grading',
   music: 'Music', sfx: 'SFX', 'motion graphics': 'Motion graphics', transitions: 'Transitions', 'captions & text': 'Captions & text',
   effects: 'Effects (zooms, speed ramps, shake)', 'voice & audio': 'Voice & audio clean-up', ending: 'Ending & call to action',
-  deliverable: 'Where it ends up', 'questions first': 'Questions to ask you first'};
+  deliverable: 'Where it ends up', 'questions first': 'Questions to ask you first',
+  titles: 'Titles', thumbnail: 'Thumbnail ideas', 'words on it': 'Words on the thumbnail', 'shot to film': 'Shot to film', colours: 'Colours'};
 const slotLabel = s => SLOT_LABEL[s] || (s ? s[0].toUpperCase() + s.slice(1) : '');
 const STAT = {clear: ['✓', 'clear'], vague: ['~', 'vague'], missing: ['✗', 'missing']};
 // a brief's check in the order a video is made (prompts.SLOTS["brief"]): the plan, the edit, sound, look, finish
 const BRIEF_GROUPS = [['The plan', ['format & length', 'story & hook', 'feel / style', 'footage', 'order & structure']],
   ['The edit', ['pacing & cuts', 'transitions', 'effects']], ['Sound', ['voice & audio', 'music', 'sfx']],
   ['Look & text', ['colour', 'motion graphics', 'captions & text']], ['Finish', ['ending', 'deliverable', 'questions first']]];
-const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use current version in a video', shot: 'Run it on the site', image: 'Run it on the site'};
+const RUN = {brief: 'Run it - make the video', script: 'Record it - make the video', hook: 'Use current version in a video', shot: 'Run it on the site', image: 'Run it on the site',
+  title: 'Use a title for a video'};
 const pstars = n => `<span class="stars" title="Claude's review of the prompt: ${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
 const ptitle = p => p.title || p.title_auto || p.text.trim().split(/\s+/).slice(0, 8).join(' ') + (p.text.trim().split(/\s+/).length > 8 ? '…' : '');
 // what a prompt needs, in two words: the tool / model, and what you bring (your clips, a photo, you on camera)
@@ -2287,6 +2526,7 @@ function pneeds(p) {
   const out = [];
   if (p.kind === 'brief') out.push('your clips');
   else if (p.kind === 'script' || p.kind === 'hook') out.push('you on camera');
+  else if (p.kind === 'title') out.push('shots to film');
   else {
     const both = t + ' ' + refs;
     if (/@video\d*|source clip|tripod clip|your (clip|video|footage)|upload(ed)? (a |your )?(clip|video)|video[- ]to[- ]video/i.test(both)) out.push('your clip');
@@ -2360,7 +2600,8 @@ function pcheckBlock(p, R) {                           // Claude's check: a card
 function promptCard(p, R) {
   const res = (p.result || {}).rating, rv = p.review || {}, ex = (p.examples || [])[0], cat = pcategory(p);
   const rating = res ? `<span class="vr ${res}" title="what it made - your rating">${res === 'ok' ? 'OK' : res[0].toUpperCase() + res.slice(1)}</span>`
-    : rv.stars != null ? pstars(rv.stars) : '<span class="small amber">not checked yet</span>';
+    : rv.stars != null ? pstars(rv.stars) : p.kind === 'title' && (p.structure || []).some(x => x.status) ? '<span class="small ok">checked by Claude</span>'
+    : '<span class="small amber">not checked yet</span>';
   return `<button class="pgc k-${esc(p.kind)}" data-id="${esc(p.id)}" title="${esc(KSHORT[p.kind] || p.kind)} · ${esc(p.id)} - click to open">
     ${ex ? `<span class="pgthumb">${pexMedia(R, ex)}</span>` : ''}
     <span class="pgtop"><span class="kbadge k-${esc(p.kind)}">${esc(KSHORT[p.kind] || p.kind)}</span>${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}</span>
@@ -2418,11 +2659,11 @@ async function pagePrepare(main) {
   await load();
   const draw = () => {
     const R = ctx.R, Q = ctx.Q, byId = Object.fromEntries(R.items.map(p => [p.id, p]));
-    const mine = R.items.filter(isTalk).sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
-    const waiting = Q.items.filter(r => !(r.made || []).length && (r.kind === 'new' || byId[r.script])).slice(0, 8);
-    main.innerHTML = `<div class="head"><div><h1>Prepare</h1><div class="sub">What you say on camera, before you film - a hook in the first 3 seconds, a structure that holds, one clear ask at the end.</div></div>
+    const mine = R.items.filter(p => isTalk(p) || p.kind === 'title').sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
+    const waiting = Q.items.filter(r => !(r.made || []).length && (r.kind === 'new' || r.kind === 'title' || byId[r.script])).slice(0, 8);
+    main.innerHTML = `<div class="head"><div><h1>Prepare</h1><div class="sub">Before you film: what you say on camera and what people click on - a hook in the first 3 seconds, a title the video keeps.</div></div>
         ${mine.length ? `<div class="row"><a class="btn" href="#/prompts">Prompt library</a></div>` : ''}</div>
-      <div class="gways">
+      <div class="gways g3">
         <div class="gway"><div class="row"><svg class="ic"><use href="#i-scriptok"/></svg><h2>Improve my script</h2></div>
           <p>Paste the script you have. MotionLab checks it on the spot - the hook, the length, dead seconds, fillers, the call to action.
             Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.</p>
@@ -2432,19 +2673,25 @@ async function pagePrepare(main) {
           <p>Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script,
             timed to your length, with what goes on screen - in the style of talking videos you analysed.</p>
           <div class="row"><button class="btn pri" id="sp-new"><svg class="i"><use href="#i-claude"/></svg>Write a script with Claude</button></div>
-          <div class="small muted">Then film it and bring the clips to <a href="#/edit">Edit</a>.</div></div></div>
+          <div class="small muted">Then film it and bring the clips to <a href="#/edit">Edit</a>.</div></div>
+        <div class="gway"><div class="row"><svg class="ic"><use href="#i-thumb"/></svg><h2>Title & thumbnail first</h2></div>
+          <p>Decide what people click on before you film - so the video delivers what the title promises. Claude writes about ten titles,
+            two or three thumbnail ideas with the words on them and the shot to film for each, and the first 3 seconds that keep the promise.</p>
+          <div class="row"><button class="btn pri" id="sp-title"><svg class="i"><use href="#i-claude"/></svg>Plan the title with Claude</button></div>
+          <div class="small muted">Film the thumbnail shots with the rest - the finished video gets its package on <a href="#/edit">Edit</a>.</div></div></div>
       <div class="sprules"><div class="row sp"><h3>How Claude writes for reach</h3><span class="small muted">every script is checked against these - the ones that can be counted, instantly</span></div>
         <ol>${SP_RULES.map(([t, d]) => `<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join('')}</ol></div>
       ${waiting.length ? `<h3 style="margin:22px 0 8px">Waiting for Claude</h3><div class="spwait">${waiting.map(r => {
-        const what = r.kind === 'new' ? `<b>${esc(r.topic.split('\n')[0].slice(0, 90))}</b> <span class="muted">· a script from zero</span>`
+        const what = r.kind === 'new' || r.kind === 'title' ? `<b>${esc(r.topic.split('\n')[0].slice(0, 90))}</b> <span class="muted">· ${r.kind === 'title' ? 'titles and thumbnail ideas' : 'a script from zero'}</span>`
           : `<b>${esc(ptitle(byId[r.script]))}</b> <span class="muted">· improve it</span>`;
-        const cmd = r.kind === 'new' ? `/write-script request ${r.id}` : `/write-script improve ${r.script}`;
+        const cmd = r.kind === 'new' ? `/write-script request ${r.id}` : r.kind === 'title' ? `/write-title request ${r.id}` : `/write-script improve ${r.script}`;
         return `<div class="spw"><span class="grow">${what} <span class="small dim">${esc(String(r.date || '').slice(0, 16).replace('T', ' '))}</span></span>
-          ${claudeBtn(cmd, 'Open in Claude Code again', 'script', r.id)}<button class="btn sm ghost" data-forget="${esc(r.id)}" title="Forget this request (your script stays)">✕</button></div>`; }).join('')}</div>` : ''}
-      ${mine.length ? `<div class="row sp" style="margin:22px 0 8px"><h3 style="margin:0">Your scripts and hooks</h3><span class="small muted">click one: Claude's check, your rating, <b>Record it</b> = make the video</span></div>
+          ${claudeBtn(cmd, 'Open in Claude Code again', r.kind === 'title' ? 'title' : 'script', r.id)}<button class="btn sm ghost" data-forget="${esc(r.id)}" title="Forget this request${r.kind === 'improve' ? ' (your script stays)' : ''}">✕</button></div>`; }).join('')}</div>` : ''}
+      ${mine.length ? `<div class="row sp" style="margin:22px 0 8px"><h3 style="margin:0">Your scripts, hooks and titles</h3><span class="small muted">click one: Claude's check, your rating, <b>Record it</b> = make the video</span></div>
         <div class="pgrid">${mine.map(p => promptCard(p, R)).join('')}</div>` : ''}`;
     $('#sp-imp', main).onclick = () => scriptImproveModal(ctx);
     $('#sp-new', main).onclick = () => scriptNewModal(ctx);
+    $('#sp-title', main).onclick = () => titleFirstModal(ctx);
     $$('.pgc', main).forEach(c => c.onclick = () => promptModal(c.dataset.id, ctx));
     $$('[data-forget]', main).forEach(b => b.onclick = async () => {
       try { await api('/api/script/forget', {id: b.dataset.forget}); toast('Forgotten', 'ok'); await ctx.reload(); }
@@ -2541,6 +2788,58 @@ async function scriptNewModal(ctx, pre = {}) {
           angle: $('#qangle', el).value, points: $('#qpoints', el).value, length_s: st.length || null, where: st.where,
           tone: st.tone, cta: st.cta, cta_text: $('#qctat', el).value, lang: st.lang, like: st.like, extra: $('#qextra', el).value});
         openClaude(r.command, 'script', r.request.id);
+        closeModal();
+        if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
+      } catch (e) { toast(e.message, 'err'); }
+    };
+  }, 'wide');
+}
+
+// Prepare > Title & thumbnail first (0.4.3): the packaging before filming - the answers -> a request (kind title) ->
+// Claude Code /write-title request <id> -> a title record in the prompt library (titles, thumbnail ideas, the hook)
+const TF_ORIENT = p => { const h = p.includes('youtube'), v = p.some(x => x !== 'youtube'); return h && v ? 'both' : h ? 'horizontal' : v ? 'vertical' : ''; };
+async function titleFirstModal(ctx, pre = {}) {
+  const [MEM, Q] = await Promise.all([api('/api/memory'), api('/api/script/requests')]);
+  const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
+  const st = {like: [], plats: ['youtube'], orient: 'horizontal', own: false, lang: ''};
+  modal(`<h2>Title & thumbnail first</h2>
+    <div class="small muted" style="margin-top:-4px">Only the first question is needed. The rest makes the titles yours - Claude asks for what is missing.</div>
+    <div class="nestep"><b>1</b>The video</div>
+    <div class="nedet spq"><label>What is it about?</label><textarea id="ttopic" rows="2" placeholder="e.g. I filmed a music video in my bedroom at 4AM">${esc(pre.topic || '')}</textarea>
+      <label>Who is it for?</label><input type="text" id="tview" placeholder="e.g. people who make music videos with one camera">
+      <label>Your angle</label><textarea id="tangle" rows="2" placeholder="your story, a number or an opinion - e.g. no budget, one lamp, done in one night"></textarea></div>
+    <div class="nestep opt"><b>2</b>Where it goes ${optTag('YouTube unless you change it')}</div>
+    <div class="nedet spf"><label>Platforms</label><div class="row" id="tplat">${Object.entries(Q.platforms || {}).map(([k, l]) => `<label class="chk"><input type="checkbox" value="${k}" ${st.plats.includes(k) ? 'checked' : ''}> ${esc(l)}</label>`).join('')}</div>
+      <label>Thumbnail</label><div><div class="seg" id="torient">${Object.entries(Q.orientations || {}).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div>
+        <div class="small muted" id="torh" style="margin-top:4px"></div></div>
+      <label>Language</label><div class="seg" id="tlang"><button data-v="">The one I write in</button>${Object.entries(Q.langs).map(([k, l]) => `<button data-v="${k}">${esc(l)}</button>`).join('')}</div></div>
+    <div class="nestep opt"><b>3</b>In the style of ${optTag('up to 3 videos you analysed - how their titles and thumbnails look')}</div>
+    ${spChipsHtml(vids)}
+    <div class="nedet spf" style="margin-top:10px"><label>Anything else</label><input type="text" id="tnotes" placeholder="optional - e.g. no clickbait, keep my channel's red" style="max-width:460px"></div>
+    <div class="row" style="margin-top:16px"><button class="btn pri big" id="tgo"><svg class="i"><use href="#i-claude"/></svg>Write them with Claude</button>
+      <span class="small muted">Claude Code opens in a new window with your answers: titles, thumbnail ideas and the hook - you find them here under Prepare.</span></div>`, el => {
+    const ob = $('#torient', el);
+    const paint = () => {
+      $$('button', ob).forEach(x => x.classList.toggle('on', x.dataset.v === st.orient));
+      $('#torh', el).textContent = st.own ? 'your choice' : st.orient ? 'from the platforms - click to change' : 'pick a platform';
+    };
+    $$('#tplat input', el).forEach(i => i.onchange = () => {
+      st.plats = $$('#tplat input:checked', el).map(x => x.value);
+      if (!st.own) st.orient = TF_ORIENT(st.plats);
+      paint();
+    });
+    $$('button', ob).forEach(b => b.onclick = () => { st.orient = b.dataset.v; st.own = true; paint(); });
+    paint();
+    spSeg(el, '#tlang', st, 'lang');
+    spStyleChips(el, vids, st);
+    $('#ttopic', el).focus();
+    $('#tgo', el).onclick = async () => {
+      const topic = $('#ttopic', el).value.trim();
+      if (!topic) { toast('Say what the video is about first', 'err'); $('#ttopic', el).focus(); return; }
+      try {
+        const r = await api('/api/title/request', {topic, viewer: $('#tview', el).value, angle: $('#tangle', el).value, platforms: st.plats,
+          orientation: st.orient, language: st.lang, style_refs: st.like, notes: $('#tnotes', el).value});
+        openClaude(r.command, 'title', r.request.id);
         closeModal();
         if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
       } catch (e) { toast(e.message, 'err'); }
@@ -2700,6 +2999,7 @@ function pstate(p, R) {
 function promptModal(id, ctx) {
   const R = ctx.R, all = R.items, p = all.find(x => x.id === id);
   if (!p) { toast(`${id} is not in your prompts any more`, 'err'); return; }
+  if (p.kind === 'title') return titleModal(p, ctx);
   const res = p.result || {}, help = R.help || {}, S = pstate(p, R), cat = pcategory(p);
   const shot = p.kind === 'shot' || p.kind === 'image', ex = p.examples || [];
   const newest = S.versions[S.versions.length - 1];
@@ -2820,6 +3120,96 @@ function promptModal(id, ctx) {
     const sp = $('[data-spick]', c);
     if (sp) sp.onclick = () => { styleModal(p, R, n => setStyle([...(p.style_refs || []), n], linkMsg)); modalBack(back); };
   }, 'wide');
+}
+// a title record (0.4.3, kind title, /write-title): the titles (pattern, characters - a phone shows about 50-60), the
+// 2-3 thumbnail ideas (the words on it, the sketch, the shot to film), the hook; Copy each; *Use this title* links it
+// to a video (POST /api/prompts/title: "project" + "chosen") - that video's Publish tab then offers its titles
+const TITLE_PHONE = 60;
+const tchars = n => `<span class="ttch${n > TITLE_PHONE ? ' long' : ''}" title="${n > TITLE_PHONE ? 'A phone may cut it after about 50-60 characters - the key words go first' : 'shows whole on a phone'}">${n} characters${n > TITLE_PHONE ? ' · may be cut' : ''}</span>`;
+function titleModal(p, ctx) {
+  const R = ctx.R, res = p.result || {}, ts = p.titles || [], cs = p.concepts || [];
+  const req = p.request, cmd = req ? `/write-title request ${req}` : p.project ? `/write-title package ${p.project}` : '/write-title';
+  const st = (p.structure || []).filter(x => x.status);
+  modal(`<div class="pm2 k-title" id="pm-top">
+    <div class="pmh"><div class="pmh-main">
+        <div class="pmh-tags"><span class="kbadge k-title">${esc(KSHORT.title)}</span>${p.project ? `<span class="tag done">for ${esc(p.project)}</span>` : ''}</div>
+        <h2 class="pmh-title">${esc(ptitle(p))}</h2>
+        <div class="pmh-needs"><span class="small muted">${plural(ts.length, 'title')} · ${plural(cs.length, 'thumbnail idea')}${p.hook ? ' · the hook' : ''}</span></div></div>
+      <div class="pmh-act"><button class="btn pri big" data-use="">▶ ${esc(RUN.title)}</button><button class="btn" data-copy title="Copies every title, idea and the hook"><svg class="i"><use href="#i-clipboard"/></svg>Copy all</button></div></div>
+    <div class="pmnext"><b class="pmnext-l">Next</b>${p.project
+      ? `<span>Linked to <b>${esc(p.project)}</b>${p.chosen ? ` - final title “${esc(p.chosen)}”` : ''}. Its package: the video's Publish tab.</span><a class="btn pri" href="#/project/${encodeURIComponent(p.project)}/publish" onclick="closeModal()">Open Publish</a>`
+      : `<span>Film the thumbnail shots with the rest. The script's first 3 seconds keep the title's promise.</span><button class="btn" data-script>Write the script</button>`}</div>
+    <div class="pmgrid"><div class="pmcol">
+      <section class="pms"><div class="pms-h"><h3>Titles</h3><span class="grow"></span><span class="small muted">a phone shows about ${TITLE_PHONE} characters</span></div>
+        <div class="ttlist">${ts.map((t, i) => `<div class="ttrow${p.chosen === t.text ? ' chosen' : ''}"><span class="ttn">${i + 1}</span>
+          <div class="grow"><b class="ttx">${esc(t.text)}</b><div class="small">${t.pattern ? `<span class="ttpat">${esc(t.pattern)}</span> ` : ''}${tchars(t.chars || t.text.length)}${p.chosen === t.text ? ' <span class="tag done">final</span>' : ''}${t.note ? ` <span class="muted">· ${esc(t.note)}</span>` : ''}</div></div>
+          <button class="btn sm ghost" data-ct="${i}" title="Copy this title"><svg class="i"><use href="#i-clipboard"/></svg></button><button class="btn sm ghost" data-use="${i}">Use this title</button></div>`).join('')
+          || '<div class="small muted">No titles yet.</div>'}</div></section>
+      <section class="pms"><div class="pms-h"><h3>Thumbnail ideas</h3></div>
+        <div class="tcons">${cs.map((c, i) => `<div class="tcon"><div class="tcon-h"><span class="tid">${esc(c.id)}</span><b class="twords">${esc(c.words || '-')}</b>
+            <span class="grow"></span>${c.title ? `<span class="small muted">for title ${esc(c.title)}</span>` : ''}<button class="btn sm ghost" data-cw="${i}" title="Copy the words"><svg class="i"><use href="#i-clipboard"/></svg></button></div>
+          <div class="kv small"><b>Picture</b><span>${esc(c.sketch || '-')}</span><b>Shot to film</b><span>${esc(c.shot || '-')}</span>${c.colours ? `<b>Colours</b><span>${esc(c.colours)}</span>` : ''}</div></div>`).join('')
+          || '<div class="small muted">No thumbnail ideas yet.</div>'}</div></section>
+      ${p.hook ? `<section class="pms"><div class="pms-h"><h3>The hook - first 3 seconds</h3><span class="grow"></span><button class="btn sm ghost" data-ch title="Copy the hook"><svg class="i"><use href="#i-clipboard"/></svg>Copy</button></div>
+        <div class="ptext2">${esc(p.hook)}</div></section>` : ''}
+      ${p.notes ? `<div class="pnotes"><b>Claude's notes</b> ${esc(p.notes)}</div>` : ''}</div>
+    <div class="pmcol side">
+      <section class="pms prate2" id="pm-rate"><h3>How did it do?</h3>
+        <div class="rbtns">${[['good', 'Good'], ['ok', 'OK'], ['bad', 'Bad']].map(([r, l]) => `<button class="btn rb ${r}${res.rating === r ? ' on' : ''}" data-r="${r}">${l}</button>`).join('')}</div>
+        <textarea class="pnote" rows="2" placeholder="Which title or thumbnail won, the click-through rate… (saved when you click away)">${esc(res.note || '')}</textarea></section>
+      ${st.length ? `<section class="pms"><h3>Claude's check</h3><div class="cparts">${st.map(x => { const [ic, lab] = STAT[x.status] || ['•', ''];
+        return `<div class="cpart st-${esc(x.status)}"><div class="cpart-h"><span class="cdot">${ic}</span><b>${esc(slotLabel(x.slot))}</b><span class="cstat">${lab}</span></div>
+          <div class="cpart-says">${esc(x.text || '')}</div>${x.tip ? `<div class="cpart-tip"><b>Tip</b> ${esc(x.tip)}</div>` : ''}</div>`; }).join('')}</div></section>` : ''}
+      <section class="pms pdet"><h3>Details</h3><div class="kv small">
+        <b>From</b><span>${psource(p)}</span>
+        ${req ? `<b>Your answers</b><span class="mono dim">${esc(req)}</span>` : ''}
+        <b>Saved</b><span>${esc(p.added || '')}${p.updated && p.updated !== p.added ? ` · changed ${esc(p.updated)}` : ''} · <span class="mono dim">${esc(p.id)}</span></span></div>
+        <div class="row" style="margin-top:10px">${claudeBtn(cmd, 'Write new ones with Claude', 'title', p.id)}
+          <span class="grow"></span><button class="btn sm danger" data-pdel title="Move it to the Recycle Bin"><svg class="i"><use href="#i-trash"/></svg>Delete</button></div></section>
+    </div></div></div>`, c => {
+    const back = () => titleModal(p, ctx);
+    const note = $('.pnote', c);
+    const save = async (rating, msg, again = false) => {
+      try { const r = await api('/api/prompts/rate', {id: p.id, rating, note: note.value});
+        p.result = r.result; toast(msg, 'ok'); if (ctx.draw) ctx.draw(); if (again) back(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    $$('[data-r]', c).forEach(b => b.onclick = () => { const was = (p.result || {}).rating; save(was === b.dataset.r ? null : b.dataset.r, was === b.dataset.r ? 'Rating removed' : 'Rating saved', true); });
+    note.onchange = () => save((p.result || {}).rating || null, 'Note saved');
+    $('[data-copy]', c).onclick = () => copy(p.text);
+    $$('[data-ct]', c).forEach(b => b.onclick = () => copy(ts[+b.dataset.ct].text));
+    $$('[data-cw]', c).forEach(b => b.onclick = () => copy(cs[+b.dataset.cw].words || ''));
+    const ch = $('[data-ch]', c); if (ch) ch.onclick = () => copy(p.hook);
+    $$('[data-use]', c).forEach(b => b.onclick = () => { useTitleModal(p, ctx, b.dataset.use === '' ? (p.chosen || (ts[0] || {}).text || '') : ts[+b.dataset.use].text); modalBack(back); });
+    const sc = $('[data-script]', c); if (sc) sc.onclick = () => { closeModal(); scriptNewModal(ctx, {topic: (p.chosen || (ts[0] || {}).text || p.title || '') + (p.hook ? `\n\nThe hook that keeps the title's promise: ${p.hook}` : '')}); };
+    $('[data-pdel]', c).onclick = () => { delPromptModal(p); modalBack(back); };
+  }, 'wide');
+}
+// *Use this title*: which video it is for (its Publish tab then shows these titles) and the final title
+async function useTitleModal(p, ctx, text) {
+  let ps;
+  try { ps = await api('/api/projects'); } catch (e) { toast(e.message, 'err'); return; }
+  const ts = (p.titles || []).map(t => t.text);
+  modal(`<h2>Use a title for a video</h2>
+    <div class="small muted" style="margin-top:-4px">The video's Publish tab then offers these titles and their thumbnail ideas.</div>
+    <div class="nestep"><b>1</b>The title</div>
+    <select id="utt" style="width:100%">${ts.map(t => `<option ${t === text ? 'selected' : ''}>${esc(t)}</option>`).join('')}${text && !ts.includes(text) ? `<option selected>${esc(text)}</option>` : ''}</select>
+    <div class="nestep"><b>2</b>Which video?</div>
+    ${ps.length ? `<div class="utlist">${ps.map(x => `<label class="chk"><input type="radio" name="utp" value="${esc(x.name)}" ${x.name === p.project ? 'checked' : ''}> <b>${esc(x.name)}</b> <span class="small muted">${x.renders.length ? plural(x.renders.length, 'render') : 'not edited yet'}</span></label>`).join('')}</div>`
+      : '<div class="small muted">No video yet - film it, then add the clips under <a href="#/edit" onclick="closeModal()">Edit</a>.</div>'}
+    <div class="row" style="margin-top:16px"><button class="btn pri" id="utgo" ${ps.length ? '' : 'disabled'}>Use this title</button>
+      ${p.project ? '<button class="btn ghost" id="utun">Unlink from the video</button>' : ''}</div>`, el => {
+    const go = async (project, chosen) => {
+      try {
+        await api('/api/prompts/title', {id: p.id, project, chosen});
+        toast(project ? `Linked to ${project} - see its Publish tab` : 'Unlinked', 'ok');
+        if (ctx.reload) await ctx.reload();
+        const np = (ctx.R.items || []).find(x => x.id === p.id); if (np) titleModal(np, ctx); else closeModal();
+      } catch (e) { toast(e.message, 'err'); }
+    };
+    $('#utgo', el).onclick = () => { const r = $('input[name=utp]:checked', el); if (!r) { toast('Pick the video', 'err'); return; } go(r.value, $('#utt', el).value); };
+    const un = $('#utun', el); if (un) un.onclick = () => go('', '');
+  });
 }
 const STYLE_KINDS = ['brief', 'script', 'hook'];           // prompts that make a video (prompts.STYLE_KINDS)
 // pick an analysed reference whose measured style a prompt follows (the ones its words seem to mean first)
@@ -3219,7 +3609,7 @@ async function pageSettings(main) {
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
       <label for="clm">Model</label><select id="clm">${(S.models || ['opus', 'fable', 'auto']).map(m => `<option value="${m}" ${(st.claude_model || 'opus') === m ? 'selected' : ''}>${esc(MODEL_WORDS[m][0])} - ${esc(MODEL_WORDS[m][1])}</option>`).join('')}</select>
-      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, writing scripts ${esc(S.tasks.script || 'high')}, what next ${esc(S.tasks.plan || 'medium')} (one level less on Fable)</option>
+      <label for="cle">Effort</label><select id="cle"><option value="auto" ${st.claude_effort === 'auto' ? 'selected' : ''}>Recommended for each task: checking a video ${esc(S.tasks.review)}, feedback ${esc(S.tasks.feedback)}, recreating a video ${esc(S.tasks.recreate)}, writing prompts ${esc(S.tasks.prompt || 'medium')}, writing scripts ${esc(S.tasks.script || 'high')}, titles and thumbnails ${esc(S.tasks.title || 'high')}, what next ${esc(S.tasks.plan || 'medium')} (one level less on Fable)</option>
         ${S.efforts.map(x => `<option value="${x}" ${st.claude_effort === x ? 'selected' : ''}>always ${x}</option>`).join('')}</select>
       <span></span><label class="chk"><input type="checkbox" id="cla" ${st.claude_ask === false ? '' : 'checked'}><span>Ask me which model and effort every time a button opens Claude Code (the dialog)</span></label>
       <span></span><div class="small muted">Opus works on every Claude plan; Fable is the strongest model for long or open-ended work (checking a video, recreating
