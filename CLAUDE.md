@@ -238,9 +238,11 @@ every button, or fixed in Settings > Claude Code.
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` all PASS, raise
   `__version__` in `tools\motionlab\__init__.py`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
   update banner shows it; it takes in the `## Unreleased` lines - the app shows only version sections), raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits
-  and pushes. GitHub's tests (self-test + `tools\dev\smoke.py`) run only for a new `x.y.0`, by hand (Actions > Run
-  workflow) or with `[tests]` in a commit message; they must turn green: they move the `tested` branch, which is what
-  the Update button installs, and tag `v<version>` (docs\organization.md "Tests on GitHub").
+  and pushes (the roadmap's "here" too: `roadmap.py sync`). GitHub's full tests (self-test + `tools\dev\smoke.py`,
+  ~15 min) run only for a new `x.y.0` or by hand (Actions > Run workflow); any other new version (0.4.2.1, 0.4.3...)
+  gets a ~1 min release check (every file compiles, its CHANGELOG section, the roadmap's "here") - the user's choice
+  2026-10-15, so the local `--extended` + smoke before a release are the real gate. A green run moves the `tested`
+  branch, which is what the Update button installs, and tags `v<version>` (docs\organization.md "Tests on GitHub").
 
 ## Environment gotchas (learned while building the lab)
 - ffmpeg's `drawtext` filter segfaults on this Gyan build (no fontconfig file): draw labels with Pillow.

@@ -67,15 +67,19 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
   (`FFMPEG_VERSION`, the build `setup.bat` installs through winget - raise it when winget's moves), then
   `selftest.py --extended` (the synthetic videos are generated there) and `tools\dev\smoke.py` (every file compiles,
   every module imports, the app server's read-only routes, every page in headless Edge, the MCP server). ~15 minutes.
-- **When it runs (since 0.4.0 - not on every push)**: a few-second Linux job ("scope") decides per push to main:
-  the full run happens only when it is started by hand (GitHub > Actions > tests > **Run workflow**, any branch), when
-  a commit message of the push contains `[tests]`, or when `__version__` is a new `x.y.0` (0.5.0, 0.6.0...) without
-  its `v<version>` tag yet - that repeats on every push until the version passes and is tagged. Anything else runs
-  nothing. Pull requests run nothing by themselves (Run workflow on their branch if wanted).
-- **The `tested` branch is the gate**: when a full run on main passes, `tested` moves to it, and the app's Update
-  button installs only what is on `tested` (`updater._upstream`). So code pushed between versions reaches friends
-  only after a run by hand or a push with `[tests]`; until then Settings > Sharing & updates says those changes are
-  "not released yet". Share still pushes to main. A push that only touches shared knowledge (`knowledge\references`,
+- **When it runs (since 0.4.2.1 - the full tests for the big versions only)**: a few-second Linux job ("scope")
+  decides per push to main. The full run (~15 min) happens only when `__version__` is a new `x.y.0` (0.5.0,
+  0.6.0...) without its `v<version>` tag yet - that repeats on every push until the version passes and is tagged -
+  or when it is started by hand (GitHub > Actions > tests > **Run workflow**, any branch). Any other new version
+  (0.4.2.1, 0.4.3... - no tag yet) gets the "release" job instead: ~1 minute on Linux - every Python file compiles,
+  CHANGELOG.md has its `## <version> - ` section, the roadmap's `here` is that version, the shared knowledge reads -
+  then it is marked tested and tagged. The user's choice (2026-10-15: "i just need to run the tests on major versions
+  ... to develop more smoothly"): the full self-test + smoke test on the developer's PC before every release are the
+  gate for the small versions. Anything else runs nothing. Pull requests run nothing by themselves.
+- **The `tested` branch is the gate**: when a run on main passes (the full tests, the release check or the knowledge
+  check), `tested` moves to it, and the app's Update button installs only what is on `tested`
+  (`updater._upstream`). So code pushed between versions reaches friends with the next version; until then Settings
+  > Sharing & updates says those changes are "not released yet". Share still pushes to main. A push that only touches shared knowledge (`knowledge\references`,
   `knowledge\incoming`, `lessons.md`) since the last tested commit needs no Windows machine: the "knowledge" job
   checks that every card / lesson reads (JSON, UTF-8) and moves `tested` within a minute. (If untested code sits on
   main in between, friends' cards wait for the next tested run too.) Runs on main go one after another in order; a

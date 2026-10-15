@@ -1,6 +1,7 @@
 #!/bin/bash
 # Move the branch "tested" (what the app's Update button installs) to this commit; with --tag also tag a new
-# __version__ as v<version>. Used by .github/workflows/tests.yml after a passing run on main.
+# __version__ as v<version>. Used by .github/workflows/tests.yml after a passing run on main: the full tests (a new
+# x.y.0, or by hand), the quick release check (any other new version) or the shared-knowledge check.
 set -uo pipefail
 # a failing command here leaves a public error note (job logs need admin rights)
 trap 'echo "::error title=Mark as tested::line $LINENO failed: $BASH_COMMAND"' ERR

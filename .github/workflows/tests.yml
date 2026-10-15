@@ -1,17 +1,20 @@
-# MotionLab - automatic tests on GitHub (0.3.1; since 0.3.5 only when asked). The full run (self-test + app smoke
-# test on a clean Windows machine with Python 3.12, requirements.txt and the ffmpeg build friends get from setup.bat)
-# takes ~15 minutes, so it does NOT run for every push. It runs when:
-#   - started by hand: GitHub > Actions > tests > Run workflow (any branch; on main a pass moves "tested"),
-#   - a commit message of the push contains [tests],
+# MotionLab - automatic tests on GitHub (0.3.1; since 0.4.2.1 only for the big versions). The full run (self-test +
+# app smoke test on a clean Windows machine with Python 3.12, requirements.txt and the ffmpeg build friends get from
+# setup.bat) takes ~15 minutes, so it runs only when:
 #   - __version__ is a new x.y.0 (0.5.0, 0.6.0, ...) that has no v<version> tag yet - so it runs again on every push
-#     until that version passes and is tagged.
+#     until that version passes and is tagged,
+#   - or it is started by hand: GitHub > Actions > tests > Run workflow (any branch; on main a pass moves "tested").
+# Any other NEW version (0.4.2.1, 0.4.3, ...: no v<version> tag yet) is released after a quick check on Linux (~1 min:
+# every Python file compiles, the roadmap and the shared knowledge read) - the user's choice (2026-10-15): the full
+# tests for the big versions only, so small versions ship smoothly. The full self-test + smoke test still run on the
+# developer's PC before every release (CLAUDE.md, Publishing).
 # A push that only adds friends' shared knowledge (cards, incoming lessons, lessons.md) since the last tested commit
 # needs no Windows machine: its files are checked on Linux and "tested" moves at once, so cards reach everyone.
+# Any other push (code between versions) runs nothing: it reaches friends with the next version.
 #
 # When a run on main passes, the branch "tested" moves to it. The app's Update button installs only what is on
-# "tested" (tools/motionlab/app/updater.py), so a broken push never reaches friends - and an untested one neither:
-# fixes between versions reach friends after a run by hand or a push with [tests]. A new __version__ also gets its
-# git tag (v0.3.1, ...). Details: docs/organization.md, "Tests on GitHub".
+# "tested" (tools/motionlab/app/updater.py). A new __version__ also gets its git tag (v0.3.1, ...).
+# Details: docs/organization.md, "Tests on GitHub".
 name: tests
 
 on:
@@ -41,22 +44,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tests needed? (by hand, [tests] in a commit message, a new x.y.0 version, or only shared knowledge)
+      - name: What does this push need? (full tests for a new x.y.0 or by hand, a quick release check for another new version, or only shared knowledge)
         id: s
         shell: bash
         env:
           EVENT: ${{ github.event_name }}
-          MESSAGES: ${{ toJSON(github.event.commits.*.message) }}
         run: |
           v=$(sed -n 's/^__version__ = "\(.*\)".*/\1/p' tools/motionlab/__init__.py)
+          new=false
+          if [ -n "$v" ] && ! git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then new=true; fi
           run=none
-          why="a code change - the tests run by hand (Actions > tests > Run workflow), with [tests] in a commit message, or for a new x.y.0 version"
+          why="a code change between versions - it reaches friends with the next version (the full tests: by hand, Actions > tests > Run workflow)"
           if [ "$EVENT" = "workflow_dispatch" ]; then
             run=tests; why="started by hand"
-          elif grep -qiF '[tests]' <<<"$MESSAGES"; then
-            run=tests; why="[tests] in a commit message"
-          elif [[ "$v" =~ ^[0-9]+\.[0-9]+\.0$ ]] && ! git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then
-            run=tests; why="version $v is new (no tag v$v yet)"
+          elif [ "$new" = true ] && [[ "$v" =~ ^[0-9]+\.[0-9]+\.0$ ]]; then
+            run=tests; why="big version $v is new (no tag v$v yet): the full tests"
+          elif [ "$new" = true ]; then
+            run=release; why="version $v is new (no tag v$v yet) and not an x.y.0: the quick check, then released"
           elif git rev-parse -q --verify origin/tested >/dev/null && git merge-base --is-ancestor origin/tested HEAD; then
             changed=$(git diff --name-only origin/tested HEAD)
             other=$(printf '%s\n' "$changed" | grep -v -E '^(knowledge/references/|knowledge/incoming/|\.claude/skills/(analyze-reference|recreate-video)/lessons\.md$)' | grep -v '^$' || true)
@@ -103,6 +107,55 @@ jobs:
       - name: Mark as tested
         shell: bash
         run: bash .github/scripts/mark_tested.sh
+
+  release:                                     # a new version that is not x.y.0: a quick check (~1 min), then released
+    needs: scope
+    if: needs.scope.outputs.run == 'release' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Every Python file compiles; CHANGELOG, roadmap and shared knowledge are ready for this version
+        shell: bash
+        run: |
+          python -m compileall -q tools || { echo "::error title=release check::a Python file does not compile (see the log above)"; exit 1; }
+          python - <<'EOF'
+          import json, pathlib, re, sys
+          bad = []
+          v = re.search(r'^__version__ = "(.+?)"', pathlib.Path("tools/motionlab/__init__.py").read_text(encoding="utf-8"), re.M).group(1)
+          if not re.search(rf"^## {re.escape(v)} - ", pathlib.Path("CHANGELOG.md").read_text(encoding="utf-8"), re.M):
+              bad.append(f"CHANGELOG.md has no '## {v} - date - title' section (the Update dialog shows it)")
+          try:
+              here = json.loads(pathlib.Path("docs/roadmap/roadmap.json").read_text(encoding="utf-8")).get("here")
+              if here != v:
+                  bad.append(f"docs/roadmap/roadmap.json says here = {here}, the version is {v} (roadmap.py sync)")
+          except Exception as e:                    # noqa: BLE001
+              bad.append(f"docs/roadmap/roadmap.json: {e}")
+          for p in sorted(pathlib.Path("knowledge").rglob("*")):
+              if p.is_file() and p.parts[1:2] and p.parts[1] in ("references", "incoming"):
+                  try:
+                      t = p.read_text(encoding="utf-8")
+                      if p.suffix == ".json":
+                          json.loads(t)
+                  except Exception as e:            # noqa: BLE001
+                      bad.append(f"{p}: {e}")
+          for b in bad:
+              print(f"::error title=release check::{b}")
+          print(f"release check for {v}: " + ("FAIL" if bad else "PASS"))
+          sys.exit(1 if bad else 0)
+          EOF
+
+      - name: Mark as tested + tag the version
+        shell: bash
+        run: bash .github/scripts/mark_tested.sh --tag
 
   tests:
     needs: scope

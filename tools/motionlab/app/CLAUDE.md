@@ -287,7 +287,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   (`updater.whats_new`: `## x.y.z - date - title` headings). Since 0.3.1 updates come from `origin/tested` when the
   repo has it (`updater._upstream`; GitHub's tests move it to each passing push to main, docs\organization.md "Tests
   on GitHub"): `behind` / the new version / What's new are read from there, `ahead` and Share stay on
-  `origin/<branch>`, `testing` = pushes on main not tested yet (the page says "not released yet": since 0.3.5 the tests run only for x.y.0, by hand or with `[tests]`). Tested
+  `origin/<branch>`, `testing` = pushes on main not tested yet (the page says "not released yet": since 0.4.2.1 a new version is released by GitHub - the full tests for an x.y.0, a quick check for the others - and code between versions waits for the next one). Tested
   2026-10-09 against a fake GitHub with the workflow's own bash steps. `apply` = `git pull --rebase --autostash`, `pip install
   -r requirements.txt` if it changed, then the server restarts itself when code changed (`restart_soon`: a new
   `app.py --wait-port`, the window shows "Updating..." and reloads; knowledge-only updates need no restart).
