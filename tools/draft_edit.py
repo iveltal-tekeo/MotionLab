@@ -331,7 +331,7 @@ def notes(prj, v, style, D, clips, fps, W, H, orient, sound_line, music_note, ar
     if any(b.get("text_graphics") for b in style.get("breakdowns", [])):
         L.append("- Text / graphics like the reference: HTML graphics (`tools\\overlay.py new`)")
     L += ["- A story: the draft picks moments by how they look; the order of what happens is Claude's job", "",
-          "## Next", "", "- Watch it; in the app: Edit > this video > *How did it turn out?*",
+          "## Next", "", "- Watch it; in the app: Editor > this video > Review > *How did it turn out?*",
           f"- Claude refines it: `/recreate-video feel:{','.join(x['analysis'] or x['title'] for x in style['sources'])} "
           f"{prj.name}`" if style.get("sources") else f"- Claude refines it: `/recreate-video want:"
           f"{','.join(style.get('presets', [])) or 'words'} {prj.name}`", "", ST.text(style, fps)]

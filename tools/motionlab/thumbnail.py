@@ -211,7 +211,7 @@ def project_of(target: str) -> tuple[object, list[dict]]:
             top = f.parent.parent
         if top is None:
             raise SystemExit(f"{f} is not in a project: thumbnails go to projects\\<name>\\build\\publish\\ - put the "
-                             "video in a project folder (the app's Edit > New) or pass the project")
+                             "video in a project folder (the app's Editor > New edit) or pass the project")
         prj = Project(top)
         return prj, [s for s in sources(prj) if Path(s["path"]).resolve() == f] or [
             {"id": f.name, "file": f.name, "path": str(f), "kind": "render" if top != f.parent else "clip"}]

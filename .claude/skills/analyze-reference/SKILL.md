@@ -140,7 +140,7 @@ unknown`
 Give: video facts (fps, CFR/VFR, duration), BPM and drops, counts per effect family, the most notable events (with
 frame + timecode), the low-confidence events worth checking first, and the possible misses you think are real.
 Say in one line what the breakdown found (the hook / the signature). Then tell them the video is ready for their edits
-(Edit > New edit can use it), and the optional next step that teaches you, in the MotionLab app: Analyze > this video >
+(Editor > New edit can use it), and the optional next step that teaches you, in the MotionLab app: Analyser > this video >
 **Effects** (Correct / Partly / Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses**
 tab, then **Send feedback to Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
 `analysis\<name>\report.html` > Generate feedback > Copy, and paste it into a chat.

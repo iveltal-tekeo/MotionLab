@@ -13,8 +13,8 @@ Prefer CPU-friendly models and options that run only when asked.
 Shipped: **automatic tests on GitHub** (0.3.1, see CHANGELOG.md); **transcription with word timings** (the
 platform's subtitles 0.3.1, faster-whisper small chosen after measuring 0.3.3, references without subtitles 0.4.0);
 **beat-sync auto-cut** (0.4.0's quick draft: shots cut on the beats at a reference's pacing). Moved into a plan:
-**match the reference's colour grade** -> 0.3.7 (2026-10-12; now 0.4.6, its first part shipped in 0.4.0);
-**on-screen text (OCR)** -> yapping mode's content foundations, 0.4.5 (2026-10-14, measure first); **Report a
+**match the reference's colour grade** -> 0.3.7 (2026-10-12; now 0.4.8, its first part shipped in 0.4.0);
+**on-screen text (OCR)** -> yapping mode's content foundations, 0.4.7 (2026-10-14, measure first); **Report a
 problem** from the app -> 0.4.2.1 (2026-10-14).
 
 | Idea | Why | Cost to check |

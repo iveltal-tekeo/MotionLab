@@ -268,14 +268,17 @@ def install_kind(exe: str) -> dict:
 
 
 def ytdlp_info(s: dict | None = None) -> dict:
-    """yt-dlp for Settings: found, version, its age in words (the version is a date: 2026.08.19), amber when older
-    than YTDLP_OLD_DAYS, and how it was installed (what *Update yt-dlp* runs)."""
+    """yt-dlp for Settings: found, version, its age in words (the version is a date: 2026.08.19), how it was installed
+    (what *Update yt-dlp* runs) and whether a newer one is out: the newest release from the daily check
+    (upstream.ytdlp_latest, PyPI) - "old" = a newer release exists; only when that is unknown (offline, never
+    checked) the age decides (older than YTDLP_OLD_DAYS)."""
+    from motionlab import upstream as UP
     exe = find("yt-dlp", s)
     if not exe:
         return {"found": False}
     v = version(exe) or ""
     out = {"found": True, "path": exe, "version": v or None, "age_days": None, "age": None, "old": False,
-           **install_kind(exe)}
+           "latest": None, "newest": None, "checked": None, **install_kind(exe)}
     m = re.search(r"(\d{4})\.(\d{1,2})\.(\d{1,2})", v)
     if m:
         try:
@@ -283,6 +286,11 @@ def ytdlp_info(s: dict | None = None) -> dict:
             out.update(age_days=days, age=age_words(max(0, days)), old=days > YTDLP_OLD_DAYS)
         except ValueError:
             pass
+    L = UP.ytdlp_latest()
+    if L and m:
+        newest = UP.dkey(v) >= UP.dkey(L["latest"])
+        out.update(latest=".".join(f"{x:02d}" if i else str(x) for i, x in enumerate(UP.dkey(L["latest"])[:3])),
+                   newest=newest, old=not newest, checked=L.get("checked"))
     return out
 
 
@@ -343,7 +351,8 @@ def tools(full: bool = False) -> list[dict]:
         row = {"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need, "how": HOW[n]}
         if full and p and n == "yt-dlp":            # its age + how Update yt-dlp would update it
             y = ytdlp_info(s)
-            row.update(age=y.get("age"), age_days=y.get("age_days"), old=y.get("old"), install=y.get("label"))
+            row.update(age=y.get("age"), age_days=y.get("age_days"), old=y.get("old"), install=y.get("label"),
+                       latest=y.get("latest"), newest=y.get("newest"), checked=y.get("checked"))
         if full and p and n == "deno":
             row["old"] = not deno_info(s).get("new_enough", True)
         out.append(row)

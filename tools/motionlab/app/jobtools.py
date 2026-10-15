@@ -57,6 +57,8 @@ def ytdlp_update(dry: bool) -> int:
         print(f"the update did not work (exit code {rc}) - yt-dlp stays at {before}"
               + (" - a pip copy: run the command above in a console" if y["kind"] == "pip" else ""))
         return rc or 1
+    from motionlab import upstream as UP
+    UP.record_latest(after)                                   # Settings then says "the newest" (not its age)
     if after != before:
         print(f"yt-dlp updated: {before} -> {after}")
     else:

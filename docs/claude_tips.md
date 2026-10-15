@@ -29,7 +29,7 @@ verdicts, lessons, edits), so nothing is lost when you start fresh.
 | review friends' lessons | the button in Claude's memory | Opus | high |
 | save library effects | the button in Claude's memory > Saved effects & graphics | Opus | high |
 | improve or write a script | `/write-script ...` (Prepare) | Opus | high |
-| prompts: split, check, write | `/write-prompt ...` (Generate > prompts) | Opus | medium |
+| prompts: split, check, write | `/write-prompt ...` (Generator > prompts) | Opus | medium |
 | what to do next | `/whats-next` (Home > Roadmap) | Opus | medium |
 | questions, small fixes | just ask | Opus | medium |
 

@@ -38,17 +38,22 @@ def copy_path(src: Path) -> Path:
 
 
 def codec(src: Path) -> dict:
-    """{"codec": "hevc", "tag": "hvc1", "height": 1920, "frames": n | None} of the first video stream (cached until the
-    file changes)."""
+    """{"codec": "hevc", "tag": "hvc1", "width": 1080, "height": 1920, "frames": n | None, "fps": 29.97 | None} of the
+    first video stream (cached until the file changes; the fps also for a render that has no plan, 2026-10-15)."""
     sig = _sig(src)
     if sig not in _codecs:
         out = subprocess.run([tool("ffprobe"), "-v", "error", "-select_streams", "v:0", "-show_entries",
-                              "stream=codec_name,codec_tag_string,height,nb_frames", "-of", "json", str(src)],
-                             capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW)
+                              "stream=codec_name,codec_tag_string,width,height,nb_frames,r_frame_rate", "-of", "json",
+                              str(src)], capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW)
         st = ((json.loads(out.stdout or "{}") or {}).get("streams") or [{}])[0]
         nb = str(st.get("nb_frames") or "")
-        _codecs[sig] = {"codec": st.get("codec_name"), "tag": st.get("codec_tag_string"), "height": st.get("height"),
-                        "frames": int(nb) if nb.isdigit() else None}
+        try:
+            n, dd = str(st.get("r_frame_rate") or "").split("/")
+            fps = round(int(n) / int(dd), 3) if int(dd) else None
+        except ValueError:
+            fps = None
+        _codecs[sig] = {"codec": st.get("codec_name"), "tag": st.get("codec_tag_string"), "width": st.get("width"),
+                        "height": st.get("height"), "frames": int(nb) if nb.isdigit() else None, "fps": fps}
     return _codecs[sig]
 
 

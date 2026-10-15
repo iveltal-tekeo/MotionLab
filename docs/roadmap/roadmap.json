@@ -11,7 +11,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-15",
-  "here": "0.4.3",
+  "here": "0.4.3.5",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -27,9 +27,11 @@
     {"v": "0.4.2", "label": "Check before render", "title": "Check before you render: notes on moments, the sound question, feel tests"},
     {"v": "0.4.2.1", "label": "Downloads + reports", "title": "Downloads that keep working, Report a problem"},
     {"v": "0.4.3", "label": "Title + thumbnail", "title": "Title + thumbnail: Title & thumbnail first, the Publish tab, the thumbnail check"},
-    {"v": "0.4.4", "label": "Prompt generator", "status": "next", "title": "Prompt generator: every model, every specialty"},
-    {"v": "0.4.5", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
-    {"v": "0.4.6", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
+    {"v": "0.4.3.5", "label": "A simpler app", "title": "A simpler app: the Editor overhaul, Film it, a new player"},
+    {"v": "0.4.4", "label": "What it took", "status": "next", "title": "What it took: Claude's time and tokens, step by step"},
+    {"v": "0.4.6", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
+    {"v": "0.4.7", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
+    {"v": "0.4.8", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
     {"v": "0.5.0", "label": "Content generation", "icon": "generate", "line": "Videos from zero that come out right - faster, and with fewer Claude tokens.", "items": ["Building blocks", "Sound effects", "Formats", "Preview first", "AI clips back in"], "title": "Content generation: videos from zero that come out right"},
     {"v": "0.6.5", "label": "Templates by feel", "title": "Templates by feel"},
     {"v": "0.7.0", "label": "AI B-roll", "icon": "videos", "line": "Missing shots or whole sequences made by video models, used like your own clips.", "title": "AI B-roll and cinematics"},

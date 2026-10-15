@@ -470,7 +470,64 @@ def _plan_info(p: Path) -> dict:
 
 def _video(p: Path, kind: str) -> dict:
     st = p.stat()
-    return {"name": p.name, "rel": rel(p), "size": st.st_size, "modified": stamp(st.st_mtime), "kind": kind}
+    return {"name": p.name, "rel": rel(p), "size": st.st_size, "modified": stamp(st.st_mtime), "mtime": st.st_mtime,
+            "kind": kind}
+
+
+def _render_version(d: Path, p: Path) -> str:
+    """The edit version a render shows: name_v2.mp4 -> "v2", else the name's rest (notes on moments)."""
+    m = re.search(r"_(v\d+)$", p.stem)
+    return m[1] if m else (p.stem[len(d.name) + 1:] if p.stem.startswith(d.name + "_") else p.stem)[:80]
+
+
+def _render_plan(plans: list[dict], d: Path, p: Path) -> dict:
+    """The plan a render was made from (its fps / frames): the plan's "name" = the render's name, else its version."""
+    v = _render_version(d, p)
+    return next((x for x in plans if x.get("name") and x["name"] == p.stem), None) \
+        or next((x for x in plans if x.get("version") == v), None) or {}
+
+
+def _picture(d: Path, b: Path, newest: Path | None, plan: dict) -> dict | None:
+    """A still that says which video this is (the user, 2026-10-15: "it should at least show a preview of some
+    render"): a frame of the newest render about a third in, else thumbnail A of the package, else a graphic's
+    picture, else a frame of the first clip one second in. {"video", "f", "fps"} (GET /api/thumb) or {"image"}."""
+    if newest:
+        fps = float(plan.get("fps") or 30)
+        f = int(int(plan["frames"]) * 0.3) if plan.get("frames") else int(round(fps))
+        return {"video": rel(newest), "f": f, "fps": fps}
+    pub = sorted((b / "publish").glob("thumb_*_16x9.png")) if (b / "publish").is_dir() else []
+    if pub:
+        return {"image": rel(pub[0])}
+    gr = sorted((b / "overlays").glob("*/thumb.png"), key=lambda q: -q.stat().st_mtime) if (b / "overlays").is_dir() else []
+    if gr:
+        return {"image": rel(gr[0])}
+    clips = sorted(p for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT)
+    return {"video": rel(clips[0]), "f": 25, "fps": 25.0} if clips else None
+
+
+def _label(b: Path) -> str | None:
+    """The name the app shows for a video when the user renamed it (build\\project.json "label"; rename_project)."""
+    return (read_json(b / "project.json", {}) or {}).get("label") or None
+
+
+def _created(d: Path) -> float:
+    """When the video's folder was made (Windows' creation time)."""
+    st = d.stat()
+    return getattr(st, "st_birthtime", None) or st.st_ctime
+
+
+def _reviewed(b: Path, outcome: dict, newest: float | None) -> bool | None:
+    """Is the newest render rated yet (How did it turn out?)? None = no render. A rating saved after the render counts:
+    outcome.json "rated_ts" (2026-10-15), for an older file the file's own time when it holds a rating."""
+    if newest is None:
+        return None
+    if not any((v or {}).get("rating") for v in (outcome.get("aspects") or {}).values() if isinstance(v, dict)):
+        return False
+    t = outcome.get("rated_ts")
+    if t is None:
+        p = b / "outcome.json"
+        t = p.stat().st_mtime if p.exists() else 0
+    return float(t) >= newest
 
 
 def list_projects() -> list[dict]:
@@ -484,14 +541,41 @@ def list_projects() -> list[dict]:
         clips = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT]
         plans = sorted(b.glob("plan_v*.json")) if b.exists() else []
         boards = sorted((b / "boards").glob("*.jpg")) if (b / "boards").exists() else []
+        renders = sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime) if b.exists() else []
+        infos = [_plan_info(p) for p in plans]
+        newest = renders[-1] if renders else None
+        plan = _render_plan(infos, d, newest) if newest else {}
+        if newest and not plan.get("fps"):                # no plan for it: its rate and length by ffprobe (cached)
+            try:
+                from . import player
+                plan = player.codec(newest)
+            except Exception:                             # noqa: BLE001
+                plan = {}
+        outcome = read_json(b / "outcome.json", {}) or {}
+        made = read_json(b / "made_from.json", []) or []
+        pkg = read_json(b / "publish" / "package.json", {}) or {}
+        nt = newest.stat().st_mtime if newest else None
+        created = _created(d)
         out.append({
-            "name": d.name, "clips": len(clips), "footage_bytes": sum(p.stat().st_size for p in clips),
+            "name": d.name, "label": _label(b), "clips": len(clips), "footage_bytes": sum(p.stat().st_size for p in clips),
             "songs": sorted(p.name for p in d.iterdir() if p.is_file() and p.suffix.lower() in AUDIO_EXT),
             "plans": [p.stem for p in plans],
-            "renders": [p.name for p in sorted(b.glob("*.mp4"))] if b.exists() else [],
+            "renders": [p.name for p in sorted(renders)],
             "resolve": sorted(m.name[:-len("_build.json")] for m in (b / "resolve").glob("*_build.json"))
             if (b / "resolve").exists() else [],
             "thumb": rel(boards[0]) if boards else None,
+            # 2026-10-15 (the Edit page's cards): the newest render, a picture, when it last changed, how it was made
+            "latest": {"rel": rel(newest), "version": _render_version(d, newest), "resolve": "_resolve_" in newest.stem,
+                       "frames": plan.get("frames"), "fps": plan.get("fps"), "width": plan.get("width"),
+                       "height": plan.get("height"), "modified": stamp(nt), "mtime": nt} if newest else None,
+            "picture": _picture(d, b, newest, plan),
+            # the list's order (the user, 2026-10-15: "by date of creation (new renders), the newest up"): the newest
+            # render's time, else when the folder was made
+            "created": created, "sort_t": nt or created,
+            "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)),
+            "rating": ((outcome.get("aspects") or {}).get("overall") or {}).get("rating"),
+            "reviewed": _reviewed(b, outcome, nt),
+            "next": outcome.get("next"), "title": pkg.get("title") or None,
         })
     return out
 
@@ -720,14 +804,35 @@ def project(name: str) -> dict:
                         "resolution": f"{meta.get('src_width')}x{meta.get('src_height')}" if meta else None,
                         "cached": bool(meta.get("complete")), "board": rel(b / "boards" / f"{sid}_01.jpg")
                         if (b / "boards" / f"{sid}_01.jpg").exists() else None})
+    known = {Path(s["path"]).name.lower() for s in srcs.values() if s.get("path")}
+    for p in sorted(d.iterdir()):                         # clips not prepared yet (no sources.json entry): listed too
+        if p.is_file() and p.suffix.lower() in VIDEO_EXT and p.name.lower() not in known:
+            sources.append({"id": None, "name": p.name, "size": p.stat().st_size, "exists": True, "fps": None,
+                            "frames": None, "duration_s": None, "resolution": None, "cached": False, "board": None})
     plans = [_plan_info(p) for p in sorted(b.glob("plan_v*.json"))] if b.exists() else []
     renders = []
     for p in sorted(b.glob("*.mp4")) if b.exists() else []:
         r = _video(p, "resolve" if "_resolve_" in p.stem else "lab")
-        m = re.search(r"_(v\d+)$", p.stem)                 # the edit version a render shows (notes on moments)
-        r["version"] = m[1] if m else (p.stem[len(d.name) + 1:] if p.stem.startswith(d.name + "_") else p.stem)[:80]
+        r["version"] = _render_version(d, p)              # the edit version a render shows (notes on moments)
+        pl = _render_plan(plans, d, p)
+        if not pl.get("fps"):                             # a render without a plan (a graphics preview): ffprobe, cached
+            try:
+                from . import player
+                pl = player.codec(p)
+            except Exception:                             # noqa: BLE001 - no ffprobe / a broken file: no rate shown
+                pl = {}
+        r.update(fps=pl.get("fps"), frames=pl.get("frames"), width=pl.get("width"), height=pl.get("height"))
         renders.append(r)
-    compares = [_video(p, "compare") for p in sorted((b / "compare").glob("*.mp4"))] if (b / "compare").exists() else []
+    newest = max(renders, key=lambda r: r["mtime"]) if renders else None
+    made = read_json(b / "made_from.json", []) or []
+    for x in made:                                    # Film it: "From the script: <its title>"
+        if isinstance(x, dict) and x.get("kind") == "prompt":
+            try:
+                pr = PR.get(str(x.get("id")))
+                x.update(title=pr.get("title") or pr.get("title_auto") or "", prompt_kind=pr.get("kind"))
+            except Exception:                         # noqa: BLE001 - deleted from the library: the id only
+                pass
+    compares =[_video(p, "compare") for p in sorted((b / "compare").glob("*.mp4"))] if (b / "compare").exists() else []
     verifies = []
     for p in sorted(b.glob("verify_*.json")) if b.exists() else []:
         vj = read_json(p, {}) or {}
@@ -761,14 +866,18 @@ def project(name: str) -> dict:
     used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
     for o in overlays:
         o["used_in"] = used.get(str((LAB / o["folder"] / f"{o['name']}.mov").resolve()).lower(), [])
-    return {"name": d.name, "sources": sources, "plans": plans, "renders": renders, "compares": compares,
-            "overlays": overlays, "media": media,
+    outcome = read_json(b / "outcome.json", {}) or {}
+    return {"name": d.name, "label": _label(b), "sources": sources, "plans": plans, "renders": renders,
+            "compares": compares, "overlays": overlays, "media": media,
             "speech": {"available": SP.available(), "small": SP.model_ready("small"), "base": SP.model_ready("base")},
             "verifies": verifies, "resolve": resolve, "check_sheets": sheets,
             "boards": [rel(p) for p in sorted((b / "boards").glob("*.jpg"))] if (b / "boards").exists() else [],
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],
             "library_picks": picks.get("picks", {}), "picks_updated": picks.get("updated"),
-            "made_from": read_json(b / "made_from.json", []) or [], "outcome": read_json(b / "outcome.json", {}) or {}}
+            "made_from": made, "outcome": outcome, "reviewed": _reviewed(b, outcome, newest["mtime"] if newest else None),
+            "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)),
+            "picture": _picture(d, b, LAB / newest["rel"] if newest else None, newest or {}),
+            "publish": (b / "publish" / "package.json").exists()}
 
 
 # ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out
@@ -787,6 +896,24 @@ def new_project(name: str) -> dict:
         raise ValueError(f"projects\\{name} exists already - pick it in the list")
     d.mkdir(parents=True)
     return {"name": name, "folder": rel(d)}
+
+
+def rename_project(name: str, label: str) -> dict:
+    """The name the app shows for a video (2026-10-15, the user: "I can't rename my edits?") -> build\\project.json
+    "label". The folder keeps its name: the clips are never moved (hard rule 1), the plans, renders and a Resolve
+    project find them by that path, and Claude's commands name the folder. An empty label = the folder's name again."""
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    label = " ".join(re.sub(r"[\x00-\x1f\x7f]", " ", str(label or "")).split())[:80]
+    if label and label != d.name:
+        for o in PROJECTS.iterdir():
+            if o.is_dir() and o != d and label.lower() in (o.name.lower(), (_label(o / "build") or "").lower()):
+                raise ValueError(f"another video is called “{label}” already")
+    p = d / "build" / "project.json"
+    out = {**(read_json(p, {}) or {}), "label": label if label and label != d.name else None, "updated": stamp()}
+    write_json_atomic(p, out)
+    return {"name": d.name, "label": out["label"]}
 
 
 def add_made_from(name: str, kind: str, ref: str) -> list:
@@ -822,7 +949,7 @@ def edit_options() -> dict:
 def edit_request(name: str) -> dict:
     p = PROJECTS / safe_name(name) / "build" / "edit_request.json"
     if not p.exists():
-        raise FileNotFoundError(f"{name}: no edit request yet (Edit > New edit)")
+        raise FileNotFoundError(f"{name}: no edit request yet (Editor > New edit)")
     return read_json(p, {}) or {}
 
 
@@ -964,10 +1091,13 @@ def save_generate_request(body: dict) -> dict:
 
 
 def draft_args(req: dict) -> list[str]:
-    """draft_edit.py's arguments for a saved edit request (the quick draft job)."""
-    if req.get("how") not in ("style", "words"):
-        raise ValueError("a quick draft is made from videos' style or your words (an exact copy or a prompt: Claude)")
-    out: list[str] = []
+    """draft_edit.py's arguments for a saved edit request (the quick draft job). A script or hook (Film it,
+    2026-10-15) = a talking video: the talking preset, its sound kept and the pauses cut."""
+    talk = req.get("how") == "prompt" and re.fullmatch(r"(script|hook)-\d{3,}", str(req.get("prompt") or ""))
+    if req.get("how") not in ("style", "words") and not talk:
+        raise ValueError("a quick draft is made from videos' style, your words or a talking script "
+                         "(an exact copy or another prompt: Claude)")
+    out: list[str] = ["--preset", "talking"] if talk else []
     for x in req.get("like") or []:
         out += ["--like", x]
     for x in req.get("presets") or []:
@@ -980,8 +1110,11 @@ def draft_args(req: dict) -> list[str]:
         out += ["--format", req["format"]]
     if req.get("music"):
         out += ["--music", req["music"]]
-    if req.get("sound") and req["sound"] != "auto":
-        out += ["--sound", req["sound"]]
+    sound = req.get("sound") or "auto"
+    if talk and sound == "auto":
+        sound = "talk"
+    if sound != "auto":
+        out += ["--sound", sound]
     return out
 
 
@@ -1021,6 +1154,8 @@ def save_outcome(name: str, body: dict) -> dict:
     moments.sort(key=lambda m: (str(m.get("version", "")), int(m.get("f", 0))))
     out = {**cur, "aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
            "next": nxt, "moments": moments}                  # every other key (0.4.3 "packaging", newer ones) stays
+    if body.get("aspects"):                   # when the ratings last changed: a newer render = "not reviewed yet"
+        out["rated_ts"] = time.time()
     if body.get("packaging") is not None:
         out["packaging"] = clean_packaging(body["packaging"], cur.get("packaging"))
     write_json_atomic(p, out)
@@ -1105,11 +1240,71 @@ def prompt_uses() -> dict:
         made = read_json(b / "made_from.json", []) if (b / "made_from.json").exists() else []
         if not made:
             continue
-        asp = (read_json(b / "outcome.json", {}) or {}).get("aspects", {})
+        outcome = read_json(b / "outcome.json", {}) or {}
+        asp = outcome.get("aspects", {})
+        # Film it (2026-10-15): a script's road - filmed (a clip in the folder), edited (a render), posted (the link)
+        clips = sum(1 for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT)
+        renders = sum(1 for _ in b.glob("*.mp4"))
+        posted = bool((outcome.get("packaging") or {}).get("link"))
         for x in made or []:
             if x.get("kind") == "prompt":
-                out.setdefault(x.get("id"), []).append({"project": d.name, "aspects": asp})
+                out.setdefault(x.get("id"), []).append({"project": d.name, "label": _label(b), "aspects": asp,
+                                                        "clips": clips, "renders": renders, "posted": posted})
     return out
+
+
+def save_upload(name: str, filename: str, stream, size: int, prompt: str = "") -> dict:
+    """Film it (2026-10-15, the user: "you click record it but don't actually record it... then you add it to
+    motionlab"): a recording the user picks or drops in the app, copied into projects\\<name>\\ as a new clip. The
+    original stays where it was (only read by the browser); a file of the same name is never overwritten - a copy
+    that is already there (same size) is kept, another one gets " (2)". prompt = the script it was filmed from
+    (made_from.json, so the script card shows "Filmed")."""
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    stem, ext = os.path.splitext(Path(str(filename)).name)
+    ext = ext.lower()
+    if ext not in VIDEO_EXT | AUDIO_EXT:
+        raise ValueError(f"{filename}: not a video or a song ({', '.join(sorted(VIDEO_EXT | AUDIO_EXT))})")
+    stem = re.sub(r"[^\w.\- \[\]()&'+,]", "_", stem).replace("..", "_").strip(" .") or "recording"
+    if not 0 < size <= 200 * 2**30:
+        raise ValueError("the file is empty or bigger than 200 GB")
+    dest, n = d / f"{stem}{ext}", 1
+    while dest.exists():
+        if dest.stat().st_size == size:                       # the same file added twice: keep the first copy
+            _drain(stream, size)
+            return {"file": dest.name, "kept": True, "made_from": add_made_from(d.name, "prompt", prompt) if prompt else None}
+        n += 1
+        dest = d / f"{stem} ({n}){ext}"
+    part = d / "build" / "upload" / (dest.name + ".part")     # outside the clips until it is whole
+    part.parent.mkdir(parents=True, exist_ok=True)
+    left = size
+    try:
+        with open(part, "wb") as f:
+            while left:
+                buf = stream.read(min(left, 4 * 2**20))
+                if not buf:
+                    raise ConnectionAbortedError("the upload stopped")
+                f.write(buf)
+                left -= len(buf)
+        os.replace(part, dest)
+    finally:
+        if part.exists():
+            part.unlink()
+        try:
+            part.parent.rmdir()                               # only when empty (another copy may be running)
+        except OSError:
+            pass
+    made = add_made_from(d.name, "prompt", prompt) if prompt else None
+    return {"file": dest.name, "kept": False, "made_from": made}
+
+
+def _drain(stream, size: int) -> None:
+    while size:
+        b = stream.read(min(size, 4 * 2**20))
+        if not b:
+            return
+        size -= len(b)
 
 
 # ================================================================================================= library / docs

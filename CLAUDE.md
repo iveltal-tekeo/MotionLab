@@ -181,14 +181,17 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`)
 `MotionLab.bat` = a local server + an Edge app window. Sidebar since 0.4 = the user's ways in: Home ("What do
-you want to do?"), **Analyze** (#/analyze: download / pick videos, analyse, the review page with verdicts and possible
+you want to do?"), **Analyser** (#/analyze, shown as Analyze until 0.4.3.5: download / pick videos, analyse, the review page with verdicts and possible
 misses, Delete), **Prepare** (#/prepare: the script before filming - *Improve my
 script* / *Write one from zero* -> `/write-script`, *Title & thumbnail first* -> `/write-title request`; scripts and
-titles live in the prompt library), **Edit** (#/edit: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
-their settings, Resolve check-up, library picks, a video's **Publish** tab (0.4.3: title, thumbnails A / B / C,
-description, chapters, hashtags - `/write-title package` or by hand), "How did it turn out?" -> `build\outcome.json`
-(+ `"packaging"`: CTR per thumbnail variant + the link, typed in after posting)), **Generate**
-(#/generate: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
+titles live in the prompt library), **Editor** (#/edit, called Edit until 2026-10-15: the user's clips - a new edit from analysed videos or a prompt, renders, graphics +
+their settings, Resolve check-up, library picks; a video opens on its newest render, then *Review it and improve it*
+/ *Start over* and **Ready to post** (0.4.3, under the render since the 2026-10-15 overhaul: title, thumbnails A / B / C,
+description, chapters, hashtags - `/write-title package` or by hand), its Review tab = "How did it turn out?" beside
+the render -> `build\outcome.json` (+ `"packaging"`: CTR per thumbnail variant + the link, typed in after posting;
+older notes on moments stay in `"moments"`); *Rename* = the name the app shows, `build\project.json` "label" - the
+folder keeps its name, so commands use the folder name), **Generator**
+(#/generate, shown as Generate until 0.4.3.5: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
 #/prompts), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,
 saved graphics + effects, Share with friends), then Jobs and Settings

@@ -107,14 +107,14 @@ Microsoft Edge (the app window) comes with Windows.
 4. **Send feedback to Claude**: a new Claude Code window turns your verdicts into lessons.
 5. **Claude's memory > Share my knowledge.**
 
-The Analyze page shows these steps and where each video stands. Every frame number comes with its timecode
+The Analyser page shows these steps and where each video stands. Every frame number comes with its timecode
 (`f480 (00:00:16:00)`), so you can check anything in your editor. New to Claude Code? Read
 [docs/claude_tips.md](docs/claude_tips.md) (also in the app: *Tips for working with Claude*): one chat per task,
 which effort level, how to use fewer tokens.
 
 ## Editing your footage like a video you liked
 
-Put your clips (and a song, if you have one) in `projects\<name>\` and click *Edit > New edit*. Pick how:
+Put your clips (and a song, if you have one) in `projects\<name>\` and click *Editor > New edit*. Pick how:
 
 - **Like videos you analysed** - up to three: Claude mixes their rhythm, hook, effects and captions with your music
   and length (*by feel*), or copies one of them exactly - same song, same cuts and effects, frame by frame (1:1).
@@ -193,10 +193,11 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.4.4 prompt generator for every model, 0.4.5
-  yapping mode for talking-to-camera videos, 0.4.6 colour: correct your own clips, adjustable grades in
-  Resolve, 0.5 content generation: videos from zero that come out right - building blocks, sound effects,
-  formats, a preview before the render, AI clips back into the lab, 0.6.5 templates by feel: the story, 0.7 AI
+- [docs/plans.md](docs/plans.md) - the planned versions (0.4.4 what it took: Claude's time and tokens for each
+  step of a video, 0.4.6 prompt generator for every model, 0.4.7 yapping mode for talking-to-camera videos, 0.4.8
+  colour: correct your own clips, adjustable grades in Resolve, 0.5 content generation: videos from zero that
+  come out right - building blocks, sound effects, formats, a preview before the render, AI clips back into the
+  lab, 0.6.5 templates by feel: the story, 0.7 AI
   B-roll and cinematics, 0.7.5 macOS, 0.8 describe video: what videos say and show), also shown in the app's
   *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.

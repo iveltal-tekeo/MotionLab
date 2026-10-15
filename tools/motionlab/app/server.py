@@ -43,7 +43,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 19                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 21                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -114,7 +114,7 @@ def status() -> dict:
             nxt.append({"text": f"Send your verdicts on {r['title']} to Claude (Send feedback to Claude): it turns them "
                                 f"into lessons" + (" - exported, waiting for Claude" if fl["sent"] else ""), "go": go})
     if projs and not lib["items"]:
-        nxt.append({"text": "Pick the effects to save in the library (Edit > your video > Resolve & library)",
+        nxt.append({"text": "Pick the effects to save in the library (Editor > your video > Resolve & library)",
                     "go": f"#/project/{projs[0]['name']}/resolve"})
     setup = [t for t in system.tools() if not t["found"] and t["need"] in ("required", "recommended")]
     if not refs:
@@ -389,6 +389,11 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts":
             ov = PR.overview()
             return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"])})
+        if path == "/api/script/cards":                  # Film it (2026-10-15): a script / hook as cue cards
+            pid = arg("id", "")
+            if not re.fullmatch(r"(script|hook)-\d{3,}", pid):
+                raise ValueError(f"not a script: {pid!r}")
+            return self._json({"parts": SC.cue_cards(PR.get(pid).get("text", ""))})
         if path == "/api/script/requests":               # Prepare (0.4.x): what the two dialogs asked Claude for
             return self._json({"items": SC.requests(), "where": SC.WHERE, "tones": SC.TONES, "ctas": SC.CTAS,
                                "langs": SC.LANGS, "platforms": SC.PLATFORMS,
@@ -440,6 +445,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self):
         path = urllib.parse.urlsplit(self.path).path
+        m = re.fullmatch(r"/api/project/([^/]+)/upload", path)
+        if m:                                     # Film it (2026-10-15): a recording copied in - a raw body, streamed
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError("missing or wrong session token")
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            prompt = (q.get("prompt") or [""])[0]
+            if prompt and not re.fullmatch(r"(script|hook|brief)-\d{3,}", prompt):
+                raise ValueError(f"not a script: {prompt!r}")
+            return self._json(data.save_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
+                                               int(self.headers.get("Content-Length") or 0), prompt))
         body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example")
                           or path.endswith("/publish/image") else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
@@ -512,6 +527,9 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/edit_request", path)       # New edit (0.4): what the user picked
         if m:
             return self._json(data.save_edit_request(urllib.parse.unquote(m[1]), body))
+        m = re.fullmatch(r"/api/project/([^/]+)/rename", path)   # the name the app shows (the folder keeps its own)
+        if m:
+            return self._json(data.rename_project(urllib.parse.unquote(m[1]), str(body.get("label", ""))))
         # how it turned out (0.4.2 also: "next" fix / start_over, "moment" / "remove_moment" = notes on moments of a
         # render) / what it is made from
         m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)

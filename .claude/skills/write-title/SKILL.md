@@ -111,10 +111,10 @@ Work from `C:\MotionLab` with `.venv\Scripts\python`. Don't explore the lab.
       words in the picture - the lab adds them). The user makes it on the site and brings the file back; then
       `thumbnail.py make <project> --id A --image <file> --words "..."` and the check as above.
 6. Tell the user: the final title, the chapters as `0:00 Name = f<f> (<timecode>)`, the hashtags, the thumbnails A / B
-   / C with their check, and that all of it is on the video's **Publish** tab in the app (Edit > the video > Publish:
-   change a thumbnail's words / colours and render it again, edit chapters, copy the texts, open the folder). Next
-   step: post it, then type the CTR per variant in *How did it turn out?* (section 5) so the next package repeats
-   what won.
+   / C with their check, and that all of it is on the video's Overview in the app, under **Ready to post** (Editor >
+   the video: change a thumbnail's words / colours and render it again, edit chapters, copy the texts, open the
+   folder). Next step: post it, then type the CTR per variant under *After posting* at the end of Ready to post
+   (section 5) so the next package repeats what won.
 
 ## 4. Test & compare (`ab <project>`)
 1. Read the current limits in guidelines section 9 (checked 2026-10-15): up to 3 variants, title only / thumbnail
@@ -129,7 +129,8 @@ Work from `C:\MotionLab` with `.venv\Scripts\python`. Don't explore the lab.
 
 ## 5. After posting
 CTR lives in YouTube Studio and the lab never logs into accounts. The user types the CTR per variant and the video's
-link in the video's *How did it turn out?* (part: Title and thumbnail) -> `build\outcome.json` `"packaging"`:
+link under the video's Ready to post > *After posting* (its rating of the title and thumbnail: the Review tab's *How
+did it turn out?*) -> `build\outcome.json` `"packaging"`:
 `{"ctr": {"A": 4.1, "B": 5.2}, "link": "...", "updated": "..."}`. Read it before the next package (section 1) and
 repeat the patterns that won (title pattern, the kind of words on the thumbnail, the emotion); drop the ones that
 lost. A posted video's public numbers are not fetched yet (`content.py stats` writes into analyses only).

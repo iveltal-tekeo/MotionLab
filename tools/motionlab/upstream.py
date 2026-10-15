@@ -5,6 +5,9 @@ HyperFrames releases several times a day, so MotionLab never upgrades by itself:
 pinned, the installed and the newest version. `overlay.py upgrade-test` renders the examples with a newer version and
 compares every frame; `overlay.py pin` adopts it (the repo owner, then GitHub's tests). The answer is kept in
 .app\\upstream.json (the last check + the upgrade tests' results).
+yt-dlp too (the user, 2026-10-15: "already up to date (2026.08.19) but it still shows update"): its newest release
+from PyPI in the same daily check (latest["yt-dlp"]), so Settings says "the newest" instead of judging by age only;
+*Update yt-dlp* records what yt-dlp itself answered (record_latest).
 """
 from __future__ import annotations
 
@@ -21,6 +24,7 @@ STATE = LAB / ".app" / "upstream.json"
 PACKAGES = {"hyperframes": "https://github.com/heygen-com/hyperframes/releases",
             "gsap": "https://github.com/greensock/GSAP/releases"}
 REGISTRY = "https://registry.npmjs.org/-/package/{}/dist-tags"
+PYPI_YTDLP = "https://pypi.org/pypi/yt-dlp/json"           # info.version = the newest stable release, "2026.8.19"
 EVERY_S = 24 * 3600
 _LOCK = threading.Lock()
 
@@ -65,6 +69,41 @@ def latest(package: str, timeout: float = 10) -> str:
     return v
 
 
+def dkey(v: str | None) -> tuple:
+    """yt-dlp's versions are dates: '2026.08.19' and PyPI's '2026.8.19' -> (2026, 8, 19); a nightly's 4th part counts."""
+    return tuple(int(x) for x in re.findall(r"\d+", str(v or ""))[:4])
+
+
+def latest_ytdlp(timeout: float = 10) -> str:
+    req = urllib.request.Request(PYPI_YTDLP, headers={"Accept": "application/json", "User-Agent": "MotionLab"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        v = (json.loads(r.read().decode("utf-8")).get("info") or {}).get("version")
+    if len(dkey(v)) < 3:
+        raise ValueError(f"PyPI gave no usable version for yt-dlp: {v!r}")
+    return v
+
+
+def ytdlp_latest() -> dict:
+    """What the last check knows about yt-dlp (no network): {"latest", "checked"} or {}."""
+    s = _load()
+    v = (s.get("latest") or {}).get("yt-dlp")
+    return {"latest": v, "checked": (s.get("ytdlp_checked") or s.get("checked"))} if v else {}
+
+
+def record_latest(version: str) -> None:
+    """*Update yt-dlp* ended "up to date" or "updated to X": X is the newest yt-dlp knows of (kept until the next check
+    finds a newer one)."""
+    if len(dkey(version)) < 3:
+        return
+    with _LOCK:
+        s = _load()
+        old = (s.get("latest") or {}).get("yt-dlp")
+        if not old or dkey(version) >= dkey(old):
+            s.setdefault("latest", {})["yt-dlp"] = version
+            s["ytdlp_checked"] = _now()
+            write_json(STATE, s, indent=1)
+
+
 def _load() -> dict:
     try:
         return read_json(STATE)
@@ -87,11 +126,12 @@ def state() -> dict:
 
 
 def check(force: bool = False) -> dict:
-    """Ask npm for the newest versions - at most once a day unless force. Never raises: errors go into the state."""
+    """Ask npm (and PyPI for yt-dlp) for the newest versions - at most once a day unless force, or when a package was
+    never asked (yt-dlp, added 2026-10-15). Never raises: errors go into the state."""
     with _LOCK:
         s = _load()
         last = s.get("checked")
-        if not force and last:
+        if not force and last and all(k in (s.get("latest") or {}) for k in (*PACKAGES, "yt-dlp")):
             try:
                 if (_dt.datetime.now() - _dt.datetime.fromisoformat(last)).total_seconds() < EVERY_S:
                     return state()
@@ -103,6 +143,13 @@ def check(force: bool = False) -> dict:
                 lat[k] = latest(k)
             except Exception as e:                                  # noqa: BLE001 - offline, proxy, npm down
                 err = f"{k}: {type(e).__name__}: {e}"
+        try:
+            v = latest_ytdlp()
+            if not lat.get("yt-dlp") or dkey(v) >= dkey(lat["yt-dlp"]):   # never below what yt-dlp -U itself said
+                lat["yt-dlp"] = v
+            s["ytdlp_checked"] = _now()
+        except Exception as e:                                      # noqa: BLE001
+            err = (err + " · " if err else "") + f"yt-dlp: {type(e).__name__}: {e}"
         s.update({"checked": _now(), "latest": lat, "error": err})
         write_json(STATE, s, indent=1)
     return state()

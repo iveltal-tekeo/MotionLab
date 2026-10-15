@@ -14,16 +14,19 @@ another.
 
 ## Where it stands (2026-10-15)
 
-Released last: **0.4.3** (2026-10-15, CHANGELOG.md) - title + thumbnail: Prepare's *Title & thumbnail first*, a
-video's Publish tab (thumbnails A / B / C, the check, chapters, hashtags), CTR per variant. Before it: 0.4.2.1
+Released last: **0.4.3.5** (2026-10-15, CHANGELOG.md) - a simpler app: the Editor overhaul, Film it, a new player,
+Analyser / Generator, dated cards newest first. Before it: **0.4.3** (2026-10-15) - title + thumbnail: Prepare's
+*Title & thumbnail first*, Ready to post (thumbnails A / B / C, the check, chapters, hashtags), CTR per variant; 0.4.2.1
 (downloads that keep working, Report a problem) and 0.4.2 (check before you render). The released plans' full
 text: plans_history.md.
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.4.4 | Prompt generator | **next** - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
-| 0.4.5 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations | L |
-| 0.4.6 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
+| 0.4.4 | What it took | **next** - Claude's minutes and tokens per step of a video; the data is already in Claude Code's session logs | M |
+| 0.4.5 | *open* | kept free by the user (2026-10-15) | - |
+| 0.4.6 | Prompt generator | planned - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
+| 0.4.7 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations | L |
+| 0.4.8 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
 | 0.5.0 | Content generation | planned - its sound effects tool shipped early in 0.4.1.1 | L, ships in parts |
 | 0.6.5 | Templates by feel | later - first part shipped in 0.4.0 | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
@@ -40,7 +43,7 @@ without subtitles get their words by speech to text when it is installed (`conte
 Overview's Content creation panel (`motionlab\profile.py`: the hook - cuts, words, text in the first 3 s; words per
 minute and how much is talked; text on screen per minute; captions likely); Claude's breakdown per focus (review.json
 `_breakdown`: hook, structure, captions, text & graphics, B-roll, sound, CTA); all searchable in Claude's memory.
-**Moved to 0.4.5** (2026-10-14): the foundations - text on screen, the shots described, topics and claims per video
+**Moved to 0.4.7** (2026-10-14): the foundations - text on screen, the shots described, topics and claims per video
 (`content.json`) - are yapping mode's first step; this plan builds on them. Still open here: notes, collections, the
 Topics page, the numbers saved at download and in cards, an `/analyze-content` skill.
 
@@ -62,7 +65,7 @@ instead of filmmaking / effects."
   player, the line being said is marked, search, *Get the transcript* / *Fetch again*). UI test 12/12. Not yet:
   saving the numbers at download time, the numbers in shared cards.
 - **Audio = what is said** and **video = what is shown** (topics, claims, numbers, tools / products, steps, hook and
-  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in 0.4.5's
+  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in 0.4.7's
   first step. Here: across many videos.
 - **Performance**: views, likes, comments, the channel's followers and the upload date, saved by the download
   (yt-dlp knows them; today `refs\downloads.json` keeps link, platform, uploader, id, duration) -> an outperformer
@@ -135,10 +138,10 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
 minute and shot lengths within ~15 %) and the structure of what is said, and the user rates it OK or better.
 
 - **Use a reference as a template**: its feel and pacing - shot lengths, cuts on the beat, effect families, the
-  structure of what is said (0.4.5's HEIT structure, the yapping profile) - with your own story, length and music
+  structure of what is said (0.4.7's HEIT structure, the yapping profile) - with your own story, length and music
   instead of a 1:1 copy. Builds on the pacing numbers (`knowledge.pacing`), the effect library and the HTML
   graphics (0.3).
-  **Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul): *Edit > New edit* takes the style of up to
+  **Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul): *Editor > New edit* takes the style of up to
   three analysed videos or the user's words / presets (`tools\style.py`), a quick draft by rules
   (`tools\draft_edit.py`: beat-cut shots, the best moments, the style's effects, a talking mode) and
   `/recreate-video` section 6 for Claude to refine it - and its colour matched to the references (0.4.0's colour
@@ -149,7 +152,7 @@ minute and shot lengths within ~15 %) and the structure of what is said, and the
 
 **Ships when** (the benchmark: a "top 3 tracks" reel from zero like illdari's): the first version is rated OK or
 better on graphics and on sound effects (v1: graphics "too clunky", sound effects bad), it needs one final render
-(v1: ~29 min of renders), and its time and Claude's tokens are measured and lower than the baseline of step 0.
+(v1: ~29 min of renders), and its time and Claude's tokens are lower than the baseline 0.4.4 (*What it took*) measured.
 
 **The user's words (2026-10-14)**: "while moving from 0.4.1 to 0.5.0 id like to have the 0.5.0 version as a
 'contente generation oriented version' ... i want the generation of video through claude and other tools such as
@@ -158,7 +161,7 @@ hyper frame or other to be more redefined and work better."
 **Where it stands** (0.4.0, 0.4.1 and the Unreleased work): *Generate* makes two things. **A motion-graphics video**:
 Claude writes the HTML / CSS / GSAP from zero for every video, HyperFrames renders it, `tools\beats.py` times it to a
 song, `overlay.py stills` checks it (`/generate-video graphics`, effort xhigh). **A video for AI video tools**: a shot
-list and every prompt saved in the prompt library, then a hand-off to *Edit > New edit* (`/generate-video ai`). The
+list and every prompt saved in the prompt library, then a hand-off to *Editor > New edit* (`/generate-video ai`). The
 first real one (illdari_test_copy_1, 2026-10-14) showed the weak spots: graphics rated "too clunky" (drawn ~40 %
 smaller than the reference, nothing moving between the big moves), no sound effects (rated bad), ~29 min of renders
 for 25 s, and a bug in hand-written code (the logo's badge missing at f38 (00:00:01:08)). Added during that rebuild:
@@ -175,9 +178,9 @@ notes on moments, ratings as rules, lessons on making videos (M###) and safe sta
 builds on. The paid API for AI video stays in 0.7.0; describe video (0.8.0) later improves *what* a video says, not
 needed here.
 
-0. **Measure first** (the baseline every step is judged by): per generated video the minutes of Claude's work, of
-   renders, and Claude's tokens (read from the Claude Code session logs on this PC - nothing leaves it), saved with
-   the video's *How did it turn out?*.
+0. **Measure first** - moved to 0.4.4 (*What it took*, 2026-10-15) and widened to every video: Claude's minutes
+   and tokens per step and the renders' minutes, read from the Claude Code session logs and the app's jobs on this
+   PC. The generated videos measured there before this plan starts are the baseline every step is judged by.
 1. **Building blocks for HyperFrames**: a tested kit Claude puts scenes together from, instead of writing every
    graphic from zero - text (type-on, word pops, mask reveals, the 3D lyric stack), UI (a phone / app / window frame,
    a cursor on a curved path with a press), numbers (counters, bars), lists, a logo sting and an end card,
@@ -192,7 +195,7 @@ needed here.
    reel... = its scenes as settings (texts, pictures, colours, song, length). The next video in that format is new
    settings, no new code (the biggest saving in Claude's tokens). *Generate* gets *Start from a format*. The first
    one: illdari's "top 3 tracks" reel, once the user approves v2.
-3. **A quick draft for Generate** (made by rules, no Claude, like Edit's quick draft): a format or the style of up to
+3. **A quick draft for Generate** (made by rules, no Claude, like the Editor's quick draft): a format or the style of up to
    3 analysed videos (`style.py`) + the user's texts + the song's beats (`beats.py`) -> scenes on the downbeats, the
    biggest change on the drop, the blocks filled in -> a first video in minutes; Claude refines it (what it says, the
    custom parts) instead of starting from an empty page. The style of a motion-graphics reference gets the numbers v1
@@ -210,7 +213,7 @@ needed here.
    whoosh, click, key, pop, hit, riser...) next to its settings, so the sound follows when a setting moves the timing
    (the typed text); synthesised (no samples to license); each effect levelled against the song under it -
    measured, since Claude cannot hear; the effects alone as a stem for Resolve + the mix for the plan. Blocks carry
-   their cues (a whip = a whoosh); Edit's quick-draft effects (zooms, whips, flashes) become cues the same way.
+   their cues (a whip = a whoosh); the Editor's quick-draft effects (zooms, whips, flashes) become cues the same way.
 5. **Voice and music** (from ideas.md, measure first): a voice-over for explainers and lists - ElevenLabs (the user's
    own account) or a local text-to-speech measured on a laptop first (time per minute of speech, size, how natural);
    its words timed like speech to text, so captions and scenes follow the voice. A voice only with the speaker's
@@ -233,24 +236,24 @@ needed here.
    frames (frame + timecode) so continuity - the same face, product, place, light - is checked on stills. Then it
    cuts them on the song's beats as the shot list says, and the blocks add titles, captions, graphics and sound
    effects on top -> one video, in the lab and in DaVinci Resolve. Each clip is rated against its prompt (good / ok /
-   bad + a note), so the prompt library learns per model (0.4.4); a shot to redo gets a new prompt that says what
-   changes. Today the route ends at *Edit > New edit*, which treats the clips as footage and forgets the shot list.
+   bad + a note), so the prompt library learns per model (0.4.6); a shot to redo gets a new prompt that says what
+   changes. Today the route ends at *Editor > New edit*, which treats the clips as footage and forgets the shot list.
 9. **One video, three sizes**: the compositions are HTML, so 9:16, 16:9 and 1:1 come from one video with layout
    rules per size (`overlay.py fit` already takes a size); the user ticks the sizes to render.
 10. **Other tools** (measure first, only where a block cannot do it): Lottie animations (After Effects exports)
     played frame by frame inside a composition; image tools (Nano Banana / GPT Image) for pictures in a scene, through
     the prompt library's `image` kind. HyperFrames stays the one graphics engine (pinned, upgrade-tested).
-11. **The made video's page**: a video made from zero opens on its project's page (Edit); it gets Generate's steps
+11. **The made video's page**: a video made from zero opens on its project's page (Editor); it gets Generate's steps
     there - the scene table (frame + timecode), the animatic and *Play*, the settings, the sound, *Render*, *How did
     it turn out?* with notes on moments (0.4.2) - in plain words.
 
-**Order** (the user decides): 0 first (small); 1 (it fixes what was rated "too clunky"; 4 is being built early);
+**Order** (the user decides): 0 comes with 0.4.4; 1 (it fixes what was rated "too clunky"; 4 is being built early);
 2 once illdari's v2 is approved; 6a (small); 3 when a few blocks and formats exist; 8; then 6b, 7, 5 and 10 after
-measuring; 9 last. **Size**: large - it can ship in parts: 0.5.0 = 0, 1, 2, 6a and 11; then 0.5.x for the rest.
+measuring; 9 last. **Size**: large - it can ship in parts: 0.5.0 = 1, 2, 6a and 11; then 0.5.x for the rest.
 **Rules**: light and tested first (every new tool optional and measured on a laptop); copy a style, never someone's
 content (their words, logos, characters); AI clips and voices labelled as generated.
 
-## 0.4.6 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+## 0.4.8 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
 
 **Ships when**: the transfer methods are measured on real shots (ΔE2000 to the reference, ms per frame on a laptop
 setting) and the best one is used; the user's own clips get white balance / exposure corrected (log / HDR detected
@@ -298,7 +301,7 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
   on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
   project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
 
-## 0.4.5 - planned - Yapping mode: the yap-maxing framework
+## 0.4.7 - planned - Yapping mode: the yap-maxing framework
 
 **Ships when**: on 3-5 talking videos the user picked, the content foundations and the HEIT parts are there with frame
 + timecode and reviewed by the user; the yapping detectors pass their synthetic self-tests; the user's own recording
@@ -346,7 +349,7 @@ screen 2) environment: experiment different environments 3) delivery: authentic 
     self-test video and ground truth first.
 - **Make (yapping mode)**:
   1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
-     HEIT script in the structure of the best videos of your format (0.4.4's database).
+     HEIT script in the structure of the best videos of your format (0.4.6's database).
   2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
      to try.
   3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
@@ -370,7 +373,7 @@ screen 2) environment: experiment different environments 3) delivery: authentic 
   went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
   styles per category.
 
-## 0.4.4 - planned - Prompt generator: every model, every specialty
+## 0.4.6 - planned - Prompt generator: every model, every specialty
 
 **Ships when**: every prompt has a specialty and the model it was written for; the Prompts page filters by both;
 `/write-prompt` copies examples of the same specialty and model first; at least one kind holds ~10 prompts the user
@@ -399,7 +402,7 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Per model**: the model a prompt was written for stays part of its structure (Seedance's lengths and camera
     words, Claude's tags...); a new prompt for another model says what it changed.
   - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
-    structure a script example (0.4.5; describe video, 0.8.0, adds more), with the link and frame + timecode.
+    structure a script example (0.4.7; describe video, 0.8.0, adds more), with the link and frame + timecode.
   - **Sharing** your own prompts and ratings through *Claude's memory > Share* (text); creators' prompts stay on the PC.
   - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
     0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
@@ -408,5 +411,70 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Style from analysed references** (built 2026-10-13, after 0.3.4: "the optimized prompt asks for a link to a
     Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
     references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
-    look measured too (0.4.6), and several references of one creator averaged into one style.
+    look measured too (0.4.8), and several references of one creator averaged into one style.
 - **Needs**: your prompts (the prompt library or pasted in the chat).
+
+## 0.4.4 - planned - What it took: Claude's time and tokens, step by step
+
+**Ships when**: a 1-min talking video made from a Prepare script to *Ready to post* shows its whole breakdown on its
+Overview - every Claude step and every job, with minutes, tokens, model and effort, and the total - and the totals
+match the Claude Code session logs on a hand check (within 1 %); the live panel follows a running `/recreate-video`
+from its first answer to its last.
+
+**The user's words (2026-10-15)**: "0.4.4 a 'breakdown' oriented version: when i mean breakdown i mean to have more
+concrete information about the process regarding claude usage. so if i run a claude /analyze-video or /recreate i
+want to see if its a way to show that process in motion lab? to have a breakdown on time Claude spent and tokens
+used? also, if i get a new video rendered in the Editor and click the Overview i want a new section below 'ready to
+post' on the side bar called 'What it took' or something similar that will tell me the entire process kinda like a
+timeline from up to top, so if the video is from a generated prompt ('Made from the script MotionLab vs other AI
+editors') in the prepare section i want it to tell me (Prepare Transcript) X minutes it took claude to come up with it
+and cost u X tokens with this model (Opus 5.5 xhigh e.g) (Edit Video) ... X minutes ... TOTAL SPENT: X minutes and X
+tokens ... something i could understand see ok a 1-min talking head video from start to finish it took 1 hour of
+claude usage."
+
+**Where it stands**: nothing shown yet. 0.5.0 had this as its step 0 (*Measure first*, generated videos only); it
+moved here on 2026-10-15 and covers every video and every Claude task, and 0.5.0 judges its steps by these numbers.
+The data is already on the PC (checked 2026-10-15):
+- Claude Code writes every session to `%USERPROFILE%\.claude\projects\<lab>\<session>.jsonl` (`<lab>` = the lab's
+  path with ':' and '\' as '-'; this PC: `C--MotionLab`), one JSON line per event. Subagents:
+  `<session>\subagents\agent-<id>.jsonl` (lines marked `isSidechain`) + `agent-<id>.meta.json` (type, description,
+  model, effort).
+- The app names every session it opens (`--name "MotionLab <task> <object>"` -> a `custom-title` line): "MotionLab
+  script req-002", "MotionLab recreate illdari_test_copy_1", "MotionLab generate <video>", "MotionLab review <video>".
+- Every answer carries its `timestamp`, `message.model` (`claude-opus-5-5` ...), `effort`, `attributionSkill`
+  (`write-script` ...) and `message.usage`: `input_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`,
+  `output_tokens`. One answer is written as several lines (one per content block) with the same `message.id` and the
+  same usage - it counts once (a session of 2026-10-15: 179 lines, 83 answers).
+- The app's own jobs (quick draft, renders, thumbnails, analyses) keep their start and end in `.app\jobs\`.
+
+1. **The reader** (`motionlab\usage.py`, read-only, standard library, nothing leaves the PC; cached per log file size
+   + time): every session -> its task + object, start and end, **active minutes** (the time between its events, gaps
+   over 5 min left out - a window left open overnight is not work; the wall time kept beside it), tokens (new input,
+   cache written, cache read, output), model(s) + effort, the skill. Subagents add to their session and are listed
+   under it with their own model. A session started by hand (no name) is matched by its skill (`attributionSkill`)
+   and the object in its first message (`/recreate-video ... <project>`). A line it does not know is skipped and a
+   number it cannot read says "not measured" - never a guess (the log format is Claude Code's, not a public API).
+2. **Sessions -> videos**: a script request (`req-NNN`) -> the script it wrote (`"request"`) -> the videos made from
+   it (`made_from.json`, kind prompt); `recreate` / `generate` / `title` (the package) / `improve` by project;
+   `review` / `feedback` by analysis; `prompt` / `script` by prompt id. Jobs by the project or analysis they ran on.
+   One call returns a video's whole chain in time order: Prepare -> film -> edit -> package -> improve.
+3. **What it took** on a video's Overview: an entry in the side index under *Ready to post* -> a section at the end
+   of the page, a timeline from the top: one row per step in words ("Prepare - the script *MotionLab vs other AI
+   editors*", "Quick draft", "Edit with Claude", "Thumbnails", "Review and improve") with when, minutes, tokens and
+   "Opus 5.5 · xhigh"; jobs as their own rows (minutes, "no Claude, no tokens"); then **Total**: Claude's minutes, the
+   jobs' minutes, the tokens, the sessions - "this 1-min video took 58 min of Claude and 12 min of renders". Tokens:
+   one headline number (everything the model read and wrote), the split in plain words folded ("new 12 k · read
+   again from the cache 1.2 M · cached 85 k · written 9 k").
+4. **The same for an analysis** (Analyser > a video > Overview: what measuring and Claude's check took) and one line
+   on Prepare's script and title cards ("written in 6 min · 240 k tokens").
+5. **Live** (the user: "if i run a claude /analyze-video or /recreate i want to see ... that process in motion lab"):
+   while a Claude window the app opened is working (its log's last line under 2 min old), its video's page and the
+   Jobs page show a panel - running for N min, tokens so far, the model, the current step in words (the skill + the
+   last tool: "reading the contact sheets", "rendering v2") - read from the growing log every few seconds. Read-only:
+   it never writes to Claude Code or steers it.
+6. **Optional, ask the user first**: "≈ $X at API prices" as a size, never a bill (the user is on a Max plan; the
+   plan's limits are not in the logs) - prices in one dated table with their source.
+
+**Needs first**: nothing - the session logs and the names the app gives its sessions exist on this PC. **Size**: M.
+**Tests**: fixed sample logs in `tools\dev\` (a named session, a session started by hand, subagents, a repeated
+answer) for a self-check and `smoke.py`; one hand count against a real session before it ships.

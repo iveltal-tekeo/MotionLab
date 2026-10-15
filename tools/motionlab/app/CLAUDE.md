@@ -14,7 +14,10 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
   (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
-  `projects\<name>\` (*Create video*), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
+  `projects\<name>\` (*Create video*), since 2026-10-15 a recording / clip the user picks or drops (*Film it*, New
+  edit's *Add clips…*: POST `/api/project/<p>/upload?name=&prompt=` = a raw body streamed by `data.save_upload` into
+  `build\upload\<file>.part`, then moved to `projects\<p>\<file>` - a new file only: the same name + size = kept,
+  else " (2)"; video / audio extensions only; `prompt` adds the script to made_from), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
   (`build\publish\thumbs\<id>\overlay.json` "values") + a picture the user brings (`build\publish\images\`) - never
   `package.json` itself (the tools own it; the words go through `publish.write`) - and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
@@ -28,9 +31,12 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
   logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
 - Sidebar (0.4, the user: "only 3 main sections: analyze, edit, generate"; Prepare added after 0.4.1 at the user's ask):
-  Home, *Make a video*: **Analyze** (#/analyze = 0.3's References, `pageRefs`; #/ref/<name> = one analysis),
-  **Prepare** (#/prepare, `pagePrepare`, green; below), **Edit** (#/edit = Videos, `pageProjects`;
-  #/project/<p>), **Generate** (#/generate, `pageGenerate`; the prompt library #/prompts belongs to it) - no
+  Home, *Make a video*: **Analyser** (shown as Analyze until 0.4.3.5; #/analyze, #/analyser = an alias; = 0.3's
+  References, `pageRefs`; #/ref/<name> = one analysis),
+  **Prepare** (#/prepare, `pagePrepare`, green; below), **Editor** (shown as Edit until 2026-10-15, the user: "rename
+  the entire edit page/section to Editor"; #/edit stays, #/editor = an alias; = Videos, `pageProjects`;
+  #/project/<p>), **Generator** (shown as Generate until 0.4.3.5; #/generate, #/generator = an alias; `pageGenerate`;
+  the prompt library #/prompts belongs to it) - no
   numbers (the user, 2026-10-14: they are not steps in an order), each row in its section's colour (`--rc`) - then
   **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
   #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
@@ -51,26 +57,61 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   four steps in one dialog: 1 your clips (a project, or *+ a new video* = POST `/api/projects/new`; its songs =
   `list_projects` `songs`), 2 how (`NE_HOW`: *Like videos you analysed* = up to `max_refs` 3 from Claude's memory -
   this PC's analyses and friends' cards - then *In its / their style* or *An exact copy* (one local analysis) |
-  *With your words* = the presets of `style.PRESETS` (GET `/api/edit/options`) + a text | *From a saved prompt*),
-  3 length / format / sound (style and words only), 4 *Quick draft now* (job `draft` = `draft_edit.py <p> ...
+  *With your words* = the presets of `style.PRESETS` (GET `/api/edit/options`) + a text | *From a script or brief*
+  (was *From a saved prompt*; a script / hook = `talkPick()`: sound Talking, the quick draft = `data.draft_args`
+  `--preset talking --sound talk`)), step 1 = *Which video?* + *Add clips…* (`uploadClip`), 3 length / format / sound
+  (style, words and a talking script), 4 *Quick draft now* (job `draft` = `draft_edit.py <p> ...
   --render`; the video's page follows it with `progressPanel(el, onEnd, ['draft'], match)`) or *Make it with Claude*
   (+ "then a DaVinci Resolve project") -> POST `/api/project/<p>/edit_request` (`data.save_edit_request`: checked,
   saved as `build\edit_request.json`, appended to `made_from.json` - kinds reference / style / words / prompt; the
   answer's `command` = `/recreate-video <ref> <p>` for a copy, `prompt:<id>`, else `/recreate-video request <p>`, so
   the user's words never pass through cmd). A video's page has *New edit…*; Edit versions say how each was made (a
-  quick draft: its style + *notes* = `draft_vN.md`; `_plan_info` `made_by` / `style` / `notes`); a video's
-  Overview starts with **How did it turn out?** (sound, SFX, colour, captions, motion graphics, effects, pacing,
-  overall: Good / OK / Bad + a note -> POST `/api/project/<p>/outcome`; *Improve it with Claude* =
-  `/recreate-video improve <p>`); GET `/api/prompts` carries `used` (prompt -> videos + their ratings: "Used in").
-  0.4.2 (`data.save_outcome` keeps `aspects` + `updated` as they were): *What next?* = **Fix this version** (*Improve
-  it with Claude*) / **Start over** (a different feel: *New edit with these clips…*, no Improve - never a v2 of a feel
-  the user did not want) -> outcome.json `"next": "fix" | "start_over" | null` (a second click clears it); **notes on
-  moments** under every render on Renders (`momentNotes`: the player's frame + timecode, a part of `ASPECTS`, the
-  text, Add note / Enter; listed by frame, a click seeks the player, ✕ removes; a render shows its version's notes;
-  the Overview lists them, `momentsSummary`) -> outcome.json `"moments": [{"f", "version", "aspect", "note",
-  "date"}]` (f = that render's frame, 0-based at its fps; `data.clean_moment`; POST outcome `moment` /
-  `remove_moment` = the note as listed); `project()` renders carry `version` (`_v2` -> "v2", else the name's rest).
-  `/recreate-video improve` fixes exactly those moments.
+  quick draft: its style + *notes* = `draft_vN.md`; `_plan_info` `made_by` / `style` / `notes`); GET `/api/prompts`
+  carries `used` (prompt -> videos + their ratings: "Used in").
+  **The Edit page and a video's page** (the overhaul of 2026-10-15, the user: "the blocks are so big and show random
+  info - at least a preview of some render"; "when I first click I want to see the last render so I know in which
+  video I am, instead of How did it turn out? shot in my face"; round 2 the same day: "list by the newest render; a
+  date on the preview; just the length; Generate's icon for made from zero; remove 1 version 1 render; remind that the
+  last render is not reviewed yet; rename my edits"): cards = `projCard` (`.pcards`, newest first by `list_projects`
+  `sort_t` = the newest render's time, else the folder's creation time `_created`): `picture` (`data._picture`: a
+  frame of the newest render ~30 % in via `/api/thumb`, else thumbnail A, a graphic's thumb.png, a clip's frame), the
+  render plays muted on hover (not with reduced motion), on it the newest render's date (`whenWords`: today 01:37 /
+  yesterday / 3 days ago / 12 Oct; "made …" without a render) and badges *ready to post* / *Resolve*; the name
+  (`pname` = the `label`, else the folder name), the length only; facts row = clips · size or `genChip` (Generate's
+  icon + colour `--gen`) + `reviewChip` (the overall rating, or *Not reviewed yet* when `reviewed` is false:
+  `data._reviewed` = a rating saved after the newest render - outcome.json `"rated_ts"`, set by every aspects save;
+  older files: the file's time); Rename (`renameModal`, pencil left of Delete, on hover; also *Rename…* on the page)
+  = POST `/api/project/<p>/rename` {label} -> `data.rename_project` -> `build\project.json` `"label"` (empty = the
+  folder's name again; a name another video shows is refused). The FOLDER is never renamed: the clips stay where
+  they are (hard rule 1), plans / renders / Resolve find them by path, Claude's commands use the folder name. A
+  video (#/project/<p>/<tab>): tabs **Overview** (`projOverview`: the newest render in a Player with a poster frame
+  (`posterUrl`); under it one line (`pvmeta`): a picker when there are several (`renderPicker`, newest first, "v1 ·
+  Resolve", a name without `_vN` humanised: "graphics preview"), version · by Claude / quick draft · length · fps ·
+  format · rendered when, *Open in player*, *Made from …*; beside it **the index** (`drawIndex`, `.pvindex`, sticky:
+  Ready to post's Title / Thumbnails / Description & chapters / After posting with their state, scrolling to
+  `#pb-title` / `#pb-thumbs` / `#pb-desc` / `#pb-after`; then Review (rating or *not reviewed yet*), Graphics,
+  Versions, Footage, Timing check, Resolve & library = their tabs; redrawn by `reIndex` whenever Ready to post
+  draws); then two big cards (`.pvnext .onx`, an icon circle, the section colour / violet, lift on hover)
+  *Something not right? Review it and improve it* (saves `next: "fix"`, goes to Review) and *Start over*
+  (`startOver`: `next: "start_over"` + New edit with these clips - never a v2 of a feel the user did not want);
+  `reviewSummary` = one line of the parts rated; *undo* clears `next`; then **Ready to post** = `projPublish` inside
+  `#pubsec`, below) | **Review** (`projReview`, only with a render or ratings: the player + **How did it turn out?**
+  beside it (`outcomePanel(P, true)` = `.outcome.side`: Overall first, one column, a part's note field shows once it
+  has a rating or a note or its name is clicked; "these ratings were for an older render" when `reviewed` is false;
+  `wireOutcome`: sound, SFX, colour, captions, motion graphics, effects, pacing, title & thumbnail, overall: Good /
+  OK / Bad + a note), *Improve it with Claude* = `/recreate-video improve <p>` (or, after Start over, *New edit with
+  these clips…* / *Improve this one instead*); the notes on moments (0.4.2, `momentNotes`) left the page on
+  2026-10-15 ("for now u can remove") - saved ones stay in outcome.json `"moments"`, the route still takes them,
+  Claude still reads them) | **Versions**
+  (`projVersions`: the edit versions table, every render with its player, Delete, the side-by-sides) | **Footage**
+  (`projFootage`, only with clips: the clips - `project()` `sources` + clips not prepared yet with `id` null - and the
+  storyboards) | Graphics | Timing check / Resolve & library only when the video has a `verify_*.json` / a Resolve
+  build, each tab starts with a line on what it is for. Old addresses: `/renders` = Versions, `/publish` = the
+  Overview scrolled to Ready to post. Outcome.json (0.4.2, `data.save_outcome` keeps every key it does not own):
+  `"next": "fix" | "start_over" | null`, `"moments": [{"f", "version", "aspect", "note", "date"}]` (f = that render's
+  frame, 0-based at its fps; `data.clean_moment`; POST outcome `moment` / `remove_moment` = the note as listed);
+  `project()` renders carry `version` (`_v2` -> "v2", else the name's rest), `mtime`, `fps` / `frames` / `width` /
+  `height` (the plan's, else `player.codec` = ffprobe, cached). `/recreate-video improve` fixes exactly those moments.
   **Prompts** - the current state (the user's wishes, 0.3.4: "more user friendly", "too crowded", "3 per row, just
   the title, the rating, if I need Higgsfield / clips, the category - the tags are noise", "too ambiguous, hard on
   the eye"; 2026-10-13: "tell the user it reviews and improves"):
@@ -85,7 +126,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
     `kindModal` / POST `/api/prompts/kind`, title, needs, *Run it* (`RUN`: brief / script = Create video with it
     picked, a hook = *Use current version in a video*; shot / image = copy for the site), *Copy Prompt* (clipboard
     icon)); `PSTEPS` + `pstate()` (check / want / opt / run / rate, the current one lit, a Next box with its
-    button); `.pmgrid` two columns: the prompt (`.ptext2`) + **Claude's check** `pcheckBlock` (unchecked: *Optimize
+    button - not for a script / hook since 0.4.3.5, the user: "the steps are a little ambiguous so just remove them":
+    `talkVideos` instead = the videos made from it, each a link to its page with its tags ✓ Filmed / ✓ Edited /
+    ✓ Posted (`VSTAGE`), or "Not filmed yet" + the road); `.pmgrid` two columns: the prompt (`.ptext2`) + **Claude's check** `pcheckBlock` (unchecked: *Optimize
     with Claude* = `/write-prompt optimize <id>`, which checks it first; checked: a `.cpart` card per part coloured
     by status - ✓ clear / ~ vague / ✗ missing, plain words `SLOT_LABEL`, a brief's grouped by `BRIEF_GROUPS`: the
     plan / the edit / sound / look & text / finish - with the tip and *what you want* (POST `/api/prompts/wishes` on
@@ -112,7 +155,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   to" box (only when an update set aside local changes); Status below the roadmap. Empty References / Videos / Prompts
   = `emptyHero` (icon, title, one line, the page's add button in the middle; the header buttons hide). Analyze and
   Edit (the user, 2026-10-14) put their actions in a first row under the title, on the left (`.toprow`: *Download from
-  link* + *Add videos*; *New edit* + *Folder*), not in the header's corner. **Optional steps** (the user,
+  link* + *Add videos*; *New edit*, *Folder* at the row's right end), not in the header's corner. Every *Folder*
+  button has the folder icon `#i-folder`; on a video's page it sits in the line under the name (`.hfold`), away from
+  New edit / Rename / Delete (2026-10-15: "add a folder icon … and move it"); Delete buttons say "Delete", no dots. **Optional steps** (the user,
   2026-10-14: numbered like the required ones they look obligatory): a grey dashed number + a bold OPTIONAL tag
   (`optTag(hint)`; `.nestep.opt` in the dialogs, `.fstep.opt` = a video's *Teach Claude* steps, `PSTEP_OPT` = a
   prompt's *You say what you want* / *Rate the result*); required steps keep the solid number in the section colour.
@@ -125,9 +170,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   claude:true per analyze job, or Measure only) -> POST `/api/analyze/batch` (`server.analyze_batch`: everything is
   checked before anything starts; files -> queued analyze jobs, links -> queued download jobs whose `then` starts
   the analysis of the saved file; `system` remembers `default_focus`). The page's in-progress panel
-  (`progressPanel`, every 2 s while jobs are active: running first, then waiting, *Remove* = cancel a queued one,
-  finished ones for 15 min) redraws the cards when one ends. Cards: focus chip, the profile's lines (`focusLines`),
-  the flow; filters focus / category / tag. One analysis (#/ref/<name>, `?verdicts` = the Effects tab): tabs right
+  (`progressPanel`, every 2 s while jobs are active: running first, then waiting, *Remove* = cancel a queued one;
+  since 2026-10-15 a finished one shows `DONE_SHOW_S` 5 s, a failed one up to 15 min, each with ✕ = `hideJob`,
+  remembered in localStorage `ml.goneJobs` by `jobKey` = id@started, ids restart with the app - the user: "Done …
+  showing all the time? a 5 s pop up, or a discard option"; the video page uses it too) redraws the cards when one ends. Cards (0.4.3.5, `refCard`, the
+  Editor's `.pcard` look): the frame with the date it was analysed (`strTime` of events.json "generated" -> `whenWords`;
+  newest first) and *not checked by Claude* until it is, the name, length · category · format, cuts/min · effects +
+  the focus chip, the flow line with its button; Delete on hover. The downloads nobody analysed are one thin row
+  (`.wbar`: "N downloaded videos wait to be analysed", music / photos counted apart) that opens `waitingModal` (the
+  `waitRows` table, *Analyse all…* up to `AV_MAX`); filters focus / category / tag. One analysis (#/ref/<name>, `?verdicts` = the Effects tab): tabs right
   under the step strip - **Overview** (default; `overviewTab`: Rhythm, Content creation and / or Cinematic panels for
   the focus from `profile.py`, Claude's breakdown (events.json `breakdown` = review.json `_breakdown`), Use it: Edit
   my clips like this / Prompts for AI tools like this / Analyse again with another focus; the player is hidden),
@@ -139,8 +190,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   effects" instead of crashing. Timelines fix their canvas height at creation (no ResizeObserver loop when shown).
 - **Generate** (0.4, the user: "a video from zero - mostly external tools like Higgsfield, InVideo... or a whole
   motion-graphics video with HyperFrames"): `pageGenerate` = two ways - *A motion-graphics video* (disabled with a
-  pointer to Settings > Programs until Node.js + HyperFrames are found) and *With AI video tools* (*Plan a video with
-  Claude*; *Just one prompt* = `aiPromptsModal`), the videos made from zero (projects without clips), the latest
+  pointer to Settings > Programs until Node.js + HyperFrames are found) and *With AI video tools* (*Generate a video
+  with Claude and other tools*, was *Plan a video with Claude* until 0.4.3.5; *Just one prompt* = `aiPromptsModal`), the videos made from zero (projects without clips), the latest
   prompts. Both open `generateModal(kind)`: what it is about, the words on screen (graphics) or the tool (ai), up to
   3 analysed videos as style chips, length, format, a song (graphics: `refs\audio\` downloads), colours, its name ->
   POST `/api/generate/request` (`data.save_generate_request`: checked; makes `projects\<name>\` when new; saves
@@ -150,7 +201,6 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   with more potential to go viral - or generate one from zero from a few questions; hooks, structure"):
   `pagePrepare` = three ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`,
   0.4.3 *Title & thumbnail first* = `titleFirstModal`, below),
-  *How Claude writes for reach* (`SP_RULES`: the six rules of `.claude\skills\write-script\guidelines.md`),
   *Waiting for Claude* (requests with nothing written from them yet: *Open in Claude Code again*, ✕ = POST
   `/api/script/forget`, the request file to the Recycle Bin, logged), *Your scripts and hooks* (prompt cards ->
   `promptModal`). Scripts live in the prompt library (kind script / hook); the requests in
@@ -163,6 +213,22 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   live in the Improve dialog (`scriptCheckHtml`, debounced) and on every script / hook pop-up (*The check*); the
   speaking rate is measured on the picked videos (`style.build(...)["talk"]`) when they have talking. A script / hook
   card's *Optimize* / *Check it again* go to `/write-script` (`optCmd`, `chkCmd`), other prompts to `/write-prompt`.
+  0.4.3.5: Prepare lists the three ways, *Waiting for Claude* and the cards only (*How Claude writes for reach* left:
+  "not that important for the person to see"); every prompt card says when (`.pgwhen` = `whenStr` of `updated` /
+  `added`), a script card shows every step it reached (`pstage`: ✓ Filmed ✓ Edited ✓ Posted).
+  **Film it** (2026-10-15, the user: "I record a video of me reading the script but I don't know where to go... it's
+  not a prompt, it's a talking script... and then where does it go?"): a script card's run button (`RUN.script`, the
+  run step says *Film it*) = `filmItModal(p)`: the road `roadHtml` (Written > Filmed > Edited > Posted = `scriptRoad`
+  from GET `/api/prompts` `used`: per video `clips`, `renders`, `posted` = outcome packaging link; the card's
+  `pstage` chip), 1 Film it = cue cards (GET `/api/script/cards?id=` = `script.cue_cards`: parts with heading, lines,
+  notes; `[check]` kept in a line, a lone one = `check`), *Teleprompter* (`teleprompter(lines)`: full screen,
+  `wpm` 150, Space / click, arrows, Esc only closes it; [check] left out), *Copy the lines*, *Film these too*
+  (B-ROLL / VISUAL / SHOT notes), *The edit adds these*, tips; 2 Add your recording = a video (linked ones first) or
+  a new one named after the script (`folderName`), drop / choose -> `uploadClip` with `prompt`; 3 Edit it = format /
+  length -> edit_request `how: prompt` + Quick draft (job draft) or *Make it with Claude* (`/recreate-video
+  prompt:<id> <p>`, which follows the script). A video made from a script: *Made from the script <title>*
+  (`project()` adds `title` / `prompt_kind` to made_from), and with no edit yet the Overview says *Filmed - now edit
+  it* (New edit with the script picked).
 - **Title & thumbnail** (0.4.3; the user: the thumbnail and the title together decide the CTR, "horizontal and
   vertical"): **Prepare > Title & thumbnail first** (`titleFirstModal`: topic (required), viewer, angle, platforms =
   check boxes (`script.PLATFORMS`), the thumbnail's orientation derived from them (`TF_ORIENT`) until the user clicks
@@ -173,8 +239,12 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   over `TITLE_PHONE` 60), the thumbnail ideas (words, picture, shot to film, colours), the hook, Copy each / *Copy
   all*, *Use a title for a video* / *Use this title* = `useTitleModal` (a video + the final title -> POST
   `/api/prompts/title` = `prompts.update(project=, chosen=)`; *Unlink*), *Write the script* (`scriptNewModal` with the
-  title + hook), the rating, Claude's check read-only, *Write new ones with Claude*. **Edit > a video > Publish**
-  (`projPublish`, the tab after Renders): GET `/api/project/<p>/publish` = `data.publish_info` (package.json as the
+  title + hook), the rating, Claude's check read-only, *Write new ones with Claude*. **Edit > a video > Ready to
+  post** (`projPublish`; 0.4.3's Publish tab, since 2026-10-15 at the end of the Overview under the render, "Happy with
+  it? Ready to post"; the Title, the Thumbnails and *Make a thumbnail yourself* (folded once thumbnails exist) are one
+  glowing box `.pbpack` of `.pbpart`s (the user: "all in one so the person isn't thrown around"); no *Open the folder*;
+  then Description `#pb-desc`, `packagingBox` *After posting* `#pb-after` last; returns the publish info for the index):
+  GET `/api/project/<p>/publish` = `data.publish_info` (package.json as the
   tools wrote it + each thumbnail's settings `OS.status(thumbs\<id>)`, the title records linked to the video, the
   edit's fps / frames, the designs `thumbnail.templates()` - imported only here (numpy) - the face finder, the newest
   render, the brought pictures). Empty = one centred *Make the package with Claude* (`/write-title package <p>`, task
@@ -194,8 +264,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   [--render]`), thumb_make (`make <p> --id X --words .. --template .. --frame f --clip c | --image <file>`, HyperFrames
   stills + its check, ~15 s), thumb_render, thumb_check (`jobtools.py thumb-check <p> [--title]` = thumbnail.py's
   `check_project`, exit 0 when a rule FAILs: a result, not a failed job); the page's progress panel follows them
-  (`THUMB_JOBS`) and redraws when one ends. **How did it turn out?** has the part `packaging` (Title & thumbnail) and
-  *After posting* (`packagingBox`: CTR % per thumbnail A / B / C + the video's link -> outcome.json `"packaging":
+  (`THUMB_JOBS`) and redraws when one ends. **How did it turn out?** has the part `packaging` (Title & thumbnail);
+  *After posting* (`packagingBox` + `wirePackaging`, the end of Ready to post: CTR % per thumbnail A / B / C + the video's link -> outcome.json `"packaging":
   {"ctr": {"A": 4.1}, "link", "updated"}`, `data.clean_packaging`: 0-100, "4,1" accepted, empty = removed; the
   winner named). The link is only kept: `content.py stats` writes into `analysis\<name>\`, so a project's public
   numbers need a change there first. `data.save_outcome` keeps every key it does not own.
@@ -211,12 +281,12 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   mtimes; friends' cards too) + saved counts + prompts; it rewrites `knowledge\local\memory.md`
   (`knowledge.memory_index()`, also rebuilt with the summary) when a card is newer - the file the skills read.
   0.4.2: also when an `outcome.json` (`KN._outcomes()`), a lessons file of either kind or a `verdicts.json` (the sound
-  answer: memory.md says "sound effects: many - ... (the user's answer)" per video) is newer. Overview: **Your ratings
+  answer: memory.md says "sound effects: many - ... (the user's answer)" per video) is newer. Overview (0.4.3.5: highlighted - 📌, an amber edge and glow, *Claude reads these first*): **Your ratings
   -> rules for every new video** (`memRules`, `knowledge.ratings()`: bad = a rule for every new video, OK with a note,
   then one line each for fine / keep doing it); Lessons: two columns, *Analysing videos* (L###) and *Making videos*
   (`lessons.making`, M###), incoming split by `kind`; the lessons tile counts both.
 - Pages (routes keep their old names #/refs, #/projects): Home (the motion graphic, counts, setup warnings when a program
-  is missing, the three ways in, roadmap, then status), **Analyze** (#/analyze, above), **Edit**
+  is missing, the three ways in, roadmap, then status), **Analyze** (#/analyze, above), **Editor** (ex-Edit)
   (#/projects: the user's own footage - versions, renders, **Graphics** (0.3.2: the video's HTML graphics in
   `build\overlays\`, thumbnail, render state, a form per declared setting -> Save = POST `/api/project/<p>/overlay`,
   Render / Save to library = jobs; *Captions from a subtitle file* + *Subtitles for Resolve (.srt)*; *Clip for
@@ -227,7 +297,11 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
   effort, default category, shortcuts, Sharing & updates). 0.4.2.1: Programs shows yt-dlp's age in words
-  (`system.ytdlp_info`: its version is its date, `age_words`, amber over `YTDLP_OLD_DAYS` 30) + **Update yt-dlp** (job
+  (`system.ytdlp_info`: its version is its date, `age_words`); since 2026-10-15 (the user: "already up to date but it
+  still shows update") the newest release from PyPI in `upstream.check`'s daily check (`latest["yt-dlp"]`, also
+  recorded by the update job: `upstream.record_latest`) decides: "the newest version" (no button) or "X is out"
+  (amber + the button); only when that is unknown the age does (amber over `YTDLP_OLD_DAYS` 30); *Check again* also
+  forces that check (POST `/api/upstream/check`) + **Update yt-dlp** (job
   `ytdlp_update`, the log inline, the result in words; `system.install_kind`: a winget copy (real path under
   `WinGet\Packages` / `Links`) = `winget upgrade --id yt-dlp.yt-dlp --exact --silent --disable-interactivity
   --accept-source-agreements --accept-package-agreements`, inside a Python environment = `pip install -U
@@ -250,6 +324,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   (link credentials + query strings, e-mails, the lab folder -> `<MotionLab>`, the home folder and any
   `X:\Users\<name>` -> `%USERPROFILE%`, the Windows user name -> `<user>`, the Settings name and COMPUTERNAME ->
   `<name>`, whole words of 3+ letters). No GitHub remote = *Copy the report* only. The app sends nothing.
+- **The player** (`Player`, 0.4.3.5, the user: "the controls are on the left, it's very hard to click play/pause and
+  also to move to a specific point"): `.pview` (a click on the picture = play / pause with a short ▶ / ❚❚ `.pflash`;
+  a big ▶ `.pbig` until the first play; double click = full screen), `.pscrub` (a seek bar as wide as the video: click /
+  drag = that frame, `seekSoon` one seek per screen frame, the video waits while dragging; the pointer shows f + timecode;
+  the selected part = `.psrange`, drawn by the `range` setter), `.pbar` = a 3-column grid: the frame + timecode / the
+  last frame's timecode | the transport in the middle (⏮ −10 −1 big ▶ +1 +10) | speed, ⟳ repeat (`setLoop`: the
+  selected part, else the whole video at `ended`), sound (`mute`), full screen (`full`). Keys when the player has the
+  focus (`tabindex=0`; its buttons never take it): Space, ← → (Shift = 10), Home / End, M, F - handled keys stop there,
+  the rest (the analysis page's J K N 1 2 3) go on to `KEYS`. Narrow players (`@container` < 620 px) stack the bar.
 - **Player copies** (0.4.2.1, `player.py`): `Player` asks GET `/api/player?path=` (the codec by ffprobe, cached per
   path + size + mtime; the copy if made) and, when `browserPlays` says no (`canPlayType` + `MediaSource
   .isTypeSupported` for hvc1 / hev1 / av01 / vp09; ProRes, MPEG-2 ... never) or the video fires `error` / loads with
@@ -304,7 +387,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   `part`, `parts` (`download.record`; a single download keeps the 0.4.2 entry), the post's first video printed last
   (the `then` analysis takes it, the rest wait); files saved before yt-dlp failed on others are kept. The login hint
   points to Settings > Downloads (`LOGIN_HINT`; a cookie-read failure has its own). `data.post_of`, `data.waiting`
-  (photos / sound of a post included, parts together in order) -> Analyze's *Downloaded, not analysed yet* shows a
+  (photos / sound of a post included, parts together in order) -> the Analyser's *Downloaded, not analysed yet* (`waitingModal`) shows a
   post as one heading + its parts (`waitRows`); `system.downloads()` carries the post fields; a post's photo can be
   deleted (`trash.plan_file`, `data.IMAGE_EXT`). `download.py selfcheck` = a fake carousel, no network.
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
@@ -353,7 +436,8 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data;
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
-  GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

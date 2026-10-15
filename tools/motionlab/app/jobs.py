@@ -394,7 +394,7 @@ class Runner:
             if saved is None:
                 msg = "the saved file was not found - analyse it from the Analyze page (Downloaded, not analysed yet)"
             elif saved.suffix.lower() not in data.VIDEO_EXT:
-                msg = f"{saved.name} is audio only - it waits for an edit (Edit), nothing to analyse"
+                msg = f"{saved.name} is audio only - it waits for an edit (Editor), nothing to analyse"
             else:
                 nj = self.start("analyze", {**job.then, "video": str(saved)}, queue=True, batch=job.batch)
                 msg = f"Next: analysing {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"

@@ -145,6 +145,57 @@ def spoken(text: str) -> tuple[str, int]:
     return "\n".join(out), cues
 
 
+_CUE_ONE = re.compile(r"\[\s*([^\]:]+?)\s*(?::\s*([^\]]*))?\]|\(\s*(" + _CUE_TAGS + r")\b\s*:?\s*([^)]*)\)", re.I)
+_CAPS_HEAD = re.compile(r"^[^a-záéíóúñü]{2,40}$")       # "SOLVE (20-30 s)", "OFFER": a short line in capitals
+
+
+def cue_cards(text: str) -> list[dict]:
+    """Film it (2026-10-15): the script as cue cards, read like spoken() - per part its heading, the lines to say
+    (a [check] stays in the line: a fact to confirm before filming) and the notes for the camera / the edit
+    ({"tag": "B-ROLL", "text": ...})."""
+    parts: list[dict] = []
+
+    def part(head: str) -> dict:
+        parts.append({"head": head, "lines": [], "notes": []})
+        return parts[-1]
+
+    cur = None
+    for ln in str(text or "").replace("\r", "").split("\n"):
+        notes = []
+
+        def note(m):
+            tag, body = (m[1], m[2]) if m[1] is not None else (m[3], m[4])
+            if tag.strip().lower() == "check" and not body:
+                return m[0]
+            notes.append({"tag": tag.strip().upper(), "text": (body or "").strip()})
+            return " "
+        rest = _CUE_ONE.sub(note, ln)
+        if _CUE_LINE.match(rest):
+            tag, _, body = rest.partition(":")
+            notes.append({"tag": tag.strip().upper(), "text": body.strip()})
+            rest = ""
+        s = rest.strip()
+        head = s.split(" · ")[0].strip() if " · " in s else s
+        if s and (_HEADING.match(head) or (_CAPS_HEAD.match(head) and len(_words(head)) <= 6 and not s.endswith((".", "!", "?")))):
+            cur = part(" · ".join(x.strip() for x in s.strip("#* ").rstrip(":").split("·") if x.strip()))
+            cur["notes"] += notes
+            continue
+        lab = _LABEL.match(s)
+        if lab:
+            cur = part(lab.group(0).strip(" :-–—*"))
+            s = s[lab.end():]
+        s = _TIMING.sub(" ", s).strip(" -–—*")
+        if cur is None and (s or notes):
+            cur = part("")
+        if cur is not None:
+            cur["notes"] += notes
+            if s.lower() == "[check]":                    # a note's own [check]: the part has a fact to confirm
+                cur["check"] = True
+            elif s:
+                cur["lines"].append(" ".join(s.split()))
+    return [p for p in parts if p["lines"] or p["notes"]]
+
+
 def sentences(text: str) -> list[str]:
     """Sentences: split at . ! ? … and at line ends (scripts often have one line per sentence, no full stop) - a line
     that goes on in lower case is the same sentence wrapped."""

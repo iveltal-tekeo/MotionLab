@@ -87,8 +87,8 @@ where the user writes what they want:
 6. Run `.venv\Scripts\python tools\script.py check <new id>`. Fix what it still flags if the fix is right; if not,
    say why it doesn't apply (a 90 s story can have one longer stretch).
 7. Tell the user: the new id and title; before → after (checks n → m of 11, length, hook words, stars); the 3-5
-   changes that matter; and the next step. Rehearse it out loud (cut every line they stumble on). Click **Record it**
-   on its card to make the video, film it, then rate it.
+   changes that matter; and the next step. Rehearse it out loud (cut every line they stumble on). Click **Film it**
+   on its card: the teleprompter, then add the recording there and it gets edited; rate it once it's out.
 
 ## 4. From zero (`request <req-NNN>` or empty)
 1. `tools\script.py show <req>` = the user's answers. Only the topic is required. When something important is
@@ -106,8 +106,8 @@ where the user writes what they want:
    (the app links it to the request), `style_refs` = the picked videos that are analysed on this PC, `structure` with
    statuses + `review` + `pattern` + `notes` (the other 2 hooks, and how to deliver it: energy, where to pause, which
    word to punch in on).
-6. Tell the user the id, the hook, the length, n of 11 checks, and the next step (rehearse it, **Record it** on its
-   card, rate it).
+6. Tell the user the id, the hook, the length, n of 11 checks, and the next step (rehearse it, **Film it** on its
+   card - teleprompter, add the recording, edit it - then rate it).
 
 ## 5. More hooks (`hooks <script id>`)
 5-8 hooks for the script's topic in different patterns (guidelines section 4), each 7-12 words, each with its
@@ -115,6 +115,8 @@ where the user writes what they want:
 `structure` = pattern / opening line / on screen / promise. Tell the user the ids and which one you would film first.
 
 ## 6. After filming
-The user films it and makes the video in Edit (the script card's *Record it* = New edit with this script picked; the
+The user films it from the script card's *Film it* (cue cards, a teleprompter, what to film besides them; then the
+recording is added there - copied into a new video named after the script - and edited: the talking quick draft or
+`/recreate-video prompt:<id>`, which follows the script; the
 talking quick draft cuts the pauses). How it turned out (the video's *How did it turn out?*) and their rating on the
 card tell you what works for them next time. Repeat those patterns and drop the ones rated bad.

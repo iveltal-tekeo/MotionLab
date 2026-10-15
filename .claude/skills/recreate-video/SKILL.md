@@ -10,7 +10,7 @@ Arguments: `$ARGUMENTS` = the reference (a folder in `analysis\`) and the projec
 user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work from `C:\MotionLab` with
 `.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh.
 
-The app's *Edit > New edit* (0.4) saves what the user picked in `projects\<project>\build\edit_request.json` and
+The app's *Editor > New edit* (0.4; the section was called Edit until 2026-10-15) saves what the user picked in `projects\<project>\build\edit_request.json` and
 opens `/recreate-video request <project>`: read that file first - `how`: `copy` (1:1 of `like[0]`: the steps below),
 `style` (up to three videos in `like`, plus any `presets` / `want`) or `words` (`presets` and / or the user's own
 `want`, their words as they typed them) = **By feel** (section 6), `prompt` (`prompt:<id>` below); `length_s`,
@@ -28,8 +28,13 @@ More ways in (the app's *How did it turn out?*, 0.3.3):
   `style from your reference <name>` line (the card's *Style like*) = match that analysis' measured pacing (cuts /
   min, typical shot, the first 3 s), its effect families (copy the ones the user marked correct: `events(<name>)`)
   and its look (`frames(<name>, ...)`) with the user's own clips - its style, never its content;
-  **script / hook** = a talking video - the user records it (or has: clips in the project), then
-  speech to text (`tools\speech.py`), captions (`overlay.py captions`) and graphics from the words (the
+  **script / hook** = a talking video - the user films it and adds the recording (the script card's *Film it*,
+  2026-10-15: it is copied into the project and linked in `made_from.json`; `build\edit_request.json` has the format
+  / length they picked, "length_s" null = all they said), then speech to text (`tools\speech.py`) and **follow the
+  script**: line it up with what was said (the script's lines from `script.cue_cards(text)`), keep the best take of
+  every line (a repeated sentence = a retake: the later, cleaner one, unless it is worse), tell the user which script
+  lines are missing or changed (frame + timecode), and put the script's `[TEXT]` / `[B-ROLL]` / `[ZOOM]` / `[SFX]`
+  notes on the words they belong to; captions (`overlay.py captions`) and graphics from the words (the
   `talking-head-pack` example: beats from the transcript, `overlay.py fit`), an edit plan; **shot / image** = for a
   video / image model - write the variants with `/write-prompt` (text only, the user generates them on the site),
   then edit what they drop into the project. Ask once what is missing (length, format, music). Same hard rules.
@@ -38,7 +43,8 @@ More ways in (the app's *How did it turn out?*, 0.3.3):
   change what was rated OK / bad as the notes say (a new edit version, never overwrite the last one); when the video
   came from a prompt, add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
   **Notes on moments** (0.4.2): `"moments": [{"f": 113, "version": "v2", "aspect": "graphics", "note": "...",
-  "date": "..."}]` = notes the user put on single frames of a render (frame of that version). Fix exactly those
+  "date": "..."}]` = notes the user put on single frames of a render (frame of that version; the app stopped taking
+  new ones on 2026-10-15 - the per-part ratings sit beside the render now - but saved ones still count). Fix exactly those
   moments, each named with frame + timecode (`f113 (00:00:03:23)`: what you changed), instead of reading one word
   per part; say which moment the new version fixes and how. **Fix or start over**: `"next": "fix"` = a new version
   with the notes (the feel is right, details are wrong); `"start_over"` = back to step 1 of *cheapest check first* or

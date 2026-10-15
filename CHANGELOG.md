@@ -5,6 +5,55 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.3.5 - 2026-10-15 - A simpler app: the Editor overhaul, Film it, a new player
+
+- **Analyser and Generator** - the sidebar's Analyze is now called **Analyser**, and Generate is now **Generator**.
+- **Every list says when, newest first** - the Analyser's videos look like the Editor's: a frame of the video with the
+  day it was analysed, the name, the length, its rhythm in one line and the next step. Prepare's scripts, hooks and
+  titles and the Generator's prompts show their date. The Generator's videos get the Editor's cards (they play while
+  the pointer is on them).
+- **Downloads waiting to be analysed** - no more long list on top: one small row says how many wait, and a click
+  opens them (analyse one, all of them, or delete what you don't need). Your analysed videos come first.
+- **A new video player** - click the picture to play or pause, and drag the bar under the video to any moment (it
+  shows the frame and timecode as you move). Play and the frame steps sit in the middle, with the length, speed, repeat,
+  sound and full screen. Keys: Space, the arrows (Shift = 10 frames), M for sound, F for full screen.
+- **Prepare is simpler** - below the three ways, just your scripts, hooks and titles (the rules box is gone). A
+  script's window has no steps any more: it lists the videos you made from it - Filmed, Edited, Posted - and opens
+  one with a click. The script's card shows every step it reached.
+- **Claude's memory**: *Your ratings → rules for every new video* stands out - Claude reads these first.
+- The Generator's button says what it does: **Generate a video with Claude and other tools**.
+- **Coming next - 0.4.4 What it took**: how long Claude worked and how many tokens each step of a video took (script,
+  edit, title and thumbnails), and the total, on the video's page.
+- **Film it: from a script to the edit in one place** - a script's card now has **Film it** (was *Record it*, which
+  only opened New edit). It shows the script as cue cards, a full-screen **teleprompter** (Space to start, arrows for
+  the speed), what to film besides you, and the facts to confirm first. You film it with your phone or camera, then
+  drop the recording into the same window: it is copied into a new video named after the script (your original
+  stays where it is). Then **Quick draft now** (the pauses cut, captions, punch-ins - a few minutes, no Claude) or
+  **Make it with Claude**, who follows the script: the good takes, the text, B-roll and zooms where the script puts
+  them. The card shows how far it is - Written, Filmed, Edited, Posted - and the video says which script it came from.
+- **New edit is clearer**: *Which video?* instead of *Your clips*, an **Add clips…** button that copies files in (no
+  more copying into a folder by hand), and *From a script or brief* instead of *From a saved prompt* - a talking
+  script now gets the quick draft too.
+- **Editor: smaller cards that show the video** - each card shows a frame of the newest render (it plays while the
+  pointer is on it) with that render's date, the name and the length. Below: your clips (or Generate's icon for a
+  video made from zero) and your rating - or *Not reviewed yet* when the newest render has no rating yet. The newest
+  render comes first.
+- **Edit is now called Editor** in the sidebar and everywhere the app mentions it.
+- **Rename a video** - the pencil next to Delete (or *Rename* on its page). Only the name MotionLab shows changes;
+  its folder keeps its name, so your clips, edits and Resolve still find everything.
+- **A video opens on its newest render**; beside it an index of the page - title, thumbnails, description, after
+  posting, review, graphics, versions, footage - each saying how far it is. Under the video, two big buttons:
+  *Something not right? Review it and improve it* and *Start over*. Happy with it? **Ready to post** is right below
+  (no separate Publish tab), with the title, the thumbnails and making one yourself in one highlighted box.
+- **A Review tab**: the player with *How did it turn out?* beside it, then *Improve it with Claude*. **Footage**
+  has its own tab; **Versions** lists every edit version with its renders. *Timing check* and *Resolve & library*
+  only show on videos that have them, each with a line on what it is for.
+- Folder buttons have a folder icon; on a video's page the button sits under the name. Delete buttons just say Delete.
+- **Finished jobs no longer stay on the page** - a finished job shows for 5 seconds; a failed one stays until you
+  close it with its ✕.
+- **yt-dlp**: Settings asks for the newest release once a day and says "the newest version" when you have it -
+  before, it judged by age alone and asked you to update a yt-dlp that was already up to date.
+
 ## 0.4.3 - 2026-10-15 - Title + thumbnail: Title & thumbnail first, the Publish tab, the thumbnail check
 
 - **Prepare: Title & thumbnail first** - a third way, before you film: answer a few questions and Claude writes

@@ -6,8 +6,8 @@ argument-hint: request <project> | graphics <project> - want: ... | ai <project>
 
 # /generate-video
 
-The third way in of the app (0.4: *Analyze*, *Edit*, **Generate**). `$ARGUMENTS`:
-- `request <project>` - the app's *Generate* page saved what the user asked for in
+The third way in of the app (*Analyser*, *Editor*, **Generator**). `$ARGUMENTS`:
+- `request <project>` - the app's *Generator* page saved what the user asked for in
   `projects\<project>\build\generate_request.json`: read it first. `kind`: `graphics` (section 2) or `ai` (section 3);
   `want` (the user's words, as typed), `like` (up to 3 analysed videos whose style to follow), `length_s`, `format`
   (vertical / horizontal / square), `music` (a song: a path in the project folder or `refs\audio\`), `tool` (ai), `text`
@@ -92,7 +92,7 @@ exit 1 = look at the sheet, fix before (4); (4) the final with the polish (motio
    Without a song `overlay.py render <folder> --mp4` alone is the video. Checked 2026-10-13: a 300-frame example +
    a WAV song -> a 10 s MP4 with AAC sound (HyperFrames ~1.6 s a frame on a 2-core cloud machine; a PC is faster).
 6. Tell the user the render, the scene table (frame + timecode) and which settings they can change in the app
-   (Edit > the video > Graphics); a graphic they like can go to the library (`overlay.py save`).
+   (Editor > the video > Graphics); a graphic they like can go to the library (`overlay.py save`).
 
 ## 3. A video for AI video tools (the plan + every prompt)
 Text only: never call a video model, an API or a website, never ask for a key (paid generation through the API is
@@ -113,7 +113,7 @@ planned for 0.7). The user generates on the tool's own site with their plan / cr
    `model` = the tool, `tags` = what it is for, `style_refs` = the `like` videos, a `review` with your stars.
 4. **The hand-off** in `projects\<project>\build\ai_plan.md`: the shot table (step, length, prompt id), what to
    generate where, how to name the downloads (`01_<shot>.mp4`, ...) and to put them into `projects\<project>\` -
-   then *Edit > New edit* (or `/recreate-video request <project>`) cuts them; the song, captions and graphics are
+   then *Editor > New edit* (or `/recreate-video request <project>`) cuts them; the song, captions and graphics are
    added there.
 5. Tell the user the prompt ids (they are in the app's prompt library, *Copy Prompt* on each) and the order.
 

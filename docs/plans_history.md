@@ -12,9 +12,12 @@ the table below.
 | Check before you render (0.4.2) | 0.4.6 (2026-10-14) |
 | Downloads that keep working + Report a problem (0.4.2.1) | none (added 2026-10-14 evening; its download items were "carried over from 0.3.3" inside describe video, *Report a problem* was in ideas.md) |
 | Title + thumbnail (0.4.3) | 0.4.2 (2026-10-14) |
-| Prompt generator (0.4.4) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14) |
-| Yapping mode (0.4.5) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14) |
-| Colour (0.4.6) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14) |
+| The interface overhaul (0.4.3.5) | none (released 2026-10-15: the Editor overhaul, Film it, simpler Analyser / Prepare / Generator pages, a new player) |
+| What it took - Claude's time and tokens (0.4.4) | none (added 2026-10-15); its measuring was 0.5.0's step 0 |
+| *0.4.5* | kept free by the user (2026-10-15) |
+| Prompt generator (0.4.6) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15) |
+| Yapping mode (0.4.7) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15) |
+| Colour (0.4.8) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15) |
 | Content generation (0.5.0) | none (2026-10-14); "0.5" before that meant templates by feel + macOS |
 | Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
@@ -51,6 +54,12 @@ the table below.
   fuchsia `#e05cff` instead of pink - picked from tangerine / fuchsia / lime / a sunset gradient), plus everything
   built since 0.4.1: Prepare, the model dialog, check before you render's items 1, 5, 6, 7, and the sound effects
   tool (made 3 dB quieter after the user's listen). Its plan section left plans.md; CHANGELOG.md has it.
+- **2026-10-15** (the user, after 0.4.3): the Editor overhaul, Film it and a simpler Analyser / Prepare / Generator
+  (renamed from Analyze / Generate) with a new video player ship as **0.4.3.5**; a new **0.4.4** = *What it took*
+  (Claude's minutes and tokens per step of a video, a live panel while Claude works; 0.5.0's step 0 *Measure first*
+  moved into it); every 0.4.x plan two up: prompt generator 0.4.4 -> **0.4.6**, yapping mode 0.4.5 -> **0.4.7**,
+  colour 0.4.6 -> **0.4.8**. **0.4.5 stays free** - the user's choice (Claude offered splitting the live panel into
+  it).
 
 ## Where some plans came from
 
@@ -65,7 +74,7 @@ the table below.
 - **Yapping mode**: planned as 0.4.0 until 2026-10-13, when 0.4.0 became the Analyze / Edit / Generate overhaul. The
   user's notes of 2026-10-12 say "v0.3.5" for describe video.
 - **Prompt generator**: planned as 0.4.1 until 2026-10-13 (0.4.1 became the fixes after 0.4.0), then 0.4.5, then
-  0.4.3, now 0.4.4.
+  0.4.3, then 0.4.4, now 0.4.6.
 
 ## Speech to text: measured and decided (2026-10-12, shipped in 0.3.3 and 0.4.0)
 
@@ -167,7 +176,7 @@ Claude makes **3 variants** for YouTube Studio's own A/B test ("Test & compare";
   link. It is saved with the video's *How did it turn out?* (a new aspect: packaging), and Claude repeats the
   patterns that won.
 
-**Needs first**: Prepare (built 2026-10-14). The graphics pipeline exists (0.3.2). The content foundations (0.4.5)
+**Needs first**: Prepare (built 2026-10-14). The graphics pipeline exists (0.3.2). The content foundations (0.4.5, now 0.4.7)
 and describe video (0.8.0) make the "what worked" part better later; it works without them. **Size**: medium.
 Order: Prepare's concept card + titles first (text only), then the Publish tab from your frames, then the AI-image
 route, then learning from references.
