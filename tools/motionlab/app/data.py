@@ -25,6 +25,7 @@ LIBRARY = LAB / "library"
 DOCS = LAB / "docs"
 VIDEO_EXT = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm", ".mts", ".mxf"}
 AUDIO_EXT = {".mp3", ".m4a", ".wav", ".aac", ".flac", ".ogg"}
+IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".heic"}     # the photos of a downloaded carousel / photo post
 _cache: dict[str, tuple[float, object]] = {}
 _lock = threading.Lock()
 
@@ -420,18 +421,38 @@ def candidate_videos() -> list[dict]:
     return out
 
 
+def post_of(entry: dict | None) -> dict:
+    """A downloads.json entry's place in a post (0.4.2.1: download.py keeps every file of an Instagram carousel /
+    TikTok photo post): {"post": link, "part": i, "parts": n}, or {} for a single download."""
+    e = entry if isinstance(entry, dict) else {}
+    if not e.get("post") or not isinstance(e.get("part"), int) or not isinstance(e.get("parts"), int):
+        return {}
+    return {"post": str(e["post"]), "part": e["part"], "parts": e["parts"]}
+
+
 def waiting() -> list[dict]:
-    """Downloads not analysed yet: videos in refs\\ without an analysis, and the audio in refs\\audio\\."""
+    """Downloads not analysed yet: videos in refs\\ without an analysis, the audio in refs\\audio\\, and the photos /
+    sound of a post (downloads.json "post"). The parts of one post come together, in their order (the page shows
+    them as one post)."""
+    idx = read_json(LAB / "refs" / "downloads.json", {}) or {}
     files = [Path(c["path"]) for c in candidate_videos() if not c["analysed"]]
     ad = LAB / "refs" / "audio"
     files += [p for p in sorted(ad.glob("*")) if p.is_file() and p.suffix.lower() in AUDIO_EXT] if ad.is_dir() else []
+    files += [p for p in sorted((LAB / "refs").glob("*")) if p.is_file() and post_of(idx.get(p.name))
+              and (p.suffix.lower() in IMAGE_EXT or p.suffix.lower() in AUDIO_EXT)]
     out = []
     for p in files:
-        st, dl = p.stat(), KN.download_info(p.name)
+        st, dl = p.stat(), idx.get(p.name) or {}
+        ext = p.suffix.lower()
         out.append({"name": p.name, "path": str(p), "rel": rel(p), "size": st.st_size, "modified": stamp(st.st_mtime),
-                    "audio": p.suffix.lower() in AUDIO_EXT, "title": dl.get("title"), "url": dl.get("url"),
-                    "platform": dl.get("platform")})
-    return out
+                    "audio": ext in AUDIO_EXT, "photo": ext in IMAGE_EXT, "title": dl.get("title"),
+                    "url": dl.get("url"), "platform": dl.get("platform"), **post_of(dl)})
+    first: dict[str, int] = {}                         # a post sits where its first file would sit
+    for i, w in enumerate(out):
+        if w.get("post"):
+            first.setdefault(w["post"], i)
+    order = [((first[w["post"]], w["part"]) if w.get("post") else (i, 0), i) for i, w in enumerate(out)]
+    return [out[i] for _, i in sorted(order)]
 
 
 # ================================================================================================= projects

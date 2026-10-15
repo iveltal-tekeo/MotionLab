@@ -41,6 +41,7 @@ HOW = {"analysis cache": "analyze.py \"<video>\" redoes the signal pass (minutes
        "self-test": "selftest.py regenerates the synthetic videos and their analyses",
        "python cache": "Python rebuilds it",
        "app cache": "the app's thumbnails and job logs (made again when needed)",
+       "player copies": "the app makes a video's player copy again when this PC cannot play its format (HEVC, AV1)",
        "check videos": "render_video.py --compare / resolve_build.py --render A B",
        "full renders": "render_video.py <plan> / resolve_build.py <plan> --render-full"}
 
@@ -61,7 +62,7 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
     if p[0] == ".venv":
         return "env", "python environment"
     if p[0] == ".app":
-        return "cache", "app cache"
+        return ("cache", "player copies") if len(p) > 2 and p[1] == "player" else ("cache", "app cache")
     if "__pycache__" in p:
         return "cache", "python cache"
     if p[0] == "refs":

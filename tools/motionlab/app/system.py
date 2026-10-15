@@ -7,6 +7,7 @@ page. Settings live in settings.json in the lab folder (personal: not in the rep
 Nothing here installs anything: missing programs are reported with how to get them."""
 from __future__ import annotations
 
+import datetime
 import importlib.util
 import os
 import re
@@ -26,7 +27,13 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
             "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_mode": "ask",
-            "claude_effort": "auto", "claude_model": "opus", "claude_ask": True, "default_focus": "both"}
+            "claude_effort": "auto", "claude_model": "opus", "claude_ask": True, "default_focus": "both",
+            "download_login": False, "download_browser": "firefox"}
+# Settings > Downloads > "Use my browser's login for downloads" (0.4.2.1, off by default): yt-dlp reads the login
+# (cookies) of this browser on this PC for each download. Firefox works best: Chrome / Edge lock their cookie file
+# while they run and encrypt it, so yt-dlp often cannot read it.
+BROWSERS = {"firefox": "Firefox (works best)", "chrome": "Google Chrome", "edge": "Microsoft Edge", "brave": "Brave"}
+BOOL_KEYS = ("claude_ask", "download_login")
 # a new version on GitHub: "ask" = the sidebar's Update button + what's new, one click installs it (since 0.3.0;
 # 0.2.x installed by itself at start-up), "auto" = install it when MotionLab starts, "off" = never look
 UPDATE_MODES = ("ask", "auto", "off")
@@ -65,7 +72,12 @@ PRESETS = {
 HOW = {
     "ffmpeg": "required for every analysis - install: winget install Gyan.FFmpeg (then restart the app)",
     "yt-dlp": "optional, for 'Download from a link' - install: winget install yt-dlp.yt-dlp, or put yt-dlp.exe "
-              "anywhere and set its path here",
+              "anywhere and set its path here. TikTok and Instagram change often: keep it up to date",
+    # yt-dlp's wiki "EJS" (checked 2026-10-15, page edited 2026-07-12): YouTube needs an external JavaScript
+    # runtime; Deno (>= 2.3.0) is the recommended one and the only one on by default (node / quickjs / bun need
+    # --js-runtimes); the yt-dlp.exe build bundles the yt-dlp-ejs scripts, pip installs need "yt-dlp[default]"
+    "deno": "optional, for YouTube downloads: recent yt-dlp needs a JavaScript runtime for YouTube - install: "
+            "winget install DenoLand.Deno (version 2.3 or newer), then restart MotionLab",
     "claude": "for the review and learning steps - install Claude Code: https://claude.com/claude-code",
     "git": "for updates and sharing knowledge - install: winget install Git.Git (or https://git-scm.com)",
     "resolve": "optional (rebuilding in DaVinci Resolve Studio)",
@@ -102,7 +114,12 @@ def save(body: dict) -> dict:
             k = "default_category"
         if k not in DEFAULTS:
             continue
+        if k in BOOL_KEYS:
+            s[k] = v if isinstance(v, bool) else str(v).strip().lower() in ("1", "true", "on", "yes")
+            continue
         v = str(v).strip().strip('"')
+        if k == "download_browser" and v not in BROWSERS:
+            raise ValueError(f"unknown browser {v}")
         if k == "update_mode" and v not in UPDATE_MODES:
             raise ValueError(f"unknown update mode {v}")
         if k == "author":
@@ -121,8 +138,6 @@ def save(body: dict) -> dict:
             raise ValueError(f"unknown effort {v}")
         if k == "claude_model" and v not in MODELS:
             raise ValueError(f"unknown model {v}")
-        if k == "claude_ask":
-            v = bool(v)
         if k == "default_focus" and v not in ("content", "cinematic", "both"):
             raise ValueError(f"unknown focus {v}")
         s[k] = v
@@ -170,6 +185,14 @@ def find(name: str, s: dict | None = None) -> str | None:
                                       if p.is_file()), None)
     if name == "node":
         return _which("node")
+    if name == "deno":                         # on PATH, or where its installers put it (PATH not refreshed yet)
+        home, local = Path.home(), Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        for p in (home / ".deno" / "bin" / "deno.exe", local / "Microsoft" / "WinGet" / "Links" / "deno.exe"):
+            if p.is_file():
+                return _which("deno") or str(p)
+        pk = local / "Microsoft" / "WinGet" / "Packages"
+        hits = sorted(pk.glob("DenoLand.Deno_*/deno.exe")) if pk.is_dir() else []
+        return _which("deno") or (str(hits[-1]) if hits else None)
     if name == "hyperframes":
         p = LAB / "tools" / "overlays" / "node_modules" / "hyperframes" / "bin" / "hyperframes.mjs"
         return str(p) if p.is_file() else None
@@ -207,6 +230,76 @@ def version(exe: str | None, args=("--version",)) -> str | None:
     return _versions[key]
 
 
+def age_words(days: int) -> str:
+    """57 -> "2 months old" (yt-dlp's version is its release date)."""
+    if days < 1:
+        return "from today"
+    if days < 14:
+        return f"{days} day{'s' if days > 1 else ''} old"
+    if days < 45:
+        return f"{round(days / 7)} weeks old"
+    m = round(days / 30.4)
+    return f"{m} month{'s' if m > 1 else ''} old" if m < 12 else f"{days / 365:.1f} years old".replace(".0 ", " ")
+
+
+YTDLP_OLD_DAYS = 30                     # older than this = amber in Settings (sites change faster than that)
+
+
+def install_kind(exe: str) -> dict:
+    """How this yt-dlp was installed -> {"kind": winget | pip | exe, "label", "cmd"}: winget's copy (its real path is
+    under WinGet\\Packages, its Links folder points there) updates with winget, a copy inside a Python environment
+    (a Scripts folder with python.exe and the environment's yt_dlp package) with pip, the stand-alone exe itself."""
+    real = Path(os.path.realpath(exe))
+    low = str(real).lower().replace("/", "\\")
+    if "\\winget\\packages\\" in low or "\\winget\\links\\" in low:
+        wg = _which("winget") or str(Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+                                     / "Microsoft" / "WindowsApps" / "winget.exe")
+        return {"kind": "winget", "label": "installed with winget",
+                "cmd": [wg, "upgrade", "--id", "yt-dlp.yt-dlp", "--exact", "--silent", "--disable-interactivity",
+                        "--accept-source-agreements", "--accept-package-agreements"]}
+    if real.parent.name.lower() == "scripts":
+        env = real.parent.parent
+        for py in (real.parent / "python.exe", env / "python.exe"):
+            if py.is_file() and ((env / "Lib" / "site-packages" / "yt_dlp").is_dir() or (env / "pyvenv.cfg").is_file()):
+                return {"kind": "pip", "label": "installed with pip in a Python environment",
+                        "cmd": [str(py), "-m", "pip", "install", "-U", "yt-dlp[default]"]}
+    return {"kind": "exe", "label": "the stand-alone yt-dlp.exe", "cmd": [str(exe), "-U"]}
+
+
+def ytdlp_info(s: dict | None = None) -> dict:
+    """yt-dlp for Settings: found, version, its age in words (the version is a date: 2026.08.19), amber when older
+    than YTDLP_OLD_DAYS, and how it was installed (what *Update yt-dlp* runs)."""
+    exe = find("yt-dlp", s)
+    if not exe:
+        return {"found": False}
+    v = version(exe) or ""
+    out = {"found": True, "path": exe, "version": v or None, "age_days": None, "age": None, "old": False,
+           **install_kind(exe)}
+    m = re.search(r"(\d{4})\.(\d{1,2})\.(\d{1,2})", v)
+    if m:
+        try:
+            days = (datetime.date.today() - datetime.date(*map(int, m.groups()))).days
+            out.update(age_days=days, age=age_words(max(0, days)), old=days > YTDLP_OLD_DAYS)
+        except ValueError:
+            pass
+    return out
+
+
+DENO_MIN = (2, 3, 0)                    # yt-dlp's wiki "EJS", checked 2026-10-15
+
+
+def deno_info(s: dict | None = None) -> dict:
+    """Deno for YouTube downloads: found, version, new enough (>= DENO_MIN), on PATH (else yt-dlp is told where)."""
+    exe = find("deno", s)
+    if not exe:
+        return {"found": False, "how": HOW["deno"]}
+    v = version(exe) or ""
+    m = re.search(r"(\d+)\.(\d+)\.(\d+)", v)
+    vt = tuple(map(int, m.groups())) if m else None
+    return {"found": True, "path": exe, "version": ".".join(map(str, vt)) if vt else (v or None),
+            "new_enough": vt is None or vt >= DENO_MIN, "on_path": bool(_which("deno")), "how": HOW["deno"]}
+
+
 def resolve_mcp_state() -> dict:
     """The Resolve MCP for Claude Code (tools\\resolve_mcp.py): set up on this PC? (marker written by its install)"""
     mark = APPDIR / "resolve_mcp" / "registered.json"
@@ -224,6 +317,7 @@ def tools(full: bool = False) -> list[dict]:
     for n, label, need in (("ffmpeg", "ffmpeg", "required"), ("claude", "Claude Code", "recommended"),
                            ("git", "Git", "recommended"), ("yt-dlp", "yt-dlp", "optional"),
                            ("node", "Node.js (HTML overlays)", "optional"),
+                           ("deno", "Deno (YouTube downloads)", "optional"),
                            ("hyperframes", "HyperFrames (HTML overlays)", "optional"),
                            ("resolve", "DaVinci Resolve", "optional"),
                            ("speech", "Speech to text (captions)", "optional"),
@@ -243,8 +337,15 @@ def tools(full: bool = False) -> list[dict]:
                 v = f"{SP.version()} - model small {'ready' if SP.model_ready('small') else 'not downloaded yet'}"
             if n == "ffmpeg" and v:
                 v = v.replace("ffmpeg version ", "").split(" Copyright")[0]
-        out.append({"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need,
-                    "how": HOW[n]})
+            if n == "deno" and v:
+                v = deno_info(s).get("version") or v
+        row = {"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need, "how": HOW[n]}
+        if full and p and n == "yt-dlp":            # its age + how Update yt-dlp would update it
+            y = ytdlp_info(s)
+            row.update(age=y.get("age"), age_days=y.get("age_days"), old=y.get("old"), install=y.get("label"))
+        if full and p and n == "deno":
+            row["old"] = not deno_info(s).get("new_enough", True)
+        out.append(row)
     return out
 
 
@@ -270,6 +371,13 @@ def download_cmd(url: str, preset: str) -> tuple[str, list[str]]:
     ff = find("ffmpeg", s)
     if ff:
         cmd += ["--ffmpeg-location", str(Path(ff).parent)]
+    if s.get("download_login"):                    # the user's own choice in Settings, off by default
+        cmd += ["--cookies-from-browser", s.get("download_browser") if s.get("download_browser") in BROWSERS
+                else "firefox"]
+    deno = find("deno", s)
+    yv = re.search(r"(\d{4})\.(\d{1,2})\.(\d{1,2})", version(exe) or "")
+    if deno and not _which("deno") and yv and tuple(map(int, yv.groups())) >= (2025, 11, 12):
+        cmd += ["--js-runtimes", f"deno:{deno}"]    # Deno installed but not on PATH yet: tell yt-dlp where
     host = re.sub(r"^https?://(www\.)?", "", url).split("/")[0]
     return f"Download ({label.split(' (')[0]}) from {host}", cmd + ["--", url]
 
@@ -404,14 +512,18 @@ def make_shortcut(where: str, folder: Path | None = None) -> dict:
 
 
 def downloads() -> list[dict]:
-    """Recently downloaded files (refs\\ and refs\\audio\\), newest first."""
+    """Recently downloaded files (refs\\ and refs\\audio\\), newest first; the files of one post (a carousel, a
+    photo post: downloads.json "post") carry post / part / parts (data.post_of)."""
     out = []
+    idx = data.read_json(REFS / "downloads.json", {}) or {}
     for d in (REFS, REFS / "audio"):
         if d.is_dir():
             for p in d.iterdir():
-                if p.is_file() and p.suffix.lower() in data.VIDEO_EXT | {".mp3", ".m4a", ".wav"}:
+                post = data.post_of(idx.get(p.name))
+                if p.is_file() and (p.suffix.lower() in data.VIDEO_EXT | {".mp3", ".m4a", ".wav"}
+                                    or (p.suffix.lower() in data.IMAGE_EXT and post)):
                     out.append({"name": p.name, "path": str(p), "rel": data.rel(p), "size": p.stat().st_size,
                                 "modified": data.stamp(p.stat().st_mtime), "audio": d.name == "audio",
-                                "t": p.stat().st_mtime})
+                                "t": p.stat().st_mtime, **post})
     return sorted(out, key=lambda x: -x["t"])[:30]
 

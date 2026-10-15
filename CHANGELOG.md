@@ -5,6 +5,22 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.2.1 - 2026-10-15 - Downloads that keep working, Report a problem
+
+- **Your downloader stays up to date**: Settings shows how old the downloader (yt-dlp) is and updates it with one
+  click - TikTok and Instagram change often, so an old one stops working. Settings also checks for Deno, which
+  YouTube downloads now need, and shows the one line to install it.
+- **Videos your PC can't play still play**: a video in a format Windows can't show here (TikTok's HEVC without the
+  HEVC extension, AV1...) gets a small playable copy for the player. Frame numbers stay the same, and the analysis
+  still reads the original.
+- **Carousels and photo posts keep every file**: an Instagram carousel or a TikTok photo post now keeps all its
+  files, shown together as one post.
+- **Downloads that need you logged in** (new option, off by default): use your browser's login for downloads
+  (Instagram, Vimeo, YouTube's "are you a bot" check). Firefox works best. It stays on this PC.
+- **Report a problem**: in Settings and on every failed job. You see the whole report first, with your name and
+  folders taken out; then GitHub opens it filled in and you press Submit yourself. MotionLab sends nothing.
+- **Fix**: *Don't ask again* in the "which Claude, how hard" dialog is remembered (it was saved as "ask again").
+
 ## 0.4.2 - 2026-10-14 - Check before you render: notes on moments, the sound question, feel tests
 
 - **Notes on exact moments**: under any render of your video, pause where something is off (or just right), pick

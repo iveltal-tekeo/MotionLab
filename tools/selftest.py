@@ -15,7 +15,8 @@ PASS = every effect found with correct type and frames, every cut exact, BPM/bea
 First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles),
 the quick draft's rules (check_draft), feel tests (check_feels), sound effects on known frames and levels (check_sfx),
 the checks before the final render (check_precheck), ratings as rules and the two kinds of lessons
-(check_lessons_ratings); --extended also renders the starter graphic (check_template).
+(check_lessons_ratings), carousels kept as one post and the scrubbed problem report (check_downloads_report);
+--extended also renders the starter graphic (check_template).
 """
 from __future__ import annotations
 
@@ -258,10 +259,11 @@ def check_titles() -> dict:
     cmd = DL.with_fields(["yt-dlp", "-P", "refs", "-o", "%(title)s [%(id)s].%(ext)s", "--", "https://x"])
     enc = cmd.index("--encoding") if "--encoding" in cmd else None
     utf8 = enc is not None and cmd[enc + 1] == "utf-8" and enc < cmd.index("--")
-    info = DL.parse(DL.MARK + "C:\\refs\\a [1].mp4|TikTok|7636117427524291861|41.0|Name | with bar")
+    # the saved-file line since 0.4.2.1: path | platform | id | duration | part | parts | uploader (DL.PRINT)
+    info = DL.parse(DL.MARK + "C:\\refs\\a [1].mp4|TikTok|7636117427524291861|41.0|NA|NA|Name | with bar")
     check(utf8 and info["path"] == "C:\\refs\\a [1].mp4"
-          and info["uploader"] == "Name | with bar" and info["duration"] == "41.0"
-          and DL.parse(DL.MARK + "p|NA|NA|NA|NA")["platform"] == "",
+          and info["uploader"] == "Name | with bar" and info["duration"] == "41.0" and info["index"] == ""
+          and DL.parse(DL.MARK + "p|NA|NA|NA|NA|NA|NA")["platform"] == "",
           "downloads: yt-dlp prints in UTF-8, the saved-file line parses (a '|' in the uploader too)")
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
@@ -415,6 +417,20 @@ def check_sfx() -> dict:
     return {"passed": r["passed"], "seconds": r["seconds"]}
 
 
+def check_downloads_report() -> dict:
+    """Downloads that keep working and Report a problem (0.4.2.1), no network: a fake carousel -> one post in a scratch
+    downloads.json; the report's scrubbing and GitHub link (known answers, trimming); how yt-dlp was installed -> its
+    update command."""
+    import download as DL
+    from motionlab.app import jobtools as JT
+    print("\n=== downloads keep every file, Report a problem ===")
+    bad = DL.selfcheck() + JT.selfcheck()
+    for b in bad:
+        print("FAIL  " + b)
+    print(("PASS  " if not bad else "FAIL  ") + "a carousel -> one post; the report scrubbed, its link fits; install kinds")
+    return {"passed": not bad}
+
+
 def check_feels() -> dict:
     """Feel tests when starting blind (0.4.2, motionlab.style): the default three feels, the words that pick one, and
     a raw hook that really is busy - no video."""
@@ -462,7 +478,7 @@ def main() -> int:
     args = ap.parse_args()
     st = HERE / "selftest"
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
-               "precheck": check_precheck(), "memory": check_lessons_ratings()}
+               "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

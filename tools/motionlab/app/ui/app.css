@@ -1003,3 +1003,13 @@ body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=gene
 .mrk.bad { color: var(--red); background: #3a1515; } .mrk.amber { color: var(--amber); background: #3a2f05; } .mrk.ok { color: var(--green); background: #12352a; }
 .mlkinds h2 { margin: 0 0 4px; }
 @media (max-width: 1100px) { .onext { grid-template-columns: 1fr; } .mnadd { grid-template-columns: 1fr 1fr; } .mrule { grid-template-columns: 1fr; } }
+
+/* ---------------- 0.4.2.1: the player's note (a copy made for this PC), a downloaded post and its parts, Report a problem */
+.player .pnote { padding: 6px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+.player .pnote.amber { background: #1f1a08; }
+.panel.waiting tr.posthead td { border-top: 1px solid var(--line2); padding-top: 10px; }
+.panel.waiting tr.postpart td:first-child { padding-left: 22px; white-space: nowrap; }
+.panel.waiting tr.postpart td { border-top-color: transparent; }
+.tag.post { color: var(--amber); border-color: var(--amber-d); }
+pre.rpbody { max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin-top: 10px; }
+#rpn { width: 100%; margin-top: 4px; }

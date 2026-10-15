@@ -109,6 +109,39 @@ to the lab's texture.
 
 ## Released plans (their text when they shipped)
 
+### 0.4.2.1 - released 2026-10-15 - Downloads that keep working, and Report a problem
+
+**Ships when**: on a fresh install, an out-of-date yt-dlp is shown in Settings and updated with one click; a TikTok
+(HEVC) reference plays in the app on a PC without the HEVC extension; a carousel keeps every file; *Report a
+problem* opens a pre-filled GitHub issue the user reads and sends themselves.
+
+Friends meet these first, and with no usage data sent anywhere, a report is the only way to hear about their
+problems. Found in the download review of 0.3.3 (kept until now inside describe video) and in ideas.md.
+**Started 2026-10-15** (the user: "continue until 0.4.3, step by step"): all five items, one part (the app,
+download.py and the jobs are one area).
+
+- **yt-dlp out of date** breaks TikTok / Instagram first: its age in Settings + an *Update yt-dlp* button (`yt-dlp
+  -U`; winget copies: `winget upgrade yt-dlp.yt-dlp`). Recent yt-dlp uses a JavaScript runtime (deno) for YouTube -
+  Settings checks for it.
+- **HEVC** (TikTok's best format) plays in the app only where Windows has the HEVC Video Extension: a small H.264
+  copy for the player when it is missing (the analysis keeps reading the original).
+- **Instagram carousels / TikTok photo posts** give several files or sound only; the app records only the last file
+  - keep every file and show them as one post.
+- **Logins**: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once: HTTP 429 + "Sign in to
+  confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;
+  Chrome / Edge lock and encrypt their cookies). It is the user's login: a setting, off by default, only with their
+  OK, explained in plain words.
+- **Report a problem** (from ideas.md): a button in Settings and on a failed job -> a GitHub issue pre-filled in the
+  browser (what happened, the version, the last lines of the job's log with the user's paths and names taken out);
+  nothing leaves the PC until the user reads it and presses Submit on GitHub.
+**Built 2026-10-15** (released the same day): yt-dlp's age + *Update yt-dlp* (winget / pip / `-U`, tested in a
+dry run), the Deno check (yt-dlp's wiki 'EJS' checked 2026-10-15: Deno >= 2.3.0), player copies for HEVC / AV1
+(`.app\player\`, the same frames: 120 = 120, VFR frame times within 0.00 ms), carousels kept as one post
+(downloads.json `post` / `part` / `parts`), the browser login (off by default, Firefox first), *Report a problem*
+(scrubbed, a GitHub link <= 7500 characters, nothing sent by the app). Not tried yet: the real yt-dlp update (the
+user's click), a real carousel, a PC without the HEVC extension. The full self-test caught one break before the
+release (a 0.3.x download check fed the old 5-field saved-file line) - the check now uses the 7-field line.
+
 ### 0.4.2 - released 2026-10-14 - Check before you render
 
 **Ships when**: snapshots match the render at the checked frames (the difference measured and stated); a new graphic

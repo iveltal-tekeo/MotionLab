@@ -12,15 +12,14 @@ four-part `0.x.y.z` is a small step between them (fixes, upkeep, polish).
 steps in order, *Needs first*. At most two versions are "next" at a time: finish and release one before starting
 another.
 
-## Where it stands (2026-10-14)
+## Where it stands (2026-10-15)
 
-Released last: **0.4.2** (2026-10-14, CHANGELOG.md) - check before you render: notes on moments, fix or start over,
-the sound question, checks before the final render, feel tests. Before it: 0.4.1.1 (each section its own feel,
-Prepare, sound effects). The 0.4.2 plan's full text: plans_history.md.
+Released last: **0.4.2.1** (2026-10-15, CHANGELOG.md) - downloads that keep working (yt-dlp's age + update, Deno,
+player copies, carousels, the browser login) and *Report a problem*. Before it: 0.4.2 (check before you render)
+and 0.4.1.1 (each section its own feel). The released plans' full text: plans_history.md.
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.4.2.1 | Downloads that keep working + Report a problem | **next** | S-M |
 | 0.4.3 | Title + thumbnail | **next** | M |
 | 0.4.4 | Prompt generator | planned - the library, `/write-prompt` and briefs shipped in 0.3.x | M |
 | 0.4.5 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations | L |
@@ -474,27 +473,8 @@ Claude makes **3 variants** for YouTube Studio's own A/B test ("Test & compare";
 and describe video (0.8.0) make the "what worked" part better later; it works without them. **Size**: medium.
 Order: Prepare's concept card + titles first (text only), then the Publish tab from your frames, then the AI-image
 route, then learning from references.
-
-## 0.4.2.1 - planned - Downloads that keep working, and Report a problem
-
-**Ships when**: on a fresh install, an out-of-date yt-dlp is shown in Settings and updated with one click; a TikTok
-(HEVC) reference plays in the app on a PC without the HEVC extension; a carousel keeps every file; *Report a
-problem* opens a pre-filled GitHub issue the user reads and sends themselves.
-
-Friends meet these first, and with no usage data sent anywhere, a report is the only way to hear about their
-problems. Found in the download review of 0.3.3 (kept until now inside describe video) and in ideas.md.
-
-- **yt-dlp out of date** breaks TikTok / Instagram first: its age in Settings + an *Update yt-dlp* button (`yt-dlp
-  -U`; winget copies: `winget upgrade yt-dlp.yt-dlp`). Recent yt-dlp uses a JavaScript runtime (deno) for YouTube -
-  Settings checks for it.
-- **HEVC** (TikTok's best format) plays in the app only where Windows has the HEVC Video Extension: a small H.264
-  copy for the player when it is missing (the analysis keeps reading the original).
-- **Instagram carousels / TikTok photo posts** give several files or sound only; the app records only the last file
-  - keep every file and show them as one post.
-- **Logins**: Instagram (often), Vimeo (now always) and YouTube's bot check (seen once: HTTP 429 + "Sign in to
-  confirm you're not a bot") need the user's browser login. yt-dlp can read it (`--cookies-from-browser firefox`;
-  Chrome / Edge lock and encrypt their cookies). It is the user's login: a setting, off by default, only with their
-  OK, explained in plain words.
-- **Report a problem** (from ideas.md): a button in Settings and on a failed job -> a GitHub issue pre-filled in the
-  browser (what happened, the version, the last lines of the job's log with the user's paths and names taken out);
-  nothing leaves the PC until the user reads it and presses Submit on GitHub.
+**Started 2026-10-15**, in two phases: (1) next to 0.4.2.1 - the thumbnail engine (`tools\thumbnail.py`:
+candidates, HTML templates for 16:9 + the 9:16 cover, the check, reference thumbnails via `content.py`) and the
+packaging (`/write-title` skill, prompt-library kind `title`, title requests, `tools\publish.py`: description,
+chapters, hashtags); (2) after 0.4.2.1 ships - the app (Prepare's *Title & thumbnail first*, Edit > a video >
+*Publish*). The shared file: `build\publish\package.json` (each tool updates only its own keys).

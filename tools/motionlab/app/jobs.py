@@ -24,6 +24,7 @@ from . import data, system
 
 TOOLS = LAB / "tools"
 LOGS = LAB / ".app" / "jobs"
+JOBTOOLS = Path(__file__).resolve().parent / "jobtools.py"       # the app's own small jobs (yt-dlp update, player copy)
 _PY = Path(sys.executable)
 PY = str(_PY.with_name("python.exe")) if _PY.name.lower() == "pythonw.exe" else str(_PY)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -189,6 +190,19 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if not (b / "verify_timing.py").exists() or not (b / f"{render}.mp4").exists():
             raise JobError(f"{p}: no verify_timing.py or no {render}.mp4")
         return f"Timing check {render}", [PY, str(b / "verify_timing.py"), render], "cpu"
+    if kind == "ytdlp_update":          # Settings > Programs > Update yt-dlp (0.4.2.1); dry_run = print, run nothing
+        if not system.find("yt-dlp"):
+            raise JobError("yt-dlp not found - " + system.HOW["yt-dlp"])
+        dry = bool(a.get("dry_run"))
+        return (("Dry run: " if dry else "") + "Update yt-dlp",
+                [PY, str(JOBTOOLS), "ytdlp-update"] + (["--dry-run"] if dry else []), "net")
+    if kind == "player_copy":           # the player cannot play a video (HEVC / AV1 ...): an H.264 copy for it only
+        rel = str(a.get("path", "")).replace("\\", "/").lstrip("/")
+        src = (LAB / rel).resolve()
+        if LAB not in src.parents or src.relative_to(LAB).parts[0] not in ("analysis", "projects", "refs") \
+                or not src.is_file() or src.suffix.lower() not in data.VIDEO_EXT:
+            raise JobError(f"not a video of the lab: {rel}")
+        return f"A copy of {src.name} that plays here", [PY, str(JOBTOOLS), "player-copy", str(src)], "cpu"
     raise JobError(f"unknown job kind {kind!r}")
 
 
@@ -323,6 +337,8 @@ class Runner:
             else:
                 nj = self.start("analyze", {**job.then, "video": str(saved)}, queue=True, batch=job.batch)
                 msg = f"Next: analysing {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
+                if any(ln.startswith("saved ") and "from one post" in ln for ln in job.lines):     # a carousel
+                    msg += " - the post's other files wait under Downloaded, not analysed yet"
         except Exception as e:                                  # noqa: BLE001 - the download itself succeeded
             msg = f"Could not start the analysis of {saved.name if saved else 'the video'}: {e}"
         job.lines.append(msg)

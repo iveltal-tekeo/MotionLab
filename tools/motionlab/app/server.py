@@ -39,10 +39,10 @@ from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
 from motionlab.util import LAB, fix_dotted_names, tool
 
-from . import data, jobs, system, trash, updater
+from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 17                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 18                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -320,6 +320,8 @@ class Handler(BaseHTTPRequestHandler):
                 if OS.EXAMPLES.resolve() not in p.parents or p.suffix.lower() != ".png":
                     raise PermissionError(rp)
                 return self._file(p)
+            if re.fullmatch(r"\.app/player/[0-9a-f]{16}\.mp4", urllib.parse.unquote(rp)):    # player copies only
+                return self._file(player.PLAYER / Path(urllib.parse.unquote(rp)).name)
             return self._file(lab_file(rp))
         if path == "/api/ping":
             S.last_ping = time.time()
@@ -361,7 +363,16 @@ class Handler(BaseHTTPRequestHandler):
                                "efforts": list(system.EFFORTS), "models": list(system.MODELS), "upstream": UP.state(),
                                "tasks": {k: v[0] for k, v in system.TASKS.items()},
                                "resolve_mcp": system.resolve_mcp_state(),
+                               "ytdlp": system.ytdlp_info(), "deno": system.deno_info(),       # 0.4.2.1
+                               "browsers": [{"id": k, "label": v} for k, v in system.BROWSERS.items()],
                                "update": {**(S.update or {}), "phase": S.phase}})
+        if path == "/api/player":                         # the player: the file's codec + its player copy (0.4.2.1)
+            v = lab_file(arg("path", ""))
+            if v.suffix.lower() not in data.VIDEO_EXT:
+                raise PermissionError(v.name)
+            return self._json({**player.info(v), "job": player_job(data.rel(v))})
+        if path == "/api/report":                         # Report a problem: the scrubbed report, before anything
+            return self._json(problem_report(arg("job"), ""))
         if path == "/api/downloads":
             return self._json(system.downloads())
         if path == "/api/update":
@@ -584,6 +595,23 @@ class Handler(BaseHTTPRequestHandler):
                 system.save({"claude_model": model or "auto", "claude_effort": effort or "auto", "claude_ask": False})
             return self._json(system.open_claude(str(body.get("prompt", "")), task, str(body.get("label", "")),
                                                  model, effort))
+        if path == "/api/player/copy":                   # the browser cannot play it: queue its player copy
+            v = lab_file(str(body.get("path", "")))
+            rel = data.rel(v)
+            info = player.info(v)
+            if info["copy"]:
+                return self._json(info)
+            jid = player_job(rel)
+            job = S.runner.jobs[jid] if jid else S.runner.start("player_copy", {"path": rel}, queue=True)
+            return self._json({**info, "job": job.id, "status": job.status})
+        if path == "/api/report":                         # the dialog's note; open = the GitHub page in the browser
+            r = problem_report(body.get("job"), str(body.get("note") or ""))
+            if body.get("open"):
+                if not r["url"]:
+                    raise ValueError("this copy has no GitHub repo - copy the report instead")
+                os.startfile(r["url"])                    # noqa: S606 - the user's click; GitHub shows it, nothing sent
+                r["opened"] = True
+            return self._json(r)
         if path == "/api/delete":                        # the user's Delete button, after the dialog
             if S.runner.active():
                 raise jobs.JobError("wait until the running jobs finish, then delete")
@@ -607,6 +635,30 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"ok": True})
         raise FileNotFoundError(path)
 
+
+
+def player_job(rel: str | None) -> int | None:
+    """The player-copy job of this file that is still running or waiting, if any (one copy per file)."""
+    return next((j.id for j in S.runner.active() if j.kind == "player_copy" and j.args.get("path") == rel), None)
+
+
+def problem_report(job_id, note: str) -> dict:
+    """Report a problem (report.py): a failed job's report (its log's last lines) or, without a job, the app's
+    (server.log's last lines); scrubbed; the GitHub link of the repo this copy updates from."""
+    job = S.runner.jobs.get(int(job_id)) if str(job_id or "").isdigit() else None
+    if job_id and not job:
+        raise FileNotFoundError(f"job {job_id} (jobs of an earlier session are gone - use Settings > Report a problem)")
+    if job:
+        log = report.tail(job.log) if job.log.exists() else job.lines[-report.LOG_LINES:]
+    else:
+        log = report.tail(report.SERVER_LOG)
+    s = system.load()
+    progs = {"yt-dlp": system.version(system.find("yt-dlp", s)), "deno": system.deno_info(s).get("version"),
+             "ffmpeg": (system.version(system.find("ffmpeg", s), ("-version",)) or "").replace("ffmpeg version ", "")
+             .split(" Copyright")[0] or None}
+    names = tuple(n for n in (s.get("author"), os.environ.get("COMPUTERNAME")) if n)
+    remote = updater._remote() if updater.is_repo() else None
+    return {**report.build(job.info() if job else None, log, note, remote, progs, names), "job": job.id if job else None}
 
 
 BATCH_MAX = 10                                     # videos per Add videos (each one is a lab pass, maybe a Claude check)

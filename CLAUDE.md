@@ -140,7 +140,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (`memory` = Claude's memory, also MCP `knowledge(category="memory")`; it starts with the user's ratings of all their
   videos (`build\outcome.json`) as rules; lessons on making videos: `local-make-N` -> M### in
   `.claude\skills\recreate-video\lessons.md`, shared as `knowledge\incoming\*-making.md`)
-- `download.py <url> <preset>` the yt-dlp wrapper the app's download job runs
+- `download.py <url> <preset> | selfcheck` the yt-dlp wrapper the app's download job runs; a post's files are all
+  kept (downloads.json `post` / `part` / `parts`, 0.4.2.1); the user's browser login only when Settings has it on.
+  `.app\player\` = player copies (H.264, same frames, when the browser can't play a video; `tools\dev\player_check.py`)
 - Rebuilding (see `/recreate-video`): `prep_footage.py <project>`, `storyboard.py <project>`,
   `render_video.py <plan.json>`, `compare_renders.py`, `overlay.py new [--from <graphic>] | render | stills | snap
   <folder> 0,38,113-116` (snap = stills straight from the HTML, no render, ~3 s for 1, ~7 s for 10 - the cheapest

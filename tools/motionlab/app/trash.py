@@ -166,7 +166,7 @@ def plan_file(relpath: str) -> dict:
     parts = p.relative_to(LAB).parts
     ext = p.suffix.lower()
     if parts[0] == "refs" and (len(parts) == 2 or (len(parts) == 3 and parts[1] == "audio")) \
-            and ext in data.VIDEO_EXT | data.AUDIO_EXT:
+            and ext in data.VIDEO_EXT | data.AUDIO_EXT | data.IMAGE_EXT:     # a photo: a downloaded post's part
         us = users_of(p)
         if us["analyses"]:
             raise PermissionError(f"{p.name} has an analysis ({', '.join(us['analyses'])}): delete the reference "

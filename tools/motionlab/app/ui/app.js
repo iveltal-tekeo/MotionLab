@@ -249,7 +249,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 17;              // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 18;              // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -337,7 +337,54 @@ function followJob(id, pre, onDone, onStatus) {     // onStatus(job): a waiting 
   tick(); onCleanup(() => { stop = true; });
 }
 
+// ============================================================================================ report a problem
+// 0.4.2.1: the scrubbed report first (what happened, versions, the log's last lines), then GitHub's new-issue page
+// in the browser - the user reads it there and presses Submit; nothing is sent by MotionLab
+const reportBtn = (job = '', cls = 'sm') => `<button class="btn ${cls}" data-report="${esc(job)}" title="Opens a GitHub issue filled in for you - you read it and send it">Report a problem…</button>`;
+async function reportModal(job = '') {
+  let R;
+  try { R = await api('/api/report' + (job ? '?job=' + encodeURIComponent(job) : '')); } catch (e) { toast(e.message, 'err'); return; }
+  modal(`<h2>Report a problem</h2>
+    <p class="hint">This is the whole report. Your name, your folders and e-mail addresses are taken out. Nothing is sent from MotionLab:
+      ${R.repo ? 'GitHub opens with it filled in - read it there, then press <b>Submit</b> yourself (you need a GitHub account).' : 'this copy is not connected to GitHub - copy the report and send it to whoever shared MotionLab with you.'}</p>
+    <label class="small" for="rpn">What were you doing? (optional)</label>
+    <textarea id="rpn" rows="2" placeholder="e.g. I pasted a TikTok link and pressed Download"></textarea>
+    <pre class="log rpbody" id="rpb"></pre><div class="small muted" id="rpt"></div>
+    <div class="row" style="margin-top:10px">${R.repo ? '<button class="btn pri" id="rpo">Open on GitHub</button>' : ''}<button class="btn${R.repo ? '' : ' pri'}" id="rpc">Copy the report</button></div>`, el => {
+    const show = r => {
+      R = r; $('#rpb', el).textContent = `${r.title}\n\n${r.body}`;
+      $('#rpt', el).textContent = r.dropped ? `GitHub's link has room for the last ${r.lines - r.dropped} of ${r.lines} log lines; Copy the report has all of them.` : '';
+    };
+    show(R);
+    const note = () => $('#rpn', el).value;
+    $('#rpn', el).oninput = debounce(async () => { try { show(await api('/api/report', {job: R.job, note: note()})); } catch (e) { /* keep */ } }, 500);
+    $('#rpc', el).onclick = async () => { try { show(await api('/api/report', {job: R.job, note: note()})); } catch (e) { /* the shown one */ } copy(`${R.title}\n\n${R.body}`); };
+    const o = $('#rpo', el); if (o) o.onclick = async () => {
+      try { const r = await api('/api/report', {job: R.job, note: note(), open: true}); show(r); toast('GitHub opened in your browser: read the report, then press Submit', 'ok'); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+  });
+}
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-report]');
+  if (r) { e.preventDefault(); e.stopPropagation(); reportModal(r.dataset.report); }
+});
+
 // ============================================================================================ player
+// 0.4.2.1: HEVC (TikTok's best format) plays only where Windows has the HEVC Video Extension, AV1 / ProRes / MPEG-2
+// often not at all: such a video gets a small H.264 copy for the player (job player_copy, .app\player\; the same
+// frames at the same times, so frame numbers still match). The address ?player=copy forces it (tests on a PC that
+// has the extension).
+const FORCE_COPY = new URLSearchParams(location.search).get('player') === 'copy';
+const CODEC_TYPE = {h264: 'avc1.640028', hevc: 'hvc1.1.6.L120.90', av1: 'av01.0.08M.08', vp9: 'vp09.00.40.08'};
+const codecWord = c => ({hevc: 'HEVC', av1: 'AV1', h264: 'H.264', vp9: 'VP9', prores: 'ProRes', mpeg2video: 'MPEG-2'})[c] || (c ? String(c).toUpperCase() : '');
+function browserPlays(c) {                            // c = /api/player: the codec ffprobe found (+ its tag)
+  if (c.codec === 'vp8') return true;
+  const k = CODEC_TYPE[c.codec];
+  if (!k) return false;                               // ProRes, DNxHD, MPEG-2, old MPEG-4: no browser plays them
+  const t = `video/mp4; codecs="${c.codec === 'hevc' && c.tag === 'hev1' ? k.replace('hvc1', 'hev1') : k}"`;
+  return document.createElement('video').canPlayType(t) !== '' && (!window.MediaSource || MediaSource.isTypeSupported(t));
+}
 class Player {
   /* frame-accurate video: the shown frame comes from requestVideoFrameCallback (presented media time) */
   constructor(el, src, fps, frames, label = '') {
@@ -354,8 +401,9 @@ class Player {
         <button class="btn rate" data-r="0.25">¼</button><button class="btn rate" data-r="0.5">½</button><button class="btn rate on" data-r="1">1×</button>
         <label class="chk small" title="Repeat the selected event"><input type="checkbox" data-a="loop"> loop</label>
         ${label ? `<span class="hint">${esc(label)}</span>` : ''}
-        <span class="now">f0<span class="tc">00:00:00:00</span></span></div></div>`;
+        <span class="now">f0<span class="tc">00:00:00:00</span></span></div><div class="pnote small" hidden></div></div>`;
     this.v = $('video', el); this.now = $('.now', el); this.pb = $('[data-a=play]', el); this.loop = $('[data-a=loop]', el);
+    this.src = src; this.note = $('.pnote', el);
     $$('[data-a]', el).forEach(b => b.addEventListener('click', () => {
       const a = b.dataset.a;
       if (a === 'play') this.toggle(); else if (a === 'start') this.seek(0); else if (a !== 'loop') this.step(+a);
@@ -380,7 +428,48 @@ class Player {
     };
     if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) this.vfc = this.v.requestVideoFrameCallback(cb);
     else this.v.addEventListener('timeupdate', () => { this.frame = Math.floor(this.v.currentTime * this.fps + 1e-3); this.show(); this.emit(); });
-    onCleanup(() => { this.v.pause(); this.v.removeAttribute('src'); this.v.load(); });
+    // 0.4.2.1: a format this browser cannot play -> a copy for the player only (the codec check, the error event,
+    // a video that loads without a picture)
+    this.v.addEventListener('error', () => this.needCopy());
+    this.v.addEventListener('loadedmetadata', () => { if (!this.v.videoWidth && !this.copied) this.needCopy(); });
+    this.checkCodec();
+    onCleanup(() => { this.gone = true; this.v.pause(); this.v.removeAttribute('src'); this.v.load(); });
+  }
+  say(html, cls = '') { this.note.className = 'pnote small ' + cls; this.note.innerHTML = html; this.note.hidden = !html; }
+  async checkCodec() {
+    let c;
+    try { c = await api('/api/player?path=' + encodeURIComponent(this.src)); } catch (e) { return; }
+    if (this.gone) return;
+    const cannot = FORCE_COPY || (c.codec && !browserPlays(c));
+    if (c.copy && cannot) this.useCopy(c.copy, c);
+    else if (cannot) this.needCopy(c);
+  }
+  async needCopy(c = null) {                           // make (or wait for) the copy, then switch to it
+    if (this.copying || this.copied || this.gone) return;
+    this.copying = true;
+    let r;
+    try { r = await api('/api/player/copy', {path: this.src}); }
+    catch (e) { this.say(`This video does not play on this PC, and a playable copy could not be started: ${esc(e.message)}`, 'bad'); return; }
+    if (r.copy) { this.useCopy(r.copy, r); return; }
+    const fmt = codecWord(r.codec || (c || {}).codec);
+    this.say(`<b>This video's format${fmt ? ` (${esc(fmt)})` : ''} does not play on this PC.</b> MotionLab is making a copy that does, for this player only - the frame numbers stay the same. <a href="#/jobs/${r.job}">progress</a>`, 'amber');
+    const tick = async () => {
+      if (this.gone) return;
+      let j; try { j = await api(`/api/jobs/${r.job}?since=999999`); } catch (e) { setTimeout(tick, 2000); return; }
+      if (['running', 'queued', 'cancelling'].includes(j.status)) { setTimeout(tick, 1000); return; }
+      if (j.status !== 'done') { this.say(`The copy for the player could not be made. ${reportBtn(j.id)}`, 'bad'); this.copying = false; return; }
+      try { const i = await api('/api/player?path=' + encodeURIComponent(this.src)); if (i.copy) this.useCopy(i.copy, i); } catch (e) { /* stays */ }
+    };
+    tick();
+  }
+  useCopy(rel, c) {
+    this.copied = true; this.copying = false;
+    const f = this.frame;                              // the same frame in the copy, once it has loaded
+    this.pending = null;
+    this.v.addEventListener('loadeddata', () => { if (f) this.v.currentTime = (f + 0.5) / this.fps; }, {once: true});
+    this.v.src = fileUrl(rel);
+    const fmt = codecWord(c && c.codec);
+    this.say(`Playing a copy made for this PC${fmt ? ` (the original is ${esc(fmt)}, which does not play here)` : ''}: same frames, same timing. The analysis uses the original.`, 'dim');
   }
   on(fn) { this.fns.push(fn); }
   emit() { this.fns.forEach(f => f(this.frame)); }
@@ -1047,13 +1136,34 @@ function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () =>
       el.innerHTML = act.length || recent.length ? `<div class="panel progress"><div class="row sp"><h2>${act.length ? `Working on ${plural(act.length, 'job')}` : 'Done'}</h2><a class="small" href="#/jobs">all jobs →</a></div>
         ${[...act, ...recent].map(j => `<div class="pjob ${esc(j.status)}"><span class="tag ${esc(j.status)}">${j.status === 'queued' ? 'waiting' : esc(j.status)}</span>
           <span class="grow">${esc(j.title)}${j.then ? ' <span class="small dim">→ then analysed</span>' : ''}${j.then_claude ? ' <span class="small amber">→ then Claude checks it</span>' : ''}</span>
-          <a class="small" href="#/jobs/${j.id}">log</a>${j.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${j.id}">Remove</button>` : ''}</div>`).join('')}</div>` : '';
+          <a class="small" href="#/jobs/${j.id}">log</a>${j.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${j.id}">Remove</button>` : ''}${j.status === 'failed' ? reportBtn(j.id, 'sm ghost') : ''}</div>`).join('')}</div>` : '';
       $$('[data-cancel]', el).forEach(b => b.onclick = async () => { try { await api(`/api/jobs/${b.dataset.cancel}/cancel`, {}); tick(); } catch (e) { toast(e.message, 'err'); } });
     }
     if (act.length) setTimeout(tick, 2000);
   };
   tick();
   return () => { stop = true; };
+}
+// Analyze > Downloaded, not analysed yet: one row per file; the files of one post (an Instagram carousel, a TikTok
+// photo post with its sound - 0.4.2.1, downloads.json "post") under one heading, in their order
+const waitKind = w => w.photo ? 'photo' : w.audio ? 'audio' : 'video';
+const waitRow = (w, part = '') => `<tr class="${part ? 'postpart' : ''}">
+  <td>${part ? `<span class="small dim">${part}</span> ` : ''}<span class="tag">${waitKind(w)}</span></td><td><b>${esc(part ? w.name.replace(/ \[[^\]]+\]\.\w+$/, '') || w.name : w.title || w.name)}</b><div class="small dim mono">${esc(w.name)}</div></td>
+  <td class="small muted">${w.url && !part ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.platform || 'link')}</a> · ` : ''}${esc(w.modified)}</td><td class="num small">${bytes(w.size)}</td>
+  <td class="row" style="justify-content:flex-end">${w.photo ? '<span class="small dim">a photo of the post</span>' : w.audio ? `<span class="small dim">${part ? 'the post\'s sound' : 'music for an edit (Edit)'}</span>` : `<button class="btn sm pri" data-an="${esc(w.path)}">Analyze…</button>`}${delBtn('file', w.rel, '', ' Delete')}</td></tr>`;
+function waitRows(wait) {
+  const groups = [];
+  wait.forEach(w => { const g = w.post && groups.find(x => x.post === w.post); if (g) g.items.push(w); else groups.push({post: w.post || null, items: [w]}); });
+  return groups.map(g => {
+    if (!g.post) return waitRow(g.items[0]);
+    const f = g.items[0], n = f.parts || g.items.length, kinds = {};
+    g.items.forEach(w => { kinds[waitKind(w)] = (kinds[waitKind(w)] || 0) + 1; });
+    return `<tr class="posthead"><td><span class="tag post">post</span></td><td><b>${esc(f.title || f.name)}</b>
+        <div class="small dim">one post, ${plural(n, 'part')}: ${Object.entries(kinds).map(([k, c]) => plural(c, k)).join(', ')}${g.items.length < n ? ` (${n - g.items.length} analysed or removed)` : ''}</div></td>
+      <td class="small muted"><a href="${esc(g.post)}" target="_blank" rel="noopener">${esc(f.platform || 'link')}</a> · ${esc(f.modified)}</td>
+      <td class="num small">${bytes(g.items.reduce((a, w) => a + w.size, 0))}</td><td></td></tr>`
+      + g.items.map(w => waitRow(w, `part ${w.part} of ${n}`)).join('');
+  }).join('');
 }
 async function pageRefs(main) {
   let tests = false, cat = '', tag = '', foc = '';
@@ -1072,10 +1182,7 @@ async function pageRefs(main) {
     main.innerHTML = `<div class="head"><div><h1>Analyze</h1><div class="sub">Videos you like, broken down cut by cut and effect by effect - Claude remembers their style for your edits.</div></div></div>
       ${none ? '' : `<div class="toprow">${btns(true)}</div>`}
       <div id="avprog"></div>
-      ${wait.length ? `<div class="panel waiting"><h2>Downloaded, not analysed yet</h2><table class="t"><tbody>${wait.map(w => `<tr>
-        <td>${w.audio ? '<span class="tag">audio</span>' : '<span class="tag">video</span>'}</td><td><b>${esc(w.title || w.name)}</b><div class="small dim mono">${esc(w.name)}</div></td>
-        <td class="small muted">${w.url ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.platform || 'link')}</a> · ` : ''}${esc(w.modified)}</td><td class="num small">${bytes(w.size)}</td>
-        <td class="row" style="justify-content:flex-end">${w.audio ? '<span class="small dim">music for an edit (Edit)</span>' : `<button class="btn sm pri" data-an="${esc(w.path)}">Analyze…</button>`}${delBtn('file', w.rel, '', ' Delete')}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      ${wait.length ? `<div class="panel waiting"><h2>Downloaded, not analysed yet</h2><table class="t"><tbody>${waitRows(wait)}</tbody></table></div>` : ''}
       ${all.length ? `<div class="row" style="margin:12px 0"><select id="ffoc" class="ffil"><option value="">Every focus</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}" ${k === foc ? 'selected' : ''}>${l} (${all.filter(r => r.focus === k).length})</option>`).join('')}</select>
         <select id="fcat" class="ffil"><option value="">All categories (${all.length})</option>${cats.map(([k, l]) => `<option value="${k}" ${k === cat ? 'selected' : ''}>${esc(l)} (${all.filter(r => r.category === k).length})</option>`).join('')}</select>
         ${tags.length ? `<select id="ftag" class="ffil"><option value="">All tags</option>${tags.map(t => `<option ${t === tag ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}</div>` : ''}
@@ -2952,7 +3059,7 @@ async function pageJobs(main, id) {
     <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
       <div class="panel"><table class="t click"><thead><tr><th>#</th><th>Job</th><th>Status</th><th class="num">Time</th></tr></thead><tbody>
       ${list.map(j => `<tr data-id="${j.id}" class="${+id === j.id ? 'sel' : ''}"><td class="mono">${j.id}</td><td>${esc(j.title)}<div class="small dim">${esc(j.started)}</div></td>
-        <td><span class="tag ${j.status}">${j.status}</span></td><td class="num">${j.status === 'queued' ? '–' : j.seconds + 's'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No jobs yet in this session.</td></tr>'}
+        <td><span class="tag ${j.status}">${j.status}</span>${j.status === 'failed' ? `<div>${reportBtn(j.id, 'sm ghost')}</div>` : ''}</td><td class="num">${j.status === 'queued' ? '–' : j.seconds + 's'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No jobs yet in this session.</td></tr>'}
       </tbody></table></div>
       <div class="panel" id="jd">${id ? '' : '<div class="muted">Select a job to see its output.</div>'}</div></div>`;
   $$('[data-k]', main).forEach(b => b.onclick = () => startJob(b.dataset.k, {}));
@@ -2963,11 +3070,13 @@ async function pageJobs(main, id) {
   $('#jd').innerHTML = `<div class="row sp"><h2>${esc(j.title)}</h2><span class="tag ${j.status}" id="jst">${j.status}</span></div>
     <div class="small muted mono" style="margin-bottom:8px">${esc(j.command)}</div>
     ${j.then_claude ? `<div class="small amber" style="margin-bottom:8px"><svg class="i"><use href="#i-claude"/></svg>Claude Code opens by itself when this measuring is done.</div>` : ''}<pre class="log" id="jlog"></pre>
-    <div class="row" style="margin-top:8px"><button class="btn danger" id="jc" ${['running', 'queued'].includes(j.status) ? '' : 'hidden'}>${j.status === 'queued' ? 'Remove from the queue' : 'Stop this job'}</button></div>`;
+    <div class="row" style="margin-top:8px"><button class="btn danger" id="jc" ${['running', 'queued'].includes(j.status) ? '' : 'hidden'}>${j.status === 'queued' ? 'Remove from the queue' : 'Stop this job'}</button>
+      <span id="jrep">${j.status === 'failed' ? reportBtn(j.id) : ''}</span></div>`;
   $('#jc').onclick = async () => { if (!confirm($('#jc').textContent + '?')) return; try { await api(`/api/jobs/${id}/cancel`, {}); } catch (e) { toast(e.message, 'err'); } };
   const shown = s => s === 'queued' ? 'waiting its turn' : s;
   followJob(+id, $('#jlog'), jj => {
     $('#jst').className = 'tag ' + jj.status; $('#jst').textContent = shown(jj.status); $('#jc').hidden = true;
+    if (jj.status === 'failed') $('#jrep').innerHTML = reportBtn(jj.id);
     toast(`${jj.title}: ${jj.status}`, jj.status === 'done' ? 'ok' : 'err');
   }, jj => {
     $('#jst').className = 'tag ' + jj.status; $('#jst').textContent = shown(jj.status);
@@ -3065,7 +3174,7 @@ async function downloadModal() {
       const pre = $('#dlog', el); pre.hidden = false; pre.textContent = '';
       followJob(j.id, pre, done => {
         $('#dgo', el).disabled = false;
-        $('#dst', el).textContent = done.status === 'done' ? 'done ✓' : done.status;
+        $('#dst', el).innerHTML = done.status === 'done' ? 'done ✓' : esc(done.status) + (done.status === 'failed' ? ' ' + reportBtn(done.id, 'sm ghost') : '');
         const file = pre.textContent.split('\n').map(l => l.trim()).reverse().find(l => FILE_RX.test(l));
         if (done.status !== 'done' || !file) return;
         const isVideo = !/\.(mp3|m4a)$/i.test(file);
@@ -3090,16 +3199,23 @@ async function pageSettings(main) {
     <table class="t tools"><thead><tr><th>Program</th><th></th><th>Found at</th><th>Version</th><th>What for · how to get it</th></tr></thead><tbody>
     ${S.tools.map(t => `<tr><td><b>${esc(t.label)}</b><div class="need">${esc(t.need)}</div></td>
       <td class="st">${t.found ? '<span class="tag done">found</span>' : `<span class="tag ${t.need === 'required' ? 'failed' : ''}">missing</span>`}</td>
-      <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}</td><td class="small muted">${esc(t.how)}${t.name === 'hyperframes' && (!t.found || /not downloaded/.test(t.version || ''))
+      <td class="mono small">${esc(t.path || '–')}</td><td class="small">${esc(t.version || '')}${t.age ? `<div class="${t.old ? 'amber' : 'dim'}" title="its version is its release date; sites like TikTok and Instagram change faster than that">${esc(t.age)}</div>` : ''}${t.name === 'deno' && t.found && t.old ? '<div class="amber">too old: 2.3 or newer</div>' : ''}</td>
+      <td class="small muted">${esc(t.how)}${t.name === 'yt-dlp' && t.found ? ` <button class="btn sm${t.old ? ' pri' : ''}" data-ytup title="Updates ${esc(t.install || 'yt-dlp')} - nothing else is installed">Update yt-dlp</button>` : ''}${t.name === 'deno' && (!t.found || t.old) ? ' <button class="btn sm" data-copy="winget install DenoLand.Deno" title="Paste it into a terminal (PowerShell), then restart MotionLab">Copy the install command</button>' : ''}${t.name === 'hyperframes' && (!t.found || /not downloaded/.test(t.version || ''))
         ? ((S.tools.find(x => x.name === 'node') || {}).found ? ' <button class="btn sm" data-hfinst>Install</button>' : ' <b>Install Node.js first.</b>') : ''}${t.name === 'speech' && (!t.found || /not downloaded/.test(t.version || ''))
         ? ' <button class="btn sm" data-spinst>Install</button>' : ''}</td></tr>`).join('')}
-    </tbody></table>${upstreamBox(S)}</div>
+    </tbody></table><pre class="log" id="ytlog" hidden style="max-height:160px;margin-top:8px"></pre>${upstreamBox(S)}</div>
   <div class="grid g2" style="margin-top:14px">
     <div class="panel"><h2>Downloads (yt-dlp)</h2><div class="form">
       <label for="ytp">yt-dlp.exe</label><input type="text" id="ytp" value="${esc(st.ytdlp_path)}" placeholder="empty = find it automatically">
       <label for="pre">Default format</label><select id="pre">${S.presets.map(o => `<option value="${o.id}" ${o.id === st.download_preset ? 'selected' : ''}>${esc(o.label)} → ${esc(o.folder)}</option>`).join('')}</select>
       <label for="nm">File name</label><input type="text" id="nm" class="mono" value="${esc(st.download_name)}">
-      <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div></div></div>
+      <span></span><div class="small muted">yt-dlp fields, e.g. <code>%(title).80s [%(id)s].%(ext)s</code> or <code>%(uploader)s - %(title)s.%(ext)s</code> (no folders)</div>
+      <label>YouTube</label><div class="small">${(S.deno || {}).found ? ((S.deno.new_enough ? '<span class="ok">ready</span>' : '<span class="amber">Deno is too old</span>') + ` - Deno ${esc(S.deno.version || '')} found (YouTube downloads need it)`)
+        : '<span class="amber">Deno is missing</span> - recent yt-dlp needs it for YouTube. Install it with <code>winget install DenoLand.Deno</code> in a terminal, then restart MotionLab. <button class="btn sm" data-copy="winget install DenoLand.Deno">Copy</button>'}</div>
+      <label>Logins</label><div><label class="chk"><input type="checkbox" id="dlin" ${st.download_login ? 'checked' : ''}><span>Use my browser's login for downloads</span></label>
+        <div class="row" style="margin:4px 0"><select id="dbr" ${st.download_login ? '' : 'disabled'}>${(S.browsers || []).map(b => `<option value="${b.id}" ${b.id === (st.download_browser || 'firefox') ? 'selected' : ''}>${esc(b.label)}</option>`).join('')}</select></div>
+        <div class="small muted">For videos that need you logged in (Instagram, Vimeo, YouTube's “are you a bot” check). It uses your own login from that browser, on this PC only: the downloader reads it for each download, and MotionLab keeps it nowhere and sends it nowhere.
+          Firefox works best - Chrome and Edge lock and encrypt their logins, so with them it often fails (close the browser first).</div></div></div></div>
     <div class="panel"><h2>Claude Code</h2><div class="form">
       <label for="clp">claude</label><input type="text" id="clp" value="${esc(st.claude_path)}" placeholder="empty = find it automatically">
       <label for="clm">Model</label><select id="clm">${(S.models || ['opus', 'fable', 'auto']).map(m => `<option value="${m}" ${(st.claude_model || 'opus') === m ? 'selected' : ''}>${esc(MODEL_WORDS[m][0])} - ${esc(MODEL_WORDS[m][1])}</option>`).join('')}</select>
@@ -3139,9 +3255,24 @@ async function pageSettings(main) {
     <div class="panel"><h2>Shortcuts</h2><div class="small muted">A “MotionLab” shortcut with the app icon, opens the app without a console window.</div>
       <div class="row" style="margin-top:10px"><button class="btn" data-sc="desktop">Add to the Desktop</button><button class="btn" data-sc="startmenu">Add to the Start menu</button></div></div>
     <div class="panel"><h2>About</h2><div class="kv"><b>Version</b><span>MotionLab ${esc(S.version)}</span><b>Lab folder</b><span class="mono small">${esc(S.lab)}</span></div>
-      <div class="row" style="margin-top:10px"><button class="btn" data-open=".">Open the lab folder</button></div></div>
+      <div class="row" style="margin-top:10px"><button class="btn" data-open=".">Open the lab folder</button>${reportBtn('', '')}</div>
+      <div class="small muted" style="margin-top:6px">Something not working? <i>Report a problem</i> shows you the report first, then opens it on GitHub for you to send.</div></div>
   </div>`;
   $('#recheck').onclick = () => route();
+  $$('[data-copy]', main).forEach(b => b.onclick = () => copy(b.dataset.copy));
+  $('#dlin').onchange = e => { $('#dbr').disabled = !e.target.checked; };
+  const ytb = $('[data-ytup]', main); if (ytb) ytb.onclick = async () => {   // Update yt-dlp: a job, the result in words
+    ytb.disabled = true; ytb.textContent = 'Updating…';
+    const j = await startJob('ytdlp_update', {}, false);
+    if (!j) { ytb.disabled = false; ytb.textContent = 'Update yt-dlp'; return; }
+    const pre = $('#ytlog'); pre.hidden = false; pre.textContent = '';
+    followJob(j.id, pre, jj => {
+      const last = pre.textContent.trim().split('\n').pop() || jj.status;
+      toast(last, jj.status === 'done' ? 'ok' : 'err');
+      if (jj.status === 'done') setTimeout(route, 2500);
+      else { ytb.disabled = false; ytb.textContent = 'Update yt-dlp'; pre.insertAdjacentHTML('afterend', `<div class="row">${reportBtn(jj.id)}</div>`); }
+    });
+  };
   const hft = $('[data-hftest]', main); if (hft) hft.onclick = async () => {
     hft.disabled = true;
     try { await startJob('overlays_upgrade_test', {}); } catch (e) { toast(e.message, 'err'); hft.disabled = false; }
@@ -3182,6 +3313,7 @@ async function pageSettings(main) {
                                              download_name: $('#nm').value, claude_path: $('#clp').value,
                                              claude_effort: $('#cle').value, claude_model: $('#clm').value,
                                              claude_ask: $('#cla').checked,
+                                             download_login: $('#dlin').checked, download_browser: $('#dbr').value,
                                              author: $('#who').value,
                                              update_mode: ($('input[name=upm]:checked') || {}).value || 'ask'}});
       $('#sv').textContent = 'saved ✓'; toast('Settings saved', 'ok'); setTimeout(route, 500);

@@ -4,8 +4,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 
 - Files: `server.py` (routes, security, update/restart), `data.py` (everything the pages show, verdicts, the workflow
   state of a reference), `jobs.py` (the fixed list of jobs), `system.py` (settings, program detection, downloads, the
-  Claude launcher, shortcuts), `trash.py` (Delete = Recycle Bin), `updater.py` (git), `ui\` (plain HTML/CSS/JS, no
-  build step).
+  Claude launcher, shortcuts), `trash.py` (Delete = Recycle Bin), `updater.py` (git), `player.py` (player copies),
+  `report.py` (Report a problem), `jobtools.py` (the app's own small jobs: yt-dlp update, player copy), `ui\` (plain
+  HTML/CSS/JS, no build step).
 - Python standard library only (nothing installed): a server on 127.0.0.1:8765 + Microsoft Edge in app mode (its
   own window, 1600x1000). It stops ~10 s after the window closes (3 min without heartbeat), unless a job runs.
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
@@ -186,7 +187,40 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   after Save Claude reviews + splits unless unticked; `motionlab.prompts`, GET `/api/prompts`, POST
   `/api/prompts/import` + `/rate`), **Knowledge**, **Library** (Graphics
   first: yours in `library\graphics\` + the examples, *Use in a video* = job `overlay_new`; then the effect macros), Jobs, Storage, **Settings** (programs, yt-dlp, Claude Code path +
-  effort, default category, shortcuts, Sharing & updates).
+  effort, default category, shortcuts, Sharing & updates). 0.4.2.1: Programs shows yt-dlp's age in words
+  (`system.ytdlp_info`: its version is its date, `age_words`, amber over `YTDLP_OLD_DAYS` 30) + **Update yt-dlp** (job
+  `ytdlp_update`, the log inline, the result in words; `system.install_kind`: a winget copy (real path under
+  `WinGet\Packages` / `Links`) = `winget upgrade --id yt-dlp.yt-dlp --exact --silent --disable-interactivity
+  --accept-source-agreements --accept-package-agreements`, inside a Python environment = `pip install -U
+  "yt-dlp[default]"`, else the exe's `-U`; winget's "no applicable upgrade" exit = up to date) and a **Deno** row
+  (`find("deno")`: PATH, `~\.deno\bin`, WinGet Links / Packages; `deno_info`, >= `DENO_MIN` 2.3.0 per yt-dlp's wiki
+  "EJS", checked 2026-10-15; not installed for the user: *Copy the install command* `winget install DenoLand.Deno`;
+  found off PATH -> `download_cmd` adds `--js-runtimes deno:<path>` for yt-dlp >= 2025.11.12); Downloads has the
+  YouTube line (Deno ready / missing) and **Use my browser's login for downloads** (`download_login`, OFF by default,
+  `download_browser` in `system.BROWSERS`, Firefox first: Chrome / Edge lock + encrypt their cookies) ->
+  `--cookies-from-browser <browser>`; About has *Report a problem…*. Bool settings (`BOOL_KEYS`) save as real
+  booleans (before, `claude_ask` false was saved as true).
+- **Report a problem** (0.4.2.1, `report.py`): `reportBtn(job)` in Settings > About, on every failed job (Jobs list
+  + detail, the Analyze in-progress panel, Download from a link, Update yt-dlp, a player copy that failed);
+  `reportModal` = GET `/api/report[?job=<id>]` (`server.problem_report`: the job's title / kind / status / exit code +
+  the last `LOG_LINES` 40 lines of `.app\jobs\<id>.log`, or `.app\server.log` without a job; MotionLab / Windows /
+  Python / yt-dlp / Deno / ffmpeg versions) shown in full first, an optional "What were you doing?" (POST
+  `/api/report` re-builds it), then *Open on GitHub* = POST `/api/report` `open: true` -> `os.startfile` of
+  `<repo>/issues/new?title=&body=` (`report.repo_url` of `git remote origin`, credentials dropped, GitHub only;
+  within `URL_MAX` 7500 chars: the log trimmed from the top and the body says so). Everything passes `report.scrub`
+  (link credentials + query strings, e-mails, the lab folder -> `<MotionLab>`, the home folder and any
+  `X:\Users\<name>` -> `%USERPROFILE%`, the Windows user name -> `<user>`, the Settings name and COMPUTERNAME ->
+  `<name>`, whole words of 3+ letters). No GitHub remote = *Copy the report* only. The app sends nothing.
+- **Player copies** (0.4.2.1, `player.py`): `Player` asks GET `/api/player?path=` (the codec by ffprobe, cached per
+  path + size + mtime; the copy if made) and, when `browserPlays` says no (`canPlayType` + `MediaSource
+  .isTypeSupported` for hvc1 / hev1 / av01 / vp09; ProRes, MPEG-2 ... never) or the video fires `error` / loads with
+  no picture, POST `/api/player/copy` -> job `player_copy` (group cpu, queued, one per file: `server.player_job`) ->
+  `.app\player\<key>.mp4` (key = sha1 of the source's path + size + mtime; height <= 720, H.264 + AAC, `-fps_mode
+  passthrough -enc_time_base demux` = every frame at its own time, no drop / duplicate; written as `.part.mp4`
+  first), served at `/files/.app/player/<16 hex>.mp4` only; the player switches to it at the same frame and says so
+  (`.pnote`); the analysis keeps the original. `?player=copy` in the page address forces it (tests: this PC has the
+  HEVC extension). `tools\dev\player_check.py <video>...` = frame count + every frame time vs the original (VFR
+  too); storage.py lists them as "player copies" (cache).
 - The analysis page's **Content** tab (0.3.5, `contentTab`, `data.content_info`): how the video performs
   (`content\stats.json`: views, views ÷ followers, views a day, likes, comments, followers; job `content_stats`) and
   what it says (`content\transcript.json` lines with frame + timecode - a click moves the player, the line being
@@ -226,12 +260,22 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   short side (vertical videos in full size), video presets never take sound only (`VIDEO_F`), `--encoding utf-8`
   (emoji in titles), the file found by `[<id>]` if the printed path is off, `download.HINTS` = yt-dlp's errors in
   words. Tested 2026-10-12 on TikTok, YouTube, SoundCloud (refused: no video), Vimeo / Instagram (login wanted).
+  0.4.2.1: a post that saves several files (Instagram carousel, TikTok photo post + its sound) keeps every one: each
+  MARK line (`download.collect`, + playlist_index / n_entries) -> its own downloads.json entry with `post` (the link),
+  `part`, `parts` (`download.record`; a single download keeps the 0.4.2 entry), the post's first video printed last
+  (the `then` analysis takes it, the rest wait); files saved before yt-dlp failed on others are kept. The login hint
+  points to Settings > Downloads (`LOGIN_HINT`; a cookie-read failure has its own). `data.post_of`, `data.waiting`
+  (photos / sound of a post included, parts together in order) -> Analyze's *Downloaded, not analysed yet* shows a
+  post as one heading + its parts (`waitRows`); `system.downloads()` carries the post fields; a post's photo can be
+  deleted (`trash.plan_file`, `data.IMAGE_EXT`). `download.py selfcheck` = a fake carousel, no network.
 - Jobs = only the lab's own tools + yt-dlp downloads, a fixed list in `jobs.py` (analyze, report, Resolve doctor /
   diff, storage + prune, self-test, verify_timing, download, resolve_mcp_install / _remove = Settings > Claude Code >
   DaVinci Resolve, overlays_install / overlays_upgrade_test = Settings > Programs, overlay_render / overlay_save /
   overlay_new / overlay_captions (a subtitle file, or a video's words = speech to text) / overlay_refresh (group
   resolve) / overlay_resolve_clip = Graphics; speech_install = Settings > Programs > Speech to text; captions read the user's .srt / .vtt / transcript.json, never change
-  it), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
+  it; 0.4.2.1: ytdlp_update (group net, `dry_run` = print the command, run nothing) and player_copy (group cpu) =
+  `jobtools.py ytdlp-update | player-copy`, the app's own small jobs; `jobtools.py selfcheck` = the report's
+  scrubbing + link and the install kinds, no network), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
   status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
   holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
   `saved_file` = download.py's last line). Claude's
@@ -267,8 +311,9 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
   6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
   check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data;
-  17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
-  else under tools.
+  17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
+  POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
   report.html starts from it and keeps local changes in the browser under the video name).
