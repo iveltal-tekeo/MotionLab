@@ -69,6 +69,8 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
         return "source", "reference videos"
     if p[0] == "tools":
         return ("cache", "self-test") if len(p) > 2 and p[1] == "selftest" else ("keep", "code")
+    if p[0] == "analysis" and len(p) >= 4 and p[1] == "thumbs":      # 0.4.5: a thumbnail set
+        return "keep", "thumbnail sets"
     if p[0] == "analysis" and len(p) >= 3:
         if p[1].startswith("synthetic_"):
             return "cache", "self-test"
@@ -100,6 +102,8 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
 
 def unit_of(rel: Path) -> str:
     p = rel.parts
+    if p[0] == "analysis" and len(p) >= 4 and p[1] == "thumbs":      # one unit per thumbnail set (0.4.5)
+        return f"analysis\\thumbs\\{p[2]}"
     if p[0] in ("analysis", "projects") and len(p) >= 3:
         return f"{p[0]}\\{p[1]}"
     if p[0] == "tools" and len(p) > 2 and p[1] == "selftest":

@@ -1,5 +1,5 @@
 """MotionLab's roadmap: ONE data file -> a motion graphic. The data is docs\\roadmap\\roadmap.json (versions, where
-you are, the strong / weak lines, the numbers); docs\\roadmap\\index.html draws it in the 4AM look (majors x.y.0 = big
+you are); docs\\roadmap\\index.html draws it in the 4AM look (majors x.y.0 = big
 badges on the main line, every other number on its major's branch, "you are here", a 4.5 s build-up + a 7.5 s loop).
 The app's Home plays that page live; README shows docs\\roadmap.png, rendered from the same page.
 

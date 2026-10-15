@@ -84,7 +84,8 @@ def main() -> int:
     m.add_argument("--clip2")
     m.add_argument("--image2")
     m.add_argument("--words", required=True)
-    m.add_argument("--template", default="outline")
+    m.add_argument("--template")
+    m.add_argument("--style", help="a thumbnail set whose patterns Claude found (thumbsets.py): its design, colours, font")
     m.add_argument("--set", nargs="*", default=[], dest="values")
     m.add_argument("--no-check", action="store_true")
     r = sub.add_parser("render")
@@ -95,6 +96,7 @@ def main() -> int:
     k.add_argument("--title")
     k.add_argument("--script")
     k.add_argument("--niche")
+    k.add_argument("--style", help="judge the look against a thumbnail set (= --niche set:<set>)")
     k.add_argument("--words")
     k.add_argument("--id", action="append")
     k.add_argument("--json", action="store_true")
@@ -121,7 +123,7 @@ def main() -> int:
         if (a.frame is None) == (a.image is None):
             raise SystemExit("give --frame <f> (with --clip) or --image <file>")
         e = T.make(a.project, a.id, a.words, a.template, a.frame, a.clip, a.image, a.frame2, a.clip2, a.image2,
-                   _vals(a.values))
+                   _vals(a.values), style=a.style)
         for k_, v in e["files"].items():
             print(f"  {k_:11s} {T.LAB / v}")
         print("  seconds: " + ", ".join(f"{k_} {v}" for k_, v in e["seconds"].items()))
@@ -136,6 +138,8 @@ def main() -> int:
             print(f"  {k_:11s} {T.LAB / v}")
         return 0
     if a.cmd == "check":
+        if a.style:
+            a.niche = f"set:{a.style}"
         p = Path(a.target)
         if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp") and p.is_file():
             res = T.check_image(str(p), a.title, a.script, a.niche, a.words)

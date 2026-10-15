@@ -14,74 +14,22 @@ another.
 
 ## Where it stands (2026-10-15)
 
-Released last: **0.4.3.5** (2026-10-15, CHANGELOG.md) - a simpler app: the Editor overhaul, Film it, a new player,
-Analyser / Generator, dated cards newest first. Before it: **0.4.3** (2026-10-15) - title + thumbnail: Prepare's
-*Title & thumbnail first*, Ready to post (thumbnails A / B / C, the check, chapters, hashtags), CTR per variant; 0.4.2.1
-(downloads that keep working, Report a problem) and 0.4.2 (check before you render). The released plans' full
-text: plans_history.md.
+Released last: **0.4.5** (2026-10-15, CHANGELOG.md) - Bulk: thumbnail sets (a channel listed whole, taken in batches,
+Claude's patterns, thumbnails in a set's style), many videos in one Claude window, several videos edited at once;
+with **0.4.4** (2026-10-15) - What it took: Claude's time for every step of a video, the live line. Before them:
+**0.4.3.5** (a simpler app) and **0.4.3** (title + thumbnail). The released plans' full text: plans_history.md.
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.4.4 | What it took | **next** - Claude's minutes and tokens per step of a video; the data is already in Claude Code's session logs | M |
-| 0.4.5 | *open* | kept free by the user (2026-10-15) | - |
-| 0.4.6 | Prompt generator | planned - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
+| 0.4.6 | Fonts and customizations | planned - fonts and caption styles for motion graphics, captions and thumbnails | M |
 | 0.4.7 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations | L |
-| 0.4.8 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
-| 0.5.0 | Content generation | planned - its sound effects tool shipped early in 0.4.1.1 | L, ships in parts |
+| 0.4.9 | Prompt generator | planned - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
+| 0.5.0 | Content generation | planned - its sound effects tool shipped early in 0.4.1.1; + the clips a script needs (2026-10-15) | L, ships in parts |
+| 0.5.1 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
+| 0.6.0 | Describe video + courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15 | L |
 | 0.6.5 | Templates by feel | later - first part shipped in 0.4.0 | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
 | 0.7.5 | macOS | later | M |
-| 0.8.0 | Describe video | later - transcripts, numbers, the content panel shipped | L |
-
-## 0.8.0 - planned - Describe video: videos as information
-
-**Ships when**: a collection of ~10 analysed videos gives its topics with counts and quotes (frame + timecode), each
-video's content reviewed Correct / Partly / Wrong by the user like effects, and searchable from Claude.
-
-**Shipped in 0.4.0** (2026-10-13, the user's overhaul): the *content creation* focus of Analyze - references
-without subtitles get their words by speech to text when it is installed (`content.py auto`); the analysis
-Overview's Content creation panel (`motionlab\profile.py`: the hook - cuts, words, text in the first 3 s; words per
-minute and how much is talked; text on screen per minute; captions likely); Claude's breakdown per focus (review.json
-`_breakdown`: hook, structure, captions, text & graphics, B-roll, sound, CTA); all searchable in Claude's memory.
-**Moved to 0.4.7** (2026-10-14): the foundations - text on screen, the shots described, topics and claims per video
-(`content.json`) - are yapping mode's first step; this plan builds on them. Still open here: notes, collections, the
-Topics page, the numbers saved at download and in cards, an `/analyze-content` skill.
-
-**The user's notes (2026-10-09, again 2026-10-12):** "describe video: instead of focusing on our already existing
-analyze video for effects, transitions and pacing, we focus on analysing videos informatively (the content inside
-the video) so we can get all the information from audio and video and generate notes accordingly in our UI to
-correctly apply to video recreation or other tools. So if we analyse 10 videos related to making money online we can
-get common topics, add notes, ask about it... similar UI as references but dedicated to content as information
-instead of filmmaking / effects."
-
-- **Done (0.3.1)**: what is said - `tools\content.py transcript <name>` (the platform's subtitles, frame + timecode
-  per line and word), MCP `transcript`. Speech to text for videos without subtitles: measured and chosen 2026-10-12
-  (faster-whisper small; plans_history.md), used for references since 0.4.0.
-- **Shipped in 0.3.2** (2026-10-12): **performance** - `content.py stats <name>` (one `yt-dlp -J` request, no
-  download; the transcript fetch saves them too) -> `content\stats.json`: views, likes, comments, the channel's
-  followers, upload date, **views ÷ followers** (the outperformer score), views a day, and a history of every fetch.
-  4AM: 3,434,506 views, 768,000 followers = 4.47x, 56,722 views a day since 2026-08-13. **App: a Content tab** on
-  the analysis page (the numbers + *Update the numbers*; the transcript with frame + timecode, a click moves the
-  player, the line being said is marked, search, *Get the transcript* / *Fetch again*). UI test 12/12. Not yet:
-  saving the numbers at download time, the numbers in shared cards.
-- **Audio = what is said** and **video = what is shown** (topics, claims, numbers, tools / products, steps, hook and
-  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in 0.4.7's
-  first step. Here: across many videos.
-- **Performance**: views, likes, comments, the channel's followers and the upload date, saved by the download
-  (yt-dlp knows them; today `refs\downloads.json` keeps link, platform, uploader, id, duration) -> an outperformer
-  score (views against followers) that yapping mode turns into validated topics.
-- **Notes**: your notes per video and per topic (one home), read by `/recreate-video`, `/write-prompt`,
-  `/generate-video` and `/write-script`.
-- **Collections**: a tag (e.g. `make-money-online`, ~10 videos) groups references; `content.py collection <tag>`
-  counts the topics across them with links to the exact frames, agreements, contradictions and gaps ->
-  `knowledge\local\collections\<tag>\`.
-- **App**: on a reference a *Content* tab (the transcript with clickable timecodes that move the player, the shots
-  described, topic chips, claims, hook / CTA, your notes) next to the effects review; a *Topics* page per collection
-  (topic cards with counts, quotes that open the frame, your notes, *Ask Claude about this collection*).
-- **Claude**: an `/analyze-content` skill -> `analysis\<name>\content\content.json`, reviewed by you like effects
-  (Correct / Partly / Wrong); MCP `content(reference)`, `topics(collection)`, `search(text)`.
-- **Sharing**: transcripts and descriptions are other people's work - they stay on the PC; only topic summaries,
-  counts and short quotes go into shared cards. Also here if friends' verdicts are in: category profiles.
 
 ## 0.7.5 - planned - macOS
 
@@ -148,11 +96,125 @@ minute and shot lengths within ~15 %) and the structure of what is said, and the
   analysis, a match LUT). Still open: the story (the HEIT structure of what is said), captions and graphics made by
   the draft itself (0.5.0's building blocks and sound effects are what the draft would place).
 
+## 0.6.0 - planned - Describe video: videos and courses as information
+
+**Ships when**: a collection of ~10 analysed videos gives its topics with counts and quotes (frame + timecode), each
+video's content reviewed Correct / Partly / Wrong by the user like effects, and searchable from Claude; a course of
+~10 lessons gives the steps each lesson teaches (frame + timecode, the screen shown) and a course summary Claude
+uses when it edits.
+
+**Courses** (the user, 2026-10-15: "and maybe in the future maybe bulk analyze courses? of davinci resolve or courses
+on content creation? (i think this is a similar idea we have for the 'describe video' version. what do you think?
+so maybe make that instead of v.0.8.0 to 0.6.0, but have the bulk stuff in 0.4.5 so it links up well to 0.5.0 and
+then we just move upwards to 0.6.0"): a course = a collection of long videos (its lessons), analysed with the
+content focus on 0.4.5's batch runner. Per lesson: the transcript, the steps taught (one key frame per step - the
+screen, the panel, the values set), the tools and settings named (DaVinci Resolve's pages, nodes, values), the
+lesson's notes; per course: a summary, "how do I ...?" answered with the lesson + frame + timecode, and techniques
+Claude can rebuild (a Resolve technique from a course -> a recipe in the library, tested like the effects). Measure
+first: Claude's time per minute of a long lesson (0.4.4), then decide what is read from the transcript only and
+what needs pictures. **Rules**: courses are someone's paid work - the user's own copies only (paid platforms are
+usually locked against downloads), everything stays on the PC, only the user's notes can be shared.
+
+**Shipped in 0.4.0** (2026-10-13, the user's overhaul): the *content creation* focus of Analyze - references
+without subtitles get their words by speech to text when it is installed (`content.py auto`); the analysis
+Overview's Content creation panel (`motionlab\profile.py`: the hook - cuts, words, text in the first 3 s; words per
+minute and how much is talked; text on screen per minute; captions likely); Claude's breakdown per focus (review.json
+`_breakdown`: hook, structure, captions, text & graphics, B-roll, sound, CTA); all searchable in Claude's memory.
+**Moved to 0.4.7** (2026-10-14): the foundations - text on screen, the shots described, topics and claims per video
+(`content.json`) - are yapping mode's first step; this plan builds on them. Still open here: notes, collections, the
+Topics page, the numbers saved at download and in cards, an `/analyze-content` skill.
+
+**The user's notes (2026-10-09, again 2026-10-12):** "describe video: instead of focusing on our already existing
+analyze video for effects, transitions and pacing, we focus on analysing videos informatively (the content inside
+the video) so we can get all the information from audio and video and generate notes accordingly in our UI to
+correctly apply to video recreation or other tools. So if we analyse 10 videos related to making money online we can
+get common topics, add notes, ask about it... similar UI as references but dedicated to content as information
+instead of filmmaking / effects."
+
+- **Done (0.3.1)**: what is said - `tools\content.py transcript <name>` (the platform's subtitles, frame + timecode
+  per line and word), MCP `transcript`. Speech to text for videos without subtitles: measured and chosen 2026-10-12
+  (faster-whisper small; plans_history.md), used for references since 0.4.0.
+- **Shipped in 0.3.2** (2026-10-12): **performance** - `content.py stats <name>` (one `yt-dlp -J` request, no
+  download; the transcript fetch saves them too) -> `content\stats.json`: views, likes, comments, the channel's
+  followers, upload date, **views ÷ followers** (the outperformer score), views a day, and a history of every fetch.
+  4AM: 3,434,506 views, 768,000 followers = 4.47x, 56,722 views a day since 2026-08-13. **App: a Content tab** on
+  the analysis page (the numbers + *Update the numbers*; the transcript with frame + timecode, a click moves the
+  player, the line being said is marked, search, *Get the transcript* / *Fetch again*). UI test 12/12. Not yet:
+  saving the numbers at download time, the numbers in shared cards.
+- **Audio = what is said** and **video = what is shown** (topics, claims, numbers, tools / products, steps, hook and
+  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in 0.4.7's
+  first step. Here: across many videos.
+- **Performance**: views, likes, comments, the channel's followers and the upload date, saved by the download
+  (yt-dlp knows them; today `refs\downloads.json` keeps link, platform, uploader, id, duration) -> an outperformer
+  score (views against followers) that yapping mode turns into validated topics.
+- **Notes**: your notes per video and per topic (one home), read by `/recreate-video`, `/write-prompt`,
+  `/generate-video` and `/write-script`.
+- **Collections**: a tag (e.g. `make-money-online`, ~10 videos) groups references; `content.py collection <tag>`
+  counts the topics across them with links to the exact frames, agreements, contradictions and gaps ->
+  `knowledge\local\collections\<tag>\`.
+- **App**: on a reference a *Content* tab (the transcript with clickable timecodes that move the player, the shots
+  described, topic chips, claims, hook / CTA, your notes) next to the effects review; a *Topics* page per collection
+  (topic cards with counts, quotes that open the frame, your notes, *Ask Claude about this collection*).
+- **Claude**: an `/analyze-content` skill -> `analysis\<name>\content\content.json`, reviewed by you like effects
+  (Correct / Partly / Wrong); MCP `content(reference)`, `topics(collection)`, `search(text)`.
+- **Sharing**: transcripts and descriptions are other people's work - they stay on the PC; only topic summaries,
+  counts and short quotes go into shared cards. Also here if friends' verdicts are in: category profiles.
+
+## 0.5.1 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+
+**Ships when**: the transfer methods are measured on real shots (ΔE2000 to the reference, ms per frame on a laptop
+setting) and the best one is used; the user's own clips get white balance / exposure corrected (log / HDR detected
+from the file, never guessed); a Resolve build has adjustable correction + look nodes that match the lab render
+within 1/255.
+
+**The user's note (2026-10-12):** "a color correction focused version since i think it kinda weak in that point
+(regarding davinci, LUTs and stuff)". Talking videos need it too (phone footage: white balance, exposure, skin).
+
+**Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
+grading"): `motionlab\colour.py` measures a reference's look per shot from the analysis' own metrics and thumbnails
+(black / white point, contrast, saturation, white balance, split toning, vignette, letterbox, main colours) -> a look
+in words (`colour\colour.json`, the analysis' Overview, cards, Claude's memory, styles); a Reinhard transfer in Lab
+-> a 33-point .cube (`tools\colour.py match`, the quick draft) used by the lab renders (grade `"lut3d"`) and the
+Resolve build's LUTs, with closeness 0-100. Still open below: correcting the user's own clips (white balance,
+exposure, log / HDR), adjustable CDL nodes in Resolve, a looks library, skin / grain / bloom, waveform and
+vectorscope, the transfer methods measured on real shots (ΔE2000).
+
+**Where the lab stands**: since 0.3.0 rebuilds are in colour (each clip decoded with its own colour settings, within
+1/255); a plan's grade = levels / gamma / output range per channel + saturation (`compose.grade_lut`); the Resolve
+build turns each grade into a .cube LUT on the Color page. Missing: grades that stay adjustable in Resolve (a LUT is
+fixed), white balance / exposure for the user's own clips, HDR and log footage. The user's clips so far: the talking
+video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = DJI 10-bit HEVC 3840x2880, bt709.
+
+- **Measure a reference's look** (per shot, from frames the lab already extracts; numpy, a few frames per shot):
+  black / white point and contrast, saturation, white balance, the colour of shadows / mids / highlights (split
+  toning), skin tones against the skin line, vignette, grain, bloom -> a *look card* in plain words ("teal shadows,
+  warm highlights, blacks lifted to 6 %, saturation 80 %"); numbers only in the shared reference card.
+- **Match it on the user's footage**: a colour transfer from a reference shot to their clip -> a 33-point .cube LUT
+  for the lab's renders, Resolve, CapCut / Premiere, with before / after stills (frame + timecode).
+- **Correct the user's own clips first**: white balance, exposure and contrast per clip, one look across the clips of
+  a scene (shot matching); full-range phone video, HDR and log footage (iPhone HLG / Dolby Vision, Apple Log, D-Log M,
+  S-Log3) detected from the file and converted the documented way (Resolve's Color Space Transform or the maker's
+  LUT), never guessed.
+- **DaVinci Resolve, adjustable**: a correction node (CDL: slope / offset / power + saturation, the API's `SetCDL`)
+  and a look node (the LUT), so the wheels still work after the build; LUTs installed under Resolve's LUT folder
+  `MotionLab\` per look; the project's colour management stated (Resolve Color Management changed every Rec.709 clip
+  in 0.3.2's test, docs\resolve_notes.md) and checked by `--doctor`.
+- **Looks library**: looks the user liked (from references or their own grades) saved like effects - name, .cube,
+  before / after stills, where it came from -> *Library > Looks*, *Use in a video*; shareable (a .cube is text).
+- **App**: a *Colour* tab on the analysis page (the look card, the shots' colours as a strip, a waveform /
+  vectorscope picture of any frame); *Videos > a video > Colour*: clips before / after, the look picked, *Make LUT*,
+  *Send to Resolve*. **Claude**: `/recreate-video` uses the look card; a look is reviewed Correct / Partly / Wrong.
+- **Measure first** (light and tested first): transfer methods (Reinhard, histogram matching, MKL - all light numpy)
+  on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
+  project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
+
 ## 0.5.0 - planned - Content generation: videos from zero that come out right
 
 **Ships when** (the benchmark: a "top 3 tracks" reel from zero like illdari's): the first version is rated OK or
 better on graphics and on sound effects (v1: graphics "too clunky", sound effects bad), it needs one final render
-(v1: ~29 min of renders), and its time and Claude's tokens are lower than the baseline 0.4.4 (*What it took*) measured.
+(v1: ~29 min of renders), and its time and Claude's tokens are lower than the baseline 0.4.4 (*What it took*) measured;
+and a talking video made from a Prepare script has a clip - the user's or one MotionLab made - on every B-roll note
+(step 12).
 
 **The user's words (2026-10-14)**: "while moving from 0.4.1 to 0.5.0 id like to have the 0.5.0 version as a
 'contente generation oriented version' ... i want the generation of video through claude and other tools such as
@@ -175,7 +237,7 @@ render and checks. The AI-tools route comes back into the lab instead of ending 
 (0.4.2) its sound effects tool, live preview, faster motion blur and templates (steps 4, 6, 7, 2 below); from
 `docs\ideas.md` voice-over and music (step 5, measure first); the rest is new. **0.4.2 came first** (released 2026-10-14): its snapshots,
 notes on moments, ratings as rules, lessons on making videos (M###) and safe starter graphic are what this plan
-builds on. The paid API for AI video stays in 0.7.0; describe video (0.8.0) later improves *what* a video says, not
+builds on. The paid API for AI video stays in 0.7.0; describe video (0.6.0) later improves *what* a video says, not
 needed here.
 
 0. **Measure first** - moved to 0.4.4 (*What it took*, 2026-10-15) and widened to every video: Claude's minutes
@@ -236,7 +298,7 @@ needed here.
    frames (frame + timecode) so continuity - the same face, product, place, light - is checked on stills. Then it
    cuts them on the song's beats as the shot list says, and the blocks add titles, captions, graphics and sound
    effects on top -> one video, in the lab and in DaVinci Resolve. Each clip is rated against its prompt (good / ok /
-   bad + a note), so the prompt library learns per model (0.4.6); a shot to redo gets a new prompt that says what
+   bad + a note), so the prompt library learns per model (0.4.9); a shot to redo gets a new prompt that says what
    changes. Today the route ends at *Editor > New edit*, which treats the clips as footage and forgets the shot list.
 9. **One video, three sizes**: the compositions are HTML, so 9:16, 16:9 and 1:1 come from one video with layout
    rules per size (`overlay.py fit` already takes a size); the user ticks the sizes to render.
@@ -246,134 +308,48 @@ needed here.
 11. **The made video's page**: a video made from zero opens on its project's page (Editor); it gets Generate's steps
     there - the scene table (frame + timecode), the animatic and *Play*, the settings, the sound, *Render*, *How did
     it turn out?* with notes on moments (0.4.2) - in plain words.
+12. **The clips a script needs** (added 2026-10-15, from the first talking video made from a Prepare script, *MotionLab
+    vs other AI editors*; its v4 note: "the script's B-roll (the report with its contact sheet, a generic AI editor,
+    your render beside the reference, the Prepare page) does not exist in the project, so those moments stay on you
+    with the punch-ins and the list". The user: "wouldn't it be better to know which clips to prepare or give you
+    before I make the decision to edit it with MotionLab? so maybe in the prepare section when creating the script,
+    you could advertise to create the specific clips (as vague as possible) and if not you could create it as I need
+    it?"). Today a script's `[B-ROLL]` / `[VISUAL]` notes are text: *Film it* lists them under *Film these too*,
+    nothing checks that they were filmed, and the edit finds out at the end.
+    - (a) **A clip list with the script**: `/write-script` turns each note into a clip to get - what it must show in
+      a few loose words, so whatever the user has fits ("your screen while a video is analysed", not a shot recipe),
+      its seconds and the part it covers, and the easiest ways to get it: film it, record your screen, a photo or clip
+      you already have, or *MotionLab makes it* (c). Saved in the script (`"clips"`: B1, B2... with the part, the
+      words, the seconds, the ways); the script check points at talking-only stretches with no clip.
+    - (b) **Film it as a checklist**: one row per clip; a file dropped on its row is copied into the video's folder
+      (as Film it does with the recording) and ticks it; *New edit* says before the edit "3 of 4 clips are here - B2:
+      MotionLab makes it, or a punch-in".
+    - (c) **What MotionLab makes when a clip is missing** (the user picks per clip; nothing paid without asking):
+      MotionLab's own screens - its report, a contact sheet, the Prepare page, an analysis' timeline - recorded by the
+      lab in headless Edge at the video's size, with a moving cursor (the app's tests drive Edge already:
+      `tools\dev\cdp.py`); the lab's pictures as clips with a slow push-in (a render beside its reference:
+      `compare_renders.py`; contact sheets: `sheet.py`); a motion graphic from step 1's blocks (an app window, a
+      cursor, a list, numbers - "a generic AI editor, the same template on three clips" as a mock-up, no real
+      product's logo); a prompt for an AI video tool (`/write-prompt shot`, made on the tool's site, back into the lab
+      by step 8; through the API in 0.7.0); else a punch-in with the words on screen (what v4 did). Made clips go to
+      `build\made\` and are named as made in the edit.
+    - (d) **The edit follows the list**: `/recreate-video` lays each clip over the words it belongs to (speech to text
+      gives the frames - v4: f310-450, f609-769, f770-888) and lists what is still missing before it renders. Yapping
+      mode's B-roll slots (0.4.7, its step 3) are this list.
+    - **What it needs**: the clip list in the script format (`/write-script`, guidelines section 9, `script.py check`
+      - text, small); Film it's checklist (the app, small); a recorder for MotionLab's own pages (new - its frame rate
+      and time measured on a laptop setting first; 3 of the first script's 4 B-roll notes were MotionLab screens);
+      step 1's blocks for the mock-ups; from the user, which stand-ins matter most for their videos.
 
-**Order** (the user decides): 0 comes with 0.4.4; 1 (it fixes what was rated "too clunky"; 4 is being built early);
-2 once illdari's v2 is approved; 6a (small); 3 when a few blocks and formats exist; 8; then 6b, 7, 5 and 10 after
-measuring; 9 last. **Size**: large - it can ship in parts: 0.5.0 = 1, 2, 6a and 11; then 0.5.x for the rest.
+**Order** (the user decides): 0 comes with 0.4.4; 1 (it fixes what was rated "too clunky"; 4 is being built
+early); 2 once illdari's v2 is approved; 6a (small); 12 (a, b and d are small: text and the app; c's recorder
+measured first, its mock-ups come with 1); 3 when a few blocks and formats exist; 8; then 6b, 7, 5 and 10 after
+measuring; 9 last. **Size**: large - it can ship in parts: 0.5.0 = 1, 2, 6a, 11 and 12 (its AI-tool stand-in comes
+with 8); then 0.5.x for the rest.
 **Rules**: light and tested first (every new tool optional and measured on a laptop); copy a style, never someone's
 content (their words, logos, characters); AI clips and voices labelled as generated.
 
-## 0.4.8 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
-
-**Ships when**: the transfer methods are measured on real shots (ΔE2000 to the reference, ms per frame on a laptop
-setting) and the best one is used; the user's own clips get white balance / exposure corrected (log / HDR detected
-from the file, never guessed); a Resolve build has adjustable correction + look nodes that match the lab render
-within 1/255.
-
-**The user's note (2026-10-12):** "a color correction focused version since i think it kinda weak in that point
-(regarding davinci, LUTs and stuff)". Talking videos need it too (phone footage: white balance, exposure, skin).
-
-**Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul: "cinematic - effects, transitions and colour
-grading"): `motionlab\colour.py` measures a reference's look per shot from the analysis' own metrics and thumbnails
-(black / white point, contrast, saturation, white balance, split toning, vignette, letterbox, main colours) -> a look
-in words (`colour\colour.json`, the analysis' Overview, cards, Claude's memory, styles); a Reinhard transfer in Lab
--> a 33-point .cube (`tools\colour.py match`, the quick draft) used by the lab renders (grade `"lut3d"`) and the
-Resolve build's LUTs, with closeness 0-100. Still open below: correcting the user's own clips (white balance,
-exposure, log / HDR), adjustable CDL nodes in Resolve, a looks library, skin / grain / bloom, waveform and
-vectorscope, the transfer methods measured on real shots (ΔE2000).
-
-**Where the lab stands**: since 0.3.0 rebuilds are in colour (each clip decoded with its own colour settings, within
-1/255); a plan's grade = levels / gamma / output range per channel + saturation (`compose.grade_lut`); the Resolve
-build turns each grade into a .cube LUT on the Color page. Missing: grades that stay adjustable in Resolve (a LUT is
-fixed), white balance / exposure for the user's own clips, HDR and log footage. The user's clips so far: the talking
-video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = DJI 10-bit HEVC 3840x2880, bt709.
-
-- **Measure a reference's look** (per shot, from frames the lab already extracts; numpy, a few frames per shot):
-  black / white point and contrast, saturation, white balance, the colour of shadows / mids / highlights (split
-  toning), skin tones against the skin line, vignette, grain, bloom -> a *look card* in plain words ("teal shadows,
-  warm highlights, blacks lifted to 6 %, saturation 80 %"); numbers only in the shared reference card.
-- **Match it on the user's footage**: a colour transfer from a reference shot to their clip -> a 33-point .cube LUT
-  for the lab's renders, Resolve, CapCut / Premiere, with before / after stills (frame + timecode).
-- **Correct the user's own clips first**: white balance, exposure and contrast per clip, one look across the clips of
-  a scene (shot matching); full-range phone video, HDR and log footage (iPhone HLG / Dolby Vision, Apple Log, D-Log M,
-  S-Log3) detected from the file and converted the documented way (Resolve's Color Space Transform or the maker's
-  LUT), never guessed.
-- **DaVinci Resolve, adjustable**: a correction node (CDL: slope / offset / power + saturation, the API's `SetCDL`)
-  and a look node (the LUT), so the wheels still work after the build; LUTs installed under Resolve's LUT folder
-  `MotionLab\` per look; the project's colour management stated (Resolve Color Management changed every Rec.709 clip
-  in 0.3.2's test, docs\resolve_notes.md) and checked by `--doctor`.
-- **Looks library**: looks the user liked (from references or their own grades) saved like effects - name, .cube,
-  before / after stills, where it came from -> *Library > Looks*, *Use in a video*; shareable (a .cube is text).
-- **App**: a *Colour* tab on the analysis page (the look card, the shots' colours as a strip, a waveform /
-  vectorscope picture of any frame); *Videos > a video > Colour*: clips before / after, the look picked, *Make LUT*,
-  *Send to Resolve*. **Claude**: `/recreate-video` uses the look card; a look is reviewed Correct / Partly / Wrong.
-- **Measure first** (light and tested first): transfer methods (Reinhard, histogram matching, MKL - all light numpy)
-  on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
-  project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
-
-## 0.4.7 - planned - Yapping mode: the yap-maxing framework
-
-**Ships when**: on 3-5 talking videos the user picked, the content foundations and the HEIT parts are there with frame
-+ timecode and reviewed by the user; the yapping detectors pass their synthetic self-tests; the user's own recording
-is edited from a cut list they approved before anything rendered, every cut on a word boundary.
-
-**Shipped in 0.4.0** (2026-10-13): first pieces of *Make* - the quick draft's talking mode (`draft_edit.py --sound
-talk`, New edit's *Talking + captions* preset: the spoken parts in order, the pauses cut - by loudness, not yet on
-word boundaries -, a punch-in every other cut, B-roll over the talking) and Claude's breakdown of a talking video
-(hook, structure, captions). **Built early (2026-10-14)**: Prepare - `/write-script` and the script check (step
-"Topic + script" below). Still open: the content foundations, HEIT labels, validated topics, delivery / environment
-numbers, the yapping detectors with self-tests, cuts on word boundaries with the user approving the cut list, the
-beats writer for the talking-head pack.
-
-**The user's notes (2026-10-12)** ("v0.3.5" = describe video, now 0.8.0): "using the v0.3.5 as an exceptional tool
-when creating a video: 'yapping mode' or talking to the camera. Focused on content creators: yap maxing framework.
-Influential videos, lots of views videos. Basically making content short or long form; take into account formats.
-HEIT framework = hook / explain / teach / illustrate. Validated topics. Copy and learn structure. Extras: 1) text on
-screen 2) environment: experiment different environments 3) delivery: authentic content 4) graphics: visual hooks."
-(Earlier, 2026-10-11: analyse talking-head creators AND edit the user's own recording that way.)
-
-- **Goal**: learn from talking-to-camera videos that work (many views) and make your own - short or long form - in
-  the same proven structure, from the topic to the finished edit in the lab and in DaVinci Resolve.
-- **First: the content foundations** (moved here from describe video, 2026-10-14 - this settles the order conflict
-  between the two; 0.8.0 builds on them): per analysed video `analysis\<name>\content\content.json`, reviewed by the
-  user Correct / Partly / Wrong like effects:
-  - **what is said**: the transcript (exists: `content.py`, `speech.py`) split into topics, with the claims,
-    numbers, tools / products, steps, the hook (first 3 s) and the call to action;
-  - **what is shown**: per shot (the lab already finds every cut) one line by Claude - setting / environment, who
-    and what is on screen, talking head or B-roll, graphics - read from a sheet of one key frame per shot (about 20
-    shots per picture keeps the tokens low);
-  - **text on screen** with a light OCR engine, measured first (Windows' built-in OCR needs no install).
-- **Learn** (from analyses of influential videos):
-  - **Validated topics**: topics of videos that outperform (views against the channel's followers / usual views,
-    `content.py stats` since 0.3.2), per niche - not just any topic, the ones the audience already proved.
-  - **HEIT structure**: every talk split into Hook / Explain / Illustrate / Teach parts with frame + timecode and
-    seconds; per format (short <= 90 s, mid, long; vertical / horizontal - measured already) the usual order and
-    share of each part = the structure to copy and learn.
-  - **The four extras, measured per video**: *text on screen* (how often, how many words, where); *environment* (the
-    setting of each shot - its shot descriptions; your own videos log theirs, so trying different environments
-    becomes a comparison); *delivery* (words per minute, pauses, energy = loudness changes, looking at the camera -
-    light numbers + Claude's notes on how authentic it feels); *graphics / visual hooks* (what happens on screen in
-    the first 3 s: a cut, a zoom, a text pop, a graphic - from the edit analysis).
-  - **The edit's yapping profile**: jump cuts inside one talking shot (a pause cut out), punch-ins (a 1.1-1.3x scale
-    step, held), word captions, B-roll cutaways over continuing speech - new detectors, each with a synthetic
-    self-test video and ground truth first.
-- **Make (yapping mode)**:
-  1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
-     HEIT script in the structure of the best videos of your format (0.4.6's database).
-  2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
-     to try.
-  3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
-     no platform subtitles), silences and fluffs cut on word boundaries, punch-ins at a chosen reference's rhythm,
-     text on screen and captions as HTML overlays timed to your words (0.3's HyperFrames, 0.3.2's captions; the SRT
-     onto Resolve's subtitle track by script, tested in the scratch project), a visual hook in the first 3 s, B-roll
-     slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
-     (every removed part with frame + timecode) before anything renders.
-  4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
-- **Steps**: (0) the content foundations above, on 3-5 influential talking videos you pick, analysed with the
-  content focus; (1) HEIT labels + the extras' numbers on them; (2) the yapping detectors + self-tests; (3) brief +
-  the edit of your own recording.
-- **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
-  video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
-  (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
-  (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
-  `assets\beats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
-  `overlay.py fit <folder> --like <video>` takes a video's size / rate / length. First use: the user's
-  `projects\talk_test` (vertical 1080 x 1920, 30 fps): beats on the frames of the spoken words (57 at f1087
-  (00:00:36:07), the list's points at f1524 / f1601 / f1692), with the speech captions underneath; a 720p preview
-  went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
-  styles per category.
-
-## 0.4.6 - planned - Prompt generator: every model, every specialty
+## 0.4.9 - planned - Prompt generator: every model, every specialty
 
 **Ships when**: every prompt has a specialty and the model it was written for; the Prompts page filters by both;
 `/write-prompt` copies examples of the same specialty and model first; at least one kind holds ~10 prompts the user
@@ -402,7 +378,7 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Per model**: the model a prompt was written for stays part of its structure (Seedance's lengths and camera
     words, Claude's tags...); a new prompt for another model says what it changed.
   - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
-    structure a script example (0.4.7; describe video, 0.8.0, adds more), with the link and frame + timecode.
+    structure a script example (0.4.7; describe video, 0.6.0, adds more), with the link and frame + timecode.
   - **Sharing** your own prompts and ratings through *Claude's memory > Share* (text); creators' prompts stay on the PC.
   - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
     0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
@@ -411,70 +387,109 @@ prompts we have given and you have analysed structurally so we can generate good
   - **Style from analysed references** (built 2026-10-13, after 0.3.4: "the optimized prompt asks for a link to a
     Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
     references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
-    look measured too (0.4.8), and several references of one creator averaged into one style.
+    look measured too (0.5.1), and several references of one creator averaged into one style.
 - **Needs**: your prompts (the prompt library or pasted in the chat).
 
-## 0.4.4 - planned - What it took: Claude's time and tokens, step by step
+## 0.4.7 - planned - Yapping mode: the yap-maxing framework
 
-**Ships when**: a 1-min talking video made from a Prepare script to *Ready to post* shows its whole breakdown on its
-Overview - every Claude step and every job, with minutes, tokens, model and effort, and the total - and the totals
-match the Claude Code session logs on a hand check (within 1 %); the live panel follows a running `/recreate-video`
-from its first answer to its last.
+**Ships when**: on 3-5 talking videos the user picked, the content foundations and the HEIT parts are there with frame
++ timecode and reviewed by the user; the yapping detectors pass their synthetic self-tests; the user's own recording
+is edited from a cut list they approved before anything rendered, every cut on a word boundary.
 
-**The user's words (2026-10-15)**: "0.4.4 a 'breakdown' oriented version: when i mean breakdown i mean to have more
-concrete information about the process regarding claude usage. so if i run a claude /analyze-video or /recreate i
-want to see if its a way to show that process in motion lab? to have a breakdown on time Claude spent and tokens
-used? also, if i get a new video rendered in the Editor and click the Overview i want a new section below 'ready to
-post' on the side bar called 'What it took' or something similar that will tell me the entire process kinda like a
-timeline from up to top, so if the video is from a generated prompt ('Made from the script MotionLab vs other AI
-editors') in the prepare section i want it to tell me (Prepare Transcript) X minutes it took claude to come up with it
-and cost u X tokens with this model (Opus 5.5 xhigh e.g) (Edit Video) ... X minutes ... TOTAL SPENT: X minutes and X
-tokens ... something i could understand see ok a 1-min talking head video from start to finish it took 1 hour of
-claude usage."
+**Shipped in 0.4.0** (2026-10-13): first pieces of *Make* - the quick draft's talking mode (`draft_edit.py --sound
+talk`, New edit's *Talking + captions* preset: the spoken parts in order, the pauses cut - by loudness, not yet on
+word boundaries -, a punch-in every other cut, B-roll over the talking) and Claude's breakdown of a talking video
+(hook, structure, captions). **Built early (2026-10-14)**: Prepare - `/write-script` and the script check (step
+"Topic + script" below). Still open: the content foundations, HEIT labels, validated topics, delivery / environment
+numbers, the yapping detectors with self-tests, cuts on word boundaries with the user approving the cut list, the
+beats writer for the talking-head pack.
 
-**Where it stands**: nothing shown yet. 0.5.0 had this as its step 0 (*Measure first*, generated videos only); it
-moved here on 2026-10-15 and covers every video and every Claude task, and 0.5.0 judges its steps by these numbers.
-The data is already on the PC (checked 2026-10-15):
-- Claude Code writes every session to `%USERPROFILE%\.claude\projects\<lab>\<session>.jsonl` (`<lab>` = the lab's
-  path with ':' and '\' as '-'; this PC: `C--MotionLab`), one JSON line per event. Subagents:
-  `<session>\subagents\agent-<id>.jsonl` (lines marked `isSidechain`) + `agent-<id>.meta.json` (type, description,
-  model, effort).
-- The app names every session it opens (`--name "MotionLab <task> <object>"` -> a `custom-title` line): "MotionLab
-  script req-002", "MotionLab recreate illdari_test_copy_1", "MotionLab generate <video>", "MotionLab review <video>".
-- Every answer carries its `timestamp`, `message.model` (`claude-opus-5-5` ...), `effort`, `attributionSkill`
-  (`write-script` ...) and `message.usage`: `input_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`,
-  `output_tokens`. One answer is written as several lines (one per content block) with the same `message.id` and the
-  same usage - it counts once (a session of 2026-10-15: 179 lines, 83 answers).
-- The app's own jobs (quick draft, renders, thumbnails, analyses) keep their start and end in `.app\jobs\`.
+**The user's notes (2026-10-12)** ("v0.3.5" = describe video, now 0.6.0): "using the v0.3.5 as an exceptional tool
+when creating a video: 'yapping mode' or talking to the camera. Focused on content creators: yap maxing framework.
+Influential videos, lots of views videos. Basically making content short or long form; take into account formats.
+HEIT framework = hook / explain / teach / illustrate. Validated topics. Copy and learn structure. Extras: 1) text on
+screen 2) environment: experiment different environments 3) delivery: authentic content 4) graphics: visual hooks."
+(Earlier, 2026-10-11: analyse talking-head creators AND edit the user's own recording that way.)
 
-1. **The reader** (`motionlab\usage.py`, read-only, standard library, nothing leaves the PC; cached per log file size
-   + time): every session -> its task + object, start and end, **active minutes** (the time between its events, gaps
-   over 5 min left out - a window left open overnight is not work; the wall time kept beside it), tokens (new input,
-   cache written, cache read, output), model(s) + effort, the skill. Subagents add to their session and are listed
-   under it with their own model. A session started by hand (no name) is matched by its skill (`attributionSkill`)
-   and the object in its first message (`/recreate-video ... <project>`). A line it does not know is skipped and a
-   number it cannot read says "not measured" - never a guess (the log format is Claude Code's, not a public API).
-2. **Sessions -> videos**: a script request (`req-NNN`) -> the script it wrote (`"request"`) -> the videos made from
-   it (`made_from.json`, kind prompt); `recreate` / `generate` / `title` (the package) / `improve` by project;
-   `review` / `feedback` by analysis; `prompt` / `script` by prompt id. Jobs by the project or analysis they ran on.
-   One call returns a video's whole chain in time order: Prepare -> film -> edit -> package -> improve.
-3. **What it took** on a video's Overview: an entry in the side index under *Ready to post* -> a section at the end
-   of the page, a timeline from the top: one row per step in words ("Prepare - the script *MotionLab vs other AI
-   editors*", "Quick draft", "Edit with Claude", "Thumbnails", "Review and improve") with when, minutes, tokens and
-   "Opus 5.5 · xhigh"; jobs as their own rows (minutes, "no Claude, no tokens"); then **Total**: Claude's minutes, the
-   jobs' minutes, the tokens, the sessions - "this 1-min video took 58 min of Claude and 12 min of renders". Tokens:
-   one headline number (everything the model read and wrote), the split in plain words folded ("new 12 k · read
-   again from the cache 1.2 M · cached 85 k · written 9 k").
-4. **The same for an analysis** (Analyser > a video > Overview: what measuring and Claude's check took) and one line
-   on Prepare's script and title cards ("written in 6 min · 240 k tokens").
-5. **Live** (the user: "if i run a claude /analyze-video or /recreate i want to see ... that process in motion lab"):
-   while a Claude window the app opened is working (its log's last line under 2 min old), its video's page and the
-   Jobs page show a panel - running for N min, tokens so far, the model, the current step in words (the skill + the
-   last tool: "reading the contact sheets", "rendering v2") - read from the growing log every few seconds. Read-only:
-   it never writes to Claude Code or steers it.
-6. **Optional, ask the user first**: "≈ $X at API prices" as a size, never a bill (the user is on a Max plan; the
-   plan's limits are not in the logs) - prices in one dated table with their source.
+- **Goal**: learn from talking-to-camera videos that work (many views) and make your own - short or long form - in
+  the same proven structure, from the topic to the finished edit in the lab and in DaVinci Resolve.
+- **First: the content foundations** (moved here from describe video, 2026-10-14 - this settles the order conflict
+  between the two; 0.6.0 builds on them): per analysed video `analysis\<name>\content\content.json`, reviewed by the
+  user Correct / Partly / Wrong like effects:
+  - **what is said**: the transcript (exists: `content.py`, `speech.py`) split into topics, with the claims,
+    numbers, tools / products, steps, the hook (first 3 s) and the call to action;
+  - **what is shown**: per shot (the lab already finds every cut) one line by Claude - setting / environment, who
+    and what is on screen, talking head or B-roll, graphics - read from a sheet of one key frame per shot (about 20
+    shots per picture keeps the tokens low);
+  - **text on screen** with a light OCR engine, measured first (Windows' built-in OCR needs no install).
+- **Learn** (from analyses of influential videos):
+  - **Validated topics**: topics of videos that outperform (views against the channel's followers / usual views,
+    `content.py stats` since 0.3.2), per niche - not just any topic, the ones the audience already proved.
+  - **HEIT structure**: every talk split into Hook / Explain / Illustrate / Teach parts with frame + timecode and
+    seconds; per format (short <= 90 s, mid, long; vertical / horizontal - measured already) the usual order and
+    share of each part = the structure to copy and learn.
+  - **The four extras, measured per video**: *text on screen* (how often, how many words, where); *environment* (the
+    setting of each shot - its shot descriptions; your own videos log theirs, so trying different environments
+    becomes a comparison); *delivery* (words per minute, pauses, energy = loudness changes, looking at the camera -
+    light numbers + Claude's notes on how authentic it feels); *graphics / visual hooks* (what happens on screen in
+    the first 3 s: a cut, a zoom, a text pop, a graphic - from the edit analysis).
+  - **The edit's yapping profile**: jump cuts inside one talking shot (a pause cut out), punch-ins (a 1.1-1.3x scale
+    step, held), word captions, B-roll cutaways over continuing speech - new detectors, each with a synthetic
+    self-test video and ground truth first.
+- **Make (yapping mode)**:
+  1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
+     HEIT script in the structure of the best videos of your format (0.4.9's database).
+  2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
+     to try.
+  3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
+     no platform subtitles), silences and fluffs cut on word boundaries, punch-ins at a chosen reference's rhythm,
+     text on screen and captions as HTML overlays timed to your words (0.3's HyperFrames, 0.3.2's captions; the SRT
+     onto Resolve's subtitle track by script, tested in the scratch project), a visual hook in the first 3 s, B-roll
+     slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
+     (every removed part with frame + timecode) before anything renders.
+  4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
+- **Steps**: (0) the content foundations above, on 3-5 influential talking videos you pick, analysed with the
+  content focus; (1) HEIT labels + the extras' numbers on them; (2) the yapping detectors + self-tests; (3) brief +
+  the edit of your own recording.
+- **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
+  video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
+  (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
+  (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
+  `assets\beats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
+  `overlay.py fit <folder> --like <video>` takes a video's size / rate / length. First use: the user's
+  `projects\talk_test` (vertical 1080 x 1920, 30 fps): beats on the frames of the spoken words (57 at f1087
+  (00:00:36:07), the list's points at f1524 / f1601 / f1692), with the speech captions underneath; a 720p preview
+  went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
+  styles per category.
 
-**Needs first**: nothing - the session logs and the names the app gives its sessions exist on this PC. **Size**: M.
-**Tests**: fixed sample logs in `tools\dev\` (a named session, a session started by hand, subagents, a repeated
-answer) for a self-check and `smoke.py`; one hand count against a real session before it ships.
+## 0.4.6 - planned - Fonts and customizations for motion graphics and captions
+
+**Ships when**: a graphic's or the captions' font can be any of ~30 curated free fonts shipped with MotionLab (the
+same render on every PC) or a font file the user adds; a caption style (font, size, colours, outline / shadow, the
+word being said highlighted, position in each platform's safe area, the animation) is saved as a preset and used in a
+new video in one click; the same fonts work in thumbnails and in DaVinci Resolve.
+
+**The user's words (2026-10-15)**: "make 0.4.6 motion graphics/captions oriented -> 'fonts and customizations for
+motion graphics'".
+
+**Where it stands**: graphics, captions and thumbnails are HTML (HyperFrames) with settings the user can change
+(*Editor > a video > Graphics*, *Ready to post*'s thumbnails); their font is one of five Windows fonts (Arial Black,
+Impact, Segoe UI, Verdana, Georgia) - nothing bundled, so another PC (or the Mac version, 0.7.5) can render
+differently, and there is no caption style to keep between videos.
+
+Claude's proposal (the user picks):
+1. **A font library**: ~30 free fonts under the SIL Open Font License (Google Fonts - e.g. Anton, Bebas Neue,
+   Montserrat, Poppins, Inter, Oswald, Archivo Black, Bangers, Permanent Marker; picked by what analysed videos and
+   0.4.5's thumbnail sets use) shipped in `tools\overlays\fonts\` with their licences and loaded by every graphic with
+   `@font-face` (a render never depends on what Windows has); the user's own font files in `library\fonts\` (private:
+   a bought font's licence is the user's); a preview of each with the user's own words.
+2. **Caption styles**: the captions example's settings grown into presets - font, weight, size, capitals, colours
+   (text, the word being said, outline, shadow, box), the highlight (colour / size / pop per word), words per line,
+   the position and the platforms' safe areas (TikTok / Reels / Shorts buttons), the entrance - saved, previewed as
+   stills in seconds (`overlay.py snap`), shared through the repo like the examples.
+3. **Like a reference**: an analysed video's captions and text on screen measured (0.4.7's text on screen: size,
+   position, capitals, colours) and the font's style named by Claude with the closest library fonts -> "captions like
+   <video>"; the same for 0.4.5's thumbnail styles.
+4. **Everywhere**: one font and preset across graphics, captions, thumbnails and the DaVinci Resolve build (Fusion
+   text needs the font installed in Windows - measured first; installed only on the user's click).
+**Needs first**: nothing (0.4.5's thumbnail styles name their fonts from this library once it exists). **Size**: M.

@@ -41,6 +41,8 @@ from motionlab.util import (ANALYSIS, SourceGuard, fix_dotted_names, load_config
 
 def pick_out_dir(src: Path, name: str | None) -> tuple[str, Path]:
     base = safe_name(name or src.stem)
+    if base.lower() == "thumbs":                    # 0.4.5: the folder analysis/thumbs holds the thumbnail sets
+        base = "thumbs_video"
     out = ANALYSIS / base
     sj = out / "source.json"
     if not name and sj.exists():

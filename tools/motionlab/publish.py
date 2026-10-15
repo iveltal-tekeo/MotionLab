@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 
 from .timecode import frame_to_tc
-from .util import LAB, read_json, safe_name
+from .util import LAB, read_json
 
 PROJECTS = LAB / "projects"
 MY_KEYS = ("title", "titles", "description", "chapters", "hashtags")
@@ -61,7 +61,9 @@ _LOCK = threading.RLock()
 def project_dir(project: str | Path) -> Path:
     """A project name (or a path like projects\\test_4am) -> projects\\<name>, which must exist."""
     name = Path(str(project).replace("\\", "/").rstrip("/")).name
-    if not name or safe_name(name) != name:
+    # the names the app gives a video's folder (data.safe_name): Film it names it after the script, so spaces and
+    # apostrophes are normal ("What's new in MotionLab 0.4.3") - only separators and ".." are refused
+    if not name or not re.fullmatch(r"[\w.\- \[\]()&'+,]+", name) or ".." in name:
         raise ValueError(f"not a video folder name: {project!r}")
     d = PROJECTS / name
     if not d.is_dir():

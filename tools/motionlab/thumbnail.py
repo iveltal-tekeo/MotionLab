@@ -535,6 +535,76 @@ def templates() -> list[dict]:
     return out
 
 
+# ------------------------------------------------------------------------------------------ a set's style (0.4.5)
+# A thumbnail set (analysis\thumbs\<set>, tools\thumbsets.py) + the patterns Claude found in it (style.json, written by
+# /analyze-reference thumbs <set>): `make --style <set>` takes its design, colours, font and capitals; `check --style`
+# (= --niche set:<set>) judges brightness / saturation against the set instead of a niche.
+DESIGN_FONTS = ("Arial Black", "Impact", "Segoe UI", "Verdana", "Georgia")   # the designs' fonts until 0.4.6
+
+
+def _closest_font(style: dict) -> str | None:
+    """The design font nearest to what Claude named (the style's words + its closest fonts): condensed / tall ->
+    Impact, heavy / wide -> Arial Black, a serif -> Georgia, rounded / plain sans -> Verdana."""
+    f = style.get("font") or {}
+    names = [str(x) for x in (f.get("closest") or [])] + [str((style.get("for_make") or {}).get("font") or "")]
+    for n in names:
+        if n in DESIGN_FONTS:
+            return n
+    words = " ".join([str(f.get("style") or "")] + names).lower()
+    if any(k in words for k in ("condensed", "narrow", "tall", "anton", "bebas", "oswald", "impact", "league gothic")):
+        return "Impact"
+    if any(k in words for k in ("serif", "georgia", "playfair", "times")) and "sans" not in words:
+        return "Georgia"
+    if any(k in words for k in ("heavy", "black", "bold", "wide", "archivo", "montserrat", "poppins")):
+        return "Arial Black"
+    return None
+
+
+def style_values(set_name: str, template: str | None = None) -> tuple[str, dict, dict]:
+    """(design, its settings, the style) for `make --style <set>`: the design the set's structure fits (style.json
+    "for_make" template), text / outline colours, the closest design font, capitals - only settings the design has."""
+    from . import overlay_settings as OS
+    from . import thumbsets as TS
+    st = TS.load_style(set_name)
+    if not st:
+        raise SystemExit(f"the set '{set_name}' has no style yet - Claude finds its patterns first "
+                         f"(/analyze-reference thumbs {set_name})")
+    fm = st.get("for_make") or {}
+    tpl = template or fm.get("template") or "outline"
+    if not (TEMPLATES / tpl / "index.html").exists():
+        tpl = "outline"
+    have = {s["id"]: s for s in OS.declared(TEMPLATES / tpl)}
+    hexcol = lambda v: v if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v) else None   # noqa: E731
+    vals = {}
+    for key, src in (("text_color", fm.get("text_colour") or fm.get("text_color")),
+                     ("outline_color", fm.get("outline_colour") or fm.get("outline_color"))):
+        if key in have and hexcol(src):
+            vals[key] = src.lower()
+    font = _closest_font(st)
+    opts = {o.get("value") for o in (have.get("font") or {}).get("options") or []}
+    if font and font in opts:
+        vals["font"] = font
+    case = str((st.get("words") or {}).get("case") or "").lower()
+    if "uppercase" in have and case in ("upper", "lower", "mixed", "title"):
+        vals["uppercase"] = case == "upper"
+    return tpl, vals, st
+
+
+def set_norm(set_name: str) -> dict | None:
+    """A set's measured look as a niche for the check (rule_look): weighted medians of brightness / saturation."""
+    try:
+        from . import thumbsets as TS
+        s = TS.get_set(set_name)
+    except Exception:                                       # noqa: BLE001 - no set is no failure
+        return None
+    sm = s.get("summary") or {}
+    med = sm.get("medians") if isinstance(sm.get("medians"), dict) else sm
+    if med.get("brightness") is None or med.get("saturation") is None:
+        return None
+    return {"brightness": med["brightness"], "saturation": med["saturation"],
+            "label": f"the set {s.get('label') or s.get('name') or set_name} ({len(s.get('items') or [])} thumbnails)"}
+
+
 def _photo_js(folder: Path, photos: list[dict]) -> None:
     js = "".join(f"window.{'PHOTO' if i == 0 else 'PHOTO2'} = {json.dumps(p, ensure_ascii=True)};\n"
                  for i, p in enumerate(photos))
@@ -569,16 +639,23 @@ def _read_photo(prj, frame: int | None, clip: str | None, image: str | None) -> 
                  "tc": frame_to_tc(frame, v["fps"]), "fps": v["fps"]}
 
 
-def make(project: str, tid: str, words: str, template: str = "outline", frame: int | None = None,
+def make(project: str, tid: str, words: str, template: str | None = None, frame: int | None = None,
          clip: str | None = None, image: str | None = None, frame2: int | None = None, clip2: str | None = None,
-         image2: str | None = None, values: dict | None = None, log=print) -> dict:
-    """A thumbnail: thumbs\\<id>\\ (the editable graphic) + both PNGs + the crops preview + package.json."""
+         image2: str | None = None, values: dict | None = None, log=print, style: str | None = None) -> dict:
+    """A thumbnail: thumbs\\<id>\\ (the editable graphic) + both PNGs + the crops preview + package.json. style = a
+    thumbnail set whose patterns Claude found (0.4.5): its design (unless template is given), colours, font and
+    capitals; the user's own values win."""
     from .project import Project
     from . import overlay_settings as OS
     OVT = _overlay()
     t0 = time.time()
     if not re.fullmatch(r"[A-Z]", tid or ""):
         raise SystemExit("--id is one capital letter: A, B or C")
+    if style:
+        template, sv, _ = style_values(style, template)
+        values = {**sv, **(values or {})}
+        log(f"in the style of the set '{style}': {template}" + (", " + ", ".join(f"{k} {v}" for k, v in sv.items()) if sv else ""))
+    template = template or "outline"
     prj = Project(project)
     src = TEMPLATES / template
     if not (src / "index.html").exists():
@@ -602,7 +679,7 @@ def make(project: str, tid: str, words: str, template: str = "outline", frame: i
             origins.append(o2)
         _photo_js(new, photos)
         W, H = SIZES["16x9"]
-        conf = {"name": f"thumb_{tid}", "kind": "thumbnail", "template": template, "frames": 3, "fps": FPS,
+        conf = {"name": f"thumb_{tid}", "kind": "thumbnail", "template": template, "style": style, "frames": 3, "fps": FPS,
                 "width": W, "height": H, "photos": origins, "values": {}}
         (new / "overlay.json").write_text(json.dumps(conf, indent=1, ensure_ascii=False), encoding="utf-8")
         try:
@@ -1206,6 +1283,8 @@ def refs(niche: str | None = None) -> dict:
 def ref_norm(niche: str | None) -> dict | None:
     if not niche:
         return None
+    if niche.startswith("set:"):                            # 0.4.5: a thumbnail set's measured look
+        return set_norm(niche[4:])
     try:
         s = refs(niche)["niches"].get(niche)
     except Exception:                                       # noqa: BLE001 - no references is no failure

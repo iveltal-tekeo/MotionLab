@@ -5,6 +5,55 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.5 - 2026-10-15 - Bulk: thumbnail sets, many videos in one Claude window, several videos edited at once
+
+- **Thumbnail sets** - *Analyser > Add thumbnails*: paste a channel link (or some video links, or drop your own
+  pictures) and MotionLab keeps only their thumbnails, titles and views - no video is downloaded - and measures them
+  in seconds: colours, faces, where the text sits. It lists the whole channel (246 videos in 3.5 s) and starts with
+  the newest or the most viewed 10-30; **More from the channel** on the set's page adds the next 10-100 whenever you
+  want, never one twice. Sort the pictures by most / least viewed or newest / oldest; each one shows its views, how
+  it did against the channel's followers, the date it came out and its length (*Update the views and dates* asks
+  the channel again - nothing is downloaded; the exact dates take about a second a video). *Find the patterns with Claude* names what repeats - the text, the
+  font's style, the colours, the structure - and you mark each one Correct / Partly / Wrong. Then a video's *Ready to
+  post* makes thumbnails **in the style of** that set (its design, colours and font), and the thumbnail check
+  compares yours with the set.
+- **Many videos, one Claude window** - *Add videos* with Claude's check now opens ONE Claude window for the
+  whole batch when the last video is measured (not one window per video), and says first how long Claude usually
+  takes per video on your PC. If the window stops half way, the Analyser shows *Continue the batch*.
+- **Edit several videos the same way** - *Editor > Edit several videos*: pick 2-10 of your videos and one
+  style, then a quick draft of each (no Claude) or one Claude window that edits them one after another.
+- **The roadmap** shows only the versions now (no panel at the bottom).
+- **Fixed**: a video named with spaces or an apostrophe - Film it names it after the script, e.g. "What's new in
+  MotionLab 0.4.3" - stopped with "not a video folder name" when you opened it; it opens normally now.
+- **Fixed**: in some dialogs (Add thumbnails, Edit several videos) the option you picked was invisible - dark on dark.
+  It now lights up in the section's colour.
+
+## 0.4.4 - 2026-10-15 - What it took: Claude's time for every step, and a simpler Prepare
+
+- **Prepare**: the two big ways for a script stay on top (*Improve my script*, *Write one from zero*). Below them a
+  slim row, **Only need a title or thumbnail?** - pick a video that is ready and Claude writes its title, thumbnails
+  and description (or answer a few questions for one that is not in MotionLab yet). Your list is split in two:
+  **Talking scripts** (the first line, the length, Filmed / Edited and a **Film it** button, faded once the
+  script is filmed and edited) and **Titles &
+  thumbnails** (the best title and the thumbnail ideas) - you can tell them apart before you open one. Each card
+  has **Rename** and **Delete** (to the Recycle Bin) when the pointer is on it.
+- **Videos you generate stay in the Generator** - their page too. *Move to the Editor* when you want to edit one with
+  your clips, captions or music; it then shows there instead (never in both). *Back to the Generator* undoes it.
+- **Analyser**: *Add videos* comes first; *show the test videos* sits beside the filters; a video's page says where it
+  stands (✓ Ready, or not checked by Claude yet) and the one next thing, instead of numbered steps.
+- **Prompts** (shots, images, briefs) no longer show numbered steps - just the next thing to do.
+- **Claude's memory**: the videos come newest first, each with the day it was analysed.
+- **What it took** - a video's Overview now ends with how it was made, as a timeline: every Claude step (the script
+  in Prepare, the edit, the title and thumbnails, Review and improve) with how long it took and the model
+  ("1:54 min · Opus 5.5 · high"), the app's own jobs (quick drafts, thumbnails) beside them, and the total - "This
+  52 s video took 40:24 min of Claude". The side index lists it under Ready to post. An analysed video's Overview
+  shows the same for Claude's check, and Prepare's cards say how long Claude took to write each script or title set.
+  MotionLab reads Claude Code's own logs on your PC: nothing is sent anywhere and it costs Claude nothing. Other
+  things you asked in the same Claude window are listed apart, not counted.
+- **Claude is working** - while a Claude window MotionLab opened is busy, one line in the sidebar (and on that video's
+  page) says on what, for how long and what it is doing ("looking at contact sheets and frames"). It goes away when
+  Claude has answered.
+
 ## 0.4.3.5 - 2026-10-15 - A simpler app: the Editor overhaul, Film it, a new player
 
 - **Analyser and Generator** - the sidebar's Analyze is now called **Analyser**, and Generate is now **Generator**.

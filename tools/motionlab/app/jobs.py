@@ -169,6 +169,35 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"
+    if kind in ("thumbs_fetch", "thumbs_links", "thumbs_measure", "thumbs_more", "thumbs_refresh"):   # Analyser (0.4.5)
+        s = data.safe_name(str(a.get("set", "")))
+        if not s.strip(" ."):
+            raise JobError("name the set")
+        tool = [PY, str(TOOLS / "thumbsets.py")]
+        order = str(a.get("order") or "newest")
+        if order not in ("newest", "views"):
+            raise JobError("the newest or the most viewed")
+        if kind == "thumbs_refresh":                  # the set's page: the newest views, dates and lengths
+            return f"The numbers of {s} again", tool + ["refresh", s], "net"
+        if kind == "thumbs_more":                     # the set's page: the next batch of its channel
+            n = int(a.get("n") or 20)
+            if not 1 <= n <= 100:
+                raise JobError("1 to 100 more thumbnails")
+            return f"{n} more thumbnails for {s}", tool + ["more", s, "--n", str(n), "--order", order], "net"
+        if kind == "thumbs_fetch":
+            url, n, label = str(a.get("url", "")).strip(), int(a.get("n") or 15), " ".join(str(a.get("label") or "").split())[:80]
+            if not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", url):
+                raise JobError("paste a full channel or playlist link starting with https://")
+            if not 1 <= n <= 100:
+                raise JobError("1 to 100 thumbnails")
+            return (f"Thumbnails of {label or s}", tool + ["fetch", s, url, "--n", str(n), "--order", order]
+                    + (["--label", label] if label else []), "net")
+        if kind == "thumbs_links":
+            urls = [str(u).strip() for u in a.get("urls") or [] if str(u).strip()]
+            if not 1 <= len(urls) <= 60 or any(not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", u) for u in urls):
+                raise JobError("1 to 60 video links, each starting with https://")
+            return f"Thumbnails for {s}", tool + ["links", s, *urls], "net"
+        return f"Measure the thumbnails of {s}", tool + ["measure", s], "light"
     if kind == "colour":                         # an analysis' Overview > Measure the colour (0.4): no decoding
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
@@ -242,10 +271,15 @@ def _thumb_job(kind: str, a: dict) -> tuple[str, list[str], str]:
     words = " ".join(str(a.get("words") or "").split())
     if not words or not THUMB_TEXT.fullmatch(words) or len(words) > 80:
         raise JobError("type the 2-4 words for the thumbnail")
-    template = str(a.get("template") or "outline")
-    if not re.fullmatch(r"[\w-]+", template) or not (TOOLS / "overlays" / "thumbnails" / template / "index.html").exists():
+    style = str(a.get("style") or "")                   # 0.4.5: in the style of a thumbnail set
+    if style and not (data._thumbs_root() / data.safe_name(style) / "style.json").exists():
+        raise JobError(f"the set {style} has no style yet - Claude finds its patterns first")
+    template = str(a.get("template") or ("" if style else "outline"))
+    if template and (not re.fullmatch(r"[\w-]+", template)
+                     or not (TOOLS / "overlays" / "thumbnails" / template / "index.html").exists()):
         raise JobError(f"no design called {template}")
-    cmd = T + ["make", p, "--id", tid, "--words", words, "--template", template]
+    cmd = T + ["make", p, "--id", tid, "--words", words] + (["--template", template] if template else []) \
+        + (["--style", style] if style else [])
     if a.get("image"):
         img = Path(str(a["image"]).strip().strip('"')).expanduser()
         if not img.is_file() or img.suffix.lower() not in data.PUB_IMAGE_EXT:
@@ -265,6 +299,10 @@ def _thumb_job(kind: str, a: dict) -> tuple[str, list[str], str]:
                 raise JobError(f"not a clip: {clip!r}")
             cmd += ["--clip", clip]
     return f"Thumbnail {tid}: {words} ({p})", cmd, "cpu"
+
+
+def plural_videos(n: int) -> str:
+    return f"{n} video{'' if n == 1 else 's'}"
 
 
 def saved_file(lines: list[str]) -> Path | None:
@@ -308,6 +346,8 @@ class Runner:
         self.jobs: dict[int, Job] = {}
         self.ids = itertools.count(1)
         self.lock = threading.Lock()
+        self.measured: dict[int, list[tuple[str, str]]] = {}     # batch -> (video, analysis) measured for Claude
+        self.opened: set[int] = set()                             # batches whose Claude window is open
 
     def running(self) -> list[Job]:
         return [j for j in self.jobs.values() if j.status in ("running", "cancelling")]
@@ -381,11 +421,62 @@ class Runner:
             job.rc = job.proc.wait()
             job.ended = time.time()
             job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
+            data.record_job(job.kind, job.title, job.args, job.started, job.ended, job.status)   # What it took (0.4.4)
             if job.then_claude and job.status == "done":
-                self._hand_to_claude(job, f)
+                if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it
+                    self._collect(job, f)
+                else:
+                    self._hand_to_claude(job, f)
             if job.then and job.status == "done":
                 self._then_analyse(job, f)
+            if job.batch is not None:
+                self._batch_to_claude(job, f)
         self._next()
+
+    def _mates(self, job: Job) -> list[Job]:
+        with self.lock:
+            return [j for j in self.jobs.values() if j.batch is not None and j.batch == job.batch and j is not job]
+
+    def _analysis_of(self, job: Job) -> str | None:
+        rep = next((ln.split("REPORT:", 1)[1].strip() for ln in reversed(job.lines) if ln.startswith("REPORT:")), "")
+        return Path(rep).parent.name if rep else None
+
+    def _collect(self, job: Job, f) -> None:
+        """A measured video of a batch: Claude checks it with the others, in one window, when the batch is measured."""
+        a = self._analysis_of(job)
+        if not a:
+            return
+        with self.lock:
+            self.measured.setdefault(job.batch, []).append((str(job.args.get("video", "")), a))
+        msg = "Measured - Claude checks it with the rest of the batch, in one window, when the last video is measured"
+        job.lines.append(msg)
+        f.write(msg + "\n")
+
+    def _batch_to_claude(self, job: Job, f) -> None:
+        """The batch's last job ended (downloads, measuring - in any order): ONE Claude window for every video it
+        measured (`/analyze-reference batch <id>`, .app\\batches\\<id>.json), or the usual one when only one was."""
+        with self.lock:
+            if job.batch in self.opened or any(j.status in ("running", "queued", "cancelling")
+                                               for j in self.jobs.values() if j.batch == job.batch):
+                return
+            got = self.measured.pop(job.batch, [])
+            if not got:
+                return
+            self.opened.add(job.batch)
+        try:
+            if len(got) == 1:
+                video, a = got[0]
+                job.claude = system.open_claude(data.review_prompt(video, a), "review", Path(video).stem)
+            else:
+                b = data.new_batch("review", [a for _, a in got], f"b{job.batch}")
+                job.claude = system.open_claude(data.batch_prompt(b), "review", f"batch of {len(got)}")
+                data.mark_batch_opened(b["id"])
+            msg = f"Claude Code opened to check {plural_videos(len(got))} ({job.claude['prompt']})"
+        except Exception as e:                                  # noqa: BLE001 - the measuring itself succeeded
+            job.claude = {"ok": False, "error": str(e)}
+            msg = f"Could not open Claude Code: {e} - the Analyser has *Continue the batch* / Send to Claude"
+        job.lines.append(msg)
+        f.write(msg + "\n")
 
     def _then_analyse(self, job: Job, f) -> None:
         """Add videos: the download ended well - its saved video is analysed next (queued behind the others)."""

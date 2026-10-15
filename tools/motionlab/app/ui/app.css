@@ -617,7 +617,7 @@ button.kbadge:hover { filter: brightness(1.25); }
 .pchk-h { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; } .pchk-h h3 { margin: 0; }
 .seg { display: inline-flex; border: 1px solid var(--line2); border-radius: 999px; overflow: hidden; }
 .seg button { background: none; border: 0; color: var(--muted); font: inherit; font-size: 12.5px; padding: 4px 12px; cursor: pointer; }
-.seg button.on { background: var(--kc); color: #111; font-weight: 600; } .seg button span { opacity: .75; margin-left: 3px; }
+.seg button.on { background: var(--kc, var(--acc)); color: #111; font-weight: 600; }   /* --kc: a prompt kind's colour, else the section's */ .seg button span { opacity: .75; margin-left: 3px; }
 .pchk-sum { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .pill { font-size: 13px; font-weight: 600; border-radius: 999px; padding: 3px 12px; }
 .pill.clear { color: var(--green); background: #12352a; } .pill.vague { color: var(--amber); background: #3a2f05; } .pill.missing { color: var(--red); background: #3a1515; }
@@ -847,6 +847,10 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 /* 0.4 phase 5: Generate's dialog - the videos whose style to follow, as chips */
 .gstyle { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow: auto; }
 .gstyle .fchip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
+.gpre { display: flex; flex-wrap: wrap; gap: 6px; }                 /* Edit several videos' presets (0.4.5) */
+.gpre .fchip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
+.bkrow { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--line); border-left: 3px solid var(--violet); background: color-mix(in srgb, var(--violet) 6%, var(--panel)); }
 .nedet > input[type=text] { justify-self: stretch; }
 
 /* 0.4 phase 6: Colour & look - the main colours and every shot's colour in order */
@@ -859,6 +863,56 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .cstrip i:hover { outline: 2px solid #fff; outline-offset: -2px; }
 
 /* ---------------- Prepare (after 0.4.1): the script - improve yours or write one from zero; the check (no Claude) */
+/* 0.4.3.5 round 3: the two big ways, a slim "Only need a title or thumbnail?" row, then the list in two halves -
+   talking scripts (green) | titles & thumbnails (blue), each with its own cards */
+.tfrow { display: flex; gap: 14px; align-items: center; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--line);
+  border-left: 3px solid var(--blue); border-radius: 12px; background: color-mix(in srgb, var(--blue) 5%, var(--panel)); }
+.tfrow .tfic { width: 24px; height: 24px; color: var(--blue); }
+.tfrow .btn { border-color: color-mix(in srgb, var(--blue) 55%, transparent); color: var(--blue); }
+.tfrow .btn:hover { background: color-mix(in srgb, var(--blue) 12%, transparent); }
+.tfpick { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
+.tfv { align-self: start; display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 0 0 10px; border: 1px solid var(--line2); border-radius: 10px;
+  background: var(--panel); color: var(--text); cursor: pointer; overflow: hidden; font: inherit; }
+.tfv:hover { border-color: var(--blue); }
+.tfv > b, .tfv > span.small { padding: 0 10px; }
+.tfvpic { position: relative; aspect-ratio: 16 / 9; background: #000; display: block; overflow: hidden; }
+.tfvpic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.preplist { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 22px; }
+.plcol { --pc: var(--green); display: flex; flex-direction: column; gap: 10px; } .plcol.pl-title { --pc: var(--blue); }
+.plh { display: flex; align-items: center; gap: 8px; margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--pc); font-size: 16px; }
+.plh svg.plic { width: 20px; height: 20px; color: var(--pc); }
+.pcn { font: 600 12px var(--mono); color: var(--pc); border: 1px solid color-mix(in srgb, var(--pc) 45%, transparent); border-radius: 999px; padding: 0 7px; }
+.pcempty { padding: 18px; border: 1px dashed var(--line2); border-radius: 10px; color: var(--dim); text-align: center; font-size: 13px; }
+.spcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.ttcards { display: flex; flex-direction: column; gap: 10px; }
+.spc, .ttc { --pc: var(--green); display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--line2); border-left: 3px solid var(--pc);
+  border-radius: 10px; background: #111116; cursor: pointer; transition: border-color .15s, transform .15s, background .15s; outline: none; }
+.ttc { --pc: var(--blue); }
+.spc:hover, .ttc:hover, .spc:focus-visible, .ttc:focus-visible { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 6%, #111116); transform: translateY(-1px); }
+.spc.k-hook { --pc: var(--pink); }
+.pcact { display: none; gap: 4px; margin-left: 4px; }   /* Rename + Delete, on hover (they take the date's place) */
+.spc:hover .pcact, .ttc:hover .pcact, .pcact:focus-within { display: inline-flex; }
+.spc:hover .pgwhen, .ttc:hover .pgwhen { display: none; }
+.spc-top .pgwhen, .spc-top .pcact { margin-left: auto; }
+.spc-top { display: flex; gap: 6px; align-items: center; }
+.spk { font: 700 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--pc); }
+.spc-title { font-size: 15px; }
+.spc-hook { font-size: 13.5px; color: var(--text); opacity: .85; font-style: italic; line-height: 1.45; border-left: 2px solid var(--line2); padding-left: 10px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.spc-foot { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.spc-end { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.spc-act { display: flex; gap: 10px; align-items: center; }
+.spc-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.spc-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.spc-act .spc-done { opacity: .45; }
+.spc-act .spc-done:hover, .spc-act .spc-done:focus-visible { opacity: 1; }
+.ttc-best { font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+.ttc-thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ttc-th { position: relative; aspect-ratio: 16 / 9; border-radius: 6px; display: grid; place-items: center; padding: 4px; text-align: center;
+  background: linear-gradient(135deg, #1b2533, #0c0f14); border: 1px solid #2b3a52; }
+.ttc-th b { font-weight: 800; font-size: 12px; line-height: 1.1; color: #fff; text-transform: uppercase; text-shadow: 0 1px 0 #000, 0 0 6px #000; }
+.ttc-th i { position: absolute; left: 5px; top: 3px; font: 600 10px var(--mono); color: var(--blue); font-style: normal; }
+@media (max-width: 1150px) { .preplist { grid-template-columns: minmax(0, 1fr); } }
 .spwait { display: flex; flex-direction: column; gap: 6px; }
 .spw { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px dashed var(--line2); border-radius: 10px; background: var(--panel); }
 .spgrid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; align-items: start; }
@@ -1122,6 +1176,7 @@ table.pbch input { padding: 4px 8px; }
 .wbar:hover { border-style: solid; border-color: var(--amber); }
 .wbar .i { color: var(--amber); }
 .wbar .wgo { color: var(--amber); font-size: 12.5px; white-space: nowrap; }
+.frow { margin: 12px 0; align-items: center; }   /* the Analyser's filters + the test-videos box at the right */
 .refcard .cact { flex-wrap: wrap; } .refcard .cact .fnl { flex: 1 1 100%; min-width: 0; }   /* the next step on its own line, its button under it */
 .pcard .pwhen { position: absolute; left: 8px; bottom: 8px; font-size: 11.5px; padding: 1px 8px; border-radius: 10px; background: #000b; color: #fff; border: 1px solid #fff3; }
 .pcard { position: relative; }
@@ -1246,3 +1301,98 @@ details.pbself[open] > summary::before { content: '▾'; }
 .tptext { max-width: 1100px; margin: 0 auto; padding: 33vh 40px 70vh; }
 .tptext p { margin: 0 0 .7em; font-size: 46px; line-height: 1.35; font-weight: 600; color: #f4f4f4; }
 @media (max-width: 900px) { .fi1 { grid-template-columns: 1fr; } .tptext p { font-size: 32px; } }
+
+/* What it took (0.4.4): a timeline of Claude's steps and the lab's jobs at the end of a video's / an analysis'
+   Overview; the live line ("Claude is working") in the sidebar and on that video's page */
+.took { margin-top: 14px; }
+.tkline { list-style: none; margin: 12px 0 0; padding: 0 0 0 4px; position: relative; }
+.tkline::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 2px; background: var(--line2); }
+.tk { display: flex; gap: 12px; padding: 7px 0; position: relative; }
+.tkdot { flex: none; width: 12px; height: 12px; margin-top: 4px; border-radius: 50%; background: var(--violet);
+  box-shadow: 0 0 0 3px var(--panel); position: relative; }
+.tk.job .tkdot { background: var(--panel2); border: 2px solid var(--muted); }
+.tkh { font-size: 14px; }
+.tkm { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.tkm b { color: var(--text); font-weight: 600; }
+.tktot { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-top: 12px; padding: 10px 12px;
+  border-radius: 8px; background: color-mix(in srgb, var(--violet) 9%, var(--panel2)); border: 1px solid color-mix(in srgb, var(--violet) 30%, var(--line)); }
+.tktot b { font-size: 16px; }
+.tkk { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--violet); font-weight: 700; }
+.tksay { margin-top: 8px; font-size: 14px; }
+.tkmore { margin-top: 8px; }
+.tkmore summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.tkother { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.tknote { margin-top: 8px; }
+.spc-took { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.spc-took svg.i { width: 14px; height: 14px; }
+#side-live { display: flex; gap: 9px; align-items: center; margin: 8px 0 2px; padding: 8px 10px; border-radius: 8px;
+  color: var(--text); background: color-mix(in srgb, var(--violet) 12%, transparent); border: 1px solid color-mix(in srgb, var(--violet) 35%, transparent); }
+#side-live[hidden], .liveline[hidden] { display: none; }
+#side-live:hover { text-decoration: none; border-color: var(--violet); }
+#side-live span { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+#side-live b { font-size: 13px; font-weight: 600; }
+#side-live small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.liveline { display: flex; gap: 9px; align-items: center; margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+  background: color-mix(in srgb, var(--violet) 10%, var(--panel)); border: 1px solid color-mix(in srgb, var(--violet) 30%, var(--line)); }
+.lvdot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--violet); animation: lvpulse 1.6s ease-in-out infinite; }
+@keyframes lvpulse { 50% { opacity: .35; } }
+
+/* Thumbnail sets (0.4.5): the Analyser's section, Add thumbnails, a set's page - the pictures in the main column, Claude's
+   patterns in a side panel that stays in view and folds away, the lab's own numbers folded under the pictures */
+.sech { display: flex; align-items: center; gap: 8px; margin: 22px 0 10px; font-size: 15px; }
+.sech svg.i { color: var(--acc); }
+.sech .pcn { font: 600 12px var(--mono); color: var(--acc); border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent); border-radius: 999px; padding: 0 7px; }
+.tsf { margin-top: 10px; }
+.tsdrop { display: block; padding: 18px; border: 1.5px dashed var(--line2); border-radius: 10px; text-align: center; color: var(--muted); cursor: pointer; }
+.tsdrop.on, .tsdrop:hover { border-color: var(--acc); color: var(--text); }
+/* "Find the patterns again": not the main button once there are patterns, but easy to find (the user: "stand out") */
+.btn.tsfind { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc) 35%, transparent), 0 0 18px color-mix(in srgb, var(--acc) 22%, transparent); }
+.btn.tsfind:hover { background: color-mix(in srgb, var(--acc) 22%, transparent); }
+.tslayout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; align-items: start; margin-top: 4px; }
+.tslayout.folded { grid-template-columns: minmax(0, 1fr); }
+.tslayout.folded .tsside { display: none; }
+.tsside { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; border-color: color-mix(in srgb, var(--violet) 45%, var(--line)); }
+.tsside-h { align-items: center; gap: 8px; }
+.tsside-h h2 { margin: 0; font-size: 16px; }
+.tsside-h .clchip { margin-right: auto; }
+.clchip, .mlchip { font: 600 11px/18px var(--ui); letter-spacing: .04em; padding: 0 8px; border-radius: 999px; white-space: nowrap; }
+.clchip { color: var(--violet); background: color-mix(in srgb, var(--violet) 15%, transparent); border: 1px solid color-mix(in srgb, var(--violet) 45%, transparent); }
+.mlchip { color: var(--cyan); background: color-mix(in srgb, var(--cyan) 12%, transparent); border: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent); }
+.tssum { margin-top: 8px; }
+.tssum summary { cursor: pointer; }
+.tssum p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; }
+.tspats { display: flex; flex-direction: column; gap: 6px; }
+.tspat { padding: 8px 10px; border: 1px solid var(--line); border-left: 3px solid var(--line2); border-radius: 8px; background: var(--panel2); cursor: pointer; }
+.tspat:hover { border-color: var(--line2); }
+.tspat.lit { border-color: var(--violet); box-shadow: 0 0 0 1px var(--violet) inset; }
+.tspat.v-correct { border-left-color: var(--green); } .tspat.v-partly { border-left-color: var(--amber); } .tspat.v-wrong { border-left-color: var(--red); }
+.tspat-t { display: flex; gap: 8px; align-items: baseline; font-size: 13px; line-height: 1.4; }
+.tspat-t .fchip { flex: none; }
+.tspat-f { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.tsvb { display: flex; gap: 4px; flex: none; }
+.tsvb .vbt { padding: 2px 8px; font-size: 12px; }
+.vbt.on.correct { background: #12352a; border-color: var(--green); color: var(--green); }
+.vbt.on.partly { background: #3a2f05; border-color: var(--amber); color: var(--amber); }
+.vbt.on.wrong { background: #3a1515; border-color: var(--red); color: var(--red); }
+.tskv { margin-top: 12px; grid-template-columns: 70px 1fr; }
+.swatch { display: inline-block; width: 18px; height: 18px; border-radius: 4px; border: 1px solid #ffffff30; vertical-align: -4px; margin-right: 4px; }
+.swatch.big { width: 30px; height: 30px; border-radius: 6px; }
+.tsmeas { margin-top: 14px; border-color: color-mix(in srgb, var(--cyan) 30%, var(--line)); }
+.tsmeas summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; }
+.tsmeas summary h2 { margin: 0; font-size: 15px; }
+.tslines { margin: 4px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.tsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.tscell { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); transition: opacity .15s, box-shadow .15s; }
+.tscell img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+.tscell figcaption { padding: 6px 8px; font-size: 12.5px; line-height: 1.35; }
+.tscell.hl { box-shadow: 0 0 0 2px var(--violet), 0 0 16px color-mix(in srgb, var(--violet) 40%, transparent); }
+.tscell.dimmed { opacity: .35; }
+.tscell .tsrm { position: absolute; top: 6px; right: 6px; display: none; background: #000a; }
+.tscell:hover .tsrm, .tsrm:focus-visible { display: inline-flex; }
+@media (max-width: 1150px) { .tslayout { grid-template-columns: minmax(0, 1fr); } .tsside { position: static; max-height: none; order: -1; } }
+.tsmeas { margin: 0 0 12px; }                       /* above the pictures: nothing important under the list */
+.tssort { align-items: center; gap: 8px; margin: 0 0 10px; }
+.tscell figcaption .tsct { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.tscd { display: flex; flex-wrap: wrap; gap: 2px 6px; margin-top: 3px; font-size: 11.5px; color: var(--muted); }
+.tscd i { font-style: normal; color: var(--dim); }
+.tscd .ok { color: var(--green); }

@@ -225,6 +225,7 @@ const ALIASES = {'#/refs': '#/analyze', '#/analyser': '#/analyze', '#/generator'
 const PAGES = [
   [/^#?\/?$/, pageHome, 'home'], [/^#\/analyze$/, pageRefs, 'analyze'],
   [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)|(verdicts)))?$/, pageRef, 'analyze'], [/^#\/edit$/, pageProjects, 'edit'],
+  [/^#\/thumbs\/([^/?]+)$/, pageThumbs, 'analyze'],
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/prepare$/, pagePrepare, 'prepare'],
   [/^#\/generate$/, pageGenerate, 'generate'],
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
@@ -250,7 +251,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 21;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 25;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -292,6 +293,7 @@ async function ping() {
     if ((p.api || 1) < API_LEVEL) banner('oldsrv', 'MotionLab was updated but its server is still the old one. <button class="btn sm pri">Restart now</button>', restartApp);
     else if (PAGE_VERSION && p.version !== PAGE_VERSION) { location.reload(); return; }
     sideUpdate(p);
+    liveLine(p.claude || []);
     $('#jobcount').textContent = p.running || '';
     const st = (p.resolve || {}).state || '…';
     const d = $('#resolve-state .dot');
@@ -651,7 +653,11 @@ function overviewTab(el, R, showTab) {
     <button class="btn pri" data-use="edit"><svg class="i"><use href="#i-edit"/></svg>Edit my clips like this…</button>
     <button class="btn" data-use="prompts"><svg class="i"><use href="#i-generate"/></svg>Prompts for AI tools like this…</button>
     <button class="btn ghost" data-use="again" title="the same video again with another focus - the measurements are re-used">Analyse again with another focus…</button></div>
-    <div class="small muted" style="margin-top:8px">Claude also reads it from its memory when you edit or generate - nothing to copy.</div></div>`;
+    <div class="small muted" style="margin-top:8px">Claude also reads it from its memory when you edit or generate - nothing to copy.</div></div>
+  <div id="ovtook"></div>`;
+  el.insertAdjacentHTML('afterbegin', `<div class="liveline" data-live="${esc(R.name)}" data-name="${esc(R.title || R.name)}" hidden></div>`);
+  liveLine(LIVE);
+  tookPanel($('#ovtook', el), 'analysis', R.name);
   $$('[data-ovgo]', el).forEach(b => b.onclick = () => showTab(b.dataset.ovgo, true));
   wireColour(el, R);
   $('[data-use=edit]', el).onclick = () => createVideoModal({from: 'reference', pick: R.name});
@@ -1010,8 +1016,13 @@ const FOCUS_OPTS = [
   ['cinematic', 'Cinematic', 'Effects, transitions, camera moves, speed ramps and the colour grade.', 'music videos, edits, trailers, ads', '+ the colour look'],
   ['both', 'Both', 'Everything - the content and the cinematic side.', 'when you are not sure', 'takes a little longer']];
 const AV_MAX = 10;
+// Claude's usual time per item on this PC (0.4.5, GET /api/estimate = What it took's numbers) -> one line before a batch
+function estWords(e, n, what = 'video') {
+  return e ? `Claude usually takes about ${minWords(e.minutes)} ${/^[aeiou]/i.test(what) ? 'an' : 'a'} ${what} on this PC${n > 1 ? ` - about <b>${minWords(e.minutes * n)}</b> for ${n}` : ''}`
+    : `Claude's time per ${what} is not measured on this PC yet`;
+}
 async function addVideosModal(pre = {}) {
-  const [cands, ST] = await Promise.all([api('/api/candidates'), api('/api/settings')]);
+  const [cands, ST, EST] = await Promise.all([api('/api/candidates'), api('/api/settings'), api('/api/estimate').catch(() => ({}))]);
   const cl = ST.tools.find(t => t.name === 'claude') || {}, yt = ST.tools.find(t => t.name === 'yt-dlp') || {};
   const picked = new Set(pre.files || []);
   let focus = pre.focus || ST.settings.default_focus || 'both';
@@ -1032,8 +1043,9 @@ async function addVideosModal(pre = {}) {
     <div class="row small" style="margin-top:8px"><label>Kind of video <select id="avcat">${ST.categories.map(o => `<option value="${o.id}" ${o.id === ST.settings.default_category ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select></label>
       <span class="dim">pacing and lessons are compared within a kind</span></div>
     <div class="avstep"><b>3</b><span>Claude's check</span></div>
-    <label class="chk avclaude"><input type="radio" name="avc" value="1" ${cl.found ? 'checked' : 'disabled'}><span><b>Claude checks each video when it is measured</b> (recommended) - a Claude Code window opens per video:
-      it names every effect and writes what makes the video work, so it can use it in your edits.${cl.found ? '' : ' <span class="bad">Claude Code was not found - Settings.</span>'}</span></label>
+    <label class="chk avclaude"><input type="radio" name="avc" value="1" ${cl.found ? 'checked' : 'disabled'}><span><b>Claude checks them when they are measured</b> (recommended) - one Claude Code window for all of them:
+      it names every effect and writes what makes each video work, so it can use it in your edits.${cl.found ? '' : ' <span class="bad">Claude Code was not found - Settings.</span>'}
+      <span class="small muted" id="avest"></span></span></label>
     <label class="chk avclaude"><input type="radio" name="avc" value="0" ${cl.found ? '' : 'checked'}><span><b>Measure only</b> - send them to Claude later (each video gets a <i>Send to Claude</i> button).</span></label>
     <details class="fold" style="margin-top:10px"><summary>More options</summary><div class="in"><div class="form">
       <label for="avtags">Tags ${optTag()}</label><input type="text" id="avtags" placeholder="e.g. instagram, asmr, recipe">
@@ -1049,6 +1061,7 @@ async function addVideosModal(pre = {}) {
       b.innerHTML = `<svg class="i"><use href="#i-analyze"/></svg>Analyze ${n > 1 ? n + ' videos' : n === 1 ? 'the video' : ''}`;
       $('#avsum', el).innerHTML = bad.length ? `<span class="bad">not a link: ${esc(bad[0])}</span>` : n > AV_MAX ? `<span class="bad">at most ${AV_MAX} at a time</span>`
         : n ? `${L.length ? plural(L.length, 'link') + ' (downloaded first)' : ''}${L.length && F.length ? ' + ' : ''}${F.length ? plural(F.length, 'file') : ''} · about 1–2 minutes per minute of video${focus !== 'cinematic' ? ', + the transcript' : ''}` : 'Paste a link or pick a video.';
+      $('#avest', el).innerHTML = ' ' + estWords(EST.review, n) + '.';
     };
     $('#avl', el).oninput = upd;
     $('#avfiles', el).onchange = upd;
@@ -1111,11 +1124,13 @@ function flowAction(r, fl, onPage = false) {         // the button for a referen
     default: return '';
   }
 }
-function flowStrip(r, fl) {                           // the video's page: download > measure > Claude | teach Claude (optional)
-  const step = ([k, t, d], i) => `<div class="fstep${i >= 3 ? ' opt' : ''} ${fl.done.includes(k) ? 'done' : k === fl.next ? 'next' : ''}" title="${esc(d)}${i >= 3 ? ' (optional)' : ''}"><b>${fl.done.includes(k) ? '✓' : i + 1}</b><span class="ft">${t}</span></div>`;
-  return `<div class="flow strip">${FLOW.slice(0, 3).map(step).join('<i class="farr">›</i>')}
-    <span class="fopt">Teach Claude ${optTag()}</span>${FLOW.slice(3).map((x, i) => step(x, i + 3)).join('<i class="farr">›</i>')}
-    <div class="grow"></div><div class="fnext"><span class="small">${esc(flowNext(fl))}</span>${flowAction(r, fl, true)}</div></div>`;
+// the video's page: where it stands + the one next thing (0.4.3.5, the user: "remove the listing in analyze as well" -
+// the numbered steps Download > Measure > Claude checks | Teach Claude 4 5 6 were as ambiguous as Prepare's)
+function flowStrip(r, fl) {
+  const nx = flowNext(fl).replace(/^(Next: |Ready ✓ · )/, ''), cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  return `<div class="flow strip">${fl.next === 'claude' ? '<b class="amber">Not checked by Claude yet</b>'
+      : '<b class="ok">✓ Ready</b><span class="small muted">Claude checked it - your edits and prompts can use its style</span>'}
+    <div class="grow"></div>${fl.next ? `<div class="fnext"><span class="small${fl.next === 'claude' ? '' : ' muted'}">${esc(cap(nx))}</span>${flowAction(r, fl, true)}</div>` : ''}</div>`;
 }
 
 async function feedbackModal(name) {
@@ -1266,6 +1281,232 @@ function waitingModal(wait) {
 }
 // one analysis as a card like the Editor's (0.4.3.5): a frame with the date it was analysed, the name, the length; the
 // rhythm in one line; the next step with its button
+// ---- thumbnail sets (0.4.5, the user: "I give 15 thumbnails from mr beast, it analyzes them and then sees common
+// patterns like font, color, structure ... then that information can be used when im generating thumbnails"):
+// analysis\thumbs\<set> (motionlab\thumbsets.py): the pictures only (no video), measured by the lab; Claude's
+// /analyze-reference thumbs <set> writes the patterns (style.json); the user marks each one; Ready to post uses them
+const THUMBS_JOBS = ['thumbs_fetch', 'thumbs_links', 'thumbs_measure', 'thumbs_more', 'thumbs_refresh'];
+// a set's pictures in order (the user, 2026-10-15: "add some filters like most viewed or less viewed ... and some data
+// to the card like the date"): # = as added; views; date (YouTube's "3 weeks ago" = an approximate date, ≈)
+const TS_SORTS = [['n', '#'], ['views_d', 'Most viewed'], ['views_a', 'Least viewed'], ['date_d', 'Newest'], ['date_a', 'Oldest']];
+// newest / oldest: the place in the channel's listing first (exact), else the date (a picture from a link)
+const tsDay = it => Date.parse(it.upload_date || '') || 0;
+const tsSortCmp = {n: (a, b) => a.n - b.n, views_d: (a, b) => (b.views ?? -1) - (a.views ?? -1), views_a: (a, b) => (a.views ?? Infinity) - (b.views ?? Infinity),
+  date_d: (a, b) => (a.pos != null && b.pos != null ? a.pos - b.pos : tsDay(b) - tsDay(a)),
+  date_a: (a, b) => (a.pos != null && b.pos != null ? b.pos - a.pos : (tsDay(a) || Infinity) - (tsDay(b) || Infinity))};
+const tsSorted = (items, k) => items.slice().sort((a, b) => tsSortCmp[k](a, b) || a.n - b.n);
+const compactNum = v => v >= 1e9 ? `${+(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `${+(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : String(v);
+// an exact date as a date; an approximate one (YouTube's "3 weeks ago" read back) in the same words, not a false day
+const dayWords = (d, approx) => { const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(d || ''); if (!m) return '';
+  if (!approx) return `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}`;
+  const days = Math.max(0, Math.round((Date.now() - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 864e5));
+  const [n, w] = days < 14 ? [days, 'day'] : days < 60 ? [Math.round(days / 7), 'week'] : days < 365 ? [Math.round(days / 30), 'month'] : [Math.round(days / 365), 'year'];
+  return n === 0 ? '≈ today' : `≈ ${plural(n, w)} ago`; };
+const lenOf = s => s == null ? '' : s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s % 3600 / 60))}:${pad(Math.round(s % 60))}` : `${Math.floor(s / 60)}:${pad(Math.round(s % 60))}`;
+let TS_SORT = 'n';
+const setSlug = s => String(s || '').normalize().replace(/[^\p{L}\p{N}_\-. ]+/gu, '_').trim().replace(/\s+/g, '_')
+  .replace(/\.{2,}/g, '_').replace(/_{2,}/g, '_').replace(/^[_. ]+|[_. ]+$/g, '').slice(0, 80);
+const hexOk = c => /^#[0-9a-f]{6}$/i.test(String(c || ''));
+function setCard(s) {
+  const t = strTime(s.updated);
+  return `<div class="card pcard setcard"><a class="clink" href="#/thumbs/${encodeURIComponent(s.name)}">
+    <div class="ppic">${s.cover ? `<img src="${fileUrl(s.cover)}" loading="lazy" alt="">` : '<svg class="ic"><use href="#i-thumb"/></svg>'}
+      <span class="pbadges">${s.has_style ? '' : '<span class="pbadge todo" title="Claude has not looked at them yet">patterns not found yet</span>'}</span>
+      ${t ? `<span class="pwhen">${esc(whenWords(t))}</span>` : ''}</div>
+    <div class="cb"><span class="ct">${esc(s.label)}</span><div class="small">${plural(s.count, 'thumbnail')}${s.channel_total ? ` <span class="muted">of ${s.channel_total} on the channel</span>` : ''}${s.measured < s.count ? ` · ${s.measured} measured` : ''}</div></div></a>
+    <div class="pfacts"><span class="fchip sm">Thumbnail set</span>${s.has_style ? '<span class="small ok">✓ patterns found</span>' : ''}</div>
+    <span class="pdel">${delBtn('thumbs', s.name)}</span></div>`;
+}
+// a picture the user picked or dropped -> the set (a raw body, like Film it's uploads; the server copies it in)
+function uploadThumb(set, file) {
+  return fetch(`/api/thumbs/${encodeURIComponent(set)}/upload?name=${encodeURIComponent(file.name)}`,
+    {method: 'POST', headers: {'X-ML-Token': TOKEN, 'Content-Type': 'application/octet-stream'}, body: file})
+    .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok || j.error) throw new Error(j.error || r.statusText); return j; });
+}
+async function addThumbsModal(pre = {}) {
+  const ST = await api('/api/settings'), yt = ST.tools.find(t => t.name === 'yt-dlp') || {};
+  const st = {from: 'channel', n: '15', order: 'newest'}, files = [];
+  modal(`<h2>${pre.set ? 'Add more thumbnails' : 'Add thumbnails'}</h2>
+    <div class="small muted" style="margin-top:-4px">Only the pictures, their titles and views are kept - no video is downloaded, and they stay on this PC.
+      Then Claude finds what they have in common: the text, the font's style, the colours, the structure.</div>
+    ${pre.set ? '' : `<div class="avstep"><b>1</b><span>Name the set</span></div><input type="text" id="tsname" placeholder="e.g. MrBeast" maxlength="60" style="max-width:320px">`}
+    <div class="avstep"><b>${pre.set ? 1 : 2}</b><span>From where?</span></div>
+    <div class="seg" id="tsfrom"><button data-v="channel">A channel or playlist</button><button data-v="links">Some videos</button><button data-v="files">Pictures you have</button></div>
+    <div class="tsf" data-f="channel"><input type="text" id="tsurl" placeholder="https://www.youtube.com/@MrBeast" style="width:100%">
+      <div class="row small" style="margin-top:8px">start with <div class="seg" id="tsn">${['10', '15', '20', '30'].map(v => `<button data-v="${v}">${v}</button>`).join('')}</div>
+        <div class="seg" id="tsord"><button data-v="newest">the newest</button><button data-v="views">the most viewed</button></div></div>
+      <div class="small muted" style="margin-top:6px">MotionLab lists the whole channel (a few seconds) - add more from the set's page whenever you want.
+        Claude reads them 15 to a sheet, so a bigger set takes Claude longer.</div></div>
+    <div class="tsf" data-f="links"><textarea id="tslinks" rows="4" placeholder="One video link per line" style="width:100%"></textarea></div>
+    <div class="tsf" data-f="files"><label class="tsdrop" id="tsdrop"><input type="file" id="tsfiles" accept=".jpg,.jpeg,.png,.webp" multiple hidden>
+      <span>Drop pictures here or <b>choose them</b> (.jpg .png .webp) - copies go into the set, your files stay where they are</span></label><div class="small muted" id="tsflist"></div></div>
+    ${yt.found ? '' : '<div class="small amber" style="margin-top:6px">Links need the downloader (yt-dlp): Settings → Programs. Your own pictures work without it.</div>'}
+    <div class="row" style="margin-top:14px"><button class="btn pri big" id="tsgo" disabled><svg class="i"><use href="#i-thumb"/></svg>Add the thumbnails</button><span class="small muted" id="tssum"></span></div>`, el => {
+    const nameOf = () => pre.set || setSlug($('#tsname', el).value);
+    const links = () => $('#tslinks', el).value.split(/\s+/).map(x => x.trim()).filter(Boolean);
+    const upd = () => {
+      $$('.tsf', el).forEach(x => x.hidden = x.dataset.f !== st.from);
+      const url = $('#tsurl', el).value.trim(), L = links();
+      const ready = nameOf() && (st.from === 'channel' ? /^https?:\/\/\S+$/i.test(url) && yt.found
+        : st.from === 'links' ? L.length && L.every(u => /^https?:\/\/\S+$/i.test(u)) && yt.found : files.length);
+      $('#tsgo', el).disabled = !ready;
+      $('#tssum', el).textContent = !nameOf() ? 'Name the set first.' : st.from === 'files' ? (files.length ? plural(files.length, 'picture') : '') : '';
+      $('#tsflist', el).textContent = files.map(f => f.name).join(' · ');
+    };
+    spSeg(el, '#tsfrom', st, 'from', upd); spSeg(el, '#tsn', st, 'n'); spSeg(el, '#tsord', st, 'order');
+    ['#tsurl', '#tslinks'].forEach(s => $(s, el).oninput = upd);
+    const nm = $('#tsname', el); if (nm) { nm.oninput = upd; nm.focus(); }
+    const addF = list => { for (const f of list) if (/\.(jpe?g|png|webp)$/i.test(f.name) && !files.some(x => x.name === f.name && x.size === f.size)) files.push(f); upd(); };
+    $('#tsfiles', el).onchange = e => { addF(e.target.files); e.target.value = ''; };
+    const dz = $('#tsdrop', el);
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add('on'); };
+    dz.ondragleave = () => dz.classList.remove('on');
+    dz.ondrop = e => { e.preventDefault(); dz.classList.remove('on'); addF(e.dataTransfer.files); };
+    $('#tsgo', el).onclick = async () => {
+      const b = $('#tsgo', el), set = nameOf(), label = pre.set ? '' : $('#tsname', el).value.trim();
+      b.disabled = true;
+      try {
+        if (st.from === 'files') {
+          for (let i = 0; i < files.length; i++) { $('#tssum', el).textContent = `copying ${i + 1} of ${files.length}…`; await uploadThumb(set, files[i]); }
+          closeModal(); toast(`${plural(files.length, 'picture')} added and measured`, 'ok');
+          location.hash = '#/thumbs/' + encodeURIComponent(set);
+          return;
+        }
+        const args = st.from === 'channel' ? {set, url: $('#tsurl', el).value.trim(), n: +st.n, order: st.order, label} : {set, urls: links()};
+        await api('/api/jobs', {kind: st.from === 'channel' ? 'thumbs_fetch' : 'thumbs_links', args, queue: true});
+        closeModal(); ping();
+        toast('Getting the thumbnails - the set shows in the Analyser when they are in', 'ok');
+        if (location.hash !== '#/analyze') location.hash = '#/analyze'; else route();
+      } catch (e) { toast(e.message, 'err'); b.disabled = false; }
+    };
+    upd();
+  }, 'wide');
+}
+// one set (the user, 2026-10-15: "make 'What they have in common' a dropdown or pop up so they dont take up all space
+// of the page ... i also want to look at the thumbnails while reviewing them"): the pictures in the main column; beside
+// them a side panel with Claude's patterns that stays in view while the pictures scroll and folds away (◂ / ▸) - a
+// click on a pattern lights up its example pictures; under the pictures the lab's own numbers, folded and labelled
+// "MotionLab · no Claude" (the user: "be clear that it is only MotionLab NOT Claude")
+let TS_FOLD = false, TS_STOP = null;
+async function pageThumbs(main, name) {
+  const S = await api('/api/thumbs/' + encodeURIComponent(name));
+  const ch = S.channel;                                // the whole channel listed once (0.4.5): its size, what is left
+  const st = S.style, V = S.verdicts || {}, items = S.items || [], sm = S.summary || {}, enc = encodeURIComponent(S.name);
+  const nf = v => Number(v).toLocaleString('en');
+  const pats = (st && st.patterns) || [], f = (st && st.font) || {};
+  const marked = pats.filter(p => (V[p.id] || {}).v).length;
+  const side = st ? `<div class="row sp tsside-h"><h2>What they have in common</h2><span class="clchip" title="written by Claude from the numbered pictures">Claude</span>
+        <button class="btn sm ghost icon" id="tsfold" title="Fold it away - the pictures take the whole width">◂</button></div>
+      ${st.summary ? `<details class="tssum"><summary class="small muted">In short <span class="dim">· click to read</span></summary><p>${esc(st.summary)}</p></details>` : ''}
+      <div class="small muted" style="margin:6px 0 8px">${marked} of ${pats.length} marked - click a pattern to light up its pictures, then say if it is really there.</div>
+      <div class="tspats">${pats.map(p => { const v = (V[p.id] || {}).v || '';
+        return `<div class="tspat${v ? ' v-' + v : ''}" data-p="${esc(p.id)}" data-ex="${esc((p.examples || []).join(','))}">
+          <div class="tspat-t"><span class="fchip sm">${esc(p.kind || '')}</span><b>${esc(p.what || '')}</b></div>
+          <div class="tspat-f"><span class="small muted grow">${esc(p.how_many || '')}${(p.examples || []).length ? ` · #${p.examples.map(esc).join(' #')}` : ''}</span>
+            <span class="tsvb">${[['correct', 'Correct'], ['partly', 'Partly'], ['wrong', 'Wrong']].map(([k, l]) => `<button class="btn sm vbt ${k}${v === k ? ' on' : ''}" data-v="${k}">${l}</button>`).join('')}</span></div></div>`; }).join('')}</div>
+      <div class="kv tskv">
+        ${f.style ? kvRow('Font', `${esc(f.style)}${(f.closest || []).length ? ` <span class="dim">- closest: ${f.closest.map(esc).join(', ')}</span>` : ''}${f.sure === false ? ' <span class="dim">(a guess from the pictures)</span>' : ''}`) : ''}
+        ${(st.colours || []).filter(hexOk).length ? kvRow('Colours', st.colours.filter(hexOk).map(c => `<span class="swatch" style="background:${c}" title="${c}"></span>`).join('')) : ''}
+        ${st.words ? kvRow('Words', `${st.words.median ?? '?'} on average, at most ${st.words.max ?? '?'}${st.words.case ? ' · ' + esc(st.words.case) : ''}`) : ''}
+        ${(st.structures || []).length ? kvRow('Structure', st.structures.map(s => `${esc(s.name)} (${esc(s.count)})`).join(' · ')) : ''}</div>
+      <div class="small muted" style="margin-top:10px">Use it in a video: <i>Ready to post</i> → Make a thumbnail yourself → <b>In the style of ${esc(S.label || S.name)}</b>.</div>`
+    : `<div class="row sp tsside-h"><h2>What they have in common</h2><span class="clchip">Claude</span>
+        <button class="btn sm ghost icon" id="tsfold" title="Fold it away">◂</button></div>
+      <div class="small muted">Claude has not looked at this set yet. It reads the numbered pictures and names what repeats - the text, the
+        font's style, the colours, the structure, the faces - so <i>Ready to post</i> can make your thumbnails in this style.</div>`;
+  main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/analyze">Analyser</a> / thumbnail set</div><h1>${esc(S.label || S.name)}</h1>
+      <div class="sub">${plural(items.length, 'thumbnail')}${ch && ch.total ? ` of the ${ch.total} videos of ${esc(ch.who || 'the channel')}` : (S.source || {}).url ? ` from ${esc(S.source.url)}` : ''}${S.updated ? ` · ${esc(whenStr(S.updated))}` : ''}</div></div>
+      <div class="row">${delBtn('thumbs', S.name, '#/analyze', 'Delete')}</div></div>
+    <div class="toprow">${claudeBtn(`/analyze-reference thumbs ${S.name}`, st ? 'Find the patterns again' : 'Find the patterns with Claude', 'review', `thumbs ${S.name}`, st ? 'big tsfind' : 'pri big')}
+      ${ch && ch.left !== 0 ? `<button class="btn big" id="tsnext" title="The next ones of ${esc(ch.who || 'the channel')} that are not in the set yet"><svg class="i"><use href="#i-download"/></svg>More from the channel${ch.left ? ` <span class="small muted">· ${ch.left} left</span>` : ''}</button>` : ''}
+      <button class="btn${ch && ch.left !== 0 ? '' : ' big'}" id="tsmore"><svg class="i"><use href="#i-thumb"/></svg>Add more</button>
+      <span class="grow"></span><button class="btn ghost" id="tsopen"${TS_FOLD ? '' : ' hidden'}>What they have in common ▸</button></div>
+    <div id="tsprog"></div>
+    <div class="tslayout${TS_FOLD ? ' folded' : ''}">
+      <div class="tsmain">
+        <details class="panel tsmeas"><summary><h2>Measured by MotionLab</h2><span class="mlchip" title="the app's own numbers, measured from the pictures - Claude was not involved">MotionLab · no Claude</span>
+          <span class="small muted">colours, brightness, faces, where the text sits - numbers only</span></summary>
+          ${(sm.colours || []).length ? `<div class="row" style="gap:6px;margin:10px 0 6px">${sm.colours.filter(c => hexOk(c.hex)).map(c => `<span class="swatch big" style="background:${c.hex}" title="${esc(c.word || '')} ${c.hex} - in ${c.pictures} pictures"></span>`).join('')}</div>` : ''}
+          <ul class="tslines">${(S.lines || []).filter(l => !/^Claude's style/.test(l)).map(l => `<li>${esc(l)}</li>`).join('')}</ul></details>
+        <div class="row tssort"><span class="small muted">Sort</span><div class="seg" id="tssort">${TS_SORTS.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join('')}</div>
+          <span class="grow"></span>${ch ? `<button class="btn sm ghost" id="tsrefresh" title="The channel listed again (seconds, nothing downloaded): the newest views, the dates, the lengths">Update the views and dates</button>` : ''}</div>
+        <div class="tsgrid">${tsSorted(items, TS_SORT).map(it => `<figure class="tscell" data-n="${it.n}"><img src="${fileUrl(it.path)}" loading="lazy" alt="">
+          <figcaption><div class="tsct"><b>#${it.n}</b> ${esc(it.title || '')}</div>
+            <div class="tscd">${[it.views != null ? `<span title="${nf(it.views)} views">${compactNum(it.views)} views</span>` : '',
+              it.outperformer != null ? `<span class="${it.outperformer >= 1 ? 'ok' : ''}" title="views ÷ the channel's followers">${it.outperformer}x</span>` : '',
+              it.upload_date ? `<span title="${it.date_approx ? 'about - YouTube only says how long ago' : 'published'}">${dayWords(it.upload_date, it.date_approx)}</span>` : '',
+              it.duration != null ? `<span title="the video's length">${lenOf(it.duration)}</span>` : ''].filter(Boolean).join('<i>·</i>') || '<span class="dim">your picture</span>'}</div></figcaption>
+          <button class="btn sm ghost icon tsrm" data-n="${it.n}" title="Take #${it.n} out of the set">✕</button></figure>`).join('')}</div>
+      </div>
+      <aside class="panel tsside">${side}</aside>
+    </div>`;
+  const lay = $('.tslayout', main);
+  const fold = on => { TS_FOLD = on; lay.classList.toggle('folded', on); $('#tsopen', main).hidden = !on; };
+  $('#tsfold', main).onclick = () => fold(true);
+  $('#tsopen', main).onclick = () => fold(false);
+  $('#tsmore', main).onclick = () => addThumbsModal({set: S.name});
+  const sortSt = {sort: TS_SORT};
+  spSeg(main, '#tssort', sortSt, 'sort', () => {        // the cards move; nothing is asked again
+    TS_SORT = sortSt.sort;
+    const grid = $('.tsgrid', main), cell = Object.fromEntries($$('.tscell', grid).map(c => [c.dataset.n, c]));
+    tsSorted(items, TS_SORT).forEach(it => cell[it.n] && grid.appendChild(cell[it.n]));
+  });
+  const rf = $('#tsrefresh', main);
+  if (rf) rf.onclick = async () => { rf.disabled = true;
+    try { await api('/api/jobs', {kind: 'thumbs_refresh', args: {set: S.name}, queue: true}); ping(); } catch (e) { toast(e.message, 'err'); rf.disabled = false; } };
+  const nx = $('#tsnext', main); if (nx) nx.onclick = () => moreThumbsModal(S, () => pageThumbs(main, S.name));
+  if (TS_STOP) TS_STOP();                             // the page's own progress: getting more, measuring - then redraw
+  TS_STOP = progressPanel($('#tsprog', main), () => pageThumbs(main, S.name), THUMBS_JOBS, j => (j.args || {}).set === S.name);
+  onCleanup(() => { if (TS_STOP) { TS_STOP(); TS_STOP = null; } });
+  // a pattern lights up its example pictures (click again, or another pattern, to change)
+  let lit = null;
+  const light = row => {
+    lit = row && lit !== row ? row : null;
+    const ex = new Set(lit ? lit.dataset.ex.split(',').filter(Boolean) : []);
+    $$('.tspat', main).forEach(r => r.classList.toggle('lit', r === lit));
+    $$('.tscell', main).forEach(c => { c.classList.toggle('hl', ex.has(c.dataset.n)); c.classList.toggle('dimmed', !!lit && !ex.has(c.dataset.n)); });
+    const first = lit && $(`.tscell[data-n="${[...ex][0]}"]`, main);
+    if (first) first.scrollIntoView({block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  };
+  $$('.tspat', main).forEach(row => {
+    row.onclick = e => { if (!e.target.closest('.vbt')) light(row); };
+    $$('.vbt', row).forEach(b => b.onclick = async () => {
+      const v = b.classList.contains('on') ? '' : b.dataset.v;
+      try {
+        await api(`/api/thumbs/${enc}/verdicts`, {patterns: {[row.dataset.p]: {v}}});
+        $$('.vbt', row).forEach(x => x.classList.toggle('on', x.dataset.v === v));
+        row.classList.remove('v-correct', 'v-partly', 'v-wrong'); if (v) row.classList.add('v-' + v);
+      } catch (e) { toast(e.message, 'err'); }
+    });
+  });
+  $$('.tsrm', main).forEach(b => b.onclick = async () => {
+    try { await api(`/api/thumbs/${enc}/remove`, {n: +b.dataset.n}); pageThumbs(main, S.name); } catch (e) { toast(e.message, 'err'); }
+  });
+}
+// More from the channel (the user, 2026-10-15: "if i have 100 thumbnails available for clavero or 150 for mrbeast and
+// i already got 10, 20 i could choose to download other 20/30 batch"): the next n not in the set - the newest or the
+// most viewed - from the listing the set keeps (asked for again when a day old); job thumbs_more
+function moreThumbsModal(S, after) {
+  const ch = S.channel, known = ch.left != null, st = {n: String(known ? Math.min(20, ch.left) : 20), order: 'newest'};
+  const sizes = known ? [10, 20, 30, 50].filter(v => v < ch.left).map(String).concat([String(Math.min(ch.left, 100))]) : ['10', '20', '30', '50'];
+  modal(`<h2>More from ${esc(ch.who || S.label || S.name)}</h2>
+    <div class="small muted" style="margin-top:-4px">${known ? `${ch.in_set} of the channel's ${ch.total} videos are in this set - ${ch.left} left.` : `${ch.in_set} are in this set - MotionLab lists the whole channel first (a few seconds).`} Only their thumbnails, titles and views - no video.</div>
+    <div class="avstep"><b>1</b><span>How many?</span></div><div class="seg" id="tmn">${[...new Set(sizes)].map(v => `<button data-v="${v}">${known && +v === ch.left ? `all ${v}` : v}</button>`).join('')}</div>
+    <div class="avstep"><b>2</b><span>Which ones?</span></div>
+    <div class="seg" id="tmo"><button data-v="newest">the newest not in the set</button><button data-v="views">the most viewed not in the set</button></div>
+    <div class="small muted" id="tmsum" style="margin-top:12px"></div>
+    <div class="row" style="margin-top:12px"><button class="btn pri big" id="tmgo"><svg class="i"><use href="#i-download"/></svg>Add them</button></div>`, el => {
+    const upd = () => { const total = (S.items || []).length + +st.n, sheets = Math.ceil(total / 15);
+      $('#tmsum', el).innerHTML = `The set will have <b>${total}</b> thumbnails - ${plural(sheets, 'sheet')} for Claude when it finds the patterns again.`; };
+    spSeg(el, '#tmn', st, 'n', upd); spSeg(el, '#tmo', st, 'order', upd); upd();
+    $('#tmgo', el).onclick = async () => {
+      $('#tmgo', el).disabled = true;
+      try { await api('/api/jobs', {kind: 'thumbs_more', args: {set: S.name, n: +st.n, order: st.order}, queue: true});
+        closeModal(); ping(); toast(`Getting ${st.n} more thumbnails`, 'ok'); after(); }
+      catch (e) { toast(e.message, 'err'); $('#tmgo', el).disabled = false; }
+    };
+  });
+}
 function refCard(r) {
   const fl = r.flow, t = strTime(r.generated), P = r.pacing || {}, fmt = ((r.format || {}).label || '').split(' · ')[0];   // the shape only: the length is shown
   return `<div class="card pcard refcard ${fl.next ? 'n-' + fl.next : 'n-done'}"><a class="clink" href="#/ref/${encodeURIComponent(r.name)}">
@@ -1274,7 +1515,7 @@ function refCard(r) {
       ${t ? `<span class="pwhen" title="analysed ${esc(r.generated)}">${esc(whenWords(t))}</span>` : ''}</div>
     <div class="cb"><span class="ct">${esc(r.title)}</span><div class="small">${[lenWords(r.frames, r.fps), r.category ? esc(r.category_label) : '', fmt ? `<span class="muted">${esc(fmt)}</span>` : ''].filter(Boolean).join(' · ')}</div></div></a>
     <div class="pfacts"><span>${P.cuts_per_min != null ? `<b>${P.cuts_per_min}</b> cuts/min · ` : ''}<b>${r.events}</b> effect${r.events === 1 ? '' : 's'}</span>${focusChip(r.focus)}</div>
-    <div class="cact"><span class="small fnl grow">${flowDots(fl)} <span class="${fl.next ? '' : 'ok'}">${esc(flowNext(fl))}</span></span>${flowAction(r, fl)}</div>
+    <div class="cact"><span class="small fnl grow ${fl.next ? '' : 'ok'}">${esc(flowNext(fl))}</span>${flowAction(r, fl)}</div>
     <span class="pdel">${delBtn('reference', r.name)}</span></div>`;
 }
 async function pageRefs(main) {
@@ -1282,35 +1523,41 @@ async function pageRefs(main) {
   let stopProgress = null;
   onCleanup(() => stopProgress && stopProgress());
   const draw = async () => {
-    const [all, wait] = await Promise.all([api('/api/references' + (tests ? '?tests=1' : '')), api('/api/waiting').catch(() => [])]);
+    const [all, wait, BAT, SETS] = await Promise.all([api('/api/references' + (tests ? '?tests=1' : '')), api('/api/waiting').catch(() => []),
+      api('/api/batches?kind=review').catch(() => []), api('/api/thumbs').catch(() => [])]);
     const cats = [...new Map(all.filter(r => r.category).map(r => [r.category, r.category_label])).entries()];
     const tags = [...new Set(all.flatMap(r => r.tags || []))].sort();
     const refs = all.filter(r => (!cat || r.category === cat) && (!tag || (r.tags || []).includes(tag)) && (!foc || r.focus === foc))
       .sort((a, b) => strTime(b.generated) - strTime(a.generated));        // newest analysis first (0.4.3.5)
     const wv = wait.filter(w => !w.photo && !w.audio).length;
-    const none = !all.length && !wait.length;
-    const btns = big => `<button class="btn ghost${big ? ' big' : ''}" id="dl" title="Download a video or a song (MP3) from a link without analysing it - e.g. music for an edit"><svg class="i"><use href="#i-download"/></svg>Download from link</button>
-      <button class="btn pri${big ? ' big' : ''}" id="an"><svg class="i"><use href="#i-analyze"/></svg>Add videos</button>`;
+    const none = !all.length && !wait.length && !SETS.length;
+    const btns = big => `<button class="btn pri${big ? ' big' : ''}" id="an"><svg class="i"><use href="#i-analyze"/></svg>Add videos</button>
+      <button class="btn${big ? ' big' : ''}" id="tadd" title="Only the thumbnails of a channel, some videos or your pictures - Claude finds what they have in common"><svg class="i"><use href="#i-thumb"/></svg>Add thumbnails</button>
+      <button class="btn ghost${big ? ' big' : ''}" id="dl" title="Download a video or a song (MP3) from a link without analysing it - e.g. music for an edit"><svg class="i"><use href="#i-download"/></svg>Download from link</button>`;
     // the page's actions: a first row under the title, on the left (the user, 2026-10-14), not the header's corner
     main.innerHTML = `<div class="head"><div><h1>Analyser</h1><div class="sub">Videos you like, broken down cut by cut and effect by effect - Claude remembers their style for your edits.</div></div></div>
       ${none ? '' : `<div class="toprow">${btns(true)}</div>`}
-      <div id="avprog"></div>
-      ${wait.length ? `<button class="wbar" id="wbar"><svg class="i"><use href="#i-download"/></svg><span class="grow"><b>${wv ? plural(wv, 'downloaded video') : plural(wait.length, 'download')}</b> ${wv ? (wv === 1 ? 'waits' : 'wait') + ' to be analysed' : 'not analysed (music, photos)'}${wv && wait.length > wv ? ` <span class="muted">· ${wait.length - wv} more (music, photos)</span>` : ''}</span><span class="wgo">Show them →</span></button>` : ''}
-      ${all.length ? `<div class="row" style="margin:12px 0"><select id="ffoc" class="ffil"><option value="">Every focus</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}" ${k === foc ? 'selected' : ''}>${l} (${all.filter(r => r.focus === k).length})</option>`).join('')}</select>
+      <div id="avprog"></div>${batchRows(BAT)}
+      ${wait.length ? `<button class="wbar" id="wbar"><svg class="i"><use href="#i-download"/></svg><span class="grow"><b>${wv ? plural(wv, 'downloaded video') : plural(wait.length, 'download')}</b> ${wv ? (wv === 1 ? 'waits' : 'wait') + ' to be analysed' : 'not analysed'}</span><span class="wgo">Show them →</span></button>` : ''}
+      <div class="row frow">${all.length ? `<select id="ffoc" class="ffil"><option value="">Every focus</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}" ${k === foc ? 'selected' : ''}>${l} (${all.filter(r => r.focus === k).length})</option>`).join('')}</select>
         <select id="fcat" class="ffil"><option value="">All categories (${all.length})</option>${cats.map(([k, l]) => `<option value="${k}" ${k === cat ? 'selected' : ''}>${esc(l)} (${all.filter(r => r.category === k).length})</option>`).join('')}</select>
-        ${tags.length ? `<select id="ftag" class="ffil"><option value="">All tags</option>${tags.map(t => `<option ${t === tag ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}</div>` : ''}
+        ${tags.length ? `<select id="ftag" class="ffil"><option value="">All tags</option>${tags.map(t => `<option ${t === tag ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}` : ''}
+        <span class="grow"></span><label class="chk small dim"><input type="checkbox" id="tests" ${tests ? 'checked' : ''}> show the test videos</label></div>
       ${refs.length ? `<div class="cards pcards">${refs.map(refCard).join('')}</div>`
         : none ? emptyHero('analyze', 'Learn from a video you like', 'Download it from a link or pick a video file - MotionLab finds every cut and effect, Claude names them and remembers the style.', btns(true))
-        : '<div class="empty">No reference in this category.</div>'}
-      <label class="chk small dim" style="margin-top:18px"><input type="checkbox" id="tests" ${tests ? 'checked' : ''}> show the test videos</label>`;
+        : all.length ? '<div class="empty">No reference in this category.</div>' : ''}
+      ${SETS.length ? `<h3 class="sech"><svg class="i"><use href="#i-thumb"/></svg>Thumbnail sets <span class="pcn">${SETS.length}</span></h3>
+        <div class="cards pcards">${SETS.map(setCard).join('')}</div>` : ''}`;
     $('#an').onclick = () => addVideosModal();
+    $('#tadd').onclick = () => addThumbsModal();
     $('#dl').onclick = downloadModal;
+    wireBatchRows(main, draw);
     const wb = $('#wbar', main); if (wb) wb.onclick = () => waitingModal(wait);
     $('#tests').onchange = e => { tests = e.target.checked; draw(); };
     const ff = $('#ffoc', main); if (ff) ff.onchange = e => { foc = e.target.value; draw(); };
     const fc = $('#fcat', main); if (fc) fc.onchange = e => { cat = e.target.value; draw(); };
     if (stopProgress) stopProgress();
-    stopProgress = progressPanel($('#avprog', main), () => draw());
+    stopProgress = progressPanel($('#avprog', main), () => draw(), ['download', 'analyze', ...THUMBS_JOBS]);
     const ft = $('#ftag', main); if (ft) ft.onchange = e => { tag = e.target.value; draw(); };
   };
   await draw();
@@ -1633,7 +1880,7 @@ const shapeWord = (w, h) => !w || !h ? '' : w > h * 1.1 ? 'horizontal' : h > w *
 const rateChip = r => RATE[r] ? `<span class="prate ${RATE[r][0]}" title="your overall rating (How did it turn out?)">${RATE[r][1]}</span>` : '';
 function projCard(p) {
   const L = p.latest, href = '#/project/' + encodeURIComponent(p.name), pc = p.picture;
-  const now = L ? lenWords(L.frames, L.fps) || 'rendered' : p.plans.length ? '<span class="amber">not rendered yet</span>' : '<span class="muted">no edit yet</span>';
+  const now = L ? lenWords(L.frames, L.fps) || 'rendered' : p.plans.length ? '<span class="amber">not rendered yet</span>' : `<span class="muted">${p.generated ? 'not made yet' : 'no edit yet'}</span>`;
   return `<div class="card pcard"><a class="clink" href="${href}">
     <div class="ppic"${L ? ` data-v="${esc(L.rel)}" data-t="${pc && pc.video === L.rel ? (pc.f + 0.5) / pc.fps : 0}"` : ''}>${pc ? `<img src="${picUrl(pc)}" loading="lazy" alt=""
       ${pc.video ? `title="f${pc.f} (${tc(pc.f, pc.fps)})${L && pc.video === L.rel ? ' of the newest render' : ''}"` : ''}>` : `<svg class="ic"><use href="#i-${p.generated ? 'generate' : 'edit'}"/></svg>`}
@@ -1662,15 +1909,91 @@ function renameModal(p) {
     const bk = $('#rnback', el); if (bk) bk.onclick = e => { e.preventDefault(); save(''); };
   });
 }
+// a video made from zero shows in the Generator only, until the user moves it to the Editor (0.4.3.5)
+const inGenerator = p => !!p.generated && !p.in_editor;
 async function pageProjects(main) {
-  const ps = (await api('/api/projects')).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
+  const [all, BAT] = await Promise.all([api('/api/projects'), api('/api/batches?kind=recreate').catch(() => [])]);
+  const ps = all.filter(p => !inGenerator(p)).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
   const cv = big => `<button class="btn pri${big ? ' big' : ''}" id="cvnew"><svg class="i"><use href="#i-edit"/></svg>New edit</button>`;
+  const many = ps.filter(p => p.clips).length >= 2;
   main.innerHTML = `<div class="head"><div><h1>Editor</h1><div class="sub">Your clips, cut like videos you analysed, the way you say - or from a prompt.</div></div></div>
-    ${ps.length ? `<div class="toprow">${cv(true)}<span class="grow"></span><button class="btn" data-open="projects" title="the folder with all your videos"><svg class="i"><use href="#i-folder"/></svg>Folder</button></div>` : ''}
+    ${ps.length ? `<div class="toprow">${cv(true)}${many ? '<button class="btn ghost big" id="bkedit" title="One style for several of your videos - quick drafts, or one Claude window for all of them"><svg class="i"><use href="#i-videos"/></svg>Edit several videos</button>' : ''}<span class="grow"></span><button class="btn" data-open="projects" title="the folder with all your videos"><svg class="i"><use href="#i-folder"/></svg>Folder</button></div>` : ''}
+    ${batchRows(BAT)}
     ${ps.length ? `<div class="cards pcards">${ps.map(projCard).join('')}</div>`
       : emptyHero('edit', 'Make your first edit', 'Your clips and a style - up to three videos you analysed, or your own words. A quick draft takes minutes; Claude makes it great.', cv(true))}`;
   $('#cvnew', main).onclick = () => createVideoModal();
+  const bk = $('#bkedit', main); if (bk) bk.onclick = () => bulkEditModal();
+  wireBatchRows(main, () => pageProjects(main));
   wirePcards(main, ps);
+}
+// ---- Bulk (0.4.5, the user: "bulk analyze thumbnails, videos, and also bulk edit stuff or generate"): a batch that
+// Claude has not finished (its window stopped - a limit, closed) waits here with *Continue the batch* (the skill skips
+// what is done); ✕ forgets it (the videos stay as they are)
+function batchRows(B) {
+  return (B || []).map(b => `<div class="bkrow"><svg class="i"><use href="#i-claude"/></svg><span class="grow"><b>Claude ${b.kind === 'review' ? 'checked' : 'edited'} ${b.done.length} of ${plural(b.items.length, 'video')}</b>
+      of the batch from ${esc(whenStr(b.created))} - ${plural(b.left.length, 'video')} left</span>
+    ${claudeBtn(b.prompt, 'Continue the batch', b.task, `batch of ${b.left.length}`, 'sm pri')}<button class="btn sm ghost" data-bkforget="${esc(b.id)}" title="Forget this batch (the videos stay as they are)">✕</button></div>`).join('');
+}
+function wireBatchRows(main, redraw) {
+  $$('[data-bkforget]', main).forEach(x => x.onclick = async () => {
+    try { await api('/api/batches/forget', {id: x.dataset.bkforget}); redraw(); } catch (e) { toast(e.message, 'err'); }
+  });
+}
+// Editor > Edit several videos (0.4.5): 2-10 of your videos, one style (up to 3 analysed videos, or presets + your
+// words), optional length / format; then a quick draft each (queued jobs, no Claude) or ONE Claude window for all
+// (/recreate-video batch <id>) - Claude's usual time per edit on this PC said first
+async function bulkEditModal() {
+  const [ps, MEM, OPT, EST] = await Promise.all([api('/api/projects'), api('/api/memory'), api('/api/edit/options'), api('/api/estimate').catch(() => ({}))]);
+  const vids = ps.filter(p => !inGenerator(p) && p.clips).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
+  const refs = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
+  const st = {how: 'style', like: [], presets: [], length: '', format: ''};
+  modal(`<h2>Edit several videos the same way</h2>
+    <div class="avstep"><b>1</b><span>Which videos?</span><span class="small muted">2 to ${AV_MAX} - each keeps its own clips and the song in its folder</span></div>
+    <div class="avfiles" id="bkv">${vids.map(p => `<label class="avfile"><input type="checkbox" value="${esc(p.name)}"><span class="grow">${esc(pname(p))}</span><span class="small dim">${plural(p.clips, 'clip')}${p.renders && p.renders.length ? ' · edited before' : ''}</span></label>`).join('')}</div>
+    <div class="avstep"><b>2</b><span>In which style?</span></div>
+    <div class="seg" id="bkhow"><button data-v="style">Like videos you analysed</button><button data-v="words">The way you say</button></div>
+    <div id="bkstyle" style="margin-top:8px">${spChipsHtml(refs)}</div>
+    <div id="bkwords" hidden style="margin-top:8px"><div class="gpre">${OPT.presets.map(x => `<button class="fchip" data-p="${esc(x.id)}" title="${esc(x.help)}">${esc(x.label)}</button>`).join('')}</div>
+      <textarea id="bkwant" rows="2" placeholder="…and / or in your words, e.g. fast cuts on the beat, captions word by word" style="margin-top:8px"></textarea></div>
+    <div class="nestep opt" style="margin-top:12px"><b>3</b>Length and format ${optTag()}</div>
+    <div class="nedet"><label>Length</label><div class="seg" id="bklen">${[['', 'Auto'], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
+      <label>Format</label><div class="seg" id="bkfmt">${[['', 'Auto'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div></div>
+    <div class="row" style="margin-top:16px"><button class="btn big" id="bkdraft" disabled>Quick drafts now</button>
+      <button class="btn pri big" id="bkclaude" disabled><svg class="i"><use href="#i-claude"/></svg>Make them with Claude</button></div>
+    <div class="small muted" id="bksum" style="margin-top:8px"></div>`, el => {
+    const picked = () => $$('#bkv input:checked', el).map(x => x.value);
+    const upd = () => {
+      const n = picked().length, styled = st.how === 'style' ? st.like.length > 0 : st.presets.length > 0 || $('#bkwant', el).value.trim();
+      const ok = n >= 2 && n <= AV_MAX && styled;
+      $('#bkdraft', el).disabled = $('#bkclaude', el).disabled = !ok;
+      $('#bkstyle', el).hidden = st.how !== 'style'; $('#bkwords', el).hidden = st.how !== 'words';
+      $('#bksum', el).innerHTML = n < 2 ? 'Pick at least two videos.' : n > AV_MAX ? `At most ${AV_MAX} at a time.` : !styled ? 'Pick a style.'
+        : `<b>Quick drafts</b>: a first edit of each in minutes, made by rules - no Claude. <b>With Claude</b>: one window edits them one after another - ${estWords(EST.recreate, n, 'edit')}.`;
+    };
+    spSeg(el, '#bkhow', st, 'how', upd); spSeg(el, '#bklen', st, 'length'); spSeg(el, '#bkfmt', st, 'format');
+    spStyleChips(el, refs, st, upd);
+    $$('[data-p]', el).forEach(b => b.onclick = () => {
+      const i = st.presets.indexOf(b.dataset.p);
+      if (i >= 0) st.presets.splice(i, 1); else st.presets.push(b.dataset.p);
+      b.classList.toggle('on', i < 0); upd();
+    });
+    $('#bkv', el).onchange = upd; $('#bkwant', el).oninput = upd;
+    const go = async mode => {
+      $('#bkdraft', el).disabled = $('#bkclaude', el).disabled = true;
+      try {
+        const r = await api('/api/edit/batch', {projects: picked(), mode, request: {how: st.how, like: st.how === 'style' ? st.like : [],
+          presets: st.how === 'words' ? st.presets : [], want: st.how === 'words' ? $('#bkwant', el).value : '', length_s: st.length || null,
+          format: st.format || null, sound: 'auto', resolve: false}});
+        closeModal();
+        if (mode === 'claude') openClaude(r.prompt, 'recreate', r.label);
+        else { ping(); toast(`${plural(r.jobs.length, 'quick draft')} on the way - one after another`, 'ok'); }
+        route();
+      } catch (e) { toast(e.message, 'err'); upd(); }
+    };
+    $('#bkdraft', el).onclick = () => go('drafts');
+    $('#bkclaude', el).onclick = () => go('claude');
+    upd();
+  }, 'wide');
 }
 // the video cards' Rename pencils + the render playing while the pointer is on its picture (Editor, Generator)
 function wirePcards(main, ps) {
@@ -1894,16 +2217,27 @@ async function pageProject(main, name, tab = 'overview') {
                 ...(P.verifies.length || tab === 'timing' ? [['timing', 'Timing check']] : []),
                 ...(P.resolve.length || tab === 'resolve' ? [['resolve', 'Resolve & library']] : [])];
   const R0 = newestFirst(P)[0];
+  // 0.4.3.5 (the user: "do not duplicate info like that"): a video made from zero lives in the Generator - its page
+  // too - until the user moves it to the Editor
+  const gen = inGenerator(P), home = gen ? ['#/generate', 'Generator'] : ['#/edit', 'Editor'];
+  if (gen) { $$('#side a[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === 'generate')); document.body.dataset.page = 'generate'; }
   const facts = [nClips ? `${plural(nClips, 'clip')} · ${bytes(foot)}` : P.generated ? genChip() : 'no clips yet',
                  ...(R0 ? [`newest render ${esc(whenWords(R0.mtime))}`] : [])];
-  main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/edit">Editor</a> /</div><h1>${esc(pname(P))}</h1>
-    <div class="sub">${facts.join(' · ')}<button class="btn sm ghost hfold" data-open="${esc('projects/' + P.name)}" title="the video's folder: your clips and everything made from them"><svg class="i"><use href="#i-folder"/></svg>Folder</button></div></div>
-    <div class="row"><button class="btn pri" id="pjnew"><svg class="i"><use href="#i-edit"/></svg>New edit…</button>
-      <button class="btn" id="pjren"><svg class="i"><use href="#i-pen"/></svg>Rename</button>${delBtn('project', P.name, '#/edit', ' Delete')}</div></div>
+  main.innerHTML = `<div class="head"><div><div class="crumb"><a href="${home[0]}">${home[1]}</a> /</div><h1>${esc(pname(P))}</h1>
+    <div class="sub">${facts.join(' · ')}<button class="btn sm ghost hfold" data-open="${esc('projects/' + P.name)}" title="the video's folder: your clips and everything made from them"><svg class="i"><use href="#i-folder"/></svg>Folder</button>
+      ${P.generated && !gen ? '<button class="btn sm ghost" id="pjback" title="Show it in the Generator again (not in the Editor)">Back to the Generator</button>' : ''}</div></div>
+    <div class="row">${gen ? '<button class="btn pri" id="pjmove" title="Edit it like your own clips - cuts, captions, music. It then shows in the Editor instead of here."><svg class="i"><use href="#i-edit"/></svg>Move to the Editor</button>'
+        : '<button class="btn pri" id="pjnew"><svg class="i"><use href="#i-edit"/></svg>New edit…</button>'}
+      <button class="btn" id="pjren"><svg class="i"><use href="#i-pen"/></svg>Rename</button>${delBtn('project', P.name, home[0], ' Delete')}</div></div>
     <div id="pjprog"></div>
     <div class="tabs">${tabs.map(([k, l]) => `<a href="#/project/${encodeURIComponent(name)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>
     <div id="tab"></div>`;
-  $('#pjnew').onclick = () => createVideoModal({project: P.name});
+  const move = async editor => {
+    try { await api(`/api/project/${encodeURIComponent(P.name)}/move`, {editor}); toast(editor ? 'Moved to the Editor' : 'Back in the Generator', 'ok'); route(); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  if (gen) $('#pjmove').onclick = () => move(true); else $('#pjnew').onclick = () => createVideoModal({project: P.name});
+  const bk = $('#pjback'); if (bk) bk.onclick = () => move(false);
   $('#pjren').onclick = () => renameModal(P);
   const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
                                  ['draft', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
@@ -1969,7 +2303,8 @@ function projOverview(el, P, toPub = false) {
     return `<span title="${n ? `f0–${n - 1} (${tc(0, fps)} – ${tc(n - 1, fps)})` : ''}">${[renderLabel(r) + (pl.made_by === 'draft_edit.py' ? ' · quick draft' : pl.version ? ' · by Claude' : ''),
       n ? `${lenWords(n, fps)} · ${fps} fps` : `${fps} fps`, r.width ? `${shapeWord(r.width, r.height)} ${r.width}×${r.height}` : '',
       `rendered ${esc(whenWords(r.mtime))}`].filter(Boolean).join(' · ')}</span>`; };
-  el.innerHTML = `<div class="pvhero"><div class="pvmain"><div id="pvpl"></div>
+  el.innerHTML = `<div class="liveline" data-live="${esc(P.name)}" data-name="${esc(pname(P))}" hidden></div>
+    <div class="pvhero"><div class="pvmain"><div id="pvpl"></div>
       <div class="pvmeta"><div id="pvpick"></div><span class="small" id="pvkv"></span><span class="grow"></span>${R.length ? '<button class="btn sm ghost" id="pvopen">Open in player</button>' : ''}</div>
       ${mf.length ? `<div class="small muted pvmade">Made from ${mf.join(', ')}</div>` : ''}</div>
       <nav class="panel pvindex" id="pvidx"></nav></div>
@@ -1979,7 +2314,10 @@ function projOverview(el, P, toPub = false) {
         <button class="onx over${nx === 'start_over' ? ' on' : ''}" data-go="start_over"><span class="oic"><svg class="i"><use href="#i-restart"/></svg></span>
           <span class="otx"><b>Start over</b><span>a different feel - a new edit with these clips, not a new version of this one</span></span><span class="oar">→</span></button></div>
       ${reviewSummary(P)}${nx ? `<div class="small muted" style="margin-top:4px">You chose: ${nx === 'fix' ? 'improve this version' : 'start over with a different feel'} · <a href="#" id="pvclr">undo</a></div>` : ''}` : ''}
-    <div id="pubsec"></div>`;
+    <div id="pubsec"></div>
+    <div id="tooksec"></div>`;
+  liveLine(LIVE);
+  tookPanel($('#tooksec', el), 'project', P.name, P);
   const pub = R.length || P.publish;
   drawIndex($('#pvidx', el), P, pub, null);
   if (!R.length) {                                   // planned, not rendered yet (a quick draft or Claude is on it)
@@ -2018,12 +2356,14 @@ function drawIndex(box, P, pub, I) {
   const n = (v, w) => `<span class="pvs dim">${v ? plural(v, w) : 'none'}</span>`;
   const item = (to, ic, label, s, tab = '') => `<a class="pvi" href="${tab ? `#/project/${enc}/${tab}` : '#'}"${tab ? '' : ` data-to="${to}"`}>
     <svg class="i"><use href="#${ic}"/></svg><span class="grow">${label}</span>${s}</a>`;
-  const A = (P.outcome || {}).aspects || {}, ov = (A.overall || {}).rating;
+  const A = (P.outcome || {}).aspects || {}, ov = (A.overall || {}).rating, TK = TOOK[P.name];
+  Object.assign(box, {_P: P, _pub: pub, _I: I});       // What it took redraws it when its numbers arrive
   box.innerHTML = `${pub ? `<div class="pvih">Ready to post</div>
     ${item('pb-title', 'i-prompts', 'Title', st(pk.title, 'chosen', 'not yet'))}
     ${item('pb-thumbs', 'i-thumb', 'Thumbnails', st(th.length, th.map(t => esc(t.id)).join(' · '), 'not yet'))}
     ${item('pb-desc', 'i-news', 'Description & chapters', st((pk.description || {}).text, 'saved', 'not yet'))}
     ${item('pb-after', 'i-jobs', 'After posting', st(ctr, 'clicks saved', 'once it is up'))}` : ''}
+    ${item('pb-took', 'i-clock', 'What it took', TK ? `<span class="pvs dim">${TK.rows.length ? `${minWords(TK.total.claude_minutes)} of Claude` : 'nothing yet'}</span>` : '')}
     <div class="pvih">This video</div>
     ${R0 ? item('', 'i-scriptok', 'Review', P.reviewed ? `<span class="pvs">${rateChip(ov) || '<span class="ok">✓ reviewed</span>'}</span>` : '<span class="pvs"><span class="prate todo">not reviewed yet</span></span>', 'review') : ''}
     ${item('', 'i-library', 'Graphics', n((P.overlays || []).length, 'graphic'), 'graphics')}
@@ -2038,6 +2378,73 @@ function drawIndex(box, P, pub, I) {
   });
 }
 const reIndex = (P, I) => { const ix = $('#pvidx'); if (ix) drawIndex(ix, P, true, I); };   // after Ready to post (re)draws
+
+// ---- What it took (0.4.4, the user: "a new section below 'ready to post' ... called 'What it took' ... the entire
+// process kinda like a timeline from up to top ... (Prepare Transcript) X minutes it took claude ... X tokens with this
+// model (Opus 5.5 xhigh e.g) ... TOTAL SPENT"): Claude's minutes and tokens per step, read from Claude Code's own logs
+// on this PC (motionlab\usage.py - read-only, nothing is sent to Claude Code) + the app's jobs since 0.4.4.
+// GET /api/took/<project|analysis|prompt>/<name>; the Overview of a video and of an analysis.
+const TOOK = {};                                     // video folder -> its numbers (the index line)
+// a time as the clock shows it (the user, 2026-10-15: "what is 1.4 min? 1:40? or 1:25?"): 45 s · 1:54 min · 1 h 05 min.
+// Time only - no tokens on the page (the user, the same night: "scrap that idea ... just say the time it took")
+const minWords = m => { const s = Math.max(1, Math.round((m || 0) * 60));
+  return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)}:${pad(s % 60)} min` : `${Math.floor(s / 3600)} h ${pad(Math.round(s % 3600 / 60))} min`; };
+async function tookPanel(box, kind, name, P) {
+  if (!box) return;
+  let D;
+  try { D = await api(`/api/took/${kind}/${encodeURIComponent(name)}`); } catch (e) { box.innerHTML = ''; return; }
+  if (!box.isConnected) return;
+  if (kind === 'project') { TOOK[name] = D; const ix = $('#pvidx'); if (ix && ix._P) drawIndex(ix, ix._P, ix._pub, ix._I); }
+  const T = D.total, rows = D.rows;
+  const dt = t => { const d = new Date(t * 1000); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const R0 = P ? newestFirst(P)[0] : null, len = R0 ? lenWords(renderFrames(P, R0), renderFps(P, R0)) : '';
+  const head = `<div class="row sp"><h2>What it took</h2><span class="small muted">Claude's time for every step - read from Claude Code's own logs on this PC, nothing is sent anywhere</span></div>`;
+  if (!rows.length) {
+    box.innerHTML = `<div class="panel took" id="pb-took">${head}<div class="small muted">${D.logs
+      ? `Nothing counted yet. The Claude windows MotionLab opens for this ${kind === 'prompt' ? 'script' : 'video'} show up here${kind === 'project' ? ' - with the script it was filmed from and the lab\'s jobs' : ''}.`
+      : 'Claude Code\'s logs for this folder are not on this PC.'}</div></div>`;
+    return;
+  }
+  const row = x => x.kind === 'job'
+    ? `<li class="tk job"><i class="tkdot"></i><div><div class="tkh"><b>${esc(x.step)}</b></div>
+        <div class="tkm">${dt(x.t0)} · <b>${minWords(x.minutes)}</b> · a lab job, no Claude</div></div></li>`
+    : `<li class="tk"><i class="tkdot"></i><div><div class="tkh"><b>${esc(x.step)}</b>${x.what ? ` <span class="muted">“${esc(x.what)}”</span>` : ''}</div>
+        <div class="tkm">${dt(x.t0)} · <b>${minWords(x.minutes)}</b>${x.measured ? '' : '<span class="dim" title="Claude Code wrote no turn time for it (stopped or interrupted): from its first to its last answer"> (about)</span>'}
+          · ${esc(x.model || 'model not in the log')}${x.effort ? ' · ' + esc(x.effort) : ''}${x.rounds > 1 ? ` · ${x.rounds} rounds` : ''}${x.helpers.length ? `<span title="${esc(x.helpers.map(h => `${h.description || h.type} - ${h.model}`).join('\n'))}"> · ${plural(x.helpers.length, 'helper')}</span>` : ''}</div></div></li>`;
+  const took = `<b>${minWords(T.claude_minutes)}</b> of Claude${T.job_minutes ? ` and <b>${minWords(T.job_minutes)}</b> of lab jobs` : ''}`;
+  const early = !D.jobs_since || rows[0].t0 < D.jobs_since;
+  box.innerHTML = `<div class="panel took" id="pb-took">${head}
+    <ol class="tkline">${rows.map(row).join('')}</ol>
+    <div class="tktot"><span class="tkk">Total</span><span><b>${minWords(T.claude_minutes)}</b> of Claude</span>${T.job_minutes ? `<span><b>${minWords(T.job_minutes)}</b> of lab jobs</span>` : ''}
+      <span class="dim">${plural(T.windows, 'Claude window')}${T.models.length ? ' · ' + T.models.map(esc).join(', ') : ''}</span></div>
+    <div class="tksay">${kind === 'project' ? `This ${len ? len + ' ' : ''}video took ${took}.` : kind === 'analysis' ? `Checking this video took ${took}.` : `It took ${took}.`}</div>
+    ${D.other.rounds ? `<details class="tkmore"><summary>Not counted: ${plural(D.other.rounds, 'other request')} in the same Claude windows (${minWords(D.other.minutes)})</summary>
+      <div class="small muted">Things you asked in the same window that were not this ${kind === 'analysis' ? 'check' : 'video\'s steps'} - left out of the total.</div>
+      <ul class="tkother">${D.other.prompts.map(o => `<li>“${esc(o.prompt)}” · ${minWords(o.minutes)}</li>`).join('')}</ul></details>` : ''}
+    ${kind !== 'prompt' && early ? '<div class="small dim tknote">The lab\'s own jobs (quick drafts, thumbnails, renders the app runs) are counted from MotionLab 0.4.4 on.</div>' : ''}</div>`;
+}
+// "● Claude is working on <video> · 12 min · 1.2 M tokens · reading the contact sheets" (0.4.4, the user: "minimalistic,
+// straight to the point, do not overuse pc resources and 100% sure it doesn't use extra tokens"): the heartbeat carries
+// it (server.live_claude: only the Claude windows MotionLab opened, only the bytes their logs grew by); gone when the
+// turn ends. One line in the sidebar + one on that video's Overview.
+let LIVE = [];
+function liveLine(L) {
+  LIVE = L;
+  const s = $('#side-live'), x = L[0];
+  if (s) {
+    s.hidden = !x;
+    if (x) {
+      s.href = x.project ? `#/project/${encodeURIComponent(x.project)}` : x.analysis ? `#/ref/${encodeURIComponent(x.analysis)}` : '#/jobs';
+      s.innerHTML = `<i class="lvdot"></i><span><b>Claude is working</b><small>${minWords(x.minutes)}${x.batch ? ` · ${x.batch.done} of ${x.batch.total} done` : ''}${L.length > 1 ? ` · ${L.length - 1} more` : ''}${x.step ? ` · ${esc(x.step)}` : ''}</small></span>`;
+      s.title = L.map(y => `Claude is working on ${y.project || y.analysis || y.label || 'a task'} · ${minWords(y.minutes)} · ${[y.model, y.effort].filter(Boolean).join(' ')} · ${y.step}`).join('\n');
+    }
+  }
+  $$('[data-live]').forEach(b => {
+    const y = L.find(z => z.project === b.dataset.live || z.analysis === b.dataset.live);
+    b.hidden = !y;
+    if (y) b.innerHTML = `<i class="lvdot"></i><span>Claude is working on <b>${esc(b.dataset.name || b.dataset.live)}</b> · ${minWords(y.minutes)}${y.step ? ` · ${esc(y.step)}` : ''}</span>`;
+  });
+}
 const nClipsWords = P => P.sources.length ? `${plural(P.sources.length, 'clip')} ready.` : 'Copy your clips into its folder first (Folder, above).';
 // the Overview's one line about the review so far: the parts rated (the details: Review)
 function reviewSummary(P) {
@@ -2260,7 +2667,8 @@ async function projPublish(el, P) {
       <div class="nestep"><b>2</b>The words and the design</div>
       <div class="nedet spf"><label>2-4 words</label><div class="row"><input type="text" id="pbwords" value="${esc(S.words)}" maxlength="60" placeholder="e.g. NO STUDIO" style="width:260px"><span class="small" id="pbwn"></span></div>
         ${concept.length ? `<label></label><div class="row small">Your ideas: ${concept.map(c => `<button class="fchip sm" data-w="${esc(c.words || '')}" title="${esc(c.sketch || '')}">${esc(c.id)}: ${esc(c.words || '')}</button>`).join('')}</div>` : ''}
-        <label>Design</label><div class="seg" id="pbtpl">${(I.templates.length ? I.templates : [{name: 'outline'}]).map(t => `<button data-v="${esc(t.name)}" title="${esc(t.what || '')}">${esc(t.name)}</button>`).join('')}</div>
+        ${(I.styles || []).length ? `<label>In the style of</label><div class="seg" id="pbsty"><button data-v="">no set</button>${I.styles.map(s => `<button data-v="${esc(s.name)}" title="the patterns Claude found in ${s.count} thumbnails: the design, the colours, the font">${esc(s.label)}</button>`).join('')}</div>` : ''}
+        <label>Design</label><div class="seg" id="pbtpl">${S.style ? '<button data-v="" title="the design the set\'s structure fits">the set\'s</button>' : ''}${(I.templates.length ? I.templates : [{name: 'outline'}]).map(t => `<button data-v="${esc(t.name)}" title="${esc(t.what || '')}">${esc(t.name)}</button>`).join('')}</div>
         <label>Thumbnail</label><div class="row"><div class="seg" id="pbid">${['A', 'B', 'C'].map(x => `<button data-v="${x}">${x}</button>`).join('')}</div><span class="small muted" id="pbidh"></span></div></div>
       <div class="row" style="margin-top:12px"><button class="btn pri" id="pbmake">Make it</button><span class="small muted" id="pbpick"></span></div></details></div>
     <div class="panel pbsec" id="pb-desc"><div class="row sp"><h2>Description</h2><span class="row" style="gap:6px">${desc.text ? '<button class="btn sm" data-cp="desc"><svg class="i"><use href="#i-clipboard"/></svg>Copy the description</button>' : ''}${tags.line ? '<button class="btn sm" data-cp="tags"><svg class="i"><use href="#i-clipboard"/></svg>Copy the hashtags</button>' : ''}</span></div>
@@ -2331,6 +2739,10 @@ async function projPublish(el, P) {
   const seg = (id, key) => { const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === S[key]));
     $$('button', b).forEach(x => x.onclick = () => { S[key] = x.dataset.v; paint(); pickLine(); }); paint(); };
   seg('#pbtpl', 'template'); seg('#pbid', 'id');
+  const sty = $('#pbsty', el);                        // 0.4.5: a thumbnail set's style -> the set's design by default
+  if (sty) { const paint = () => $$('button', sty).forEach(x => x.classList.toggle('on', x.dataset.v === (S.style || '')));
+    $$('button', sty).forEach(x => x.onclick = () => { S.style = x.dataset.v; S.template = S.style ? '' : 'outline'; projPublish(el, P); });
+    paint(); }
   pickLine();
   $('#pbimg', el).onchange = async e => {
     const f = e.target.files[0]; e.target.value = '';
@@ -2345,7 +2757,7 @@ async function projPublish(el, P) {
     if (!S.pick) { toast('Pick a moment or a picture first', 'err'); return; }
     if (!words) { $('#pbwords', el).focus(); toast('Type the 2-4 words for the thumbnail', 'err'); return; }
     const c = S.pick.c && items.find(x => x.id === S.pick.c);
-    runJob('thumb_make', {id: S.id, words, template: S.template, ...(c ? {frame: c.frame, clip: c.clip} : {image: S.pick.image})});
+    runJob('thumb_make', {id: S.id, words, template: S.template, ...(S.style ? {style: S.style} : {}), ...(c ? {frame: c.frame, clip: c.clip} : {image: S.pick.image})});
   };
   // ---- description: chapters (YouTube time + frame + timecode), hashtags, the words
   let rows = chs.slice();
@@ -2621,7 +3033,7 @@ const lessonText = t => String(t || '').replace(/^- \[[^\]]+\]\s*/, '');
 function memVideoCard(v) {
   const P = v.pacing || {}, L = v.lines || {};
   return `<div class="card mvid"><div class="cb">
-    <div class="row sp"><b class="ct">${esc(v.title)}</b>${v.origin === 'local' ? '<span class="tag">yours</span>' : `<span class="tag" title="shared by a friend">${esc(v.author || 'friend')}</span>`}</div>
+    <div class="row sp"><b class="ct">${esc(v.title)}</b><span class="row" style="gap:6px;flex:none">${v.analysed ? `<span class="small dim" title="analysed ${esc(v.analysed)}">${esc(whenStr(v.analysed))}</span>` : ''}${v.origin === 'local' ? '<span class="tag">yours</span>' : `<span class="tag" title="shared by a friend">${esc(v.author || 'friend')}</span>`}</span></div>
     <div class="small">${focusChip(v.focus)} ${v.category_label ? `<span class="tag">${esc(v.category_label)}</span>` : ''} <span class="muted">${esc(v.format || '')}</span></div>
     <div class="small">${P.cuts_per_min ?? '–'} cuts/min · shots ${P.avg_shot_s ?? '–'} s · ${P.hook_cuts_3s ?? 0} cuts in 3 s · ${P.effects_per_min ?? '–'} effects/min${P.bpm ? ` · ${P.bpm} BPM` : ''}</div>
     ${[L.content, L.cinematic, L.colour].filter(Boolean).map(x => `<div class="small muted pline">${esc(x)}</div>`).join('')}
@@ -2710,7 +3122,7 @@ function memVideos(el, M) {
       <select id="mvo" class="ffil"><option value="">Yours and friends'</option><option value="local">Yours</option><option value="shared">Friends'</option></select></div>
     <div id="mvl"></div>`;
   const draw = () => {
-    const vs = M.videos.filter(v => (!foc || v.focus === foc) && (!cat || v.category_label === cat) && (!org || (org === 'local' ? v.origin === 'local' : v.origin !== 'local'))
+    const vs = M.videos.slice().reverse().filter(v => (!foc || v.focus === foc) && (!cat || v.category_label === cat) && (!org || (org === 'local' ? v.origin === 'local' : v.origin !== 'local'))
       && memFind(q, v.title, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author));
     $('#mvl', el).innerHTML = vs.length ? `<div class="cards">${vs.slice().reverse().map(memVideoCard).join('')}</div>`
       : M.videos.length ? '<div class="empty">No video matches.</div>'
@@ -2948,6 +3360,44 @@ function promptCard(p, R) {
     <span class="pgfoot"><span class="pgneeds">${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</span>${rating}</span></button>`;
 }
 // ============================================================================================ prepare
+// Prepare's cards (0.4.3.5): a script shows its first spoken line, its length and how far it got (+ Film it); a
+// title record shows the best title and its thumbnail ideas as small 16:9 tiles - two looks for two different things
+const spokenLines = t => String(t || '').split('\n').map(l => l.replace(/\[[^\]]*\]/g, '').replace(/^\s*(said|says|dice)\s*:\s*/i, '').trim())
+  .filter(l => l && !/^[A-Z0-9][A-Z0-9 &/+'’-]*(\([^)]*\))?\s*:?$/.test(l));      // no headings ("HOOK (0-3 s)"), no [notes]
+function scriptCard(p, R) {
+  const L = spokenLines(p.text), words = L.join(' ').split(/\s+/).filter(Boolean).length, hook = L[0] || '';
+  const res = (p.result || {}).rating, rv = p.review || {}, cat = pcategory(p);
+  const rating = res ? `<span class="vr ${res}" title="what it made - your rating">${res === 'ok' ? 'OK' : res[0].toUpperCase() + res.slice(1)}</span>` : rv.stars != null ? pstars(rv.stars) : '';
+  // filmed and edited already: Film it stays (to film it again) but faded, not the card's main button
+  const done = p.kind === 'script' && scriptRoad(((R || {}).used || {})[p.id] || []).st.edited;
+  return `<div class="spc k-${esc(p.kind)}" data-id="${esc(p.id)}" tabindex="0" title="Open it: the script, the check, your rating">
+    <div class="spc-top"><span class="spk">${p.kind === 'hook' ? 'Hook' : 'Talking script'}</span>${cat ? `<span class="pgcat">${esc(cat)}</span>` : ''}<span class="pgwhen">${esc(whenStr(p.updated || p.added))}</span><span class="pcact"><button class="btn sm ghost icon" data-pren="${esc(p.id)}" title="Rename…"><svg class="i"><use href="#i-pen"/></svg></button><button class="btn sm ghost icon" data-pdelc="${esc(p.id)}" title="Delete… (to the Recycle Bin)"><svg class="i"><use href="#i-trash"/></svg></button></span></div>
+    <b class="spc-title">${esc(ptitle(p))}</b>
+    ${hook ? `<div class="spc-hook">“${esc(hook.length > 140 ? hook.slice(0, 137) + '…' : hook)}”</div>` : ''}
+    ${p.kind === 'script' ? `<div class="spc-meta"><span class="small muted">≈ ${fmtSecs(words / 150 * 60)} · ${words} words</span>
+      <div class="spc-tags">${pstage(p, R) || '<span class="small dim">not filmed yet</span>'}</div></div>` : ''}
+    ${spcEnd(tookLine(p, R), p.kind === 'script' ? `<button class="btn sm ${done ? 'spc-done' : 'pri'}" data-film="${esc(p.id)}"${done ? ' title="Already filmed and edited - film it again"' : ''}>▶ Film it</button>` : '', rating)}</div>`;
+}
+// What it took (0.4.4): Claude's time to write it (its request) or improve it, from GET /api/prompts "took"
+const tookLine = (p, R) => { const t = ((R || {}).took || {})[p.id];
+  return t ? `<div class="spc-took" title="Claude's time for it, from Claude Code's logs on this PC"><svg class="i"><use href="#i-clock"/></svg>Claude wrote it in ${minWords(t.minutes)}</div>` : ''; };
+// a card's bottom (the user, 2026-10-15: "keep structure ... 'Claude wrote in...' always on top of the film it", then
+// "a fixed place for the stars (bottom right) and the film it button to bottom left"): pushed to the card's bottom
+// whatever is above it - the time first, under it one row: the button on the left, the rating on the right - the same
+// place on every card of a row
+const spcEnd = (took, btn, rating = '') => took || btn || rating ? `<div class="spc-end">${took}${btn || rating
+  ? `<div class="spc-act">${btn}<span class="grow"></span>${rating}</div>` : ''}</div>` : '';
+function titleCard(p, R) {
+  const ts = p.titles || [], cs = p.concepts || [], best = p.chosen || (ts[0] || {}).text || '';
+  return `<div class="ttc" data-id="${esc(p.id)}" tabindex="0" title="Open it: every title, the thumbnail ideas, the hook">
+    <div class="spc-top"><span class="spk">Titles & thumbnails</span><span class="pgwhen">${esc(whenStr(p.updated || p.added))}</span><span class="pcact"><button class="btn sm ghost icon" data-pren="${esc(p.id)}" title="Rename…"><svg class="i"><use href="#i-pen"/></svg></button><button class="btn sm ghost icon" data-pdelc="${esc(p.id)}" title="Delete… (to the Recycle Bin)"><svg class="i"><use href="#i-trash"/></svg></button></span></div>
+    <b class="spc-title">${esc(ptitle(p))}</b>
+    ${best ? `<div class="ttc-best">“${esc(best)}”${p.chosen ? ' <span class="small ok">your pick</span>' : ''}</div>` : ''}
+    ${cs.length ? `<div class="ttc-thumbs">${cs.slice(0, 3).map(c => `<span class="ttc-th" title="${esc(c.sketch || '')}"><b>${esc(c.words || '')}</b><i>${esc(c.id || '')}</i></span>`).join('')}</div>` : ''}
+    <div class="spc-foot"><span class="small muted">${plural(ts.length, 'title')} · ${plural(cs.length, 'thumbnail idea')}${p.hook ? ' · the hook' : ''}</span><span class="grow"></span>
+      ${p.project ? `<span class="pgstage edited" title="linked to this video">for ${esc(p.project)}</span>` : '<span class="small dim">not used yet</span>'}</div>
+    ${spcEnd(tookLine(p, R), '')}</div>`;
+}
 // Prepare (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it with
 // more potential to go viral - or generate one from zero from a few questions; hooks, structure"): what you say on
 // camera. The scripts live in the prompt library (kind script / hook, so rating, Style like and Film it work as
@@ -2993,9 +3443,12 @@ async function pagePrepare(main) {
     const R = ctx.R, Q = ctx.Q, byId = Object.fromEntries(R.items.map(p => [p.id, p]));
     const mine = R.items.filter(p => isTalk(p) || p.kind === 'title').sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
     const waiting = Q.items.filter(r => !(r.made || []).length && (r.kind === 'new' || r.kind === 'title' || byId[r.script])).slice(0, 8);
+    const scripts = mine.filter(isTalk), titles = mine.filter(p => p.kind === 'title');
+    // the old structure (the user, round 3): the two big ways for scripts, a slim row for a title / thumbnail only,
+    // what waits for Claude, then the list in two halves - talking scripts | titles & thumbnails, each its own cards
     main.innerHTML = `<div class="head"><div><h1>Prepare</h1><div class="sub">Before you film: what you say on camera and what people click on - a hook in the first 3 seconds, a title the video keeps.</div></div>
         ${mine.length ? `<div class="row"><a class="btn" href="#/prompts">Prompt library</a></div>` : ''}</div>
-      <div class="gways g3">
+      <div class="gways">
         <div class="gway"><div class="row"><svg class="ic"><use href="#i-scriptok"/></svg><h2>Improve my script</h2></div>
           <p>Paste the script you have. MotionLab checks it on the spot - the hook, the length, dead seconds, fillers, the call to action.
             Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.</p>
@@ -3005,24 +3458,31 @@ async function pagePrepare(main) {
           <p>Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script,
             timed to your length, with what goes on screen - in the style of talking videos you analysed.</p>
           <div class="row"><button class="btn pri" id="sp-new"><svg class="i"><use href="#i-claude"/></svg>Write a script with Claude</button></div>
-          <div class="small muted">Then film it and bring the clips to the <a href="#/edit">Editor</a>.</div></div>
-        <div class="gway"><div class="row"><svg class="ic"><use href="#i-thumb"/></svg><h2>Title & thumbnail first</h2></div>
-          <p>Decide what people click on before you film - so the video delivers what the title promises. Claude writes about ten titles,
-            two or three thumbnail ideas with the words on them and the shot to film for each, and the first 3 seconds that keep the promise.</p>
-          <div class="row"><button class="btn pri" id="sp-title"><svg class="i"><use href="#i-claude"/></svg>Plan the title with Claude</button></div>
-          <div class="small muted">Film the thumbnail shots with the rest - the finished video gets its package in the <a href="#/edit">Editor</a>.</div></div></div>
+          <div class="small muted">Then film it and bring the clips to the <a href="#/edit">Editor</a>.</div></div></div>
+      <div class="tfrow"><svg class="i tfic" aria-hidden="true"><use href="#i-thumb"/></svg><div class="grow"><b>Only need a title or thumbnail?</b>
+          <div class="small muted">If you already have a video ready and are still missing a powerful title or thumbnail, create it with Claude.</div></div>
+        <button class="btn" id="sp-title"><svg class="i"><use href="#i-claude"/></svg>Create it with Claude</button></div>
       ${waiting.length ? `<h3 style="margin:22px 0 8px">Waiting for Claude</h3><div class="spwait">${waiting.map(r => {
         const what = r.kind === 'new' || r.kind === 'title' ? `<b>${esc(r.topic.split('\n')[0].slice(0, 90))}</b> <span class="muted">· ${r.kind === 'title' ? 'titles and thumbnail ideas' : 'a script from zero'}</span>`
           : `<b>${esc(ptitle(byId[r.script]))}</b> <span class="muted">· improve it</span>`;
         const cmd = r.kind === 'new' ? `/write-script request ${r.id}` : r.kind === 'title' ? `/write-title request ${r.id}` : `/write-script improve ${r.script}`;
-        return `<div class="spw"><span class="grow">${what} <span class="small dim">${esc(String(r.date || '').slice(0, 16).replace('T', ' '))}</span></span>
+        return `<div class="spw"><span class="grow">${what} <span class="small dim">${esc(whenStr(r.date))}</span></span>
           ${claudeBtn(cmd, 'Open in Claude Code again', r.kind === 'title' ? 'title' : 'script', r.id)}<button class="btn sm ghost" data-forget="${esc(r.id)}" title="Forget this request${r.kind === 'improve' ? ' (your script stays)' : ''}">✕</button></div>`; }).join('')}</div>` : ''}
-      ${mine.length ? `<div class="row sp" style="margin:22px 0 8px"><h3 style="margin:0">Your scripts, hooks and titles</h3><span class="small muted">click one: Claude's check, your rating, <b>Film it</b> = film it, add the recording, edit it</span></div>
-        <div class="pgrid">${mine.map(p => promptCard(p, R)).join('')}</div>` : ''}`;
+      ${mine.length ? `<div class="preplist">
+        <section class="plcol pl-script"><h3 class="plh"><svg class="i plic" aria-hidden="true"><use href="#i-mic"/></svg>Talking scripts <span class="pcn">${scripts.length}</span></h3>
+          ${scripts.length ? `<div class="spcards">${scripts.map(x => scriptCard(x, R)).join('')}</div>` : '<div class="pcempty">No script yet - improve yours or write one from zero, above.</div>'}</section>
+        <section class="plcol pl-title"><h3 class="plh"><svg class="i plic" aria-hidden="true"><use href="#i-thumb"/></svg>Titles & thumbnails <span class="pcn">${titles.length}</span></h3>
+          ${titles.length ? `<div class="ttcards">${titles.map(x => titleCard(x, R)).join('')}</div>` : '<div class="pcempty">No titles yet - <i>Only need a title or thumbnail?</i> above.</div>'}</section></div>` : ''}`;
     $('#sp-imp', main).onclick = () => scriptImproveModal(ctx);
     $('#sp-new', main).onclick = () => scriptNewModal(ctx);
-    $('#sp-title', main).onclick = () => titleFirstModal(ctx);
-    $$('.pgc', main).forEach(c => c.onclick = () => promptModal(c.dataset.id, ctx));
+    $('#sp-title', main).onclick = () => titleForVideoModal(ctx);
+    $$('.spc, .ttc', main).forEach(c => {
+      c.onclick = e => { if (!e.target.closest('[data-film], .pcact')) promptModal(c.dataset.id, ctx); };
+      c.onkeydown = e => { if (e.key === 'Enter' && e.target === c) promptModal(c.dataset.id, ctx); };
+    });
+    $$('[data-film]', main).forEach(b => b.onclick = () => filmItModal(byId[b.dataset.film]));
+    $$('[data-pren]', main).forEach(b => b.onclick = () => renamePromptModal(byId[b.dataset.pren], ctx));
+    $$('[data-pdelc]', main).forEach(b => b.onclick = () => delPromptModal(byId[b.dataset.pdelc]));
     $$('[data-forget]', main).forEach(b => b.onclick = async () => {
       try { await api('/api/script/forget', {id: b.dataset.forget}); toast('Forgotten', 'ok'); await ctx.reload(); }
       catch (e) { toast(e.message, 'err'); }
@@ -3125,6 +3585,25 @@ async function scriptNewModal(ctx, pre = {}) {
   }, 'wide');
 }
 
+// Prepare > Only need a title or thumbnail? (round 3 of 0.4.3.5, the user: "if you already have a video ready and are
+// still missing a powerful title or thumbnail, review it with Claude"): pick the video -> its Ready to post + Claude
+// (/write-title package <p>); a video not in MotionLab (or not filmed yet) -> the questions (titleFirstModal)
+async function titleForVideoModal(ctx) {
+  const ps = (await api('/api/projects')).filter(x => x.latest).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
+  if (!ps.length) return titleFirstModal(ctx);
+  modal(`<h2>Only need a title or thumbnail?</h2>
+    <div class="small muted" style="margin-top:-4px">Pick the video. Claude looks at what it says and shows, then writes the title, thumbnails A / B / C, the description and the hashtags - you find them under the video's <b>Ready to post</b>.</div>
+    <div class="tfpick">${ps.map(x => `<button class="tfv" data-p="${esc(x.name)}"><span class="tfvpic">${x.picture ? `<img src="${picUrl(x.picture)}" loading="lazy" alt="">` : ''}</span>
+      <b>${esc(pname(x))}</b><span class="small muted">${[lenWords(x.latest.frames, x.latest.fps), whenWords(x.latest.mtime)].filter(Boolean).map(esc).join(' · ')}${x.title ? ' · <span class="ok">has a title</span>' : ''}</span></button>`).join('')}</div>
+    <div class="row" style="margin-top:14px"><span class="small muted">Not in MotionLab, or not filmed yet?</span><button class="btn sm" id="tfq">Answer a few questions instead</button></div>`, el => {
+    $$('.tfv', el).forEach(b => b.onclick = () => {
+      const n = b.dataset.p;
+      closeModal(); location.hash = `#/project/${encodeURIComponent(n)}/publish`;
+      setTimeout(() => openClaude(`/write-title package ${n}`, 'title', n), 300);
+    });
+    $('#tfq', el).onclick = () => { titleFirstModal(ctx); modalBack(() => titleForVideoModal(ctx)); };
+  }, 'wide');
+}
 // Prepare > Title & thumbnail first (0.4.3): the packaging before filming - the answers -> a request (kind title) ->
 // Claude Code /write-title request <id> -> a title record in the prompt library (titles, thumbnail ideas, the hook)
 const TF_ORIENT = p => { const h = p.includes('youtube'), v = p.some(x => x !== 'youtube'); return h && v ? 'both' : h ? 'horizontal' : v ? 'vertical' : ''; };
@@ -3182,8 +3661,7 @@ async function titleFirstModal(ctx, pre = {}) {
 async function pageGenerate(main) {
   const [R, G, ps] = await Promise.all([api('/api/prompts'), api('/api/generate/options'), api('/api/projects')]);
   const recent = [...R.items].sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id)).slice(0, 6);
-  const made = ps.filter(x => !x.clips && (x.renders.length || x.plans.length))         // videos made from zero, newest first
-    .sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
+  const made = ps.filter(inGenerator).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));   // made from zero, newest first
   main.innerHTML = `<div class="head"><div><h1>Generator</h1><div class="sub">A video from zero - no clips of your own needed.</div></div>
       <div class="row"><a class="btn" href="#/prompts">Prompt library (${R.items.length})</a></div></div>
     <div class="gways">
@@ -3477,7 +3955,6 @@ async function filmItModal(p, step = 0) {
 // to do, then two columns - the prompt and Claude's check | your rating, what it makes, Style like, details
 const PSTEPS = [['check', 'Claude checks it'], ['want', 'You say what you want'], ['opt', 'Claude improves it'],
                 ['run', 'Run it'], ['rate', 'Rate the result']];
-const PSTEP_OPT = new Set(['want', 'rate']);          // optional steps: a dashed number + OPTIONAL (optTag)
 // a script / hook has no steps (the user, 0.4.3.5: "the steps are a little ambiguous so just remove them") - instead
 // the videos made from it, each with how far it got and a way there; a script not filmed yet points to Film it
 const VSTAGE = [['clips', 'filmed', 'Filmed'], ['renders', 'edited', 'Edited'], ['posted', 'posted', 'Posted']];
@@ -3519,7 +3996,6 @@ function promptModal(id, ctx) {
     rate: `<span>How did it turn out? Your rating makes Claude's next prompts better.</span><button class="btn pri" data-gosec="pm-rate">Rate it</button>`,
     '': `<span>Done - you rated it <b>${esc(res.rating === 'ok' ? 'OK' : res.rating || '')}</b>. Another take?</span><button class="btn" data-remix><svg class="i"><use href="#i-claude"/></svg>Use it, change…</button>`,
   };
-  const sec = {check: 'pm-check', want: 'pm-check', opt: 'pm-check', run: 'pm-top', rate: 'pm-rate'};
   modal(`<div class="pm2 k-${esc(p.kind)}" id="pm-top">
     <div class="pmh"><div class="pmh-main">
         <div class="pmh-tags"><button class="kbadge k-${esc(p.kind)}" data-kind title="${esc(help[p.kind] || '')} - click to change the kind">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
@@ -3527,8 +4003,7 @@ function promptModal(id, ctx) {
         <h2 class="pmh-title">${esc(ptitle(p))}</h2>
         <div class="pmh-needs"><span class="small muted">Needs</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
       <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="Copies this ${isTalk(p) ? 'script' : 'prompt'}'s text"><svg class="i"><use href="#i-clipboard"/></svg>Copy ${isTalk(p) ? 'Script' : 'Prompt'}</button></div></div>
-    ${isTalk(p) ? talkVideos(p, R) : `<ol class="pmsteps">${PSTEPS.map(([k, l], i) => `<li class="${PSTEP_OPT.has(k) ? 'opt ' : ''}${S.done[k] ? 'done' : k === S.now ? 'now' : ''}" data-gosec="${sec[k]}"><b>${S.done[k] ? '✓' : i + 1}</b><span>${l}${PSTEP_OPT.has(k) ? ' ' + optTag() : ''}</span></li>`).join('')}</ol>
-    <div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>`}
+    ${isTalk(p) ? talkVideos(p, R) : `<div class="pmnext"><b class="pmnext-l">${S.now ? 'Next' : 'All done'}</b>${NEXT[S.now]}</div>`}
     <div class="pmgrid"><div class="pmcol">
         <section class="pms"><div class="pms-h"><h3>${isTalk(p) ? 'The script' : 'The prompt'}</h3><span class="grow"></span>${long ? '<button class="btn sm ghost" data-more>Show all</button>' : ''}</div>
           <div class="ptext2${long ? ' clamp' : ''}">${esc(p.text)}</div>${p.notes ? `<div class="pnotes"><b>${isTalk(p) ? 'Notes' : 'How to use'}</b> ${esc(p.notes)}</div>` : ''}</section>
@@ -3783,6 +4258,21 @@ function kindModal(p, R) {
       try { const r = await api('/api/prompts/kind', {id: p.id, kind: k}); closeModal(); toast(`${p.id} is now ${r.id}`, 'ok'); route(); }
       catch (e) { toast(e.message, 'err'); }
     };
+  });
+}
+// a prompt's shown name (Prepare's cards, 0.4.3.5): POST /api/prompts/rename - empty = the automatic name again
+function renamePromptModal(p, ctx) {
+  modal(`<h2>Rename</h2><div class="small muted" style="margin-top:-4px">The name MotionLab shows for this ${esc((KSHORT[p.kind] || 'prompt').toLowerCase())}. Its text stays as it is.</div>
+    <input type="text" id="prname" value="${esc(ptitle(p))}" maxlength="120" style="width:100%;margin-top:14px">
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="prok">Save</button><button class="btn" data-close>Cancel</button></div>`, el => {
+    const inp = $('#prname', el); inp.focus(); inp.select();
+    $('[data-close]', el).onclick = dismissModal;
+    $('#prok', el).onclick = async () => {
+      const v = inp.value.trim(); if (!v) { inp.focus(); return; }
+      try { await api('/api/prompts/rename', {id: p.id, title: v}); closeModal(); toast('Renamed', 'ok'); if (ctx && ctx.reload) await ctx.reload(); else route(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#prok', el).click(); } };
   });
 }
 function delPromptModal(p) {

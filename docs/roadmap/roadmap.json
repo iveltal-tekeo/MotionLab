@@ -11,7 +11,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-15",
-  "here": "0.4.3.5",
+  "here": "0.4.5",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -28,24 +28,16 @@
     {"v": "0.4.2.1", "label": "Downloads + reports", "title": "Downloads that keep working, Report a problem"},
     {"v": "0.4.3", "label": "Title + thumbnail", "title": "Title + thumbnail: Title & thumbnail first, the Publish tab, the thumbnail check"},
     {"v": "0.4.3.5", "label": "A simpler app", "title": "A simpler app: the Editor overhaul, Film it, a new player"},
-    {"v": "0.4.4", "label": "What it took", "status": "next", "title": "What it took: Claude's time and tokens, step by step"},
-    {"v": "0.4.6", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
+    {"v": "0.4.4", "label": "What it took", "title": "What it took: Claude's time for every step, and a simpler Prepare"},
+    {"v": "0.4.5", "label": "Bulk", "title": "Bulk: thumbnail sets, many videos in one Claude window, several videos edited at once"},
+    {"v": "0.4.6", "label": "Fonts + captions", "title": "Fonts and customizations for motion graphics and captions"},
     {"v": "0.4.7", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
-    {"v": "0.4.8", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
+    {"v": "0.4.9", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
     {"v": "0.5.0", "label": "Content generation", "icon": "generate", "line": "Videos from zero that come out right - faster, and with fewer Claude tokens.", "items": ["Building blocks", "Sound effects", "Formats", "Preview first", "AI clips back in"], "title": "Content generation: videos from zero that come out right"},
+    {"v": "0.5.1", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
+    {"v": "0.6.0", "label": "Describe video", "icon": "memory", "line": "What videos and courses say and show: topics, the steps taught, notes, collections.", "title": "Describe video: videos and courses as information"},
     {"v": "0.6.5", "label": "Templates by feel", "title": "Templates by feel"},
     {"v": "0.7.0", "label": "AI B-roll", "icon": "videos", "line": "Missing shots or whole sequences made by video models, used like your own clips.", "title": "AI B-roll and cinematics"},
-    {"v": "0.7.5", "label": "macOS", "title": "macOS"},
-    {"v": "0.8.0", "label": "Describe video", "icon": "memory", "line": "What videos say and show: topics, shots described, text on screen, collections.", "title": "Describe video: videos as information"}
-  ],
-  "stats": [
-    {"value": "4/4", "label": "self-tests pass"},
-    {"value": "40%", "label": "effect types right before review", "weak": true},
-    {"value": "53/54", "label": "key frames on time in a rebuild"},
-    {"value": "14", "label": "effects saved in the library"},
-    {"value": "44", "label": "verdicts given (4AM)", "weak": true}
-  ],
-  "strong": "Measuring and rebuilding are frame-accurate and verified, in the lab and in DaVinci Resolve; 0.4 adds quick drafts and colour matching.",
-  "weak": "Detection has seen one video and one round of feedback (7 lessons): numbers stay anecdotal until ~10 per category. A quick draft picks moments by how they look, not by the story.",
-  "risks": "heavy Fusion crashes Resolve (graphics now as clips)  |  footage cache 3.9 GB per minute (2.6 grey)  |  HyperFrames + Resolve MCP are young: versions pinned"
+    {"v": "0.7.5", "label": "macOS", "title": "macOS"}
+  ]
 }

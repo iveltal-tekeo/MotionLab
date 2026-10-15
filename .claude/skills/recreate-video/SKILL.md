@@ -8,7 +8,8 @@ argument-hint: <reference> <project> | request <project> | feel:<a>[,<b>,<c>] <p
 
 Arguments: `$ARGUMENTS` = the reference (a folder in `analysis\`) and the project (a folder in `projects\` with the
 user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work from `C:\MotionLab` with
-`.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh.
+`.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh. `batch <id>` = several
+of the user's videos edited the same way in this one window: section 7.
 
 The app's *Editor > New edit* (0.4; the section was called Edit until 2026-10-15) saves what the user picked in `projects\<project>\build\edit_request.json` and
 opens `/recreate-video request <project>`: read that file first - `how`: `copy` (1:1 of `like[0]`: the steps below),
@@ -221,6 +222,16 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
 4. If `resolve` was asked: option 2 (section 5) once the user approves the lab render.
 5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
    (00:00:18:24)") and what is approximate.
+
+## 7. Batch - several videos the same way (`/recreate-video batch <id>`, 0.4.5)
+The app's *Editor > Edit several videos* saved the same request in each video's `build\edit_request.json` and opened
+ONE window for all (the user, 2026-10-15: "bulk edit stuff"). Read `.app\batches\<id>.json` (`items` = project
+folders, in order). Section 0 once for the whole batch. Then per video, one at a time and completely: its request
+(section 6 - a quick draft if it has none, then make it good), render, check - before the next, so a stop loses at
+most one video (*Continue the batch* skips the videos that already have an edit plan by you newer than the batch).
+Name the project folder in your tool calls as you work: What it took splits this window's time per video by it.
+After each: one line ("2 of 4 done - <video>: v2, 0:42"); at the end a short list with each render's path and what
+to look at first. Ask the batch's questions once, at the start (not per video).
 
 ## Keep it lean
 Don't re-read files you have already read in this chat; read tool docstrings instead of whole tools; look at

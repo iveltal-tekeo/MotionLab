@@ -851,7 +851,8 @@ def memory() -> dict:
                                              "effects_per_min", "cuts_on_beat_pct", "bpm")},
             "lines": prof.get("lines") or {}, "summary": b.get("summary"), "breakdown": sorted(b),
             "effects": len(effects), "verdicts": c.get("verdicts") or {}, "analysis": analysis,
-            "url": c.get("url"), "platform": c.get("platform"), "tags": c.get("tags") or [], "file": c.get("_file")})
+            "url": c.get("url"), "platform": c.get("platform"), "tags": c.get("tags") or [], "file": c.get("_file"),
+            "analysed": (c.get("made_with") or {}).get("analysed")})       # "2026-10-14 01:24" - the app sorts by it
         for e in effects:
             t = e.get("type") or "unknown"
             g = fx.setdefault(t, {"type": t, "label": e.get("label") or t, "family": e.get("family"), "count": 0,

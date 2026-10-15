@@ -13,16 +13,17 @@ the table below.
 | Downloads that keep working + Report a problem (0.4.2.1) | none (added 2026-10-14 evening; its download items were "carried over from 0.3.3" inside describe video, *Report a problem* was in ideas.md) |
 | Title + thumbnail (0.4.3) | 0.4.2 (2026-10-14) |
 | The interface overhaul (0.4.3.5) | none (released 2026-10-15: the Editor overhaul, Film it, simpler Analyser / Prepare / Generator pages, a new player) |
-| What it took - Claude's time and tokens (0.4.4) | none (added 2026-10-15); its measuring was 0.5.0's step 0 |
-| *0.4.5* | kept free by the user (2026-10-15) |
-| Prompt generator (0.4.6) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15) |
+| What it took - Claude's time (0.4.4) | 0.4.5.5 for a few hours (2026-10-15 evening); its measuring was 0.5.0's step 0 |
+| Bulk - thumbnails, videos, edits at once (0.4.5) | none (added 2026-10-15 night; 0.4.5 was *Trending sounds* that evening - scrapped) |
+| Fonts and customizations (0.4.6) | none (added 2026-10-15 night) |
 | Yapping mode (0.4.7) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15) |
-| Colour (0.4.8) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15) |
+| Prompt generator (0.4.9) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15) |
 | Content generation (0.5.0) | none (2026-10-14); "0.5" before that meant templates by feel + macOS |
+| Colour (0.5.1) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15) |
+| Describe video + courses (0.6.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
 | Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
 | macOS (0.7.5) | 0.5 (with templates by feel, 2026-10-07 to 2026-10-14) |
-| Describe video (0.8.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14) |
 
 ## Renumbers
 
@@ -60,6 +61,25 @@ the table below.
   moved into it); every 0.4.x plan two up: prompt generator 0.4.4 -> **0.4.6**, yapping mode 0.4.5 -> **0.4.7**,
   colour 0.4.6 -> **0.4.8**. **0.4.5 stays free** - the user's choice (Claude offered splitting the live panel into
   it).
+- **2026-10-15, evening** (the user): **0.4.5 = Trending sounds** - the user's `trending_sounds.py` (TikTok's song
+  chart) reviewed and planned into the Editor; What it took 0.4.4 -> **0.4.5.5** (right after it); colour 0.4.8 ->
+  **0.5.1** (after content generation). 0.4.4 is free now. 0.5.0 gained step 12, *the clips a script needs*, from the
+  user's first talking video made from a Prepare script.
+- **2026-10-15, later that evening** (the user: "while i think about the 0.4.5 tik tok thing ... go ahead with the
+  claude usage version"): What it took is built first, so it went back to **0.4.4** - the updater installs versions
+  in number order, and a 0.4.5.5 released before 0.4.5 would make 0.4.5 look older. Trending sounds stays 0.4.5.
+- **2026-10-15, night** (the user, after What it took was built): **Trending sounds scrapped** ("forget about 0.4.5
+  trending sounds, scrap that version entirely"). It had been planned that evening from the user's
+  `trending_sounds.py` (Playwright on TikTok Creative Center's song chart with a TikTok Business login, YouTube MP3s
+  through yt-dlp, a Windows scheduled task); Claude's review found, among others: a response filter on "music" that
+  may miss the chart's `popular_trend/sound` request, `networkidle` timeouts without the debug screenshot, `python -m
+  yt_dlp` failing inside the lab's Python, unchecked YouTube matches (covers, sped-up versions), history mixing
+  countries and periods, a scheduled task downloading songs nobody asked for. The file stays at the repo root,
+  untracked. New **0.4.5 = Bulk** (thumbnails analysed on their own as sets, videos and edits in bulk, the time known
+  first - "now that we have the cost/usage of claude"); prompt generator 0.4.6 -> **0.4.9**; new **0.4.6 = Fonts and
+  customizations** for motion graphics and captions; describe video 0.8.0 -> **0.6.0**, with courses added (the user:
+  bulk-analysed courses are "a similar idea" - Claude agreed: a course is a collection of long videos analysed for
+  what they teach). ideas.md's *background analyses* moved into 0.4.5.
 
 ## Where some plans came from
 
@@ -117,6 +137,191 @@ to the lab's texture.
   winget's full build: unchecked).
 
 ## Released plans (their text when they shipped)
+
+### 0.4.5 - released 2026-10-15 - Bulk: many thumbnails, videos and edits at once
+
+**Ships when**: 15 thumbnails from a channel link (no video downloaded) are measured and their common patterns named
+by Claude in one window (colours, the text's words, size and font style, faces, layout) and saved as a *thumbnail
+style* that *Ready to post* and `/write-title` use for the user's own thumbnails; a batch of ~10 videos gets Claude's
+check in ONE Claude window instead of ten; before any batch starts the app says how long it should take (0.4.4's
+measured time per step), and a batch that stopped half way continues where it stopped.
+
+**The user's words (2026-10-15)**: "lets make the 0.4.5 about working in 'bulk' now that we have the cost/usage of
+claude tokens and pacing ... 1) i want to be able to analyze only thumbnails, like I give 15 thumbnails from mr beast,
+it analyzes them and then sees common patterns like font, color, structure etc etc. and then that information can be
+used when im generating a thumbnails for my videos as well. 2) id also like to bulk analyze thumbnails, videos, and
+also bulk edit stuff or generate. 3) and maybe in the future maybe bulk analyze courses? ..." (courses -> 0.6.0,
+describe video; built on this plan's batch runner).
+
+**Built 2026-10-15 (Unreleased)**, steps 1-4 and 6 (the user: "go ahead with the planning 0.4.4 to 0.4.5, I will
+release and test when I see fit"):
+- **Thumbnail sets** - `motionlab\thumbsets.py` + `tools\thumbsets.py fetch | links | add | measure | sheet | list | show
+  | remove-item | selfcheck` (30 checks, no network): a channel link -> its newest N videos' thumbnails, titles, views
+  and the channel's followers (yt-dlp `--flat-playlist`, no video), measured with the thumbnail check's own parts
+  (look, YuNet faces, the text estimate, palette; 4:3 bands cut off) -> `analysis\thumbs\<set>\` (set.json, img\,
+  numbered sheets of 15). Measured on this PC: MrBeast, 15 thumbnails in 4.1 s (measuring 0.7 s). The same night (the user: "why stop at
+  the newest? ... I could choose to download other 20/30 batch"): the WHOLE channel is listed once and kept in
+  set.json (Clavero 246 videos in 3.5 s, MrBeast 804 in 10.3 s, views included); the first batch is the newest or the
+  most viewed, then `thumbsets.py more <set> --n 20 --order newest|views` / *More from the channel* (job thumbs_more;
+  10 more in 1.9 s from the kept listing, listed again when a day old). Not all at once by default: Claude reads 15
+  pictures a sheet, so a set's size is Claude's time - the dialog says the sheets first. Each picture: views, views ÷
+  followers, its length and its EXACT date (yt-dlp per video in the set, 3 at a time: 30 videos in ~35 s; the
+  listing's approximate dates, "≈ 3 weeks ago", until then). Claude:
+  `/analyze-reference thumbs <set>` (skill section *Thumbnail sets*) writes `style.json` (patterns with how many and
+  the picture numbers, the font's style + closest fonts + "sure", colours, words, structures, `for_make`). App: the
+  Analyser's *Add thumbnails* + *Thumbnail sets* cards, a set's page (#/thumbs/<set>: the patterns with Correct /
+  Partly / Wrong -> `verdicts.json`, the measures, every picture), Delete = Recycle Bin. **Use the style**: *Ready
+  to post* > *In the style of <set>* -> `thumbnail.py make --style <set>` (the set's design, colours, the closest of
+  today's five fonts, capitals) and `check --style <set>` (the look against the set).
+- **Videos in bulk** - *Add videos* (2+ videos, Claude's check) opens ONE window when the batch's last job ends
+  (`/analyze-reference batch <id>`, `.app\batches\<id>.json`, skill section *Batch*); the estimate first (GET
+  `/api/estimate`: the median minutes per video of What it took on this PC - 16:33 min for Claude's check now);
+  *Continue the batch* rows; What it took splits a batch window per video by the folder each tool call named
+  (`usage.split`, a sample with known answers in the self-check).
+- **Edits in bulk** - *Editor > Edit several videos* (2-10 videos, one style): quick drafts (queued, no Claude) or
+  one window `/recreate-video batch <id>` (skill section 7). Bulk generation waits for 0.5.0's formats.
+- **Not built**: step 5 (Claude Code without a window) - it spends the plan unwatched, so it waits for a measured test
+  and the user's go; the font names stay among today's five design fonts until 0.4.6's library.
+
+**Before it was built**: *Add videos* queues up to 10 videos (links download first) and "Claude checks each video" opens
+one Claude window per video when its measuring ends - ten windows for ten videos. Thumbnails: `content.py thumbnail`
+saves an analysed video's own thumbnail, `thumbnail.py refs` measures them per niche (brightness, saturation,
+faces...) and `thumbnail.py check` judges the user's against the niche's outperformers - but only for videos analysed
+in full, one at a time, and without what only eyes see (the font's style, the structure, the story of the picture).
+0.4.4 measures Claude's time per step on this PC (the illdari check: 7:00 min). ideas.md's *background analyses* (Claude
+Code without a window, a limit per batch) moved here.
+
+1. **Thumbnails only** (point 1): *Analyser > Add thumbnails* - a channel or playlist link (yt-dlp lists its newest N
+   videos and saves only their thumbnails, titles and numbers - views, the channel's followers; no video
+   downloaded), single links, or image files. One set per folder (`analysis\thumbs\<set>\`, e.g. "mrbeast"). The lab
+   measures every picture (no Claude, seconds): the main colours, brightness / contrast / saturation, faces (how many,
+   how big, where, looking at the camera - the YuNet model the thumbnail check has), where the text sits and how much
+   of the picture it takes, the layout (thirds, a left / right split), views ÷ followers when known. Then Claude
+   reads one sheet of the set (15 per picture) and names what repeats: the text (words, capitals, outline / box, the
+   font's style - "heavy condensed sans, white with a black outline" - with the closest fonts of 0.4.6's library; an
+   exact font name from a picture is a guess and is said so), the colours, the structure (face + text, before /
+   after split, an object and an arrow, a big number), the emotion, what the title adds to the picture. -> a
+   **thumbnail style** (`style.json` + the sheet), reviewed by the user Correct / Partly / Wrong, kept in Claude's
+   memory (only its numbers and words in shared cards, never the pictures).
+2. **Use the style**: *Ready to post* and *Title & thumbnail first* get "in the style of <set>"; `thumbnail.py make`
+   takes its colours, font, word count and layout (a template per structure: outline / block / split today, the
+   structures the sets show most added); `thumbnail.py check` judges against the set as well as the niche;
+   `/write-title` reads the style when it writes the concepts.
+3. **Videos in bulk** (point 2): *Add videos* keeps queuing the measuring as today; Claude's check of the whole batch
+   runs in ONE window (`/analyze-reference batch <videos>`: video by video, each review.json written before the
+   next) with the estimate first ("10 videos ≈ 1 h 10 min of Claude - your plan's limit may pause it") and progress
+   per video on the live line (0.4.4: "video 3 of 10"). If the window stops (a limit, closed), *Continue the batch*
+   starts at the first video without a review.
+4. **Edits and videos in bulk** (point 2): one style for several of your videos (a quick draft for each - no Claude,
+   minutes - then one Claude window refines them in turn); several videos from one format (0.5.0's formats: five
+   "top 3" reels = five sets of settings) - the batch runner is built here, 0.5.0 fills it.
+5. **Without a window, measured first** (from ideas.md): Claude Code without a window (`claude -p`) for long batches,
+   only if a test shows it is reliable on Windows and keeps to a limit the user sets per batch; a window stays the
+   default (you see it work and can stop it).
+6. **The time first, the time after**: every bulk button shows the estimate from 0.4.4's own numbers (the median
+   time of the same step on this PC; "not measured yet" until there is one); after the batch, *What it took* for it.
+**Order**: 1-2 (thumbnails) first, then 3, then 4-6. **Needs first**: 0.4.4 (released). **Size**: L, ships in parts.
+**Rules**: other people's thumbnails and videos stay on this PC - only a style's numbers and words are shared; copy a
+style, never a design, a logo or a face; light and tested first (the thumbnail measures are numpy on small pictures).
+
+### 0.4.4 - released 2026-10-15 - What it took: Claude's time, step by step
+
+**Ships when**: a 1-min talking video made from a Prepare script to *Ready to post* shows its whole breakdown on its
+Overview - every Claude step and every job, with minutes, tokens, model and effort, and the total - and the totals
+match the Claude Code session logs on a hand check (within 1 %); the live line follows a running `/recreate-video`
+from its first answer to its last.
+
+**The user's words (2026-10-15)**: "0.4.4 a 'breakdown' oriented version: when i mean breakdown i mean to have more
+concrete information about the process regarding claude usage. so if i run a claude /analyze-video or /recreate i
+want to see if its a way to show that process in motion lab? to have a breakdown on time Claude spent and tokens
+used? also, if i get a new video rendered in the Editor and click the Overview i want a new section below 'ready to
+post' on the side bar called 'What it took' or something similar that will tell me the entire process kinda like a
+timeline from up to top, so if the video is from a generated prompt ('Made from the script MotionLab vs other AI
+editors') in the prepare section i want it to tell me (Prepare Transcript) X minutes it took claude to come up with it
+and cost u X tokens with this model (Opus 5.5 xhigh e.g) (Edit Video) ... X minutes ... TOTAL SPENT: X minutes and X
+tokens ... something i could understand see ok a 1-min talking head video from start to finish it took 1 hour of
+claude usage."
+
+**Built 2026-10-15 (Unreleased)**: steps 1-5 - `motionlab\usage.py` + `tools\usage.py sessions | project | analysis |
+check | selfcheck`, `data.took` / `prompt_took` / `live_claude`, GET `/api/took/<project|analysis|prompt>/<name>`,
+the heartbeat's `claude` list (API_LEVEL 24), jobs recorded in `.app\jobs\history.jsonl` when they end. Measured on
+this PC's 28 logs (425 MB): read in 0.9 s, the big request copies skipped unparsed; the heartbeat stays ~1 ms. What
+the logs taught: (a) minutes = Claude Code's own `turn_duration` per turn (lines sorted by time; local commands like
+/effort are no turns); (b) attribution per **round** (a prompt and its answers), not per session - the app's window
+"MotionLab script req-002" wrote the script in round 1 (1.9 min, tagged `write-script`) and then built Film it in
+the same window (13 min, untagged): only round 1 counts, the rest is listed as "not counted"; work after /clear in a
+named window is never counted; a background task's notice continues the round before it; (c) `cost-state` notes are
+per run of the program and sometimes missing, so they are only the hand check: output tokens agree within 0.06 % for
+every session the app opened (`usage.py check`); cache reads are 0-7 % lower than the note because Claude Code's own
+side calls (the auto-mode permission check, Haiku page summaries) are not answers in the log - left out, said so.
+The first talking video (*testing_entire_workflow*): Prepare 1.9 min · 1.3 M tokens · Opus 5.5 high, Edit 38.5 min ·
+8.7 M · Fable 5.1 high = 40 min, 10.0 M tokens. **Then the user (2026-10-15, after seeing it): "the tokens stuff is
+kinda wrong so lets just scrap that idea as well, just say the time it took"** - and "what is 1.4 min? 1:40 minutes?
+or 1:25?": the app shows **time only**, as the clock shows it (45 s · 1:54 min · 1 h 05 min); no tokens on any page
+(the headline mostly counted Claude re-reading its own conversation from the cache - true, but it says little). The
+reader still counts tokens, only for `usage.py check`, which proves the logs are read right. Steps 3-5's token parts
+are dropped. **Not built**: step 6 (*Your plan*) - the "% of a 5-hour window"
+needs the measurement it describes, and the user does not need "$"; no setting without an effect. Jobs before
+0.4.4 were never recorded (their logs are overwritten when the app restarts) - the page says so.
+
+**Before it was built**: nothing shown. 0.5.0 had this as its step 0 (*Measure first*, generated videos only); it
+moved here on 2026-10-15 and covers every video and every Claude task, and 0.5.0 judges its steps by these numbers.
+The data is already on the PC (checked 2026-10-15):
+- Claude Code writes every session to `%USERPROFILE%\.claude\projects\<lab>\<session>.jsonl` (`<lab>` = the lab's
+  path with ':' and '\' as '-'; this PC: `C--MotionLab`), one JSON line per event. Subagents:
+  `<session>\subagents\agent-<id>.jsonl` (lines marked `isSidechain`) + `agent-<id>.meta.json` (type, description,
+  model, effort).
+- The app names every session it opens (`--name "MotionLab <task> <object>"` -> a `custom-title` line): "MotionLab
+  script req-002", "MotionLab recreate illdari_test_copy_1", "MotionLab generate <video>", "MotionLab review <video>".
+- Every answer carries its `timestamp`, `message.model` (`claude-opus-5-5` ...), `effort`, `attributionSkill`
+  (`write-script` ...) and `message.usage`: `input_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`,
+  `output_tokens`. One answer is written as several lines (one per content block) with the same `message.id` and the
+  same usage - it counts once (a session of 2026-10-15: 179 lines, 83 answers).
+- The app's own jobs (quick draft, renders, thumbnails, analyses) keep their start and end in `.app\jobs\`.
+
+1. **The reader** (`motionlab\usage.py`, read-only, standard library, nothing leaves the PC; cached per log file size
+   + time): every session -> its task + object, start and end, **active minutes** (the time between its events, gaps
+   over 5 min left out - a window left open overnight is not work; the wall time kept beside it), tokens (new input,
+   cache written, cache read, output), model(s) + effort, the skill. Subagents add to their session and are listed
+   under it with their own model. A session started by hand (no name) is matched by its skill (`attributionSkill`)
+   and the object in its first message (`/recreate-video ... <project>`). A line it does not know is skipped and a
+   number it cannot read says "not measured" - never a guess (the log format is Claude Code's, not a public API).
+2. **Sessions -> videos**: a script request (`req-NNN`) -> the script it wrote (`"request"`) -> the videos made from
+   it (`made_from.json`, kind prompt); `recreate` / `generate` / `title` (the package) / `improve` by project;
+   `review` / `feedback` by analysis; `prompt` / `script` by prompt id. Jobs by the project or analysis they ran on.
+   One call returns a video's whole chain in time order: Prepare -> film -> edit -> package -> improve.
+3. **What it took** on a video's Overview: an entry in the side index under *Ready to post* -> a section at the end
+   of the page, a timeline from the top: one row per step in words ("Prepare - the script *MotionLab vs other AI
+   editors*", "Quick draft", "Edit with Claude", "Thumbnails", "Review and improve") with when, minutes, tokens and
+   "Opus 5.5 · xhigh"; jobs as their own rows (minutes, "no Claude, no tokens"); then **Total**: Claude's minutes, the
+   jobs' minutes, the tokens, the sessions - "this 1-min video took 58 min of Claude and 12 min of renders". Tokens:
+   one headline number (everything the model read and wrote), the split in plain words folded ("new 12 k · read
+   again from the cache 1.2 M · cached 85 k · written 9 k").
+4. **The same for an analysis** (Analyser > a video > Overview: what measuring and Claude's check took) and one line
+   on Prepare's script and title cards ("written in 6 min · 240 k tokens").
+5. **Live** (the user: "if i run a claude /analyze-video or /recreate i want to see ... that process in motion lab";
+   2026-10-15: "minimalistic, straight to the point, do not overuse pc resources and 100% sure it doesn't use extra
+   tokens"): ONE line, no panel - "● Claude is working on *testing_entire_workflow* · 12 min · 1.2 M tokens · reading
+   the contact sheets" - on that video's (or analysis') page and in the sidebar's status corner, gone when it stops.
+   - **Light**: the server reads only the bytes added to the log since its last read (a file offset - never the whole
+     file again), only for sessions the app opened (named "MotionLab ..."), every 5 s and only while the app's window
+     is open (the heartbeat) and the log grew in the last 2 min; nothing runs otherwise. No new process, no watcher.
+   - **Zero extra tokens, by design**: MotionLab only reads files Claude Code writes anyway. It never sends anything to
+     Claude Code - no hook, no status line, no MCP call, no message - and never starts or steers a session, so the
+     session's context and its token count are exactly the same with the line on or off. The self-check proves the
+     reader opens `.claude\projects` read-only and the app has no route that writes there.
+6. **Your plan, Pro by default** (the user, 2026-10-15: "more people won't be on Max, so default it to the Pro plan but
+   have options for Max users"; a "$ at API prices" line does not matter to them): Settings > Claude Code > *Your
+   plan*: **Pro** (the default), Max 5×, Max 20×, or API (pay as you go). Everyone sees minutes and tokens. Pro and Max
+   users care about their limit: "about N % of a 5-hour window on Pro" - the logs do not carry the plan's limit and
+   Anthropic does not publish limits as token counts, so this line comes only after a measurement (Claude Code's own
+   usage readout before and after a known session, on Pro; Max 5× / 20× = 5 / 20 times Pro, as the plans are sold),
+   kept in one dated table with its source; until then the line is left out, never guessed. API users see "≈ $X"
+   from a dated price table.
+
+**Needs first**: nothing - the session logs and the names the app gives its sessions exist on this PC. **Size**: M.
+**Tests**: fixed sample logs in `tools\dev\` (a named session, a session started by hand, subagents, a repeated
+answer) for a self-check and `smoke.py`; one hand count against a real session before it ships.
 
 ### 0.4.3 - released 2026-10-15 - Title + thumbnail: packaging for clicks (horizontal and vertical)
 

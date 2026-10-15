@@ -510,6 +510,23 @@ def _label(b: Path) -> str | None:
     return (read_json(b / "project.json", {}) or {}).get("label") or None
 
 
+def _in_editor(b: Path) -> bool:
+    """A video made from zero lives in the Generator; the user can move it to the Editor (project.json "in_editor")."""
+    return bool((read_json(b / "project.json", {}) or {}).get("in_editor"))
+
+
+def move_project(name: str, to_editor: bool) -> dict:
+    """0.4.3.5 (the user: "do not duplicate info like that"): a video made from zero shows in ONE section - the
+    Generator, or the Editor once moved there (build\\project.json "in_editor"; nothing else moves)."""
+    d = PROJECTS / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    p = d / "build" / "project.json"
+    out = {**(read_json(p, {}) or {}), "in_editor": bool(to_editor), "updated": stamp()}
+    write_json_atomic(p, out)
+    return {"name": d.name, "in_editor": out["in_editor"]}
+
+
 def _created(d: Path) -> float:
     """When the video's folder was made (Windows' creation time)."""
     st = d.stat()
@@ -573,6 +590,7 @@ def list_projects() -> list[dict]:
             # render's time, else when the folder was made
             "created": created, "sort_t": nt or created,
             "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)),
+            "in_editor": _in_editor(b),
             "rating": ((outcome.get("aspects") or {}).get("overall") or {}).get("rating"),
             "reviewed": _reviewed(b, outcome, nt),
             "next": outcome.get("next"), "title": pkg.get("title") or None,
@@ -717,6 +735,7 @@ def publish_info(name: str) -> dict:
     return {"name": d.name, "folder": rel(pub), "exists": (pub / "package.json").exists(), "package": {**pkg, "thumbnails": thumbs},
             "records": recs, "fps": pl.get("fps"), "frames": pl.get("frames"), "plan": plan.name if plan else None,
             "templates": templates, "face_detector": face, "render": renders[-1].name if renders else None,
+            "styles": _thumb_styles(),                       # 0.4.5: thumbnail sets whose patterns Claude found
             "clips": sum(1 for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT),
             "images": [{"name": p.name, "path": str(p), "rel": rel(p)} for p in sorted(imgs.iterdir(), key=lambda q: -q.stat().st_mtime)
                        if p.suffix.lower() in PUB_IMAGE_EXT] if imgs.is_dir() else []}
@@ -875,7 +894,7 @@ def project(name: str) -> dict:
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],
             "library_picks": picks.get("picks", {}), "picks_updated": picks.get("updated"),
             "made_from": made, "outcome": outcome, "reviewed": _reviewed(b, outcome, newest["mtime"] if newest else None),
-            "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)),
+            "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)), "in_editor": _in_editor(b),
             "picture": _picture(d, b, LAB / newest["rel"] if newest else None, newest or {}),
             "publish": (b / "publish" / "package.json").exists()}
 
@@ -1331,6 +1350,8 @@ def memory() -> dict:
     """Claude's memory page (0.4): knowledge.memory() (videos, effects, lessons) + what was saved (effects for
     DaVinci Resolve, graphics) and how many prompts there are. memory.md is rewritten when what it is made of changed."""
     M = dict(KN.memory())
+    # oldest analysis first (0.4.3.5: "Latest videos" showed the oldest one first) - the pages take the end as the newest
+    M["videos"] = sorted(M.get("videos", []), key=lambda v: v.get("analysed") or "")
     # memory.md is stale when a card, a rating (outcome.json), a lesson or an answer on sound effects is newer
     src = [p for d in (KN.LOCAL_REFS, KN.SHARED_REFS) if d.exists() for p in d.glob("*.json")] + KN._outcomes() + [
         p for p in (KN.MAKING_LESSONS, KN.LOCAL_MAKING, KN.SHARED_LESSONS, KN.LOCAL_LESSONS) if p.exists()] + (
@@ -1445,3 +1466,446 @@ def text_file(relpath: str, limit: int = 400_000) -> str:
     if LAB not in p.parents or p.suffix.lower() not in (".md", ".txt", ".json", ".comp", ".py", ".csv", ".setting"):
         raise PermissionError(relpath)
     return p.read_text(encoding="utf-8", errors="replace")[:limit]
+
+
+# ------------------------------------------------------------------------------------------------- What it took (0.4.4)
+# Claude's minutes and tokens per step of a video / an analysis / a script, from Claude Code's own session logs
+# (motionlab\usage.py, read-only) + the app's jobs (.app\jobs\history.jsonl, written when a job ends, since 0.4.4).
+JOB_HISTORY = LAB / ".app" / "jobs" / "history.jsonl"
+# a job kind -> the step in words (the jobs that make or measure something; player copies, updates... are left out)
+JOB_STEP = {"draft": "Quick draft", "overlay_render": "Graphic rendered", "overlay_new": "Graphic added",
+            "overlay_captions": "Captions made", "overlay_resolve_clip": "Graphic for Resolve",
+            "thumb_candidates": "Good moments for a thumbnail", "thumb_make": "Thumbnail made",
+            "thumb_render": "Thumbnail rendered", "thumb_check": "Thumbnails checked", "analyze": "Measured by the lab",
+            "content_transcript": "Transcript", "content_stats": "Views and likes", "colour": "Colour measured",
+            "verify_timing": "Timing check", "resolve_doctor": "Resolve check-up", "report": "Report rebuilt"}
+# a counted round's task (+ the command's first word) -> the step in words
+TASK_STEP = {("script", "request"): "Prepare · the script written", ("script", "improve"): "Prepare · the script improved",
+             ("script", ""): "Prepare · the script checked", ("title", "request"): "Prepare · titles and thumbnail ideas",
+             ("title", "package"): "Ready to post · title, thumbnails, description",
+             ("title", ""): "Titles and thumbnails", ("recreate", "improve"): "Review and improve",
+             ("recreate", ""): "Edit with Claude", ("generate", ""): "Made with Claude",
+             ("prompt", ""): "Prompt with Claude", ("review", ""): "Claude's check", ("feedback", ""): "Your feedback applied"}
+
+
+def record_job(kind: str, title: str, args: dict, started: float, ended: float, status: str) -> None:
+    """A job that ended -> one line in .app\\jobs\\history.jsonl (What it took's lab jobs). Never raises."""
+    if kind not in JOB_STEP:
+        return
+    a = args or {}
+    analysis = a.get("name")
+    if kind == "analyze" and a.get("video"):
+        from motionlab.util import safe_name as video_folder
+        analysis = video_folder(Path(str(a["video"])).stem)
+    line = {"kind": kind, "title": title, "project": a.get("project"), "analysis": analysis,
+            "started": round(started, 1), "ended": round(ended, 1), "status": status}
+    try:
+        JOB_HISTORY.parent.mkdir(parents=True, exist_ok=True)
+        with open(JOB_HISTORY, "a", encoding="utf-8") as f:
+            f.write(json.dumps(line, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def _job_history() -> list[dict]:
+    out = []
+    try:
+        with open(JOB_HISTORY, encoding="utf-8") as f:
+            for ln in f:
+                try:
+                    out.append(json.loads(ln))
+                except ValueError:
+                    continue
+    except OSError:
+        pass
+    return out
+
+
+def usage_names() -> dict:
+    """The lab's objects a Claude session can name: projects, analyses, script / title requests, prompts."""
+    def dirs(d: Path) -> set:
+        return {p.name for p in d.iterdir() if p.is_dir()} if d.is_dir() else set()
+    req = PR.HOME / "requests"
+    return {"project": dirs(PROJECTS),
+            "analysis": {p.name for p in ANALYSIS.iterdir() if (p / "events.json").exists()} if ANALYSIS.is_dir() else set(),
+            "thumbs": dirs(_thumbs_root()),                     # 0.4.5: thumbnail sets (analysis\thumbs\<set>)
+            "request": {p.stem for p in req.glob("req-*.json")} if req.is_dir() else set(),
+            "prompt": {p.stem for k in PR.KINDS for p in (PR.HOME / k).glob(f"{k}-*.json")}}
+
+
+def _prompt_of_request(req: str) -> dict | None:
+    for k in ("script", "hook", "title"):
+        for p in (PR.HOME / k).glob(f"{k}-*.json") if (PR.HOME / k).is_dir() else []:
+            d = read_json(p, {}) or {}
+            if d.get("request") == req:
+                return d
+    return None
+
+
+def _request_of(pid: str) -> str | None:
+    try:
+        return PR.get(pid).get("request")
+    except (ValueError, OSError):
+        return None
+
+
+def took(kind: str, name: str) -> dict:
+    """What it took for a video ("project"), an analysis ("analysis") or a script / title ("prompt"): a timeline of
+    rows (Claude's steps, the lab's jobs) oldest first + the total + the other rounds in the same Claude windows
+    (not counted). A video's steps include its script / title records and the requests that wrote them."""
+    from motionlab import usage as U
+    names = usage_names()
+    want: set = set()
+    if kind == "project":
+        p = PROJECTS / safe_name(name)
+        if not p.is_dir():
+            raise FileNotFoundError(name)
+        name = p.name
+        want.add(("project", name))
+        made = read_json(p / "build" / "made_from.json", []) or []
+        pids = {str(x.get("id")) for x in made if x.get("kind") == "prompt"}
+        for f in (PR.HOME / "title").glob("title-*.json") if (PR.HOME / "title").is_dir() else []:
+            if (read_json(f, {}) or {}).get("project") == name:      # title records linked to it (Use this title)
+                pids.add(f.stem)
+        for pid in pids:
+            want.add(("prompt", pid))
+            req = _request_of(pid)
+            if req:
+                want.add(("request", req))
+    elif kind == "analysis":
+        if not (ANALYSIS / name / "events.json").exists():           # an analysis, not the thumbnail sets
+            raise FileNotFoundError(name)
+        want.add(("analysis", name))
+    elif kind == "prompt":
+        want.add(("prompt", name))
+        req = _request_of(name)
+        if req:
+            want.add(("request", req))
+    else:
+        raise ValueError(f"what it took for {kind!r}?")
+    sess = U.sessions()
+    rows, used = [], set()
+    for s, r, objs in U.counted(sess, names):
+        part = None
+        if r.get("mode") == "batch" and kind in ("analysis", "project"):   # 0.4.5: this video's share of a batch
+            part = U.split(r, names, kind).get(name)
+            if not part:
+                continue
+        elif not objs & want:
+            continue
+        used.add(s["id"])
+        info = U.round_info(s, r)
+        if part is not None:
+            info.update(minutes=part, tokens={k: 0 for k in info["tokens"]}, total=0, helpers=[])
+        step = TASK_STEP.get((r["task"], r.get("mode") or ""), TASK_STEP.get((r["task"], ""), r["task"]))
+        if part is not None:
+            step += " (in a batch)"
+        what = ""
+        if r["task"] in ("script", "title", "prompt"):
+            reqs = [n for k, n in objs if k == "request"]
+            pr = _prompt_of_request(reqs[0]) if reqs else None
+            ps = [n for k, n in objs if k == "prompt"]
+            if not pr and ps:
+                try:
+                    pr = PR.get(ps[0])
+                except (ValueError, OSError):
+                    pr = None
+            what = (pr or {}).get("title") or (pr or {}).get("title_auto") or ""
+        prev = rows[-1] if rows else None
+        if prev and prev["session"] == s["id"] and prev["step"] == step:
+            prev["minutes"] = round(prev["minutes"] + info["minutes"], 2)     # its continuation (a render finished)
+            prev["t1"] = info["t1"]
+            prev["rounds"] += 1
+            for k, v in info["tokens"].items():
+                prev["tokens"][k] += v
+            prev["total"] += info["total"]
+            prev["helpers"] += info["helpers"]
+            continue
+        rows.append({"kind": "claude", "step": step, "what": what, "rounds": 1, **info})
+    other = {"rounds": 0, "minutes": 0.0, "prompts": []}
+    for s in sess:
+        if s["id"] not in used:
+            continue
+        for r in s["rounds"]:
+            if not r.get("clear") and not r.get("task") and r["answers"]:
+                other["rounds"] += 1
+                other["minutes"] = round(other["minutes"] + r["minutes"], 2)
+                if len(other["prompts"]) < 6:
+                    other["prompts"].append({"prompt": r["prompt"][:120], "minutes": r["minutes"]})
+    jobs_since = None
+    if kind in ("project", "analysis"):
+        hist = _job_history()
+        jobs_since = min((j.get("started", 0) for j in hist), default=None)
+        for j in hist:
+            if j.get(kind) == name and j.get("status") == "done":
+                rows.append({"kind": "job", "step": JOB_STEP.get(j.get("kind"), j.get("title") or j.get("kind")),
+                             "what": "", "t0": j["started"], "t1": j["ended"],
+                             "minutes": round((j["ended"] - j["started"]) / 60, 2), "total": 0})
+    rows.sort(key=lambda x: x["t0"] or 0)
+    claude = [x for x in rows if x["kind"] == "claude"]
+    split = {k: sum(x["tokens"][k] for x in claude) for k, _ in U.TOKEN_KEYS}
+    return {"kind": kind, "name": name, "rows": rows, "other": other, "jobs_since": jobs_since,
+            "logs": U.log_dir().is_dir(),
+            "total": {"claude_minutes": round(sum(x["minutes"] for x in claude), 2),
+                      "job_minutes": round(sum(x["minutes"] for x in rows if x["kind"] == "job"), 2),
+                      "tokens": sum(split.values()), "split": split,
+                      "models": sorted({x["model"] for x in claude if x.get("model")}),
+                      "windows": len({x["session"] for x in claude})}}
+
+
+def prompt_took(items: list[dict]) -> dict:
+    """Prepare's cards: prompt id -> {minutes, tokens} Claude spent writing it (its request) or improving it."""
+    from motionlab import usage as U
+    by: dict = {}
+    for _, r, objs in U.counted(U.sessions(), usage_names()):
+        if r["task"] not in ("script", "title", "prompt"):
+            continue
+        t = U.total(r["tokens"]) + sum(U.total(h["tokens"]) for h in r["helpers"])
+        for o in objs:
+            a = by.setdefault(o, [0.0, 0])
+            a[0] += r["minutes"]
+            a[1] += t
+    out = {}
+    for p in items:
+        if p.get("kind") not in ("script", "hook", "title"):
+            continue
+        m = t = 0
+        for o in {("prompt", p.get("id")), ("request", p.get("request"))}:
+            if o in by:
+                m, t = m + by[o][0], t + by[o][1]
+        if t:
+            out[p["id"]] = {"minutes": round(m, 2)}
+    return out
+
+
+def live_claude() -> list[dict]:
+    """The heartbeat's line (every 4 s while the window is open): Claude windows the app opened that work now, with
+    the video / analysis they work on (the session name's words -> the lab's objects). Reads only new log bytes."""
+    from motionlab import usage as U
+    L = U.live()
+    if not L:
+        return []
+    names = usage_names()
+    for x in L:
+        objs = sorted(U.objects(x.get("label", ""), names))
+        x["project"] = next((n for k, n in objs if k == "project"), None)
+        x["analysis"] = next((n for k, n in objs if k == "analysis"), None)
+        if str(x.get("label", "")).startswith("batch"):                  # 0.4.5: "video 3 of 10"
+            b = next((b for b in batches(open_only=False) if b["task"] == x.get("task")), None)
+            if b:
+                x["batch"] = {"done": len(b["done"]), "total": len(b["items"]), "kind": b["kind"]}
+    return L
+
+
+# ------------------------------------------------------------------------------------------------- Bulk (0.4.5)
+# Many videos for Claude in ONE window (the user, 2026-10-15: "bulk analyze thumbnails, videos, and also bulk edit
+# stuff"): a batch = .app\batches\<id>.json {id, kind: review | recreate, items, created, opened}; Claude's skill reads
+# it and works item by item (/analyze-reference batch <id>, /recreate-video batch <id>); what is done is read from the
+# lab's own files, so *Continue the batch* starts at the first item not done yet.
+BATCHES = LAB / ".app" / "batches"
+BATCH_KINDS = {"review": ("/analyze-reference", "review"), "recreate": ("/recreate-video", "recreate")}
+
+
+def new_batch(kind: str, items: list[str], bid: str | None = None) -> dict:
+    if kind not in BATCH_KINDS:
+        raise ValueError(f"unknown batch kind {kind!r}")
+    items = list(dict.fromkeys(str(x) for x in items if x))
+    if not items:
+        raise ValueError("an empty batch")
+    for x in items:
+        if (ANALYSIS if kind == "review" else PROJECTS).joinpath(x).resolve().parent != \
+                (ANALYSIS if kind == "review" else PROJECTS).resolve():
+            raise ValueError(f"bad name: {x!r}")
+    bid = bid or f"b{int(time.time() * 1000) % 10_000_000}"
+    if not re.fullmatch(r"b\d{1,12}", bid):
+        raise ValueError(f"bad batch id {bid!r}")
+    b = {"id": bid, "kind": kind, "items": items, "created": stamp(), "created_t": time.time(), "opened": None}
+    write_json_atomic(BATCHES / f"{bid}.json", b)
+    return b
+
+
+def get_batch(bid: str) -> dict:
+    if not re.fullmatch(r"b\d{1,12}", str(bid)):
+        raise ValueError(f"bad batch id {bid!r}")
+    b = read_json(BATCHES / f"{bid}.json", None)
+    if not b:
+        raise FileNotFoundError(bid)
+    return b
+
+
+def _item_done(kind: str, name: str, since: float) -> bool:
+    """review: Claude wrote the analysis' review.json; recreate: an edit plan by Claude newer than the batch."""
+    if kind == "review":
+        return (ANALYSIS / name / "review.json").exists()
+    b = PROJECTS / name / "build"
+    for p in sorted(b.glob("plan_v*.json"), key=lambda x: x.stat().st_mtime, reverse=True) if b.is_dir() else []:
+        if p.stat().st_mtime < since:
+            return False
+        if (read_json(p, {}) or {}).get("made_by") != "draft_edit.py":
+            return True
+    return False
+
+
+def batch_state(b: dict) -> dict:
+    done = [x for x in b["items"] if _item_done(b["kind"], x, b.get("created_t") or 0)]
+    return {**b, "done": done, "left": [x for x in b["items"] if x not in done],
+            "prompt": batch_prompt(b), "task": BATCH_KINDS[b["kind"]][1]}
+
+
+def batch_prompt(b: dict) -> str:
+    return f"{BATCH_KINDS[b['kind']][0]} batch {b['id']}"
+
+
+def batches(kind: str | None = None, open_only: bool = True) -> list[dict]:
+    """The batches, newest first (with what is done); open_only = those with items left."""
+    out = []
+    for p in sorted(BATCHES.glob("b*.json"), key=lambda x: x.stat().st_mtime, reverse=True) if BATCHES.is_dir() else []:
+        b = read_json(p, None)
+        if not b or (kind and b.get("kind") != kind) or not b.get("items"):
+            continue
+        st = batch_state(b)
+        if open_only and not st["left"]:
+            continue
+        out.append(st)
+    return out
+
+
+def mark_batch_opened(bid: str) -> None:
+    b = get_batch(bid)
+    b["opened"] = stamp()
+    write_json_atomic(BATCHES / f"{bid}.json", b)
+
+
+def estimate() -> dict:
+    """What Claude usually takes per item on THIS PC (What it took's numbers): review = minutes per analysed video,
+    recreate = per edit with Claude (not counting Review and improve). {task: {"minutes": median, "n": how many}} -
+    a task never measured here is left out ("not measured yet" on the page, never a guess)."""
+    from motionlab import usage as U
+    names = usage_names()
+    per: dict = {"review": {}, "recreate": {}, "generate": {}, "script": {}}
+    kind_of = {"review": "analysis", "recreate": "project", "generate": "project", "script": "request"}
+    for s, r, objs in U.counted(U.sessions(), names):
+        t = r["task"]
+        if t not in per or (t == "recreate" and r.get("mode") == "improve"):
+            continue
+        k = kind_of[t]
+        if r.get("mode") == "batch":
+            for n, m in U.split(r, names, k).items():
+                per[t][n] = per[t].get(n, 0.0) + m
+            continue
+        mine = [n for kk, n in objs if kk == k]
+        if len(mine) == 1:
+            per[t][mine[0]] = per[t].get(mine[0], 0.0) + r["minutes"]
+    out = {}
+    for t, d in per.items():
+        v = sorted(x for x in d.values() if x > 0.2)
+        if v:
+            mid = len(v) // 2
+            out[t] = {"minutes": round(v[mid] if len(v) % 2 else (v[mid - 1] + v[mid]) / 2, 2), "n": len(v)}
+    return out
+
+
+def forget_batch(bid: str) -> dict:
+    """A batch row's ✕: the batch file (the app's own, in .app) goes; the videos and what Claude made stay."""
+    get_batch(bid)
+    (BATCHES / f"{bid}.json").unlink()
+    return {"ok": True}
+
+
+# ------------------------------------------------------------------------------------------------- thumbnail sets (0.4.5)
+# Analyser > Add thumbnails (the user, 2026-10-15: "15 thumbnails from mr beast ... common patterns like font, color,
+# structure"): analysis\thumbs\<set>\ (motionlab\thumbsets.py: set.json, img\, sheets; style.json by Claude). The
+# user's verdicts on Claude's patterns have their own file: verdicts.json {"patterns": {"P1": {"v", "note"}}}.
+THUMB_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def _thumbs_root() -> Path:
+    """analysis\\thumbs = thumbsets.ROOT (MOTIONLAB_THUMBS_ROOT moves it for tests)."""
+    from motionlab import thumbsets as TS
+    return Path(TS.ROOT)
+
+
+def _thumb_dir(name: str) -> Path:
+    d = _thumbs_root() / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    return d
+
+
+def thumb_sets() -> list[dict]:
+    from motionlab import thumbsets as TS
+    return TS.list_sets()
+
+
+def _thumb_styles() -> list[dict]:
+    """Ready to post's *In the style of*: the sets with Claude's patterns (style.json) - name, label, how many."""
+    try:
+        from motionlab import thumbsets as TS
+        return [{"name": s["name"], "label": s["label"], "count": s["count"]} for s in TS.list_sets() if s["has_style"]]
+    except Exception:                                        # noqa: BLE001 - no sets is no failure
+        return []
+
+
+def thumb_set(name: str) -> dict:
+    from motionlab import thumbsets as TS
+    d = _thumb_dir(name)
+    return {**TS.get_set(d.name), "verdicts": (read_json(d / "verdicts.json", {}) or {}).get("patterns", {}),
+            "lines": TS.summary_lines(d.name)[1:]}
+
+
+def save_thumb_verdicts(name: str, patterns: dict) -> dict:
+    """The user's verdict on each pattern Claude named: correct / partly / wrong (+ a note); empty = removed."""
+    d = _thumb_dir(name)
+    cur = (read_json(d / "verdicts.json", {}) or {}).get("patterns", {})
+    for pid, x in (patterns or {}).items():
+        if not re.fullmatch(r"P\d{1,3}", str(pid)):
+            raise ValueError(f"not a pattern: {pid!r}")
+        v = str((x or {}).get("v") or "")
+        note = " ".join(str((x or {}).get("note") or "").split())[:500]
+        if v not in ("", "correct", "partly", "wrong"):
+            raise ValueError(f"a verdict is correct, partly or wrong - not {v!r}")
+        if v or note:
+            cur[pid] = {"v": v, "note": note, "date": stamp()}
+        else:
+            cur.pop(pid, None)
+    write_json_atomic(d / "verdicts.json", {"patterns": cur, "updated": stamp()})
+    return {"patterns": cur}
+
+
+def thumb_remove(name: str, n: int) -> dict:
+    from motionlab import thumbsets as TS
+    d = _thumb_dir(name)
+    TS.remove_item(d.name, int(n))
+    return thumb_set(d.name)
+
+
+def thumb_upload(name: str, filename: str, stream, size: int) -> dict:
+    """A picture the user picked or dropped for a set (a new set when the name is new): received into .app\\tmp,
+    then COPIED into the set by thumbsets.add_files (the user's original is only read by the browser)."""
+    from motionlab import thumbsets as TS
+    from motionlab.util import safe_name as folder_name
+    set_name = folder_name(str(name))
+    stem, ext = os.path.splitext(Path(str(filename)).name)
+    if ext.lower() not in THUMB_IMG_EXT:
+        raise ValueError(f"{filename}: not a picture ({', '.join(sorted(THUMB_IMG_EXT))})")
+    if not 0 < size <= 25_000_000:
+        raise ValueError("the picture is empty or bigger than 25 MB")
+    tmp = LAB / ".app" / "tmp" / "thumbs"
+    tmp.mkdir(parents=True, exist_ok=True)
+    clean = re.sub(r"[^\w.\- ]", "_", stem).strip(" .")[:80] or "picture"
+    part = tmp / f"{clean}{ext.lower()}"
+    left = size
+    with open(part, "wb") as f:
+        while left > 0:
+            chunk = stream.read(min(1 << 20, left))
+            if not chunk:
+                break
+            f.write(chunk)
+            left -= len(chunk)
+    try:
+        if left:
+            raise ValueError("the upload stopped half way - try again")
+        TS.add_files(set_name, [part], log=lambda *_: None)
+    finally:
+        part.unlink(missing_ok=True)
+    return {"set": set_name}

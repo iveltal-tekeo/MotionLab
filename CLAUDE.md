@@ -41,6 +41,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 ## Layout
 - `refs\` reference videos the user drops in or downloads (read-only); `refs\audio\` = MP3 downloads;
   `refs\downloads.json` = where each download came from (link, platform, uploader, id, duration)
+- `analysis\thumbs\<set>\` = a thumbnail set (0.4.5: `set.json`, `img\`, `sheet_N.png`, Claude's `style.json`, the
+  user's `verdicts.json`) - not a video analysis
 - `analysis\<video name>\` one per analyzed video: `events.json` (all data), `report.html`, `review.json` (Claude's
   reviews), `review_todo.md`, `events\<ID>\sheet_NN.jpg + preview.mp4`, `frames\`, `cuts\`, `metrics.csv`,
   `overview.png`, `audio.wav`, `proxy_cfr.mp4` (only for VFR sources), `cache\` (re-usable metrics), `inspect\`,
@@ -77,7 +79,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `docs\` hand-offs: `resolve_notes.md`, `option2_resolve.md`, `claude_tips.md`, `knowledge_sharing.md`,
   `organization.md` (repo/versioning plan), `roadmap\` (`roadmap.json` = the roadmap's ONE data file, `index.html` =
   the motion graphic drawn from it, played live on the app's Home) -> `roadmap.png` (README; `roadmap.mp4` stays local)
-- `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\`, `open_claude.cmd`, `server.json`);
+- `.app\` the app's cache and logs (`server.log`, `deleted.log`, `jobs\` + `jobs\history.jsonl` (0.4.4: jobs ended),
+  `batches\` (0.4.5: bulk Claude work), `open_claude.cmd`, `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `write-script\` (+ `guidelines.md`), `write-title\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`,
   `write-prompt\`, `whats-next\`
@@ -151,6 +154,16 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   volume
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
+- `thumbsets.py fetch <set> <channel link> [--n 15] [--order newest|views] | more <set> [--n 20] [--order ...] |
+  refresh <set> | links <set> <urls> | add <set> <pictures> | measure | sheet | list | show | remove-item | selfcheck` thumbnail sets
+  (0.4.5): only the pictures (no video; the channel listed whole, taken in batches) -> `analysis\thumbs\<set>\`
+  measured + numbered sheets; Claude's patterns = `/analyze-reference thumbs <set>` -> style.json; used by
+  `thumbnail.py make / check --style <set>`. Bulk Claude work = `.app\batches\<id>.json` (`/analyze-reference batch
+  <id>`, `/recreate-video batch <id>`)
+- `usage.py sessions | project <p> | analysis <name> | check | selfcheck` What it took (0.4.4): Claude's time per
+  step, read-only from Claude Code's session logs (`motionlab\usage.py`: per round, what counts for a video) + the
+  app's jobs (`.app\jobs\history.jsonl`); the app shows time only (the user's call); `check` = the tokens against
+  Claude Code's own cost notes, proving the logs are read right
 - `selftest.py [--extended]` regenerate-if-needed and score the synthetic test videos (must PASS after any change);
   `make_testvideo.py [--extended|--negative|--vfr]` builds them with ground truth
 - `knowledge.py cards | summary | memory | pending | next-lesson-id [--kind making] | share | export | import <pack>`

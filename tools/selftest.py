@@ -418,6 +418,23 @@ def check_sfx() -> dict:
     return {"passed": r["passed"], "seconds": r["seconds"]}
 
 
+def check_usage() -> dict:
+    """What it took (0.4.4), no real logs: Claude Code session logs in tools\\dev\\usage_samples -> rounds, minutes,
+    tokens counted once per answer, what is counted for a video and what is not, a helper's tokens, the live line
+    reading only new bytes."""
+    from motionlab import usage as U
+    print("\n=== what it took: Claude's time and tokens from its logs ===")
+    return {"passed": U.selfcheck()["passed"]}
+
+
+def check_thumbsets() -> dict:
+    """Thumbnail sets (0.4.5), no network: synthetic pictures added to a temp set -> measured, text found / not
+    found and where, the summary, the sheets, re-use, remove-item, the style read back."""
+    from motionlab import thumbsets as TS
+    print("\n=== thumbnail sets: pictures measured, sheets for Claude ===")
+    return {"passed": TS.selfcheck()["passed"]}
+
+
 def check_downloads_report() -> dict:
     """Downloads that keep working and Report a problem (0.4.2.1), no network: a fake carousel -> one post in a scratch
     downloads.json; the report's scrubbing and GitHub link (known answers, trimming); how yt-dlp was installed -> its
@@ -502,7 +519,8 @@ def main() -> int:
     st = HERE / "selftest"
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
-               "thumbnail": check_thumbnail(), "publish": check_publish()}
+               "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
+               "thumbsets": check_thumbsets()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

@@ -10,7 +10,8 @@ Video: `$ARGUMENTS`
 
 Work from `C:\MotionLab`. Python is `.venv\Scripts\python.exe` (run tools as `.venv\Scripts\python tools\<tool>.py`).
 If no path was given, ask for one (or list `refs\`). If the user pasted feedback instead, jump to
-**Applying feedback** below.
+**Applying feedback** below. `batch <id>` = several videos in this one window: **Batch** below. `thumbs <set>` = a
+set of thumbnails, not a video: **Thumbnail sets** below.
 
 ## 0. Always first
 1. **Read the lessons completely** before anything else: the shared, reviewed ones in
@@ -144,6 +145,36 @@ Say in one line what the breakdown found (the hook / the signature). Then tell t
 **Effects** (Correct / Partly / Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses**
 tab, then **Send feedback to Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
 `analysis\<name>\report.html` > Generate feedback > Copy, and paste it into a chat.
+
+## Batch (`/analyze-reference batch <id>`, 0.4.5 - the app's *Add videos* with Claude's check, or *Continue the batch*)
+The app measured several videos and opened ONE window for all of them (the user, 2026-10-15: "bulk analyze ...").
+1. Read `.app\batches\<id>.json`: `items` = analysis folder names, in order. Section 0 (the lessons, the summary) once
+   for the whole batch, not per video.
+2. Skip every item whose `analysis\<name>\review.json` already exists (done in an earlier window - say so in one line).
+3. The rest, one at a time and completely: sections 2-3 for that video (every contact sheet, review.json with its
+   `_breakdown` and `_near_misses`, `report.py <name>`) before you start the next - so a stop (a limit, the window
+   closed) loses at most one video and *Continue the batch* starts at the next. Name the analysis folder in your tool
+   calls as you work (paths, `report.py <name>`): What it took splits this window's time per video by it.
+4. After each video: one short line ("3 of 8 done - <title>: 14 effects, 2 possible misses kept"); at the end the
+   section 3 report per video, short, then what the batch has in common (pacing, the effect families, the hooks).
+Keep it lean across videos: don't re-read the lessons or tool docstrings per video.
+
+## Thumbnail sets (`/analyze-reference thumbs <set>`, 0.4.5 - Analyser > Add thumbnails)
+A set = `analysis\thumbs\<set>\`: `set.json` (every picture: title, views, the lab's measures - colours, brightness,
+faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). Steps:
+1. `.venv\Scripts\python tools\thumbsets.py show <set>` (the measured summary), then look at EVERY sheet.
+2. Name what repeats, with how many of the set and their numbers: the text (words per picture, capitals, outline /
+   box / shadow, size, where), the font's STYLE in words ("heavy condensed sans, white, thick black outline") with the
+   closest free fonts (an exact font name from a picture is a guess - write `"sure": false`), the colours (hex), the
+   structure (face + big text, before / after split, an object and an arrow, a big number, a person reacting), faces
+   (expression, looking at the camera, size), the emotion, what the title adds to the picture. Outperformers
+   (views ÷ followers in set.json) count more - say which patterns they share.
+3. Write `analysis\thumbs\<set>\style.json` in the shape `tools\motionlab\thumbsets.py`'s docstring gives (summary,
+   patterns P1..Pn with `how_many` and `examples`, font, colours, words, structures, `for_make` = what
+   `thumbnail.py make` should use: template outline / block / split, text and outline colours, font, words).
+4. Tell the user the 3-5 strongest patterns in plain words (with picture numbers) and that the set's page in the
+   Analyser lets them mark each pattern Correct / Partly / Wrong; *Ready to post* can then make thumbnails "in the
+   style of <set>". Copy a style, never a design, a logo or a face.
 
 ---
 

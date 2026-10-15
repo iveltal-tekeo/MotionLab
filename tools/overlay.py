@@ -382,10 +382,10 @@ def cmd_render(a) -> int:
     folder = guard(Path(a.folder))
     c = read_conf(folder)
     W, H, fps = int(c["width"]), int(c["height"]), float(c["fps"])
-    n = a.motion_blur or int(c.get("motion_blur") or 1)
+    n = getattr(a, "motion_blur", None) or int(c.get("motion_blur") or 1)
     if n > 1 and (n % 2 == 0 or n > 9 or fps * n > 240.01):
         raise SystemExit(f"--motion-blur {n}: an odd number 3-9 with {fps:g} x N at most 240 sub-frames per second")
-    if a.motion_blur:             # kept for the next render (the app's Graphics tab renders without the flag)
+    if getattr(a, "motion_blur", None):             # kept for the next render (the app's Graphics tab renders without the flag)
         c["motion_blur"] = n
         (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
     vargs, vals, vfile = variables_args(folder)

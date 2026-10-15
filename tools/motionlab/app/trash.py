@@ -103,7 +103,7 @@ def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) ->
 
 def plan_reference(name: str) -> dict:
     d = ANALYSIS / data.safe_name(name)
-    if not d.is_dir():
+    if not d.is_dir() or d.name.lower() == "thumbs":       # analysis\thumbs = the thumbnail sets (kind "thumbs")
         raise FileNotFoundError(name)
     inside(d)
     ev = data.read_json(d / "events.json", {}) or {}
@@ -185,8 +185,25 @@ def plan_file(relpath: str) -> dict:
     return {"kind": kind, "name": data.rel(p), "title": p.name, "items": [item], "notes": [], "keeps": []}
 
 
+def plan_thumbs(name: str) -> dict:
+    """A thumbnail set (0.4.5, analysis\\thumbs\\<set>): its pictures (downloaded, or copies of the user's - the
+    originals stay where they were), the measures, Claude's patterns, the user's verdicts on them."""
+    d = data._thumbs_root() / data.safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    inside(d)
+    b, n = size_of(d)
+    label = (data.read_json(d / "set.json", {}) or {}).get("label") or d.name
+    return {"kind": "thumbs", "name": d.name, "title": label, "notes": [], "keeps": [],
+            "items": [{"key": "set", "label": "The thumbnail set", "path": data.rel(d), "bytes": b, "files": n,
+                       "what": "the pictures (copies), their measures, Claude's patterns and your verdicts on them",
+                       "default": True, "warn": []}]}
+
+
 def plan(kind: str, name: str, resolve_state: str = "") -> dict:
-    if kind == "reference":
+    if kind == "thumbs":
+        out = plan_thumbs(name)
+    elif kind == "reference":
         out = plan_reference(name)
     elif kind == "project":
         out = plan_project(name, resolve_state)

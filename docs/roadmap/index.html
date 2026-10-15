@@ -46,23 +46,11 @@
   .tag.nextmajor { background: var(--amber); color: var(--bg); }
   .tag.later { border: 1px solid var(--dim); color: var(--grey); }
   .eraghost { font: 400 13px/16px Consolas, monospace; color: #6a6a70; }
-  /* header, band, footer */
+  /* header, footer (the strong / weak band and the risks line left on 2026-10-15 - the user: "i dont really care about that") */
   #sub { right: 70px; top: 150px; font: 400 15px/18px Consolas, monospace; color: var(--grey); text-align: right; }
   #legend { right: 70px; top: 176px; display: flex; gap: 18px; font: 400 13px/16px Consolas, monospace; color: var(--grey); }
   #legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; border-radius: 50%; }
-  #band { left: 70px; top: 812px; width: 1780px; height: 192px; background: var(--panel); border-left: 6px solid var(--amber); }
-  .vrow { left: 34px; width: 1000px; display: flex; gap: 20px; align-items: flex-start; }
-  .vrow .chip { flex: none; width: 78px; text-align: center; font: 700 14px/24px Consolas, monospace; border-radius: 5px; }
-  .vrow .chip.s { border: 2px solid var(--white); color: var(--white); }
-  .vrow .chip.w { background: var(--amber); color: var(--bg); border: 2px solid var(--amber); }
-  .vrow p { font: 300 19px/26px "Segoe UI", sans-serif; color: #e2e2e6; }
-  .vrow.weak p { color: #ece2c8; }
-  #stats { left: 1080px; top: 26px; width: 670px; display: flex; gap: 16px; }
-  .st { flex: 1; }
-  .st b { display: block; font: 400 36px/48px Bahnschrift, "Segoe UI", sans-serif; color: var(--white); white-space: nowrap; }
-  .st.weak b { color: var(--amber); }
-  .st span { display: block; margin-top: 4px; font: 600 12.5px/16px "Segoe UI", sans-serif; color: var(--text); }
-  #foot { left: 96px; top: 1034px; width: 1728px; display: flex; justify-content: space-between; font: 400 14px/18px Consolas, monospace; color: #8e8e94; }
+  #foot { left: 96px; top: 1034px; width: 1728px; display: flex; justify-content: flex-end; font: 400 14px/18px Consolas, monospace; color: #8e8e94; }
   #msg { left: 96px; top: 480px; font: 400 22px/30px "Segoe UI", sans-serif; color: var(--grey); }
 </style>
 </head>
@@ -380,19 +368,8 @@
       });
     });
 
-    // ---- the band: strong / weak + the numbers, the footer
-    const band = div("abs", {}, ""); band.id = "band";
-    const vr = (tag, cls, text, top) => div("abs vrow " + cls, { top: top + "px" }, `<span class="chip ${tag}">${cls.toUpperCase()}</span><p>${esc(text)}</p>`, band);
-    const strong = vr("s", "strong", D.strong || "", 30);
-    const weak = vr("w", "weak", D.weak || "", 30 + strong.offsetHeight + 18);
-    const stats = div("abs", {}, "", band); stats.id = "stats";
-    const nums = [];
-    for (const s of D.stats || []) {
-      const m = /^(\d+)(.*)$/.exec(String(s.value));
-      const el = div("st" + (s.weak ? " weak" : ""), {}, `<b>${m ? `<em style="font-style:normal">0</em>${esc(m[2])}` : esc(s.value)}</b><span>${esc(s.label)}</span>`, stats);
-      if (m) nums.push([el.querySelector("em"), +m[1]]);
-    }
-    const foot = div("abs", {}, `<span>risks: ${esc(D.risks || "")}</span><span>MotionLab · ${esc(D.date || "")}</span>`); foot.id = "foot";
+    // ---- the footer (no band: the versions have the whole height)
+    const foot = div("abs", {}, `<span>MotionLab · ${esc(D.date || "")}</span>`); foot.id = "foot";
 
     // ---- the build-up (0 .. INTRO)
     const strokes = el => el.g.querySelectorAll("polyline");
@@ -407,10 +384,6 @@
     for (let k = 0; k < segs.length; k += 2) tl.set([segs[k], segs[k + 1]], { attr: { opacity: 1 } }, 0.3 + 0.6 * rnd());
     tl.fromTo([sub, legend], { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.9);
     tl.set(comet, { opacity: 0 }, 0);
-    tl.fromTo(band, { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power2.inOut" }, 3.3);
-    tl.fromTo([strong, weak], { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.12 }, 3.55);
-    tl.fromTo(stats.children, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.07 }, 3.6);
-    nums.forEach(([el, v], k) => tl.fromTo(el, { innerText: 0 }, { innerText: v, snap: { innerText: 1 }, duration: 0.7, ease: "power2.out" }, 3.62 + 0.07 * k));
     tl.fromTo(foot, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.9);
 
     // ---- the loop (INTRO .. SECONDS, 7.5 s): every part repeats a whole number of times, so the end = INTRO

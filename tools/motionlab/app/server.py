@@ -43,7 +43,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 21                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 25                                      # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
@@ -92,6 +92,15 @@ class State:
 S: State | None = None
 
 
+def live_claude() -> list[dict]:
+    """The heartbeat's 'Claude is working' line (0.4.4): read-only, only new log bytes - and never in the heartbeat's
+    way (a log it cannot read = no line)."""
+    try:
+        return data.live_claude()
+    except Exception:                                    # noqa: BLE001 - the heartbeat must answer
+        return []
+
+
 def status() -> dict:
     refs = data.list_references()
     projs = data.list_projects()
@@ -121,7 +130,7 @@ def status() -> dict:
         nxt.insert(0, {"text": "Start here: analyse a video you like (Analyze > Download from a link) or drop "
                                "one into the refs folder, then click Analyse a video", "go": "#/analyze"})
     return {"version": VERSION, "lab": str(LAB), "references": len(refs), "events": sum(r["events"] for r in refs),
-            "reviewed": sum(r["reviewed"] for r in refs), "verdicts": verdicts, "projects": len(projs),
+            "reviewed": sum(r["reviewed"] for r in refs), "verdicts": verdicts, "projects": sum(1 for p in projs if not (p.get("generated") and not p.get("in_editor"))),
             "library": len(lib["items"]), "picks": len(lib["picks"]), "free_bytes": du.free, "total_bytes": du.total,
             "resolve": S.resolve, "jobs_running": [j.info() for j in S.runner.active()],
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
@@ -332,7 +341,8 @@ class Handler(BaseHTTPRequestHandler):
                                "update": bool(u.get("can_update")), "update_kind": u.get("kind"),
                                "update_version": u.get("new_version"), "update_cards": u.get("new_cards", 0),
                                "update_lessons": u.get("new_lessons", 0), "update_checked": u.get("checked"),
-                               "update_testing": u.get("testing", 0), "update_error": u.get("error")})
+                               "update_testing": u.get("testing", 0), "update_error": u.get("error"),
+                               "claude": live_claude()})              # 0.4.4: Claude windows at work, one line
         if path == "/api/status":
             return self._json(status())
         if path == "/api/references":
@@ -388,7 +398,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(KN.card_detail(arg("id", "")))
         if path == "/api/prompts":
             ov = PR.overview()
-            return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"])})
+            return self._json({**ov, "used": data.prompt_uses(), **data.prompt_styles(ov["items"]),
+                               "took": data.prompt_took(ov["items"])})
         if path == "/api/script/cards":                  # Film it (2026-10-15): a script / hook as cue cards
             pid = arg("id", "")
             if not re.fullmatch(r"(script|hook)-\d{3,}", pid):
@@ -417,6 +428,21 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/publish", path)        # Edit > a video > Publish (0.4.3)
         if m:
             return self._json(data.publish_info(urllib.parse.unquote(m[1])))
+        m = re.fullmatch(r"/api/took/(project|analysis|prompt)/([^/]+)", path)   # What it took (0.4.4)
+        if m:
+            return self._json(data.took(m[1], urllib.parse.unquote(m[2])))
+        if path == "/api/estimate":                      # 0.4.5: Claude's usual minutes per video on this PC
+            return self._json(data.estimate())
+        if path == "/api/thumbs":                        # 0.4.5: the thumbnail sets (Analyser)
+            return self._json(data.thumb_sets())
+        m = re.fullmatch(r"/api/thumbs/([^/]+)", path)
+        if m:
+            return self._json(data.thumb_set(urllib.parse.unquote(m[1])))
+        if path == "/api/batches":                       # 0.4.5: batches with videos left (Continue the batch)
+            kind = arg("kind")
+            if kind not in (None, "review", "recreate"):
+                raise ValueError(f"unknown batch kind {kind!r}")
+            return self._json(data.batches(kind))
         m = re.fullmatch(r"/api/project/([^/]+)/chapters", path)       # Publish: chapter points (plan / its words)
         if m:
             data.publish_dir(urllib.parse.unquote(m[1]))
@@ -445,6 +471,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def _post(self):
         path = urllib.parse.urlsplit(self.path).path
+        m = re.fullmatch(r"/api/thumbs/([^/]+)/upload", path)
+        if m:                                     # 0.4.5: a picture for a thumbnail set - a raw body (<= 25 MB)
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError("missing or wrong session token")
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.thumb_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
+                                                int(self.headers.get("Content-Length") or 0)))
         m = re.fullmatch(r"/api/project/([^/]+)/upload", path)
         if m:                                     # Film it (2026-10-15): a recording copied in - a raw body, streamed
             if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
@@ -530,6 +563,9 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/rename", path)   # the name the app shows (the folder keeps its own)
         if m:
             return self._json(data.rename_project(urllib.parse.unquote(m[1]), str(body.get("label", ""))))
+        m = re.fullmatch(r"/api/project/([^/]+)/move", path)     # 0.4.3.5: a video from zero -> the Editor (or back)
+        if m:
+            return self._json(data.move_project(urllib.parse.unquote(m[1]), bool(body.get("editor"))))
         # how it turned out (0.4.2 also: "next" fix / start_over, "moment" / "remove_moment" = notes on moments of a
         # render) / what it is made from
         m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)
@@ -547,6 +583,16 @@ class Handler(BaseHTTPRequestHandler):
                                              queue=bool(body.get("queue"))).info(0))
         if path == "/api/analyze/batch":                # Analyze > Add videos (0.4): links + files, one focus
             return self._json(analyze_batch(body))
+        if path == "/api/edit/batch":                   # 0.4.5: several videos edited the same way
+            return self._json(edit_batch(body))
+        if path == "/api/batches/forget":               # 0.4.5: a batch row's ✕ (the videos stay as they are)
+            return self._json(data.forget_batch(str(body.get("id", ""))))
+        m = re.fullmatch(r"/api/thumbs/([^/]+)/(verdicts|remove)", path)   # 0.4.5: a thumbnail set
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2] == "verdicts":
+                return self._json(data.save_thumb_verdicts(name, body.get("patterns") or {}))
+            return self._json(data.thumb_remove(name, int(body.get("n") or 0)))
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)
         if m:
             return self._json(S.runner.cancel(int(m[1])).info())
@@ -627,6 +673,10 @@ class Handler(BaseHTTPRequestHandler):
             if len(raw) > 30_000_000:
                 raise ValueError("pictures and clips up to 30 MB")
             return self._json(PR.add_example(pid, str(body.get("name", "")), raw))
+        if path == "/api/prompts/rename":                 # 0.4.3.5: Prepare's cards - the name shown (empty = automatic)
+            name = " ".join(re.sub(r"[\x00-\x1f\x7f]", " ", str(body.get("title") or "")).split())[:120]
+            r = PR.update(str(body.get("id", "")), title=name)
+            return self._json({"id": r["id"], "title": r.get("title")})
         if path == "/api/prompts/kind":                   # a card's kind, changed by the user (a new id of that kind)
             return self._json(PR.set_kind(str(body.get("id", "")), str(body.get("kind", ""))))
         if path == "/api/prompts/delete":                 # a card's Delete (the user's click, after a confirm)
@@ -763,6 +813,37 @@ def analyze_batch(body: dict) -> dict:
     for u in links:
         started.append(S.runner.start("download", {"url": u, "preset": preset}, queue=True, then=opts, batch=batch))
     return {"batch": batch, "jobs": [j.info() for j in started]}
+
+
+def edit_batch(body: dict) -> dict:
+    """Editor > Edit several videos (0.4.5): one style for 2-10 of the user's videos. Everything is checked first;
+    each video gets the same request (build\\edit_request.json, its own song if its folder has one), then either a
+    quick draft each (queued jobs, no Claude) or one Claude window for all (/recreate-video batch <id>)."""
+    names = list(dict.fromkeys(str(p) for p in body.get("projects") or [] if str(p).strip()))
+    if not 2 <= len(names) <= BATCH_MAX:
+        raise ValueError(f"pick 2 to {BATCH_MAX} videos")
+    req = dict(body.get("request") or {})
+    if req.get("how") not in ("style", "words"):
+        raise ValueError("several videos are edited in a style or the way you say (not a 1:1 copy)")
+    req["music"] = ""                                   # each video: the song in its own folder, if any
+    mode = body.get("mode")
+    if mode not in ("drafts", "claude"):
+        raise ValueError("mode: drafts or claude")
+    folders = []
+    for n in names:
+        d = data.PROJECTS / data.safe_name(n)
+        if not d.is_dir():
+            raise FileNotFoundError(n)
+        if not any(p.is_file() and p.suffix.lower() in data.VIDEO_EXT for p in d.iterdir()):
+            raise ValueError(f"{data._label(d / 'build') or d.name}: no clips in its folder yet")
+        folders.append(d.name)
+    for n in folders:
+        data.save_edit_request(n, req)
+    if mode == "drafts":
+        batch = int(time.time() * 1000) % 10_000_000
+        return {"jobs": [S.runner.start("draft", {"project": n}, queue=True, batch=batch).info() for n in folders]}
+    b = data.new_batch("recreate", folders)
+    return {"batch": b, "prompt": data.batch_prompt(b), "label": f"batch of {len(folders)}"}
 
 
 def restart_soon() -> None:

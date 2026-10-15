@@ -35,7 +35,8 @@ PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/prompts", "#
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
           "/api/storage", "/api/jobs", "/api/skills", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
           "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts", "/api/memory",
-          "/api/edit/options", "/api/generate/options", "/api/script/requests"]
+          "/api/edit/options", "/api/generate/options", "/api/script/requests",
+          "/api/thumbs", "/api/estimate", "/api/batches", "/api/batches?kind=review"]           # 0.4.5
 
 
 def ok(cond, what: str) -> bool:
@@ -239,6 +240,8 @@ def check_server(base: str) -> list[str]:
         try:
             st, body = get(base, "/api/reference/" + r)
             ok(st == 200 and json.loads(body).get("events") is not None, f"GET /api/reference/{r}")
+            st, body = get(base, "/api/took/analysis/" + r)             # What it took (0.4.4)
+            ok(st == 200 and "rows" in json.loads(body), f"GET /api/took/analysis/{r}")
         except Exception as e:                                  # noqa: BLE001
             ok(False, f"GET /api/reference/{r}: {type(e).__name__}: {e}")
     return test_refs
