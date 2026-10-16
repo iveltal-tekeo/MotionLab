@@ -1,0 +1,22 @@
+{
+ "name": "calendar-fill",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the card pops"
+  },
+  {
+   "f": "start + round(16 * fps / 30) + i * round(gap * fps / 30)",
+   "repeat": "filled",
+   "kind": "tick",
+   "db": -6,
+   "seed": "900 + i",
+   "what": "a day fills"
+  }
+ ]
+}

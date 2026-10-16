@@ -1,0 +1,41 @@
+{
+ "name": "Photo strip",
+ "kind": "photos",
+ "what": "A photobooth strip pushes down in jerks, frame by frame, in black and white or colour, sways on the wall with a handwritten date, then slides back up - memories, a recap, friends.",
+ "use_for": [
+  "memories",
+  "friends",
+  "recap",
+  "wedding",
+  "party",
+  "photos",
+  "throwback"
+ ],
+ "tags": [
+  "photobooth",
+  "strip",
+  "photos",
+  "black and white",
+  "retro"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__photobooth-animation",
+   "what": "a photobooth strip pushing out frame by frame"
+  }
+ ],
+ "motion": "n pushes of 9 f (S-curve) + a 6 f stop with a tiny shake; sways 30 f (sine); slides back 14 f (accelerating)",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  25,
+  40,
+  60,
+  90,
+  140
+ ]
+}

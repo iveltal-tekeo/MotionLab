@@ -1,0 +1,64 @@
+{
+ "name": "Title card",
+ "kind": "text",
+ "what": "A finished title screen in four looks: an editorial title with a big serif word whose letters rise and breathe; an event card with words rising over a soft shape; two names with an ampersand blurring in (an invitation); or a product line with a sound-wave strip and a button popping.",
+ "use_for": [
+  "title",
+  "intro",
+  "event",
+  "wedding",
+  "invitation",
+  "product",
+  "launch",
+  "announcement",
+  "ad"
+ ],
+ "tags": [
+  "title",
+  "serif",
+  "invitation",
+  "product",
+  "editorial",
+  "blur in"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__the-future-of-design",
+   "what": "a small top line, a huge serif word whose letters rise and lean, a bottom line"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__saas-security",
+   "what": "a product title rising with a soft background shape"
+  },
+  {
+   "pack": "swishy",
+   "clip": "text__generate-ai-voice-animation",
+   "what": "words blurring in over a sound-wave strip, a button popping"
+  },
+  {
+   "pack": "swishy",
+   "clip": "social__science-club",
+   "what": "an event title building up line by line"
+  },
+  {
+   "pack": "swishy",
+   "clip": "social__wedding-announcement",
+   "what": "two names and an ampersand blurring in one after another"
+  }
+ ],
+ "motion": "letters rise 16 f, 3 f apart (slow end), then breathe; lines blur in 20 f, 10 f apart; the button back.out 12 f",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  8,
+  20,
+  40,
+  60,
+  90,
+  140
+ ]
+}

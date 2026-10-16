@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "a1", "type": "string", "label": "First title, line 1", "default": "Make it"},
+  {"id": "a2", "type": "string", "label": "First title, line 2 (empty = one line)", "default": "Simple"},
+  {"id": "b1", "type": "string", "label": "Second title, line 1", "default": "Make it"},
+  {"id": "b2", "type": "string", "label": "Second title, line 2", "default": "Move"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "swap_at", "type": "number", "label": "The swap at frame", "default": 34, "min": 0, "max": 900, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "wave-swap" (0.5.0, the Motion Graphics library): a title that changes into another - the
+     letters of the first leave along a wave (up, down, out to the right, one after another, rotating with the curve)
+     while the letters of the second ride the same wave in from the left and settle. Learned from
+     text__i-want-a-smooth-animation-where-the-text-with-2-li ("Swishy / Design" flowing out along a wave and coming
+     back as "Creative / Motion", f26-f123 (00:00:01:01-00:00:04:23) at 25 fps). Each letter's path is three eased legs
+     (a wave), staggered 2 frames. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; left: 0; top: 0; white-space: nowrap; display: flex; }
+  .ch { display: inline-block; line-height: 1.05; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, weight = ONE.test(V.font) ? 400 : 700;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, fs = 120 * U * s, lh = fs * 1.05, cy = H * V.y / 100, cam = document.getElementById("cam");
+  const build = (l1, l2) => {
+    const lines = [l1, l2].filter(x => x && x.trim()), out = [];
+    lines.forEach((t, li) => {
+      const ln = document.createElement("div"); ln.className = "ln"; cam.appendChild(ln);
+      [...t].forEach(c => { const e = document.createElement("span"); e.className = "ch"; e.textContent = c === " " ? " " : c;
+        Object.assign(e.style, { font: `${weight} ${fs}px ${fam}`, color: V.color }); ln.appendChild(e); out.push({ e, li }); });
+      gsap.set(ln, { x: W / 2, xPercent: -50, y: cy - lines.length * lh / 2 + li * lh });
+    });
+    return out;
+  };
+  const A = build(V.a1, V.a2), B = build(V.b1, V.b2);
+  const S = Math.round(V.start), X = Math.max(S + K(14), Math.round(V.swap_at)), LEG = K(10), amp = 80 * U * s;
+  // the first title: in (fade + rise), then out along a wave: up, down, away right
+  A.forEach(({ e }, i) => {
+    enter(e, { opacity: 0, y: 30 * U }, { opacity: 1, y: 0 }, S + i * K(1), S + i * K(1) + K(12), "power3.out");
+    const f0 = X + i * K(2);
+    to(e, { x: W * 0.12, y: -amp, rotation: -20 }, f0, f0 + LEG, "sine.in");
+    to(e, { x: W * 0.32, y: amp * 0.7, rotation: 18 }, f0 + LEG, f0 + 2 * LEG, "sine.inOut");
+    to(e, { x: W * 0.9, y: -amp * 0.2, rotation: 0, opacity: 0 }, f0 + 2 * LEG, f0 + 3 * LEG, "sine.out");
+  });
+  // the second: rides the same wave in from the left and settles
+  B.forEach(({ e }, i) => {
+    const f0 = X + K(10) + i * K(2);
+    gsap.set(e, { opacity: 0 });
+    set(e, { opacity: 1, x: -W * 0.9, y: amp * 0.2, rotation: 0 }, f0);
+    to(e, { x: -W * 0.32, y: -amp * 0.7, rotation: -18 }, f0, f0 + LEG, "sine.in");
+    to(e, { x: -W * 0.12, y: amp, rotation: 20 }, f0 + LEG, f0 + 2 * LEG, "sine.inOut");
+    to(e, { x: 0, y: 0, rotation: 0 }, f0 + 2 * LEG, f0 + 3 * LEG + K(4), "power3.out");
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

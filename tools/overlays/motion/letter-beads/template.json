@@ -1,0 +1,41 @@
+{
+ "name": "Letter beads",
+ "kind": "text",
+ "what": "Letter beads lie scattered and roll into a line that spells the word - each turning as it rolls, landing with a tiny bounce; a string pulls through them; they scatter again at the end.",
+ "use_for": [
+  "word",
+  "cta",
+  "subscribe",
+  "name",
+  "playful",
+  "kids",
+  "craft"
+ ],
+ "tags": [
+  "kinetic text",
+  "beads",
+  "assemble",
+  "roll",
+  "playful"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__friendship-beads",
+   "what": "letter beads scattered on cream rolling into a word and scattering again"
+  }
+ ],
+ "motion": "beads pop in 10 f; each rolls 14 f (slow end, turning by its distance), 2 f apart, bounces 6 f; the string draws 12 f",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  24,
+  34,
+  50,
+  90,
+  140
+ ]
+}

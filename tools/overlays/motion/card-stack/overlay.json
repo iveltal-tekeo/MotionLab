@@ -1,0 +1,30 @@
+{
+ "name": "card-stack",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(2 * fps / 30)",
+   "repeat": "cards",
+   "kind": "thump",
+   "db": -8,
+   "seed": "2000 + i",
+   "what": "a card drops"
+  },
+  {
+   "f": "start + cards * round(2 * fps / 30) + round(14 * fps / 30) + i * round(14 * fps / 30)",
+   "repeat": "3",
+   "kind": "whip",
+   "db": -6,
+   "seed": "2100 + i",
+   "what": "a card shuffles"
+  },
+  {
+   "f": "start + cards * round(2 * fps / 30) + round(60 * fps / 30)",
+   "kind": "shimmer",
+   "what": "the chosen card glows"
+  }
+ ]
+}

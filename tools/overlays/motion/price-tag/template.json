@@ -1,0 +1,40 @@
+{
+ "name": "Price tag",
+ "kind": "promo",
+ "what": "A sale: a card pops up, the old price gets struck through, the new price slams in, a spiky -50 % burst spins onto the corner and keeps turning, confetti falls once, a button pops and pulses.",
+ "use_for": [
+  "sale",
+  "discount",
+  "price",
+  "offer",
+  "shop",
+  "product",
+  "promo",
+  "black friday"
+ ],
+ "tags": [
+  "sale",
+  "price",
+  "badge",
+  "burst",
+  "confetti",
+  "promo"
+ ],
+ "learned_from": [],
+ "origin": "product promos and sale badges - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "card 14 f (back.out); strike 6 f; price 1.6 -> 1 in 8 f + a 3 f shake; burst back.out 12 f then turns; confetti once; button pops, pulses every 30 f",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  20,
+  26,
+  34,
+  44,
+  60,
+  90,
+  140
+ ]
+}

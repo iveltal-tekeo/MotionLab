@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "style", "type": "enum", "label": "Card", "default": "note", "options": [{"value": "note", "label": "Note - a dark card, a title, the text typing in"}, {"value": "terminal", "label": "Terminal - a window, a prompt, code typing in"}, {"value": "paper", "label": "Paper - a light card"}]},
+  {"id": "title", "type": "string", "label": "Title (empty = none)", "default": "Note"},
+  {"id": "text", "type": "string", "label": "The text that types in (a / starts a new line)", "default": "Creating a video people finish takes one thing: / know the single message you want them to keep - / then cut everything that does not carry it."},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "mono_font", "type": "enum", "label": "Terminal font", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "card", "type": "color", "label": "Card colour (note)", "default": "#1c1c1f"},
+  {"id": "ink", "type": "color", "label": "Text colour (note)", "default": "#f1f1f3"},
+  {"id": "accent", "type": "color", "label": "Accent (the cursor, the prompt)", "default": "#4ade80"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f4f4f5"},
+  {"id": "cps", "type": "number", "label": "Letters a second", "default": 30, "min": 4, "max": 120, "step": 1},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "tilt", "type": "number", "label": "Tilt (degrees)", "default": -4, "min": -20, "max": 20, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "typing-card" (0.5.0, the Motion Graphics library): a card (a dark note, a terminal window
+     or paper) swings in tilted, its text types in letter by letter behind a cursor, line after line, the card floats
+     and slowly straightens; the cursor blinks once the text is done. Learned from graphics__notepad (the dark tilted
+     "Note" card typing a paragraph, a soft shadow), text__terminal-typing (a terminal on blue typing a line of code)
+     and graphics__terminal-showcase (window chrome, lines typing). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #card { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .dots { display: flex; gap: 0.5em; }
+  .dots i { display: block; width: 0.75em; height: 0.75em; border-radius: 50%; }
+  .c { display: none; }
+  .cur { width: 0.08em; height: 1.05em; vertical-align: -0.16em; margin-left: 0.04em; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="card"><div id="bar"></div><div id="ttl"></div><div id="txt"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const term = V.style === "terminal", paper = V.style === "paper", s = V.size;
+  const cardBg = term ? "#121418" : paper ? "#fbfaf6" : V.card, ink = term ? "#d8dee9" : paper ? "#24221d" : V.ink;
+  const f0nt = term ? `"${V.mono_font}", Consolas, monospace` : `"${V.font}", "Segoe UI", sans-serif`;
+  const cw = W * 0.8 * s, pad = 58 * U * s, fs = (term ? 38 : 46) * U * s;
+  const card = document.getElementById("card"), bar = document.getElementById("bar"), ttl = document.getElementById("ttl"), txt = document.getElementById("txt");
+  Object.assign(card.style, { width: `${cw}px`, padding: `${pad}px`, background: cardBg, borderRadius: `${28 * U * s}px`,
+    boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.28), 0 ${8 * U}px ${20 * U}px rgba(0,0,0,.18)`, font: `400 ${fs}px ${f0nt}`, color: ink });
+  Object.assign(bar.style, { fontSize: `${fs * 0.7}px`, marginBottom: `${26 * U * s}px` });
+  bar.innerHTML = `<div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>`;
+  if (V.title) {
+    ttl.textContent = V.title;
+    Object.assign(ttl.style, { font: `${ONE.test(V.font) || term ? 700 : 800} ${fs * 1.32}px ${f0nt}`, marginBottom: `${18 * U * s}px` });
+  }
+  // every letter its own span, shown one at a time (display: none -> inline), so the lines wrap where they will end;
+  // a cursor after every letter - only the one after the newest letter shows, so it follows the typing
+  const lines = (V.text || "").split(/\s+\/\s+|\s*\n\s*/).filter(Boolean);
+  let h = "";
+  lines.forEach((l, i) => {
+    h += `<div style="line-height:1.5;margin-top:${i ? 0.35 : 0}em">${term ? `<span class="c" style="color:${V.accent}">$ </span><span class="c cur" style="background:${V.accent}"></span>` : ""}`
+       + [...l].map(c => `<span class="c">${esc(c)}</span><span class="c cur" style="background:${V.accent}"></span>`).join("") + "</div>";
+  });
+  txt.innerHTML = h;
+  const all = [...txt.querySelectorAll(".c")];
+  const chars = all.filter(e => !e.classList.contains("cur")), curs = all.filter(e => e.classList.contains("cur"));
+  const cx = W * V.x / 100, cy = H * V.y / 100;
+  gsap.set(card, { x: cx - cw / 2, y: cy - H * 0.16, rotation: V.tilt, transformOrigin: "50% 50%" });
+
+  // ---- the motion: the card swings in, the letters type, the cursor follows the last letter (it moves with the
+  // text: it sits after the last span and the hidden ones take no room), then blinks; the card floats and straightens
+  const S = Math.round(V.start);
+  enter(card, { opacity: 0, y: cy - H * 0.16 + 160 * U, rotation: V.tilt * 3, scale: 0.9 }, { opacity: 1, y: cy - H * 0.16, rotation: V.tilt, scale: 1 }, S, S + K(20), "power3.out");
+  const T0 = S + K(16), per = FPS / Math.max(1, V.cps);
+  chars.forEach((c, i) => {
+    const f = T0 + Math.round(i * per), nf = T0 + Math.round((i + 1) * per);
+    set(c, { display: "inline" }, f);
+    set(curs[i], { display: "inline-block" }, f);
+    if (i < chars.length - 1 && nf > f) set(curs[i], { display: "none" }, nf);
+  });
+  const T1 = T0 + Math.round(chars.length * per), last = curs[curs.length - 1];
+  if (last) for (let f = T1 + K(10), on = false; f < FRAMES; f += K(15), on = !on) set(last, { opacity: on ? 1 : 0 }, f);
+  to(card, { rotation: V.tilt * 0.4, y: cy - H * 0.16 - 26 * U }, S + K(20), FRAMES, "sine.inOut");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

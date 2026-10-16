@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Card title", "default": "Revenue this week"},
+  {"id": "total", "type": "number", "label": "The total (counts up)", "default": 48250, "min": 0, "max": 1000000000, "step": 1},
+  {"id": "prefix", "type": "string", "label": "Before the total", "default": "$"},
+  {"id": "change", "type": "string", "label": "Change badge (empty = none)", "default": "+18.4%"},
+  {"id": "values", "type": "string", "label": "Bars / line (| between)", "default": "32|45|38|60|52|74|66"},
+  {"id": "labels", "type": "string", "label": "Labels under them (| between)", "default": "M|T|W|T|F|S|S"},
+  {"id": "chart", "type": "enum", "label": "Chart", "default": "bars", "options": [{"value": "bars", "label": "Bars with a highlight that walks across"}, {"value": "line", "label": "A line with a soft area"}]},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#ff6a1a"},
+  {"id": "card", "type": "color", "label": "Card colour", "default": "#15171c"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#0a0b0e"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.6, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 47, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "dashboard-card" (0.5.0, the Motion Graphics library): a dark app card swings in in 3D
+     (tilted back, it settles flat), the total counts up, a change badge pops, the chart builds - bars that grow with a
+     highlight walking from bar to bar (the total follows it), or a line with a soft area; the card floats with a slow
+     tilt. Learned from graphics__ad-spend (a dark dashboard card, a money total, an orange highlight bar moving across
+     the bars) and graphics__fintech-dashboard (a navy balance card with a line chart tilting in 3D). MotionLab's own
+     code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; font-synthesis: none; }
+  #tot::after { content: attr(data-v); }
+  #stage { perspective: 1400px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="glow" class="abs"></div>
+  <div id="stage" class="abs"><div id="card" class="abs"><div id="ttl" class="t"></div><div id="tot" class="t"></div><div id="chg" class="t"></div>
+    <svg id="g" class="abs" style="overflow:visible"></svg><div id="labs" class="abs"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#glow", "#stage"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, cw = W * 0.86 * Math.min(1.1, s), ch = cw * 0.92, cx = W / 2, cy = H * V.y / 100;
+  if (V.background) gsap.set("#glow", { background: `radial-gradient(ellipse ${cw * 0.7}px ${ch * 0.6}px at 50% ${cy}px, ${V.accent}2e, transparent 70%)` });
+  const card = q("card"), pad = 56 * U * s;
+  Object.assign(card.style, { width: `${cw}px`, height: `${ch}px`, background: `linear-gradient(160deg, ${V.card}, #0d0e12)`, borderRadius: `${40 * U * s}px`,
+    border: "1px solid #ffffff14", boxShadow: `0 ${40 * U}px ${100 * U}px rgba(0,0,0,.55)` });
+  gsap.set(card, { x: cx - cw / 2, y: cy - ch / 2, transformOrigin: "50% 50%" });
+  Object.assign(q("ttl").style, { font: `500 ${34 * U * s}px ${fam}`, color: "#ffffff", opacity: 0.6 });
+  q("ttl").textContent = V.title; gsap.set("#ttl", { x: pad, y: pad });
+  Object.assign(q("tot").style, { font: `800 ${96 * U * s}px ${fam}`, color: "#ffffff", letterSpacing: "-0.02em" });
+  gsap.set("#tot", { x: pad, y: pad + 52 * U * s });
+  Object.assign(q("chg").style, { font: `700 ${28 * U * s}px ${fam}`, color: "#0b0b0c", background: V.accent, padding: `${8 * U * s}px ${16 * U * s}px`, borderRadius: `${999}px` });
+  q("chg").textContent = V.change || ""; gsap.set("#chg", { x: cw - pad, y: pad, xPercent: -100 });
+  const vals = String(V.values).split("|").map(Number).filter(x => !isNaN(x)), labs = String(V.labels || "").split("|"), n = Math.max(1, vals.length);
+  const mx = Math.max(...vals, 1), gx = pad, gw = cw - 2 * pad, gb = ch - pad - 50 * U * s, gh = ch * 0.48;
+  const svg = q("g"); svg.setAttribute("width", cw); svg.setAttribute("height", ch);
+  const NS = "http://www.w3.org/2000/svg", mk = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); svg.appendChild(e); return e; };
+  const bw = gw / n * 0.56, step = gw / n, bars = [];
+  labs.slice(0, n).forEach((l, i) => { const e = document.createElement("div"); e.className = "t"; e.textContent = l;
+    Object.assign(e.style, { font: `500 ${26 * U * s}px ${fam}`, color: "#ffffff", opacity: 0.4 }); q("labs").appendChild(e);
+    gsap.set(e, { x: gx + step * (i + 0.5), y: gb + 20 * U * s, xPercent: -50 }); });
+  const fmt = v => `${V.prefix}${Math.round(v).toLocaleString("en-US")}`;
+  const S = Math.round(V.start), C0 = S + K(12), N = K(40), ease = gsap.parseEase("power3.out");
+  // in: tilted back 28 degrees and lower, it settles flat (S-curve), then floats with a slow tilt
+  enter(card, { opacity: 0, rotationX: 28, rotationY: -12, y: cy - ch / 2 + 140 * U, scale: 0.9 }, { opacity: 1, rotationX: 0, rotationY: 0, y: cy - ch / 2, scale: 1 }, S, S + K(22), "power3.inOut");
+  to(card, { rotationY: 6, rotationX: -3, y: cy - ch / 2 - 20 * U }, S + K(22), FRAMES, "sine.inOut");
+  for (let f = S; f <= C0 + N && f < FRAMES; f++) set("#tot", { attr: { "data-v": fmt(V.total * (f < C0 ? 0 : ease((f - C0) / N))) } }, f);
+  if (V.change) enter("#chg", { opacity: 1, scale: 0 }, { scale: 1 }, C0 + N - K(4), C0 + N + K(8), "back.out(2.6)");
+  if (V.chart === "bars") {
+    vals.forEach((v, i) => {
+      const h = gh * v / mx, x = gx + step * i + (step - bw) / 2;
+      const b = mk("rect", { x, y: gb - h, width: bw, height: h, rx: 8 * U * s, fill: "#ffffff22" });
+      const f0 = C0 + i * K(3);
+      set(b, { attr: { height: 0, y: gb } }, 0);
+      ft(b, { attr: { height: 0, y: gb } }, { attr: { height: h, y: gb - h } }, f0, f0 + K(14), "power3.out");
+      bars.push({ b, h, x, v });
+    });
+    // the highlight walks across the bars, one every 14 frames, the total showing that bar's share
+    const hl = mk("rect", { x: bars[0].x, y: gb - bars[0].h, width: bw, height: bars[0].h, rx: 8 * U * s, fill: V.accent, opacity: 0 });
+    const h0 = C0 + n * K(3) + K(14);
+    if (h0 < FRAMES) set(hl, { attr: { opacity: 1 } }, h0);
+    for (let i = 1, f = h0 + K(14); i < n && f + K(8) < FRAMES; i++, f += K(14))
+      to(hl, { attr: { x: bars[i].x, y: gb - bars[i].h, height: bars[i].h } }, f, f + K(8), "power3.inOut");
+  } else {
+    const pts = vals.map((v, i) => [gx + gw * i / Math.max(1, n - 1), gb - gh * v / mx]);
+    const d = pts.reduce((a, [x, y], i) => { if (!i) return `M${x},${y}`; const [p, r] = pts[i - 1], m = (p + x) / 2; return a + ` C${m},${r} ${m},${y} ${x},${y}`; }, "");
+    const defs = mk("defs", {}); defs.innerHTML = `<linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${V.accent}" stop-opacity=".45"/><stop offset="1" stop-color="${V.accent}" stop-opacity="0"/></linearGradient><clipPath id="cp"><rect id="cr" x="0" y="0" width="0" height="${ch}"/></clipPath>`;
+    const g = document.createElementNS(NS, "g"); g.setAttribute("clip-path", "url(#cp)"); svg.appendChild(g);
+    g.innerHTML = `<path d="${d} L${pts[pts.length - 1][0]},${gb} L${pts[0][0]},${gb} Z" fill="url(#ar)"/><path d="${d}" fill="none" stroke="${V.accent}" stroke-width="${6 * U * s}" stroke-linecap="round"/>`;
+    for (let f = C0; f <= C0 + K(40) && f < FRAMES; f++) set("#cr", { attr: { width: gx + gw * gsap.parseEase("power2.inOut")((f - C0) / K(40)) + 10 * U } }, f);
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

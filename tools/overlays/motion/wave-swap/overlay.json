@@ -1,0 +1,15 @@
+{
+ "name": "wave-swap",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "max(start + round(14 * fps / 30), swap_at)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "what": "the letters ride the wave"
+  }
+ ]
+}

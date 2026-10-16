@@ -1,0 +1,11 @@
+{
+ "name": "word-pills",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(gap * fps / 30) + round(16 * fps / 30)", "repeat": "count", "kind": "thump", "db": -6, "seed": "70 + i", "what": "a pill lands"},
+  {"f": "frames - round(20 * fps / 30)", "kind": "whoosh", "dur": "0.5", "from": 1800, "to": 300, "if": "exit", "what": "the pile drops away"}
+ ]
+}

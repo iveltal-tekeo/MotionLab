@@ -1,0 +1,41 @@
+{
+ "name": "Subscribe button",
+ "kind": "social",
+ "what": "The call to action: a Like button, a Subscribe button and a bell pop in; a cursor clicks each - the like fills with a burst, the button turns grey and says Subscribed, the bell rings - then they pop away.",
+ "use_for": [
+  "subscribe",
+  "call to action",
+  "youtube",
+  "like",
+  "outro",
+  "intro",
+  "follow"
+ ],
+ "tags": [
+  "subscribe",
+  "like",
+  "bell",
+  "cursor",
+  "click",
+  "cta",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "subscribe / notification-bell animations - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "pops back.out 12 f, 4 f apart; the cursor glides 14 f (S-curve) and clicks (3 f press, 5 f release); the bell swings 6 x 3 f; away back.in 8 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.9,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  10,
+  30,
+  42,
+  60,
+  72,
+  96,
+  110,
+  140
+ ]
+}

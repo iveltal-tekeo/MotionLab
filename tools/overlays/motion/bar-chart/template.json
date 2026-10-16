@@ -1,0 +1,15 @@
+{
+ "name": "Bar chart",
+ "kind": "charts",
+ "what": "Bars grow from the base one after another with a slow end, each value counting up on its bar; up / down bars in green and red; an optional line drawn across the tops.",
+ "use_for": ["stat", "comparison", "growth", "results", "data", "explainer", "finance"],
+ "tags": ["chart", "bars", "data", "stagger", "count up"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__bar-chart", "what": "four coloured bars on navy growing one after another, decelerating"},
+                  {"pack": "swishy", "clip": "charts-data__simple-chart", "what": "the bars one after another and a line drawn over them"},
+                  {"pack": "swishy", "clip": "graphics__wins-vs-losses", "what": "gainers up in green, losers down in red, with their values"}],
+ "motion": "title 12 f, a bar every 6 f growing 14 f (power3.out) with its value counting, the line 24 f",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 110,
+ "check_frames": [0, 10, 18, 30, 45, 70, 110]
+}

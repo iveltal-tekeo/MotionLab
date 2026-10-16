@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "number", "type": "string", "label": "Number", "default": "3"},
+  {"id": "prefix", "type": "string", "label": "Before the number", "default": "#"},
+  {"id": "title", "type": "string", "label": "Title", "default": "Speed ramps"},
+  {"id": "subtitle", "type": "string", "label": "Small line (empty = none)", "default": "the transition everyone asks about"},
+  {"id": "kicker", "type": "string", "label": "Line on top (empty = none)", "default": "TOP 5 EDITING TRICKS"},
+  {"id": "accent", "type": "color", "label": "Number colour", "default": "#facc15"},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Number font", "default": "Anton", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "text_font", "type": "enum", "label": "Text font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#0c0c10"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Number centre down (% of the height)", "default": 42, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end (a quick push out)", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "rank-number" (0.5.0, the Motion Graphics library): a countdown list's item - "TOP 5
+     EDITING TRICKS" on top, a huge outlined number slams in and fills with colour from the bottom, the item's title
+     wipes in under it and a small line follows; a light streak crosses the number; at the end it all pushes out to
+     make room for the next one. Use one per item of a top-5 / top-10 video. Not learned from a clip: numbered list /
+     countdown titles are among the most used title templates (Mixkit "Countdown", "Headline"; researched 2026-10-16).
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .mask { position: absolute; left: 0; top: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fn = `'${V.font}', Impact, sans-serif`, ft2 = `'${V.text_font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? `radial-gradient(circle at 50% ${V.y}%, ${V.accent}26, transparent 50%), ${V.bg}` : "transparent" });
+  const s = V.size * U, cx = W / 2, cy = H * V.y / 100, ns = 560 * s, txt = esc(V.prefix) + esc(V.number);
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("cam").appendChild(e); return e; };
+  // the number twice: an outline, and a filled copy shown through a mask that rises from the bottom
+  const out = add("t", { font: `400 ${ns}px ${fn}`, color: "transparent", webkitTextStroke: `${6 * s}px ${V.accent}` }, txt);
+  const fillBox = add("mask", {}, `<div class="t fill" style="font:400 ${ns}px ${fn};color:${V.accent}">${txt}</div>`);
+  const fill = fillBox.querySelector(".fill");
+  const streak = add("abs", { width: `${120 * s}px`, height: `${ns * 1.3}px`, background: "linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent)" });
+  [out].forEach(e => gsap.set(e, { x: cx, y: cy, xPercent: -50, yPercent: -50, transformOrigin: "50% 50%" }));
+  // the mask is placed once the number's own box is known (the font is in by then; measured again when fonts settle)
+  const place = () => { const w = out.offsetWidth || ns * 0.6 * txt.length, h = out.offsetHeight || ns;
+    Object.assign(fillBox.style, { width: `${w}px`, height: `${h}px` }); gsap.set(fillBox, { x: cx - w / 2, y: cy - h / 2 });
+    gsap.set(streak, { x: cx - w / 2 - 200 * s, y: cy - ns * 0.65 }); streak.dataset.w = w; };
+  place(); if (document.fonts) document.fonts.ready.then(place);
+  Object.assign(fillBox.style, { clipPath: "inset(100% 0 0 0)" });
+  const kk = V.kicker ? add("t", { font: `800 ${40 * s}px ${ft2}`, color: V.ink, letterSpacing: "0.22em", opacity: 0.7 }, esc(V.kicker)) : null;
+  if (kk) gsap.set(kk, { x: cx, y: cy - ns * 0.62, xPercent: -50, yPercent: -100 });
+  const tm = add("mask", {}, `<div class="t ti" style="position:relative;font:900 ${92 * s}px ${ft2};color:${V.ink};letter-spacing:-0.01em">${esc(V.title)}</div>`);
+  gsap.set(tm, { x: cx, y: cy + ns * 0.5, xPercent: -50 });
+  const ti = tm.querySelector(".ti");
+  const sub = V.subtitle ? add("t", { font: `500 ${40 * s}px ${ft2}`, color: V.ink, opacity: 0.7 }, esc(V.subtitle)) : null;
+  if (sub) gsap.set(sub, { x: cx, y: cy + ns * 0.5 + 130 * s, xPercent: -50 });
+
+  // ---- the motion: the kicker fades down (10 f); the outlined number slams 2.2 -> 1 (8 f, accelerating) with a 3 f
+  // shake of the whole frame; its fill rises from the bottom (14 f, S-curve); the title rises behind its mask (12 f),
+  // the small line 6 f later; a light streak crosses the number (12 f); the number drifts 3 % bigger to the end; at
+  // the end everything pushes up and out (10 f, accelerating)
+  const S = Math.round(V.start);
+  if (kk) enter(kk, { opacity: 0, y: cy - ns * 0.62 - 30 * s }, { opacity: 0.7, y: cy - ns * 0.62 }, S, S + K(10), "power2.out");
+  enter(out, { opacity: 1, scale: 2.2 }, { scale: 1 }, S + K(4), S + K(12), "power2.in");
+  to("#cam", { x: 12 * s, y: -8 * s }, S + K(12), S + K(13), "none"); to("#cam", { x: -8 * s, y: 6 * s }, S + K(13), S + K(14), "none"); to("#cam", { x: 0, y: 0 }, S + K(14), S + K(17), "power2.out");
+  ft(fillBox, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)" }, S + K(14), S + K(28), "power2.inOut");
+  set(fillBox, { opacity: 0 }, 0); set(fillBox, { opacity: 1 }, S + K(14));
+  set(ti, { yPercent: 110 }, 0); ft(ti, { yPercent: 110 }, { yPercent: 0 }, S + K(18), S + K(30), "power3.out");
+  if (sub) enter(sub, { opacity: 0, y: cy + ns * 0.5 + 150 * s }, { opacity: 0.7, y: cy + ns * 0.5 + 130 * s }, S + K(24), S + K(36), "power2.out");
+  set(streak, { opacity: 0 }, 0);
+  const sw = () => +(streak.dataset.w || ns);
+  set(streak, { opacity: 1 }, S + K(30)); ft(streak, { x: cx - sw() / 2 - 200 * s, skewX: -20 }, { x: cx + sw() / 2 + 80 * s, skewX: -20 }, S + K(30), S + K(42), "power2.inOut");
+  set(streak, { opacity: 0 }, S + K(43));
+  const L = FRAMES - K(10);
+  ft([out, fillBox], { scale: 1 }, { scale: 1.03 }, S + K(28), V.leave ? L : FRAMES, "none");
+  if (V.leave && L > S + K(50)) to("#cam", { y: -H * 0.12, opacity: 0 }, L, FRAMES, "power3.in");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

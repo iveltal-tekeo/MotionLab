@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The line (repeated in a block)", "default": "MAKE SOME NOISE"},
+  {"id": "rows", "type": "number", "label": "Rows in the block", "default": 10, "min": 1, "max": 20, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Archivo Black", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#0a0a0c"},
+  {"id": "accent", "type": "color", "label": "Accent row colour", "default": "#ff3b1f"},
+  {"id": "accent_row", "type": "boolean", "label": "The middle row in the accent colour", "default": false},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#efefef"},
+  {"id": "size", "type": "number", "label": "Size (1 = fills the width)", "default": 1, "min": 0.3, "max": 1.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "spread", "type": "number", "label": "How far the letters fly (1 = the frame)", "default": 1, "min": 0.2, "max": 2, "step": 0.05},
+  {"id": "scatter_at", "type": "number", "label": "First scatter at frame", "default": 36, "min": 0, "max": 900, "step": 1},
+  {"id": "cycles", "type": "number", "label": "Scatters (each one flies apart and back)", "default": 2, "min": 1, "max": 6, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "scatter-text" (0.5.0, the Motion Graphics library): a block of one line repeated; its
+     letters burst apart across the frame (fast: 3-8 frames, a slow end), drift while scattered, and fly back into the
+     block one after another (an S-curve over ~29 frames at 25 fps, 35 at 30). Learned from text__scattered-text
+     (analysis\templates\swishy: the burst f38-f40, the return f51-f79 (00:00:02:01-00:00:03:04), letters missing while
+     scattered). MotionLab's own code. Size-independent. Letters are placed by their row and column (no font metrics
+     read at load), so the layout is the same in a snapshot, a render and the live preview. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .row { position: absolute; left: 0; top: 0; display: flex; white-space: nowrap; }
+  .ch { display: inline-block; text-align: center; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="block" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.round(n * FPS / 30);
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 900;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const txt = (V.text || "TEXT").toUpperCase(), chars = [...txt], rows = Math.max(1, Math.round(V.rows));
+  // a cell per letter, narrow letters narrower (like the reference's tight block): the block fills the width
+  const wt = c => /[IJ1.,:;'!|]/.test(c) ? 0.5 : c === " " ? 0.8 : /[MW]/.test(c) ? 1.2 : 1;
+  const units = chars.reduce((a, c) => a + wt(c), 0), cu = W * 0.86 * V.size / units;
+  const fs = Math.min(cu * 1.45, H * 0.8 / rows / 0.92), lh = fs * 0.92, bw = cu * units;
+  const block = document.getElementById("block"), cy = H * V.y / 100, top0 = cy - rows * lh / 2;
+  gsap.set(block, { width: W, height: H, transformOrigin: `50% ${V.y}%` });       // scales about the block's centre
+  const letters = [];
+  for (let r = 0; r < rows; r++) {
+    const row = document.createElement("div");
+    row.className = "row";
+    block.appendChild(row);
+    gsap.set(row, { x: (W - bw) / 2, y: top0 + r * lh });
+    let acc = 0;
+    chars.forEach((c, i) => {
+      const cw = cu * wt(c);
+      const e = document.createElement("span");
+      e.className = "ch";
+      e.textContent = c === " " ? " " : c;
+      Object.assign(e.style, { width: `${cw}px`, font: `${weight} ${fs}px ${font}`,
+                               color: V.accent_row && r === Math.floor(rows / 2) ? V.accent : V.color });
+      row.appendChild(e);
+      if (c !== " ") letters.push({ e, r, i, x0: (W - bw) / 2 + acc + cw / 2, y0: top0 + (r + 0.5) * lh });
+      acc += cw;
+    });
+  }
+
+  // ---- the motion
+  const S = Math.round(V.start), R = rnd(31);
+  if (S > 0) { set(block, { opacity: 0 }, 0); set(block, { opacity: 1 }, S); }
+  ft(block, { scale: 1.06 }, { scale: 1 }, S, S + K(18), "power3.out");        // the block settles as it appears
+  const BURST = K(6), LOOSE = K(22), BACK = K(35), REST = K(26);
+  let f = Math.max(S + K(10), Math.round(V.scatter_at));
+  for (let c = 0; c < Math.round(V.cycles) && f + BURST + LOOSE + BACK < FRAMES - K(4); c++) {
+    const sp = V.spread;
+    letters.forEach(L => {
+      // a target anywhere on the frame (kept inside it), a spin; about a third of the letters fade while loose
+      const tx = (0.06 + 0.88 * R()) * W, ty = (0.08 + 0.84 * R()) * H;
+      const dx = (tx - L.x0) * sp, dy = (ty - L.y0) * sp, rot = (R() - 0.5) * 70, gone = R() < 0.32;
+      const d = Math.round(R() * K(3));
+      to(L.e, { x: dx, y: dy, rotation: rot, opacity: gone ? 0 : 1 }, f + d, f + d + BURST, "expo.out");
+      to(L.e, { x: dx * 1.06, y: dy * 1.06 + 10 * U, rotation: rot * 1.15 }, f + d + BURST, f + BURST + LOOSE, "none");  // drifting while loose
+      const b = f + BURST + LOOSE + Math.round(R() * K(8));
+      to(L.e, { x: 0, y: 0, rotation: 0, opacity: 1 }, b, b + BACK, "power3.inOut");
+    });
+    f += BURST + LOOSE + K(8) + BACK + REST;
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

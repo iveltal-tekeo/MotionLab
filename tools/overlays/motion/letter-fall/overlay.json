@@ -1,0 +1,24 @@
+{
+ "name": "letter-fall",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "impact",
+   "what": "the word slams in"
+  },
+  {
+   "f": "max(start + round(16 * fps / 30), fall_at) + i * round(gap * fps / 30) + round(12 * fps / 30)",
+   "repeat": "len(word) - keep",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 1800,
+   "to": 300,
+   "seed": "1100 + i",
+   "what": "a letter falls"
+  }
+ ]
+}

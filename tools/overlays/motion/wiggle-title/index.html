@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "line1", "type": "string", "label": "First line", "default": "GOOD"},
+  {"id": "line2", "type": "string", "label": "Second line (empty = one line)", "default": "MOOD"},
+  {"id": "style", "type": "enum", "label": "Motion", "default": "wave", "options": [{"value": "wave", "label": "Wave - letters stretch up and down one after another"}, {"value": "boil", "label": "Boil - hand-drawn jitter, a new pose every 3 frames"}, {"value": "both", "label": "Both"}]},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Bagel Fat One", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "First line colour", "default": "#ffffff"},
+  {"id": "multicolour", "type": "boolean", "label": "Second line in several colours", "default": true},
+  {"id": "c1", "type": "color", "label": "Colour 1", "default": "#ffb000"},
+  {"id": "c2", "type": "color", "label": "Colour 2", "default": "#1e6bff"},
+  {"id": "c3", "type": "color", "label": "Colour 3", "default": "#ff2a2a"},
+  {"id": "c4", "type": "color", "label": "Colour 4", "default": "#ff86a8"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 3, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "strength", "type": "number", "label": "How much it moves (1 = normal)", "default": 1, "min": 0, "max": 2.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "Leaves at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "wiggle-title" (0.5.0, the Motion Graphics library): a one- or two-line title whose
+     letters stay alive the whole time - a wave of squash and stretch running through the letters (learned from
+     text__good-mood: each letter's height changes, a travelling wave, the second line in four colours) and / or a
+     hand-drawn boil (text__wiggle-text: a new small pose every 3 frames at 25 fps). Letters pop in one after another
+     (2 frames apart, back.out) and drop out at the end. MotionLab's own code. Size-independent (overlay.py new
+     --from wiggle-title --frames N --fps F --width W --height H). Animate only on the paused timeline. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; left: 0; top: 0; white-space: nowrap; display: flex; align-items: flex-end; }
+  .ch { display: inline-block; line-height: 0.82; font-synthesis: none; transform-origin: 50% 100%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="title" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.round(n * FPS / 30);
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 900;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const title = document.getElementById("title");
+  gsap.set(title, { x: W * V.x / 100, y: H * V.y / 100 });
+  const lines = [V.line1, V.line2].filter(s => s && s.trim());
+  const fs = 300 * U * V.size, pal = [V.c1, V.c2, V.c3, V.c4];
+  const letters = [];
+  lines.forEach((txt, li) => {
+    const ln = document.createElement("div");
+    ln.className = "ln";
+    title.appendChild(ln);
+    [...txt].forEach((c, ci) => {
+      const e = document.createElement("span");
+      e.className = "ch";
+      e.textContent = c === " " ? " " : c;
+      const col = li === 1 && V.multicolour ? pal[ci % 4] : V.color;
+      Object.assign(e.style, { font: `${weight} ${fs * (li === 1 && lines.length > 1 ? 0.92 : 1)}px ${font}`, color: col });
+      ln.appendChild(e);
+      if (c !== " ") letters.push({ e, li, ci });
+    });
+    const lh = fs * 1.0;
+    gsap.set(ln, { xPercent: -50, y: (li - lines.length / 2) * lh });
+  });
+
+  // ---- the motion
+  const S = Math.round(V.start), POP = K(10), STEP = K(2), OUT = K(16);
+  const O = V.exit ? Math.max(S + POP + STEP * letters.length + K(10), FRAMES - OUT) : FRAMES;
+  const k = V.strength, R = rnd(7);
+  letters.forEach((L, i) => {
+    const f0 = S + i * STEP;
+    if (f0 > 0) set(L.e, { opacity: 0 }, 0);
+    ft(L.e, { opacity: 1, scaleY: 0.2, scaleX: 1.3, y: 40 * U }, { scaleY: 1, scaleX: 1, y: 0 }, f0, f0 + POP, "back.out(2.4)");
+  });
+  const LIVE0 = S + POP + STEP * letters.length;            // the letters keep moving from here until the exit
+  // the wave: each letter's height runs a sine (period 1.8 s at the reference's speed), one letter a quarter-step behind
+  if ((V.style === "wave" || V.style === "both") && k > 0) {
+    const P = K(54), steps = Math.max(1, Math.ceil((O - LIVE0) / (P / 2)));
+    letters.forEach((L, i) => {
+      const ph = Math.round((i % 6) * P / 8);
+      let f = LIVE0;
+      set(L.e, { scaleY: 1 }, f);
+      for (let s = 0; s < steps && f < O; s++) {
+        const up = (s + (L.li + i) % 2) % 2 === 0;
+        const f1 = Math.min(O, f + Math.round(P / 2) + (s === 0 ? ph : 0));
+        to(L.e, { scaleY: up ? 1 + 0.28 * k : 1 - 0.24 * k, scaleX: up ? 1 - 0.08 * k : 1 + 0.06 * k }, f, f1, "sine.inOut");
+        f = f1;
+      }
+    });
+  }
+  // the boil: a new small pose every 3 frames (stepped, like a drawing redrawn) - rotation and a 1-3 px shift
+  if ((V.style === "boil" || V.style === "both") && k > 0) {
+    const B = Math.max(2, K(3));
+    letters.forEach(L => {
+      for (let f = LIVE0; f < O; f += B)
+        set(L.e, { rotation: (R() - 0.5) * 7 * k, x: (R() - 0.5) * 6 * U * k, y: (R() - 0.5) * 6 * U * k }, f);
+    });
+  }
+  // the exit: the letters drop away one after another (accelerating), twice as fast as they came
+  if (V.exit && O < FRAMES) {
+    letters.forEach((L, i) => {
+      const f0 = O + Math.round(i * STEP / 2);
+      to(L.e, { y: H * 0.6, rotation: (R() - 0.5) * 50, opacity: 0 }, f0, Math.min(FRAMES, f0 + K(12)), "power2.in");
+    });
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

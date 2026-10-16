@@ -1,0 +1,58 @@
+{
+ "name": "Line chart",
+ "kind": "charts",
+ "what": "A line that draws itself: a chart whose lines rise with a dot riding each tip and the end value popping; a wavy journey with milestones popping and a flag; or a heartbeat line drawing across.",
+ "use_for": [
+  "growth",
+  "stat",
+  "progress",
+  "journey",
+  "timeline",
+  "milestones",
+  "health",
+  "story"
+ ],
+ "tags": [
+  "chart",
+  "line",
+  "draw",
+  "data",
+  "milestones",
+  "pulse"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__github-stars",
+   "what": "one line rising across a light chart, a dot on its tip"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__github-star-comparison",
+   "what": "two curves rising with a picture on each tip"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__timeline",
+   "what": "a wavy line with milestone dots ending on a red flag"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__life-line-animation",
+   "what": "a heartbeat line drawing across black"
+  }
+ ],
+ "motion": "grid 14 f; the line draws 70 f (S-curve), the tip rides it; milestones back.out 10 f as the line reaches them; the flag waves",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  14,
+  40,
+  70,
+  90,
+  110,
+  140
+ ]
+}

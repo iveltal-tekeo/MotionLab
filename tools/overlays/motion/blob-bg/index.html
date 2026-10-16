@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "c1", "type": "color", "label": "Colour 1", "default": "#22d3ee"},
+  {"id": "c2", "type": "color", "label": "Colour 2", "default": "#6366f1"},
+  {"id": "c3", "type": "color", "label": "Colour 3", "default": "#f472b6"},
+  {"id": "blobs", "type": "number", "label": "Blobs", "default": 1, "min": 1, "max": 4, "step": 1},
+  {"id": "sparks", "type": "boolean", "label": "Small floating sparks", "default": true},
+  {"id": "text", "type": "string", "label": "Words over it (empty = none)", "default": ""},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#08080b"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "speed", "type": "number", "label": "Speed (1 = normal)", "default": 1, "min": 0.2, "max": 3, "step": 0.05}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "blob-bg" (0.5.0, the Motion Graphics library): a soft gradient blob that never stops
+     changing shape - its corners breathe in and out, it turns and drifts, the colours rotate through it, a few sparks
+     float - a background for words, a logo or a talking head. Learned from logos__animated-blob (a teal-blue-pink blob
+     morphing slowly on black with small particles, moving 91 % of its frames). The shape is a rounded box whose eight
+     corner radii are tweened (no random): the same loop every render. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .blob { position: absolute; left: 0; top: 0; }
+  .sp { position: absolute; left: 0; top: 0; border-radius: 50%; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; text-align: center; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="blobs" class="abs"></div>
+  <div id="sparks" class="abs"></div>
+  <div id="tx" class="t"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+
+  gsap.set(["#bgfill", "#blobs", "#sparks"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const R = rnd(67), n = Math.round(V.blobs), s = V.size, sp = V.speed, cols = [V.c1, V.c2, V.c3];
+  const shape = () => { const a = () => Math.round(30 + R() * 40); return `${a()}% ${a()}% ${a()}% ${a()}% / ${a()}% ${a()}% ${a()}% ${a()}%`; };
+  for (let b = 0; b < n; b++) {
+    const e = document.createElement("div"); e.className = "blob";
+    const d = (n === 1 ? 620 : 420) * U * s, x = n === 1 ? W / 2 : W * (0.3 + 0.4 * ((b * 0.618) % 1)), y = n === 1 ? H * 0.46 : H * (0.25 + 0.5 * ((b * 0.382) % 1));
+    Object.assign(e.style, { width: `${d}px`, height: `${d}px`, borderRadius: shape(), background: `linear-gradient(135deg, ${cols[b % 3]}, ${cols[(b + 1) % 3]} 55%, ${cols[(b + 2) % 3]})`,
+      filter: `blur(${2 * U}px)`, boxShadow: `0 0 ${80 * U}px ${cols[b % 3]}55` });
+    e.innerHTML = `<div style="position:absolute;left:22%;top:18%;width:30%;height:16%;border-radius:50%;background:#ffffff40;filter:blur(${10 * U}px)"></div>`;
+    document.getElementById("blobs").appendChild(e);
+    gsap.set(e, { x: x - d / 2, y: y - d / 2, transformOrigin: "50% 50%" });
+    // the loop: a new corner shape every 36 frames (S-curve), a slow turn, a drift; the gradient turns with hue-rotate
+    const per = Math.max(K(8), Math.round(K(36) / sp));
+    for (let f = 0; f < FRAMES; f += per) to(e, { borderRadius: shape(), scaleX: 0.92 + R() * 0.16, scaleY: 0.92 + R() * 0.16 }, f, Math.min(FRAMES, f + per), "sine.inOut");
+    ft(e, { rotation: 0, filter: `blur(${2 * U}px) hue-rotate(0deg)` }, { rotation: (b % 2 ? -1 : 1) * 70 * sp * FRAMES / FPS / 6, filter: `blur(${2 * U}px) hue-rotate(${40 * sp}deg)` }, 0, FRAMES, "none");
+    ft(e, { y: y - d / 2 }, { y: y - d / 2 - 60 * U }, 0, FRAMES, "sine.inOut");
+  }
+  if (V.sparks) for (let i = 0; i < 18; i++) {
+    const e = document.createElement("div"), z = (3 + R() * 6) * U; e.className = "sp";
+    Object.assign(e.style, { width: `${z}px`, height: `${z}px`, background: cols[i % 3], boxShadow: `0 0 ${10 * U}px ${cols[i % 3]}` });
+    document.getElementById("sparks").appendChild(e);
+    const x = W * R(), y = H * (0.15 + 0.7 * R());
+    ft(e, { x, y, opacity: 0.2 + R() * 0.6 }, { x: x + (R() - 0.5) * 120 * U, y: y - (80 + R() * 160) * U, opacity: 0.2 + R() * 0.8 }, 0, FRAMES, "sine.inOut");
+  }
+  if (V.text) { const tx = document.getElementById("tx"); tx.textContent = V.text;
+    Object.assign(tx.style, { font: `800 ${96 * U * s}px "${V.font}", "Segoe UI", sans-serif`, color: "#ffffff", textShadow: `0 ${6 * U}px ${30 * U}px rgba(0,0,0,.35)`, width: `${W * 0.86}px`, whiteSpace: "normal" });
+    gsap.set(tx, { x: W / 2, y: H * 0.46, xPercent: -50, yPercent: -50 });
+    set(tx, { opacity: 0 }, 0); ft(tx, { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1 }, K(10), K(28), "power3.out"); }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

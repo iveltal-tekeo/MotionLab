@@ -1,0 +1,11 @@
+{
+ "name": "toggle-switch",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "pop", "db": -4, "what": "the switch pops in"},
+  {"f": "max(start + round(16 * fps / 30), flip_at) + i * round(30 * fps / 30)", "repeat": "flips", "kind": "click", "seed": "700 + i", "what": "a flip"}
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "name": "rank-number",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "impact",
+   "what": "the number slams"
+  },
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "shimmer",
+   "what": "the streak"
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "name": "clock-words",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the clock pops"
+  },
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "riser",
+   "dur": "1.6",
+   "if": "look == 'analog'",
+   "what": "the hands spin"
+  },
+  {
+   "f": "start + round(16 * fps / 30) + i * round(8 * fps / 30)",
+   "repeat": "parts(words)",
+   "kind": "tick",
+   "db": -4,
+   "seed": "1200 + i",
+   "what": "a word appears"
+  }
+ ]
+}

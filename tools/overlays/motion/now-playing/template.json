@@ -1,0 +1,14 @@
+{
+ "name": "Now playing",
+ "kind": "music",
+ "what": "A song card: a vinyl disc with the cover spins, the title (scrolling when long) and artist under it, a progress bar and the time counting, play controls - everything pulsing on the beat; or a visualizer whose bars jump on every beat.",
+ "use_for": ["song", "music video", "now playing", "release", "lyrics", "podcast", "playlist", "top tracks"],
+ "tags": ["music", "record", "vinyl", "player", "visualizer", "beat"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__spotify-player-animation", "what": "the spinning record with its cover, the scrolling title, the progress bar and controls"},
+                  {"pack": "swishy", "clip": "graphics__audio-visualizer", "what": "violet bars pulsing in the middle, Now playing, the song name"}],
+ "motion": "parts in 16 f, 3 f apart; the disc spins 33 rpm and pulses 1.025 on each beat (bpm); bars jump 3 f up and fall to the next beat",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 120,
+ "check_frames": [0, 10, 30, 60, 120, 200]
+}

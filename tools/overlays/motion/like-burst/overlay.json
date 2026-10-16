@@ -1,0 +1,11 @@
+{
+ "name": "like-burst",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "pop", "db": 2, "what": "the heart pops"},
+  {"f": "start + round(3 * fps / 30)", "kind": "crackle", "dur": "0.4", "what": "the particles burst"}
+ ]
+}

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "count_from", "type": "number", "label": "Counts down from", "default": 3, "min": 1, "max": 99, "step": 1},
+  {"id": "step", "type": "number", "label": "Frames per number", "default": 30, "min": 4, "max": 300, "step": 1},
+  {"id": "end_text", "type": "string", "label": "After the last number (empty = none)", "default": "GO"},
+  {"id": "caption", "type": "string", "label": "Small line under it (empty = none)", "default": "starting in"},
+  {"id": "look", "type": "enum", "label": "Look", "default": "ring", "options": [{"value": "ring", "label": "Ring - the number in a ring that drains each step"}, {"value": "bar", "label": "Bar - the number beside a line that shrinks"}]},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent", "type": "color", "label": "Ring / line colour", "default": "#ff3b3b"},
+  {"id": "text_color", "type": "color", "label": "Number colour", "default": "#ffffff"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#0b0b0c"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 45, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "countdown-ring" (0.5.0, the Motion Graphics library): a countdown - each number pops in
+     and the ring around it drains over its step (linear: it is a clock), a glow pulses behind on every change, the end
+     word lands with a kick. Learned from graphics__countdown (a big number inside a red ring on a dark glow, one
+     number a second) and overlays__apple-style-30-sec-counter (a number counting down beside a red line that
+     shrinks, white). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .n { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="glow" class="abs"></div>
+  <div id="cam" class="abs"><svg id="ring" class="abs" style="overflow:visible"></svg><div id="bar" class="abs"></div>
+    <div id="nums" class="abs"></div><div id="cap" class="n"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, heavy = ONE.test(V.font) ? 400 : 800;
+
+  gsap.set(["#bgfill", "#glow", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, cx = W * V.x / 100, cy = H * V.y / 100, ring = V.look === "ring";
+  const R = 190 * U * s, sw = 16 * U * s, fs = ring ? 210 * U * s : 230 * U * s;
+  if (V.background) gsap.set("#glow", { background: `radial-gradient(circle ${R * 2.2}px at ${cx}px ${cy}px, ${V.accent}55, transparent 70%)`, opacity: 0.35 });
+  const svg = document.getElementById("ring");
+  if (ring) {
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${V.text_color}" stroke-opacity=".12" stroke-width="${sw}"/>
+      <circle id="arc" cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${V.accent}" stroke-width="${sw}" stroke-linecap="round"
+        pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>`;
+  } else {
+    Object.assign(document.getElementById("bar").style, { background: V.accent, borderRadius: `${8 * U}px` });
+  }
+  const steps = [];
+  for (let v = Math.round(V.count_from); v >= 1; v--) steps.push(String(v));
+  if (V.end_text) steps.push(V.end_text);
+  const box = document.getElementById("nums");
+  const els = steps.map((t, i) => {
+    const e = document.createElement("div");
+    e.className = "n";
+    e.textContent = t;
+    const end = V.end_text && i === steps.length - 1;
+    Object.assign(e.style, { font: `${heavy} ${end ? fs * (t.length > 3 ? 0.55 : 0.8) : fs}px ${fam}`, color: V.text_color, letterSpacing: "-0.02em" });
+    box.appendChild(e);
+    gsap.set(e, ring ? { x: cx, y: cy, xPercent: -50, yPercent: -50 } : { x: cx - R * 0.6, y: cy, xPercent: -100, yPercent: -50 });
+    gsap.set(e, { opacity: 0 });
+    return e;
+  });
+  const barW = R * 2.2;
+  if (!ring) gsap.set("#bar", { x: cx - R * 0.35, y: cy - 6 * U * s, width: barW, height: 12 * U * s, transformOrigin: "0% 50%" });
+  const cap = document.getElementById("cap");
+  cap.textContent = V.caption || "";
+  Object.assign(cap.style, { font: `600 ${30 * U * s}px ${fam}`, color: V.text_color, opacity: 0.55, letterSpacing: "0.12em" });
+  gsap.set(cap, { x: cx, y: cy + (ring ? R + 60 * U * s : fs * 0.6), xPercent: -50 });
+
+  // ---- the motion: a step per number - it pops (scale 1.35 -> 1, 8 frames, a slow end), the ring drains linearly,
+  // the glow pulses; the end word kicks in and the ring flashes full
+  const S = Math.round(V.start), STEP = Math.max(K(4), Math.round(V.step * FPS / 30));
+  if (V.caption) enter(cap, { opacity: 0 }, { opacity: 0.55 }, S, S + K(10), "power1.out");
+  els.forEach((e, i) => {
+    const f0 = S + i * STEP, f1 = f0 + STEP, end = V.end_text && i === els.length - 1;
+    set(e, { opacity: 1 }, f0);
+    ft(e, { scale: end ? 1.8 : 1.35 }, { scale: 1 }, f0, f0 + K(end ? 12 : 8), end ? "back.out(2.5)" : "power3.out");
+    if (!end && f1 < FRAMES) set(e, { opacity: 0 }, f1);
+    if (V.background) ft("#glow", { opacity: 0.9 }, { opacity: 0.35 }, f0, f0 + K(12), "power2.out");
+    if (!end) {
+      if (ring) ft("#arc", { attr: { "stroke-dashoffset": 0 } }, { attr: { "stroke-dashoffset": 1000 } }, f0, f1, "none");
+      else ft("#bar", { scaleX: 1 }, { scaleX: 0 }, f0, f1, "none");
+    } else {
+      if (ring) ft("#arc", { attr: { "stroke-dashoffset": 1000 } }, { attr: { "stroke-dashoffset": 0 } }, f0, f0 + K(10), "power2.out");
+      else ft("#bar", { scaleX: 0 }, { scaleX: 1 }, f0, f0 + K(10), "power2.out");
+      ft("#cam", { scale: 1.04 }, { scale: 1 }, f0, f0 + K(10), "expo.out");
+    }
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

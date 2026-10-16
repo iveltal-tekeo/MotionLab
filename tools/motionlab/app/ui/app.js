@@ -227,7 +227,7 @@ const PAGES = [
   [/^#\/ref\/([^/?]+)(?:\?(?:e=(\w+)|(misses)|(verdicts)))?$/, pageRef, 'analyze'], [/^#\/edit$/, pageProjects, 'edit'],
   [/^#\/thumbs\/([^/?]+)$/, pageThumbs, 'analyze'],
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/prepare$/, pagePrepare, 'prepare'],
-  [/^#\/generate$/, pageGenerate, 'generate'],
+  [/^#\/generate$/, pageGenerate, 'generate'], [/^#\/motion(?:\/(\w+))?(?:\/([\w-]+))?$/, pageMotion, 'motion'],
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/skills$/, pageSkills, 'settings']];
@@ -251,7 +251,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 26;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 27;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -3775,10 +3775,10 @@ async function pageGenerate(main) {
       <div class="row"><a class="btn" href="#/prompts">Prompt library (${R.items.length})</a></div></div>
     <div class="gways">
       <div class="gway"><div class="row"><svg class="ic"><use href="#i-library"/></svg><h2>A motion-graphics video</h2></div>
-        <p>Kinetic text, titles, numbers, shapes and charts - written by Claude as HTML and rendered to a video (HyperFrames), timed to your song.
+        <p>Kinetic text, titles, numbers, shapes and charts - built by Claude from your <a href="#/motion">Motion Graphics</a> templates as HTML and rendered to a video (HyperFrames), timed to your song.
           Every text, colour and timing stays editable afterwards.</p>
         <div class="row"><button class="btn pri" id="ggfx"${G.hyperframes ? '' : ' disabled'}><svg class="i"><use href="#i-claude"/></svg>Make a motion-graphics video</button>
-          <a class="btn ghost" href="#/memory/saved">Your graphics</a></div>
+          <a class="btn ghost" href="#/motion">Motion templates</a><a class="btn ghost" href="#/memory/saved">Your graphics</a></div>
         <div class="small ${G.hyperframes ? 'muted' : 'amber'}">${G.hyperframes ? 'Claude writes it with you, then renders it - you watch it in the Editor.'
           : `Needs ${G.node ? '' : 'Node.js and '}HyperFrames first - <a href="#/settings">Settings → Programs</a> installs it.`}</div></div>
       <div class="gway"><div class="row"><svg class="ic"><use href="#i-generate"/></svg><h2>With AI video tools</h2></div>
@@ -3802,8 +3802,9 @@ async function pageGenerate(main) {
 // whole motion-graphics video with HyperFrames"): one dialog for both ways -> POST /api/generate/request (the video's
 // folder + build\generate_request.json) -> Claude Code /generate-video request <name>
 async function generateModal(kind, pre = {}) {
-  const [G, MEM, ps] = await Promise.all([api('/api/generate/options'), api('/api/memory'), api('/api/projects')]);
-  const gfx = kind === 'graphics', st = {like: [], length: gfx ? '30' : '30', format: '', music: ''};
+  const [G, MEM, ps, MG] = await Promise.all([api('/api/generate/options'), api('/api/memory'), api('/api/projects'),
+    kind === 'graphics' ? api('/api/motion').catch(() => ({library: []})) : {library: []}]);
+  const gfx = kind === 'graphics', st = {like: [], length: gfx ? '30' : '30', format: '', music: '', tpl: [...(pre.templates || [])]};
   const vids = MEM.videos.slice().reverse().map(v => ({...v, key: v.analysis || v.id}));
   const taken = new Set(ps.map(x => x.name.toLowerCase())), base = gfx ? 'motion graphic' : 'ai video';
   let k = 1; while (taken.has(`${base} ${k}`)) k++;
@@ -3821,12 +3822,14 @@ async function generateModal(kind, pre = {}) {
     <div class="nestep opt"><b>2</b>In the style of ${optTag('up to 3 videos you analysed')}</div>
     ${vids.length ? `<div class="gstyle">${vids.slice(0, 30).map(v => `<button class="fchip" data-k="${esc(v.key)}" title="${esc((Object.values(v.lines || {}).filter(Boolean).join(' · ')) || v.title)}">${esc(v.title)}</button>`).join('')}</div>`
       : '<div class="small dim">No analysed video yet - Analyze one and Claude follows its rhythm and text style.</div>'}
-    <div class="nestep opt"><b>3</b>Length, format${gfx ? ', song' : ''} ${optTag('30 s, Claude picks the format unless you change it')}</div>
+    ${gfx && MG.library.length ? `<div class="nestep opt"><b>3</b>Motion templates ${optTag('Claude builds the scenes from these')}</div>
+      <div class="gtpl" id="gtpl"></div><div class="small muted" id="gtplw" style="margin-top:4px"></div>` : ''}
+    <div class="nestep opt"><b>${gfx && MG.library.length ? 4 : 3}</b>Length, format${gfx ? ', song' : ''} ${optTag('30 s, Claude picks the format unless you change it')}</div>
     <div class="nedet"><label>Length</label><div class="seg" id="glen">${[['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       <label>Format</label><div class="seg" id="gfmt">${[['', 'Claude picks'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       ${gfx ? `<label>Song</label><select id="gsong" style="max-width:420px"><option value="">no song / I put one in the folder later</option>${G.songs.map(x => `<option value="${esc(x.rel)}">${esc(x.name)}</option>`).join('')}</select>
       <label>Colours</label><input type="text" id="gcol" placeholder="optional - e.g. black, white and my orange #ff6a00; font: Inter" style="max-width:420px">` : ''}</div>
-    <div class="nestep"><b>4</b>Its name</div>
+    <div class="nestep"><b>${gfx && MG.library.length ? 5 : 4}</b>Its name</div>
     <div class="row"><input type="text" id="gname" value="${esc(pre.name || n0)}" style="max-width:320px"><span class="small muted">a folder in projects\ - a logo or a song you put there, Claude can use</span></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="ggo"><svg class="i"><use href="#i-claude"/></svg>${gfx ? 'Make it with Claude' : 'Plan it with Claude'}</button>
       <span class="small muted">${gfx ? 'Claude shows you the scenes first, then renders it. It can take an hour or more.' : 'Claude shows you the shot list first, then writes the prompts.'}</span></div>`, el => {
@@ -3839,7 +3842,35 @@ async function generateModal(kind, pre = {}) {
       else if (st.like.length < 3) st.like.push(k);
       else { toast('At most 3 videos', 'err'); return; }
       $$('.gstyle .fchip', el).forEach(x => x.classList.toggle('on', st.like.includes(x.dataset.k)));
+      tplDraw();
     });
+    // 0.5.0: the Motion Graphics templates that fit the words (GET /api/motion/pick, while typing): the picked ones
+    // (a click) are what Claude must use; none picked + no style video = Claude starts from the suggested ones
+    let sug = [], all = false;
+    const tplDraw = () => {
+      const box = $('#gtpl', el);
+      if (!box) return;
+      const byId = Object.fromEntries(MG.library.map(t => [t.id, t]));
+      const ids = all ? MG.library.map(t => t.id) : [...new Set([...st.tpl, ...sug.filter(s => s.score > 0).map(s => s.id)])];
+      box.innerHTML = ids.map(id => byId[id]).filter(Boolean).map(t => `<button class="fchip${st.tpl.includes(t.id) ? ' on' : ''}${!st.tpl.includes(t.id) && sug.some(s => s.id === t.id && s.score > 0) ? ' sug' : ''}" data-t="${esc(t.id)}" title="${esc(t.what || '')}">${esc(t.name)}</button>`).join('')
+        + `<button class="fchip sm ghostc" id="gtplall">${all ? 'fewer' : `all ${MG.library.length}…`}</button>`;
+      const blind = !st.like.length;
+      $('#gtplw', el).innerHTML = st.tpl.length ? `Claude uses ${plural(st.tpl.length, 'picked template')} and adds what they do not cover.`
+        : blind ? (sug.some(s => s.score > 0) ? 'None picked: Claude starts from the suggested ones (dashed) - the ones that fit your words.' : 'None picked: Claude picks the templates that fit what you write above.')
+        : 'None picked: Claude follows the style video(s) and uses a template where it fits.';
+      $$('[data-t]', box).forEach(b => b.onclick = () => {
+        const id = b.dataset.t;
+        st.tpl = st.tpl.includes(id) ? st.tpl.filter(x => x !== id) : st.tpl.length < 12 ? [...st.tpl, id] : st.tpl;
+        tplDraw();
+      });
+      $('#gtplall', box).onclick = () => { all = !all; tplDraw(); };
+    };
+    const tplSuggest = debounce(async () => {
+      const w = $('#gwant', el).value + ' ' + ($('#gtext', el) ? $('#gtext', el).value : '');
+      try { sug = w.trim() ? (await api('/api/motion/pick?n=6&want=' + encodeURIComponent(w))).picks : []; } catch (e) { sug = []; }
+      tplDraw();
+    }, 350);
+    if ($('#gtpl', el)) { tplDraw(); $('#gwant', el).addEventListener('input', tplSuggest); if ($('#gtext', el)) $('#gtext', el).addEventListener('input', tplSuggest); if ($('#gwant', el).value) tplSuggest(); }
     if ($('#gtool', el)) $('#gtool', el).onchange = e => { $('#gtool2', el).hidden = e.target.value !== 'other'; };
     $('#gwant', el).focus();
     $('#ggo', el).onclick = async () => {
@@ -3849,13 +3880,165 @@ async function generateModal(kind, pre = {}) {
       try {
         const r = await api('/api/generate/request', {kind, name: $('#gname', el).value, want, text: $('#gtext', el) ? $('#gtext', el).value : '',
           like: st.like, length_s: st.length || null, format: st.format || null, music: $('#gsong', el) ? $('#gsong', el).value : '',
-          tool, colours: $('#gcol', el) ? $('#gcol', el).value : ''});
+          tool, colours: $('#gcol', el) ? $('#gcol', el).value : '', templates: gfx ? st.tpl : []});
         openClaude(r.command, 'generate', r.project);
         closeModal(); location.hash = '#/project/' + encodeURIComponent(r.project);
       } catch (e) { toast(e.message, 'err'); }
     };
   }, 'wide');
 }
+// ============================================================================================ Motion Graphics (0.5.0)
+// the user (2026-10-16): "turn the Swishy reference clips (in the refs folder) I captured into a reusable Motion
+// Graphics library, add a Motion Graphics section to the sidebar, and make Generate use those templates as well when
+// generating blindly". GET /api/motion = data.motion(): the library = MotionLab's own HyperFrames templates
+// (tools\overlays\motion\<id>: settings, picture, the clips each was learned from) + the packs of captured clips
+// (analysis\templates\<pack>: measured with no Claude, Claude's cards). A template goes into a video like any graphic
+// (job overlay_new, sized like the video's edit) or into the Generator (generate_request.json "templates").
+const MKIND = {text: 'Text', numbers: 'Numbers', charts: 'Charts', lists: 'Lists', ui: 'Buttons & UI', chat: 'Chat',
+  social: 'Social', music: 'Music', logo: 'Logo', photos: 'Photos', places: 'Places', background: 'Backgrounds', transitions: 'Transitions',
+  lower_thirds: 'Lower thirds', callouts: 'Call-outs', broadcast: 'News & broadcast', promo: 'Promo & sale'};
+const mkind = k => MKIND[k] || k;
+const MSTATUS = [['', 'All'], ['built', 'Rebuilt'], ['p1', 'Next to rebuild'], ['p2', 'Later'], ['p3', 'Style only']];
+const mclipStatus = it => it.built.length ? 'built' : it.still ? 'still' : 'p' + ((it.card || {}).rebuild || 2);
+const MSTATUS_WORD = {built: 'rebuilt', still: 'a still capture', p1: 'next to rebuild', p2: 'later', p3: 'style only'};
+const mdefaults = t => { const v = {}; (t.settings || []).forEach(s => { v[s.id] = s.default; }); return v; };
+async function pageMotion(main, tab, open) {
+  const M = await api('/api/motion');
+  tab = tab === 'learned' ? 'learned' : 'templates';
+  const L = M.library, clips = M.packs.flatMap(p => p.items.map(it => ({...it, pack: p.pack})));
+  const todo = clips.filter(it => mclipStatus(it) === 'p1' || mclipStatus(it) === 'p2');   // the skill does 1s first
+  main.innerHTML = `<div class="head"><div><h1>Motion Graphics</h1><div class="sub">Designed motion to reuse - learned from pro template clips, or made for what creators use most, as MotionLab's own graphics.
+      Change the words and colours, put one in a video, or let the Generator build a video from them.</div></div>
+      ${todo.length && M.packs.length ? `<div class="row">${claudeBtn(`/generate-video templates ${M.packs[0].pack}`, `Rebuild the next ${Math.min(todo.length, 8)} with Claude`, 'generate', 'templates', 'cl')}</div>` : ''}</div>
+    <div class="tabs"><a href="#/motion" class="${tab === 'templates' ? 'on' : ''}">Templates <span class="dim">${L.length}</span></a>
+      <a href="#/motion/learned" class="${tab === 'learned' ? 'on' : ''}">Learned from <span class="dim">${clips.length}</span></a></div>
+    <div id="mgbody"></div>`;
+  const body = $('#mgbody', main);
+  if (tab === 'templates') motionTemplates(body, M, L, clips);
+  else motionClips(body, M, clips);
+  if (open) { const t = L.find(x => x.id === open); if (t) motionModal(t, M); }
+}
+function motionTemplates(body, M, L, clips) {
+  if (!L.length) {
+    body.innerHTML = emptyHero('motion', 'No templates yet', 'Templates are rebuilt from the clips under “Learned from” - Claude rebuilds them in batches.', '');
+    return;
+  }
+  let kf = '';
+  try { kf = localStorage.getItem('ml.mkind') || ''; } catch (e) { /* all */ }
+  const draw = () => {
+    const ks = [...new Set(L.map(t => t.kind))];
+    if (kf && !ks.includes(kf)) kf = '';
+    body.innerHTML = `<div class="hint" style="margin-bottom:10px">Click one to play it and try your own words. Most were learned from the clips they name - their timing, eases and layout measured; the MotionLab originals fill the kinds template sites offer most (lower thirds, transitions, call-outs...). All are MotionLab's own graphics: free to use in any video.</div>
+      <div class="row pfilters">${[['', 'All'], ...ks.map(k => [k, mkind(k)])].map(([k, l]) => `<button class="fchip${k === kf ? ' on' : ''}" data-k="${esc(k)}">${esc(l)} <span class="dim">${k ? L.filter(t => t.kind === k).length : L.length}</span></button>`).join('')}</div>
+      <div class="mggrid">${L.filter(t => !kf || t.kind === kf).map(t => `<div class="mgc" data-id="${esc(t.id)}" tabindex="0">
+        <div class="mgpic">${t.thumb ? `<img src="${fileUrl(t.thumb)}?v=${t.thumb_v}" alt="" loading="lazy">` : '<span class="dim small">no picture yet</span>'}</div>
+        <div class="row sp" style="margin-top:8px"><b>${esc(t.name)}</b><span class="chip">${esc(mkind(t.kind))}</span></div>
+        <div class="small muted mgwhat">${esc(t.what || '')}</div>
+        <div class="small dim">${(t.frames / t.fps).toFixed(1)} s · ${(t.sources || []).length ? `learned from ${plural(t.sources.length, 'clip')}` : 'MotionLab original'}</div></div>`).join('')}</div>`;
+    $$('[data-k]', body).forEach(b => b.onclick = () => { kf = b.dataset.k; try { localStorage.setItem('ml.mkind', kf); } catch (e) { /* not kept */ } draw(); });
+    $$('.mgc', body).forEach(c => c.onclick = c.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; motionModal(L.find(t => t.id === c.dataset.id), M); });
+  };
+  draw();
+}
+function motionClips(body, M, clips) {
+  let kf = '', sf = '';
+  const kinds = [...new Set(clips.map(c => c.kind))];
+  const draw = () => {
+    const shown = clips.filter(c => (!kf || c.kind === kf) && (!sf || mclipStatus(c) === sf || (sf === 'p3' && c.still)));
+    body.innerHTML = `<div class="hint" style="margin-bottom:10px">The template clips you captured (they stay on this PC, untouched). MotionLab measured each one with no Claude - its moves with frame + timecode, the ease of each, how long it holds - and Claude wrote what it is and whether it is worth rebuilding. Hover a clip to play it.</div>
+      <div class="row pfilters">${[['', 'All'], ...kinds.map(k => [k, k.replace(/-/g, ' ')])].map(([k, l]) => `<button class="fchip${k === kf ? ' on' : ''}" data-k="${esc(k)}">${esc(l)} <span class="dim">${k ? clips.filter(c => c.kind === k).length : clips.length}</span></button>`).join('')}</div>
+      <div class="row pfilters">${MSTATUS.map(([k, l]) => `<button class="fchip sm${k === sf ? ' on' : ''}" data-s="${k}">${l} <span class="dim">${k ? clips.filter(c => mclipStatus(c) === k || (k === 'p3' && c.still)).length : clips.length}</span></button>`).join('')}</div>
+      <div class="mcgrid">${shown.map(c => { const s = mclipStatus(c);
+        return `<div class="mcc" data-id="${esc(c.pack + '/' + c.id)}" tabindex="0">
+        <div class="mcpic"><video muted loop playsinline preload="none" ${c.poster ? `poster="${fileUrl(c.poster)}"` : ''} src="${fileUrl(c.file)}"></video></div>
+        <div class="row sp" style="margin-top:6px"><b class="small">${esc(c.name)}</b><span class="mst mst-${s}">${MSTATUS_WORD[s]}</span></div>
+        <div class="small muted mgwhat">${esc((c.card || {}).what || '')}</div>
+        <div class="small dim">${c.seconds.toFixed(1)} s · ${c.still ? 'no motion caught' : plural(c.moves, 'move')}${c.loops ? ' · loops' : ''}</div></div>`; }).join('') || '<div class="empty">Nothing here.</div>'}</div>`;
+    $$('[data-k]', body).forEach(b => b.onclick = () => { kf = b.dataset.k; draw(); });
+    $$('[data-s]', body).forEach(b => b.onclick = () => { sf = b.dataset.s; draw(); });
+    $$('.mcc', body).forEach(card => {
+      const v = $('video', card);
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        card.onmouseenter = () => { v.play().catch(() => {}); };
+        card.onmouseleave = () => { v.pause(); };
+      }
+      card.onclick = card.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; motionClipModal(clips.find(c => c.pack + '/' + c.id === card.dataset.id), M); };
+    });
+  };
+  draw();
+}
+// one template: its live preview (the page's own GSAP, the form's values - nothing rendered, nothing saved), what it
+// is for, the clips it was learned from playing beside it; Use in a video / Make a video with it
+function motionModal(t, M) {
+  const S = (t.settings || []).map(s => ({...s, value: s.default}));
+  modal(`<div class="mgm"><div class="mgprev" id="mgprev"></div>
+    <div><div class="row" style="gap:10px;padding-right:28px"><h2 style="margin:0">${esc(t.name)}</h2><span class="chip">${esc(mkind(t.kind))}</span></div>
+      <p style="margin:8px 0">${esc(t.what || '')}</p>
+      ${(t.use_for || []).length ? `<div class="small muted">Good for: ${t.use_for.map(u => `<span class="tag">${esc(u)}</span>`).join(' ')}</div>` : ''}
+      ${t.motion ? `<div class="small muted" style="margin-top:4px">Motion: ${esc(t.motion)} · ${t.frames} frames at ${t.fps} fps, ${t.width}×${t.height} - it takes any size</div>` : ''}
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="mguse">Use in a video…</button><button class="btn" id="mggen"><svg class="i"><use href="#i-claude"/></svg>Make a video with it</button></div>
+      <h3>Try your words</h3><div class="small muted" style="margin:-2px 0 6px">The preview follows at once; these values go with it into a video.</div>
+      <div class="gset">${S.map(s => `<label title="${esc(s.id)}">${esc(s.label || s.id)}</label><div>${gsetInput(s)}</div>`).join('')}</div>
+      ${(t.sources || []).length ? `<h3>Learned from</h3><div class="mgsrc">${t.sources.map(s => `<div class="mgs">${s.file ? `<video src="${fileUrl(s.file)}" muted loop autoplay playsinline></video>` : ''}
+        <div class="small"><b>${esc((s.clip || '').replace(/^[\w-]+?__/, '').replace(/-/g, ' '))}</b><div class="muted">${esc(s.what || '')}</div></div></div>`).join('')}</div>`
+        : `<h3>A MotionLab original</h3><div class="small muted">Not learned from a clip: made for one of the template kinds creators use most${t.origin ? ` (${esc(t.origin.split(' - ')[0])})` : ''}.</div>`}
+    </div></div>`, el => {
+    const vals = () => { const v = mdefaults(t); $$('[data-set]', el).forEach(i => { v[i.dataset.set] = gsetValue(i); }); return v; };
+    const live = livePreview($('#mgprev', el), t, vals);
+    const stop = live.stop;
+    $$('[data-set]', el).forEach(i => { i.oninput = i.onchange = () => live.refresh(); });
+    $$('.mgs video', el).forEach(v => { if (matchMedia('(prefers-reduced-motion: reduce)').matches) v.removeAttribute('autoplay'); });
+    $('#mguse', el).onclick = () => { stop(); motionUseModal(t, vals(), () => motionModal(t, M)); };
+    $('#mggen', el).onclick = () => { stop(); generateModal('graphics', {templates: [t.id]}); };
+  }, 'wide');
+}
+async function motionUseModal(t, values, back) {
+  const ps = (await api('/api/projects')).filter(p => !inGenerator(p) || p.plans.length);
+  const changed = Object.fromEntries(Object.entries(values).filter(([k, v]) => v !== mdefaults(t)[k]));
+  // an overlay (a button, a pin, a like...) goes over the footage: see-through unless the user painted it on purpose
+  if (t.overlay && !('background' in changed) && (t.settings || []).some(s => s.id === 'background')) changed.background = false;
+  modal(`<h2>Use “${esc(t.name)}” in a video</h2>
+    <div class="small muted">A copy goes into the video, sized like its edit (or ${t.width}×${t.height} without one) and rendered right away; change it later on the video's Graphics tab.${t.overlay ? ' It goes over your footage, see-through.' : ''}</div>
+    ${ps.length ? `<div class="row" style="margin-top:12px"><label>Video <select id="muv">${ps.map(p => `<option value="${esc(p.name)}">${esc(p.label || p.name)}</option>`).join('')}</select></label>
+      <label>Name <input id="mun" value="${esc(t.id)}" style="width:200px"></label></div>
+      ${Object.keys(changed).length ? `<div class="small" style="margin-top:6px">With your words: ${Object.entries(changed).map(([k, v]) => `<span class="tag">${esc(k)}: ${esc(String(v)).slice(0, 40)}</span>`).join(' ')}</div>` : ''}
+      <div class="row" style="margin-top:12px"><button class="btn pri" id="mugo">Add and render</button><span id="mumsg" class="small"></span></div><pre class="log" hidden></pre>`
+      : '<div class="empty" style="margin-top:12px">No videos yet - start one in the Editor.</div>'}`, m => {
+    const go = $('#mugo', m);
+    if (!go) return;
+    go.onclick = async () => {
+      const project = $('#muv', m).value, name = $('#mun', m).value.trim();
+      const j = await startJob('overlay_new', {project, graphic: t.id, name, values: changed}, false);
+      if (!j) return;
+      go.disabled = true; const pre = $('pre.log', m); pre.hidden = false;
+      followJob(j.id, pre, jj => {
+        if (jj.status === 'done') { closeModal(); location.hash = `#/project/${encodeURIComponent(project)}/graphics`; }
+        else { $('#mumsg', m).innerHTML = '<span class="bad">did not work - see the log</span>'; go.disabled = false; }
+      });
+    };
+  });
+  modalBack(back);
+}
+function motionClipModal(c, M) {
+  const tpl = M.library.filter(t => c.built.includes(t.id)), card = c.card || {};
+  modal(`<div class="mgm"><div class="mgprev"><video src="${fileUrl(c.file)}" controls loop autoplay muted playsinline style="width:100%;max-height:560px;border-radius:8px;background:#000"></video></div>
+    <div><div class="row" style="gap:10px;padding-right:28px"><h2 style="margin:0">${esc(c.name)}</h2><span class="mst mst-${mclipStatus(c)}">${MSTATUS_WORD[mclipStatus(c)]}</span></div>
+      <div class="small muted" style="margin-top:4px">${esc(c.kind.replace(/-/g, ' '))} · ${c.frames} frames at ${c.fps} fps (${c.seconds.toFixed(2)} s) · ${c.width}×${c.height}</div>
+      ${card.what ? `<p style="margin:10px 0"><span class="clchip">Claude</span> ${esc(card.what)}</p>` : ''}
+      ${(card.use_for || []).length ? `<div class="small muted">Good for: ${card.use_for.map(u => `<span class="tag">${esc(u)}</span>`).join(' ')}</div>` : ''}
+      ${card.note ? `<div class="small muted" style="margin-top:4px">${esc(card.note)}</div>` : ''}
+      ${tpl.length ? `<div style="margin-top:10px">Rebuilt as ${tpl.map(t => `<a href="#/motion/templates/${esc(t.id)}">${esc(t.name)}</a>`).join(', ')}</div>` : ''}
+      <h3>Measured by MotionLab <span class="mlchip">MotionLab · no Claude</span></h3>
+      <div class="small">${c.still ? 'A still capture: the clip has fewer than 15 frames, so no motion was caught.'
+        : `${plural(c.moves, 'move')}, moving ${Math.round(100 * (c.moving_share || 0))} % of the time${c.loops ? ', loops' : ''}; eases: ${Object.entries(c.eases || {}).map(([k, n]) => `${esc(k)} ×${n}`).join(', ') || '-'}${c.alive_in_holds != null ? `; something still moves in ${Math.round(100 * c.alive_in_holds)} % of the holds` : ''}.`}</div>
+      ${c.sheet ? `<div style="margin-top:8px"><img src="${fileUrl(c.sheet)}" alt="contact sheet" class="mgsheet" title="every move's start / fastest / end frame, frame + timecode - click to enlarge"></div>` : ''}
+      ${(c.colours || {}).main ? `<div class="row" style="margin-top:8px;gap:4px">${c.colours.main.map(([h, s]) => `<span class="sw" title="${esc(h)} ${Math.round(100 * s)} %" style="width:22px;height:22px;border-radius:4px;background:${esc(h)};display:inline-block;border:1px solid var(--line2)"></span>`).join('')}</div>` : ''}
+    </div></div>`, el => {
+    const im = $('.mgsheet', el);
+    if (im) im.onclick = () => lightbox([{src: c.sheet, cap: `${c.id} - contact sheet`}], 0);
+  }, 'wide');
+}
+
 const PFILTERS = [['', 'All'], ['tool', 'Needs another tool'], ['own', 'No other tool'], ['todo', 'Not checked yet']];
 const pfilterOk = (p, f) => !f || (f === 'tool' ? !!ptool(p) : f === 'own' ? !ptool(p) : !p.structure && !p.review);
 async function pagePrompts(main, arg) {               // every kind in one grid; a click opens the prompt

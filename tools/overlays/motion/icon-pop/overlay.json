@@ -1,0 +1,20 @@
+{
+ "name": "icon-pop",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the icon pops"
+  },
+  {
+   "f": "start",
+   "kind": "zap",
+   "if": "look == 'warning'",
+   "what": "the warning shakes"
+  }
+ ]
+}

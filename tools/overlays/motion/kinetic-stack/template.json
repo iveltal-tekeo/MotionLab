@@ -1,0 +1,13 @@
+{
+ "name": "Kinetic stack",
+ "kind": "text",
+ "what": "One bold word stacked; the middle copy comes in stretched and skewed like rubber, snaps into a clean stack, wobbles once and stretches away.",
+ "use_for": ["hook", "title", "one word", "music video", "drop"],
+ "tags": ["kinetic text", "stack", "stretch", "bold", "rubber"],
+ "learned_from": [{"pack": "swishy", "clip": "text__extend", "what": "the rubber settle (S-curve, ~33 f at 25 fps), the tilt, the stretched middle copy"}],
+ "motion": "in 40 f (S-curve), hold breathing, a wobble 8 + 14 f, out 14 f",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 75,
+ "check_frames": [0, 8, 20, 40, 75, 90, 140, 146]
+}

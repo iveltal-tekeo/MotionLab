@@ -1,0 +1,11 @@
+{
+ "name": "big-counter",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round(10 * fps / 30)", "kind": "riser", "dur": "count_frames / 30", "from": 400, "to": 2600, "what": "the number counts up"},
+  {"f": "start + round(10 * fps / 30) + round(count_frames * fps / 30)", "kind": "impact", "db": -5, "what": "it lands"}
+ ]
+}

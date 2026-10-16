@@ -1,0 +1,15 @@
+{
+ "name": "Checklist",
+ "kind": "lists",
+ "what": "A list that builds one line at a time: a check draws itself (or a box is ticked, a number, a dot), the words slide in beside it, the list re-centres as it grows; earlier lines can fade back.",
+ "use_for": ["list", "steps", "goals", "tips", "features", "agenda", "talking head"],
+ "tags": ["list", "checklist", "check", "steps", "build"],
+ "learned_from": [{"pack": "swishy", "clip": "text__goals", "what": "the lines with a check, one after another on black"},
+                  {"pack": "swishy", "clip": "overlays__list-of-things", "what": "an icon + a word sliding in, later items dimmed"},
+                  {"pack": "swishy", "clip": "graphics__create-with-ai", "what": "items stacking one after another"}],
+ "motion": "a line every 24 f: the block re-centres 12 f (S-curve), the mark back.out 9 f, the check draws 10 f, the words 12 f",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 100,
+ "check_frames": [0, 6, 16, 30, 40, 54, 100]
+}

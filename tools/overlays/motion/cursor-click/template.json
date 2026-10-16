@@ -1,0 +1,16 @@
+{
+ "name": "Cursor click",
+ "kind": "ui",
+ "what": "A button pops in, a cursor glides to it on a curve, presses (a dip and a ripple) and the button changes - Subscribe turns grey Subscribed and a bell pops and rings.",
+ "use_for": ["subscribe", "call to action", "cta", "click", "tutorial", "end card", "follow"],
+ "tags": ["cursor", "button", "click", "subscribe", "ripple", "ui"],
+ "learned_from": [{"pack": "swishy", "clip": "overlays__click-animation", "what": "the cursor gliding to the button, the dip and the soft ripple"},
+                  {"pack": "swishy", "clip": "overlays__youtube-subscribe-button", "what": "the red subscribe button and the cursor (a still capture)"},
+                  {"pack": "swishy", "clip": "overlays__tech-youtube", "what": "the name above the button, Subscribed (a still capture)"}],
+ "motion": "button back.out 12 f; the cursor glides 26 f (x power2.out, y S-curve = a curve); press 4 f, release 6 f; ripple 18 f; the bell back.out 10 f and rings",
+ "scene": false,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 75,
+ "check_frames": [0, 8, 20, 34, 40, 43, 50, 60, 75]
+}

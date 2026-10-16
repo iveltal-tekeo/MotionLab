@@ -1,0 +1,23 @@
+{
+ "name": "phone-fan",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(3 * fps / 30)",
+   "repeat": "count",
+   "kind": "thump",
+   "db": -8,
+   "seed": "1900 + i",
+   "what": "a phone lands"
+  },
+  {
+   "f": "start + count * round(3 * fps / 30) + round(20 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "what": "they fan out"
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "name": "letter-beads",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "max(start + round(14 * fps / 30), line_at) + i * round(2 * fps / 30) + round(14 * fps / 30)",
+   "repeat": "len(word)",
+   "kind": "tick",
+   "freq": 2200,
+   "seed": "1300 + i",
+   "what": "a bead clicks into the line"
+  }
+ ]
+}

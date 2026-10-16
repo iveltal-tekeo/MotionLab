@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "word", "type": "string", "label": "Word", "default": "SPILL"},
+  {"id": "keep", "type": "number", "label": "Letters that stay (from the left)", "default": 1, "min": 0, "max": 20, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Anton", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "accent", "type": "color", "label": "Accent (a dot on the i, the first letter...)", "default": "#ff4fd8"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 44, "min": 0, "max": 100, "step": 1},
+  {"id": "fall_at", "type": "number", "label": "First letter falls at frame", "default": 40, "min": 0, "max": 900, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between letters", "default": 10, "min": 1, "max": 120, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "letter-fall" (0.5.0, the Motion Graphics library): a tall word slams in, then its letters
+     come loose one after another from the right - each wobbles on its spot, tips over and falls out of the frame with
+     gravity (accelerating), spinning; the letters that stay are left alone, one kicks when the last one goes. Learned
+     from text__spill-word ("SPILL" losing its letters, f120-f156 (00:00:04:20-00:00:06:06) at 25 fps, the falling
+     ones blurred). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #word { position: absolute; left: 0; top: 0; display: flex; align-items: flex-end; }
+  .ch { display: inline-block; line-height: 0.9; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="word"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const bump = (f, sc = 1.04, y = 0, len = 9) => ft("#cam", { scale: sc, y }, { scale: 1, y: 0 }, f, f + len, "expo.out");
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 900;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, word = V.word || "WORD", fs = Math.min(W * 0.84 * s / (word.length * 0.46), 520 * U * s), cy = H * V.y / 100;
+  const box = document.getElementById("word"), letters = [];
+  [...word].forEach((c, i) => {
+    const e = document.createElement("span"); e.className = "ch"; e.textContent = c === " " ? " " : c;
+    Object.assign(e.style, { font: `${weight} ${fs}px ${font}`, color: i === 0 ? V.color : V.color });
+    box.appendChild(e); letters.push(e);
+    gsap.set(e, { transformOrigin: "50% 100%" });
+  });
+  gsap.set(box, { x: W / 2, y: cy, xPercent: -50, yPercent: -50 });
+  // a dot of the accent colour over the first i / j (the reference's pink dot), else on the last letter that stays
+  const di = [...word].findIndex(c => /[ij]/.test(c));          // only a lowercase i or j gets the dot
+  if (di >= 0) { const d = document.createElement("div"); Object.assign(d.style, { position: "absolute", width: `${fs * 0.12}px`, height: `${fs * 0.12}px`, borderRadius: "50%", background: V.accent, left: "50%", top: `${-fs * 0.04}px`, transform: "translateX(-50%)" });
+    letters[di].style.position = "relative"; letters[di].appendChild(d); }
+
+  // ---- the motion: slam in (12 f, from 1.4x, a camera bump); from fall_at, letter by letter from the right: a wobble
+  // (6 f), a tip (6 f), then the fall - three quarters of the height in 22 f, accelerating, spinning
+  const S = Math.round(V.start), FA = Math.max(S + K(16), Math.round(V.fall_at)), G = Math.max(1, Math.round(V.gap * FPS / 30));
+  enter(box, { opacity: 1, scale: 1.4 }, { scale: 1 }, S, S + K(12), "power3.in");
+  if (S + K(12) < FRAMES) bump(S + K(12), 1.035, 8 * U);
+  const keep = Math.min(Math.round(V.keep), letters.length), falling = letters.slice(keep).reverse();
+  falling.forEach((e, i) => {
+    const f0 = FA + i * G, dir = i % 2 ? -1 : 1;
+    if (f0 >= FRAMES) return;
+    to(e, { rotation: 6 * dir }, f0, f0 + K(3), "sine.inOut"); to(e, { rotation: -5 * dir }, f0 + K(3), f0 + K(6), "sine.inOut");
+    to(e, { rotation: 18 * dir, x: 10 * U * dir }, f0 + K(6), f0 + K(12), "power2.in");
+    to(e, { y: H * 0.75, rotation: 120 * dir, x: 80 * U * dir }, f0 + K(12), f0 + K(34), "power2.in");
+    if (f0 + K(34) < FRAMES) set(e, { opacity: 0 }, f0 + K(34));
+  });
+  const last = FA + (falling.length - 1) * G + K(12);
+  if (keep > 0 && last + K(12) < FRAMES) { ft(letters[0], { scaleY: 0.85 }, { scaleY: 1 }, last, last + K(12), "elastic.out(1, 0.4)"); }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

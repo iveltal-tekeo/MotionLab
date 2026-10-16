@@ -1,0 +1,36 @@
+{
+ "name": "Credits",
+ "kind": "text",
+ "what": "End credits: a role in small grey capitals over each name, rolling up at an even speed and fading at the top and bottom; the last line rolls to the middle and stays.",
+ "use_for": [
+  "credits",
+  "outro",
+  "thanks",
+  "short film",
+  "music video",
+  "team"
+ ],
+ "tags": [
+  "credits",
+  "roll",
+  "names",
+  "outro",
+  "serif"
+ ],
+ "learned_from": [],
+ "origin": "credits - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "linear roll from under the frame until the last line has left the top; the last line in 24 f (slow end), then still",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  30,
+  60,
+  90,
+  130,
+  186,
+  210,
+  239
+ ]
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "quote", "type": "string", "label": "What they said", "default": "This changed how I edit. My videos finally look the way I imagine them."},
+  {"id": "name", "type": "string", "label": "Who said it", "default": "Maya K."},
+  {"id": "detail", "type": "string", "label": "Small line under the name (empty = none)", "default": "Verified buyer"},
+  {"id": "picture", "type": "string", "label": "Their picture in the graphic’s assets folder (empty = a letter)", "default": ""},
+  {"id": "stars", "type": "number", "label": "Stars (0-5, halves work)", "default": 5, "min": 0, "max": 5, "step": 0.5},
+  {"id": "score", "type": "string", "label": "Score line (empty = none)", "default": "4.9 from 2,140 reviews"},
+  {"id": "star_color", "type": "color", "label": "Star colour", "default": "#fbbf24"},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#6366f1"},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#111827"},
+  {"id": "card", "type": "color", "label": "Card colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#eef0fb"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Card centre down (% of the height)", "default": 48, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "review-stars" (0.5.0, the Motion Graphics library): a review - a card rises, the stars
+     pop in one after another and fill (a half star fills half), the quote appears word by word, the reviewer's round
+     picture and name slide in, a score line counts in under the card. Not learned from a clip: testimonials and
+     ratings are a staple of the marketplaces' promo packs (Envato Elements, Motion Array; researched 2026-10-16).
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; line-height: 1.3; font-synthesis: none; }
+  .w { display: inline-block; white-space: pre; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size * U, cx = W / 2, cy = H * V.y / 100, cw = 860 * s, chh = 700 * s, ctop = cy - chh / 2, pad = 60 * s;
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("ui").appendChild(e); return e; };
+  const card = add("abs", { width: `${cw}px`, height: `${chh}px`, borderRadius: `${36 * s}px`, background: V.card, boxShadow: `0 ${30 * s}px ${70 * s}px rgba(30,30,60,.16)` });
+  gsap.set(card, { x: cx - cw / 2, y: ctop });
+  // a big quote mark in the corner
+  const qm = add("t", { font: `900 ${220 * s}px Georgia, serif`, color: V.accent, opacity: 0.18, lineHeight: "1" }, "“");
+  gsap.set(qm, { x: cx + cw / 2 - 190 * s, y: ctop - 10 * s });
+  // the stars: each a grey star with a coloured copy on top, clipped to how full it is
+  const SP = "M12 2.2l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17l-5.9 3.2 1.3-6.6L2.5 9.1l6.6-.8z", sz = 76 * s, stars = [];
+  for (let i = 0; i < 5; i++) {
+    const fill = Math.max(0, Math.min(1, V.stars - i));
+    const e = add("abs", { width: `${sz}px`, height: `${sz}px` }, `<svg width="100%" height="100%" viewBox="0 0 24 24"><path d="${SP}" fill="#e5e7eb"/><g class="fl" style="clip-path:inset(0 ${(1 - fill) * 100}% 0 0)"><path d="${SP}" fill="${V.star_color}"/></g></svg>`);
+    gsap.set(e, { x: cx - cw / 2 + pad + i * (sz + 14 * s), y: ctop + pad, transformOrigin: "50% 50%" });
+    stars.push({ e, fill });
+  }
+  // the quote, word by word (each word its own box so it can appear)
+  const qt = add("t", { width: `${cw - pad * 2}px`, font: `600 ${50 * s}px ${fam}`, color: V.ink }, String(V.quote || "").split(/\s+/).filter(Boolean).map(w => `<span class="w">${esc(w)} </span>`).join(""));
+  gsap.set(qt, { x: cx - cw / 2 + pad, y: ctop + pad + sz + 46 * s });
+  const words = [...qt.querySelectorAll(".w")];
+  const av = 104 * s, ay = ctop + chh - pad - av;
+  const pic = add("abs", { width: `${av}px`, height: `${av}px`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", font: `800 ${av * 0.42}px ${fam}`,
+    background: V.picture ? `center / cover url("${String(V.picture).replace(/"/g, "")}")` : `linear-gradient(135deg, ${V.accent}, #ec4899)` }, V.picture ? "" : esc((V.name || "?").trim().charAt(0).toUpperCase()));
+  gsap.set(pic, { x: cx - cw / 2 + pad, y: ay, transformOrigin: "50% 50%" });
+  const nm = add("t", { font: `800 ${42 * s}px ${fam}`, color: V.ink, whiteSpace: "nowrap" }, esc(V.name));
+  gsap.set(nm, { x: cx - cw / 2 + pad + av + 26 * s, y: ay + (V.detail ? 8 * s : 30 * s) });
+  const dt = V.detail ? add("t", { font: `500 ${32 * s}px ${fam}`, color: V.ink, opacity: 0.55, whiteSpace: "nowrap" }, `✓ ${esc(V.detail)}`) : null;
+  if (dt) gsap.set(dt, { x: cx - cw / 2 + pad + av + 26 * s, y: ay + 60 * s });
+  const sc = V.score ? add("t", { font: `700 ${40 * s}px ${fam}`, color: V.ink, whiteSpace: "nowrap" }, `<span style="color:${V.star_color}">★</span> ${esc(V.score)}`) : null;
+  if (sc) gsap.set(sc, { x: cx, y: ctop + chh + 50 * s, xPercent: -50 });
+
+  // ---- the motion: the card rises (16 f, slow end); the stars pop 4 f apart (back.out 10 f) and each fills from the
+  // left (8 f) as it lands; the quote's words appear 2 f apart (6 f each, rising 12 px); the picture pops, the name and
+  // line slide in; the score line rises under the card
+  const S = Math.round(V.start);
+  enter(card, { opacity: 0, y: ctop + 80 * s }, { opacity: 1, y: ctop }, S, S + K(16), "power3.out");
+  enter(qm, { opacity: 0 }, { opacity: 0.18 }, S + K(8), S + K(20), "power1.out");
+  stars.forEach(({ e, fill }, i) => {
+    const f = S + K(10) + i * K(4);
+    enter(e, { opacity: 1, scale: 0, rotation: -40 }, { scale: 1, rotation: 0 }, f, f + K(10), "back.out(2.6)");
+    const fl = e.querySelector(".fl");
+    if (fill > 0) ft(fl, { clipPath: "inset(0 100% 0 0)" }, { clipPath: `inset(0 ${(1 - fill) * 100}% 0 0)` }, f + K(4), f + K(12), "power2.out");
+  });
+  const w0 = S + K(32);
+  words.forEach((w, i) => enter(w, { opacity: 0, y: 12 * s }, { opacity: 1, y: 0 }, w0 + i * K(2), w0 + i * K(2) + K(6), "power2.out"));
+  const p0 = w0 + words.length * K(2) + K(4);
+  enter(pic, { opacity: 1, scale: 0 }, { scale: 1 }, p0, p0 + K(12), "back.out(2)");
+  enter(nm, { opacity: 0, x: cx - cw / 2 + pad + av + 46 * s }, { opacity: 1, x: cx - cw / 2 + pad + av + 26 * s }, p0 + K(4), p0 + K(14), "power3.out");
+  if (dt) enter(dt, { opacity: 0 }, { opacity: 0.55 }, p0 + K(8), p0 + K(18), "power1.out");
+  if (sc) enter(sc, { opacity: 0, y: ctop + chh + 80 * s }, { opacity: 1, y: ctop + chh + 50 * s }, p0 + K(10), p0 + K(22), "power3.out");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

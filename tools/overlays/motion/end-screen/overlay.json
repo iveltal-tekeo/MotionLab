@@ -1,0 +1,27 @@
+{
+ "name": "end-screen",
+ "frames": 240,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "what": "the cards slide in"
+  },
+  {
+   "f": "start + round(25 * fps / 30)",
+   "kind": "pop",
+   "what": "the picture pops"
+  },
+  {
+   "f": "start + round(40 * fps / 30)",
+   "kind": "pop",
+   "db": -4,
+   "if": "button",
+   "what": "the button pops"
+  }
+ ]
+}

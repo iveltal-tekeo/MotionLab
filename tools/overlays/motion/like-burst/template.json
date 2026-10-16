@@ -1,0 +1,15 @@
+{
+ "name": "Like burst",
+ "kind": "ui",
+ "what": "A heart pops (it overshoots and settles), a ring goes out, small particles burst and fade, a +1 floats up and the count ticks up; then it beats gently.",
+ "use_for": ["like", "reaction", "love", "call to action", "cta", "engagement"],
+ "tags": ["heart", "like", "burst", "particles", "pop", "ui"],
+ "learned_from": [{"pack": "swishy", "clip": "overlays__like", "what": "the heart button popping with a burst of particles"},
+                  {"pack": "swishy", "clip": "overlays__heart-crush-button", "what": "the heart on a pink disc, a pop on every change"}],
+ "motion": "pop to 1.25 in 7 f, settle back.out 9 f; ring 16 f; particles 18 f (power3.out); +1 floats 24 f; a heartbeat every 30 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 60,
+ "check_frames": [0, 8, 11, 14, 20, 30, 50, 100]
+}

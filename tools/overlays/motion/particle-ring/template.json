@@ -1,0 +1,43 @@
+{
+ "name": "Particle ring",
+ "kind": "background",
+ "what": "A ring of dots that turns, breaks into a cloud of stars drifting across the frame, then pulls back into the ring with a glow as it closes - a loading moment, a 'thinking' beat, a transition.",
+ "use_for": [
+  "loading",
+  "thinking",
+  "ai",
+  "transition",
+  "intro",
+  "wait",
+  "tech"
+ ],
+ "tags": [
+  "particles",
+  "ring",
+  "dots",
+  "stars",
+  "loading",
+  "loop"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "overlays__loading",
+   "what": "a ring of dots scattering into stars and pulling back into a ring on black"
+  }
+ ],
+ "motion": "the ring appears around 12 f and turns the whole time; burst 16 f (slow end), drift 24 f, back 20 f (S-curve), glow 8 f, hold 16 f",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 20,
+ "check_frames": [
+  0,
+  14,
+  40,
+  56,
+  80,
+  100,
+  130,
+  190
+ ]
+}

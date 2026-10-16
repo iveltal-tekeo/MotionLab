@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Word", "default": "EXTEND"},
+  {"id": "copies", "type": "number", "label": "Copies stacked", "default": 3, "min": 1, "max": 7, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Anton", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "accent", "type": "color", "label": "Middle copy colour", "default": "#ffffff"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 3, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "stretch", "type": "number", "label": "Stretch of the entrance (0 = none)", "default": 0.6, "min": 0, "max": 1.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "wobble", "type": "boolean", "label": "A rubber wobble in the middle", "default": true},
+  {"id": "exit", "type": "boolean", "label": "Leaves at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "kinetic-stack" (0.5.0, the Motion Graphics library): one word stacked; the middle copy
+     comes in stretched and skewed like rubber and snaps into a clean stack, the stack breathes during the hold,
+     wobbles once and leaves stretched. Learned from the captured template text__extend (analysis\templates\swishy):
+     the settle is an S-curve over ~33 frames at 25 fps (40 at 30), the stack tilted ~8 degrees at the start, the
+     middle copy ~1.5x wider and skewed. MotionLab's own code - no picture or font of the original.
+     Size-independent: `overlay.py new <folder> --from kinetic-stack --frames N --fps F --width W --height H` (or
+     `overlay.py fit <folder> --like <video>`). Rules: animate only on the paused GSAP timeline, times in frames
+     through set / to / ft (they end half a frame early, so a snapshot = the plain render = motion blur). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .w { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="smear" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur id="smearB" stdDeviation="0.01 0.01"/></filter>
+</svg>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="stack" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;                       // 1 = a pixel on a 1080 px wide frame
+  const K = n => Math.round(n * FPS / 30);               // a duration designed at 30 fps, at this rate
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const smear = (t, f0, fp, f1, px, dir = "x") => {
+    const s = dir === "x" ? `${px} 0.01` : `0.01 ${px}`, z = "0.01 0.01";
+    set(t, { filter: "url(#smear)" }, f0); set(t, { filter: "none" }, f1);
+    ft("#smearB", { attr: { stdDeviation: z } }, { attr: { stdDeviation: s } }, f0, fp, "power2.in");
+    ft("#smearB", { attr: { stdDeviation: s } }, { attr: { stdDeviation: z } }, fp, f1, "power2.out");
+  };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 800;
+
+  // ---- the layout
+  const root = document.getElementById("root"), stack = document.getElementById("stack");
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const n = Math.max(1, Math.round(V.copies)), mid = Math.floor(n / 2);
+  const fs = 190 * U * V.size, gap = fs * 0.98;          // the copies sit a line apart (the reference: tight)
+  const cx = W * V.x / 100, cy = H * V.y / 100;
+  gsap.set(stack, { x: cx, y: cy });
+  const words = [];
+  for (let i = 0; i < n; i++) {
+    const e = document.createElement("div");
+    e.className = "w";
+    e.textContent = V.text;
+    Object.assign(e.style, { font: `${weight} ${fs}px ${font}`, color: i === mid ? V.accent : V.color });
+    stack.appendChild(e);
+    gsap.set(e, { xPercent: -50, yPercent: -50, y: (i - mid) * gap, transformOrigin: "50% 50%" });
+    words.push(e);
+  }
+
+  // ---- the motion (frames at 30 fps; the reference's numbers scaled from 25 fps)
+  const S = Math.round(V.start), IN = K(40), OUT = K(14);
+  const O = V.exit ? Math.max(S + IN + K(10), FRAMES - OUT) : FRAMES;
+  const st = V.stretch;
+  if (S > 0) { set(stack, { opacity: 0 }, 0); set(stack, { opacity: 1 }, S); }   // never two sets on one frame
+  // the whole stack: tilted and a little big, settles (S-curve, as measured)
+  ft(stack, { rotation: -8, scale: 1 + 0.25 * st }, { rotation: 0, scale: 1 }, S, S + IN, "power3.inOut");
+  // every copy: stretched and skewed, the middle one most; the outer ones follow 2 frames per step (rubber)
+  words.forEach((e, i) => {
+    const k = i === mid ? 1 : 0.45, d = K(Math.abs(i - mid) * 2);
+    ft(e, { scaleX: 1 + st * 1.6 * k, skewX: -24 * st * k, x: -W * 0.06 * st * k },
+          { scaleX: 1, skewX: 0, x: 0 }, S + d, S + IN - K(6) + d, "power3.inOut");
+  });
+  // the hold breathes (never fully still) until the wobble / the exit
+  const HOLD0 = S + IN + K(2), M = Math.round((HOLD0 + O) / 2);
+  if (V.wobble && M - HOLD0 > K(30)) {
+    to(stack, { scale: 1.02 }, HOLD0, M - K(6), "sine.inOut");
+    words.forEach((e, i) => {
+      const k = i === mid ? 1 : 0.5, d = K(Math.abs(i - mid) * 2);
+      to(e, { skewX: 14 * k, scaleX: 1 + 0.3 * k }, M + d, M + K(8) + d, "power2.out");
+      to(e, { skewX: 0, scaleX: 1 }, M + K(8) + d, M + K(22) + d, "power3.inOut");
+    });
+    to(stack, { scale: 1 }, M + K(8), O - 1, "sine.inOut");
+  } else if (O - HOLD0 > K(8)) {
+    to(stack, { scale: 1.025 }, HOLD0, O - 1, "sine.inOut");
+  }
+  // the exit: twice as fast as the entrance - the copies fold into the middle one, which stretches away
+  if (V.exit && O < FRAMES) {
+    words.forEach((e, i) => { if (i !== mid) to(e, { y: 0, opacity: 0 }, O, O + K(6), "power2.in"); });
+    to(words[mid], { scaleX: 1 + 1.8 * Math.max(st, 0.4), skewX: 20, x: W * 0.9 }, O + K(4), O + OUT, "power3.in");
+    smear(words[mid], O + K(6), O + OUT - 1, O + OUT, 30 * U);
+    set(stack, { opacity: 0 }, O + OUT);
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

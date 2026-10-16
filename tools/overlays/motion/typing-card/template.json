@@ -1,0 +1,15 @@
+{
+ "name": "Typing card",
+ "kind": "text",
+ "what": "A card - a dark note, a terminal window or paper - swings in tilted; its text types in letter by letter behind a cursor, the card floats and slowly straightens.",
+ "use_for": ["tip", "note", "code", "tech", "script", "quote", "tutorial"],
+ "tags": ["typing", "card", "terminal", "note", "cursor", "keyboard"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__notepad", "what": "the dark tilted note card typing a paragraph, the soft shadow"},
+                  {"pack": "swishy", "clip": "text__terminal-typing", "what": "the terminal window, a line of code typing with a cursor"},
+                  {"pack": "swishy", "clip": "graphics__terminal-showcase", "what": "the window chrome, lines typing in"}],
+ "motion": "in 20 f (power3.out, from 3x the tilt), 30 letters a second, the cursor blinks every 15 f, the card floats to 40 % of its tilt",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 150,
+ "check_frames": [0, 10, 30, 60, 100, 150, 175]
+}

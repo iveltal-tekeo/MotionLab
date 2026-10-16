@@ -1,0 +1,15 @@
+{
+ "name": "Notification stack",
+ "kind": "chat",
+ "what": "Notification cards arrive one after another - each slides in from the side and lands with a small buzz; new ones go under the others or on top, pushing them down. Light cards or dark glass with a lock-screen clock.",
+ "use_for": ["notifications", "results", "sales", "story", "app promo", "proof", "milestone"],
+ "tags": ["notification", "cards", "stack", "phone", "ui", "lock screen"],
+ "learned_from": [{"pack": "swishy", "clip": "ui-elements__notifications", "what": "the cards sliding in faded from the right and stacking"},
+                  {"pack": "swishy", "clip": "overlays__instagram-update-notification-animation", "what": "the dark pill with an icon"},
+                  {"pack": "swishy", "clip": "app-website__phone-notification-pop-up", "what": "a banner on a lock screen"}],
+ "motion": "a card every 26 f: slides in 16 f (power3.out) from 110 px, a 5 f buzz; on top: the others move down 12 f (S-curve)",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 100,
+ "check_frames": [0, 6, 12, 22, 34, 60, 100]
+}

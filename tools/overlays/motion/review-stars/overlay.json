@@ -1,0 +1,17 @@
+{
+ "name": "review-stars",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(10 * fps / 30) + i * round(4 * fps / 30)",
+   "repeat": "max(1, ceil(stars))",
+   "kind": "pop",
+   "db": -6,
+   "seed": "3300 + i",
+   "what": "a star pops"
+  }
+ ]
+}

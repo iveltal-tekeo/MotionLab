@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "name", "type": "string", "label": "Name", "default": "Your Name"},
+  {"id": "handle", "type": "string", "label": "Handle", "default": "@yourname"},
+  {"id": "bio", "type": "string", "label": "Bio (a / starts a new line)", "default": "Helping you make better videos / Editing tips · tutorials · reels"},
+  {"id": "posts", "type": "number", "label": "Posts", "default": 178, "min": 0, "max": 1000000000, "step": 1},
+  {"id": "followers", "type": "number", "label": "Followers", "default": 143200, "min": 0, "max": 10000000000, "step": 1},
+  {"id": "following", "type": "number", "label": "Following", "default": 275, "min": 0, "max": 1000000000, "step": 1},
+  {"id": "picture", "type": "string", "label": "Profile picture in the graphic’s assets folder (empty = a colour circle)", "default": ""},
+  {"id": "follow_click", "type": "boolean", "label": "The Follow button gets clicked", "default": true},
+  {"id": "accent", "type": "color", "label": "Button colour", "default": "#3b82f6"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "look", "type": "enum", "label": "Card", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "dark", "label": "Dark"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#eef0f4"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.6, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 45, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "profile-card" (0.5.0, the Motion Graphics library): a social profile builds itself - the
+     card rises, the round picture pops with a ring, the name and handle slide in, the three counts tick up from 0, the
+     bio writes in line by line, then the Follow button is pressed and turns to "Following" (a dip, a check). Learned
+     from graphics__instagram-profile (a profile header - picture, posts / followers / following, a bio, Follow /
+     Message buttons - building in and out). MotionLab's own code - no app's logo or layout copied. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.15; font-synthesis: none; }
+  .n::after { content: attr(data-v); }
+  .btn { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="card" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const dark = V.look === "dark", ink = dark ? "#f2f3f5" : "#121417", sub = dark ? "#9aa0aa" : "#6b7280", s = V.size;
+  const cw = W * 0.88 * Math.min(1.1, s), pad = 56 * U * s, av = 190 * U * s, cx = W / 2, cy = H * V.y / 100;
+  const bioLines = String(V.bio || "").split(/\s+\/\s+/).filter(Boolean);
+  const ch = pad * 2 + av + 70 * U * s + bioLines.length * 48 * U * s + 172 * U * s;
+  const card = document.getElementById("card");
+  Object.assign(card.style, { width: `${cw}px`, height: `${ch}px`, background: dark ? "#16181d" : "#ffffff", borderRadius: `${40 * U * s}px`, boxShadow: `0 ${30 * U}px ${80 * U}px rgba(20,24,40,.18)` });
+  gsap.set(card, { x: cx - cw / 2, y: cy - ch / 2 });
+  const add = (cls, style, text) => { const e = document.createElement("div"); e.className = cls; if (text != null) e.textContent = text; Object.assign(e.style, style); card.appendChild(e); return e; };
+  const ring = add("abs", { width: `${av + 14 * U * s}px`, height: `${av + 14 * U * s}px`, borderRadius: "50%", background: `conic-gradient(${V.accent}, #f472b6, #f59e0b, ${V.accent})` });
+  gsap.set(ring, { x: pad - 7 * U * s, y: pad - 7 * U * s });
+  const pic = add("abs", { width: `${av}px`, height: `${av}px`, borderRadius: "50%", border: `${6 * U * s}px solid ${dark ? "#16181d" : "#fff"}`,
+    background: V.picture ? `center / cover url("${V.picture.replace(/"/g, "")}")` : `linear-gradient(135deg, #93c5fd, ${V.accent})` });
+  gsap.set(pic, { x: pad, y: pad });
+  if (!V.picture) { pic.textContent = (V.name || "?").trim().charAt(0).toUpperCase(); Object.assign(pic.style, { display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", font: `800 ${av * 0.42}px ${fam}` }); }
+  // the counts beside the picture
+  const sx = pad + av + 40 * U * s, sw = (cw - sx - pad) / 3, short = v => v >= 1e6 ? (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + "M" : v >= 1e4 ? (v / 1e3).toFixed(v >= 1e5 ? 0 : 1) + "K" : String(Math.round(v));
+  const counts = [["posts", V.posts], ["followers", V.followers], ["following", V.following]].map(([lab, v], i) => {
+    const n = add("t n", { font: `800 ${48 * U * s}px ${fam}`, color: ink, textAlign: "center", width: `${sw}px` });
+    const l = add("t", { font: `400 ${26 * U * s}px ${fam}`, color: sub, textAlign: "center", width: `${sw}px` }, lab);
+    gsap.set(n, { x: sx + i * sw, y: pad + av / 2 - 50 * U * s }); gsap.set(l, { x: sx + i * sw, y: pad + av / 2 + 6 * U * s });
+    return { n, l, v };
+  });
+  const nm = add("t", { font: `800 ${44 * U * s}px ${fam}`, color: ink }, V.name);
+  const hd = add("t", { font: `400 ${32 * U * s}px ${fam}`, color: sub }, V.handle);
+  const ny = pad + av + 30 * U * s;
+  gsap.set(nm, { x: pad, y: ny }); gsap.set(hd, { x: pad + 0, y: ny + 54 * U * s });
+  const bios = bioLines.map((b, i) => { const e = add("t", { font: `400 ${32 * U * s}px ${fam}`, color: ink }, b); gsap.set(e, { x: pad, y: ny + 110 * U * s + i * 46 * U * s }); return e; });
+  const by = ch - pad - 84 * U * s, bw = (cw - pad * 2 - 20 * U * s) / 2;
+  const follow = add("btn", { width: `${bw}px`, height: `${84 * U * s}px`, borderRadius: `${18 * U * s}px`, background: V.accent, color: "#fff", font: `700 ${32 * U * s}px ${fam}` });
+  follow.innerHTML = `<span class="f1">Follow</span><span class="f2" style="position:absolute;opacity:0">Following ✓</span>`;
+  const msg = add("btn", { width: `${bw}px`, height: `${84 * U * s}px`, borderRadius: `${18 * U * s}px`, background: dark ? "#262a31" : "#eef0f3", color: ink, font: `700 ${32 * U * s}px ${fam}` }, "Message");
+  gsap.set(follow, { x: pad, y: by, transformOrigin: "50% 50%" }); gsap.set(msg, { x: pad + bw + 20 * U * s, y: by });
+
+  // ---- the motion: card up (16 f), picture pop (back.out 12 f) + the ring turning, name / handle (12 f), counts tick
+  // (36 f, slow end), bio lines (12 f, 6 f apart), buttons; the click: dip 4 f, colour + label swap, release
+  const S = Math.round(V.start), ease = gsap.parseEase("power3.out");
+  enter(card, { opacity: 0, y: cy - ch / 2 + 120 * U }, { opacity: 1, y: cy - ch / 2 }, S, S + K(16), "power3.out");
+  enter(ring, { opacity: 1, scale: 0, rotation: -90 }, { scale: 1, rotation: 0 }, S + K(8), S + K(20), "back.out(2)");
+  enter(pic, { opacity: 1, scale: 0 }, { scale: 1 }, S + K(10), S + K(22), "back.out(2.2)");
+  to(ring, { rotation: 180 }, S + K(20), FRAMES, "none");
+  [nm, hd].forEach((e, i) => enter(e, { opacity: 0, x: pad - 30 * U }, { opacity: 1, x: pad }, S + K(16) + i * K(4), S + K(28) + i * K(4), "power3.out"));
+  const C0 = S + K(18), N = K(36);
+  counts.forEach(({ n, l, v }, i) => {
+    enter(l, { opacity: 0 }, { opacity: 1 }, C0, C0 + K(10), "power1.out");
+    for (let f = C0; f <= C0 + N && f < FRAMES; f++) set(n, { attr: { "data-v": short(v * ease((f - C0) / N)) } }, f);
+  });
+  bios.forEach((e, i) => enter(e, { opacity: 0, y: ny + 110 * U * s + i * 46 * U * s + 16 * U }, { opacity: 1, y: ny + 110 * U * s + i * 46 * U * s }, S + K(28) + i * K(6), S + K(40) + i * K(6), "power2.out"));
+  [follow, msg].forEach((e, i) => enter(e, { opacity: 0, y: by + 20 * U }, { opacity: 1, y: by }, S + K(34) + i * K(4), S + K(46) + i * K(4), "power3.out"));
+  const CL = S + K(70);
+  if (V.follow_click && CL + K(16) < FRAMES) {
+    ft(follow, { scale: 1 }, { scale: 0.92 }, CL, CL + K(4), "power2.in");
+    to(follow, { scale: 1 }, CL + K(4), CL + K(14), "back.out(3)");
+    to(follow, { backgroundColor: dark ? "#262a31" : "#eef0f3", color: ink }, CL + K(3), CL + K(9), "power1.out");
+    set(follow.querySelector(".f1"), { opacity: 0 }, CL + K(4)); set(follow.querySelector(".f2"), { opacity: 1 }, CL + K(4));
+    // the follower count goes up by one
+    const fl = counts[1];
+    if (fl.v < 1e4) set(fl.n, { attr: { "data-v": short(fl.v + 1) } }, CL + K(6));
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

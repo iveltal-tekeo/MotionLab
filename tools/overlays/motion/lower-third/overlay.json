@@ -1,0 +1,26 @@
+{
+ "name": "lower-third",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "db": -4,
+   "what": "the name wipes in"
+  },
+  {
+   "f": "start + round(hold * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 2600,
+   "to": 500,
+   "db": -6,
+   "if": "leave and start + round(hold * fps / 30) + round(16 * fps / 30) < frames",
+   "what": "it leaves"
+  }
+ ]
+}

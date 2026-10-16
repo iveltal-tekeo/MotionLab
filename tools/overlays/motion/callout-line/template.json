@@ -1,0 +1,40 @@
+{
+ "name": "Call-outs",
+ "kind": "callouts",
+ "what": "Point at things in your video: a dot lands on a spot and pulses, a line draws out from it with an elbow, and a title with a small line slides out of its end - several one after another; they draw back at the end.",
+ "use_for": [
+  "product",
+  "features",
+  "explain",
+  "tutorial",
+  "review",
+  "point at",
+  "unboxing",
+  "tech"
+ ],
+ "tags": [
+  "callout",
+  "line",
+  "label",
+  "dot",
+  "pointer",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "call-outs - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "dot back.out 10 f + a halo every 30 f; line draws 14 f (S-curve); title rises 10 f, the small line 4 f later; 18 f between call-outs; back in reverse 10 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.8,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  10,
+  20,
+  30,
+  50,
+  80,
+  125,
+  140
+ ]
+}

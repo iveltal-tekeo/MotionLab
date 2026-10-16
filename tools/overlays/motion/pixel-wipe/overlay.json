@@ -1,0 +1,25 @@
+{
+ "name": "pixel-wipe",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "riser",
+   "dur": "0.85",
+   "if": "mode != 'reveal'",
+   "what": "the pixels cover the frame"
+  },
+  {
+   "f": "start + round(36 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 2600,
+   "to": 400,
+   "if": "mode == 'cover_reveal'",
+   "what": "they clear"
+  }
+ ]
+}

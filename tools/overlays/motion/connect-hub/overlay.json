@@ -1,0 +1,22 @@
+{
+ "name": "connect-hub",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the hub pops"
+  },
+  {
+   "f": "start + round(14 * fps / 30) + i * round(gap * fps / 30)",
+   "repeat": "parts(nodes)",
+   "kind": "pop",
+   "db": -6,
+   "seed": "1500 + i",
+   "what": "a node connects"
+  }
+ ]
+}

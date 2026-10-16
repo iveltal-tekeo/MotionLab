@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "label", "type": "string", "label": "Top left, by the red dot", "default": "REC"},
+  {"id": "tc_start", "type": "string", "label": "Timecode it starts from (HH:MM:SS:FF)", "default": "00:12:48:00"},
+  {"id": "info", "type": "string", "label": "Bottom left (empty = none)", "default": "4K  ·  60 FPS  ·  ISO 400"},
+  {"id": "battery", "type": "number", "label": "Battery (%; 0 = no battery)", "default": 72, "min": 0, "max": 100, "step": 1},
+  {"id": "focus", "type": "boolean", "label": "A focus box snaps in the middle", "default": true},
+  {"id": "cross", "type": "boolean", "label": "A small cross in the middle", "default": false},
+  {"id": "color", "type": "color", "label": "Line colour", "default": "#ffffff"},
+  {"id": "dot", "type": "color", "label": "Recording dot colour", "default": "#ff2d2d"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "margin", "type": "number", "label": "Distance from the edges (px on a 1080 frame)", "default": 60, "min": 0, "max": 300, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#3a4250"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "rec-frame" (0.5.0, the Motion Graphics library): a camera viewfinder over your video -
+     corner brackets, a blinking red REC dot, a timecode that runs frame by frame, camera info and a battery, a focus box
+     that snaps onto the middle (a quick double blink) - for a vlog, a "found footage" or behind-the-scenes look. Loops
+     cleanly: give it any length. Not learned from a clip: HUD / viewfinder overlays are a Mixkit tag ("HUD",
+     "Interface", "Frame") and a common overlay pack (researched 2026-10-16). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; font-synthesis: none; }
+  .tc::after { content: attr(data-v); }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg id="g" class="abs"></svg>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const fam = `'${V.font}', Consolas, monospace`;
+  const q = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+
+  gsap.set(["#bgfill", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const svg = q("g"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  const el = (tag, at, parent = svg) => { const e = document.createElementNS(NS, tag); Object.entries(at).forEach(([k, v]) => e.setAttribute(k, v)); parent.appendChild(e); return e; };
+  const m = V.margin * U, arm = 90 * U, sw = 6 * U, shadow = "drop-shadow(0 0 3px rgba(0,0,0,.55))";
+  svg.style.filter = shadow;
+  const corners = [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].map(([x, y, sx, sy]) =>
+    el("path", { d: `M${x},${y + sy * arm} L${x},${y} L${x + sx * arm},${y}`, fill: "none", stroke: V.color, "stroke-width": sw, "stroke-linecap": "square" }));
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st, { filter: shadow }); if (html != null) e.innerHTML = html; q("ui").appendChild(e); return e; };
+  const fs = 40 * U, row = m + arm * 0.35;
+  const dot = add("abs", { width: `${30 * U}px`, height: `${30 * U}px`, borderRadius: "50%", background: V.dot });
+  gsap.set(dot, { x: m + 40 * U, y: row });
+  const rec = add("t", { font: `700 ${fs}px ${fam}`, color: V.color }, String(V.label || "").replace(/[&<>]/g, ""));
+  gsap.set(rec, { x: m + 86 * U, y: row - 4 * U });
+  const tc = add("t tc", { font: `700 ${fs}px ${fam}`, color: V.color, textAlign: "right" });
+  gsap.set(tc, { x: W - m - 40 * U, y: row - 4 * U, xPercent: -100 });
+  const info = V.info ? add("t", { font: `700 ${fs * 0.8}px ${fam}`, color: V.color }, String(V.info).replace(/[&<>]/g, "")) : null;
+  if (info) gsap.set(info, { x: m + 40 * U, y: H - m - arm * 0.35 - fs });
+  if (V.battery > 0) {                                  // the battery: a box, a nub, a fill as wide as its charge
+    const bw = 90 * U, bh = 42 * U, bx = W - m - 40 * U - bw - 8 * U, by = H - m - arm * 0.35 - bh;
+    el("rect", { x: bx, y: by, width: bw, height: bh, rx: 6 * U, fill: "none", stroke: V.color, "stroke-width": 4 * U });
+    el("rect", { x: bx + bw, y: by + bh * 0.3, width: 8 * U, height: bh * 0.4, rx: 2 * U, fill: V.color });
+    el("rect", { x: bx + 7 * U, y: by + 7 * U, width: (bw - 14 * U) * V.battery / 100, height: bh - 14 * U, rx: 3 * U, fill: V.battery < 20 ? V.dot : V.color });
+  }
+  if (V.cross) { const c = 26 * U; el("path", { d: `M${W / 2 - c},${H / 2} H${W / 2 + c} M${W / 2},${H / 2 - c} V${H / 2 + c}`, stroke: V.color, "stroke-width": 4 * U, opacity: 0.8 }); }
+  let fb = null;
+  if (V.focus) {                                        // the focus box: four small corners around the middle
+    fb = el("g", {}); const b = 150 * U, a = 36 * U, cx = W / 2, cy = H / 2;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => el("path", { d: `M${cx + sx * b},${cy + sy * (b - a)} L${cx + sx * b},${cy + sy * b} L${cx + sx * (b - a)},${cy + sy * b}`, fill: "none", stroke: V.color, "stroke-width": 5 * U }, fb));
+  }
+  // the timecode: tc_start + the frame, at the graphic's own rate, counted the way the lab counts (non-drop)
+  const m0 = String(V.tc_start || "").match(/(\d+):(\d+):(\d+)[:;.](\d+)/), nom = Math.round(FPS);
+  const base = m0 ? ((+m0[1] * 60 + +m0[2]) * 60 + +m0[3]) * nom + +m0[4] : 0;
+  const tcs = n => { const ff = n % nom, sec = Math.floor(n / nom); const p = x => String(x).padStart(2, "0"); return `${p(Math.floor(sec / 3600))}:${p(Math.floor(sec / 60) % 60)}:${p(sec % 60)}:${p(ff)}`; };
+
+  // ---- the motion: everything appears at start (the corners grow in from their points, 8 f); the dot blinks: on 15 f,
+  // off 15 f; the timecode changes every frame; the focus box snaps 1.25 -> 1 (8 f) and blinks twice (2 f off)
+  const S = Math.round(V.start);
+  if (S > 0) [...corners, dot].forEach(e => set(e, { opacity: 0 }, 0));
+  [rec, tc, info].filter(Boolean).forEach(e => set(e, { opacity: 0 }, 0));        // they fade in from S + 2
+  corners.forEach((c, i) => { const L = 2 * arm; c.setAttribute("stroke-dasharray", `${L} ${L}`); ft(c, { opacity: 1, attr: { "stroke-dashoffset": L } }, { attr: { "stroke-dashoffset": 0 } }, S, S + K(8), "power2.out"); });
+  [rec, tc, info].filter(Boolean).forEach(e => ft(e, { opacity: 0 }, { opacity: 1 }, S + K(2), S + K(8), "power1.out"));
+  for (let f = S, on = true; f < FRAMES; f += K(15), on = !on) set(dot, { opacity: on ? 1 : 0 }, f);
+  for (let f = 0; f < FRAMES; f++) set(tc, { attr: { "data-v": tcs(base + Math.max(0, f - S)) } }, f);
+  if (fb) {
+    if (S + K(6) > 0) set(fb, { opacity: 0 }, 0);
+    ft(fb, { opacity: 1, scale: 1.25, svgOrigin: `${W / 2} ${H / 2}` }, { scale: 1 }, S + K(6), S + K(14), "power3.out");
+    set(fb, { opacity: 0 }, S + K(16)); set(fb, { opacity: 1 }, S + K(18)); set(fb, { opacity: 0 }, S + K(20)); set(fb, { opacity: 1 }, S + K(22));
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

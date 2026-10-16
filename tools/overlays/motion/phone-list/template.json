@@ -1,0 +1,41 @@
+{
+ "name": "Phone list",
+ "kind": "lists",
+ "what": "A phone rises and floats while a list fills its screen row by row - each row slides in from the right and its icon pops; at the end the rows can slide away. Apps, features, steps, tips.",
+ "use_for": [
+  "list",
+  "apps",
+  "features",
+  "steps",
+  "tips",
+  "app promo",
+  "tutorial"
+ ],
+ "tags": [
+  "phone",
+  "list",
+  "rows",
+  "app",
+  "ui"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "social__animated-app-list",
+   "what": "a phone whose app rows slide in one after another"
+  }
+ ],
+ "motion": "the phone up 20 f (slow end) and floats; a row every 7 f: in 14 f (power3.out), the icon back.out; out 3 f apart",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  14,
+  30,
+  50,
+  80,
+  100,
+  149
+ ]
+}

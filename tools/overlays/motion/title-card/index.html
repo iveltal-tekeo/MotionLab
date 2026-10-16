@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "look", "type": "enum", "label": "Look", "default": "editorial", "options": [{"value": "editorial", "label": "Editorial - a huge italic word, small words above and below"}, {"value": "event", "label": "Event - a two-colour serif title over rolling waves"}, {"value": "names", "label": "Names - two names in script under a night sky"}, {"value": "product", "label": "Product - a tagline word by word, a pulse, a button"}]},
+  {"id": "top", "type": "string", "label": "Small line above", "default": "the"},
+  {"id": "main", "type": "string", "label": "The main line (*stars* = the accent colour)", "default": "future"},
+  {"id": "bottom", "type": "string", "label": "Small line below", "default": "of design"},
+  {"id": "second", "type": "string", "label": "Second name (names look)", "default": "Ernesto"},
+  {"id": "button", "type": "string", "label": "Button (product look; empty = none)", "default": "Try it free"},
+  {"id": "font", "type": "enum", "label": "Title font", "default": "Playfair Display", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "script_font", "type": "enum", "label": "Script font (names look)", "default": "Pacifico", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "text_font", "type": "enum", "label": "Small text font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#ff7ab6"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour (editorial, product)", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 46, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "title-card" (0.5.0, the Motion Graphics library): a title that is the whole frame, in four
+     looks. Editorial: small words above and below, one huge italic word whose letters rise in one by one and then
+     breathe. Event: a serif title in two colours over waves rolling at the bottom, small shapes floating. Names: two
+     names in a script with an "&" between them, under a night sky - stars twinkle, a city skyline. Product: a small
+     "new" pill, the tagline word by word, a pulse line under it, a button that pops. Learned from
+     text__the-future-of-design (a big italic "future" with "the" / "of design"), social__science-club (a two-colour
+     serif title over rolling waves with floating shapes), social__wedding-announcement (two names in a script over a
+     night skyline with stars), text__generate-ai-voice-animation (a title with a small waveform and a button on navy)
+     and graphics__saas-security (a tagline built word by word). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.05; font-synthesis: none; text-align: center; }
+  .ch, .wd { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg id="deco" class="abs" style="overflow:visible"></svg>
+  <div id="cam" class="abs"><div id="tp" class="t"></div><div id="mn" class="t"></div><div id="bt" class="t"></div><div id="nd" class="t"></div><div id="btn" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const serif = `"${V.font}", Georgia, serif`, sw = ONE.test(V.font) ? 400 : 700, sans = `"${V.text_font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  const look = V.look, s = V.size, cy = H * V.y / 100, S = Math.round(V.start), R = rnd(19);
+  const BG = { editorial: V.bg, event: "#0e4f6e", names: "linear-gradient(180deg, #0b1630, #172a52 70%, #22365f)", product: V.bg === "#000000" ? "#0b1020" : V.bg }[look];
+  gsap.set("#bgfill", { background: V.background ? BG : "transparent" });
+  const svg = q("deco"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  const split = (el, text, cls, style) => { el.innerHTML = ""; const out = [];
+    String(text || "").split(/(\*[^*]+\*)/).forEach(part => { const acc = /^\*.*\*$/.test(part); const t = acc ? part.slice(1, -1) : part;
+      (cls === "ch" ? [...t] : t.split(/(\s+)/)).forEach(tok => { if (!tok) return; const e = document.createElement("span"); e.className = cls;
+        e.textContent = /^\s+$/.test(tok) ? " " : tok; if (acc) e.style.color = V.accent; el.appendChild(e); if (!/^\s+$/.test(tok)) out.push(e); }); });
+    Object.assign(el.style, style); return out; };
+  const place = (id, y) => gsap.set(id, { x: W / 2, y, xPercent: -50, yPercent: -50 });
+
+  if (look === "editorial") {
+    const big = 300 * U * s;
+    split(q("tp"), V.top, "wd", { font: `500 ${46 * U * s}px ${sans}`, color: V.color, letterSpacing: "0.02em" }); place("#tp", cy - big * 0.62);
+    const chars = split(q("mn"), V.main, "ch", { font: `italic ${sw} ${big}px ${serif}`, color: V.color, letterSpacing: "-0.03em" }); place("#mn", cy);
+    split(q("bt"), V.bottom, "wd", { font: `600 ${46 * U * s}px ${sans}`, color: V.color, letterSpacing: "0.06em" }); place("#bt", cy + big * 0.62);
+    chars.forEach((c, i) => { gsap.set(c, { transformOrigin: "50% 100%" }); enter(c, { opacity: 0, y: big * 0.3, skewX: -12 }, { opacity: 1, y: 0, skewX: 0 }, S + K(4) + i * K(3), S + K(20) + i * K(3), "power3.out"); });
+    enter("#tp", { opacity: 0, y: cy - big * 0.62 + 20 * U }, { opacity: 1, y: cy - big * 0.62 }, S, S + K(14), "power2.out");
+    enter("#bt", { opacity: 0, y: cy + big * 0.62 - 20 * U }, { opacity: 1, y: cy + big * 0.62 }, S + K(12) + chars.length * K(3), S + K(26) + chars.length * K(3), "power2.out");
+    const b0 = S + K(24) + chars.length * K(3);           // the letters breathe: each leans and stretches on its own phase
+    chars.forEach((c, i) => { for (let f = b0 + i * K(3), up = true; f + K(18) < FRAMES; f += K(18), up = !up) to(c, { scaleY: up ? 1.06 : 1, skewX: up ? -4 : 0 }, f, f + K(18), "sine.inOut"); });
+  } else if (look === "event") {
+    const wl = W * 0.55, band = (yy, a, ph) => { let d = `M${-wl * 2},${H}`; for (let x = -wl * 2; x <= W + wl * 2; x += wl / 10) d += ` L${x},${yy + Math.sin(x / wl * Math.PI * 2 + ph) * a}`; return d + ` L${W + wl * 2},${H} Z`; };
+    svg.innerHTML = `<path id="e1" d="${band(H * 0.78, 30 * U, 0)}" fill="#2f8f9d" opacity=".8"/><path id="e2" d="${band(H * 0.82, 26 * U, 1.5)}" fill="#7cc6b1" opacity=".85"/><path id="e3" d="${band(H * 0.87, 22 * U, 3)}" fill="#f2c57c"/>`;
+    [["#e1", wl], ["#e2", -wl], ["#e3", wl]].forEach(([id, dx]) => { for (let f = 0; f < FRAMES; f += K(60)) ft(id, { x: 0 }, { x: dx }, f, Math.min(FRAMES, f + K(60)), "none"); });
+    for (let i = 0; i < 9; i++) {                         // floating shapes: triangles and petals, drifting and turning
+      const x = W * (0.08 + 0.84 * R()), y = H * (0.12 + 0.5 * R()), sz = (22 + 30 * R()) * U, col = ["#ffb3c7", "#f2c57c", "#7cc6b1"][i % 3];
+      const sh = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      sh.setAttribute("d", i % 2 ? `M${x},${y - sz} L${x + sz * 0.9},${y + sz * 0.6} L${x - sz * 0.9},${y + sz * 0.6} Z` : `M${x},${y} m${-sz},0 a${sz},${sz} 0 1,0 ${sz * 2},0 a${sz},${sz} 0 1,0 ${-sz * 2},0`);
+      sh.setAttribute("fill", i % 2 ? "none" : col); sh.setAttribute("stroke", col); sh.setAttribute("stroke-width", 4 * U); sh.setAttribute("opacity", ".8"); svg.appendChild(sh);
+      ft(sh, { y: 0, rotation: 0, svgOrigin: `${x} ${y}` }, { y: -60 * U * (0.5 + R()), rotation: (R() - 0.5) * 120 }, 0, FRAMES, "sine.inOut");
+    }
+    const ws = split(q("mn"), V.main === "future" ? "International *Day of* Design" : V.main, "wd", { font: `${sw} ${96 * U * s}px ${serif}`, color: V.color, whiteSpace: "normal", width: `${W * 0.8}px`, lineHeight: 1.15 });
+    place("#mn", cy);
+    split(q("tp"), V.top === "the" ? "SAVE THE DATE" : V.top, "wd", { font: `600 ${32 * U * s}px ${sans}`, color: V.color, letterSpacing: "0.3em", opacity: 0.8 }); place("#tp", cy - 210 * U * s);
+    split(q("bt"), V.bottom === "of design" ? "MAY 26 · 7 PM" : V.bottom, "wd", { font: `600 ${36 * U * s}px ${sans}`, color: V.color, letterSpacing: "0.12em" }); place("#bt", cy + 210 * U * s);
+    enter("#tp", { opacity: 0 }, { opacity: 0.8 }, S, S + K(14), "power1.out");
+    ws.forEach((w, i) => enter(w, { opacity: 0, y: 40 * U }, { opacity: 1, y: 0 }, S + K(8) + i * K(5), S + K(24) + i * K(5), "power3.out"));
+    enter("#bt", { opacity: 0, y: cy + 230 * U * s }, { opacity: 1, y: cy + 210 * U * s }, S + K(20) + ws.length * K(5), S + K(34) + ws.length * K(5), "power2.out");
+    enter("#deco", { opacity: 1, y: H * 0.25 }, { y: 0 }, S, S + K(30), "power3.out");
+  } else if (look === "names") {
+    let g = "";
+    for (let i = 0; i < 70; i++) g += `<circle class="st" cx="${W * R()}" cy="${H * 0.62 * R()}" r="${(1 + 2.5 * R()) * U}" fill="#fff" opacity="${0.3 + 0.7 * R()}"/>`;
+    let city = `<path d="M0,${H}`, x = 0;
+    while (x < W) { const bw = (40 + 90 * R()) * U, bh = (120 + 380 * R()) * U; city += ` L${x},${H - bh} L${x + bw},${H - bh}`; x += bw; }
+    city += ` L${W},${H} Z" fill="#070d1d"/>`;
+    let wins = ""; for (let i = 0; i < 60; i++) wins += `<rect class="wn" x="${W * R()}" y="${H - (60 + 300 * R()) * U}" width="${8 * U}" height="${10 * U}" fill="#ffd36b" opacity="${R() < 0.5 ? 0.9 : 0}"/>`;
+    svg.innerHTML = g + city + wins;
+    svg.querySelectorAll(".st").forEach((st, i) => { for (let f = (i % 7) * K(4); f + K(14) < FRAMES; f += K(28)) { to(st, { attr: { opacity: 0.2 } }, f, f + K(14), "sine.inOut"); to(st, { attr: { opacity: 1 } }, f + K(14), f + K(28), "sine.inOut"); } });
+    const script = `"${V.script_font}", cursive`, fs = 130 * U * s;
+    split(q("tp"), V.main === "future" ? "Claudia" : V.main, "wd", { font: `400 ${fs}px ${script}`, color: V.color, textShadow: `0 0 ${20 * U}px ${V.accent}66` }); place("#tp", cy - fs * 0.85);
+    split(q("nd"), "&", "wd", { font: `400 ${fs * 0.6}px ${script}`, color: V.accent }); place("#nd", cy);
+    split(q("mn"), V.second, "wd", { font: `400 ${fs}px ${script}`, color: V.color, textShadow: `0 0 ${20 * U}px ${V.accent}66` }); place("#mn", cy + fs * 0.85);
+    split(q("bt"), V.bottom === "of design" ? "are getting married" : V.bottom, "wd", { font: `500 ${34 * U * s}px ${sans}`, color: V.color, letterSpacing: "0.2em", opacity: 0.8 }); place("#bt", cy + fs * 1.75);
+    [["#tp", 0], ["#nd", 1], ["#mn", 2], ["#bt", 3]].forEach(([id, i]) => enter(id, { opacity: 0, filter: "blur(10px)" }, { opacity: id === "#bt" ? 0.8 : 1, filter: "blur(0px)" }, S + K(6) + i * K(10), S + K(26) + i * K(10), "power2.out"));
+    to("#cam", { y: -20 * U }, S, FRAMES, "sine.inOut");
+  } else {
+    const glow = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    glow.setAttribute("cx", W * 0.5); glow.setAttribute("cy", cy - 260 * U); glow.setAttribute("r", W * 0.38); glow.setAttribute("fill", V.accent); glow.setAttribute("opacity", ".35"); glow.setAttribute("filter", "url(#bl)");
+    svg.innerHTML = `<defs><filter id="bl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${90 * U}"/></filter></defs>`; svg.appendChild(glow);
+    ft(glow, { attr: { opacity: 0.2 } }, { attr: { opacity: 0.45 } }, 0, FRAMES, "sine.inOut");
+    split(q("tp"), V.top === "the" ? "NEW" : V.top, "wd", { font: `700 ${26 * U * s}px ${sans}`, color: "#0b1020", background: V.accent, padding: `${8 * U * s}px ${18 * U * s}px`, borderRadius: "999px", letterSpacing: "0.12em" }); place("#tp", cy - 170 * U * s);
+    const ws = split(q("mn"), V.main === "future" ? "Turn any script into a *voice*" : V.main, "wd", { font: `800 ${84 * U * s}px ${sans}`, color: V.color, whiteSpace: "normal", width: `${W * 0.84}px`, lineHeight: 1.12 }); place("#mn", cy);
+    let bars = ""; const nb = 34;
+    for (let i = 0; i < nb; i++) bars += `<rect class="vb" x="${W / 2 - nb * 7 * U + i * 14 * U}" y="${cy + 170 * U * s - 30 * U}" width="${7 * U}" height="${60 * U}" rx="${3.5 * U}" fill="${V.accent}"/>`;
+    svg.insertAdjacentHTML("beforeend", bars);
+    svg.querySelectorAll(".vb").forEach((b, i) => { gsap.set(b, { svgOrigin: `${W / 2 - nb * 7 * U + i * 14 * U + 3.5 * U} ${cy + 170 * U * s}`, scaleY: 0.15 });
+      for (let f = S + K(30), k = 0; f + K(6) < FRAMES; f += K(6), k++) to(b, { scaleY: 0.15 + 0.85 * Math.abs(Math.sin(i * 0.7 + k * 1.3)) * (1 - Math.abs(i - nb / 2) / (nb / 1.6)) }, f, f + K(6), "sine.inOut"); });
+    if (V.button) { split(q("btn"), V.button, "wd", { font: `700 ${36 * U * s}px ${sans}`, color: "#0b1020", background: V.color, padding: `${22 * U * s}px ${44 * U * s}px`, borderRadius: "999px" }); place("#btn", cy + 330 * U * s); }
+    enter("#tp", { opacity: 1, scale: 0 }, { scale: 1 }, S, S + K(10), "back.out(2.4)");
+    ws.forEach((w, i) => enter(w, { opacity: 0, y: 30 * U, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)" }, S + K(8) + i * K(4), S + K(22) + i * K(4), "power3.out"));
+    if (V.button) enter("#btn", { opacity: 1, scale: 0 }, { scale: 1 }, S + K(30) + ws.length * K(4), S + K(42) + ws.length * K(4), "back.out(2.2)");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

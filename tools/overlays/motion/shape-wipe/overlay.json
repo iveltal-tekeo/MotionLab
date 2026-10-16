@@ -1,0 +1,24 @@
+{
+ "name": "shape-wipe",
+ "frames": 48,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "cover_frames / 30 + 0.1",
+   "what": "it covers"
+  },
+  {
+   "f": "start + 2 * round(3 * fps / 30) + round(cover_frames * fps / 30) + round(hold_frames * fps / 30)",
+   "if": "reveal",
+   "kind": "whoosh",
+   "dur": "cover_frames / 30",
+   "from": 2600,
+   "to": 500,
+   "what": "it clears"
+  }
+ ]
+}

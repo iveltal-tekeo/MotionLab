@@ -1,0 +1,11 @@
+{
+ "name": "quote-card",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "whoosh", "dur": "0.5", "what": "the card pops in"},
+  {"f": "start + round(14 * fps / 30)", "kind": "shimmer", "dur": "1.2", "if": "reveal != 'type'", "what": "the words come in"}
+ ]
+}

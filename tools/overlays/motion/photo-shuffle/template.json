@@ -1,0 +1,15 @@
+{
+ "name": "Photo shuffle",
+ "kind": "photos",
+ "what": "Pictures land on a pile one after another - each flies in from off the frame with a spin and settles tilted, like prints thrown on a table; a handwritten line under the pile.",
+ "use_for": ["photos", "memories", "vlog", "products", "portfolio", "trip", "recap", "behind the scenes"],
+ "tags": ["photos", "pile", "shuffle", "polaroid", "tilt", "collage"],
+ "learned_from": [{"pack": "swishy", "clip": "social__image-shuffle", "what": "photos shuffling in tilted one after another"},
+                  {"pack": "swishy", "clip": "social__instagram-story-3-images", "what": "photos sliding in and stacking"},
+                  {"pack": "swishy", "clip": "graphics__apple-folder-open", "what": "photos fanning out and settling in a tilted pile"}],
+ "motion": "a picture every 18 f: flies 18 f (power3.out) with a spin, overshoots its tilt 4 degrees and settles 8 f; the pile drifts closer",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 120,
+ "check_frames": [0, 8, 20, 30, 45, 80, 120]
+}

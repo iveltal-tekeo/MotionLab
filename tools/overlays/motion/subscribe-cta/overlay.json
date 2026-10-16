@@ -1,0 +1,29 @@
+{
+ "name": "subscribe-cta",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the buttons pop"
+  },
+  {
+   "f": "start + (int(like) + 1 + int(bell)) * round(4 * fps / 30) + round(23 * fps / 30) + i * round(25 * fps / 30)",
+   "repeat": "int(like) + 1 + int(bell)",
+   "if": "cursor",
+   "kind": "click",
+   "seed": "3000 + i",
+   "what": "a click"
+  },
+  {
+   "f": "start + 3 * round(4 * fps / 30) + round(73 * fps / 30)",
+   "if": "bell and cursor and like",
+   "kind": "chime",
+   "db": -4,
+   "what": "the bell rings"
+  }
+ ]
+}

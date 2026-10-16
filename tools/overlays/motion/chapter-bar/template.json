@@ -1,0 +1,38 @@
+{
+ "name": "Chapter bar",
+ "kind": "lists",
+ "what": "A video's chapters as a segmented progress bar along the bottom (or top): it fills as the video plays, the current chapter stands taller and a small '02 · Setup' title pops when each chapter starts. Give it the video's length.",
+ "use_for": [
+  "chapters",
+  "progress",
+  "tutorial",
+  "explainer",
+  "long video",
+  "steps",
+  "course"
+ ],
+ "tags": [
+  "chapters",
+  "progress bar",
+  "timeline",
+  "segments",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "progress bars - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "each fill linear over its chapter; the current segment 2.2x taller (6 f in / out); titles back.out 10 f, away after 45 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  10,
+  20,
+  60,
+  110,
+  180,
+  260,
+  299
+ ]
+}

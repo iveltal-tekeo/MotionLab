@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "name", "type": "string", "label": "Name", "default": "Your Name"},
+  {"id": "handle", "type": "string", "label": "Handle under it (empty = none)", "default": "@yourname"},
+  {"id": "quote", "type": "string", "label": "The quote (*stars* = highlighted; a / starts a new paragraph)", "default": "Most people quit right before it starts working. / The ones who *keep posting* are the ones you end up watching."},
+  {"id": "verified", "type": "boolean", "label": "A check badge after the name", "default": true},
+  {"id": "stats", "type": "string", "label": "Counts at the bottom (| between; empty = none)", "default": "1.2K|8.4K|52K"},
+  {"id": "reveal", "type": "enum", "label": "How the words come in", "default": "words", "options": [{"value": "words", "label": "Word by word"}, {"value": "lines", "label": "Paragraph by paragraph"}, {"value": "type", "label": "Typed, letter by letter"}]},
+  {"id": "look", "type": "enum", "label": "Card", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "dark", "label": "Dark"}]},
+  {"id": "accent", "type": "color", "label": "Highlight / badge colour", "default": "#1d9bf0"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#e9edf2"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 48, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "quote-card" (0.5.0, the Motion Graphics library): a post-style quote card - a round
+     picture, a name with a check badge, a handle - pops in with a slight tilt that settles; the quote comes in word by
+     word (or by paragraph, or typed), the starred phrase in the accent colour; the counts at the bottom tick up; the
+     card floats. Learned from social__naval-quote (a post-style quote card: avatar, name, a two-paragraph quote with
+     one phrase in blue - a still capture; the motion is the lab's own: the entrance, the word-by-word reveal and the
+     counts follow the library's measured rules). MotionLab's own code: no platform's logo, never someone's words.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #card { position: absolute; left: 0; top: 0; }
+  .hd { display: flex; align-items: center; }
+  .w { display: inline; }
+  .c { display: none; }
+  .st { display: flex; gap: 2.2em; }
+  .st span::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="card"><div id="hd" class="hd"></div><div id="qt"></div><div id="stats" class="st"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const dark = V.look === "dark", s = V.size, ink = dark ? "#e7e9ea" : "#0f1419", sub = dark ? "#71767b" : "#536471";
+  const cw = W * 0.84 * Math.min(1.1, s), fs = 44 * U * s, pad = 54 * U * s;
+  const card = q("card");
+  Object.assign(card.style, { width: `${cw}px`, padding: `${pad}px`, background: dark ? "#16181c" : "#ffffff", borderRadius: `${34 * U * s}px`,
+    boxShadow: `0 ${30 * U}px ${80 * U}px rgba(15,20,25,.18)`, font: `400 ${fs}px ${fam}`, color: ink });
+  // the header: a round picture (a gradient with the first letter), the name + a badge, the handle
+  const av = 104 * U * s, hd = q("hd");
+  const pic = document.createElement("div");
+  Object.assign(pic.style, { width: `${av}px`, height: `${av}px`, borderRadius: "50%", flex: "none", marginRight: `${24 * U * s}px`,
+    background: `linear-gradient(135deg, ${V.accent}, #a78bfa)`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+    font: `700 ${av * 0.44}px ${fam}` });
+  pic.textContent = (V.name || "?").trim().charAt(0).toUpperCase();
+  const who = document.createElement("div");
+  const nm = document.createElement("div"), hn = document.createElement("div");
+  nm.textContent = V.name || "";
+  Object.assign(nm.style, { font: `700 ${fs}px ${fam}`, display: "flex", alignItems: "center", gap: `${10 * U * s}px` });
+  if (V.verified) nm.insertAdjacentHTML("beforeend", `<svg width="${fs * 0.9}" height="${fs * 0.9}" viewBox="0 0 24 24"><path d="M12 1.8l2.4 1.8 3-.2 1 2.8 2.6 1.6-.8 2.9 1 2.8-2.4 1.8-.4 3-3 .5-1.8 2.4-2.8-1-2.8 1-1.8-2.4-3-.5-.4-3L1.2 12.3l1-2.8-.8-2.9L4 5l1-2.8 3 .2z" fill="${V.accent}"/><path d="M7.6 12.2l3 3 5.8-6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`);
+  hn.textContent = V.handle || "";
+  Object.assign(hn.style, { font: `400 ${fs * 0.8}px ${fam}`, color: sub, marginTop: `${4 * U * s}px` });
+  who.append(nm, hn);
+  hd.append(pic, who);
+  Object.assign(hd.style, { marginBottom: `${32 * U * s}px` });
+  // the quote: words (or letters) as their own spans, so they can come in one by one
+  const qt = q("qt"), paras = (V.quote || "").split(/\s+\/\s+|\s*\n\s*/).filter(Boolean);
+  Object.assign(qt.style, { lineHeight: 1.4, fontSize: `${fs}px` });
+  const typed = V.reveal === "type", pieces = [];
+  paras.forEach((p, pi) => {
+    const pe = document.createElement("div");
+    if (pi) pe.style.marginTop = `${0.7 * fs}px`;
+    let hl = false;
+    p.split(/(\*)/).forEach(part => {
+      if (part === "*") { hl = !hl; return; }
+      (typed ? [...part] : part.split(/(\s+)/)).forEach(tok => {
+        if (!tok) return;
+        const sp = document.createElement("span");
+        sp.className = typed ? "c" : "w";
+        sp.textContent = tok;
+        if (hl) sp.style.color = V.accent;
+        pe.appendChild(sp);
+        if (!/^\s+$/.test(tok) || typed) pieces.push({ sp, pi });
+      });
+    });
+    qt.appendChild(pe);
+  });
+  const stats = (V.stats || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 4);
+  const stEl = q("stats");
+  if (stats.length) {
+    Object.assign(stEl.style, { marginTop: `${40 * U * s}px`, paddingTop: `${26 * U * s}px`, borderTop: `1px solid ${dark ? "#2f3336" : "#eff3f4"}`, color: sub, font: `500 ${fs * 0.72}px ${fam}` });
+    const icons = ["💬", "🔁", "♥", "📊"];
+    stEl.innerHTML = stats.map((v, i) => `<div><span style="margin-right:.4em">${icons[i]}</span><span data-v="${esc(v)}" data-i="${i}"></span></div>`).join("");
+  }
+  gsap.set(card, { x: (W - cw) / 2, y: H * V.y / 100, yPercent: -50, transformOrigin: "50% 50%" });
+
+  // ---- the motion: the card pops with a tilt that settles (back.out 18 f); the words come in (2 f apart, each rising
+  // 8 f) / paragraphs (12 f) / letters (35 a second); the counts tick up from 0 over 20 f; the card floats
+  const S = Math.round(V.start);
+  enter(card, { opacity: 0, y: H * V.y / 100 + 120 * U, rotation: -5, scale: 0.92 }, { opacity: 1, y: H * V.y / 100, rotation: 0, scale: 1 }, S, S + K(18), "back.out(1.4)");
+  let f = S + K(14);
+  if (V.reveal === "words") {
+    pieces.forEach(({ sp }, i) => enter(sp, { opacity: 0, y: 10 * U }, { opacity: 1, y: 0 }, f + i * K(2), f + i * K(2) + K(8), "power2.out"));
+    pieces.forEach(({ sp }) => gsap.set(sp, { display: "inline-block" }));
+    f += pieces.length * K(2) + K(8);
+  } else if (V.reveal === "lines") {
+    [...qt.children].forEach((pe, i) => enter(pe, { opacity: 0, y: 24 * U }, { opacity: 1, y: 0 }, f + i * K(14), f + i * K(14) + K(14), "power3.out"));
+    f += qt.children.length * K(14) + K(10);
+  } else {
+    pieces.forEach(({ sp }, i) => set(sp, { display: "inline" }, f + Math.round(i * FPS / 35)));
+    f += Math.round(pieces.length * FPS / 35) + K(6);
+  }
+  if (stats.length) {
+    enter(stEl, { opacity: 0 }, { opacity: 1 }, f, f + K(10), "power1.out");
+    stEl.querySelectorAll("span[data-v]").forEach(sp => {
+      const v = sp.getAttribute("data-v"), m = v.match(/^([\d.]+)(\D*)$/), N = K(20);
+      if (!m) return;
+      const target = parseFloat(m[1]), dec = (m[1].split(".")[1] || "").length;
+      for (let g = 0; g <= N; g++) set(sp, { attr: { "data-v": `${(target * gsap.parseEase("power3.out")(g / N)).toFixed(dec)}${m[2]}` } }, f + g);
+    });
+  }
+  to(card, { y: H * V.y / 100 - 24 * U, rotation: 0.6 }, S + K(18), FRAMES, "sine.inOut");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

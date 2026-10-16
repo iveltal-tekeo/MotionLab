@@ -1,0 +1,21 @@
+{
+ "name": "title-card",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "what": "the title comes in"
+  },
+  {
+   "f": "start + round(40 * fps / 30)",
+   "kind": "pop",
+   "if": "look == 'product'",
+   "what": "the button pops"
+  }
+ ]
+}

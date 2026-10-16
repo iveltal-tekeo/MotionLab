@@ -1,0 +1,11 @@
+{
+ "name": "highlight-reveal",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round(6 * fps / 30)", "kind": "air", "what": "the headline rises in"},
+  {"f": "start + round(40 * fps / 30)", "kind": "whoosh", "dur": "0.5", "from": 3000, "to": 1200, "peak": 0.3, "what": "the highlighter sweeps (about here: it follows the headline's length)"}
+ ]
+}

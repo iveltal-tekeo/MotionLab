@@ -1,0 +1,41 @@
+{
+ "name": "Wave swap",
+ "kind": "text",
+ "what": "A title that changes into another: the first one's letters leave along a wave one after another while the second's ride the same wave in and settle.",
+ "use_for": [
+  "title",
+  "transition",
+  "word swap",
+  "before after",
+  "reveal",
+  "intro"
+ ],
+ "tags": [
+  "kinetic text",
+  "wave",
+  "swap",
+  "letters",
+  "transition"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__i-want-a-smooth-animation-where-the-text-with-2-li",
+   "what": "a two-line title flowing out along a wave and coming back as a new one"
+  }
+ ],
+ "motion": "in 12 f; out along a wave in 3 legs of 8 f (sine), 2 f apart; the new one in the same way, settling with a slow end",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  14,
+  34,
+  42,
+  50,
+  58,
+  70,
+  100
+ ]
+}

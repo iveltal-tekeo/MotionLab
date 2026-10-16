@@ -1,0 +1,43 @@
+{
+ "name": "Connect hub",
+ "kind": "charts",
+ "what": "Everything connects to one thing: a hub in the middle, nodes popping around it one after another, each with a dashed curve drawing to the hub, then dots running along the lines - integrations, a team, a network, sources.",
+ "use_for": [
+  "integrations",
+  "network",
+  "connect",
+  "ecosystem",
+  "team",
+  "workflow",
+  "ai",
+  "tools"
+ ],
+ "tags": [
+  "hub",
+  "network",
+  "nodes",
+  "lines",
+  "connect",
+  "diagram"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__mcp-animation",
+   "what": "a centre icon with app nodes connecting by dashed curves"
+  }
+ ],
+ "motion": "hub back.out 14 f + its halo turns; a node every 12 f (10 f) and its curve draws 14 f (S-curve); dots run 24 f, staggered",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  14,
+  40,
+  70,
+  100,
+  120,
+  149
+ ]
+}

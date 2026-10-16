@@ -8,6 +8,7 @@ started it; Claude spends nothing while the pass runs)."""
 from __future__ import annotations
 
 import itertools
+import json
 import os
 import re
 import subprocess
@@ -160,8 +161,12 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         dst = data.PROJECTS / p / "build" / "overlays" / name
         if dst.exists():
             raise JobError(f"{p} already has a graphic called {name}: pick another name")
+        vals = a.get("values") or {}                                # 0.5.0: the words tried in Motion Graphics' preview
+        if not isinstance(vals, dict):
+            raise JobError("values: a set of settings")
         return (f"Add the graphic {graphic} to {p} as {name}",
-                [PY, str(TOOLS / "overlay.py"), "new", str(dst), "--from", graphic, "--render"], "cpu")
+                [PY, str(TOOLS / "overlay.py"), "new", str(dst), "--from", graphic, "--like-plan", "--render"]
+                + (["--values", json.dumps(vals, ensure_ascii=False)] if vals else []), "cpu")
     if kind in ("resolve_mcp_install", "resolve_mcp_remove"):      # Settings > Claude Code > DaVinci Resolve (MCP)
         install = kind == "resolve_mcp_install"
         return ("Connect Claude Code to DaVinci Resolve (MCP)" if install else "Disconnect the Resolve MCP",

@@ -1,0 +1,42 @@
+{
+ "name": "Envelope letter",
+ "kind": "social",
+ "what": "An envelope slides in, its wax seal pops off, the flap opens and a letter rises out and comes to the front with its handwritten lines appearing - an invitation, a thank-you, an announcement.",
+ "use_for": [
+  "invitation",
+  "announcement",
+  "thank you",
+  "wedding",
+  "event",
+  "message",
+  "save the date"
+ ],
+ "tags": [
+  "envelope",
+  "letter",
+  "invitation",
+  "seal",
+  "paper"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "ui-elements__charming-letting",
+   "what": "an envelope opening and a letter sliding out"
+  }
+ ],
+ "motion": "slides in 18 f; seal pops 8 f; the flap opens 14 f (rotationX); the letter rises 20 f (slow end) and comes forward; lines 8 f apart",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  18,
+  26,
+  34,
+  50,
+  70,
+  110,
+  149
+ ]
+}

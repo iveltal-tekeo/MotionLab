@@ -1,0 +1,17 @@
+{
+ "name": "stories",
+ "frames": 240,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * floor((240 * fps / 30 - start) / count)",
+   "repeat": "count",
+   "kind": "whip",
+   "db": -4,
+   "seed": "1700 + i",
+   "what": "the next story"
+  }
+ ]
+}

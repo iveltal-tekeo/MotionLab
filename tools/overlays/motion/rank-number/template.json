@@ -1,0 +1,38 @@
+{
+ "name": "Rank number",
+ "kind": "text",
+ "what": "A countdown item for a top-5 / top-10 video: 'TOP 5 EDITING TRICKS' on top, a huge outlined number slams in and fills with colour from the bottom, the item's title wipes in under it, a light streak crosses the number; it pushes out at the end.",
+ "use_for": [
+  "top 10",
+  "list",
+  "countdown",
+  "ranking",
+  "listicle",
+  "tips",
+  "number"
+ ],
+ "tags": [
+  "rank",
+  "number",
+  "countdown",
+  "list",
+  "title",
+  "slam"
+ ],
+ "learned_from": [],
+ "origin": "numbered list / countdown titles - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "kicker 10 f; number 2.2 -> 1 in 8 f (accelerating) + a 3 f shake; fill rises 14 f (S-curve); title 12 f behind a mask, small line 6 f later; streak 12 f; out 10 f",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  6,
+  12,
+  20,
+  30,
+  36,
+  60,
+  112
+ ]
+}

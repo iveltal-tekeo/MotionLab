@@ -1,0 +1,51 @@
+{
+ "name": "Word ring",
+ "kind": "text",
+ "what": "One word, many times, moving along a shape: copies appear around a spinning pinwheel; words run along a winding ribbon; or a wavy band of stacked words scrolls up.",
+ "use_for": [
+  "brand",
+  "loop",
+  "background",
+  "hook",
+  "music video",
+  "intro"
+ ],
+ "tags": [
+  "kinetic text",
+  "path",
+  "ring",
+  "spin",
+  "ribbon",
+  "wave",
+  "loop"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__brand-spinning",
+   "what": "the word repeated around a spinning ring that spirals in"
+  },
+  {
+   "pack": "swishy",
+   "clip": "text__funnel-text-animation",
+   "what": "words running along a winding ribbon"
+  },
+  {
+   "pack": "swishy",
+   "clip": "text__squiggle-flow-text",
+   "what": "a wavy band of stacked words scrolling up"
+  }
+ ],
+ "motion": "copies back.out 12 f, 4 f apart, the ring turns 60 degrees a second; the ribbon draws 30 f and the words run; the wave lines swing 26 f a side",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  30,
+  60,
+  90,
+  150
+ ]
+}

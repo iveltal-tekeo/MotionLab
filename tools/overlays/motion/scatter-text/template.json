@@ -1,0 +1,13 @@
+{
+ "name": "Scatter text",
+ "kind": "text",
+ "what": "A block of one line repeated; its letters burst apart across the frame, drift loose, and fly back into the block one after another.",
+ "use_for": ["title", "music video", "hook", "drop", "beat", "chorus"],
+ "tags": ["kinetic text", "scatter", "assemble", "bold", "block", "explode"],
+ "learned_from": [{"pack": "swishy", "clip": "text__scattered-text", "what": "the burst (3-8 f), the loose letters, the S-curve return over ~29 f at 25 fps"}],
+ "motion": "burst 6 f (expo.out), loose 22 f drifting, back 35 f (S-curve) staggered 0-8 f",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 20,
+ "check_frames": [0, 20, 37, 42, 60, 75, 95, 120, 145]
+}

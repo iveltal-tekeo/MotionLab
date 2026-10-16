@@ -1,0 +1,42 @@
+{
+ "name": "Card stack",
+ "kind": "ui",
+ "what": "A loose pile of cards shuffles - the top card slides out and goes under, again and again - then one card comes forward, straightens and lights up with a glowing edge while the rest dim. Payments, membership, picks, a reveal.",
+ "use_for": [
+  "payment",
+  "card",
+  "membership",
+  "reveal",
+  "fintech",
+  "choose",
+  "pick"
+ ],
+ "tags": [
+  "cards",
+  "shuffle",
+  "glow",
+  "pile",
+  "reveal"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__card",
+   "what": "green glowing cards shuffling, one coming forward and glowing"
+  }
+ ],
+ "motion": "drops 12 f, 2 f apart; a shuffle every 14 f (out 8 f, back 10 f); the pick forward 16 f (S-curve), the glow 12 f; the rest dim",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  12,
+  30,
+  50,
+  80,
+  100,
+  120,
+  149
+ ]
+}

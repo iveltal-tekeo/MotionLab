@@ -1,0 +1,43 @@
+{
+ "name": "Glow year",
+ "kind": "numbers",
+ "what": "A year or a number as the whole frame: rising in glowing over a liquid wave rolling at the bottom; or two huge lines that shrink in hard steps to a small mono line.",
+ "use_for": [
+  "new year",
+  "date",
+  "year",
+  "number",
+  "recap",
+  "anniversary"
+ ],
+ "tags": [
+  "number",
+  "glow",
+  "wave",
+  "liquid",
+  "year"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__animated-year",
+   "what": "the glowing 2026 over a green wave rolling at the bottom"
+  },
+  {
+   "pack": "swishy",
+   "clip": "text__2026",
+   "what": "a huge 20 / 26 shrinking into small blocky digits"
+  }
+ ],
+ "motion": "rises 20 f from a blur; the wave loops every 45 f; the stack shrinks in 6 steps over 18 f",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  10,
+  26,
+  60,
+  110
+ ]
+}

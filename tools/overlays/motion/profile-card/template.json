@@ -1,0 +1,43 @@
+{
+ "name": "Profile card",
+ "kind": "social",
+ "what": "A social profile card rises: the picture pops inside a turning story ring, the name and handle slide in, the posts / followers / following count up, the bio appears, and the Follow button gets clicked and turns to Following.",
+ "use_for": [
+  "follow",
+  "creator",
+  "about me",
+  "intro",
+  "call to action",
+  "social",
+  "outro"
+ ],
+ "tags": [
+  "profile",
+  "followers",
+  "counter",
+  "follow button",
+  "social"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__instagram-profile",
+   "what": "a profile page building up with counts ticking and the Follow button clicked"
+  }
+ ],
+ "motion": "card up 16 f; picture back.out 12 f + the ring turns; counts 36 f (slow end); bio lines 6 f apart; the click: a 4 f dip, the button flips",
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  12,
+  30,
+  60,
+  84,
+  92,
+  110,
+  149
+ ]
+}

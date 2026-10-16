@@ -1,0 +1,11 @@
+{
+ "name": "notification-stack",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(gap * fps / 30)", "repeat": "3", "kind": "chime", "db": -4, "seed": "600 + i", "what": "a notification arrives (3)"},
+  {"f": "start + i * round(gap * fps / 30) + round(14 * fps / 30)", "repeat": "3", "kind": "buzz", "db": -10, "seed": "620 + i", "what": "its buzz"}
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "name": "stretch-pills",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(3 * fps / 30)",
+   "repeat": "6",
+   "kind": "pop",
+   "db": -6,
+   "seed": "1000 + i",
+   "what": "a pill grows in"
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "name": "pencil-annotate",
+ "frames": 90,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "air",
+   "dur": "draw_frames / 30",
+   "what": "the pencil draws"
+  }
+ ]
+}

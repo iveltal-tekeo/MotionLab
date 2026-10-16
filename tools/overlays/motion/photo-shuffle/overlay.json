@@ -1,0 +1,11 @@
+{
+ "name": "photo-shuffle",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(gap * fps / 30)", "repeat": "count", "kind": "whip", "seed": "800 + i", "what": "a picture flies in"},
+  {"f": "start + i * round(gap * fps / 30) + round(16 * fps / 30)", "repeat": "count", "kind": "thump", "db": -8, "seed": "820 + i", "what": "it lands"}
+ ]
+}

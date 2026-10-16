@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "words", "type": "string", "label": "Words (one pill each, spaces between)", "default": "MAKE IT MOVE LIKE NEVER BEFORE"},
+  {"id": "count", "type": "number", "label": "Pills (the words repeat to fill)", "default": 16, "min": 1, "max": 40, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Archivo Black", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Pill and text colour", "default": "#f6f6f6"},
+  {"id": "fill", "type": "boolean", "label": "Filled pills (off = outlined)", "default": false},
+  {"id": "fill_text", "type": "color", "label": "Text colour on a filled pill", "default": "#000000"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "floor", "type": "number", "label": "Where they land (% of the height)", "default": 88, "min": 20, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "First pill falls at frame", "default": 0, "min": 0, "max": 900, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between pills", "default": 4, "min": 1, "max": 30, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "The pile drops away at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "word-pills" (0.5.0, the Motion Graphics library): words in outlined pills fall from the top
+     one after another, land with a small bounce and tilt, and pile up; at the end the pile drops away. Learned from
+     text__blog-animations (pills falling over ~41 frames at 25 fps and piling across the frame) and text__pins
+     (letter discs dropping into a loose cluster). The pile is worked out once, deterministically (a height map across
+     the frame: each pill rests on whatever is under it), so every render is the same. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pill { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap;
+          border-radius: 999px; font-synthesis: none; line-height: 1; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="pile" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.round(n * FPS / 30);
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const bump = (f, s = 1.02, y = 6 * U, len = 9) => ft("#cam", { scale: s, y }, { scale: 1, y: 0 }, f, f + len, "expo.out");
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 800;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  gsap.set("#cam", { transformOrigin: "50% 100%" });
+  const words = (V.words || "WORD").split(/\s+/).filter(Boolean), n = Math.max(1, Math.round(V.count));
+  const fs = 64 * U * V.size, ph = fs * 1.9, padx = fs * 0.75, bw = Math.max(2, 4 * U * V.size);
+  // the pile, worked out once: a height map in 6 px columns; each pill rests on the highest point under it
+  const R = rnd(5), COL = 6 * U, cols = Math.ceil(W / COL), hm = new Array(cols).fill(0), floorY = H * V.floor / 100;
+  const pills = [];
+  for (let i = 0; i < n; i++) {
+    const w = words[i % words.length].toUpperCase();
+    const pw = w.length * fs * 0.78 + padx * 2;              // the width estimated from the letters (no font metrics at load)
+    // it lands in the lowest of 4 random spots (things roll off peaks), so the pile builds up evenly like the reference
+    let best = null;
+    for (let k = 0; k < 4; k++) {
+      const x = Math.max(W * 0.01, Math.min(W * 0.99 - pw, (0.04 + R() * 0.92) * W - pw / 2));
+      const c0 = Math.floor(x / COL), c1 = Math.min(cols - 1, Math.floor((x + pw) / COL));
+      let top = 0, lo = Infinity;
+      for (let c = c0; c <= c1; c++) { top = Math.max(top, hm[c]); lo = Math.min(lo, hm[c]); }
+      if (!best || top < best.top) best = { x, c0, c1, top, lo };
+    }
+    const { x, c0, c1, top, lo } = best;
+    // tilt: steeper the more uneven the ground under it (a pill on one other pill leans off it), at most 24 degrees
+    const tilt = Math.max(-24, Math.min(24, (R() - 0.5) * 16 + (top - lo) / ph * 14 * (R() < 0.5 ? -1 : 1)));
+    const restY = floorY - top - ph;
+    for (let c = c0; c <= c1; c++) hm[c] = top + ph * (0.86 - Math.abs(tilt) / 120);
+    pills.push({ w, pw, x, restY, tilt });
+  }
+  const pile = document.getElementById("pile");
+  pills.forEach(p => {
+    const e = document.createElement("div");
+    e.className = "pill";
+    e.textContent = p.w;
+    Object.assign(e.style, { width: `${p.pw}px`, height: `${ph}px`, font: `${weight} ${fs}px ${font}`,
+      border: `${bw}px solid ${V.color}`, color: V.fill ? V.fill_text : V.color,
+      background: V.fill ? V.color : V.background ? V.bg : "transparent" });     // an outlined pill covers the ones behind it
+    pile.appendChild(e);
+    p.e = e;
+    gsap.set(e, { x: p.x, y: p.restY, rotation: p.tilt, transformOrigin: "50% 50%" });
+  });
+
+  // ---- the motion: each pill falls (accelerating), lands, bounces once and settles its tilt
+  const S = Math.round(V.start), GAP = Math.max(1, Math.round(V.gap * FPS / 30)), FALL = K(16), OUT = K(20);
+  const O = V.exit ? Math.max(S + n * GAP + FALL + K(20), FRAMES - OUT) : FRAMES;
+  pills.forEach((p, i) => {
+    const f0 = S + i * GAP, land = f0 + FALL, drop = p.restY + ph * 2 + R() * H * 0.15;
+    if (f0 > 0) set(p.e, { opacity: 0 }, 0);
+    ft(p.e, { y: p.restY - drop, rotation: p.tilt + (R() - 0.5) * 60, opacity: 1 }, { y: p.restY }, f0, land, "power2.in");
+    to(p.e, { rotation: p.tilt }, f0, land, "power1.out");
+    to(p.e, { y: p.restY - ph * 0.35 }, land, land + K(5), "power2.out");        // the bounce: a third of its height
+    to(p.e, { y: p.restY }, land + K(5), land + K(10), "power2.in");
+    if (i % 3 === 0 && land < O) bump(land, 1.008, 3 * U, K(8));                    // a light jolt on some landings
+  });
+  if (V.exit && O < FRAMES) {                                                         // the floor opens: everything falls out
+    pills.forEach((p, i) => {
+      const f0 = O + Math.round(R() * K(6));
+      to(p.e, { y: H + ph * 2, rotation: p.tilt + (R() - 0.5) * 90 }, f0, Math.min(FRAMES, f0 + K(14)), "power2.in");
+    });
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

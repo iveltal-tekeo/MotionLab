@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "message", "type": "string", "label": "The letter (a / starts a new line)", "default": "You’re invited! / Saturday · 7 PM / bring a friend"},
+  {"id": "font", "type": "enum", "label": "Handwriting font", "default": "Pacifico", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "envelope", "type": "color", "label": "Envelope colour", "default": "#e9d7b9"},
+  {"id": "paper", "type": "color", "label": "Paper colour", "default": "#fffdf7"},
+  {"id": "ink", "type": "color", "label": "Ink", "default": "#3a2f25"},
+  {"id": "seal", "type": "color", "label": "Seal colour", "default": "#c2410c"},
+  {"id": "close_again", "type": "boolean", "label": "The letter goes back and it closes at the end", "default": false},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#ffffff"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.4, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "envelope-letter" (0.5.0, the Motion Graphics library): an envelope slides in, its seal pops
+     off, the flap opens (folding back in 3D), a letter rises out of it and grows to the front, its handwritten lines
+     appearing one by one; optionally it goes back in and the flap closes. Learned from ui-elements__charming-letting (an
+     envelope opening and a letter with a short message sliding out, then going back, f4-f72 at 25 fps).
+     MotionLab's own drawing. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #env { position: absolute; left: 0; top: 0; perspective: 1600px; }
+  .ln { display: block; text-align: center; line-height: 1.35; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="env"><div id="back" class="abs"></div><div id="letter" class="abs"></div><div id="front" class="abs"></div><div id="flap" class="abs"></div><div id="sealx" class="abs"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, ew = W * 0.74 * s, eh = ew * 0.66, ex = W / 2 - ew / 2, ey = H * 0.56 - eh / 2;
+  const env = q("env"); gsap.set(env, { x: ex, y: ey, width: ew, height: eh });
+  const shade = c => `linear-gradient(180deg, ${c}, ${c})`;
+  Object.assign(q("back").style, { width: `${ew}px`, height: `${eh}px`, background: V.envelope, borderRadius: `${14 * U}px`, filter: "brightness(.9)" });
+  // the front: a pocket shape (two triangles meeting low in the middle), drawn with a clip-path
+  Object.assign(q("front").style, { width: `${ew}px`, height: `${eh}px`, background: shade(V.envelope), borderRadius: `${14 * U}px`, clipPath: "polygon(0 22%, 50% 62%, 100% 22%, 100% 100%, 0 100%)", boxShadow: "0 0 0 1px #00000010" });
+  Object.assign(q("flap").style, { width: `${ew}px`, height: `${eh * 0.62}px`, background: V.envelope, clipPath: "polygon(0 0, 100% 0, 50% 100%)", filter: "brightness(1.04)", transformOrigin: "50% 0%" });
+  const sd = ew * 0.13;
+  Object.assign(q("sealx").style, { width: `${sd}px`, height: `${sd}px`, borderRadius: "50%", background: `radial-gradient(circle at 40% 35%, #ffffff44, ${V.seal} 60%)`, boxShadow: `0 ${4 * U}px ${10 * U}px rgba(0,0,0,.25)` });
+  gsap.set("#sealx", { x: ew / 2 - sd / 2, y: eh * 0.62 - sd * 0.6, transformOrigin: "50% 50%" });
+  const lw = ew * 0.86, lh = eh * 1.25, letter = q("letter");
+  Object.assign(letter.style, { width: `${lw}px`, height: `${lh}px`, background: V.paper, borderRadius: `${10 * U}px`, boxShadow: `0 ${10 * U}px ${30 * U}px rgba(0,0,0,.12)`,
+    display: "flex", flexDirection: "column", justifyContent: "center", padding: `${40 * U * s}px`, color: V.ink, font: `400 ${56 * U * s}px "${V.font}", cursive` });
+  const lines = String(V.message || "").split(/\s+\/\s+/).filter(Boolean).map(t => { const e = document.createElement("span"); e.className = "ln"; e.textContent = t; letter.appendChild(e); return e; });
+  gsap.set(letter, { x: ew / 2 - lw / 2, y: eh - lh * 0.95, transformOrigin: "50% 100%" });
+
+  // ---- the motion: the envelope slides in (18 f); the seal pops off (8 f); the flap opens (14 f, rotationX 0 -> -180,
+  // it goes behind the letter half-way); the letter rises (20 f, slow end) and comes to the front, bigger; lines 8 f apart
+  const S = Math.round(V.start);
+  enter(env, { opacity: 1, y: ey + H * 0.4, rotation: -8 }, { y: ey, rotation: 0 }, S, S + K(18), "power3.out");
+  const P = S + K(20);
+  to("#sealx", { scale: 1.3 }, P, P + K(4), "power2.out"); to("#sealx", { scale: 0, rotation: 90, opacity: 0 }, P + K(4), P + K(10), "power2.in");
+  const O = P + K(8);
+  to("#flap", { rotationX: -180 }, O, O + K(14), "power2.inOut");
+  set("#flap", { zIndex: 0 }, O + K(7)); set("#back", { zIndex: -1 }, 0);
+  gsap.set("#letter", { zIndex: 1 }); gsap.set("#front", { zIndex: 2 }); gsap.set("#flap", { zIndex: 3 }); gsap.set("#sealx", { zIndex: 4 });
+  const R0 = O + K(12);
+  to(letter, { y: eh - lh * 0.95 - eh * 0.9 }, R0, R0 + K(18), "power3.out");
+  set(letter, { zIndex: 5 }, R0 + K(18));
+  to(letter, { y: -lh * 0.62, scale: 1.18 }, R0 + K(18), R0 + K(32), "power3.inOut");
+  lines.forEach((e, i) => { set(e, { opacity: 0 }, 0); ft(e, { opacity: 0, y: 10 * U }, { opacity: 1, y: 0 }, R0 + K(26) + i * K(8), R0 + K(38) + i * K(8), "power2.out"); });
+  if (V.close_again) {
+    const C = FRAMES - K(34);
+    if (C > R0 + K(40) + lines.length * K(8)) {
+      to(letter, { y: eh - lh * 0.95 - eh * 0.9, scale: 1 }, C, C + K(12), "power3.inOut");
+      set(letter, { zIndex: 1 }, C + K(12));
+      to(letter, { y: eh - lh * 0.95 }, C + K(12), C + K(22), "power2.in");
+      set("#flap", { zIndex: 3 }, C + K(26)); to("#flap", { rotationX: 0 }, C + K(20), C + K(32), "power2.inOut");
+    }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

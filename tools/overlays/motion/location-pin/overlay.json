@@ -1,0 +1,12 @@
+{
+ "name": "location-pin",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "whoosh", "dur": "0.4", "from": 2600, "to": 600, "what": "the pin drops"},
+  {"f": "start + round(12 * fps / 30)", "kind": "thump", "what": "it lands"},
+  {"f": "start + round(16 * fps / 30)", "kind": "pop", "what": "the place card pops"}
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "name": "typing-card",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "whoosh", "dur": "0.6", "what": "the card swings in"},
+  {"f": "start + round(16 * fps / 30) + round(i * fps / cps)", "repeat": "len(text)", "kind": "key", "db": -4, "seed": "200 + i", "what": "a key"}
+ ]
+}

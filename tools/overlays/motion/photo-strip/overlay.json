@@ -1,0 +1,16 @@
+{
+ "name": "photo-strip",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(15 * fps / 30)",
+   "repeat": "frames_n",
+   "kind": "click",
+   "seed": "1800 + i",
+   "what": "the strip pushes out a frame"
+  }
+ ]
+}

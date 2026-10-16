@@ -1,0 +1,17 @@
+{
+ "name": "shape-letters",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(i * fps / cps)",
+   "repeat": "len(text)",
+   "kind": "key",
+   "db": -6,
+   "seed": "1200 + i",
+   "what": "a letter types"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "name": "Split-flap board",
+ "kind": "text",
+ "what": "A departures board: every tile flips through letters until it lands on its own, left to right and row after row, so the words settle like a wave.",
+ "use_for": ["title", "announcement", "schedule", "travel", "list", "date"],
+ "tags": ["kinetic text", "split flap", "board", "mechanical", "dark", "flip"],
+ "learned_from": [{"pack": "swishy", "clip": "text__flights-animation", "what": "the board, rows of letters flipping until they land, the title bar"}],
+ "motion": "a letter every 2 f with a falling flap, landing 2 f apart along a row, 5 f between rows",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 120,
+ "check_frames": [0, 8, 16, 24, 32, 40, 60, 120]
+}

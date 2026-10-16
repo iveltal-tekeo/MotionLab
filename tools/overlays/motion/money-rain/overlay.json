@@ -1,0 +1,11 @@
+{
+ "name": "money-rain",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "ching", "if": "what == 'money'", "what": "the money starts falling"},
+  {"f": "start", "kind": "shimmer", "dur": "1.5", "if": "what != 'money'", "what": "it starts falling"}
+ ]
+}

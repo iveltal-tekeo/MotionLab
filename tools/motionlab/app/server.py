@@ -44,8 +44,9 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 26                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 27                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
+OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
 FILE_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge", "fonts"}    # fonts: 0.4.6, the library
@@ -332,6 +333,15 @@ class Handler(BaseHTTPRequestHandler):
                 if OS.EXAMPLES.resolve() not in p.parents or p.suffix.lower() != ".png":
                     raise PermissionError(rp)
                 return self._file(p)
+            if urllib.parse.unquote(rp).startswith("tools/overlays/motion/"):      # 0.5.0: a motion template's files
+                parts = urllib.parse.unquote(rp).split("/")                         # for its picture + live preview
+                if len(parts) == 5 and parts[4] == "gsap.min.js":                   # the pinned GSAP (not in the repo)
+                    return self._file(OV_GSAP)
+                p = lab_file(rp, {"tools"})
+                if OS.MOTION.resolve() not in p.parents or p.suffix.lower() not in (".png", ".html", ".json", ".js",
+                                                                                     ".css", ".svg", ".jpg"):
+                    raise PermissionError(rp)
+                return self._file(p)
             if re.fullmatch(r"\.app/player/[0-9a-f]{16}\.mp4", urllib.parse.unquote(rp)):    # player copies only
                 return self._file(player.PLAYER / Path(urllib.parse.unquote(rp)).name)
             return self._file(lab_file(rp))
@@ -366,6 +376,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.list_projects())
         if path == "/api/edit/options":                  # New edit (0.4): presets, how many videos a style mixes
             return self._json(data.edit_options())
+        if path == "/api/motion":                        # 0.5.0: the Motion Graphics library + the captured clips
+            return self._json(data.motion())
+        if path == "/api/motion/pick":                   # the templates that fit Generate's words
+            return self._json({"picks": data.motion_pick(arg("want", ""), int(arg("n", "6") or 6))})
         if path == "/api/generate/options":              # Generate (0.4): AI tools, downloaded songs, HyperFrames
             return self._json(data.generate_options())
         if path == "/api/library":

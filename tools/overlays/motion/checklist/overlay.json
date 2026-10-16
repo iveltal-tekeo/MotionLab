@@ -1,0 +1,10 @@
+{
+ "name": "checklist",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(gap * fps / 30) + round(4 * fps / 30)", "repeat": "3", "kind": "click", "seed": "500 + i", "what": "a line checks in (3 lines)"}
+ ]
+}

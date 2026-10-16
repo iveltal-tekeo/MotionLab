@@ -1,0 +1,39 @@
+{
+ "name": "Review",
+ "kind": "social",
+ "what": "A review: a card rises, the stars pop in one after another and fill (a half star fills half), the quote appears word by word, the reviewer's picture and name slide in, a score line comes in under the card.",
+ "use_for": [
+  "review",
+  "testimonial",
+  "rating",
+  "social proof",
+  "product",
+  "customer",
+  "course"
+ ],
+ "tags": [
+  "review",
+  "stars",
+  "rating",
+  "testimonial",
+  "quote",
+  "card"
+ ],
+ "learned_from": [],
+ "origin": "testimonials and ratings - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "card 16 f (slow end); stars back.out 10 f, 4 f apart, filling 8 f; words 2 f apart (6 f each); picture back.out 12 f, name 10 f",
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  10,
+  20,
+  34,
+  50,
+  70,
+  100,
+  140
+ ]
+}

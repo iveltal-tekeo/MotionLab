@@ -1,0 +1,38 @@
+{
+ "name": "Camera REC frame",
+ "kind": "ui",
+ "what": "A camera viewfinder over your video: corner brackets, a blinking red REC dot, a timecode that runs frame by frame, camera info and a battery, a focus box that snaps onto the middle. Loops at any length.",
+ "use_for": [
+  "vlog",
+  "behind the scenes",
+  "camera",
+  "found footage",
+  "recording",
+  "pov",
+  "documentary"
+ ],
+ "tags": [
+  "rec",
+  "viewfinder",
+  "camera",
+  "hud",
+  "timecode",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "HUD / viewfinder overlays - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "corners grow 8 f; the dot on 15 f / off 15 f; the timecode every frame; the focus box 1.25 -> 1 in 8 f, two 2 f blinks",
+ "scene": false,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  4,
+  10,
+  17,
+  30,
+  45,
+  149
+ ]
+}

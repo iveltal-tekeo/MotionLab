@@ -1,0 +1,11 @@
+{
+ "name": "countdown-ring",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(step * fps / 30)", "repeat": "count_from", "kind": "tick", "freq": 1400, "dur": 0.06, "seed": "400 + i", "what": "a number"},
+  {"f": "start + count_from * round(step * fps / 30)", "kind": "impact", "if": "len(end_text) > 0", "what": "the end word lands"}
+ ]
+}

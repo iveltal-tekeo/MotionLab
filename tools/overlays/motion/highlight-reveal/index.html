@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "kicker", "type": "string", "label": "Small line above (empty = none)", "default": "WHAT NOBODY TELLS YOU"},
+  {"id": "headline", "type": "string", "label": "Headline (*stars* = highlighted; none = all of it)", "default": "The *one habit* that made my videos *grow*"},
+  {"id": "body", "type": "string", "label": "Text under it (a / starts a new line, empty = none)", "default": "It took me two years to see it. / Once I did, every video got easier to make - and to watch."},
+  {"id": "footer", "type": "string", "label": "Numbers row (three, | between: 10 DAYS|200+|1 HABIT; empty = none)", "default": "2 YEARS|120 VIDEOS|1 HABIT"},
+  {"id": "font", "type": "enum", "label": "Headline font", "default": "Playfair Display", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink colour", "default": "#1a1712"},
+  {"id": "marker", "type": "color", "label": "Highlighter colour", "default": "#f7d23e"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Paper colour", "default": "#efe6d6"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Top of the text (% of the height)", "default": 22, "min": 0, "max": 80, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "highlight-reveal" (0.5.0, the Motion Graphics library): an editorial page - a small
+     kicker, a serif headline whose key words get a highlighter sweep (left to right, word after word), the text lines
+     rising in under it, a row of numbers; the paper drifts slowly closer. Learned from graphics__newspaper-animation
+     (analysis\templates\swishy: the yellow sweep behind the headline's first words, the paragraphs building in, the
+     stats row "10 DAYS / 200+ / 1 CITY"). MotionLab's own code; never the article's words. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #page { position: absolute; left: 0; top: 0; }
+  .hl { position: relative; display: inline-block; white-space: nowrap; }
+  .mk { position: absolute; left: -0.06em; right: -0.06em; top: 0.12em; bottom: 0.02em; transform-origin: 0 50%; z-index: -1; border-radius: 0.08em; }
+  .w { display: inline-block; white-space: nowrap; }
+  .t { position: relative; z-index: 1; }
+  .fn { display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="page"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = f => `"${f}", Georgia, serif`, w = (f, x) => ONE.test(f) ? 400 : x;
+  const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const page = document.getElementById("page"), M = W * 0.08, PW = W - 2 * M, s = V.size;
+  gsap.set(page, { x: M, y: H * V.y / 100, width: PW });
+  const add = (html, style) => { const e = document.createElement("div"); e.innerHTML = html; Object.assign(e.style, style); page.appendChild(e); return e; };
+  const kick = V.kicker ? add(esc(V.kicker), { font: `${w(V.body_font, 700)} ${26 * U * s}px ${fam(V.body_font)}`, color: V.ink, letterSpacing: "0.16em", opacity: 0.72, marginBottom: `${22 * U * s}px` }) : null;
+  // the headline: every word its own box; the starred ones (or all) carry a marker that sweeps in behind them
+  const marked = /\*[^*]+\*/.test(V.headline);
+  let html = "", inMark = !marked;
+  V.headline.split(/(\*)/).forEach(part => {
+    if (part === "*") { inMark = !inMark; return; }
+    part.split(/(\s+)/).forEach(tok => {
+      if (!tok) return;
+      if (/^\s+$/.test(tok)) { html += " "; return; }
+      html += inMark ? `<span class="hl w"><span class="mk" style="background:${V.marker}"></span><span class="t">${esc(tok)}</span></span>` : `<span class="w"><span class="t">${esc(tok)}</span></span>`;
+    });
+  });
+  const head = add(html, { font: `${w(V.font, 700)} ${92 * U * s}px ${fam(V.font)}`, color: V.ink, lineHeight: 1.08, position: "relative", zIndex: 0 });
+  const bodyLines = (V.body || "").split(/\s+\/\s+|\s*\n\s*/).filter(Boolean);
+  const body = bodyLines.map((l, i) => add(esc(l), { font: `${w(V.body_font, 400)} ${40 * U * s}px ${fam(V.body_font)}`, color: V.ink, opacity: 0.8,
+                                                     lineHeight: 1.45, marginTop: `${(i ? 10 : 46) * U * s}px` }));
+  const nums = (V.footer || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 3);
+  const foot = nums.length ? add(nums.map(n => `<div style="text-align:left">${esc(n)}</div>`).join(""),
+    { font: `${w(V.body_font, 800)} ${36 * U * s}px ${fam(V.body_font)}`, color: V.ink, marginTop: `${70 * U * s}px`, display: "flex",
+      justifyContent: "space-between", borderTop: `${2 * U}px solid ${V.ink}33`, paddingTop: `${22 * U * s}px` }) : null;
+
+  // ---- the motion
+  const S = Math.round(V.start);
+  if (kick) enter(kick, { opacity: 0, y: 14 * U }, { opacity: 0.72, y: 0 }, S, S + K(12), "power2.out");
+  const ws = [...head.querySelectorAll(".w")];
+  ws.forEach((e, i) => enter(e, { opacity: 0, y: 30 * U }, { opacity: 1, y: 0 }, S + K(6) + i * K(2), S + K(22) + i * K(2), "power3.out"));
+  // the sweep: word after word, each 8 frames (slow end), one continuous stroke along the line
+  let f = S + K(24) + ws.length * K(2);
+  head.querySelectorAll(".mk").forEach(m => {
+    set(m, { scaleX: 0 }, 0);                                         // no marker before its sweep
+    ft(m, { scaleX: 0 }, { scaleX: 1 }, f, f + K(8), "power2.inOut"); f += K(6);
+  });
+  f += K(6);
+  body.forEach((e, i) => enter(e, { opacity: 0, y: 24 * U }, { opacity: 0.8, y: 0 }, f + i * K(8), f + i * K(8) + K(16), "power2.out"));
+  f += body.length * K(8) + K(8);
+  if (foot) enter(foot, { opacity: 0, y: 20 * U }, { opacity: 1, y: 0 }, f, f + K(16), "power2.out");
+  to("#cam", { scale: 1.035 }, S, FRAMES, "sine.inOut");               // the page drifts closer: never fully still
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

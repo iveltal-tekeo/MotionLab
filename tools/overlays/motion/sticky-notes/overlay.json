@@ -1,0 +1,24 @@
+{
+ "name": "sticky-notes",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(gap * fps / 30)",
+   "repeat": "parts(notes)",
+   "kind": "thump",
+   "db": -6,
+   "seed": "1300 + i",
+   "what": "a note slaps on"
+  },
+  {
+   "f": "frames - round(26 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "if": "fly_off",
+   "what": "they fly off"
+  }
+ ]
+}

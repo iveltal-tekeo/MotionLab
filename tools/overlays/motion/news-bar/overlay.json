@@ -1,0 +1,20 @@
+{
+ "name": "news-bar",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whip",
+   "what": "the tag snaps in"
+  },
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "what": "the headline wipes"
+  }
+ ]
+}

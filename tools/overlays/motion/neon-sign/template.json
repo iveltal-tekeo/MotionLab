@@ -1,0 +1,13 @@
+{
+ "name": "Neon sign",
+ "kind": "text",
+ "what": "Words in boxed neon signs, a little crooked, light up one after another with a real tube flicker; a round badge pops, a sign buzzes off and back, the glow breathes under a string of lights.",
+ "use_for": ["title", "music video", "night", "event", "club", "intro", "location"],
+ "tags": ["neon", "flicker", "glow", "dark", "pink", "sign"],
+ "learned_from": [{"pack": "swishy", "clip": "text__night-street-market", "what": "unlit signs lighting one by one with a flicker, the late flicker off and back, the haze and the lights"}],
+ "motion": "signs in 10 f, 4 f apart; each lights with on 2 / off 2 / on 1 / off 3 / on; 12 f between signs; a badge back.out 12 f",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [0, 14, 30, 36, 45, 58, 75, 110, 140]
+}

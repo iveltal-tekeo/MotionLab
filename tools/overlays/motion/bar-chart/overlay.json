@@ -1,0 +1,10 @@
+{
+ "name": "bar-chart",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round(8 * fps / 30) + i * round(stagger * fps / 30)", "repeat": "5", "kind": "pop", "db": -6, "seed": "300 + i", "what": "a bar grows (5 bars)"}
+ ]
+}

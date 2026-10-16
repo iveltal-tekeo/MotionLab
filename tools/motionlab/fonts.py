@@ -33,6 +33,7 @@ ROOT = LAB / "fonts"
 LOCAL = LAB / "library" / "fonts"                   # the user's own fonts, this PC only
 EXAMPLES = LAB / "tools" / "overlays" / "examples"
 THUMB_TEMPLATES = LAB / "tools" / "overlays" / "thumbnails"
+MOTION = LAB / "tools" / "overlays" / "motion"             # 0.5.0: the Motion Graphics library
 SYSTEM = ("Arial Black", "Impact", "Bahnschrift", "Segoe UI", "Verdana", "Georgia")    # Windows only - not bundled, kept for old graphics
 LINK = '<link rel="stylesheet" href="assets/fonts/fonts.css">'
 FONT_EXT = (".ttf", ".otf")
@@ -257,13 +258,14 @@ def sync_file(index: Path, root: Path | None = None, default: dict | None = None
 
 
 def sync(root: Path | None = None) -> list[str]:
-    """The examples and the thumbnail designs that come with MotionLab: their font settings offer the shipped library
+    """The examples, the thumbnail designs and the motion templates that come with MotionLab: their font settings offer the shipped library
     (never the user's own fonts: these files go to GitHub), their defaults are bundled families (Arial Black ->
     Archivo Black, Impact -> Anton: the closest free ones), they link assets/fonts/fonts.css. -> the files changed."""
     root = root or ROOT
     moved = {"Arial Black": "Archivo Black", "Impact": "Anton"}
     out = []
-    for idx in sorted(list(EXAMPLES.glob("*/index.html")) + list(THUMB_TEMPLATES.glob("*/index.html"))):
+    for idx in sorted(list(EXAMPLES.glob("*/index.html")) + list(THUMB_TEMPLATES.glob("*/index.html"))
+                      + list(MOTION.glob("*/index.html"))):
         if '"id": "font"' in idx.read_text(encoding="utf-8") or "_font\"" in idx.read_text(encoding="utf-8"):
             if sync_file(idx, root, moved):
                 out.append(idx.relative_to(LAB).as_posix())

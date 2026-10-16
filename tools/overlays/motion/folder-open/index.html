@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "folder_name", "type": "string", "label": "Folder name", "default": "Projects"},
+  {"id": "window_title", "type": "string", "label": "Window title", "default": "My best work"},
+  {"id": "items", "type": "number", "label": "Pictures in the window", "default": 6, "min": 1, "max": 12, "step": 1},
+  {"id": "folder_color", "type": "color", "label": "Folder colour", "default": "#7cb7ff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "close", "type": "boolean", "label": "The window closes back at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#fde1e1"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.6, "step": 0.05},
+  {"id": "click_at", "type": "number", "label": "The double click at frame", "default": 34, "min": 0, "max": 900, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "folder-open" (0.5.0, the Motion Graphics library): a folder on a desk, a cursor glides to it
+     and double-clicks (two dips), a window grows out of the folder (scale from the folder's spot, a slow end) with a
+     title bar and a grid of pictures that pop in one by one; at the end it shrinks back into the folder. Learned from
+     graphics__folder-gallery (a cursor clicking a folder icon on pink, a window opening out of it and closing).
+     MotionLab's own code - no system's icons. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; font-synthesis: none; }
+  #win { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .cell { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><svg id="fold" class="abs" style="overflow:visible"></svg><div id="fn" class="t"></div><div id="win"><div id="bar" class="abs"></div><div id="wt" class="t"></div><div id="grid" class="abs"></div></div>
+    <svg id="cur" class="abs" viewBox="0 0 24 24" style="overflow:visible"><path d="M4 2.5v16.8l4.4-4.2 3 6.7 3-1.4-3-6.6 6.2-.3z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, fw = 260 * U * s, fh = fw * 0.78, fx = W / 2 - fw / 2, fy = H * 0.5 - fh / 2;
+  const fold = q("fold"); fold.setAttribute("width", W); fold.setAttribute("height", H);
+  const c = V.folder_color;
+  fold.innerHTML = `<g id="fg"><path d="M${fx},${fy + fh * 0.12} q0,-${fh * 0.12} ${fw * 0.08},-${fh * 0.12} h${fw * 0.3} l${fw * 0.07},${fh * 0.1} h${fw * 0.47} q${fw * 0.08},0 ${fw * 0.08},${fh * 0.1} v${fh * 0.8} q0,${fh * 0.1} -${fw * 0.08},${fh * 0.1} h-${fw * 0.84} q-${fw * 0.08},0 -${fw * 0.08},-${fh * 0.1}z" fill="${c}"/>
+    <path id="flap" d="M${fx},${fy + fh * 0.3} h${fw} v${fh * 0.6} q0,${fh * 0.1} -${fw * 0.08},${fh * 0.1} h-${fw * 0.84} q-${fw * 0.08},0 -${fw * 0.08},-${fh * 0.1}z" fill="${c}" style="filter:brightness(1.12)"/></g>`;
+  const fn = q("fn"); fn.textContent = V.folder_name;
+  Object.assign(fn.style, { font: `600 ${32 * U * s}px ${fam}`, color: "#222" });
+  gsap.set(fn, { x: W / 2, y: fy + fh + 26 * U * s, xPercent: -50 });
+  const ww = W * 0.86 * Math.min(1.1, s), wh = ww * 1.05, wx = W / 2 - ww / 2, wy = H * 0.42 - wh / 2, win = q("win");
+  Object.assign(win.style, { width: `${ww}px`, height: `${wh}px`, background: "#ffffff", borderRadius: `${28 * U * s}px`, boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.25)` });
+  gsap.set(win, { x: wx, y: wy, transformOrigin: `${W / 2 - wx}px ${fy + fh / 2 - wy}px` });
+  Object.assign(q("bar").style, { width: `${ww}px`, height: `${80 * U * s}px`, background: "#f1f2f5", display: "flex", gap: `${12 * U}px`, alignItems: "center", padding: `0 ${28 * U * s}px` });
+  q("bar").innerHTML = ["#ff5f57", "#febc2e", "#28c840"].map(cc => `<i style="display:block;width:${22 * U * s}px;height:${22 * U * s}px;border-radius:50%;background:${cc}"></i>`).join("");
+  const wt = q("wt"); wt.textContent = V.window_title;
+  Object.assign(wt.style, { font: `700 ${30 * U * s}px ${fam}`, color: "#333" });
+  gsap.set(wt, { x: ww / 2, y: 22 * U * s, xPercent: -50 });
+  const n = Math.round(V.items), cols = n > 4 ? 3 : 2, gap = 22 * U * s, cwid = (ww - 2 * 40 * U * s - (cols - 1) * gap) / cols, cells = [];
+  const ART = [["#ffb88c", "#de6262"], ["#a1c4fd", "#c2e9fb"], ["#f6d365", "#fda085"], ["#89f7fe", "#66a6ff"], ["#fbc2eb", "#a6c1ee"], ["#d4fc79", "#96e6a1"]];
+  for (let i = 0; i < n; i++) {
+    const e = document.createElement("div"); e.className = "cell"; const [a, b] = ART[i % ART.length];
+    Object.assign(e.style, { width: `${cwid}px`, height: `${cwid * 1.1}px`, borderRadius: `${16 * U * s}px`, background: `radial-gradient(circle at 70% 30%, #ffffffaa 8%, transparent 9%), linear-gradient(160deg, ${a}, ${b})` });
+    q("grid").appendChild(e);
+    gsap.set(e, { x: 40 * U * s + (i % cols) * (cwid + gap), y: 120 * U * s + Math.floor(i / cols) * (cwid * 1.1 + gap) });
+    cells.push(e);
+  }
+  const cs = 70 * U * s, cur = q("cur"); cur.setAttribute("width", cs); cur.setAttribute("height", cs);
+
+  // ---- the motion: folder pops (back.out 12 f); the cursor glides in (24 f, a curve), double-click (2 dips of 3 f,
+  // the folder flap dips with it); the window grows out of the folder (16 f, slow end), pictures pop 3 f apart; the
+  // cursor leaves; at the end the window shrinks back (12 f, accelerating)
+  const S = Math.round(V.start), C = Math.max(S + K(30), Math.round(V.click_at));
+  enter("#fg", { opacity: 1, scale: 0, svgOrigin: `${W / 2} ${fy + fh}` }, { scale: 1 }, S, S + K(12), "back.out(2)");
+  enter(fn, { opacity: 0 }, { opacity: 1 }, S + K(6), S + K(16), "power1.out");
+  const tx = W / 2 + fw * 0.1, ty = fy + fh * 0.55;
+  set(cur, { opacity: 0 }, 0); set(cur, { opacity: 1, x: W * 0.95, y: H * 0.85 }, C - K(26));
+  to(cur, { x: tx }, C - K(26), C - K(2), "power2.out"); to(cur, { y: ty }, C - K(26), C - K(2), "power3.inOut");
+  [0, K(6)].forEach(d => { to(cur, { scale: 0.82 }, C + d, C + d + K(2), "power2.in"); to(cur, { scale: 1 }, C + d + K(2), C + d + K(4), "power2.out");
+    to("#flap", { svgOrigin: `${W / 2} ${fy + fh}`, scaleY: 0.92 }, C + d, C + d + K(2), "power2.in"); to("#flap", { scaleY: 1 }, C + d + K(2), C + d + K(4), "power2.out"); });
+  const O = C + K(10);
+  enter(win, { opacity: 1, scale: 0.08 }, { scale: 1 }, O, O + K(16), "power3.out");
+  cells.forEach((e, i) => enter(e, { opacity: 1, scale: 0.5 }, { scale: 1 }, O + K(10) + i * K(3), O + K(20) + i * K(3), "back.out(1.8)"));
+  to(cur, { x: tx + 160 * U, y: ty + 380 * U, opacity: 0 }, O + K(8), O + K(24), "power2.in");
+  if (V.close) { const E = FRAMES - K(16); if (E > O + K(30)) to(win, { scale: 0.06, opacity: 0 }, E, E + K(12), "power3.in"); }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

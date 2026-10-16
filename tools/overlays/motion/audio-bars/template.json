@@ -1,0 +1,39 @@
+{
+ "name": "Audio visualizer",
+ "kind": "music",
+ "what": "Bars around a round picture, a row of bars, or a glowing wave jumping on every beat of the tempo you set - each bar its own height, a bigger hit on the downbeat, a small one between beats - and falling back; the picture pulses on the downbeats. For music and podcasts.",
+ "use_for": [
+  "music",
+  "podcast",
+  "song",
+  "audio",
+  "beat",
+  "radio",
+  "episode"
+ ],
+ "tags": [
+  "visualizer",
+  "audio",
+  "bars",
+  "beat",
+  "wave",
+  "spectrum"
+ ],
+ "learned_from": [],
+ "origin": "audio visualizers - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16; it follows a tempo, not the sound itself",
+ "motion": "on each beat (bpm, from offset) every bar jumps in 2 f (slow end) and falls over the beat; downbeat 100 %, beats 80 %, 8ths 45 %; the picture pulses 6 % on downbeats",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 64,
+ "check_frames": [
+  0,
+  4,
+  6,
+  12,
+  19,
+  34,
+  64,
+  94,
+  140
+ ]
+}

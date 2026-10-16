@@ -1,0 +1,14 @@
+{
+ "name": "Countdown",
+ "kind": "numbers",
+ "what": "A countdown: each number pops in and the ring around it drains over its step, a glow pulses on every change, the end word lands with a kick - or a number beside a line that shrinks.",
+ "use_for": ["countdown", "launch", "timer", "hook", "reveal", "intro"],
+ "tags": ["countdown", "ring", "timer", "number", "pulse", "dark"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__countdown", "what": "the number in a red ring on a dark glow, one a second"},
+                  {"pack": "swishy", "clip": "overlays__apple-style-30-sec-counter", "what": "the number beside a red line that shrinks"}],
+ "motion": "a number every 30 f: pop 8 f (scale 1.35 -> 1), the ring drains linearly, the glow pulses 12 f; the end word back.out 12 f",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 40,
+ "check_frames": [0, 4, 15, 30, 45, 60, 92, 100, 130]
+}

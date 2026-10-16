@@ -1,0 +1,41 @@
+{
+ "name": "Stretch pills",
+ "kind": "text",
+ "what": "Words on bright pills with their letters far apart and thin lines between; the pills grow in one after another, then stretch wide and narrow like elastic on different beats.",
+ "use_for": [
+  "brand",
+  "words",
+  "tagline",
+  "list",
+  "fashion",
+  "music"
+ ],
+ "tags": [
+  "kinetic text",
+  "pills",
+  "stretch",
+  "elastic",
+  "mono",
+  "lime"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__create-a-stretchy-animation-like-this",
+   "what": "lime pills with spaced letters stretching wider and narrower"
+  }
+ ],
+ "motion": "pills back.out 16 f, 3 f apart; each stretches 20-28 f (S-curve) on its own beat",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  8,
+  20,
+  40,
+  60,
+  100,
+  150
+ ]
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "moods", "type": "string", "label": "Moods (| between; happy, calm, sad, angry, wow, love)", "default": "happy|calm|sad|wow"},
+  {"id": "labels", "type": "string", "label": "Their names (| between; empty = the mood)", "default": "Happy|Calm|Meh|Wow"},
+  {"id": "question", "type": "string", "label": "A line under the face (empty = none)", "default": "How do you feel today?"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Rubik", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.5, "step": 0.05},
+  {"id": "hold", "type": "number", "label": "Frames on each mood", "default": 24, "min": 8, "max": 300, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "mood-switch" (0.5.0, the Motion Graphics library): a big friendly face changes mood - each
+     change is a colour wipe (a circle growing from the face's centre in the new mood's colour), the eyes and mouth
+     morph to the new expression with a squash, the name on top swaps, a marker slides along the scale below.
+     Learned from graphics__wellness-app-moods (a big face going Happy -> Calm -> Confused with a colour wipe for each,
+     a mood slider under it). MotionLab's own drawing (SVG shapes). Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="wipes" class="abs"></div>
+  <div id="cam" class="abs"><svg id="face" class="abs" style="overflow:visible"></svg><div id="names" class="abs"></div><div id="qq" class="t"></div>
+    <div id="track" class="abs"></div><div id="mark" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  // each mood: background, face colour, eyes (a curve each), mouth (one curve): the same number of points, so they morph
+  const M = {
+    happy: { bg: "#fde68a", face: "#ffc93c", eye: "M-1,0.4 Q0,-0.9 1,0.4", mouth: "M-1,0 Q0,1.3 1,0" },
+    calm:  { bg: "#bfdbfe", face: "#60a5fa", eye: "M-1,0 Q0,0.9 1,0", mouth: "M-1,0 Q0,0.6 1,0" },
+    sad:   { bg: "#fed7aa", face: "#fb923c", eye: "M-1,0 Q0,0.01 1,0", mouth: "M-1,0.3 Q0,-0.9 1,0.3" },
+    angry: { bg: "#fecaca", face: "#f87171", eye: "M-1,-0.6 Q0,0.2 1,0.4", mouth: "M-1,0.2 Q0,-0.5 1,0.2" },
+    wow:   { bg: "#e9d5ff", face: "#c084fc", eye: "M-1,0.3 Q0,-1.4 1,0.3", mouth: "M-0.5,0 Q0,1.6 0.5,0" },
+    love:  { bg: "#fbcfe8", face: "#f472b6", eye: "M-1,0.2 Q0,-1.1 1,0.2", mouth: "M-1,-0.1 Q0,1.2 1,-0.1" },
+  };
+  gsap.set(["#bgfill", "#cam", "#wipes", "#names"], { width: W, height: H });
+  const moods = String(V.moods || "happy").split("|").map(x => x.trim().toLowerCase()).filter(m => M[m]);
+  const labs = String(V.labels || "").split("|").map(x => x.trim());
+  const s = V.size, D = 560 * U * s, cx = W / 2, cy = H * 0.42;
+  gsap.set("#bgfill", { background: V.background ? M[moods[0]].bg : "transparent" });
+  const svg = q("face"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  // a curve "M-1,y Q0,y 1,y" scaled into the face: eyes at (cx -+ D*0.2, cy - D*0.1), mouth at (cx, cy + D*0.18)
+  const sc = (d, ox, oy, sx, sy) => d.replace(/(-?[\d.]+),(-?[\d.]+)/g, (_, x, y) => `${(ox + +x * sx).toFixed(1)},${(oy + +y * sy).toFixed(1)}`);
+  const ex = D * 0.075, ey = D * 0.06, mx = D * 0.2, my = D * 0.1;
+  svg.innerHTML = `<g id="fc"><circle id="disc" cx="${cx}" cy="${cy}" r="${D / 2}" fill="${M[moods[0]].face}"/>
+    <path id="el" d="${sc(M[moods[0]].eye, cx - D * 0.17, cy - D * 0.08, ex, ey)}" fill="none" stroke="#1d1d1f" stroke-width="${D * 0.04}" stroke-linecap="round"/>
+    <path id="er" d="${sc(M[moods[0]].eye, cx + D * 0.17, cy - D * 0.08, ex, ey)}" fill="none" stroke="#1d1d1f" stroke-width="${D * 0.04}" stroke-linecap="round"/>
+    <path id="mo" d="${sc(M[moods[0]].mouth, cx, cy + D * 0.16, mx, my)}" fill="none" stroke="#1d1d1f" stroke-width="${D * 0.045}" stroke-linecap="round"/></g>`;
+  const names = moods.map((m, i) => { const e = document.createElement("div"); e.className = "t"; e.textContent = labs[i] || m[0].toUpperCase() + m.slice(1);
+    Object.assign(e.style, { font: `700 ${86 * U * s}px ${fam}`, color: "#1d1d1f" }); q("names").appendChild(e);
+    gsap.set(e, { x: cx, y: cy - D / 2 - 140 * U * s, xPercent: -50, opacity: 0 }); return e; });
+  if (V.question) { const qq = q("qq"); qq.textContent = V.question; Object.assign(qq.style, { font: `500 ${42 * U * s}px ${fam}`, color: "#1d1d1f" });
+    gsap.set(qq, { x: cx, y: cy + D / 2 + 90 * U * s, xPercent: -50 }); }
+  const tw = W * 0.7, ty = cy + D / 2 + 230 * U * s;
+  Object.assign(q("track").style, { width: `${tw}px`, height: `${10 * U}px`, borderRadius: "999px", background: "#1d1d1f22" });
+  gsap.set("#track", { x: cx - tw / 2, y: ty });
+  Object.assign(q("mark").style, { width: `${44 * U * s}px`, height: `${44 * U * s}px`, borderRadius: "50%", background: "#1d1d1f", border: `${8 * U}px solid #fff` });
+  const markX = i => cx - tw / 2 + tw * (moods.length === 1 ? 0.5 : i / (moods.length - 1)) - 22 * U * s;
+  gsap.set("#mark", { x: markX(0), y: ty - 17 * U * s });
+
+  // ---- the motion: the face pops (back.out 16 f); each change: a wipe circle in the new background (16 f, slow end),
+  // the face colour + eyes + mouth morph (12 f, S-curve) with a squash, the name drops in, the marker slides
+  const S = Math.round(V.start), HOLD = Math.max(K(8), Math.round(V.hold * FPS / 30)), CH = K(16);
+  enter("#fc", { opacity: 1, scale: 0, svgOrigin: `${cx} ${cy}` }, { scale: 1 }, S, S + K(16), "back.out(1.8)");
+  set(names[0], { opacity: 1 }, S + K(6));
+  ft(names[0], { y: cy - D / 2 - 170 * U * s }, { y: cy - D / 2 - 140 * U * s }, S + K(6), S + K(18), "back.out(2)");
+  if (V.question) enter("#qq", { opacity: 0 }, { opacity: 1 }, S + K(10), S + K(22), "power1.out");
+  enter(["#track", "#mark"], { opacity: 0 }, { opacity: 1 }, S + K(14), S + K(24), "power1.out");
+  let f = S + K(16) + HOLD;
+  for (let i = 1; i < moods.length && f + CH < FRAMES; i++, f += CH + HOLD) {
+    const m = M[moods[i]];
+    if (V.background) {
+      const w = document.createElement("div"); w.className = "abs";
+      Object.assign(w.style, { width: `${H * 2.4}px`, height: `${H * 2.4}px`, borderRadius: "50%", background: m.bg });
+      q("wipes").appendChild(w); gsap.set(w, { x: cx - H * 1.2, y: cy - H * 1.2, scale: 0, transformOrigin: "50% 50%" });
+      ft(w, { scale: 0 }, { scale: 1 }, f, f + CH, "power3.out");
+    }
+    to("#disc", { attr: { fill: m.face } }, f, f + K(12), "power2.inOut");
+    to("#el", { attr: { d: sc(m.eye, cx - D * 0.17, cy - D * 0.08, ex, ey) } }, f + K(2), f + K(12), "power2.inOut");
+    to("#er", { attr: { d: sc(m.eye, cx + D * 0.17, cy - D * 0.08, ex, ey) } }, f + K(2), f + K(12), "power2.inOut");
+    to("#mo", { attr: { d: sc(m.mouth, cx, cy + D * 0.16, mx, my) } }, f + K(2), f + K(12), "power2.inOut");
+    to("#fc", { scaleX: 1.08, scaleY: 0.92 }, f, f + K(5), "power2.out"); to("#fc", { scaleX: 1, scaleY: 1 }, f + K(5), f + K(14), "back.out(2.5)");
+    set(names[i - 1], { opacity: 0 }, f + K(4)); set(names[i], { opacity: 1 }, f + K(4));
+    ft(names[i], { y: cy - D / 2 - 170 * U * s }, { y: cy - D / 2 - 140 * U * s }, f + K(4), f + K(14), "back.out(2)");
+    to("#mark", { x: markX(i) }, f, f + K(14), "power3.inOut");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

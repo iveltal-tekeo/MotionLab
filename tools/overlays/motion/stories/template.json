@@ -1,0 +1,41 @@
+{
+ "name": "Stories",
+ "kind": "social",
+ "what": "Phone stories: pictures (yours, or soft colour fills) play one after another full screen with the progress bars filling at the top, the name in the corner, a quick zoom on each cut and a slow push-in, a tilted caption sticker popping on each.",
+ "use_for": [
+  "recap",
+  "day in the life",
+  "travel",
+  "behind the scenes",
+  "photos",
+  "story"
+ ],
+ "tags": [
+  "stories",
+  "progress bars",
+  "photos",
+  "caption",
+  "vertical"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "social__instagram-stories",
+   "what": "stories playing with bars filling at the top and a caption on each"
+  }
+ ],
+ "motion": "each story 60 f: cut in 1.12 -> 1.04 in 8 f, then a slow push-in; its bar fills linearly; the caption back.out 10 f in, tilted",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  8,
+  30,
+  60,
+  76,
+  136,
+  200,
+  239
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "name": "Wiggle title",
+ "kind": "text",
+ "what": "A one- or two-line title whose letters never stand still: a wave of squash and stretch runs through them, or they boil like a hand drawing; the second line in four colours.",
+ "use_for": ["title", "hook", "fun", "kids", "playful", "intro"],
+ "tags": ["kinetic text", "bouncy", "colourful", "wave", "boil", "alive"],
+ "learned_from": [{"pack": "swishy", "clip": "text__good-mood", "what": "the letters' heights in a travelling wave, the four-colour second line"},
+                  {"pack": "swishy", "clip": "text__wiggle-text", "what": "the hand-drawn boil: a new pose every 3 frames"}],
+ "motion": "letters pop in 2 f apart (10 f, back.out), a 54 f wave, out 16 f",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 70,
+ "check_frames": [0, 6, 14, 30, 50, 70, 100, 140]
+}

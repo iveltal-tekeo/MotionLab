@@ -1,0 +1,15 @@
+{
+ "name": "Toggle switch",
+ "kind": "ui",
+ "what": "A switch pops in off and flips on - the knob slides with a squash, the track turns green and glows, the word under it changes; it can flip on, off and on again.",
+ "use_for": ["on off", "before after", "settings", "turn on", "habit", "feature", "notifications"],
+ "tags": ["toggle", "switch", "on", "glow", "ui"],
+ "learned_from": [{"pack": "swishy", "clip": "overlays__on-off-toggle", "what": "OFF to ON: the knob slides, the track turns green, the glow grows"},
+                  {"pack": "swishy", "clip": "overlays__alarm-toggle", "what": "the toggle beside a label (a still capture)"}],
+ "motion": "in back.out 12 f; a flip 10 f (S-curve), the knob stretches 1.28 mid-way, the colour and glow follow; 30 f between flips",
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 70,
+ "check_frames": [0, 8, 34, 38, 44, 70, 110]
+}

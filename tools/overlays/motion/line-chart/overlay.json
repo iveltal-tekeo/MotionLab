@@ -1,0 +1,22 @@
+{
+ "name": "line-chart",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "riser",
+   "dur": "draw_frames / 30",
+   "if": "look != 'heartbeat'",
+   "what": "the line draws"
+  },
+  {
+   "f": "start + round(12 * fps / 30) + round(draw_frames * fps / 30)",
+   "kind": "pop",
+   "if": "look == 'chart'",
+   "what": "the tip value pops"
+  }
+ ]
+}

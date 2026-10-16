@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "look", "type": "enum", "label": "Look", "default": "bar", "options": [{"value": "bar", "label": "Bar - a colour bar wipes in, the name rides on it"}, {"value": "line", "label": "Line - a thin line draws, the name rises over it"}, {"value": "box", "label": "Boxes - two stacked boxes, a little offset"}, {"value": "social", "label": "Social - a round badge + your @handle"}]},
+  {"id": "name", "type": "string", "label": "Name (or the main line)", "default": "Alex Rivera"},
+  {"id": "role", "type": "string", "label": "Role (the small line; empty = none)", "default": "Video editor · MotionLab"},
+  {"id": "badge", "type": "string", "label": "Badge letter / emoji (Social look)", "default": "@"},
+  {"id": "align", "type": "enum", "label": "Where", "default": "left", "options": [{"value": "left", "label": "Left"}, {"value": "center", "label": "Centre"}, {"value": "right", "label": "Right"}]},
+  {"id": "y", "type": "number", "label": "How far down (% of the height)", "default": 76, "min": 0, "max": 100, "step": 1},
+  {"id": "margin", "type": "number", "label": "Side margin (% of the width)", "default": 7, "min": 0, "max": 40, "step": 1},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#ff4d4d"},
+  {"id": "box", "type": "color", "label": "Box colour", "default": "#111111"},
+  {"id": "ink", "type": "color", "label": "Text colour on the accent", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#6b7280"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 6, "min": 0, "max": 900, "step": 1},
+  {"id": "hold", "type": "number", "label": "Frames it stays", "default": 96, "min": 10, "max": 3000, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "lower-third" (0.5.0, the Motion Graphics library): who is talking - a name and a role
+     in the lower part of the frame, in four looks: a colour bar wiping in with the name riding on it, a thin line
+     drawing with the name rising over it, two stacked boxes a little offset, or a round badge + an @handle. Each line
+     wipes in behind a mask (the box first, the words 4 frames later), stays, and leaves the other way. Not learned
+     from a clip: lower thirds are the template kind every marketplace lists first (Mixkit, Envato Elements, Motion
+     Array, researched 2026-10-16). MotionLab's own code. Size-independent; the boxes take the words' own width. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #lt { position: absolute; display: flex; flex-direction: column; }
+  .row { position: relative; display: flex; align-items: center; width: fit-content; }
+  .rbg { position: absolute; inset: 0; }
+  .mask { position: relative; overflow: hidden; }
+  .tx { white-space: nowrap; line-height: 1.15; font-synthesis: none; }
+  #ln { position: relative; }
+  #bd { flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="lt"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? V.bg : "transparent" });
+  const s = V.size * U, look = V.look, al = V.align, lt = q("lt");
+  Object.assign(lt.style, { top: `${H * V.y / 100}px`, alignItems: al === "left" ? "flex-start" : al === "right" ? "flex-end" : "center", gap: `${(look === "line" ? 0 : look === "box" ? 0 : 6) * s}px` });
+  if (al === "left") lt.style.left = `${W * V.margin / 100}px`;
+  else if (al === "right") lt.style.right = `${W * V.margin / 100}px`;
+  else { lt.style.left = "0"; lt.style.width = `${W}px`; }
+  lt.style.transform = "translateY(-50%)";
+  const box0 = document.createElement("div"); lt.appendChild(box0);          // the block: as wide as its widest line
+  Object.assign(box0.style, { display: "flex", flexDirection: "column", width: "fit-content", alignItems: al === "left" ? "flex-start" : al === "right" ? "flex-end" : "center", gap: lt.style.gap });
+  const from = al === "right" ? "100% 50%" : al === "center" ? "50% 50%" : "0% 50%", away = al === "right" ? "0% 50%" : al === "center" ? "50% 50%" : "100% 50%";
+  // one line = a row with its own box (rbg) and its words behind a mask
+  const row = (text, o) => {
+    const r = document.createElement("div"); r.className = "row";
+    r.innerHTML = `<div class="rbg"></div><div class="mask"><div class="tx">${esc(text)}</div></div>`;
+    Object.assign(r.querySelector(".rbg").style, { background: o.bg || "transparent", borderRadius: `${(o.round || 0) * s}px` });
+    Object.assign(r.querySelector(".mask").style, { padding: `${o.py * s}px ${o.px * s}px` });
+    Object.assign(r.querySelector(".tx").style, { font: `${o.w} ${o.fs * s}px ${fam}`, color: o.color, letterSpacing: o.ls || "0" });
+    return r;
+  };
+  let rows = [], line = null, badge = null;
+  if (look === "bar") {
+    const r1 = document.createElement("div"); r1.className = "row"; r1.style.flexDirection = al === "right" ? "row-reverse" : "row";
+    const tick = document.createElement("div"); Object.assign(tick.style, { width: `${16 * s}px`, alignSelf: "stretch", background: V.box });
+    const n = row(V.name, { bg: V.accent, color: V.ink, w: 800, fs: 66, px: 28, py: 14 });
+    r1.append(tick, n); box0.appendChild(r1); rows.push(n); line = tick;
+    if (V.role) { const r = row(V.role, { bg: V.box, color: "#ffffff", w: 500, fs: 36, px: 28, py: 12 }); box0.appendChild(r); rows.push(r); }
+  } else if (look === "line") {
+    const n = row(V.name, { color: "#ffffff", w: 800, fs: 70, px: 2, py: 6 }); box0.appendChild(n); rows.push(n);
+    line = document.createElement("div"); line.id = "ln"; Object.assign(line.style, { width: "100%", minWidth: `${300 * s}px`, height: `${6 * s}px`, background: V.accent, borderRadius: `${3 * s}px` });
+    box0.appendChild(line);
+    if (V.role) { const r = row(V.role, { color: "#ffffffdd", w: 500, fs: 38, px: 2, py: 8, ls: "0.02em" }); box0.appendChild(r); rows.push(r); }
+    lt.querySelectorAll(".tx").forEach(e => { e.style.textShadow = `0 ${2 * s}px ${14 * s}px rgba(0,0,0,.45)`; });
+  } else if (look === "box") {
+    const n = row(V.name, { bg: "#ffffff", color: "#111111", w: 800, fs: 64, px: 30, py: 14 }); box0.appendChild(n); rows.push(n);
+    if (V.role) { const r = row(V.role, { bg: V.accent, color: V.ink, w: 600, fs: 36, px: 26, py: 12 }); r.style.marginLeft = al === "left" ? `${40 * s}px` : "0"; r.style.marginRight = al === "right" ? `${40 * s}px` : "0"; box0.appendChild(r); rows.push(r); }
+  } else {
+    const r1 = document.createElement("div"); r1.className = "row"; r1.style.gap = `${16 * s}px`; r1.style.flexDirection = al === "right" ? "row-reverse" : "row";
+    badge = document.createElement("div"); badge.id = "bd"; badge.textContent = V.badge || "@";
+    Object.assign(badge.style, { width: `${104 * s}px`, height: `${104 * s}px`, background: V.accent, color: V.ink, font: `800 ${50 * s}px ${fam}`, boxShadow: `0 ${8 * s}px ${24 * s}px rgba(0,0,0,.3)` });
+    const col = document.createElement("div"); Object.assign(col.style, { display: "flex", flexDirection: "column", gap: `${6 * s}px`, alignItems: al === "right" ? "flex-end" : "flex-start" });
+    const n = row(V.name, { bg: "#ffffff", color: "#111111", w: 800, fs: 52, px: 26, py: 10, round: 40 }); col.appendChild(n); rows.push(n);
+    if (V.role) { const r = row(V.role, { bg: V.box, color: "#ffffff", w: 500, fs: 32, px: 22, py: 8, round: 40 }); col.appendChild(r); rows.push(r); }
+    r1.append(badge, col); box0.appendChild(r1);
+  }
+
+  // ---- the motion: the box wipes in (10 f, slow end), the words rise behind their mask 4 f later (10 f), the second
+  // line 6 f after the first; out after `hold`: the words drop away (8 f, slow start), then the boxes wipe off
+  const S = Math.round(V.start), O = S + Math.round(V.hold * FPS / 30);
+  const boxes = rows.map(r => r.querySelector(".rbg")), words = rows.map(r => r.querySelector(".tx"));
+  if (S > 0) set(lt, { opacity: 0 }, 0);
+  set(lt, { opacity: 1 }, S);
+  boxes.forEach(b => gsap.set(b, { scaleX: 0, transformOrigin: from }));
+  words.forEach(w => gsap.set(w, { yPercent: 115 }));
+  let f = S;
+  if (badge) { ft(badge, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0 }, f, f + K(12), "back.out(2.2)"); f += K(5); }
+  if (line && look === "line") { gsap.set(line, { scaleX: 0, transformOrigin: from }); ft(line, { scaleX: 0 }, { scaleX: 1 }, f, f + K(14), "power3.inOut"); f += K(6); }
+  if (line && look === "bar") { gsap.set(line, { scaleY: 0 }); ft(line, { scaleY: 0 }, { scaleY: 1 }, f, f + K(6), "power3.out"); f += K(3); }
+  rows.forEach((r, i) => {
+    const g = f + i * K(6);
+    ft(boxes[i], { scaleX: 0 }, { scaleX: 1 }, g, g + K(10), "power3.out");
+    ft(words[i], { yPercent: look === "line" && i > 0 ? -115 : 115 }, { yPercent: 0 }, g + K(4), g + K(14), "power3.out");
+  });
+  if (V.leave && O + K(16) < FRAMES) {
+    rows.forEach((r, i) => {
+      const g = O + i * K(3);
+      to(words[i], { yPercent: look === "line" && i > 0 ? -115 : 115 }, g, g + K(8), "power2.in");
+      set(boxes[i], { transformOrigin: away }, g + K(4));
+      to(boxes[i], { scaleX: 0 }, g + K(4), g + K(12), "power3.in");
+    });
+    if (line) to(line, look === "line" ? { scaleX: 0 } : { scaleY: 0 }, O + K(6), O + K(14), "power3.in");
+    if (badge) to(badge, { scale: 0 }, O + K(6), O + K(14), "back.in(2)");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

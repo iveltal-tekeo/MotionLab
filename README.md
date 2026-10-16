@@ -7,11 +7,13 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.4.6 - Fonts and captions** ([what's new](CHANGELOG.md)): **Analyse** videos you like (several at once,
+> **Status: v0.5.0 - Motion Graphics** ([what's new](CHANGELOG.md)): **Analyse** videos you like (several at once,
 > by focus: content creation, cinematic or both - colour grading included), **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
-> makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools) - and
-> **Claude's memory**: everything it learned, in one place, used when it edits or generates for you. Since 0.3: colour rebuilds, 3x faster renders,
+> makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools),
+> **Motion Graphics** - 74 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
+> screens...) you change live and put in any video - and **Claude's memory**: everything it learned, in one place,
+> used when it edits or generates for you. Since 0.3: colour rebuilds, 3x faster renders,
 > graphics written as HTML, Claude Code connected to the lab and to DaVinci Resolve, updates that only offer versions
 > GitHub's automatic tests passed.
 > Detection was tuned on music videos; other categories work and get better with every verdict you give.
@@ -63,8 +65,10 @@ badges are the major versions (x.y.0), the smaller versions hang below them.*
 - **Share it**: *Claude's memory > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
   back with the next update. The *Knowledge* page compares pacing and effects per category across everybody.
 - **Rebuild it** with your own clips, in colour, as a lab render or as an editable DaVinci Resolve project.
-- **Fonts and captions**: 28 free fonts come with MotionLab - every graphic, caption and thumbnail can use them, the
-  same render on every PC; each graphic draws live as you change it; captions in two looks (Classic, Clean box).
+- **Motion Graphics**: 74 animated graphics - 57 learned from pro template clips, 17 for what template sites offer
+  most - each with a live preview: type your words, pick colours and one of 28 shipped fonts, see it at once, then put
+  it in a video at any size (vertical, horizontal, square), with its sound effects. The Generator builds whole videos
+  from them.
 - **Prompts**: keep the prompts that worked for you (Seedance / Higgsfield / Kling shots, hooks, talking scripts) or
   a creator's public one with its link; Claude splits each into its structure and writes new ones for your need in
   a structure that already worked. You paste them into the site and rate what they made.
@@ -195,13 +199,13 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.4.7 yapping mode for talking-to-camera videos and the
-  clips a script needs, 0.4.8 faster videos: a minute of video in ~10 minutes of Claude, 0.4.9 prompt generator for
-  every model, 0.5 motion graphics learned from pro templates - template packs read exactly, motion rules, building
-  blocks, a motion check, formats, a preview before the render, 0.5.1 colour: correct your own clips, adjustable
-  grades in Resolve, 0.5.2 content generation: AI clips back into the lab, voice and music, 0.6 describe video: what
-  videos and courses say and show, 0.6.5 templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS),
-  also shown in the app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.5.1 yapping mode for talking-to-camera videos and the
+  clips a script needs, 0.5.2 faster videos: a minute of video in ~10 minutes of Claude, 0.5.3 prompt generator for
+  every model, 0.5.4 motion graphics from template packs - Resolve / After Effects packs read exactly, a motion check,
+  formats, a preview before the render, 0.5.5 colour: correct your own clips, adjustable grades in Resolve, 0.5.6
+  content generation: AI clips back into the lab, voice and music, 0.6 describe video: what videos and courses say and
+  show, 0.6.5 templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS), also shown in the app's
+  *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

@@ -1,0 +1,13 @@
+{
+ "name": "Wheel list",
+ "kind": "lists",
+ "what": "A list on a wheel: items roll up past the middle one at a time; the current one bold and dark, the rest smaller and fainter with distance, like a phone's picker.",
+ "use_for": ["list", "options", "keywords", "topics", "steps", "features"],
+ "tags": ["list", "wheel", "picker", "scroll", "minimal", "light"],
+ "learned_from": [{"pack": "swishy", "clip": "text__sentence-reveal", "what": "the centre line, the fade with distance, a roll every ~1 s (an S-curve over ~10 f at 25 fps)"}],
+ "motion": "in 16 f (rise), a roll every hold + 12 f (S-curve), the bold copy cross-fades",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 60,
+ "check_frames": [0, 8, 30, 46, 50, 60, 90, 140]
+}

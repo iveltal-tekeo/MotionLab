@@ -1,0 +1,26 @@
+{
+ "name": "poll",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the card pops"
+  },
+  {
+   "f": "start + round(26 * fps / 30) + parts(options) * round(4 * fps / 30) + round(16 * fps / 30)",
+   "if": "pick > 0",
+   "kind": "click",
+   "what": "the tap"
+  },
+  {
+   "f": "start + round(34 * fps / 30) + parts(options) * round(4 * fps / 30) + (round(16 * fps / 30) if pick > 0 else 0)",
+   "kind": "riser",
+   "dur": "0.8",
+   "what": "the bars fill"
+  }
+ ]
+}

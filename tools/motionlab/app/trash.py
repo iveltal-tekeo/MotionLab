@@ -103,7 +103,7 @@ def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) ->
 
 def plan_reference(name: str) -> dict:
     d = ANALYSIS / data.safe_name(name)
-    if not d.is_dir() or d.name.lower() == "thumbs":       # analysis\thumbs = the thumbnail sets (kind "thumbs")
+    if not d.is_dir() or d.name.lower() in ("thumbs", "templates"):   # thumbnail sets (kind "thumbs"), motion packs (0.5.0)
         raise FileNotFoundError(name)
     inside(d)
     ev = data.read_json(d / "events.json", {}) or {}

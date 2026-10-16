@@ -1,0 +1,14 @@
+{
+ "name": "Logo reveal",
+ "kind": "logo",
+ "what": "A logo sting: a rounded square drops, lands with a squash, turns into a circle and the letter (or your logo) appears in it, the name fades up under it - or the mark spins in.",
+ "use_for": ["logo", "intro", "outro", "brand", "end card", "channel"],
+ "tags": ["logo", "sting", "morph", "minimal", "brand"],
+ "learned_from": [{"pack": "swishy", "clip": "logos__logo-reveal", "what": "the square at f1, the circle with a letter by f31 at 25 fps, the name under it at f45"},
+                  {"pack": "swishy", "clip": "logos__logo-spin", "what": "the mark spinning in with a word and a small line"}],
+ "motion": "drop 12 f (accelerating), squash elastic 10 f, square to circle 14 f (S-curve, a quarter turn), letter back.out 12 f, name 18 f with its spacing closing",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 80,
+ "check_frames": [0, 6, 13, 18, 28, 36, 45, 60, 85]
+}

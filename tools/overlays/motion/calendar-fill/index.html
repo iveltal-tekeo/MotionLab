@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "month", "type": "string", "label": "Month at the top", "default": "June 2026"},
+  {"id": "days", "type": "number", "label": "Days in the month", "default": 30, "min": 28, "max": 31, "step": 1},
+  {"id": "first_day", "type": "number", "label": "First day’s column (1 = Monday ... 7 = Sunday)", "default": 1, "min": 1, "max": 7, "step": 1},
+  {"id": "filled", "type": "number", "label": "Days that fill in", "default": 24, "min": 0, "max": 31, "step": 1},
+  {"id": "streak_text", "type": "string", "label": "Counter under it (# = the number; empty = none)", "default": "# day streak"},
+  {"id": "c1", "type": "color", "label": "Dot colour 1", "default": "#3b82f6"},
+  {"id": "c2", "type": "color", "label": "Dot colour 2", "default": "#ec4899"},
+  {"id": "c3", "type": "color", "label": "Dot colour 3", "default": "#f59e0b"},
+  {"id": "header", "type": "color", "label": "Header colour", "default": "#f4b860"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f6efe4"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 46, "min": 0, "max": 100, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between days", "default": 3, "min": 1, "max": 30, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "calendar-fill" (0.5.0, the Motion Graphics library): a month card pops in and its days
+     fill one after another with coloured dots (a pop each, 3 frames apart), the counter under it ticking with them -
+     a habit streak, a posting plan, a countdown to a date. Learned from graphics__june (a "June 2024" card whose days
+     fill with coloured dots one by one, f4-f75 (00:00:00:04-00:00:03:00) at 25 fps) and graphics__january (a month
+     whose dates appear one by one). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; }
+  .dot { position: absolute; left: 0; top: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  #cnt::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="card" class="abs"><div id="hd" class="abs"></div><div id="grid" class="abs"></div></div><div id="cnt" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, cw = W * 0.82 * Math.min(1.1, s), cell = (cw - 80 * U * s) / 7, rows = Math.ceil((V.first_day - 1 + V.days) / 7);
+  const hh = 120 * U * s, ch = hh + 70 * U * s + rows * cell + 40 * U * s, cx = W / 2, cy = H * V.y / 100;
+  const card = q("card");
+  Object.assign(card.style, { width: `${cw}px`, height: `${ch}px`, background: "#ffffff", borderRadius: `${36 * U * s}px`, overflow: "hidden",
+    boxShadow: `0 ${24 * U}px ${60 * U}px rgba(60,40,20,.16)` });
+  gsap.set(card, { x: cx - cw / 2, y: cy - ch / 2, transformOrigin: "50% 50%" });
+  const hd = q("hd");
+  Object.assign(hd.style, { width: `${cw}px`, height: `${hh}px`, background: V.header, display: "flex", alignItems: "center", justifyContent: "center",
+    font: `800 ${46 * U * s}px ${fam}`, color: "#2b2015" });
+  hd.textContent = V.month;
+  const grid = q("grid"), x0 = 40 * U * s, y0 = hh + 70 * U * s;
+  "MTWTFSS".split("").forEach((d, i) => { const e = document.createElement("div"); e.className = "t"; e.textContent = d;
+    Object.assign(e.style, { font: `700 ${24 * U * s}px ${fam}`, color: "#2b2015", opacity: 0.4 }); grid.appendChild(e);
+    gsap.set(e, { x: x0 + cell * (i + 0.5), y: hh + 30 * U * s, xPercent: -50 }); });
+  const pal = [V.c1, V.c2, V.c3], dots = [];
+  for (let d = 1; d <= V.days; d++) {
+    const k = V.first_day - 2 + d, c = k % 7, r = Math.floor(k / 7);
+    const num = document.createElement("div"); num.className = "t"; num.textContent = d;
+    Object.assign(num.style, { font: `500 ${26 * U * s}px ${fam}`, color: "#2b2015", opacity: 0.55 }); grid.appendChild(num);
+    gsap.set(num, { x: x0 + cell * (c + 0.5), y: y0 + cell * (r + 0.5), xPercent: -50, yPercent: -50 });
+    if (d <= V.filled) {
+      const dot = document.createElement("div"); dot.className = "dot"; const ds = cell * 0.62;
+      Object.assign(dot.style, { width: `${ds}px`, height: `${ds}px`, background: pal[(d * 7 + r) % 3], color: "#fff", font: `700 ${24 * U * s}px ${fam}` });
+      dot.textContent = d; grid.appendChild(dot);
+      gsap.set(dot, { x: x0 + cell * (c + 0.5) - ds / 2, y: y0 + cell * (r + 0.5) - ds / 2, transformOrigin: "50% 50%" });
+      dots.push(dot);
+    }
+  }
+  const cnt = q("cnt");
+  Object.assign(cnt.style, { font: `800 ${54 * U * s}px ${fam}`, color: "#2b2015" });
+  gsap.set(cnt, { x: cx, y: cy + ch / 2 + 70 * U * s, xPercent: -50 });
+
+  // ---- the motion: the card pops (back.out 14 f), then a day every gap frames: a dot pops (8 f), the counter ticks
+  const S = Math.round(V.start), G = Math.max(1, Math.round(V.gap * FPS / 30)), D0 = S + K(16);
+  enter(card, { opacity: 0, scale: 0.85, y: cy - ch / 2 + 60 * U }, { opacity: 1, scale: 1, y: cy - ch / 2 }, S, S + K(14), "back.out(1.6)");
+  dots.forEach((d, i) => enter(d, { opacity: 1, scale: 0 }, { scale: 1 }, D0 + i * G, D0 + i * G + K(8), "back.out(2.8)"));
+  if (V.streak_text) {
+    enter(cnt, { opacity: 0 }, { opacity: 1 }, D0, D0 + K(8), "power1.out");
+    for (let i = 0; i <= dots.length; i++) set(cnt, { attr: { "data-v": V.streak_text.replace("#", i) } }, D0 + Math.max(0, i - 1) * G + (i ? K(4) : 0));
+    const fe = D0 + dots.length * G + K(4);
+    if (fe + K(12) < FRAMES) { to(cnt, { scale: 1.15 }, fe, fe + K(5), "power2.out"); to(cnt, { scale: 1 }, fe + K(5), fe + K(12), "back.out(2)"); }
+  }
+  to(card, { y: cy - ch / 2 - 16 * U }, S + K(14), FRAMES, "sine.inOut");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

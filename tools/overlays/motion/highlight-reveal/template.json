@@ -1,0 +1,13 @@
+{
+ "name": "Highlight reveal",
+ "kind": "text",
+ "what": "An editorial page: a kicker, a serif headline whose key words get a highlighter sweep word after word, the text rising in under it and a row of three numbers.",
+ "use_for": ["quote", "headline", "explainer", "talking head", "fact", "article", "statement"],
+ "tags": ["editorial", "highlighter", "serif", "paper", "marker", "light"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__newspaper-animation", "what": "the yellow sweep behind the headline, the paragraphs building in, the numbers row"}],
+ "motion": "words rise 16 f, 2 f apart; the marker sweeps 8 f a word; text lines 16 f, 8 f apart; the page drifts closer",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 120,
+ "check_frames": [0, 10, 30, 45, 60, 80, 120]
+}

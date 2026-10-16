@@ -1,0 +1,13 @@
+{
+ "name": "kinetic-stack",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "whoosh", "dur": "1.0", "what": "the stretched stack comes in"},
+  {"f": "start + round(34 * fps / 30)", "kind": "thump", "what": "it snaps into a clean stack"},
+  {"f": "round((start + round(42 * fps / 30) + frames - round(14 * fps / 30)) / 2)", "kind": "whip", "if": "wobble", "what": "the rubber wobble"},
+  {"f": "frames - round(10 * fps / 30)", "kind": "whoosh", "dur": "0.33", "from": 2600, "to": 500, "if": "exit", "what": "it stretches away"}
+ ]
+}

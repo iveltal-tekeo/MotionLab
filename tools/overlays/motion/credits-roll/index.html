@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title at the top (empty = none)", "default": "Credits"},
+  {"id": "credits", "type": "string", "label": "Role: name (| between; a name alone is fine)", "default": "Directed by: Alex Rivera|Edited by: Sam Lee|Music: Nova Sound|Motion graphics: MotionLab|Thanks to: everyone who watched"},
+  {"id": "end", "type": "string", "label": "Last line, stays in the middle (empty = none)", "default": "Thanks for watching"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "name_font", "type": "enum", "label": "Name font", "default": "Playfair Display", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "dim", "type": "color", "label": "Role colour", "default": "#9ca3af"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "credits-roll" (0.5.0, the Motion Graphics library): end credits - a role in small grey
+     capitals over each name, rolling up from below at an even speed and fading at the top and bottom edges; the last
+     line rolls to the middle and stops there. The speed follows the length: every line passes in the time the graphic
+     has. Not learned from a clip: credits are a Mixkit tag and a staple of title packs (researched 2026-10-16).
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #roll { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .t { line-height: 1.15; font-synthesis: none; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="view" class="abs"><div id="roll"></div></div>
+  <div id="last" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#view", "#last"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  // the edges fade: the rolling block is seen through a mask that is clear in the middle 70 %
+  Object.assign(q("view").style, { maskImage: "linear-gradient(transparent 0%, #000 14%, #000 86%, transparent 100%)", webkitMaskImage: "linear-gradient(transparent 0%, #000 14%, #000 86%, transparent 100%)" });
+  const s = V.size * U, roll = q("roll"), fa = `'${V.font}', 'Segoe UI', sans-serif`, fn = `'${V.name_font}', Georgia, serif`;
+  roll.style.width = `${W}px`; roll.style.gap = `${64 * s}px`;
+  const add = (html, st) => { const e = document.createElement("div"); e.innerHTML = html; Object.assign(e.style, st || {}); roll.appendChild(e); return e; };
+  if (V.title) add(`<div class="t" style="font:800 ${88 * s}px ${fn};color:${V.ink}">${esc(V.title)}</div>`, { marginBottom: `${40 * s}px` });
+  String(V.credits || "").split("|").map(x => x.trim()).filter(Boolean).forEach(c => {
+    const i = c.indexOf(":"), role = i > 0 ? c.slice(0, i).trim() : "", name = i > 0 ? c.slice(i + 1).trim() : c;
+    add((role ? `<div class="t" style="font:600 ${30 * s}px ${fa};color:${V.dim};letter-spacing:.18em;text-transform:uppercase;margin-bottom:${12 * s}px">${esc(role)}</div>` : "")
+      + `<div class="t" style="font:600 ${60 * s}px ${fn};color:${V.ink}">${esc(name)}</div>`);
+  });
+  const last = q("last");
+  if (V.end) { last.innerHTML = `<div class="t" style="font:800 ${80 * s}px ${fn};color:${V.ink}">${esc(V.end)}</div>`;
+    Object.assign(last.style, { display: "flex", alignItems: "center", justifyContent: "center" }); }
+
+  // ---- the motion: the block rolls from just under the frame until its last line has left the top, linear (even
+  // speed, as credits do); then the last line rolls in from below to the middle (24 f, slow end) and stays. The block's
+  // height is measured when the timeline is built (fonts in), so the roll ends exactly at the last line.
+  const S = Math.round(V.start), endF = V.end ? FRAMES - K(54) : FRAMES - K(6);
+  const build = () => {
+    const h = roll.offsetHeight || 1000 * s;
+    ft(roll, { y: H }, { y: -h }, S, Math.max(S + K(30), endF), "none");
+    if (V.end) enter(last, { opacity: 0, y: H * 0.35 }, { opacity: 1, y: 0 }, endF - K(10), endF + K(18), "power3.out");
+  };
+  build();
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

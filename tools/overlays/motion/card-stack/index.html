@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "cards", "type": "number", "label": "Cards", "default": 5, "min": 2, "max": 8, "step": 1},
+  {"id": "label", "type": "string", "label": "Text on the cards", "default": "MOTIONLAB"},
+  {"id": "number", "type": "string", "label": "Number on the cards", "default": "4821  ••••  ••••  0526"},
+  {"id": "title", "type": "string", "label": "A line under them (empty = none)", "default": "Pay with a glow"},
+  {"id": "glow", "type": "color", "label": "Glow colour", "default": "#39ff88"},
+  {"id": "card", "type": "color", "label": "Card colour", "default": "#16231b"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Space Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#030504"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "card-stack" (0.5.0, the Motion Graphics library): a loose pile of cards shuffles - the top
+     card slides out, swings round and goes under the pile, again and again - then one card comes forward, straightens
+     and lights up with a glowing edge while the rest dim back. Learned from graphics__card (a pile of green glowing
+     cards shuffling, one card coming forward and glowing, f1-f53 then f152 at 25 fps). MotionLab's own drawing - no
+     bank's card. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .cd { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="pile" class="abs"></div><div id="tt" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam", "#pile"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? `radial-gradient(circle at 50% 45%, ${V.glow}14, transparent 50%), ${V.bg}` : "transparent" });
+  const n = Math.round(V.cards), s = V.size, cw = 560 * U * s, ch = cw * 0.63, cx = W / 2, cy = H * 0.45, R = rnd(43);
+  const cards = [];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("div"); c.className = "cd";
+    Object.assign(c.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${cw * 0.05}px`, background: `linear-gradient(135deg, ${V.card}, #0b120e)`,
+      border: `${2 * U}px solid ${V.glow}55`, boxShadow: `0 ${20 * U}px ${40 * U}px rgba(0,0,0,.5)` });
+    c.innerHTML = `<div class="t" style="left:${cw * 0.07}px;top:${ch * 0.12}px;font:700 ${ch * 0.1}px ${fam.replace(/"/g, "'")};color:${V.glow};letter-spacing:.12em">${V.label.replace(/[&<>]/g, "")}</div>
+      <div class="abs" style="left:${cw * 0.07}px;top:${ch * 0.36}px;width:${cw * 0.13}px;height:${ch * 0.18}px;border-radius:${cw * 0.015}px;background:linear-gradient(135deg,#d9c27a,#8a7436)"></div>
+      <div class="t" style="left:${cw * 0.07}px;top:${ch * 0.7}px;font:500 ${ch * 0.085}px ${fam.replace(/"/g, "'")};color:#ffffffcc;letter-spacing:.08em">${V.number.replace(/[&<>]/g, "")}</div>`;
+    q("pile").appendChild(c);
+    const r = (R() - 0.5) * 16, dx = (R() - 0.5) * 50 * U, dy = (R() - 0.5) * 40 * U;
+    gsap.set(c, { x: cx - cw / 2 + dx, y: cy - ch / 2 + dy, rotation: r, zIndex: i, transformOrigin: "50% 50%" });
+    cards.push({ c, r, dx, dy });
+  }
+  if (V.title) { const tt = q("tt"); tt.textContent = V.title; Object.assign(tt.style, { font: `700 ${52 * U * s}px ${fam}`, color: "#ffffff" }); gsap.set(tt, { x: cx, y: cy + ch * 0.95, xPercent: -50 }); }
+
+  // ---- the motion: the pile drops in (cards 2 f apart, 12 f); shuffles: the top card slides out right (8 f), swings
+  // under (z drops), back into the pile (10 f) - one every 14 f; then the chosen card comes forward (16 f, S-curve),
+  // straight, bigger, its edge glowing; the others dim
+  const S = Math.round(V.start);
+  cards.forEach(({ c, r, dx, dy }, i) => enter(c, { opacity: 1, y: cy - ch / 2 + dy - H * 0.4, rotation: r - 30 }, { y: cy - ch / 2 + dy, rotation: r }, S + i * K(2), S + i * K(2) + K(12), "power3.out"));
+  let f = S + n * K(2) + K(14), order = cards.map((_, i) => i), z = n;
+  const shuffles = Math.max(2, Math.min(5, Math.floor((FRAMES - f - K(50)) / K(14))));
+  for (let k = 0; k < shuffles; k++, f += K(14)) {
+    const top = order[order.length - 1], it = cards[top], dir = k % 2 ? -1 : 1;
+    to(it.c, { x: cx - cw / 2 + dir * cw * 0.75, rotation: it.r + dir * 18 }, f, f + K(8), "power2.out");
+    set(it.c, { zIndex: -(++z) }, f + K(8));
+    to(it.c, { x: cx - cw / 2 + it.dx, rotation: it.r }, f + K(8), f + K(18), "power2.inOut");
+    order = [top, ...order.slice(0, -1)];
+  }
+  const pick = cards[order[order.length - 1]], P = f + K(4);
+  if (P + K(16) < FRAMES) {
+    set(pick.c, { zIndex: 1000 }, P);
+    to(pick.c, { x: cx - cw / 2, y: cy - ch / 2 - 40 * U, rotation: 0, scale: 1.12 }, P, P + K(16), "power3.inOut");
+    to(pick.c, { boxShadow: `0 0 ${50 * U}px ${8 * U}px ${V.glow}88, 0 ${30 * U}px ${50 * U}px rgba(0,0,0,.6)`, borderColor: V.glow }, P + K(8), P + K(20), "power2.out");
+    cards.forEach(({ c }) => { if (c !== pick.c) to(c, { opacity: 0.35, scale: 0.94 }, P, P + K(16), "power2.out"); });
+    if (V.title) enter("#tt", { opacity: 0, y: cy + ch * 0.95 + 20 * U }, { opacity: 1, y: cy + ch * 0.95 }, P + K(12), P + K(24), "power2.out");
+    for (let g = P + K(20), k = 0; g + K(24) < FRAMES; g += K(24), k++) to(pick.c, { rotationY: k % 2 ? -6 : 6, rotationX: k % 2 ? 3 : -3 }, g, g + K(24), "sine.inOut");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

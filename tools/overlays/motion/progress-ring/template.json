@@ -1,0 +1,52 @@
+{
+ "name": "Progress ring",
+ "kind": "numbers",
+ "what": "Progress you can see: a ring fills to its percent with the number counting and a check popping; a ring drawing around a symbol that pops and glows; or a ticket card whose bar fills with a glowing tip.",
+ "use_for": [
+  "progress",
+  "goal",
+  "percent",
+  "stat",
+  "travel",
+  "loading",
+  "milestone"
+ ],
+ "tags": [
+  "ring",
+  "progress",
+  "percent",
+  "bar",
+  "check",
+  "icon"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__chart-with",
+   "what": "a green ring filling to 78 %, a check popping"
+  },
+  {
+   "pack": "swishy",
+   "clip": "overlays__moneyyyy",
+   "what": "a ring drawing around a green dollar that pops"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__flight-progress",
+   "what": "a dark ticket card, a green bar filling"
+  }
+ ],
+ "motion": "fills 50 f (S-curve) with the count; the check back.out 12 f; the symbol pops and the glow breathes",
+ "scene": false,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  10,
+  30,
+  54,
+  60,
+  80
+ ]
+}

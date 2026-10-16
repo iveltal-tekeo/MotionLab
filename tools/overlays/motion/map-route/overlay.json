@@ -1,0 +1,28 @@
+{
+ "name": "map-route",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "thump",
+   "what": "the start pin drops"
+  },
+  {
+   "f": "start + round(16 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "travel_frames / 30",
+   "from": 300,
+   "to": 1800,
+   "what": "the trip"
+  },
+  {
+   "f": "start + round(16 * fps / 30) + round(travel_frames * fps / 30)",
+   "if": "start + round(16 * fps / 30) + round(travel_frames * fps / 30) < frames",
+   "kind": "pop",
+   "what": "the end pin pops"
+  }
+ ]
+}

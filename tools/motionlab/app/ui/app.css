@@ -449,11 +449,13 @@ tr.sel td { background: #221d0d; }
 /* ---------------- 0.3.3: a livelier look, CSS only (no images, no scripts): a colour per section (body[data-page],
    set by route()), soft gradients, a little motion on cards / dialogs / toasts - off with prefers-reduced-motion */
 :root { --violet: #a78bfa; --cyan: #38d6f5; --pink: #ff6fae; --acc: var(--amber); --acc-soft: #ffc4001c;
-  --gen: #e05cff; }                              /* Generate's colour: one token for the page, its sidebar row, Home's card */
+  --gen: #e05cff;                                /* Generate's colour: one token for the page, its sidebar row, Home's card */
+  --motion: #ff7a45; }                           /* 0.5.0: Motion Graphics' colour (coral) */
 body[data-page=analyze] { --acc: var(--cyan); --acc-soft: #38d6f51c; }
 body[data-page=generate] { --acc: var(--gen); --acc-soft: color-mix(in srgb, var(--gen) 11%, transparent); }
 body[data-page=prepare] { --acc: var(--green); --acc-soft: #3ecf8e1c; }
 body[data-page=memory] { --acc: var(--violet); --acc-soft: #a78bfa1c; }
+body[data-page=motion] { --acc: var(--motion); --acc-soft: color-mix(in srgb, var(--motion) 11%, transparent); }
 body[data-page=jobs], body[data-page=settings] { --acc: var(--blue); --acc-soft: #4fb3ff1c; }
 main { background: radial-gradient(1100px 340px at 18% -140px, var(--acc-soft), transparent 70%), var(--bg); }
 #side { background: linear-gradient(180deg, #15151a, #0f0f12); }
@@ -463,6 +465,7 @@ main { background: radial-gradient(1100px 340px at 18% -140px, var(--acc-soft), 
 #side a.on .ic { color: var(--acc); }
 #side a[data-nav=edit]:hover .ic { color: var(--amber); } #side a[data-nav=analyze]:hover .ic { color: var(--cyan); }
 #side a[data-nav=generate]:hover .ic { color: var(--gen); } #side a[data-nav=memory]:hover .ic { color: var(--violet); }
+#side a[data-nav=motion]:hover .ic { color: var(--motion); }
 .head h1 { display: flex; align-items: center; gap: 10px; }
 .head h1::before { content: ""; width: 4px; height: 22px; border-radius: 2px; background: linear-gradient(180deg, var(--acc), transparent); }
 .tabs a.on { border-bottom-color: var(--acc); }
@@ -1005,47 +1008,54 @@ body[data-page=memory] {
   --sf-tex-size: 240px 170px; --sf-tex-rep: repeat;
 }
 
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) main { position: relative; isolation: isolate; }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) main::before {
+body[data-page=motion] {
+  --sf-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='15.5' cy='12' r='5'/><path d='M2.5 8.5h6M4.5 12h4.5M2.5 15.5h6'/></svg>");
+  /* motion paths: an eased curve with its keyframe dots and handles */
+  --sf-tex: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='160'><path fill='none' stroke='black' stroke-width='.9' d='M10 130C60 130 70 30 120 30S180 90 210 90'/><path fill='none' stroke='black' stroke-opacity='.5' stroke-width='.7' d='M10 130H52M120 30H82M120 30H158'/><circle cx='10' cy='130' r='2.4'/><circle cx='120' cy='30' r='2.4'/><circle cx='210' cy='90' r='2.4'/><circle cx='52' cy='130' r='1.3'/><circle cx='82' cy='30' r='1.3'/><circle cx='158' cy='30' r='1.3'/></svg>");
+  --sf-tex-size: 220px 160px; --sf-tex-rep: repeat;
+}
+
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) main { position: relative; isolation: isolate; }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) main::before {
   content: ""; position: absolute; left: 0; right: 0; top: 0; height: 320px; z-index: -1; pointer-events: none;
   background: var(--acc); opacity: .045;
   mask-image: linear-gradient(180deg, #000 25%, transparent), var(--sf-tex);
   mask-size: 100% 100%, var(--sf-tex-size); mask-repeat: no-repeat, var(--sf-tex-rep); mask-composite: intersect; }
 
 /* 1. the band */
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) {
   position: relative; isolation: isolate; align-items: center; justify-content: flex-start; gap: 18px; padding: 20px 22px;
   border: 1px solid color-mix(in srgb, var(--acc) 32%, var(--line)); border-radius: 14px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 15%, transparent), color-mix(in srgb, var(--acc) 4%, transparent) 75%); }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) > div:first-child { flex: 1; min-width: 0; }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) > div:first-child { flex: 1; min-width: 0; }
 /* the big icon tile (the band's first flex item): a tinted rounded square + the icon, both in --acc through one mask
    (the icon at full strength, the square at 18 %) */
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb))::before {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb))::before {
   content: ""; order: -1; flex: none; width: 60px; height: 60px; border-radius: 14px; background: var(--acc);
   mask-image: var(--sf-icon), linear-gradient(#0000002e, #0000002e); mask-size: 34px 34px, 100% 100%;
   mask-position: center; mask-repeat: no-repeat; mask-composite: add; }
 /* the glow behind the band, fades in once */
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb))::after {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb))::after {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
   background: radial-gradient(600px 160px at 12% 0, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%);
   box-shadow: 0 8px 40px color-mix(in srgb, var(--acc) 10%, transparent); animation: sfglow .2s ease-out; }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) h1 { font-size: 26px; }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) h1::before { display: none; }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) .sub { color: #a9a9b3; font-size: 13.5px; }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) h1 { font-size: 26px; }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) h1::before { display: none; }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) .sub { color: #a9a9b3; font-size: 13.5px; }
 /* sub-pages (a video, an edit, the prompt library): the bar before the title + a softer wash, no band */
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:has(.crumb) h1::before { width: 5px; height: 26px; background: var(--acc); }
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:has(.crumb) h1::before { width: 5px; height: 26px; background: var(--acc); }
 
 /* 3. surfaces: borders 22 %, hover glows 25 %; primary buttons in the section colour */
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) :is(.panel, .card, .stat, .gway) {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) :is(.panel, .card, .stat, .gway) {
   border-color: color-mix(in srgb, var(--acc) 22%, var(--line)); }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .gway {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .gway {
   background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 7%, var(--panel)), var(--panel) 60%); }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) :is(.card, .gway, .pgc):hover {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) :is(.card, .gway, .pgc):hover {
   border-color: color-mix(in srgb, var(--acc) 50%, var(--line)); box-shadow: 0 10px 28px #0008, 0 0 22px color-mix(in srgb, var(--acc) 25%, transparent); }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .btn.pri {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .btn.pri {
   background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 82%, #fff), var(--acc)); border-color: var(--acc); color: #111;
   box-shadow: 0 2px 10px color-mix(in srgb, var(--acc) 22%, transparent); }
-body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .btn.pri:hover {
+body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .btn.pri:hover {
   background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 70%, #fff), color-mix(in srgb, var(--acc) 90%, #fff));
   box-shadow: 0 4px 16px color-mix(in srgb, var(--acc) 40%, transparent); }
 
@@ -1053,13 +1063,13 @@ body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=gene
    always, a tint on hover, the open one lit */
 #side a[data-nav=analyze] { --rc: var(--cyan); } #side a[data-nav=prepare] { --rc: var(--green); }
 #side a[data-nav=edit] { --rc: var(--amber); } #side a[data-nav=generate] { --rc: var(--gen); }
-#side a[data-nav=memory] { --rc: var(--violet); }
-#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory]) {
+#side a[data-nav=memory] { --rc: var(--violet); } #side a[data-nav=motion] { --rc: var(--motion); }
+#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory],[data-nav=motion]) {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--rc) 45%, transparent); }
-#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory]) .ic { color: var(--rc); }
-#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory]):hover {
+#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory],[data-nav=motion]) .ic { color: var(--rc); }
+#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory],[data-nav=motion]):hover {
   background: color-mix(in srgb, var(--rc) 10%, transparent); color: var(--text); }
-#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory]).on {
+#side a[data-nav]:is([data-nav=analyze],[data-nav=prepare],[data-nav=edit],[data-nav=generate],[data-nav=memory],[data-nav=motion]).on {
   background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 22%, transparent), transparent 85%);
   box-shadow: inset 3px 0 0 var(--rc); color: var(--text); }
 
@@ -1067,10 +1077,10 @@ body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=gene
 @media (prefers-reduced-motion: reduce) { .head::after { animation: none !important; } }
 /* a narrow window: a smaller tile and title, the band's buttons wrap under the text */
 @media (max-width: 760px) {
-  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) { flex-wrap: wrap; gap: 12px; padding: 12px 10px; }
-  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb))::before { width: 40px; height: 40px; mask-size: 24px 24px, 100% 100%; }
-  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) h1 { font-size: 21px; }
-  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory]) .head:not(:has(.crumb)) > div:first-child { flex-basis: 100%; }
+  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) { flex-wrap: wrap; gap: 12px; padding: 12px 10px; }
+  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb))::before { width: 40px; height: 40px; mask-size: 24px 24px, 100% 100%; }
+  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) h1 { font-size: 21px; }
+  body:is([data-page=analyze],[data-page=prepare],[data-page=edit],[data-page=generate],[data-page=memory],[data-page=motion]) .head:not(:has(.crumb)) > div:first-child { flex-basis: 100%; }
 }
 
 /* 0.4.2: sound effects in a reference (asked like a possible miss), notes on moments of a render, fix / start over,
@@ -1406,3 +1416,31 @@ details.pbself[open] > summary::before { content: '▾'; }
 .tscd { display: flex; flex-wrap: wrap; gap: 2px 6px; margin-top: 3px; font-size: 11.5px; color: var(--muted); }
 .tscd i { font-style: normal; color: var(--dim); }
 .tscd .ok { color: var(--green); }
+
+/* ---------------- 0.5.0: Motion Graphics (#/motion) - the templates (portrait pictures, a click = the live preview) and
+   the captured clips they were learned from (play on hover) */
+.mggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-top: 10px; }
+.mgc, .mcc { padding: 10px; border: 1px solid color-mix(in srgb, var(--acc) 22%, var(--line)); border-radius: var(--r); background: var(--panel); cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s; }
+.mgc:hover, .mcc:hover, .mgc:focus-visible, .mcc:focus-visible { border-color: color-mix(in srgb, var(--acc) 55%, var(--line));
+  box-shadow: 0 10px 28px #0008, 0 0 22px color-mix(in srgb, var(--acc) 25%, transparent); transform: translateY(-2px); outline: none; }
+.mgpic, .mcpic { aspect-ratio: 9 / 16; background: #0b0b0e; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.mgpic img, .mcpic video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.mgwhat { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 4px 0; min-height: 3.9em; }
+.mcgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+.mcc .mgwhat { -webkit-line-clamp: 2; min-height: 2.6em; }
+.mst { font: 600 10.5px/17px var(--ui); padding: 0 7px; border-radius: 999px; white-space: nowrap; border: 1px solid var(--line2); color: var(--muted); }
+.mst-built { color: var(--green); border-color: color-mix(in srgb, var(--green) 50%, transparent); background: color-mix(in srgb, var(--green) 12%, transparent); }
+.mst-p1 { color: var(--motion); border-color: color-mix(in srgb, var(--motion) 50%, transparent); background: color-mix(in srgb, var(--motion) 12%, transparent); }
+.mst-p3, .mst-still { color: var(--dim); }
+.mgm { display: grid; grid-template-columns: minmax(260px, 360px) 1fr; gap: 22px; align-items: start; }
+.mgprev { position: sticky; top: 0; }
+.mgsrc { display: flex; flex-wrap: wrap; gap: 10px; }
+.mgs { display: flex; gap: 8px; align-items: flex-start; max-width: 300px; }
+.mgs video { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 6px; background: #000; flex: none; }
+.mgsheet { max-width: 100%; max-height: 260px; border-radius: 6px; cursor: zoom-in; border: 1px solid var(--line2); }
+@media (max-width: 900px) { .mgm { grid-template-columns: 1fr; } .mgprev { position: static; } }
+@media (prefers-reduced-motion: reduce) { .mgc, .mcc { transition: none; } .mgc:hover, .mcc:hover { transform: none; } }
+.gtpl { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip.sug { border-style: dashed; border-color: var(--acc); color: var(--text); }
+.fchip.ghostc { background: transparent; border-color: transparent; color: var(--muted); }

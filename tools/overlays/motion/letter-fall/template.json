@@ -1,0 +1,41 @@
+{
+ "name": "Letter fall",
+ "kind": "text",
+ "what": "A tall word slams in, then its letters come loose one after another - each wobbles, tips over and falls out of the frame spinning; the letters that stay are left alone.",
+ "use_for": [
+  "word",
+  "fail",
+  "loss",
+  "funny",
+  "drop",
+  "music video"
+ ],
+ "tags": [
+  "kinetic text",
+  "fall",
+  "gravity",
+  "letters",
+  "slam"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__spill-word",
+   "what": "the tall word losing its letters one by one"
+  }
+ ],
+ "motion": "slam 12 f + a bump; each letter wobbles 6 f, tips 6 f, falls 22 f (accelerating), 10 f apart",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  8,
+  14,
+  40,
+  50,
+  60,
+  75,
+  100
+ ]
+}

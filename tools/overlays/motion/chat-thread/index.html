@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "name", "type": "string", "label": "Contact name at the top (empty = no top bar)", "default": "Sam"},
+  {"id": "msg1", "type": "string", "label": "Message 1", "default": "ready to do you?"},
+  {"id": "msg2", "type": "string", "label": "Message 2", "default": "on my way 🙌"},
+  {"id": "msg3", "type": "string", "label": "Message 3 (empty = not shown)", "default": "bring the camera"},
+  {"id": "msg4", "type": "string", "label": "Message 4 (empty = not shown)", "default": "already in the bag"},
+  {"id": "msg5", "type": "string", "label": "Message 5 (empty = not shown)", "default": ""},
+  {"id": "msg6", "type": "string", "label": "Message 6 (empty = not shown)", "default": ""},
+  {"id": "first", "type": "enum", "label": "Who writes first (then they take turns)", "default": "me", "options": [{"value": "me", "label": "Me (right)"}, {"value": "them", "label": "Them (left)"}]},
+  {"id": "look", "type": "enum", "label": "Look", "default": "green", "options": [{"value": "green", "label": "Green bubbles on beige"}, {"value": "blue", "label": "Blue bubbles on white"}, {"value": "dark", "label": "Dark"}]},
+  {"id": "typing", "type": "boolean", "label": "Typing dots before each reply", "default": true},
+  {"id": "times", "type": "boolean", "label": "Times under the messages", "default": true},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "top", "type": "number", "label": "First message at (% of the height)", "default": 12, "min": 0, "max": 80, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between messages", "default": 34, "min": 6, "max": 300, "step": 1},
+  {"id": "start", "type": "number", "label": "First message at frame", "default": 4, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "chat-thread" (0.5.0, the Motion Graphics library): a chat that builds message by message -
+     each bubble grows out of its corner (back.out), its words fade in a moment later, the replies after typing dots.
+     Learned from social__whatsapp-convo (a sent green bubble, then the reply's empty bubble at f61 (00:00:02:11) at
+     25 fps and its words at f76-f82, the times and ticks) and ui-elements__phone-messages (left / right bubbles, a
+     typing indicator before each reply). The bubbles are in the page's own layout (shown one by one), so long messages
+     wrap and stack without measuring fonts. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #thread { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; }
+  .msg { display: none; max-width: 74%; }
+  .msg.me { align-self: flex-end; } .msg.them { align-self: flex-start; }
+  .bub { position: relative; line-height: 1.32; font-synthesis: none; }
+  .tm { opacity: .55; text-align: right; margin-top: .2em; }
+  .dots { display: flex; gap: .32em; align-items: center; }
+  .dots i { display: block; width: .42em; height: .42em; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="bar" class="abs"></div>
+  <div id="cam" class="abs"><div id="thread"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
+
+  const L = { green: { bg: "#e7ded3", me: "#d9fdd3", them: "#ffffff", ink: "#111b21", bar: "#f0ebe4", tick: "#53bdeb" },
+              blue: { bg: "#ffffff", me: "#1f8bff", them: "#e9e9eb", ink: "#111111", meInk: "#ffffff", bar: "#f7f7f8", tick: "#ffffffcc" },
+              dark: { bg: "#0b141a", me: "#005c4b", them: "#202c33", ink: "#e9edef", bar: "#1f2c34", tick: "#53bdeb" } }[V.look] || {};
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? L.bg : "transparent" });
+  const s = V.size, fs = 48 * U * s, pad = 56 * U * s;
+  if (V.name && V.background) {                          // the top bar: back arrow, an avatar, the name
+    const bar = document.getElementById("bar");
+    Object.assign(bar.style, { width: `${W}px`, height: `${150 * U * s}px`, background: L.bar, display: "flex", alignItems: "flex-end",
+      padding: `0 ${pad}px ${26 * U * s}px`, gap: `${22 * U * s}px`, font: `600 ${fs * 1.05}px ${fam}`, color: L.ink, boxShadow: "0 1px 0 rgba(0,0,0,.08)" });
+    bar.innerHTML = `<span style="opacity:.6">‹</span><span style="display:inline-block;width:${66 * U * s}px;height:${66 * U * s}px;border-radius:50%;background:linear-gradient(135deg,#9db4ff,#ffb3c7)"></span><span>${esc(V.name)}</span>`;
+  }
+  const th = document.getElementById("thread");
+  Object.assign(th.style, { width: `${W - 2 * pad}px`, gap: `${18 * U * s}px`, font: `400 ${fs}px ${fam}` });
+  gsap.set(th, { x: pad, y: H * V.top / 100 + (V.name && V.background ? 60 * U * s : 0) });
+  const msgs = [V.msg1, V.msg2, V.msg3, V.msg4, V.msg5, V.msg6].map(t => (t || "").trim()).filter(Boolean);
+  const r = 26 * U * s;
+  const items = msgs.map((t, i) => {
+    const me = (i % 2 === 0) === (V.first === "me");
+    const wrap = document.createElement("div");
+    wrap.className = `msg ${me ? "me" : "them"}`;
+    const ink = me && L.meInk ? L.meInk : L.ink;
+    const hh = 10 + (i * 3) % 50;
+    wrap.innerHTML = `<div class="bub" style="background:${me ? L.me : L.them};color:${ink};padding:${0.5 * fs}px ${0.68 * fs}px;border-radius:${r}px ${r}px ${me ? r * 0.25 : r}px ${me ? r : r * 0.25}px;box-shadow:0 ${2 * U}px ${4 * U}px rgba(0,0,0,.08)">
+      <div class="tx">${esc(t)}</div>${V.times ? `<div class="tm" style="font-size:${fs * 0.55}px">10:${hh < 10 ? "0" + hh : hh} PM${me ? ` <span style="color:${L.tick}">✓✓</span>` : ""}</div>` : ""}</div>`;
+    let dots = null;
+    if (!me && V.typing) {
+      dots = document.createElement("div");
+      dots.className = "msg them";
+      dots.innerHTML = `<div class="bub" style="background:${L.them};padding:${0.62 * fs}px ${0.7 * fs}px;border-radius:${r}px ${r}px ${r}px ${r * 0.25}px"><div class="dots">${"<i></i>".repeat(3)}</div></div>`;
+      dots.querySelectorAll("i").forEach(d => d.style.background = L.ink + "88");
+      th.appendChild(dots);
+    }
+    th.appendChild(wrap);
+    return { me, wrap, bub: wrap.querySelector(".bub"), tx: wrap.querySelector(".tx"), dots };
+  });
+
+  // ---- the motion: a message every gap frames; a reply first shows typing dots for 24 frames in its place
+  const S = Math.round(V.start), GAP = Math.max(K(6), Math.round(V.gap * FPS / 30)), TYPE = K(24);
+  let f = S;
+  items.forEach((m, i) => {
+    if (m.dots) {
+      const d0 = Math.max(0, f - TYPE + K(4));
+      set(m.dots, { display: "block" }, d0);
+      ft(m.dots.querySelector(".bub"), { scale: 0.5, transformOrigin: "0% 100%" }, { scale: 1 }, d0, d0 + K(8), "back.out(2)");
+      m.dots.querySelectorAll("i").forEach((d, k) => {                 // each dot hops, one after another
+        for (let g = d0 + K(4) + k * K(3); g + K(8) < f; g += K(12)) { to(d, { y: -8 * U * s }, g, g + K(4), "sine.out"); to(d, { y: 0 }, g + K(4), g + K(8), "sine.in"); }
+      });
+      set(m.dots, { display: "none" }, f);
+    }
+    set(m.wrap, { display: "block" }, f);
+    ft(m.bub, { scale: 0.55, opacity: 0, transformOrigin: m.me ? "100% 100%" : "0% 100%" }, { scale: 1, opacity: 1 }, f, f + K(12), "back.out(1.8)");
+    ft(m.tx, { opacity: 0, y: 6 * U }, { opacity: 1, y: 0 }, f + K(6), f + K(14), "power2.out");
+    f += GAP + (items[i + 1] && items[i + 1].dots ? TYPE - K(4) : 0);
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

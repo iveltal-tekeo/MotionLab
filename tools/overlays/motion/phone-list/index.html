@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Screen title", "default": "My apps"},
+  {"id": "rows", "type": "string", "label": "Rows (| between; emoji first = its icon; a : then a small line)", "default": "📅 Calendar: 3 events today|📸 Photos: 128 new|🎵 Music: Now playing|💪 Fitness: 8,240 steps|☀️ Weather: 24° sunny"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "look", "type": "enum", "label": "Phone", "default": "light", "options": [{"value": "light", "label": "Light screen"}, {"value": "dark", "label": "Dark screen"}]},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#3b82f6"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#e9ebf0"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 1.4, "step": 0.05},
+  {"id": "gap", "type": "number", "label": "Frames between rows", "default": 7, "min": 1, "max": 60, "step": 1},
+  {"id": "rows_out", "type": "boolean", "label": "The rows slide out at the end", "default": false},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "phone-list" (0.5.0, the Motion Graphics library): a phone rises into the frame and its
+     screen fills with a list - row after row slides in from the right with its icon popping, each settling with a slow
+     end; the phone floats; optionally the rows slide out again. Learned from social__animated-app-list (a phone screen
+     "Apps" whose rows slide in one after another, then out). MotionLab's own code - no app's look copied.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #phone { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .row { position: absolute; left: 0; top: 0; display: flex; align-items: center; }
+  .ic { flex: none; display: flex; align-items: center; justify-content: center; }
+  .tx div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="phone"><div id="notch" class="abs"></div><div id="ttl" class="abs"></div><div id="list" class="abs"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const dark = V.look === "dark", s = V.size, scr = dark ? "#0f1115" : "#ffffff", ink = dark ? "#f3f4f6" : "#111318", sub = dark ? "#8b919c" : "#6b7280";
+  const pw = W * 0.68 * s, ph = pw * 2.05, px = W / 2 - pw / 2, py = H / 2 - ph / 2;
+  const phone = q("phone");
+  Object.assign(phone.style, { width: `${pw}px`, height: `${ph}px`, borderRadius: `${pw * 0.13}px`, background: scr, border: `${pw * 0.03}px solid #15161a`, boxShadow: `0 ${40 * U}px ${90 * U}px rgba(0,0,0,.3)` });
+  gsap.set(phone, { x: px, y: py });
+  Object.assign(q("notch").style, { width: `${pw * 0.3}px`, height: `${pw * 0.07}px`, borderRadius: "999px", background: "#15161a" });
+  gsap.set("#notch", { x: pw * 0.35 - pw * 0.03, y: pw * 0.03 });
+  const ttl = q("ttl"); ttl.textContent = V.title;
+  Object.assign(ttl.style, { font: `800 ${pw * 0.085}px ${fam}`, color: ink });
+  gsap.set(ttl, { x: pw * 0.07, y: pw * 0.17 });
+  const rows = String(V.rows || "").split("|").map(x => x.trim()).filter(Boolean), rh = pw * 0.19, list = q("list"), els = [];
+  rows.forEach((r, i) => {
+    let [t, sb] = r.split(":").map(x => x.trim());
+    const m = (t || "").match(/^(\p{Extended_Pictographic}️?|\p{Emoji_Presentation})\s*/u);
+    const icon = m ? m[1] : (t || "?").charAt(0);
+    if (m) t = t.slice(m[0].length);
+    const e = document.createElement("div"); e.className = "row";
+    Object.assign(e.style, { width: `${pw * 0.86}px`, height: `${rh * 0.82}px`, gap: `${pw * 0.04}px`, padding: `0 ${pw * 0.035}px`, borderRadius: `${pw * 0.05}px`, background: dark ? "#1b1e24" : "#f4f5f8" });
+    e.innerHTML = `<div class="ic"></div><div class="tx"><div></div><div></div></div>`;
+    Object.assign(e.children[0].style, { width: `${rh * 0.52}px`, height: `${rh * 0.52}px`, borderRadius: `${rh * 0.14}px`, background: m ? (dark ? "#2a2e36" : "#ffffff") : V.accent, color: "#fff", font: `700 ${rh * 0.3}px ${fam}` });
+    e.children[0].textContent = icon;
+    Object.assign(e.children[1].children[0].style, { font: `700 ${pw * 0.05}px ${fam}`, color: ink });
+    Object.assign(e.children[1].children[1].style, { font: `400 ${pw * 0.038}px ${fam}`, color: sub });
+    e.children[1].children[0].textContent = t || ""; e.children[1].children[1].textContent = sb || "";
+    list.appendChild(e); gsap.set(e, { x: pw * 0.07, y: pw * 0.36 + i * rh });
+    els.push(e);
+  });
+
+  // ---- the motion: the phone rises (20 f, slow end) and floats; the title fades; a row every gap frames slides in
+  // from the right (14 f, power3.out) and its icon pops (back.out); out: the rows slide left, 3 f apart
+  const S = Math.round(V.start), G = Math.max(1, Math.round(V.gap * FPS / 30));
+  enter(phone, { opacity: 1, y: py + H * 0.6, rotation: 6 }, { y: py, rotation: 0 }, S, S + K(20), "power3.out");
+  to(phone, { y: py - 24 * U, rotation: -1 }, S + K(20), FRAMES, "sine.inOut");
+  enter(ttl, { opacity: 0, x: pw * 0.07 - 20 * U }, { opacity: 1, x: pw * 0.07 }, S + K(14), S + K(26), "power2.out");
+  els.forEach((e, i) => {
+    const f0 = S + K(20) + i * G;
+    enter(e, { opacity: 0, x: pw * 0.6 }, { opacity: 1, x: pw * 0.07 }, f0, f0 + K(14), "power3.out");
+    ft(e.children[0], { scale: 0 }, { scale: 1 }, f0 + K(4), f0 + K(14), "back.out(2.6)");
+  });
+  if (V.rows_out) { const o = FRAMES - K(20) - els.length * K(3);
+    if (o > S + K(20) + els.length * G + K(14)) els.forEach((e, i) => to(e, { x: -pw, opacity: 0 }, o + i * K(3), o + i * K(3) + K(12), "power3.in")); }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+ "name": "before-after",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(10 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "if": "mode != 'versus'",
+   "what": "the divider sweeps"
+  },
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "if": "mode == 'versus'",
+   "what": "the halves slide in"
+  },
+  {
+   "f": "start + round(18 * fps / 30)",
+   "kind": "impact",
+   "if": "mode == 'versus'",
+   "what": "the VS slams"
+  }
+ ]
+}

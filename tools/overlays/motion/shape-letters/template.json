@@ -1,0 +1,40 @@
+{
+ "name": "Shape letters",
+ "kind": "text",
+ "what": "A phrase types in, but some letters are small coloured shapes - a triangle, a circle, a square - that spin in where the letter would be, bob while it holds, and turn back into their letters at the end.",
+ "use_for": [
+  "brand",
+  "tagline",
+  "title",
+  "playful",
+  "app promo",
+  "intro"
+ ],
+ "tags": [
+  "kinetic text",
+  "typing",
+  "shapes",
+  "playful",
+  "colourful"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__make-with-notion",
+   "what": "a phrase typing in with letters replaced by a red triangle and a blue dot"
+  }
+ ],
+ "motion": "14 letters a second; shapes spin in back.out 10 f, bob 14 f; back to letters back.out 10 f",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  10,
+  25,
+  45,
+  70,
+  100,
+  118
+ ]
+}

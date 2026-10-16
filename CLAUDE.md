@@ -27,7 +27,7 @@ explore the whole lab:
 | a script to say on camera: improve one for reach or write one from zero (Prepare), hooks | the `/write-script` skill |
 | titles, thumbnails, a video's package (description, chapters, hashtags), YouTube's A/B test | the `/write-title` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), briefs, image prompts | the `/write-prompt` skill |
-| a video from zero: a motion-graphics video (HyperFrames), a plan + prompts for AI video tools | the `/generate-video` skill |
+| a video from zero: a motion-graphics video (HyperFrames), a plan + prompts for AI video tools; motion templates | the `/generate-video` skill |
 | what to do next: status, unreleased changes, roadmap, plans, ideas, what waits on the user | the `/whats-next` skill |
 | anything in DaVinci Resolve (resolve_build.py, Fusion comps, library.py test / install) | `docs\resolve_notes.md` |
 | the app (`tools\app.py`, `tools\motionlab\app\`) | `tools\motionlab\app\CLAUDE.md` (loads by itself there) |
@@ -43,6 +43,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `refs\downloads.json` = where each download came from (link, platform, uploader, id, duration)
 - `analysis\thumbs\<set>\` = a thumbnail set (0.4.5: `set.json`, `img\`, `sheet_N.png`, Claude's `style.json`, the
   user's `verdicts.json`) - not a video analysis
+- `analysis\templates\<pack>\` = a pack of captured motion-graphics clips (0.5.0, e.g. `refs\swishy\`): `pack.json`
+  (every clip measured), `<id>\sheet.png` + `poster.jpg`, `overview_N.png`, Claude's `cards.json` - not a video analysis;
+  `tools\overlays\motion\<id>\` = the Motion Graphics library (MotionLab's own templates rebuilt from them, in the repo)
 - `analysis\<video name>\` one per analyzed video: `events.json` (all data), `report.html`, `review.json` (Claude's
   reviews), `review_todo.md`, `events\<ID>\sheet_NN.jpg + preview.mp4`, `frames\`, `cuts\`, `metrics.csv`,
   `overview.png`, `audio.wav`, `proxy_cfr.mp4` (only for VFR sources), `cache\` (re-usable metrics), `inspect\`,
@@ -147,6 +150,14 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `fonts.py list | sync | check <graphic> | selfcheck` the font library (0.4.6): families with group, licence,
   weights; `sync` after adding a family = every shipped design's font setting offers the whole library (HyperFrames
   checks a value against the declared options); renders / snapshots copy the used fonts into the graphic by themselves
+- `templates.py read <clips folder> [--pack p] | show <pack> [id] | verify <pack> | library | pick "<words>" | todo
+  <pack> | check [ids] [--size WxH@fps] [--values JSON] | selfcheck` the Motion Graphics library (0.5.0, built
+  2026-10-16): captured template clips measured with no Claude (moves with frame + timecode, their ease, holds, colours,
+  sheets; ~0.5 s a clip) -> `analysis\templates\<pack>\`; `library` / `pick` = the 74 templates in
+  `tools\overlays\motion\` (57 rebuilt from the Swishy clips, 17 MotionLab originals for the kinds template sites list
+  most - lower thirds, transitions, call-outs, end screens...; Generate starting blind picks from them; `overlay.py new <folder> --from <id> --frames
+  --fps --width --height --values JSON` uses one); `check` = a snapshot sheet + the template's picture;
+  `/generate-video templates <pack>` rebuilds the next ones
 - `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
   a motion-graphics video, `/generate-video`)
 - `precheck.py <render.mp4 | graphic .mov | snapshot folder> [--sfx <name>_sfx.json] [--motion-blur N]` checks before
@@ -155,7 +166,7 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   .json` + `.png` (frame + timecode per tile); exit 1 = look; footage moves only noted; `selfcheck`
 - `sfx.py cues <graphic|cues.json|plan.json> [--set id=v] | make <...> --song <audio|none> | plan <plan.json> | kinds |
   selfcheck` sound effects (built 2026-10-14 for 0.5.0): synthesised, seeded; a graphic's cues = overlay.json "cues"
-  (formulas of its settings), a plan's zooms / whips / flashes become cues; each effect levelled against the song where
+  (formulas of its settings; `parts(s)` = the items of an "a|b|c" setting), a plan's zooms / whips / flashes become cues; each effect levelled against the song where
   it sounds -> `build\sfx\<name>_sfx.wav` (Resolve track), `_mix.wav` (the plan's "audio"), `_sfx.json`; never guess a
   volume
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
@@ -213,7 +224,8 @@ the render -> `build\outcome.json` (+ `"packaging"`: CTR per thumbnail variant +
 older notes on moments stay in `"moments"`); *Rename* = the name the app shows, `build\project.json` "label" - the
 folder keeps its name, so commands use the folder name), **Generator**
 (#/generate, shown as Generate until 0.4.3.5: a motion-graphics video or a plan + prompts for AI video tools - `/generate-video`; the prompt library
-#/prompts), **Claude's memory**
+#/prompts), **Motion Graphics** (#/motion, 0.5.0: the templates with a live preview and the clips they were learned
+from; *Use in a video*, *Make a video with it*), **Claude's memory**
 (#/memory: one search over what Claude learned - videos and their style, effects and how they were made, lessons,
 saved graphics + effects, Share with friends), then Jobs and Settings
 (General, Storage, Claude skills). The 0.3 addresses (#/refs, #/projects, #/knowledge, #/library) still work. The app

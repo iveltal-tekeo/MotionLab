@@ -1,0 +1,36 @@
+{
+ "name": "End screen",
+ "kind": "social",
+ "what": "The last seconds of a video: a title, one or two video cards (where the platform's end-screen links go) sliding in, the channel's round picture popping in a turning ring and a Subscribe button that pulses. Side by side on a wide frame, stacked on a tall one.",
+ "use_for": [
+  "outro",
+  "end screen",
+  "youtube",
+  "subscribe",
+  "watch next",
+  "channel"
+ ],
+ "tags": [
+  "end screen",
+  "outro",
+  "cards",
+  "subscribe",
+  "channel"
+ ],
+ "learned_from": [],
+ "origin": "end screens - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "title rises 16 f; cards slide 18 f (power3.out, 5 f apart), play buttons breathe; picture back.out 14 f in a turning ring; the button pops, pulses every 40 f",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  20,
+  30,
+  50,
+  90,
+  160,
+  239
+ ]
+}

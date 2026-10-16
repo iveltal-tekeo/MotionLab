@@ -1,0 +1,14 @@
+{
+ "name": "Word pills",
+ "kind": "text",
+ "what": "Words in outlined pills fall from the top one after another, land with a bounce and a tilt, and pile up; at the end the pile drops away.",
+ "use_for": ["words", "list", "hook", "keywords", "topics", "fun"],
+ "tags": ["kinetic text", "pills", "physics", "fall", "pile", "bounce"],
+ "learned_from": [{"pack": "swishy", "clip": "text__blog-animations", "what": "the pills falling and piling across the frame (~41 f at 25 fps)"},
+                  {"pack": "swishy", "clip": "text__pins", "what": "the drop into a loose cluster"}],
+ "motion": "a pill every 4 f, falls 16 f (accelerating), bounces 10 f; the pile drops 14-20 f",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [0, 10, 25, 50, 75, 110, 135, 146]
+}

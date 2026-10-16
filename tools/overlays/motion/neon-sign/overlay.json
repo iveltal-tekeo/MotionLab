@@ -1,0 +1,11 @@
+{
+ "name": "neon-sign",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round((20 + 4 * 3) * fps / 30) + i * round(12 * fps / 30)", "repeat": "3", "kind": "zap", "db": -8, "seed": "90 + i", "what": "a sign buzzes on (3 signs)"},
+  {"f": "start + round((20 + 4 * 3) * fps / 30) + round(2 * 12 * fps / 30) + round(10 * fps / 30)", "kind": "pop", "if": "len(badge) > 0", "what": "the badge pops"}
+ ]
+}

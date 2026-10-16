@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The phrase", "default": "Make it yours"},
+  {"id": "shapes", "type": "string", "label": "Letters that become shapes (e.g. a,o)", "default": "a,o"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#121212"},
+  {"id": "c1", "type": "color", "label": "Shape colour 1", "default": "#ff4d4d"},
+  {"id": "c2", "type": "color", "label": "Shape colour 2", "default": "#3b82f6"},
+  {"id": "c3", "type": "color", "label": "Shape colour 3", "default": "#f5b400"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f5f4ef"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "cps", "type": "number", "label": "Letters a second", "default": 14, "min": 2, "max": 60, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 4, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "shape-letters" (0.5.0, the Motion Graphics library): a phrase types in, but some letters
+     are small coloured shapes - a triangle, a circle, a square - that spin in where the letter would be; when the line
+     is done the shapes keep moving (a slow turn, a bob), and at the end they turn back into their letters. Learned from
+     text__make-with-notion (a phrase typing in with letters replaced by a red triangle and a blue dot, the shapes
+     moving between frames f0-f148 at 25 fps). MotionLab's own code - no brand. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #line { position: absolute; left: 0; top: 0; display: flex; align-items: baseline; white-space: nowrap; }
+  .c { display: none; line-height: 1; font-synthesis: none; }
+  .sh { display: none; position: relative; }
+  .sh i { position: absolute; left: 50%; top: 50%; display: block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="line"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, weight = ONE.test(V.font) ? 400 : 700;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, txt = V.text || "Text", fs = Math.min(W * 0.86 * s / (txt.length * 0.55), 150 * U * s);
+  const want = new Set(String(V.shapes || "").toLowerCase().split(/[,\s]+/).filter(Boolean));
+  const line = document.getElementById("line"), items = [], pal = [V.c1, V.c2, V.c3];
+  let k = 0;
+  [...txt].forEach(c => {
+    const isShape = want.has(c.toLowerCase());
+    const e = document.createElement("span"); e.className = "c"; e.textContent = c === " " ? " " : c;
+    Object.assign(e.style, { font: `${weight} ${fs}px ${fam}`, color: V.color });
+    line.appendChild(e);
+    let sh = null;
+    if (isShape) {
+      sh = document.createElement("span"); sh.className = "sh";
+      const z = fs * 0.5, kind = k % 3, col = pal[k % 3]; k++;
+      Object.assign(sh.style, { width: `${fs * 0.58}px`, height: `${fs * 0.72}px` });
+      const g = document.createElement("i");
+      if (kind === 0) Object.assign(g.style, { width: 0, height: 0, borderLeft: `${z * 0.55}px solid transparent`, borderRight: `${z * 0.55}px solid transparent`, borderBottom: `${z}px solid ${col}`, marginLeft: `${-z * 0.55}px`, marginTop: `${-z * 0.6}px` });
+      else if (kind === 1) Object.assign(g.style, { width: `${z * 0.9}px`, height: `${z * 0.9}px`, borderRadius: "50%", background: col, marginLeft: `${-z * 0.45}px`, marginTop: `${-z * 0.45}px` });
+      else Object.assign(g.style, { width: `${z * 0.8}px`, height: `${z * 0.8}px`, borderRadius: `${z * 0.12}px`, background: col, marginLeft: `${-z * 0.4}px`, marginTop: `${-z * 0.4}px` });
+      sh.appendChild(g); line.insertBefore(sh, e);
+    }
+    items.push({ e, sh, g: sh && sh.firstChild });
+  });
+  gsap.set(line, { x: W / 2, y: H * V.y / 100, xPercent: -50, yPercent: -50 });
+
+  // ---- the motion: a letter (or its shape) every 1/cps s; a shape spins in (back.out 10 f); the line done, the shapes
+  // turn and bob; near the end each shape gives its place back to the letter (a pop)
+  const S = Math.round(V.start), per = FPS / Math.max(1, V.cps);
+  items.forEach((it, i) => {
+    const f = S + Math.round(i * per);
+    if (it.sh) {
+      set(it.sh, { display: "inline-block" }, f);
+      ft(it.g, { scale: 0, rotation: -180 }, { scale: 1, rotation: 0 }, f, f + K(10), "back.out(2.4)");
+    } else set(it.e, { display: "inline" }, f);
+  });
+  const done = S + Math.round(items.length * per) + K(6), back = FRAMES - K(26);
+  items.forEach((it, i) => {
+    if (!it.sh) return;
+    for (let g = done + i % 3 * K(3), up = true; g + K(14) < back; g += K(14), up = !up) to(it.g, { y: up ? -fs * 0.08 : 0, rotation: up ? 12 : -8 }, g, g + K(14), "sine.inOut");
+    if (back > done) {
+      to(it.g, { scale: 0, rotation: 90 }, back, back + K(6), "power2.in");
+      set(it.sh, { display: "none" }, back + K(6));
+      set(it.e, { display: "inline-block" }, back + K(6));                    // inline-block: it can scale
+      ft(it.e, { scale: 0.4 }, { scale: 1 }, back + K(6), back + K(16), "back.out(2.4)");
+    }
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

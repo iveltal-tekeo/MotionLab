@@ -14,7 +14,10 @@ particles) are written this way since 0.3.0.
           overlay.json, 1 = off) = real motion blur: N sub-frames per frame averaged, a shutter of (N-1)/N frame
           centred on the frame - N times the render time (2026-10-14: 750 frames 1080x1080 = 79 s, N=5 ~6.5 min).
           A jump at AT(n) never leaks into frame n-1; a tween on the same property must end half a frame before it
-    .venv\\Scripts\\python tools\\overlay.py new <folder> --from <graphic>   a copy of a library graphic or an example
+    .venv\\Scripts\\python tools\\overlay.py new <folder> --from <graphic> [--frames N --fps F --width W --height H |
+          --like-plan]   a copy of a library graphic, an example or a motion template (tools\\overlays\\motion\\, 0.5.0:
+          templates.py library); a size-independent one takes the size / rate / length given (--like-plan = the
+          project's newest edit plan's size and rate, its own length in seconds kept)
     .venv\\Scripts\\python tools\\overlay.py settings <folder>           what the user can change (declared on <html>,
           data-composition-variables; render passes overlay.json's "values"; render.json + thumb.png record it)
     .venv\\Scripts\\python tools\\overlay.py set <folder> text="NEW" color=#ff0000     then render again
@@ -280,6 +283,27 @@ def cmd_new(a) -> int:
         except ValueError as e:
             raise SystemExit(str(e))
         c = copy_sources(src, folder, folder.name, {"from": a.from_})
+        # 0.5.0: a size-independent graphic (the motion templates, captions) takes the size / rate / length given, or
+        # with --like-plan the project's newest edit plan's size and rate (its own length in seconds kept)
+        want = {"fps": a.fps, "frames": a.frames, "width": a.width, "height": a.height}
+        if a.like_plan:
+            pl = _plan_of(folder)
+            for k in ("fps", "width", "height"):
+                if want[k] is None and pl.get(k):
+                    want[k] = pl[k]
+        if any(v is not None for v in want.values()) and "const W = " in (folder / "index.html").read_text(
+                encoding="utf-8", errors="replace"):
+            fps = float(want["fps"] or c["fps"])
+            frames = int(want["frames"] or round(int(c["frames"]) / float(c["fps"]) * fps))
+            retime(folder, fps, frames, int(want["width"] or c["width"]), int(want["height"] or c["height"]))
+            c.update(fps=fps, frames=frames, width=int(want["width"] or c["width"]),
+                     height=int(want["height"] or c["height"]))
+            (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+        if getattr(a, "values", None):                    # settings to start with (JSON), checked like `set`
+            try:
+                OS.set_values(folder, json.loads(a.values))
+            except (ValueError, json.JSONDecodeError) as e:
+                raise SystemExit(f"--values: {e}")
         log(f"{folder.name}: a copy of the graphic '{a.from_}' ({c['frames']} frames at {float(c['fps']):g} fps, "
             f"{c['width']}x{c['height']}); change its settings in the app or with overlay.py set, then render")
         print(folder / "index.html")
@@ -288,6 +312,7 @@ def cmd_new(a) -> int:
         return 0
     if not a.frames:
         raise SystemExit("--frames N is needed (or --from <graphic>)")
+    a.fps, a.width, a.height = a.fps or 25.0, a.width or 1520, a.height or 1080
     folder.mkdir(parents=True, exist_ok=True)
     name = folder.name
     secs = a.frames / a.fps
@@ -1197,9 +1222,11 @@ def main() -> int:
     s.add_argument("--frames", type=int)
     s.add_argument("--from", dest="from_", metavar="GRAPHIC", help="start from a library graphic or an example")
     s.add_argument("--render", action="store_true", help="with --from: render it right away")
-    s.add_argument("--fps", type=float, default=25.0)
-    s.add_argument("--width", type=int, default=1520)
-    s.add_argument("--height", type=int, default=1080)
+    s.add_argument("--fps", type=float, help="25 for a new graphic; with --from: retime a size-independent one")
+    s.add_argument("--width", type=int, help="1520 for a new graphic; with --from: resize a size-independent one")
+    s.add_argument("--height", type=int, help="1080 for a new graphic; with --from: resize a size-independent one")
+    s.add_argument("--like-plan", action="store_true", help="with --from: the project's newest plan's size and rate")
+    s.add_argument("--values", help='with --from: settings to start with, JSON: {"text": "HELLO"}')
     s.add_argument("--force", action="store_true")
     s = sub.add_parser("render")
     s.add_argument("folder")

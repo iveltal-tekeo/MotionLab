@@ -1,0 +1,14 @@
+{
+ "name": "Money rain",
+ "kind": "background",
+ "what": "Things raining through the frame - coins that flip and notes that sway, near ones big and fast, far ones small, slow and soft, a few glowing; or confetti, hearts or stars. The frame is full from the first frame.",
+ "use_for": ["money", "win", "celebration", "sale", "giveaway", "success", "background", "confetti"],
+ "tags": ["particles", "rain", "coins", "confetti", "falling", "background"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__money-falling", "what": "coins and notes falling at different speeds through a black frame, a few glowing"}],
+ "motion": "each piece falls in 80-150 f by its depth, coins flip and notes sway twice a fall, seeded",
+ "scene": true,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 60,
+ "check_frames": [0, 30, 60, 120]
+}

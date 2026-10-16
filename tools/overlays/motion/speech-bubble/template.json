@@ -1,0 +1,47 @@
+{
+ "name": "Speech bubble",
+ "kind": "chat",
+ "what": "A speech bubble pops out of its tail and pulses (a dip and a colour flip every 24 frames), or a round pill with an emoji that waves - a message, a reaction, a callout next to someone talking.",
+ "use_for": [
+  "callout",
+  "message",
+  "reaction",
+  "talking head",
+  "hook",
+  "comment",
+  "hello"
+ ],
+ "tags": [
+  "speech bubble",
+  "callout",
+  "emoji",
+  "pill",
+  "pop"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "overlays__pop-up-message-bubble",
+   "what": "a black bubble popping from its tail and pulsing"
+  },
+  {
+   "pack": "swishy",
+   "clip": "ui-elements__animated-emoji-button",
+   "what": "a pill with an emoji waving"
+  }
+ ],
+ "motion": "pops from the tail: 0 -> 1.12 in 7 f, settle back.out 10 f; a pulse every 24 f (a 4 f dip + the colour flips); the emoji waves 5 x 5 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  6,
+  12,
+  28,
+  30,
+  60,
+  119
+ ]
+}

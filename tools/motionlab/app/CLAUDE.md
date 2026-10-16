@@ -36,7 +36,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   **Prepare** (#/prepare, `pagePrepare`, green; below), **Editor** (shown as Edit until 2026-10-15, the user: "rename
   the entire edit page/section to Editor"; #/edit stays, #/editor = an alias; = Videos, `pageProjects`;
   #/project/<p>), **Generator** (shown as Generate until 0.4.3.5; #/generate, #/generator = an alias; `pageGenerate`;
-  the prompt library #/prompts belongs to it) - no
+  the prompt library #/prompts belongs to it), **Motion Graphics** (0.5.0, #/motion, `pageMotion`, coral; below) - no
   numbers (the user, 2026-10-14: they are not steps in an order), each row in its section's colour (`--rc`) - then
   **Claude's memory** (below; #/memory/learned = 0.3's Knowledge, `memLearned`;
   #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
@@ -207,6 +207,33 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   POST `/api/generate/request` (`data.save_generate_request`: checked; makes `projects\<name>\` when new; saves
   `build\generate_request.json`; made_from kind `generated`) -> Claude `/generate-video request <name>` (task
   `generate`, effort xhigh). GET `/api/generate/options` = the tools, the downloaded songs, HyperFrames found.
+- **Motion Graphics** (0.5.0, the user, 2026-10-16: "turn the Swishy reference clips (in the refs folder) I captured
+  into a reusable Motion Graphics library, add a Motion Graphics section to the sidebar, and make Generate use those
+  templates as well when generating blindly"): sidebar row after Generator (`data-nav="motion"`, icon `#i-motion`, coral
+  `--motion`, its band texture = eased motion paths); `pageMotion(main, tab, open)` (#/motion, #/motion/learned,
+  #/motion/templates/<id> opens one) = GET `/api/motion` (`data.motion()` = `motionlab.templates.catalog()` + each
+  template's size, declared settings and picture + the clips it learned from with their files). Tabs **Templates**
+  (`motionTemplates`: kind chips `MKIND` remembered in localStorage `ml.mkind`, `.mggrid` of `.mgc` portrait cards ->
+  `motionModal(t)`: the live preview (`livePreview` with the form's values, starting from the declared defaults),
+  *Try your words* (`gsetInput`), *Use in a video…* = `motionUseModal` (a project + a name -> job `overlay_new` with
+  `values` = the changed settings, an overlay template (`template.json` `"overlay": true`) gets `background: false`;
+  jobs.py passes `--like-plan --values <json>`) and *Make a video with it* = `generateModal('graphics', {templates:
+  [id]})`; *Learned from* = the source clips playing muted) | **Learned from** (`motionClips`: kind + status chips
+  (`MSTATUS`: rebuilt / next to rebuild = cards.json rebuild 1 / later / style only + still captures), `.mcgrid` of
+  `.mcc` cards whose `<video>` (refs\ via /files/, preload none, poster.jpg) plays on hover unless reduced motion ->
+  `motionClipModal`: the clip, Claude's card (violet chip), *Measured by MotionLab* (the cyan chip), the sheet in the
+  lightbox, the colours, *Rebuilt as*). The header's *Rebuild the next 8 with Claude* (while rebuild-1 clips are left)
+  = `/generate-video templates <pack>` (task generate). **Generate** (graphics): step 3 *Motion templates*
+  (`#gtpl`, only when the library has templates): GET `/api/motion/pick?want=&n=6` while the user types (debounced) -
+  the suggested ones dashed (`.fchip.sug`), a click pins one (up to 12), *all N…* lists the library; the words under it
+  say what Claude will do (pinned = used; none + no style video = it starts from the suggested ones); POST
+  `/api/generate/request` `templates` (`data.save_generate_request` checks them against the library) ->
+  generate_request.json `"templates"`. **MotionLab originals** (17 of the 74, from the user's ask to review template
+  marketplaces for what is missing, 2026-10-16): `template.json` `learned_from: []` + `origin` (the need) - the card
+  says "MotionLab original" instead of "learned from N clips", the dialog *A MotionLab original* instead of *Learned
+  from*; their kinds have labels in `MKIND` too (transitions, lower_thirds, callouts, broadcast, promo). `data.library()` leaves the motion templates out of Claude's memory > saved
+  graphics (they have their own page). `/files/tools/overlays/motion/<id>/<file>` serves a template's .html / .json /
+  .js / .css / .png / .jpg / .svg and maps `gsap.min.js` to the pinned GSAP (node_modules) - the live preview's `<base>`.
 - **Prepare** (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it
   with more potential to go viral - or generate one from zero from a few questions; hooks, structure"):
   `pagePrepare` = three ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`,
@@ -559,7 +586,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
-  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

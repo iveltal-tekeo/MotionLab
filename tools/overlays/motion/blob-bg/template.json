@@ -1,0 +1,41 @@
+{
+ "name": "Blob background",
+ "kind": "background",
+ "what": "A soft gradient blob that never stops changing shape - it breathes, turns and drifts, its colours rotate, a few sparks float - a background for words, a logo or a talking head.",
+ "use_for": [
+  "background",
+  "intro",
+  "tech",
+  "calm",
+  "loop",
+  "logo",
+  "ai"
+ ],
+ "tags": [
+  "blob",
+  "gradient",
+  "background",
+  "loop",
+  "glow",
+  "morph"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "logos__animated-blob",
+   "what": "a teal-blue-pink blob morphing slowly on black with small particles"
+  }
+ ],
+ "motion": "a new shape every 36 f (S-curve), turning and drifting the whole time; sparks rise slowly",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  30,
+  60,
+  90,
+  120,
+  179
+ ]
+}

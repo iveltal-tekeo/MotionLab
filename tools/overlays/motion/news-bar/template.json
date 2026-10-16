@@ -1,0 +1,39 @@
+{
+ "name": "News bar",
+ "kind": "broadcast",
+ "what": "A news-style band: a BREAKING tag snaps in, the headline bar wipes out of it, a ticker scrolls its lines underneath, a live dot blinks; it leaves the way it came. For a funny breaking-news beat or a real update.",
+ "use_for": [
+  "news",
+  "update",
+  "announcement",
+  "breaking",
+  "funny",
+  "headline",
+  "live"
+ ],
+ "tags": [
+  "news",
+  "breaking",
+  "ticker",
+  "headline",
+  "broadcast",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "broadcast / news packages - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "tag 8 f (slow end) + a 3 f flash; bar wipes 12 f (S-curve), headline rises 10 f; ticker drops 8 f and scrolls 5 px a frame; dot blinks every 15 f; leaves 8-10 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  6,
+  12,
+  20,
+  30,
+  60,
+  120,
+  170
+ ]
+}

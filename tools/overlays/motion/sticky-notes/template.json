@@ -1,0 +1,46 @@
+{
+ "name": "Sticky notes",
+ "kind": "lists",
+ "what": "Handwritten sticky notes slap onto a board one after another, a little crooked, each with a squash; they flutter in a draft, then peel off and fly away - a to-do list, reminders, tips.",
+ "use_for": [
+  "list",
+  "to do",
+  "tips",
+  "reminders",
+  "ideas",
+  "plan",
+  "study"
+ ],
+ "tags": [
+  "sticky notes",
+  "handwritten",
+  "list",
+  "paper",
+  "slap"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__sticky-notes",
+   "what": "yellow notes slapping on one by one with handwriting"
+  },
+  {
+   "pack": "swishy",
+   "clip": "ui-elements__sticky-notes-animation",
+   "what": "coloured notes popping on and peeling off"
+  }
+ ],
+ "motion": "a note every 12 f: from above 9 f + a squash 6 f, the words 4 f later; a draft lifts them; peel and away 3 f apart",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  30,
+  60,
+  90,
+  130,
+  149
+ ]
+}

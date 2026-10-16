@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "from_name", "type": "string", "label": "From", "default": "Lisbon"},
+  {"id": "to_name", "type": "string", "label": "To", "default": "Tokyo"},
+  {"id": "ax", "type": "number", "label": "From: across (%)", "default": 22, "min": 0, "max": 100, "step": 1},
+  {"id": "ay", "type": "number", "label": "From: down (%)", "default": 66, "min": 0, "max": 100, "step": 1},
+  {"id": "bx", "type": "number", "label": "To: across (%)", "default": 76, "min": 0, "max": 100, "step": 1},
+  {"id": "by", "type": "number", "label": "To: down (%)", "default": 30, "min": 0, "max": 100, "step": 1},
+  {"id": "bend", "type": "number", "label": "Curve (- the other way, 0 = straight)", "default": 0.35, "min": -1, "max": 1, "step": 0.05},
+  {"id": "vehicle", "type": "enum", "label": "What travels", "default": "plane", "options": [{"value": "plane", "label": "A plane"}, {"value": "dot", "label": "A glowing dot"}, {"value": "none", "label": "Nothing - just the line"}]},
+  {"id": "line", "type": "color", "label": "Route colour", "default": "#ef4444"},
+  {"id": "water", "type": "color", "label": "Water colour", "default": "#bfe3f2"},
+  {"id": "land", "type": "color", "label": "Land colour", "default": "#f6f1e3"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "map", "type": "boolean", "label": "Draw the map (off = see-through, over your own map or video)", "default": true},
+  {"id": "travel_frames", "type": "number", "label": "Frames to travel", "default": 60, "min": 6, "max": 900, "step": 1},
+  {"id": "seed", "type": "number", "label": "Map shapes (any number)", "default": 3, "min": 0, "max": 9999, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 6, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "map-route" (0.5.0, the Motion Graphics library): a trip - the start pin drops with its
+     name, a dashed route draws in a curve to the destination with a plane (or a glowing dot) riding its tip and turning
+     with it, the end pin pops with its name, a ripple goes out; the map is a seeded, drawn one (water, land shapes, a
+     faint grid) or none, over your own. Not learned from a clip: travel / map routes are a common template kind
+     (Mixkit "Travel", Envato Elements; researched 2026-10-16); the Swishy location pin is its own template.
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pill { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="cam" class="abs"><svg id="map" class="abs"></svg><svg id="rt" class="abs"></svg><div id="ui" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (svg, tag, at) => { const e = document.createElementNS(NS, tag); Object.entries(at).forEach(([k, v]) => e.setAttribute(k, v)); svg.appendChild(e); return e; };
+
+  gsap.set(["#cam", "#ui"], { width: W, height: H });
+  ["map", "rt"].forEach(id => { q(id).setAttribute("width", W); q(id).setAttribute("height", H); });
+  const R = rnd(500 + Math.round(V.seed));
+  // the map: water, a few land shapes (smooth blobs through seeded points), a faint grid
+  if (V.map) {
+    const m = q("map");
+    el(m, "rect", { x: -W * 0.1, y: -H * 0.1, width: W * 1.2, height: H * 1.2, fill: V.water });
+    for (let i = 0; i < 5; i++) {
+      const cx = W * (0.1 + 0.8 * R()), cy = H * (0.1 + 0.8 * R()), r = Math.min(W, H) * (0.18 + 0.22 * R()), n = 9, pts = [];
+      for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, rr = r * (0.6 + 0.5 * R()); pts.push([cx + Math.cos(a) * rr * 1.2, cy + Math.sin(a) * rr]); }
+      let d = `M${(pts[0][0] + pts[n - 1][0]) / 2},${(pts[0][1] + pts[n - 1][1]) / 2}`;
+      for (let k = 0; k < n; k++) { const p = pts[k], nx = pts[(k + 1) % n]; d += ` Q${p[0]},${p[1]} ${(p[0] + nx[0]) / 2},${(p[1] + nx[1]) / 2}`; }
+      el(m, "path", { d, fill: V.land, stroke: "#ffffff", "stroke-width": 4 * U, opacity: 0.95 });
+    }
+    for (let x = 0; x <= W; x += W / 8) el(m, "line", { x1: x, y1: -H * 0.1, x2: x, y2: H * 1.1, stroke: "#ffffff", "stroke-width": 1.5 * U, opacity: 0.35 });
+    for (let y = 0; y <= H; y += H / 14) el(m, "line", { x1: -W * 0.1, y1: y, x2: W * 1.1, y2: y, stroke: "#ffffff", "stroke-width": 1.5 * U, opacity: 0.35 });
+  }
+  // the route: a quadratic curve bent sideways by `bend`; drawn through a mask so the dashes stay still while it grows
+  const A = [W * V.ax / 100, H * V.ay / 100], B = [W * V.bx / 100, H * V.by / 100], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+  const dx = B[0] - A[0], dy = B[1] - A[1], C = [mx - dy * V.bend, my + dx * V.bend];
+  const rt = q("rt"), d = `M${A[0]},${A[1]} Q${C[0]},${C[1]} ${B[0]},${B[1]}`, mid = "rm" + Math.round(V.seed);
+  const defs = el(rt, "defs", {}), mask = el(defs, "mask", { id: mid, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: W, height: H });
+  const mp = el(mask, "path", { d, fill: "none", stroke: "#fff", "stroke-width": 30 * U, "stroke-linecap": "round" });
+  el(rt, "path", { d, fill: "none", stroke: "rgba(0,0,0,.18)", "stroke-width": 12 * U, "stroke-linecap": "round", "stroke-dasharray": `${2 * U} ${26 * U}`, mask: `url(#${mid})`, transform: `translate(${4 * U} ${8 * U})` });
+  el(rt, "path", { d, fill: "none", stroke: V.line, "stroke-width": 10 * U, "stroke-linecap": "round", "stroke-dasharray": `${20 * U} ${16 * U}`, mask: `url(#${mid})` });
+  const L = mp.getTotalLength(); mp.setAttribute("stroke-dasharray", `${L} ${L}`); mp.setAttribute("stroke-dashoffset", L);
+  // pins + names
+  const pin = (p, name) => {
+    const g = document.createElement("div"); g.className = "abs"; q("ui").appendChild(g);
+    const pw = 70 * U;
+    g.innerHTML = `<svg width="${pw}" height="${pw * 1.35}" viewBox="0 0 24 32" style="position:absolute;left:${-pw / 2}px;top:${-pw * 1.35}px"><path d="M12 1C6 1 1.5 5.5 1.5 11.3 1.5 19 12 31 12 31s10.5-12 10.5-19.7C22.5 5.5 18 1 12 1z" fill="${V.line}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11.5" r="4.2" fill="#fff"/></svg>`;
+    const lb = document.createElement("div"); lb.className = "pill"; lb.textContent = name; g.appendChild(lb);
+    Object.assign(lb.style, { font: `800 ${40 * U}px ${fam}`, color: "#111", background: "#fff", padding: `${12 * U}px ${22 * U}px`, borderRadius: `${30 * U}px`, boxShadow: `0 ${6 * U}px ${18 * U}px rgba(0,0,0,.18)` });
+    gsap.set(lb, { x: 0, y: -pw * 1.35 - 20 * U, xPercent: -50, yPercent: -100 });
+    gsap.set(g, { x: p[0], y: p[1], transformOrigin: "0px 0px" });
+    const rip = document.createElement("div"); rip.className = "abs"; q("ui").insertBefore(rip, q("ui").firstChild);
+    Object.assign(rip.style, { width: `${120 * U}px`, height: `${120 * U}px`, borderRadius: "50%", border: `${5 * U}px solid ${V.line}` });
+    gsap.set(rip, { x: p[0] - 60 * U, y: p[1] - 60 * U, opacity: 0, transformOrigin: "50% 50%" });
+    return { g, lb, rip };
+  };
+  const pa = pin(A, V.from_name), pb = pin(B, V.to_name);
+  let veh = null;
+  if (V.vehicle !== "none") {
+    veh = document.createElement("div"); veh.className = "abs"; q("ui").appendChild(veh);
+    const vz = (V.vehicle === "plane" ? 84 : 34) * U;
+    veh.innerHTML = V.vehicle === "plane"
+      ? `<svg width="${vz}" height="${vz}" viewBox="0 0 24 24" style="position:absolute;left:${-vz / 2}px;top:${-vz / 2}px;filter:drop-shadow(0 ${6 * U}px ${6 * U}px rgba(0,0,0,.3))"><path d="M12 1.5 C12.9 1.5 13.4 3 13.4 4.5 L13.4 9.2 L22 13.4 L22 15.4 L13.4 12.9 L13.1 18.6 L16 20.6 L16 22.4 L12 21.3 L8 22.4 L8 20.6 L10.9 18.6 L10.6 12.9 L2 15.4 L2 13.4 L10.6 9.2 L10.6 4.5 C10.6 3 11.1 1.5 12 1.5 Z" fill="#fff" stroke="#1f2937" stroke-width="1.1" stroke-linejoin="round"/></svg>`
+      : `<div style="position:absolute;left:${-vz / 2}px;top:${-vz / 2}px;width:${vz}px;height:${vz}px;border-radius:50%;background:#fff;border:${6 * U}px solid ${V.line};box-shadow:0 0 ${24 * U}px ${V.line}"></div>`;
+  }
+
+  // ---- the motion: the camera starts 12 % closer and eases out over the trip; the start pin drops (back.out 12 f)
+  // with its ripple; the route draws over travel_frames (S-curve) with the vehicle on its tip, turned along it, set
+  // every frame; the end pin pops as it arrives, its ripple goes out twice (22 f apart); the vehicle fades into the pin
+  const S = Math.round(V.start), T = Math.max(K(6), Math.round(V.travel_frames * FPS / 30)), t0 = S + K(16), ez = gsap.parseEase("power2.inOut");
+  ft("#cam", { scale: 1.12, transformOrigin: `${mx}px ${my}px` }, { scale: 1 }, 0, Math.min(FRAMES, t0 + T + K(10)), "power2.inOut");
+  enter(pa.g, { opacity: 1, scale: 0, y: A[1] - 60 * U }, { scale: 1, y: A[1] }, S, S + K(12), "back.out(2)");
+  ft(pa.rip, { opacity: 1, scale: 0.2 }, { opacity: 0, scale: 1.6 }, S + K(8), S + K(28), "power2.out");
+  for (let f = t0, k = 0; f <= t0 + T; f++, k++) {
+    const u = ez(Math.min(1, (f - t0) / T)), at = L * u;
+    set(mp, { attr: { "stroke-dashoffset": L - at } }, f);
+    if (veh) { const p = mp.getPointAtLength(at), p2 = mp.getPointAtLength(Math.min(L, at + 2)), p1 = mp.getPointAtLength(Math.max(0, at - 2));
+      const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI + 90;
+      set(veh, f === t0 ? { opacity: 1, x: p.x, y: p.y, rotation: ang } : { x: p.x, y: p.y, rotation: ang }, f); }
+  }
+  if (veh) { set(veh, { opacity: 0 }, 0); to(veh, { opacity: 0, scale: 0.5 }, t0 + T + 1, t0 + T + K(8), "power2.in"); }
+  const E = t0 + T;
+  enter(pb.g, { opacity: 1, scale: 0 }, { scale: 1 }, E - K(4), E + K(10), "back.out(2.2)");
+  [0, K(22)].forEach(o => { if (E + o + K(20) <= FRAMES) ft(pb.rip, { opacity: 1, scale: 0.2 }, { opacity: 0, scale: 1.8 }, E + o, E + o + K(20), "power2.out"); });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

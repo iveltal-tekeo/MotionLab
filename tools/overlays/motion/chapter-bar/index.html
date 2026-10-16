@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "chapters", "type": "string", "label": "Chapters: name length (| between; lengths are shares, empty = equal)", "default": "Intro 10|Setup 25|The edit 40|Export 25"},
+  {"id": "where", "type": "enum", "label": "Where", "default": "bottom", "options": [{"value": "bottom", "label": "Bottom"}, {"value": "top", "label": "Top"}]},
+  {"id": "titles", "type": "boolean", "label": "A title pops when a chapter starts", "default": true},
+  {"id": "title_frames", "type": "number", "label": "Frames each title stays", "default": 45, "min": 10, "max": 600, "step": 1},
+  {"id": "color", "type": "color", "label": "Fill colour", "default": "#22d3ee"},
+  {"id": "track", "type": "color", "label": "Track colour", "default": "#ffffff"},
+  {"id": "ink", "type": "color", "label": "Title text colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "margin", "type": "number", "label": "Distance from the edge (px on a 1080 frame)", "default": 70, "min": 0, "max": 400, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#3a4250"}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "chapter-bar" (0.5.0, the Motion Graphics library): a video's chapters as a segmented
+     progress bar along the bottom (or top) - it fills as the video plays, the current chapter's segment stands taller,
+     and a small "02 · Setup" title pops above the bar when each chapter starts. Give it the whole video's length
+     (overlay.py new --frames) and the chapters' shares (publish.py chapters gives the real points). Not learned from a
+     clip: progress bars are a Mixkit tag ("Progress Bar") and chapter bars a common explainer overlay (researched
+     2026-10-16). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .seg { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 300;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const raw = String(V.chapters || "").split("|").map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^(.*?)\s+([\d.]+)\s*$/); return m ? [m[1], parseFloat(m[2])] : [x, 1]; });
+  const ch = raw.length ? raw : [["Video", 1]], tot = ch.reduce((a, c) => a + c[1], 0) || 1;
+  const m = V.margin * U, gap = 8 * U, bh = 12 * U, x0 = m * 0.6, span = W - 2 * x0 - gap * (ch.length - 1);
+  const yb = V.where === "top" ? m : H - m - bh;
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("ui").appendChild(e); return e; };
+  // each chapter: a track segment with its fill inside; its start and end frame on the graphic's own length
+  let x = x0, acc = 0;
+  const segs = ch.map(([name, v], i) => {
+    const w = span * v / tot, f0 = Math.round(FRAMES * acc / tot), f1 = Math.round(FRAMES * (acc + v) / tot);
+    const sg = add("seg", { width: `${w}px`, height: `${bh}px`, borderRadius: `${bh / 2}px`, background: `${V.track}55`, boxShadow: "0 1px 4px rgba(0,0,0,.35)" },
+      `<div class="fl" style="position:absolute;left:0;top:0;width:100%;height:100%;background:${V.color};border-radius:${bh / 2}px"></div>`);
+    gsap.set(sg, { x, y: yb, transformOrigin: V.where === "top" ? "50% 0%" : "50% 100%" });
+    const fl = sg.querySelector(".fl"); gsap.set(fl, { scaleX: 0, transformOrigin: "0% 50%" });
+    const it = { name, sg, fl, x, w, f0, f1, i }; x += w + gap; acc += v; return it;
+  });
+
+  // ---- the motion: each segment's fill grows linearly over its chapter; the current one stands 2.2x taller (6 f in,
+  // 6 f out); a title "0N · name" pops above the bar at each chapter's start (back.out 10 f) and drops away after
+  // title_frames; the bar itself rises in over the first 10 f
+  ft("#ui", { opacity: 0, y: V.where === "top" ? -20 * U : 20 * U }, { opacity: 1, y: 0 }, 0, K(10), "power2.out");
+  const TF = Math.round(V.title_frames * FPS / 30);
+  segs.forEach(sg => {
+    ft(sg.fl, { scaleX: 0 }, { scaleX: 1 }, sg.f0, Math.max(sg.f0 + 1, sg.f1), "none");
+    to(sg.sg, { scaleY: 2.2 }, sg.f0, Math.min(sg.f1, sg.f0 + K(6)), "power2.out");
+    if (sg.f1 + K(6) <= FRAMES && sg.i < segs.length - 1) to(sg.sg, { scaleY: 1 }, sg.f1, sg.f1 + K(6), "power2.inOut");
+    if (V.titles) {
+      const t = add("t", { font: `700 ${38 * U}px ${fam}`, color: V.ink, textShadow: "0 2px 10px rgba(0,0,0,.6)" },
+        `<span style="color:${V.color}">${String(sg.i + 1).padStart(2, "0")}</span>  ·  ${esc(sg.name)}`);
+      const ty = V.where === "top" ? yb + bh * 2.2 + 26 * U : yb - 70 * U, tx = Math.min(Math.max(sg.x, x0), W - x0 - 420 * U);
+      gsap.set(t, { x: tx, y: ty, opacity: 0, transformOrigin: "0% 100%" });
+      const a = sg.f0 + K(2), b = Math.min(sg.f1, a + TF);
+      ft(t, { opacity: 1, scale: 0.6 }, { scale: 1 }, a, a + K(10), "back.out(2)");
+      if (b + K(8) <= FRAMES && b > a + K(12)) to(t, { opacity: 0, y: ty + (V.where === "top" ? -16 : 16) * U }, b, b + K(8), "power2.in");
+    }
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

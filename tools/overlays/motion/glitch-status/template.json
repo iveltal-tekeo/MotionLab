@@ -1,0 +1,41 @@
+{
+ "name": "Glitch status",
+ "kind": "text",
+ "what": "A sci-fi status line: each letter scrambles through random signs before it locks, glitches jolt it now and then with a colour split, small lines type in, scan lines roll.",
+ "use_for": [
+  "tech",
+  "sci-fi",
+  "gaming",
+  "status",
+  "error",
+  "hacker",
+  "hook"
+ ],
+ "tags": [
+  "glitch",
+  "mono",
+  "terminal",
+  "scramble",
+  "sci-fi"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__simulation-terminated",
+   "what": "the teal mono status typing in on dark, a small status line"
+  }
+ ],
+ "motion": "a letter every 1.5 f scrambles 6-9 f then locks; glitches 2 f every ~30 f",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  8,
+  20,
+  40,
+  60,
+  70,
+  100
+ ]
+}

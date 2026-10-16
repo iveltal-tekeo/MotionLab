@@ -1,0 +1,45 @@
+{
+ "name": "Calendar streak",
+ "kind": "numbers",
+ "what": "A month card pops in and its days fill one after another with coloured dots, a streak counter ticking with them - a habit, a posting plan, a countdown to a date.",
+ "use_for": [
+  "streak",
+  "habit",
+  "challenge",
+  "schedule",
+  "days",
+  "consistency",
+  "date"
+ ],
+ "tags": [
+  "calendar",
+  "streak",
+  "dots",
+  "month",
+  "counter"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__june",
+   "what": "a month card whose days fill with coloured dots one by one"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__january",
+   "what": "a month whose dates appear one by one"
+  }
+ ],
+ "motion": "card back.out 14 f; a day every 3 f (back.out 8 f), the counter ticks; a kick when it ends",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  12,
+  30,
+  60,
+  90,
+  110
+ ]
+}

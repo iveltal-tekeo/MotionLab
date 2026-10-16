@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "badge", "type": "string", "label": "Burst badge", "default": "-50%"},
+  {"id": "product", "type": "string", "label": "What it is (empty = none)", "default": "Creator Course"},
+  {"id": "old_price", "type": "string", "label": "Old price (empty = none)", "default": "$98"},
+  {"id": "price", "type": "string", "label": "New price", "default": "$49"},
+  {"id": "button", "type": "string", "label": "Button words (empty = none)", "default": "SHOP NOW"},
+  {"id": "note", "type": "string", "label": "Small line under it (empty = none)", "default": "this week only"},
+  {"id": "accent", "type": "color", "label": "Burst + button colour", "default": "#ff2e63"},
+  {"id": "ink", "type": "color", "label": "Price colour", "default": "#111111"},
+  {"id": "card", "type": "color", "label": "Card colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#ffe3ec"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Card centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "price-tag" (0.5.0, the Motion Graphics library): a sale - a card pops up with what it is,
+     the old price gets struck through and drops away, the new price slams in, a spiky burst badge (-50 %) spins onto
+     the card's corner and keeps turning, a button pops and pulses, confetti bits fall once. Not learned from a clip:
+     product promos and sale badges are a Videohive / Envato Elements category ("Promos", "Shop", "Retail" tags on
+     Mixkit; researched 2026-10-16). MotionLab's own code. Seeded confetti. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .pill { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-synthesis: none; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="conf" class="abs"></div>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#conf", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? `radial-gradient(circle at 50% ${V.y}%, #ffffff88, transparent 55%), ${V.bg}` : "transparent" });
+  const s = V.size * U, cx = W / 2, cy = H * V.y / 100, cw = 700 * s, chh = 640 * s, R = rnd(29);
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("ui").appendChild(e); return e; };
+  const card = add("abs", { width: `${cw}px`, height: `${chh}px`, borderRadius: `${40 * s}px`, background: V.card, boxShadow: `0 ${30 * s}px ${70 * s}px rgba(0,0,0,.18)` });
+  gsap.set(card, { x: cx - cw / 2, y: cy - chh / 2, transformOrigin: "50% 100%" });
+  const ctop = cy - chh / 2;                         // not `top`: a global const named like window.top breaks the page
+  const prod = V.product ? add("t", { font: `700 ${46 * s}px ${fam}`, color: V.ink, opacity: 0.75 }, esc(V.product)) : null;
+  if (prod) gsap.set(prod, { x: cx, y: ctop + 70 * s, xPercent: -50 });
+  const old = V.old_price ? add("t", { font: `600 ${64 * s}px ${fam}`, color: "#9ca3af" }, `${esc(V.old_price)}<div class="strike" style="position:absolute;left:-6%;top:48%;width:112%;height:${7 * s}px;border-radius:${4 * s}px;background:${V.accent}"></div>`) : null;
+  if (old) gsap.set(old, { x: cx, y: ctop + 160 * s, xPercent: -50 });
+  const pr = add("t", { font: `900 ${190 * s}px ${fam}`, color: V.ink, letterSpacing: "-0.03em" }, esc(V.price));
+  gsap.set(pr, { x: cx, y: ctop + (old ? 250 : 180) * s, xPercent: -50, transformOrigin: "50% 60%" });
+  const bh = 104 * s, bw = Math.max(340, 28 * String(V.button).length + 100) * s;
+  const btn = V.button ? add("pill", { width: `${bw}px`, height: `${bh}px`, borderRadius: `${bh / 2}px`, background: V.accent, color: "#fff", font: `800 ${42 * s}px ${fam}`, letterSpacing: "0.05em", boxShadow: `0 ${12 * s}px ${30 * s}px ${V.accent}55` }, esc(V.button)) : null;
+  if (btn) gsap.set(btn, { x: cx - bw / 2, y: ctop + chh - bh - 90 * s, transformOrigin: "50% 50%" });
+  const note = V.note ? add("t", { font: `500 ${32 * s}px ${fam}`, color: V.ink, opacity: 0.6 }, esc(V.note)) : null;
+  if (note) gsap.set(note, { x: cx, y: ctop + chh - 64 * s, xPercent: -50 });
+  // the burst: a 16-point star with the badge words on it
+  const bd = 270 * s, pts = [];
+  for (let i = 0; i < 32; i++) { const a = i / 32 * Math.PI * 2, r = i % 2 ? 0.8 : 1; pts.push(`${50 + Math.cos(a) * 50 * r},${50 + Math.sin(a) * 50 * r}`); }
+  const burst = add("abs", { width: `${bd}px`, height: `${bd}px` }, `<svg width="100%" height="100%" viewBox="0 0 100 100"><polygon class="star" points="${pts.join(" ")}" fill="${V.accent}"/></svg>`);
+  const bt = add("t", { font: `900 ${78 * s}px ${fam}`, color: "#fff" }, esc(V.badge));
+  gsap.set(burst, { x: cx + cw / 2 - bd * 0.62, y: ctop - bd * 0.38, transformOrigin: "50% 50%" });
+  gsap.set(bt, { x: cx + cw / 2 - bd * 0.12, y: ctop + bd * 0.12, xPercent: -50, yPercent: -50, rotation: 12 });
+
+  // ---- the motion: the card rises with a squash (14 f, back.out); the product line fades up; the old price appears,
+  // its strike draws (6 f) and it drops a little and fades; the new price slams (1.6 -> 1 in 8 f) with a 3 f shake of
+  // the card; the burst spins in (12 f, back.out) and keeps turning slowly; confetti falls once; the button pops and
+  // pulses every 30 f
+  const S = Math.round(V.start);
+  enter(card, { opacity: 1, y: cy - chh / 2 + 260 * s, scaleY: 0.8 }, { y: cy - chh / 2, scaleY: 1 }, S, S + K(14), "back.out(1.6)");
+  if (prod) enter(prod, { opacity: 0, y: ctop + 90 * s }, { opacity: 0.75, y: ctop + 70 * s }, S + K(8), S + K(18), "power2.out");
+  let f = S + K(14);
+  if (old) {
+    enter(old, { opacity: 0 }, { opacity: 1 }, f, f + K(6), "power1.out");
+    const st = old.querySelector(".strike"); gsap.set(st, { scaleX: 0, transformOrigin: "0% 50%" });
+    ft(st, { scaleX: 0 }, { scaleX: 1 }, f + K(8), f + K(14), "power2.inOut");
+    to(old, { y: ctop + 175 * s, opacity: 0.55 }, f + K(16), f + K(24), "power2.out");
+    f += K(18);
+  }
+  enter(pr, { opacity: 1, scale: 1.6 }, { scale: 1 }, f, f + K(8), "power4.in");
+  to(card, { x: cx - cw / 2 + 10 * s }, f + K(8), f + K(9), "none"); to(card, { x: cx - cw / 2 - 8 * s }, f + K(9), f + K(10), "none"); to(card, { x: cx - cw / 2 }, f + K(10), f + K(12), "power2.out");
+  enter(burst, { opacity: 1, scale: 0, rotation: -180 }, { scale: 1, rotation: 0 }, f + K(6), f + K(18), "back.out(1.8)");
+  enter(bt, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1 }, f + K(12), f + K(20), "back.out(2.5)");
+  ft(burst.querySelector(".star"), { rotation: 0, svgOrigin: "50 50" }, { rotation: 90 }, f + K(18), FRAMES, "none");
+  for (let i = 0; i < 46; i++) {                       // confetti: seeded bits from above the card, falling once
+    const e = document.createElement("div"), w = (8 + R() * 10) * s, c = [V.accent, "#ffd23f", "#3ec1d3", "#7c5cff", "#ffffff"][i % 5];
+    Object.assign(e.style, { position: "absolute", left: 0, top: 0, width: `${w}px`, height: `${w * 0.5}px`, background: c, borderRadius: `${2 * s}px` });
+    q("conf").appendChild(e);
+    const x = cx + (R() - 0.5) * W * 0.9, d = f + K(4) + Math.round(R() * K(10));
+    enter(e, { opacity: 1, x, y: -40 * s, rotation: R() * 360 }, { x: x + (R() - 0.5) * 200 * s, y: H * (0.55 + R() * 0.5), rotation: R() * 900 }, d, Math.min(FRAMES, d + K(50) + Math.round(R() * K(30))), "power1.in");
+  }
+  if (btn) {
+    enter(btn, { opacity: 1, scale: 0 }, { scale: 1 }, f + K(16), f + K(28), "back.out(2.4)");
+    for (let g = f + K(40); g + K(14) < FRAMES; g += K(30)) { to(btn, { scale: 1.07 }, g, g + K(6), "power2.out"); to(btn, { scale: 1 }, g + K(6), g + K(14), "power2.inOut"); }
+  }
+  if (note) enter(note, { opacity: 0 }, { opacity: 0.6 }, f + K(24), f + K(34), "power1.out");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

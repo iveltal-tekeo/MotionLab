@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "look", "type": "enum", "label": "Look", "default": "analog", "options": [{"value": "analog", "label": "Analog - a clock spinning, word pills popping around it"}, {"value": "digital", "label": "Digital - a big time rolling fast, like a timelapse"}]},
+  {"id": "words", "type": "string", "label": "Word pills (analog; | between)", "default": "moment|present|hour|instant|now"},
+  {"id": "from_time", "type": "string", "label": "From (digital, HH:MM, 24 h)", "default": "05:41"},
+  {"id": "to_time", "type": "string", "label": "To (digital, HH:MM)", "default": "19:57"},
+  {"id": "ampm", "type": "boolean", "label": "Show AM / PM (digital)", "default": true},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "face", "type": "color", "label": "Clock face", "default": "#0b0b0d"},
+  {"id": "hand", "type": "color", "label": "Hands", "default": "#ff7a30"},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#111111"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#eaa3c7"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 46, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "clock-words" (0.5.0, the Motion Graphics library): time, made visible. Analog: a clock face
+     pops in, its hands spin fast then slow down, word pills pop around it one after another and drift. Digital: a big
+     time rolls quickly from one hour to another (minutes ticking, faster in the middle), then lands with a kick.
+     Learned from graphics__clock-and-text (a black clock on pink spinning its hands while pills - moment, present,
+     hour, instant - pop) and text__simple-timelapse (a big clock time rolling through the hours). MotionLab's own
+     code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  #dg::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><svg id="clk" class="abs" style="overflow:visible"></svg><div id="pills" class="abs"></div><div id="dg" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam", "#pills"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, cx = W / 2, cy = H * V.y / 100, S = Math.round(V.start);
+  if (V.look === "analog") {
+    const R = 260 * U * s, svg = q("clk");
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    let ticks = "";
+    for (let i = 0; i < 12; i++) { const a = i * 30 * Math.PI / 180; ticks += `<line x1="${cx + Math.sin(a) * R * 0.82}" y1="${cy - Math.cos(a) * R * 0.82}" x2="${cx + Math.sin(a) * R * 0.92}" y2="${cy - Math.cos(a) * R * 0.92}" stroke="#ffffff55" stroke-width="${5 * U * s}" stroke-linecap="round"/>`; }
+    svg.innerHTML = `<g id="face"><circle cx="${cx}" cy="${cy}" r="${R}" fill="${V.face}"/>${ticks}
+      <line id="hh" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - R * 0.5}" stroke="${V.hand}" stroke-width="${12 * U * s}" stroke-linecap="round"/>
+      <line id="mh" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - R * 0.78}" stroke="#ffd166" stroke-width="${7 * U * s}" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy}" r="${14 * U * s}" fill="${V.hand}"/></g>`;
+    gsap.set(["#hh", "#mh"], { svgOrigin: `${cx} ${cy}` });
+    enter("#face", { opacity: 1, scale: 0, svgOrigin: `${cx} ${cy}` }, { scale: 1 }, S, S + K(14), "back.out(1.8)");
+    // the hands: fast, then slowing down (expo.out), the minute hand 12 turns, the hour hand one
+    ft("#mh", { rotation: 0 }, { rotation: 360 * 12 + 40 }, S + K(6), FRAMES, "expo.out");
+    ft("#hh", { rotation: 0 }, { rotation: 360 + 130 }, S + K(6), FRAMES, "expo.out");
+    const words = String(V.words || "").split("|").map(x => x.trim()).filter(Boolean);
+    words.forEach((w, i) => {
+      const a = (-60 + i * (300 / Math.max(1, words.length))) * Math.PI / 180, rr = R * (1.25 + (i % 2) * 0.18);
+      const e = document.createElement("div"); e.className = "t"; e.textContent = w;
+      Object.assign(e.style, { font: `600 ${34 * U * s}px ${fam}`, color: "#111", background: "#fff", padding: `${12 * U * s}px ${24 * U * s}px`, borderRadius: "999px", boxShadow: `0 ${8 * U}px ${20 * U}px rgba(0,0,0,.18)` });
+      q("pills").appendChild(e);
+      const x = cx + Math.sin(a) * rr, y = cy - Math.cos(a) * rr;
+      gsap.set(e, { x, y, xPercent: -50, yPercent: -50 });
+      const f0 = S + K(16) + i * K(8);
+      enter(e, { opacity: 1, scale: 0, rotation: (i % 2 ? 12 : -12) }, { scale: 1, rotation: (i % 2 ? 4 : -4) }, f0, f0 + K(10), "back.out(2.4)");
+      to(e, { y: y - 30 * U, rotation: (i % 2 ? -3 : 3) }, f0 + K(10), FRAMES, "sine.inOut");
+    });
+  } else {
+    const parse = t => { const m = String(t).match(/(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : 0; };
+    const a = parse(V.from_time), b = parse(V.to_time), fmt = mins => { const h = Math.floor(mins / 60) % 24, m = mins % 60;
+      return V.ampm ? `${String(((h + 11) % 12) + 1).padStart(2, "0")}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}` : `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; };
+    const dg = q("dg");
+    Object.assign(dg.style, { font: `400 ${150 * U * s}px ${fam}`, color: V.text_color, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" });
+    gsap.set(dg, { x: cx, y: cy, xPercent: -50, yPercent: -50 });
+    const N = Math.max(K(10), FRAMES - S - K(30)), ease = gsap.parseEase("power2.inOut");
+    for (let f = S; f <= S + N && f < FRAMES; f++) set(dg, { attr: { "data-v": fmt(Math.round(a + (b - a) * ease((f - S) / N))) } }, f);
+    enter(dg, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1 }, S, S + K(10), "power2.out");
+    if (S + N + K(12) < FRAMES) { to(dg, { scale: 1.08 }, S + N, S + N + K(5), "power2.out"); to(dg, { scale: 1 }, S + N + K(5), S + N + K(14), "back.out(2)"); }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

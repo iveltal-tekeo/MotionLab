@@ -1,0 +1,40 @@
+{
+ "name": "Lower third",
+ "kind": "lower_thirds",
+ "what": "Who is talking: a name and a role low in the frame - a colour bar wiping in with the name riding on it, a thin line drawing with the name rising over it, two stacked boxes, or a round badge with your @handle. It stays, then leaves the other way.",
+ "use_for": [
+  "name",
+  "interview",
+  "talking head",
+  "podcast",
+  "guest",
+  "speaker",
+  "social handle",
+  "intro"
+ ],
+ "tags": [
+  "lower third",
+  "name",
+  "title",
+  "bar",
+  "handle",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "lower thirds - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "box wipes 10 f (slow end), words rise behind a mask 4 f later (10 f), the second line 6 f after; leaves: words 8 f (slow start), boxes 8 f",
+ "scene": false,
+ "overlay": true,
+ "general": 0.9,
+ "thumb_f": 40,
+ "check_frames": [
+  0,
+  8,
+  14,
+  20,
+  40,
+  102,
+  110,
+  120
+ ]
+}

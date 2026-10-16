@@ -1,0 +1,14 @@
+{
+ "name": "speech-bubble",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the bubble pops"
+  }
+ ]
+}

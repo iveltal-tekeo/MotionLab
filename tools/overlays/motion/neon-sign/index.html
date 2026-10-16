@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "line1", "type": "string", "label": "Sign 1", "default": "NIGHT"},
+  {"id": "line2", "type": "string", "label": "Sign 2 (empty = not shown)", "default": "STREET"},
+  {"id": "line3", "type": "string", "label": "Sign 3 (empty = not shown)", "default": "MARKET"},
+  {"id": "line4", "type": "string", "label": "Sign 4 (empty = not shown)", "default": ""},
+  {"id": "badge", "type": "string", "label": "Round badge (empty = none)", "default": "OPEN LATE"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Anton", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "neon", "type": "color", "label": "Neon colour", "default": "#ff2d6f"},
+  {"id": "lit", "type": "color", "label": "Lit letters", "default": "#fff0f5"},
+  {"id": "badge_color", "type": "color", "label": "Badge colour", "default": "#ffc21a"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#0c0609"},
+  {"id": "lights", "type": "boolean", "label": "A string of lights at the top", "default": true},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 45, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1},
+  {"id": "flicker", "type": "boolean", "label": "A sign flickers off and on during the hold", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "neon-sign" (0.5.0, the Motion Graphics library): words in boxed neon signs, slightly
+     crooked, appear unlit and light up one after another with a flicker (on 2, off 2, on 1, off 3 frames, then on), a
+     round badge pops on the last one, a sign buzzes off and back during the hold, the glow breathes, a string of
+     lights twinkles. Learned from text__night-street-market (analysis\templates\swishy: the signs dark at f23
+     (00:00:00:23), lit one by one f49-f70, a flicker off at f78 (00:00:03:03) and back at f81, the pink haze and the
+     lights at the top). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .sign { position: absolute; left: 0; top: 0; }
+  .box, .glow { position: absolute; left: 0; top: 0; }
+  .word { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+          white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .bulb { position: absolute; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="haze" class="abs"></div>
+  <div id="lights" class="abs"></div>
+  <div id="cam" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.round(n * FPS / 30);
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 800;
+
+  gsap.set(["#bgfill", "#haze", "#lights", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const cy = H * V.y / 100, R = rnd(9);
+  if (V.background)                                     // the pink haze across the signs (a soft band)
+    gsap.set("#haze", { background: `radial-gradient(ellipse ${W * 0.9}px ${H * 0.12}px at 50% ${cy + H * 0.06}px, ${V.neon}33, transparent 70%),
+                                      radial-gradient(ellipse ${W * 0.8}px ${H * 0.06}px at 50% ${H * 0.07}px, ${V.neon}26, transparent 70%)` });
+  const words = [V.line1, V.line2, V.line3, V.line4].map(s => (s || "").trim()).filter(Boolean);
+  const fs = 132 * U * V.size, bh = fs * 1.42, gap = fs * 0.36;
+  const cam = document.getElementById("cam"), signs = [];
+  const total = words.length * bh + (words.length - 1) * gap;
+  words.forEach((w, i) => {
+    const bw = Math.max(w.length * fs * 0.62 + fs * 0.9, fs * 2.6);
+    const s = document.createElement("div");
+    s.className = "sign";
+    s.innerHTML = `<div class="glow"></div><div class="box"></div><div class="word u"></div><div class="word l"></div>`;
+    cam.appendChild(s);
+    const [glow, box, unlit, lit] = s.children;
+    gsap.set(s, { x: W / 2 - bw / 2 + (R() - 0.5) * 40 * U, y: cy - total / 2 + i * (bh + gap), width: bw, height: bh,
+                  rotation: (R() - 0.5) * 4.5, transformOrigin: "50% 50%" });
+    [glow, box].forEach(e => gsap.set(e, { width: bw, height: bh }));
+    Object.assign(box.style, { border: `${3 * U}px solid ${V.neon}`, background: "rgba(16,10,13,.92)", borderRadius: `${4 * U}px` });
+    Object.assign(glow.style, { borderRadius: `${4 * U}px`, boxShadow: `0 0 ${26 * U}px ${6 * U}px ${V.neon}aa, inset 0 0 ${18 * U}px ${V.neon}66` });
+    [unlit, lit].forEach(e => { e.textContent = w; Object.assign(e.style, { font: `${weight} ${fs}px ${font}` }); });
+    Object.assign(unlit.style, { color: "#5a5257" });
+    Object.assign(lit.style, { color: V.lit, textShadow: `0 0 ${6 * U}px #fff, 0 0 ${16 * U}px ${V.neon}, 0 0 ${34 * U}px ${V.neon}` });
+    gsap.set([glow, lit], { opacity: 0 });
+    signs.push({ s, glow, lit, bw });
+  });
+  // the round badge on the last sign's corner
+  let badge = null;
+  if (V.badge && signs.length) {
+    badge = document.createElement("div");
+    badge.className = "sign";
+    const d = fs * 1.05, last = signs[signs.length - 1];
+    const bt = document.createElement("div");
+    bt.className = "word";
+    bt.textContent = V.badge;
+    Object.assign(bt.style, { font: `${weight} ${fs * 0.24}px ${font}`, color: "#1a1206", whiteSpace: "normal", textAlign: "center",
+                              lineHeight: 1.0, padding: `${fs * 0.14}px` });
+    badge.appendChild(bt);
+    Object.assign(badge.style, { width: `${d}px`, height: `${d}px`, borderRadius: "50%", background: V.badge_color, boxShadow: `0 0 ${16 * U}px ${V.badge_color}66` });
+    cam.appendChild(badge);
+    gsap.set(badge, { x: W / 2 + last.bw / 2 - d * 0.35, y: cy + total / 2 - bh * 0.62, rotation: -12, transformOrigin: "50% 50%" });
+  }
+  // a string of lights along a sagging curve at the top
+  const bulbs = [];
+  if (V.lights) {
+    const box = document.getElementById("lights"), nb = 13;
+    for (let i = 0; i < nb; i++) {
+      const b = document.createElement("div"), t = i / (nb - 1), x = W * (0.02 + 0.96 * t), y = H * 0.035 + Math.sin(t * Math.PI * 2) * H * 0.008 + H * 0.012 * Math.sin(t * Math.PI);
+      b.className = "bulb";
+      Object.assign(b.style, { width: `${7 * U}px`, height: `${7 * U}px`, background: "#ffd36b", boxShadow: `0 0 ${10 * U}px ${3 * U}px #ffb03366` });
+      box.appendChild(b);
+      gsap.set(b, { x, y });
+      bulbs.push(b);
+    }
+  }
+
+  // ---- the motion
+  const S = Math.round(V.start);
+  signs.forEach((g, i) => enter(g.s, { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1 }, S + i * K(4), S + i * K(4) + K(10), "power2.out"));
+  const lightUp = (g, f) => {                           // a neon tube starting: on 2, off 2, on 1, off 3, then on
+    [[0, 1], [2, 0], [4, 1], [5, 0], [8, 1]].forEach(([d, o]) => set([g.lit, g.glow], { opacity: o }, f + K(d)));
+  };
+  const L0 = S + K(20) + K(4) * signs.length;
+  signs.forEach((g, i) => lightUp(g, L0 + i * K(12)));
+  const lastLit = L0 + (signs.length - 1) * K(12) + K(8);
+  if (badge) enter(badge, { opacity: 1, scale: 0.2, rotation: -40 }, { scale: 1, rotation: -12 }, lastLit + K(2), lastLit + K(14), "back.out(2.6)");
+  // the hold: one sign buzzes off and back (3 frames), the glow breathes, the bulbs twinkle
+  const holdStart = lastLit + K(16);
+  if (V.flicker && signs.length && FRAMES - holdStart > K(30)) {
+    const g = signs[signs.length - 1], f = holdStart + Math.round((FRAMES - holdStart) * 0.35);
+    set([g.lit, g.glow], { opacity: 0.15 }, f);
+    set([g.lit, g.glow], { opacity: 1 }, f + K(3));
+    set([g.lit, g.glow], { opacity: 0.4 }, f + K(5));
+    set([g.lit, g.glow], { opacity: 1 }, f + K(6));
+  }
+  for (let f = holdStart, up = false; f + K(24) < FRAMES; f += K(24), up = !up)
+    to(signs.map(g => g.s), { scale: up ? 1 : 1.012 }, f, f + K(24), "sine.inOut");
+  bulbs.forEach((b, i) => { for (let f = (i % 3) * K(4); f < FRAMES; f += K(12)) set(b, { opacity: (i + Math.round(f / K(12))) % 3 === 0 ? 0.35 : 1 }, f); });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

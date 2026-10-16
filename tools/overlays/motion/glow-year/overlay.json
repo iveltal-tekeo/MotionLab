@@ -1,0 +1,22 @@
+{
+ "name": "glow-year",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "riser",
+   "dur": "0.8",
+   "if": "look == 'wave'",
+   "what": "the year rises"
+  },
+  {
+   "f": "start + round(16 * fps / 30)",
+   "kind": "chip",
+   "if": "look == 'stack'",
+   "what": "it shrinks in steps"
+  }
+ ]
+}

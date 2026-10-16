@@ -1,0 +1,45 @@
+{
+ "name": "Pencil mark",
+ "kind": "ui",
+ "what": "A hand-drawn mark over your video - a circle round something, an underline, an arrow, a check, a cross or a scribble - drawn stroke by stroke by a pencil whose tip rides the line, with an optional handwritten note; then the pencil lifts away.",
+ "use_for": [
+  "callout",
+  "highlight",
+  "point at",
+  "tutorial",
+  "talking head",
+  "explain",
+  "mistake",
+  "right or wrong"
+ ],
+ "tags": [
+  "pencil",
+  "draw",
+  "circle",
+  "arrow",
+  "handwritten",
+  "annotate"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__pencil-drawing",
+   "what": "a pencil drawing a long curve, its tip following the line"
+  }
+ ],
+ "motion": "the strokes draw over 18 f (S-curve each), the tip on the line every frame; the note wipes in 12 f; the pencil lifts 10 f (accelerating)",
+ "scene": false,
+ "overlay": true,
+ "general": 0.8,
+ "thumb_f": 50,
+ "check_frames": [
+  0,
+  8,
+  16,
+  24,
+  30,
+  44,
+  60,
+  89
+ ]
+}

@@ -1,0 +1,20 @@
+{
+ "name": "donut-chart",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "riser",
+   "dur": "2.0",
+   "what": "the slices draw"
+  },
+  {
+   "f": "start + round(72 * fps / 30)",
+   "kind": "pop",
+   "what": "the middle number pops"
+  }
+ ]
+}

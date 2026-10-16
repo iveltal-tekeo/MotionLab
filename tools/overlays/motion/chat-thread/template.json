@@ -1,0 +1,14 @@
+{
+ "name": "Chat thread",
+ "kind": "chat",
+ "what": "A chat that builds message by message: each bubble grows out of its corner, its words fade in a moment later, the replies come after typing dots - green on beige, blue on white or dark.",
+ "use_for": ["chat", "story", "conversation", "dialogue", "texting", "skit", "storytime"],
+ "tags": ["chat", "messages", "bubbles", "typing", "phone", "ui"],
+ "learned_from": [{"pack": "swishy", "clip": "social__whatsapp-convo", "what": "the sent bubble, the reply's empty bubble then its words, the times and ticks"},
+                  {"pack": "swishy", "clip": "ui-elements__phone-messages", "what": "left / right bubbles, typing dots before each reply"}],
+ "motion": "a bubble every 34 f: back.out 12 f from its corner, the words 8 f later; typing dots 24 f before a reply",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 170,
+ "check_frames": [0, 6, 12, 40, 58, 66, 100, 140, 175]
+}

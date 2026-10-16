@@ -5,6 +5,24 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.5.0 - 2026-10-16 - Motion Graphics: 74 ready-made graphics, and the Generator builds from them
+
+- **Motion Graphics** - a new section in the sidebar: 74 ready-made motion graphics. 57 were learned from pro
+  template clips - titles that stretch, scatter, fall apart or flicker like neon, counters and progress rings, bar,
+  line and dashboard charts, checklists, sticky notes, chats and speech bubbles, notifications, a profile card, an
+  envelope that opens, stories, a photobooth strip, phones fanning out, a pencil that circles things, a pixel wipe,
+  a loading ring, a logo sting... - and 17 are new, for what template sites offer most and the clips lacked: **lower
+  thirds**, a **subscribe button** with a cursor click, **call-outs**, **shape transitions**, an **end screen**, an
+  **audio visualizer**, a **donut chart**, **before / after**, a **news bar**, **credits**, a **price tag**, a
+  **review** with stars, a **map route**, a camera **REC frame**, a **chapter bar**, a **poll** and a **top-10 rank
+  number**. Click one to play it and type your own words - it changes at once, before anything renders - then *Use in
+  a video* or *Make a video with it*. Every one takes any size (vertical, horizontal, square) and comes with its sound
+  effects. *Learned from* shows the clips you captured, what MotionLab measured in each and what Claude thinks it is
+  good for.
+- **The Generator builds from them** - a motion-graphics video now starts from these templates: the dialog suggests
+  the ones that fit your words as you type (pick some to be sure they are used), and Claude builds the scenes from
+  them instead of writing every graphic from zero.
+
 ## 0.4.6 - 2026-10-16 - Fonts and captions: 28 fonts, live previews, caption looks
 
 - **Claude's check uses less of your Claude plan** - on videos with many effects, helpers look at the contact sheets

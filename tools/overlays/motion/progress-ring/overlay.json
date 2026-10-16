@@ -1,0 +1,20 @@
+{
+ "name": "progress-ring",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "riser",
+   "dur": "fill_frames / 30",
+   "what": "it fills"
+  },
+  {
+   "f": "start + round(fill_frames * fps / 30)",
+   "kind": "chime",
+   "what": "it lands (the check / the symbol)"
+  }
+ ]
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "word", "type": "string", "label": "The word", "default": "SUBSCRIBE"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Space Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "bead", "type": "color", "label": "Bead colour", "default": "#fbfaf6"},
+  {"id": "ink", "type": "color", "label": "Letter colour", "default": "#2a2420"},
+  {"id": "string", "type": "boolean", "label": "A string through them once they line up", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#ece5da"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "The line, down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "line_at", "type": "number", "label": "They line up at frame", "default": 20, "min": 0, "max": 900, "step": 1},
+  {"id": "scatter_again", "type": "boolean", "label": "Scatter again at the end", "default": true},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "letter-beads" (0.5.0, the Motion Graphics library): letter beads lie scattered on a table
+     and roll into a line that spells the word - each turning as it rolls (rotation follows the distance), landing one
+     after another with a tiny bounce; a string pulls through them; at the end they scatter again. Learned from
+     text__friendship-beads (white letter beads scattered on cream rolling into "S U B S C R I B E", f17-f45
+     (00:00:00:17-00:00:01:20) at 25 fps, and scattering again). Seeded positions. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .bd { position: absolute; left: 0; top: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><svg id="str" class="abs" style="overflow:visible"></svg><div id="beads" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+
+  gsap.set(["#bgfill", "#cam", "#beads"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const word = [...(V.word || "WORD").toUpperCase()].filter(c => c !== " "), n = word.length, s = V.size;
+  const d = Math.min(W * 0.88 / n * 0.92, 120 * U) * s, gap = d * 0.1, rowW = n * d + (n - 1) * gap, x0 = (W - rowW) / 2, ly = H * V.y / 100;
+  const R = rnd(29), box = document.getElementById("beads"), beads = [];
+  word.forEach((c, i) => {
+    const e = document.createElement("div"); e.className = "bd"; e.textContent = c;
+    Object.assign(e.style, { width: `${d}px`, height: `${d}px`, background: `radial-gradient(circle at 35% 30%, #ffffff, ${V.bead} 55%, #d8d2c6)`, color: V.ink,
+      font: `700 ${d * 0.5}px ${fam}`, boxShadow: `0 ${d * 0.08}px ${d * 0.16}px rgba(60,40,20,.25)` });
+    box.appendChild(e);
+    // scattered: around the line's area, a random turn
+    const sx = W * (0.1 + 0.8 * R()) - d / 2, sy = ly + (R() - 0.5) * H * 0.28 - d / 2, sr = (R() - 0.5) * 300;
+    const tx = x0 + i * (d + gap), ty = ly - d / 2;
+    gsap.set(e, { x: sx, y: sy, rotation: sr });
+    beads.push({ e, sx, sy, sr, tx, ty });
+  });
+  const svg = document.getElementById("str"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.innerHTML = `<path id="sp" d="M${x0 - d * 0.6},${ly + d * 0.05} L${x0 + rowW + d * 0.6},${ly + d * 0.05}" stroke="#b9774f" stroke-width="${3 * U * s}" fill="none" opacity="0"/>`;
+
+  // ---- the motion: the scattered beads drop in (back.out 10 f, 1 f apart); from line_at each rolls to its place
+  // (14 f, a slow end) turning by the distance it rolls (a bead of diameter d turns 360 per pi * d), 2 f apart, then a
+  // 4-frame bounce; the string draws through; near the end they scatter back to new places
+  const S = Math.round(V.start), L0 = Math.max(S + K(14), Math.round(V.line_at));
+  beads.forEach((b, i) => enter(b.e, { opacity: 1, scale: 0 }, { scale: 1 }, S + i * K(1), S + i * K(1) + K(10), "back.out(2.4)"));
+  beads.forEach((b, i) => {
+    const f0 = L0 + i * K(2), dist = b.tx - b.sx, turn = dist / (Math.PI * d) * 360;
+    b.rf = b.sr + turn - ((b.sr + turn) % 360);           // a whole number of turns: upright when it lands
+    to(b.e, { x: b.tx, y: b.ty, rotation: b.rf }, f0, f0 + K(14), "power3.out");
+    to(b.e, { y: b.ty - d * 0.12 }, f0 + K(14), f0 + K(17), "power2.out");
+    to(b.e, { y: b.ty }, f0 + K(17), f0 + K(20), "power2.in");
+  });
+  const lined = L0 + n * K(2) + K(20);
+  if (V.string && lined + K(12) < FRAMES) {
+    const p = document.getElementById("sp"), Lp = p.getTotalLength();
+    p.setAttribute("stroke-dasharray", `${Lp} ${Lp}`);
+    ft(p, { attr: { opacity: 1, "stroke-dashoffset": Lp } }, { attr: { "stroke-dashoffset": 0 } }, lined, lined + K(12), "power2.inOut");
+  }
+  if (V.scatter_again) {
+    const sc = FRAMES - K(24);
+    if (sc > lined + K(16)) {
+      if (V.string) to("#sp", { attr: { opacity: 0 } }, sc, sc + K(4), "none");
+      beads.forEach((b, i) => to(b.e, { x: W * (0.08 + 0.84 * R()) - d / 2, y: ly + (R() - 0.5) * H * 0.3 - d / 2, rotation: b.rf + (R() - 0.5) * 240 }, sc + i % 4, sc + i % 4 + K(18), "power3.out"));
+    }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "question", "type": "string", "label": "Question", "default": "What do you edit on?"},
+  {"id": "options", "type": "string", "label": "Answers: words percent (| between)", "default": "Phone 46|Laptop 38|Desktop 16"},
+  {"id": "pick", "type": "number", "label": "The answer that gets tapped (1 = first, 0 = none)", "default": 1, "min": 0, "max": 6, "step": 1},
+  {"id": "votes", "type": "string", "label": "Small line under it (empty = none)", "default": "12,408 votes"},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#8b5cf6"},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#111827"},
+  {"id": "card", "type": "color", "label": "Card colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#ede9fe"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Card centre down (% of the height)", "default": 46, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "poll" (0.5.0, the Motion Graphics library): a social poll - the card pops, the question
+     and the answers come in, a finger tap picks one (a ripple), then every answer's bar fills to its share with the
+     percent counting, the tapped one ticked and the winner in the accent colour. Not learned from a clip: polls and
+     quizzes are a staple of the marketplaces' social media packs (Envato Elements, Motion Array; researched
+     2026-10-16). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.15; font-synthesis: none; }
+  .opt { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .num::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const opts = String(V.options || "").split("|").map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^(.*?)\s+([\d.]+)\s*%?\s*$/); return m ? [m[1], parseFloat(m[2])] : [x, 0]; }).slice(0, 6);
+  const s = V.size * U, cw = 860 * s, pad = 50 * s, oh = 110 * s, og = 22 * s, qh = 150 * s;
+  const chh = pad * 2 + qh + opts.length * (oh + og) + (V.votes ? 40 * s : 0), cx = W / 2, ctop = H * V.y / 100 - chh / 2;
+  const add = (cls, st, html) => { const e = document.createElement("div"); e.className = cls; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("ui").appendChild(e); return e; };
+  const card = add("abs", { width: `${cw}px`, height: `${chh}px`, borderRadius: `${40 * s}px`, background: V.card, boxShadow: `0 ${30 * s}px ${70 * s}px rgba(60,30,120,.18)` });
+  gsap.set(card, { x: cx - cw / 2, y: ctop, transformOrigin: "50% 50%" });
+  const qq = add("t", { width: `${cw - pad * 2}px`, whiteSpace: "normal", font: `800 ${56 * s}px ${fam}`, color: V.ink }, esc(V.question));
+  gsap.set(qq, { x: cx - cw / 2 + pad, y: ctop + pad });
+  const best = opts.reduce((b, o, i) => (o[1] > (b < 0 ? -1 : opts[b][1]) ? i : b), -1), pk = Math.round(V.pick) - 1;
+  const rows = opts.map(([label, pct], i) => {
+    const y = ctop + pad + qh + i * (oh + og), ow = cw - pad * 2;
+    const o = add("opt", { width: `${ow}px`, height: `${oh}px`, borderRadius: `${oh / 2}px`, border: `${4 * s}px solid ${i === pk ? V.accent : "#e5e7eb"}`, background: "#ffffff" });
+    o.innerHTML = `<div class="fl" style="position:absolute;left:0;top:0;width:100%;height:100%;background:${i === best ? V.accent : "#ddd6fe"};opacity:${i === best ? 0.9 : 1}"></div>
+      <div class="t" style="left:${36 * s}px;top:50%;transform:translateY(-50%);font:700 ${44 * s}px ${fam};color:${V.ink}">${esc(label)}${i === pk ? ` <span class="ck" style="color:${V.accent};display:inline-block">✓</span>` : ""}</div>
+      <div class="t num" data-v="" style="right:${36 * s}px;left:auto;top:50%;transform:translateY(-50%);font:800 ${44 * s}px ${fam};color:${V.ink}"></div>`;
+    gsap.set(o, { x: cx - cw / 2 + pad, y, transformOrigin: "50% 50%" });
+    const fl = o.querySelector(".fl"); gsap.set(fl, { scaleX: 0, transformOrigin: "0% 50%" });
+    const ck = o.querySelector(".ck"); if (ck) gsap.set(ck, { scale: 0 });
+    return { o, fl, num: o.querySelector(".num"), ck, pct, y, ow };
+  });
+  const vt = V.votes ? add("t", { font: `500 ${32 * s}px ${fam}`, color: V.ink, opacity: 0.55 }, esc(V.votes)) : null;
+  if (vt) gsap.set(vt, { x: cx - cw / 2 + pad, y: ctop + chh - pad - 34 * s });
+  // the finger: a round tap mark with a ripple
+  const tap = add("abs", { width: `${70 * s}px`, height: `${70 * s}px`, borderRadius: "50%", background: "rgba(17,24,39,.35)", border: `${4 * s}px solid #fff` });
+  const rip = add("abs", { width: `${70 * s}px`, height: `${70 * s}px`, borderRadius: "50%", border: `${5 * s}px solid ${V.accent}` });
+  gsap.set([tap, rip], { opacity: 0, transformOrigin: "50% 50%" });
+
+  // ---- the motion: the card pops (back.out 14 f); the question fades up; the answers slide in 4 f apart (12 f); the tap
+  // comes down on the picked answer (8 f), presses it (a 3 f dip) and its ripple goes out (14 f); then all bars fill
+  // to their share together (24 f, slow end) with the numbers counting, the tick pops, the winner kicks once
+  const S = Math.round(V.start);
+  enter(card, { opacity: 1, scale: 0.7 }, { scale: 1 }, S, S + K(14), "back.out(1.7)");
+  enter(qq, { opacity: 0, y: ctop + pad + 20 * s }, { opacity: 1, y: ctop + pad }, S + K(8), S + K(20), "power3.out");
+  rows.forEach((r, i) => enter(r.o, { opacity: 0, x: cx - cw / 2 + pad + 60 * s }, { opacity: 1, x: cx - cw / 2 + pad }, S + K(14) + i * K(4), S + K(26) + i * K(4), "power3.out"));
+  let f = S + K(26) + rows.length * K(4) + K(8);
+  if (pk >= 0 && rows[pk]) {
+    const r = rows[pk], tx = cx + cw * 0.18, ty = r.y + oh / 2 - 35 * s;
+    ft(tap, { opacity: 0, x: tx + 40 * s, y: ty + 80 * s, scale: 1.4 }, { opacity: 1, x: tx, y: ty, scale: 1 }, f, f + K(8), "power2.out");
+    to(r.o, { scale: 0.97 }, f + K(8), f + K(11), "power2.out"); to(r.o, { scale: 1 }, f + K(11), f + K(18), "back.out(2)");
+    set(rip, { x: tx, y: ty }, f + K(8)); ft(rip, { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2.6 }, f + K(8), f + K(22), "power2.out");
+    to(tap, { opacity: 0 }, f + K(14), f + K(20), "power1.in");
+    f += K(16);
+  }
+  const ez = gsap.parseEase("power2.out"), FL = K(24);
+  rows.forEach((r, i) => {
+    ft(r.fl, { scaleX: 0 }, { scaleX: Math.max(0.001, r.pct / 100) }, f, f + FL, "power2.out");
+    for (let k = 0; k <= FL; k++) set(r.num, { attr: { "data-v": Math.round(r.pct * ez(k / FL)) + "%" } }, f + k);
+    if (r.ck) ft(r.ck, { scale: 0 }, { scale: 1 }, f + K(4), f + K(14), "back.out(3)");
+  });
+  if (best >= 0 && f + FL + K(14) < FRAMES) { const b = rows[best]; to(b.o, { scale: 1.03 }, f + FL, f + FL + K(6), "power2.out"); to(b.o, { scale: 1 }, f + FL + K(6), f + FL + K(14), "power2.inOut"); }
+  if (vt) enter(vt, { opacity: 0 }, { opacity: 0.55 }, f + K(10), f + K(22), "power1.out");
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

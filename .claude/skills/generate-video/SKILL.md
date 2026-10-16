@@ -1,7 +1,7 @@
 ---
 name: generate-video
-description: MotionLab - make a video from zero (no clips of the user's own needed) - a motion-graphics video written as HTML / CSS / GSAP and rendered by HyperFrames, timed to a song; or the plan of a video for AI video tools (Higgsfield, Seedance, Kling, Runway, Veo, Sora, InVideo...) - the shot list and every prompt, saved in the prompt library, which the user generates on the tool's site and then edits with /recreate-video. Use for "/generate-video request <project>", "/generate-video graphics <project>", "/generate-video ai <project>", or when the user asks for a video from scratch, a motion graphic / kinetic text / explainer video, or prompts for a whole AI video.
-argument-hint: request <project> | graphics <project> - want: ... | ai <project> - want: ... - tool: ...
+description: MotionLab - make a video from zero (no clips of the user's own needed) - a motion-graphics video built from the Motion Graphics library's templates (HTML / CSS / GSAP rendered by HyperFrames), timed to a song; or the plan of a video for AI video tools (Higgsfield, Seedance, Kling, Runway, Veo, Sora, InVideo...) - the shot list and every prompt, saved in the prompt library, which the user generates on the tool's site and then edits with /recreate-video; or rebuild captured template clips as new library templates. Use for "/generate-video request <project>", "/generate-video graphics <project>", "/generate-video ai <project>", "/generate-video templates <pack>", or when the user asks for a video from scratch, a motion graphic / kinetic text / explainer video, prompts for a whole AI video, or more motion templates.
+argument-hint: request <project> | graphics <project> - want: ... | ai <project> - want: ... - tool: ... | templates <pack>
 ---
 
 # /generate-video
@@ -11,8 +11,10 @@ The third way in of the app (*Analyser*, *Editor*, **Generator**). `$ARGUMENTS`:
   `projects\<project>\build\generate_request.json`: read it first. `kind`: `graphics` (section 2) or `ai` (section 3);
   `want` (the user's words, as typed), `like` (up to 3 analysed videos whose style to follow), `length_s`, `format`
   (vertical / horizontal / square), `music` (a song: a path in the project folder or `refs\audio\`), `tool` (ai), `text`
-  (graphics: the words to show, one item per line), `colours` / `font` (graphics, optional).
+  (graphics: the words to show, one item per line), `colours` / `font` (graphics, optional), `templates` (graphics,
+  0.5.0: Motion Graphics templates the user picked - use every one of them).
 - `graphics <project> - want: ...` / `ai <project> - want: ... - tool: ...` - the same, typed.
+- `templates <pack>` - the app's *Motion Graphics > Rebuild the next ones with Claude*: section 4.
 Work from `C:\MotionLab` with `.venv\Scripts\python`; read tool docstrings, not whole tools. The app opens this with
 effort xhigh (graphics) / medium (ai).
 
@@ -28,10 +30,22 @@ effort xhigh (graphics) / medium (ai).
 - **Starting blind** (no `like`, only words; 0.4.2): first `.venv\Scripts\python tools\style.py closest "<their
   words>"` - the analysed videos whose measured style fits the words, one line of numbers each; 60 % or more ->
   suggest it as `like`, else suggest analysing one video in that feel (one analysed reference turns guessing into
-  measuring). Only when there is no reference and the words are vague: the hook (the first 3 s) as `overlay.py
+  measuring). **The Motion Graphics library** (0.5.0): with no `like`, build the scenes from the library's
+  templates - designed motion learned from pro clips - instead of writing graphics from zero:
+  `.venv\Scripts\python tools\templates.py pick "<their words + the words on screen>" --n 8` (best fit first) and
+  `templates.py library` (all of them, with their settings); the request's `templates` are the user's picks and come
+  first. Match each scene to a template by what it shows (a hook word -> kinetic-stack / scatter-text, a number ->
+  big-counter, a list -> checklist / wheel-list / rank-number, a story -> story-lines, a chat -> chat-thread, the song
+  -> now-playing / audio-bars, a name -> lower-third, pointing at something -> callout-line, a scene change ->
+  shape-wipe / pixel-wipe, the end -> end-screen / subscribe-cta / logo-reveal...); write new code only for what no
+  template does. Only when
+  there is no reference, the library has nothing close and the words are vague: the hook (the first 3 s) as `overlay.py
   snap` stills in 2-3 looks (e.g. clean and slick / raw and glitchy / slow and cinematic: one small composition per
   look, the same words, snap 4-6 frames each, one sheet labelled A / B / C) - this costs Claude tokens, so keep it
   to the hook. The user picks or mixes ("B's pacing with A's colours") - that is the plan.
+- **Motion rules** (measured on 120 pro clips, `knowledge\local\lessons_making.md` local-make-9): something moves in
+  the first 2 frames; moves ~13 f at 30 fps (7-35 f), S-curve or slow end, linear only for clocks; holds ~20 f, 65 f at
+  most, something alive in them; exits faster than entrances. Check the scene table and the sheet against them.
 - **The next version** of a generated video: `build\outcome.json` - `"moments": [{"f", "version", "aspect", "note",
   "date"}]` = notes on single frames: fix exactly those, each named with frame + timecode; `"next": "fix"` = a new
   version with the notes, `"start_over"` = back to step (1) below or to the looks above - never a v2 of a feel the
@@ -66,8 +80,14 @@ exit 1 = look at the sheet, fix before (4); (4) the final with the polish (motio
 3. **Build**: `tools\overlay.py new projects\<p>\build\overlays\<name> --frames <N> --fps <fps> --width <W> --height <H>`
    (1080x1920 vertical, 1920x1080 horizontal, 1080x1080 square; 30 fps unless the style says otherwise), or several
    compositions (one per scene) when it helps; a background that paints the whole frame (it is a video, not an
-   overlay). Start from an example when one fits (`overlay.py graphics`; `whats-new-0.3.0` is a 10-second stand-alone
-   video, `talking-head-pack` kinetic captions). Expose the texts, colours and timings as settings. Animate only
+   overlay). **A scene from a motion template** (0.5.0, the usual way): `tools\overlay.py new
+   projects\<p>\build\overlays\<scene> --from <template id> --frames <scene frames> --fps <fps> --width <W> --height <H>
+   --values "{\"text\": \"STOP SCROLLING\", \"bg\": \"#0b0b0c\"}"` - every template takes any size, rate and length;
+   its words, colours, font and timing are settings (`overlay.py settings <folder>`, `set` after); its sound cues come
+   with it (`sfx.py cues`). One composition per scene, each an overlay layer in the plan one after another; a
+   template's scene setting `background` paints the frame. Also the examples (`overlay.py graphics`;
+   `whats-new-0.3.0` is a 10-second stand-alone video, `talking-head-pack` kinetic captions). New code: expose the
+   texts, colours and timings as settings. Animate only
    with the template's helpers (`set` / `to` / `ft`, `bump` = a camera jolt, `smear` for moves over ~60 px a frame):
    they keep a plain render, a motion-blur render and a snapshot the same (M003, M004).
 4. **Check** (steps 2-3 above): `overlay.py snap <folder> <frames>` at every scene change and text hit (a cut as
@@ -117,6 +137,30 @@ planned for 0.7). The user generates on the tool's own site with their plan / cr
    then *Editor > New edit* (or `/recreate-video request <project>`) cuts them; the song, captions and graphics are
    added there.
 5. Tell the user the prompt ids (they are in the app's prompt library, *Copy Prompt* on each) and the order.
+
+## 4. Rebuild captured clips as Motion Graphics templates (`/generate-video templates <pack>`, 0.5.0)
+The user's captured template clips (e.g. `refs\swishy\`) are measured with no Claude: `tools\templates.py read <folder>
+--pack <pack>` -> `analysis\templates\<pack>\` (pack.json: every move with frame + timecode, its ease, the holds;
+`<id>\sheet.png` per clip; `overview_N.png`, 8 clips a page) and Claude's `cards.json` (what each clip is, use_for, tags,
+`rebuild` 1 / 2 / 3 - write a card for every clip without one, from the overviews). The clips stay untouched (hard
+rule 1) and private; the repo gets only MotionLab's own templates.
+1. `templates.py todo <pack>` = the clips not rebuilt yet, priority 1 first. Take up to 8 per session; group clips that
+   are one motion (two chat clips = one chat template). Skip `rebuild` 3 (a brand's logo, someone's character).
+2. Per template: read the clip's sheet and `templates.py show <pack> <id>` (the moves' frames and eases), then write
+   `tools\overlays\motion\<template>\`: `index.html` - copy the helper block of an existing template (FPS / FRAMES,
+   W / H lines for `retime`, F / AT / K (frames designed at 30 fps), set / to / ft / enter); everything sized from
+   `U = min(W, H) / 1080`; the settings declared on `<html>` (the words, colours, a `font` enum - `fonts.py sync` fills
+   its list -, `background` + `bg`, `size`, position, `start`); never a brand's logo, name or someone's words.
+   `overlay.json` = frames / fps / size + sound `cues` (formulas of the settings; `sfx.py cues <folder>` must list them
+   inside the frames; a list setting "a|b|c" counts with `parts(words)` - formulas have no `.split`). `template.json` =
+   name, kind (text / numbers / charts / lists / ui / chat / social / music / logo / photos / places / background /
+   transitions / lower_thirds / callouts / broadcast / promo), what, use_for, tags, `learned_from` [{pack, clip, what}]
+   (a MotionLab original made for a common need, not from a clip: `[]` + `origin` = the need, in words), motion (in
+   words + frames), scene / overlay, general (0-1: how often it fits), thumb_f, check_frames.
+3. `templates.py check <template>` = a snapshot sheet at the check frames (no render, ~4 s) + its thumb.png; look,
+   fix, again; then `--size 1920x1080@25` (another size and rate) and `--values '{...}'` for each look. The lessons
+   local-make-8 and -10 list the bugs that look fine in code (font stacks in single quotes; no top-level `const top`).
+4. Tell the user what was added (the app's Motion Graphics page shows them with a live preview, the clip beside it).
 
 ## Keep it lean
 Don't re-read what you already read in this chat; look at stills, not whole renders; summarise after each step.

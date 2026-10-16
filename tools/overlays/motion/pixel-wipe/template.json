@@ -1,0 +1,45 @@
+{
+ "name": "Pixel wipe",
+ "kind": "transitions",
+ "what": "A transition made of square pixels: blobs grow from a few spots until the frame is one colour, then shrink away blob by blob to reveal the words (or the next shot) - stepped like a pixel animation.",
+ "use_for": [
+  "transition",
+  "reveal",
+  "quote",
+  "retro",
+  "gaming",
+  "tech",
+  "scene change"
+ ],
+ "tags": [
+  "pixels",
+  "transition",
+  "wipe",
+  "blobs",
+  "retro",
+  "reveal"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__text-blob",
+   "what": "pixelated blue blobs growing over the frame, then shrinking away to reveal a quote"
+  }
+ ],
+ "motion": "24 steps over 26 f (power1.inOut spacing), 10 f full, back over 30 f",
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 10,
+ "check_frames": [
+  0,
+  8,
+  14,
+  20,
+  30,
+  45,
+  55,
+  66,
+  100
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "name": "mood-switch",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the face pops"
+  },
+  {
+   "f": "start + round(16 * fps / 30) + round(hold * fps / 30) + i * (round(16 * fps / 30) + round(hold * fps / 30))",
+   "repeat": "parts(moods) - 1",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "seed": "1600 + i",
+   "what": "the mood changes"
+  }
+ ]
+}

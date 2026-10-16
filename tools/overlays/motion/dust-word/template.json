@@ -1,0 +1,39 @@
+{
+ "name": "Dust word",
+ "kind": "text",
+ "what": "One big word turns to grain - its edge breaks up, the grains scatter and thin out - then gathers back; or forms out of dust; or blows away sideways; small words frame it at the corners.",
+ "use_for": [
+  "quote",
+  "word",
+  "statement",
+  "transition",
+  "dramatic"
+ ],
+ "tags": [
+  "kinetic text",
+  "dust",
+  "dissolve",
+  "particles",
+  "grain"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "text__energy-text",
+   "what": "the big word breaking into dust and coming back, small words around it"
+  }
+ ],
+ "motion": "dissolves 30 f (the threshold falls, the scatter grows), back 30 f (slow end); a slow push-in",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  10,
+  25,
+  40,
+  60,
+  90,
+  115
+ ]
+}

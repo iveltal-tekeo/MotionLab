@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "quote", "type": "string", "label": "Words revealed (a / starts a new line)", "default": "A mind too full of information / has no space for inspiration"},
+  {"id": "kicker", "type": "string", "label": "Small line above (empty = none)", "default": "design inspiration"},
+  {"id": "mode", "type": "enum", "label": "Motion", "default": "cover_reveal", "options": [{"value": "cover_reveal", "label": "Blobs cover the frame, then clear to reveal the words"}, {"value": "cover", "label": "Blobs cover the frame (a transition out)"}, {"value": "reveal", "label": "Start covered, clear to reveal (a transition in)"}]},
+  {"id": "cell", "type": "number", "label": "Pixel size (px on a 1080 frame)", "default": 36, "min": 8, "max": 160, "step": 1},
+  {"id": "color", "type": "color", "label": "Pixel colour", "default": "#1f2bff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#121212"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f1f1ef"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "pixel-wipe" (0.5.0, the Motion Graphics library): a transition made of square pixels -
+     blobs of them grow from a few spots until the frame is one colour, then shrink away blob by blob, revealing the
+     words underneath. Each pixel appears when its distance to the nearest spread centre is passed (the blobs are seeded
+     noise), all on stepped frames like a pixel animation. Learned from text__text-blob (pixelated blue blobs growing
+     until the frame is blue, then shrinking away to reveal "A mind too full of information has no space for
+     inspiration", f114-f202 at 25 fps). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; line-height: 1.2; font-synthesis: none; }
+  canvas { position: absolute; left: 0; top: 0; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="kk" class="t"></div><div id="qt" class="t"></div>
+  <div id="px" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#px"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const lines = String(V.quote || "").split(/\s+\/\s+/).filter(Boolean);
+  q("qt").innerHTML = lines.map(l => `<div>${l.replace(/[&<>]/g, "")}</div>`).join("");
+  Object.assign(q("qt").style, { font: `500 ${56 * U}px ${fam}`, color: V.ink, width: `${W * 0.8}px` });
+  gsap.set("#qt", { x: W * 0.1, y: H * 0.42 });
+  q("kk").textContent = V.kicker || "";
+  Object.assign(q("kk").style, { font: `500 ${28 * U}px ${fam}`, color: V.ink, opacity: 0.55, letterSpacing: "0.04em" });
+  gsap.set("#kk", { x: W * 0.1, y: H * 0.1 });
+  // the pixels: one element per cell would be thousands - instead a stack of layers, one per "step" (24 steps), each
+  // a tiny canvas (one canvas pixel = one cell, scaled up sharp) with the cells lit at that step; a step shows by
+  // setting that layer visible
+  const c = Math.max(8, V.cell) * U, cols = Math.ceil(W / c), rows = Math.ceil(H / c), R = rnd(83), STEPS = 24;
+  const centres = Array.from({ length: 7 }, () => [R() * W, R() * H]);
+  const rank = [];                                       // when each cell lights: its distance to the nearest centre + noise
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const px = (x + 0.5) * c, py = (y + 0.5) * c;
+    let d = Infinity; for (const [ax, ay] of centres) d = Math.min(d, Math.hypot(px - ax, py - ay));
+    rank.push(d + R() * c * 4);
+  }
+  const mx = Math.max(...rank), layers = [];
+  for (let k = 0; k < STEPS; k++) {
+    const cv = document.createElement("canvas"); cv.width = cols; cv.height = rows;
+    Object.assign(cv.style, { width: `${cols * c}px`, height: `${rows * c}px` });
+    const g = cv.getContext("2d"); g.fillStyle = V.color;
+    const lim = mx * (k + 1) / STEPS;
+    for (let i = 0; i < rank.length; i++) if (rank[i] <= lim) g.fillRect(i % cols, Math.floor(i / cols), 1, 1);
+    q("px").appendChild(cv); gsap.set(cv, { opacity: 0 }); layers.push(cv);
+  }
+  // ---- the motion: cover = steps 0..23 shown one after another (1 frame each at 30 fps, eased by spacing: fast in the
+  // middle; steps landing on one frame = only the last shows), hold 8 f full; reveal = back down 23..0; the words
+  // appear under it while covered
+  const S = Math.round(V.start);
+  const seq = (from, to_, f0, len) => { const n = Math.abs(to_ - from) + 1, out = [];
+    for (let i = 0; i < n; i++) out.push([from + Math.sign(to_ - from || 1) * i, f0 + Math.round(len * gsap.parseEase("power1.inOut")(i / (n - 1 || 1)))]); return out; };
+  let cur = -1;
+  const play = steps => { const byF = new Map(); steps.forEach(([k, f]) => byF.set(f, k));
+    [...byF].sort((a, b) => a[0] - b[0]).forEach(([f, k]) => { if (k === cur) return; if (cur >= 0) set(layers[cur], { opacity: 0 }, f); set(layers[k], { opacity: 1 }, f); cur = k; }); };
+  const COV = K(26), RV = K(30);
+  if (V.mode === "reveal") {
+    set(layers[STEPS - 1], { opacity: 1 }, 0); cur = STEPS - 1;
+    play(seq(STEPS - 2, 0, S + K(4), RV - K(2)));
+    set(layers[0], { opacity: 0 }, S + K(4) + RV);
+  } else {
+    if (V.mode === "cover_reveal") { set(["#qt", "#kk"], { opacity: 0 }, 0); }
+    play(seq(0, STEPS - 1, S, COV));
+    if (V.mode === "cover_reveal") {
+      set(["#qt", "#kk"], { opacity: 1 }, S + COV + K(2));
+      play(seq(STEPS - 2, 0, S + COV + K(10), RV));
+      set(layers[0], { opacity: 0 }, S + COV + K(10) + RV + 1);
+    }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

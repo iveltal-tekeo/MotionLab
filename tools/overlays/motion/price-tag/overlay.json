@@ -1,0 +1,25 @@
+{
+ "name": "price-tag",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "what": "the card rises"
+  },
+  {
+   "f": "start + round(32 * fps / 30)",
+   "kind": "impact",
+   "what": "the price slams"
+  },
+  {
+   "f": "start + round(38 * fps / 30)",
+   "kind": "ching",
+   "what": "the burst spins in"
+  }
+ ]
+}

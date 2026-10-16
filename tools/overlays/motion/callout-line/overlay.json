@@ -1,0 +1,25 @@
+{
+ "name": "callout-line",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(gap * fps / 30)",
+   "repeat": "parts(callouts)",
+   "kind": "pop",
+   "db": -6,
+   "seed": "3100 + i",
+   "what": "a dot lands"
+  },
+  {
+   "f": "start + i * round(gap * fps / 30) + round(6 * fps / 30)",
+   "repeat": "parts(callouts)",
+   "kind": "whip",
+   "db": -8,
+   "seed": "3200 + i",
+   "what": "its line draws"
+  }
+ ]
+}

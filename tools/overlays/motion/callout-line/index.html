@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "callouts", "type": "string", "label": "Call-outs: across %, down %, title, small line (| between call-outs)", "default": "62,38,4K camera,60 frames a second|34,55,All-day battery,up to 12 hours|60,70,Pocket size,182 grams"},
+  {"id": "side", "type": "enum", "label": "Labels go", "default": "auto", "options": [{"value": "auto", "label": "Away from the middle"}, {"value": "left", "label": "To the left"}, {"value": "right", "label": "To the right"}]},
+  {"id": "reach", "type": "number", "label": "Line length (% of the width)", "default": 14, "min": 4, "max": 60, "step": 1},
+  {"id": "color", "type": "color", "label": "Line + dot colour", "default": "#ffffff"},
+  {"id": "accent", "type": "color", "label": "Dot glow", "default": "#22d3ee"},
+  {"id": "ink", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2b3240"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "gap", "type": "number", "label": "Frames between call-outs", "default": 18, "min": 0, "max": 300, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 6, "min": 0, "max": 900, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "callout-line" (0.5.0, the Motion Graphics library): point at things in your video - a dot
+     lands on a spot and pulses, a line draws out from it with an elbow, and a label (a title + a small line) slides out
+     of the line's end; several call-outs one after another; they draw back at the end. Not learned from a clip:
+     call-outs are a main category on Mixkit and Motion Array (researched 2026-10-16). MotionLab's own code.
+     Size-independent: places are % of the frame. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .lbl { position: absolute; display: flex; flex-direction: column; }
+  .mask { overflow: hidden; }
+  .tx { line-height: 1.15; font-synthesis: none; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg id="g" class="abs"></svg>
+  <div id="labels" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+  const NS = "http://www.w3.org/2000/svg";
+
+  gsap.set(["#bgfill", "#labels"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const svg = q("g"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  const s = V.size * U, list = String(V.callouts || "").split("|").map(c => c.split(",").map(x => x.trim())).filter(c => c.length >= 3 && !isNaN(+c[0]) && !isNaN(+c[1]));
+  const el = (tag, at) => { const e = document.createElementNS(NS, tag); Object.entries(at).forEach(([k, v]) => e.setAttribute(k, v)); svg.appendChild(e); return e; };
+  const items = list.map(([x, y, title, ...rest]) => {
+    const px = W * +x / 100, py = H * +y / 100, dir = V.side === "left" ? -1 : V.side === "right" ? 1 : (px < W / 2 ? -1 : 1);
+    const rise = 70 * s, reach = W * V.reach / 100;
+    const ex = px + dir * rise, ey = py - rise, fx = ex + dir * reach;               // the elbow, then the line's end
+    const halo = el("circle", { cx: px, cy: py, r: 26 * s, fill: "none", stroke: V.accent, "stroke-width": 4 * s });
+    const dotc = el("circle", { cx: px, cy: py, r: 12 * s, fill: V.color, stroke: V.accent, "stroke-width": 4 * s });
+    const path = el("path", { d: `M${px},${py} L${ex},${ey} L${fx},${ey}`, fill: "none", stroke: V.color, "stroke-width": 4 * s, "stroke-linecap": "round", "stroke-linejoin": "round" });
+    const L = Math.hypot(ex - px, ey - py) + reach; path.setAttribute("stroke-dasharray", `${L} ${L}`); path.setAttribute("stroke-dashoffset", L);
+    // the title sits on the line (its bottom 10 px above it), the small line hangs under it; both as wide as the line
+    const lab = (text, cls, st, above) => { const b = document.createElement("div"); b.className = "lbl";
+      b.innerHTML = `<div class="mask"><div class="tx ${cls}">${esc(text)}</div></div>`; q("labels").appendChild(b);
+      Object.assign(b.querySelector(".tx").style, st, { textShadow: `0 ${2 * s}px ${12 * s}px rgba(0,0,0,.5)` });
+      // it starts where the line turns and grows the way the line goes, wrapping before the frame's edge
+      Object.assign(b.style, { alignItems: dir > 0 ? "flex-start" : "flex-end", textAlign: dir > 0 ? "left" : "right",
+        maxWidth: `${Math.max(reach, dir > 0 ? W - ex - 24 * s : ex - 24 * s)}px`, ...(dir > 0 ? { left: `${ex}px` } : { right: `${W - ex}px` }),
+        ...(above ? { bottom: `${H - (ey - 10 * s)}px` } : { top: `${ey + 10 * s}px` }) });
+      return b; };
+    const lb = [lab(title, "t1", { font: `800 ${48 * s}px ${fam}`, color: V.ink }, true)];
+    if (rest.length) lb.push(lab(rest.join(", "), "t2", { font: `500 ${32 * s}px ${fam}`, color: V.ink, opacity: 0.85 }, false));
+    return { halo, dotc, path, L, lb, dir };
+  });
+
+  // ---- the motion: per call-out (gap frames apart): the dot lands (back.out 10 f) and its halo pulses out every 30 f;
+  // the line draws 14 f (S-curve) to its end; the title rises out of its mask (10 f), the small line 4 f later; at the
+  // end everything draws back in reverse order (10 f)
+  const S = Math.round(V.start), G = Math.round(V.gap * FPS / 30);
+  const L0 = FRAMES - K(14) - (items.length - 1) * K(3), last = S + (items.length - 1) * G + K(30), gone = V.leave && L0 > last;
+  items.forEach((it, i) => {
+    const f = S + i * G;
+    gsap.set(it.dotc, { svgOrigin: `${it.dotc.getAttribute("cx")} ${it.dotc.getAttribute("cy")}` });
+    gsap.set(it.halo, { svgOrigin: `${it.halo.getAttribute("cx")} ${it.halo.getAttribute("cy")}`, opacity: 0 });
+    enter(it.dotc, { opacity: 1, scale: 0 }, { scale: 1 }, f, f + K(10), "back.out(2.5)");
+    for (let p = f + K(6); p + K(24) < (gone ? L0 : FRAMES); p += K(30)) ft(it.halo, { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2 }, p, p + K(24), "power2.out");
+    ft(it.path, { attr: { "stroke-dashoffset": it.L } }, { attr: { "stroke-dashoffset": 0 } }, f + K(6), f + K(20), "power2.inOut");
+    const ws = it.lb.map(b => b.querySelector(".tx"));
+    ws.forEach((w, k) => gsap.set(w, { yPercent: k ? -110 : 110 }));                   // hidden in their masks until they rise
+    ws.forEach((w, k) => ft(w, { yPercent: k ? -110 : 110 }, { yPercent: 0 }, f + K(16) + k * K(4), f + K(26) + k * K(4), "power3.out"));
+    it.ws = ws;
+  });
+  if (gone) {
+    items.slice().reverse().forEach((it, i) => {
+      const f = L0 + i * K(3);
+      it.ws.forEach((w, k) => to(w, { yPercent: k ? -110 : 110 }, f, f + K(6), "power2.in"));
+      to(it.path, { attr: { "stroke-dashoffset": it.L } }, f + K(2), f + K(10), "power2.in");
+      to(it.dotc, { scale: 0 }, f + K(6), f + K(12), "back.in(2)");
+    });
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

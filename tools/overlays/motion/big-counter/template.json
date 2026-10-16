@@ -1,0 +1,15 @@
+{
+ "name": "Big counter",
+ "kind": "numbers",
+ "what": "One big number counts up and lands with a kick, a label above and a caption under it - over a glow rising from the bottom, an area chart drawing behind it with a tag on its tip, or on a white card.",
+ "use_for": ["stat", "number", "money", "growth", "result", "hook", "percent", "followers"],
+ "tags": ["counter", "number", "glow", "chart", "card", "count up"],
+ "learned_from": [{"pack": "swishy", "clip": "graphics__upwork-ad", "what": "the big green percentage over a rising glow, the two-line caption"},
+                  {"pack": "swishy", "clip": "text__financials", "what": "the count with an area chart rising behind it and a tag on the curve (~49 f at 25 fps)"},
+                  {"pack": "swishy", "clip": "graphics__makin-bank", "what": "the number counting on a white card"}],
+ "motion": "in 10 f, counts 45 f (power3.out) growing to 1.06, lands with a back.out kick; the glow rises with it and breathes",
+ "scene": true,
+ "general": 0.8,
+ "thumb_f": 110,
+ "check_frames": [0, 8, 20, 35, 55, 62, 110]
+}

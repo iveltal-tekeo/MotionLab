@@ -359,7 +359,9 @@ def synth(kind: str, params: dict | None = None, seed: int = 1) -> np.ndarray:
 
 # ------------------------------------------------------------------------------------------------ cue formulas
 _FUNCS = {"len": len, "min": min, "max": max, "abs": abs, "floor": math.floor, "ceil": math.ceil, "int": int,
-          "round": lambda x: math.floor(x + 0.5)}
+          "round": lambda x: math.floor(x + 0.5),
+          # how many items a "a|b|c" list setting holds (empty ones left out): one cue per item of a list
+          "parts": lambda s, sep="|": len([x for x in str(s).split(sep) if x.strip()])}
 _BIN = {ast.Add: lambda a, b: a + b, ast.Sub: lambda a, b: a - b, ast.Mult: lambda a, b: a * b,
         ast.Div: lambda a, b: a / b, ast.FloorDiv: lambda a, b: a // b, ast.Mod: lambda a, b: a % b,
         ast.Pow: lambda a, b: a ** b}

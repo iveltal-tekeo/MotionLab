@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Song title", "default": "Midnight Drive"},
+  {"id": "artist", "type": "string", "label": "Artist", "default": "Your Name"},
+  {"id": "look", "type": "enum", "label": "Look", "default": "record", "options": [{"value": "record", "label": "Record - a spinning disc with the cover, a player under it"}, {"value": "bars", "label": "Bars - a visualizer pulsing on the beat"}]},
+  {"id": "cover", "type": "string", "label": "Cover picture in the graphic’s assets folder (empty = a colour art)", "default": ""},
+  {"id": "bpm", "type": "number", "label": "Beats a minute (the bars and the pulse follow it)", "default": 96, "min": 40, "max": 200, "step": 1},
+  {"id": "length_s", "type": "number", "label": "Song length shown (seconds)", "default": 214, "min": 10, "max": 3600, "step": 1},
+  {"id": "at_s", "type": "number", "label": "Starts at (seconds into the song)", "default": 42, "min": 0, "max": 3600, "step": 1},
+  {"id": "accent", "type": "color", "label": "Accent colour", "default": "#8b5cf6"},
+  {"id": "art1", "type": "color", "label": "Art colour 1 (no cover)", "default": "#ff9ecb"},
+  {"id": "art2", "type": "color", "label": "Art colour 2 (no cover)", "default": "#7dd3fc"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#0d0b14"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 45, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "now-playing" (0.5.0, the Motion Graphics library): a song card. Record look: a vinyl disc
+     with the cover in its middle spins (33 rpm), the title and artist under it (a long title scrolls), a progress bar
+     and the elapsed time count, the play controls; everything pulses on the beat. Bars look: "Now playing" over a
+     visualizer whose bars jump on every beat (seeded heights) and settle between beats, the song name under it.
+     Learned from graphics__spotify-player-animation (the spinning record with its cover, the scrolling title, the
+     progress bar and controls, 549 frames at 25 fps moving the whole time) and graphics__audio-visualizer (violet bars
+     pulsing in the middle of a dark frame, "Now playing", the song name). MotionLab's own code - no app's logo; the
+     beat comes from the bpm setting (beats.py measures a song's). Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.15; font-synthesis: none; }
+  .bar { position: absolute; left: 0; top: 0; }
+  #tm::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="haze" class="abs"></div>
+  <div id="cam" class="abs">
+    <div id="disc" class="abs"><div id="grooves" class="abs"></div><div id="art" class="abs"></div><div id="hole" class="abs"></div></div>
+    <div id="viz" class="abs"></div>
+    <div id="np" class="t"></div><div id="tbox" class="abs" style="overflow:hidden"><div id="ttl" class="t"></div></div><div id="art2" class="t"></div>
+    <div id="prog" class="abs"><div id="fill" class="abs"></div><div id="knob" class="abs"></div></div><div id="tm" class="t"></div><div id="tl2" class="t"></div>
+    <svg id="ctrl" class="abs" style="overflow:visible"></svg>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+  const mmss = x => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, "0")}`;
+
+  gsap.set(["#bgfill", "#haze", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, rec = V.look === "record", cy = H * V.y / 100, ink = "#ffffff";
+  if (V.background) gsap.set("#haze", { background: `radial-gradient(circle ${W * 0.7}px at 50% ${cy}px, ${V.accent}40, transparent 70%)` });
+  const D = 640 * U * s, A = D * 0.42;
+  // the disc: grooves (repeating rings), the cover in the middle (the user's picture or a colour art), a hole
+  Object.assign(q("disc").style, { width: `${D}px`, height: `${D}px`, borderRadius: "50%", background: "#0b0b0d", boxShadow: `0 ${30 * U}px ${80 * U}px rgba(0,0,0,.55)` });
+  Object.assign(q("grooves").style, { width: `${D}px`, height: `${D}px`, borderRadius: "50%",
+    background: `repeating-radial-gradient(circle, #ffffff10 0 ${2 * U}px, transparent ${2 * U}px ${7 * U}px), conic-gradient(from 30deg, #ffffff14, transparent 20%, #ffffff10 45%, transparent 70%, #ffffff14)` });
+  const art = q("art");
+  Object.assign(art.style, { width: `${A}px`, height: `${A}px`, borderRadius: "50%", left: `${(D - A) / 2}px`, top: `${(D - A) / 2}px`,
+    background: V.cover ? `center / cover no-repeat url("${V.cover.replace(/"/g, "")}")` : `radial-gradient(circle at 30% 30%, ${V.art1}, transparent 55%), radial-gradient(circle at 70% 65%, ${V.art2}, transparent 55%), linear-gradient(135deg, ${V.art2}, ${V.art1})` });
+  Object.assign(q("hole").style, { width: `${D * 0.04}px`, height: `${D * 0.04}px`, borderRadius: "50%", background: "#0b0b0d", left: `${D * 0.48}px`, top: `${D * 0.48}px` });
+  const discY = cy - D * 0.62;
+  gsap.set("#disc", { x: W / 2 - D / 2, y: discY, transformOrigin: "50% 50%", display: rec ? "block" : "none" });
+  // the visualizer (bars look)
+  const NB = 28, bw = W * 0.62 / NB, R = rnd(51), bars = [];
+  if (!rec) {
+    for (let i = 0; i < NB; i++) {
+      const b = document.createElement("div");
+      b.className = "bar";
+      const mid = 1 - Math.abs(i - (NB - 1) / 2) / (NB / 2);                 // taller in the middle
+      Object.assign(b.style, { width: `${bw * 0.55}px`, height: `${380 * U * s}px`, borderRadius: `${bw}px`, background: `linear-gradient(180deg, ${V.accent}, ${V.accent}88)` });
+      q("viz").appendChild(b);
+      gsap.set(b, { x: W * 0.19 + i * bw, y: cy - 190 * U * s, scaleY: 0.08, transformOrigin: "50% 50%" });
+      bars.push({ b, mid: 0.25 + 0.75 * mid });
+    }
+    q("np").textContent = "NOW PLAYING";
+    Object.assign(q("np").style, { font: `600 ${30 * U * s}px ${fam}`, color: ink, opacity: 0.6, letterSpacing: "0.3em" });
+    gsap.set("#np", { x: W / 2, y: cy - 330 * U * s, xPercent: -50 });
+  }
+  // title (scrolls when longer than the box), artist, progress, time, controls
+  const tY = rec ? discY + D + 70 * U * s : cy + 260 * U * s, boxW = W * 0.8;
+  Object.assign(q("ttl").style, { font: `700 ${58 * U * s}px ${fam}`, color: ink });
+  q("ttl").textContent = V.title;
+  const longT = V.title.length * 58 * U * s * 0.55 > boxW;
+  if (longT) q("ttl").textContent = `${V.title}     ·     ${V.title}     ·     `;
+  gsap.set("#tbox", { x: W / 2 - boxW / 2, y: tY, width: boxW, height: 80 * U * s });
+  gsap.set("#ttl", { x: longT ? 0 : boxW / 2, xPercent: longT ? 0 : -50 });
+  q("art2").textContent = V.artist;
+  Object.assign(q("art2").style, { font: `400 ${38 * U * s}px ${fam}`, color: ink, opacity: 0.6 });
+  gsap.set("#art2", { x: W / 2, y: tY + 82 * U * s, xPercent: -50 });
+  const pY = tY + 170 * U * s, pw = boxW;
+  Object.assign(q("prog").style, { width: `${pw}px`, height: `${8 * U * s}px`, borderRadius: `${8 * U}px`, background: "#ffffff2a" });
+  Object.assign(q("fill").style, { width: `${pw}px`, height: `${8 * U * s}px`, borderRadius: `${8 * U}px`, background: ink });
+  Object.assign(q("knob").style, { width: `${22 * U * s}px`, height: `${22 * U * s}px`, borderRadius: "50%", background: ink, top: `${-7 * U * s}px` });
+  gsap.set("#prog", { x: W / 2 - pw / 2, y: pY });
+  [["#tm", 0, 0], ["#tl2", 1, -100]].forEach(([id, side, xp]) => {
+    Object.assign(q(id.slice(1)).style, { font: `500 ${26 * U * s}px ${fam}`, color: ink, opacity: 0.55 });
+    gsap.set(id, { x: W / 2 - pw / 2 + side * pw, y: pY + 26 * U * s, xPercent: xp });
+  });
+  q("tl2").textContent = mmss(V.length_s);
+  const cs = 70 * U * s, svg = q("ctrl");
+  svg.setAttribute("width", W); svg.setAttribute("height", 200 * U * s);
+  const cx = W / 2, yC = 70 * U * s;
+  svg.innerHTML = `<g fill="${ink}">
+    <path d="M${cx - 230 * U * s},${yC} l${40 * U * s},-${26 * U * s} v${52 * U * s}z M${cx - 236 * U * s},${yC - 26 * U * s} h${7 * U * s} v${52 * U * s} h-${7 * U * s}z"/>
+    <circle cx="${cx}" cy="${yC}" r="${cs * 0.75}"/>
+    <path d="M${cx + 230 * U * s},${yC} l-${40 * U * s},-${26 * U * s} v${52 * U * s}z M${cx + 236 * U * s},${yC - 26 * U * s} h-${7 * U * s} v${52 * U * s} h${7 * U * s}z"/>
+    <rect x="${cx - 14 * U * s}" y="${yC - 20 * U * s}" width="${9 * U * s}" height="${40 * U * s}" fill="${V.bg}"/><rect x="${cx + 5 * U * s}" y="${yC - 20 * U * s}" width="${9 * U * s}" height="${40 * U * s}" fill="${V.bg}"/></g>`;
+  gsap.set("#ctrl", { y: pY + 80 * U * s });
+
+  // ---- the motion
+  const S = Math.round(V.start), BEAT = Math.max(2, Math.round(FPS * 60 / V.bpm));
+  const parts = rec ? ["#disc", "#tbox", "#art2", "#prog", "#tm", "#tl2", "#ctrl"] : ["#np", "#viz", "#tbox", "#art2", "#prog", "#tm", "#tl2", "#ctrl"];
+  parts.forEach((id, i) => enter(id, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1 }, S + i * K(3), S + i * K(3) + K(16), "power3.out"));
+  if (rec) {
+    ft("#disc", { rotation: 0 }, { rotation: 200 * (FRAMES - S) / FPS }, S, FRAMES, "none");   // 33 rpm = 200 degrees a second
+    for (let b = S + K(16); b + K(8) < FRAMES; b += BEAT)                                         // a soft pulse on each beat
+      ft("#disc", { scale: 1.025 }, { scale: 1 }, b, b + Math.min(BEAT - 1, K(8)), "power2.out");
+  } else {
+    for (let b = S + K(10); b < FRAMES; b += BEAT) bars.forEach(({ b: el, mid }) => {
+      const h = Math.min(1, mid * (0.45 + 0.55 * R()));
+      to(el, { scaleY: h }, b, b + K(3), "power3.out");                                           // up on the beat...
+      to(el, { scaleY: Math.max(0.08, h * 0.25) }, b + K(3), Math.min(FRAMES, b + BEAT), "power2.in");   // ...and down
+    });
+  }
+  if (longT) to("#ttl", { x: -(q("ttl").textContent.length * 58 * U * s * 0.55) / 2 }, S + K(20), FRAMES, "none");
+  // the progress and the elapsed time follow the frames (the song plays from at_s)
+  const total = Math.max(1, V.length_s);
+  ft("#fill", { scaleX: V.at_s / total, transformOrigin: "0% 50%" }, { scaleX: (V.at_s + (FRAMES - S) / FPS) / total }, S, FRAMES, "none");
+  ft("#knob", { x: pw * V.at_s / total - 11 * U * s }, { x: pw * (V.at_s + (FRAMES - S) / FPS) / total - 11 * U * s }, S, FRAMES, "none");
+  for (let f = S; f < FRAMES; f += Math.max(1, Math.round(FPS))) set("#tm", { attr: { "data-v": mmss(V.at_s + (f - S) / FPS) } }, f);
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+ "name": "Folder open",
+ "kind": "ui",
+ "what": "A desktop folder pops in, a cursor glides to it and double-clicks, and a window grows out of it with a grid of pictures popping in - a portfolio, a project, behind the scenes; it can close back at the end.",
+ "use_for": [
+  "portfolio",
+  "projects",
+  "behind the scenes",
+  "files",
+  "work",
+  "reveal",
+  "gallery"
+ ],
+ "tags": [
+  "folder",
+  "cursor",
+  "window",
+  "gallery",
+  "desktop",
+  "click"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__folder-gallery",
+   "what": "a cursor double-clicking a folder that opens into a picture window"
+  }
+ ],
+ "motion": "folder back.out 12 f; the cursor glides 24 f (a curve), double-click (2 dips of 3 f); the window grows 16 f (slow end), pictures 3 f apart; closes 12 f",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  12,
+  30,
+  36,
+  50,
+  90,
+  140
+ ]
+}

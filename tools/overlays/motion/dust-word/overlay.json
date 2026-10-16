@@ -1,0 +1,15 @@
+{
+ "name": "dust-word",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "crackle",
+   "dur": "1.0",
+   "what": "it turns to dust"
+  }
+ ]
+}

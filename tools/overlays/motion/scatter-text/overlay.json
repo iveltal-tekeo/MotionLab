@@ -1,0 +1,12 @@
+{
+ "name": "scatter-text",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "thump", "what": "the block lands"},
+  {"f": "max(start + round(10 * fps / 30), scatter_at)", "kind": "impact", "db": -4, "what": "the letters burst apart"},
+  {"f": "max(start + round(10 * fps / 30), scatter_at) + round(28 * fps / 30)", "kind": "riser", "dur": "1.2", "what": "they fly back into the block"}
+ ]
+}

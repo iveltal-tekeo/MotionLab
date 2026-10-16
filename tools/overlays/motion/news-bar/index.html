@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "tag", "type": "string", "label": "Tag", "default": "BREAKING"},
+  {"id": "headline", "type": "string", "label": "Headline", "default": "MotionLab 0.5 adds a motion graphics library"},
+  {"id": "ticker", "type": "string", "label": "Ticker lines (| between; empty = no ticker)", "default": "60+ templates you can change|lower thirds · transitions · charts|made from pro template clips|free to use in any video"},
+  {"id": "place", "type": "string", "label": "Small line by the live dot (empty = none)", "default": "LIVE"},
+  {"id": "accent", "type": "color", "label": "Tag colour", "default": "#e11d2a"},
+  {"id": "bar", "type": "color", "label": "Headline bar colour", "default": "#ffffff"},
+  {"id": "ink", "type": "color", "label": "Headline text colour", "default": "#111111"},
+  {"id": "band", "type": "color", "label": "Ticker band colour", "default": "#0f172a"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "y", "type": "number", "label": "Headline down (% of the height)", "default": 74, "min": 0, "max": 100, "step": 1},
+  {"id": "speed", "type": "number", "label": "Ticker speed (px a frame on a 1080 frame)", "default": 5, "min": 0.5, "max": 30, "step": 0.5},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#334155"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 4, "min": 0, "max": 900, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "news-bar" (0.5.0, the Motion Graphics library): a news-style lower band - a coloured tag
+     (BREAKING) snaps in, the headline bar wipes out of it and the headline rises, a ticker band under it scrolls its
+     lines past with dots between them, a live dot blinks; it leaves the way it came. For a funny "breaking news" beat
+     or a real update. Not learned from a clip: broadcast / news packages are a Videohive and Envato Elements category
+     (researched 2026-10-16). MotionLab's own design - no channel's branding. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .box { position: absolute; left: 0; top: 0; overflow: hidden; display: flex; align-items: center; }
+  .t { white-space: nowrap; line-height: 1.1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="nb" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const esc = s => String(s || "").replace(/[&<>]/g, "");
+
+  gsap.set(["#bgfill", "#nb"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const box = (st, html) => { const e = document.createElement("div"); e.className = "box"; Object.assign(e.style, st); if (html != null) e.innerHTML = html; q("nb").appendChild(e); return e; };
+  const y0 = H * V.y / 100, hh = 120 * U, th = 64 * U, m = 0;                       // the headline row's height, the ticker's
+  const tagW = Math.max(220, 34 * String(V.tag).length + 60) * U;
+  const tag = box({ width: `${tagW}px`, height: `${hh}px`, background: V.accent, justifyContent: "center" }, `<div class="t" style="font:900 ${44 * U}px ${fam};color:#fff;letter-spacing:.06em">${esc(V.tag)}</div>`);
+  const bar = box({ width: `${W - tagW}px`, height: `${hh}px`, background: V.bar, padding: `0 ${34 * U}px` }, `<div class="t hl" style="font:800 ${46 * U}px ${fam};color:${V.ink}">${esc(V.headline)}</div>`);
+  gsap.set(tag, { x: m, y: y0 }); gsap.set(bar, { x: m + tagW, y: y0, transformOrigin: "0% 50%" });
+  const hl = bar.querySelector(".hl");
+  // the headline is one line: shrink it to fit the bar when it is long (measured once the fonts are in)
+  const fit = () => { const room = W - tagW - 68 * U; if (hl.scrollWidth > room) hl.style.fontSize = `${46 * U * room / hl.scrollWidth}px`; };
+  fit(); if (document.fonts) document.fonts.ready.then(fit);
+  const lines = String(V.ticker || "").split("|").map(x => x.trim()).filter(Boolean);
+  let band = null, strip = null;
+  if (lines.length) {
+    const seq = lines.map(l => `<span>${esc(l)}</span><span style="color:${V.accent};padding:0 ${28 * U}px">●</span>`).join("");
+    band = box({ width: `${W}px`, height: `${th}px`, background: V.band }, `<div class="t strip" style="font:600 ${32 * U}px ${fam};color:#fff;padding-left:${W}px">${seq.repeat(6)}</div>`);
+    gsap.set(band, { x: 0, y: y0 + hh, transformOrigin: "50% 0%" });
+    strip = band.querySelector(".strip");
+  }
+  let live = null;
+  if (V.place) {
+    live = box({ height: `${54 * U}px`, padding: `0 ${18 * U}px`, background: "rgba(0,0,0,.65)", borderRadius: `${8 * U}px`, gap: `${12 * U}px` },
+      `<div class="dot" style="width:${18 * U}px;height:${18 * U}px;border-radius:50%;background:${V.accent}"></div><div class="t" style="font:800 ${28 * U}px ${fam};color:#fff;letter-spacing:.08em">${esc(V.place)}</div>`);
+    gsap.set(live, { x: 30 * U, y: y0 - 74 * U });
+  }
+
+  // ---- the motion: the tag snaps in from the left (8 f, slow end) with a 3 f flash; the bar wipes out of it (12 f,
+  // S-curve), the headline rises (10 f); the ticker band drops open (8 f) and scrolls at `speed` the whole time; the
+  // live dot blinks every 15 f; at the end it all leaves the other way (8-10 f, slow start)
+  const S = Math.round(V.start);
+  const show = (e, f) => { if (f > 0) set(e, { opacity: 0 }, 0); set(e, { opacity: 1 }, f); };   // hidden until its frame
+  show(tag, S); ft(tag, { x: -tagW }, { x: m }, S, S + K(8), "power3.out");
+  ft(tag, { filter: "brightness(2)" }, { filter: "brightness(1)" }, S + K(8), S + K(11), "power1.out");
+  show(bar, S + K(6)); ft(bar, { scaleX: 0 }, { scaleX: 1 }, S + K(6), S + K(18), "power3.inOut");
+  ft(hl, { yPercent: 120 }, { yPercent: 0 }, S + K(14), S + K(24), "power3.out");
+  if (band) {
+    show(band, S + K(16)); ft(band, { scaleY: 0 }, { scaleY: 1 }, S + K(16), S + K(24), "power3.out");
+    const sp = V.speed * U * 30 / FPS;
+    ft(strip, { x: 0 }, { x: -sp * (FRAMES - S - K(16)) }, S + K(16), FRAMES, "none");
+  }
+  if (live) {
+    show(live, S + K(10)); ft(live, { scale: 0 }, { scale: 1 }, S + K(10), S + K(20), "back.out(2)");
+    const dot = live.querySelector(".dot");
+    for (let f = S + K(24), k = 0; f + K(15) < FRAMES; f += K(15), k++) set(dot, { opacity: k % 2 ? 1 : 0.15 }, f);
+  }
+  if (V.leave) {
+    const L = FRAMES - K(16);
+    if (L > S + K(40)) {
+      to(hl, { yPercent: -120 }, L, L + K(8), "power2.in");
+      set(bar, { transformOrigin: "100% 50%" }, L + K(4)); to(bar, { scaleX: 0 }, L + K(4), L + K(14), "power3.in");
+      to(tag, { x: -tagW }, L + K(8), L + K(16), "power3.in");
+      if (band) to(band, { scaleY: 0 }, L, L + K(8), "power3.in");
+      if (live) to(live, { scale: 0 }, L, L + K(8), "back.in(2)");
+    }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

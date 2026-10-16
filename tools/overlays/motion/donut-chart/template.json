@@ -1,0 +1,39 @@
+{
+ "name": "Donut chart",
+ "kind": "charts",
+ "what": "Shares of a whole: a donut (or pie) whose slices draw in one after another around the circle, each slice's number counting up in the legend as it draws; the middle shows the biggest share and that slice pushes out a little.",
+ "use_for": [
+  "stat",
+  "data",
+  "budget",
+  "split",
+  "survey",
+  "breakdown",
+  "percent",
+  "infographic"
+ ],
+ "tags": [
+  "pie",
+  "donut",
+  "chart",
+  "data",
+  "percent",
+  "legend"
+ ],
+ "learned_from": [],
+ "origin": "infographics (pie / donut charts) - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "title 14 f; slices draw over 60 f in all (S-curve across the turn), the legend counting with them; the middle back.out 12 f; the biggest slice out 10 f and back",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  14,
+  30,
+  50,
+  72,
+  84,
+  100,
+  140
+ ]
+}

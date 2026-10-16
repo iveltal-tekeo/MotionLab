@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "item1", "type": "string", "label": "Item 1", "default": "interaction design"},
+  {"id": "item2", "type": "string", "label": "Item 2", "default": "web design guidelines"},
+  {"id": "item3", "type": "string", "label": "Item 3", "default": "ui design system"},
+  {"id": "item4", "type": "string", "label": "Item 4", "default": "frontend design"},
+  {"id": "item5", "type": "string", "label": "Item 5", "default": "motion principles"},
+  {"id": "item6", "type": "string", "label": "Item 6 (empty = not shown)", "default": "type that moves"},
+  {"id": "item7", "type": "string", "label": "Item 7 (empty = not shown)", "default": ""},
+  {"id": "item8", "type": "string", "label": "Item 8 (empty = not shown)", "default": ""},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "The current item", "default": "#111114"},
+  {"id": "dim", "type": "color", "label": "The other items", "default": "#9a9aa2"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f6f6f7"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "hold", "type": "number", "label": "Frames on each item", "default": 26, "min": 6, "max": 300, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "wheel-list" (0.5.0, the Motion Graphics library): a list on a wheel - the items roll up
+     past a centre line one at a time; the one in the middle is bold and dark, the others smaller and fainter the
+     further they are, like a picker on a phone. Learned from text__sentence-reveal (analysis\templates\swishy: a step
+     every ~1 s, each roll an S-curve over ~10 frames at 25 fps, five items in view, fading with distance). MotionLab's
+     own code; each roll is written out item by item (no per-frame callbacks), so a snapshot = the render.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .it { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .it span { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="wheel" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, light = ONE.test(V.font) ? 400 : 400, bold = ONE.test(V.font) ? 400 : 700;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const items = [V.item1, V.item2, V.item3, V.item4, V.item5, V.item6, V.item7, V.item8].map(s => (s || "").trim()).filter(Boolean);
+  const fs = 60 * U * V.size, lh = fs * 1.8, cx = W * V.x / 100, cy = H * V.y / 100;
+  const wheel = document.getElementById("wheel");
+  // each item = a faint copy and a bold copy on top; the bold one shows only in the middle
+  const els = items.map(t => {
+    const e = document.createElement("div");
+    e.className = "it";
+    e.innerHTML = `<span class="d"></span><span class="b"></span>`;
+    const [d, b] = e.children;
+    d.textContent = b.textContent = t;
+    Object.assign(d.style, { font: `${light} ${fs}px ${fam}`, color: V.dim });
+    Object.assign(b.style, { font: `${bold} ${fs}px ${fam}`, color: V.color });
+    wheel.appendChild(e);
+    return { e, d, b };
+  });
+  // where item i sits when item k is in the middle: its distance decides height, size and fade (as measured: ~5 in view)
+  const pose = (i, k) => {
+    const dd = i - k, a = Math.abs(dd);
+    return { e: { x: cx, y: cy + dd * lh * (1 - 0.05 * Math.min(a, 3)), scale: 1 - 0.09 * Math.min(a, 4), opacity: a > 3.5 ? 0 : 1 - 0.27 * a },
+             b: { opacity: a < 0.5 ? 1 : 0 }, d: { opacity: a < 0.5 ? 0 : 1 } };
+  };
+
+  // ---- the motion: in (a rise + fade), then one roll per item: an S-curve, the bold copy cross-fades
+  const S = Math.round(V.start), HOLD = Math.max(K(6), Math.round(V.hold * FPS / 30)), ROLL = K(12);
+  els.forEach((L, i) => {
+    const p = pose(i, 0);
+    if (S > 0) set(L.e, { opacity: 0 }, 0);
+    ft(L.e, { ...p.e, y: p.e.y + 60 * U, opacity: 0 }, p.e, S, S + K(16) + i * K(2), "power3.out");
+    gsap.set(L.b, p.b); gsap.set(L.d, p.d);
+  });
+  let f = S + K(16) + HOLD;
+  for (let k = 1; k < els.length && f + ROLL < FRAMES; k++, f += ROLL + HOLD) {
+    els.forEach((L, i) => {
+      const p = pose(i, k);
+      to(L.e, p.e, f, f + ROLL, "power3.inOut");
+      to(L.b, p.b, f + K(3), f + ROLL - K(2), "power1.inOut");
+      to(L.d, p.d, f + K(3), f + ROLL - K(2), "power1.inOut");
+    });
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

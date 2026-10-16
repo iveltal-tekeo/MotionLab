@@ -1,0 +1,55 @@
+{
+ "name": "Icon pop",
+ "kind": "logo",
+ "what": "One icon pops in and keeps pulsing: an app-style tile with letters (like an editing app's icon), a red warning sign that shakes, or a round symbol - a ring goes out and the glow breathes on every pulse.",
+ "use_for": [
+  "app",
+  "tool",
+  "software",
+  "warning",
+  "error",
+  "logo",
+  "topic",
+  "tutorial"
+ ],
+ "tags": [
+  "icon",
+  "app",
+  "tile",
+  "warning",
+  "pop",
+  "glow",
+  "pulse"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "social__photoshop-animation",
+   "what": "an app tile popping with a glow"
+  },
+  {
+   "pack": "swishy",
+   "clip": "social__premiere-pro-animation",
+   "what": "an app tile popping and pulsing"
+  },
+  {
+   "pack": "swishy",
+   "clip": "overlays__error-error",
+   "what": "a red warning sign popping and shaking"
+  }
+ ],
+ "motion": "pops to 1.15 in 8 f, settles back.out 10 f with a glow swell; the warning shakes; a pulse every 36 f",
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 30,
+ "check_frames": [
+  0,
+  6,
+  12,
+  24,
+  40,
+  76,
+  119
+ ]
+}

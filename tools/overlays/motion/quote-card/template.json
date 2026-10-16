@@ -1,0 +1,13 @@
+{
+ "name": "Quote card",
+ "kind": "social",
+ "what": "A post-style quote card - a round picture, a name with a check badge, a handle - pops in with a tilt that settles; the quote comes in word by word, the starred phrase in the accent colour; the counts tick up.",
+ "use_for": ["quote", "opinion", "statement", "talking head", "testimonial", "review", "hot take"],
+ "tags": ["quote", "card", "post", "social", "words"],
+ "learned_from": [{"pack": "swishy", "clip": "social__naval-quote", "what": "the post-style card: avatar, name, a two-paragraph quote with one phrase in blue (a still capture; the motion follows the library's rules)"}],
+ "motion": "card back.out 18 f from a -5 degree tilt; words 2 f apart rising 8 f; counts 20 f; the card floats",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 150,
+ "check_frames": [0, 8, 16, 30, 50, 70, 110, 150]
+}

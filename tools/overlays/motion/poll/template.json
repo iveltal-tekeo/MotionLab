@@ -1,0 +1,40 @@
+{
+ "name": "Poll",
+ "kind": "social",
+ "what": "A social poll: the card pops, the question and the answers come in, a tap picks one with a ripple, then every answer's bar fills to its share with the percent counting - the tapped one ticked, the winner in the accent colour.",
+ "use_for": [
+  "poll",
+  "question",
+  "quiz",
+  "survey",
+  "engagement",
+  "results",
+  "vote"
+ ],
+ "tags": [
+  "poll",
+  "quiz",
+  "vote",
+  "bars",
+  "percent",
+  "social"
+ ],
+ "learned_from": [],
+ "origin": "polls and quizzes in social media packs - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "card back.out 14 f; answers 12 f, 4 f apart; the tap 8 f, a 3 f press, ripple 14 f; bars fill 24 f (slow end) with the counts; the winner kicks",
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  10,
+  24,
+  46,
+  56,
+  64,
+  80,
+  110,
+  140
+ ]
+}

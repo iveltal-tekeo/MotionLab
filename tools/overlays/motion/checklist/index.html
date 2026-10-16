@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (empty = none)", "default": ""},
+  {"id": "item1", "type": "string", "label": "Item 1", "default": "New year"},
+  {"id": "item2", "type": "string", "label": "Item 2", "default": "New goals"},
+  {"id": "item3", "type": "string", "label": "Item 3 (empty = not shown)", "default": "New energy"},
+  {"id": "item4", "type": "string", "label": "Item 4 (empty = not shown)", "default": ""},
+  {"id": "item5", "type": "string", "label": "Item 5 (empty = not shown)", "default": ""},
+  {"id": "item6", "type": "string", "label": "Item 6 (empty = not shown)", "default": ""},
+  {"id": "marks", "type": "enum", "label": "Before each item", "default": "check", "options": [{"value": "check", "label": "A check mark that draws itself"}, {"value": "box", "label": "A box that gets ticked"}, {"value": "number", "label": "A number (1, 2, 3...)"}, {"value": "dot", "label": "A dot"}]},
+  {"id": "focus", "type": "boolean", "label": "Earlier items fade back as each new one comes", "default": false},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#f4f4f5"},
+  {"id": "accent", "type": "color", "label": "Marks colour", "default": "#22c55e"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Left edge of the list (% of the width; 0 = centred)", "default": 0, "min": 0, "max": 90, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between items", "default": 24, "min": 2, "max": 300, "step": 1},
+  {"id": "start", "type": "number", "label": "First item at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "checklist" (0.5.0, the Motion Graphics library): a list that builds one line at a time -
+     the mark first (a check that draws itself, a box that gets ticked, a number or a dot), then the words slide in
+     beside it; the list re-centres as it grows; earlier lines can fade back so the newest leads. Learned from
+     text__goals (lines with a check, one after another on black: f1-f5, f25-f31 (00:00:01:00-00:00:01:06) at 25 fps),
+     overlays__list-of-things (an icon + a word sliding up, later items dimmed) and graphics__create-with-ai (buttons
+     stacking one after another). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .row { position: absolute; left: 0; top: 0; display: flex; align-items: center; white-space: nowrap; }
+  .mk { flex: none; position: relative; display: flex; align-items: center; justify-content: center; }
+  .tx { line-height: 1.1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="list" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, heavy = ONE.test(V.font) ? 400 : 700;
+
+  gsap.set(["#bgfill", "#cam", "#list"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const items = [V.item1, V.item2, V.item3, V.item4, V.item5, V.item6].map(t => (t || "").trim()).filter(Boolean);
+  const s = V.size, fs = 78 * U * s, lh = fs * 1.55, ms = fs * 0.9, gapX = fs * 0.45;
+  const longest = Math.max(...items.map(t => t.length), (V.title || "").length * 0.8, 1);
+  const listW = ms + gapX + longest * fs * 0.55;
+  const left = V.x > 0 ? W * V.x / 100 : (W - listW) / 2;
+  const cy = H * V.y / 100, n = items.length, hasT = !!V.title;
+  const list = document.getElementById("list"), rows = [];
+  let tEl = null;
+  if (hasT) {
+    tEl = document.createElement("div");
+    tEl.className = "tx abs";
+    tEl.textContent = V.title;
+    Object.assign(tEl.style, { font: `${ONE.test(V.font) ? 400 : 800} ${fs * 1.15}px ${fam}`, color: V.text_color, whiteSpace: "nowrap" });
+    list.appendChild(tEl);
+  }
+  // where row i sits when k rows are shown: the block stays centred on cy as it grows
+  const rowY = (i, k) => cy - ((k + (hasT ? 1.3 : 0)) * lh) / 2 + (i + (hasT ? 1.3 : 0)) * lh;
+  items.forEach((t, i) => {
+    const r = document.createElement("div");
+    r.className = "row";
+    const m = document.createElement("div");
+    m.className = "mk";
+    Object.assign(m.style, { width: `${ms}px`, height: `${ms}px`, marginRight: `${gapX}px` });
+    const sw = Math.max(2, ms * 0.11);
+    if (V.marks === "check")
+      m.innerHTML = `<svg width="${ms}" height="${ms}" viewBox="0 0 24 24"><path class="ck" d="M4 12.5l5 5L20 6.5" fill="none" stroke="${V.accent}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>`;
+    else if (V.marks === "box")
+      m.innerHTML = `<svg width="${ms}" height="${ms}" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="none" stroke="${V.text_color}" stroke-opacity=".5" stroke-width="2"/><rect class="bf" x="2.5" y="2.5" width="19" height="19" rx="5" fill="${V.accent}" opacity="0"/><path class="ck" d="M7 12.5l3.5 3.5L17.5 8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>`;
+    else if (V.marks === "number")
+      Object.assign(m.style, { borderRadius: "50%", background: V.accent, color: "#0b0b0c", font: `${heavy} ${ms * 0.55}px ${fam}` }), m.textContent = String(i + 1);
+    else Object.assign(m.style, { width: `${ms * 0.35}px`, height: `${ms * 0.35}px`, borderRadius: "50%", background: V.accent, margin: `0 ${gapX + ms * 0.65}px 0 ${0}px` });
+    const tx = document.createElement("div");
+    tx.className = "tx";
+    tx.textContent = t;
+    Object.assign(tx.style, { font: `${heavy} ${fs}px ${fam}`, color: V.text_color });
+    r.append(m, tx);
+    list.appendChild(r);
+    rows.push({ r, m, tx, ck: m.querySelector(".ck"), bf: m.querySelector(".bf") });
+  });
+
+  // ---- the motion: row i at f_i = start + i * gap: the block slides to make room, the mark lands, the words slide in
+  const S = Math.round(V.start), GAP = Math.max(K(2), Math.round(V.gap * FPS / 30)), MOVE = K(12);
+  if (tEl) { gsap.set(tEl, { x: left, y: rowY(-1.3, 1) - lh / 2 }); enter(tEl, { opacity: 0, x: left - 30 * U }, { opacity: 1, x: left }, S, S + K(12), "power3.out"); }
+  rows.forEach((R, i) => {
+    const f0 = S + (hasT ? K(10) : 0) + i * GAP;
+    gsap.set(R.r, { x: left, y: rowY(i, i + 1) - lh / 2 });
+    // the rows already there move up as the block re-centres
+    for (let j = 0; j < i; j++) to(rows[j].r, { y: rowY(j, i + 1) - lh / 2 }, f0, f0 + MOVE, "power3.inOut");
+    if (tEl && i > 0) to(tEl, { y: rowY(-1.3, i + 1) - lh / 2 }, f0, f0 + MOVE, "power3.inOut");
+    enter(R.r, { opacity: 1 }, { opacity: 1 }, f0, f0 + 1, "none");
+    ft(R.m, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1 }, f0, f0 + K(9), "back.out(2.2)");
+    if (R.bf) ft(R.bf, { attr: { opacity: 0 } }, { attr: { opacity: 1 } }, f0 + K(4), f0 + K(10), "power1.out");
+    if (R.ck) ft(R.ck, { attr: { "stroke-dashoffset": 100 } }, { attr: { "stroke-dashoffset": 0 } }, f0 + K(4), f0 + K(14), "power2.out");
+    set(R.tx, { opacity: 0 }, f0);                                    // the words wait for their mark
+    ft(R.tx, { opacity: 0, x: -36 * U * s, filter: "blur(6px)" }, { opacity: 1, x: 0, filter: "blur(0px)" }, f0 + K(3), f0 + K(15), "power3.out");
+    if (V.focus && i > 0) for (let j = 0; j < i; j++) to(rows[j].r, { opacity: 0.38 }, f0, f0 + K(10), "power1.out");
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Board title (empty = none)", "default": "ARRIVALS"},
+  {"id": "line1", "type": "string", "label": "Row 1", "default": "NEW VIDEO"},
+  {"id": "line2", "type": "string", "label": "Row 2 (empty = not shown)", "default": "EVERY FRIDAY"},
+  {"id": "line3", "type": "string", "label": "Row 3 (empty = not shown)", "default": "AT 6 PM"},
+  {"id": "line4", "type": "string", "label": "Row 4 (empty = not shown)", "default": ""},
+  {"id": "line5", "type": "string", "label": "Row 5 (empty = not shown)", "default": ""},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Barlow Condensed", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "letters", "type": "color", "label": "Letters", "default": "#f2f2ec"},
+  {"id": "tile", "type": "color", "label": "Tiles", "default": "#1b1b1e"},
+  {"id": "accent", "type": "color", "label": "Title colour", "default": "#ffc400"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#050506"},
+  {"id": "size", "type": "number", "label": "Size (1 = fills the width)", "default": 1, "min": 0.3, "max": 1.2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "flips", "type": "number", "label": "Flips before a letter lands (about)", "default": 8, "min": 1, "max": 30, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts flipping at frame", "default": 6, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "split-flap" (0.5.0, the Motion Graphics library): a departures board - every tile flips
+     through letters (a flap falling each time) until it lands on its letter, left to right and row after row, so the
+     words settle like a wave. Learned from text__flights-animation (analysis\templates\swishy: the empty board, rows of
+     letters flipping f124-f241 (00:00:04:24-00:00:09:16) at 25 fps, the title bar). MotionLab's own code; the letters
+     before landing are random but seeded (the same in every render). Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .tile { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .ch { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        line-height: 1; font-synthesis: none; }
+  .ch::after { content: attr(data-c); }          /* the letter: an attribute the timeline sets (GSAP's attr) */
+  .flap { position: absolute; left: 0; top: 0; width: 100%; height: 50%; transform-origin: 50% 100%; }
+  .seam { position: absolute; left: 0; width: 100%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="board" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const rnd = s => () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909)) >>> 0) / 4294967296;
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Narrow", sans-serif`, weight = ONE.test(V.font) ? 400 : 700;
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const rows = [V.line1, V.line2, V.line3, V.line4, V.line5].map(s => (s || "").toUpperCase()).filter(s => s.trim());
+  const cols = Math.max(4, ...rows.map(r => r.length));
+  const gapX = 6 * U, tw = (W * 0.92 * V.size - gapX * (cols - 1)) / cols, th = tw * 1.45, gapY = th * 0.16;
+  const titleH = V.title ? th * 0.75 : 0;
+  const bwid = cols * tw + (cols - 1) * gapX, bhei = titleH + rows.length * th + (rows.length - 1) * gapY;
+  const x0 = (W - bwid) / 2, y0 = H * V.y / 100 - bhei / 2;
+  const board = document.getElementById("board");
+  if (V.title) {
+    const t = document.createElement("div");
+    t.className = "abs";
+    t.textContent = V.title.toUpperCase();
+    Object.assign(t.style, { font: `${weight} ${th * 0.42}px ${font}`, color: V.accent, letterSpacing: "0.18em", whiteSpace: "nowrap" });
+    board.appendChild(t);
+    gsap.set(t, { x: x0, y: y0 });
+  }
+  const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", R = rnd(17), tiles = [];
+  rows.forEach((row, r) => {
+    for (let c = 0; c < cols; c++) {
+      const ch = row[c] || " ";
+      const e = document.createElement("div");
+      e.className = "tile";
+      e.innerHTML = `<div class="ch"></div><div class="flap"></div><div class="seam"></div>`;
+      board.appendChild(e);
+      const by = y0 + titleH + r * (th + gapY);
+      gsap.set(e, { x: x0 + c * (tw + gapX), y: by, width: tw, height: th });
+      Object.assign(e.style, { background: V.tile, borderRadius: `${tw * 0.08}px`, boxShadow: `inset 0 ${-th * 0.04}px 0 rgba(0,0,0,.45)` });
+      const [cE, flap, seam] = e.children;
+      Object.assign(cE.style, { font: `${weight} ${th * 0.8}px ${font}`, color: V.letters });
+      Object.assign(flap.style, { background: "linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.35))", borderRadius: `${tw * 0.08}px ${tw * 0.08}px 0 0` });
+      Object.assign(seam.style, { top: `${th / 2 - U}px`, height: `${Math.max(1, 2 * U)}px`, background: "rgba(0,0,0,.65)" });
+      gsap.set(flap, { scaleY: 0 });
+      tiles.push({ e, cE, flap, ch, r, c, by });
+    }
+  });
+
+  // ---- the motion: every tile flips K(2) frames a letter; it lands left to right, row after row (a wave)
+  const S = Math.round(V.start), STEP = K(2), WAVE = K(2), ROWD = K(5), N = Math.max(1, Math.round(V.flips));
+  tiles.forEach(t => {
+    const land = S + Math.round((N + (t.c * WAVE + t.r * ROWD) / STEP + R() * 3) * STEP);
+    let f = S + Math.round(R() * STEP);
+    if (t.ch === " " && R() < 0.6) return;                                // most blank tiles stay blank
+    for (; f < land; f += STEP) {
+      set(t.cE, { attr: { "data-c": POOL[Math.floor(R() * POOL.length)] } }, f);
+      ft(t.flap, { scaleY: 1 }, { scaleY: 0 }, f, f + STEP, "power2.in");          // the flap falls over the new letter
+    }
+    set(t.cE, { attr: { "data-c": t.ch === " " ? "" : t.ch } }, land);
+    ft(t.flap, { scaleY: 1 }, { scaleY: 0 }, land, land + STEP, "power2.in");
+    ft(t.e, { y: t.by + 3 * U }, { y: t.by }, land, land + K(4), "power2.out");        // a small knock as it lands
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+ "name": "phone-list",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "what": "the phone rises"
+  },
+  {
+   "f": "start + round(20 * fps / 30) + i * round(gap * fps / 30)",
+   "repeat": "parts(rows)",
+   "kind": "pop",
+   "db": -6,
+   "seed": "1400 + i",
+   "what": "a row slides in"
+  }
+ ]
+}

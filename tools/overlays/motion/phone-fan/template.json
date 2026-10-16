@@ -1,0 +1,40 @@
+{
+ "name": "Phone fan",
+ "kind": "photos",
+ "what": "Phones drop onto a pile one after another, then fan out like cards with the middle one forward, each showing a picture (yours or a colour) - an app showcase, several screens, a content mix.",
+ "use_for": [
+  "app promo",
+  "showcase",
+  "screens",
+  "content",
+  "portfolio",
+  "features"
+ ],
+ "tags": [
+  "phones",
+  "fan",
+  "mockup",
+  "screens",
+  "showcase"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "social__app-video-showcase",
+   "what": "phones stacking and fanning out to show their screens"
+  }
+ ],
+ "motion": "phones drop 10 f each, 3 f apart; a beat; fan out 22 f (S-curve); then the fan breathes",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  10,
+  25,
+  40,
+  60,
+  90,
+  149
+ ]
+}

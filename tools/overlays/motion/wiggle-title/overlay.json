@@ -1,0 +1,11 @@
+{
+ "name": "wiggle-title",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(2 * fps / 30)", "repeat": "len(line1) + len(line2)", "kind": "pop", "db": -5, "seed": "40 + i", "what": "a letter pops in"},
+  {"f": "frames - round(16 * fps / 30)", "kind": "whoosh", "dur": "0.4", "from": 2400, "to": 400, "if": "exit", "what": "the letters drop away"}
+ ]
+}

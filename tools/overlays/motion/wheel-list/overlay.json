@@ -1,0 +1,11 @@
+{
+ "name": "wheel-list",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "air", "what": "the list rises in"},
+  {"f": "start + round(16 * fps / 30) + round(hold * fps / 30) + i * (round(12 * fps / 30) + round(hold * fps / 30))", "repeat": "max(0, min(5, floor((frames - start - round(16 * fps / 30) - round(hold * fps / 30) - round(12 * fps / 30)) / (round(12 * fps / 30) + round(hold * fps / 30))) + 1))", "kind": "tick", "seed": "150 + i", "what": "the wheel rolls one item (5 rolls; fewer when the video ends sooner)"}
+ ]
+}

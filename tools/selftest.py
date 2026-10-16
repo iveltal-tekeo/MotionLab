@@ -29,7 +29,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from motionlab.util import ANALYSIS, setup_console  # noqa: E402
+from motionlab.util import ANALYSIS, LAB, setup_console  # noqa: E402
 
 PY = sys.executable
 ACCEPT = {
@@ -445,7 +445,8 @@ def check_fonts() -> dict:
     r = FL.selfcheck()
     want = [o["value"] for o in FL.options(FL.ROOT)]           # the shipped library (never the user's own fonts)
     stale = []
-    for idx in sorted(list(FL.EXAMPLES.glob("*/index.html")) + list(FL.THUMB_TEMPLATES.glob("*/index.html"))):
+    for idx in sorted(list(FL.EXAMPLES.glob("*/index.html")) + list(FL.THUMB_TEMPLATES.glob("*/index.html"))
+                      + list(FL.MOTION.glob("*/index.html"))):
         for d in OSX.declared(idx.parent):
             if FL.is_font_setting(d) and [o["value"] for o in d.get("options", [])] != want:
                 stale.append(f"{idx.parent.name}:{d['id']}")
@@ -520,6 +521,69 @@ def check_lessons_ratings() -> dict:
     return {"passed": KN.selfcheck()["pass"]}
 
 
+def check_motion(extended: bool) -> dict:
+    """The Motion Graphics library (0.5.0): reading a pack of clips measures a synthetic clip right (its two moves,
+    the hold, the files); every template is complete (index.html declaring its settings + the size lines overlay.py
+    retime needs, overlay.json whose cues resolve inside its frames, template.json, its picture) and pick() finds
+    templates for words. --extended: every template snapshotted at its picture's frame (HyperFrames, no render) - an
+    empty frame fails (the hide + show trap of local-make-8)."""
+    import re as _re
+    import shutil as _sh
+    import numpy as _np
+    from motionlab import overlay_settings as OSX
+    from motionlab import sfx as SFX
+    from motionlab import template_read as TR
+    from motionlab import templates as TP
+    print("\n=== motion templates: a pack read, the library complete, picks ===")
+    ok = all(TR.selfcheck(verbose=False).values())
+    print(("PASS  " if ok else "FAIL  ") + "a synthetic clip read: 2 moves and the hold found within 2 frames, sheets written")
+    lib, bad = TP.library(), []
+    need = ("name", "kind", "what", "use_for", "thumb_f", "check_frames")     # + the clips it learned from, or its origin
+    for t in lib:
+        f = LAB / t["folder"]
+        try:
+            html = (f / "index.html").read_text(encoding="utf-8")
+            miss = [k for k in need if not t.get(k)] + ([] if t.get("learned_from") or t.get("origin") else ["learned_from / origin"])
+            sizes = [p for p in OSX._SIZE_LINES[:5] if not _re.search(p, html)]
+            cues, fps, frames, _ = SFX.graphic_cues(f)
+            out = [c["f"] for c in cues if not 0 <= c["f"] < frames]
+            if miss or sizes or out or not OSX.declared(f) or not (f / "thumb.png").exists():
+                bad.append(f"{t['id']}: {'missing ' + ', '.join(miss) if miss else ''}{' no size line ' + ', '.join(sizes) if sizes else ''}"
+                           f"{' cues outside the frames ' + str(out) if out else ''}")
+        except (OSError, ValueError, KeyError) as e:
+            bad.append(f"{t['id']}: {e}")
+    print(("PASS  " if lib and not bad else "FAIL  ") + f"{len(lib)} templates complete (settings, size lines, cues, card, picture)"
+          + ("" if not bad else ": " + "; ".join(bad)))
+    picks = TP.pick("a bold hook title, a number counting up, then a list of tips", 5)
+    good_pick = len(picks) == min(5, len(lib)) and picks and picks[0]["score"] > 0
+    print(("PASS  " if good_pick else "FAIL  ") + "pick() finds templates for words: " + ", ".join(p["id"] for p in picks))
+    passed = ok and bool(lib) and not bad and bool(good_pick)
+    if extended:
+        import overlay as OVL
+        if not OVL.HF.exists():
+            print("SKIP  snapshots: HyperFrames is not installed")
+        else:
+            work, empty = LAB / ".app" / "dev" / "selftest_motion", []
+            _sh.rmtree(work, ignore_errors=True)
+            import time as _t
+            t0 = _t.time()
+            for t in lib:
+                dst = work / t["id"]
+                OVL.copy_sources(LAB / t["folder"], dst, t["id"])
+                try:
+                    arrs, _ = OVL.snapshots(dst, [int(t["thumb_f"])], work / f"{t['id']}_snap")
+                    rgb = _np.asarray(OVL.on_checker(arrs[0]).convert("L"), _np.float32)
+                    if rgb.std() < 4:
+                        empty.append(t["id"])
+                except SystemExit as e:
+                    empty.append(f"{t['id']} ({e})")
+            _sh.rmtree(work, ignore_errors=True)
+            print(("PASS  " if not empty else "FAIL  ") + f"every template draws something at its picture's frame "
+                  f"({len(lib)} snapshots in {_t.time() - t0:.0f} s)" + (": empty " + ", ".join(empty) if empty else ""))
+            passed = passed and not empty
+    return {"passed": passed}
+
+
 def check_template() -> dict:
     """The starter graphic (0.4.2, overlay.py new): a snapshot, a plain render and a motion-blur render agree where
     nothing moves (~45 s; needs Node.js + HyperFrames, else skipped)."""
@@ -539,7 +603,8 @@ def main() -> int:
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
-               "thumbsets": check_thumbsets(), "fonts": check_fonts()}
+               "thumbsets": check_thumbsets(), "fonts": check_fonts(),
+               "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

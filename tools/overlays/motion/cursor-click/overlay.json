@@ -1,0 +1,13 @@
+{
+ "name": "cursor-click",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "pop", "what": "the button pops in"},
+  {"f": "max(start + round(28 * fps / 30), click_at) - round(32 * fps / 30)", "kind": "air", "dur": "0.8", "what": "the cursor glides in"},
+  {"f": "max(start + round(28 * fps / 30), click_at)", "kind": "click", "what": "the click"},
+  {"f": "max(start + round(28 * fps / 30), click_at) + round(8 * fps / 30)", "kind": "chime", "if": "look == 'subscribe'", "what": "the bell pops"}
+ ]
+}

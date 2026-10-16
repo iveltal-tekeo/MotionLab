@@ -1,0 +1,25 @@
+{
+ "name": "folder-open",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "what": "the folder pops"
+  },
+  {
+   "f": "start + click_at * fps / 30",
+   "kind": "click",
+   "what": "double-click"
+  },
+  {
+   "f": "start + click_at * fps / 30 + round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "what": "the window opens"
+  }
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "name": "chat-thread",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "pop", "what": "message 1 (the others follow every gap frames, replies after their typing dots)"},
+  {"f": "start + round(gap * fps / 30) + round(20 * fps / 30)", "kind": "pop", "from": 520, "to": 1000, "what": "message 2"},
+  {"f": "start + 2 * round(gap * fps / 30) + round(20 * fps / 30)", "kind": "pop", "if": "len(msg3) > 0", "what": "message 3"},
+  {"f": "start + 3 * round(gap * fps / 30) + round(40 * fps / 30)", "kind": "pop", "from": 520, "to": 1000, "if": "len(msg4) > 0", "what": "message 4"}
+ ]
+}

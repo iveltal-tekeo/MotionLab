@@ -1064,6 +1064,38 @@ def generate_options() -> dict:
             "node": bool(system.find("node"))}
 
 
+def motion() -> dict:
+    """The Motion Graphics page (0.5.0): the library of motion templates (tools\\overlays\\motion\\: their settings, size,
+    picture, the clips they were learned from) + every pack of captured clips with Claude's cards (motionlab.templates)."""
+    from motionlab import templates as TP
+    cat = TP.catalog()
+    for t in cat["library"]:
+        f = LAB / t["folder"]
+        c = OS.conf(f)
+        try:
+            decl = OS.declared(f)
+        except ValueError:
+            decl = []
+        th = f / "thumb.png"
+        t.update(frames=int(c.get("frames") or 0), fps=float(c.get("fps") or 30), width=int(c.get("width") or 0),
+                 height=int(c.get("height") or 0), settings=decl,
+                 thumb=rel(th) if th.exists() else None, thumb_v=int(th.stat().st_mtime) if th.exists() else 0)
+    clips = {f"{p['pack']}/{it['id']}": it for p in cat["packs"] for it in p["items"]}
+    for t in cat["library"]:                          # the clips a template learned from, ready to play beside it
+        t["sources"] = [{"pack": s.get("pack"), "clip": s.get("clip"), "what": s.get("what", ""),
+                         "file": (clips.get(f"{s.get('pack')}/{s.get('clip')}") or {}).get("file")}
+                        for s in t.get("learned_from", [])]
+    cat["kinds"] = sorted({t.get("kind", "other") for t in cat["library"]})
+    return cat
+
+
+def motion_pick(want: str, n: int = 6) -> list[dict]:
+    """The templates that fit the words best (Generate's dialog suggests them while the user types)."""
+    from motionlab import templates as TP
+    return [{k: t.get(k) for k in ("id", "name", "kind", "what", "score", "matched")}
+            for t in TP.pick(" ".join(str(want or "").split())[:3000], max(1, min(int(n), 12)))]
+
+
 def _song(d: Path, music: str) -> str | None:
     """A song for Generate: a file in the video's folder (a name) or a download in refs\\audio\\ (lab-relative)."""
     if not music or music == "none":
@@ -1104,6 +1136,14 @@ def save_generate_request(body: dict) -> dict:
         raise ValueError(f"format: one of {', '.join(ST.SIZES)}")
     tool = " ".join(str(body.get("tool") or "").split())[:60]
     extra = {k: " ".join(str(body.get(k) or "").split())[:120] for k in ("colours", "font")}
+    templates = [str(x) for x in (body.get("templates") or []) if str(x).strip()]      # 0.5.0: the Motion Graphics
+    if templates:                                                                   # library's templates to use
+        from motionlab import templates as TP
+        have = {t["id"] for t in TP.library()}
+        bad = [x for x in templates if x not in have]
+        if bad or len(templates) > 12:
+            raise ValueError(f"not in the Motion Graphics library: {', '.join(bad)}" if bad else "at most 12 templates")
+    extra["templates"] = templates
     d = PROJECTS / name
     b = d / "build"
     if b.exists() and not body.get("reuse") and (any(b.glob("plan_v*.json")) or any(b.glob("*.mp4")) or any(
@@ -1401,7 +1441,9 @@ def library() -> dict:
         pl = (read_json(last, {}) or {}) if last else {}
         videos.append({"name": pr["name"], "width": pl.get("width"), "height": pl.get("height"), "fps": pl.get("fps"),
                        "overlays": [s["name"] for s in OS.project_overlays(pr["name"])]})
-    return {"items": items, "picks": picks, "graphics": OS.library(), "videos": videos}
+    # the motion templates (0.5.0) have their own page, Motion Graphics: not repeated in the saved graphics
+    return {"items": items, "picks": picks, "graphics": [g for g in OS.library() if g.get("kind") != "motion"],
+            "videos": videos}
 
 
 # ================================================================================================= skills (Tools > Skills)

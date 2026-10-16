@@ -1,0 +1,15 @@
+{
+ "name": "Story lines",
+ "kind": "text",
+ "what": "A story or a quote told card by card: lines fade up out of a blur one after another, the key words bright; or a colour per card with one big serif keyword typed, slid or risen in.",
+ "use_for": ["story", "quote", "lyrics", "intro", "talking head", "motivation", "cinematic"],
+ "tags": ["kinetic text", "lines", "serif", "vignette", "pastel", "slow", "cards"],
+ "learned_from": [{"pack": "swishy", "clip": "launch-videos__storytime", "what": "the dark vignette, lines fading in ~15 f, 6-10 f apart, the key phrase white"},
+                  {"pack": "swishy", "clip": "launch-videos__a-story-about-the-world", "what": "a colour per card cut on the change, the big serif keyword, a different entrance per card, the dots"},
+                  {"pack": "swishy", "clip": "launch-videos__motivational", "what": "the light look: a serif title on white, soft fades"}],
+ "motion": "per line 14 f (blur up, power2.out), 9 f apart; a card fades 12 f before the next; keywords typed 2 f a letter / slid 18 f / risen 20 f",
+ "scene": true,
+ "general": 0.9,
+ "thumb_f": 250,
+ "check_frames": [0, 12, 40, 95, 110, 190, 250, 300, 340]
+}

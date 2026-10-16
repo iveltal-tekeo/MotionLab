@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "look", "type": "enum", "label": "Look", "default": "bubble", "options": [{"value": "bubble", "label": "Bubble - a speech bubble that pops and pulses"}, {"value": "pill", "label": "Pill - a button with an emoji that waves"}]},
+  {"id": "text", "type": "string", "label": "The words", "default": "WAIT FOR IT"},
+  {"id": "emoji", "type": "string", "label": "Emoji (pill look)", "default": "👋"},
+  {"id": "tail", "type": "enum", "label": "Tail points (bubble)", "default": "bottom-left", "options": [{"value": "bottom-left", "label": "Down left"}, {"value": "bottom-right", "label": "Down right"}, {"value": "none", "label": "No tail"}]},
+  {"id": "color", "type": "color", "label": "Bubble colour", "default": "#111111"},
+  {"id": "alt", "type": "color", "label": "Pulse colour", "default": "#5b5b5b"},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#eef0f3"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 3, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 40, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Pops at frame", "default": 4, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "speech-bubble" (0.5.0, the Motion Graphics library): a word that speaks. Bubble: a speech
+     bubble pops out of its tail (back.out), then pulses - it dips and its colour flips to the pulse colour and back,
+     like a beat. Pill: a rounded button with an emoji and a word pops in, the emoji waves (a wrist-like rotation). Learned
+     from overlays__pop-up-message-bubble (a black speech bubble with one word popping and pulsing black / grey) and
+     ui-elements__animated-emoji-button (a blue pill with a waving hand and "Hey" wiggling). MotionLab's own code.
+     Size-independent; an overlay (background off) or a scene. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #b { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; gap: .35em; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  #tail { position: absolute; width: 0; height: 0; }
+  #em { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="b"><span id="em"></span><span id="tx"></span><div id="tail"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, pill = V.look === "pill", fs = (pill ? 62 : 70) * U * s, cx = W * V.x / 100, cy = H * V.y / 100;
+  const b = q("b"), col = pill && V.color === "#111111" ? "#2f7cf6" : V.color;
+  Object.assign(b.style, { font: `800 ${fs}px ${fam}`, color: V.text_color, background: col, padding: `${fs * (pill ? 0.42 : 0.5)}px ${fs * (pill ? 0.75 : 0.8)}px`,
+    borderRadius: `${pill ? 999 : fs * 0.38}px`, boxShadow: `0 ${16 * U}px ${36 * U}px rgba(0,0,0,.22)`, letterSpacing: pill ? "0" : "0.04em" });
+  q("tx").textContent = V.text;
+  if (pill) q("em").textContent = V.emoji || "👋"; else q("em").remove();
+  const tail = q("tail"), tz = fs * 0.5;
+  if (!pill && V.tail !== "none") Object.assign(tail.style, { bottom: `${-tz * 0.8}px`, [V.tail === "bottom-right" ? "right" : "left"]: `${fs * 0.6}px`,
+    borderTop: `${tz}px solid ${col}`, [V.tail === "bottom-right" ? "borderLeft" : "borderRight"]: `${tz * 0.9}px solid transparent` });
+  else tail.remove();
+  const origin = pill ? "50% 50%" : V.tail === "bottom-right" ? "85% 120%" : V.tail === "none" ? "50% 50%" : "15% 120%";
+  gsap.set(b, { x: cx, y: cy, xPercent: -50, yPercent: -50, transformOrigin: origin });
+
+  // ---- the motion: pop from the tail (scale 0 -> 1.12 in 7 f, settle back.out 10 f); bubble: a pulse every 24 frames
+  // (a 4-frame dip + the colour flips, then back); pill: the emoji waves (5 swings of 5 frames) every 40 frames
+  const S = Math.round(V.start);
+  enter(b, { opacity: 1, scale: 0, rotation: pill ? 0 : -8 }, { scale: 1.12, rotation: 0 }, S, S + K(7), "power3.out");
+  to(b, { scale: 1 }, S + K(7), S + K(17), "back.out(3)");
+  if (!pill) {
+    for (let f = S + K(30), k = 0; f + K(12) < FRAMES; f += K(24), k++) {
+      to(b, { scale: 0.94 }, f, f + K(4), "power2.in"); to(b, { scale: 1 }, f + K(4), f + K(12), "back.out(2.5)");
+      set(b, { backgroundColor: k % 2 ? col : V.alt }, f + K(4));
+      if (tail.isConnected) set(tail, { borderTopColor: k % 2 ? col : V.alt }, f + K(4));
+    }
+  } else {
+    gsap.set("#em", { transformOrigin: "70% 85%" });
+    for (let f = S + K(16); f + K(25) < FRAMES; f += K(40)) [22, -10, 22, -10, 0].forEach((r, i) => to("#em", { rotation: r }, f + i * K(5), f + (i + 1) * K(5), "sine.inOut"));
+    to(b, { y: cy - 10 * U }, S + K(17), FRAMES, "sine.inOut");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

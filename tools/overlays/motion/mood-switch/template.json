@@ -1,0 +1,42 @@
+{
+ "name": "Mood switch",
+ "kind": "ui",
+ "what": "A big round face changes mood - happy, calm, sad, wow - each change wipes a new background colour across the frame while the eyes and mouth morph, the face squashes and the mood's name drops in; a marker slides along a scale.",
+ "use_for": [
+  "mood",
+  "feelings",
+  "reaction",
+  "before and after",
+  "wellness",
+  "poll",
+  "story"
+ ],
+ "tags": [
+  "face",
+  "emoji",
+  "mood",
+  "morph",
+  "wipe",
+  "colour"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__wellness-app-moods",
+   "what": "a face changing mood with the background wiping to a new colour"
+  }
+ ],
+ "motion": "face back.out 16 f; each change: a circle wipe 16 f (slow end), the face morphs 12 f (S-curve) with a squash, the name drops, hold 24 f",
+ "scene": true,
+ "general": 0.4,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  16,
+  40,
+  48,
+  80,
+  120,
+  140
+ ]
+}

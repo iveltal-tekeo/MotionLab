@@ -1,0 +1,47 @@
+{
+ "name": "Clock words",
+ "kind": "numbers",
+ "what": "Time passing: an analog clock whose hands spin fast and slow down while words about time appear around it; or a digital time that rolls from one hour to another, digit by digit.",
+ "use_for": [
+  "time",
+  "timelapse",
+  "routine",
+  "deadline",
+  "day in the life",
+  "morning",
+  "schedule"
+ ],
+ "tags": [
+  "clock",
+  "time",
+  "hands",
+  "digits",
+  "words",
+  "timelapse"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__clock-and-text",
+   "what": "a dark clock with orange hands spinning on pink, words about time around it"
+  },
+  {
+   "pack": "swishy",
+   "clip": "text__simple-timelapse",
+   "what": "the time rolling forward digit by digit"
+  }
+ ],
+ "motion": "the clock back.out 14 f; the hands spin and slow (expo.out to the end); words 8 f apart; the digits roll 6 f each",
+ "scene": true,
+ "general": 0.5,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  10,
+  30,
+  60,
+  80,
+  120,
+  149
+ ]
+}

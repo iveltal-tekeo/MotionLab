@@ -1,0 +1,11 @@
+{
+ "name": "split-flap",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * round(2 * fps / 30)", "repeat": "flips + 14", "kind": "tick", "db": -4, "seed": "120 + i", "what": "the board flipping"},
+  {"f": "start + round((flips + 14) * 2 * fps / 30)", "kind": "click", "what": "the last letters land"}
+ ]
+}

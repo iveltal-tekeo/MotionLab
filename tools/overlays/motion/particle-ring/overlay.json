@@ -1,0 +1,24 @@
+{
+ "name": "particle-ring",
+ "frames": 210,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(40 * fps / 30) + i * (round(60 * fps / 30) + round(16 * fps / 30))",
+   "repeat": "min(cycles, 2)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "seed": "2200 + i",
+   "what": "the ring bursts"
+  },
+  {
+   "f": "start + round(96 * fps / 30) + i * (round(60 * fps / 30) + round(16 * fps / 30))",
+   "repeat": "min(cycles, 2)",
+   "kind": "shimmer",
+   "seed": "2300 + i",
+   "what": "it forms again"
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "name": "Before / after",
+ "kind": "photos",
+ "what": "Show a change: a slider whose divider sweeps across the before and after pictures (both labelled), or two halves that slam together with a VS badge. With only the after picture, the before is the same picture in grey - a colour grade, a cleanup.",
+ "use_for": [
+  "before and after",
+  "comparison",
+  "versus",
+  "transformation",
+  "colour grade",
+  "makeover",
+  "results"
+ ],
+ "tags": [
+  "before after",
+  "slider",
+  "versus",
+  "compare",
+  "split"
+ ],
+ "learned_from": [],
+ "origin": "before / after and versus layouts - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "slider 100 % -> 50 % (18 f) -> 15 % -> 85 % -> 50 % (S-curves, holds between); versus: halves 14 f (slow end), a 2 f shake, the badge 3 -> 1 in 8 f",
+ "scene": true,
+ "general": 0.7,
+ "thumb_f": 40,
+ "check_frames": [
+  0,
+  10,
+  20,
+  28,
+  46,
+  70,
+  104,
+  132,
+  149
+ ]
+}

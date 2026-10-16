@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "look", "type": "enum", "label": "Look", "default": "ring", "options": [{"value": "ring", "label": "Ring - fills to the percent, a check pops"}, {"value": "icon", "label": "Icon - a ring draws around a symbol that pops"}, {"value": "bar", "label": "Bar - a ticket card whose bar fills"}]},
+  {"id": "percent", "type": "number", "label": "Fills to (percent)", "default": 78, "min": 0, "max": 100, "step": 1},
+  {"id": "label", "type": "string", "label": "Line under it (empty = none)", "default": "of the goal reached"},
+  {"id": "symbol", "type": "string", "label": "Symbol in the middle (icon look)", "default": "$"},
+  {"id": "from_code", "type": "string", "label": "From (bar look)", "default": "LIS"},
+  {"id": "to_code", "type": "string", "label": "To (bar look)", "default": "TYO"},
+  {"id": "color", "type": "color", "label": "Fill colour", "default": "#22c55e"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#15171a"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#ffffff"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 2.5, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 45, "min": 0, "max": 100, "step": 1},
+  {"id": "fill_frames", "type": "number", "label": "Frames to fill", "default": 50, "min": 4, "max": 900, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 4, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "progress-ring" (0.5.0, the Motion Graphics library): progress you can see. Ring: a ring
+     fills to the percent while the number counts with it, a check pops when it lands. Icon: a ring draws around a
+     symbol, the symbol pops and the ring glows. Bar: a dark ticket card (from -> to) whose bar fills with a glowing tip.
+     Learned from graphics__chart-with (a green ring filling to 78 %, a check popping), overlays__moneyyyy (a ring
+     drawing around a green dollar that pops) and graphics__flight-progress (a dark ticket card, a green bar filling).
+     MotionLab's own code. Size-independent; an overlay (background off) or a scene. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  #pc::after { content: attr(data-v); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="card" class="abs"></div><svg id="g" class="abs" style="overflow:visible"></svg>
+    <div id="pc" class="t"></div><div id="sym" class="t"></div><div id="lb" class="t"></div><div id="codes" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, cx = W * V.x / 100, cy = H * V.y / 100, look = V.look, pct = Math.max(0, Math.min(100, V.percent));
+  const S = Math.round(V.start), N = Math.max(K(4), Math.round(V.fill_frames * FPS / 30)), ease = gsap.parseEase("power2.inOut");
+  const svg = q("g"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  if (look === "ring" || look === "icon") {
+    const R = (look === "ring" ? 170 : 150) * U * s, sw = (look === "ring" ? 26 : 14) * U * s, iconL = look === "icon";
+    svg.innerHTML = `<defs><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${10 * U}"/></filter></defs>
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${V.color}" stroke-opacity=".14" stroke-width="${sw}"/>
+      <circle id="glow" cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${V.color}" stroke-width="${sw}" filter="url(#gl)" opacity="0" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 ${cx} ${cy})"/>
+      <circle id="arc" cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${V.color}" stroke-width="${sw}" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 ${cx} ${cy})"/>
+      <g id="chk" opacity="0"><circle cx="${cx}" cy="${cy + R + 80 * U * s}" r="${34 * U * s}" fill="${V.color}"/><path d="M${cx - 15 * U * s},${cy + R + 80 * U * s} l${10 * U * s},${11 * U * s} l${20 * U * s},${-22 * U * s}" fill="none" stroke="#fff" stroke-width="${7 * U * s}" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    const target = iconL ? 100 : pct;
+    for (let f = S; f <= S + N && f < FRAMES; f++) {
+      const p = ease(Math.min(1, (f - S) / N)) * target;
+      set(["#arc", "#glow"], { attr: { "stroke-dashoffset": 100 - p } }, f);
+      if (!iconL) set("#pc", { attr: { "data-v": `${Math.round(p)}%` } }, f);
+    }
+    if (!iconL) {
+      Object.assign(q("pc").style, { font: `800 ${110 * U * s}px ${fam}`, color: V.text_color, letterSpacing: "-0.03em" });
+      gsap.set("#pc", { x: cx, y: cy, xPercent: -50, yPercent: -50 });
+      enter("#pc", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1 }, S, S + K(10), "power3.out");
+      const f1 = S + N;
+      ft("#chk", { attr: { opacity: 1 }, svgOrigin: `${cx} ${cy + R + 80 * U * s}`, scale: 0 }, { scale: 1 }, f1, f1 + K(12), "back.out(2.6)");
+      if (V.label) { Object.assign(q("lb").style, { font: `500 ${34 * U * s}px ${fam}`, color: V.text_color, opacity: 0.6 });
+        q("lb").textContent = V.label; gsap.set("#lb", { x: cx, y: cy + R + 160 * U * s, xPercent: -50 });
+        enter("#lb", { opacity: 0 }, { opacity: 0.6 }, f1 + K(6), f1 + K(18), "power1.out"); }
+    } else {
+      q("sym").textContent = V.symbol || "";
+      Object.assign(q("sym").style, { font: `800 ${R * 1.15}px ${fam}`, color: V.color });
+      gsap.set("#sym", { x: cx, y: cy, xPercent: -50, yPercent: -50 });
+      enter("#sym", { opacity: 1, scale: 0 }, { scale: 1.15 }, S + N - K(6), S + N + K(4), "power3.out");
+      to("#sym", { scale: 1 }, S + N + K(4), S + N + K(14), "back.out(3)");
+      ft("#glow", { attr: { opacity: 0 } }, { attr: { opacity: 0.9 } }, S + N, S + N + K(8), "power2.out");
+      for (let g = S + N + K(14), k = 0; g + K(18) < FRAMES; g += K(18), k++) to("#glow", { attr: { opacity: k % 2 ? 0.9 : 0.35 } }, g, g + K(18), "sine.inOut");
+      if (V.label) { Object.assign(q("lb").style, { font: `500 ${34 * U * s}px ${fam}`, color: V.text_color, opacity: 0.6 });
+        q("lb").textContent = V.label; gsap.set("#lb", { x: cx, y: cy + R + 70 * U * s, xPercent: -50 });
+        enter("#lb", { opacity: 0 }, { opacity: 0.6 }, S + N + K(4), S + N + K(16), "power1.out"); }
+    }
+  } else {                                              // the ticket card
+    const cw = W * 0.8 * Math.min(1.1, s), ch = 300 * U * s, x0 = cx - cw / 2, y0 = cy - ch / 2;
+    Object.assign(q("card").style, { width: `${cw}px`, height: `${ch}px`, background: "#14161a", borderRadius: `${34 * U * s}px`, boxShadow: `0 ${30 * U}px ${70 * U}px rgba(0,0,0,.35)` });
+    gsap.set("#card", { x: x0, y: y0 });
+    const codes = q("codes");
+    codes.innerHTML = `<div class="t" id="c1"></div><div class="t" id="c2"></div><div class="t" id="arr">→</div><div class="t" id="pl">✈</div>`;
+    q("c1").textContent = V.from_code; q("c2").textContent = V.to_code;
+    [["#c1", x0 + 60 * U * s, -0], ["#c2", x0 + cw - 60 * U * s, -100]].forEach(([id, x, xp]) => {
+      Object.assign(q(id.slice(1)).style, { font: `800 ${86 * U * s}px ${fam}`, color: "#ffffff", letterSpacing: "0.02em" });
+      gsap.set(id, { x, y: y0 + 100 * U * s, xPercent: xp, yPercent: -50 });
+    });
+    Object.assign(q("arr").style, { font: `400 ${60 * U * s}px ${fam}`, color: "#ffffff66" });
+    gsap.set("#arr", { x: cx, y: y0 + 100 * U * s, xPercent: -50, yPercent: -50 });
+    const bx = x0 + 60 * U * s, bw = cw - 120 * U * s, by = y0 + ch - 90 * U * s, bh = 18 * U * s;
+    svg.innerHTML = `<defs><filter id="gb" x="-10%" y="-200%" width="120%" height="500%"><feGaussianBlur stdDeviation="${8 * U}"/></filter></defs>
+      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bh / 2}" fill="#ffffff1c"/>
+      <rect id="bf" x="${bx}" y="${by}" width="0" height="${bh}" rx="${bh / 2}" fill="${V.color}"/>
+      <circle id="bt" cx="${bx}" cy="${by + bh / 2}" r="${bh}" fill="${V.color}" filter="url(#gb)"/>`;
+    Object.assign(q("pl").style, { font: `400 ${44 * U * s}px ${fam}`, color: "#fff" });
+    gsap.set("#pl", { x: bx, y: by - 30 * U * s, xPercent: -50, yPercent: -50 });
+    enter("#card", { opacity: 0, y: y0 + 60 * U }, { opacity: 1, y: y0 }, S, S + K(14), "power3.out");
+    ["#c1", "#c2", "#arr", "#codes"].forEach((id, i) => enter(id, { opacity: 0 }, { opacity: 1 }, S + K(6) + i * K(2), S + K(16) + i * K(2), "power1.out"));
+    for (let f = S + K(14); f <= S + K(14) + N && f < FRAMES; f++) {
+      const w = bw * pct / 100 * ease(Math.min(1, (f - S - K(14)) / N));
+      set("#bf", { attr: { width: w } }, f);
+      set("#bt", { attr: { cx: bx + w } }, f);
+      set("#pl", { x: bx + w, y: by - 30 * U * s, xPercent: -50, yPercent: -50 }, f);
+    }
+    if (V.label) { Object.assign(q("lb").style, { font: `500 ${32 * U * s}px ${fam}`, color: V.text_color, opacity: 0.6 });
+      q("lb").textContent = V.label; gsap.set("#lb", { x: cx, y: y0 + ch + 60 * U * s, xPercent: -50 });
+      enter("#lb", { opacity: 0 }, { opacity: 0.6 }, S + K(14) + N, S + K(26) + N, "power1.out"); }
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

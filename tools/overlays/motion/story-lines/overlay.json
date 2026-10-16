@@ -1,0 +1,11 @@
+{
+ "name": "story-lines",
+ "frames": 360,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + i * floor((frames - start) / 4)", "repeat": "4", "kind": "air", "db": -4, "what": "a card comes in (4 cards; more cards = shorter ones)"},
+  {"f": "start + round(4 * fps / 30) + floor((frames - start) / 4) * 2", "kind": "shimmer", "what": "the key line of card 3"}
+ ]
+}

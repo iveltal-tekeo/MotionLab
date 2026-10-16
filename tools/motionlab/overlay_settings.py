@@ -30,6 +30,7 @@ from .util import LAB
 
 LIBRARY = LAB / "library" / "graphics"
 EXAMPLES = LAB / "tools" / "overlays" / "examples"
+MOTION = LAB / "tools" / "overlays" / "motion"          # 0.5.0: the Motion Graphics library (motionlab\templates.py)
 SOURCES = ("index.html", "overlay.json", "gsap.min.js", "hyperframes.json",      # + assets\ (what new / save copy)
            "presets.json")
 TYPES = ("string", "color", "number", "boolean", "enum")
@@ -339,9 +340,10 @@ def project_overlays(project: str) -> list[dict]:
 
 
 def library() -> list[dict]:
-    """The graphics library: the user's approved graphics first, then the examples that come with MotionLab."""
+    """The graphics library: the user's approved graphics first, then the examples and the motion templates that come
+    with MotionLab."""
     out = []
-    for kind, root in (("yours", LIBRARY), ("example", EXAMPLES)):
+    for kind, root in (("yours", LIBRARY), ("example", EXAMPLES), ("motion", MOTION)):
         for p in sorted(root.glob("*/index.html")) if root.is_dir() else []:
             try:
                 s = status(p.parent)
@@ -353,10 +355,10 @@ def library() -> list[dict]:
 
 
 def find_graphic(name: str) -> Path:
-    """A library graphic or an example by folder name (the user's own first)."""
+    """A library graphic, an example or a motion template by folder name (the user's own first)."""
     if not re.fullmatch(r"[\w.-]+", name or ""):
         raise ValueError(f"not a graphic name: {name!r}")
-    for root in (LIBRARY, EXAMPLES):
+    for root in (LIBRARY, EXAMPLES, MOTION):
         if (root / name / "index.html").exists():
             return root / name
-    raise ValueError(f"no graphic '{name}' in library\\graphics or tools\\overlays\\examples")
+    raise ValueError(f"no graphic '{name}' in library\\graphics, tools\\overlays\\examples or tools\\overlays\\motion")

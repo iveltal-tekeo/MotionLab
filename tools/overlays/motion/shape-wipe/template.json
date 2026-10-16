@@ -1,0 +1,39 @@
+{
+ "name": "Shape wipe",
+ "kind": "transitions",
+ "what": "A transition to put over a cut: bars, a circle, a slanted panel, two halves or thin stripes cover the frame in two colours, hold, then clear the other way - the cut goes where it is fully covered. Words can show while it covers.",
+ "use_for": [
+  "transition",
+  "scene change",
+  "chapter",
+  "cut",
+  "intro",
+  "reveal"
+ ],
+ "tags": [
+  "transition",
+  "wipe",
+  "bars",
+  "circle",
+  "shape",
+  "overlay"
+ ],
+ "learned_from": [],
+ "origin": "shape transitions - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "covers 12 f (power3.inOut; bars / stripes staggered, each 70 % of it), the front layer 3 f behind the back one; holds 6 f; clears 12 f the other way, the front first",
+ "scene": false,
+ "overlay": true,
+ "general": 0.9,
+ "thumb_f": 8,
+ "check_frames": [
+  0,
+  4,
+  8,
+  12,
+  15,
+  21,
+  26,
+  32,
+  40
+ ]
+}

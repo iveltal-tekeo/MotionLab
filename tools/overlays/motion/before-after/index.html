@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "mode", "type": "enum", "label": "How", "default": "slider", "options": [{"value": "slider", "label": "Slider - a divider sweeps across the two"}, {"value": "versus", "label": "Versus - two halves slam together with a VS"}]},
+  {"id": "before", "type": "string", "label": "Before picture in the graphic’s assets folder (empty = the after one in grey)", "default": ""},
+  {"id": "after", "type": "string", "label": "After picture in the assets folder (empty = drawn art)", "default": ""},
+  {"id": "before_label", "type": "string", "label": "Before label", "default": "BEFORE"},
+  {"id": "after_label", "type": "string", "label": "After label", "default": "AFTER"},
+  {"id": "vs_text", "type": "string", "label": "Middle badge (Versus)", "default": "VS"},
+  {"id": "accent", "type": "color", "label": "Divider / badge colour", "default": "#ffffff"},
+  {"id": "badge_ink", "type": "color", "label": "Badge text colour", "default": "#111111"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#111111"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "before-after" (0.5.0, the Motion Graphics library): show a change - a slider whose
+     divider sweeps across the before and after pictures (both labelled), or two halves that slam together with a VS
+     badge (top / bottom on a tall frame, side by side on a wide one). With only the after picture the before is the
+     same picture in grey (a colour grade, a cleanup). Not learned from a clip: before / after and versus layouts are a
+     staple of the marketplaces' promo and social packs (Envato Elements, Motion Array; researched 2026-10-16).
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pane { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .pill { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="stage" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const fam = `'${V.font}', 'Segoe UI', sans-serif`;
+  const q = id => document.getElementById(id);
+  const url = s => String(s || "").replace(/"/g, "");
+
+  gsap.set(["#bgfill", "#stage"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  // the art when there is no picture: a sunset over hills, the same drawing for both (the before one in grey)
+  const ART = `<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7e5f"/><stop offset=".55" stop-color="#feb47b"/><stop offset="1" stop-color="#ffd8a8"/></linearGradient></defs>
+    <rect width="100" height="100" fill="url(#sk)"/><circle cx="62" cy="44" r="11" fill="#fff4d6"/><path d="M0 70 Q25 52 50 66 T100 60 V100 H0Z" fill="#7b4b8a"/><path d="M0 82 Q30 66 60 80 T100 76 V100 H0Z" fill="#3d2a5c"/></svg>`;
+  const fill = (e, pic, grey) => { if (pic) e.style.background = `center / cover url("${url(pic)}")`; else e.innerHTML = ART; if (grey) e.style.filter = "grayscale(1) brightness(.82) contrast(.92)"; };
+  const pane = st => { const e = document.createElement("div"); e.className = "pane"; Object.assign(e.style, st); q("stage").appendChild(e); return e; };
+  const pill = (text, dark) => { const e = document.createElement("div"); e.className = "pill"; e.textContent = text; q("stage").appendChild(e);
+    Object.assign(e.style, { font: `800 ${40 * U}px ${fam}`, letterSpacing: "0.08em", padding: `${16 * U}px ${26 * U}px`, borderRadius: `${40 * U}px`, color: dark ? "#ffffff" : "#111111", background: dark ? "rgba(0,0,0,.6)" : "rgba(255,255,255,.9)" });
+    return e; };
+  const S = Math.round(V.start), bpic = V.before || V.after, grey = !V.before;
+
+  if (V.mode !== "versus") {
+    // ---- slider: the after picture whole, the before on top clipped to the left of the divider; the divider + its
+    // handle; the divider goes 100 % -> 50 % (18 f) -> 15 % -> 85 % -> 50 % (S-curves), holding between
+    const after = pane({ width: `${W}px`, height: `${H}px` }); fill(after, V.after, false);
+    const before = pane({ width: `${W}px`, height: `${H}px` }); fill(before, bpic, grey);
+    const line = pane({ width: `${6 * U}px`, height: `${H}px`, background: V.accent, boxShadow: `0 0 ${20 * U}px rgba(0,0,0,.5)` });
+    const hd = 110 * U, handle = pane({ width: `${hd}px`, height: `${hd}px`, borderRadius: "50%", background: V.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 ${8 * U}px ${24 * U}px rgba(0,0,0,.4)` });
+    handle.innerHTML = `<svg width="${hd * 0.6}" height="${hd * 0.6}" viewBox="0 0 24 24"><path d="M9 6 L3 12 L9 18 M15 6 L21 12 L15 18" fill="none" stroke="${V.badge_ink}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const lb = pill(V.before_label, true), la = pill(V.after_label, true);
+    gsap.set(lb, { x: 40 * U, y: 60 * U }); gsap.set(la, { x: W - 40 * U, xPercent: -100, y: 60 * U });
+    const st = { p: 1 };
+    const place = p => ({ clip: `inset(0% ${(1 - p) * 100}% 0% 0%)`, x: W * p });
+    const keys = [[S, 1], [S + K(10), 1], [S + K(28), 0.5], [S + K(46), 0.5], [S + K(70), 0.15], [S + K(80), 0.15], [S + K(104), 0.85], [S + K(114), 0.85], [S + K(132), 0.5]];
+    gsap.set(before, { clipPath: place(1).clip }); gsap.set(line, { x: W - 3 * U }); gsap.set(handle, { x: W - hd / 2, y: H / 2 - hd / 2 });
+    for (let i = 1; i < keys.length; i++) {
+      const [f0, p0] = keys[i - 1], [f1, p1] = keys[i];
+      if (f1 > FRAMES || p0 === p1) continue;
+      ft(before, { clipPath: place(p0).clip }, { clipPath: place(p1).clip }, f0, f1, "power3.inOut");
+      ft(line, { x: W * p0 - 3 * U }, { x: W * p1 - 3 * U }, f0, f1, "power3.inOut");
+      ft(handle, { x: W * p0 - hd / 2 }, { x: W * p1 - hd / 2 }, f0, f1, "power3.inOut");
+    }
+    enter(handle, { opacity: 1, scale: 0 }, { scale: 1 }, S + K(8), S + K(20), "back.out(2)");
+    enter(lb, { opacity: 0, y: 30 * U }, { opacity: 1, y: 60 * U }, S + K(4), S + K(16), "power3.out");
+    enter(la, { opacity: 0, y: 30 * U }, { opacity: 1, y: 60 * U }, S + K(24), S + K(36), "power3.out");
+  } else {
+    // ---- versus: tall = top / bottom halves, wide = left / right; each slides in from its own side (14 f, slow end),
+    // a 2 f shake when they meet, the line between them draws, the badge slams (3 -> 1 in 8 f), the labels pop
+    const tall = H > W, hw = tall ? W : W / 2, hh = tall ? H / 2 : H;
+    const a = pane({ width: `${hw}px`, height: `${hh}px` }); fill(a, bpic, grey);
+    const b = pane({ width: `${hw}px`, height: `${hh}px` }); fill(b, V.after, false);
+    const k = tall ? "y" : "x", far = tall ? H / 2 : W / 2;
+    gsap.set(b, { [k]: far });
+    ft(a, { [k]: -far }, { [k]: 0 }, S, S + K(14), "power3.out");
+    ft(b, { [k]: far * 2 }, { [k]: far }, S + K(2), S + K(16), "power3.out");
+    to("#stage", { [tall ? "y" : "x"]: 10 * U }, S + K(16), S + K(18), "power2.out"); to("#stage", { [tall ? "y" : "x"]: 0 }, S + K(18), S + K(22), "power2.inOut");
+    const line = pane(tall ? { width: `${W}px`, height: `${8 * U}px`, background: V.accent } : { width: `${8 * U}px`, height: `${H}px`, background: V.accent });
+    gsap.set(line, tall ? { y: H / 2 - 4 * U, scaleX: 0 } : { x: W / 2 - 4 * U, scaleY: 0 });
+    ft(line, tall ? { scaleX: 0 } : { scaleY: 0 }, tall ? { scaleX: 1 } : { scaleY: 1 }, S + K(14), S + K(24), "power3.out");
+    const bd = 200 * U, badge = pane({ width: `${bd}px`, height: `${bd}px`, borderRadius: "50%", background: V.accent, color: V.badge_ink, display: "flex", alignItems: "center", justifyContent: "center", font: `900 ${bd * 0.4}px ${fam}`, boxShadow: `0 ${10 * U}px ${40 * U}px rgba(0,0,0,.5)`, overflow: "visible" });
+    badge.textContent = V.vs_text;
+    gsap.set(badge, { x: W / 2 - bd / 2, y: H / 2 - bd / 2, transformOrigin: "50% 50%" });
+    enter(badge, { opacity: 1, scale: 3, rotation: -20 }, { scale: 1, rotation: 0 }, S + K(18), S + K(26), "power4.in");
+    for (let g = S + K(40); g + K(16) < FRAMES; g += K(30)) { to(badge, { scale: 1.08 }, g, g + K(6), "power2.out"); to(badge, { scale: 1 }, g + K(6), g + K(16), "power2.inOut"); }
+    const lb = pill(V.before_label, true), la = pill(V.after_label, true);
+    if (tall) { gsap.set(lb, { x: 40 * U, y: 60 * U }); gsap.set(la, { x: 40 * U, y: H / 2 + 60 * U }); }
+    else { gsap.set(lb, { x: 40 * U, y: 60 * U }); gsap.set(la, { x: W / 2 + 40 * U, y: 60 * U }); }
+    enter(lb, { opacity: 1, scale: 0 }, { scale: 1 }, S + K(26), S + K(36), "back.out(2)");
+    enter(la, { opacity: 1, scale: 0 }, { scale: 1 }, S + K(30), S + K(40), "back.out(2)");
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

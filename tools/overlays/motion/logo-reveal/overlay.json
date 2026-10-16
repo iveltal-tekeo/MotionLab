@@ -1,0 +1,12 @@
+{
+ "name": "logo-reveal",
+ "frames": 90,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round(12 * fps / 30)", "kind": "thump", "what": "the mark lands"},
+  {"f": "start + round(30 * fps / 30)", "kind": "chime", "what": "the letter appears"},
+  {"f": "start + round(40 * fps / 30)", "kind": "shimmer", "what": "the name"}
+ ]
+}

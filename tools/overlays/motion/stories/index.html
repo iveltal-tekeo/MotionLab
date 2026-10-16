@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "photos", "type": "string", "label": "Pictures in the graphic’s assets folder (| between; empty = colour art)", "default": ""},
+  {"id": "count", "type": "number", "label": "Stories (without your own pictures)", "default": 4, "min": 1, "max": 10, "step": 1},
+  {"id": "name", "type": "string", "label": "Name at the top", "default": "yourname"},
+  {"id": "captions", "type": "string", "label": "A caption per story (| between; empty = none)", "default": "morning ritual|the view today|work mode|golden hour"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "caption_font", "type": "enum", "label": "Caption font", "default": "Permanent Marker", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent", "type": "color", "label": "Ring colour", "default": "#f472b6"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "start", "type": "number", "label": "First story at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "stories" (0.5.0, the Motion Graphics library): a stories screen - progress bars at the top
+     fill one after another, each story a full-frame picture that slowly pushes in (and the next cuts in with a quick
+     zoom), a small round picture + name, a handwritten caption sticker popping on each. Learned from
+     social__instagram-stories (full-frame photos changing like stories with progress bars at the top). Your pictures
+     go in the graphic's assets folder; without them, colour art. MotionLab's own code - no app's look. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pic { position: absolute; left: 0; top: 0; background-size: cover; background-position: center; }
+  .seg { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .cap { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="pics" class="abs"></div>
+  <div id="shade" class="abs"></div>
+  <div id="ui" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const fam = `"${V.font}", "Segoe UI", sans-serif`;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#pics", "#shade", "#ui"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  Object.assign(q("shade").style, { background: "linear-gradient(180deg, rgba(0,0,0,.45), transparent 16%, transparent 80%, rgba(0,0,0,.35))" });
+  const own = String(V.photos || "").split("|").map(x => x.trim().replace(/"/g, "")).filter(Boolean), n = own.length || Math.max(1, Math.round(V.count));
+  const caps = String(V.captions || "").split("|").map(x => x.trim());
+  const ART = [["#f6d365", "#fda085", "#6b4226"], ["#a1c4fd", "#c2e9fb", "#2f6f5e"], ["#fbc2eb", "#a6c1ee", "#4b3f72"], ["#d4fc79", "#96e6a1", "#2b5a3a"], ["#ffb88c", "#de6262", "#5b3a29"], ["#89f7fe", "#66a6ff", "#1f3b73"]];
+  const S = Math.round(V.start), D = Math.max(K(20), Math.floor((FRAMES - S) / n)), m = 26 * U, gap = 10 * U, bw = (W - 2 * m - (n - 1) * gap) / n;
+  const pics = [], segs = [];
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement("div"); p.className = "pic";
+    const [a, b, hill] = ART[i % ART.length];
+    Object.assign(p.style, { width: `${W}px`, height: `${H}px`, background: own[i] ? `center / cover url("${own[i]}")` :
+      `radial-gradient(ellipse 70% 22% at ${30 + i * 13 % 40}% 100%, ${hill} 70%, transparent 71%), radial-gradient(circle at ${65 - i * 9 % 30}% 34%, #fff6d0 7%, transparent 8%), linear-gradient(180deg, ${a}, ${b})` });
+    q("pics").appendChild(p); gsap.set(p, { opacity: 0, transformOrigin: "50% 50%" }); pics.push(p);
+    const sg = document.createElement("div"); sg.className = "seg";
+    Object.assign(sg.style, { width: `${bw}px`, height: `${6 * U}px`, borderRadius: "999px", background: "rgba(255,255,255,.35)" });
+    sg.innerHTML = `<div style="width:100%;height:100%;background:#fff;transform-origin:0 50%;transform:scaleX(0)"></div>`;
+    q("ui").appendChild(sg); gsap.set(sg, { x: m + i * (bw + gap), y: 40 * U }); segs.push(sg.firstChild);
+  }
+  const av = document.createElement("div"); av.className = "abs";
+  Object.assign(av.style, { width: `${84 * U}px`, height: `${84 * U}px`, borderRadius: "50%", background: `linear-gradient(135deg, #93c5fd, #a78bfa)`, border: `${5 * U}px solid ${V.accent}` });
+  q("ui").appendChild(av); gsap.set(av, { x: m, y: 70 * U });
+  const nm = document.createElement("div"); nm.className = "cap"; nm.textContent = V.name;
+  Object.assign(nm.style, { font: `700 ${34 * U}px ${fam}`, color: "#fff" }); q("ui").appendChild(nm); gsap.set(nm, { x: m + 104 * U, y: 92 * U });
+  // ---- the motion: story i from S + i*D: it cuts in with a quick zoom (1.12 -> 1.04 in 8 f), then pushes in slowly; its
+  // bar fills linearly; the caption sticker pops (back.out) 10 f in, tilted
+  pics.forEach((p, i) => {
+    const f0 = S + i * D, f1 = i === n - 1 ? FRAMES : f0 + D;
+    set(p, { opacity: 1 }, f0);
+    if (i) set(pics[i - 1], { opacity: 0 }, f0);
+    ft(p, { scale: 1.12 }, { scale: 1.04 }, f0, f0 + K(8), "power3.out");
+    to(p, { scale: 1 }, f0 + K(8), f1, "none");
+    ft(segs[i], { scaleX: 0 }, { scaleX: 1 }, f0, f0 + D, "none");
+    if (caps[i]) {
+      const c = document.createElement("div"); c.className = "cap"; c.textContent = caps[i];
+      Object.assign(c.style, { font: `400 ${64 * U}px "${V.caption_font}", cursive`, color: "#111", background: "#fff", padding: `${10 * U}px ${26 * U}px`, borderRadius: `${12 * U}px` });
+      q("ui").appendChild(c); gsap.set(c, { x: W / 2, y: H * 0.68, xPercent: -50, rotation: i % 2 ? 4 : -5, opacity: 0 });
+      set(c, { opacity: 1 }, f0 + K(10)); ft(c, { scale: 0 }, { scale: 1 }, f0 + K(10), f0 + K(20), "back.out(2.4)");
+      if (i < n - 1) set(c, { opacity: 0 }, f1);
+    }
+  });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+ "name": "Dashboard card",
+ "kind": "charts",
+ "what": "A dark app card swings in in 3D, its total counts up, a change badge pops, bars grow with a highlight walking across them (or a line with a soft area); the card floats with a slow tilt.",
+ "use_for": [
+  "revenue",
+  "stat",
+  "results",
+  "app promo",
+  "finance",
+  "dashboard",
+  "money"
+ ],
+ "tags": [
+  "dashboard",
+  "card",
+  "3d",
+  "bars",
+  "counter",
+  "dark"
+ ],
+ "learned_from": [
+  {
+   "pack": "swishy",
+   "clip": "graphics__ad-spend",
+   "what": "a dark dashboard card, a money total, an orange highlight moving across the bars"
+  },
+  {
+   "pack": "swishy",
+   "clip": "graphics__fintech-dashboard",
+   "what": "a balance card with a line chart tilting in 3D"
+  }
+ ],
+ "motion": "in 22 f from a 28-degree tilt (S-curve); counts 40 f; bars 14 f, 3 f apart; the highlight steps every 14 f (8 f S-curve)",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  10,
+  22,
+  40,
+  60,
+  100,
+  140
+ ]
+}

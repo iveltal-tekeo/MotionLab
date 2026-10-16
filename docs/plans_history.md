@@ -16,12 +16,13 @@ the table below.
 | What it took - Claude's time (0.4.4) | 0.4.5.5 for a few hours (2026-10-15 evening); its measuring was 0.5.0's step 0 |
 | Bulk - thumbnails, videos, edits at once (0.4.5) | none (added 2026-10-15 night; 0.4.5 was *Trending sounds* that evening - scrapped) |
 | Fonts and customizations (0.4.6) | none (added 2026-10-15 night; released 2026-10-16) |
-| Yapping mode (0.4.7) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15) |
-| Faster videos (0.4.8) | none (added 2026-10-15 night; earlier that day 0.4.8 was colour's number) |
-| Prompt generator (0.4.9) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15) |
-| Motion graphics (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps) |
-| Colour (0.5.1) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15) |
-| Content generation (0.5.2) | 0.5.0 (2026-10-14 to 2026-10-15); "0.5" before that meant templates by feel + macOS |
+| Yapping mode (0.5.1) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16) |
+| Faster videos (0.5.2) | 0.4.8 (2026-10-15 night to 2026-10-16; earlier on 2026-10-15 0.4.8 was colour's number) |
+| Prompt generator (0.5.3) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16) |
+| Motion graphics - the library (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps; released 2026-10-16) |
+| Motion graphics - template packs, the motion check, formats (0.5.4) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N |
+| Colour (0.5.5) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16) |
+| Content generation (0.5.6) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16); "0.5" before that meant templates by feel + macOS |
 | Describe video + courses (0.6.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
 | Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
@@ -96,6 +97,12 @@ the table below.
   8 AI clips back into the lab -> 0.5.2's 2, 9 three sizes -> 12, 10 other tools -> Lottie in step 4 and image tools
   in 0.5.2's 3, 11 the made video's page -> 11 (kept in 0.5.0: it shows the scene table and the animatic), 12 the
   clips a script needs -> 0.4.7 (*Make*'s step 3 B-roll slots are that list).
+- **2026-10-16** (the user, releasing what an overnight session built): **0.4.6** (fonts and captions) and **0.5.0**
+  (the Motion Graphics library: 74 templates, the page, Generate building from them) released the same day, 0.4.6
+  first. The plans between them moved after 0.5.0, in the same order: yapping mode 0.4.7 -> 0.5.1, faster videos 0.4.8
+  -> 0.5.2, prompt generator 0.4.9 -> 0.5.3; what 0.5.0's plan still has open (template packs read exactly, templates
+  used as they are, the motion check, formats, the preview) -> **0.5.4**, its step numbers kept; colour 0.5.1 -> 0.5.5,
+  content generation 0.5.2 -> 0.5.6.
 
 ## Where some plans came from
 
@@ -154,6 +161,201 @@ to the lab's texture.
 
 ## Released plans (their text when they shipped)
 
+### 0.5.0 - released 2026-10-16 - Motion Graphics: a library learned from pro template clips
+
+**Ships when**: (1) the user's template packs are read with no Claude - every template's moves, eases, timing and
+controls, plus a preview with a frame + timecode sheet - for at least two packs (Free Starter Pack 2.0 and Swift Pack
+2 are on this PC); (2) ~20 templates the user starred have motion cards the user reviewed Correct / Partly / Wrong,
+and their motion rules are in Claude's memory; (3) the "top 3 tracks" benchmark (illdari_test_copy_1, v1: graphics
+"too clunky", sound effects bad) made again from blocks rebuilt from templates is rated **good** on graphics and on
+sound effects, with one final render, and its time and Claude's tokens are below the baseline *What it took* (0.4.4)
+measured; (4) one Resolve template is used as it is - the user's words in it - in a lab render and in a Resolve
+build.
+
+**The user's words (2026-10-15)**: "also look into a "motion graphics" oriented version? and where could i go cuz i am
+getting like a lot of free templates from some courses and wanted to give them to motionlab to analyze and possibly
+use in the future cuz they right now the motion graphics by default are very dull, lack creativity, very simple and
+honestly could be 100x times better. where could this version fit" - then, to Claude's proposal (this plan as 0.5.0,
+the rest of content generation as 0.5.2): "yeah go ahead". The plan it grew from (2026-10-14): "i want the generation
+of video through claude and other tools such as hyper frame or other to be more redefined and work better."
+
+**Where it stands** (2026-10-15): *Generate*'s motion-graphics videos are written by Claude from zero - HTML / CSS /
+GSAP that HyperFrames renders, timed to a song by `beats.py`, checked with `overlay.py snap` / `stills` and
+`precheck.py`, with sound from `sfx.py` (shipped in 0.4.1.1). MotionLab has 5 example graphics (7-16 KB each) and the
+graphics library is empty. The first real one (illdari_test_copy_1, 2026-10-14) was rated "too clunky": drawn ~40 %
+smaller than the reference, nothing moving between the big moves, a hand-written bug (the logo's badge missing at f38
+(00:00:01:08)); every video from zero is ~42 KB of new animation code (0.4.8's review). **Why it looks dull**: Claude
+invents every graphic with nothing to learn the craft from. The lab measures edits (cuts, zooms, flashes), not motion
+design - the ease of a move, overshoot, letters arriving one after another, things still drifting during a hold,
+layers, texture. Building blocks written the same way would come out the same.
+
+**What the templates give** (checked read-only on this PC, 2026-10-15): `Documents\EditingVault\Plugins` holds DaVinci
+Resolve packs from courses - Free Starter Pack 2.0 (228 templates), Swift Pack 2 (72 transitions, each with a preview
+picture), Shot Pack (31), Paper Animator, tracked text / image and 5 Hyperlapse macros; the same packs are installed
+in Resolve. A `.drfx` is a zip of Fusion `.setting` files, which are plain text: the exact keyframes, their ease
+handles, the controls a user can change and the expressions can be read (a quick count: *Shake - Main* 168 keys and
+217 expressions, *Animation In & Out* 32 keys and 42 expressions) - nothing guessed from pixels. After Effects 2025 is
+installed with `aerender.exe` (renders a project without opening a window) and Motion Bro (a template-pack manager);
+the `.aep` files found look like the user's own projects. The pinned HyperFrames (0.8.149) has Lottie support in its
+code (`data-lottie-src`; not tried yet), so After Effects animations exported to Lottie (the free Bodymovin plug-in,
+not installed) could play inside MotionLab's graphics.
+
+**Done 2026-10-16** (a scheduled overnight session; the user's words: "turn the Swishy reference clips (in the refs
+folder) I captured into a reusable Motion Graphics library, add a Motion Graphics section to the sidebar, and make
+Generate use those templates as well when generating blindly"; then: "i dont need to \"review\" templates with ok partly or wrong
+so just go in with it, i think the 64 later clips would be a great addition" and "review on websites that offer motion
+graphics templates what else we could be lacking and go ahead and implement them as well"; released the same day):
+- Step 1-2 for a pack of **preview clips only** (`refs\swishy\`: 131 screen captures of a template gallery, 320x572 at
+  25 fps, 9 kinds): `tools\templates.py read` (`motionlab\template_read.py`, no Claude, 76 s for the pack) = every move
+  with frame + timecode, its ease from the change per frame, the holds and what keeps them alive, scene changes,
+  loops, colours, a sheet per clip, 17 overview pages; SHA-256 recorded and checked (`verify`); 10 clips are still
+  captures (under 15 frames). Resolve `.setting` / After Effects / Lottie packs are NOT read yet.
+- Step 3: Claude's card for every clip (`analysis\templates\swishy\cards.json`: what, use_for, tags, rebuild 1/2/3 -
+  37 / 64 / 30); **motion rules** from 500 measured moves = `knowledge\local\lessons_making.md` local-make-9 (moves
+  ~11 f at 25 fps, 60 % S-curves, holds ~17 f, half of them alive, motion within 2 frames). Not reviewed by the user
+  yet (Correct / Partly / Wrong on cards is not built).
+- Step 5: **74 templates** in `tools\overlays\motion\` - 57 cover every rebuild-1 and rebuild-2 clip (the first 25: kinetic-stack, wiggle-title,
+  story-lines, scatter-text, word-pills, neon-sign, split-flap, wheel-list, highlight-reveal, typing-card, big-counter,
+  bar-chart, countdown-ring, checklist, chat-thread, notification-stack, cursor-click, like-burst, toggle-switch,
+  location-pin, quote-card, now-playing, logo-reveal, photo-shuffle, money-rain; then 32 more: line-chart,
+  progress-ring, dashboard-card, calendar-fill, word-ring, stretch-pills, dust-word, letter-fall, glow-year, wave-swap,
+  shape-letters, glitch-status, letter-beads, title-card, clock-words, sticky-notes, profile-card, icon-pop,
+  speech-bubble, phone-list, connect-hub, folder-open, mood-switch, envelope-letter, stories, photo-strip, phone-fan,
+  card-stack, pencil-annotate, blob-bg, particle-ring, pixel-wipe) and 17 are **MotionLab originals** for the kinds the
+  template marketplaces list most and the clips lacked (Mixkit, Envato Elements, Motion Array, Videohive - their
+  categories and tags, read 2026-10-16): lower-third, subscribe-cta, callout-line, shape-wipe, end-screen, audio-bars,
+  donut-chart, before-after, news-bar, credits-roll, price-tag, review-stars, map-route, rec-frame, chapter-bar, poll,
+  rank-number (`template.json` `origin` instead of `learned_from`); size-independent (`overlay.py new
+  --from <id> --frames --fps --width --height --values`, `--like-plan`), settings for words / colours / font /
+  background, sound cues, timings scaled from 30 fps; each checked with `templates.py check` (snapshot sheets, other
+  sizes, other looks); `selftest.py` checks the library (+ a snapshot of each in --extended).
+- The app: **Motion Graphics** in the sidebar (#/motion: templates with a live preview and *Use in a video* / *Make a
+  video with it*; *Learned from* = the clips, measured + Claude's cards; *Rebuild the next 8 with Claude*), Generate's
+  dialog suggests templates from the words and saves the picks (`generate_request.json` "templates"); the
+  `/generate-video` skill builds scenes from templates (blind: `templates.py pick`) and rebuilds more
+  (`/generate-video templates <pack>`, section 4).
+
+**Goal**: graphics that look designed, not generated - learned from professional templates the user owns, used as
+they are where that is best, rebuilt as MotionLab's own blocks where they must bend to any video, and checked against
+measured motion rules before anything renders. Claude decides what a video says and its scenes; the templates, the
+rules and the blocks decide how it moves.
+
+**Builds on 0.4.8** (*Faster videos*): the blocks (step 5), the formats (6) and Generate's quick draft (7) run through
+its one-page brief and its build command - Claude reads one page, writes a scene list, one command renders, checks
+and makes one sheet - so a video from zero gets the same brief -> plan -> build -> one look as an edit. **Moved out**
+(2026-10-15): voice and music, AI clips back into the lab and pictures from image tools -> 0.5.2 (*Content
+generation*); the clips a script needs -> 0.4.7 (yapping mode's B-roll slots are that list); faster renders -> 0.4.8;
+measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
+
+**Learn from the templates**
+
+1. **Template packs in** (the Analyser, next to videos): drop a pack - .drfx, .setting, a .zip or a folder, an .aep /
+   .mogrt, a Lottie .json, or only its preview videos - or point at the folder where it already is. The pack stays
+   where it is, read-only like a reference video (hard rule 1, its SHA-256 recorded and checked); MotionLab writes only
+   to `analysis\templates\<pack>\` (like 0.4.5's thumbnail sets in `analysis\thumbs\`). The pack's licence text is
+   kept with it and shown. *Can it work*: yes.
+2. **Read them exactly** (`tools\templates.py read <pack>`, no Claude, in bulk): per template what moves, its keyframes
+   in frames, the ease of each move as numbers (the cubic-bezier) and in words (decelerating, S-curve...), overshoot,
+   the stagger between parts, the expressions (a wiggle's or shake's size and speed), the layers and effects used and
+   the controls a user can change -> `motion.json`; plus a preview rendered by Resolve (on a test clip, the way
+   `library.py test` renders macros) or by `aerender`, and a sheet with frame + timecode on every tile. Sources:
+   Resolve's `.setting` text (certain - checked above); After Effects through a script run inside it (`AfterFX.exe
+   -r`, only on a PC that has it: likely - measure its start-up and that it runs without clicks); Lottie JSON (the
+   keyframes and eases are in the file); preview videos only (the lab's own analysis, category motion_graphics -
+   measured, less exact). *Can it work*: Resolve yes, After Effects likely; the preview render time per template is
+   measured first (Starter Pack alone is 228 templates).
+3. **Motion cards and motion rules** (Claude, in batches like 0.4.5's bulk; the templates the user stars first): per
+   template a short card - what it is (a title, a transition, a lower third, a counter...), frames in / hold / out,
+   the eases, what keeps it alive during a hold, layering and depth, texture (grain, glow, a chromatic split), the type,
+   and why it works - reviewed Correct / Partly / Wrong like effects. Across the cards Claude writes **motion rules**
+   with numbers ("entrances 8-12 frames, decelerating; letters 2 frames apart; exits about twice as fast; nothing
+   fully still during a hold"), saved like lessons on making videos (`local-make-N`) and read before every graphic.
+   Cards and rules are text and numbers - shareable through *Claude's memory > Share*; the templates never leave the
+   PC. *Can it work*: yes - the numbers come from step 2, Claude adds the why from a sheet (~1.6 k tokens a picture);
+   ~20 cards are enough to start, not all 330.
+4. **Use templates as they are** (where the user's licence allows): a Resolve template on a Resolve build's timeline
+   with its controls filled in (the user's words, colours) through Resolve's API (Fusion titles and generators have
+   calls; effects as a clip's Fusion comp, `ImportFusionComp` - the lab uses it already); the same template rendered
+   by Resolve or `aerender` into a transparent clip that the lab render uses like any overlay (a plan layer); a Lottie
+   export played inside a HyperFrames composition (was part of step 10). HyperFrames stays MotionLab's own graphics
+   engine; a template used as it is arrives as a rendered clip. *Can it work*: likely. Measure: which kinds the API can
+   place (a transition between two clips may need a workaround) and the render time per template. Resolve's scripting
+   needs the Studio edition (the free 21.1 and later can't be scripted from outside), so friends on the free edition
+   get steps 3 and 5 only.
+
+**Make with what was learned**
+
+5. **Building blocks for HyperFrames, rebuilt from the best templates** (was step 1): a tested kit Claude puts scenes
+   together from, instead of writing every graphic from zero - text (type-on, word pops, mask reveals, the 3D lyric
+   stack), UI (a phone / app / window frame, a cursor on a curved path with a press), numbers (counters, bars), lists,
+   a logo sting and an end card, transitions between scenes (whip, zoom-through, mask wipe, flash) and a camera
+   (push-in, a jolt on hits, a slow drift, a smear for fast moves). **New**: each block starts from templates the user
+   liked (steps 2-3) - their curves converted exactly (Fusion's and After Effects' ease handles -> GSAP eases), their
+   timing and layering kept, their effects rebuilt in CSS / SVG / WebGL once per block - MotionLab's own code, never a
+   template's pictures or fonts and never a 1:1 copy of a paid one. Each block: settings the user can change, its own
+   sound cues (step 8), safe with motion blur and snapshots (0.4.2 item 7's helpers), and a test - its frames rendered
+   and compared like `overlay.py upgrade-test` (max 4/255), so a HyperFrames upgrade cannot break it unseen. Shared
+   through the repo next to `tools\overlays\examples\`; the user's approved ones in the graphics library. Claude writes
+   new code only for what no block does (fewer tokens, fewer bugs: the badge missing at f38 (00:00:01:08) was
+   hand-written). *Can it work*: the moves and eases yes (the conversion is math); heavy effects (particles,
+   displacement, 3D) only partly - those stay template clips (step 4).
+6. **Formats - a made video as a template** (was item 13 of *Check before you render*): a generated video the user
+   approved is saved as a format - "top 3 tracks", a lyric video, a list / explainer, an app promo, a quote or number
+   reel... = its scenes as settings (texts, pictures, colours, song, length). The next video in that format is new
+   settings, no new code (the biggest saving in Claude's tokens). *Generate* gets *Start from a format*. The first
+   one: illdari's "top 3 tracks" reel, once the user approves v2.
+7. **A quick draft for Generate** (made by rules, no Claude, like the Editor's quick draft): a format or the style of up to
+   3 analysed videos (`style.py`) + the user's texts + the song's beats (`beats.py`) -> scenes on the downbeats, the
+   biggest change on the drop, the blocks filled in -> a first video in minutes; Claude refines it (what it says, the
+   custom parts) instead of starting from an empty page. The style of a motion-graphics reference gets the numbers v1
+   got wrong: how long text holds, how fast things move (pixels per frame), the size of the main element on the frame
+   (Claude measures it once on the reference's frames; saved with the style); the motion rules (step 3) set its
+   eases, holds and staggers.
+8. **Sound effects as a lab tool** (was item 8 of *Check before you render*; **Shipped in 0.4.1.1** (2026-10-14,
+   built early): `tools\sfx.py` + `motionlab\sfx.py` - 22 synthesised kinds, sample-identical to `sfx_v2.py`; cues in
+   overlay.json "cues" as formulas of the settings (`repeat` / `if`), the starter graphic has them; cues from a plan's
+   layers; each effect levelled against the song - the quieter of 400 ms around it and its own loud part, so a sound
+   in a short gap before a loud line follows the gap; a -1 dBFS limiter; stem + mix + a level report; ~1 s per minute
+   of video; self-check in `selftest.py`. The user's listen of the illdari v2 rebuild: "kinda too loud" -> every level
+   3 dB lower, effects' peaks at most -6 dBFS, sparse sounds (sparks) measured near their peak: now 3.1 dB under
+   `sfx_v2.py` (median), none more than 2.9 dB over (was up to +10.6). Open: a `--sfx` flag for the quick draft):
+   `tools\sfx.py`, from `sfx_v2.py` - a graphic lists its cues (frame + kind:
+   whoosh, click, key, pop, hit, riser...) next to its settings, so the sound follows when a setting moves the timing
+   (the typed text); synthesised (no samples to license); each effect levelled against the song under it -
+   measured, since Claude cannot hear; the effects alone as a stem for Resolve + the mix for the plan. Blocks carry
+   their cues (a whip = a whoosh); the Editor's quick-draft effects (zooms, whips, flashes) become cues the same way.
+   It was step 4 until 2026-10-15 (code comments still say so).
+9. **A preview before the render** (was item 11 of *Check before you render*, measure first): (a) an **animatic** -
+   the scene snapshots (0.4.2's `overlay.py snap`) held on their frames with the song and the sound effects -> an MP4
+   in seconds, so the timing and the sound are checked before anything renders for minutes; (b) the **live preview**
+   - HyperFrames' `hyperframes preview` (in the pinned 0.8.149), not yet tried: does the 3D lyric part play smoothly
+   on a laptop, does it play the song. If it does: *Play* on the video's page - live with the song and its sound
+   effects, a scrub bar, frame + timecode, settings change at once without a render (no motion blur in the preview;
+   the render is the final word).
+10. **The motion check** (new): `precheck.py` learns the motion rules (step 3) and flags, with frame + timecode: a
+    stretch where nothing on screen moves for longer than the rules allow, moves with no ease (linear), every move at
+    one speed, the main element smaller than the style's measured size (illdari's v1 was ~40 % small), text on screen
+    shorter than its reading time, parts outside the platform's safe area. Claude also checks the snapshot sheet
+    against the rules before the first render. *Can it work*: yes for what can be measured (movement per frame is
+    already measured for the motion-blur check); "does it look designed" stays the user's rating.
+11. **The made video's page**: a video made from zero opens on its project's page (Editor); it gets Generate's steps
+    there - the scene table (frame + timecode), the animatic and *Play*, the settings, the sound, *Render*, *How did
+    it turn out?* with notes on moments (0.4.2) - in plain words.
+12. **One video, three sizes**: the compositions are HTML, so 9:16, 16:9 and 1:1 come from one video with layout
+    rules per size (`overlay.py fit` already takes a size); the user ticks the sizes to render.
+
+**Order then** (the user decides): 1 and 2 on the Resolve packs first (no Claude - they can be built early, like the sound
+effects tool was); 3 on ~20 templates the user stars; 10 (the check, from the rules); 5 (the "top 3" reel's blocks
+first); 6 once illdari's v2 is approved; 9a (small); 11; 7 when a few blocks and formats exist; 4, measured (Resolve
+first, After Effects after); then 9b and 12. **Size**: large - it can ship in parts: 0.5.0 = 1, 2, 3, 5, 10 and 11;
+the rest in a later 0.5.x.
+**Rules**: light and tested first (every new tool optional and measured on a laptop; After Effects and Resolve Studio
+only where they are installed); the templates are the user's copies under their licences - they stay on the PC, never
+in the repo, a pack for friends or a shared graphic; motion cards, rules and MotionLab's own blocks are what is shared;
+copy a style, never someone's content (their words, logos, characters, pictures).
+**Needs first**: 0.4.8's brief and build command (steps 5-7 run through them); 0.4.6's fonts (type is half of a
+title); from the user: which packs first, ~20 templates starred, the verdict on the remade "top 3" reel.
+
 ### 0.4.6 - released 2026-10-16 - Fonts and customizations for motion graphics and captions
 
 **Ships when**: a graphic's or the captions' font can be any of ~30 curated free fonts shipped with MotionLab (the
@@ -179,7 +381,7 @@ Claude's proposal (the user picks):
    (text, the word being said, outline, shadow, box), the highlight (colour / size / pop per word), words per line,
    the position and the platforms' safe areas (TikTok / Reels / Shorts buttons), the entrance - saved, previewed as
    stills in seconds (`overlay.py snap`), shared through the repo like the examples.
-3. **Like a reference**: an analysed video's captions and text on screen measured (0.4.7's text on screen: size,
+3. **Like a reference**: an analysed video's captions and text on screen measured (0.4.7's (now 0.5.1's) text on screen: size,
    position, capitals, colours) and the font's style named by Claude with the closest library fonts -> "captions like
    <video>"; the same for 0.4.5's thumbnail styles.
 4. **Everywhere**: one font and preset across graphics, captions, thumbnails and the DaVinci Resolve build (Fusion
@@ -221,7 +423,7 @@ Claude's proposal (the user picks):
 are variable fonts only: measure what Resolve does with them before the Resolve part relies on them (plan item 4);
 (2) a caption look the user saves from their own settings (only the shipped looks exist) and more looks from the
 six mock-ups; position by platform / keeping captions off the face; (3) "like a reference" (item 3) - waits for
-0.4.7's text on screen; (4) Clean box in a full render - checked before the release (2026-10-16: a
+0.4.7's (now 0.5.1's) text on screen; (4) Clean box in a full render - checked before the release (2026-10-16: a
 90-frame render, the box fits each line in the render too, the said word cyan); (5) the real Clavero set has no "texts" yet - Claude adds them when it finds the patterns again.
 
 **Needs first**: nothing (0.4.5's thumbnail styles name their fonts from this library once it exists). **Size**: M.

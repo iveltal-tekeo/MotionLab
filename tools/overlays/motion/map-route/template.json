@@ -1,0 +1,39 @@
+{
+ "name": "Map route",
+ "kind": "places",
+ "what": "A trip: the start pin drops with its name, a dashed route draws in a curve to the destination with a plane (or a glowing dot) riding its tip and turning with it, the end pin pops with a ripple. A drawn map, or none over your own.",
+ "use_for": [
+  "travel",
+  "trip",
+  "journey",
+  "flight",
+  "vlog",
+  "route",
+  "from to",
+  "move"
+ ],
+ "tags": [
+  "map",
+  "route",
+  "plane",
+  "travel",
+  "pin",
+  "journey"
+ ],
+ "learned_from": [],
+ "origin": "travel / map routes - the template kinds marketplaces list (Mixkit, Envato Elements, Motion Array, Videohive), researched 2026-10-16",
+ "motion": "camera eases out 12 %; pin back.out 12 f; route draws over 60 f (S-curve) with the plane on its tip every frame; end pin back.out 14 f, two ripples 22 f apart",
+ "scene": true,
+ "general": 0.6,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  10,
+  22,
+  40,
+  60,
+  82,
+  100,
+  140
+ ]
+}

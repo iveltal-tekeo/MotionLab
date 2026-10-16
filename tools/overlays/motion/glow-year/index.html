@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The number or word", "default": "2026"},
+  {"id": "look", "type": "enum", "label": "Look", "default": "wave", "options": [{"value": "wave", "label": "Wave - glowing, over a liquid wave rolling at the bottom"}, {"value": "stack", "label": "Stack - two huge lines that shrink in steps to a small mono line"}]},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Archivo Black", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "mono_font", "type": "enum", "label": "Small font (stack)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "color", "type": "color", "label": "Text colour", "default": "#ffffff"},
+  {"id": "glow", "type": "color", "label": "Glow / wave colour", "default": "#1fd655"},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#000000"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 1.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 44, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "glow-year" (0.5.0, the Motion Graphics library): a year or a number as the whole frame.
+     Wave: it rises in glowing, a liquid wave rolls along the bottom (a seamless loop - the wave moves one wavelength),
+     the glow breathes. Stack: two huge lines ("20" / "26") fill the frame, then shrink in hard steps (a stepped ease,
+     like frames dropped) to a small mono line. Learned from graphics__animated-year (a glowing white "2026" over a green
+     wave rolling at the bottom of a black frame) and text__2026 (a huge "20 / 26" shrinking into small blocky digits,
+     f14-f32 (00:00:00:14-00:00:01:07) at 25 fps). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 0.86; font-synthesis: none; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg id="wv" class="abs" style="overflow:visible"></svg>
+  <div id="cam" class="abs"><div id="big" class="t"></div><div id="l1" class="t"></div><div id="l2" class="t"></div><div id="small" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const font = `"${V.font}", "Arial Black", sans-serif`, weight = ONE.test(V.font) ? 400 : 900;
+  const q = id => document.getElementById(id);
+
+  gsap.set(["#bgfill", "#cam"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const s = V.size, txt = String(V.text || "2026"), cy = H * V.y / 100, S = Math.round(V.start);
+  if (V.look === "wave") {
+    const fs = Math.min(W * 0.86 * s / (txt.length * 0.62), 360 * U * s);
+    const big = q("big"); big.textContent = txt;
+    Object.assign(big.style, { font: `${weight} ${fs}px ${font}`, color: V.color, textShadow: `0 0 ${12 * U}px ${V.glow}, 0 0 ${40 * U}px ${V.glow}aa, 0 0 ${90 * U}px ${V.glow}66` });
+    gsap.set(big, { x: W / 2, y: cy, xPercent: -50, yPercent: -50 });
+    // the wave: two layers, each a long wavy band moved by exactly one wavelength (a seamless loop)
+    const svg = q("wv"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+    const wl = W * 0.5, top = H * 0.8, amp = 26 * U;
+    const band = (yy, a) => { let d = `M${-wl * 2},${H}`; for (let x = -wl * 2; x <= W + wl * 2; x += wl / 8) d += ` L${x},${yy + Math.sin(x / wl * Math.PI * 2) * a}`; return d + ` L${W + wl * 2},${H} Z`; };
+    svg.innerHTML = `<defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${V.glow}"/><stop offset="1" stop-color="${V.glow}" stop-opacity=".35"/></linearGradient></defs>
+      <path id="w2" d="${band(top - 18 * U, amp * 0.8)}" fill="${V.glow}" opacity=".45"/><path id="w1" d="${band(top, amp)}" fill="url(#lg)"/>`;
+    const per = K(45);
+    for (let f = S, k = 0; f < FRAMES; f += per, k++) {
+      ft("#w1", { x: 0 }, { x: wl }, f, Math.min(FRAMES, f + per), "none");
+      ft("#w2", { x: 0 }, { x: -wl }, f, Math.min(FRAMES, f + per), "none");
+    }
+    enter("#wv", { opacity: 1, y: H * 0.2 }, { y: 0 }, S, S + K(24), "power3.out");
+    enter(big, { opacity: 0, y: cy + 120 * U, filter: "blur(10px)" }, { opacity: 1, y: cy, filter: "blur(0px)" }, S + K(6), S + K(26), "power3.out");
+    for (let f = S + K(26), k = 0; f + K(20) < FRAMES; f += K(20), k++) to(big, { scale: k % 2 ? 1 : 1.03 }, f, f + K(20), "sine.inOut");
+  } else {
+    const half = Math.ceil(txt.length / 2), a = txt.slice(0, half), b = txt.slice(half);
+    const fs = Math.min(W * 0.96 / (Math.max(a.length, b.length) * 0.62), 600 * U) * s;
+    [["#l1", a, cy - fs * 0.45], ["#l2", b, cy + fs * 0.45]].forEach(([id, t, yy]) => {
+      q(id.slice(1)).textContent = t;
+      Object.assign(q(id.slice(1)).style, { font: `${weight} ${fs}px ${font}`, color: V.color, letterSpacing: "0.04em" });
+      gsap.set(id, { x: W / 2, y: yy, xPercent: -50, yPercent: -50 });
+    });
+    const small = q("small"); small.textContent = txt;
+    Object.assign(small.style, { font: `700 ${64 * U * s}px "${V.mono_font}", Consolas, monospace`, color: V.color, letterSpacing: "0.5em" });
+    gsap.set(small, { x: W / 2, y: cy, xPercent: -50, yPercent: -50, opacity: 0 });
+    enter(["#l1", "#l2"], { opacity: 1, scale: 1.25 }, { scale: 1 }, S, S + K(10), "power3.out");
+    const sh = S + K(16), n = K(18);
+    // the shrink: 6 hard steps (frames dropped on purpose), the two lines closing in, then the small mono line swaps in
+    to("#l1", { scale: 0.16, y: cy - fs * 0.08, opacity: 0.5 }, sh, sh + n, "steps(6)");
+    to("#l2", { scale: 0.16, y: cy + fs * 0.08, opacity: 0.5 }, sh, sh + n, "steps(6)");
+    set(["#l1", "#l2"], { opacity: 0 }, sh + n);
+    set(small, { opacity: 1 }, sh + n);
+    for (let f = sh + n + K(8), on = true; f + K(8) < FRAMES; f += K(8), on = !on) set(small, { letterSpacing: on ? "0.56em" : "0.5em" }, f);
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

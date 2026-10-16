@@ -1,0 +1,19 @@
+{
+ "name": "glitch-status",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "zap",
+   "what": "the letters scramble"
+  },
+  {
+   "f": "start + round(1.5 * (len(text) + 4) * fps / 30) + round(8 * fps / 30)",
+   "kind": "tick",
+   "what": "it locks"
+  }
+ ]
+}
