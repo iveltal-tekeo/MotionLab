@@ -33,6 +33,7 @@ from pathlib import Path
 from motionlab import __version__
 from motionlab import fonts as FL
 from motionlab import knowledge as KN
+from motionlab import logos as LGO
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
 from motionlab import publish as PB
@@ -44,12 +45,13 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 27                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 28                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
-FILE_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge", "fonts"}    # fonts: 0.4.6, the library
+FILE_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge", "fonts",      # fonts: 0.4.6, the library
+              "logos"}                                                                     # the logo library (2026-10-16)
 OPENABLE = {".html", ".md", ".txt", ".png", ".jpg", ".jpeg", ".mp4", ".mov", ".json", ".csv"}
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 for ext, typ in ((".js", "text/javascript"), (".css", "text/css"), (".md", "text/plain"), (".comp", "text/plain"),
@@ -328,6 +330,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._file(p)
         if path.startswith("/files/"):
             rp = path[len("/files/"):]
+            if urllib.parse.unquote(rp).endswith("/assets/logos/logos.js"):         # a graphic's logos (logos.py): the
+                p = (LAB / urllib.parse.unquote(rp)).resolve()                      # file once a render wrote it, else
+                if LAB not in p.parents or not (p.relative_to(LAB).parts[0] in FILE_ROOTS    # the helper alone (the
+                                                or OS.MOTION.resolve() in p.parents):          # preview adds /logos.js)
+                    raise PermissionError(rp)
+                if p.is_file():
+                    return self._file(p)
+                return self._send(200, LGO.js([]).encode("utf-8"), "text/javascript; charset=utf-8")
             if urllib.parse.unquote(rp).startswith("tools/overlays/examples/"):    # the examples' thumbnails only
                 p = lab_file(rp, {"tools"})
                 if OS.EXAMPLES.resolve() not in p.parents or p.suffix.lower() != ".png":
@@ -364,6 +374,15 @@ class Handler(BaseHTTPRequestHandler):
             css = FL.css(FL.families(), base=lambda f: "/files/library/fonts/" if f["own"] else "/files/fonts/")
             return self._send(200, css.replace("font-display:block", "font-display:swap").encode("utf-8"),
                               "text/css; charset=utf-8")
+        if path == "/api/logos":                         # the logo library (logos.py): the pickers + Motion > Logos
+            cat = LGO.catalog()
+            return self._json({"groups": cat.get("groups", {}), "logos": [
+                {k: lg[k] for k in ("id", "name", "group", "words", "default")}
+                | {"variants": {v: {k: i[k] for k in ("aspect", "on", "tint")} for v, i in lg["variants"].items()}}
+                for lg in cat["logos"]]})
+        if path == "/logos.js":                          # a live preview's logos: ?b=youtube,figma -> MLLogo + those
+            return self._send(200, LGO.js([x for x in (arg("b", "") or "").split(",")[:200] if x]).encode("utf-8"),
+                              "text/javascript; charset=utf-8")
         if path == "/api/references":
             return self._json(data.list_references(arg("tests") == "1"))
         if path == "/api/candidates":

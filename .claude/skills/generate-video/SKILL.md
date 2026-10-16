@@ -61,7 +61,10 @@ Needs Node.js + HyperFrames (`tools\overlay.py doctor`; missing -> the app's Set
 `tools\overlay.py install`). The graphics rules are the ones of `/recreate-video` section 3b (read it): HTML / CSS /
 SVG / GSAP on a paused timeline, times in frames (`F(n)`, `AT(n)`), no timers / `Math.random` (`rnd(seed)`), fonts
 from the lab's font library (`tools\fonts.py list`, 0.4.6 - section 3b), settings the user can change in
-`data-composition-variables`.
+`data-composition-variables`. Real logos of apps, platforms and AI tools come from the logo library, never drawn by
+hand: `tools\logos.py find "<the user's words>"` names them (`show <id>` = its versions); a logo setting takes `youtube`
+/ `youtube/mono` / `a|b|c`, a text `:youtube:` - the templates logo-wall, logo-reveal, icon-pop, connect-hub,
+notification-stack, phone-list and lower-third draw them, renders bundle them by themselves.
 **Cheapest check first** (the first video's ~29 min of renders mostly went on bugs a 1-second snapshot shows). The
 user approves each step in plain words; no polish before step 3 is approved:
 (1) the plan in words and numbers - the scene table with frame + timecode and the feel as numbers ("a cut every
@@ -150,7 +153,10 @@ rule 1) and private; the repo gets only MotionLab's own templates.
    `tools\overlays\motion\<template>\`: `index.html` - copy the helper block of an existing template (FPS / FRAMES,
    W / H lines for `retime`, F / AT / K (frames designed at 30 fps), set / to / ft / enter); everything sized from
    `U = min(W, H) / 1080`; the settings declared on `<html>` (the words, colours, a `font` enum - `fonts.py sync` fills
-   its list -, `background` + `bg`, `size`, position, `start`); never a brand's logo, name or someone's words.
+   its list -, `background` + `bg`, `size`, position, `start`); never a brand's logo, name or someone's words copied
+   from a clip - a template that shows logos loads `assets/logos/logos.js` in `<head>` and draws the library's
+   (`motionlab\logos.py`: a logo setting `logo` / `*_logo` / `logos` -> `MLLogo.fill(box, V.logo, {dark, tint, mono})`,
+   a text -> `MLLogo.text()` / `MLLogo.lead()` for `:youtube:`).
    `overlay.json` = frames / fps / size + sound `cues` (formulas of the settings; `sfx.py cues <folder>` must list them
    inside the frames; a list setting "a|b|c" counts with `parts(words)` - formulas have no `.split`). `template.json` =
    name, kind (text / numbers / charts / lists / ui / chat / social / music / logo / photos / places / background /

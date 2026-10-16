@@ -76,6 +76,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from motionlab import fonts as FL  # noqa: E402
+from motionlab import logos as LG  # noqa: E402
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import overlays as OV  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
@@ -420,6 +421,9 @@ def cmd_render(a) -> int:
         c["motion_blur"] = n
         (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
     FL.ensure(folder, OS.values(folder), OS.declared(folder))   # 0.4.6: the bundled fonts its settings name, in assets
+    _, unknown = LG.ensure(folder, OS.values(folder), OS.declared(folder))     # the library logos it names (logos.py)
+    if unknown:
+        log(f"not in the logo library: {', '.join(unknown)} - logos.py find \"{unknown[0]}\"")
     vargs, vals, vfile = variables_args(folder)
     if vals:
         log("settings: " + ", ".join(f"{k} = {v!r}" for k, v in vals.items()))
@@ -571,6 +575,7 @@ def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndar
         raise SystemExit(str(e))
     if decl:                                  # 0.4.6: the bundled fonts the settings name - into the copy only
         FL.ensure(src, OS.values(folder), decl)
+    LG.ensure(src, OS.values(folder) if decl else {}, decl)                   # and the library logos it names
     if decl:                                  # what the runtime's getVariables() reads (render: --variables-file)
         js = json.dumps(OS.values(folder), ensure_ascii=True).replace("</", "<\\/")
         html = (src / "index.html").read_text(encoding="utf-8")
@@ -1006,6 +1011,7 @@ def _render_pngs(hf_bin: Path, gsap_js: Path, example: Path, work: Path) -> tupl
     shutil.copytree(example, src, ignore=shutil.ignore_patterns("thumb.png", "*.mov", "*.rgba*", "render.json"))
     shutil.copy2(gsap_js, src / "gsap.min.js")
     FL.ensure(src, OS.values(example), OS.declared(example))     # 0.4.6: its default font, bundled
+    LG.ensure(src, OS.values(example), OS.declared(example))
     fps, _ = _example_conf(example)
     t0 = time.time()
     r = subprocess.run([node(), str(hf_bin), "render", str(src), "--format", "png-sequence", "--fps", fps_arg(fps),

@@ -3,7 +3,7 @@
   {"id": "mark", "type": "string", "label": "Letter(s) in the mark", "default": "M"},
   {"id": "name", "type": "string", "label": "Name under it", "default": "MOTION STUDIO"},
   {"id": "tagline", "type": "string", "label": "Small line (empty = none)", "default": ""},
-  {"id": "logo", "type": "string", "label": "Your logo picture in the graphic’s assets folder (empty = the letter)", "default": ""},
+  {"id": "logo", "type": "string", "label": "Logo instead of the letter: from the library, or your picture (empty = the letter)", "default": ""},
   {"id": "style", "type": "enum", "label": "Motion", "default": "morph", "options": [{"value": "morph", "label": "Morph - a square drops, turns into a circle, the letter appears"}, {"value": "spin", "label": "Spin - the mark spins in and the name rises"}]},
   {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
   {"id": "mark_color", "type": "color", "label": "Mark colour", "default": "#111113"},
@@ -17,6 +17,7 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "logo-reveal" (0.5.0, the Motion Graphics library): a logo sting. Morph: a rounded square
@@ -25,7 +26,8 @@
      tagline rise. Learned from logos__logo-reveal (a black rounded square at f1, a circle with a letter at f31
      (00:00:01:06) at 25 fps, the studio name fading in under it at f45) and logos__logo-spin (a dot-grid mark spinning
      in with "Welcome" and a small line under it on navy). MotionLab's own code; the user's own logo picture can stand
-     in for the letter. Size-independent. -->
+     in for the letter, or a logo of the lab's library (tools\logos.py; drawn to stand out on the mark's colour).
+     Size-independent. -->
 <script src="./gsap.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -69,10 +71,9 @@
   gsap.set("#mark", { x: cx - M / 2, y: my, transformOrigin: "50% 50%" });
   const lt = q("lt");
   gsap.set(lt, { width: M, height: M });
-  if (V.logo) {
-    const im = document.createElement("img");
-    im.src = V.logo; Object.assign(im.style, { width: "64%", height: "64%", objectFit: "contain" });
-    lt.appendChild(im);
+  const LG = window.MLLogo;
+  if (V.logo && LG && LG.fill(lt, V.logo, { scale: 0.62, dark: LG.isDark(V.mark_color), tint: V.letter_color })) {
+    // a logo of the library or the user's picture, centred in the mark
   } else {
     lt.textContent = V.mark || "";
     Object.assign(lt.style, { font: `800 ${M * (String(V.mark).length > 1 ? 0.36 : 0.5)}px ${fam}`, color: V.letter_color });

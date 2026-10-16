@@ -75,6 +75,10 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `fonts\` the font library (0.4.6, in the repo): one folder per family (.ttf + its licence: SIL OFL 1.1 / Apache 2.0)
   + `fonts.css`; graphics, captions and thumbnails pick from it (`motionlab\fonts.py`), each render gets copies of the
   fonts it uses in its own `assets\fonts\`
+- `logos\` the logo library (2026-10-16, in the repo): `<logo>\<variant>.svg` (color / mono / wordmark / -dark) cleaned
+  from the user's `refs\logos\` (only read) + `logos.json` (names, groups, search words, aspect, background, colours);
+  graphics name one in a logo setting (`youtube`, `youtube/mono`, `a|b`) or as `:youtube:` in a text, renders and
+  snapshots bundle the named ones into the graphic's `assets\logos\logos.js` (`motionlab\logos.py`)
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
@@ -150,11 +154,14 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `fonts.py list | sync | check <graphic> | selfcheck` the font library (0.4.6): families with group, licence,
   weights; `sync` after adding a family = every shipped design's font setting offers the whole library (HyperFrames
   checks a value against the declared options); renders / snapshots copy the used fonts into the graphic by themselves
+- `logos.py import [<folder>] | list [--group g] | find "<words>" | show <id> | check <graphic> | selfcheck` the logo
+  library: 92 app / platform / AI-tool logos for motion graphics; `find` names them from the user's words, `show` =
+  the versions; drawn by logo-wall, logo-reveal, icon-pop, connect-hub, notification-stack, phone-list, lower-third
 - `templates.py read <clips folder> [--pack p] | show <pack> [id] | verify <pack> | library | pick "<words>" | todo
   <pack> | check [ids] [--size WxH@fps] [--values JSON] | selfcheck` the Motion Graphics library (0.5.0, built
   2026-10-16): captured template clips measured with no Claude (moves with frame + timecode, their ease, holds, colours,
-  sheets; ~0.5 s a clip) -> `analysis\templates\<pack>\`; `library` / `pick` = the 74 templates in
-  `tools\overlays\motion\` (57 rebuilt from the Swishy clips, 17 MotionLab originals for the kinds template sites list
+  sheets; ~0.5 s a clip) -> `analysis\templates\<pack>\`; `library` / `pick` = the 75 templates in
+  `tools\overlays\motion\` (57 rebuilt from the Swishy clips, 18 MotionLab originals for the kinds template sites list
   most - lower thirds, transitions, call-outs, end screens...; Generate starting blind picks from them; `overlay.py new <folder> --from <id> --frames
   --fps --width --height --values JSON` uses one); `check` = a snapshot sheet + the template's picture;
   `/generate-video templates <pack>` rebuilds the next ones

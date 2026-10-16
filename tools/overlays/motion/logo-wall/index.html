@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "logos", "type": "string", "label": "Logos (| between): from the logo library, or your pictures", "default": "premiere-pro|after-effects|davinci-resolve|photoshop|figma|blender"},
+  {"id": "title", "type": "string", "label": "Title (empty = none)", "default": "MY EDITING STACK"},
+  {"id": "style", "type": "enum", "label": "Motion", "default": "grid", "options": [{"value": "grid", "label": "Grid - the logos pop in one after another"}, {"value": "marquee", "label": "Marquee - an endless strip sliding sideways"}, {"value": "spotlight", "label": "Spotlight - one big logo at a time, each replacing the last"}]},
+  {"id": "names", "type": "boolean", "label": "Names under the logos (grid, spotlight)", "default": true},
+  {"id": "tiles", "type": "boolean", "label": "On rounded tiles, like app icons (off = the bare logos)", "default": true},
+  {"id": "tile_color", "type": "color", "label": "Tile colour", "default": "#ffffff"},
+  {"id": "mono", "type": "boolean", "label": "Every logo in one colour", "default": false},
+  {"id": "logo_color", "type": "color", "label": "That one colour", "default": "#111113"},
+  {"id": "text_color", "type": "color", "label": "Text colour", "default": "#111113"},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#f1f1ee"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.3, "max": 3, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "gap", "type": "number", "label": "Frames between logos (grid)", "default": 6, "min": 1, "max": 60, "step": 1},
+  {"id": "speed", "type": "number", "label": "Marquee speed (pixels a frame)", "default": 5, "min": 0, "max": 40, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 900, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "logo-wall" (2026-10-16, a MotionLab original for the logo library - tools\logos.py):
+     the logos of a stack, a list of platforms or of clients. Grid: tiles pop in one after another (back.out 12 f, the
+     logo 3 f later, its name 6 f later), then breathe. Marquee: one or two strips (6+ logos = two, the other way)
+     sliding at a steady speed, soft at the edges. Spotlight: the graphic's length shared out - each logo pops big with
+     a ring going out, its name under it, then shrinks away as the next one comes. Every logo is drawn by MLLogo
+     (assets/logos/logos.js, written at render time with only the logos named): the -dark variant or white mono on a
+     dark tile, one colour when "mono" is on; a name that is not a library logo can be a picture file. MotionLab's own
+     code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .tile { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .strip { position: absolute; left: 0; top: 0; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cam" class="abs"><div id="title" class="t"></div><div id="wall" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
+  const ONE = /^(Anton|Bebas Neue|Archivo Black|Bagel Fat One|Bangers|Lilita One|Luckiest Guy|Pacifico|Permanent Marker|DM Serif Display|Instrument Serif)$/;
+  const fam = `"${V.font}", "Segoe UI", sans-serif`, heavy = ONE.test(V.font) ? 400 : 800;
+  const q = id => document.getElementById(id);
+  const LG = window.MLLogo || { split: v => String(v || "").split("|").map(x => x.trim()).filter(Boolean), el: () => null,
+                                name: () => "", aspect: () => 1, variant: () => "", isDark: () => false };
+
+  gsap.set(["#bgfill", "#cam", "#wall"], { width: W, height: H });
+  gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
+  const list = LG.split(V.logos).slice(0, 12);
+  const s = V.size, S = Math.round(V.start), cy = H * V.y / 100, wide = W > H;
+  const onDark = LG.isDark(V.tiles ? V.tile_color : V.bg);
+  const opts = { dark: onDark, mono: !!V.mono, tint: V.mono ? V.logo_color : undefined };
+  const label = v => LG.name(v) || String(v).replace(/^.*[\\/]/, "").replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ");
+  const wall = q("wall");
+
+  // one logo in a box of w x h (on a tile, or bare), its name under it when asked
+  function item(v, w, h, withName, nameSize) {
+    const box = document.createElement("div");
+    box.className = "tile";
+    Object.assign(box.style, { width: `${w}px`, height: `${h}px` });
+    if (V.tiles) Object.assign(box.style, { background: V.tile_color, borderRadius: `${Math.min(w, h) * 0.24}px`,
+      boxShadow: `0 ${14 * U * s}px ${34 * U * s}px rgba(0,0,0,${onDark ? 0.35 : 0.13})` });
+    const inner = document.createElement("div");
+    Object.assign(inner.style, { width: `${V.tiles ? 58 : 92}%`, height: `${V.tiles ? 58 : 92}%`, display: "flex", alignItems: "center", justifyContent: "center" });
+    const e = LG.el(v, opts);
+    if (e) inner.appendChild(e);
+    else Object.assign(inner.style, { font: `${heavy} ${h * 0.34}px ${fam}`, color: V.text_color }), inner.textContent = String(v).slice(0, 2).toUpperCase();
+    box.appendChild(inner);
+    let nm = null;
+    if (withName && !/\/wordmark/.test(LG.variant(v, opts))) {         // a wordmark already says its name
+      nm = document.createElement("div");
+      nm.className = "t";
+      nm.textContent = label(v);
+      Object.assign(nm.style, { font: `600 ${nameSize}px ${fam}`, color: V.text_color });
+    }
+    return { box, inner, nm };
+  }
+
+  // ---- the title on top
+  const T = q("title"), hasT = !!(V.title || "").trim();
+  T.textContent = V.title || "";
+  const tfs = (wide ? 64 : 72) * U * s;
+  Object.assign(T.style, { font: `${heavy} ${tfs}px ${fam}`, color: V.text_color, letterSpacing: "0.04em" });
+
+  const n = list.length;
+  if (V.style === "grid" && n) {
+    const cols = Math.min(n, wide ? (n <= 6 ? n : Math.ceil(n / 2)) : (n <= 3 ? n : n === 4 ? 2 : 3)), rows = Math.ceil(n / cols);
+    const gx = 44 * U * s, nameFs = 30 * U * s, nameH = V.names ? nameFs * 2.1 : 0;
+    const T0 = Math.min(250 * U * s, (W * 0.86 - (cols - 1) * gx) / cols, (H * 0.62 - (rows - 1) * (gx + nameH)) / rows);
+    const blockH = rows * T0 + (rows - 1) * gx + rows * nameH + (hasT ? tfs * 2 : 0);
+    const top = cy - blockH / 2 + (hasT ? tfs * 2 : 0);
+    gsap.set(T, { x: W / 2, y: cy - blockH / 2, xPercent: -50 });
+    if (hasT) enter(T, { opacity: 0, y: cy - blockH / 2 + 30 * U, letterSpacing: "0.2em" }, { opacity: 1, y: cy - blockH / 2, letterSpacing: "0.04em" }, S, S + K(16), "power3.out");
+    const G0 = S + (hasT ? K(8) : 0), GAP = Math.max(1, Math.round(V.gap * FPS / 30));
+    list.forEach((v, i) => {
+      const r = Math.floor(i / cols), inRow = Math.min(cols, n - r * cols), c = i - r * cols;
+      const x = W / 2 + (c - (inRow - 1) / 2) * (T0 + gx) - T0 / 2, y = top + r * (T0 + gx + nameH);
+      const it = item(v, T0, T0, V.names, nameFs);
+      wall.appendChild(it.box);
+      gsap.set(it.box, { x, y, transformOrigin: "50% 60%" });
+      const f0 = G0 + i * GAP;
+      enter(it.box, { opacity: 0, scale: 0.2, y: y + 40 * U * s }, { opacity: 1, scale: 1, y }, f0, f0 + K(12), "back.out(1.8)");
+      ft(it.inner, { scale: 0.55 }, { scale: 1 }, f0 + K(3), f0 + K(13), "back.out(2.4)");
+      if (it.nm) {
+        wall.appendChild(it.nm);
+        gsap.set(it.nm, { x: x + T0 / 2, y: y + T0 + nameFs * 0.7, xPercent: -50 });
+        enter(it.nm, { opacity: 0, y: y + T0 + nameFs * 1.2 }, { opacity: 1, y: y + T0 + nameFs * 0.7 }, f0 + K(6), f0 + K(16), "power3.out");
+      }
+      const f1 = f0 + K(14);
+      if (FRAMES - f1 > K(12)) to(it.box, { y: y - 7 * U * s * (i % 2 ? 1 : -1) }, f1, FRAMES, "sine.inOut");     // it breathes
+    });
+  } else if (V.style === "marquee" && n) {
+    const lanes = n >= 6 ? 2 : 1, h = (V.tiles ? 170 : 120) * U * s, gx = (V.tiles ? 40 : 90) * U * s;
+    const per = lanes === 2 ? [list.filter((_, i) => i % 2 === 0), list.filter((_, i) => i % 2 === 1)] : [list];
+    const laneGap = h * 0.45, block = lanes * h + (lanes - 1) * laneGap + (hasT ? tfs * 2.2 : 0);
+    const top = cy - block / 2 + (hasT ? tfs * 2.2 : 0);
+    gsap.set(T, { x: W / 2, y: cy - block / 2, xPercent: -50 });
+    if (hasT) enter(T, { opacity: 0, y: cy - block / 2 + 30 * U }, { opacity: 1, y: cy - block / 2 }, S, S + K(16), "power3.out");
+    const dist = Math.max(0, V.speed) * U * (FRAMES - S);
+    per.forEach((L, li) => {
+      const strip = document.createElement("div");
+      strip.className = "strip";
+      Object.assign(strip.style, { gap: `${gx}px`, height: `${h}px` });
+      const widths = L.map(v => V.tiles ? h : Math.min(h * 4.5, h * LG.aspect(v, opts)));
+      const cycle = widths.reduce((a, b) => a + b + gx, 0);
+      const copies = Math.max(2, Math.ceil((W + dist) / cycle) + 1);
+      for (let c = 0; c < copies; c++) L.forEach((v, j) => {
+        const b = item(v, widths[j], h, false, 0).box;
+        Object.assign(b.style, { position: "relative", flex: "none" });     // in the strip's row, not on top of each other
+        strip.appendChild(b);
+      });
+      const lane = document.createElement("div");
+      lane.className = "abs";
+      Object.assign(lane.style, { width: `${W}px`, height: `${h + 60 * U}px`, overflow: "hidden",
+        webkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+        maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)" });
+      lane.appendChild(strip);
+      wall.appendChild(lane);
+      gsap.set(lane, { y: top + li * (h + laneGap) - 30 * U });
+      gsap.set(strip, { y: 30 * U });
+      const back = li % 2 === 1, x0 = back ? -cycle - dist % cycle : -cycle * 0.25;
+      gsap.set(strip, { x: x0 });
+      to(strip, { x: back ? x0 + dist : x0 - dist }, S, FRAMES, "none");            // a steady slide, the whole length
+      enter(lane, { opacity: 0, y: top + li * (h + laneGap) - 30 * U + 50 * U }, { opacity: 1, y: top + li * (h + laneGap) - 30 * U }, S + K(4 + li * 6), S + K(20 + li * 6), "power3.out");
+    });
+  } else if (n) {                                       // spotlight: the length shared out, one logo at a time
+    const D = Math.max(K(14), Math.floor((FRAMES - S) / n)), B = (V.tiles ? 400 : 440) * U * s, nameFs = 52 * U * s;
+    const block = B + (V.names ? nameFs * 2.4 : 0) + (hasT ? tfs * 2.2 : 0);
+    const top = cy - block / 2 + (hasT ? tfs * 2.2 : 0), x = W / 2 - B / 2;
+    gsap.set(T, { x: W / 2, y: cy - block / 2, xPercent: -50 });
+    if (hasT) enter(T, { opacity: 0, y: cy - block / 2 + 30 * U }, { opacity: 1, y: cy - block / 2 }, S, S + K(14), "power3.out");
+    const ring = document.createElement("div");
+    ring.className = "abs";
+    Object.assign(ring.style, { width: `${B}px`, height: `${B}px`, borderRadius: "50%", border: `${6 * U * s}px solid ${V.mono ? V.logo_color : V.text_color}` });
+    wall.appendChild(ring);
+    gsap.set(ring, { x, y: top, opacity: 0, transformOrigin: "50% 50%" });
+    list.forEach((v, i) => {
+      const it = item(v, B, B, V.names, nameFs);
+      wall.appendChild(it.box);
+      gsap.set(it.box, { x, y: top, transformOrigin: "50% 50%" });
+      const f0 = S + i * D, f1 = Math.min(FRAMES, f0 + D);
+      enter(it.box, { opacity: 0, scale: 0.35, rotation: -10 }, { opacity: 1, scale: 1, rotation: 0 }, f0, f0 + K(12), "back.out(1.9)");
+      ft(ring, { opacity: 0.5, scale: 0.8 }, { opacity: 0, scale: 1.55 }, f0 + K(2), f0 + K(20), "power2.out");
+      if (it.nm) {
+        wall.appendChild(it.nm);
+        gsap.set(it.nm, { x: W / 2, y: top + B + nameFs * 0.8, xPercent: -50 });
+        enter(it.nm, { opacity: 0, y: top + B + nameFs * 1.3, letterSpacing: "0.12em" }, { opacity: 1, y: top + B + nameFs * 0.8, letterSpacing: "0em" }, f0 + K(5), f0 + K(16), "power3.out");
+      }
+      if (i < n - 1) {                                  // it leaves as the next one lands
+        to(it.box, { opacity: 0, scale: 0.6, y: top - 70 * U * s }, f1 - K(7), f1, "power2.in");
+        if (it.nm) to(it.nm, { opacity: 0 }, f1 - K(6), f1, "power1.in");
+      } else if (FRAMES - (f0 + K(14)) > K(10)) to(it.box, { scale: 1.04 }, f0 + K(14), FRAMES, "sine.inOut");
+    });
+  }
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

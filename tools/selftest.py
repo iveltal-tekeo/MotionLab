@@ -455,6 +455,15 @@ def check_fonts() -> dict:
     return {"passed": r["passed"] and not stale}
 
 
+def check_logos() -> dict:
+    """The logo library (2026-10-16), no render: an SVG cleaned (ids / classes renamed, scripts and outside links
+    refused), a library imported from a made-up folder that stays untouched, find / parse, a graphic's logos.js with
+    only the logos it names (motionlab.logos.selfcheck)."""
+    from motionlab import logos as LG
+    print("\n=== logos: the library, a graphic's logos.js ===")
+    return {"passed": LG.selfcheck()["passed"]}
+
+
 def check_downloads_report() -> dict:
     """Downloads that keep working and Report a problem (0.4.2.1), no network: a fake carousel -> one post in a scratch
     downloads.json; the report's scrubbing and GitHub link (known answers, trimming); how yt-dlp was installed -> its
@@ -603,7 +612,7 @@ def main() -> int:
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
-               "thumbsets": check_thumbsets(), "fonts": check_fonts(),
+               "thumbsets": check_thumbsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",

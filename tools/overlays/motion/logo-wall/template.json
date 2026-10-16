@@ -1,0 +1,15 @@
+{
+ "name": "Logo wall",
+ "kind": "logo",
+ "what": "Real logos of the logo library: your stack, the platforms you post on, the tools a video is about or the clients you worked with - a grid of app tiles popping in one after another, an endless sliding strip, or one big logo at a time, each replacing the last, with the names under them.",
+ "use_for": ["logos", "apps", "tools", "stack", "software", "platforms", "socials", "available on", "trusted by", "clients", "integrations", "tutorial", "tech"],
+ "tags": ["logo", "logos", "app", "icons", "grid", "marquee", "brands", "tools"],
+ "learned_from": [],
+ "origin": "Videos about tools and apps keep naming them (\"I edit in Premiere, grade in Resolve\", \"follow me on TikTok and YouTube\", \"the AI tools I use\") - the logo library made real logos possible (2026-10-16); template sites list logo grids and logo marquees among their most used",
+ "motion": "grid: a tile every 6 f, back.out 12 f from 0.2, the logo 3 f later, the name 6 f later, then a slow breathe; marquee: a steady slide the whole length (5 px a frame at 1080), lanes the other way; spotlight: the length shared out, each logo back.out 12 f with a ring going out over 18 f, the last one breathes",
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 75,
+ "check_frames": [0, 4, 10, 20, 40, 75, 149]
+}

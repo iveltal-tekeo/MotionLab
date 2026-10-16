@@ -29,7 +29,7 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(HERE))
 PY = sys.executable
 FAILED: list[str] = []
-PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/prompts", "#/memory", "#/memory/videos", "#/memory/effects",
+PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory", "#/memory/videos", "#/memory/effects",
          "#/memory/lessons", "#/memory/saved", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
          "#/refs", "#/projects", "#/library", "#/knowledge"]              # 0.3 addresses: still work (rewritten)
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
@@ -37,7 +37,8 @@ ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "
           "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts", "/api/memory",
           "/api/edit/options", "/api/generate/options", "/api/script/requests",
           "/api/thumbs", "/api/estimate", "/api/batches", "/api/batches?kind=review",           # 0.4.5
-          "/api/motion", "/api/motion/pick?want=a%20bold%20title"]                              # 0.5.0
+          "/api/motion", "/api/motion/pick?want=a%20bold%20title",                              # 0.5.0
+          "/api/logos"]                                                                         # the logo library
 
 
 def ok(cond, what: str) -> bool:

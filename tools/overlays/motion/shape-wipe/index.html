@@ -105,7 +105,7 @@
     } else if (mode === "diagonal") {
       const pw = (horiz ? W : H) * 1.9, slant = 0.35;
       const e = div(lay, horiz ? { width: `${pw}px`, height: `${H * 1.4}px`, background: col } : { width: `${W * 1.4}px`, height: `${pw}px`, background: col });
-      const off = (horiz ? W : H) * (1 + slant) + pw * 0.05;
+      const off = (horiz ? W : H) * (1 + slant) + pw * 0.3;   // 0.3: the skewed edge reaches ~0.24 pw past the box
       const base = horiz ? { y: -H * 0.2, skewX: -20 * sgn } : { x: -W * 0.2, skewY: -20 * sgn };
       const k = horiz ? "x" : "y", mid = horiz ? -(pw - W) / 2 : -(pw - H) / 2;
       gsap.set(e, { ...base, [k]: mid - sgn * off });

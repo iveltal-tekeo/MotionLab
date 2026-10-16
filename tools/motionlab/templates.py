@@ -135,10 +135,12 @@ def library() -> list[dict]:
             t = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if not (p.parent / "index.html").exists():
+        idx = p.parent / "index.html"
+        if not idx.exists():
             continue
         t["id"] = p.parent.name
         t["folder"] = rel(p.parent)
+        t["logos"] = "assets/logos/logos.js" in idx.read_text(encoding="utf-8", errors="replace")   # draws library logos
         out.append(t)
     return out
 
@@ -155,9 +157,12 @@ def _words(s: str) -> list[str]:
 def pick(want: str, n: int = 6, kinds: list[str] | None = None) -> list[dict]:
     """The rebuilt templates that fit the user's words best (Generate starting blind): each template's name, kind,
     what, use_for and tags against the words; the score is the matched words' weight. Always returns up to n - the
-    best matches first, then the most general ones (use_for "any") so a blind start never has nothing."""
+    best matches first, then the most general ones (use_for "any") so a blind start never has nothing. Words that name
+    logos of the logo library ("Claude, Midjourney and Suno") lift the templates that can draw them (logos.py)."""
+    from . import logos as LG
     lib = [t for t in library() if not kinds or t.get("kind") in kinds]
     W = set(_words(want))
+    brands = [lg["name"] for lg in LG.find(want, 12) if lg["score"] >= 6]          # a logo named by its name or id
     stems = {w[:5] for w in W if len(w) >= 5}
     scored = []
     for t in lib:
@@ -171,6 +176,9 @@ def pick(want: str, n: int = 6, kinds: list[str] | None = None) -> list[dict]:
                 if w in W or (len(w) >= 5 and w[:5] in stems):
                     s += wt[k]
                     hits.add(w)
+        if brands and t.get("logos"):
+            s += 3 + 2 * (t.get("kind") == "logo")
+            hits.add("logos: " + ", ".join(brands[:4]))
         scored.append((s, t.get("general", 0), t, sorted(hits)))
     scored.sort(key=lambda x: (-x[0], -x[1], x[2]["id"]))
     return [{**t, "score": round(s, 1), "matched": hits} for s, _, t, hits in scored[:n]]

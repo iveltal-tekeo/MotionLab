@@ -251,7 +251,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 27;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 28;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -2028,9 +2028,11 @@ function wirePcards(main, ps) {
 
 // ---- Edit > New edit (0.4, the user: "give the clips and use a reference video (previously analysed) or even more -
 // max 3 - or edit it with a given prompt: hooks, 3 s cuts, very fast paced... or slower, transitions, captions").
-// Four steps in one dialog: 1 which video (its clips; *Add clips…* copies files in - Film it, 2026-10-15), 2 how (like
-// analysed videos | your words | a script or brief - a talking script / hook gets the talking quick draft), 3 length /
-// format / sound, 4 a quick draft now (job "draft": rules, no Claude) or Claude (/recreate-video ...). What was picked
+// Four steps in one dialog: 1 select your clips (2026-10-16, the user: "choose between an old video clip or new clips,
+// intuitive and distinct": *Clips you already have* = a video + *Add clips…* | *New clips* = a name + a drop zone, the
+// video made on the first file), 2 how should it be edited (like analysed videos | your words | a script or brief - a
+// talking script / hook gets the talking quick draft), 3 length / format / sound, 4 = the *Make it with Claude* button
+// itself (+ the Resolve card) or a quick draft now (job "draft": rules, no Claude) - no "Make it" heading. What was picked
 // is saved as build\edit_request.json (POST /api/project/<p>/edit_request) - Claude and the draft both read it.
 const NE_HOW = [
   ['like', 'i-analyze', 'Like videos you analysed', 'Up to 3 - their rhythm, effects and captions, or an exact copy of one'],
@@ -2045,48 +2047,60 @@ async function createVideoModal(pre = {}) {
   const st = {how: pre.from === 'prompt' ? 'prompt' : pre.from === 'words' ? 'words' : pre.from === 'reference' || pre.pick ? 'like' : '',
               like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false, presets: [], want: '', prompt: pre.from === 'prompt' ? pre.pick || '' : '',
               length: '', format: '', sound: 'auto', music: '', resolve: false};
-  modal(`<h2>New edit</h2><div class="small muted" style="margin-top:-4px">Your clips, cut the way you want. Your clips are only read, never changed.</div>
-    <div class="nestep"><b>1</b>Which video? <span class="nehint">its clips are what gets cut</span></div>
-    <div class="row"><select id="cvp" style="max-width:340px">${ps.map(x => `<option value="${esc(x.name)}">${esc(pname(x))} (${plural(x.clips, 'clip')})</option>`).join('')}<option value="">+ a new video…</option></select>
-      <input type="text" id="cvname" placeholder="name, e.g. cooking vlog 1" hidden style="max-width:260px"><button class="btn sm" id="cvmk" hidden>Create it</button>
-      <label class="btn sm" id="cvadd" title="Copies your recordings or clips into this video - the originals stay where they are"><svg class="i"><use href="#i-folder"/></svg>Add clips…<input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv"></label></div>
-    <div class="small muted" id="cvhint" style="margin-top:6px"></div>
-    <div class="nestep"><b>2</b>How should it be cut?</div>
+  modal(`<h2>New edit</h2><div class="small muted" style="margin-top:-4px">Your clips, edited the way you want. Your clips are only read, never changed.</div>
+    <div class="nestep"><b>1</b>Select your clips</div>
+    <div class="cvchoice nesrc">
+      <button class="cvopt" data-src="old" ${ps.length ? '' : 'disabled'}><svg class="ic"><use href="#i-videos"/></svg><b>Clips you already have</b>
+        <span>${ps.length ? `The clips of one of your videos (${plural(ps.length, 'video')})` : 'No video yet - start with new clips'}</span></button>
+      <button class="cvopt" data-src="new"><svg class="ic"><use href="#i-upload"/></svg><b>New clips</b>
+        <span>Recordings or clips from your PC - copied in, your originals stay where they are</span></button></div>
+    <div class="nesrcbox" id="nesrc-old" hidden><div class="row"><select id="cvp" style="max-width:340px">${ps.map(x => `<option value="${esc(x.name)}">${esc(pname(x))} (${plural(x.clips, 'clip')})</option>`).join('')}</select>
+      <label class="btn sm" id="cvadd" title="Copies more recordings or clips into this video - the originals stay where they are"><svg class="i"><use href="#i-folder"/></svg>Add clips…<input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv"></label></div>
+      <div class="small muted" id="cvhint" style="margin-top:6px"></div></div>
+    <div class="nesrcbox" id="nesrc-new" hidden><div class="row"><input type="text" id="cvname" placeholder="Name the video, e.g. cooking vlog 1" style="max-width:320px"><span class="small muted" id="cvnewis"></span></div>
+      <label class="fidrop" id="cvdrop"><input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv">
+        <b>Drop your clips here</b><span class="small muted">or click to choose them - videos, and a song if you have one. Several files are fine.</span></label></div>
+    <div id="cvfiles"></div>
+    <div class="nestep"><b>2</b>How should it be edited?</div>
     <div class="cvchoice three">${NE_HOW.map(([k, ic, t, s]) => `<button class="cvopt" data-m="${k}"><svg class="ic"><use href="#${ic}"/></svg><b>${t}</b><span>${s}</span></button>`).join('')}</div>
     <div id="cvpick"></div>
     <div id="nedet" hidden><div class="nestep opt"><b>3</b>Length, format, sound ${optTag('automatic unless you pick')}</div>
       <div class="nedet"><label>Length</label><div class="seg" id="nelen">${[['', 'Auto'], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
         <label>Format</label><div class="seg" id="nefmt">${[['', 'Auto'], ['vertical', 'Vertical 9:16'], ['horizontal', 'Horizontal 16:9'], ['square', 'Square']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
         <label>Sound</label><select id="nesnd" style="max-width:420px"></select></div></div>
-    <div class="nestep"><b id="nego-n">4</b>Make it</div>
-    <div class="nego"><div class="negoc" id="nedraft"><button class="btn big" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>Quick draft now</button>
-        <span class="small muted">A first version in a few minutes, by rules - no Claude. Watch it, then let Claude make it better.</span></div>
-      <div class="negoc"><button class="btn pri big" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Make it with Claude</button>
-        <span class="small muted">Claude plans it with you and renders a preview - it can take an hour or more.</span>
-        <label class="small"><input type="checkbox" id="neres"> then build it as a DaVinci Resolve project</label></div></div>
+    <div class="nefinal"><b id="nego-n">4</b>
+      <div class="nefc"><button class="btn pri big" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>Make it with Claude</button>
+        <label class="neres"><input type="checkbox" id="neres"><span><b>Also build it as a DaVinci Resolve project</b><span>the same edit as a timeline you can keep editing by hand</span></span></label></div>
+      <div class="nefc nedraft" id="nedraft"><button class="btn big" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>Quick draft now</button>
+        <span class="small muted">A first version in a few minutes, by rules - no Claude. Watch it, then let Claude make it better.</span></div></div>
     <div class="small amber" id="nemsg" style="margin-top:8px"></div>`, el => {
-    const sel = $('#cvp', el), name = $('#cvname', el), mk = $('#cvmk', el);
-    if (pre.project && ps.some(x => x.name === pre.project)) sel.value = pre.project;
-    const P = () => ps.find(x => x.name === sel.value);
+    const sel = $('#cvp', el), name = $('#cvname', el);
+    // step 1: clips of a video they already have ("old") or new clips copied into a new video ("new", st.newp once made)
+    st.src = pre.project && ps.some(x => x.name === pre.project) ? 'old' : ps.length ? '' : 'new'; st.newp = '';
+    if (st.src === 'old') sel.value = pre.project;
+    const proj = () => st.src === 'old' ? sel.value : st.src === 'new' ? st.newp : '';
+    const P = () => ps.find(x => x.name === proj());
+    const clipsLine = p => `${plural(p.clips, 'clip')}${(p.songs || []).length ? ` · ${plural(p.songs.length, 'song')}: ${p.songs.map(esc).join(', ')}` : ' · no song in the folder (an .mp3 there is used as the music)'}`;
     const talkPick = () => st.how === 'prompt' && /^(script|hook)-/.test(st.prompt);   // a talking video: the quick draft can cut it
     const ready = () => {
-      if (!sel.value || !P() || !P().clips) return '';
+      if (!proj() || !P() || !P().clips) return '';
       if (st.how === 'like') return st.like.length ? (st.exact ? 'copy' : 'style') : '';
       if (st.how === 'words') return st.presets.length || st.want.trim() ? 'words' : '';
       if (st.how === 'prompt') return st.prompt ? 'prompt' : '';
       return '';
     };
     const upd = () => {
-      const nw = !sel.value; name.hidden = mk.hidden = !nw;
-      $('#cvhint', el).innerHTML = nw ? 'Name it, then add your clips (and a song, if you have one).'
-        : P() && !P().clips ? `<span class="amber">No clips in ${esc(pname(P()))} yet</span> - <b>Add clips…</b> copies them in (your originals stay where they are).`
-        : P() ? `${plural(P().clips, 'clip')}${(P().songs || []).length ? ` · ${plural(P().songs.length, 'song')}: ${P().songs.map(esc).join(', ')}` : ' · no song in the folder (an .mp3 there is used as the music)'}` : '';
+      $$('.nesrc .cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.src === st.src));
+      $('#nesrc-old', el).hidden = st.src !== 'old'; $('#nesrc-new', el).hidden = st.src !== 'new';
+      $('#cvhint', el).innerHTML = st.src !== 'old' || !P() ? ''
+        : !P().clips ? `<span class="amber">No clips in ${esc(pname(P()))} yet</span> - <b>Add clips…</b> copies them in (your originals stay where they are).` : clipsLine(P());
+      name.disabled = !!st.newp;
+      $('#cvnewis', el).innerHTML = st.newp && P() ? clipsLine(P()) : 'Leave it empty to name it after the first clip.';
       const how = ready();
       const det = how === 'style' || how === 'words' || how === 'prompt' && talkPick();
       $('#nedet', el).hidden = !(st.how === 'like' && !st.exact || st.how === 'words' || talkPick());
       $('#nego-n', el).textContent = $('#nedet', el).hidden ? '3' : '4';
       $('#nedraft', el).hidden = !(st.how === 'words' || st.how === 'like' && !st.exact || talkPick());
-      $('#cvadd', el).hidden = !sel.value;
       $('#cvdraft', el).disabled = !det;
       $('#cvgo', el).disabled = !how;
       const snd = $('#nesnd', el), songs = (P() || {}).songs || [];
@@ -2161,50 +2175,70 @@ async function createVideoModal(pre = {}) {
     segPick('#nelen', 'length'); segPick('#nefmt', 'format');
     $('#nesnd', el).onchange = e => { st.sound = e.target.value; };
     $$('.cvopt', el).forEach(b => b.onclick = () => { st.how = b.dataset.m; showPick(); });
-    sel.onchange = upd;
-    const addIn = $('#cvadd input', el);
-    addIn.onchange = async () => {
-      const files = [...addIn.files].filter(f => CLIP_EXT.test(f.name)), skip = addIn.files.length - files.length; addIn.value = '';
-      if (skip) toast(`${plural(skip, 'file')} skipped - not a video or a sound file`, 'err');
-      for (const [i, f] of files.entries()) {
-        try {
-          const r = await uploadClip(sel.value, f, st.how === 'prompt' && /^(script|hook)-/.test(st.prompt) ? st.prompt : '',
-            v => { $('#cvhint', el).textContent = `Copying ${f.name} (${i + 1} of ${files.length}) - ${Math.round(v * 100)} %`; });
-          if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(f.name)) (P().songs = P().songs || []).push(r.file); else P().clips++; }
-        } catch (e) { toast(e.message, 'err'); }
-      }
-      $(`#cvp option[value="${CSS.escape(sel.value)}"]`, el).textContent = `${pname(P())} (${plural(P().clips, 'clip')})`;
-      if (files.length) toast(`${plural(files.length, 'file')} added`, 'ok');
-      upd();
-    };
-    mk.onclick = async () => {
+    sel.onchange = () => { $('#cvfiles', el).innerHTML = ''; upd(); };
+    $$('.nesrc .cvopt', el).forEach(b => b.onclick = () => { if (st.busy || st.src === b.dataset.src) return;
+      st.src = b.dataset.src; $('#cvfiles', el).innerHTML = ''; upd(); });
+    // picked or dropped files -> the video's folder (a new video is made first, named by the user or after the first clip)
+    const addFiles = async list => {
+      let files = [...list];
+      const skip = files.filter(f => !CLIP_EXT.test(f.name)); files = files.filter(f => CLIP_EXT.test(f.name));
+      if (skip.length) toast(`${skip.map(f => f.name).join(', ')}: not a video or a sound file`, 'err');
+      if (!files.length || st.busy) return;
+      st.busy = true;
       try {
-        const r = await api('/api/projects/new', {name: name.value});
-        ps.push({name: r.name, clips: 0, songs: []});
-        sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${esc(r.name)} (new)</option>`); sel.value = r.name;
-        upd(); toast(`“${r.name}” created - now Add clips…`, 'ok');
+        if (st.src === 'new' && !st.newp) {
+          let nm = name.value.trim();
+          if (!nm) { const base = folderName(files[0].name.replace(/\.[^.]+$/, '')); nm = base;
+            for (let i = 2; ps.some(x => x.name.toLowerCase() === nm.toLowerCase()); i++) nm = `${base} ${i}`; }
+          const r = await api('/api/projects/new', {name: nm});
+          ps.unshift({name: r.name, label: null, clips: 0, songs: []}); st.newp = name.value = r.name;
+          sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${esc(r.name)} (new)</option>`);
+        }
+        const pj = proj(), box = $('#cvfiles', el);
+        $(`#nesrc-${st.src}`, el).append(box);               // the rows sit in the box in use
+        for (const f of files) {
+          const row = document.createElement('div'); row.className = 'fifile';
+          row.innerHTML = `<span class="grow">${esc(f.name)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>copying…</span>`;
+          box.append(row);
+          try {
+            const r = await uploadClip(pj, f, talkPick() ? st.prompt : '', v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; });
+            $('.fibar i', row).style.width = '100%'; row.classList.add('ok');
+            $('[data-s]', row).textContent = r.kept ? 'already there' : 'copied ✓';
+            if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(f.name)) (P().songs = P().songs || []).push(r.file); else P().clips++; }
+          } catch (e) { row.classList.add('err'); $('[data-s]', row).textContent = e.message; }
+        }
+        const o = $(`#cvp option[value="${CSS.escape(pj)}"]`, el); if (o) o.textContent = `${pname(P())} (${plural(P().clips, 'clip')})`;
       } catch (e) { toast(e.message, 'err'); }
+      st.busy = false; upd();
     };
+    const addIn = $('#cvadd input', el);
+    addIn.onchange = () => { addFiles(addIn.files); addIn.value = ''; };
+    const drop = $('#cvdrop', el), dropIn = $('input', drop);
+    dropIn.onchange = () => { addFiles(dropIn.files); dropIn.value = ''; };
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('on'); };
+    drop.ondragleave = () => drop.classList.remove('on');
+    drop.ondrop = e => { e.preventDefault(); drop.classList.remove('on'); addFiles(e.dataTransfer.files); };
     const request = async () => {
       const how = ready(), snd = $('#nesnd', el).value;
       const body = {how, like: st.like, presets: st.presets, want: st.want, prompt: st.prompt, length_s: st.length || null,
                     format: st.format || null, music: snd.startsWith('music:') ? snd.slice(6) : snd === 'none' ? 'none' : '',
                     sound: snd.startsWith('music:') ? 'music' : snd === 'none' ? 'clips' : snd, resolve: $('#neres', el).checked};
-      return api(`/api/project/${encodeURIComponent(sel.value)}/edit_request`, body);
+      return api(`/api/project/${encodeURIComponent(proj())}/edit_request`, body);
     };
     $('#cvgo', el).onclick = async () => {
       try {
-        const r = await request();
-        openClaude(r.command, 'recreate', `${ready()} → ${sel.value}`);
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
+        const pj = proj(), r = await request();
+        openClaude(r.command, 'recreate', `${ready()} → ${pj}`);
+        closeModal(); location.hash = '#/project/' + encodeURIComponent(pj);
       } catch (e) { toast(e.message, 'err'); }
     };
     $('#cvdraft', el).onclick = async () => {
       try {
+        const pj = proj();
         await request();
-        await api('/api/jobs', {kind: 'draft', args: {project: sel.value}, queue: true});
+        await api('/api/jobs', {kind: 'draft', args: {project: pj}, queue: true});
         toast('The quick draft is on its way - it shows up here when it is ready', 'ok');
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value);
+        closeModal(); location.hash = '#/project/' + encodeURIComponent(pj);
       } catch (e) { toast(e.message, 'err'); }
     };
     showPick();
@@ -2848,9 +2882,99 @@ api('/api/fonts').then(f => {
   $$('select[data-font]').forEach(sel => { const v = sel.value; sel.innerHTML = fontOptions({id: sel.dataset.set, type: 'enum', value: v, options: [...sel.options].map(o => ({value: o.value, label: o.textContent}))}); });
 }).catch(() => {});
 
+// the logo library (logos\, tools\logos.py, 2026-10-16): a logo setting (id logo / logos / *_logo / *_logos) gets *Pick a
+// logo…*, a text setting whose label shows ":name:" gets *+ Logo* (it writes ":youtube:"); both open the picker under the
+// field (not a dialog: the template's own dialog keeps its values). The live previews load the logos the values name.
+let LOGOS = null;
+const LOGO_GROUPS = {social: 'Social & video', ai: 'AI tools', creative: 'Creative apps', dev: 'Code', work: 'Work & money', web: 'Browsers & systems', other: 'Other'};
+const LOGO_STYLES = [['', 'Auto - fits the background'], ['color', 'In its colours'], ['mono', 'One colour'], ['wordmark', 'The name written out']];
+const LOGO_VARIANT = {color: 'its colours', mono: 'one colour - takes any colour', wordmark: 'the name written out', 'color-dark': 'its colours, for a dark background', 'wordmark-dark': 'the name, for a dark background'};
+const isLogoSet = s => s.type === 'string' && (/^logos?$/.test(s.id) || /_logos?$/.test(s.id));
+const logoText = s => s.type === 'string' && !isLogoSet(s) && /:[a-z][a-z0-9-]*:/.test(s.label || '');
+const logoSrc = (lg, v) => fileUrl(`logos/${lg.id}/${v && lg.variants[v] ? v : lg.default}.svg`);
+const logoLoad = () => LOGOS ? Promise.resolve(LOGOS) : api('/api/logos').then(d => (LOGOS = d));
+const logoFind = (L, q) => { const w = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return L.filter(lg => w.every(x => `${lg.id} ${lg.name.toLowerCase()} ${lg.words.join(' ')} ${lg.group}`.includes(x))); };
+const logoTile = (lg, v, cls = '') => { const k = v && lg.variants[v] ? v : lg.default;
+  return `<span class="lgimg${lg.variants[k].on === 'dark' ? ' dk' : ''} ${cls}"><img src="${logoSrc(lg, k)}" alt="" loading="lazy"></span>`; };
+// the logo names in a graphic's values - a live preview loads just those ("a|b/mono" in a logo setting, ":a:" in a text)
+function logoIds(vals) {
+  const ids = new Set();
+  Object.values(vals || {}).forEach(v => {
+    if (typeof v !== 'string') return;
+    v.split('|').forEach(x => { const m = /^\s*:?([a-z0-9][a-z0-9-]*)(?:\/[a-z0-9-]+)?:?\s*$/i.exec(x); if (m) ids.add(m[1].toLowerCase()); });
+    for (const m of v.matchAll(/:([a-z0-9][a-z0-9-]*)(?:\/[a-z0-9-]+)?:/gi)) ids.add(m[1].toLowerCase());
+  });
+  return [...ids].slice(0, 200);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-logopick]');
+  if (!b) return;
+  e.preventDefault();
+  const host = b.closest('.lgin'), inp = $('input[data-set]', host), was = host._pop && host._pop.isConnected;
+  $$('.lgpop').forEach(x => x.remove());
+  if (!was) logoPicker(host, inp, b.dataset.logopick);
+});
+['keyup', 'click', 'focus'].forEach(ev => document.addEventListener(ev, e => {            // where a text's logo goes
+  const t = e.target;
+  if (t && t.matches && t.matches('input[data-logohow]')) t.dataset.caret = t.selectionStart ?? '';
+}, true));
+async function logoPicker(host, inp, mode) {
+  const pop = document.createElement('div');
+  pop.className = 'lgpop';
+  pop.innerHTML = '<div class="small muted">Loading the logos…</div>';
+  const cell = host.parentElement;                 // in a settings form: a row of its own, as wide as the form
+  (cell && cell.parentElement && cell.parentElement.classList.contains('gset') ? cell : host).after(pop);
+  host._pop = pop;
+  let D;
+  try { D = await logoLoad(); } catch (e) { pop.innerHTML = `<div class="small bad">${esc(e.message)}</div>`; return; }
+  let q = '', g = '', st = '';
+  pop.innerHTML = `<div class="row" style="gap:6px"><input type="search" class="lgq" placeholder="Search: youtube, editing, ai…" style="flex:1;min-width:0">
+      <select class="lgst" title="Which version">${LOGO_STYLES.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select>
+      <button type="button" class="btn sm lgx" title="Close">✕</button></div>
+    <div class="row lgg">${[['', 'All'], ...Object.keys(D.groups || {}).map(k => [k, LOGO_GROUPS[k] || k])].map(([k, l]) => `<button type="button" class="fchip sm${k ? '' : ' on'}" data-g="${esc(k)}">${esc(l)}</button>`).join('')}</div>
+    <div class="lggrid"></div>
+    <div class="small dim">${mode === 'many' ? 'Click several: each one joins the list.' : mode === 'text' ? 'It goes in written like :youtube: - the graphic draws the logo there.' : 'A click puts it in.'} Logos are trademarks of their owners: use them to name the products your video is about.</div>`;
+  const grid = $('.lggrid', pop);
+  const draw = () => {
+    const L = logoFind(D.logos.filter(lg => !g || lg.group === g), q);
+    grid.innerHTML = L.map(lg => { const has = !st || lg.variants[st];
+      return `<button type="button" class="lgb${has ? '' : ' off'}" data-lg="${esc(lg.id)}" title="${esc(lg.name)}${has ? '' : ' - it has no such version: the usual one'}">${logoTile(lg, has ? st : '')}<span>${esc(lg.name)}</span></button>`; }).join('')
+      || '<div class="small muted">No logo fits those words.</div>';
+  };
+  draw();
+  const qi = $('.lgq', pop);
+  qi.oninput = () => { q = qi.value; draw(); };
+  $('.lgst', pop).onchange = e => { st = e.target.value; draw(); };
+  $('.lgx', pop).onclick = () => pop.remove();
+  $$('[data-g]', pop).forEach(b => b.onclick = () => { g = b.dataset.g; $$('[data-g]', pop).forEach(x => x.classList.toggle('on', x === b)); draw(); });
+  grid.onclick = e => {
+    const b = e.target.closest('[data-lg]');
+    if (!b) return;
+    const lg = D.logos.find(x => x.id === b.dataset.lg), val = st && lg.variants[st] ? `${lg.id}/${st}` : lg.id;
+    if (mode === 'one') inp.value = val;
+    else if (mode === 'many') { const L = inp.value.split('|').map(x => x.trim()).filter(Boolean); if (!L.includes(val)) L.push(val); inp.value = L.join('|'); }
+    else {
+      const tok = `:${val}:`, v = inp.value, how = inp.dataset.logohow, c = inp.dataset.caret === undefined || inp.dataset.caret === '' ? null : Number(inp.dataset.caret);
+      if (how === 'swap' && (v.trim().length <= 3 || /^\s*:[a-z0-9/-]+:\s*$/i.test(v))) inp.value = tok;     // letters / an emoji / a logo -> this logo
+      else if (how === 'first' && c == null) inp.value = tok + ' ' + v.replace(/^\s*:[a-z0-9/-]+:\s*/i, '');
+      else if (c == null) inp.value = v ? `${v}${how === 'list' ? '|' : ' '}${tok}` : tok;
+      else { const a = v.slice(0, c), z = v.slice(c);
+        inp.value = a + (a && !/[\s|]$/.test(a) ? ' ' : '') + tok + (z && !/^[\s|:]/.test(z) ? ' ' : '') + z; }
+      inp.dataset.caret = '';
+    }
+    inp.dispatchEvent(new Event('input', {bubbles: true}));
+    inp.dispatchEvent(new Event('change', {bubbles: true}));
+    if (mode !== 'many') pop.remove();
+  };
+  qi.focus();
+}
+
 function gsetInput(s) {
   const a = `data-set="${esc(s.id)}" data-type="${esc(s.type)}"`, v = s.value;
   if (isFontSet(s)) return `<select ${a} data-font>${fontOptions(s)}</select>${fontPreview(v)}`;
+  if (isLogoSet(s)) return `<div class="lgin"><input type="text" ${a} value="${esc(v)}" placeholder="youtube, figma/mono…"><button type="button" class="btn sm" data-logopick="${/s$/.test(s.id) ? 'many' : 'one'}">Pick a logo…</button></div>`;
+  if (logoText(s)) return `<div class="lgin"><input type="text" ${a} value="${esc(v)}" data-logohow="${/\| between/.test(s.label) ? 'list' : /first/.test(s.label) ? 'first' : 'swap'}"><button type="button" class="btn sm" data-logopick="text" title="Put a logo of the library in this text">+ Logo</button></div>`;
   if (s.type === 'color') return `<input type="color" ${a} value="${esc(v)}">`;
   if (s.type === 'boolean') return `<input type="checkbox" ${a} ${v ? 'checked' : ''}>`;
   if (s.type === 'enum') return `<select ${a}>${(s.options || []).map(o => `<option value="${esc(o.value)}" ${o.value === v ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
@@ -2887,8 +3011,8 @@ function livePreview(box, o, getValues) {
   };
   const load = async () => {
     try { html = html || await (await fetch(base + 'index.html', {cache: 'no-store'})).text(); } catch (e) { return fail(); }
-    const vals = JSON.stringify(getValues()).replace(/</g, '\\u003c');
-    fr.srcdoc = html.replace(/<head[^>]*>/i, m => `${m}<base href="${base}"><link rel="stylesheet" href="/fonts.css"><script>window.__hyperframes = {getVariables: () => (${vals})};<\/script>`);
+    const V0 = getValues(), vals = JSON.stringify(V0).replace(/</g, '\\u003c'), lgs = encodeURIComponent(logoIds(V0).join(','));
+    fr.srcdoc = html.replace(/<head[^>]*>/i, m => `${m}<base href="${base}"><link rel="stylesheet" href="/fonts.css"><script src="/logos.js?b=${lgs}"><\/script><script>window.__hyperframes = {getVariables: () => (${vals})};<\/script>`);
   };
   rng.oninput = () => { stop(); f = Number(rng.value); show(); };
   play.onclick = () => {
@@ -3903,18 +4027,20 @@ const mclipStatus = it => it.built.length ? 'built' : it.still ? 'still' : 'p' +
 const MSTATUS_WORD = {built: 'rebuilt', still: 'a still capture', p1: 'next to rebuild', p2: 'later', p3: 'style only'};
 const mdefaults = t => { const v = {}; (t.settings || []).forEach(s => { v[s.id] = s.default; }); return v; };
 async function pageMotion(main, tab, open) {
-  const M = await api('/api/motion');
-  tab = tab === 'learned' ? 'learned' : 'templates';
+  const [M, LGD] = await Promise.all([api('/api/motion'), logoLoad().catch(() => ({logos: [], groups: {}}))]);
+  tab = ['learned', 'logos'].includes(tab) ? tab : 'templates';
   const L = M.library, clips = M.packs.flatMap(p => p.items.map(it => ({...it, pack: p.pack})));
   const todo = clips.filter(it => mclipStatus(it) === 'p1' || mclipStatus(it) === 'p2');   // the skill does 1s first
   main.innerHTML = `<div class="head"><div><h1>Motion Graphics</h1><div class="sub">Designed motion to reuse - learned from pro template clips, or made for what creators use most, as MotionLab's own graphics.
       Change the words and colours, put one in a video, or let the Generator build a video from them.</div></div>
       ${todo.length && M.packs.length ? `<div class="row">${claudeBtn(`/generate-video templates ${M.packs[0].pack}`, `Rebuild the next ${Math.min(todo.length, 8)} with Claude`, 'generate', 'templates', 'cl')}</div>` : ''}</div>
     <div class="tabs"><a href="#/motion" class="${tab === 'templates' ? 'on' : ''}">Templates <span class="dim">${L.length}</span></a>
-      <a href="#/motion/learned" class="${tab === 'learned' ? 'on' : ''}">Learned from <span class="dim">${clips.length}</span></a></div>
+      <a href="#/motion/learned" class="${tab === 'learned' ? 'on' : ''}">Learned from <span class="dim">${clips.length}</span></a>
+      <a href="#/motion/logos" class="${tab === 'logos' ? 'on' : ''}">Logos <span class="dim">${LGD.logos.length}</span></a></div>
     <div id="mgbody"></div>`;
   const body = $('#mgbody', main);
   if (tab === 'templates') motionTemplates(body, M, L, clips);
+  else if (tab === 'logos') motionLogos(body, M, LGD);
   else motionClips(body, M, clips);
   if (open) { const t = L.find(x => x.id === open); if (t) motionModal(t, M); }
 }
@@ -3939,6 +4065,65 @@ function motionTemplates(body, M, L, clips) {
     $$('.mgc', body).forEach(c => c.onclick = c.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; motionModal(L.find(t => t.id === c.dataset.id), M); });
   };
   draw();
+}
+// Motion Graphics > Logos (the logo library, 2026-10-16): every logo with its versions; + picks several for a logo wall
+let LG_PICKED = [];
+function motionLogos(body, M, D) {
+  if (!D.logos.length) {
+    body.innerHTML = emptyHero('motion', 'No logos yet', 'Put SVG logos in refs\\logos (one folder per logo) and ask Claude to add them to the library.', '');
+    return;
+  }
+  const wall = (M.library || []).find(t => t.id === 'logo-wall');
+  let q = '', g = '';
+  body.innerHTML = `<div class="hint" style="margin-bottom:10px">Real logos of apps, platforms and AI tools for your graphics - sharp at any size, in their own colours or in one colour of yours.
+      In a graphic's settings, <b>Pick a logo…</b> puts one in; in a text, write it like <code>:youtube:</code>. They are trademarks of their owners: use them to name the products a video is about.</div>
+    <div class="lgtray" id="lgtray"></div>
+    <div class="row" style="gap:8px;margin:10px 0;flex-wrap:wrap"><input type="search" id="lgq" placeholder="Search: youtube, editing, ai…" style="width:240px">
+      <div class="row pfilters" style="margin:0">${[['', 'All'], ...Object.keys(D.groups || {}).map(k => [k, LOGO_GROUPS[k] || k])].map(([k, l]) => `<button class="fchip${k ? '' : ' on'}" data-g="${esc(k)}">${esc(l)} <span class="dim">${k ? D.logos.filter(x => x.group === k).length : D.logos.length}</span></button>`).join('')}</div></div>
+    <div class="lggrid big" id="lgall"></div>`;
+  const tray = $('#lgtray', body), grid = $('#lgall', body);
+  const name = id => (D.logos.find(x => x.id === id) || {name: id}).name;
+  const drawTray = () => {
+    tray.innerHTML = LG_PICKED.length ? `<span class="small muted">Picked</span> ${LG_PICKED.map(id => `<span class="tag lgtag">${esc(name(id))}<button data-unpick="${esc(id)}" title="Take it out">✕</button></span>`).join('')}
+      ${wall ? '<button class="btn pri sm" id="lgwall">Make a logo wall with them</button>' : ''}<button class="btn sm" id="lgcopy" title="For a text setting">Copy as :logos:</button><button class="btn sm" id="lgclr">Clear</button>`
+      : '<span class="small muted">Pick several with <b>+</b> to make a logo wall from them.</span>';
+    $$('[data-unpick]', tray).forEach(b => b.onclick = () => { LG_PICKED = LG_PICKED.filter(x => x !== b.dataset.unpick); drawTray(); drawGrid(); });
+    if ($('#lgwall', tray)) $('#lgwall', tray).onclick = () => motionModal(wall, M, {logos: LG_PICKED.join('|'), title: ''});
+    if ($('#lgcopy', tray)) $('#lgcopy', tray).onclick = () => copy(LG_PICKED.map(id => `:${id}:`).join(' '));
+    if ($('#lgclr', tray)) $('#lgclr', tray).onclick = () => { LG_PICKED = []; drawTray(); drawGrid(); };
+  };
+  const drawGrid = () => {
+    const L = logoFind(D.logos.filter(lg => !g || lg.group === g), q);
+    grid.innerHTML = L.map(lg => { const on = LG_PICKED.includes(lg.id);
+      return `<div class="mgc lgc${on ? ' on' : ''}" data-id="${esc(lg.id)}" tabindex="0"><button class="lgadd" data-add="${esc(lg.id)}" title="${on ? 'Picked - click to take it out' : 'Pick it for a logo wall'}">${on ? '✓' : '+'}</button>
+        ${logoTile(lg, '')}<div style="margin-top:6px"><b>${esc(lg.name)}</b></div><div class="small dim">${esc(LOGO_GROUPS[lg.group] || lg.group)} · ${plural(Object.keys(lg.variants).length, 'version')}</div></div>`; }).join('')
+      || '<div class="small muted">No logo fits those words.</div>';
+  };
+  grid.onclick = grid.onkeydown = e => {
+    if (e.type === 'keydown' && e.key !== 'Enter') return;
+    const a = e.target.closest('[data-add]');
+    if (a) { e.stopPropagation(); LG_PICKED = LG_PICKED.includes(a.dataset.add) ? LG_PICKED.filter(x => x !== a.dataset.add) : [...LG_PICKED, a.dataset.add].slice(0, 12); drawTray(); drawGrid(); return; }
+    const c = e.target.closest('.lgc');
+    if (c) logoModal(D.logos.find(x => x.id === c.dataset.id), () => { drawTray(); drawGrid(); });
+  };
+  const qi = $('#lgq', body);
+  qi.oninput = () => { q = qi.value; drawGrid(); };
+  $$('[data-g]', body).forEach(b => b.onclick = () => { g = b.dataset.g; $$('[data-g]', body).forEach(x => x.classList.toggle('on', x === b)); drawGrid(); });
+  drawTray();
+  drawGrid();
+}
+function logoModal(lg, after) {
+  const vs = Object.keys(lg.variants);
+  modal(`<div class="row" style="gap:10px;padding-right:28px"><h2 style="margin:0">${esc(lg.name)}</h2><span class="chip">${esc(LOGO_GROUPS[lg.group] || lg.group)}</span></div>
+    <p class="small muted" style="margin:6px 0 12px">In a logo setting write <code>${esc(lg.id)}</code> - the graphic picks the version that stands out on its background - or one version below. In a text write <code>:${esc(lg.id)}:</code>.</p>
+    <div class="lgvars">${vs.map(v => `<div class="lgvar"><div class="lgpair"><span class="lgimg"><img src="${logoSrc(lg, v)}" alt=""></span><span class="lgimg dk"><img src="${logoSrc(lg, v)}" alt=""></span></div>
+      <div class="small"><b>${esc(v)}</b> <span class="muted">- ${esc(LOGO_VARIANT[v] || v)}</span></div>
+      <div class="row" style="gap:6px;margin-top:4px"><code class="small">${esc(lg.id)}/${esc(v)}</code><button class="btn sm" data-copy="${esc(lg.id)}/${esc(v)}">Copy</button></div></div>`).join('')}</div>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="lgpick">${LG_PICKED.includes(lg.id) ? 'Picked for a logo wall - take it out' : 'Pick it for a logo wall'}</button><button class="btn" data-copy=":${esc(lg.id)}:">Copy :${esc(lg.id)}:</button></div>
+    <div class="small dim" style="margin-top:10px">A trademark of its owner - use it to name the product your video is about.</div>`, el => {
+    $$('[data-copy]', el).forEach(b => b.onclick = () => copy(b.dataset.copy));
+    $('#lgpick', el).onclick = () => { LG_PICKED = LG_PICKED.includes(lg.id) ? LG_PICKED.filter(x => x !== lg.id) : [...LG_PICKED, lg.id].slice(0, 12); closeModal(); after(); };
+  });
 }
 function motionClips(body, M, clips) {
   let kf = '', sf = '';
@@ -3969,8 +4154,8 @@ function motionClips(body, M, clips) {
 }
 // one template: its live preview (the page's own GSAP, the form's values - nothing rendered, nothing saved), what it
 // is for, the clips it was learned from playing beside it; Use in a video / Make a video with it
-function motionModal(t, M) {
-  const S = (t.settings || []).map(s => ({...s, value: s.default}));
+function motionModal(t, M, init) {
+  const S = (t.settings || []).map(s => ({...s, value: init && s.id in init ? init[s.id] : s.default}));
   modal(`<div class="mgm"><div class="mgprev" id="mgprev"></div>
     <div><div class="row" style="gap:10px;padding-right:28px"><h2 style="margin:0">${esc(t.name)}</h2><span class="chip">${esc(mkind(t.kind))}</span></div>
       <p style="margin:8px 0">${esc(t.what || '')}</p>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-composition-variables='[
   {"id": "title", "type": "string", "label": "Screen title", "default": "My apps"},
-  {"id": "rows", "type": "string", "label": "Rows (| between; emoji first = its icon; a : then a small line)", "default": "📅 Calendar: 3 events today|📸 Photos: 128 new|🎵 Music: Now playing|💪 Fitness: 8,240 steps|☀️ Weather: 24° sunny"},
+  {"id": "rows", "type": "string", "label": "Rows (| between; an emoji or :spotify: first; a : then a small line)", "default": "📅 Calendar: 3 events today|📸 Photos: 128 new|🎵 Music: Now playing|💪 Fitness: 8,240 steps|☀️ Weather: 24° sunny"},
   {"id": "font", "type": "enum", "label": "Font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
   {"id": "look", "type": "enum", "label": "Phone", "default": "light", "options": [{"value": "light", "label": "Light screen"}, {"value": "dark", "label": "Dark screen"}]},
   {"id": "accent", "type": "color", "label": "Accent colour", "default": "#3b82f6"},
@@ -14,6 +14,7 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "phone-list" (0.5.0, the Motion Graphics library): a phone rises into the frame and its
@@ -56,6 +57,7 @@
   const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
   const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
   const q = id => document.getElementById(id);
+  const LG = window.MLLogo, say = (b, t, o) => LG ? LG.text(b, t, o) : (b.textContent = t, false);   // ":youtube:" = a logo of the library
 
   gsap.set(["#bgfill", "#cam"], { width: W, height: H });
   gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
@@ -71,15 +73,17 @@
   gsap.set(ttl, { x: pw * 0.07, y: pw * 0.17 });
   const rows = String(V.rows || "").split("|").map(x => x.trim()).filter(Boolean), rh = pw * 0.19, list = q("list"), els = [];
   rows.forEach((r, i) => {
-    let [t, sb] = r.split(":").map(x => x.trim());
-    const m = (t || "").match(/^(\p{Extended_Pictographic}️?|\p{Emoji_Presentation})\s*/u);
+    const [logo, rest] = LG ? LG.lead(r) : [null, r];              // ":spotify: Music: Now playing" = its logo
+    let [t, sb] = rest.split(":").map(x => x.trim());
+    const m = logo ? null : (t || "").match(/^(\p{Extended_Pictographic}️?|\p{Emoji_Presentation})\s*/u);
     const icon = m ? m[1] : (t || "?").charAt(0);
     if (m) t = t.slice(m[0].length);
     const e = document.createElement("div"); e.className = "row";
     Object.assign(e.style, { width: `${pw * 0.86}px`, height: `${rh * 0.82}px`, gap: `${pw * 0.04}px`, padding: `0 ${pw * 0.035}px`, borderRadius: `${pw * 0.05}px`, background: dark ? "#1b1e24" : "#f4f5f8" });
     e.innerHTML = `<div class="ic"></div><div class="tx"><div></div><div></div></div>`;
-    Object.assign(e.children[0].style, { width: `${rh * 0.52}px`, height: `${rh * 0.52}px`, borderRadius: `${rh * 0.14}px`, background: m ? (dark ? "#2a2e36" : "#ffffff") : V.accent, color: "#fff", font: `700 ${rh * 0.3}px ${fam}` });
-    e.children[0].textContent = icon;
+    Object.assign(e.children[0].style, { width: `${rh * 0.52}px`, height: `${rh * 0.52}px`, borderRadius: `${rh * 0.14}px`, background: m || logo ? (dark ? "#2a2e36" : "#ffffff") : V.accent, color: "#fff", font: `700 ${rh * 0.3}px ${fam}` });
+    if (logo) LG.fill(e.children[0], logo, { scale: 0.68, dark });
+    else e.children[0].textContent = icon;
     Object.assign(e.children[1].children[0].style, { font: `700 ${pw * 0.05}px ${fam}`, color: ink });
     Object.assign(e.children[1].children[1].style, { font: `400 ${pw * 0.038}px ${fam}`, color: sub });
     e.children[1].children[0].textContent = t || ""; e.children[1].children[1].textContent = sb || "";

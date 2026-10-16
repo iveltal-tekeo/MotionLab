@@ -5,6 +5,6 @@
  "width": 1080,
  "height": 1920,
  "cues": [
-  {"f": "start + i * round(gap * fps / 30) + round(4 * fps / 30)", "repeat": "3", "kind": "click", "seed": "500 + i", "what": "a line checks in (3 lines)"}
+  {"f": "start + i * round(gap * fps / 30) + round(4 * fps / 30)", "repeat": "(item1 != '') + (item2 != '') + (item3 != '') + (item4 != '') + (item5 != '') + (item6 != '')", "kind": "click", "seed": "500 + i", "what": "a line checks in (one per item)"}
  ]
 }

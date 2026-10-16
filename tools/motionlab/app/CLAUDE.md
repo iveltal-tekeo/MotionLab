@@ -10,7 +10,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Python standard library only (nothing installed): a server on 127.0.0.1:8765 + Microsoft Edge in app mode (its
   own window, 1600x1000). It stops ~10 s after the window closes (3 min without heartbeat), unless a job runs.
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
-  refs, docs, library, knowledge, fonts (0.4.6) only. Writes only: verdicts / feedback exports, library picks, `.app\`,
+  refs, docs, library, knowledge, fonts (0.4.6), logos (2026-10-16) only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
   (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
@@ -59,10 +59,15 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   this PC's analyses and friends' cards - then *In its / their style* or *An exact copy* (one local analysis) |
   *With your words* = the presets of `style.PRESETS` (GET `/api/edit/options`) + a text | *From a script or brief*
   (was *From a saved prompt*; a script / hook = `talkPick()`: sound Talking, the quick draft = `data.draft_args`
-  `--preset talking --sound talk`)), step 1 = *Which video?* + *Add clips…* (`uploadClip`), 3 length / format / sound
-  (style, words and a talking script), 4 *Quick draft now* (job `draft` = `draft_edit.py <p> ...
-  --render`; the video's page follows it with `progressPanel(el, onEnd, ['draft'], match)`) or *Make it with Claude*
-  (+ "then a DaVinci Resolve project") -> POST `/api/project/<p>/edit_request` (`data.save_edit_request`: checked,
+  `--preset talking --sound talk`)), step 1 = *Select your clips* (2026-10-16, the user: "choose between an old video
+  clip or new clips, intuitive and distinct"): two wide cards `.nesrc` - *Clips you already have* (a video + *Add
+  clips…*; preselected when opened from a video, disabled with no video) | *New clips* (a name + the `.fidrop` drop
+  zone: the first file makes the video - POST `/api/projects/new`, named after the first clip when left empty, " 2"
+  on a clash - then `uploadClip`; preselected with no video); step 2 = *How should it be edited?* (was "cut"), 3
+  length / format / sound (style, words and a talking script), 4 = no heading, the *Make it with Claude* button itself
+  (`.nefinal`, the "Claude plans it with you…" line removed) with the Resolve option as its own card under it
+  (`.neres`, "Also build it as a DaVinci Resolve project") and *Quick draft now* beside (job `draft` = `draft_edit.py
+  <p> ... --render`; the video's page follows it with `progressPanel(el, onEnd, ['draft'], match)`) -> POST `/api/project/<p>/edit_request` (`data.save_edit_request`: checked,
   saved as `build\edit_request.json`, appended to `made_from.json` - kinds reference / style / words / prompt; the
   answer's `command` = `/recreate-video <ref> <p>` for a copy, `prompt:<id>`, else `/recreate-video request <p>`, so
   the user's words never pass through cmd). A video's page has *New edit…*; Edit versions say how each was made (a
@@ -234,6 +239,20 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   from*; their kinds have labels in `MKIND` too (transitions, lower_thirds, callouts, broadcast, promo). `data.library()` leaves the motion templates out of Claude's memory > saved
   graphics (they have their own page). `/files/tools/overlays/motion/<id>/<file>` serves a template's .html / .json /
   .js / .css / .png / .jpg / .svg and maps `gsap.min.js` to the pinned GSAP (node_modules) - the live preview's `<base>`.
+  **Logos** (2026-10-16, the user: "the motion graphics section lacked svgs or icons" - the logo library, root
+  `logos\`, `motionlab\logos.py`): tab *Logos* (#/motion/logos, `motionLogos`) = GET `/api/logos` (`logos.catalog()`
+  without the SVGs; loaded once, `LOGOS` / `logoLoad`): search + group chips (`LOGO_GROUPS`), `.lgc` cards (a light or
+  dark plate `.lgimg.dk` by the default version's `on`), + picks up to 12 (`LG_PICKED`, this visit) -> *Make a logo
+  wall with them* = `motionModal(logo-wall, M, {logos, title: ''})` (motionModal's `init` = starting values), *Copy as
+  :logos:*; a card = `logoModal` (every version on light and dark, the value to type, Copy). The settings form
+  (`gsetInput`, everywhere it is used): a logo setting (`isLogoSet`: string, id logo / logos / *_logo / *_logos) = text
+  + *Pick a logo…* (`data-logopick` one / many), a text whose label shows `:name:` (`logoText`) = text + *+ Logo*
+  (`data-logohow` list / first / swap read from the label; the caret kept in `data-caret`) -> `logoPicker` = an inline
+  `.lgpop` under the field (a full-width row of `.gset`, `contain: inline-size`; never a dialog - the template dialog
+  keeps its values): search, the version (`LOGO_STYLES`: auto / colours / one colour / wordmark), groups; a pick sets
+  the value and fires input + change (the live preview follows). `livePreview` adds `<script src="/logos.js?b=<ids>">`
+  (`logoIds(values)`; GET `/logos.js` = `logos.js(ids)` = MLLogo + those logos); `/files/.../assets/logos/logos.js`
+  not written yet (a template folder, a graphic never rendered) = the helper alone; `/files/logos/` = the SVGs.
 - **Prepare** (the user, 2026-10-14: "prepare a video (transcript oriented): improve a script you have - rewrite it
   with more potential to go viral - or generate one from zero from a few questions; hooks, structure"):
   `pagePrepare` = three ways (*Improve my script* = `scriptImproveModal`, *Write one from zero* = `scriptNewModal`,
@@ -586,7 +605,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
-  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

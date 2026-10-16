@@ -5,6 +5,22 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.5.0.1 - 2026-10-16 - Logos for your motion graphics
+
+- **Logos for your motion graphics** - 92 real logos of apps, platforms and AI tools (YouTube, TikTok, Instagram,
+  Premiere Pro, After Effects, DaVinci Resolve, Figma, Claude, ChatGPT, Midjourney...), sharp at any size, in their
+  own colours or in one colour of yours. *Motion Graphics > Logos* shows them all: pick a few and *Make a logo wall
+  with them*. In a graphic's settings, *Pick a logo…* puts one in, and the texts that take an icon (a notification,
+  a phone's rows, a hub and its nodes, a lower third's badge, an app tile) have *+ Logo*. A new template, **Logo
+  wall**: your stack, the platforms you post on or your clients - tiles popping in one after another, an endless
+  sliding strip, or one big logo at a time. When your words name an app ("the AI tools I use: Claude, Midjourney"),
+  the Generator suggests the graphics that can show its logo.
+- **New edit** is clearer: step 1 *Select your clips* asks plainly - *Clips you already have* (one of your videos) or
+  *New clips* (name it, drop your files in); step 2 is now *How should it be edited?*; the last step is simply the
+  *Make it with Claude* button, with *Also build it as a DaVinci Resolve project* as its own option under it.
+- Fixes: the checklist's click sounds follow how many lines it has (it always played three); the shape wipe now
+  covers the whole frame at its slant.
+
 ## 0.5.0 - 2026-10-16 - Motion Graphics: 74 ready-made graphics, and the Generator builds from them
 
 - **Motion Graphics** - a new section in the sidebar: 74 ready-made motion graphics. 57 were learned from pro

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-composition-variables='[
   {"id": "look", "type": "enum", "label": "Look", "default": "tile", "options": [{"value": "tile", "label": "Tile - an app-style tile with letters, glowing"}, {"value": "warning", "label": "Warning - a triangle that pulses"}, {"value": "symbol", "label": "Symbol - a big symbol or emoji on a disc"}]},
-  {"id": "letters", "type": "string", "label": "Letters / symbol", "default": "Ed"},
+  {"id": "letters", "type": "string", "label": "Letters, a symbol or a logo like :premiere-pro:", "default": "Ed"},
   {"id": "label", "type": "string", "label": "A line under it (empty = none)", "default": ""},
   {"id": "color", "type": "color", "label": "Main colour", "default": "#31a8ff"},
   {"id": "tile", "type": "color", "label": "Tile colour (tile look)", "default": "#001e36"},
@@ -16,14 +16,16 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "icon-pop" (0.5.0, the Motion Graphics library): one icon, made to matter. Tile: a rounded
      tile with letters (an app, a tool, a skill) pops in, its glow swells and breathes. Warning: a red triangle with "!"
      punches in, shakes, and pulses with a glow ring. Symbol: a big symbol or emoji on a soft disc pops and bobs.
      Learned from social__photoshop-animation and social__premiere-pro-animation (an app tile glowing in and out on
-     dark) and overlays__error-error (a red warning triangle pulsing with a glow on white). MotionLab's own code - make
-     your own letters; no app's logo. Size-independent; an overlay (background off) or a scene. -->
+     dark) and overlays__error-error (a red warning triangle pulsing with a glow on white). MotionLab's own code - your
+     own letters, or a real app's logo from the lab's logo library (:premiere-pro:, tools\logos.py). Size-independent;
+     an overlay (background off) or a scene. -->
 <script src="./gsap.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -57,6 +59,7 @@
   const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
   const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
   const q = id => document.getElementById(id);
+  const LG = window.MLLogo, say = (b, t, o) => LG ? LG.text(b, t, o) : (b.textContent = t, false);   // ":youtube:" = a logo of the library
 
   gsap.set(["#bgfill", "#cam", "#rings"], { width: W, height: H });
   const look = V.look, s = V.size, cx = W * V.x / 100, cy = H * V.y / 100;
@@ -65,14 +68,14 @@
   if (look === "tile") {
     Object.assign(ic.style, { width: `${D}px`, height: `${D}px`, borderRadius: `${D * 0.22}px`, background: V.tile, border: `${D * 0.03}px solid ${V.color}`,
       color: V.color, font: `700 ${D * 0.42}px ${fam}`, boxShadow: `0 0 ${60 * U}px ${V.color}66, inset 0 0 ${30 * U}px ${V.color}22` });
-    ic.textContent = V.letters;
+    say(ic, V.letters, { scale: 0.62, dark: LG && LG.isDark(V.tile), tint: V.color });
   } else if (look === "warning") {
     ic.innerHTML = `<svg width="${D}" height="${D}" viewBox="0 0 24 24"><path d="M12 2.8 22.2 20.5H1.8z" fill="none" stroke="${V.color === "#31a8ff" ? "#ff3b3b" : V.color}" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5.6" stroke="${V.color === "#31a8ff" ? "#ff3b3b" : V.color}" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.15" fill="${V.color === "#31a8ff" ? "#ff3b3b" : V.color}"/></svg>`;
     Object.assign(ic.style, { width: `${D}px`, height: `${D}px`, filter: `drop-shadow(0 0 ${18 * U}px ${V.color === "#31a8ff" ? "#ff3b3b" : V.color}99)` });
   } else {
     Object.assign(ic.style, { width: `${D}px`, height: `${D}px`, borderRadius: "50%", background: `radial-gradient(circle at 35% 30%, #ffffff33, ${V.color}55 60%, ${V.color}22)`,
       font: `800 ${D * 0.5}px ${fam}`, color: V.color });
-    ic.textContent = V.letters;
+    say(ic, V.letters, { scale: 0.56, dark: LG && LG.isDark(V.bg), tint: V.color });
   }
   gsap.set(ic, { x: cx - D / 2, y: cy - D / 2, transformOrigin: "50% 50%" });
   const gc = look === "warning" ? (V.color === "#31a8ff" ? "#ff3b3b" : V.color) : V.color;

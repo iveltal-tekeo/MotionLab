@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-composition-variables='[
-  {"id": "hub", "type": "string", "label": "The hub (letters or an emoji)", "default": "⚡"},
-  {"id": "nodes", "type": "string", "label": "Around it (| between; letters or emoji)", "default": "M|G|S|N|F|D"},
+  {"id": "hub", "type": "string", "label": "The hub (letters, an emoji or :claude:)", "default": "⚡"},
+  {"id": "nodes", "type": "string", "label": "Around it (| between; letters, emoji, :slack:)", "default": "M|G|S|N|F|D"},
   {"id": "label", "type": "string", "label": "A line under it (empty = none)", "default": "Everything, connected"},
   {"id": "accent", "type": "color", "label": "Hub colour", "default": "#2f6bff"},
   {"id": "line", "type": "color", "label": "Line colour", "default": "#2f6bff"},
@@ -15,6 +15,7 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "connect-hub" (0.5.0, the Motion Graphics library): how things plug together - the hub
@@ -55,13 +56,14 @@
   const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
   const fam = `"${V.font}", "Segoe UI", "Segoe UI Emoji", sans-serif`;
   const q = id => document.getElementById(id);
+  const LG = window.MLLogo, say = (b, t, o) => LG ? LG.text(b, t, o) : (b.textContent = t, false);   // ":youtube:" = a logo of the library
   const NS = "http://www.w3.org/2000/svg";
 
   gsap.set(["#bgfill", "#cam", "#nodes"], { width: W, height: H });
   gsap.set("#bgfill", { background: V.background ? V.bg : "transparent" });
   const s = V.size, cx = W / 2, cy = H * V.y / 100, hs = 170 * U * s, ns = 110 * U * s, R = W * 0.36 * s;
   const svg = q("g"); svg.setAttribute("width", W); svg.setAttribute("height", H);
-  const mk = (cls, txt, size, bg, col, rad) => { const e = document.createElement("div"); e.className = "nd"; e.textContent = txt;
+  const mk = (cls, txt, size, bg, col, rad) => { const e = document.createElement("div"); e.className = "nd"; say(e, txt, { scale: 0.56, dark: LG && LG.isDark(bg) });
     Object.assign(e.style, { width: `${size}px`, height: `${size}px`, borderRadius: rad, background: bg, color: col, font: `800 ${size * 0.42}px ${fam}`,
       boxShadow: `0 ${12 * U}px ${30 * U}px rgba(20,30,60,.16)` }); q("nodes").appendChild(e); return e; };
   const hub = mk("nd", V.hub, hs, V.accent, "#fff", `${hs * 0.28}px`);

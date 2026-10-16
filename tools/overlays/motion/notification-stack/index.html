@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en" data-composition-variables='[
-  {"id": "n1", "type": "string", "label": "Notification 1 (title | line under it; an emoji first = its icon)", "default": "✅ Payment received | $2,400 from Sarah"},
-  {"id": "n2", "type": "string", "label": "Notification 2", "default": "📦 Order shipped | Your package is on the way"},
-  {"id": "n3", "type": "string", "label": "Notification 3 (empty = not shown)", "default": "🎉 New milestone! | 1,000 followers"},
-  {"id": "n4", "type": "string", "label": "Notification 4 (empty = not shown)", "default": ""},
-  {"id": "n5", "type": "string", "label": "Notification 5 (empty = not shown)", "default": ""},
+  {"id": "n1", "type": "string", "label": "Notification 1 (title | line under it; an emoji or :slack: first)", "default": "✅ Payment received | $2,400 from Sarah"},
+  {"id": "n2", "type": "string", "label": "Notification 2 (an emoji or :slack: first)", "default": "📦 Order shipped | Your package is on the way"},
+  {"id": "n3", "type": "string", "label": "Notification 3 (empty = none; :slack: first)", "default": "🎉 New milestone! | 1,000 followers"},
+  {"id": "n4", "type": "string", "label": "Notification 4 (empty = none; :slack: first)", "default": ""},
+  {"id": "n5", "type": "string", "label": "Notification 5 (empty = none; :slack: first)", "default": ""},
   {"id": "when", "type": "string", "label": "Time on each card", "default": "now"},
   {"id": "order", "type": "enum", "label": "Where a new one goes", "default": "bottom", "options": [{"value": "bottom", "label": "Under the others"}, {"value": "top", "label": "On top, pushing the others down"}]},
   {"id": "look", "type": "enum", "label": "Look", "default": "light", "options": [{"value": "light", "label": "Light cards"}, {"value": "glass", "label": "Dark glass (like a lock screen)"}]},
@@ -20,6 +20,7 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "notification-stack" (0.5.0, the Motion Graphics library): notification cards arrive one
@@ -66,6 +67,7 @@
 
   gsap.set(["#bgfill", "#cam"], { width: W, height: H });
   const glass = V.look === "glass";
+  const LG = window.MLLogo, say = (b, t, o) => LG ? LG.text(b, t, o) : (b.textContent = t, false);   // ":youtube:" = a logo of the library
   gsap.set("#bgfill", { background: !V.background ? "transparent" : glass ? "linear-gradient(160deg, #3b2b6e, #12182e 55%, #0b0f1c)" : V.bg });
   const s = V.size, cw = W * 0.9 * Math.min(1.05, s), ch = 158 * U * s, gap = 22 * U * s, x0 = (W - cw) / 2, y0 = H * V.y / 100;
   const ink = glass ? "#ffffff" : "#15171c", sub = glass ? "rgba(255,255,255,.72)" : "#6b7280";
@@ -81,8 +83,9 @@
   const list = [V.n1, V.n2, V.n3, V.n4, V.n5].map(t => (t || "").trim()).filter(Boolean);
   const stack = document.getElementById("stack");
   const cards = list.map((t, i) => {
-    let [title, line] = t.split("|").map(x => x.trim());
-    const m = (title || "").match(/^(\p{Extended_Pictographic}️?|\p{Emoji_Presentation})\s*/u);
+    const [logo, rest] = LG ? LG.lead(t) : [null, t];              // ":slack: New message | ..." = the app's logo
+    let [title, line] = rest.split("|").map(x => x.trim());
+    const m = logo ? null : (title || "").match(/^(\p{Extended_Pictographic}️?|\p{Emoji_Presentation})\s*/u);
     const icon = m ? m[1] : null;
     if (m) title = title.slice(m[0].length);
     const e = document.createElement("div");
@@ -94,8 +97,9 @@
     ic.className = "ic";
     const is = 92 * U * s;
     Object.assign(ic.style, { width: `${is}px`, height: `${is}px`, borderRadius: `${20 * U * s}px`,
-      background: icon ? (glass ? "rgba(255,255,255,.18)" : "#f1f3f7") : V.accent, font: `${icon ? 400 : 700} ${is * 0.52}px ${fam}`, color: "#fff" });
-    ic.textContent = icon || "✓";
+      background: icon || logo ? (glass ? "rgba(255,255,255,.18)" : "#f1f3f7") : V.accent, font: `${icon ? 400 : 700} ${is * 0.52}px ${fam}`, color: "#fff" });
+    if (logo) LG.fill(ic, logo, { scale: 0.64, dark: glass });
+    else ic.textContent = icon || "✓";
     const tx = document.createElement("div");
     tx.className = "tx";
     tx.innerHTML = "<div></div><div></div>";

@@ -14,7 +14,9 @@ another.
 
 ## Where it stands (2026-10-16)
 
-Released last: **0.5.0** (2026-10-16, CHANGELOG.md) - Motion Graphics: 74 templates (57 learned from the Swishy
+Released last: **0.5.0.1** (2026-10-16, CHANGELOG.md) - the logo library: 92 app / platform / AI-tool logos for the
+motion graphics (`logos\`, `tools\logos.py`), the Logo wall template, *Pick a logo* / *+ Logo*, Motion Graphics >
+Logos. Before it **0.5.0** (2026-10-16) - Motion Graphics: 74 templates (57 learned from the Swishy
 clips, 17 MotionLab originals), the Motion Graphics page, Generate builds from them; with **0.4.6** (2026-10-16) -
 fonts and captions: 28 shipped fonts, live previews, caption looks, the measured font of a thumbnail set. Before
 them: **0.4.5** (bulk) and **0.4.4** (what it took). The released plans' full text: plans_history.md.

@@ -856,6 +856,29 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 .negoc { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #131317; }
 .negoc[hidden] { display: none; }
 @media (max-width: 1100px) { .cvchoice.three, .nepre, .nego { grid-template-columns: 1fr; } }
+/* 2026-10-16: step 1 = two wide cards (icon left) - clips already in a video | new clips from the PC */
+.nesrc .cvopt { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: center; padding: 14px 18px; }
+.nesrc .cvopt .ic { grid-row: span 2; width: 30px; height: 30px; }
+.nesrc .cvopt[data-src=old] .ic { color: var(--acc); } .nesrc .cvopt[data-src=new] .ic { color: var(--green); }
+.nesrc .cvopt.on { border-color: var(--acc); background: var(--acc-soft); box-shadow: 0 0 0 1px var(--acc) inset; }
+.nesrc .cvopt:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.nesrcbox { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #131317; }
+.nesrcbox[hidden] { display: none; }
+.nesrcbox input[type=text]:disabled { opacity: .7; }
+#cvfiles:empty { display: none; }
+/* the last step = the Claude button itself, the Resolve option as its own card under it, the quick draft beside */
+.nefinal { display: flex; align-items: flex-start; gap: 12px 14px; margin: 22px 0 4px; flex-wrap: wrap; }
+.nefinal > b { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12px; flex: none; margin-top: 9px;
+  background: var(--acc-soft); color: var(--acc); border: 1px solid var(--acc); }
+.nefc { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.nefc[hidden] { display: none; }
+.nefc.nedraft { max-width: 320px; padding-left: 16px; border-left: 1px solid var(--line); }
+.neres { display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 12px; border: 1px dashed var(--line2); border-radius: 10px;
+  background: #131317; cursor: pointer; transition: border-color .15s, background .15s; }
+.neres:hover { border-color: var(--dim); }
+.neres:has(input:checked) { border-style: solid; border-color: var(--acc); background: var(--acc-soft); }
+.neres input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--acc); }
+.neres b { display: block; font-size: 13.5px; } .neres b + span { display: block; font-size: 12px; color: var(--muted); }
 
 /* 0.4 phase 5: Generate's dialog - the videos whose style to follow, as chips */
 .gstyle { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow: auto; }
@@ -1433,6 +1456,36 @@ details.pbself[open] > summary::before { content: '▾'; }
 .mst-built { color: var(--green); border-color: color-mix(in srgb, var(--green) 50%, transparent); background: color-mix(in srgb, var(--green) 12%, transparent); }
 .mst-p1 { color: var(--motion); border-color: color-mix(in srgb, var(--motion) 50%, transparent); background: color-mix(in srgb, var(--motion) 12%, transparent); }
 .mst-p3, .mst-still { color: var(--dim); }
+/* the logo library (2026-10-16): Motion Graphics > Logos, and the picker under a logo setting / a text that takes :logos:
+   (a light or dark plate per logo: .dk = made for a dark background) */
+.lgin { display: flex; gap: 6px; align-items: center; }
+.lgin input { flex: 1; min-width: 0; }
+.lgpop { margin: 6px 0 8px; padding: 10px; border: 1px solid color-mix(in srgb, var(--acc) 40%, var(--line)); border-radius: var(--r);
+  background: var(--panel2); display: flex; flex-direction: column; gap: 8px; }
+.lgpop .lgg { gap: 4px; flex-wrap: wrap; }
+.gset > .lgpop { grid-column: 1 / -1; margin: 2px 0 6px; contain: inline-size; }   /* never widens the form's columns */
+.lgpop select { width: auto; flex: none; }
+.lgpop .lggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 6px; max-height: 262px; overflow: auto; padding-right: 2px; }
+.lgb { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 4px; background: transparent; border: 1px solid var(--line);
+  border-radius: 8px; color: var(--muted); font: 11px/1.2 var(--ui); cursor: pointer; text-align: center; }
+.lgb:hover, .lgb:focus-visible { border-color: var(--acc); color: var(--text); outline: none; }
+.lgb.off { opacity: .4; }
+.lgimg { width: 100%; aspect-ratio: 1.6; display: flex; align-items: center; justify-content: center; background: #f4f4f1; border-radius: 6px; padding: 7px; }
+.lgimg.dk { background: #15161a; box-shadow: inset 0 0 0 1px var(--line2); }
+.lgimg img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.lggrid.big { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.lgc { position: relative; }
+.lgc .lgimg { aspect-ratio: 1.5; padding: 16px; }
+.lgc.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc); }
+.lgadd { position: absolute; top: 14px; right: 14px; z-index: 1; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line2);
+  background: var(--panel); color: var(--text); font: 600 15px/1 var(--ui); cursor: pointer; opacity: .85; }
+.lgadd:hover, .lgc.on .lgadd { background: var(--acc); border-color: var(--acc); color: #111; opacity: 1; }
+.lgtray { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 30px; }
+.lgtag { display: inline-flex; align-items: center; gap: 4px; }
+.lgtag button { background: none; border: 0; color: var(--dim); cursor: pointer; padding: 0 0 0 2px; }
+.lgtag button:hover { color: var(--text); }
+.lgvars { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.lgpair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
 .mgm { display: grid; grid-template-columns: minmax(260px, 360px) 1fr; gap: 22px; align-items: start; }
 .mgprev { position: sticky; top: 0; }
 .mgsrc { display: flex; flex-wrap: wrap; gap: 10px; }

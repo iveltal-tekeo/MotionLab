@@ -1,0 +1,3997 @@
+{
+ "_comment": "Made by tools\\logos.py import from the user's folder (only read). Per variant: w / h / aspect of its viewBox, on = the background it is drawn for (light = dark ink, dark = light ink, any), tint = takes any colour (mono), one = its single colour (a tint replaces it), colors = its main colours, bytes. Trademarks of their owners - see README.md.",
+ "source": "refs/logos",
+ "count": 92,
+ "files": 234,
+ "groups": {
+  "social": "Social and video platforms",
+  "ai": "AI tools",
+  "creative": "Creative apps (edit, design, 3D, audio)",
+  "dev": "Code and developer tools",
+  "work": "Work, notes, files, money",
+  "web": "Browsers and systems"
+ },
+ "logos": [
+  {
+   "id": "affinity-photo",
+   "name": "Affinity Photo",
+   "group": "creative",
+   "words": [
+    "photo",
+    "editor",
+    "serif"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 1024.0,
+     "h": 1024.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#4e3188",
+      "#f9a6ff",
+      "#ea73ff"
+     ],
+     "bytes": 1539
+    }
+   }
+  },
+  {
+   "id": "after-effects",
+   "name": "After Effects",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "ae",
+    "motion",
+    "graphics",
+    "compositing",
+    "vfx"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 83.0,
+     "h": 80.0,
+     "aspect": 1.038,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#9999ff"
+     ],
+     "bytes": 3425
+    }
+   }
+  },
+  {
+   "id": "anthropic",
+   "name": "Anthropic",
+   "group": "ai",
+   "words": [
+    "claude",
+    "company"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#191919",
+     "colors": [
+      "#191919"
+     ],
+     "bytes": 261
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 266
+    },
+    "wordmark": {
+     "w": 182.0,
+     "h": 24.0,
+     "aspect": 7.583,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1515
+    }
+   }
+  },
+  {
+   "id": "apple",
+   "name": "Apple",
+   "group": "web",
+   "words": [
+    "mac",
+    "macos",
+    "ios",
+    "iphone",
+    "ipad"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 814.0,
+     "h": 1000.0,
+     "aspect": 0.814,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 632
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 639
+    },
+    "color-dark": {
+     "w": 814.0,
+     "h": 1000.0,
+     "aspect": 0.814,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 647
+    }
+   }
+  },
+  {
+   "id": "audacity",
+   "name": "Audacity",
+   "group": "creative",
+   "words": [
+    "audio",
+    "recording",
+    "podcast",
+    "sound",
+    "editor"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#0000cc",
+     "colors": [
+      "#0000cc"
+     ],
+     "bytes": 1139
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1144
+    }
+   }
+  },
+  {
+   "id": "audition",
+   "name": "Audition",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "au",
+    "audio",
+    "sound",
+    "podcast"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 32.0,
+     "h": 32.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#9999ff"
+     ],
+     "bytes": 3126
+    }
+   }
+  },
+  {
+   "id": "blender",
+   "name": "Blender",
+   "group": "creative",
+   "words": [
+    "3d",
+    "modelling",
+    "render",
+    "animation"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 2472.8,
+     "h": 1996.5,
+     "aspect": 1.239,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#005385",
+      "#ff7021"
+     ],
+     "bytes": 1088
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1281
+    }
+   }
+  },
+  {
+   "id": "bluesky",
+   "name": "Bluesky",
+   "group": "social",
+   "words": [
+    "bsky",
+    "social",
+    "network"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 226.0,
+     "aspect": 1.133,
+     "on": "any",
+     "tint": false,
+     "one": "#1185fe",
+     "colors": [
+      "#1185fe"
+     ],
+     "bytes": 631
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 552
+    }
+   }
+  },
+  {
+   "id": "bytedance",
+   "name": "ByteDance",
+   "group": "social",
+   "words": [
+    "tiktok",
+    "company",
+    "capcut"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#00c8d2",
+      "#3c8cff",
+      "#78e6dc",
+      "#325ab4"
+     ],
+     "bytes": 872
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 316
+    },
+    "wordmark": {
+     "w": 116.0,
+     "h": 24.0,
+     "aspect": 4.833,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3309
+    }
+   }
+  },
+  {
+   "id": "canva",
+   "name": "Canva",
+   "group": "creative",
+   "words": [
+    "design",
+    "templates",
+    "thumbnails"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 80.0,
+     "h": 80.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#00c4cc",
+      "#6420ff",
+      "#7d2ae7"
+     ],
+     "bytes": 2692
+    }
+   }
+  },
+  {
+   "id": "chrome",
+   "name": "Chrome",
+   "group": "web",
+   "words": [
+    "google",
+    "browser"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 190.5,
+     "h": 190.5,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#229342",
+      "#fbc116",
+      "#1a73e8",
+      "#e33b2e"
+     ],
+     "bytes": 1155
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 516
+    }
+   }
+  },
+  {
+   "id": "cinema-4d",
+   "name": "Cinema 4D",
+   "group": "creative",
+   "words": [
+    "c4d",
+    "maxon",
+    "3d",
+    "motion"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#011a6a",
+     "colors": [
+      "#011a6a"
+     ],
+     "bytes": 978
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 983
+    }
+   }
+  },
+  {
+   "id": "claude",
+   "name": "Claude",
+   "group": "ai",
+   "words": [
+    "anthropic",
+    "assistant",
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#d97757",
+     "colors": [
+      "#d97757"
+     ],
+     "bytes": 1618
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1909
+    },
+    "wordmark": {
+     "w": 512.0,
+     "h": 110.0,
+     "aspect": 4.655,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#d97757",
+      "#121212"
+     ],
+     "bytes": 4365
+    },
+    "wordmark-dark": {
+     "w": 512.0,
+     "h": 110.0,
+     "aspect": 4.655,
+     "on": "dark",
+     "tint": false,
+     "one": "#d97757",
+     "colors": [
+      "#d97757"
+     ],
+     "bytes": 4363
+    }
+   }
+  },
+  {
+   "id": "copilot",
+   "name": "Copilot",
+   "group": "ai",
+   "words": [
+    "microsoft",
+    "assistant",
+    "chatbot"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#00aeff",
+      "#2253ce",
+      "#0736c4",
+      "#ffb657",
+      "#ff5f3d"
+     ],
+     "bytes": 3250
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 674
+    },
+    "wordmark": {
+     "w": 73.0,
+     "h": 24.0,
+     "aspect": 3.042,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2616
+    }
+   }
+  },
+  {
+   "id": "cursor",
+   "name": "Cursor",
+   "group": "ai",
+   "words": [
+    "code",
+    "editor",
+    "ai",
+    "coding"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 437
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 442
+    },
+    "wordmark": {
+     "w": 123.0,
+     "h": 24.0,
+     "aspect": 5.125,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1639
+    }
+   }
+  },
+  {
+   "id": "davinci-resolve",
+   "name": "DaVinci Resolve",
+   "group": "creative",
+   "words": [
+    "resolve",
+    "blackmagic",
+    "davinci",
+    "video",
+    "editor",
+    "colour",
+    "grading"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#233a51",
+     "colors": [
+      "#233a51"
+     ],
+     "bytes": 1749
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1754
+    }
+   }
+  },
+  {
+   "id": "deepseek",
+   "name": "DeepSeek",
+   "group": "ai",
+   "words": [
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#4d6bfe",
+     "colors": [
+      "#4d6bfe"
+     ],
+     "bytes": 2084
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2072
+    },
+    "wordmark": {
+     "w": 131.0,
+     "h": 24.0,
+     "aspect": 5.458,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3925
+    }
+   }
+  },
+  {
+   "id": "discord",
+   "name": "Discord",
+   "group": "social",
+   "words": [
+    "community",
+    "chat",
+    "server",
+    "voice"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 199.0,
+     "aspect": 1.286,
+     "on": "any",
+     "tint": false,
+     "one": "#5865f2",
+     "colors": [
+      "#5865f2"
+     ],
+     "bytes": 979
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1361
+    }
+   }
+  },
+  {
+   "id": "docker",
+   "name": "Docker",
+   "group": "dev",
+   "words": [
+    "containers",
+    "devops"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#008fe2",
+     "colors": [
+      "#008fe2"
+     ],
+     "bytes": 1483
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1753
+    }
+   }
+  },
+  {
+   "id": "dropbox",
+   "name": "Dropbox",
+   "group": "work",
+   "words": [
+    "files",
+    "cloud",
+    "storage"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 128.0,
+     "h": 128.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0061fe"
+     ],
+     "bytes": 408
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 323
+    },
+    "wordmark": {
+     "w": 472.0,
+     "h": 128.0,
+     "aspect": 3.688,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0061fe",
+      "#1e1919"
+     ],
+     "bytes": 2307
+    },
+    "wordmark-dark": {
+     "w": 472.0,
+     "h": 128.0,
+     "aspect": 3.688,
+     "on": "dark",
+     "tint": false,
+     "one": "#f7f5f2",
+     "colors": [
+      "#f7f5f2"
+     ],
+     "bytes": 2275
+    }
+   }
+  },
+  {
+   "id": "edge",
+   "name": "Edge",
+   "group": "web",
+   "words": [
+    "microsoft",
+    "browser"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#66eb6e",
+      "#35c1f1",
+      "#34c1ed",
+      "#2fc2df",
+      "#2bc3d2"
+     ],
+     "bytes": 3857
+    }
+   }
+  },
+  {
+   "id": "elevenlabs",
+   "name": "ElevenLabs",
+   "group": "ai",
+   "words": [
+    "voice",
+    "tts",
+    "text",
+    "to",
+    "speech",
+    "dubbing",
+    "audio"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 137
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 142
+    },
+    "wordmark": {
+     "w": 175.0,
+     "h": 24.0,
+     "aspect": 7.292,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2272
+    }
+   }
+  },
+  {
+   "id": "facebook",
+   "name": "Facebook",
+   "group": "social",
+   "words": [
+    "fb",
+    "meta",
+    "social",
+    "network"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 666.667,
+     "h": 666.667,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0866ff"
+     ],
+     "bytes": 1130
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 528
+    },
+    "wordmark": {
+     "w": 886.0,
+     "h": 158.33,
+     "aspect": 5.596,
+     "on": "any",
+     "tint": false,
+     "one": "#0866ff",
+     "colors": [
+      "#0866ff"
+     ],
+     "bytes": 2529
+    }
+   }
+  },
+  {
+   "id": "figma",
+   "name": "Figma",
+   "group": "creative",
+   "words": [
+    "design",
+    "ui",
+    "prototype"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 54.0,
+     "h": 80.0,
+     "aspect": 0.675,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0acf83",
+      "#a259ff",
+      "#f24e1e",
+      "#ff7262",
+      "#1abcfe"
+     ],
+     "bytes": 1042
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1082
+    }
+   }
+  },
+  {
+   "id": "firefox",
+   "name": "Firefox",
+   "group": "web",
+   "words": [
+    "mozilla",
+    "browser"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 265.0,
+     "aspect": 0.966,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#fff44f",
+      "#ff980e",
+      "#ff3647",
+      "#e31587",
+      "#ff3750"
+     ],
+     "bytes": 12238
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1450
+    }
+   }
+  },
+  {
+   "id": "flux",
+   "name": "Flux",
+   "group": "ai",
+   "words": [
+    "black",
+    "forest",
+    "labs",
+    "image",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#5468ff",
+     "colors": [
+      "#5468ff"
+     ],
+     "bytes": 1710
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1715
+    },
+    "wordmark": {
+     "w": 72.0,
+     "h": 24.0,
+     "aspect": 3.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 4269
+    }
+   }
+  },
+  {
+   "id": "framer",
+   "name": "Framer",
+   "group": "creative",
+   "words": [
+    "website",
+    "builder",
+    "design",
+    "no",
+    "code"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 384.0,
+     "aspect": 0.667,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 138
+    },
+    "color-dark": {
+     "w": 256.0,
+     "h": 384.0,
+     "aspect": 0.667,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 153
+    }
+   }
+  },
+  {
+   "id": "gemini",
+   "name": "Gemini",
+   "group": "ai",
+   "words": [
+    "google",
+    "bard",
+    "assistant",
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#08b962",
+      "#f94543",
+      "#fabc12",
+      "#3186ff"
+     ],
+     "bytes": 2644
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 382
+    },
+    "wordmark": {
+     "w": 344.0,
+     "h": 127.0,
+     "aspect": 2.709,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#439ddf",
+      "#4f87ed",
+      "#9476c5",
+      "#bc688e",
+      "#d6645d"
+     ],
+     "bytes": 4989
+    }
+   }
+  },
+  {
+   "id": "github",
+   "name": "GitHub",
+   "group": "dev",
+   "words": [
+    "git",
+    "code",
+    "repository",
+    "open",
+    "source"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 1024.0,
+     "h": 1024.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#1b1f23",
+     "colors": [
+      "#1b1f23"
+     ],
+     "bytes": 970
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 810
+    },
+    "wordmark": {
+     "w": 249.1,
+     "h": 67.5,
+     "aspect": 3.69,
+     "on": "light",
+     "tint": false,
+     "one": "#1b1f24",
+     "colors": [
+      "#1b1f24"
+     ],
+     "bytes": 1621
+    },
+    "color-dark": {
+     "w": 1024.0,
+     "h": 1024.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [],
+     "bytes": 936
+    },
+    "wordmark-dark": {
+     "w": 249.1,
+     "h": 67.5,
+     "aspect": 3.69,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 1621
+    }
+   }
+  },
+  {
+   "id": "github-copilot",
+   "name": "GitHub Copilot",
+   "group": "ai",
+   "words": [
+    "copilot",
+    "code",
+    "ai",
+    "coding"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 208.0,
+     "aspect": 1.231,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 1498
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1724
+    },
+    "color-dark": {
+     "w": 256.0,
+     "h": 208.0,
+     "aspect": 1.231,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 1513
+    }
+   }
+  },
+  {
+   "id": "gmail",
+   "name": "Gmail",
+   "group": "work",
+   "words": [
+    "google",
+    "email",
+    "mail",
+    "inbox"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 512.0,
+     "h": 399.42,
+     "aspect": 1.282,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#4285f4",
+      "#34a853",
+      "#fbbc04",
+      "#ea4335",
+      "#c5221f"
+     ],
+     "bytes": 671
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 328
+    }
+   }
+  },
+  {
+   "id": "google",
+   "name": "Google",
+   "group": "web",
+   "words": [
+    "search"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 268.152,
+     "h": 273.883,
+     "aspect": 0.979,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0cba65",
+      "#0fbc5f",
+      "#ff4540",
+      "#3086ff",
+      "#0fbc5c"
+     ],
+     "bytes": 8380
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 445
+    },
+    "wordmark": {
+     "w": 272.0,
+     "h": 92.0,
+     "aspect": 2.957,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ea4335",
+      "#4285f4",
+      "#fbbc05",
+      "#34a853"
+     ],
+     "bytes": 1826
+    }
+   }
+  },
+  {
+   "id": "google-drive",
+   "name": "Google Drive",
+   "group": "work",
+   "words": [
+    "drive",
+    "files",
+    "cloud",
+    "storage"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 87.3,
+     "h": 78.0,
+     "aspect": 1.119,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0066da",
+      "#00ac47",
+      "#ea4335",
+      "#00832d",
+      "#2684fc"
+     ],
+     "bytes": 715
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 581
+    }
+   }
+  },
+  {
+   "id": "grok",
+   "name": "Grok",
+   "group": "ai",
+   "words": [
+    "xai",
+    "x",
+    "chatbot",
+    "llm"
+   ],
+   "default": "mono",
+   "variants": {
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 680
+    },
+    "wordmark": {
+     "w": 63.0,
+     "h": 24.0,
+     "aspect": 2.625,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 878
+    }
+   }
+  },
+  {
+   "id": "gumroad",
+   "name": "Gumroad",
+   "group": "work",
+   "words": [
+    "creator",
+    "store",
+    "sell",
+    "digital",
+    "products"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#ff90e8",
+     "colors": [
+      "#ff90e8"
+     ],
+     "bytes": 486
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 491
+    }
+   }
+  },
+  {
+   "id": "hugging-face",
+   "name": "Hugging Face",
+   "group": "ai",
+   "words": [
+    "huggingface",
+    "models",
+    "open",
+    "source"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ff9d0b",
+      "#ffd21e",
+      "#ff323d",
+      "#3a3b45"
+     ],
+     "bytes": 3685
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3009
+    },
+    "wordmark": {
+     "w": 153.0,
+     "h": 24.0,
+     "aspect": 6.375,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 7711
+    }
+   }
+  },
+  {
+   "id": "ideogram",
+   "name": "Ideogram",
+   "group": "ai",
+   "words": [
+    "image",
+    "generator",
+    "text"
+   ],
+   "default": "mono",
+   "variants": {
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2423
+    },
+    "wordmark": {
+     "w": 94.0,
+     "h": 24.0,
+     "aspect": 3.917,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 7733
+    }
+   }
+  },
+  {
+   "id": "illustrator",
+   "name": "Illustrator",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "vector",
+    "design"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 83.0,
+     "h": 80.0,
+     "aspect": 1.038,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ff9a00",
+      "#330000"
+     ],
+     "bytes": 2576
+    }
+   }
+  },
+  {
+   "id": "instagram",
+   "name": "Instagram",
+   "group": "social",
+   "words": [
+    "ig",
+    "insta",
+    "reels",
+    "stories",
+    "meta"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 264.583,
+     "h": 264.583,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ffcc00",
+      "#ff005f",
+      "#fc01d8",
+      "#780cff",
+      "#820bff"
+     ],
+     "bytes": 7142
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2086
+    },
+    "wordmark": {
+     "w": 792.0,
+     "h": 224.7,
+     "aspect": 3.525,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#780cff",
+      "#fc01d8",
+      "#ff005f",
+      "#ffcc00"
+     ],
+     "bytes": 5084
+    }
+   }
+  },
+  {
+   "id": "kick",
+   "name": "Kick",
+   "group": "social",
+   "words": [
+    "live",
+    "streaming",
+    "stream"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": "#53fc19",
+     "colors": [
+      "#53fc19"
+     ],
+     "bytes": 199
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 204
+    }
+   }
+  },
+  {
+   "id": "kimi",
+   "name": "Kimi",
+   "group": "ai",
+   "words": [
+    "moonshot",
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#1783ff"
+     ],
+     "bytes": 700
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 644
+    },
+    "wordmark": {
+     "w": 64.0,
+     "h": 24.0,
+     "aspect": 2.667,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1206
+    }
+   }
+  },
+  {
+   "id": "kling",
+   "name": "Kling",
+   "group": "ai",
+   "words": [
+    "kuaishou",
+    "ai",
+    "video",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#fff959",
+      "#0df35e",
+      "#0bf2f9",
+      "#04a6f0",
+      "#003eff"
+     ],
+     "bytes": 2024
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 811
+    },
+    "wordmark": {
+     "w": 80.0,
+     "h": 24.0,
+     "aspect": 3.333,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 949
+    }
+   }
+  },
+  {
+   "id": "lightroom",
+   "name": "Lightroom",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "lr",
+    "photo",
+    "editing",
+    "presets",
+    "colour"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 83.0,
+     "h": 80.0,
+     "aspect": 1.038,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#31a8ff",
+      "#001e36"
+     ],
+     "bytes": 2446
+    }
+   }
+  },
+  {
+   "id": "linkedin",
+   "name": "LinkedIn",
+   "group": "social",
+   "words": [
+    "jobs",
+    "business",
+    "professional",
+    "network"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#0a66c2",
+     "colors": [
+      "#0a66c2"
+     ],
+     "bytes": 711
+    }
+   }
+  },
+  {
+   "id": "linux",
+   "name": "Linux",
+   "group": "web",
+   "words": [
+    "tux",
+    "open",
+    "source",
+    "system"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": "#fcc624",
+     "colors": [
+      "#fcc624"
+     ],
+     "bytes": 5447
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 5452
+    }
+   }
+  },
+  {
+   "id": "luma",
+   "name": "Luma",
+   "group": "ai",
+   "words": [
+    "dream",
+    "machine",
+    "ai",
+    "video",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0000aa",
+      "#a78dff",
+      "#004eff",
+      "#00ffff"
+     ],
+     "bytes": 1591
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 259
+    },
+    "wordmark": {
+     "w": 111.0,
+     "h": 24.0,
+     "aspect": 4.625,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1077
+    }
+   }
+  },
+  {
+   "id": "meta",
+   "name": "Meta",
+   "group": "social",
+   "words": [
+    "facebook",
+    "instagram",
+    "company",
+    "ai"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0082fb",
+      "#0867df",
+      "#0064e0",
+      "#0064df",
+      "#0072ec"
+     ],
+     "bytes": 5504
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1314
+    },
+    "wordmark": {
+     "w": 75.0,
+     "h": 24.0,
+     "aspect": 3.125,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1948
+    }
+   }
+  },
+  {
+   "id": "midjourney",
+   "name": "Midjourney",
+   "group": "ai",
+   "words": [
+    "mj",
+    "image",
+    "generator",
+    "art"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 698.0,
+     "h": 583.0,
+     "aspect": 1.197,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 1017
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3930
+    },
+    "wordmark": {
+     "w": 134.0,
+     "h": 24.0,
+     "aspect": 5.583,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3746
+    },
+    "color-dark": {
+     "w": 698.0,
+     "h": 583.0,
+     "aspect": 1.197,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 1017
+    }
+   }
+  },
+  {
+   "id": "mistral",
+   "name": "Mistral",
+   "group": "ai",
+   "words": [
+    "le",
+    "chat",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ffaf00",
+      "#ff8205",
+      "#fa500f",
+      "#e10500"
+     ],
+     "bytes": 576
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 274
+    },
+    "wordmark": {
+     "w": 134.0,
+     "h": 24.0,
+     "aspect": 5.583,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2026
+    }
+   }
+  },
+  {
+   "id": "nano-banana",
+   "name": "Nano Banana",
+   "group": "ai",
+   "words": [
+    "google",
+    "gemini",
+    "image",
+    "editor",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#f9c23c",
+      "#f3ad61",
+      "#feefc2",
+      "#fcd53f",
+      "#fff478"
+     ],
+     "bytes": 1298
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1053
+    },
+    "wordmark": {
+     "w": 169.0,
+     "h": 24.0,
+     "aspect": 7.042,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 6217
+    }
+   }
+  },
+  {
+   "id": "nodejs",
+   "name": "Node.js",
+   "group": "dev",
+   "words": [
+    "node",
+    "javascript",
+    "js"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 292.0,
+     "aspect": 0.877,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#41873f",
+      "#54a044",
+      "#66b848",
+      "#6cc04a",
+      "#418b3d"
+     ],
+     "bytes": 2541
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1595
+    }
+   }
+  },
+  {
+   "id": "notebooklm",
+   "name": "NotebookLM",
+   "group": "ai",
+   "words": [
+    "google",
+    "notes",
+    "research",
+    "podcast"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 538
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 543
+    },
+    "wordmark": {
+     "w": 157.0,
+     "h": 24.0,
+     "aspect": 6.542,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 4391
+    }
+   }
+  },
+  {
+   "id": "notion",
+   "name": "Notion",
+   "group": "work",
+   "words": [
+    "notes",
+    "docs",
+    "planner",
+    "workspace"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 268.0,
+     "aspect": 0.955,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [],
+     "bytes": 1526
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 966
+    }
+   }
+  },
+  {
+   "id": "npm",
+   "name": "npm",
+   "group": "dev",
+   "words": [
+    "javascript",
+    "packages",
+    "node"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 2500.0,
+     "h": 2500.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#cc0000"
+     ],
+     "bytes": 200
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 308
+    },
+    "wordmark": {
+     "w": 128.0,
+     "h": 128.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#cb3837",
+     "colors": [
+      "#cb3837"
+     ],
+     "bytes": 330
+    }
+   }
+  },
+  {
+   "id": "obs-studio",
+   "name": "OBS Studio",
+   "group": "creative",
+   "words": [
+    "obs",
+    "screen",
+    "recording",
+    "live",
+    "streaming"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 75.0,
+     "h": 75.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#302e31",
+      "#c4c2c4"
+     ],
+     "bytes": 747
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1011
+    }
+   }
+  },
+  {
+   "id": "obsidian",
+   "name": "Obsidian",
+   "group": "work",
+   "words": [
+    "notes",
+    "markdown",
+    "second",
+    "brain"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 332.0,
+     "aspect": 0.771,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#6c31e3"
+     ],
+     "bytes": 5989
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1307
+    }
+   }
+  },
+  {
+   "id": "openai",
+   "name": "OpenAI",
+   "group": "ai",
+   "words": [
+    "chatgpt",
+    "gpt",
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 611.0,
+     "h": 611.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 2404
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1609
+    },
+    "wordmark": {
+     "w": 1360.0,
+     "h": 611.0,
+     "aspect": 2.226,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [],
+     "bytes": 2267
+    },
+    "color-dark": {
+     "w": 611.0,
+     "h": 611.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 2404
+    },
+    "wordmark-dark": {
+     "w": 1360.0,
+     "h": 611.0,
+     "aspect": 2.226,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 2267
+    }
+   }
+  },
+  {
+   "id": "patreon",
+   "name": "Patreon",
+   "group": "social",
+   "words": [
+    "membership",
+    "creators",
+    "support"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 36.0,
+     "h": 40.0,
+     "aspect": 0.9,
+     "on": "light",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2853
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 356
+    },
+    "color-dark": {
+     "w": 36.0,
+     "h": 40.0,
+     "aspect": 0.9,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 2848
+    }
+   }
+  },
+  {
+   "id": "perplexity",
+   "name": "Perplexity",
+   "group": "ai",
+   "words": [
+    "search",
+    "answers",
+    "chatbot"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#22b8cd",
+     "colors": [
+      "#22b8cd"
+     ],
+     "bytes": 521
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 602
+    },
+    "wordmark": {
+     "w": 117.0,
+     "h": 24.0,
+     "aspect": 4.875,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3905
+    }
+   }
+  },
+  {
+   "id": "photoshop",
+   "name": "Photoshop",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "ps",
+    "photo",
+    "editing"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 83.0,
+     "h": 80.0,
+     "aspect": 1.038,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#31a8ff",
+      "#001e36"
+     ],
+     "bytes": 3986
+    }
+   }
+  },
+  {
+   "id": "pika",
+   "name": "Pika",
+   "group": "ai",
+   "words": [
+    "ai",
+    "video",
+    "generator"
+   ],
+   "default": "mono",
+   "variants": {
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 421
+    },
+    "wordmark": {
+     "w": 67.0,
+     "h": 24.0,
+     "aspect": 2.792,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1035
+    }
+   }
+  },
+  {
+   "id": "pinterest",
+   "name": "Pinterest",
+   "group": "social",
+   "words": [
+    "pins",
+    "ideas",
+    "boards"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#cb1f27",
+     "colors": [
+      "#cb1f27"
+     ],
+     "bytes": 1043
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 894
+    }
+   }
+  },
+  {
+   "id": "premiere-pro",
+   "name": "Premiere Pro",
+   "group": "creative",
+   "words": [
+    "adobe",
+    "premiere",
+    "pr",
+    "video",
+    "editor",
+    "editing"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 83.0,
+     "h": 80.0,
+     "aspect": 1.038,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#9999ff"
+     ],
+     "bytes": 2772
+    }
+   }
+  },
+  {
+   "id": "python",
+   "name": "Python",
+   "group": "dev",
+   "words": [
+    "code",
+    "programming"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 32.0,
+     "h": 32.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#387eb8",
+      "#366994",
+      "#ffe052",
+      "#ffc331"
+     ],
+     "bytes": 1146
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1506
+    }
+   }
+  },
+  {
+   "id": "qwen",
+   "name": "Qwen",
+   "group": "ai",
+   "words": [
+    "alibaba",
+    "chatbot",
+    "llm"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#6336e7",
+      "#6f69f7"
+     ],
+     "bytes": 1938
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 795
+    },
+    "wordmark": {
+     "w": 75.0,
+     "h": 24.0,
+     "aspect": 3.125,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2329
+    }
+   }
+  },
+  {
+   "id": "react",
+   "name": "React",
+   "group": "dev",
+   "words": [
+    "javascript",
+    "ui",
+    "web"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 569.0,
+     "h": 512.0,
+     "aspect": 1.111,
+     "on": "light",
+     "tint": false,
+     "one": "#087ea4",
+     "colors": [
+      "#087ea4"
+     ],
+     "bytes": 6356
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2915
+    },
+    "wordmark": {
+     "w": 600.0,
+     "h": 180.322,
+     "aspect": 3.327,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#087ea4",
+      "#23272f"
+     ],
+     "bytes": 12656
+    },
+    "color-dark": {
+     "w": 569.0,
+     "h": 512.0,
+     "aspect": 1.111,
+     "on": "dark",
+     "tint": false,
+     "one": "#58c4dc",
+     "colors": [
+      "#58c4dc"
+     ],
+     "bytes": 6429
+    },
+    "wordmark-dark": {
+     "w": 600.0,
+     "h": 180.767,
+     "aspect": 3.319,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#58c4dc"
+     ],
+     "bytes": 19732
+    }
+   }
+  },
+  {
+   "id": "reddit",
+   "name": "Reddit",
+   "group": "social",
+   "words": [
+    "forum",
+    "community",
+    "subreddit"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#edf3f5",
+      "#dee9ec",
+      "#d8e4e8",
+      "#ccd8df",
+      "#c8d5dd"
+     ],
+     "bytes": 7659
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1221
+    },
+    "wordmark": {
+     "w": 2000.0,
+     "h": 600.0,
+     "aspect": 3.333,
+     "on": "light",
+     "tint": false,
+     "one": "#ff4500",
+     "colors": [
+      "#ff4500"
+     ],
+     "bytes": 1800
+    },
+    "wordmark-dark": {
+     "w": 2000.0,
+     "h": 600.0,
+     "aspect": 3.333,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 1800
+    }
+   }
+  },
+  {
+   "id": "runway",
+   "name": "Runway",
+   "group": "ai",
+   "words": [
+    "gen",
+    "ai",
+    "video",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 300.0,
+     "h": 300.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [],
+     "bytes": 4341
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 674
+    },
+    "wordmark": {
+     "w": 94.0,
+     "h": 24.0,
+     "aspect": 3.917,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1225
+    }
+   }
+  },
+  {
+   "id": "safari",
+   "name": "Safari",
+   "group": "web",
+   "words": [
+    "apple",
+    "browser"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 66.166,
+     "h": 65.804,
+     "aspect": 1.006,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#06c2e7",
+      "#0db8ec",
+      "#12aef1",
+      "#1f86f9",
+      "#107ddd"
+     ],
+     "bytes": 16635
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 11832
+    }
+   }
+  },
+  {
+   "id": "shopify",
+   "name": "Shopify",
+   "group": "work",
+   "words": [
+    "store",
+    "shop",
+    "ecommerce"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 292.0,
+     "aspect": 0.877,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#95bf46",
+      "#5e8e3e"
+     ],
+     "bytes": 1642
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1221
+    },
+    "wordmark": {
+     "w": 100.0,
+     "h": 28.6,
+     "aspect": 3.497,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#8db849",
+      "#5a863e",
+      "#1a1919"
+     ],
+     "bytes": 2245
+    },
+    "wordmark-dark": {
+     "w": 608.0,
+     "h": 173.7,
+     "aspect": 3.5,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#95bf47",
+      "#5e8e3e"
+     ],
+     "bytes": 2882
+    }
+   }
+  },
+  {
+   "id": "slack",
+   "name": "Slack",
+   "group": "work",
+   "words": [
+    "team",
+    "chat",
+    "messages"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 2447.6,
+     "h": 2452.5,
+     "aspect": 0.998,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#36c5f0",
+      "#2eb67d",
+      "#ecb22e",
+      "#e01e5a"
+     ],
+     "bytes": 1420
+    },
+    "wordmark": {
+     "w": 2500.0,
+     "h": 632.6,
+     "aspect": 3.952,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#e01e5a",
+      "#36c5f0",
+      "#2eb67d",
+      "#ecb22e"
+     ],
+     "bytes": 1999
+    }
+   }
+  },
+  {
+   "id": "snapchat",
+   "name": "Snapchat",
+   "group": "social",
+   "words": [
+    "snap",
+    "stories"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 514.631,
+     "h": 514.631,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#fffc00"
+     ],
+     "bytes": 7989
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1464
+    }
+   }
+  },
+  {
+   "id": "sora",
+   "name": "Sora",
+   "group": "ai",
+   "words": [
+    "openai",
+    "ai",
+    "video",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#6bb6fe",
+      "#012659",
+      "#0968da"
+     ],
+     "bytes": 4302
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2889
+    },
+    "wordmark": {
+     "w": 61.0,
+     "h": 24.0,
+     "aspect": 2.542,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2476
+    }
+   }
+  },
+  {
+   "id": "spotify",
+   "name": "Spotify",
+   "group": "social",
+   "words": [
+    "music",
+    "streaming",
+    "podcast",
+    "songs"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#1ed760",
+     "colors": [
+      "#1ed760"
+     ],
+     "bytes": 956
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 684
+    },
+    "wordmark": {
+     "w": 559.0,
+     "h": 168.0,
+     "aspect": 3.327,
+     "on": "any",
+     "tint": false,
+     "one": "#1ed760",
+     "colors": [
+      "#1ed760"
+     ],
+     "bytes": 4073
+    }
+   }
+  },
+  {
+   "id": "stability-ai",
+   "name": "Stability AI",
+   "group": "ai",
+   "words": [
+    "stable",
+    "diffusion",
+    "image",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#e80000",
+      "#9d39ff",
+      "#a380ff"
+     ],
+     "bytes": 871
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 688
+    },
+    "wordmark": {
+     "w": 202.0,
+     "h": 24.0,
+     "aspect": 8.417,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 8023
+    }
+   }
+  },
+  {
+   "id": "stripe",
+   "name": "Stripe",
+   "group": "work",
+   "words": [
+    "payments",
+    "money",
+    "checkout"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 312.0,
+     "h": 312.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#533afd",
+     "colors": [
+      "#533afd"
+     ],
+     "bytes": 187
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 576
+    },
+    "wordmark": {
+     "w": 512.0,
+     "h": 214.0,
+     "aspect": 2.393,
+     "on": "any",
+     "tint": false,
+     "one": "#635bff",
+     "colors": [
+      "#635bff"
+     ],
+     "bytes": 1609
+    }
+   }
+  },
+  {
+   "id": "suno",
+   "name": "Suno",
+   "group": "ai",
+   "words": [
+    "ai",
+    "music",
+    "song",
+    "generator"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 201
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 206
+    },
+    "wordmark": {
+     "w": 65.0,
+     "h": 24.0,
+     "aspect": 2.708,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 2481
+    }
+   }
+  },
+  {
+   "id": "telegram",
+   "name": "Telegram",
+   "group": "social",
+   "words": [
+    "chat",
+    "messages",
+    "channel"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#2aabee",
+      "#229ed9"
+     ],
+     "bytes": 1156
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 728
+    }
+   }
+  },
+  {
+   "id": "threads",
+   "name": "Threads",
+   "group": "social",
+   "words": [
+    "meta",
+    "instagram",
+    "posts"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 192.0,
+     "h": 192.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [],
+     "bytes": 1502
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 822
+    },
+    "color-dark": {
+     "w": 192.0,
+     "h": 192.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 1517
+    }
+   }
+  },
+  {
+   "id": "tiktok",
+   "name": "TikTok",
+   "group": "social",
+   "words": [
+    "tik",
+    "tok",
+    "short",
+    "video",
+    "fyp"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 352.28,
+     "h": 398.67,
+     "aspect": 0.884,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#fe2c55",
+      "#25f4ee"
+     ],
+     "bytes": 1831
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 695
+    },
+    "wordmark": {
+     "w": 1851.6,
+     "h": 449.5,
+     "aspect": 4.119,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#25f4ee",
+      "#fe2c55"
+     ],
+     "bytes": 2621
+    },
+    "color-dark": {
+     "w": 352.28,
+     "h": 398.67,
+     "aspect": 0.884,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#fe2c55",
+      "#25f4ee"
+     ],
+     "bytes": 1852
+    },
+    "wordmark-dark": {
+     "w": 1851.6,
+     "h": 449.4,
+     "aspect": 4.12,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#25f4ee",
+      "#fe2c55"
+     ],
+     "bytes": 2745
+    }
+   }
+  },
+  {
+   "id": "twitch",
+   "name": "Twitch",
+   "group": "social",
+   "words": [
+    "live",
+    "streaming",
+    "stream",
+    "gaming"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 2400.0,
+     "h": 2800.0,
+     "aspect": 0.857,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#9146ff"
+     ],
+     "bytes": 346
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 280
+    }
+   }
+  },
+  {
+   "id": "unity",
+   "name": "Unity",
+   "group": "creative",
+   "words": [
+    "game",
+    "engine",
+    "3d"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 638
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 643
+    }
+   }
+  },
+  {
+   "id": "unreal-engine",
+   "name": "Unreal Engine",
+   "group": "creative",
+   "words": [
+    "ue5",
+    "unreal",
+    "epic",
+    "game",
+    "engine",
+    "3d"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#0e1128",
+     "colors": [
+      "#0e1128"
+     ],
+     "bytes": 793
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 798
+    }
+   }
+  },
+  {
+   "id": "vercel",
+   "name": "Vercel",
+   "group": "dev",
+   "words": [
+    "hosting",
+    "nextjs",
+    "deploy"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 222.0,
+     "aspect": 1.153,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 116
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 120
+    },
+    "wordmark": {
+     "w": 262.0,
+     "h": 52.0,
+     "aspect": 5.038,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 3560
+    },
+    "color-dark": {
+     "w": 256.0,
+     "h": 222.0,
+     "aspect": 1.153,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 116
+    },
+    "wordmark-dark": {
+     "w": 262.0,
+     "h": 52.0,
+     "aspect": 5.038,
+     "on": "dark",
+     "tint": false,
+     "one": "#ffffff",
+     "colors": [
+      "#ffffff"
+     ],
+     "bytes": 3560
+    }
+   }
+  },
+  {
+   "id": "vscode",
+   "name": "VS Code",
+   "group": "dev",
+   "words": [
+    "visual",
+    "studio",
+    "code",
+    "editor",
+    "microsoft"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 100.0,
+     "h": 100.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0065a9",
+      "#007acc",
+      "#1f9cf0"
+     ],
+     "bytes": 3394
+    }
+   }
+  },
+  {
+   "id": "whatsapp",
+   "name": "WhatsApp",
+   "group": "social",
+   "words": [
+    "chat",
+    "messages",
+    "meta"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 360.0,
+     "h": 362.0,
+     "aspect": 0.994,
+     "on": "any",
+     "tint": false,
+     "one": "#25d366",
+     "colors": [
+      "#25d366"
+     ],
+     "bytes": 1590
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 1202
+    },
+    "wordmark": {
+     "w": 1485.66,
+     "h": 345.24,
+     "aspect": 4.303,
+     "on": "any",
+     "tint": false,
+     "one": "#25d366",
+     "colors": [
+      "#25d366"
+     ],
+     "bytes": 6844
+    }
+   }
+  },
+  {
+   "id": "windows",
+   "name": "Windows",
+   "group": "web",
+   "words": [
+    "microsoft",
+    "pc"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 88.0,
+     "h": 88.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": "#00adef",
+     "colors": [
+      "#00adef"
+     ],
+     "bytes": 274
+    }
+   }
+  },
+  {
+   "id": "windsurf",
+   "name": "Windsurf",
+   "group": "ai",
+   "words": [
+    "codeium",
+    "code",
+    "editor",
+    "ai",
+    "coding"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#0b100f",
+     "colors": [
+      "#0b100f"
+     ],
+     "bytes": 794
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 799
+    },
+    "wordmark": {
+     "w": 111.0,
+     "h": 24.0,
+     "aspect": 4.625,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 3040
+    }
+   }
+  },
+  {
+   "id": "x",
+   "name": "X",
+   "group": "social",
+   "words": [
+    "twitter",
+    "tweet",
+    "posts"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "light",
+     "tint": false,
+     "one": "#000000",
+     "colors": [
+      "#000000"
+     ],
+     "bytes": 287
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 292
+    }
+   }
+  },
+  {
+   "id": "youtube",
+   "name": "YouTube",
+   "group": "social",
+   "words": [
+    "yt",
+    "video",
+    "channel",
+    "subscribe",
+    "shorts"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 180.0,
+     "aspect": 1.422,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ff0000"
+     ],
+     "bytes": 492
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 446
+    },
+    "wordmark": {
+     "w": 512.0,
+     "h": 114.301,
+     "aspect": 4.479,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#282828",
+      "#ff0000"
+     ],
+     "bytes": 3691
+    },
+    "wordmark-dark": {
+     "w": 512.0,
+     "h": 114.301,
+     "aspect": 4.479,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ff0000"
+     ],
+     "bytes": 3949
+    }
+   }
+  },
+  {
+   "id": "youtube-music",
+   "name": "YouTube Music",
+   "group": "social",
+   "words": [
+    "yt",
+    "music",
+    "songs",
+    "streaming"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 192.0,
+     "h": 192.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ff0000"
+     ],
+     "bytes": 464
+    },
+    "wordmark": {
+     "w": 756.773,
+     "h": 140.76,
+     "aspect": 5.376,
+     "on": "light",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#232325",
+      "#e22224"
+     ],
+     "bytes": 6260
+    },
+    "wordmark-dark": {
+     "w": 756.773,
+     "h": 140.76,
+     "aspect": 5.376,
+     "on": "dark",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#ed1d24"
+     ],
+     "bytes": 6250
+    }
+   }
+  },
+  {
+   "id": "zoom",
+   "name": "Zoom",
+   "group": "work",
+   "words": [
+    "video",
+    "call",
+    "meeting"
+   ],
+   "default": "color",
+   "variants": {
+    "color": {
+     "w": 256.0,
+     "h": 256.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": false,
+     "one": null,
+     "colors": [
+      "#0845bf",
+      "#0950de",
+      "#0b59f6",
+      "#0b5cff",
+      "#0e5efe"
+     ],
+     "bytes": 1334
+    },
+    "mono": {
+     "w": 24.0,
+     "h": 24.0,
+     "aspect": 1.0,
+     "on": "any",
+     "tint": true,
+     "one": null,
+     "colors": [],
+     "bytes": 827
+    }
+   }
+  }
+ ]
+}

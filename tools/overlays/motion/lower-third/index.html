@@ -3,7 +3,7 @@
   {"id": "look", "type": "enum", "label": "Look", "default": "bar", "options": [{"value": "bar", "label": "Bar - a colour bar wipes in, the name rides on it"}, {"value": "line", "label": "Line - a thin line draws, the name rises over it"}, {"value": "box", "label": "Boxes - two stacked boxes, a little offset"}, {"value": "social", "label": "Social - a round badge + your @handle"}]},
   {"id": "name", "type": "string", "label": "Name (or the main line)", "default": "Alex Rivera"},
   {"id": "role", "type": "string", "label": "Role (the small line; empty = none)", "default": "Video editor · MotionLab"},
-  {"id": "badge", "type": "string", "label": "Badge letter / emoji (Social look)", "default": "@"},
+  {"id": "badge", "type": "string", "label": "Badge: a letter, an emoji or :instagram: (Social look)", "default": "@"},
   {"id": "align", "type": "enum", "label": "Where", "default": "left", "options": [{"value": "left", "label": "Left"}, {"value": "center", "label": "Centre"}, {"value": "right", "label": "Right"}]},
   {"id": "y", "type": "number", "label": "How far down (% of the height)", "default": 76, "min": 0, "max": 100, "step": 1},
   {"id": "margin", "type": "number", "label": "Side margin (% of the width)", "default": 7, "min": 0, "max": 40, "step": 1},
@@ -20,6 +20,7 @@
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
+<script src="assets/logos/logos.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1080, height=1920">
 <!-- MotionLab motion template "lower-third" (0.5.0, the Motion Graphics library): who is talking - a name and a role
@@ -66,6 +67,7 @@
   const enter = (t, a, b, f0, f1, ease = "none") => { if (f0 > 0) set(t, { opacity: 0 }, 0); return ft(t, a, b, f0, f1, ease); };
   const fam = `'${V.font}', 'Segoe UI', sans-serif`;
   const q = id => document.getElementById(id);
+  const LG = window.MLLogo, say = (b, t, o) => LG ? LG.text(b, t, o) : (b.textContent = t, false);   // ":youtube:" = a logo of the library
   const esc = s => String(s || "").replace(/[&<>]/g, "");
 
   gsap.set("#bgfill", { width: W, height: H, background: V.background ? V.bg : "transparent" });
@@ -105,7 +107,7 @@
     if (V.role) { const r = row(V.role, { bg: V.accent, color: V.ink, w: 600, fs: 36, px: 26, py: 12 }); r.style.marginLeft = al === "left" ? `${40 * s}px` : "0"; r.style.marginRight = al === "right" ? `${40 * s}px` : "0"; box0.appendChild(r); rows.push(r); }
   } else {
     const r1 = document.createElement("div"); r1.className = "row"; r1.style.gap = `${16 * s}px`; r1.style.flexDirection = al === "right" ? "row-reverse" : "row";
-    badge = document.createElement("div"); badge.id = "bd"; badge.textContent = V.badge || "@";
+    badge = document.createElement("div"); badge.id = "bd"; say(badge, V.badge || "@", { scale: 0.58, dark: LG && LG.isDark(V.accent), tint: V.ink });
     Object.assign(badge.style, { width: `${104 * s}px`, height: `${104 * s}px`, background: V.accent, color: V.ink, font: `800 ${50 * s}px ${fam}`, boxShadow: `0 ${8 * s}px ${24 * s}px rgba(0,0,0,.3)` });
     const col = document.createElement("div"); Object.assign(col.style, { display: "flex", flexDirection: "column", gap: `${6 * s}px`, alignItems: al === "right" ? "flex-end" : "flex-start" });
     const n = row(V.name, { bg: "#ffffff", color: "#111111", w: 800, fs: 52, px: 26, py: 10, round: 40 }); col.appendChild(n); rows.push(n);

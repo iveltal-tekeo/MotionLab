@@ -1,0 +1,12 @@
+{
+ "name": "logo-wall",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + (title != '') * round(8 * fps / 30) + i * max(1, round(gap * fps / 30))", "repeat": "min(parts(logos), 12)", "if": "style == 'grid'", "kind": "pop", "seed": "700 + i", "what": "a logo pops in (one per logo)"},
+  {"f": "start + round(4 * fps / 30)", "if": "style == 'marquee'", "kind": "whoosh", "dur": "16 / fps", "what": "the strip slides in"},
+  {"f": "start + i * max(round(14 * fps / 30), floor((frames - start) / max(1, min(parts(logos), 12))))", "repeat": "min(parts(logos), 12)", "if": "style == 'spotlight'", "kind": "pop", "seed": "720 + i", "what": "the next logo lands"}
+ ]
+}
