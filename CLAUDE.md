@@ -69,6 +69,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   (0.4.3: the ready-to-post package - `package.json`, title / description / hashtags .txt, `thumb_<A|B|C>_16x9 /
   _9x16 / _9x16_crops.png`, `thumbs\<id>\` = each thumbnail as an editable graphic, `candidates\`, `images\` =
   pictures the user brought, e.g. from an AI image tool)
+- `fonts\` the font library (0.4.6, in the repo): one folder per family (.ttf + its licence: SIL OFL 1.1 / Apache 2.0)
+  + `fonts.css`; graphics, captions and thumbnails pick from it (`motionlab\fonts.py`), each render gets copies of the
+  fonts it uses in its own `assets\fonts\`
 - `library\` approved effects only (made by `tools\library.py`): `README.md` + per effect `<effect>.md` recipe,
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
@@ -141,6 +144,9 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   the video in words + numbers -> `analysis\<name>\colour\colour.json` (analyze.py does it for the cinematic / both
   focus); `match` = a .cube that moves the footage toward the videos' look (`build\colour\`, Resolve's Color page, a
   plan grade `"lut3d"`) + how close (0-100)
+- `fonts.py list | sync | check <graphic> | selfcheck` the font library (0.4.6): families with group, licence,
+  weights; `sync` after adding a family = every shipped design's font setting offers the whole library (HyperFrames
+  checks a value against the declared options); renders / snapshots copy the used fonts into the graphic by themselves
 - `beats.py <song> [--fps 30] [--start s] [--length s]` a song's beats, downbeats and drops as frame + timecode (0.4: timing
   a motion-graphics video, `/generate-video`)
 - `precheck.py <render.mp4 | graphic .mov | snapshot folder> [--sfx <name>_sfx.json] [--motion-blur N]` checks before
@@ -155,10 +161,12 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `whatsnext.py [--fetch]` one digest of where the lab stands (version, unreleased commits, plans' status lines,
   roadmap, ideas, what waits on the user) - the `/whats-next` skill starts from it
 - `thumbsets.py fetch <set> <channel link> [--n 15] [--order newest|views] | more <set> [--n 20] [--order ...] |
-  refresh <set> | links <set> <urls> | add <set> <pictures> | measure | sheet | list | show | remove-item | selfcheck` thumbnail sets
+  refresh <set> | links <set> <urls> | add <set> <pictures> | measure | sheet | fontmatch <set> | list | show | remove-item |
+  selfcheck` thumbnail sets
   (0.4.5): only the pictures (no video; the channel listed whole, taken in batches) -> `analysis\thumbs\<set>\`
   measured + numbered sheets; Claude's patterns = `/analyze-reference thumbs <set>` -> style.json; used by
-  `thumbnail.py make / check --style <set>`. Bulk Claude work = `.app\batches\<id>.json` (`/analyze-reference batch
+  `thumbnail.py make / check --style <set>`; `fontmatch` (0.4.6, ~2 s) = the words Claude listed in style.json
+  "texts" compared by shape with the font library -> `fontmatch.json`, the font *In the style of* uses. Bulk Claude work = `.app\batches\<id>.json` (`/analyze-reference batch
   <id>`, `/recreate-video batch <id>`)
 - `usage.py sessions | project <p> | analysis <name> | check | selfcheck` What it took (0.4.4): Claude's time per
   step, read-only from Claude Code's session logs (`motionlab\usage.py`: per round, what counts for a video) + the
@@ -179,8 +187,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   check; `new`'s helpers set / to / ft / bump / smear keep a motion-blur render and a snapshot = a plain render) (graphics
   as HTML via HyperFrames, pinned in `tools\overlays\`; `settings | set` = the values the user can change, `save |
   graphics` = the graphics library; `fit <folder> --like <video>` = a size-independent graphic takes a video's size; `captions <folder> --from
-  <.srt|.vtt|transcript.json|video>` = styled captions + an
-  .srt for Resolve; `refresh` = swap it in the open Resolve project (Resolve gets numbered copies: it locks files); `versions | upgrade-test | pin` = adopt a newer one only after its frames match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
+  <.srt|.vtt|transcript.json|video> [--preset clean_box]` = styled captions + an
+  .srt for Resolve; `preset <folder> [id]` = a graphic's ready-made looks (presets.json: captions Classic / Clean box); `refresh` = swap it in the open Resolve project (Resolve gets numbered copies: it locks files); `versions | upgrade-test | pin` = adopt a newer one only after its frames match); Resolve (see `docs\resolve_notes.md`): `resolve_build.py`,
   `library.py build | test | title | install`, `resolve_mcp.py install | status | remove` (optional Resolve MCP for
   Claude Code, this PC only)
 - `storage.py` disk report by category; `--prune <name|all> --what cache,checks,finals --yes` deletes only what the

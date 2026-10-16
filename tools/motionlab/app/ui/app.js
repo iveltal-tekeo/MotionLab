@@ -251,7 +251,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 25;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 26;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast('Something went wrong: ' + ((e.reason && e.reason.message) || e.reason), 'err'));
 function overlay(text) {
@@ -1285,7 +1285,7 @@ function waitingModal(wait) {
 // patterns like font, color, structure ... then that information can be used when im generating thumbnails"):
 // analysis\thumbs\<set> (motionlab\thumbsets.py): the pictures only (no video), measured by the lab; Claude's
 // /analyze-reference thumbs <set> writes the patterns (style.json); the user marks each one; Ready to post uses them
-const THUMBS_JOBS = ['thumbs_fetch', 'thumbs_links', 'thumbs_measure', 'thumbs_more', 'thumbs_refresh'];
+const THUMBS_JOBS = ['thumbs_fetch', 'thumbs_links', 'thumbs_measure', 'thumbs_more', 'thumbs_refresh', 'thumbs_fontmatch'];
 // a set's pictures in order (the user, 2026-10-15: "add some filters like most viewed or less viewed ... and some data
 // to the card like the date"): # = as added; views; date (YouTube's "3 weeks ago" = an approximate date, ≈)
 const TS_SORTS = [['n', '#'], ['views_d', 'Most viewed'], ['views_a', 'Least viewed'], ['date_d', 'Newest'], ['date_a', 'Oldest']];
@@ -1395,6 +1395,15 @@ async function pageThumbs(main, name) {
   const nf = v => Number(v).toLocaleString('en');
   const pats = (st && st.patterns) || [], f = (st && st.font) || {};
   const marked = pats.filter(p => (V[p.id] || {}).v).length;
+  // 0.4.6: the font, measured - the words Claude listed (style.json "texts") against the font library, by shape
+  const FM = S.fontmatch, pct = x => Math.round((x || 0) * 100) + ' %';
+  const pick = String(((st || {}).for_make || {}).font || (f.closest || [])[0] || '');     // Claude's first choice
+  const guess = FM && pick && (FM.ranking || []).find(r => pick.startsWith(r.family));
+  const fmRow = !st ? '' : FM && FM.best ? kvRow('Font, measured', `<span class="mlchip sm" title="MotionLab compared the words on the pictures with every font it has, letter by letter - Claude only said where the words are">MotionLab</span>
+      <b>${esc(FM.best.family)}</b> ${esc(FM.best.weight)} <span class="muted">· matches ${pct(FM.best.score)} over ${plural(FM.best.items, 'text')}, the best on ${FM.best.first_on}</span>
+      ${FM.best.runner_up ? `<div class="small muted">then ${esc(FM.best.runner_up.family)} ${pct(FM.best.runner_up.score)}${guess && guess.family !== FM.best.family ? ` · Claude's guess ${esc(guess.family)} ${pct(guess.score)}` : ''}</div>` : ''}
+      <button class="btn sm ghost" id="tsfm" title="again, e.g. after you added a font (about 2 seconds, no Claude)">Measure again</button>`)
+    : (st.texts || []).length ? kvRow('Font, measured', `<button class="btn sm" id="tsfm" title="the words Claude listed against every font MotionLab has, letter by letter (about 2 seconds, no Claude)">Measure the font</button>`) : '';
   const side = st ? `<div class="row sp tsside-h"><h2>What they have in common</h2><span class="clchip" title="written by Claude from the numbered pictures">Claude</span>
         <button class="btn sm ghost icon" id="tsfold" title="Fold it away - the pictures take the whole width">◂</button></div>
       ${st.summary ? `<details class="tssum"><summary class="small muted">In short <span class="dim">· click to read</span></summary><p>${esc(st.summary)}</p></details>` : ''}
@@ -1405,7 +1414,8 @@ async function pageThumbs(main, name) {
           <div class="tspat-f"><span class="small muted grow">${esc(p.how_many || '')}${(p.examples || []).length ? ` · #${p.examples.map(esc).join(' #')}` : ''}</span>
             <span class="tsvb">${[['correct', 'Correct'], ['partly', 'Partly'], ['wrong', 'Wrong']].map(([k, l]) => `<button class="btn sm vbt ${k}${v === k ? ' on' : ''}" data-v="${k}">${l}</button>`).join('')}</span></div></div>`; }).join('')}</div>
       <div class="kv tskv">
-        ${f.style ? kvRow('Font', `${esc(f.style)}${(f.closest || []).length ? ` <span class="dim">- closest: ${f.closest.map(esc).join(', ')}</span>` : ''}${f.sure === false ? ' <span class="dim">(a guess from the pictures)</span>' : ''}`) : ''}
+        ${fmRow}
+        ${f.style ? kvRow(FM && FM.best ? "Font's style" : 'Font', `${esc(f.style)}${(f.closest || []).length ? ` <span class="dim">- closest: ${f.closest.map(esc).join(', ')}</span>` : ''}${f.sure === false ? ' <span class="dim">(a guess from the pictures)</span>' : ''}`) : ''}
         ${(st.colours || []).filter(hexOk).length ? kvRow('Colours', st.colours.filter(hexOk).map(c => `<span class="swatch" style="background:${c}" title="${c}"></span>`).join('')) : ''}
         ${st.words ? kvRow('Words', `${st.words.median ?? '?'} on average, at most ${st.words.max ?? '?'}${st.words.case ? ' · ' + esc(st.words.case) : ''}`) : ''}
         ${(st.structures || []).length ? kvRow('Structure', st.structures.map(s => `${esc(s.name)} (${esc(s.count)})`).join(' · ')) : ''}</div>
@@ -1427,7 +1437,7 @@ async function pageThumbs(main, name) {
         <details class="panel tsmeas"><summary><h2>Measured by MotionLab</h2><span class="mlchip" title="the app's own numbers, measured from the pictures - Claude was not involved">MotionLab · no Claude</span>
           <span class="small muted">colours, brightness, faces, where the text sits - numbers only</span></summary>
           ${(sm.colours || []).length ? `<div class="row" style="gap:6px;margin:10px 0 6px">${sm.colours.filter(c => hexOk(c.hex)).map(c => `<span class="swatch big" style="background:${c.hex}" title="${esc(c.word || '')} ${c.hex} - in ${c.pictures} pictures"></span>`).join('')}</div>` : ''}
-          <ul class="tslines">${(S.lines || []).filter(l => !/^Claude's style/.test(l)).map(l => `<li>${esc(l)}</li>`).join('')}</ul></details>
+          <ul class="tslines">${(S.lines || []).filter(l => !/^Claude's style|^Font, measured/.test(l)).map(l => `<li>${esc(l)}</li>`).join('')}</ul></details>
         <div class="row tssort"><span class="small muted">Sort</span><div class="seg" id="tssort">${TS_SORTS.map(([k, l]) => `<button data-v="${k}">${l}</button>`).join('')}</div>
           <span class="grow"></span>${ch ? `<button class="btn sm ghost" id="tsrefresh" title="The channel listed again (seconds, nothing downloaded): the newest views, the dates, the lengths">Update the views and dates</button>` : ''}</div>
         <div class="tsgrid">${tsSorted(items, TS_SORT).map(it => `<figure class="tscell" data-n="${it.n}"><img src="${fileUrl(it.path)}" loading="lazy" alt="">
@@ -1455,6 +1465,9 @@ async function pageThumbs(main, name) {
   if (rf) rf.onclick = async () => { rf.disabled = true;
     try { await api('/api/jobs', {kind: 'thumbs_refresh', args: {set: S.name}, queue: true}); ping(); } catch (e) { toast(e.message, 'err'); rf.disabled = false; } };
   const nx = $('#tsnext', main); if (nx) nx.onclick = () => moreThumbsModal(S, () => pageThumbs(main, S.name));
+  const fmb = $('#tsfm', main);
+  if (fmb) fmb.onclick = async () => { fmb.disabled = true;
+    try { await api('/api/jobs', {kind: 'thumbs_fontmatch', args: {set: S.name}, queue: true}); ping(); } catch (e) { toast(e.message, 'err'); fmb.disabled = false; } };
   if (TS_STOP) TS_STOP();                             // the page's own progress: getting more, measuring - then redraw
   TS_STOP = progressPanel($('#tsprog', main), () => pageThumbs(main, S.name), THUMBS_JOBS, j => (j.args || {}).set === S.name);
   onCleanup(() => { if (TS_STOP) { TS_STOP(); TS_STOP = null; } });
@@ -2667,7 +2680,7 @@ async function projPublish(el, P) {
       <div class="nestep"><b>2</b>The words and the design</div>
       <div class="nedet spf"><label>2-4 words</label><div class="row"><input type="text" id="pbwords" value="${esc(S.words)}" maxlength="60" placeholder="e.g. NO STUDIO" style="width:260px"><span class="small" id="pbwn"></span></div>
         ${concept.length ? `<label></label><div class="row small">Your ideas: ${concept.map(c => `<button class="fchip sm" data-w="${esc(c.words || '')}" title="${esc(c.sketch || '')}">${esc(c.id)}: ${esc(c.words || '')}</button>`).join('')}</div>` : ''}
-        ${(I.styles || []).length ? `<label>In the style of</label><div class="seg" id="pbsty"><button data-v="">no set</button>${I.styles.map(s => `<button data-v="${esc(s.name)}" title="the patterns Claude found in ${s.count} thumbnails: the design, the colours, the font">${esc(s.label)}</button>`).join('')}</div>` : ''}
+        ${(I.styles || []).length ? `<label>In the style of</label><div class="seg" id="pbsty"><button data-v="">no set</button>${I.styles.map(s => `<button data-v="${esc(s.name)}" title="the patterns Claude found in ${s.count} thumbnails: the design, the colours, the font${s.font ? ` - ${esc(s.font.family)} (${s.font.from === 'measured' ? 'measured' : "Claude's pick"})` : ''}">${esc(s.label)}</button>`).join('')}</div>` : ''}
         <label>Design</label><div class="seg" id="pbtpl">${S.style ? '<button data-v="" title="the design the set\'s structure fits">the set\'s</button>' : ''}${(I.templates.length ? I.templates : [{name: 'outline'}]).map(t => `<button data-v="${esc(t.name)}" title="${esc(t.what || '')}">${esc(t.name)}</button>`).join('')}</div>
         <label>Thumbnail</label><div class="row"><div class="seg" id="pbid">${['A', 'B', 'C'].map(x => `<button data-v="${x}">${x}</button>`).join('')}</div><span class="small muted" id="pbidh"></span></div></div>
       <div class="row" style="margin-top:12px"><button class="btn pri" id="pbmake">Make it</button><span class="small muted" id="pbpick"></span></div></details></div>
@@ -2804,8 +2817,40 @@ async function projPublish(el, P) {
 }
 
 // ---- Videos > Graphics (0.3.2): the video's HTML graphics (tools\overlay.py): settings, render, save to the library
+// 0.4.6: the font library (the lab's fonts folder) - a font setting lists every bundled family by what it suits, the
+// Windows fonts older graphics used after them, and shows the picked one in a preview line (/fonts.css loads a family
+// only when something shows it)
+let FONTS = null;
+const FONT_GROUPS = {yours: 'Your fonts (this PC only)', 'heavy condensed': 'Heavy and narrow', 'heavy wide': 'Heavy and wide', 'friendly / rounded': 'Friendly, rounded',
+  'playful display': 'Playful', 'handwritten / marker': 'Handwritten', 'serif display': 'Serif', 'clean text': 'Clean text',
+  'tech / mono': 'Tech', other: 'Other'};
+const isFontSet = s => s.type === 'enum' && (s.id === 'font' || /_font$/.test(s.id));
+const fontCss = f => `font-family:'${String(f).replace(/['"\\<>]/g, '')}', sans-serif`;
+function fontOptions(s) {
+  const v = s.value, opt = (val, label, tip) => `<option value="${esc(val)}" ${val === v ? 'selected' : ''} style="${fontCss(val)}"${tip ? ` title="${esc(tip)}"` : ''}>${esc(label)}</option>`;
+  const declared = (s.options || []).map(o => o.value);
+  if (!FONTS) return (s.options || []).map(o => opt(o.value, o.label)).join('');
+  const groups = {};
+  FONTS.families.forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
+  const known = new Set([...FONTS.families.map(f => f.family), ...FONTS.windows]);
+  const extra = declared.filter(x => !known.has(x));
+  return Object.entries(groups).map(([g, L]) => `<optgroup label="${esc(FONT_GROUPS[g] || g)}">${L.map(f => opt(f.family, f.family, f.own ? 'your own font - on this PC only' : `free font (${f.licence}), comes with MotionLab`)).join('')}</optgroup>`).join('')
+    + `<optgroup label="Windows only (another PC may draw them differently)">${FONTS.windows.map(w => opt(w, w)).join('')}</optgroup>`
+    + (extra.length ? `<optgroup label="In this graphic">${extra.map(x => opt(x, x)).join('')}</optgroup>` : '');
+}
+const fontPreview = v => `<div class="fprev" style="${fontCss(v)}" title="how this font looks">Aa Bb 0123 - the quick brown fox</div>`;
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches && t.matches('select[data-font]') && t.nextElementSibling && t.nextElementSibling.classList.contains('fprev')) t.nextElementSibling.style.cssText = fontCss(t.value);
+});
+api('/api/fonts').then(f => {
+  FONTS = f;
+  $$('select[data-font]').forEach(sel => { const v = sel.value; sel.innerHTML = fontOptions({id: sel.dataset.set, type: 'enum', value: v, options: [...sel.options].map(o => ({value: o.value, label: o.textContent}))}); });
+}).catch(() => {});
+
 function gsetInput(s) {
   const a = `data-set="${esc(s.id)}" data-type="${esc(s.type)}"`, v = s.value;
+  if (isFontSet(s)) return `<select ${a} data-font>${fontOptions(s)}</select>${fontPreview(v)}`;
   if (s.type === 'color') return `<input type="color" ${a} value="${esc(v)}">`;
   if (s.type === 'boolean') return `<input type="checkbox" ${a} ${v ? 'checked' : ''}>`;
   if (s.type === 'enum') return `<select ${a}>${(s.options || []).map(o => `<option value="${esc(o.value)}" ${o.value === v ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
@@ -2813,6 +2858,59 @@ function gsetInput(s) {
   return `<input type="text" ${a} value="${esc(v)}">`;
 }
 const gsetValue = i => i.dataset.type === 'boolean' ? i.checked : i.dataset.type === 'number' ? Number(i.value) : i.value;
+
+// 0.4.6: a graphic drawn live in the page - its own HTML + GSAP in a frame, the settings as they are in the form (no
+// HyperFrames, no render, no Claude): a change shows at once; the slider and ▶ move through its frames. The rendered
+// picture stays the fallback when the graphic does not run here (no window.__timelines.main).
+function livePreview(box, o, getValues) {
+  const W = o.width || 1920, H = o.height || 1080, fps = o.fps || 25, N = Math.max(1, o.frames || 1);
+  const sc = Math.min((box.clientWidth || 300) / W, 560 / H);
+  const base = '/files/' + String(o.folder).replace(/\\/g, '/').split('/').map(encodeURIComponent).join('/') + '/';
+  box.innerHTML = `<div class="glv" style="width:${Math.round(W * sc)}px;height:${Math.round(H * sc)}px"><iframe title="live preview" style="width:${W}px;height:${H}px;transform:scale(${sc})"></iframe></div>
+    <div class="glvbar"><button class="btn sm" data-lvp title="play / pause">▶</button><input type="range" min="0" max="${N - 1}" value="0" data-lvr><span class="small mono" data-lvf></span></div>
+    <div class="small muted">Live preview: a change shows here at once, before you save or render.</div>`;
+  const fr = $('iframe', box), rng = $('[data-lvr]', box), lab = $('[data-lvf]', box), play = $('[data-lvp]', box);
+  let html = null, f = null, tl = null, raf = 0, t0 = 0, f0 = 0, timer = 0;
+  const show = () => { lab.innerHTML = ftc(f, fps); rng.value = f; if (tl) try { tl.seek(f / fps, false); } catch (e) { /* the graphic's own error */ } };
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; play.textContent = '▶'; };
+  const fail = () => { stop(); box.innerHTML = gthumb(o) + '<div class="small muted">No live preview for this graphic - render it to see a change.</div>'; };
+  fr.onload = () => {
+    const w = fr.contentWindow;
+    tl = w && w.__timelines && w.__timelines.main;
+    if (!tl) return fail();
+    if (f == null) {                              // start where something shows: the first caption, else a third in
+      const cue = w.CAPTIONS && w.CAPTIONS.cues && w.CAPTIONS.cues[0];
+      f = cue ? Math.min(N - 1, Math.round((cue.f0 + cue.f1) / 2)) : Math.floor(N * 0.3);
+    }
+    show();
+    if (w.document.fonts) w.document.fonts.ready.then(show);
+  };
+  const load = async () => {
+    try { html = html || await (await fetch(base + 'index.html', {cache: 'no-store'})).text(); } catch (e) { return fail(); }
+    const vals = JSON.stringify(getValues()).replace(/</g, '\\u003c');
+    fr.srcdoc = html.replace(/<head[^>]*>/i, m => `${m}<base href="${base}"><link rel="stylesheet" href="/fonts.css"><script>window.__hyperframes = {getVariables: () => (${vals})};<\/script>`);
+  };
+  rng.oninput = () => { stop(); f = Number(rng.value); show(); };
+  play.onclick = () => {
+    if (raf) return stop();
+    if (f >= N - 1) f = 0;
+    play.textContent = '❚❚'; t0 = performance.now(); f0 = f;
+    const step = now => { f = Math.min(N - 1, f0 + Math.floor((now - t0) / 1000 * fps)); show(); if (f < N - 1) raf = requestAnimationFrame(step); else stop(); };
+    raf = requestAnimationFrame(step);
+  };
+  load();
+  return {refresh: () => { clearTimeout(timer); timer = setTimeout(load, 120); }, stop};
+}
+
+// 0.4.6: a graphic's ready-made looks (Classic | Clean box ...): one click sets them; captions made before their
+// example had looks take its newest design first (the words and settings stay)
+const lookRow = o => {
+  const L = (o.looks || {}).looks || {}, ids = Object.keys(L);
+  if (!ids.length) return '';
+  const on = ids.find(k => L[k].active);
+  return `<div class="glooks"><span class="small muted">Look</span><div class="seg">${ids.map(k => `<button data-look="${esc(k)}" class="${k === on ? 'on' : ''}" title="${esc(L[k].what || '')}">${esc(L[k].label)}</button>`).join('')}</div>
+    <span class="small muted">${o.looks.upgrade ? 'picking one also brings these captions to the newest design - your words and settings stay' : on ? '' : 'your own settings'}</span></div>`;
+};
 const gthumb = g => g.thumb ? `<img src="${fileUrl(g.thumb)}?v=${g.thumb_v}" alt="" loading="lazy">` : '<div class="muted small">no picture yet</div>';
 
 function projGraphics(el, P) {
@@ -2829,11 +2927,12 @@ function projGraphics(el, P) {
     <div class="col">${O.map(o => {
       const st = o.current ? `<span class="ok">rendered ✓</span> <span class="muted">${esc(o.rendered_at)}</span>`
         : o.rendered ? '<span class="amber">settings changed: render it again</span>' : '<span class="amber">not rendered yet</span>';
-      return `<div class="gcard" data-g="${esc(o.name)}"><div class="gthumb">${gthumb(o)}</div>
+      return `<div class="gcard" data-g="${esc(o.name)}"><div class="gside"><div class="gthumb">${gthumb(o)}</div></div>
         <div><div class="row sp"><b style="font-size:15px">${esc(o.name)}</b><span class="small muted">${o.frames} frames ${frange(0, o.frames - 1, o.fps)} · ${o.width}×${o.height} · ${o.fps} fps</span></div>
           <div class="small" style="margin:4px 0 10px">${st} · ${o.used_in.length ? `in the edit: ${o.used_in.map(esc).join(', ')}` : '<span class="muted">not in an edit version yet</span>'}</div>
           ${o.captions ? `<div class="small" style="margin:-4px 0 10px">Captions: ${plural(o.captions.cues, 'line')}, ${plural(o.captions.words, 'word')} from the ${esc(o.captions.what)}${o.captions.estimated ? ' · <span class="amber">word times estimated (the file has one time per line)</span>' : ''}</div>` : ''}
           ${o.problem ? `<div class="bad small">${esc(o.problem)}</div>` : ''}
+          ${lookRow(o)}
           ${o.settings.length ? `<div class="gset">${o.settings.map(s => `<label title="${esc(s.id)}">${esc(s.label || s.id)}</label><div>${gsetInput(s)}</div>`).join('')}</div>`
             : '<div class="muted small">This graphic has no settings yet (Claude can add them: text, colours, timing).</div>'}
           <div class="row" style="margin-top:10px">${o.settings.length ? '<button class="btn sm" data-gsave disabled>Save settings</button>' : ''}
@@ -2849,7 +2948,17 @@ function projGraphics(el, P) {
   captionsBtn(el, P);
   $$('.gcard', el).forEach(card => {
     const name = card.dataset.g, pre = $('pre.log', card), save = $('[data-gsave]', card);
-    $$('[data-set]', card).forEach(i => { i.oninput = i.onchange = () => { if (save) save.disabled = false; }; });
+    const o = O.find(x => x.name === name);
+    const formValues = () => { const v = {}; o.settings.forEach(s => { v[s.id] = s.value; }); $$('[data-set]', card).forEach(i => { v[i.dataset.set] = gsetValue(i); }); return v; };
+    const live = o.settings.length && !o.problem ? livePreview($('.gside', card), o, formValues) : null;
+    if (live) CLEAN.push(live.stop);
+    $$('[data-set]', card).forEach(i => { i.oninput = i.onchange = () => { if (save) save.disabled = false; if (live) live.refresh(); }; });
+    $$('[data-look]', card).forEach(b => b.onclick = async () => {
+      try {
+        await api(`/api/project/${encodeURIComponent(P.name)}/overlay`, {overlay: name, preset: b.dataset.look});
+        toast(`${name}: the look “${b.textContent}” - render it to use it in the video`, 'ok'); route();
+      } catch (e) { toast(e.message, 'err'); }
+    });
     if (save) save.onclick = async () => {
       const values = {};
       $$('[data-set]', card).forEach(i => { values[i.dataset.set] = gsetValue(i); });
@@ -3676,7 +3785,7 @@ async function pageGenerate(main) {
         <p>Higgsfield, Seedance, Kling, Runway, Veo, Sora, InVideo… Tell Claude your idea: it plans the shots and writes every prompt - in the
           structure that worked best in your library, in the style of videos you analysed. You generate them on the tool's site, then the <a href="#/edit">Editor</a> cuts them.</p>
         <div class="row"><button class="btn pri" id="gai"><svg class="i"><use href="#i-claude"/></svg>Generate a video with Claude and other tools</button>
-          <button class="btn ghost" id="gone">Just one prompt</button></div>
+          <button class="btn ghost" id="gen-one">Just one prompt</button></div>
         <div class="small muted">Nothing is paid here - the tool's own plan or credits pay for the clips.</div></div></div>
     ${made.length ? `<div class="row sp" style="margin-top:20px"><h3 style="margin:0">Made from zero</h3></div>
       <div class="cards pcards" style="margin-top:8px">${made.map(projCard).join('')}</div>` : ''}
@@ -3684,7 +3793,7 @@ async function pageGenerate(main) {
       <div class="pgrid" style="margin-top:8px">${recent.map(p => promptCard(p, R)).join('')}</div>` : ''}`;
   $('#ggfx', main).onclick = () => generateModal('graphics');
   $('#gai', main).onclick = () => generateModal('ai');
-  $('#gone', main).onclick = () => aiPromptsModal();
+  $('#gen-one', main).onclick = () => aiPromptsModal();     // not #gone: the heartbeat removes that one (its warning)
   $$('.pgc', main).forEach(c => c.onclick = () => { location.hash = '#/prompts/' + c.dataset.id; });
   wirePcards(main, ps);
 }

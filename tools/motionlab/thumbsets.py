@@ -14,6 +14,8 @@ Layout - one set per folder under ROOT (analysis\\thumbs\\; MOTIONLAB_THUMBS_ROO
                   sheet_1.png ...   15 tiles per sheet (5 x 3): "#n", views and views / followers, the title cut short
                                   under each picture (never over it) - Claude names patterns per number from one sheet
                   style.json        written by Claude (a skill), never by this module; load_style() reads it
+                  fontmatch.json    the font MEASURED from the words Claude listed in style.json "texts" (fontmatch():
+                                  the best library family + weight with its overlap score, the top 5 per text)
 <set> = util.safe_name of the name given ("mrbeast"). A set's files are all lab-made: remove_item() deletes only them.
 
 What counts (measure, at <= 640 px; re-used while the file's name / size / time stays the same - "sig" - and the
@@ -43,7 +45,10 @@ style.json (Claude's, after reading the sheets; the shape load_style() returns):
      "colours": ["#ffcc00", ...], "words": {"median": 3, "max": 4, "case": "upper"},
      "structures": [{"name": "face + big text", "count": 8}],
      "for_make": {"template": "outline|block|split", "text_colour": "#ffffff", "outline_colour": "#000000",
-                  "font": "Anton", "words": 3}}
+                  "font": "Anton", "words": 3},
+     "texts": [{"n": 4, "words": "DAY 201", "box": [62, 2, 98, 15]}]}     (0.4.6: the words the editor ADDED on picture
+                  #n, exactly as written (case kept), one line of one size and colour per entry, box = x0, y0, x1, y1 in %
+                  of the picture - what fontmatch() measures; no signs, logos or text that is part of the scene)
 Other people's thumbnails stay on this PC: nothing here writes to knowledge\\ (the app decides what is shared - only a
 style's words and numbers, never the pictures). Network only in fetch() / add_links().
 """
@@ -385,7 +390,8 @@ def list_sets() -> list[dict]:
 
 
 def get_set(name: str) -> dict:
-    """set.json + "style" (Claude's, or None) + "sheets" + "dir" + every item's "path" (all lab-relative)."""
+    """set.json + "style" (Claude's, or None) + "fontmatch" (the measured font, or None) + "sheets" + "dir" + every
+    item's "path" (all lab-relative)."""
     S = _need(name)
     d = set_dir(name)
     for it in S["items"]:
@@ -400,7 +406,8 @@ def get_set(name: str) -> dict:
         src = S["source"]                               # a set from before the listing was kept: more() lists it first
         S["channel"] = {"url": src["url"], "who": src.get("channel"), "total": None, "in_set": len(S["items"]),
                         "left": None, "listed": None}
-    return {**S, "name": d.name, "dir": rel(d), "style": load_style(name), "sheets": [rel(p) for p in sheets_of(name)]}
+    return {**S, "name": d.name, "dir": rel(d), "style": load_style(name), "fontmatch": load_fontmatch(name),
+            "sheets": [rel(p) for p in sheets_of(name)]}
 
 
 # ------------------------------------------------------------------------------------------ public: measure + sheets
@@ -1136,7 +1143,444 @@ def summary_lines(name: str) -> list[str]:
                     else "")
                  + (" Structures: " + ", ".join(f"{x['name']} ({x.get('count')})" for x in st["structures"][:3]) + "."
                     if st.get("structures") else ""))
+    fm = load_fontmatch(name)
+    if fm:
+        b, r = fm["best"], fm["best"].get("runner_up")
+        L.append(f"Font, measured ({fm.get('date', '?')}): {b['family']} {b['weight']} (overlap {b['score']:.2f} over "
+                 f"{b['items']} text(s), the best on {b.get('first_on', '?')})"
+                 + (f", then {r['family']} {r['weight']} ({r['score']:.2f})" if r else "") + ".")
     return L
+
+
+# ------------------------------------------------------------------------------------------ the font, measured (0.4.6)
+# Claude lists the words added on each picture (style.json "texts"); fontmatch() cuts those letters out of the picture
+# and compares them by shape with the same words drawn in every library font (fonts.families(): the shipped fonts\ +
+# the user's own library\fonts\). Method and numbers: fontmatch()'s docstring; measured first on 2026-10-15 (the
+# Clavero set: Claude guessed Montserrat, the letters say Inter).
+FM_WEIGHTS = (500, 600, 700, 800, 900)    # tried per family: thumbnail words are bold; a one-weight family as it is
+FM_SIZE = 120                             # the renders' font size in px (letters are compared at the picture's scale)
+FM_TOP = 5                                # families kept per text item
+FM_SPECK = 0.0025                         # a shape under 0.25 % of a line's ink is a speck (a period is ~0.6 %)
+FM_MISSING = "\U0010fffd"                 # a code point no font draws: its picture = "no glyph"
+_FM: dict = {"fonts": {}, "glyphs": {}}
+
+
+def _fm_faces() -> list[dict]:
+    """What fontmatch draws with: every library family at the weights thumbnail words use - a variable font at
+    FM_WEIGHTS inside its range (+ its heaviest when that is above 900), a family of weight files at its files of 500 and
+    up (its heaviest when it has none), a one-weight family as it is."""
+    from . import fonts as FL
+    out = []
+    for fam in FL.families():
+        src = Path(fam.get("src") or (FL.ROOT / fam["dir"]))
+        up = [f for f in fam["files"] if not f["italic"]] or fam["files"]
+        var = next((f for f in up if f["variable"] and f["wght"]), None)
+        if var:
+            lo, hi = var["wght"]
+            ws = [w for w in FM_WEIGHTS if lo <= w <= hi] + ([hi] if hi > FM_WEIGHTS[-1] else [])
+            out += [{"family": fam["family"], "weight": int(w), "path": src / var["file"], "wght": w} for w in ws or [hi]]
+        else:
+            pick = [f for f in up if f["weight"] >= FM_WEIGHTS[0]] or [max(up, key=lambda f: f["weight"])]
+            out += [{"family": fam["family"], "weight": int(f["weight"]), "path": src / f["file"], "wght": None}
+                    for f in sorted(pick, key=lambda f: f["weight"])]
+    return out
+
+
+def _fm_font(face: dict):
+    """The face's font at FM_SIZE with its weight set (a variable font: the optical size at its largest = display text,
+    as a browser draws big words; other axes at their defaults)."""
+    from PIL import ImageFont
+    key = str(face["path"])
+    if key not in _FM["fonts"]:
+        f = ImageFont.truetype(key, FM_SIZE)
+        try:
+            axes = f.get_variation_axes() if face["wght"] is not None else []
+        except OSError:                                     # not a variable font after all
+            axes = []
+        _FM["fonts"][key] = (f, axes)
+    f, axes = _FM["fonts"][key]
+    if axes:
+        vals = []
+        for a in axes:
+            nm = (a.get("name") or b"").decode("latin-1", "replace").lower() if isinstance(a.get("name"), bytes) \
+                else str(a.get("name") or "").lower()
+            vals.append(face["wght"] if "weight" in nm else a["maximum"] if "optical" in nm else a["default"])
+        f.set_variation_by_axes(vals)
+    return f
+
+
+def _fm_glyph(font, ch: str) -> bytes:
+    from PIL import ImageDraw
+    im = Image.new("L", (FM_SIZE * 2, FM_SIZE * 2), 0)
+    ImageDraw.Draw(im).text((FM_SIZE // 2, FM_SIZE // 2), ch, font=font, fill=255)
+    return im.tobytes()
+
+
+def _fm_missing(face: dict, font, text: str) -> str:
+    """The characters of text the face has no glyph for ('' = it draws them all)."""
+    out = ""
+    for ch in sorted(set(text) - set(" \t")):
+        k = (str(face["path"]), ch)
+        if k not in _FM["glyphs"]:
+            k0 = (str(face["path"]), FM_MISSING)
+            if k0 not in _FM["glyphs"]:
+                _FM["glyphs"][k0] = _fm_glyph(font, FM_MISSING)
+            _FM["glyphs"][k] = _fm_glyph(font, ch) != _FM["glyphs"][k0]
+        if not _FM["glyphs"][k]:
+            out += ch
+    return out
+
+
+def _fm_render(font, words: str) -> np.ndarray:
+    """The words in white on black, cut to their ink + 8 px; the mask at 50 % (the anti-aliased edge's middle)."""
+    from PIL import ImageDraw
+    x0, y0, x1, y1 = font.getbbox(words)
+    im = Image.new("L", (max(1, x1 - x0) + 16, max(1, y1 - y0) + 16), 0)
+    ImageDraw.Draw(im).text((8 - x0, 8 - y0), words, font=font, fill=255)
+    return np.asarray(im) > 127
+
+
+def _fm_clusters(mask: np.ndarray, speck: float = FM_SPECK) -> list[tuple]:
+    """A line's letters: its connected shapes (specks dropped) with the ones stacked over each other joined (i and its
+    dot, a colon, ñ, a broken $) - left to right as (x, y, w, h, mask)."""
+    import cv2
+    n, lab, st, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8), connectivity=8)
+    if n <= 1:
+        return []
+    total = float(st[1:, cv2.CC_STAT_AREA].sum())
+    ids = [i for i in range(1, n) if st[i, cv2.CC_STAT_AREA] >= speck * total]
+    if not ids:
+        return []
+    parent = {i: i for i in ids}
+    tall = 1.7 * float(np.median([st[i, 3] for i in ids]))     # a joined letter stays letter-sized (not 2 lines)
+
+    def top(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    box = {i: tuple(int(v) for v in st[i, :4]) for i in ids}
+    for ai, a in enumerate(ids):
+        xa, ya, wa, ha = box[a]
+        for b in ids[ai + 1:]:
+            xb, yb, wb, hb = box[b]
+            if xb >= xa + wa or xa >= xb + wb:
+                continue
+            xo = min(xa + wa, xb + wb) - max(xa, xb)
+            yo = min(ya + ha, yb + hb) - max(ya, yb)
+            if xo >= 0.6 * min(wa, wb) and yo <= 0.25 * min(ha, hb) and max(ya + ha, yb + hb) - min(ya, yb) <= tall:
+                parent[top(b)] = top(a)
+    groups: dict[int, list[int]] = {}
+    for i in ids:
+        groups.setdefault(top(i), []).append(i)
+    out = []
+    for g in groups.values():
+        x0, y0 = min(int(st[i, 0]) for i in g), min(int(st[i, 1]) for i in g)
+        x1, y1 = max(int(st[i, 0] + st[i, 2]) for i in g), max(int(st[i, 1] + st[i, 3]) for i in g)
+        sub = lab[y0:y1, x0:x1]
+        out.append((x0, y0, x1 - x0, y1 - y0, sub == g[0] if len(g) == 1 else np.isin(sub, g)))
+    return sorted(out, key=lambda c: c[0] + c[2] / 2)
+
+
+def _fm_union(cs: list[tuple]) -> np.ndarray:
+    x0, y0 = min(c[0] for c in cs), min(c[1] for c in cs)
+    x1, y1 = max(c[0] + c[2] for c in cs), max(c[1] + c[3] for c in cs)
+    m = np.zeros((y1 - y0, x1 - x0), bool)
+    for x, y, w, h, cm in cs:
+        m[y - y0:y - y0 + h, x - x0:x - x0 + w] |= cm
+    return m
+
+
+def _fm_iou(a: np.ndarray, b: np.ndarray) -> float:
+    """Two letters bottom-aligned and centred: shared ink / all ink (1.0 = the same shape)."""
+    h, w = max(a.shape[0], b.shape[0]), max(a.shape[1], b.shape[1])
+    A, B = np.zeros((h, w), bool), np.zeros((h, w), bool)
+    A[h - a.shape[0]:, (w - a.shape[1]) // 2:(w - a.shape[1]) // 2 + a.shape[1]] = a
+    B[h - b.shape[0]:, (w - b.shape[1]) // 2:(w - b.shape[1]) // 2 + b.shape[1]] = b
+    return float(np.logical_and(A, B).sum() / max(1, np.logical_or(A, B).sum()))
+
+
+def _fm_score(R: list[tuple], C: list[tuple]) -> float:
+    """The real letters R vs the rendered ones C: C scaled so its tallest letter is R's tallest, then letter by letter
+    (in order when both have as many; else each real letter against the rendered ones whose centre falls in its share
+    of the line's width), the mean overlap over max(len R, len C) - a letter missing on one side counts 0."""
+    if not R or not C:
+        return 0.0
+    s = max(r[3] for r in R) / max(c[3] for c in C)
+
+    def scaled(m):
+        im = Image.fromarray(m.astype(np.uint8) * 255)
+        return np.asarray(im.resize((max(1, round(m.shape[1] * s)), max(1, round(m.shape[0] * s))), Image.BILINEAR)) > 127
+    if len(R) == len(C):
+        pairs = [(r[4], c[4]) for r, c in zip(R, C)]
+    else:
+        rx0, rx1 = min(r[0] for r in R), max(r[0] + r[2] for r in R)
+        cx0, cx1 = min(c[0] for c in C), max(c[0] + c[2] for c in C)
+        pairs = []
+        for r in R:
+            a, b = (r[0] - rx0) / max(1, rx1 - rx0), (r[0] + r[2] - rx0) / max(1, rx1 - rx0)
+            got = [c for c in C if a <= (c[0] + c[2] / 2 - cx0) / max(1, cx1 - cx0) <= b]
+            pairs.append((r[4], _fm_union(got) if got else None))
+    return sum(_fm_iou(r, scaled(c)) for r, c in pairs if c is not None) / max(len(R), len(C))
+
+
+def _fm_sizes(cl: list) -> np.ndarray:
+    """Each letter's width and height over the line's tallest letter (the same for most fonts of a word)."""
+    top = float(max(c[3] for c in cl)) or 1.0
+    return np.array([(c[2] / top, c[3] / top) for c in cl], np.float32)
+
+
+def _fm_cut(rgb: np.ndarray, box: list, expected: int, sizes: np.ndarray | None = None) -> tuple[list, dict]:
+    """The words' letters cut out of the picture. Claude's box (% of the picture) grown by 40 % of its height (a loose
+    box keeps whole letters), small words enlarged to ~100 px; candidate cuts = pure white, pure black, lighter / darker
+    than Otsu's threshold and each of 3 colour groups (k-means in Lab); a shape counts when it does not touch the grown
+    edge (the scene around the words) and its centre sits in the box (+5 % of its height); more letters than the words
+    have -> the smallest specks go first; a cut must fill half the box's height and 40 % of its width. The cut whose
+    letter count is nearest the words' (ties: the letter sizes nearest the renders' `sizes` - a fragment is no $ - then
+    the most contrast with its surroundings) is then redrawn at the midpoint between the letters' colour and the colour
+    around them - the same 50 % edge a render's mask has.
+    -> (letters, {"cut", "letters", "colour"})."""
+    import cv2
+    H, W = rgb.shape[:2]
+    x0, x1 = sorted(float(v) for v in box[0::2])
+    y0, y1 = sorted(float(v) for v in box[1::2])
+    bx0, by0, bx1, by1 = x0 * W / 100, y0 * H / 100, x1 * W / 100, y1 * H / 100
+    bh = max(4.0, by1 - by0)
+    m = 0.4 * bh
+    cx0, cy0 = max(0, int(bx0 - m)), max(0, int(by0 - m))
+    cx1, cy1 = min(W, int(np.ceil(bx1 + m))), min(H, int(np.ceil(by1 + m)))
+    if cx1 - cx0 < 4 or cy1 - cy0 < 4:
+        return [], {"why": "the box is empty"}
+    inside = (cx0 > 0, cy0 > 0, cx1 < W, cy1 < H)           # sides of the cut that lie inside the picture
+    f = min(4.0, max(1.0, 100.0 / bh))
+    sub = rgb[cy0:cy1, cx0:cx1].astype(np.float32)
+    if f > 1.01:
+        sub = cv2.resize(sub, None, fx=f, fy=f, interpolation=cv2.INTER_CUBIC)
+    sub = np.clip(sub, 0, 255)
+    h, w = sub.shape[:2]
+    g = 0.05 * bh * f
+    ib = ((bx0 - cx0) * f - g, (by0 - cy0) * f - g, (bx1 - cx0) * f + g, (by1 - cy0) * f + g)
+    s8 = sub.astype(np.uint8)
+    g8 = cv2.cvtColor(s8, cv2.COLOR_RGB2GRAY)
+    t, _ = cv2.threshold(g8, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    cands = [("white", s8.min(axis=2) > 225), ("black", s8.max(axis=2) < 35), ("lighter", g8 > t), ("darker", g8 <= t)]
+    lab = cv2.cvtColor(s8, cv2.COLOR_RGB2LAB).reshape(-1, 3).astype(np.float32)
+    sample = lab[::max(1, len(lab) // 6000)]
+    if len(sample) >= 3:
+        cv2.setRNGSeed(1)
+        _, _, cen = cv2.kmeans(sample, 3, None, (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0), 2,
+                               cv2.KMEANS_PP_CENTERS)
+        lbl = ((lab[:, None, :] - cen[None]) ** 2).sum(-1).argmin(1).reshape(h, w)
+        cands += [(f"colour group {k + 1}", lbl == k) for k in range(3)]
+    ring_k = np.ones((max(3, int(0.08 * bh * f)) | 1,) * 2, np.uint8)
+
+    def keep(mask):
+        n, lb, st, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8), connectivity=8)
+        ok = np.zeros(n, bool)
+        for i in range(1, n):
+            x, y, ww, hh, _a = (int(v) for v in st[i])
+            if (inside[0] and x == 0) or (inside[1] and y == 0) or (inside[2] and x + ww >= w) or (inside[3] and y + hh >= h):
+                continue
+            if hh > 1.6 * bh * f or not (ib[0] <= x + ww / 2 <= ib[2] and ib[1] <= y + hh / 2 <= ib[3]):
+                continue
+            ok[i] = True
+        return ok[lb]
+
+    def colours(mask):
+        core = cv2.erode(mask.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+        ring = cv2.dilate(mask.astype(np.uint8), ring_k).astype(bool) & ~cv2.dilate(
+            mask.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+        if ring.sum() < 4:
+            return None, None
+        return np.median(sub[core if core.sum() >= 4 else mask], axis=0), np.median(sub[ring], axis=0)
+    def trim(cl):
+        """More letters than the words have: the smallest specks (under 15 % of the median letter's ink) go first."""
+        cl = list(cl)
+        while len(cl) > expected:
+            med = float(np.median([c[4].sum() for c in cl]))
+            k = min(range(len(cl)), key=lambda j: cl[j][4].sum())
+            if cl[k][4].sum() >= 0.15 * med:
+                break
+            del cl[k]
+        return cl
+    best = None
+    for name_, cm in cands:
+        km = keep(cm)
+        if not km.any():
+            continue
+        cl = trim(_fm_clusters(km))
+        if not cl:
+            continue
+        ux0, uy0 = min(c[0] for c in cl), min(c[1] for c in cl)
+        ux1, uy1 = max(c[0] + c[2] for c in cl), max(c[1] + c[3] for c in cl)
+        if uy1 - uy0 < 0.5 * bh * f or ux1 - ux0 < 0.4 * (bx1 - bx0) * f:
+            continue                                         # a part of the box only (a hole in a letter, a speck)
+        km = np.zeros_like(km)
+        for x, y, ww, hh, cm_ in cl:
+            km[y:y + hh, x:x + ww] |= cm_
+        tc, bc = colours(km)
+        if tc is None:
+            continue
+        lt, lb_ = (cv2.cvtColor(np.array([[c]], np.uint8), cv2.COLOR_RGB2LAB)[0, 0].astype(float) for c in (tc, bc))
+        shape = (float(np.abs(_fm_sizes(cl) - sizes).mean()) if sizes is not None and len(cl) == len(sizes)
+                 else 9.0)
+        rank = (abs(len(cl) - expected), round(shape, 2), -float(np.linalg.norm(lt - lb_)))
+        if best is None or rank < best[0]:
+            best = (rank, name_, km, cl, tc, bc)
+    if best is None:
+        return [], {"why": "no letters found in the box"}
+    _, name_, km, cl, tc, bc = best
+    axis = tc - bc
+    if float(axis @ axis) >= 30 ** 2:                       # redraw at the midpoint between the letters and around them
+        proj = ((sub - bc) @ axis) / float(axis @ axis)
+        near = cv2.dilate(km.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        cl2 = trim(_fm_clusters((proj > 0.5) & near))
+        if len(cl2) == len(cl):
+            cl = cl2
+    return cl, {"cut": name_, "letters": len(cl), "colour": "#%02x%02x%02x" % tuple(int(round(v)) for v in tc)}
+
+
+def load_fontmatch(name: str) -> dict | None:
+    """fontmatch.json of the set (fontmatch()'s answer), or None when it was not measured."""
+    try:
+        fm = read_json(set_dir(name) / "fontmatch.json")
+    except (OSError, ValueError):
+        return None
+    return fm if isinstance(fm, dict) and fm.get("best") else None
+
+
+def fontmatch(name: str, log=print) -> dict:
+    """The set's font, MEASURED: per text Claude listed in style.json "texts" ({"n", "words" as written, "box": [x0, y0,
+    x1, y1] in % of the picture}) the letters are cut out of picture #n (_fm_cut: Claude's box, not the lab's text
+    estimate - the estimate misses thin or textured words (4 of the 13 Clavero pictures with words) and cannot tell a
+    sign in the scene from words the editor added; Claude's box says which words and roughly where, the colours inside
+    it find the letters) and compared with the same words drawn in every library family at its heavy weights (_fm_faces;
+    _fm_score = the overlap of each letter's shape, 1.0 = identical, scaled by the tallest letter: it carries the width,
+    the x-height, the stroke weight and the shape at once; spacing is not scored - tracking is a setting, not the font).
+    A family that has no glyph for one of the words' characters scores 0 there.
+    Per item: its 5 best families (each at its best weight). For the set: per family the weighted mean of its per-item
+    best-weight scores - each item weighs its picture's views / followers (max(0.25, x), 1 when unknown, as the set's
+    summary: what beat the channel counts most) x its letters compared (up to 10: 2 letters say less than 8); the
+    family's weight = the one weight with the best weighted mean (what a design would draw with).
+    Writes <set>\\fontmatch.json {"set", "date", "seconds", "faces", "items": [{"n", "words", "box", "letters", "cut",
+    "colour", "top": [{"family", "weight", "score"}]}], "skipped": [{"n", "words", "why"}], "best": {"family", "weight",
+    "score", "items", "margin", "runner_up": {"family", "weight", "score"}}, "ranking": [every family: "family", "weight", "score", "first_on" = the
+    texts it is the best for], "method"} and
+    returns it. Raises ValueError (no file written) when Claude has not listed the words or none could be measured."""
+    t0 = time.time()
+    S = _need(name)
+    st = load_style(name) or {}
+    texts = [t for t in st.get("texts") or [] if isinstance(t, dict)]
+    if not texts:
+        raise ValueError(f"Claude has not listed the words yet: {set_name(name)}'s style.json has no \"texts\" (the "
+                         f"words added on each picture and where) - /analyze-reference thumbs {set_name(name)} adds them")
+    faces = _fm_faces()
+    if not faces:
+        raise ValueError("the font library is missing (the fonts folder at the lab's root)")
+    d = set_dir(name)
+    by_n = {it.get("n"): it for it in S["items"]}
+    todo, skipped = [], []
+    for t in texts:
+        words = " ".join(str(t.get("words") or "").split())
+        box = t.get("box")
+        n = t.get("n")
+        it = by_n.get(n)
+        why_ = ("no words" if not words else f"the set has no picture #{n}" if it is None else
+                "the box is not [x0, y0, x1, y1] in % of the picture" if not (
+                    isinstance(box, (list, tuple)) and len(box) == 4 and all(isinstance(v, (int, float)) for v in box)
+                    and all(-1 <= v <= 101 for v in box) and box[2] > box[0] and box[3] > box[1]) else None)
+        if why_:
+            skipped.append({"n": n, "words": words, "why": why_})
+            continue
+        todo.append({"n": n, "words": words, "box": [round(float(v), 1) for v in box], "item": it})
+    log(f"{len(todo)} text(s) on {len({x['n'] for x in todo})} picture(s) against {len({f['family'] for f in faces})} "
+        f"families ({len(faces)} family + weight pairs) ...")
+    # the renders, font by font (a variable font's weight is set once for every text)
+    rend: dict[int, list] = {i: [] for i in range(len(todo))}
+    for face in faces:
+        try:
+            font = _fm_font(face)
+        except OSError as e:
+            log(f"skipped {face['family']} {face['weight']}: the font file could not be read ({e})")
+            continue
+        for i, x in enumerate(todo):
+            miss = _fm_missing(face, font, x["words"])
+            rend[i].append((face, None if miss else _fm_clusters(_fm_render(font, x["words"]))))
+    pics: dict = {}
+    items = []
+    for i, x in enumerate(todo):
+        counts = [len(c) for _, c in rend[i] if c]
+        if not counts:
+            skipped.append({"n": x["n"], "words": x["words"], "why": "no library font has these characters"})
+            continue
+        expected = Counter(counts).most_common(1)[0][0]
+        p = d / x["item"]["file"]
+        try:
+            if p not in pics:
+                with Image.open(p) as im:
+                    pics[p] = np.asarray(im.convert("RGB"))
+        except (OSError, ValueError) as e:
+            skipped.append({"n": x["n"], "words": x["words"], "why": f"the picture could not be read ({type(e).__name__})"})
+            continue
+        sizes = np.median([_fm_sizes(c) for _, c in rend[i] if c and len(c) == expected], axis=0)
+        R, info = _fm_cut(pics[p], x["box"], expected, sizes)
+        if not R or abs(len(R) - expected) > max(1, round(0.25 * expected)):
+            skipped.append({"n": x["n"], "words": x["words"], "why": info.get("why") or (
+                f"the letters could not be cut out cleanly ({len(R)} shapes found, the words have {expected}) - "
+                f"check the box, or the words are tilted, curved or touching")})
+            continue
+        sc = [(face, None if c is None else _fm_score(R, c)) for face, c in rend[i]]
+        best_of: dict[str, tuple] = {}
+        for face, s in sc:
+            if s is not None and (face["family"] not in best_of or s > best_of[face["family"]][1]):
+                best_of[face["family"]] = (face["weight"], s)
+        top = sorted(best_of.items(), key=lambda kv: -kv[1][1])[:FM_TOP]
+        op = x["item"].get("outperformer")
+        items.append({"n": x["n"], "words": x["words"], "box": x["box"], "letters": len(R), "expected": expected,
+                      "cut": info["cut"], "colour": info["colour"],
+                      "top": [{"family": f_, "weight": w_, "score": round(s_, 3)} for f_, (w_, s_) in top],
+                      "_scores": sc, "_w": max(0.25, op if isinstance(op, (int, float)) else 1.0) * min(len(R), 10)})
+        log(f"#{x['n']} \"{x['words']}\": " + ", ".join(f"{f_} {w_} {s_:.2f}" for f_, (w_, s_) in top[:3])
+            + f"  ({len(R)} letters, {info['cut']})")
+    for s in skipped:
+        log(f"#{s['n']} \"{s['words']}\" not measured: {s['why']}")
+    if not items:
+        raise ValueError(f"none of the {len(texts)} listed text(s) could be measured: "
+                         + "; ".join(f"#{s['n']} {s['why']}" for s in skipped[:3]))
+    W = sum(it["_w"] for it in items)
+    fams: dict[str, dict] = {}
+    for it in items:
+        per_fam: dict[str, float] = {}
+        for face, s in it["_scores"]:
+            v = s or 0.0                                     # no glyph for a character = 0
+            fm = fams.setdefault(face["family"], {"best": 0.0, "by_w": {}})
+            fm["by_w"][face["weight"]] = fm["by_w"].get(face["weight"], 0.0) + it["_w"] * v
+            per_fam[face["family"]] = max(per_fam.get(face["family"], 0.0), v)
+        for f_, v in per_fam.items():
+            fams[f_]["best"] += it["_w"] * v
+        fams[it["top"][0]["family"]]["first"] = fams[it["top"][0]["family"]].get("first", 0) + 1
+    ranking = sorted(({"family": f_, "weight": max(fm["by_w"], key=lambda k: (fm["by_w"][k], k)),
+                       "score": round(fm["best"] / W, 3), "first_on": fm.get("first", 0)} for f_, fm in fams.items()),
+                     key=lambda r: (-r["score"], -r["first_on"]))
+    for it in items:
+        del it["_scores"], it["_w"]
+    best = {**ranking[0], "items": len(items),
+            "margin": round(ranking[0]["score"] - ranking[1]["score"], 3) if len(ranking) > 1 else None,
+            "runner_up": ranking[1] if len(ranking) > 1 else None}
+    res = {"set": set_name(name), "date": _now(), "seconds": round(time.time() - t0, 2), "faces": len(faces),
+           "families": len(fams), "items": items, "skipped": skipped, "best": best, "ranking": ranking,
+           "method": "Claude lists the words added on each picture and their box (style.json texts); the letters are "
+                     "cut out of the picture by colour inside that box and compared shape by shape with the same words "
+                     "drawn in every library font at weights 500-900 (overlap of each letter, 1.0 = identical, scaled to "
+                     "the tallest letter; spacing not scored). Set score = the mean of each font's best per-item score, "
+                     "weighted by the picture's views / followers and the letters compared."}
+    with _lock(name):
+        write_json(d / "fontmatch.json", res, indent=1)
+    log(f"the set's font, measured: {best['family']} {best['weight']} ({best['score']:.2f} over {best['items']} "
+        f"text(s))" + (f", then {best['runner_up']['family']} {best['runner_up']['weight']} "
+                       f"({best['runner_up']['score']:.2f})" if best["runner_up"] else "")
+        + f" - {res['seconds']} s -> {rel(d / 'fontmatch.json')}")
+    return res
 
 
 # ------------------------------------------------------------------------------------------ self-check
@@ -1272,6 +1716,80 @@ def selfcheck(verbose: bool = True) -> dict:
         sl = summary_lines("Demo set")
         ok(len(sl) >= 5 and any(x.startswith("Text") for x in sl) and any("Claude's style" in x for x in sl),
            f"summary_lines: {len(sl)} lines with the text and Claude's style")
+        # the font, measured (0.4.6): words drawn in two library fonts on photo-like pictures, boxes a little loose
+        try:
+            fontmatch("Demo set", log=quiet)
+            ok(False, "fontmatch without texts: refused")
+        except ValueError as e:
+            ok("has not listed the words" in str(e) and not (d / "fontmatch.json").exists(),
+               "fontmatch without texts: \"Claude has not listed the words yet\", no file")
+        from . import fonts as FL
+        faces = {(f["family"], f["weight"]): f for f in _fm_faces()}
+        need = [("Luckiest Guy", 400), ("Inter", 700), ("Inter", 800)]
+        if not all(k in faces for k in need):
+            ok(False, f"fontmatch: the font library has Luckiest Guy and Inter 700 / 800 ({FL.ROOT})")
+        else:
+            import cv2
+
+            def photo(seed, lo=40, hi=200):
+                r = np.random.default_rng(seed)
+                yy, xx = np.mgrid[0:720, 0:1280]
+                t = (xx / 1280 * 0.6 + yy / 720 * 0.4)[..., None]
+                img = r.uniform(lo, hi, 3) * (1 - t) + r.uniform(lo, hi, 3) * t
+                img = img + cv2.resize(r.normal(0, 22, (12, 20, 3)), (1280, 720), interpolation=cv2.INTER_CUBIC)
+                return Image.fromarray(np.clip(img + r.normal(0, 4, img.shape), 0, 255).astype(np.uint8))
+
+            def words_on(im, face, words, xy, fill, stroke=0, shadow=False):
+                f = _fm_font(faces[face])
+                if shadow:
+                    sh = Image.new("L", im.size, 0)
+                    ImageDraw.Draw(sh).text((xy[0] + 4, xy[1] + 5), words, font=f, fill=190)
+                    from PIL import ImageFilter
+                    im.paste(Image.new("RGB", im.size, (0, 0, 0)), (0, 0), sh.filter(ImageFilter.GaussianBlur(6)))
+                dr = ImageDraw.Draw(im)
+                dr.text(xy, words, font=f, fill=fill, stroke_width=stroke, stroke_fill=(0, 0, 0))
+                x0, y0, x1, y1 = dr.textbbox(xy, words, font=f)
+                return [round(x0 / 12.8 - 1.0, 1), round(y0 / 7.2 - 1.5, 1), round(x1 / 12.8 + 1.5, 1), round(y1 / 7.2 + 1.0, 1)]
+            fsrc = tmp / "fontsrc"
+            fsrc.mkdir()
+            texts = []
+            for k, (face, words, xy, fill, stroke, shadow, light) in enumerate([
+                    (("Luckiest Guy", 400), "DAY 201", (60, 40), (255, 255, 255), 9, False, False),
+                    (("Inter", 700), "3:00 am", (640, 50), (255, 255, 255), 0, True, False),
+                    (("Inter", 800), "102 Años", (620, 60), (5, 5, 5), 0, False, True)], 1):
+                im = photo(k, *((170, 250) if light else (40, 200)))
+                box = words_on(im, face, words, xy, fill, stroke, shadow)
+                im.save(fsrc / f"f{k}.jpg", quality=88)
+                texts.append({"n": k, "words": words, "box": box})
+            add_files("Fonts", [fsrc / f"f{k}.jpg" for k in (1, 2, 3)], log=quiet)
+            (ROOT / "Fonts" / "style.json").write_text(json.dumps(
+                {"set": "Fonts", "font": {"style": "bold geometric sans", "closest": ["Montserrat ExtraBold", "Poppins Bold"],
+                                          "sure": False},
+                 "for_make": {"template": "outline", "font": "Montserrat ExtraBold"}, "texts": texts}), encoding="utf-8")
+            t_fm = time.time()
+            fm = fontmatch("Fonts", log=quiet)
+            t_fm = time.time() - t_fm
+            tops = {it["words"]: it["top"][0] for it in fm["items"]}
+            ok(tops.get("DAY 201", {}).get("family") == "Luckiest Guy",
+               f"fontmatch: \"DAY 201\" drawn in Luckiest Guy (white, black outline) -> {tops.get('DAY 201')}")
+            ok(tops.get("3:00 am", {}).get("family") == "Inter" and tops.get("102 Años", {}).get("family") == "Inter",
+               f"fontmatch: \"3:00 am\" (white, soft shadow) and \"102 Años\" (black) drawn in Inter -> "
+               f"{tops.get('3:00 am')}, {tops.get('102 Años')}")
+            b = fm["best"]
+            ok(b["family"] == "Inter" and b["weight"] in (700, 800) and b["items"] == 3 and b["runner_up"]
+               and (ROOT / "Fonts" / "fontmatch.json").is_file() and load_fontmatch("Fonts")["best"]["family"] == "Inter",
+               f"fontmatch: the set's font = Inter (2 of 3 texts) -> {b['family']} {b['weight']} {b['score']} "
+               f"(then {b['runner_up']['family'] if b['runner_up'] else '-'}), fontmatch.json written, {t_fm:.1f} s")
+            ok(all(len(it["top"]) == FM_TOP and {"n", "words", "box", "letters", "colour"} <= set(it) for it in fm["items"])
+               and get_set("Fonts")["fontmatch"] and any(x.startswith("Font, measured") for x in summary_lines("Fonts")),
+               "fontmatch.json: the top 5 per text, the page and summary_lines get it")
+            from .thumbnail import style_values
+            _, sv, _ = style_values("Fonts")
+            (ROOT / "Fonts" / "fontmatch.json").unlink()
+            _, sv2, _ = style_values("Fonts")
+            ok(sv.get("font") == "Inter" and sv2.get("font") == "Montserrat",
+               f"style_values: the measured font wins (got {sv.get('font')}); without it Claude's pick "
+               f"\"Montserrat ExtraBold\" -> {sv2.get('font')}")
         # the whole channel listed once, then batches (no network: a canned listing, pictures made here)
         canned = {"channel": "Canned", "channel_follower_count": 1000, "entries": [
             {"id": f"vid{i:08d}", "ie_key": "Youtube", "title": f"video {i}", "view_count": v, "url": f"https://youtu.be/vid{i:08d}",

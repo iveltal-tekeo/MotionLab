@@ -279,10 +279,20 @@ details.fold > .in { padding: 4px 10px 10px; }
 .gcard { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 .gthumb { display: flex; align-items: center; justify-content: center; min-height: 90px; background: #1b1b20; border-radius: 6px; overflow: hidden; }
 .gthumb img { max-width: 100%; display: block; }
+/* 0.4.6: the live preview (the graphic's own HTML in a frame, scaled) + its frame slider, and the looks */
+.gside { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.glv { position: relative; overflow: hidden; border-radius: 6px; align-self: center;
+  background: repeating-conic-gradient(#26262c 0 25%, #1b1b20 0 50%) 0 0 / 20px 20px; }
+.glv iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: transparent; pointer-events: none; }
+.glvbar { display: flex; align-items: center; gap: 8px; }
+.glvbar input[type=range] { flex: 1; min-width: 0; }
+.glvbar .btn { min-width: 34px; justify-content: center; }
+.glooks { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; }
 .gset { display: grid; grid-template-columns: max-content minmax(0, 360px); gap: 6px 12px; align-items: center; font-size: 13px; }
 .gset label { color: var(--muted); }
 .gset input[type=text], .gset input[type=number], .gset select { width: 100%; padding: 4px 8px; }
 .gset input[type=color] { width: 56px; height: 26px; padding: 0 2px; }
+.gset .fprev { margin-top: 4px; font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* 0.4.6: the picked font */
 .glib { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 22px; }
 .gl { padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 @media (max-width: 760px) { .gcard { grid-template-columns: 1fr; } }

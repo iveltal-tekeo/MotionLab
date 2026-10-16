@@ -30,7 +30,8 @@ from .util import LAB
 
 LIBRARY = LAB / "library" / "graphics"
 EXAMPLES = LAB / "tools" / "overlays" / "examples"
-SOURCES = ("index.html", "overlay.json", "gsap.min.js", "hyperframes.json")      # + assets\ (what new / save copy)
+SOURCES = ("index.html", "overlay.json", "gsap.min.js", "hyperframes.json",      # + assets\ (what new / save copy)
+           "presets.json")
 TYPES = ("string", "color", "number", "boolean", "enum")
 _DECL = re.compile(r"<html\b[^>]*?\bdata-composition-variables\s*=\s*(?:'([^']*)'|\"([^\"]*)\")", re.S | re.I)
 _COLOR = re.compile(r"^#(?:[0-9a-f]{3}|[0-9a-f]{6})$", re.I)
@@ -152,6 +153,11 @@ def set_values(folder: Path, new: dict) -> dict:
     decl = declared(folder)
     if not decl:
         raise ValueError(f"{folder.name} declares no settings (data-composition-variables in its index.html)")
+    from . import fonts as FL                         # 0.4.6: a graphic made before the font library learns its list
+    if any(FL.is_font_setting(d) and new.get(d["id"]) not in [o["value"] for o in d.get("options", [])]
+           and FL.by_family(str(new.get(d["id"]))) for d in decl):
+        FL.sync_file(folder / "index.html")
+        decl = declared(folder)
     clean, bad = check(decl, new)
     if bad:
         raise ValueError("; ".join(bad))
@@ -161,6 +167,93 @@ def set_values(folder: Path, new: dict) -> dict:
     c["values"] = {**old, **clean}
     _write_json(p, c)
     return status(folder)
+
+
+def presets(folder: Path) -> dict:
+    """A graphic's ready-made looks (0.4.6): <folder>\\presets.json = {id: {"label", "what", "values"}} (keys starting
+    with "_" are notes), values = settings its index.html declares. -> {id: {"label", "what", "values", "active"}},
+    active = the graphic's values equal that preset's now; {} when it has no presets.json. ValueError on a broken file."""
+    folder = Path(folder)
+    p = folder / "presets.json"
+    if not p.exists():
+        return {}
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"{p}: not valid JSON ({e})") from None
+    decl = declared(folder)
+    now = values(folder) if decl else {}
+    out = {}
+    for k, v in (raw.items() if isinstance(raw, dict) else []):
+        if k.startswith("_") or not isinstance(v, dict) or not isinstance(v.get("values"), dict):
+            continue
+        clean, _ = check(decl, v["values"])
+        out[k] = {"label": str(v.get("label") or k), "what": str(v.get("what") or ""), "values": v["values"],
+                  "active": bool(clean) and all(now.get(i) == x for i, x in clean.items())}
+    return out
+
+
+def apply_preset(folder: Path, preset_id: str) -> dict:
+    """Give a graphic one of its ready-made looks (presets.json): set_values with that preset's values -> status().
+    ValueError when the graphic has no such preset (or a value does not fit its settings)."""
+    folder = Path(folder)
+    p = presets(folder)
+    if preset_id not in p:
+        name = conf(folder).get("name", folder.name)
+        if not p:
+            raise ValueError(f"{name} has no ready-made looks (no presets.json next to its index.html)")
+        raise ValueError(f"{name} has no look '{preset_id}' - pick one of: "
+                         + ", ".join(f"{k} ({v['label']})" for k, v in p.items()))
+    return set_values(folder, p[preset_id]["values"])
+
+
+def looks(folder: Path) -> dict:
+    """The looks the app offers for a graphic: its own presets.json, else those of the example it was made from (a
+    graphic made before that example had looks - captions before 0.4.6), marked upgrade: taking one first brings the
+    graphic's design up to the example's. -> {"looks": {id: {label, what, active}}, "upgrade": bool}."""
+    folder = Path(folder)
+    try:
+        own = presets(folder)
+    except ValueError:
+        own = {}
+    if own:
+        return {"looks": {k: {x: v[x] for x in ("label", "what", "active")} for k, v in own.items()}, "upgrade": False}
+    ex = EXAMPLES / str(conf(folder).get("from") or "")
+    if conf(folder).get("from") and (ex / "presets.json").exists() and (ex / "index.html").exists():
+        try:
+            return {"looks": {k: {"label": v["label"], "what": v["what"], "active": False}
+                              for k, v in presets(ex).items()}, "upgrade": True}
+        except ValueError:
+            pass
+    return {"looks": {}, "upgrade": False}
+
+
+def adopt_example(folder: Path) -> Path:
+    """A graphic made from an example takes the example's newest design: its index.html + presets.json (the words in
+    assets\\, overlay.json and the values the new design still declares stay; the old index.html is kept in
+    <folder>\\_before\\). -> the kept copy."""
+    folder = Path(folder)
+    ex = EXAMPLES / str(conf(folder).get("from") or "")
+    if not conf(folder).get("from") or not (ex / "index.html").exists():
+        raise ValueError(f"{folder.name} was not made from one of the examples")
+    keep = folder / "_before"
+    keep.mkdir(exist_ok=True)
+    old = (folder / "index.html").read_text(encoding="utf-8")
+    shutil.copy2(folder / "index.html", keep / "index.html")
+    new = (ex / "index.html").read_text(encoding="utf-8")
+    for pat in _SIZE_LINES:                     # the graphic's own rate, length and size (overlay.py retime) stay
+        m = re.search(pat, old)
+        if m:
+            new = re.sub(pat, lambda _m: m.group(0), new)
+    (folder / "index.html").write_text(new, encoding="utf-8")
+    if (ex / "presets.json").exists():
+        shutil.copy2(ex / "presets.json", folder / "presets.json")
+    return keep / "index.html"
+
+
+_SIZE_LINES = (r"const FPS = [\d./]+, FRAMES = \d+;", r"const W = \d+, H = \d+;", r'data-duration="[\d.]+"',
+               r'data-width="\d+"', r'data-height="\d+"', r'content="width=\d+, height=\d+"',
+               r"width: \d+px; height: \d+px;")
 
 
 def inputs_hash(folder: Path) -> str:

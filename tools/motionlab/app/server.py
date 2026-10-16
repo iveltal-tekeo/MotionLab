@@ -31,6 +31,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from motionlab import __version__
+from motionlab import fonts as FL
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
@@ -43,15 +44,16 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 25                                      # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 26                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 APPDIR = LAB / ".app"
 THUMBS = APPDIR / "thumbs"
-FILE_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge"}
+FILE_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge", "fonts"}    # fonts: 0.4.6, the library
 OPENABLE = {".html", ".md", ".txt", ".png", ".jpg", ".jpeg", ".mp4", ".mov", ".json", ".csv"}
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 for ext, typ in ((".js", "text/javascript"), (".css", "text/css"), (".md", "text/plain"), (".comp", "text/plain"),
-                 (".mp4", "video/mp4"), (".json", "application/json"), (".csv", "text/plain"), (".py", "text/plain")):
+                 (".mp4", "video/mp4"), (".json", "application/json"), (".csv", "text/plain"), (".py", "text/plain"),
+                 (".ttf", "font/ttf"), (".otf", "font/otf")):
     mimetypes.add_type(typ, ext)
 
 
@@ -345,6 +347,13 @@ class Handler(BaseHTTPRequestHandler):
                                "claude": live_claude()})              # 0.4.4: Claude windows at work, one line
         if path == "/api/status":
             return self._json(status())
+        if path == "/api/fonts":                         # 0.4.6: the font library - the font settings' lists + previews
+            return self._json({"families": [{"family": f["family"], "group": f["group"], "licence": f["licence"],
+                                             "own": f["own"]} for f in FL.families()], "windows": list(FL.SYSTEM)})
+        if path == "/fonts.css":                         # the same library as @font-face, for the previews
+            css = FL.css(FL.families(), base=lambda f: "/files/library/fonts/" if f["own"] else "/files/fonts/")
+            return self._send(200, css.replace("font-display:block", "font-display:swap").encode("utf-8"),
+                              "text/css; charset=utf-8")
         if path == "/api/references":
             return self._json(data.list_references(arg("tests") == "1"))
         if path == "/api/candidates":
@@ -577,7 +586,7 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/overlay", path)            # Videos > Graphics: Save settings
         if m:
             return self._json(data.save_overlay_values(urllib.parse.unquote(m[1]), str(body.get("overlay", "")),
-                                                       body.get("values")))
+                                                       body.get("values"), str(body.get("preset") or "")))
         if path == "/api/jobs":                          # queue: true = wait its turn (0.4.1: the quick draft)
             return self._json(S.runner.start(str(body.get("kind", "")), body.get("args") or {},
                                              queue=bool(body.get("queue"))).info(0))

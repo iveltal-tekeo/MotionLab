@@ -25,9 +25,14 @@ particles) are written this way since 0.3.0.
           files it uses, so it always gets a numbered copy <folder>\\resolve\\<name>_<id>.mov (resolve-clip <folder>
           makes one to drag in by hand); <name>.mov stays free to render again
     .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json | a video>
-          [--names "MotionLab, 4AM"] [--model small|base] [--render]   (a video = its words by speech to text)
-          captions timed to the words (styles + settings like any graphic) + <name>.srt for Resolve's subtitle track;
-          rate / size / length from the project's newest edit plan (or --fps --width --height --frames)
+          [--names "MotionLab, 4AM"] [--model small|base] [--preset clean_box] [--render]   (a video = its words by
+          speech to text) captions timed to the words (styles + settings like any graphic) + <name>.srt for
+          Resolve's subtitle track; rate / size / length from the project's newest edit plan (or --fps --width
+          --height --frames); --preset = start with that ready-made look
+    .venv\\Scripts\\python tools\\overlay.py preset <folder> [<id>]    a graphic's ready-made looks (presets.json next to
+          its index.html; the captions: classic = the look before 0.4.6, clean_box = sentence case on a rounded dark
+          box fitted to its longest line, the word being said in cyan, a fade): no id = list them, an id = set its
+          values (like `set`), then render again
     .venv\\Scripts\\python tools\\overlay.py stills <folder> 0,12,40     PNGs of rendered frames on a checkerboard,
           frame number + timecode burned in (look at these instead of the video); ranges too: 0,38,113-116
     .venv\\Scripts\\python tools\\overlay.py snap <folder> 0,38,113-116   the same straight from the HTML, NO render
@@ -67,6 +72,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from motionlab import fonts as FL  # noqa: E402
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import overlays as OV  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
@@ -388,6 +394,7 @@ def cmd_render(a) -> int:
     if getattr(a, "motion_blur", None):             # kept for the next render (the app's Graphics tab renders without the flag)
         c["motion_blur"] = n
         (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+    FL.ensure(folder, OS.values(folder), OS.declared(folder))   # 0.4.6: the bundled fonts its settings name, in assets
     vargs, vals, vfile = variables_args(folder)
     if vals:
         log("settings: " + ", ".join(f"{k} = {v!r}" for k, v in vals.items()))
@@ -537,6 +544,8 @@ def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndar
         decl = OS.declared(folder)
     except ValueError as e:
         raise SystemExit(str(e))
+    if decl:                                  # 0.4.6: the bundled fonts the settings name - into the copy only
+        FL.ensure(src, OS.values(folder), decl)
     if decl:                                  # what the runtime's getVariables() reads (render: --variables-file)
         js = json.dumps(OS.values(folder), ensure_ascii=True).replace("</", "<\\/")
         html = (src / "index.html").read_text(encoding="utf-8")
@@ -730,6 +739,12 @@ def cmd_captions(a) -> int:
     from motionlab import captions as CAP
     from motionlab import speech as SP
     folder = guard(Path(a.folder))
+    if a.preset:                                    # checked before any speech to text
+        have = OS.presets(folder if (folder / "index.html").exists() else OS.EXAMPLES / "captions")
+        if a.preset not in have:
+            raise SystemExit(f"no caption look '{a.preset}' - pick one of: "
+                             + (", ".join(f"{k} ({v['label']})" for k, v in have.items())
+                                or "(none: these captions were made before 0.4.6 - make them in a new folder)"))
     plan = _plan_of(folder)
     src = Path(a.from_)
     vid = {}
@@ -774,6 +789,12 @@ def cmd_captions(a) -> int:
                            "cues": len(cues), "estimated": est, "offset": a.offset,
                            **({"speech": {"model": a.model, "names": a.names or ""}} if vid else {})}})
     (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+    if a.preset:
+        try:
+            OS.apply_preset(folder, a.preset)
+        except ValueError as e:
+            raise SystemExit(str(e))
+        log(f"{folder.name}: the look '{OS.presets(folder)[a.preset]['label']}'")
     log(f"{folder.name}: {len(cues)} captions, {c['captions']['words']} words from the {what}"
         + (" (word times ESTIMATED: the file has one time per line)" if est else "")
         + f"; {frames} frames at {fps:g} fps, {W}x{H}")
@@ -785,6 +806,30 @@ def cmd_captions(a) -> int:
     print(f"for DaVinci Resolve's subtitle track: {srt}")
     if a.render:
         return cmd_render(argparse.Namespace(folder=str(folder), workers=None, mp4=False))
+    return 0
+
+
+def cmd_preset(a) -> int:
+    """A graphic's ready-made looks (presets.json next to its index.html): list them, or give it one (then render)."""
+    folder = Path(a.folder)
+    try:
+        have = OS.presets(folder)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    if not a.preset:
+        if not have:
+            print(f"{folder.name}: no ready-made looks (no presets.json next to its index.html)")
+            return 0
+        for k, v in have.items():
+            print(f"  {'*' if v['active'] else ' '} {k:12s} {v['label']:12s} {v['what']}")
+        print(f"* = its look now. Give it one: overlay.py preset {folder} <id>")
+        return 0
+    folder = guard(folder)
+    try:
+        s = OS.apply_preset(folder, a.preset)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    print(f"{s['name']}: the look '{have[a.preset]['label']}' - render it again (overlay.py render {folder})")
     return 0
 
 
@@ -935,6 +980,7 @@ def _render_pngs(hf_bin: Path, gsap_js: Path, example: Path, work: Path) -> tupl
     shutil.rmtree(work, ignore_errors=True)
     shutil.copytree(example, src, ignore=shutil.ignore_patterns("thumb.png", "*.mov", "*.rgba*", "render.json"))
     shutil.copy2(gsap_js, src / "gsap.min.js")
+    FL.ensure(src, OS.values(example), OS.declared(example))     # 0.4.6: its default font, bundled
     fps, _ = _example_conf(example)
     t0 = time.time()
     r = subprocess.run([node(), str(hf_bin), "render", str(src), "--format", "png-sequence", "--fps", fps_arg(fps),
@@ -1200,7 +1246,11 @@ def main() -> int:
     s.add_argument("--offset", type=int, default=0, help="frames to move every caption by")
     s.add_argument("--max-chars", type=int, default=32)
     s.add_argument("--max-words", type=int, default=6)
+    s.add_argument("--preset", metavar="ID", help="start with a ready-made look: classic, clean_box (overlay.py preset)")
     s.add_argument("--render", action="store_true")
+    s = sub.add_parser("preset", help="a graphic's ready-made looks: list them, or give it one (then render)")
+    s.add_argument("folder")
+    s.add_argument("preset", nargs="?", help="the look's id (none = list them)")
     sub.add_parser("install")
     s = sub.add_parser("doctor")
     s.add_argument("--fix", action="store_true", help="download HyperFrames' Chrome if missing")
@@ -1217,7 +1267,7 @@ def main() -> int:
     a = ap.parse_args()
     return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "snap": cmd_snap, "check": cmd_check,
             "settings": cmd_settings,
-            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions,
+            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions, "preset": cmd_preset,
             "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip, "fit": cmd_fit,
             "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
             "pin": cmd_pin}[a.cmd](a)

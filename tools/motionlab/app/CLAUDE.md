@@ -10,7 +10,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
 - Python standard library only (nothing installed): a server on 127.0.0.1:8765 + Microsoft Edge in app mode (its
   own window, 1600x1000). It stops ~10 s after the window closes (3 min without heartbeat), unless a job runs.
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
-  refs, docs, library, knowledge only. Writes only: verdicts / feedback exports, library picks, `.app\`,
+  refs, docs, library, knowledge, fonts (0.4.6) only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
   (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
@@ -406,6 +406,35 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   - "the set's" button -, colours, the closest design font, capitals). analysis\thumbs is never an analysis:
   `usage_names` / `took` need events.json, `trash.plan_reference` refuses "thumbs", analyze.py names a video
   "thumbs" `thumbs_video`, storage.py has one row per set.
+- **Fonts** (0.4.6, the user: "fonts and customizations for motion graphics"; `motionlab\fonts.py`, the lab's
+  `fonts\` folder): every font setting (an enum with id `font` / `*_font`, `isFontSet`) in a graphic's form and a
+  thumbnail's *Change it…* (`gsetInput`) lists the whole library grouped by what it suits (`FONT_GROUPS`, GET
+  `/api/fonts` once at start = `FONTS`; until it answers the declared options), then the Windows fonts older graphics
+  used ("Windows only"), then any other name the graphic declares; under it `.fprev` = a line in the picked font
+  (`/fonts.css` = `fonts.css(families())` with `/files/fonts/` links, swap; a family loads only when shown), following
+  the select (one `change` listener on the document). Picking a library font a graphic made before 0.4.6 does not
+  declare is fine: `overlay_settings.set_values` upgrades its list (`fonts.sync_file`) before checking. Own fonts
+  (`library\fonts\<family>\`, private) come first as *Your fonts (this PC only)*; `/fonts.css` links them under
+  `/files/library/fonts/`.
+  **Live preview** (0.4.6; the user, 2026-10-15: changes they cannot see are "editing blind"): every graphic card on
+  a video's Graphics tab draws the graphic itself (`livePreview(box, o, getValues)`): its index.html fetched from
+  `/files/`, given `<base>` + `/fonts.css` + a `window.__hyperframes.getVariables()` shim with the FORM's values, set
+  as an iframe's srcdoc (same origin, scaled to the column, `pointer-events: none`) and seeked with
+  `__timelines.main.seek(f / fps)`; a slider + ▶ (frame + timecode) move through it, starting on the first caption's
+  middle (`window.CAPTIONS`), else 30 % in; any input re-builds it (120 ms debounce) - nothing is saved until *Save*.
+  No `__timelines.main` = the rendered picture + "No live preview for this graphic". **Looks** (`lookRow`): a
+  graphic's presets.json (`OS.looks` = `{looks: {id: {label, what, active}}, upgrade}`) as a `.seg` *Look: Classic |
+  Clean box*; a click = POST `/api/project/<p>/overlay` `{overlay, preset}` -> `data.save_overlay_values(..., preset)`
+  -> `OS.apply_preset`. Captions made before 0.4.6 (no presets.json, overlay.json `from` = an example that has looks)
+  get `upgrade: true`: the click first takes the example's newest design (`OS.adopt_example`: index.html + presets.json,
+  the graphic's own rate / length / size lines kept (`_SIZE_LINES`, as `overlay.py retime` wrote them), the old
+  index.html kept in `_before\`); words (`assets\captions.js`) and values stay.
+  **The font, measured** (thumbnail sets): `pageThumbs` side panel row *Font, measured* (MotionLab chip) = `S.fontmatch`
+  (`thumbsets.fontmatch`: Claude's style.json `texts` vs the library by shape): best family + weight, "matches 82 %
+  over 14 texts, the best on 8", the runner-up and Claude's first pick's score from `ranking`; *Measure the font* /
+  *Measure again* = job `thumbs_fontmatch` (group light, ~2 s; in `THUMBS_JOBS`); the "Font, measured" summary line is
+  left out of *Measured by MotionLab* (no double). *In the style of* buttons name the font each set gives
+  (`_thumb_styles` `font` = `thumbnail.style_values(...)[2]["font_pick"]`: measured, else Claude's pick).
 - **Report a problem** (0.4.2.1, `report.py`): `reportBtn(job)` in Settings > About, on every failed job (Jobs list
   + detail, the Analyze in-progress panel, Download from a link, Update yt-dlp, a player copy that failed);
   `reportModal` = GET `/api/report[?job=<id>]` (`server.problem_report`: the job's title / kind / status / exit code +
@@ -530,7 +559,7 @@ Loaded by Claude Code only when you work in this folder (the root CLAUDE.md stay
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
-  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

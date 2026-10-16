@@ -2,28 +2,44 @@
 <html lang="en" data-composition-variables='[
   {"id": "style", "type": "enum", "label": "Style", "default": "highlight",
    "options": [{"value": "highlight", "label": "Line, the spoken word highlighted"}, {"value": "pop", "label": "Words pop in as they are said"}, {"value": "line", "label": "Whole line, no animation"}]},
-  {"id": "font", "type": "enum", "label": "Font", "default": "Arial Black",
-   "options": [{"value": "Arial Black", "label": "Arial Black"}, {"value": "Impact", "label": "Impact"}, {"value": "Segoe UI", "label": "Segoe UI (bold)"}, {"value": "Verdana", "label": "Verdana (bold)"}, {"value": "Georgia", "label": "Georgia (bold)"}]},
+  {"id": "entrance", "type": "enum", "label": "How each line comes in", "default": "none",
+   "options": [{"value": "none", "label": "All at once"}, {"value": "fade", "label": "Fades in and rises a little"}]},
+  {"id": "entrance_frames", "type": "number", "label": "Fade-in length (frames)", "default": 4, "min": 1, "max": 15, "step": 1},
+  {"id": "font", "type": "enum", "label": "Font", "default": "Archivo Black",
+   "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "weight", "type": "number", "label": "Letter weight (400 regular, 700 bold, 900 heaviest)", "default": 800, "min": 100, "max": 900, "step": 100},
   {"id": "font_size", "type": "number", "label": "Text size (px)", "default": 72, "min": 12, "max": 400, "step": 1},
   {"id": "uppercase", "type": "boolean", "label": "Capitals", "default": true},
+  {"id": "first_capital", "type": "boolean", "label": "Capital letter at the start of each line", "default": false},
   {"id": "color", "type": "color", "label": "Colour", "default": "#ffffff"},
   {"id": "highlight_color", "type": "color", "label": "Spoken word colour", "default": "#ffd400"},
   {"id": "outline", "type": "number", "label": "Outline (px)", "default": 6, "min": 0, "max": 40, "step": 1},
   {"id": "outline_color", "type": "color", "label": "Outline colour", "default": "#000000"},
   {"id": "box", "type": "boolean", "label": "Box behind the text", "default": false},
   {"id": "box_color", "type": "color", "label": "Box colour", "default": "#000000"},
-  {"id": "box_opacity", "type": "number", "label": "Box opacity", "default": 0.6, "min": 0, "max": 1, "step": 0.05},
-  {"id": "y", "type": "number", "label": "Height on screen (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
+  {"id": "box_opacity", "type": "number", "label": "Box opacity", "default": 0.6, "min": 0, "max": 1, "step": 0.01},
+  {"id": "box_radius", "type": "number", "label": "Box corners, roundness (px)", "default": 13, "min": 0, "max": 200, "step": 1},
+  {"id": "box_pad_y", "type": "number", "label": "Box space above and below the text (px)", "default": 4, "min": 0, "max": 200, "step": 1},
+  {"id": "box_pad_x", "type": "number", "label": "Box space left and right of the text (px)", "default": 18, "min": 0, "max": 200, "step": 1},
+  {"id": "line_height", "type": "number", "label": "Line spacing (times the text size)", "default": 1.18, "min": 0.8, "max": 2.5, "step": 0.02},
+  {"id": "balance", "type": "boolean", "label": "Even line lengths when a line wraps", "default": false},
+  {"id": "y", "type": "number", "label": "Height on wide and square videos (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
+  {"id": "y_upright", "type": "number", "label": "Height on upright videos (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
   {"id": "max_width", "type": "number", "label": "Line width (% of the frame)", "default": 80, "min": 20, "max": 100, "step": 1},
   {"id": "pop_frames", "type": "number", "label": "Pop-in length (frames)", "default": 3, "min": 0, "max": 15, "step": 1}
 ]'>
 <head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920, height=1080">
 <!-- MotionLab overlay example "captions" (0.3.2): captions timed to the words, from assets/captions.js (written by
      .venv\Scripts\python tools\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json>, which also sets
      the size, rate and length below and writes <name>.srt for DaVinci Resolve's subtitle track). Render:
      .venv\Scripts\python tools\overlay.py render <this folder>
+     Ready-made looks (0.4.6): presets.json next to this file (classic = these defaults, clean_box = sentence case on
+     a rounded dark box that fits its longest line, the word being said in cyan, a fade);
+     .venv\Scripts\python tools\overlay.py preset <this folder> [classic | clean_box]. Upright frames (taller than
+     wide: 9:16, 4:5) use y_upright, the others y.
      Rules: transparent background (never paint html / body / #root); animate only on the paused GSAP timeline below
      (no CSS animations, timers, Date or Math.random); times in frames with F(n) / AT(n). -->
 <script src="./gsap.min.js"></script>
@@ -51,24 +67,31 @@
   const root = document.getElementById("root");
   const hex = (c, a) => `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`;
   const tl = gsap.timeline({ paused: true });
+  const TALL = H > W;                     // an upright frame (9:16, 4:5) has its own height: the apps' buttons sit low
+  const WEIGHT = V.font === "Arial Black" || V.font === "Impact" ? "400" : String(V.weight);   // one-face Windows fonts: no fake bold
+  const boxes = [];                       // [cue, its words] - each box is fitted to its longest line below
   for (const cue of C.cues) {
     const el = document.createElement("div");
     el.className = "cue";
-    Object.assign(el.style, { top: V.y + "%", width: V.max_width + "%", fontFamily: `"${V.font}", Arial, sans-serif`,
-                              fontWeight: V.font === "Arial Black" || V.font === "Impact" ? "400" : "800",
-                              fontSize: V.font_size + "px", color: V.color,
+    Object.assign(el.style, { top: (TALL ? V.y_upright : V.y) + "%", width: V.max_width + "%",
+                              fontFamily: `"${V.font}", Arial, sans-serif`, fontWeight: WEIGHT,
+                              fontSize: V.font_size + "px", lineHeight: String(V.line_height), color: V.color,
                               textTransform: V.uppercase ? "uppercase" : "none" });
+    if (V.balance) el.style.setProperty("text-wrap", "balance");
     const inner = document.createElement("span");
     inner.className = "in";
-    if (V.box) Object.assign(inner.style, { background: hex(V.box_color, V.box_opacity), borderRadius: (V.font_size * 0.18) + "px",
-                                            padding: `${V.font_size * 0.06}px ${V.font_size * 0.25}px` });
+    if (V.box || V.entrance === "fade") inner.style.display = "block";    // one box around the lines; a block can rise
+    if (V.box) Object.assign(inner.style, { background: hex(V.box_color, V.box_opacity), borderRadius: V.box_radius + "px",
+                                            padding: `${V.box_pad_y}px ${V.box_pad_x}px` });
     el.appendChild(inner);
+    const spans = [];
     cue.words.forEach(([text, f0, f1], i) => {
       const s = document.createElement("span");
       s.className = "w";
-      s.textContent = text;
+      s.textContent = i === 0 && V.first_capital && !V.uppercase ? text.replace(/\p{L}/u, ch => ch.toUpperCase()) : text;
       if (V.outline > 0) s.style.webkitTextStroke = `${2 * V.outline}px ${V.outline_color}`;   // half of it is under the fill
       inner.appendChild(s);
+      spans.push(s);
       if (i < cue.words.length - 1) inner.appendChild(document.createTextNode(" "));
       if (V.style === "pop") {
         s.style.opacity = "0";
@@ -80,8 +103,38 @@
       }
     });
     root.appendChild(el);
+    if (V.box) boxes.push([el, spans]);
     tl.set(el, { opacity: 1 }, AT(cue.f0));
+    if (V.entrance === "fade") {          // the line's first frame already shows 1/N of the fade; full on frame f0 + N - 1
+      const n = V.entrance_frames, t0 = F(Math.max(cue.f0 - 1, 0));
+      tl.fromTo(inner, { opacity: 0, y: 0.2 * V.font_size }, { opacity: 1, y: 0, ease: "sine.out",
+                duration: Math.max(F(cue.f0 - 1 + n) - (0.5 / FPS + 0.002) - t0, 0.004) }, t0);
+    }
     if (cue.f1 + 1 < FRAMES) tl.set(el, { opacity: 0 }, AT(cue.f1 + 1));
+  }
+  // The box hugs its longest line (a block would take the full line width once the text wraps): each cue is laid out
+  // at the full width, its lines measured from the words' layout boxes (transforms ignored), then narrowed to the
+  // longest line + the box's sides; once more when the font file has loaded (snapshots and renders wait for it).
+  const fit = () => {
+    const most = W * V.max_width / 100;
+    for (const [el, spans] of boxes) {
+      el.style.width = V.max_width + "%";
+      for (let pass = 0; pass < 2; pass++) {
+        const lines = new Map();
+        for (const s of spans) {
+          const l = s.offsetLeft, r = l + s.offsetWidth, e = lines.get(s.offsetTop);
+          lines.set(s.offsetTop, e ? [Math.min(e[0], l), Math.max(e[1], r)] : [l, r]);
+        }
+        let w = 0;
+        for (const [l, r] of lines.values()) w = Math.max(w, r - l);
+        el.style.width = Math.min(most, Math.ceil(w + 2 * V.box_pad_x + 2)) + "px";
+      }
+    }
+  };
+  if (boxes.length) {
+    fit();
+    const text = C.cues.map(q => q.words.map(x => x[0]).join(" ")).join(" ");
+    document.fonts.load(`${WEIGHT} ${V.font_size}px "${V.font}"`, text).then(fit, fit);
   }
   tl.set({}, {}, F(FRAMES));              // the timeline's length = the overlay's length
   window.__timelines = window.__timelines || {};

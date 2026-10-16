@@ -1,0 +1,63 @@
+{
+ "_comment": "Ready-made looks for the captions graphic (0.4.6): values = settings its index.html declares (data-composition-variables), every look setting listed so switching from one to another leaves nothing behind. Apply: .venv\\Scripts\\python tools\\overlay.py preset <folder> <id> (or captions ... --preset <id>). Sizes in px are for a 1080-px short side (1080x1920 or 1920x1080).",
+ "classic": {
+  "label": "Classic",
+  "what": "Heavy capitals with a black outline, the word being said in yellow, the whole line at once (the look before 0.4.6).",
+  "values": {
+   "style": "highlight",
+   "entrance": "none",
+   "entrance_frames": 4,
+   "font": "Archivo Black",
+   "weight": 800,
+   "font_size": 72,
+   "uppercase": true,
+   "first_capital": false,
+   "color": "#ffffff",
+   "highlight_color": "#ffd400",
+   "outline": 6,
+   "outline_color": "#000000",
+   "box": false,
+   "box_color": "#000000",
+   "box_opacity": 0.6,
+   "box_radius": 13,
+   "box_pad_y": 4,
+   "box_pad_x": 18,
+   "line_height": 1.18,
+   "balance": false,
+   "y": 78,
+   "y_upright": 78,
+   "max_width": 80,
+   "pop_frames": 3
+  }
+ },
+ "clean_box": {
+  "label": "Clean box",
+  "what": "Sentence case on a rounded, see-through dark box that fits its longest line, the word being said in cyan, each line fades in. Calm and readable on any footage (talking, explainers, podcasts).",
+  "values": {
+   "style": "highlight",
+   "entrance": "fade",
+   "entrance_frames": 4,
+   "font": "Poppins",
+   "weight": 600,
+   "font_size": 56,
+   "uppercase": false,
+   "first_capital": true,
+   "color": "#ffffff",
+   "highlight_color": "#5ce1e6",
+   "outline": 0,
+   "outline_color": "#000000",
+   "box": true,
+   "box_color": "#0c0e14",
+   "box_opacity": 0.62,
+   "box_radius": 24,
+   "box_pad_y": 16,
+   "box_pad_x": 32,
+   "line_height": 1.32,
+   "balance": true,
+   "y": 86,
+   "y_upright": 70,
+   "max_width": 74,
+   "pop_frames": 3
+  }
+ }
+}

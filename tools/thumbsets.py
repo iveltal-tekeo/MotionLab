@@ -21,6 +21,11 @@ video here; the logic is tools\\motionlab\\thumbsets.py.
           which side; "not measured" without the face model), the text (an estimate: letter size, where it sits, how
           much it covers) - re-used while a picture is unchanged; then the set's summary (views / followers weighted
           first), the faces / text counts, the usual positions, the set's main colours, the best 3
+    .venv\\Scripts\\python tools\\thumbsets.py fontmatch <set>
+          the set's font MEASURED (0.4.6): the words Claude listed in style.json "texts" cut out of the pictures and
+          compared by shape with every library font at weights 500-900 -> fontmatch.json (the best family + weight with
+          its overlap score, 1.00 = identical; the top 5 per text); "In the style of <set>" then uses it. ~2 s for 14
+          texts x 28 families
     .venv\\Scripts\\python tools\\thumbsets.py sheet <set>          the contact sheets again (15 per sheet: "#n", views,
           views / followers and the title under each picture)
     .venv\\Scripts\\python tools\\thumbsets.py list                 the sets: pictures, measured, style, last change
@@ -30,7 +35,7 @@ video here; the logic is tools\\motionlab\\thumbsets.py.
           a temp folder, a few seconds)
 
 <set> = a short name, e.g. mrbeast (letters, digits, _ - . are kept). --root <folder> (or MOTIONLAB_THUMBS_ROOT) keeps
-the sets somewhere else (tests). style.json in a set is Claude's (/write-title), never written here. Other people's
+the sets somewhere else (tests). style.json in a set is Claude's (/analyze-reference thumbs), never written here. Other people's
 thumbnails stay on this PC: nothing is shared from here. yt-dlp is the one the app uses (Settings > Programs).
 """
 from __future__ import annotations
@@ -89,6 +94,8 @@ def main() -> int:
     m = sub.add_parser("measure", parents=[common])
     m.add_argument("set")
     m.add_argument("--force", action="store_true")
+    fm = sub.add_parser("fontmatch", parents=[common])
+    fm.add_argument("set")
     s = sub.add_parser("sheet", parents=[common])
     s.add_argument("set")
     sub.add_parser("list", parents=[common])
@@ -125,6 +132,9 @@ def main() -> int:
             for line in TS.summary_lines(a.set):
                 print(line)
             return 1 if res["failed"] else 0
+        if a.cmd == "fontmatch":
+            TS.fontmatch(a.set, log=lambda x: print(x, flush=True))
+            return 0
         if a.cmd == "sheet":
             for p in TS.make_sheets(a.set):
                 print(p)

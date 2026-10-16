@@ -45,8 +45,9 @@ effort xhigh (graphics) / medium (ai).
 ## 2. A motion-graphics video (HyperFrames)
 Needs Node.js + HyperFrames (`tools\overlay.py doctor`; missing -> the app's Settings > Programs > Install, or
 `tools\overlay.py install`). The graphics rules are the ones of `/recreate-video` section 3b (read it): HTML / CSS /
-SVG / GSAP on a paused timeline, times in frames (`F(n)`, `AT(n)`), no timers / `Math.random` (`rnd(seed)`), system
-fonts or font files in the folder, settings the user can change in `data-composition-variables`.
+SVG / GSAP on a paused timeline, times in frames (`F(n)`, `AT(n)`), no timers / `Math.random` (`rnd(seed)`), fonts
+from the lab's font library (`tools\fonts.py list`, 0.4.6 - section 3b), settings the user can change in
+`data-composition-variables`.
 **Cheapest check first** (the first video's ~29 min of renders mostly went on bugs a 1-second snapshot shows). The
 user approves each step in plain words; no polish before step 3 is approved:
 (1) the plan in words and numbers - the scene table with frame + timecode and the feel as numbers ("a cut every

@@ -435,6 +435,25 @@ def check_thumbsets() -> dict:
     return {"passed": TS.selfcheck()["passed"]}
 
 
+def check_fonts() -> dict:
+    """The font library (0.4.6), no render: the families read from the lab's fonts folder (licences, weights,
+    variable ranges), a graphic gets only the fonts it uses, and every example / thumbnail design that has a font
+    setting offers the whole library (fonts.py sync was run after a font was added)."""
+    from motionlab import fonts as FL
+    from motionlab import overlay_settings as OSX
+    print("\n=== fonts: the library, a graphic's copies, the designs' lists ===")
+    r = FL.selfcheck()
+    want = [o["value"] for o in FL.options(FL.ROOT)]           # the shipped library (never the user's own fonts)
+    stale = []
+    for idx in sorted(list(FL.EXAMPLES.glob("*/index.html")) + list(FL.THUMB_TEMPLATES.glob("*/index.html"))):
+        for d in OSX.declared(idx.parent):
+            if FL.is_font_setting(d) and [o["value"] for o in d.get("options", [])] != want:
+                stale.append(f"{idx.parent.name}:{d['id']}")
+    print(("PASS  " if not stale else "FAIL  ") + "every shipped design offers the whole library"
+          + (f" - run tools\\fonts.py sync: {', '.join(stale)}" if stale else ""))
+    return {"passed": r["passed"] and not stale}
+
+
 def check_downloads_report() -> dict:
     """Downloads that keep working and Report a problem (0.4.2.1), no network: a fake carousel -> one post in a scratch
     downloads.json; the report's scrubbing and GitHub link (known answers, trimming); how yt-dlp was installed -> its
@@ -520,7 +539,7 @@ def main() -> int:
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
-               "thumbsets": check_thumbsets()}
+               "thumbsets": check_thumbsets(), "fonts": check_fonts()}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",
                                             "synthetic_test", [PY, str(HERE / "make_testvideo.py")], args.rebuild)

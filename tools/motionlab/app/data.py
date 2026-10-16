@@ -458,12 +458,15 @@ def waiting() -> list[dict]:
 # ================================================================================================= projects
 def _plan_info(p: Path) -> dict:
     pl = read_json(p, {}) or {}
+    made = pl.get("made_by") or {}
+    if not isinstance(made, dict):  # hand-written plans note the tool as one string
+        made = {"tool": str(made)}
     return {"file": p.name, "rel": rel(p), "name": pl.get("name"), "version": p.stem.split("_")[-1],
             "frames": pl.get("frames"), "fps": pl.get("fps"), "width": pl.get("width"), "height": pl.get("height"),
             "layers": len(pl.get("layers", [])), "levels": pl.get("levels", "single"),
             "duration_tc": frame_to_tc(max(0, int(pl.get("frames") or 1) - 1), float(pl.get("fps") or 25)),
             "reference": rel(pl["reference"]) if pl.get("reference") and Path(pl["reference"]).exists() else None,
-            "made_by": (pl.get("made_by") or {}).get("tool"), "style": (pl.get("made_by") or {}).get("style"),
+            "made_by": made.get("tool"), "style": made.get("style"),
             "notes": rel(p.with_name(f"draft_{p.stem.split('_')[-1]}.md"))
             if p.with_name(f"draft_{p.stem.split('_')[-1]}.md").exists() else None}
 
@@ -672,10 +675,18 @@ def overlay_folder(project: str, overlay: str) -> Path:
     return f
 
 
-def save_overlay_values(project: str, overlay: str, values) -> dict:
+def save_overlay_values(project: str, overlay: str, values, preset: str = "") -> dict:
     """The Graphics tab's Save: the user's settings into the overlay's overlay.json (validated against what its
-    index.html declares); the render job then uses them."""
-    return OS.set_values(overlay_folder(project, overlay), values if isinstance(values, dict) else {})
+    index.html declares); the render job then uses them. preset (0.4.6) = one of its looks (OS.looks): a graphic made
+    before its example had looks takes the example's design first (OS.adopt_example)."""
+    f = overlay_folder(project, overlay)
+    if preset:
+        if preset not in OS.looks(f)["looks"]:
+            raise ValueError(f"{overlay} has no look '{preset}'")
+        if OS.looks(f)["upgrade"]:
+            OS.adopt_example(f)
+        return OS.apply_preset(f, preset)
+    return OS.set_values(f, values if isinstance(values, dict) else {})
 
 
 # ------------------------------------------------------------------ 0.4.3: Edit > a video > Publish
@@ -885,6 +896,7 @@ def project(name: str) -> dict:
     used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
     for o in overlays:
         o["used_in"] = used.get(str((LAB / o["folder"] / f"{o['name']}.mov").resolve()).lower(), [])
+        o["looks"] = OS.looks(LAB / o["folder"])                         # 0.4.6: Classic | Clean box ...
     outcome = read_json(b / "outcome.json", {}) or {}
     return {"name": d.name, "label": _label(b), "sources": sources, "plans": plans, "renders": renders,
             "compares": compares, "overlays": overlays, "media": media,
@@ -1841,9 +1853,16 @@ def _thumb_styles() -> list[dict]:
     """Ready to post's *In the style of*: the sets with Claude's patterns (style.json) - name, label, how many."""
     try:
         from motionlab import thumbsets as TS
-        return [{"name": s["name"], "label": s["label"], "count": s["count"]} for s in TS.list_sets() if s["has_style"]]
+        out = [{"name": s["name"], "label": s["label"], "count": s["count"]} for s in TS.list_sets() if s["has_style"]]
     except Exception:                                        # noqa: BLE001 - no sets is no failure
         return []
+    from motionlab import thumbnail as TH
+    for s in out:                                            # 0.4.6: the font it gives - measured, else Claude's
+        try:
+            s["font"] = TH.style_values(s["name"])[2].get("font_pick")
+        except (Exception, SystemExit):                      # noqa: BLE001 - the button works without the line
+            s["font"] = None
+    return out
 
 
 def thumb_set(name: str) -> dict:

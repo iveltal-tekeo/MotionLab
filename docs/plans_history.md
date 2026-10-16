@@ -15,11 +15,13 @@ the table below.
 | The interface overhaul (0.4.3.5) | none (released 2026-10-15: the Editor overhaul, Film it, simpler Analyser / Prepare / Generator pages, a new player) |
 | What it took - Claude's time (0.4.4) | 0.4.5.5 for a few hours (2026-10-15 evening); its measuring was 0.5.0's step 0 |
 | Bulk - thumbnails, videos, edits at once (0.4.5) | none (added 2026-10-15 night; 0.4.5 was *Trending sounds* that evening - scrapped) |
-| Fonts and customizations (0.4.6) | none (added 2026-10-15 night) |
+| Fonts and customizations (0.4.6) | none (added 2026-10-15 night; released 2026-10-16) |
 | Yapping mode (0.4.7) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15) |
+| Faster videos (0.4.8) | none (added 2026-10-15 night; earlier that day 0.4.8 was colour's number) |
 | Prompt generator (0.4.9) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15) |
-| Content generation (0.5.0) | none (2026-10-14); "0.5" before that meant templates by feel + macOS |
+| Motion graphics (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps) |
 | Colour (0.5.1) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15) |
+| Content generation (0.5.2) | 0.5.0 (2026-10-14 to 2026-10-15); "0.5" before that meant templates by feel + macOS |
 | Describe video + courses (0.6.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
 | Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
@@ -80,6 +82,20 @@ the table below.
   customizations** for motion graphics and captions; describe video 0.8.0 -> **0.6.0**, with courses added (the user:
   bulk-analysed courses are "a similar idea" - Claude agreed: a course is a collection of long videos analysed for
   what they teach). ideas.md's *background analyses* moved into 0.4.5.
+- **2026-10-15, night** (the user, after Claude's review of what a video costs: ~1 min of Claude per second of video,
+  the goal 10 min per minute): new **0.4.8 = Faster videos** in the free slot - brief -> plan -> build -> one look;
+  the from-zero part stays in 0.5.0's blocks and formats. The user kept the two apart (asked whether to merge them);
+  0.5.0's step 7 (faster renders) moved into 0.4.8's step 3, and 0.5.0 builds on 0.4.8's brief and build command.
+- **2026-10-15, night, again** (the user asked where a motion-graphics version would fit - "a lot of free templates
+  from some courses ... the motion graphics by default are very dull" - then, to Claude's proposal, "yeah go ahead"):
+  **0.5.0 = Motion graphics: learned from pro templates** - new steps 1-4 (template packs in, read exactly, motion
+  cards and rules, templates used as they are) and 10 (the motion check); its benchmark stays illdari's "top 3
+  tracks" reel, now rated *good*. The rest of content generation -> new **0.5.2**; colour stays 0.5.1. 0.5.0's old
+  step numbers: 1 building blocks -> 5, 2 formats -> 6, 3 quick draft for Generate -> 7, 4 sound effects -> 8 (code
+  comments say "0.5.0 step 4"), 5 voice and music -> 0.5.2's 1, 6 preview -> 9, 7 faster renders -> 0.4.8's step 3,
+  8 AI clips back into the lab -> 0.5.2's 2, 9 three sizes -> 12, 10 other tools -> Lottie in step 4 and image tools
+  in 0.5.2's 3, 11 the made video's page -> 11 (kept in 0.5.0: it shows the scene table and the animatic), 12 the
+  clips a script needs -> 0.4.7 (*Make*'s step 3 B-roll slots are that list).
 
 ## Where some plans came from
 
@@ -137,6 +153,78 @@ to the lab's texture.
   winget's full build: unchecked).
 
 ## Released plans (their text when they shipped)
+
+### 0.4.6 - released 2026-10-16 - Fonts and customizations for motion graphics and captions
+
+**Ships when**: a graphic's or the captions' font can be any of ~30 curated free fonts shipped with MotionLab (the
+same render on every PC) or a font file the user adds; a caption style (font, size, colours, outline / shadow, the
+word being said highlighted, position in each platform's safe area, the animation) is saved as a preset and used in a
+new video in one click; the same fonts work in thumbnails and in DaVinci Resolve.
+
+**The user's words (2026-10-15)**: "make 0.4.6 motion graphics/captions oriented -> 'fonts and customizations for
+motion graphics'".
+
+**Where it stands**: graphics, captions and thumbnails are HTML (HyperFrames) with settings the user can change
+(*Editor > a video > Graphics*, *Ready to post*'s thumbnails); their font is one of five Windows fonts (Arial Black,
+Impact, Segoe UI, Verdana, Georgia) - nothing bundled, so another PC (or the Mac version, 0.7.5) can render
+differently, and there is no caption style to keep between videos.
+
+Claude's proposal (the user picks):
+1. **A font library**: ~30 free fonts under the SIL Open Font License (Google Fonts - e.g. Anton, Bebas Neue,
+   Montserrat, Poppins, Inter, Oswald, Archivo Black, Bangers, Permanent Marker; picked by what analysed videos and
+   0.4.5's thumbnail sets use) shipped in `tools\overlays\fonts\` with their licences and loaded by every graphic with
+   `@font-face` (a render never depends on what Windows has); the user's own font files in `library\fonts\` (private:
+   a bought font's licence is the user's); a preview of each with the user's own words.
+2. **Caption styles**: the captions example's settings grown into presets - font, weight, size, capitals, colours
+   (text, the word being said, outline, shadow, box), the highlight (colour / size / pop per word), words per line,
+   the position and the platforms' safe areas (TikTok / Reels / Shorts buttons), the entrance - saved, previewed as
+   stills in seconds (`overlay.py snap`), shared through the repo like the examples.
+3. **Like a reference**: an analysed video's captions and text on screen measured (0.4.7's text on screen: size,
+   position, capitals, colours) and the font's style named by Claude with the closest library fonts -> "captions like
+   <video>"; the same for 0.4.5's thumbnail styles.
+4. **Everywhere**: one font and preset across graphics, captions, thumbnails and the DaVinci Resolve build (Fusion
+   text needs the font installed in Windows - measured first; installed only on the user's click).
+**Decided 2026-10-15 (the user, after the choices made while 0.4.5 was tested)**:
+- **The fonts** = the user's own `fonts\` folder at the lab's root (25 families, 10.5 MB, with a `fonts.css`; checked:
+  24 SIL OFL 1.1 + Luckiest Guy Apache 2.0, the licence file and the font's own licence field agree, embedding
+  unrestricted, each with its licence file) + from the suggested first 12 the three it lacks: Nunito, Permanent
+  Marker, Space Grotesk (the helper's verified OFL copies). The candidates and specimen sheets of 32 fonts stayed on
+  this PC (Claude's scratch). Open: 11 of the 25 are variable fonts only - whether DaVinci Resolve's text tool uses
+  every weight of a variable font is to be measured before the Resolve part relies on them.
+- **The first caption preset** = *Clean box* (sentence case on a rounded dark box, the word being said in an accent
+  colour, a fade; Poppins 600 in the mock-up) - the box fits its longest line. Mock-ups of six styles on the user's
+  talking video (f2 (00:00:00:02) of testing_entire_workflow_v3) showed: presets need their own position per
+  orientation (today's captions sit in the 9:16 apps' bottom zone), ads need a higher position than ordinary posts,
+  and the face detector the thumbnail check has can keep captions off the face.
+- **Added: a measured font match for thumbnail sets** - the words on a set's thumbnails compared by shape with the
+  bundled fonts; the best one (with its score) is what *In the style of* uses instead of Claude's guess. Measured on
+  the Clavero set: Claude guessed Montserrat, the best match is Inter (0.89 vs 0.71 in the first try; the built
+  tool, 14 texts read off 10 pictures: Inter 800 0.82, Rubik 0.77, Montserrat 0.74).
+
+**Built 2026-10-15, released 2026-10-16**:
+- The font library: `fonts\` (28 families: the user's 25 + Nunito, Permanent Marker, Space Grotesk) + the user's own
+  fonts in `library\fonts\` (private, listed first); `motionlab\fonts.py` + `tools\fonts.py`; every font setting of
+  the shipped designs (captions, talking-head pack, thumbnails outline / block / split) offers the library, the
+  Windows defaults moved to Archivo Black / Anton; a render / snapshot copies the fonts it uses into the graphic.
+- The app: every font setting lists the library by what it suits with a line in the picked font; **a live preview**
+  of every graphic on a video's Graphics tab (its own HTML in the page: a change shows at once, before Save / Render;
+  frame slider + play); **looks** *Classic | Clean box* in one click, captions made before 0.4.6 take the new design
+  (words and settings kept, the old design kept in `_before\`).
+- Captions: *Clean box* (`--preset clean_box`; the box fits the longest line, sentence case, cyan word, fade, its own
+  height for upright videos) + *Classic* (today's look, pixel-identical: 0 differing pixels at 5 frames x 2 sizes);
+  new settings: entrance (fade), weight, capital at the line start, box corners / padding, line spacing, even lines,
+  height for upright videos.
+- Thumbnail sets: `thumbsets.py fontmatch <set>` (~2 s; Claude lists the added words + boxes in style.json "texts",
+  `/analyze-reference thumbs` runs it), *In the style of* uses the measured font, the set page shows it.
+
+**Still open when it shipped** (kept in ideas.md, *Left from 0.4.6*): (1) DaVinci Resolve - Fusion's text needs the font installed in Windows, and 11 of the 25 families
+are variable fonts only: measure what Resolve does with them before the Resolve part relies on them (plan item 4);
+(2) a caption look the user saves from their own settings (only the shipped looks exist) and more looks from the
+six mock-ups; position by platform / keeping captions off the face; (3) "like a reference" (item 3) - waits for
+0.4.7's text on screen; (4) Clean box in a full render - checked before the release (2026-10-16: a
+90-frame render, the box fits each line in the render too, the said word cyan); (5) the real Clavero set has no "texts" yet - Claude adds them when it finds the patterns again.
+
+**Needs first**: nothing (0.4.5's thumbnail styles name their fonts from this library once it exists). **Size**: M.
 
 ### 0.4.5 - released 2026-10-15 - Bulk: many thumbnails, videos and edits at once
 

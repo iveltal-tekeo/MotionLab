@@ -169,7 +169,8 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"
-    if kind in ("thumbs_fetch", "thumbs_links", "thumbs_measure", "thumbs_more", "thumbs_refresh"):   # Analyser (0.4.5)
+    if kind in ("thumbs_fetch", "thumbs_links", "thumbs_measure", "thumbs_more", "thumbs_refresh",   # Analyser (0.4.5)
+                "thumbs_fontmatch"):                                                                     # 0.4.6
         s = data.safe_name(str(a.get("set", "")))
         if not s.strip(" ."):
             raise JobError("name the set")
@@ -177,6 +178,8 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         order = str(a.get("order") or "newest")
         if order not in ("newest", "views"):
             raise JobError("the newest or the most viewed")
+        if kind == "thumbs_fontmatch":                # 0.4.6: the words Claude listed vs the font library (~2 s)
+            return f"The font of {s}, measured", tool + ["fontmatch", s], "light"
         if kind == "thumbs_refresh":                  # the set's page: the newest views, dates and lengths
             return f"The numbers of {s} again", tool + ["refresh", s], "net"
         if kind == "thumbs_more":                     # the set's page: the next batch of its channel

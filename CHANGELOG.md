@@ -5,6 +5,22 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish).
 
+## 0.4.6 - 2026-10-16 - Fonts and captions: 28 fonts, live previews, caption looks
+
+- **Claude's check uses less of your Claude plan** - on videos with many effects, helpers look at the contact sheets
+  in parallel and Claude keeps its notes as it goes, so nothing is looked at twice; every sheet is still read.
+- **Fonts that come with MotionLab** - 28 free fonts (Anton, Bebas Neue, Montserrat, Poppins, Inter, Luckiest Guy,
+  Permanent Marker...) in every graphic's, caption's and thumbnail's font list, grouped by what they suit, with a line
+  in the picked font - the same render on every PC. Your own font files go in `library\fonts\` (they stay on your PC).
+- **See a change before you render it** - a video's Graphics tab now draws each graphic live: change the font, a
+  colour or the size and it shows at once; a slider and play move through it.
+- **Caption looks** - *Classic* (as before) or **Clean box**: sentence case on a rounded dark box that fits the line,
+  the word being said in cyan, a soft fade, higher on upright videos so the apps' buttons don't cover it. One click;
+  captions you already made can take it too (your words and settings stay).
+- **The font of a thumbnail set, measured** - MotionLab compares the words on a set's thumbnails with every font it
+  has, letter by letter, and *In the style of* uses the best one (on Clavero's: Inter, where Claude had guessed
+  Montserrat).
+
 ## 0.4.5 - 2026-10-15 - Bulk: thumbnail sets, many videos in one Claude window, several videos edited at once
 
 - **Thumbnail sets** - *Analyser > Add thumbnails*: paste a channel link (or some video links, or drop your own

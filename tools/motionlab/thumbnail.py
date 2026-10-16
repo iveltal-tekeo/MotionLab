@@ -539,30 +539,38 @@ def templates() -> list[dict]:
 # A thumbnail set (analysis\thumbs\<set>, tools\thumbsets.py) + the patterns Claude found in it (style.json, written by
 # /analyze-reference thumbs <set>): `make --style <set>` takes its design, colours, font and capitals; `check --style`
 # (= --niche set:<set>) judges brightness / saturation against the set instead of a niche.
-DESIGN_FONTS = ("Arial Black", "Impact", "Segoe UI", "Verdana", "Georgia")   # the designs' fonts until 0.4.6
+WINDOWS_STAND_INS = {"arial black": "Archivo Black", "impact": "Anton"}   # fonts.sync()'s closest free ones (0.4.6)
 
 
-def _closest_font(style: dict) -> str | None:
-    """The design font nearest to what Claude named (the style's words + its closest fonts): condensed / tall ->
-    Impact, heavy / wide -> Arial Black, a serif -> Georgia, rounded / plain sans -> Verdana."""
+def _closest_font(style: dict, offered: set, measured: dict | None = None) -> tuple[str | None, dict | None]:
+    """The set's font among those the design offers (since 0.4.6 the font library + the old Windows fonts):
+    1. measured (thumbsets.fontmatch -> fontmatch.json "best") when the design offers that family;
+    2. else the fonts Claude named in style.json - for_make "font" first, then font "closest" in order - a library
+       family by its name ("Montserrat ExtraBold" = Montserrat), a Windows font as its free stand-in (Arial Black ->
+       Archivo Black, Impact -> Anton) or as itself when the design has it;
+    3. else none (the design's own default). -> (font, {"family", "from": "measured"|"Claude", "weight", "score"})."""
+    b = (measured or {}).get("best") or {}
+    if b.get("family") in offered:
+        return b["family"], {"family": b["family"], "from": "measured", "weight": b.get("weight"),
+                             "score": b.get("score"), "runner_up": b.get("runner_up")}
     f = style.get("font") or {}
-    names = [str(x) for x in (f.get("closest") or [])] + [str((style.get("for_make") or {}).get("font") or "")]
-    for n in names:
-        if n in DESIGN_FONTS:
-            return n
-    words = " ".join([str(f.get("style") or "")] + names).lower()
-    if any(k in words for k in ("condensed", "narrow", "tall", "anton", "bebas", "oswald", "impact", "league gothic")):
-        return "Impact"
-    if any(k in words for k in ("serif", "georgia", "playfair", "times")) and "sans" not in words:
-        return "Georgia"
-    if any(k in words for k in ("heavy", "black", "bold", "wide", "archivo", "montserrat", "poppins")):
-        return "Arial Black"
-    return None
+    names = [str((style.get("for_make") or {}).get("font") or "")] + [str(x) for x in (f.get("closest") or [])]
+    by_len = sorted(offered, key=lambda o: -len(o))
+    for n in (x.strip() for x in names if x and x.strip()):
+        low = n.lower()
+        pick = next((o for o in by_len if low == o.lower() or low.startswith(o.lower() + " ")), None)
+        stand_in = WINDOWS_STAND_INS.get(pick.lower() if pick else low)
+        if stand_in in offered:
+            pick = stand_in
+        if pick:
+            return pick, {"family": pick, "from": "Claude", "named": n}
+    return None, None
 
 
 def style_values(set_name: str, template: str | None = None) -> tuple[str, dict, dict]:
     """(design, its settings, the style) for `make --style <set>`: the design the set's structure fits (style.json
-    "for_make" template), text / outline colours, the closest design font, capitals - only settings the design has."""
+    "for_make" template), text / outline colours, the font (_closest_font: measured first, then Claude's names),
+    capitals - only settings the design has. The style comes back with "font_pick" = where the font came from."""
     from . import overlay_settings as OS
     from . import thumbsets as TS
     st = TS.load_style(set_name)
@@ -580,14 +588,14 @@ def style_values(set_name: str, template: str | None = None) -> tuple[str, dict,
                      ("outline_color", fm.get("outline_colour") or fm.get("outline_color"))):
         if key in have and hexcol(src):
             vals[key] = src.lower()
-    font = _closest_font(st)
-    opts = {o.get("value") for o in (have.get("font") or {}).get("options") or []}
-    if font and font in opts:
+    opts = {str(o.get("value")) for o in (have.get("font") or {}).get("options") or [] if o.get("value")}
+    font, pick = _closest_font(st, opts, TS.load_fontmatch(set_name))
+    if font:
         vals["font"] = font
     case = str((st.get("words") or {}).get("case") or "").lower()
     if "uppercase" in have and case in ("upper", "lower", "mixed", "title"):
         vals["uppercase"] = case == "upper"
-    return tpl, vals, st
+    return tpl, vals, {**st, "font_pick": pick}
 
 
 def set_norm(set_name: str) -> dict | None:

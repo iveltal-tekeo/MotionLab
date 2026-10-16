@@ -69,7 +69,8 @@ read the whole `events.json` (~0.7 MB). For **each** event, in order:
    visual observation and lower the confidence. If the event is not an edit effect at all (camera, lighting,
    subject motion), set `"false_alarm": true` and explain in `what`. If you notice an effect the pipeline did not
    flag (e.g. in the padding frames), mention it in `notes` and in your summary.
-4. Write all reviews into `analysis\<name>\review.json` (format below). Keep `start`/`end` so reviews survive a
+4. Write all reviews into `analysis\<name>\review.json` (format below; built from `review_parts\`, see "Working
+   through the sheets without waste" below). Keep `start`/`end` so reviews survive a
    re-run that renumbers events. Then run `.venv\Scripts\python tools\report.py <name>` - it must say
    `N/N events reviewed`.
 5. **Possible misses** (end of `review_todo.md`): sudden changes no event explains. Look at each (its 3 frames, or
@@ -99,9 +100,32 @@ read the whole `events.json` (~0.7 MB). For **each** event, in order:
    Only these keys count: summary hook structure captions text_graphics broll sound cta transitions camera grade
    rhythm rebuild_tips. `tools\report.py <name>` puts it on the video's Overview page in the app.
 
-Long videos have many events: you may batch the work, but every sheet of every event must be read.
-If `review.json` already has reviews (an earlier chat stopped half-way), keep them and continue with the events that
-have none - don't redo finished ones unless the user asks.
+Every sheet of every event must be read - by you or by a helper. If `review.json` or `review_parts\` already has
+reviews (an earlier chat stopped half-way), keep them and continue with the events that have none - don't redo
+finished ones unless the user asks.
+
+### Working through the sheets without waste (the user, 2026-10-15: same quality, less usage)
+Every picture you open stays in the chat and is sent again with every later step, so the cost grows with pictures
+held x steps taken (a 33 s video once took 14 M tokens: ~80 sheets in one chat, read 3-5 per step, ~45 read twice).
+- **Save as you go.** After each batch of events, write their reviews (the per-event entries of the format below) to
+  `analysis\<name>\review_parts\<first ID>-<last ID>.json` BEFORE you open more sheets. Never keep finished reviews
+  only in your head: old pictures drop out of a long chat (a request limit) and reading them again doubles the cost.
+  At the end merge all parts into `review.json` with `_meta`, `_near_misses` and `_breakdown`, run `report.py`, then
+  delete `review_parts\`. Write `review.json` once, complete: the app takes its existence as "Claude's check done".
+- **More than ~20 sheets: helpers read them.** First look at the whole video yourself, text and one picture only: the
+  measured lines and table of `review_todo.md`, `overview.png`, and whatever holds for the whole video (e.g. a stepped
+  frame rate: the share of repeated frames in `metrics.csv` column `dup`; a recurring graphic). Then split the events
+  into runs of consecutive events of ~10-12 sheets and start one helper per run, all in one message so they run in
+  parallel (Agent tool, general-purpose). Each helper's prompt: the analysis folder and its event IDs (with the event
+  before and after, for context); the whole-video facts you found; read both lessons files and this file's section 2
+  steps 1-3, "review.json format" and "Canonical types" first; every sheet of its events; frame + timecode on every
+  frame it names; write its reviews to `review_parts\<first ID>-<last ID>.json` and nothing else (no `review.json`, no
+  `report.py`); reply with one line per event (ID, type, false alarm yes / no, confidence) plus what it saw beyond its
+  events (an effect running into the next run, a possible miss). Then you: read the parts (text), make the runs agree
+  (the same thing named the same way; a move spanning two runs described once and referred to from the other), open a
+  sheet yourself only for low-confidence events, runs that disagree and what a helper flagged, then the possible
+  misses and the breakdown.
+- **Fewer sheets: read them yourself**, 8-10 per step, saving each batch as above.
 Plain hard cuts are NOT reviewed visually (they are listed in the cuts table with on-beat yes/no).
 
 ### review.json format
@@ -151,7 +175,9 @@ The app measured several videos and opened ONE window for all of them (the user,
 1. Read `.app\batches\<id>.json`: `items` = analysis folder names, in order. Section 0 (the lessons, the summary) once
    for the whole batch, not per video.
 2. Skip every item whose `analysis\<name>\review.json` already exists (done in an earlier window - say so in one line).
-3. The rest, one at a time and completely: sections 2-3 for that video (every contact sheet, review.json with its
+   An item with `review_parts\` but no `review.json` was stopped half-way: continue it first, from its parts.
+3. The rest, one at a time and completely: sections 2-3 for that video (every contact sheet - helpers for videos with
+   more than ~20, one video's helpers at a time; review.json with its
    `_breakdown` and `_near_misses`, `report.py <name>`) before you start the next - so a stop (a limit, the window
    closed) loses at most one video and *Continue the batch* starts at the next. Name the analysis folder in your tool
    calls as you work (paths, `report.py <name>`): What it took splits this window's time per video by it.
@@ -165,14 +191,24 @@ faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). 
 1. `.venv\Scripts\python tools\thumbsets.py show <set>` (the measured summary), then look at EVERY sheet.
 2. Name what repeats, with how many of the set and their numbers: the text (words per picture, capitals, outline /
    box / shadow, size, where), the font's STYLE in words ("heavy condensed sans, white, thick black outline") with the
-   closest free fonts (an exact font name from a picture is a guess - write `"sure": false`), the colours (hex), the
-   structure (face + big text, before / after split, an object and an arrow, a big number, a person reacting), faces
-   (expression, looking at the camera, size), the emotion, what the title adds to the picture. Outperformers
+   closest library fonts (`.venv\Scripts\python tools\fonts.py list`; an exact font name from a picture is a guess -
+   write `"sure": false`), the colours (hex), the structure (face + big text, before / after split, an object and an
+   arrow, a big number, a person reacting), faces (expression, looking at the camera, size), the emotion, what the
+   title adds to the picture. Outperformers
    (views ÷ followers in set.json) count more - say which patterns they share.
 3. Write `analysis\thumbs\<set>\style.json` in the shape `tools\motionlab\thumbsets.py`'s docstring gives (summary,
    patterns P1..Pn with `how_many` and `examples`, font, colours, words, structures, `for_make` = what
-   `thumbnail.py make` should use: template outline / block / split, text and outline colours, font, words).
-4. Tell the user the 3-5 strongest patterns in plain words (with picture numbers) and that the set's page in the
+   `thumbnail.py make` should use: template outline / block / split, text and outline colours, font, words) AND
+   `"texts"`: every piece of text the editor ADDED, `{"n": <picture number>, "words": "<exactly as written, case
+   kept>", "box": [x0, y0, x1, y1]}` with the box in % of the picture (approximate, but around these words only). One
+   entry per line of one size and colour (`3:00` and a smaller `AM` = two entries; two lines = two entries). Leave out
+   signs, logos, products and text that is part of the scene, and tilted, curved or 3D words (the measurement needs
+   straight letters). Open a picture from `img\` when the sheet is too small to read the words or place the box.
+4. Run `.venv\Scripts\python tools\thumbsets.py fontmatch <set>` (a few seconds): it measures which library font the
+   listed words are written in -> `fontmatch.json`, and *In the style of <set>* uses that font instead of your guess.
+   A text it could not measure says why (fix its box or drop it, run it again).
+5. Tell the user the 3-5 strongest patterns in plain words (with picture numbers), the measured font with its score
+   (e.g. "Inter 800, overlap 0.82 over 14 texts - your guess Montserrat 0.74"), and that the set's page in the
    Analyser lets them mark each pattern Correct / Partly / Wrong; *Ready to post* can then make thumbnails "in the
    style of <set>". Copy a style, never a design, a logo or a face.
 

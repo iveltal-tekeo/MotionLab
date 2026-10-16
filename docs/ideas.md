@@ -23,13 +23,17 @@ problem** from the app -> 0.4.2.1 (2026-10-14).
 
 ## Later / not now
 
+- **Left from 0.4.6** (2026-10-16): DaVinci Resolve with the shipped fonts (Fusion's text needs them installed in
+  Windows; 11 of the 25 families are variable fonts only - measure what Resolve does with them first); a caption look
+  the user saves from their own settings (only the shipped looks exist) and more looks from the six mock-ups; caption
+  position by platform / off the face; captions "like a reference" (waits for 0.4.7's text on screen).
 - **Export to other editors** (OpenTimelineIO / FCPXML for Premiere, Final Cut, free Resolve) - not needed for now.
 - **Better camera-motion measurement** (optical flow, e.g. RAFT) - zooms, pans, shakes measured, not guessed; detection
   is the weak spot (40 % right before review). GPU-hungry: test a light variant.
 - **Separate music from voice** (Demucs stems) - cleaner beats / drops and cleaner speech for transcripts. Heavy on CPU.
 - **A small classifier trained on the verdicts** - once friends have given ~300+ verdicts.
 - **Auto-reframe 16:9 -> 9:16** following the subject (MediaPipe / YOLO) - for shorts.
-- **Proposed for 0.5.0** (content generation, 2026-10-14 - in its plan as step 5, measure first; the user confirms):
+- **Proposed for content generation** (2026-10-14; now 0.5.2, its step 1 - measure first; the user confirms):
   voice-over (ElevenLabs / local TTS), music only with clear licences.
 - **For 0.7**: upscaling (Real-ESRGAN), smooth slow motion (RIFE).
 - **Background analyses** with Claude Code headless (`claude -p`) for a 10-video collection - with a per-batch limit,
