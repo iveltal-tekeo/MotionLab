@@ -146,7 +146,7 @@ def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf:
     else:
         cmd += ["-map", "0:v", "-c:v", "copy"]
     cmd += ["-movflags", "+faststart", str(out)]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")   # accents in a path
     if r.returncode:
         raise RuntimeError(f"joining the parts failed: {r.stderr[-800:]}")
     for s in segs + [lst]:

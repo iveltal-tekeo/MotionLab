@@ -305,10 +305,11 @@ def knowledge(category: str = "") -> str:
     corrections per category), with a category id (music_video, vlog, cooking, ...) every reviewed effect of that
     category, or with category="memory" Claude's memory (0.4: the user's ratings of all their videos as rules - a
     part rated bad once is a default for every new video -, every video's style in one line, the effects seen and how
-    they were made, the lessons incl. those on making videos - read it before an edit or a prompt)."""
-    if category == "memory":
-        from motionlab import knowledge as KN
-        return KN.memory_index(write=False)                 # read-only: memory.md is written by the app / knowledge.py
+    they were made, the lessons incl. those on making videos - read it before an edit or a prompt); "memory:styles" =
+    the same without the effects and how they were made (for scripts and titles)."""
+    if category in ("memory", "memory:styles"):
+        from motionlab import knowledge as KN               # read-only: memory.md is written by the app / knowledge.py
+        return KN.memory_index(write=False, styles=category == "memory:styles")
     p = KNOWLEDGE / "summary" / f"{category}.md" if category else KNOWLEDGE / "summary.md"
     if not p.exists():
         return f"no {p.relative_to(LAB)} yet (Claude's memory > Rebuild it, or tools\\knowledge.py summary)"

@@ -7,8 +7,10 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.5.0 - Motion Graphics** ([what's new](CHANGELOG.md)): **Analyse** videos you like (several at once,
-> by focus: content creation, cinematic or both - colour grading included), **Prepare** a script, a title and a
+> **Status: v0.5.1 - Phase 2 begins** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md)), the path from
+> 0.5.0 to 1.0.0: the app in English or Spanish, analyses in about half the time, a one-file install, one way to
+> review everything. **Analyse** videos you like (several at once, by focus: content creation, cinematic or both -
+> colour grading included), a channel's thumbnails and scripts & prompts, **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
 > makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools),
 > **Motion Graphics** - 74 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
@@ -22,7 +24,7 @@ pop and transition, frame-accurately - so you can learn its style and pacing and
 
 - [What it is](#what-it-is)
 - [What it does](#what-it-does)
-- [Install (Windows 10 / 11)](#install-windows-10--11)
+- [Install (Windows 10 / 11) - 3 steps](#install-windows-10--11---3-steps) · [Instalar en 3 pasos (español)](#instalar-en-3-pasos)
 - [First steps](#first-steps)
 - [Editing your footage like a video you liked](#editing-your-footage-like-a-video-you-liked)
 - [Claude Code in MotionLab](#claude-code-in-motionlab)
@@ -46,8 +48,9 @@ through this GitHub repo. Analyse 10 videos each and everyone's MotionLab knows 
 
 ![roadmap](docs/roadmap.png)
 
-*The roadmap moves in the app (Home). Its data is [docs/roadmap/roadmap.json](docs/roadmap/roadmap.json): the big
-badges are the major versions (x.y.0), the smaller versions hang below them.*
+*The roadmap moves in the app (Home), in the app's language. Its data is
+[docs/roadmap/roadmap.json](docs/roadmap/roadmap.json): the big badges are the major versions (x.y.0), the smaller
+versions hang below them, and the brackets above the line are the phases - Phase 2 is the path from 0.5.0 to 1.0.0.*
 
 ## What it does
 
@@ -59,11 +62,15 @@ badges are the major versions (x.y.0), the smaller versions hang below them.*
 - **Analyse** it: cuts and 30+ effect types with exact frame ranges (frame number + timecode on everything), beats
   and drops, **pacing** (cuts per minute, shot lengths, cuts in the first 3 seconds, cuts on the beat), contact sheets
   and previews per effect, "possible misses".
+- **Analyse more than videos**: the Analyser has three ways in - videos cut by cut, a channel's thumbnails (their
+  patterns, the font measured), and scripts & prompts (up to 20 at once, every quote Claude makes checked against the
+  text).
 - **Review** with Claude Code: what happens, timing and easing, camera or post, and how to rebuild it.
-- **Teach it**: your verdicts in the app's review tab (and your answers on the "possible misses") -> Claude turns
-  them into rules, checked by a self-test.
-- **Share it**: *Claude's memory > Share my knowledge* - your reference cards and new rules go to GitHub; your friends' come
-  back with the next update. The *Knowledge* page compares pacing and effects per category across everybody.
+- **Teach it**: your verdicts in the app (Correct / Partly / Wrong - the same review everywhere - and your answers
+  on the "possible misses") -> *Send it to Claude* turns them into rules, checked by a self-test.
+- **Share it**: *Claude's memory > Shared knowledge > Share my knowledge* - your reference cards and new rules go to
+  GitHub (you tick what goes; tests stay on your PC until you tick them); your friends' come back with the next update,
+  marked with their name. The same tab compares pacing and effects per kind of video across everybody.
 - **Rebuild it** with your own clips, in colour, as a lab render or as an editable DaVinci Resolve project.
 - **Motion Graphics**: 74 animated graphics - 57 learned from pro template clips, 17 for what template sites offer
   most - each with a live preview: type your words, pick colours and one of 28 shipped fonts, see it at once, then put
@@ -72,46 +79,117 @@ badges are the major versions (x.y.0), the smaller versions hang below them.*
 - **Prompts**: keep the prompts that worked for you (Seedance / Higgsfield / Kling shots, hooks, talking scripts) or
   a creator's public one with its link; Claude splits each into its structure and writes new ones for your need in
   a structure that already worked. You paste them into the site and rate what they made.
+- **In English or Spanish**: *Settings > General > Language* - English or Español (Spain). The app's words and
+  Claude's replies follow it; what Claude saves in MotionLab stays in English.
 - **Tidy up**: *Delete* on references, downloads, your videos and renders moves them to the Windows Recycle Bin.
 
 MotionLab never modifies a source video: it only reads it and checks its SHA-256 before and after every analysis.
 
-## Install (Windows 10 / 11)
+## Install (Windows 10 / 11) - 3 steps
 
-**Recommended - with git** (needed for updates and sharing):
+**En español:** [Instalar en 3 pasos](#instalar-en-3-pasos). No terminal, nothing to type.
 
-1. Install Git once: `winget install Git.Git` (or https://git-scm.com).
-2. In a terminal: `git clone https://github.com/iveltal-tekeo/MotionLab.git C:\MotionLab`
-   (a private repo asks you to log in to GitHub in the browser once).
-3. Double-click **`C:\MotionLab\setup.bat`**: Python packages, a check of the programs below (it offers to install
-   missing ones and asks first), HyperFrames if you want it, your name for sharing, a Desktop shortcut.
-4. Start **MotionLab** from the shortcut (or `MotionLab.bat`). *Settings > Programs* shows what it found.
+1. **Download [Install-MotionLab.cmd](https://github.com/iveltal-tekeo/MotionLab/blob/tested/Install-MotionLab.cmd)**
+   (one small file): on its GitHub page click **Download raw file** - the download arrow at the top right of the
+   file. If your browser warns that the file "isn't commonly downloaded" or "may be dangerous", choose **Keep** (in
+   Edge: the **...** next to the download > **Keep** > **Show more** > **Keep anyway**).
+2. **Double-click it** (in your Downloads folder).
+   - A blue box **"Windows protected your PC"**? Click **More info**, then **Run anyway**. A box **"Open File -
+     Security Warning"**? Click **Run**. No button to run it? Right-click the file > **Properties** > tick
+     **Unblock** (bottom of the General tab) > **OK**, then double-click it again.
+   - A black window asks where MotionLab goes (press **Enter** for `C:\MotionLab`), lists what it will install and
+     waits: press **Y** (or Enter). Then two small questions: motion graphics (**Enter** = yes) and your name for
+     sharing (**Enter** = later).
+   - When Windows asks **"Do you want to allow this app to make changes to your device?"** - up to 3 times: Git,
+     Microsoft Visual C++, Node.js (on some PCs once more for Python) - click **Yes**.
+3. **Sign in to Claude** when your browser opens (your Claude Pro or Max plan - the free plan does not include
+   Claude Code). No plan yet? Close the small sign-in window: MotionLab measures videos without Claude and asks you
+   to sign in the first time a Claude button needs it.
+   - Then leave the black window open: the first time takes about 20 minutes and about 3 GB. MotionLab opens by
+     itself when it is done.
+   - Next time: the **MotionLab** icon on your Desktop or in the Start menu.
+   - The first time a button opens Claude, it asks whether you trust the MotionLab folder: **Yes**.
 
-Downloaded the ZIP instead? Run `setup.bat` the same way; then *Settings > Sharing & updates > Connect to GitHub*
-turns on updates and sharing.
+**Something went wrong?** Double-click the installer again - or **setup.bat** in `C:\MotionLab` - it only does what
+is missing. In MotionLab, *Settings > Programs* shows what it found and *Settings > About > Report a problem* puts the
+details together for you to send (the installer's window is saved in `C:\MotionLab\.app\install.log`).
 
-| Program | Needed for | Get it |
-|---|---|---|
-| Python 3.12 (64-bit) | everything | `winget install Python.Python.3.12` or python.org (tick "Add to PATH") |
-| ffmpeg | every analysis | `winget install Gyan.FFmpeg` |
-| Microsoft Visual C++ Redistributable (x64) | the audio step of every analysis (beats, drops) - many PCs have it already, `setup.bat` checks | `winget install --id Microsoft.VCRedist.2015+.x64 -e` (as administrator) or https://aka.ms/vs/17/release/vc_redist.x64.exe |
-| Git | updates + sharing knowledge | `winget install Git.Git` |
-| Claude Code | reviews, learning from feedback, rebuilds | https://claude.com/claude-code (your own Claude plan) |
-| yt-dlp | *Download from a link* (optional) | `winget install yt-dlp.yt-dlp`, or any `yt-dlp.exe` + its path in Settings |
-| Node.js 22+ | graphics written as HTML ([HyperFrames](https://github.com/heygen-com/hyperframes)) when rebuilding (optional) | `winget install OpenJS.NodeJS.LTS`, then `setup.bat` or *Settings > Programs > Install* |
-| DaVinci Resolve Studio | rebuilding as a Resolve project, Claude looking into Resolve (optional) | blackmagicdesign.com (Studio is paid; needed for scripting) |
+<details><summary><b>What it installs</b> (sizes measured on a PC with everything)</summary>
 
-Microsoft Edge (the app window) comes with Windows.
+| Program | What for | Size | Windows asks permission? |
+|---|---|---|---|
+| Git | updates and sharing knowledge with friends | 360 MB | yes |
+| Microsoft Visual C++ Redistributable (x64) | the sound part of every analysis (beats, drops) - many PCs have it already | 15 MB | yes |
+| Python 3.12 (64-bit) | MotionLab itself | 270 MB | on some PCs (its launcher) |
+| MotionLab + its Python packages | the app and the lab, in `C:\MotionLab` (with its git history) | 730 MB | no |
+| ffmpeg (Gyan's full build) | reading and making videos - every analysis | 670 MB | no |
+| Claude Code (Anthropic's own installer) | reviews, learning from your feedback, edits - your own Claude plan | 280 MB | no |
+| Deno | YouTube downloads | 95 MB | no |
+| yt-dlp | downloads from a link | 20 MB | no |
+| Node.js (LTS) | the motion graphics - only if you say yes | 110 MB | yes |
+| HyperFrames + its Chrome | the motion graphics - only if you say yes (inside `C:\MotionLab`) | 390 MB | no |
+
+About 2.9 GB with the motion graphics, 2.4 GB without. The programs come from their makers through the Windows
+Package Manager (winget), Claude Code from Anthropic, MotionLab from this GitHub page - nothing else is downloaded,
+and nothing of yours is uploaded. Microsoft Edge (the app window) comes with Windows. Optional, not installed:
+DaVinci Resolve Studio (blackmagicdesign.com, paid) for rebuilding a video as a Resolve project.
+
+</details>
+
+<details><summary><b>Other ways</b> (the ZIP, or git by hand)</summary>
+
+- **The ZIP**: on this page *Code > Download ZIP*, right-click it > **Extract All**, move the extracted folder where
+  MotionLab should live (`C:\MotionLab` is best - not Downloads or the Desktop) and double-click **setup.bat** in it.
+  It installs what is missing and connects the copy to GitHub, so the Update button works.
+- **git by hand** (if you use git already): `git clone https://github.com/iveltal-tekeo/MotionLab.git C:\MotionLab`,
+  then double-click `C:\MotionLab\setup.bat`. A clone starts from the newest push; the installer and the Update
+  button use the last tested version (`git checkout -B main origin/tested` does the same by hand).
+
+</details>
+
+### Instalar en 3 pasos
+
+Sin terminal y sin escribir comandos. La ventana del instalador está en inglés; estos pasos te dicen qué pulsar.
+
+1. **Descarga [Install-MotionLab.cmd](https://github.com/iveltal-tekeo/MotionLab/blob/tested/Install-MotionLab.cmd)**
+   (un archivo pequeño): en su página de GitHub haz clic en **Download raw file**, la flecha de descarga arriba a la
+   derecha del archivo. Si el navegador avisa que el archivo "no se descarga con frecuencia" o "puede ser
+   peligroso", elige **Conservar** (en Edge: los **...** junto a la descarga > **Conservar** > **Mostrar más** >
+   **Conservar de todos modos**).
+2. **Haz doble clic en el archivo** (en tu carpeta Descargas).
+   - ¿Un cuadro azul **"Windows protegió su PC"** (o "tu PC")? Haz clic en **Más información** y luego en
+     **Ejecutar de todas formas**. ¿Un cuadro **"Abrir archivo - Advertencia de seguridad"**? Haz clic en
+     **Ejecutar**. ¿No hay ningún botón para ejecutarlo? Clic derecho en el archivo > **Propiedades** > marca
+     **Desbloquear** (abajo, en la pestaña General) > **Aceptar**, y vuelve a hacer doble clic.
+   - Se abre una ventana negra: pregunta dónde va MotionLab (pulsa **Enter** para `C:\MotionLab`), muestra lo que va
+     a instalar y espera: pulsa **Y** (o Enter). Luego dos preguntas cortas: los gráficos animados ("motion
+     graphics", **Enter** = sí) y tu nombre para compartir (**Enter** = más tarde).
+   - Cuando Windows pregunte **"¿Quieres permitir que esta aplicación haga cambios en el dispositivo?"** - hasta 3
+     veces: Git, Microsoft Visual C++ y Node.js (en algunos equipos, una vez más para Python) - haz clic en **Sí**.
+3. **Inicia sesión en Claude** cuando se abra el navegador (tu plan Claude Pro o Max; el plan gratuito no incluye
+   Claude Code). ¿Todavía no tienes plan? Cierra la ventanita de inicio de sesión: MotionLab mide los videos sin
+   Claude y te pide iniciar sesión la primera vez que un botón de Claude lo necesite.
+   - Después deja la ventana negra abierta: la primera vez tarda unos 20 minutos y ocupa unos 3 GB. Al terminar,
+     MotionLab se abre solo.
+   - La próxima vez: el icono de **MotionLab** en el escritorio o en el menú Inicio.
+   - La primera vez que un botón abra Claude, te pregunta si confías en la carpeta de MotionLab: responde **Yes**
+     (sí).
+
+**¿Algo salió mal?** Vuelve a hacer doble clic en el instalador (o en **setup.bat** dentro de `C:\MotionLab`): solo
+hace lo que falta. En MotionLab, *Settings > Programs* muestra lo que encontró y *Settings > About > Report a
+problem* reúne los detalles para que los envíes.
 
 ## First steps
 
-1. **References > Download from a link** -> paste a link -> *Download* -> **Analyse it**.
-2. Pick the **category** (and tags, e.g. `instagram, recipe`) and click **Analyse with Claude**: the lab measures the
-   video (about 1-2 minutes per minute of video), then Claude Code opens by itself and checks every effect.
-3. Open the reference: **Review effects** - Correct / Partly / Wrong (keys 1 2 3) and a note where needed - then the
-   red **Possible misses** tab.
-4. **Send feedback to Claude**: a new Claude Code window turns your verdicts into lessons.
-5. **Claude's memory > Share my knowledge.**
+1. **Analyser > Add videos** -> paste links (one per line, up to 10) or pick videos you already have -> choose what
+   Claude should look at (content creation, cinematic or both) and the kind of video (tags under *More options*).
+2. Keep **Claude checks them when they are measured** and click **Analyze**: the lab measures each video (about 1-2
+   minutes per minute of video), then one Claude Code window opens by itself and checks every effect.
+3. Open the video: the **Effects** tab - is Claude right? Correct / Partly / Wrong (keys 1 2 3, J / K to move) and a
+   note where needed - then the red **Possible misses & sound** tab.
+4. **Send it to Claude**: a new Claude Code window turns your verdicts into lessons.
+5. **Claude's memory > Shared knowledge > Share my knowledge** (tick what goes; tests stay on your PC until you tick
+   them).
 
 The Analyser page shows these steps and where each video stands. Every frame number comes with its timecode
 (`f480 (00:00:16:00)`), so you can check anything in your editor. New to Claude Code? Read
@@ -174,8 +252,11 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 | New **lessons** from your feedback (they work on your PC right away) | `knowledge\local\lessons.md` -> `knowledge\incoming\` | yes, reviewed first |
 | Reviewed rules every MotionLab applies | `.claude\skills\analyze-reference\lessons.md` | yes |
 
-- *Share my knowledge* commits your new cards and lessons and pushes them. Git asks you to log in to GitHub the first
-  time (in the browser).
+- *Claude's memory > Shared knowledge > Share my knowledge* commits your new cards and lessons - the ones ticked there
+  (anything named like a test stays on your PC until you tick it) - and pushes them. Git asks you to log in to GitHub
+  the first time (in the browser).
+- What came from a friend carries a lime "from <name>" badge, and *Shared knowledge* lists per friend their videos,
+  their lessons waiting for a review and the rules that came from them. Scripts & prompts you analyse are never shared.
 - To push, a friend needs write access: on GitHub, *Settings > Collaborators > Add people*. Friends without access
   get a pack file (`knowledge\outbox\*.mlpack.json`) to send to you; you drop it in `knowledge\inbox\` and *Import*.
 - Lessons from others wait in `knowledge\incoming\` until someone reviews them (*Claude's memory > Review them in Claude
@@ -188,24 +269,24 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 | Folder | What | In the repo? |
 |---|---|---|
 | `tools\` | the pipeline, the app (`tools\motionlab\app\`), the Resolve builder, MotionLab's MCP server, HTML overlays (`tools\overlays\`: HyperFrames, versions pinned; its `node_modules` stays on your PC) | yes |
-| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`, `generate-video`, `write-prompt`, `whats-next`) | yes |
+| `.claude\skills\` | the Claude Code skills (`analyze-reference` + the shared `lessons.md`, `recreate-video`, `generate-video`, `write-script`, `write-title`, `write-prompt`, `whats-next`) | yes |
 | `knowledge\` | shared reference cards and lessons waiting for review (`local\`, `inbox\`, `outbox\` are private) | partly |
 | `docs\` | roadmap, plans, ideas, guides, design notes | yes |
 | `refs\` | reference videos (read-only for the lab) | no - yours |
 | `analysis\` | one folder per analysed video: report, events, sheets, previews, your verdicts | no - yours |
-| `projects\` | your own videos and everything made for them (the app's *Videos* page) | no - yours |
+| `projects\` | your own videos and everything made for them (the app's *Editor*) | no - yours |
 | `library\` | saved effects (recipes + Fusion macros) | no - yours |
 | `settings.json`, `.app\`, `.venv\` | your settings, app cache, Python packages | no |
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.5.1 yapping mode for talking-to-camera videos and the
-  clips a script needs, 0.5.2 faster videos: a minute of video in ~10 minutes of Claude, 0.5.3 prompt generator for
-  every model, 0.5.4 motion graphics from template packs - Resolve / After Effects packs read exactly, a motion check,
-  formats, a preview before the render, 0.5.5 colour: correct your own clips, adjustable grades in Resolve, 0.5.6
+- [docs/plans.md](docs/plans.md) - the planned versions (0.5.2 yapping mode for talking-to-camera videos and the
+  clips a script needs, 0.5.3 faster videos: a minute of video in ~10 minutes of Claude, 0.5.4 prompt generator for
+  every model, 0.5.5 motion graphics from template packs - Resolve / After Effects packs read exactly, a motion check,
+  formats, a preview before the render, 0.5.6 colour: correct your own clips, adjustable grades in Resolve, 0.5.7
   content generation: AI clips back into the lab, voice and music, 0.6 describe video: what videos and courses say and
-  show, 0.6.5 templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS), also shown in the app's
-  *What's new*.
+  show, 0.6.5 templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end
+  of Phase 2, which 0.5.1 opened), also shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

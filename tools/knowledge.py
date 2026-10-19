@@ -6,7 +6,11 @@
                                                                (your ratings of all your videos as rules, every video's
                                                                style, the effects seen and how they were made) - read
                                                                it before an edit or a prompt
-    .venv\\Scripts\\python tools\\knowledge.py pending            what "Share my knowledge" would send now
+    .venv\\Scripts\\python tools\\knowledge.py memory --styles    the same, printed without the effects and how they
+                                                               were made (most of the file) - for scripts and titles
+    .venv\\Scripts\\python tools\\knowledge.py pending            what "Share my knowledge" would send now - and what
+                                                               stays on this PC (unticked in Claude's memory > Shared
+                                                               knowledge, or looks like a test and not ticked)
     .venv\\Scripts\\python tools\\knowledge.py next-lesson-id     the id for a new local lesson (local-N)
     .venv\\Scripts\\python tools\\knowledge.py next-lesson-id --kind making    ... on making videos (local-make-N, in
                                                                knowledge\\local\\lessons_making.md; reviewed = M###)
@@ -43,13 +47,21 @@ def main() -> int:
         KN.summary()
         print(KN.SUMMARY)
     elif cmd == "memory":
-        print(KN.memory_index())
+        text = KN.memory_index()                            # memory.md stays the whole memory, rebuilt
+        print(KN.memory_index(write=False, styles=True) if "--styles" in sys.argv[2:] else text)
     elif cmd == "pending":
         p = KN.pending()
-        print(f"{len(p['cards'])} card(s): " + ", ".join(c["title"] for c in p["cards"]))
+        print(f"{len(p['cards'])} card(s): " + ", ".join(KN.label(c)["name"] for c in p["cards"]))
         for k in KN.KINDS:
             ids = [i for i, _ in p["lessons"] if KN.lesson_kind(i) == k]
             print(f"{len(ids)} lesson(s) on {'making videos' if k == 'making' else 'analysis'}: " + ", ".join(ids))
+        kept = p["kept"]
+        print(f"kept on this PC (not shared): {len(kept['cards'])} card(s)"
+              + (": " + ", ".join(KN.label(c)["name"] + (" (looks like a test)" if KN.looks_test(c.get("analysis"),
+                                                                                                   c.get("title")) else "")
+                                  for c in kept["cards"]) if kept["cards"] else "")
+              + f"; {len(kept['lessons'])} lesson(s)" + (": " + ", ".join(i for i, _ in kept["lessons"])
+                                                        if kept["lessons"] else ""))
     elif cmd == "next-lesson-id":
         kind = sys.argv[sys.argv.index("--kind") + 1] if "--kind" in sys.argv[:-1] else "analysis"
         if kind not in KN.KINDS:
@@ -58,6 +70,8 @@ def main() -> int:
     elif cmd == "export":
         pack = KN.make_pack()
         print(KN.write_pack(pack))
+        if pack["cards"] or pack["lessons"]:
+            KN.mark_shared(pack, "file")                  # a share by file: not sent again, listed in Shared before
     elif cmd == "import":
         if len(sys.argv) < 3:
             raise SystemExit("give the pack file")
@@ -80,8 +94,12 @@ def main() -> int:
             print(json.dumps(r, indent=1))
             if r.get("pushed"):
                 KN.mark_shared(pack, "github")
+            elif pack["cards"] or pack["lessons"]:
+                KN.mark_shared(pack, "file")              # not uploaded: the pack file is the share
         else:
             print("not a git checkout: send the pack file instead")
+            if pack["cards"] or pack["lessons"]:
+                KN.mark_shared(pack, "file")
         KN.summary()
     return 0
 

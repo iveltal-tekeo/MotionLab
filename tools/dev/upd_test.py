@@ -41,7 +41,7 @@ def last():
 
 def main():
     what = sys.argv[1]
-    b = Browser(9341)
+    b = Browser()                                   # a free DevTools port and its own profile (two tests at once)
     try:
         b.goto(URL, 2.5)
         if what == "whatsnew":

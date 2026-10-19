@@ -30,7 +30,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from motionlab.app import server  # noqa: E402
+try:
+    from motionlab.app import server, system  # noqa: E402
+except Exception:                     # a half-done pip install, a bad edit: pythonw has no console - keep the error
+    try:                              # where MotionLab.bat and the window point (no lab import: that just failed)
+        _log = Path(__file__).resolve().parents[1] / ".app" / "server.log"
+        _log.parent.mkdir(exist_ok=True)
+        with open(_log, "a", encoding="utf-8") as _f:
+            _f.write(f"{time.strftime('%Y-%m-%d %H:%M')} app.py could not start\n{traceback.format_exc()}\n")
+    except OSError:
+        pass
+    raise
 
 EDGE = [Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Microsoft/Edge/Application/msedge.exe",
         Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Microsoft/Edge/Application/msedge.exe"]
@@ -50,6 +60,8 @@ def say(msg: str) -> None:
 
 
 def ping(port: int) -> dict | None:
+    if free(port):                                              # nobody listens: no 1.5 s wait for an answer
+        return None
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/ping", timeout=1.5) as r:
             d = json.load(r)
@@ -115,11 +127,21 @@ def _is_python(pid: int) -> bool:
 
 
 def free(port: int) -> bool:
+    """Nobody listens on 127.0.0.1:<port>. Windows: a plain bind (no socket options) answers at once - a refused
+    connect takes ~2 s there (it retries), which every start paid before the window opened. Elsewhere a refused
+    connect answers at once, so it stays."""
     with socket.socket() as s:
-        return s.connect_ex(("127.0.0.1", port)) != 0
+        if os.name != "nt":
+            return s.connect_ex(("127.0.0.1", port)) != 0
+        try:
+            s.bind(("127.0.0.1", port))
+            return True
+        except OSError:
+            return False
 
 
 def main() -> int:
+    system.merge_registry_path()             # programs installed since Explorer read its PATH (the installer, winget)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--no-window", action="store_true", help="only start the server")

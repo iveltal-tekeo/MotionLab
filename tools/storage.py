@@ -73,6 +73,8 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
         return "keep", "thumbnail sets"
     if p[0] == "analysis" and len(p) >= 4 and p[1] == "templates":   # 0.5.0: a pack of motion-template clips, measured
         return "keep", "motion template packs"
+    if p[0] == "analysis" and len(p) >= 4 and p[1] == "texts":       # 2026-10-18: a set of scripts & prompts
+        return "keep", "text sets"
     if p[0] == "analysis" and len(p) >= 3:
         if p[1].startswith("synthetic_"):
             return "cache", "self-test"
@@ -104,7 +106,7 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
 
 def unit_of(rel: Path) -> str:
     p = rel.parts
-    if p[0] == "analysis" and len(p) >= 4 and p[1] in ("thumbs", "templates"):   # one unit per set / pack (0.4.5, 0.5.0)
+    if p[0] == "analysis" and len(p) >= 4 and p[1] in ("thumbs", "templates", "texts"):   # one unit per set / pack
         return f"analysis\\{p[1]}\\{p[2]}"
     if p[0] in ("analysis", "projects") and len(p) >= 3:
         return f"{p[0]}\\{p[1]}"

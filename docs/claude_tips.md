@@ -1,7 +1,7 @@
 # Working with Claude in MotionLab
 
 ## The short version
-1. **Start Claude from the app's buttons** (Send to Claude, Send feedback to Claude, Recreate with my footage...).
+1. **Start Claude from the app's buttons** (Send to Claude, a review's Send it to Claude, Recreate with my footage...).
    Each opens a new Claude Code window with the exact request and a fitting effort level, so Claude starts working
    right away instead of first finding its way around the lab.
 2. **One chat per task.** When the task is done, close the window (or type `/clear`). Don't carry on with another
@@ -23,12 +23,14 @@ verdicts, lessons, edits), so nothing is lost when you start fresh.
 | what | in Claude Code | model | effort |
 |---|---|---|---|
 | check every effect of a reference | `/analyze-reference "C:\MotionLab\refs\<video>.mp4"` (the app's Send to Claude) | Opus; Fable is stronger | high |
+| find what a thumbnail set or a set of scripts & prompts has in common | `/analyze-reference thumbs <set>` / `texts <set>` (the Analyser) | Opus | high |
 | recreate a reference with your clips | `/recreate-video <reference> <your project>` (the app's Recreate button) | Opus; Fable is stronger | xhigh (high on Fable) |
 | a video from zero | `/generate-video request <project>` (Generate) | Opus; Fable is stronger | xhigh (high on Fable) |
-| apply your verdicts | `Apply the MOTIONLAB FEEDBACK in <file>` (the app's Send feedback to Claude) | Opus | high |
+| apply your verdicts | `Apply the MOTIONLAB FEEDBACK in <file>` (the app's Send it to Claude, after your review) | Opus | high |
 | review friends' lessons | the button in Claude's memory | Opus | high |
-| save library effects | the button in Claude's memory > Saved effects & graphics | Opus | high |
+| save library effects | the button in Claude's memory > Graphics & saved effects | Opus | high |
 | improve or write a script | `/write-script ...` (Prepare) | Opus | high |
+| titles, thumbnails, a video's package | `/write-title ...` (Prepare, a video's Ready to post) | Opus | high |
 | prompts: split, check, write | `/write-prompt ...` (Generator > prompts) | Opus | medium |
 | what to do next | `/whats-next` (Home > Roadmap) | Opus | medium |
 | questions, small fixes | just ask | Opus | medium |
@@ -68,7 +70,8 @@ tools\...`) and writing into `analysis\` or `projects\<name>\build\` is normal. 
 change your videos, and it asks before installing anything or uploading to GitHub - you can always say no.
 
 ## When something goes wrong
-- *Claude Code not found*: install it (Settings shows how), then restart MotionLab.
+- *Claude Code not found*: double-click setup.bat in the MotionLab folder (it installs Claude Code and signs you in),
+  then restart MotionLab.
 - *Usage limit reached*: `/usage` shows when it resets; meanwhile continue with a lower effort or a smaller task.
 - *Claude got confused*: press `Esc`, close the window and start again from the app's button - the work done so far
   is saved in the lab.

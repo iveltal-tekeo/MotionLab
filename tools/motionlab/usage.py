@@ -35,6 +35,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
+from motionlab import i18n as I18N
 from motionlab.util import LAB, safe_name
 
 # lab skill -> the task it does (system.TASKS names the app's sessions with the same words)
@@ -51,6 +52,8 @@ SKIP = (b'{"type":"api-request', b'{"type":"file-history', b'{"type":"attachment
 TOKEN_KEYS = (("input", "input_tokens"), ("cache_write", "cache_creation_input_tokens"),
               ("cache_read", "cache_read_input_tokens"), ("output", "output_tokens"))
 LIVE_WINDOW_S = 120          # a log that grew in the last 2 min = a session at work
+MESSAGE = "<message>"        # live(): the user's message came in (not a tool) - _step() says "reading your message"
+STEP_INPUT = ("description", "file_path", "path", "skill")   # what _step() reads of a tool's input (live() keeps these)
 _lock = threading.Lock()
 _cache: dict[str, tuple[int, int, dict]] = {}       # log path -> (size, mtime_ns, session)
 _live: dict[str, dict] = {}                         # log path -> what live() read so far
@@ -357,9 +360,10 @@ def objects(words: str, names: dict) -> set[tuple[str, str]]:
     its analysis folder (util.safe_name)."""
     w = str(words or "")
     found = set()
+    sw = safe_name(w) if names.get("analysis") else None     # once, not once per analysis name (it depends on w only)
     for kind in names:                                   # project, analysis, request, prompt, thumbs (0.4.5) ...
         for n in names.get(kind, ()):
-            if n and (n in w or (kind == "analysis" and safe_name(w) == n)):
+            if n and (n in w or (kind == "analysis" and sw == n)):
                 found.add((kind, n))
     for tok in re.findall(r"[^\s'\"]+", w):              # a quoted path to the video: its stem -> its analysis
         stem = safe_name(Path(tok.rstrip(",")).stem)
@@ -419,37 +423,44 @@ def round_info(s: dict, r: dict) -> dict:
 
 # ------------------------------------------------------------------------------------------------- live
 def _step(name: str | None, inp: dict) -> str:
-    """The last tool Claude used, in words ("reading the contact sheets", "rendering v2" = its own description)."""
+    """The last tool Claude used, in words ("reading the contact sheets", "rendering v2" = its own description, as
+    Claude wrote it). Only the app's live line shows it: in the app's language (Settings > Language, 2026-10-19)."""
     n = str(name or "")
+    if n == MESSAGE:
+        return I18N.t("reading your message")
     if n in ("Bash", "PowerShell"):
         d = str(inp.get("description") or "").strip()
-        return (d[0].lower() + d[1:])[:70] if d else "running a command"
+        return (d[0].lower() + d[1:])[:70] if d else I18N.t("running a command")
     f = Path(str(inp.get("file_path") or inp.get("path") or "")).name
     if n == "Read":
-        return f"looking at {f}" if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")) else f"reading {f}" if f else "reading"
+        if not f:
+            return I18N.t("reading")
+        return I18N.t("looking at {file}", file=f) if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")) \
+            else I18N.t("reading {file}", file=f)
     if n in ("Write", "Edit", "NotebookEdit"):
-        return f"writing {f}" if f else "writing"
+        return I18N.t("writing {file}", file=f) if f else I18N.t("writing")
     if n in ("Grep", "Glob"):
-        return "searching the files"
+        return I18N.t("searching the files")
     if n in ("Agent", "Task"):
-        return "a helper: " + str(inp.get("description") or "working")[:60]
+        return I18N.t("a helper: {what}", what=str(inp.get("description") or I18N.t("working"))[:60])
     if n == "Skill":
-        return "using /" + str(inp.get("skill") or "a skill")
+        return I18N.t("using /{skill}", skill=str(inp.get("skill") or I18N.t("a skill")))
     if n.startswith("Web"):
-        return "searching the web"
+        return I18N.t("searching the web")
     if n.startswith("mcp__motionlab__"):
-        return "looking at contact sheets and frames" if n.split("__")[-1] in ("sheet", "frames", "stills", "overlay_stills") \
-            else "reading the lab's data"
+        sees = n.split("__")[-1] in ("sheet", "frames", "stills", "overlay_stills")
+        return I18N.t("looking at contact sheets and frames") if sees else I18N.t("reading the lab's data")
     if n.startswith("mcp__davinci-resolve__"):
-        return "working in DaVinci Resolve"
-    return "thinking" if not n else n
+        return I18N.t("working in DaVinci Resolve")
+    return I18N.t("thinking") if not n else n
 
 
 def live(root: Path | None = None, now: float | None = None) -> list[dict]:
     """The sessions the app opened ("MotionLab ...") that are working now: their log grew in the last 2 min and the
     last answer is not the end of a turn. Per log, only the bytes added since the last call are read (an offset);
     nothing is read for a log that did not grow. -> [{session, title, task, label, minutes, tokens, model, effort,
-    step}] - minutes since the current prompt, tokens of the whole session so far."""
+    step}] - minutes since the current prompt, tokens of the whole session so far. The step is kept as the last tool
+    (its name + the few input fields _step reads) and put in words when asked: the app's language of that moment."""
     root = Path(root) if root else log_dir()
     now = now or time.time()
     if not root.is_dir():
@@ -466,7 +477,7 @@ def live(root: Path | None = None, now: float | None = None) -> list[dict]:
             if now - st.st_mtime > LIVE_WINDOW_S:
                 continue
             s = _live.setdefault(e.path, {"off": 0, "title": None, "ids": set(), "tok": 0, "t0": None, "t_last": None,
-                                          "step": "", "model": None, "effort": None, "ended": False})
+                                          "tool": None, "model": None, "effort": None, "ended": False})
             if st.st_size < s["off"]:                    # rewritten: start again
                 s.update(off=0, ids=set(), tok=0)
             if st.st_size > s["off"]:
@@ -490,12 +501,13 @@ def live(root: Path | None = None, now: float | None = None) -> list[dict]:
                     if ty == "user" and not d.get("isMeta"):
                         c = (d.get("message") or {}).get("content")
                         if not _is_result(c) and not _text(c).lstrip().startswith("<local-command"):
-                            s["t0"], s["ended"], s["step"] = t, False, "reading your message"
+                            s["t0"], s["ended"], s["tool"] = t, False, (MESSAGE, {})
                     elif ty == "assistant":
                         m = d.get("message") or {}
                         for c in m.get("content") if isinstance(m.get("content"), list) else []:
                             if isinstance(c, dict) and c.get("type") == "tool_use":
-                                s["step"] = _step(c.get("name"), c.get("input") or {})
+                                inp = c.get("input") or {}
+                                s["tool"] = (c.get("name"), {k: inp.get(k) for k in STEP_INPUT})
                         s["ended"] = m.get("stop_reason") == "end_turn"
                         if m.get("id") and m["id"] not in s["ids"] and isinstance(m.get("usage"), dict):
                             s["ids"].add(m["id"])
@@ -508,7 +520,7 @@ def live(root: Path | None = None, now: float | None = None) -> list[dict]:
             out.append({"session": Path(e.path).stem, "title": s["title"], "task": task, "label": label,
                         "minutes": round((now - s["t0"]) / 60, 1), "tokens": s["tok"],
                         "model": model_name(s["model"]) if s["model"] else None, "effort": s["effort"],
-                        "step": s["step"]})
+                        "step": _step(*s["tool"]) if s["tool"] else ""})
     return out
 
 

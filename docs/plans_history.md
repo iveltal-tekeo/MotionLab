@@ -16,17 +16,22 @@ the table below.
 | What it took - Claude's time (0.4.4) | 0.4.5.5 for a few hours (2026-10-15 evening); its measuring was 0.5.0's step 0 |
 | Bulk - thumbnails, videos, edits at once (0.4.5) | none (added 2026-10-15 night; 0.4.5 was *Trending sounds* that evening - scrapped) |
 | Fonts and customizations (0.4.6) | none (added 2026-10-15 night; released 2026-10-16) |
-| Yapping mode (0.5.1) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16) |
-| Faster videos (0.5.2) | 0.4.8 (2026-10-15 night to 2026-10-16; earlier on 2026-10-15 0.4.8 was colour's number) |
-| Prompt generator (0.5.3) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16) |
+| Phase 2 begins - Spanish, speed, the one-file install, the Analyser's three ways, Shared knowledge, one way to review (0.5.1) | none (built 2026-10-19; the user first said "a 0.5.5 version", the planned colour number - it took the next free one) |
+| Yapping mode (0.5.2) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16), 0.5.1 (2026-10-16 to 2026-10-19) |
+| Faster videos (0.5.3) | 0.4.8 (2026-10-15 night to 2026-10-16; earlier on 2026-10-15 0.4.8 was colour's number), 0.5.2 (2026-10-16 to 2026-10-19) |
+| Prompt generator (0.5.4) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16), 0.5.3 (2026-10-16 to 2026-10-19) |
 | Motion graphics - the library (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps; released 2026-10-16) |
-| Motion graphics - template packs, the motion check, formats (0.5.4) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N |
-| Colour (0.5.5) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16) |
-| Content generation (0.5.6) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16); "0.5" before that meant templates by feel + macOS |
+| Motion graphics - template packs, the motion check, formats (0.5.5) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N; 0.5.4 (2026-10-16 to 2026-10-19) |
+| Colour (0.5.6) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16), 0.5.5 (2026-10-16 to 2026-10-19) |
+| Content generation (0.5.7) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16), 0.5.6 (2026-10-16 to 2026-10-19); "0.5" before that meant templates by feel + macOS |
 | Describe video + courses (0.6.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
 | Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
 | macOS (0.7.5) | 0.5 (with templates by feel, 2026-10-07 to 2026-10-14) |
+| Deployment (1.0.0) | none (added 2026-10-19: the end of Phase 2, the user's words) |
+
+A number in the "earlier" column means that plan only between the dates given: "0.5.1" in a note of 2026-10-17 is
+yapping mode, in one of 2026-10-19 or later it is the release that opened Phase 2.
 
 ## Renumbers
 
@@ -103,6 +108,15 @@ the table below.
   -> 0.5.2, prompt generator 0.4.9 -> 0.5.3; what 0.5.0's plan still has open (template packs read exactly, templates
   used as they are, the motion check, formats, the preview) -> **0.5.4**, its step numbers kept; colour 0.5.1 -> 0.5.5,
   content generation 0.5.2 -> 0.5.6.
+- **2026-10-19** (the user, after the speed audit of 2026-10-18: "maybe we could use this as an opportunity and put all
+  of these changes (speed, language, setup...) as a 0.5.5 version that can be inside a new "phase" called phase 2 of
+  Motion Labs which is the path from 0.5.0 to v1.0.0 deployment!"; then, asked, the user's choice): the round's
+  changes ship as **0.5.1** - the next free number (0.5.5 was colour's, and the Update button only offers higher
+  numbers) - and open **Phase 2** (Phase 1 = everything up to 0.5.0.1). The planned versions each moved one up, in the
+  same order: yapping mode 0.5.1 -> 0.5.2, faster videos 0.5.2 -> 0.5.3, prompt generator 0.5.3 -> 0.5.4, template
+  packs 0.5.4 -> 0.5.5, colour + Resolve 0.5.5 -> 0.5.6, content generation 0.5.6 -> 0.5.7; 0.6.0 and later
+  unchanged. New: **1.0.0 = Deployment**, the end of Phase 2 (what it holds is the user's to decide). The roadmap got
+  "phases"; code comments keep the old numbers (the table above says which plan they mean).
 
 ## Where some plans came from
 
@@ -160,6 +174,89 @@ to the lab's texture.
   winget's full build: unchecked).
 
 ## Released plans (their text when they shipped)
+
+### 0.5.1 - built 2026-10-19 - Phase 2 begins: the whole app in Spanish, speed, the first install, the Analyser, sharing, reviews
+
+**Ships when**: the user's `selftest.py --extended` and `tools\dev\smoke.py` pass on the merged round; then the user
+commits and pushes it (not an x.y.0: GitHub's quick release check, then *tested*).
+
+**The user's words (2026-10-18, verbatim)**:
+1) "improve the "analyser" i think it would be cool to also be able to analyz anything i kinda want remaining, for now
+   i have videos and tuhumnails but it should also be able to analize propmpts. so maybe create the big 3 buttons
+   similar to prepare section but for "videos" "thumnbails" "scripts" make sure it is able to handle batches or
+   multiple at the same time, imagine i wanted to analize 10 prompts at the same time i could and it wouldnt
+   allucinate"
+2) "change the way we use share knowledge? sometimes it appears e.g in improve my script step 3 "in style of..." In
+   the style of Optional up to 3 talking videos you analysed: their pace and structure "Video by yp.motionstudio Video
+   by sultanmotions Video by divyansh.fx_ Video by afrozarchives Video by olafmotion Video by illdari NEMZZZ - 4AM
+   [OFFICIAL VIDEO] [VLDJ_-wrwj8] " but normal people or my friends wouldnt know what that is? so it would be fine to
+   only look in style of "prompts" or "videos" they already analize, make the share knowledge a more distinct section
+   in the "claudes memory". i should be able to click it and know what is being shared or from where or even select
+   what id like to share (imagine i had tests) also associate a distinct icon to the shared knowledge and if something
+   every came from shared knowledge it would appear as a reminder. and also please"
+3) "lets improve the reivew workflow. in all sections i need you to make it the same way if im either reviewing a
+   script in prepare, reviewing a video analyzed or an edit or a generation of motion graphics, it needs to look the
+   same so that the user is familiar with the process of reviewing it and making it easier in the future."
+4) "we also kinda need to improve the first installation process, since its very hard for people to read the steps or
+   install git or do all fo that throught the terminal... can we do it easier in the README or steps or some? the
+   update section is very good and works perfectly its just the setup that need a "idiot-proof" imporvment"
+5) "we need a spanish version of the entire app, how could we do it and how hard it is?" - first an assessment, then
+   (the same evening) "All of it in this release": Spain, tú; Claude's stored knowledge stays English.
+
+Later the same day: "please go ahead with each section i asked for without running any LONG test, I want you to be
+efficient and fixing everything systematically. I will run the tests at the end". After the speed audit: "i want all
+improvemts made (if they dont hurt our performace or analysis or anything else)!" - every finding its skeptic kept
+(results identical), except in the files the user's other Claude window was changing.
+
+**What shipped** (each area's hand-off has the details):
+- **The Analyser's three ways** (1): Videos, Thumbnails and **Scripts & prompts**, a tab each; up to 20 texts at once
+  (`textsets.MAX_ITEMS`), numbered and measured with no Claude (`tools\textsets.py`); "it wouldnt allucinate" is
+  enforced by a tool, not by wording: Claude's check of a text is saved only when every quote is found in THAT text
+  (`prompts.verify_check`, also behind `prompts.py annotate` and the JSON `import`). Measured read-only on the user's
+  prompt library (26 records): 244 of 248 quotes found verbatim in 0.12 s; the 4 refused = 2 out of order, a
+  paraphrase, a summary; the 7 "clear" rows without a quote flagged. Still to measure: refusals and minutes per text in
+  a real `/analyze-reference texts` run (then set MAX_ITEMS from them).
+- **Shared knowledge** (2): its own tab in Claude's memory - what goes with the next share (a name that looks like a
+  test stays on this PC until ticked, a lesson that names a file is flagged), what was shared, per friend their videos,
+  waiting lessons and rules; the lime "from <name>" badge (`sharedChip`, `#i-shared`); ONE style picker
+  (`stylePicker`, GET `/api/styles`) with this PC's analyses only, by a readable name (`knowledge.label()`, worked out
+  when read, never stored - on the 7 tekeo cards e.g. "Motion-graphics ad for an AI assistant app"); "effects you
+  confirmed" counts this PC's verdicts only (it had counted tekeo's 40 as the user's).
+- **One way to review** (3): one component, `reviewPanel`, in six places - an analysis' Effects and Possible misses &
+  sound, a video's Review (Editor and Generator), a prompt or script, a title, a thumbnail set, a set of scripts &
+  prompts: ✓ ~ ✗ (keys 1 2 3), J K N, one note saved as you type, "N of M reviewed", *Send it to Claude*. The review
+  area's UI test: 107 of 107; the text set's panel (round 2): every key and the note read back from verdicts.json.
+- **The first install** (4): `Install-MotionLab.cmd` - download, double-click, two questions, Y: Git, the VC++ runtime,
+  Python 3.12, ffmpeg, Claude Code + its sign-in, Deno, yt-dlp, Node.js + HyperFrames when wanted, the lab on the last
+  tested version, the shortcuts; a second run does only what is missing; setup.bat = its repair run (a ZIP copy gets
+  connected to GitHub); the README's 3 steps in English and Spanish. Measured sizes: ~2.9 GB with motion graphics,
+  ~2.4 GB without. `tools\dev\install_test.py`: 66 checks PASS in 132 s (a fake winget and GitHub, scratch folders;
+  this PC untouched). Still needs one clean Windows 10 and 11 run (the user's).
+- **Spanish** (5): the mechanism (round 2 - Settings > General > Language, `t()` / `tn()` / `ta()` on the page,
+  `motionlab.i18n` on the server, dates / numbers / plural nouns in the language, Claude's Spanish line after the
+  600-character cut, jobs started with `MOTIONLAB_LANG`, `tools\dev\i18n_check.py`), then the whole app (round 3 - the
+  areas of `tools\dev\i18n_areas.json`: 10 page areas, 3 server areas, index.html, report.html, the Motion Graphics
+  library's labels by key; the installer in Spanish on a Spanish Windows; *What's new* from `CHANGELOG.es.md`; the
+  roadmap's words). Measured before: ~2,690 page texts, ~1,715 server texts, 124 in report.html, 4,127 Motion Graphics
+  labels (851 distinct); 20,000 server `t()` calls in 39 ms. What Claude stores (memory.md, cards, lessons,
+  review.json, verdicts) stays English. Waits: the words in the other window's files (`i18n_check.py` WAITS).
+- **Speed** (the audit's kept findings, results identical): `app.py` start -> listening 4.06 -> 0.45 s; GET
+  `/api/status` 295 -> 84 ms, `/api/memory` 208 -> 31 ms, `/api/motion` 153 -> 24 ms, `/api/library` 193 -> 17 ms; the
+  30 s synthetic test video analysed in 18.9 s instead of 35.0 s (the signal pass on several cores 22.8 -> 11.2 s, the
+  sound measured beside it) with events.json, metrics.csv, overview.png and the frames picked for the sheets identical
+  (sym_lr / sym_tb / tile within 1e-6 relative - and now the same on every run); a damaged video no longer hangs an
+  analysis (before: still running after 25 s; now 2.1 s). Waits for the other window: a template pack's clips decoded
+  4 times, `/api/motion/pick`'s cache, overlay.py's encode errors on accented names.
+- **Claude's notes** (round 2): root CLAUDE.md 31,394 -> 21,471 bytes (-32 %), the app's CLAUDE.md 96,366 -> 41,712
+  bytes (the pages' history moved verbatim to `docs\app_pages.md`), an analyze-reference helper reads
+  `review_rules.md` (4.5 KB) instead of the whole skill (24.8 KB); the 4 skills whose description did not parse are
+  found again; every skill answers in Spanish when the first message asks.
+- Also: memory.md's *Scripts & prompts you analysed* block and `knowledge.py memory --styles` (the short memory for
+  scripts and titles); readable names in the Analyser, the analysis page, Home, the Jobs titles and the Delete
+  dialog; `/write-prompt request <req-NNN>` (a long wish reaches Claude whole); the roadmap's phases and Spanish.
+
+**Still open after it**: the user's `selftest.py --extended` + smoke (the rule: no long tests during the round), a
+clean-PC install, the real `/analyze-reference texts` measurement, the other window's files.
 
 ### 0.5.0 - released 2026-10-16 - Motion Graphics: a library learned from pro template clips
 

@@ -15,7 +15,11 @@ Manager, in the browser) the first time something is pushed.
             The result (.app\\update_last.json) carries the CHANGELOG sections that came in: the restarted window
             shows them once ("What's new"), then mark_seen()
   share()   commit the staged knowledge files and push them (on failure everything is put back as it was)
-  connect() turn a ZIP copy into a git checkout of a repo (so updates and sharing work)"""
+  connect() turn a ZIP copy into a git checkout of a repo (so updates and sharing work): the tested commit on a local
+            main when the repo has the branch "tested" - what the Update button would install (Install-MotionLab.cmd
+            does the same for a new clone and calls connect() for a ZIP copy; Settings > Connect to GitHub too)
+In Spanish (Settings > Language, 0.5.1) What's new comes from CHANGELOG.es.md: a version that file has shows in its
+words, the others in English (whats_new / translated / in_language); its own messages follow the language too."""
 from __future__ import annotations
 
 import json
@@ -27,6 +31,7 @@ import sys
 import time
 from pathlib import Path
 
+from motionlab import i18n as I18N
 from motionlab.util import LAB
 
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -35,6 +40,9 @@ LAST = LAB / ".app" / "update_last.json"                 # the last apply(), sho
 KNOWLEDGE_PATHS = ("knowledge/references", "knowledge/incoming", ".claude/skills/analyze-reference/lessons.md",
                    ".claude/skills/recreate-video/lessons.md")    # analysis lessons L###, lessons on making videos M###
 GATE = "tested"                                          # the branch GitHub's tests move forward (tests.yml)
+HOME_REPO = "https://github.com/iveltal-tekeo/MotionLab"  # Settings > Connect to GitHub starts with it (2026-10-18)
+NO_GIT = "git is not installed (needed for updates and sharing) - double-click setup.bat in the MotionLab folder: " \
+         "it installs git and connects this copy"
 
 
 class GitError(RuntimeError):
@@ -54,12 +62,12 @@ def git_exe() -> str | None:
 def git(*args: str, timeout: float = 60, check: bool = True, cwd: Path = LAB) -> str:
     exe = git_exe()
     if not exe:
-        raise GitError("git is not installed - winget install Git.Git (or https://git-scm.com)")
+        raise GitError(I18N.t(NO_GIT))
     r = subprocess.run([exe, *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout,
                        creationflags=NO_WINDOW, encoding="utf-8", errors="replace",
                        env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "auto"})
     if check and r.returncode != 0:
-        raise GitError((r.stderr or r.stdout).strip()[-600:] or f"git {' '.join(args)} failed")
+        raise GitError((r.stderr or r.stdout).strip()[-600:] or I18N.t("git {args} failed", args=" ".join(args)))
     return r.stdout.strip()
 
 
@@ -107,11 +115,68 @@ def releases(changelog: str) -> list[dict]:
             for i, m in enumerate(heads)]
 
 
-def whats_new(changelog: str, after: str | None, upto: str | None = None) -> str:
-    """Markdown of every CHANGELOG section newer than version `after` (and not newer than `upto`), newest first."""
-    keep = [r for r in releases(changelog) if vtuple(r["version"]) > vtuple(after)
+def whats_new(changelog: str, after: str | None, upto: str | None = None, local: str | None = None) -> str:
+    """Markdown of every CHANGELOG section newer than version `after` (and not newer than `upto`), newest first.
+    local = the same CHANGELOG in the app's language (CHANGELOG.es.md): a version it has comes in its words, the
+    others in English - the versions and their order are always CHANGELOG.md's."""
+    tr = {r["version"]: r for r in releases(local)} if local else {}
+    keep = [tr.get(r["version"], r) for r in releases(changelog) if vtuple(r["version"]) > vtuple(after)
             and (upto is None or vtuple(r["version"]) <= vtuple(upto))]
     return "\n\n".join(f"## {r['heading']}\n\n{r['body']}" for r in keep)[:30000]
+
+
+def changelog_name(lg: str) -> str:
+    """CHANGELOG.md, or its translation (CHANGELOG.es.md since 0.5.1: the same `## x.y.z - date - title` headings in
+    that language, from 0.5.1 on - the older notes stay in CHANGELOG.md)."""
+    return "CHANGELOG.md" if lg == "en" else f"CHANGELOG.{lg}.md"
+
+
+def local_changelog(lg: str) -> str | None:
+    """This copy's CHANGELOG in language lg ("" when there is none); None for English (nothing to lay over it)."""
+    return None if lg == "en" else _read(LAB / changelog_name(lg))
+
+
+def _changelog_at(ref: str, lg: str) -> str | None:
+    """The same at a git ref - the update's source (a missing file = "")."""
+    return None if lg == "en" else git("show", f"{ref}:{changelog_name(lg)}", check=False)
+
+
+def translated(changelog: str, local: str | None) -> str:
+    """CHANGELOG.md for the sidebar's What's new in the app's language: each version section the translation has, in
+    its words (heading and body); the other versions, the opening lines and ## Unreleased as they are."""
+    tr = {r["version"]: r for r in releases(local)} if local else {}
+    if not tr:
+        return changelog
+    text = (changelog or "").replace("\r", "")
+    heads = list(re.finditer(r"(?m)^## +(\d+(?:\.\d+){1,3})\b.*$", text))
+    out, at = [], 0
+    for i, m in enumerate(heads):
+        r = tr.get(m.group(1))
+        if r:
+            out += [text[at:m.start()], f"## {r['heading']}\n\n{r['body']}\n\n"]
+            at = heads[i + 1].start() if i + 1 < len(heads) else len(text)
+    return "".join(out) + text[at:]
+
+
+def in_language(rec: dict | None) -> dict | None:
+    """A check() or update record with its What's new in the app's language when it was written in another one
+    (Settings > Language changed since, or Claude's knowledge.py share wrote it in English): made again from the same
+    CHANGELOG sections - a check from the update's source (git show, no fetch), an update / a share from this copy."""
+    lg = I18N.lang()
+    if not rec or not rec.get("whats_new") or rec.get("lang", "en") == lg:
+        return rec
+    try:
+        if rec.get("source") and "behind" in rec:
+            text = whats_new(git("show", f"{rec['source']}:CHANGELOG.md", check=False), rec.get("version"),
+                             local=_changelog_at(rec["source"], lg))
+        elif rec.get("from_version") and rec.get("version"):
+            text = whats_new(_read(LAB / "CHANGELOG.md"), rec["from_version"], rec["version"],
+                             local=local_changelog(lg))
+        else:
+            return rec
+    except (GitError, subprocess.TimeoutExpired, OSError):
+        return rec
+    return {**rec, "whats_new": text, "lang": lg}
 
 
 def _is_knowledge(path: str) -> bool:
@@ -134,23 +199,24 @@ def local_version() -> str:
 
 
 def check(fetch: bool = True) -> dict:
-    """Where this copy stands against GitHub (cached in .app\\update.json)."""
+    """Where this copy stands against GitHub (cached in .app\\update.json); its words in the app's language."""
+    lg = I18N.lang()
     out = {"checked": time.strftime("%Y-%m-%d %H:%M"), "version": local_version(), "disk_version": disk_version(),
            "git": bool(git_exe()),
            "repo": is_repo(), "remote": None, "branch": None, "behind": 0, "ahead": 0, "dirty": [], "new_version": None,
            "source": None, "testing": 0,
            "changes": [], "whats_new": "", "kind": None, "files": 0, "new_cards": 0, "new_lessons": 0,
-           "error": None, "can_update": False}
+           "error": None, "can_update": False, "lang": lg}
     if not out["git"]:
-        out["error"] = "git is not installed (needed for updates and sharing): winget install Git.Git"
+        out["error"] = I18N.t(NO_GIT)
     elif not out["repo"]:
-        out["error"] = "this copy is not connected to GitHub (it was not installed with git clone)"
+        out["error"] = I18N.t("this copy is not connected to GitHub (it was not installed with git clone)")
     else:
         try:
             out["remote"] = _remote()
             out["branch"] = br = _branch()
             if not out["remote"]:
-                out["error"] = "no GitHub repo set for this copy (git remote 'origin')"
+                out["error"] = I18N.t("no GitHub repo set for this copy (git remote 'origin')")
             else:
                 if fetch:
                     git("fetch", "--quiet", "origin", timeout=60)
@@ -164,14 +230,15 @@ def check(fetch: bool = True) -> dict:
                 if out["behind"]:
                     nv = out["new_version"] = _version_of(git("show", f"{up}:tools/motionlab/__init__.py", check=False))
                     out["changes"] = git("log", "--format=%s", f"HEAD..{up}", "-n", "30").splitlines()
-                    out["whats_new"] = whats_new(git("show", f"{up}:CHANGELOG.md", check=False), out["version"])
+                    out["whats_new"] = whats_new(git("show", f"{up}:CHANGELOG.md", check=False), out["version"],
+                                                 local=_changelog_at(up, lg))
                     inc = _incoming(git("merge-base", "HEAD", up), up)          # what the update brings
                     out.update(files=len(inc["files"]), new_cards=inc["new_cards"], new_lessons=inc["new_lessons"])
                     out["kind"] = ("version" if nv and vtuple(nv) > vtuple(out["version"]) else
                                    "knowledge" if inc["knowledge_only"] else "changes")
                 out["can_update"] = out["behind"] > 0
         except (GitError, subprocess.TimeoutExpired, ValueError) as e:
-            out["error"] = f"could not check GitHub: {e}"
+            out["error"] = I18N.t("could not check GitHub: {error}", error=e)
     out["restart_needed"] = bool(out["disk_version"] and out["disk_version"] != out["version"])
     CACHE.parent.mkdir(exist_ok=True)
     CACHE.write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -186,14 +253,14 @@ def cached() -> dict:
         return {}
     out["version"], out["disk_version"] = local_version(), disk_version()
     out["restart_needed"] = bool(out["disk_version"] and out["disk_version"] != out["version"])
-    return out
+    return in_language(out)
 
 
 def apply() -> dict:
     """Pull the new version. Local knowledge commits and changed files are kept (rebase + autostash); if that
     cannot be done cleanly nothing changes. Installs Python packages when requirements.txt changed."""
     if not is_repo():
-        raise GitError("this copy is not connected to GitHub")
+        raise GitError(I18N.t("this copy is not connected to GitHub"))
     br = _branch()
     old = git("rev-parse", "HEAD")
     old_version = disk_version()
@@ -201,7 +268,7 @@ def apply() -> dict:
         set_aside = _pull(_upstream(br).removeprefix("origin/"))
     except (GitError, subprocess.TimeoutExpired) as e:
         git("rebase", "--abort", check=False)
-        raise GitError(f"the update could not be applied cleanly, nothing was changed: {e}")
+        raise GitError(I18N.t("the update could not be applied cleanly, nothing was changed: {error}", error=e))
     new = git("rev-parse", "HEAD")
     changed = git("diff", "--name-only", old, new).splitlines() if old != new else []
     pip = install_requirements() if "requirements.txt" in changed else None
@@ -209,11 +276,13 @@ def apply() -> dict:
     check(fetch=False)
     version = disk_version()
     inc = _incoming(old, new) if old != new else {"new_cards": 0, "new_lessons": 0}
+    lg = I18N.lang()
     out = {"updated": old != new, "from": old[:7], "to": new[:7], "changed": changed[:80], "pip": pip, "npm": npm,
            "set_aside": set_aside, "when": time.time(), "version": version, "from_version": old_version,
            "code_changed": any(not _is_knowledge(f) for f in changed),
-           "new_cards": inc["new_cards"], "new_lessons": inc["new_lessons"], "seen": False,
-           "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), old_version, version) if version != old_version else ""}
+           "new_cards": inc["new_cards"], "new_lessons": inc["new_lessons"], "seen": False, "lang": lg,
+           "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), old_version, version, local=local_changelog(lg))
+           if version != old_version else ""}
     if out["updated"]:
         LAST.parent.mkdir(exist_ok=True)
         LAST.write_text(json.dumps(out, indent=1), encoding="utf-8")
@@ -248,8 +317,8 @@ def last_result(max_age: float = 900) -> dict | None:
         return None
     age = time.time() - float(r.get("when", 0))
     if "seen" not in r:                  # written by MotionLab 0.2.x while updating itself to this version
-        return _complete_old(r) if age < max_age else None
-    return r if age < max_age or (not r["seen"] and age < 7 * 86400) else None
+        return in_language(_complete_old(r)) if age < max_age else None
+    return in_language(r) if age < max_age or (not r["seen"] and age < 7 * 86400) else None
 
 
 def _complete_old(r: dict) -> dict:
@@ -259,8 +328,10 @@ def _complete_old(r: dict) -> dict:
     except (GitError, subprocess.TimeoutExpired, OSError):
         frm = None
     ver = r.get("version") or disk_version()
-    return {**r, "from_version": frm, "version": ver, "seen": False, "code_changed": True,
-            "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver) if frm and ver and frm != ver else ""}
+    lg = I18N.lang()
+    return {**r, "from_version": frm, "version": ver, "seen": False, "code_changed": True, "lang": lg,
+            "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver, local=local_changelog(lg))
+            if frm and ver and frm != ver else ""}
 
 
 def mark_seen() -> None:
@@ -326,9 +397,9 @@ def share(files: list[Path], who: str, message: str) -> dict:
     push fails (no access, offline), the commit is undone and the new files are removed again, so nothing is left
     half-shared; the caller then offers the pack file instead."""
     if not is_repo():
-        raise GitError("this copy is not connected to GitHub")
+        raise GitError(I18N.t("this copy is not connected to GitHub"))
     if not _remote():
-        raise GitError("no GitHub repo set for this copy")
+        raise GitError(I18N.t("no GitHub repo set for this copy"))
     _identity(who)
     br = _branch()
     rels = [str(p.relative_to(LAB)).replace("\\", "/") for p in files]
@@ -341,9 +412,12 @@ def share(files: list[Path], who: str, message: str) -> dict:
         for p in new_files:
             if p.exists():
                 p.unlink()
-        raise GitError(f"this copy is not on GitHub yet (no origin/{br}) - push it first" if ahead < 0 else
-                       f"this copy has {ahead} commit(s) that are not on GitHub yet (work in progress?) - push "
-                       "them first, then share again (the pack file can be sent meanwhile)")
+        raise GitError(I18N.t("this copy is not on GitHub yet (no origin/{branch}) - push it first", branch=br)
+                       if ahead < 0 else
+                       I18N.tn(ahead, "this copy has {n} commit(s) that are not on GitHub yet (work in progress?) - "
+                                      "push them first, then share again (the pack file can be sent meanwhile)",
+                               "this copy has {n} commit(s) that are not on GitHub yet (work in progress?) - push them "
+                               "first, then share again (the pack file can be sent meanwhile)"))
     paths = rels + [k for k in KNOWLEDGE_PATHS if (LAB / k).exists()]
     git("add", "--", *paths)
     if not git("diff", "--cached", "--name-only", "--", *paths):
@@ -369,12 +443,14 @@ def share(files: list[Path], who: str, message: str) -> dict:
         if out["code_updated"]:
             frm = _version_of(git("show", f"{mine}:tools/motionlab/__init__.py", check=False))
             ver = disk_version()
+            lg = I18N.lang()
             LAST.parent.mkdir(exist_ok=True)
             LAST.write_text(json.dumps({"updated": True, "from": mine[:7], "to": out["commit"], "changed": pulled[:80],
                                         "pip": None, "set_aside": set_aside, "when": time.time(), "version": ver,
                                         "from_version": frm, "code_changed": True, "new_cards": 0, "new_lessons": 0,
-                                        "seen": False,
-                                        "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver)
+                                        "seen": False, "lang": lg,
+                                        "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver,
+                                                               local=local_changelog(lg))
                                         if frm and ver and frm != ver else ""}, indent=1), encoding="utf-8")
         return out
     except (GitError, subprocess.TimeoutExpired) as e:
@@ -387,20 +463,43 @@ def share(files: list[Path], who: str, message: str) -> dict:
         return {"pushed": False, "error": str(e)}
 
 
-def connect(url: str) -> dict:
+def connect(url: str, local: bool = False) -> dict:
     """Make a ZIP copy a git checkout of `url` (updates + sharing). Only the app's own files (tracked in the repo)
-    are replaced by the repo's version; your videos, analyses, settings and local knowledge are not touched."""
+    are replaced by the repo's version; your videos, analyses, settings and local knowledge are not touched.
+    It starts from what the Update button installs (`_upstream`): the branch "tested" checked out as a LOCAL main
+    that follows origin/main (so updates keep coming from tested and Share pushes to main), else the default branch.
+    local=True (the installer's tests only, never the Settings page): `url` may also be a local repo folder."""
     url = url.strip()
-    if not re.fullmatch(r"https://github\.com/[\w.-]+/[\w.-]+?(\.git)?/?", url):
-        raise ValueError("paste the repo address, e.g. https://github.com/name/MotionLab")
+    if not (re.fullmatch(r"https://github\.com/[\w.-]+/[\w.-]+?(\.git)?/?", url) or (local and Path(url).is_dir())):
+        raise ValueError(I18N.t("paste the repo address, e.g. {example}", example=HOME_REPO))
     if is_repo():
-        raise GitError("this copy is already connected to " + (_remote() or "a git repo"))
+        raise GitError(I18N.t("this copy is already connected to {remote}", remote=_remote() or I18N.t("a git repo")))
     git("init", "-q")
     git("remote", "add", "origin", url)
     git("fetch", "--quiet", "origin", timeout=300)
     head = git("ls-remote", "--symref", "origin", "HEAD", timeout=60)
     m = re.search(r"ref: refs/heads/(\S+)\s+HEAD", head)
     br = m.group(1) if m else "main"
-    git("checkout", "-q", "-B", br, f"origin/{br}", "--force", timeout=120)
+    start = _upstream(br)                                    # origin/tested when the repo has it (br == main)
+    git("checkout", "-q", "-B", br, start, "--force", timeout=120)
     git("branch", "--set-upstream-to", f"origin/{br}", check=False)
-    return {"connected": True, "remote": url, "branch": br, "head": git("rev-parse", "--short", "HEAD")}
+    return {"connected": True, "remote": url, "branch": br, "source": start,
+            "head": git("rev-parse", "--short", "HEAD")}
+
+
+def selfcheck() -> list[str]:
+    """Known answers without git (jobtools selfcheck - the self-test - runs it): What's new takes a version's section
+    from the translation when it has that version and the English one otherwise; the sidebar's What's new likewise."""
+    en = ("# Changelog\n\n## Unreleased\n\n- soon\n\n## 0.5.2 - 2026-11-01 - Two\n\n- two\n\n"
+          "## 0.5.1 - 2026-10-19 - One\n\n- one\n")
+    es = "Las notas anteriores están en CHANGELOG.md.\n\n## 0.5.1 - 2026-10-19 - Uno\n\n- uno\n"
+    bad = []
+    if whats_new(en, "0.5.0", local=es) != "## 0.5.2 - 2026-11-01 - Two\n\n- two\n\n## 0.5.1 - 2026-10-19 - Uno\n\n- uno":
+        bad.append("whats_new: 0.5.1 from the translation, 0.5.2 (not in it) in English")
+    if whats_new(en, "0.5.0", local="") != whats_new(en, "0.5.0") or not whats_new(en, "0.5.0").endswith("- one"):
+        bad.append("whats_new: without a translation the English sections")
+    t = translated(en, es)
+    if [r["heading"] for r in releases(t)] != ["0.5.2 - 2026-11-01 - Two", "0.5.1 - 2026-10-19 - Uno"] \
+            or "- soon" not in t or translated(en, None) != en:
+        bad.append("translated: CHANGELOG.md with the translation's sections, the rest as it is")
+    return bad

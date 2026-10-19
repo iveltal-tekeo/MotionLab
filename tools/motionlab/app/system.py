@@ -16,6 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from motionlab import i18n as I18N
 from motionlab.styles import CATEGORIES, DEFAULT as CATEGORY_DEFAULT, norm as norm_category
 from motionlab.util import LAB, REFS
 
@@ -28,7 +29,15 @@ NEW_CONSOLE = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
 DEFAULTS = {"ytdlp_path": "", "download_preset": "mp4_1080", "download_name": "%(title).80s [%(id)s].%(ext)s",
             "claude_path": "", "default_category": CATEGORY_DEFAULT, "author": "", "update_mode": "ask",
             "claude_effort": "auto", "claude_model": "opus", "claude_ask": True, "default_focus": "both",
-            "download_login": False, "download_browser": "firefox"}
+            "download_login": False, "download_browser": "firefox", "language": "en"}
+# Settings > General > Language (2026-10-18, the user: "we need a spanish version of the entire app"; Spain, tú): the
+# app's words and Claude's replies - what Claude writes into the lab stays English (motionlab\i18n.py)
+LANGUAGES = I18N.LANGUAGES
+# the first message of a Claude window opened from the app in Spanish ends with this line: ASCII (the same bytes in
+# any console code page) and added AFTER the 600-character cut, so it is never lost; a free chat (no first message)
+# stays empty. The skills read it (their first line: "If the first message says to reply in Spanish ...")
+LANG_LINE = {"es": " - reply to the user in Spanish (Spain, tu); commands, ids, file names and the lab's formats stay as "
+                   "they are; write the lab's own files (reviews, lessons, cards, memory) in English"}
 # Settings > Downloads > "Use my browser's login for downloads" (0.4.2.1, off by default): yt-dlp reads the login
 # (cookies) of this browser on this PC for each download. Firefox works best: Chrome / Edge lock their cookie file
 # while they run and encrypt it, so yt-dlp often cannot read it.
@@ -70,22 +79,28 @@ PRESETS = {
     "mp4_best": ("MP4 video, best quality (can be 4K)", ["-f", VIDEO_F, "--merge-output-format", "mp4"], "refs"),
     "mp3": ("MP3 audio only (e.g. the song)", ["-x", "--audio-format", "mp3", "--audio-quality", "0"], "refs/audio"),
 }
+DOWNLOAD_TITLE = "Download ({what}) from {site}"      # a download job's title (what = the preset's label before " (")
+# how to get a missing program: setup.bat in the lab folder installs it (Install-MotionLab.cmd -Here, 2026-10-18 -
+# the user: "its very hard for people to read the steps or install git or do all fo that throught the terminal")
 HOW = {
-    "ffmpeg": "required for every analysis - install: winget install Gyan.FFmpeg (then restart the app)",
-    "yt-dlp": "optional, for 'Download from a link' - install: winget install yt-dlp.yt-dlp, or put yt-dlp.exe "
-              "anywhere and set its path here. TikTok and Instagram change often: keep it up to date",
+    "ffmpeg": "required for every analysis - double-click setup.bat in the MotionLab folder: it installs what is "
+              "missing (then restart MotionLab)",
+    "yt-dlp": "optional, for 'Download from a link' - setup.bat in the MotionLab folder installs it, or put "
+              "yt-dlp.exe anywhere and set its path here. TikTok and Instagram change often: keep it up to date",
     # yt-dlp's wiki "EJS" (checked 2026-10-15, page edited 2026-07-12): YouTube needs an external JavaScript
     # runtime; Deno (>= 2.3.0) is the recommended one and the only one on by default (node / quickjs / bun need
     # --js-runtimes); the yt-dlp.exe build bundles the yt-dlp-ejs scripts, pip installs need "yt-dlp[default]"
-    "deno": "optional, for YouTube downloads: recent yt-dlp needs a JavaScript runtime for YouTube - install: "
-            "winget install DenoLand.Deno (version 2.3 or newer), then restart MotionLab",
-    "claude": "for the review and learning steps - install Claude Code: https://claude.com/claude-code",
-    "git": "for updates and sharing knowledge - install: winget install Git.Git (or https://git-scm.com)",
+    "deno": "optional, for YouTube downloads: recent yt-dlp needs a JavaScript runtime for YouTube (Deno 2.3 or "
+            "newer) - setup.bat in the MotionLab folder installs it, then restart MotionLab",
+    "claude": "for the review and learning steps - double-click setup.bat in the MotionLab folder: it installs "
+              "Claude Code and signs you in (your Claude Pro or Max plan)",
+    "git": "for updates and sharing knowledge - double-click setup.bat in the MotionLab folder: it installs git "
+           "(and connects a copy that came as a ZIP)",
     "resolve": "optional (rebuilding in DaVinci Resolve Studio)",
     "hyperframes": "optional, renders graphics written as HTML into transparent clips for rebuilds (tools\\overlay.py) "
                    "- needs Node.js; Install below or setup.bat (pinned version, about 130 MB + its Chrome 150 MB)",
-    "node": "optional, for graphics written as HTML (HyperFrames overlays) when rebuilding a video - install: winget "
-            "install OpenJS.NodeJS.LTS, then run setup.bat again (it installs HyperFrames into tools\\overlays)",
+    "node": "optional, for the motion graphics and graphics written as HTML (HyperFrames) - double-click setup.bat "
+            "in the MotionLab folder and say yes to motion graphics: it installs Node.js and HyperFrames",
     "edge": "the app window (comes with Windows)",
     "speech": "optional, the words of your own videos for captions (faster-whisper on the CPU, ~60 MB + the model "
               "small 464 MB, or base 141 MB for slow laptops) - Install below",
@@ -105,6 +120,8 @@ def load() -> dict:
     s["default_category"] = norm_category(s["default_category"]) or CATEGORY_DEFAULT
     if s["update_mode"] not in UPDATE_MODES:
         s["update_mode"] = "ask"
+    if s["language"] not in LANGUAGES:
+        s["language"] = "en"
     return s
 
 
@@ -120,37 +137,40 @@ def save(body: dict) -> dict:
             continue
         v = str(v).strip().strip('"')
         if k == "download_browser" and v not in BROWSERS:
-            raise ValueError(f"unknown browser {v}")
+            raise ValueError(I18N.t("unknown browser {id}", id=v))
         if k == "update_mode" and v not in UPDATE_MODES:
-            raise ValueError(f"unknown update mode {v}")
+            raise ValueError(I18N.t("unknown update mode {id}", id=v))
         if k == "author":
             v = re.sub(r"[^a-z0-9_-]", "", v.lower().replace(" ", "-"))[:24]
         if k.endswith("_path") and v and not Path(v).is_file():
-            raise ValueError(f"{k}: no such file: {v}")
+            raise ValueError(I18N.t("{setting}: no such file: {file}", setting=k, file=v))
         if k == "download_preset" and v not in PRESETS:
-            raise ValueError(f"unknown preset {v}")
+            raise ValueError(I18N.t("unknown preset {id}", id=v))
         if k == "download_name":
             check_name(v)
         if k == "default_category":
             v = norm_category(v) or ""
             if v not in CATEGORIES:
-                raise ValueError("unknown category")
+                raise ValueError(I18N.t("unknown category"))
         if k == "claude_effort" and v not in ("auto", *EFFORTS):
-            raise ValueError(f"unknown effort {v}")
+            raise ValueError(I18N.t("unknown effort {id}", id=v))
         if k == "claude_model" and v not in MODELS:
-            raise ValueError(f"unknown model {v}")
+            raise ValueError(I18N.t("unknown model {id}", id=v))
         if k == "default_focus" and v not in ("content", "cinematic", "both"):
-            raise ValueError(f"unknown focus {v}")
+            raise ValueError(I18N.t("unknown focus {id}", id=v))
+        if k == "language" and v not in LANGUAGES:
+            raise ValueError(I18N.t("unknown language {id}", id=v))
         s[k] = v
     data.write_json_atomic(SETTINGS, s)
+    I18N.forget()                                         # the page reloads in the new language at once
     return s
 
 
 def check_name(t: str) -> str:
     """A yt-dlp output name template that stays inside the target folder."""
     if not t or len(t) > 160 or not re.fullmatch(r"[\w\s%().,\[\]\-#+&'!]+", t) or "%(ext)s" not in t or ".." in t:
-        raise ValueError("name template: letters, spaces, yt-dlp fields like %(title)s - no folders - and it must "
-                         "end with .%(ext)s")
+        raise ValueError(I18N.t("name template: letters, spaces, yt-dlp fields like %(title)s - no folders - and it "
+                                "must end with .%(ext)s"))
     return t
 
 
@@ -161,6 +181,37 @@ def _which(*names: str) -> str | None:
         if p:
             return p
     return None
+
+
+def merge_registry_path() -> list[str]:
+    """Add the PATH entries Windows keeps in the registry (the machine's, then the user's) that this process lacks, after
+    its own ones: a program installed after Explorer read its PATH (the installer, setup.bat, winget) is found when
+    MotionLab starts - without signing out first. tools\\app.py calls it at start; the jobs inherit it. Returns the
+    entries added; never raises (a PC without the keys or not Windows = nothing to do)."""
+    added: list[str] = []
+    if os.name != "nt":
+        return added
+    try:
+        import winreg
+        have = [p for p in os.environ.get("PATH", "").split(os.pathsep) if p.strip()]
+        seen = {os.path.normcase(p.strip().rstrip("\\/")) for p in have}
+        for root, key in ((winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+                          (winreg.HKEY_CURRENT_USER, "Environment")):
+            try:
+                with winreg.OpenKey(root, key) as k:
+                    val, _kind = winreg.QueryValueEx(k, "Path")
+            except OSError:
+                continue
+            for p in winreg.ExpandEnvironmentStrings(str(val or "")).split(";"):
+                n = os.path.normcase(p.strip().rstrip("\\/"))
+                if n and n not in seen:
+                    seen.add(n)
+                    added.append(p.strip())
+        if added:
+            os.environ["PATH"] = os.pathsep.join(have + added)
+    except Exception:                                   # noqa: BLE001 - the app must start whatever the registry says
+        return []
+    return added
 
 
 def find(name: str, s: dict | None = None) -> str | None:
@@ -243,6 +294,24 @@ def age_words(days: int) -> str:
     return f"{m} month{'s' if m > 1 else ''} old" if m < 12 else f"{days / 365:.1f} years old".replace(".0 ", " ")
 
 
+def age_text(days: int) -> str:
+    """age_words in the app's language - for the Settings page only (a job's log and the self-check keep the English
+    age_words)."""
+    if I18N.lang() == "en":
+        return age_words(days)
+    if days < 1:
+        return I18N.t("from today")
+    if days < 14:
+        return I18N.tn(days, "{n} day old", "{n} days old")
+    if days < 45:
+        return I18N.tn(round(days / 7), "{n} week old", "{n} weeks old")
+    m = round(days / 30.4)
+    if m < 12:
+        return I18N.tn(m, "{n} month old", "{n} months old")
+    y = round(days / 365, 1)
+    return I18N.tn(int(y) if y == int(y) else y, "{n} year old", "{n} years old")
+
+
 YTDLP_OLD_DAYS = 30                     # older than this = amber in Settings (sites change faster than that)
 
 
@@ -255,9 +324,11 @@ def install_kind(exe: str) -> dict:
     if "\\winget\\packages\\" in low or "\\winget\\links\\" in low:
         wg = _which("winget") or str(Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
                                      / "Microsoft" / "WindowsApps" / "winget.exe")
+        # --skip-dependencies: winget's yt-dlp also pulls DenoLand.Deno and yt-dlp.FFmpeg (a second, untested ffmpeg
+        # of 431 MB that can land on PATH); yt-dlp gets MotionLab's ffmpeg anyway (--ffmpeg-location, download_cmd)
         return {"kind": "winget", "label": "installed with winget",
                 "cmd": [wg, "upgrade", "--id", "yt-dlp.yt-dlp", "--exact", "--silent", "--disable-interactivity",
-                        "--accept-source-agreements", "--accept-package-agreements"]}
+                        "--accept-source-agreements", "--accept-package-agreements", "--skip-dependencies"]}
     if real.parent.name.lower() == "scripts":
         env = real.parent.parent
         for py in (real.parent / "python.exe", env / "python.exe"):
@@ -349,9 +420,11 @@ def tools(full: bool = False) -> list[dict]:
             if n == "deno" and v:
                 v = deno_info(s).get("version") or v
         row = {"name": n, "label": label, "found": bool(p), "path": p, "version": v, "need": need, "how": HOW[n]}
-        if full and p and n == "yt-dlp":            # its age + how Update yt-dlp would update it
-            y = ytdlp_info(s)
-            row.update(age=y.get("age"), age_days=y.get("age_days"), old=y.get("old"), install=y.get("label"),
+        if full and p and n == "yt-dlp":            # its age + how Update yt-dlp would update it (in the app's language:
+            y = ytdlp_info(s)                       # this row is the Settings page's; ytdlp_info stays English for the job)
+            row.update(age=age_text(max(0, y["age_days"])) if y.get("age_days") is not None else y.get("age"),
+                       age_days=y.get("age_days"), old=y.get("old"),
+                       install=I18N.t(y["label"]) if y.get("label") else y.get("label"),
                        latest=y.get("latest"), newest=y.get("newest"), checked=y.get("checked"))
         if full and p and n == "deno":
             row["old"] = not deno_info(s).get("new_enough", True)
@@ -366,13 +439,13 @@ def download_cmd(url: str, preset: str) -> tuple[str, list[str]]:
     s = load()
     url = url.strip()
     if not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", url):
-        raise ValueError("paste a full link starting with https://")
+        raise ValueError(I18N.t("paste a full link starting with https://"))
     preset = preset or s["download_preset"]
     if preset not in PRESETS:
-        raise ValueError(f"unknown preset {preset}")
+        raise ValueError(I18N.t("unknown preset {id}", id=preset))
     exe = find("yt-dlp", s)
     if not exe:
-        raise ValueError("yt-dlp not found - " + HOW["yt-dlp"])
+        raise ValueError(I18N.t("yt-dlp not found - {how}", how=I18N.t(HOW["yt-dlp"])))
     label, args, folder = PRESETS[preset]
     out_dir = LAB / folder
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -389,7 +462,9 @@ def download_cmd(url: str, preset: str) -> tuple[str, list[str]]:
     if deno and not _which("deno") and yv and tuple(map(int, yv.groups())) >= (2025, 11, 12):
         cmd += ["--js-runtimes", f"deno:{deno}"]    # Deno installed but not on PATH yet: tell yt-dlp where
     host = re.sub(r"^https?://(www\.)?", "", url).split("/")[0]
-    return f"Download ({label.split(' (')[0]}) from {host}", cmd + ["--", url]
+    # the job's title: shown in the app's language, its English (.en) is what download.py prints into the job's log
+    what = data.Words.of(I18N.t(label).split(" (")[0], label.split(" (")[0])
+    return data.words(DOWNLOAD_TITLE, what=what, site=host), cmd + ["--", url]
 
 
 # ------------------------------------------------------------------------------------------------- Claude Code
@@ -453,18 +528,22 @@ def claude_launcher(prompt: str = "", task: str = "free", label: str = "", model
     """(cleaned prompt, .cmd text, effort used, model used) that opens Claude Code in the lab folder with an optional
     first message, the model (--model) and effort level (--effort) - the dialog's choice, else Settings / the task's
     recommendation - and a session name (--name, shown by /resume). The prompt loses the characters cmd would
-    interpret (quotes, %, ^, &, |, <, >). Older Claude Codes without a flag get the command without it."""
+    interpret (quotes, %, ^, &, |, <, >) - so the user's own words go to Claude in a file and the prompt names it
+    (e.g. /write-prompt request req-012). In Spanish (Settings > Language) LANG_LINE follows the cut prompt. Older
+    Claude Codes without a flag get the command without it."""
     if task not in TASKS:
-        raise ValueError(f"unknown task {task!r}")
+        raise ValueError(I18N.t("unknown task {id}", id=repr(task)))
     if model is not None and model not in MODELS:
-        raise ValueError(f"unknown model {model!r}")
+        raise ValueError(I18N.t("unknown model {id}", id=repr(model)))
     if effort is not None and effort not in EFFORTS:
-        raise ValueError(f"unknown effort {effort!r}")
+        raise ValueError(I18N.t("unknown effort {id}", id=repr(effort)))
     s = load()
     exe = find("claude", s)
     if not exe:
-        raise FileNotFoundError("Claude Code (claude) - " + HOW["claude"])
+        raise FileNotFoundError("Claude Code (claude) - " + I18N.t(HOW["claude"]))
     clean = _cmd_text(prompt, 600)
+    if clean and I18N.lang() in LANG_LINE:                # after the cut: the language line is never lost
+        clean += LANG_LINE[I18N.lang()]
     help_text = claude_flags(exe)
     args = []
     model = claude_model(task, s) if model is None else (None if model == "auto" else model)
@@ -478,7 +557,9 @@ def claude_launcher(prompt: str = "", task: str = "free", label: str = "", model
     name = _cmd_text(f"{TASKS[task][1]} {label}", 60)
     if task != "free" and "--name" in help_text:
         args.append(f'--name "{name}"')
-    lines = ["@echo off", "title MotionLab - Claude Code", f'cd /d "{LAB}"',
+    # chcp 65001: the file is UTF-8 but cmd reads it in the OEM code page (850 ...), so a lab folder or claude.exe
+    # under a Windows user name with an accent (José, María - common for Spanish friends) was "not found" (2026-10-18)
+    lines = ["@echo off", "chcp 65001 >nul", "title MotionLab - Claude Code", f'cd /d "{LAB}"',
              f'call "{exe}"' + "".join(" " + a for a in args) + (f' "{clean}"' if clean else "")]
     return clean, "\r\n".join(lines) + "\r\n", effort, model
 
@@ -517,7 +598,7 @@ def make_shortcut(where: str, folder: Path | None = None) -> dict:
     out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=30,
                          creationflags=NO_WINDOW)
     if out.returncode != 0:
-        raise RuntimeError(out.stderr.strip()[-300:] or "could not create the shortcut")
+        raise RuntimeError(out.stderr.strip()[-300:] or I18N.t("could not create the shortcut"))
     return {"ok": True, "path": out.stdout.strip().splitlines()[-1] if out.stdout.strip() else ""}
 
 

@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motionlab import footage as FC  # noqa: E402
 from motionlab.probe import probe  # noqa: E402
 from motionlab.project import Project  # noqa: E402
+from motionlab.signals import StderrTail  # noqa: E402
 from motionlab.util import log, read_json, setup_console, tool, write_json  # noqa: E402
 
 KEEP_FREE = 2e9                                   # bytes that must stay free on the disk after a cache
@@ -118,6 +119,7 @@ def prep_source(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: 
         f"~{expected} frames, "
         f"~{need / 1e9:.1f} GB")
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=fsize * 4)
+    tail = StderrTail(p.stderr)            # read while decoding: a full stderr pipe would stall ffmpeg for ever
     try:
         while n < expected:
             buf = p.stdout.read(fsize)
@@ -147,8 +149,8 @@ def prep_source(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: 
     finally:
         out_f.close()
         p.stdout.close()
-        err = p.stderr.read().decode("utf-8", "replace")
         p.wait()
+        err = tail.text()
     if p.returncode not in (0, None) and n == 0:
         raise RuntimeError(f"ffmpeg failed on {src}: {err[-1500:]}")
     np.savez(prj.check(prj.cache / f"{sid}_stats.npz"), **{k_: a[:n] for k_, a in stats.items()})

@@ -7,8 +7,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.axis  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
 
 from . import taxonomy  # noqa: E402
 
@@ -41,6 +43,16 @@ def _g(m, k):
     return np.asarray(v, dtype=float) if v is not None else None
 
 
+def _vline(ax, x, ymin=0, ymax=1, **kw):
+    """ax.axvline's line (same Line2D, transform and interpolation steps) without its per-line data-limit update and
+    autoscale request - most of the overview's time with hundreds of beats. Same pixels: set_xlim(0, dur) fixes x
+    and the line's y is in axes coordinates (2026-10-19 speed audit)."""
+    line = Line2D([x, x], [ymin, ymax], transform=ax.get_xaxis_transform(which="grid"), **kw)
+    line.get_path()._interpolation_steps = matplotlib.axis.GRIDLINE_INTERPOLATION_STEPS
+    ax.add_artist(line)
+    return line
+
+
 def render(m: dict, audio: dict | None, events: list[dict], plain_cuts: list[dict], fps: float, out: Path,
            theme: str = "light") -> Path:
     T = THEMES[theme]
@@ -69,13 +81,13 @@ def render(m: dict, audio: dict | None, events: list[dict], plain_cuts: list[dic
         ax.grid(axis="y", color=T["grid"], linewidth=0.6)
         ax.set_axisbelow(True)
         for b in beats:
-            ax.axvline(b, color=T["beat"], linewidth=0.6, zorder=0)
+            _vline(ax, b, color=T["beat"], linewidth=0.6, zorder=0)
         for b in downs:
-            ax.axvline(b, color=T["bar"], linewidth=0.8, zorder=0)
+            _vline(ax, b, color=T["bar"], linewidth=0.8, zorder=0)
         for bl in builds:
             ax.axvspan(bl["start_t"], bl["end_t"], color=T["s"][3], alpha=0.10, linewidth=0, zorder=0)
         for d in drops:
-            ax.axvline(d, color=T["drop"], linewidth=1.2, zorder=1)
+            _vline(ax, d, color=T["drop"], linewidth=1.2, zorder=1)
 
     def title(ax, txt):
         ax.set_title(txt, loc="left", fontsize=9.5, color=T["ink2"], pad=3)
@@ -99,7 +111,7 @@ def render(m: dict, audio: dict | None, events: list[dict], plain_cuts: list[dic
     ax.plot(t, np.nan_to_num(_g(m, "cut_hist")), color=T["s"][0], linewidth=0.9)
     ax.set_ylim(0, 1.0)
     for c in cut_t:
-        ax.axvline(c, ymin=0.82, ymax=1.0, color=T["ink"], linewidth=1.0)
+        _vline(ax, c, ymin=0.82, ymax=1.0, color=T["ink"], linewidth=1.0)
     title(ax, "Cut score: colour-histogram change vs previous frame (0-1)  ·  ticks = hard cuts")
 
     ax = axes[2]
@@ -157,7 +169,7 @@ def render(m: dict, audio: dict | None, events: list[dict], plain_cuts: list[dic
         ax.text(a, y0 + 0.40, f"{ev['id']} {taxonomy.label(ev['type'])}", fontsize=7.5, color=T["ink"],
                 va="bottom", clip_on=True)
     for c in cut_t:
-        ax.axvline(c, ymin=0, ymax=0.06, color=T["ink"], linewidth=1.0)
+        _vline(ax, c, ymin=0, ymax=0.06, color=T["ink"], linewidth=1.0)
     handles = [plt.Rectangle((0, 0), 1, 1, color=T["s"][k]) for k in sorted(used)]
     if handles:
         ax.legend(handles, [CLASS_NAMES[k] for k in sorted(used)], loc="upper right", fontsize=8, frameon=False,

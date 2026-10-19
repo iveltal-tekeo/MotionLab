@@ -10,3 +10,6 @@ scenedetect==0.7.1
 matplotlib==3.11.2
 pillow==12.3.0
 mcp==1.30.0
+# 2026-10-18: a PDF's text for the prompt library and the Analyser's scripts & prompts (pure Python, BSD licence) -
+# without it a PDF goes to Claude to read, as before
+pypdf==6.21.1

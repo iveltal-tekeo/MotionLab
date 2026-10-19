@@ -1,7 +1,7 @@
 """Tiny headless-Edge driver for app tests (stdlib only): DevTools protocol over a minimal websocket client.
 
     from cdp import Browser
-    b = Browser(port=9333)                 # starts msedge --headless=new with its own profile
+    b = Browser()                          # starts msedge --headless=new with its own profile, on a free port
     b.goto("http://127.0.0.1:8791/")
     b.wait("document.querySelector('#side-update') && !document.querySelector('#side-update').hidden")
     print(b.eval("document.title"))
@@ -17,6 +17,7 @@ import shutil
 import socket
 import struct
 import subprocess
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -24,7 +25,7 @@ from pathlib import Path
 EDGE = [Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Microsoft/Edge/Application/msedge.exe",
         Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Microsoft/Edge/Application/msedge.exe",
         Path("/opt/pw-browsers/chromium")]                  # a Claude Code cloud session (Linux): Playwright's Chromium
-PROFILE = Path(__file__).resolve().parents[2] / ".app" / "dev" / "edge-profile"   # scratch, not in git
+PROFILES = Path(__file__).resolve().parents[2] / ".app" / "dev"     # edge-<pid>-*: one profile per run, not in git
 
 
 class WS:
@@ -88,23 +89,66 @@ class WS:
                 return b"".join(parts).decode(errors="replace")
 
 
+def _alive(pid: int) -> bool:
+    """Does process <pid> still run? (os.kill(pid, 0) would send Ctrl+C on Windows.)"""
+    if os.name != "nt":
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except OSError:
+            return True
+        return True
+    import ctypes
+    k = ctypes.WinDLL("kernel32", use_last_error=True)
+    k.OpenProcess.restype = ctypes.c_void_p
+    h = k.OpenProcess(0x1000, False, pid)                           # PROCESS_QUERY_LIMITED_INFORMATION
+    if not h:
+        return ctypes.get_last_error() == 5                         # access denied: it exists
+    code = ctypes.c_ulong()
+    ok = k.GetExitCodeProcess(ctypes.c_void_p(h), ctypes.byref(code))
+    k.CloseHandle(ctypes.c_void_p(h))
+    return bool(ok) and code.value == 259                           # STILL_ACTIVE
+
+
+def _sweep() -> None:
+    """Profiles of runs that died without close() (a killed test): their test process is gone. And the one profile
+    every run shared before 2026-10-19 (edge-profile)."""
+    shutil.rmtree(PROFILES / "edge-profile", ignore_errors=True)
+    for d in PROFILES.glob("edge-*-*"):
+        pid = d.name.split("-")[1]
+        if d.is_dir() and pid.isdigit() and not _alive(int(pid)):
+            shutil.rmtree(d, ignore_errors=True)
+
+
 class Browser:
-    def __init__(self, port: int = 9333, width: int = 1600, height: int = 1000):
+    def __init__(self, port: int = 0, width: int = 1600, height: int = 1000):
+        """port 0 = a free one Edge picks itself (read back from its DevToolsActivePort file). Every run gets its own
+        profile folder, removed again by close(): two tests at once never share a profile or a port."""
         edge = next(p for p in EDGE if p.exists())
-        shutil.rmtree(PROFILE, ignore_errors=True)
+        PROFILES.mkdir(parents=True, exist_ok=True)
+        _sweep()
+        self.profile = Path(tempfile.mkdtemp(prefix=f"edge-{os.getpid()}-", dir=PROFILES))
         self.proc = subprocess.Popen([str(edge), "--headless=new", f"--remote-debugging-port={port}",
-                                      f"--user-data-dir={PROFILE}", f"--window-size={width},{height}",
+                                      f"--user-data-dir={self.profile}", f"--window-size={width},{height}",
                                       "--no-first-run", "--disable-extensions"]
                                      + (["--no-sandbox"] if os.name != "nt" else []) + ["about:blank"])
-        for _ in range(60):
+        page, t0 = None, time.time()
+        while page is None:
+            if self.proc.poll() is not None or time.time() - t0 > 30:     # gone, or no DevTools port: fail now
+                gone = self.proc.poll()
+                if gone is None:
+                    self.proc.kill()
+                    self.proc.wait(timeout=10)
+                self._remove()
+                raise RuntimeError("Edge did not start" + (f" (it exited with {gone})" if gone is not None else
+                                                           " (no DevTools port after 30 s)"))
             try:
-                tabs = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/json/list", timeout=2))
+                self.port = int((self.profile / "DevToolsActivePort").read_text().split()[0])
+                tabs = json.load(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json/list", timeout=2))
                 page = next(t for t in tabs if t.get("type") == "page")
-                break
-            except (OSError, StopIteration, ValueError):
-                time.sleep(0.5)
-        else:
-            raise RuntimeError("Edge did not start")
+            except (OSError, IndexError, StopIteration, ValueError):
+                time.sleep(0.2)
         self.ws = WS(page["webSocketDebuggerUrl"])
         self.i = 0
         self.call("Page.enable")
@@ -169,3 +213,13 @@ class Browser:
             self.proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             self.proc.kill()
+            self.proc.wait(timeout=10)
+        self._remove()
+
+    def _remove(self):
+        """This run's profile, once Edge let go of it (its helper processes close their files a moment later)."""
+        for _ in range(20):
+            shutil.rmtree(self.profile, ignore_errors=True)
+            if not self.profile.exists():
+                return
+            time.sleep(0.25)

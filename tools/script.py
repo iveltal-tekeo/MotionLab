@@ -11,11 +11,12 @@
           everything Claude needs: the script (or the request = the user's answers), what the user wants from the
           rewrite, the scripts made from it, and the check
     .venv\\Scripts\\python tools\\script.py requests     every request of the app's Prepare page, newest first
-          (kinds: new / improve = a script, title = *Title & thumbnail first*)
+          (kinds: new / improve = a script, title = *Title & thumbnail first*, prompt = a new prompt)
 
 Requests: knowledge\\local\\prompts\\requests\\req-NNN.json (the app writes them: *Improve my script* = the script
 saved in the prompt library + what the user wants; *Write one from zero* = the answers; *Title & thumbnail first* =
-the answers for `/write-title request`, motionlab.script.save_title). Scripts themselves live in
+the answers for `/write-title request`, motionlab.script.save_title; the prompt library's *Generate a new prompt* /
+*Use it, change…* = kind prompt for `/write-prompt request`, motionlab.script.save_prompt). Scripts themselves live in
 the prompt library (tools\\prompts.py: kind script / hook). Script times are estimates in seconds - there is no video
 yet. Rules behind the check: .claude\\skills\\write-script\\guidelines.md.
 """
@@ -71,7 +72,7 @@ def main() -> int:
 
     if a.cmd == "requests":
         for r in SC.requests():
-            what = r.get("topic") or r.get("script") or ""
+            what = " ".join(str(r.get("topic") or r.get("script") or r.get("want") or r.get("change") or "").split())
             print(f"{r['id']}  {r.get('kind'):8} {str(r.get('date', ''))[:16]}  {what[:70]}"
                   f"  -> {', '.join(r.get('made') or []) or 'nothing written yet'}")
         return 0

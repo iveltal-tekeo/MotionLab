@@ -32,6 +32,7 @@ from pathlib import Path
 
 from motionlab import __version__
 from motionlab import fonts as FL
+from motionlab import i18n as I18N
 from motionlab import knowledge as KN
 from motionlab import logos as LGO
 from motionlab import overlay_settings as OS
@@ -45,7 +46,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 28                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 29                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -66,8 +67,51 @@ def log_error(msg: str) -> None:
         f.write(f"{data.stamp()} {msg}\n")
 
 
+def _image_running(image: str) -> bool | None:
+    """Is a process with this image name (e.g. "resolve.exe", any case) running? Windows' process list (a Toolhelp
+    snapshot, ~5 ms); None = could not tell (not Windows, the call failed)."""
+    if os.name != "nt":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
+    class Entry(ctypes.Structure):                               # PROCESSENTRY32W
+        _fields_ = [("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD), ("th32ProcessID", wintypes.DWORD),
+                    ("th32DefaultHeapID", ctypes.c_size_t), ("th32ModuleID", wintypes.DWORD),
+                    ("cntThreads", wintypes.DWORD), ("th32ParentProcessID", wintypes.DWORD),
+                    ("pcPriClassBase", wintypes.LONG), ("dwFlags", wintypes.DWORD),
+                    ("szExeFile", wintypes.WCHAR * 260)]
+    try:
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.CreateToolhelp32Snapshot.argtypes, k.CreateToolhelp32Snapshot.restype = [wintypes.DWORD, wintypes.DWORD], \
+            wintypes.HANDLE
+        for fn in (k.Process32FirstW, k.Process32NextW):
+            fn.argtypes, fn.restype = [wintypes.HANDLE, ctypes.POINTER(Entry)], wintypes.BOOL
+        k.CloseHandle.argtypes, k.CloseHandle.restype = [wintypes.HANDLE], wintypes.BOOL
+        h = k.CreateToolhelp32Snapshot(0x2, 0)                   # TH32CS_SNAPPROCESS
+        if not h or h == ctypes.c_void_p(-1).value:              # INVALID_HANDLE_VALUE
+            return None
+        try:
+            e = Entry()
+            e.dwSize = ctypes.sizeof(Entry)
+            more = k.Process32FirstW(h, ctypes.byref(e))
+            while more:
+                if e.szExeFile.lower() == image.lower():
+                    return True
+                more = k.Process32NextW(h, ctypes.byref(e))
+            return False if ctypes.get_last_error() == 18 else None      # 18 = ERROR_NO_MORE_FILES: the whole list
+        finally:
+            k.CloseHandle(h)
+    except (OSError, AttributeError, ValueError):
+        return None
+
+
 def resolve_state() -> str:
-    """'running' / 'not responding' / 'not running' (Windows' own flag; same as resolve_build.resolve_state)."""
+    """'running' / 'not responding' / 'not running' (Windows' own flag; same as resolve_build.resolve_state). The
+    watcher asks every 20 s: with no Resolve.exe in the process list (the usual case) the answer comes without
+    starting PowerShell (~0.7 s of CPU each time) - Get-Process Resolve finds exactly the Resolve.exe processes."""
+    if _image_running("resolve.exe") is False:
+        return "not running"
     try:
         out = subprocess.run(["powershell", "-NoProfile", "-Command",
                               "(Get-Process Resolve -ErrorAction SilentlyContinue | Select-Object -First 1).Responding"],
@@ -109,41 +153,59 @@ def live_claude() -> list[dict]:
 def status() -> dict:
     refs = data.list_references()
     projs = data.list_projects()
-    lib = data.library()
+    lib = data.library(videos=False)                  # counts only (2026-10-19)
     du = shutil.disk_usage(str(LAB))
     verdicts = sum(r["verdicts"] for r in refs)
     nxt = []
     for r in refs:                                      # each reference's next step of the workflow (data.FLOW)
-        fl, go = r["flow"], f"#/ref/{urllib.parse.quote(r['name'])}"
+        fl, go, nm = r["flow"], f"#/ref/{urllib.parse.quote(r['name'])}", r.get("label") or r["title"]   # readable name
         if fl["next"] == "claude":
-            nxt.append({"text": f"Send {r['title']} to Claude: {fl['events'] - fl['reviewed']} effect(s) not checked "
-                                f"yet (until then their names are the lab's guesses)", "go": go,
+            nxt.append({"text": I18N.tn(fl["events"] - fl["reviewed"],
+                                        "Send {name} to Claude: {n} effect(s) not checked yet (until then their names "
+                                        "are the lab's guesses)",
+                                        "Send {name} to Claude: {n} effect(s) not checked yet (until then their names "
+                                        "are the lab's guesses)", name=nm), "go": go,
                         "claude": r["review_prompt"], "task": "review",
                         "label": r["title"]})
-        elif fl["next"] == "verdicts":
-            nxt.append({"text": f"Give your verdicts on {r['title']}: {fl['given']} of {fl['real']} effects"
-                                + (f", {fl['misses_checked']} of {fl['misses']} possible misses" if fl["misses"] else ""),
-                        "go": go})
+        elif fl["next"] == "verdicts":                  # the one review pattern (2026-10-18): "Is Claude right?"
+            nxt.append({"text": I18N.t("Review {name} - is Claude right? {given} of {real} effects, {checked} of "
+                                       "{misses} possible misses", name=nm, given=fl["given"], real=fl["real"],
+                                       checked=fl["misses_checked"], misses=fl["misses"]) if fl["misses"] else
+                        I18N.t("Review {name} - is Claude right? {given} of {real} effects", name=nm,
+                               given=fl["given"], real=fl["real"]), "go": go})
         elif fl["next"] == "feedback":
-            nxt.append({"text": f"Send your verdicts on {r['title']} to Claude (Send feedback to Claude): it turns them "
-                                f"into lessons" + (" - exported, waiting for Claude" if fl["sent"] else ""), "go": go})
+            nxt.append({"text": I18N.t("Send your review of {name} to Claude (Send it to Claude): it turns your verdicts "
+                                       "into lessons - sent, waiting for Claude", name=nm) if fl["sent"] else
+                        I18N.t("Send your review of {name} to Claude (Send it to Claude): it turns your verdicts into "
+                               "lessons", name=nm), "go": go})
     if projs and not lib["items"]:
-        nxt.append({"text": "Pick the effects to save in the library (Editor > your video > Resolve & library)",
+        nxt.append({"text": I18N.t("Pick the effects to save in the library (Editor > your video > Resolve & library)"),
                     "go": f"#/project/{projs[0]['name']}/resolve"})
-    setup = [t for t in system.tools() if not t["found"] and t["need"] in ("required", "recommended")]
+    progs = system.tools()                              # once: "claude" below is its row (audit 2026-10-19)
+    setup = [t for t in progs if not t["found"] and t["need"] in ("required", "recommended")]
     if not refs:
-        nxt.insert(0, {"text": "Start here: analyse a video you like (Analyze > Download from a link) or drop "
-                               "one into the refs folder, then click Analyse a video", "go": "#/analyze"})
+        nxt.insert(0, {"text": I18N.t("Start here: analyse a video you like (Analyze > Download from a link) or drop "
+                                      "one into the refs folder, then click Analyse a video"), "go": "#/analyze"})
     return {"version": VERSION, "lab": str(LAB), "references": len(refs), "events": sum(r["events"] for r in refs),
+            "thumbs": set_count(data.thumb_sets), "texts": set_count(data.text_sets),    # 2026-10-18: Home's Analyser
             "reviewed": sum(r["reviewed"] for r in refs), "verdicts": verdicts, "projects": sum(1 for p in projs if not (p.get("generated") and not p.get("in_editor"))),
             "library": len(lib["items"]), "picks": len(lib["picks"]), "free_bytes": du.free, "total_bytes": du.total,
             "resolve": S.resolve, "jobs_running": [j.info() for j in S.runner.active()],
             "roadmap": "docs/roadmap.png" if (LAB / "docs" / "roadmap.png").exists() else None, "next": nxt,
             "roadmap_live": "docs/roadmap/index.html" if (LAB / "docs" / "roadmap" / "index.html").exists() else None,
-            "projects_list": projs, "references_list": refs, "setup": setup,
-            "claude": bool(system.find("claude")), "update": S.update, "update_result": S.update_result,
+            "projects_list": projs, "setup": setup,                 # no references_list: no page read it (2026-10-19)
+            "claude": any(t["name"] == "claude" and t["found"] for t in progs), "update": S.update,
+            "update_result": S.update_result,
             "author": KN.author(), "prompts": PR.count(), "scripts": PR.count(("script", "hook")),
             "lessons": KN.lesson_count()}
+
+
+def set_count(sets) -> int:
+    """How many thumbnails / scripts & prompts the Analyser's sets hold (Home's card); 0 when they cannot be read."""
+    try:
+        return sum(s.get("count") or 0 for s in sets())
+    except Exception:                                    # noqa: BLE001 - Home must draw
+        return 0
 
 
 def storage_summary() -> dict:
@@ -178,7 +240,7 @@ def thumb(video: Path, frame: int, fps: float) -> Path:
                         "-frames:v", "1", "-vf", "scale=480:-2", "-q:v", "4", str(out)],
                        capture_output=True, timeout=60, creationflags=NO_WINDOW)
         if not out.exists():
-            raise FileNotFoundError(f"frame {frame} of {video.name}")
+            raise FileNotFoundError(I18N.t("frame {frame} of {file}", frame=frame, file=video.name))
     return out
 
 
@@ -189,6 +251,11 @@ def lab_file(relpath: str, roots=FILE_ROOTS) -> Path:
     if not p.exists():
         raise FileNotFoundError(relpath)
     return p
+
+
+class NoRoute(FileNotFoundError):
+    """A route this server does not have: its 404 stays "not found: <path>" in every language - a newer page tells an
+    older server by it (app.js tests /not found|404/)."""
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -223,11 +290,11 @@ class Handler(BaseHTTPRequestHandler):
     def _body(self, limit: int = 5_000_000) -> dict:
         n = int(self.headers.get("Content-Length") or 0)
         if n > limit:
-            raise ValueError("request too large")
+            raise ValueError(I18N.t("request too large"))
         raw = self.rfile.read(n) if n else b""
         obj = json.loads(raw.decode("utf-8") or "{}")
         if not isinstance(obj, dict):
-            raise ValueError("expected a JSON object")
+            raise ValueError(I18N.t("expected a JSON object"))
         return obj
 
     def _file(self, p: Path):
@@ -282,8 +349,12 @@ class Handler(BaseHTTPRequestHandler):
                 left -= len(chunk)
 
     def _index(self):
+        # Settings > Language (2026-10-18): <html lang>, index.html's {{t:...}} texts and the page's words, inlined
+        # before app.js so its label tables are translated as they load (English: {} - the page as before)
+        lg = I18N.lang()
         html = (UI / "index.html").read_text(encoding="utf-8").replace("{{TOKEN}}", S.token) \
-            .replace("{{VERSION}}", VERSION)
+            .replace("{{VERSION}}", VERSION).replace("{{LANG}}", lg)
+        html = I18N.fill_html(html, lg).replace("{{I18N}}", I18N.page_script(lg))
         self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
     def _guard(self, fn):
@@ -291,10 +362,12 @@ class Handler(BaseHTTPRequestHandler):
             fn()
         except jobs.JobError as e:
             self._err(409, str(e))
+        except NoRoute as e:
+            self._err(404, "not found: " + str(e))
         except FileNotFoundError as e:
-            self._err(404, f"not found: {e}")
+            self._err(404, I18N.t("not found: {what}", what=e))
         except PermissionError as e:
-            self._err(403, f"not allowed: {e}")
+            self._err(403, I18N.t("not allowed: {what}", what=e))
         except RuntimeError as e:
             self._err(500, str(e))
         except (ValueError, KeyError, TypeError) as e:
@@ -304,7 +377,7 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:                                       # noqa: BLE001 - report, keep serving
             log_error(f"{self.command} {self.path}\n{traceback.format_exc()}")
             try:
-                self._err(500, "internal error (details in .app\\server.log)")
+                self._err(500, I18N.t("internal error (details in .app\\server.log)"))
             except OSError:
                 pass
 
@@ -365,8 +438,8 @@ class Handler(BaseHTTPRequestHandler):
                                "update_lessons": u.get("new_lessons", 0), "update_checked": u.get("checked"),
                                "update_testing": u.get("testing", 0), "update_error": u.get("error"),
                                "claude": live_claude()})              # 0.4.4: Claude windows at work, one line
-        if path == "/api/status":
-            return self._json(status())
+        if path == "/api/status":                         # + Home's "· 7 from friends" (2026-10-18)
+            return self._json({**status(), "friends": KN.friend_counts()})
         if path == "/api/fonts":                         # 0.4.6: the font library - the font settings' lists + previews
             return self._json({"families": [{"family": f["family"], "group": f["group"], "licence": f["licence"],
                                              "own": f["own"]} for f in FL.families()], "windows": list(FL.SYSTEM)})
@@ -418,7 +491,12 @@ class Handler(BaseHTTPRequestHandler):
                                "resolve_mcp": system.resolve_mcp_state(),
                                "ytdlp": system.ytdlp_info(), "deno": system.deno_info(),       # 0.4.2.1
                                "browsers": [{"id": k, "label": v} for k, v in system.BROWSERS.items()],
-                               "update": {**(S.update or {}), "phase": S.phase}})
+                               "languages": [{"id": k, "label": I18N.NAMES[k]} for k in system.LANGUAGES],
+                               # Connect to GitHub (2026-10-18): pre-filled; git / repo found now - a ZIP copy is
+                               # never checked at start-up, so the cached check may not exist yet
+                               "home_repo": updater.HOME_REPO,
+                               "update": {**(S.update or {}), "git": bool(updater.git_exe()),
+                                          "repo": updater.is_repo(), "phase": S.phase}})
         if path == "/api/player":                         # the player: the file's codec + its player copy (0.4.2.1)
             v = lab_file(arg("path", ""))
             if v.suffix.lower() not in data.VIDEO_EXT:
@@ -434,8 +512,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.skills())
         if path == "/api/memory":                         # Claude's memory (0.4): videos, effects, lessons, saved
             return self._json(data.memory())
-        if path == "/api/knowledge":
-            return self._json(KN.overview())
+        if path == "/api/styles":                         # 2026-10-18: every "In the style of" picker - this PC's
+            return self._json(data.style_choices())      # analysed videos + the scripts and hooks, never friends'
+        if path == "/api/knowledge":                      # Claude's memory > Shared knowledge
+            return self._json(data.knowledge_overview())
         if path == "/api/knowledge/card":
             return self._json(KN.card_detail(arg("id", "")))
         if path == "/api/prompts":
@@ -445,14 +525,17 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/script/cards":                  # Film it (2026-10-15): a script / hook as cue cards
             pid = arg("id", "")
             if not re.fullmatch(r"(script|hook)-\d{3,}", pid):
-                raise ValueError(f"not a script: {pid!r}")
+                raise ValueError(I18N.t("not a script: {id}", id=repr(pid)))
             return self._json({"parts": SC.cue_cards(PR.get(pid).get("text", ""))})
         if path == "/api/script/requests":               # Prepare (0.4.x): what the two dialogs asked Claude for
             return self._json({"items": SC.requests(), "where": SC.WHERE, "tones": SC.TONES, "ctas": SC.CTAS,
                                "langs": SC.LANGS, "platforms": SC.PLATFORMS,
                                "orientations": SC.ORIENTATIONS})
         if path == "/api/text":
-            return self._json({"path": arg("path"), "text": data.text_file(arg("path", ""))})
+            text, lg = data.text_file(arg("path", "")), I18N.lang()
+            if lg != "en" and arg("path", "").replace("\\", "/").strip("/").lower() == "changelog.md":
+                text = updater.translated(text, updater.local_changelog(lg))      # What's new: CHANGELOG.es.md's words
+            return self._json({"path": arg("path"), "text": text})
         if path == "/api/thumb":
             v = lab_file(arg("video", ""))
             if v.suffix.lower() not in data.VIDEO_EXT:
@@ -480,30 +563,35 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/thumbs/([^/]+)", path)
         if m:
             return self._json(data.thumb_set(urllib.parse.unquote(m[1])))
+        if path == "/api/texts":                         # 2026-10-18: the sets of scripts & prompts (Analyser)
+            return self._json(data.text_sets())
+        m = re.fullmatch(r"/api/texts/([^/]+)", path)
+        if m:
+            return self._json(data.text_set(urllib.parse.unquote(m[1])))
         if path == "/api/batches":                       # 0.4.5: batches with videos left (Continue the batch)
             kind = arg("kind")
             if kind not in (None, "review", "recreate"):
-                raise ValueError(f"unknown batch kind {kind!r}")
+                raise ValueError(I18N.t("unknown batch kind {kind}", kind=repr(kind)))
             return self._json(data.batches(kind))
         m = re.fullmatch(r"/api/project/([^/]+)/chapters", path)       # Publish: chapter points (plan / its words)
         if m:
             data.publish_dir(urllib.parse.unquote(m[1]))
             src = arg("from", "plan")
             if src not in ("plan", "transcript"):
-                raise ValueError("chapters from the edit (plan) or from the words (transcript)")
+                raise ValueError(I18N.t("chapters from the edit (plan) or from the words (transcript)"))
             try:
                 return self._json(PB.chapter_points(data.safe_name(urllib.parse.unquote(m[1])), src))
             except ValueError:                            # the tool's words name files: the page says it plainly
-                raise ValueError("no edit of this video yet - make one first" if src == "plan" else
-                                 "MotionLab has not heard this video's words yet - make captions from the finished "
-                                 "video first (Graphics > Captions), then try again") from None
+                raise ValueError(I18N.t("no edit of this video yet - make one first") if src == "plan" else
+                                 I18N.t("MotionLab has not heard this video's words yet - make captions from the "
+                                        "finished video first (Graphics > Captions), then try again")) from None
         m = re.fullmatch(r"/api/jobs/(\d+)", path)
         if m:
             job = S.runner.jobs.get(int(m[1]))
             if not job:
-                raise FileNotFoundError(f"job {m[1]}")
+                raise FileNotFoundError(I18N.t("job {id}", id=m[1]))
             return self._json(job.info(int(arg("since", "0"))))
-        raise FileNotFoundError(path)
+        raise NoRoute(path)
 
     # ------------------------------------------------------------------------------------------ POST
     def do_POST(self):
@@ -516,25 +604,25 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/thumbs/([^/]+)/upload", path)
         if m:                                     # 0.4.5: a picture for a thumbnail set - a raw body (<= 25 MB)
             if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
-                raise PermissionError("missing or wrong session token")
+                raise PermissionError(I18N.t("missing or wrong session token"))
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             return self._json(data.thumb_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
                                                 int(self.headers.get("Content-Length") or 0)))
         m = re.fullmatch(r"/api/project/([^/]+)/upload", path)
         if m:                                     # Film it (2026-10-15): a recording copied in - a raw body, streamed
             if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
-                raise PermissionError("missing or wrong session token")
+                raise PermissionError(I18N.t("missing or wrong session token"))
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             prompt = (q.get("prompt") or [""])[0]
             if prompt and not re.fullmatch(r"(script|hook|brief)-\d{3,}", prompt):
-                raise ValueError(f"not a script: {prompt!r}")
+                raise ValueError(I18N.t("not a script: {id}", id=repr(prompt)))
             return self._json(data.save_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
                                                int(self.headers.get("Content-Length") or 0), prompt))
         body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example")
                           or path.endswith("/publish/image") else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
         if not secrets.compare_digest(str(tok), S.token):
-            raise PermissionError("missing or wrong session token")
+            raise PermissionError(I18N.t("missing or wrong session token"))
         if path == "/api/bye":
             S.bye = time.time()
             return self._json({"ok": True})
@@ -563,16 +651,19 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/title/request":                  # Prepare > Title & thumbnail first (0.4.3): the answers
             r = SC.save_title(body)
             return self._json({"request": r, "command": f"/write-title request {r['id']}"})
+        if path == "/api/prompts/request":                # 2026-10-19: Generate a new prompt / Use it, change... - the
+            r = SC.save_prompt(body)                      # user's words reach Claude whole, in a file (never through cmd)
+            return self._json({"request": r, "command": f"/write-prompt request {r['id']}"})
         if path == "/api/prompts/title":                  # a title record: Use this title -> a video (+ its final title)
             pid = str(body.get("id", ""))
             if not re.fullmatch(r"title-\d{3,}", pid):
-                raise ValueError(f"not a title record: {pid!r}")
+                raise ValueError(I18N.t("not a title record: {id}", id=repr(pid)))
             proj = str(body.get("project") or "")
             if proj:
                 data.publish_dir(proj)                    # the video must exist (FileNotFoundError)
             ch = " ".join(str(body.get("chosen") or "").split())
             if len(ch) > PR.TITLE_MAX:
-                raise ValueError(f"a title has at most {PR.TITLE_MAX} characters")
+                raise ValueError(I18N.t("a title has at most {n} characters", n=PR.TITLE_MAX))
             return self._json(PR.update(pid, project=data.safe_name(proj) if proj else "",
                                         **({"chosen": ch} if "chosen" in body else {})))
         m = re.fullmatch(r"/api/project/([^/]+)/publish", path)         # Publish: title, description, chapters, tags
@@ -587,7 +678,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 raw = base64.b64decode(str(body.get("data", "")), validate=True)
             except ValueError:
-                raise ValueError("the picture did not arrive whole - add it again") from None
+                raise ValueError(I18N.t("the picture did not arrive whole - add it again")) from None
             return self._json(data.save_publish_image(urllib.parse.unquote(m[1]), str(body.get("name", "")), raw))
         if path == "/api/script/forget":                  # a request nobody wants any more (Recycle Bin, logged)
             rid = str(body.get("id", ""))
@@ -595,7 +686,7 @@ class Handler(BaseHTTPRequestHandler):
             with open(APPDIR / "deleted.log", "a", encoding="utf-8") as f:
                 f.write(f"{data.stamp()} script request {rid} moved to the Recycle Bin: {r['moved']}\n")
             if r["left"]:
-                raise ValueError(r["why"] or "the request could not be moved to the Recycle Bin")
+                raise ValueError(r.get("why_shown") or I18N.t("the request could not be moved to the Recycle Bin"))
             return self._json({"forgotten": rid})
         if path == "/api/generate/request":              # Generate (0.4): a video from zero -> its folder + request
             return self._json(data.save_generate_request(body))
@@ -635,19 +726,37 @@ class Handler(BaseHTTPRequestHandler):
             if m[2] == "verdicts":
                 return self._json(data.save_thumb_verdicts(name, body.get("patterns") or {}))
             return self._json(data.thumb_remove(name, int(body.get("n") or 0)))
+        if path == "/api/texts/split":                   # 2026-10-18: Add scripts & prompts - the numbered preview
+            return self._json(data.text_split(body))
+        if path == "/api/texts/new":                     # ... saved word for word, numbered, measured (no Claude yet)
+            return self._json(data.text_new(body))
+        m = re.fullmatch(r"/api/texts/([^/]+)/(add|verdicts|remove|kind)", path)   # one set of scripts & prompts
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2] == "add":
+                return self._json(data.text_add(name, body))
+            if m[2] == "verdicts":
+                return self._json(data.save_text_verdicts(name, body.get("patterns") or {}))
+            if m[2] == "remove":
+                return self._json(data.text_remove(name, int(body.get("n") or 0)))
+            return self._json(data.text_kind(name, int(body.get("n") or 0), str(body.get("kind") or "")))
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)
         if m:
             return self._json(S.runner.cancel(int(m[1])).info())
         if path == "/api/settings":
-            return self._json({"settings": system.save(body.get("settings") or {})})
+            lg = I18N.lang()
+            saved = system.save(body.get("settings") or {})
+            if I18N.lang() != lg:                        # Settings > Language: the update notes follow it too
+                S.update, S.update_result = updater.in_language(S.update), updater.in_language(S.update_result)
+            return self._json({"settings": saved})
         if path == "/api/quit":
             if S.runner.active() and not body.get("force"):
-                raise jobs.JobError("a job is still running")
+                raise jobs.JobError(I18N.t("a job is still running"))
             threading.Timer(0.4, S.server.shutdown).start()
             return self._json({"ok": True})
         if path == "/api/restart":
             if S.runner.active():
-                raise jobs.JobError("wait until the running jobs finish")
+                raise jobs.JobError(I18N.t("wait until the running jobs finish"))
             restart_soon()
             return self._json({"ok": True, "phase": S.phase})
         if path == "/api/update/check":
@@ -666,6 +775,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(r)
         if path == "/api/knowledge/share":
             return self._json(share_knowledge())
+        if path == "/api/knowledge/private":              # 2026-10-18: a tick on Shared knowledge (kept on this PC)
+            ids = [str(x)[:40] for x in body.get("ids") or [] if isinstance(x, str)]
+            KN.set_private(str(body.get("kind", "")), ids, bool(body.get("private")))
+            return self._json(data.knowledge_overview())
         if path == "/api/knowledge/import":
             name = Path(str(body.get("file", ""))).name
             r = KN.import_pack(KN.INBOX / name)
@@ -676,7 +789,7 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/reference/([^/]+)/meta", path)
         if m:
             name = data.safe_name(urllib.parse.unquote(m[1]))
-            r = KN.save_meta(name, **{k: body[k] for k in ("category", "tags") if k in body})
+            r = KN.save_meta(name, **{k: body[k] for k in ("category", "tags", "label") if k in body})
             KN.build_local_cards([name])
             return self._json(r)
         if path == "/api/upstream/check":                 # Settings > Programs: newer HyperFrames / GSAP now
@@ -695,7 +808,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/prompts/wishes":                 # Claude's check: what the user wants per item (then Optimize)
             w = body.get("wishes") if isinstance(body.get("wishes"), dict) else {}
             w = {str(k)[:40]: str(v).strip()[:1000] for k, v in list(w.items())[:30] if str(v).strip()}
-            return self._json(PR.update(str(body.get("id", "")), wishes=w))
+            # 2026-10-18 (one review pattern): the user's verdict on Claude's check of each part - correct / partly /
+            # wrong (the record's "verdicts"); a body without it keeps the saved ones
+            vd = body.get("verdicts") if isinstance(body.get("verdicts"), dict) else None
+            if vd is not None:
+                vd = {str(k)[:40]: str(v) for k, v in list(vd.items())[:30] if str(v) in ("correct", "partly", "wrong")}
+            return self._json(PR.update(str(body.get("id", "")), wishes=w, verdicts=vd))
         if path == "/api/prompts/style":                  # a card's Style like: analysed references (0.3.5)
             refs = [str(x)[:200] for x in body.get("refs") or [] if isinstance(x, str)]
             return self._json(PR.set_style(str(body.get("id", "")), refs[:5]))
@@ -711,9 +829,9 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 raw = base64.b64decode(str(body.get("data", "")), validate=True)
             except ValueError:
-                raise ValueError("the file did not arrive whole - add it again") from None
+                raise ValueError(I18N.t("the file did not arrive whole - add it again")) from None
             if len(raw) > 30_000_000:
-                raise ValueError("pictures and clips up to 30 MB")
+                raise ValueError(I18N.t("pictures and clips up to 30 MB"))
             return self._json(PR.add_example(pid, str(body.get("name", "")), raw))
         if path == "/api/prompts/rename":                 # 0.4.3.5: Prepare's cards - the name shown (empty = automatic)
             name = " ".join(re.sub(r"[\x00-\x1f\x7f]", " ", str(body.get("title") or "")).split())[:120]
@@ -728,7 +846,7 @@ class Handler(BaseHTTPRequestHandler):
                 f.write(f"{data.stamp()} prompt {pid} moved to the Recycle Bin: {r['moved']}"
                         + (f" - not moved: {r['left']}" if r["left"] else "") + "\n")
             if r["left"]:
-                raise ValueError(r["why"] or "the prompt could not be moved to the Recycle Bin")
+                raise ValueError(r.get("why_shown") or I18N.t("the prompt could not be moved to the Recycle Bin"))
             return self._json({"deleted": pid})
         if path == "/api/prompts/guess":                  # the Add dialog's kind, while the user types
             return self._json({"kind": PR.guess_kind(str(body.get("text", ""))[:200_000])})
@@ -736,9 +854,9 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 raw = base64.b64decode(str(body.get("data", "")), validate=True)
             except ValueError:
-                raise ValueError("the file did not arrive whole - attach it again") from None
+                raise ValueError(I18N.t("the file did not arrive whole - attach it again")) from None
             if len(raw) > 30_000_000:
-                raise ValueError("files up to 30 MB")
+                raise ValueError(I18N.t("files up to 30 MB"))
             return self._json(PR.save_file(str(body.get("name", "")), raw))
         if path == "/api/prompts/rate":
             return self._json(PR.update(str(body.get("id", "")), rating=body.get("rating") or None,
@@ -765,18 +883,21 @@ class Handler(BaseHTTPRequestHandler):
             r = problem_report(body.get("job"), str(body.get("note") or ""))
             if body.get("open"):
                 if not r["url"]:
-                    raise ValueError("this copy has no GitHub repo - copy the report instead")
+                    raise ValueError(I18N.t("this copy has no GitHub repo - copy the report instead"))
                 os.startfile(r["url"])                    # noqa: S606 - the user's click; GitHub shows it, nothing sent
                 r["opened"] = True
             return self._json(r)
         if path == "/api/delete":                        # the user's Delete button, after the dialog
             if S.runner.active():
-                raise jobs.JobError("wait until the running jobs finish, then delete")
+                raise jobs.JobError(I18N.t("wait until the running jobs finish, then delete"))
             r = trash.delete(str(body.get("kind", "")), str(body.get("name", "")), body.get("keys") or [],
                              S.resolve.get("state", ""))
             with open(APPDIR / "deleted.log", "a", encoding="utf-8") as f:      # what went to the Recycle Bin, when
                 f.write(f"{data.stamp()} moved to the Recycle Bin: {r['moved']}"
                         + (f" - not moved: {r['failed']}" if r["failed"] else "") + "\n")
+            shown = r.pop("why_shown", "")               # why in the app's language for the page (the log: English)
+            for x in r["failed"] if shown else []:
+                x["why"] = shown
             return self._json(r)
         if path == "/api/shortcut":
             return self._json(system.make_shortcut(str(body.get("where", ""))))
@@ -790,7 +911,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 os.startfile(str(p))                                   # noqa: S606 - a viewer for a lab file
             return self._json({"ok": True})
-        raise FileNotFoundError(path)
+        raise NoRoute(path)
 
 
 
@@ -804,7 +925,8 @@ def problem_report(job_id, note: str) -> dict:
     (server.log's last lines); scrubbed; the GitHub link of the repo this copy updates from."""
     job = S.runner.jobs.get(int(job_id)) if str(job_id or "").isdigit() else None
     if job_id and not job:
-        raise FileNotFoundError(f"job {job_id} (jobs of an earlier session are gone - use Settings > Report a problem)")
+        raise FileNotFoundError(I18N.t("job {id} (jobs of an earlier session are gone - use Settings > Report a problem)",
+                                       id=job_id))
     if job:
         log = report.tail(job.log) if job.log.exists() else job.lines[-report.LOG_LINES:]
     else:
@@ -815,7 +937,9 @@ def problem_report(job_id, note: str) -> dict:
              .split(" Copyright")[0] or None}
     names = tuple(n for n in (s.get("author"), os.environ.get("COMPUTERNAME")) if n)
     remote = updater._remote() if updater.is_repo() else None
-    return {**report.build(job.info() if job else None, log, note, remote, progs, names), "job": job.id if job else None}
+    # Report a problem stays English: the job's English title (Job.title_en), not the one the page shows
+    return {**report.build({**job.info(), "title": job.title_en} if job else None, log, note, remote, progs, names),
+            "job": job.id if job else None}
 
 
 BATCH_MAX = 10                                     # videos per Add videos (each one is a lab pass, maybe a Claude check)
@@ -827,12 +951,12 @@ def analyze_batch(body: dict) -> dict:
     links = [str(u).strip() for u in body.get("links") or [] if str(u).strip()]
     files = [str(f).strip().strip('"') for f in body.get("files") or [] if str(f).strip()]
     if not links and not files:
-        raise ValueError("paste a link or pick a video first")
+        raise ValueError(I18N.t("paste a link or pick a video first"))
     if len(links) + len(files) > BATCH_MAX:
-        raise ValueError(f"at most {BATCH_MAX} videos at a time - add the rest when these are done")
+        raise ValueError(I18N.t("at most {n} videos at a time - add the rest when these are done", n=BATCH_MAX))
     focus = str(body.get("focus") or "both")
     if focus not in ("content", "cinematic", "both"):
-        raise ValueError(f"unknown focus {focus}")
+        raise ValueError(I18N.t("unknown focus {id}", id=focus))
     opts = {"focus": focus, "claude": bool(body.get("claude"))}
     if body.get("category"):
         opts["category"] = str(body["category"])
@@ -842,7 +966,7 @@ def analyze_batch(body: dict) -> dict:
     preset = st.get("download_preset") if st.get("download_preset") in ("mp4_1080", "mp4_best") else "mp4_1080"
     for u in links:                                     # check everything before anything starts
         if not re.match(r"https?://\S+$", u):
-            raise ValueError(f"not a link: {u} (a full link starts with https://)")
+            raise ValueError(I18N.t("not a link: {link} (a full link starts with https://)", link=u))
         system.download_cmd(u, preset)
     for f in files:
         jobs.make("analyze", {**opts, "video": f, "redetect": bool(body.get("redetect"))})
@@ -863,21 +987,21 @@ def edit_batch(body: dict) -> dict:
     quick draft each (queued jobs, no Claude) or one Claude window for all (/recreate-video batch <id>)."""
     names = list(dict.fromkeys(str(p) for p in body.get("projects") or [] if str(p).strip()))
     if not 2 <= len(names) <= BATCH_MAX:
-        raise ValueError(f"pick 2 to {BATCH_MAX} videos")
+        raise ValueError(I18N.t("pick 2 to {n} videos", n=BATCH_MAX))
     req = dict(body.get("request") or {})
     if req.get("how") not in ("style", "words"):
-        raise ValueError("several videos are edited in a style or the way you say (not a 1:1 copy)")
+        raise ValueError(I18N.t("several videos are edited in a style or the way you say (not a 1:1 copy)"))
     req["music"] = ""                                   # each video: the song in its own folder, if any
     mode = body.get("mode")
     if mode not in ("drafts", "claude"):
-        raise ValueError("mode: drafts or claude")
+        raise ValueError(I18N.t("mode: drafts or claude"))
     folders = []
     for n in names:
         d = data.PROJECTS / data.safe_name(n)
         if not d.is_dir():
             raise FileNotFoundError(n)
         if not any(p.is_file() and p.suffix.lower() in data.VIDEO_EXT for p in d.iterdir()):
-            raise ValueError(f"{data._label(d / 'build') or d.name}: no clips in its folder yet")
+            raise ValueError(I18N.t("{video}: no clips in its folder yet", video=data._label(d / "build") or d.name))
         folders.append(d.name)
     for n in folders:
         data.save_edit_request(n, req)
@@ -906,7 +1030,7 @@ def restart_soon() -> None:
 
 def apply_update() -> dict:
     if S.runner.active():
-        raise jobs.JobError("wait until the running jobs finish, then update")
+        raise jobs.JobError(I18N.t("wait until the running jobs finish, then update"))
     S.phase = "updating"
     try:
         r = updater.apply()
@@ -930,12 +1054,15 @@ def apply_update() -> dict:
 
 def share_knowledge() -> dict:
     """'Share my knowledge': new / changed reference cards + unreviewed local lessons -> the repo (commit + push), or
-    a pack file in knowledge\\outbox\\ to send when this copy cannot push."""
+    a pack file in knowledge\\outbox\\ to send when this copy cannot push. What the user keeps on this PC (unticked,
+    or looks like a test) is never in the pack (KN.pending). A pack that was not uploaded counts as shared by file
+    (2026-10-18): it is the share, so it is not sent twice; the answer names what went."""
     who = KN.author()
     if not who:
-        raise ValueError("set your name for sharing first (Settings > Sharing & updates)")
+        raise ValueError(I18N.t("set your name for sharing first (Settings > Sharing & updates)"))
     pack = KN.make_pack(who)
-    out = {"author": who, "cards": len(pack["cards"]), "lessons": len(pack["lessons"]), "pushed": False}
+    out = {"author": who, "cards": len(pack["cards"]), "lessons": len(pack["lessons"]), "pushed": False,
+           "names": [KN.label(c)["name"] for c in pack["cards"]], "lesson_ids": [i for i, _ in pack["lessons"]]}
     if pack["cards"] or pack["lessons"]:
         out["pack"] = str(KN.write_pack(pack).relative_to(LAB)).replace("\\", "/")
     if updater.is_repo():
@@ -954,7 +1081,10 @@ def share_knowledge() -> dict:
         except updater.GitError as e:
             out["error"] = str(e)
     else:
-        out["error"] = "this copy is not connected to GitHub - send the pack file instead"
+        out["error"] = I18N.t("this copy is not connected to GitHub - send the pack file instead")
+    if out.get("pack") and not out.get("pushed"):          # the file is the share: recorded, not sent again
+        KN.mark_shared(pack, "file")
+        out["by_file"] = True
     if not pack["cards"] and not pack["lessons"] and not out.get("pushed"):
         out["nothing"] = not out.get("error")
     KN.summary()
@@ -1019,6 +1149,9 @@ def make(port: int, auto_exit: bool, check_updates: bool = True) -> ThreadingHTT
     unsaved changes must never pull an update into it."""
     global S
     srv = Server(("127.0.0.1", port), Handler)
+    # the app's words follow Settings > Language (MOTIONLAB_LANG overrides) - before State, whose update records
+    # (What's new) are read in that language
+    I18N.follow_settings()
     S = State(srv.server_address[1], auto_exit)
     S.server = srv
     S.check_updates = check_updates

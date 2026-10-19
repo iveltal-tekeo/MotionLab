@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import datetime
+import functools
 import json
 import os
 import re
@@ -11,6 +12,7 @@ import threading
 import time
 from pathlib import Path
 
+from motionlab import i18n as I18N
 from motionlab import taxonomy
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
@@ -30,10 +32,28 @@ _cache: dict[str, tuple[float, object]] = {}
 _lock = threading.Lock()
 
 
+@functools.lru_cache(maxsize=1 << 16)
+def _rel_existing(p: str) -> str | None:
+    """rel() of an existing absolute path, remembered: resolve() opens the path on Windows (~0.3-0.5 ms), and the pages
+    list the same sheets, frames and clips on every visit. A missing path raises here (so it is never remembered) and
+    rel() resolves it as before."""
+    r = Path(os.path.realpath(p, strict=True))                  # = resolve() of an existing path
+    try:
+        return r.relative_to(LAB).as_posix()
+    except ValueError:
+        return None
+
+
 def rel(p: Path | str) -> str | None:
     """Lab-relative path with forward slashes (what /files/ serves), or None if outside the lab."""
     try:
-        return Path(p).resolve().relative_to(LAB).as_posix()
+        q = Path(p)
+        if q.is_absolute():
+            try:
+                return _rel_existing(str(q))
+            except OSError:
+                pass
+        return q.resolve().relative_to(LAB).as_posix()
     except (ValueError, OSError):
         return None
 
@@ -80,10 +100,28 @@ def human(n: float | None) -> str:
     return f"{n:.0f} {units[i]}" if n >= 100 or i == 0 else f"{n:.1f} {units[i]}"
 
 
+class Words(str):
+    """Words in the app's language (Settings > Language) that keep their English (.en): a job's title shows in the
+    language on the Jobs page, while its log, .app\\jobs\\history.jsonl and Report a problem keep the English (job
+    logs never follow the language)."""
+    en = ""
+
+    @classmethod
+    def of(cls, shown: str, en: str) -> Words:          # (annotations are not evaluated: __future__)
+        w = cls(shown)
+        w.en = en
+        return w
+
+
+def words(en: str, **v) -> Words:
+    """I18N.t(en, **v) that keeps its English; a var that is Words itself goes into the English as its .en."""
+    return Words.of(I18N.t(en, **v), I18N.fill(I18N.english(en), {k: getattr(x, "en", x) for k, x in v.items()}))
+
+
 def safe_name(name: str) -> str:
     """A folder name from a URL: no separators, no '..'."""
     if not re.fullmatch(r"[\w.\- \[\]()&'+,]+", name or "") or ".." in name:
-        raise ValueError(f"bad name: {name!r}")
+        raise ValueError(I18N.t("bad name: {name}", name=repr(name)))
     return name
 
 
@@ -257,6 +295,49 @@ def share_pending() -> set:
         return set(_pend["names"])
 
 
+def knowledge_overview() -> dict:
+    """GET /api/knowledge = Claude's memory > Shared knowledge: share_pending() rebuilds only the cards whose analysis
+    changed, then knowledge.overview() reads them as they are (the tab stays fast with many analyses)."""
+    share_pending()
+    return KN.overview(rebuild=[])
+
+
+def style_choices() -> dict:
+    """GET /api/styles - every "In the style of" picker (2026-10-18, the user: "normal people or my friends wouldnt
+    know what that is? so it would be fine to only look in style of "prompts" or "videos" they already analize"):
+    `videos` = this PC's analyses (key = the analysis folder, what style.find and the saved requests take; self-test
+    videos left out) with their picture and readable name; `prompts` = the prompt library's scripts and hooks (the
+    user's good-rated first, then Claude's stars). Friends' cards are left out on purpose: they stay in Claude's
+    memory as data, marked as shared. Light: knowledge.style() and the profiles are cached per file change."""
+    from motionlab import script as SC
+    from motionlab import style as ST
+    videos = []
+    for s in PR.all_styles():
+        sp = ((PF.profile(s["name"]) or {}).get("content") or {}).get("speech") or {}
+        videos.append({"key": s["name"], "title": s["title"], "label": s.get("label") or s["title"],
+                       "by": s.get("by") or "", "platform": s.get("platform") or "", "picture": s.get("thumb"),
+                       "format": (s.get("format") or {}).get("label"), "category_label": s.get("category_label"),
+                       "focus": s.get("focus"), "talk_pct": sp.get("talk_pct"),
+                       "cuts_per_min": (s.get("pacing") or {}).get("cuts_per_min"),
+                       "checked": bool(s.get("breakdown")) or bool(s["effects"]) and s["reviewed"] >= s["effects"],
+                       "summary": (s.get("summary") or "")[:220], "line": s.get("line"), "analysed": s.get("analysed")})
+    videos.sort(key=lambda v: str(v.get("analysed") or ""), reverse=True)
+    prompts = []
+    for r in PR.load_all("script") + PR.load_all("hook"):
+        src, res = r.get("source") or {}, (r.get("result") or {}).get("rating")
+        first = next((ln.strip() for ln in SC.spoken(r.get("text", ""))[0].split("\n") if ln.strip()), "")
+        prompts.append({"id": r["id"], "kind": r["kind"],
+                        "title": r.get("title") or PR.auto_title(r.get("text", ""), r["kind"]),
+                        "first": first[:160], "rating": res, "stars": (r.get("review") or {}).get("stars"),
+                        "source": (I18N.t("{creator}'s", creator=src["creator"]) if src.get("creator")
+                                   else I18N.t("a creator's")) if src.get("type") == "creator" else I18N.t("yours"),
+                        "updated": r.get("updated") or r.get("added") or ""})
+    prompts.sort(key=lambda p: p["updated"], reverse=True)
+    prompts.sort(key=lambda p: ({"good": 0, "bad": 2}.get(p["rating"], 1),
+                                -(p["stars"] if p["stars"] is not None else -1)))
+    return {"videos": videos, "prompts": prompts, "max": ST.MAX_REFS}
+
+
 def flow(name: str, ev: dict, S: dict, pend: set) -> dict:
     """Where one reference stands in the workflow (FLOW) and its next step. Feedback counts as applied when Claude
     ran tools\\feedback.py (it archives feedback_<time>.txt) after the last change to the verdicts."""
@@ -324,9 +405,15 @@ def list_references(include_tests: bool = False) -> list[dict]:
 
 
 def _kind(name: str, ev: dict, v: dict) -> dict:
-    """Category, tags, link, format and pacing of an analysis (for the cards, filters and the analysis page)."""
+    """Category, tags, link, format and pacing of an analysis (for the cards, filters and the analysis page) + its
+    readable name (2026-10-19: knowledge.label() - the user's own name, Claude's, the title without yt-dlp's [id]);
+    keys, links and commands keep the folder name."""
     m = KN.meta(name, ev)
-    return {"category": m["category"], "category_label": style_label(m["category"]), "tags": m["tags"],
+    bd = ev.get("breakdown") if isinstance(ev.get("breakdown"), dict) else {}
+    lab = KN.label({"title": m["title"], "uploader": m["uploader"], "platform": m["platform"], "url": m["url"],
+                    "breakdown": bd}, user_label=m.get("label"))
+    return {"label": lab["name"], "by": lab["by"],
+            "category": m["category"], "category_label": style_label(m["category"]), "tags": m["tags"],
             "focus": m["focus"], "focus_label": FOCUS.get(m["focus"] or "", ""),
             "url": m["url"], "platform": m["platform"],
             "style": m["category"], "style_label": style_label(m["category"]),            # v0.2.0 names
@@ -404,7 +491,9 @@ def reference(name: str) -> dict:
         "feedback_files": [rel(p) for p in sorted((d / "feedback").glob("*.txt"))] if (d / "feedback").exists() else [],
         "flow": flow(d.name, ev, load_verdicts(name), share_pending()),
         "review_prompt": review_prompt(src or d.name, d.name),
-        "projects": [p["name"] for p in list_projects()],
+        # the names only - the same list as list_projects() gives, without working out every project (audit 2026-10-19)
+        "projects": [p.name for p in sorted(PROJECTS.iterdir(), key=lambda p: p.name.lower()) if p.is_dir()]
+        if PROJECTS.exists() else [],
         "content": content_info(d),
         "profile": PF.profile(d.name), "breakdown": ev.get("breakdown"), "colour": colour_info(d),
     }
@@ -639,7 +728,7 @@ def rebuild_effects(b: Path, timeline: str | None) -> list[dict]:
     if clips:
         groups["Static panel"] = {"title": "Static panel", "what": "cover-fit panel: Edit-page Zoom/Pan/Tilt/Crop + a "
                                   "grade LUT; flash frames = 1-frame cuts with a flash LUT; holds = freeze frames",
-                                  "units": [{"name": f"{len(clips)} Edit-page clips", "track": None,
+                                  "units": [{"name": I18N.t("{n} Edit-page clips", n=len(clips)), "track": None,
                                              "start": min(c["start"] for c in clips),
                                              "end": max(c["end"] for c in clips),
                                              "start_tc": frame_to_tc(min(c["start"] for c in clips), fps),
@@ -668,10 +757,10 @@ def save_library_picks(name: str, body: dict) -> dict:
 def overlay_folder(project: str, overlay: str) -> Path:
     """projects\\<project>\\build\\overlays\\<overlay>\\ (an HTML graphic) - names checked, the folder must exist."""
     if not re.fullmatch(r"[\w.-]+", overlay or ""):
-        raise ValueError(f"bad graphic name: {overlay!r}")
+        raise ValueError(I18N.t("bad graphic name: {name}", name=repr(overlay)))
     f = PROJECTS / safe_name(project) / "build" / "overlays" / overlay
     if not (f / "index.html").exists():
-        raise FileNotFoundError(f"{project}: no graphic {overlay}")
+        raise FileNotFoundError(I18N.t("{video}: no graphic {name}", video=project, name=overlay))
     return f
 
 
@@ -682,7 +771,7 @@ def save_overlay_values(project: str, overlay: str, values, preset: str = "") ->
     f = overlay_folder(project, overlay)
     if preset:
         if preset not in OS.looks(f)["looks"]:
-            raise ValueError(f"{overlay} has no look '{preset}'")
+            raise ValueError(I18N.t("{graphic} has no look '{look}'", graphic=overlay, look=preset))
         if OS.looks(f)["upgrade"]:
             OS.adopt_example(f)
         return OS.apply_preset(f, preset)
@@ -706,10 +795,10 @@ def publish_dir(name: str) -> Path:
 
 def thumb_folder(name: str, tid: str) -> Path:
     if not re.fullmatch(r"[A-Z]", str(tid or "")):
-        raise ValueError("a thumbnail is A, B or C")
+        raise ValueError(I18N.t("a thumbnail is A, B or C"))
     f = publish_dir(name) / "thumbs" / tid
     if not (f / "index.html").exists():
-        raise FileNotFoundError(f"{name}: no thumbnail {tid} yet")
+        raise FileNotFoundError(I18N.t("{video}: no thumbnail {id} yet", video=name, id=tid))
     return f
 
 
@@ -761,19 +850,19 @@ def save_publish(name: str, body: dict) -> dict:
     chs = body.get("chapters")
     if chs is not None:
         if not isinstance(chs, list):
-            raise ValueError("chapters: a list of [frame, name]")
+            raise ValueError(I18N.t("chapters: a list of [frame, name]"))
         clean = []
         for c in chs:
             try:
                 f, n = (c[0], c[1]) if isinstance(c, (list, tuple)) else (c.get("f"), c.get("name"))
                 clean.append((int(f), " ".join(str(n or "").split())[:100]))
             except (TypeError, ValueError, IndexError, AttributeError):
-                raise ValueError("each chapter needs a frame number and a name") from None
+                raise ValueError(I18N.t("each chapter needs a frame number and a name")) from None
         chs = sorted(clean)
     tags = body.get("hashtags")
     tf = str(body.get("titles_from") or "")
     if tf and not re.fullmatch(r"title-\d{3,}", tf):
-        raise ValueError(f"not a title record: {tf!r}")
+        raise ValueError(I18N.t("not a title record: {id}", id=repr(tf)))
     r = PB.write(name, title, chapters=chs, hashtags=None if tags is None else str(tags)[:3000],
                  body=None if body.get("body") is None else str(body["body"])[:6000], titles_from=tf)
     return {"ok": r["ok"], "checks": r["checks"], "description": r["description"]}
@@ -790,9 +879,9 @@ def save_publish_image(name: str, filename: str, raw: bytes) -> dict:
     thumbnail is then made from it with make --image)."""
     ext = Path(str(filename or "")).suffix.lower()
     if ext not in PUB_IMAGE_EXT:
-        raise ValueError("a picture: .jpg, .png or .webp")
+        raise ValueError(I18N.t("a picture: .jpg, .png or .webp"))
     if len(raw) > 30_000_000:
-        raise ValueError("pictures up to 30 MB")
+        raise ValueError(I18N.t("pictures up to 30 MB"))
     d = publish_dir(name) / "images"
     d.mkdir(parents=True, exist_ok=True)
     stem = re.sub(r"[^\w.-]+", "_", Path(filename).stem).strip("._")[:60] or "picture"
@@ -862,6 +951,8 @@ def project(name: str) -> dict:
                 x.update(title=pr.get("title") or pr.get("title_auto") or "", prompt_kind=pr.get("kind"))
             except Exception:                         # noqa: BLE001 - deleted from the library: the id only
                 pass
+        elif isinstance(x, dict) and x.get("kind") in ("style", "reference"):   # 2026-10-18: names, not keys
+            x["refs"] = _made_refs(str(x.get("id") or ""))
     compares =[_video(p, "compare") for p in sorted((b / "compare").glob("*.mp4"))] if (b / "compare").exists() else []
     verifies = []
     for p in sorted(b.glob("verify_*.json")) if b.exists() else []:
@@ -888,9 +979,9 @@ def project(name: str) -> dict:
         if (b / "resolve" / "checks").exists() else []
     picks = read_json(library_picks_path(name), {}) or {}
     overlays = OS.project_overlays(d.name)
-    media = [{"label": f"render {p.name}", "path": str(p)} for p in sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime,
-                                                                         reverse=True)] if b.exists() else []
-    media += [{"label": f"your clip {p.name}", "path": str(p)} for p in sorted(d.iterdir())
+    media = [{"label": I18N.t("render {name}", name=p.name), "path": str(p)}
+             for p in sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime, reverse=True)] if b.exists() else []
+    media += [{"label": I18N.t("your clip {name}", name=p.name), "path": str(p)} for p in sorted(d.iterdir())
               if p.is_file() and p.suffix.lower() in VIDEO_EXT]
     from motionlab import speech as SP
     used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
@@ -921,10 +1012,10 @@ def new_project(name: str) -> dict:
     """Videos > Create video: an empty projects\\<name>\\ for the user's clips (nothing else is written)."""
     name = safe_name(str(name).strip())
     if name.startswith((".", " ")) or name.endswith((".", " ")):
-        raise ValueError("a name cannot start or end with a dot or a space")
+        raise ValueError(I18N.t("a name cannot start or end with a dot or a space"))
     d = PROJECTS / name
     if d.exists():
-        raise ValueError(f"projects\\{name} exists already - pick it in the list")
+        raise ValueError(I18N.t("projects\\{name} exists already - pick it in the list", name=name))
     d.mkdir(parents=True)
     return {"name": name, "folder": rel(d)}
 
@@ -940,11 +1031,48 @@ def rename_project(name: str, label: str) -> dict:
     if label and label != d.name:
         for o in PROJECTS.iterdir():
             if o.is_dir() and o != d and label.lower() in (o.name.lower(), (_label(o / "build") or "").lower()):
-                raise ValueError(f"another video is called “{label}” already")
+                raise ValueError(I18N.t("another video is called “{name}” already", name=label))
     p = d / "build" / "project.json"
     out = {**(read_json(p, {}) or {}), "label": label if label and label != d.name else None, "updated": stamp()}
     write_json_atomic(p, out)
     return {"name": d.name, "label": out["label"]}
+
+
+def _made_refs(ids: str) -> list[dict]:
+    """A made_from "style" / "reference" entry's videos by name (2026-10-18): this PC's analysis -> its readable
+    name; a friend's card -> its name + who shared it (so *Made from* shows no folder name or 12-hex id). The entry
+    holds the keys joined by ", " (save_edit_request) - a key may contain ", " itself, so the longest run of pieces
+    that names a video wins."""
+    cards = None
+
+    def find(k: str) -> dict | None:
+        nonlocal cards
+        if k and ".." not in k and "/" not in k and "\\" not in k and (ANALYSIS / k / "events.json").exists():
+            s = KN.style(k)
+            return {"key": k, "label": (s or {}).get("label") or k, "analysis": k}
+        if cards is None:
+            cards = KN.all_cards()
+        low = k.lower()
+        c = next((c for c in cards if low in (str(c.get("analysis") or "").lower(), str(c.get("video_id")).lower(),
+                                              str(c.get("title") or "").lower())), None)
+        if not c:
+            return None
+        friend = c.get("origin") == "shared" and c.get("author") != KN.author()
+        return {"key": k, "label": KN.label(c)["name"], "analysis": KN._analysis_here(c),
+                "author": c.get("author") if friend else None,
+                "shared": (c.get("made_with") or {}).get("carded") if friend else None}
+    parts, out, i = ids.split(", "), [], 0
+    while i < len(parts):
+        for j in range(len(parts), i, -1):
+            r = find(", ".join(parts[i:j]).strip())
+            if r:
+                out.append(r)
+                i = j
+                break
+        else:
+            out.append({"key": parts[i], "label": parts[i]})
+            i += 1
+    return out
 
 
 def add_made_from(name: str, kind: str, ref: str) -> list:
@@ -952,10 +1080,10 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     ("style": names joined by ", "), the user's words ("words": presets / their words) or a prompt -
     build\\made_from.json."""
     if kind not in ("reference", "prompt", "style", "words", "generated"):
-        raise ValueError("made from a reference, videos' style, your words, a prompt or from zero")
+        raise ValueError(I18N.t("made from a reference, videos' style, your words, a prompt or from zero"))
     ref = safe_name(ref) if kind == "reference" else " ".join(str(ref).split())[:300]
     if kind == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief|title)-\d{3,}", ref):
-        raise ValueError(f"not a prompt id: {ref!r}")
+        raise ValueError(I18N.t("not a prompt id: {id}", id=repr(ref)))
     d = PROJECTS / safe_name(name)
     if not d.is_dir():
         raise FileNotFoundError(name)
@@ -980,7 +1108,7 @@ def edit_options() -> dict:
 def edit_request(name: str) -> dict:
     p = PROJECTS / safe_name(name) / "build" / "edit_request.json"
     if not p.exists():
-        raise FileNotFoundError(f"{name}: no edit request yet (Editor > New edit)")
+        raise FileNotFoundError(I18N.t("{video}: no edit request yet (Editor > New edit)", video=name))
     return read_json(p, {}) or {}
 
 
@@ -995,45 +1123,45 @@ def save_edit_request(name: str, body: dict) -> dict:
         raise FileNotFoundError(name)
     how = str(body.get("how") or "")
     if how not in EDIT_HOW:
-        raise ValueError(f"how: one of {', '.join(EDIT_HOW)}")
+        raise ValueError(I18N.t("how: one of {choices}", choices=", ".join(EDIT_HOW)))
     like = [" ".join(str(x).split()) for x in (body.get("like") or []) if str(x).strip()]
     if len(like) > ST.MAX_REFS:
-        raise ValueError(f"at most {ST.MAX_REFS} videos for one edit")
+        raise ValueError(I18N.t("at most {n} videos for one edit", n=ST.MAX_REFS))
     for x in like:
         if x.startswith("-") or len(x) > 160 or ST.find(x) is None:
-            raise ValueError(f"no analysed video called {x!r}")
+            raise ValueError(I18N.t("no analysed video called {name}", name=repr(x)))
     if how in ("copy", "style") and not like:
-        raise ValueError("pick at least one analysed video")
+        raise ValueError(I18N.t("pick at least one analysed video"))
     if how == "copy" and (len(like) != 1 or not re.fullmatch(r"[\w.\- \[\]()&'+,]+", like[0]) or ".." in like[0]
                           or not (ANALYSIS / like[0] / "events.json").exists()):
-        raise ValueError("an exact copy needs one video analysed on this PC")
+        raise ValueError(I18N.t("an exact copy needs one video analysed on this PC"))
     presets = [str(x) for x in (body.get("presets") or [])]
     bad = [x for x in presets if x not in ST.PRESETS]
     if bad:
-        raise ValueError(f"unknown preset {bad[0]!r}")
+        raise ValueError(I18N.t("unknown preset {id}", id=repr(bad[0])))
     want = " ".join(str(body.get("want") or "").split())[:1500]
     if how == "words" and not presets and not want:
-        raise ValueError("pick a style or write what you want")
+        raise ValueError(I18N.t("pick a style or write what you want"))
     prompt = str(body.get("prompt") or "")
     if how == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief|title)-\d{3,}", prompt):
-        raise ValueError(f"not a prompt id: {prompt!r}")
+        raise ValueError(I18N.t("not a prompt id: {id}", id=repr(prompt)))
     length = body.get("length_s")
     if length not in (None, ""):
         length = float(length)
         if not 3 <= length <= 900:
-            raise ValueError("length: 3 to 900 seconds")
+            raise ValueError(I18N.t("length: 3 to 900 seconds"))
     else:
         length = None
     fmt = body.get("format") or None
     if fmt is not None and fmt not in ST.SIZES:
-        raise ValueError(f"format: one of {', '.join(ST.SIZES)}")
+        raise ValueError(I18N.t("format: one of {choices}", choices=", ".join(ST.SIZES)))
     music = str(body.get("music") or "")
     if music and music != "none":
         if Path(music).name != music or not (d / music).is_file() or (d / music).suffix.lower() not in AUDIO_EXT:
-            raise ValueError(f"{music}: not a song in projects\\{d.name}")
+            raise ValueError(I18N.t("{file}: not a song in projects\\{video}", file=music, video=d.name))
     sound = str(body.get("sound") or "auto")
     if sound not in EDIT_SOUND:
-        raise ValueError(f"sound: one of {', '.join(EDIT_SOUND)}")
+        raise ValueError(I18N.t("sound: one of {choices}", choices=", ".join(EDIT_SOUND)))
     req = {"how": how, "like": like if how in ("copy", "style") else [], "presets": presets if how in (
         "words", "style") else [], "want": want if how != "prompt" else "", "prompt": prompt if how == "prompt" else None,
         "length_s": length, "format": fmt, "music": music or None, "sound": sound,
@@ -1064,10 +1192,54 @@ def generate_options() -> dict:
             "node": bool(system.find("node"))}
 
 
+_MOTION: dict = {"sig": None, "json": None}
+_MOTION_LOCK = threading.Lock()
+
+
+def _motion_sig(TP) -> tuple:
+    """What motion() is made of, as directory listings (each entry's name, time and size - no file is opened): every
+    template folder of the library and of this PC's own templates (library\\motion_graphics\\local\\<pack>\\<id>\\,
+    2026-10-18), the packs' folders (pack.json, cards.json). Any change there = the answer is worked out again."""
+    out: list = [str(TP.root()), TP.root() == TP.ROOT]
+
+    def listing(d: Path, depth: int) -> None:
+        try:
+            with os.scandir(d) as it:
+                ents = sorted(it, key=lambda e: e.name)
+        except OSError:
+            out.append((str(d), None))
+            return
+        row = []
+        for e in ents:
+            try:
+                if depth and e.is_dir():         # listed below, so its own entries show what changed in it (NTFS
+                    row.append((e.name, True))   # updates a folder's time in its parent's listing a call late)
+                    continue
+                st = e.stat()
+                row.append((e.name, e.is_dir(), st.st_mtime_ns, st.st_size))
+            except OSError:
+                row.append((e.name, None))
+        out.append((str(d), tuple(row)))
+        for e in ents:
+            if depth and e.is_dir():
+                listing(Path(e.path), depth - 1)
+
+    listing(TP.MOTION, 1)
+    listing(LAB / "library" / "motion_graphics", 3)
+    listing(TP.root(), 1)
+    return tuple(out)
+
+
 def motion() -> dict:
     """The Motion Graphics page (0.5.0): the library of motion templates (tools\\overlays\\motion\\: their settings, size,
-    picture, the clips they were learned from) + every pack of captured clips with Claude's cards (motionlab.templates)."""
+    picture, the clips they were learned from) + every pack of captured clips with Claude's cards (motionlab.templates).
+    Worked out again only when a file it is made of changed (_motion_sig, ~0.15-0.3 s otherwise on every tab of the
+    page and every Generate dialog); each call gets its own copy."""
     from motionlab import templates as TP
+    sig = _motion_sig(TP)                      # before reading: a file changed meanwhile shows on the next call
+    with _MOTION_LOCK:
+        if _MOTION["sig"] == sig:
+            return json.loads(_MOTION["json"])
     cat = TP.catalog()
     for t in cat["library"]:
         f = LAB / t["folder"]
@@ -1086,6 +1258,8 @@ def motion() -> dict:
                          "file": (clips.get(f"{s.get('pack')}/{s.get('clip')}") or {}).get("file")}
                         for s in t.get("learned_from", [])]
     cat["kinds"] = sorted({t.get("kind", "other") for t in cat["library"]})
+    with _MOTION_LOCK:
+        _MOTION["sig"], _MOTION["json"] = sig, json.dumps(cat, ensure_ascii=False, default=str)
     return cat
 
 
@@ -1105,7 +1279,7 @@ def _song(d: Path, music: str) -> str | None:
     p = (LAB / music).resolve()
     if p.parent == (LAB / "refs" / "audio").resolve() and p.is_file() and p.suffix.lower() in AUDIO_EXT:
         return str(p)
-    raise ValueError(f"{music}: not a song in the video's folder or in refs\\audio")
+    raise ValueError(I18N.t("{file}: not a song in the video's folder or in refs\\audio", file=music))
 
 
 def save_generate_request(body: dict) -> dict:
@@ -1115,25 +1289,25 @@ def save_generate_request(body: dict) -> dict:
     from motionlab import style as ST
     kind = str(body.get("kind") or "")
     if kind not in GEN_KINDS:
-        raise ValueError("kind: graphics or ai")
+        raise ValueError(I18N.t("kind: graphics or ai"))
     name = safe_name(" ".join(str(body.get("name") or "").split()))
     want = " ".join(str(body.get("want") or "").split())[:3000]
     if not want:
-        raise ValueError("say what the video is about")
+        raise ValueError(I18N.t("say what the video is about"))
     text = "\n".join(" ".join(ln.split()) for ln in str(body.get("text") or "").splitlines() if ln.strip())[:3000]
     like = [" ".join(str(x).split()) for x in (body.get("like") or []) if str(x).strip()]
     if len(like) > ST.MAX_REFS:
-        raise ValueError(f"at most {ST.MAX_REFS} videos for one style")
+        raise ValueError(I18N.t("at most {n} videos for one style", n=ST.MAX_REFS))
     for x in like:
         if len(x) > 160 or ST.find(x) is None:
-            raise ValueError(f"no analysed video called {x!r}")
+            raise ValueError(I18N.t("no analysed video called {name}", name=repr(x)))
     length = body.get("length_s")
     length = float(length) if length not in (None, "") else None
     if length is not None and not 3 <= length <= 900:
-        raise ValueError("length: 3 to 900 seconds")
+        raise ValueError(I18N.t("length: 3 to 900 seconds"))
     fmt = body.get("format") or None
     if fmt is not None and fmt not in ST.SIZES:
-        raise ValueError(f"format: one of {', '.join(ST.SIZES)}")
+        raise ValueError(I18N.t("format: one of {choices}", choices=", ".join(ST.SIZES)))
     tool = " ".join(str(body.get("tool") or "").split())[:60]
     extra = {k: " ".join(str(body.get(k) or "").split())[:120] for k in ("colours", "font")}
     templates = [str(x) for x in (body.get("templates") or []) if str(x).strip()]      # 0.5.0: the Motion Graphics
@@ -1142,13 +1316,14 @@ def save_generate_request(body: dict) -> dict:
         have = {t["id"] for t in TP.library()}
         bad = [x for x in templates if x not in have]
         if bad or len(templates) > 12:
-            raise ValueError(f"not in the Motion Graphics library: {', '.join(bad)}" if bad else "at most 12 templates")
+            raise ValueError(I18N.t("not in the Motion Graphics library: {ids}", ids=", ".join(bad)) if bad
+                             else I18N.t("at most 12 templates"))
     extra["templates"] = templates
     d = PROJECTS / name
     b = d / "build"
     if b.exists() and not body.get("reuse") and (any(b.glob("plan_v*.json")) or any(b.glob("*.mp4")) or any(
             (b / f).exists() for f in ("generate_request.json", "edit_request.json"))):
-        raise ValueError(f"{name} is already a video - give this one another name")
+        raise ValueError(I18N.t("{name} is already a video - give this one another name", name=name))
     song = _song(d, str(body.get("music") or ""))         # checked before a new folder is made
     if not d.exists():
         new_project(name)
@@ -1166,8 +1341,8 @@ def draft_args(req: dict) -> list[str]:
     2026-10-15) = a talking video: the talking preset, its sound kept and the pauses cut."""
     talk = req.get("how") == "prompt" and re.fullmatch(r"(script|hook)-\d{3,}", str(req.get("prompt") or ""))
     if req.get("how") not in ("style", "words") and not talk:
-        raise ValueError("a quick draft is made from videos' style, your words or a talking script "
-                         "(an exact copy or another prompt: Claude)")
+        raise ValueError(I18N.t("a quick draft is made from videos' style, your words or a talking script "
+                                "(an exact copy or another prompt: Claude)"))
     out: list[str] = ["--preset", "talking"] if talk else []
     for x in req.get("like") or []:
         out += ["--like", x]
@@ -1204,14 +1379,14 @@ def save_outcome(name: str, body: dict) -> dict:
             continue
         rating = v.get("rating") or None
         if rating not in (None, "good", "ok", "bad"):
-            raise ValueError(f"rating: good, ok or bad (got {rating!r})")
+            raise ValueError(I18N.t("rating: good, ok or bad (got {value})", value=repr(rating)))
         asp[k] = {"rating": rating, "note": str(v.get("note") or "").strip()[:500]}
     # 0.4.2: fix this version or start over (null = not answered); notes on moments of a render
     nxt = cur.get("next") if cur.get("next") in OUTCOME_NEXT else None
     if "next" in body:
         nxt = body["next"] or None
         if nxt not in (None, *OUTCOME_NEXT):
-            raise ValueError(f"next: fix or start_over (got {nxt!r})")
+            raise ValueError(I18N.t("next: fix or start_over (got {value})", value=repr(nxt)))
     moments = [m for m in (cur.get("moments") or []) if isinstance(m, dict)]
     if body.get("moment") is not None:
         moments.append(clean_moment(body["moment"]))
@@ -1220,7 +1395,7 @@ def save_outcome(name: str, body: dict) -> dict:
         hit = next((i for i, m in enumerate(moments) if all(m.get(k) == r.get(k) for k in ("f", "version", "note"))
                     and (not r.get("date") or m.get("date") == r.get("date"))), None)
         if hit is None:
-            raise ValueError("that note is not there any more")
+            raise ValueError(I18N.t("that note is not there any more"))
         moments.pop(hit)
     moments.sort(key=lambda m: (str(m.get("version", "")), int(m.get("f", 0))))
     out = {**cur, "aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
@@ -1238,28 +1413,28 @@ def clean_packaging(b, old=None) -> dict:
     in %) and the video's link -> outcome.json "packaging": {"ctr": {"A": 4.1}, "link", "updated"}. A key left out
     keeps its old value; an empty CTR removes that variant."""
     if not isinstance(b, dict):
-        raise ValueError("packaging: the click-through rates and the link")
+        raise ValueError(I18N.t("packaging: the click-through rates and the link"))
     old = old if isinstance(old, dict) else {}
     ctr = dict(old.get("ctr") or {})
     for k, v in (b.get("ctr") or {}).items() if isinstance(b.get("ctr"), dict) else []:
         k = str(k).strip().upper()
         if not CTR_IDS.fullmatch(k):
-            raise ValueError(f"a thumbnail is A, B or C (got {k!r})")
+            raise ValueError(I18N.t("a thumbnail is A, B or C (got {value})", value=repr(k)))
         if v in (None, ""):
             ctr.pop(k, None)
             continue
         try:
             x = float(str(v).replace(",", ".").replace("%", "").strip())
         except ValueError:
-            raise ValueError(f"thumbnail {k}: the click-through rate is a number like 4.1") from None
+            raise ValueError(I18N.t("thumbnail {id}: the click-through rate is a number like 4.1", id=k)) from None
         if not 0 <= x <= 100:
-            raise ValueError(f"thumbnail {k}: the click-through rate is a percentage between 0 and 100")
+            raise ValueError(I18N.t("thumbnail {id}: the click-through rate is a percentage between 0 and 100", id=k))
         ctr[k] = round(x, 2)
     link = old.get("link") or ""
     if "link" in b:
         link = str(b.get("link") or "").strip()
         if link and (not re.fullmatch(r"https?://\S{3,500}", link)):
-            raise ValueError("the video's link starts with https:// (copy it from the platform)")
+            raise ValueError(I18N.t("the video's link starts with https:// (copy it from the platform)"))
     return {"ctr": dict(sorted(ctr.items())), "link": link, "updated": stamp()}
 
 
@@ -1268,22 +1443,22 @@ def clean_moment(m) -> dict:
     """A note on one moment of a render: {"f": frame of that render (0-based, its fps), "version": "v2", "aspect":
     one of ASPECTS, "note": text, "date"} - /recreate-video improve fixes exactly those moments."""
     if not isinstance(m, dict):
-        raise ValueError("a note needs a frame, a version, a part and the text")
+        raise ValueError(I18N.t("a note needs a frame, a version, a part and the text"))
     try:
         f = int(m.get("f"))
     except (TypeError, ValueError):
-        raise ValueError("a note needs the frame it is about") from None
+        raise ValueError(I18N.t("a note needs the frame it is about")) from None
     if not 0 <= f <= 10_000_000:
-        raise ValueError(f"frame out of range: {f}")
+        raise ValueError(I18N.t("frame out of range: {frame}", frame=f))
     version = str(m.get("version") or "").strip()
     if not re.fullmatch(r"[\w.\- \[\]()&'+,]{1,80}", version):
-        raise ValueError(f"which version is it about? (got {version!r})")
+        raise ValueError(I18N.t("which version is it about? (got {value})", value=repr(version)))
     aspect = str(m.get("aspect") or "")
     if aspect not in ASPECTS:
-        raise ValueError(f"part: one of {', '.join(ASPECTS)}")
+        raise ValueError(I18N.t("part: one of {choices}", choices=", ".join(ASPECTS)))
     note = " ".join(str(m.get("note") or "").split())[:500]
     if not note:
-        raise ValueError("write what is wrong or right at that moment")
+        raise ValueError(I18N.t("write what is wrong or right at that moment"))
     return {"f": f, "version": version, "aspect": aspect, "note": note, "date": stamp()}
 
 
@@ -1292,7 +1467,7 @@ def prompt_styles(items: list[dict]) -> dict:
     and, per brief / script / hook, the references its words seem to mean (who made it, its title)."""
     st = PR.all_styles()
     keep = ("name", "title", "uploader", "category_label", "format", "line", "thumb", "reviewed", "effects",
-            "verdicts", "transcript")
+            "verdicts", "transcript", "label", "by")                     # label / by: readable names (2026-10-18)
     styles = {s["name"]: {k: s.get(k) for k in keep} for s in st}
     for r in items:                                  # a linked self-test copy (zz tests) still shows
         for n in r.get("style_refs") or []:
@@ -1336,10 +1511,11 @@ def save_upload(name: str, filename: str, stream, size: int, prompt: str = "") -
     stem, ext = os.path.splitext(Path(str(filename)).name)
     ext = ext.lower()
     if ext not in VIDEO_EXT | AUDIO_EXT:
-        raise ValueError(f"{filename}: not a video or a song ({', '.join(sorted(VIDEO_EXT | AUDIO_EXT))})")
+        raise ValueError(I18N.t("{file}: not a video or a song ({types})", file=filename,
+                                types=", ".join(sorted(VIDEO_EXT | AUDIO_EXT))))
     stem = re.sub(r"[^\w.\- \[\]()&'+,]", "_", stem).replace("..", "_").strip(" .") or "recording"
     if not 0 < size <= 200 * 2**30:
-        raise ValueError("the file is empty or bigger than 200 GB")
+        raise ValueError(I18N.t("the file is empty or bigger than 200 GB"))
     dest, n = d / f"{stem}{ext}", 1
     while dest.exists():
         if dest.stat().st_size == size:                       # the same file added twice: keep the first copy
@@ -1404,23 +1580,28 @@ def memory() -> dict:
     M = dict(KN.memory())
     # oldest analysis first (0.4.3.5: "Latest videos" showed the oldest one first) - the pages take the end as the newest
     M["videos"] = sorted(M.get("videos", []), key=lambda v: v.get("analysed") or "")
-    # memory.md is stale when a card, a rating (outcome.json), a lesson or an answer on sound effects is newer
+    # memory.md is stale when a card, a rating (outcome.json), a lesson, an answer on sound effects or a set of
+    # scripts & prompts (2026-10-19: its block "Scripts & prompts you analysed") is newer
+    tx = _texts_root()
     src = [p for d in (KN.LOCAL_REFS, KN.SHARED_REFS) if d.exists() for p in d.glob("*.json")] + KN._outcomes() + [
         p for p in (KN.MAKING_LESSONS, KN.LOCAL_MAKING, KN.SHARED_LESSONS, KN.LOCAL_LESSONS) if p.exists()] + (
-        list(ANALYSIS.glob("*/feedback/verdicts.json")) if ANALYSIS.exists() else [])
+        list(ANALYSIS.glob("*/feedback/verdicts.json")) if ANALYSIS.exists() else []) + (
+        list(tx.glob("*/*.json")) if tx.is_dir() else [])
     if not KN.MEMORY.exists() or KN.MEMORY.stat().st_mtime < max([_mtime(p) for p in src] or [0]):
         try:
             KN.memory_index()
         except OSError:
             pass
-    lib = library()
+    lib = library(videos=False)
     M["saved"] = {"effects": len(lib["items"]), "graphics": sum(1 for g in lib["graphics"] if g.get("kind") == "yours"),
                   "examples": sum(1 for g in lib["graphics"] if g.get("kind") != "yours"), "picks": len(lib["picks"])}
     M["prompts"] = PR.count()
     return M
 
 
-def library() -> dict:
+def library(videos: bool = True) -> dict:
+    """Saved effects (library\\), the library picks of every video, the graphics (yours + the examples) and, unless
+    videos=False (Home and Claude's memory only count), every video with its size and graphics (GET /api/library)."""
     items = []
     if LIBRARY.exists():
         # library\<effect>\<effect>.md (+ .setting macros, check.png); README.md is the index, not an effect
@@ -1433,17 +1614,31 @@ def library() -> dict:
             chk = p.parent / "check.png"
             items.append({"name": p.stem, "title": first, "recipe": rel(p), "macros": macros,
                           "check": rel(chk) if chk.exists() else None, "modified": stamp(p.stat().st_mtime)})
-    picks, videos = [], []
-    for pr in list_projects():
+    picks, vids = [], []
+    # the counts need only the picks: the same folders in list_projects()' order, without working out each video
+    prs = list_projects() if videos else [{"name": d.name} for d in (
+        sorted(PROJECTS.iterdir(), key=lambda p: p.name.lower()) if PROJECTS.exists() else []) if d.is_dir()]
+    for pr in prs:
         pk = (read_json(library_picks_path(pr["name"]), {}) or {}).get("picks", {})
         picks += [{"project": pr["name"], "effect": k, **v} for k, v in pk.items() if v.get("pick")]
+        if not videos:
+            continue
         last = PROJECTS / pr["name"] / "build" / f"{pr['plans'][-1]}.json" if pr["plans"] else None
         pl = (read_json(last, {}) or {}) if last else {}
-        videos.append({"name": pr["name"], "width": pl.get("width"), "height": pl.get("height"), "fps": pl.get("fps"),
-                       "overlays": [s["name"] for s in OS.project_overlays(pr["name"])]})
-    # the motion templates (0.5.0) have their own page, Motion Graphics: not repeated in the saved graphics
-    return {"items": items, "picks": picks, "graphics": [g for g in OS.library() if g.get("kind") != "motion"],
-            "videos": videos}
+        vids.append({"name": pr["name"], "width": pl.get("width"), "height": pl.get("height"), "fps": pl.get("fps"),
+                     "overlays": [s["name"] for s in OS.project_overlays(pr["name"])]})
+    # the motion templates (0.5.0) have their own page, Motion Graphics: not repeated in the saved graphics - and not
+    # worked out at all (OS.library()'s loop without its 75 motion templates: the same list, ~20 ms instead of ~0.35 s)
+    graphics = []
+    for kind, root in (("yours", OS.LIBRARY), ("example", OS.EXAMPLES)):
+        for p in sorted(root.glob("*/index.html")) if root.is_dir() else []:
+            try:
+                s = OS.status(p.parent)
+            except (OSError, ValueError, json.JSONDecodeError):
+                continue
+            s["kind"] = kind
+            graphics.append(s)
+    return {"items": items, "picks": picks, "graphics": graphics, **({"videos": vids} if videos else {})}
 
 
 # ================================================================================================= skills (Tools > Skills)
@@ -1452,9 +1647,10 @@ SKILLS = LAB / ".claude" / "skills"
 # app runs it for you; a skill missing here shows the first sentence of its description
 SKILL_INFO = {
     "analyze-reference": {"brief": "Claude checks a video you analysed: it looks at every effect and names it - and "
-                                   "learns from your verdicts when you send feedback.",
-                          "uses": ["/analyze-reference <video name or file>"], "task": "review",
-                          "where": "Analyze - Send to Claude, Send feedback to Claude"},
+                                   "learns from your verdicts when you send it your review.",
+                          "uses": ["/analyze-reference <video name or file>", "/analyze-reference thumbs <set>",
+                                   "/analyze-reference texts <set>"], "task": "review",
+                          "where": "Analyser - Send to Claude; after your review, Send it to Claude"},
     "write-script": {"brief": "Claude prepares what you say on camera: it checks a script you have against what makes "
                               "talking videos hold attention (hook, structure, re-hooks, call to action) and rewrites "
                               "it in your voice - or writes one from zero from your answers to a few questions.",
@@ -1583,6 +1779,7 @@ def usage_names() -> dict:
     return {"project": dirs(PROJECTS),
             "analysis": {p.name for p in ANALYSIS.iterdir() if (p / "events.json").exists()} if ANALYSIS.is_dir() else set(),
             "thumbs": dirs(_thumbs_root()),                     # 0.4.5: thumbnail sets (analysis\thumbs\<set>)
+            "texts": dirs(_texts_root()),                       # 2026-10-18: text sets (analysis\texts\<set>)
             "request": {p.stem for p in req.glob("req-*.json")} if req.is_dir() else set(),
             "prompt": {p.stem for k in PR.KINDS for p in (PR.HOME / k).glob(f"{k}-*.json")}}
 
@@ -1636,7 +1833,7 @@ def took(kind: str, name: str) -> dict:
         if req:
             want.add(("request", req))
     else:
-        raise ValueError(f"what it took for {kind!r}?")
+        raise ValueError(I18N.t("what it took for {kind}?", kind=repr(kind)))
     sess = U.sessions()
     rows, used = [], set()
     for s, r, objs in U.counted(sess, names):
@@ -1748,6 +1945,14 @@ def live_claude() -> list[dict]:
             b = next((b for b in batches(open_only=False) if b["task"] == x.get("task")), None)
             if b:
                 x["batch"] = {"done": len(b["done"]), "total": len(b["items"]), "kind": b["kind"]}
+        m = re.match(r"texts\s+(\S+)", str(x.get("label", "")))         # 2026-10-18: a text set - "4 of 10 checked"
+        if m and m[1] in names.get("texts", ()):
+            from motionlab import textsets as TX
+            try:
+                st = TX.state(m[1])
+                x["texts"], x["batch"] = m[1], {"done": st["checked"], "total": st["items"], "kind": "texts"}
+            except (OSError, ValueError):
+                pass
     return L
 
 
@@ -1762,17 +1967,17 @@ BATCH_KINDS = {"review": ("/analyze-reference", "review"), "recreate": ("/recrea
 
 def new_batch(kind: str, items: list[str], bid: str | None = None) -> dict:
     if kind not in BATCH_KINDS:
-        raise ValueError(f"unknown batch kind {kind!r}")
+        raise ValueError(I18N.t("unknown batch kind {kind}", kind=repr(kind)))
     items = list(dict.fromkeys(str(x) for x in items if x))
     if not items:
-        raise ValueError("an empty batch")
+        raise ValueError(I18N.t("an empty batch"))
     for x in items:
         if (ANALYSIS if kind == "review" else PROJECTS).joinpath(x).resolve().parent != \
                 (ANALYSIS if kind == "review" else PROJECTS).resolve():
-            raise ValueError(f"bad name: {x!r}")
+            raise ValueError(I18N.t("bad name: {name}", name=repr(x)))
     bid = bid or f"b{int(time.time() * 1000) % 10_000_000}"
     if not re.fullmatch(r"b\d{1,12}", bid):
-        raise ValueError(f"bad batch id {bid!r}")
+        raise ValueError(I18N.t("bad batch id {id}", id=repr(bid)))
     b = {"id": bid, "kind": kind, "items": items, "created": stamp(), "created_t": time.time(), "opened": None}
     write_json_atomic(BATCHES / f"{bid}.json", b)
     return b
@@ -1780,7 +1985,7 @@ def new_batch(kind: str, items: list[str], bid: str | None = None) -> dict:
 
 def get_batch(bid: str) -> dict:
     if not re.fullmatch(r"b\d{1,12}", str(bid)):
-        raise ValueError(f"bad batch id {bid!r}")
+        raise ValueError(I18N.t("bad batch id {id}", id=repr(bid)))
     b = read_json(BATCHES / f"{bid}.json", None)
     if not b:
         raise FileNotFoundError(bid)
@@ -1832,14 +2037,19 @@ def mark_batch_opened(bid: str) -> None:
 
 def estimate() -> dict:
     """What Claude usually takes per item on THIS PC (What it took's numbers): review = minutes per analysed video,
-    recreate = per edit with Claude (not counting Review and improve). {task: {"minutes": median, "n": how many}} -
-    a task never measured here is left out ("not measured yet" on the page, never a guess)."""
+    recreate = per edit with Claude (not counting Review and improve), texts = per text of a text set (2026-10-18:
+    its time split by the prompt each step named). {task: {"minutes": median, "n": how many}} - a task never
+    measured here is left out ("not measured yet" on the page, never a guess)."""
     from motionlab import usage as U
     names = usage_names()
-    per: dict = {"review": {}, "recreate": {}, "generate": {}, "script": {}}
+    per: dict = {"review": {}, "recreate": {}, "generate": {}, "script": {}, "texts": {}}
     kind_of = {"review": "analysis", "recreate": "project", "generate": "project", "script": "request"}
     for s, r, objs in U.counted(U.sessions(), names):
         t = r["task"]
+        if t == "review" and r.get("mode") == "texts":                   # /analyze-reference texts <set>
+            for n, m in U.split(r, names, "prompt").items():
+                per["texts"][n] = per["texts"].get(n, 0.0) + m
+            continue
         if t not in per or (t == "recreate" and r.get("mode") == "improve"):
             continue
         k = kind_of[t]
@@ -1920,11 +2130,11 @@ def save_thumb_verdicts(name: str, patterns: dict) -> dict:
     cur = (read_json(d / "verdicts.json", {}) or {}).get("patterns", {})
     for pid, x in (patterns or {}).items():
         if not re.fullmatch(r"P\d{1,3}", str(pid)):
-            raise ValueError(f"not a pattern: {pid!r}")
+            raise ValueError(I18N.t("not a pattern: {id}", id=repr(pid)))
         v = str((x or {}).get("v") or "")
         note = " ".join(str((x or {}).get("note") or "").split())[:500]
         if v not in ("", "correct", "partly", "wrong"):
-            raise ValueError(f"a verdict is correct, partly or wrong - not {v!r}")
+            raise ValueError(I18N.t("a verdict is correct, partly or wrong - not {value}", value=repr(v)))
         if v or note:
             cur[pid] = {"v": v, "note": note, "date": stamp()}
         else:
@@ -1948,9 +2158,9 @@ def thumb_upload(name: str, filename: str, stream, size: int) -> dict:
     set_name = folder_name(str(name))
     stem, ext = os.path.splitext(Path(str(filename)).name)
     if ext.lower() not in THUMB_IMG_EXT:
-        raise ValueError(f"{filename}: not a picture ({', '.join(sorted(THUMB_IMG_EXT))})")
+        raise ValueError(I18N.t("{file}: not a picture ({types})", file=filename, types=", ".join(sorted(THUMB_IMG_EXT))))
     if not 0 < size <= 25_000_000:
-        raise ValueError("the picture is empty or bigger than 25 MB")
+        raise ValueError(I18N.t("the picture is empty or bigger than 25 MB"))
     tmp = LAB / ".app" / "tmp" / "thumbs"
     tmp.mkdir(parents=True, exist_ok=True)
     clean = re.sub(r"[^\w.\- ]", "_", stem).strip(" .")[:80] or "picture"
@@ -1965,8 +2175,91 @@ def thumb_upload(name: str, filename: str, stream, size: int) -> dict:
             left -= len(chunk)
     try:
         if left:
-            raise ValueError("the upload stopped half way - try again")
+            raise ValueError(I18N.t("the upload stopped half way - try again"))
         TS.add_files(set_name, [part], log=lambda *_: None)
     finally:
         part.unlink(missing_ok=True)
     return {"set": set_name}
+
+
+# ------------------------------------------------------------------------------------------------- text sets (2026-10-18)
+# Analyser > Scripts & prompts (the user: "imagine i wanted to analize 10 prompts at the same time i could and it
+# wouldnt allucinate"): analysis\texts\<set>\ (motionlab\textsets.py) around texts that live in the prompt library -
+# measured inline (milliseconds, no job); verdicts.json = the user's verdicts on Claude's patterns (one home).
+def _texts_root() -> Path:
+    """analysis\\texts = textsets.ROOT (MOTIONLAB_TEXTS_ROOT moves it for tests)."""
+    from motionlab import textsets as TX
+    return Path(TX.ROOT)
+
+
+def _text_dir(name: str) -> Path:
+    d = _texts_root() / safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    return d
+
+
+def text_sets() -> list[dict]:
+    from motionlab import textsets as TX
+    return TX.list_sets()
+
+
+def text_set(name: str) -> dict:
+    from motionlab import textsets as TX
+    return TX.get_set(_text_dir(name).name)
+
+
+def _text_body(body: dict) -> tuple[str, list, dict, dict | None, list]:
+    """The add dialog's fields: the paste, the attached files (POST /api/prompts/file names), the kinds the user
+    picked {sha: kind}, whose they are, tags."""
+    text = str(body.get("text") or "")[:2_200_000]
+    files = [str(f)[:300] for f in body.get("files") or [] if isinstance(f, str) and f.strip()][:30]
+    kinds = {str(k)[:40]: str(v) for k, v in (body.get("kinds") or {}).items()} if isinstance(body.get("kinds"), dict) \
+        else {}
+    src = body.get("source") if isinstance(body.get("source"), dict) else None
+    tags = [str(x).strip().lower()[:40] for x in body.get("tags") or [] if isinstance(x, str) and x.strip()][:12]
+    return text, files, kinds, src, tags
+
+
+def text_split(body: dict) -> dict:
+    """The numbered preview while the user pastes / attaches (nothing is written)."""
+    from motionlab import textsets as TX
+    text, files, kinds, src, _ = _text_body(body)
+    into = str(body.get("set") or "")
+    return TX.split(text, files, kinds, src, into=_text_dir(into).name if into else "")
+
+
+def text_new(body: dict) -> dict:
+    """*Add scripts or prompts*: a new set, everything checked first -> {set, label, added, reused, to_sort, count,
+    command} (the command = /analyze-reference texts <set>, opened by the page when the user ticked Claude's check)."""
+    from motionlab import textsets as TX
+    text, files, kinds, src, tags = _text_body(body)
+    return TX.create("", " ".join(str(body.get("label") or "").split())[:80], text, files, kinds, src, tags)
+
+
+def text_add(name: str, body: dict) -> dict:
+    from motionlab import textsets as TX
+    text, files, kinds, src, tags = _text_body(body)
+    return TX.add_items(_text_dir(name).name, text, files, kinds, src, tags)
+
+
+def save_text_verdicts(name: str, patterns: dict) -> dict:
+    """The user's verdict on each pattern Claude named in a text set: correct / partly / wrong (+ a note)."""
+    from motionlab import textsets as TX
+    return TX.save_verdicts(_text_dir(name).name, patterns if isinstance(patterns, dict) else {})
+
+
+def text_remove(name: str, n: int) -> dict:
+    """#n out of the set - its prompt stays in the library."""
+    from motionlab import textsets as TX
+    d = _text_dir(name)
+    TX.remove_item(d.name, int(n))
+    return text_set(d.name)
+
+
+def text_kind(name: str, n: int, kind: str) -> dict:
+    """The user says #n is another kind (its prompt gets a new id of that kind)."""
+    from motionlab import textsets as TX
+    d = _text_dir(name)
+    TX.set_item_kind(d.name, int(n), str(kind), "you picked it", by="you")
+    return text_set(d.name)

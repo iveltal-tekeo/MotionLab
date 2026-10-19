@@ -32,8 +32,11 @@ from __future__ import annotations
 
 import csv
 import math
+import os
 import subprocess
+import threading
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import cv2
@@ -58,6 +61,9 @@ COLUMNS = [
     "proxy_fill",
     "audio_rms_db", "audio_onset", "beat", "downbeat",
 ]
+INT_COLUMNS = ("frame", "dup", "rep_k", "motion_pts", "motion_src", "beat", "downbeat", "proxy_fill")
+BLOCK = 48                 # frames per block of the parallel signal pass
+WORKERS = 5                # its threads at most (measured 2026-10-19: ~2x, 1 OpenCV thread each)
 
 
 def even(x: float) -> int:
@@ -80,10 +86,33 @@ def ffmpeg_frames_cmd(video: Path, w: int, h: int, hdr: bool) -> list[str]:
             "-fps_mode", "passthrough", "-vf", ",".join(vf), "-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
 
 
+class StderrTail:
+    """Reads a child's stderr while it runs and keeps the last `keep` bytes. A pipe nobody reads fills up after
+    4-8 KB and then blocks the child for ever - ffmpeg prints a line per damaged macroblock, so a damaged video hung
+    the decode (2026-10-19 speed audit). text() waits for the end and returns what was kept."""
+
+    def __init__(self, stream, keep: int = 8192):
+        self.stream, self.keep, self.buf = stream, keep, bytearray()
+        self.th = threading.Thread(target=self._drain, daemon=True)
+        self.th.start()
+
+    def _drain(self):
+        read = getattr(self.stream, "read1", self.stream.read)
+        for chunk in iter(lambda: read(4096), b""):
+            self.buf.extend(chunk)
+            del self.buf[:-self.keep]
+
+    def text(self) -> str:
+        self.th.join()
+        self.stream.close()
+        return self.buf.decode("utf-8", "replace")
+
+
 def iter_frames(video: Path, w: int, h: int, hdr: bool = False):
     """Yield (index, frame) for every decoded frame, in display order."""
     proc = subprocess.Popen(ffmpeg_frames_cmd(video, w, h, hdr), stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, bufsize=w * h * 3 * 8)
+    err = StderrTail(proc.stderr)
     size = w * h * 3
     i = 0
     try:
@@ -95,10 +124,10 @@ def iter_frames(video: Path, w: int, h: int, hdr: bool = False):
             i += 1
     finally:
         proc.stdout.close()
-        err = proc.stderr.read().decode("utf-8", "replace")
         proc.wait()
+        msg = err.text()
         if proc.returncode not in (0, None) and i == 0:
-            raise RuntimeError(f"ffmpeg failed to decode {video}:\n{err[-1500:]}")
+            raise RuntimeError(f"ffmpeg failed to decode {video}:\n{msg[-1500:]}")
 
 
 def _corr(a: np.ndarray, b: np.ndarray) -> float:
@@ -297,29 +326,51 @@ class FrameMetrics:
         return (run_len(rm, rx) / H, run_len(rm[::-1], rx[::-1]) / H,
                 run_len(cm, cx) / W, run_len(cm[::-1], cx[::-1]) / W)
 
-    # ------------------------------------------------------------------ main
-    def compute(self, f: np.ndarray):
-        r = {}
-        gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
-        y = cv2.transform(f, self.k709)
-        lm, ls, p05, p95 = self._luma_stats(y)
-        r["luma_mean"], r["luma_std"] = lm / 2.55, ls / 2.55
-        r["luma_p05"], r["luma_p95"] = p05 / 2.55, p95 / 2.55
+    # ------------------------------------------------------------------ state
+    def _thumb(self, f: np.ndarray):
+        thumb = cv2.resize(f, (self.tw, self.th), interpolation=cv2.INTER_AREA)
+        return thumb, cv2.cvtColor(thumb, cv2.COLOR_BGR2GRAY).astype(np.float32)
 
+    def _state(self, f: np.ndarray):
+        """What frame t+1 is compared with (self.prev) + the pieces compute() measures on them. compute() and warm()
+        both build it here, so a block of the parallel signal pass starts from exactly the sequential state."""
+        gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
         hsv = cv2.cvtColor(f, cv2.COLOR_BGR2HSV)
         hs = cv2.calcHist([hsv], [0, 1], None, [30, 32], [0, 180, 0, 256])
         cv2.normalize(hs, hs, 1, 0, cv2.NORM_L1)
         hv = cv2.calcHist([hsv], [2], None, [32], [0, 256])
         cv2.normalize(hv, hv, 1, 0, cv2.NORM_L1)
+        thumb, tg = self._thumb(f)
+        g2 = cv2.resize(gray, (self.w2, self.h2), interpolation=cv2.INTER_AREA)
+        st = {"g": gray, "gb": cv2.GaussianBlur(gray, (3, 3), 0), "hs": hs, "hv": hv, "tg": tg,
+              "g2f": g2.astype(np.float32)}
+        return st, hsv, thumb, g2
+
+    def warm(self, before: list) -> None:
+        """Start in the middle of a video: the state the sequential pass carries in from the frames `before` (the
+        repeat_search_frames frames before a block): their grey thumbnails (newest first) and the last one's prev."""
+        for j, f in enumerate(before):
+            if j == len(before) - 1:
+                self.prev = self._state(f)[0]
+                self.hist.appendleft(self.prev["tg"])
+            else:
+                self.hist.appendleft(self._thumb(f)[1])
+
+    # ------------------------------------------------------------------ main
+    def compute(self, f: np.ndarray):
+        r = {}
+        st, hsv, thumb, g2 = self._state(f)
+        gray, gb, hs, hv, tg = st["g"], st["gb"], st["hs"], st["hv"], st["tg"]
+        y = cv2.transform(f, self.k709)
+        lm, ls, p05, p95 = self._luma_stats(y)
+        r["luma_mean"], r["luma_std"] = lm / 2.55, ls / 2.55
+        r["luma_p05"], r["luma_p95"] = p05 / 2.55, p95 / 2.55
         r["sat_mean"] = float(hsv[..., 1].mean()) / 2.55
 
-        thumb = cv2.resize(f, (self.tw, self.th), interpolation=cv2.INTER_AREA)
         lab = cv2.cvtColor(thumb, cv2.COLOR_BGR2LAB)
         r["lab_a"] = float(lab[..., 1].mean()) - 128.0
         r["lab_b"] = float(lab[..., 2].mean()) - 128.0
-        tg = cv2.cvtColor(thumb, cv2.COLOR_BGR2GRAY).astype(np.float32)
 
-        g2 = cv2.resize(gray, (self.w2, self.h2), interpolation=cv2.INTER_AREA)
         lap = cv2.Laplacian(gray, cv2.CV_32F, ksize=3)
         r["sharpness"] = float(lap.var())
         r["sharp_norm"] = r["sharpness"] / (ls * ls + 4.0)
@@ -348,7 +399,6 @@ class FrameMetrics:
         gx = cv2.Sobel(g2, cv2.CV_32F, 1, 0, ksize=3)
         gy = cv2.Sobel(g2, cv2.CV_32F, 0, 1, ksize=3)
         r["grad_aniso"] = math.log((float(np.abs(gx).mean()) + 1.0) / (float(np.abs(gy).mean()) + 1.0))
-        gb = cv2.GaussianBlur(gray, (3, 3), 0)
 
         # stateless structure metrics
         rd = np.abs(np.diff(gray.astype(np.int16), axis=0)).mean(axis=1)
@@ -364,7 +414,8 @@ class FrameMetrics:
         r["seam_h"] = float(rv_.max()) if len(rv_) else np.nan
         r["seam_h_pos"] = float((np.argmax(rv_) + mr + 1) / g2.shape[0]) if len(rv_) else np.nan
         g4 = cv2.resize(g2, (self.w2 // 2, self.h2 // 2), interpolation=cv2.INTER_AREA).astype(np.float32)
-        e = cv2.magnitude(cv2.Sobel(g4, cv2.CV_32F, 1, 0), cv2.Sobel(g4, cv2.CV_32F, 0, 1))
+        ex_, ey_ = cv2.Sobel(g4, cv2.CV_32F, 1, 0), cv2.Sobel(g4, cv2.CV_32F, 0, 1)
+        e = np.sqrt(ex_ * ex_ + ey_ * ey_)      # not cv2.magnitude: its last bit depends on where the buffer sits
         eh, ew = e.shape
         r["sym_lr"] = _corr(e[:, :ew // 2], e[:, ew - ew // 2:][:, ::-1])
         r["sym_tb"] = _corr(e[:eh // 2], e[eh - eh // 2:][::-1])
@@ -407,6 +458,9 @@ class FrameMetrics:
                 j = int(np.argmin(errs[1:]) + 1)
                 r["rep_k"], r["rep_err"] = j + 1, float(errs[j])
             r.update(self._motion(p["g"], gray))
+            # phaseCorrelate multiplies its window INTO its inputs when no DFT padding is needed (240x135 here):
+            # p["g2f"] is windowed from here on (the band test below reads it so), the current frame's copy is
+            # thrown away - never pass st["g2f"], the next frame's prev
             (dx, dy), resp = cv2.phaseCorrelate(p["g2f"], g2.astype(np.float32), self.win2)
             r["pc_tx_pct"] = dx / self.w2 * 100.0
             r["pc_ty_pct"] = dy / self.h2 * 100.0
@@ -427,18 +481,21 @@ class FrameMetrics:
                 r["band_dev_pct"] = float(np.abs(np.asarray(dxs) - fit).max()) / self.w2 * 100.0
 
         # update state
-        self.prev = {"g": gray, "gb": gb, "hs": hs, "hv": hv, "tg": tg, "g2f": g2.astype(np.float32)}
+        self.prev = st
         self.hist.appendleft(tg)
         return r, thumb
 
 
 def run_signal_pass(video: Path, info: dict, cfg: dict, out_dir: Path, fps: float,
                     est_frames: int | None, proxy_fill: np.ndarray | None = None):
+    """One decode (this thread); blocks of BLOCK frames measured on up to WORKERS threads, each FrameMetrics warmed
+    with the frames before its block, so every number is the one the frame-by-frame pass gives (2026-10-19 speed
+    audit: ~2x). Rows and thumbnails are written in frame order."""
     acfg = cfg["analysis"]
     v = info["video"]
     w, h = fit_long_side(v["display_aspect"], acfg["long_side_px"])
     tw, th = fit_long_side(v["display_aspect"], acfg["thumb_long_side_px"])
-    fm = FrameMetrics(w, h, tw, th, v["display_width"], acfg)
+    K = int(acfg["repeat_search_frames"])
     cache = out_dir / "cache"
     cache.mkdir(parents=True, exist_ok=True)
     thumbs_path = cache / "thumbs.u8"
@@ -446,18 +503,45 @@ def run_signal_pass(video: Path, info: dict, cfg: dict, out_dir: Path, fps: floa
     import time as _t
     t0 = _t.time()
     n = 0
-    with open(thumbs_path, "wb") as tf:
-        for i, frame in iter_frames(video, w, h, v.get("hdr", False)):
-            m, thumb = fm.compute(frame)
-            for k in rows:
-                if k in m:
-                    rows[k].append(m[k])
-            tf.write(thumb.tobytes())
-            n = i + 1
-            if n % 500 == 0:
-                rate = n / max(1e-6, _t.time() - t0)
-                eta = f", ETA {((est_frames or n) - n) / rate:.0f}s" if est_frames else ""
-                log(f"signal pass: frame {n}{'/' + str(est_frames) if est_frames else ''} ({rate:.0f} fps{eta})")
+
+    def block(before, frames):
+        fm = FrameMetrics(w, h, tw, th, v["display_width"], acfg)
+        fm.warm(before)
+        return [fm.compute(f) for f in frames]
+
+    workers = max(1, min(WORKERS, (os.cpu_count() or 2) - 1))
+    threads = cv2.getNumThreads()
+    cv2.setNumThreads(1)                   # OpenCV's own threads gain nothing at this size; the blocks use the cores
+    try:
+        with open(thumbs_path, "wb") as tf, ThreadPoolExecutor(workers) as ex:
+            def collect(fut):
+                nonlocal n
+                for m, thumb in fut.result():
+                    for k in rows:
+                        if k in m:
+                            rows[k].append(m[k])
+                    tf.write(thumb.tobytes())
+                    n += 1
+                    if n % 500 == 0:
+                        rate = n / max(1e-6, _t.time() - t0)
+                        eta = f", ETA {((est_frames or n) - n) / rate:.0f}s" if est_frames else ""
+                        log(f"signal pass: frame {n}{'/' + str(est_frames) if est_frames else ''} ({rate:.0f} fps{eta})")
+
+            pending, cur, last = deque(), [], deque(maxlen=K)
+            for i, frame in iter_frames(video, w, h, v.get("hdr", False)):
+                cur.append(frame)
+                if len(cur) == BLOCK:
+                    pending.append(ex.submit(block, list(last), cur))
+                    last.extend(cur)
+                    cur = []
+                    while len(pending) > 2 * workers:         # ~2 blocks per thread in memory (~19 MB each)
+                        collect(pending.popleft())
+            if cur:
+                pending.append(ex.submit(block, list(last), cur))
+            while pending:
+                collect(pending.popleft())
+    finally:
+        cv2.setNumThreads(threads)
     if n == 0:
         raise RuntimeError("no frames decoded")
     log(f"signal pass done: {n} frames in {_t.time() - t0:.1f}s at {w}x{h}")
@@ -480,27 +564,26 @@ def save_metrics(metrics: dict, out_dir: Path, fps: float, drop_tc: bool) -> Pat
     n = len(metrics["frame"])
     np.savez_compressed(out_dir / "cache" / "metrics.npz", **{k: v for k, v in metrics.items()})
     path = out_dir / "metrics.csv"
+    cols = []                              # formatted a column at a time (~4x faster than cell by cell), same text
+    for c in COLUMNS:
+        if c == "timecode":
+            cols.append([frame_to_tc(i, fps, drop_tc) for i in range(n)])
+            continue
+        arr = metrics.get(c)
+        if arr is None:
+            cols.append([""] * n)
+            continue
+        if len(arr) < n:
+            raise IndexError(f"metrics column {c}: {len(arr)} values for {n} frames")
+        vals, fin = arr[:n].tolist(), np.isfinite(arr[:n]).tolist()
+        if c in INT_COLUMNS:
+            cols.append([str(int(x)) if ok else "" for x, ok in zip(vals, fin)])
+        else:
+            cols.append([f"{x:.6g}" if ok else "" for x, ok in zip(vals, fin)])
     with open(path, "w", newline="", encoding="utf-8") as f:
         wr = csv.writer(f)
         wr.writerow(COLUMNS)
-        for i in range(n):
-            row = []
-            for c in COLUMNS:
-                if c == "timecode":
-                    row.append(frame_to_tc(i, fps, drop_tc))
-                    continue
-                arr = metrics.get(c)
-                if arr is None:
-                    row.append("")
-                    continue
-                val = arr[i]
-                if c in ("frame", "dup", "rep_k", "motion_pts", "motion_src", "beat", "downbeat", "proxy_fill"):
-                    row.append("" if not np.isfinite(val) else str(int(val)))
-                elif not np.isfinite(val):
-                    row.append("")
-                else:
-                    row.append(f"{val:.6g}")
-            wr.writerow(row)
+        wr.writerows(zip(*cols))
     return path
 
 

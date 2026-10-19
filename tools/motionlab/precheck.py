@@ -187,7 +187,9 @@ def edge_energy(g: np.ndarray) -> np.ndarray:
     b = cv2.GaussianBlur(g, (3, 3), 0.8)
     gx = cv2.Sobel(b, cv2.CV_32F, 1, 0, ksize=3)
     gy = cv2.Sobel(b, cv2.CV_32F, 0, 1, ksize=3)
-    return cv2.magnitude(gx, gy) / 4.0          # Sobel's 3x3 gain: a 0->255 step reads ~255 / 4 * 2 at its edge
+    # Sobel's 3x3 gain: a 0->255 step reads ~255 / 4 * 2 at its edge; np.sqrt, not cv2.magnitude (whose last bit
+    # moves with the buffer's memory address)
+    return np.sqrt(gx * gx + gy * gy) / 4.0
 
 
 def shift_candidates(g0: np.ndarray, g1: np.ndarray, k: int = 4) -> list[tuple[float, float]]:

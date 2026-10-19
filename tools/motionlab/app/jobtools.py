@@ -11,7 +11,7 @@ date"); --dry-run prints the command and runs nothing (the tests). player-copy =
 when the browser cannot play a video (player.py). thumb-check (0.4.3) = Edit > a video > Publish > *Check*: the
 thumbnail check of every thumbnail (tools\\thumbnail.py's rules; it saves the results in package.json) - a rule that
 FAILs is a result to show, not a failed job (thumbnail.py check exits 1 then). selfcheck = known answers without network (the report's scrubbing
-and link, how yt-dlp was installed)."""
+and link, how yt-dlp was installed, What's new taken from CHANGELOG.es.md - updater.selfcheck)."""
 from __future__ import annotations
 
 import os
@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))         # tools\
 
-from motionlab.app import player, report, system  # noqa: E402
+from motionlab.app import player, report, system, updater  # noqa: E402
 from motionlab.util import setup_console  # noqa: E402
 
 WINGET_NO_UPDATE = (0x8A15002B, 0x8A15002B - (1 << 32))       # "no applicable upgrade found" (unsigned / signed)
@@ -85,7 +85,7 @@ def thumb_check(project: str, title: str | None) -> int:
 
 
 def selfcheck() -> list[str]:
-    bad = report.selfcheck()
+    bad = report.selfcheck() + updater.selfcheck()            # + What's new from CHANGELOG.es.md (0.5.1)
     with tempfile.TemporaryDirectory() as t:
         t = Path(t)
         wg = t / "AppData" / "Local" / "Microsoft" / "WinGet" / "Packages" / "yt-dlp.yt-dlp_Microsoft.Winget.Source_8w" / "yt-dlp.exe"
@@ -127,7 +127,8 @@ def main() -> int:
         return thumb_check(a[1], a[a.index("--title") + 1] if "--title" in a[:-1] else None)
     if a[0] == "selfcheck":
         bad = selfcheck()
-        print("\n".join(bad) if bad else "jobtools selfcheck: PASS (scrubbing, the issue link, yt-dlp install kinds)")
+        print("\n".join(bad) if bad else "jobtools selfcheck: PASS (scrubbing, the issue link, yt-dlp install kinds, "
+                                         "What's new in Spanish)")
         return 1 if bad else 0
     raise SystemExit(__doc__)
 

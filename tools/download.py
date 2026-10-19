@@ -192,7 +192,7 @@ def main() -> int:
     title, cmd = system.download_cmd(url, preset)
     cmd = with_fields(cmd)                                # extra fields printed after the file is in place
     folder = Path(cmd[cmd.index("-P") + 1])
-    print(title, flush=True)
+    print(getattr(title, "en", "") or title, flush=True)      # the job's log stays English (the page shows the title)
     if "--cookies-from-browser" in cmd:
         print(f"using your {cmd[cmd.index('--cookies-from-browser') + 1]} login for this download (Settings)", flush=True)
     env = dict(os.environ, PYTHONIOENCODING="utf-8")

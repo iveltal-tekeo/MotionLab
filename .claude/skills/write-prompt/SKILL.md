@@ -1,10 +1,12 @@
 ---
 name: write-prompt
-description: MotionLab - the prompt library (0.4). Save the user's proven or collected prompts (briefs that tell Claude how to make a video, video-model shots for Seedance / Higgsfield / Kling, image prompts for Nano Banana / GPT Image, hooks, talking scripts), check each part by part (clear / vague / missing + tips, 0-5 stars), optimize it from the user's wishes, and write new prompts from zero or like one that worked. Use for "/write-prompt ...", when the user pastes or uploads prompts (text, PDFs, docs), or asks for a brief, a Seedance / video / image prompt, a hook or a script.
-argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|image|hook|script> [like <id>] [- want: ...] [- style: <reference>] | shot <reference> f<a>-<b>
+description: "MotionLab - the prompt library: save prompts (briefs for Claude, Seedance / Higgsfield / Kling shots, Nano Banana / GPT Image pictures), check each part by part (clear / vague / missing, 0-5 stars), optimize one from the user's wishes, write new ones like one that worked. Use for '/write-prompt ...', pasted or uploaded prompts (text, PDFs, docs), 'a brief', 'a Seedance / video / image prompt'."
+argument-hint: "analyse <ids> | optimize <id> | import <files> | <brief|shot|image|hook|script> [like <id>] [- want: ...] [- style: <reference>] | shot <reference> f<a>-<b> | request <req-NNN>"
 ---
 
 # /write-prompt
+
+If the first message says to reply in Spanish, talk to the user in Spanish (Spain, tu); keep what you write into the lab's files in English.
 
 `$ARGUMENTS`:
 - `analyse <id> <id> ...` (old name: `split`) -> Claude's check of each prompt, part by part (section 2): what it
@@ -22,6 +24,11 @@ argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|imag
     `style` = an analysed reference to copy the style of (section 2a).
   - `... like <id> - change: <what>` (the app's *Use it, change…*): keep that prompt's structure, wording and what
     worked; change only what the user wrote; say in one line what changed.
+  - `request <req-NNN>` (the app's *Generate a new prompt* and *Use it, change…* since 2026-10-19: the user's words
+    reach you whole in a file, never through the cmd line): read it with `.venv\Scripts\python tools\script.py show
+    <req-NNN>` (the kind, what the user wants, start from <id>, what to change, for, model, style like) and work as
+    for the two lines above; save what you write with `"request": "<req-NNN>"` in the JSON import, so the app sees the
+    request is done.
 - A prompt's `tags` = what it is for (vlog, talking head, sfx, transitions, colour, ... or the user's own): copy
   examples with the same tags and model first. Videos made from a prompt keep how they turned out per part in
   `projects\<p>\build\outcome.json` (the prompt library shows it as "Used in"): repeat the parts rated good, fix bad.
@@ -29,24 +36,11 @@ argument-hint: analyse <ids> | optimize <id> | import <files> | <brief|shot|imag
 - empty -> ask what they need: a new prompt (which kind) or adding examples
 The app opens this with effort medium. Work from `C:\MotionLab` with `.venv\Scripts\python`; don't explore the lab.
 
+**Read `.claude\skills\write-prompt\writing.md` first, every time**: section 0 (the rules), section 3 (write a new
+prompt) and section 4 (a shot from a reference) live there - /generate-video reads the same file.
+
 ## 0. Rules
-- **Text only.** You never call a video model, an API or a website and never ask for a key - the user pastes the
-  prompt into the site. (Paid generation through the API is 0.7.)
-- **One home**: `knowledge\local\prompts\<kind>\<id>.json`, written only through `tools\prompts.py` (import /
-  annotate / rate). Read with the MCP tool `prompts(kind)` / `prompts(id=...)` (or `prompts.py list / show`).
-- Never invent a source or a result. Two ratings, never mixed: `result` = the user's Good / OK / Bad of what a model
-  made (the prompt library or `prompts.py rate`); `review` = YOUR reading of the text, 0-5 stars + why + fix (will a
-  model do what it asks?). The user's rating always outranks your stars. Creators' prompts stay on this PC; keep
-  their link or the file they came from (`source.file`).
-- Frames you mention: frame number + timecode, e.g. `f480 (00:00:16:00)` (hard rule 2).
-- Before writing or optimizing (sections 2b, 3, 4) read Claude's memory: `.venv\Scripts\python tools\knowledge.py
-  memory` (or MCP `knowledge(category="memory")`) - every analysed video's style in one line (rhythm, hook, captions,
-  signature effects) and the effects seen; a video the user names, or one that fits the want, beats an adjective.
-- No likeness of a real person without their consent; no logos / brands the user has no rights to.
-- **Talking scripts and hooks** (kinds `script` / `hook`) are `/write-script`'s job: its guidelines
-  (`.claude\skills\write-script\guidelines.md`: hook, structure, re-hooks, payoff, CTA) and its check
-  (`tools\script.py check`). The app sends a script's *Optimize* there. When one reaches you here (an import, a mixed
-  `analyse`), check it by those guidelines.
+In `writing.md` (read it first).
 
 ## 1. The user pastes prompts
 Save their text unchanged to a file in your scratchpad, then
@@ -58,8 +52,13 @@ prompt = nothing saved, the error names it - never change their prompt text). Th
 templates = 10 records), text copied as written (no translation - say in the review when it should be translated),
 `source` = creator (as the file names them, else "unknown") + `file`; a multi-step recipe (image prompt -> video
 prompt) gets the same `workflow` name and `step` 1, 2, ...; `notes` = how to use it (what to upload, what to fill).
-Save them as one JSON list (`prompts.py import <file>.json`) with `structure` and `review` already in it. Big PDFs
-that don't render: extract the text in a scratch venv (`pypdf`), never into the lab's `.venv`.
+Save them as one JSON list (`prompts.py import <file>.json`) with `structure` and `review` already in it.
+**The import checks your copy against the file** (2026-10-18): every line / sentence of a record's text must be in its
+`source.file`, in the file's order (punctuation, case and line breaks may differ; a page number between two is fine).
+A record that is not - translated, cleaned up, two prompts merged, a heading of yours - is refused, nothing is saved,
+and the error names the closest real passage: copy that passage, never re-word to get past it. The lab reads PDFs
+itself once setup / the Update button installed its PDF reader; until then a PDF's copy is not checked (the import
+says so) - be exact anyway. Never install anything into the lab's `.venv` yourself (a scratch venv is fine).
 
 **Reviewing (stars)**: judge whether a model will do what the text asks: 5 = one clear job, every reference has a
 role, locks first then the change, one camera move (or timed beats), the usual failures closed; 4 = solid with one
@@ -76,7 +75,18 @@ a row** (also the ones the prompt never mentions), with `status` = `clear` (a mo
 written), `vague` (said, but open to guessing or self-contradicting) or `missing` (not said and it matters for this
 prompt), and `tip` = the concrete change, one sentence (for clear parts only when something small would still
 help). `text` = the prompt's own words for that part (verbatim, in its language, shortened with ...; "" when
-missing). A part that does not apply to this prompt (no transitions in a single-shot prompt) gets no row.
+missing). A part that does not apply to this prompt (no transitions in a single-shot prompt, the length set on the
+site) goes in `"skipped": {"<part>": "why it is not part of this prompt"}` - every part is a row or skipped.
+**The tool checks your quotes** (2026-10-18, `prompts.verify_check` - annotate, a JSON import and the Analyser's text
+sets): every row's `text` must be found in THIS prompt - its whole words in its order, pieces left out with ... (in
+the prompt's order), at most 400 characters; case, accents, curly quotes and punctuation may differ, and the saved
+quote becomes the prompt's own words + where they are (`at`, the app lights them up). "missing" quotes nothing;
+"clear" / "vague" quote the prompt (a part that is fine but not said is `skipped`, not "clear" with no words); the
+part names are the kind's (below); words in double quotes inside `review.why` must be the prompt's (a new line goes in
+`fix` or a tip); a `model` the prompt does not name is left out. Refused = exit 2, nothing saved, every problem named
+with the closest real passage - fix the quote to that passage (or the status, or move the part to `skipped`), never
+re-word it to get past the check. A record checked before this has no `at`: the app says "not verified" - check it
+again.
 - **Briefs** (kind `brief` = the user tells Claude how to make / edit a whole video), in the order a video is made
   (the app groups them): *the plan* - format & length (long / short form, minutes, aspect, platform), story & hook,
   feel / style (an analysed reference beats an adjective, section 2a), footage (folders, cameras, log profiles,
@@ -85,13 +95,16 @@ missing). A part that does not apply to this prompt (no transitions in a single-
   music), music (licensed or made where), sfx; *look & text* - colour (one base LUT or per scene - never both),
   motion graphics, captions & text; *finish* - ending (outro, call to action, end screen), deliverable (Resolve
   project name, export), questions first (what Claude must ask before starting). Mark what the lab cannot do or
-  measure today as vague with the tip. Skip parts that do not apply (no music in a silent edit).
+  measure today as vague with the tip. A part that does not apply (no music in a silent edit) goes in `skipped` with
+  why.
 - Wrong kind (a brief saved as a talking script): move it first - `prompts.py kind <id> <kind>` - and say the new id.
 For each id: read it (`prompts(id=...)`), then write a JSON file and run
 `.venv\Scripts\python tools\prompts.py annotate <id> <file>`:
 ```json
 {"title": "Neon alley dolly-in", "pattern": "", "tags": ["night", "city"],
- "structure": [{"slot": "subject", "text": "a young man in a black hoodie"}, {"slot": "camera", "text": "slow dolly-in"}]}
+ "structure": [{"slot": "subject", "text": "a young man in a black hoodie", "status": "clear"},
+               {"slot": "camera", "text": "slow dolly-in", "status": "clear"}],
+ "skipped": {"audio": "the site adds no sound to this model's clips"}}
 ```
 - `structure` items: `{"slot": "colour", "text": "un mismo lut ... luts acorde a la escena", "status": "vague",
   "tip": "Pick one: one base LUT for the D-Log M clips + per-scene exposure / white balance, or a LUT per scene"}`.
@@ -135,7 +148,9 @@ on the card's *Style like*, or `- style:`) or `analysed references it may mean (
 ## 2b. Optimize (`optimize <id>`)
 No check on it yet (no part has a status): do the check of section 2 first and save it (`annotate`), so the card shows
 it, then go on here. Read the prompt (`prompts(id=...)`): its check (each part's status / tip), its `review`, the user's wishes
-("what the user wants") and its style references (section 2a - link a clear match first). Write ONE better
+("what the user wants") and its style references (section 2a - link a clear match first). The user's per-part verdicts
+(`verdicts`, the app's *Is Claude right?*): Wrong = the user disagrees with your check of that part, keep their words
+unless the note says otherwise; Partly = follow the note; Correct = your check stands. Write ONE better
 version: the user's wishes win over your tips; every vague / missing part gets fixed (wish, else your tip; when neither and it matters, ask once - or pick a sensible default
 and say so); keep their language, voice and every good part word for word. A brief is written in clear sections, one
 per part (short headings), so the Claude that runs it cannot misread it; drop asks the lab cannot do (say so).
@@ -149,31 +164,10 @@ site) and to rate what it made.
   say so) - then annotate the new id.
 
 ## 3. Write a new prompt
-1. What they need - ask only for what is missing, in one message: brief = the footage (project folder, cameras),
-   long / short form and length, the feel (an analysed reference - `- style:` or one it names, section 2a - else
-   a link to analyse first), where it ends up (Resolve project name); shot = subject / story, model, length and aspect; hook = topic, audience, platform; script =
-   topic, audience, length. A brief from zero: write every part of section 2's brief list, in sections.
-2. Examples: `prompts(kind)` - best first (the user's good ratings, then your stars). Pick 1-2 and say so:
-   "built on shot-003's structure, camera wording from shot-007". With `like <id>` start from that one, and apply its
-   review's `fix`. Fewer than 3 examples of the kind: say the structure is thin and suggest adding tested prompts.
-   A workflow step (e.g. image prompt -> video prompt) means writing the whole recipe, every step in order.
-3. Write **3 variants** that keep the example's slot order, length and way of writing (comma list vs sentences,
-   tense, how the camera is named) and change the content to the user's need. Each in its own code block (easy to
-   copy) with one line of slots under it.
-   - Shots: one shot per prompt, one camera move (or timed beats with seconds); lock what stays before describing
-     the change; length / aspect the model offers (check the site's options). Images: references + locks first.
-   - Hooks and scripts: follow `/write-script` (its guidelines.md and `tools\script.py check`).
-4. Save them: a JSON list -> `prompts.py import <file>.json`, each with `"source": {"type": "written"}`,
-   `"made_from": [example ids]`, kind, title, model, structure, review (your stars for your own text, honestly).
-   Tell the user the new ids and: paste one into the
-   site, then rate it in the prompt library (Good / OK / Bad + a note) - good ones become the first examples.
+In `writing.md` (read it first).
 
 ## 4. A shot from a reference (`shot <reference> f<a>-<b>`)
-Fill the slots from the analysis instead of guessing: `frame_info` / `events(reference, start=a, end=b)` (camera
-moves with easing words, cuts inside the range), `frames(reference, "a-b:step")` to look at it (light, colours,
-lens, framing), the size and fps for aspect and length ((b-a+1) / fps seconds, rounded up to what the model
-offers - the edit trims it). The subject comes from the user's story, not the reference's people. Name the range as
-`f<a>-<b> (<tc a> - <tc b>)`. Image-to-video: suggest a start frame from the user's own footage so the look matches.
+In `writing.md` (read it first).
 
 ## 5. Hooks from talking videos (until 0.4 step 2 automates it)
 When the user names an analysed talking reference: `transcript(reference, 0, <3 s in frames>)` = its hook. Offer to

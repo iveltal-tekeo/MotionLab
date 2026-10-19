@@ -39,6 +39,8 @@ import threading
 import time
 from pathlib import Path
 
+from . import i18n as I18N
+from .script import ENGLISH, as_g
 from .timecode import frame_to_tc
 from .util import LAB, read_json
 
@@ -67,7 +69,7 @@ def project_dir(project: str | Path) -> Path:
         raise ValueError(f"not a video folder name: {project!r}")
     d = PROJECTS / name
     if not d.is_dir():
-        raise ValueError(f"no video called {name!r} in projects")
+        raise ValueError(I18N.t("no video called {name} in projects", name=repr(name)))
     return d
 
 
@@ -253,8 +255,9 @@ def _speech_file(project: str | Path) -> tuple[Path | None, str]:
         if renders.match(p.name):
             return p, ""
     if files:
-        return files[0], (f"{files[0].name} is the words of a clip, not of the final video - its times may not "
-                          "match the edit; transcribe the final render (speech.py transcribe <render>) for exact ones")
+        return files[0], I18N.t("{file} is the words of a clip, not of the final video - its times may not match the "
+                                "edit; transcribe the final render (speech.py transcribe <render>) for exact ones",
+                                file=files[0].name)
     return None, ""
 
 
@@ -270,9 +273,10 @@ def chapter_points(project: str | Path, source: str = "plan", speech: str | Path
         if not plan_p:
             raise ValueError("no edit plan yet (build\\plan_vN.json) - make the edit first, or use --from transcript")
         pts, src = plan_points(plan), plan_p.name
-        for p in pts:
-            p["hint"] = ("starts: " + ", ".join(str(x) for x in p.pop("starts") if x)) + (
-                f" | text on screen: {p['text']}" if p.get("text") else "")
+        for p in pts:                                    # hints / warnings: the page's words (the CLI's are English)
+            starts = ", ".join(str(x) for x in p.pop("starts") if x)
+            p["hint"] = I18N.t("starts: {layers} | text on screen: {text}", layers=starts, text=p["text"]) \
+                if p.get("text") else I18N.t("starts: {layers}", layers=starts)
             p.pop("text", None)
     elif source == "transcript":
         sp, w = (Path(speech), "") if speech else _speech_file(project)
@@ -283,12 +287,14 @@ def chapter_points(project: str | Path, source: str = "plan", speech: str | Path
         T = read_json(sp)
         if not fps:
             fps = 30.0
-            warn.append("no edit plan: frames counted at 30 fps")
+            warn.append(I18N.t("no edit plan: frames counted at 30 fps"))
         if not frames:
             frames = int(round(float(T.get("audio_s") or 0) * fps))
         pts, src = transcript_points(T.get("lines") or [], fps), sp.name
         for p in pts:
-            p["hint"] = f"says: {p.pop('text')}" + (f" | pause {p['pause_s']:g} s before" if p.get("pause_s") else "")
+            said = p.pop("text")
+            p["hint"] = I18N.t("says: {text} | pause {s} s before", text=said, s=I18N.num(as_g(p["pause_s"]))) \
+                if p.get("pause_s") else I18N.t("says: {text}", text=said)
     else:
         raise ValueError("--from plan or --from transcript")
     total = frames / fps if frames else 0
@@ -318,29 +324,35 @@ def parse_chapters(text: str) -> list[tuple[int, str]]:
     return out
 
 
-def check_chapters(chs: list[tuple[int, str]], fps: float, frames: int = 0) -> list[dict]:
+def check_chapters(chs: list[tuple[int, str]], fps: float, frames: int = 0, I18N=I18N) -> list[dict]:
     """YouTube's chapter rules on the whole seconds it reads: the first at 0:00, at least 3, ascending, each >= 10 s
-    (the last up to the end when the length is known), every one named."""
+    (the last up to the end when the length is known), every one named. The words in the app's language (the page);
+    I18N=ENGLISH = in English (package.json keeps them so - every check_* below likewise)."""
     if not chs:
         return []
     out, secs = [], [yt_seconds(f, fps) for f, _ in chs]
-    out.append(_c("chapters", "the first at 0:00", "PASS" if secs[0] == 0 else "FAIL",
-                  "starts at 0:00" if secs[0] == 0 else f"the first is at {yt_time(secs[0])} - YouTube needs 0:00"))
-    out.append(_c("chapters", f"at least {CHAPTERS_MIN}", "PASS" if len(chs) >= CHAPTERS_MIN else "FAIL",
-                  f"{len(chs)} chapter{'s' if len(chs) != 1 else ''}"))
+    part = I18N.t("chapters")
+    out.append(_c(part, I18N.t("the first at 0:00"), "PASS" if secs[0] == 0 else "FAIL",
+                  I18N.t("starts at 0:00") if secs[0] == 0 else
+                  I18N.t("the first is at {time} - YouTube needs 0:00", time=yt_time(secs[0]))))
+    out.append(_c(part, I18N.t("at least {n}", n=CHAPTERS_MIN), "PASS" if len(chs) >= CHAPTERS_MIN else "FAIL",
+                  I18N.tn(len(chs), "{n} chapter", "{n} chapters")))
     if any(b <= a for a, b in zip([f for f, _ in chs], [f for f, _ in chs][1:])):
-        out.append(_c("chapters", "in order", "FAIL", "the frames must go up, one chapter after another"))
+        out.append(_c(part, I18N.t("in order"), "FAIL", I18N.t("the frames must go up, one chapter after another")))
     total = int(math.floor(frames / fps + 1e-9)) if frames else None
     ends = secs[1:] + ([total] if total is not None else [])
     short = [(chs[i][1] or f"#{i + 1}", e - secs[i]) for i, e in enumerate(ends) if e - secs[i] < CHAPTER_MIN_S]
-    out.append(_c("chapters", f"each at least {CHAPTER_MIN_S} s", "FAIL" if short else "PASS",
-                  "; ".join(f"'{n}' is {d} s" for n, d in short) if short else
-                  f"the shortest is {min(e - s for s, e in zip(secs, ends))} s" if ends else "-"))
+    out.append(_c(part, I18N.t("each at least {n} s", n=CHAPTER_MIN_S), "FAIL" if short else "PASS",
+                  "; ".join(I18N.t("'{name}' is {n} s", name=nm, n=d) for nm, d in short) if short else
+                  I18N.t("the shortest is {n} s", n=min(e - s for s, e in zip(secs, ends))) if ends else "-"))
     if frames and chs[-1][0] >= frames:
-        out.append(_c("chapters", "inside the video", "FAIL", f"f{chs[-1][0]} is past the end (f{frames - 1})"))
+        out.append(_c(part, I18N.t("inside the video"), "FAIL",
+                      I18N.t("f{frame} is past the end (f{last})", frame=chs[-1][0], last=frames - 1)))
     unnamed = [i + 1 for i, (_, n) in enumerate(chs) if not n]
     if unnamed:
-        out.append(_c("chapters", "every chapter named", "FAIL", f"chapter {', '.join(map(str, unnamed))} has no name"))
+        out.append(_c(part, I18N.t("every chapter named"), "FAIL",
+                      I18N.tn(len(unnamed), "chapter {list} has no name", "chapter {list} has no name",
+                              list=", ".join(map(str, unnamed)))))
     return out
 
 
@@ -358,48 +370,68 @@ def parse_hashtags(text: str) -> list[str]:
     return out
 
 
-def check_hashtags(tags: list[str], title: str = "") -> list[dict]:
+def check_hashtags(tags: list[str], title: str = "", I18N=I18N) -> list[dict]:
     out = []
+    part = I18N.t("hashtags")
     if not tags:
-        return [_c("hashtags", "some hashtags", "WARN", "none - 3-5 relevant ones help people find it (rule of thumb)")]
+        return [_c(part, I18N.t("some hashtags"), "WARN",
+                   I18N.t("none - 3-5 relevant ones help people find it (rule of thumb)"))]
     n = len(tags)
-    out.append(_c("hashtags", f"at most {HASHTAGS_IGNORED_OVER} (YouTube ignores all of them above)",
-                  "FAIL" if n > HASHTAGS_IGNORED_OVER else "PASS", f"{n} hashtag{'s' if n != 1 else ''}"))
+    out.append(_c(part, I18N.t("at most {n} (YouTube ignores all of them above)", n=HASHTAGS_IGNORED_OVER),
+                  "FAIL" if n > HASHTAGS_IGNORED_OVER else "PASS", I18N.tn(n, "{n} hashtag", "{n} hashtags")))
     if 5 < n <= HASHTAGS_IGNORED_OVER:
-        out.append(_c("hashtags", "3-5 relevant ones (rule of thumb)", "WARN", f"{n} - more dilutes them"))
+        out.append(_c(part, I18N.t("3-5 relevant ones (rule of thumb)"), "WARN", I18N.t("{n} - more dilutes them", n=n)))
     broken = [t for t in tags if not _TAG_OK.fullmatch(t)]
     if broken:
-        out.append(_c("hashtags", "letters, digits and _ only", "WARN",
-                      ", ".join(broken) + " - a hashtag stops at the first other character"))
+        out.append(_c(part, I18N.t("letters, digits and _ only"), "WARN",
+                      I18N.t("{tags} - a hashtag stops at the first other character", tags=", ".join(broken))))
     shown = tags[:HASHTAGS_SHOWN]
-    out.append(_c("hashtags", f"the {HASHTAGS_SHOWN} shown by the title", "PASS",
-                  " ".join(shown) + " (the first ones in the description; put the best first)"))
+    out.append(_c(part, I18N.t("the {n} shown by the title", n=HASHTAGS_SHOWN), "PASS",
+                  I18N.t("{tags} (the first ones in the description; put the best first)", tags=" ".join(shown))))
     if "#" in (title or ""):
-        out.append(_c("hashtags", "no hashtags in the title (rule of thumb)", "WARN",
-                      "they take characters a phone shows of the title"))
+        out.append(_c(part, I18N.t("no hashtags in the title (rule of thumb)"), "WARN",
+                      I18N.t("they take characters a phone shows of the title")))
     return out
 
 
-def check_title(title: str) -> list[dict]:
+def check_title(title: str, I18N=I18N) -> list[dict]:
     t = " ".join(str(title or "").split())
-    out = [_c("title", f"at most {TITLE_MAX} characters", "PASS" if 0 < len(t) <= TITLE_MAX else "FAIL",
-              f"{len(t)} characters" if t else "no title")]
+    part = I18N.t("title")
+    out = [_c(part, I18N.t("at most {n} characters", n=TITLE_MAX), "PASS" if 0 < len(t) <= TITLE_MAX else "FAIL",
+              I18N.tn(len(t), "{n} characters", "{n} characters") if t else I18N.t("no title"))]
     if t and len(t) > TITLE_PHONE:
-        out.append(_c("title", f"about {TITLE_PHONE} characters on a phone (rule of thumb)", "WARN",
-                      f"{len(t)} - a phone may cut it after “{t[:TITLE_PHONE].rstrip()}…”: the key words go first"))
+        out.append(_c(part, I18N.t("about {n} characters on a phone (rule of thumb)", n=TITLE_PHONE), "WARN",
+                      I18N.t("{n} - a phone may cut it after “{start}…”: the key words go first", n=len(t),
+                             start=t[:TITLE_PHONE].rstrip())))
     elif t:
-        out.append(_c("title", f"about {TITLE_PHONE} characters on a phone (rule of thumb)", "PASS", f"{len(t)} characters"))
+        out.append(_c(part, I18N.t("about {n} characters on a phone (rule of thumb)", n=TITLE_PHONE), "PASS",
+                      I18N.tn(len(t), "{n} characters", "{n} characters")))
     if re.search(r"[<>]", t):
-        out.append(_c("title", "no < or >", "FAIL", "YouTube Studio refuses < and > in a title"))
+        out.append(_c(part, I18N.t("no < or >"), "FAIL", I18N.t("YouTube Studio refuses < and > in a title")))
     return out
 
 
-def check_description(text: str) -> list[dict]:
-    out = [_c("description", f"at most {DESCRIPTION_MAX} characters", "PASS" if len(text) <= DESCRIPTION_MAX else "FAIL",
-              f"{len(text)} characters")]
+def check_description(text: str, I18N=I18N) -> list[dict]:
+    part = I18N.t("description")
+    out = [_c(part, I18N.t("at most {n} characters", n=DESCRIPTION_MAX),
+              "PASS" if len(text) <= DESCRIPTION_MAX else "FAIL", I18N.tn(len(text), "{n} characters", "{n} characters"))]
     if re.search(r"[<>]", text):
-        out.append(_c("description", "no < or >", "FAIL", "YouTube Studio refuses < and > in a description"))
+        out.append(_c(part, I18N.t("no < or >"), "FAIL", I18N.t("YouTube Studio refuses < and > in a description")))
     return out
+
+
+def page_checks(pkg: dict) -> list[dict]:
+    """package.json's description checks for the page, in the app's language: the same checks again on what the file
+    holds (title, description, chapters, hashtags - write()'s inputs, so the same statuses); in English the stored
+    ones as they are (package.json keeps English - Claude reads it)."""
+    d = pkg.get("description") or {}
+    if not d.get("checks") or I18N.lang() == "en":
+        return d.get("checks") or []
+    ch, title = pkg.get("chapters") or {}, pkg.get("title") or ""
+    chs = [(int(c["f"]), str(c.get("name") or "")) for c in ch.get("items") or []]
+    return (check_title(title) + check_description(d.get("text") or "")
+            + check_chapters(chs, float(ch.get("fps") or 30), int(ch.get("frames") or 0))
+            + check_hashtags((pkg.get("hashtags") or {}).get("items") or [], title))
 
 
 def description_text(body: str, chapters: list[dict], hashtags: list[str]) -> str:
@@ -485,7 +517,7 @@ def write(project: str | Path, title: str, chapters: str | list | None = None, h
     text = description_text(body, items, tags)
 
     checks = check_title(title) + check_description(text) + check_chapters(chs, fps, frames) + check_hashtags(tags, title)
-    ok = not any(c["status"] == "FAIL" for c in checks)
+    ok = not any(c["status"] == "FAIL" for c in checks)          # the page's words (the app's language)
     res = {"ok": ok, "checks": checks, "files": [], "description": text}
     if not ok:
         return res
@@ -499,10 +531,14 @@ def write(project: str | Path, title: str, chapters: str | list | None = None, h
     if title and not any(t["chosen"] for t in titles):
         titles.append({"text": title, "pattern": "", "chars": len(title), "from": "", "chosen": True})
     now = _dt.datetime.now().isoformat(timespec="seconds")
+    # package.json keeps the checks in English - Claude reads them (the user 2026-10-18: "Claude's stored knowledge
+    # stays English"); the same rules, so the same statuses
+    stored = (check_title(title, ENGLISH) + check_description(text, ENGLISH) + check_chapters(chs, fps, frames, ENGLISH)
+              + check_hashtags(tags, title, ENGLISH))
     out_dir.mkdir(parents=True, exist_ok=True)
     changes = {"title": title, "titles": titles,
                "description": {"text": text, "body": body, "chars": len(text), "file": "description.txt",
-                               "checks": checks, "updated": now},
+                               "checks": stored, "updated": now},
                "chapters": {"fps": fps, "frames": frames, "from": (plan_p.name if plan_p else ""), "items": items},
                "hashtags": {"items": tags, "shown": tags[:HASHTAGS_SHOWN], "line": " ".join(tags)}}
     for name, t in (("title.txt", title + "\n"), ("description.txt", text), ("hashtags.txt", " ".join(tags) + "\n")):

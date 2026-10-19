@@ -12,7 +12,9 @@ questions -> `/write-script request`).
 - Requests = what the app's two dialogs saved: knowledge\\local\\prompts\\requests\\req-NNN.json (private, next to
   the prompt library where the scripts themselves live: kind `script` / `hook`). A script written from a request
   carries `"request": "req-NNN"` (prompts.add). Since 0.4.3 a third kind: `"kind": "title"` = *Title & thumbnail
-  first* (`save_title`, for `/write-title request`); the record made from it is a prompt of kind `title`.
+  first* (`save_title`, for `/write-title request`); the record made from it is a prompt of kind `title`. Since
+  2026-10-19 a fourth: `"kind": "prompt"` = the prompt library's *Generate a new prompt* / *Use it, change…*
+  (`save_prompt`, for `/write-prompt request`), so the user's words never pass through cmd.
 
 A script has no video yet, so its times are estimates in seconds; once it is filmed, timestamps follow the lab's
 frame + timecode rule.
@@ -23,9 +25,18 @@ import datetime as _dt
 import re
 import threading
 import time
+import types
 
+from . import i18n as I18N
 from . import prompts as PR
 from .util import ANALYSIS, read_json, safe_name, write_json
+
+# i18n's t / tn / num, always in English: for words that are STORED (a text set's facts in set.json, package.json's
+# checks - "Claude's stored knowledge stays English", the user 2026-10-18). check(..., I18N=ENGLISH) builds them; the
+# default I18N = the app's language (Settings > Language), for the page
+ENGLISH = types.SimpleNamespace(t=lambda en, **v: I18N.text({}, en, v),
+                                tn=lambda n, one, other, **v: I18N.count({}, "en", n, one, other, v),
+                                num=lambda v, lg=None: I18N.num(v, "en"))
 
 REQUESTS = PR.HOME / "requests"
 WPM = 150                       # speaking rate when no analysed video says otherwise: ~2.5 spoken words a second
@@ -218,16 +229,36 @@ def talk_rate(like: list[str]) -> dict | None:
     if hit and time.time() - hit[0] < 60:
         return hit[1]
     from . import style as ST                            # numpy and the cards: only when references are picked
+    found = {n: ST.find(n) or {} for n in key}
     # sung lyrics are no speaking rate: music videos are left out (the 4AM video: 177 "words/min" of lyrics)
-    talk = [n for n in key if (ST.find(n) or {}).get("category") != "music_video"]
+    talk = [n for n in key if found[n].get("category") != "music_video"]
     try:
         t = (ST.build(like=talk) or {}).get("talk") or {} if talk else {}
     except (ValueError, OSError):
         t = {}
     wpm = t.get("words_per_min")
-    out = {"wpm": wpm, "hook_words": t.get("hook_words"), "videos": len(talk)} if wpm and wpm >= 60 else None
+    friends: dict = {}                                    # 2026-10-18: whose videos the rate was measured on
+    for n in talk:
+        if found[n].get("origin") == "shared":
+            a = found[n].get("author") or "a friend"
+            friends[a] = friends.get(a, 0) + 1
+    out = {"wpm": wpm, "hook_words": t.get("hook_words"), "videos": len(talk),
+           "mine": len(talk) - sum(friends.values()), "friends": friends} if wpm and wpm >= 60 else None
     _TALK_CACHE[key] = (time.time(), out)
     return out
+
+
+def _measured_on(tr: dict, I18N=I18N) -> str:
+    """"measured on 1 of your videos and 1 of tekeo's" - the videos a speaking rate came from, whose they are."""
+    n = tr.get("mine", tr.get("videos", 0))
+    parts = [I18N.t("{n} of your analysed videos", n=n)] if n else []   # "1 of your videos", "2 of your videos"
+    parts += [I18N.t("{n} of {name}'s", n=k, name=a) for a, k in (tr.get("friends") or {}).items()]
+    if not parts:
+        return I18N.t("measured on {n} analysed videos", n=tr.get("videos", 0))
+    said = parts[0]
+    for p in parts[1:]:
+        said = I18N.t("{a} and {b}", a=said, b=p)
+    return I18N.t("measured on {videos}", videos=said)
 
 
 def _snip(s: str, n: int = 8) -> str:
@@ -235,19 +266,29 @@ def _snip(s: str, n: int = 8) -> str:
     return " ".join(w[:n]) + ("…" if len(w) > n else "")
 
 
-def check(text: str, length_s: float | None = None, like: list[str] | None = None, wpm: float | None = None) -> dict:
+def as_g(x: float):
+    """x as f"{x:g}" writes it, as a number i18n.num writes in the language (12.0 -> 12, 4.5 -> 4.5 / 4,5)."""
+    v = float(f"{x:g}")
+    return int(v) if v.is_integer() else v
+
+
+def check(text: str, length_s: float | None = None, like: list[str] | None = None, wpm: float | None = None, *,
+          I18N=I18N) -> dict:
     """The script check. length_s = the length the user wants (none: no length check, just the estimate); like =
-    analysed videos whose MEASURED speaking rate replaces the rule of thumb; wpm = a rate given directly."""
+    analysed videos whose MEASURED speaking rate replaces the rule of thumb; wpm = a rate given directly. The words
+    (labels, details, rate_from) are in the app's language - Prepare checks while you type; I18N=ENGLISH = in English
+    (a text set stores the check in its facts)."""
     say, cues = spoken(text)
     words = _words(say)
     n = len(words)
-    rate_from = "rule of thumb"
+    num = I18N.num
+    rate_from = I18N.t("rule of thumb")
     if not wpm:
         tr = talk_rate(like or [])
         if tr:
-            wpm, rate_from = tr["wpm"], f"measured on {tr['videos']} of your analysed video{'s' if tr['videos'] > 1 else ''}"
+            wpm, rate_from = tr["wpm"], _measured_on(tr, I18N)
         elif like:
-            rate_from = "rule of thumb - the videos you picked have too little talking to measure"
+            rate_from = I18N.t("rule of thumb - the videos you picked have too little talking to measure")
     wpm = float(wpm or WPM)
     wps = wpm / 60.0
     secs = round(n / wps, 1) if n else 0.0
@@ -274,30 +315,41 @@ def check(text: str, length_s: float | None = None, like: list[str] | None = Non
     pattern = next((p for p, rx in _PATTERNS if re.search(rx, first, re.I)), "")
     out["hook"] = {"text": first, "words": lens[0], "first_3s": first3, "pattern": pattern,
                    "opener": opener.group(0).strip(" ,.") if opener else ""}
+    hook = I18N.t("Hook in the first 3 s")
     if opener:
-        add("hook", "Hook in the first 3 s", "bad", f"It opens with “{out['hook']['opener']}” - the first 3 s decide if "
-            "people stay: open with your most interesting line, greet later or never.")
+        add("hook", hook, "bad", I18N.t("It opens with “{opener}” - the first 3 s decide if people stay: open with your "
+                                        "most interesting line, greet later or never.", opener=out["hook"]["opener"]))
     elif lens[0] > 22:
-        add("hook", "Hook in the first 3 s", "bad", f"The first sentence is {lens[0]} words (≈ {lens[0] / wps:.0f} s): "
-            f"in 3 s they hear only “{_snip(first3, 12)}”. Say the hook in 7-12 words.")
+        add("hook", hook, "bad", I18N.t("The first sentence is {n} words (≈ {s} s): in 3 s they hear only “{heard}”. Say "
+                                        "the hook in 7-12 words.", n=lens[0], s=round(lens[0] / wps),
+                                        heard=_snip(first3, 12)))
     elif lens[0] > 15:
-        add("hook", "Hook in the first 3 s", "warn", f"{lens[0]} words in the first sentence - a bit long for 3 s "
-            f"(≈ {n3} words fit). They hear “{_snip(first3, 12)}”.")
+        add("hook", hook, "warn", I18N.t("{n} words in the first sentence - a bit long for 3 s (≈ {fit} words fit). They "
+                                         "hear “{heard}”.", n=lens[0], fit=n3, heard=_snip(first3, 12)))
     else:
-        add("hook", "Hook in the first 3 s", "ok", f"“{_snip(first, 12)}” - {lens[0]} words, ≈ {lens[0] / wps:.1f} s.")
-    add("pattern", "A known hook pattern", "ok" if pattern else "warn",
-        f"A {pattern} hook." if pattern else "No question, number, bold claim, story, call-out or contrarian line in "
-        "the first sentence - give them a reason to wait for the next one.")
+        add("hook", hook, "ok", I18N.tn(lens[0], "“{first}” - {n} words, ≈ {s} s.", "“{first}” - {n} words, ≈ {s} s.",
+                                        first=_snip(first, 12), s=num(round(lens[0] / wps, 1))))
+    add("pattern", I18N.t("A known hook pattern"), "ok" if pattern else "warn",
+        I18N.t("A {pattern} hook.", pattern=I18N.t(pattern)) if pattern else
+        I18N.t("No question, number, bold claim, story, call-out or contrarian line in the first sentence - give them "
+               "a reason to wait for the next one."))
 
     # 3. length
+    rate = {"secs": num(as_g(secs)), "wpm": round(wpm), "rate": rate_from}
     if length_s:
         diff = (secs - length_s) / length_s
         st = "ok" if abs(diff) <= 0.15 else "warn" if abs(diff) <= 0.3 else "bad"
-        add("length", "Length", st, f"≈ {secs:g} s at {round(wpm)} words/min ({rate_from}) for {length_s:g} s wanted"
-            + ("" if st == "ok" else f" - {'cut' if diff > 0 else 'add'} ≈ {abs(round(n - length_s * wps))} words."))
+        want, k = num(as_g(length_s)), abs(round(n - length_s * wps))
+        add("length", I18N.t("Length"), st,
+            I18N.t("≈ {secs} s at {wpm} words/min ({rate}) for {want} s wanted", want=want, **rate) if st == "ok" else
+            I18N.t("≈ {secs} s at {wpm} words/min ({rate}) for {want} s wanted - cut ≈ {k} words.", want=want, k=k,
+                   **rate) if diff > 0 else
+            I18N.t("≈ {secs} s at {wpm} words/min ({rate}) for {want} s wanted - add ≈ {k} words.", want=want, k=k,
+                   **rate))
     else:
-        add("length", "Length", "ok", f"≈ {secs:g} s at {round(wpm)} words/min ({rate_from}) - "
-            f"{'a short (TikTok, Reels, Shorts)' if secs <= SHORT_MAX_S else 'long form'}.")
+        add("length", I18N.t("Length"), "ok",
+            I18N.t("≈ {secs} s at {wpm} words/min ({rate}) - a short (TikTok, Reels, Shorts).", **rate)
+            if secs <= SHORT_MAX_S else I18N.t("≈ {secs} s at {wpm} words/min ({rate}) - long form.", **rate))
 
     # 4. short spoken sentences
     avg = sum(lens) / len(lens)
@@ -305,8 +357,11 @@ def check(text: str, length_s: float | None = None, like: list[str] | None = Non
     out["sentences"] = {"count": len(sents), "avg_words": round(avg, 1), "longest": lens[longest],
                         "longest_text": _snip(sents[longest])}
     st = "ok" if avg <= 16 and lens[longest] <= 30 else "bad" if avg > 20 or lens[longest] > 40 else "warn"
-    add("sentences", "Short, spoken sentences", st, f"{avg:.0f} words a sentence on average; the longest "
-        f"({lens[longest]} words) starts “{_snip(sents[longest], 6)}”" + ("." if st == "ok" else " - split it: one idea a sentence."))
+    sv = {"avg": round(avg), "n": lens[longest], "start": _snip(sents[longest], 6)}
+    add("sentences", I18N.t("Short, spoken sentences"), st,
+        I18N.t("{avg} words a sentence on average; the longest ({n} words) starts “{start}”.", **sv) if st == "ok" else
+        I18N.t("{avg} words a sentence on average; the longest ({n} words) starts “{start}” - split it: one idea a "
+               "sentence.", **sv))
 
     # 5. fillers
     joined = " " + " ".join(low) + " "
@@ -318,8 +373,10 @@ def check(text: str, length_s: float | None = None, like: list[str] | None = Non
                 fl.append({"w": f, "n": k})
     out["fillers"] = fl
     nf = sum(x["n"] for x in fl) * 150 / max(n, 150)      # per 150 words (a minute of talking)
-    add("fillers", "No filler words", "ok" if nf <= 1 else "warn" if nf <= 3 else "bad",
-        "None." if not fl else ", ".join(f"“{x['w']}” ×{x['n']}" for x in fl) + " - cut them: every word has to earn its second.")
+    add("fillers", I18N.t("No filler words"), "ok" if nf <= 1 else "warn" if nf <= 3 else "bad",
+        I18N.t("None.|fillers") if not fl else
+        I18N.t("{fillers} - cut them: every word has to earn its second.",
+               fillers=", ".join(f"“{x['w']}” ×{x['n']}" for x in fl)))
 
     # 6. something new every few seconds (short) / every minute (long): turns, questions, numbers, list steps
     marks, pos = [], 0
@@ -335,57 +392,72 @@ def check(text: str, length_s: float | None = None, like: list[str] | None = Non
     start = " ".join(toks[at:at + 6])
     out["flat"] = {"seconds": flat_s, "start": start, "turns": len(marks)}
     st = "ok" if flat_s <= ok_s else "warn" if flat_s <= warn_s else "bad"
-    add("rehooks", "Something new every few seconds" if out["format"] == "short" else "A re-hook every minute", st,
-        f"{len(marks)} turns, questions or numbers after the hook; the longest stretch without one is ≈ {flat_s:g} s"
-        + (f", from “{start}…”" if st != "ok" and start else "")
-        + ("." if st == "ok" else f" - add a turn (but / here's the thing), a question or a number every ≈ {ok_s} s."))
+    fv = {"s": num(as_g(flat_s)), "start": start, "every": ok_s}
+    add("rehooks", I18N.t("Something new every few seconds") if out["format"] == "short" else
+        I18N.t("A re-hook every minute"), st,
+        I18N.tn(len(marks), "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s.",
+                "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s.", **fv)
+        if st == "ok" else
+        I18N.tn(len(marks), "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s, "
+                            "from “{start}…” - add a turn (but / here's the thing), a question or a number every ≈ "
+                            "{every} s.",
+                "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s, from "
+                "“{start}…” - add a turn (but / here's the thing), a question or a number every ≈ {every} s.", **fv)
+        if start else
+        I18N.tn(len(marks), "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s "
+                            "- add a turn (but / here's the thing), a question or a number every ≈ {every} s.",
+                "{n} turns, questions or numbers after the hook; the longest stretch without one is ≈ {s} s - add a "
+                "turn (but / here's the thing), a question or a number every ≈ {every} s.", **fv))
 
     # 7. talks to the viewer
     you = sum(w in _YOU[lg] for w in low for lg in L)
     me = sum(w in _I[lg] for w in low for lg in L)
     out["you"], out["i"] = you, me
-    add("you", "Talks to the viewer", "ok" if you >= max(1, me // 3) else "warn",
-        f"“you” ×{you}, “I” ×{me}" + ("." if you >= max(1, me // 3) else
-                                       " - make it about them: what THEY get, feel or should do."))
+    add("you", I18N.t("Talks to the viewer"), "ok" if you >= max(1, me // 3) else "warn",
+        I18N.t("“you” ×{you}, “I” ×{me}.", you=you, me=me) if you >= max(1, me // 3) else
+        I18N.t("“you” ×{you}, “I” ×{me} - make it about them: what THEY get, feel or should do.", you=you, me=me))
 
     # 8. concrete details
     nums = sum(1 for w in low if w.isdigit() or w in _NUMWORDS)
     out["numbers"] = nums
     want = max(1, round(secs / 30))
-    add("specifics", "Concrete details", "ok" if nums >= want else "warn",
-        f"{nums} number{'s' if nums != 1 else ''}" + ("." if nums >= want else
-                                                     " - a number, a name, a price or a time frame makes it believable (one every ≈ 30 s)."))
+    add("specifics", I18N.t("Concrete details"), "ok" if nums >= want else "warn",
+        I18N.tn(nums, "{n} number.", "{n} numbers.") if nums >= want else
+        I18N.tn(nums, "{n} number - a number, a name, a price or a time frame makes it believable (one every ≈ 30 s).",
+                "{n} numbers - a number, a name, a price or a time frame makes it believable (one every ≈ 30 s)."))
 
     # 9. one call to action, near the end
     ctas = [(m.start() / max(1, len(say)), m.group(0)) for m in _CTA.finditer(say)]
     out["cta"] = [{"text": t, "at": round(a, 2)} for a, t in ctas]
     kinds = {t.lower().split()[0] for _, t in ctas}
     late = [t for a, t in ctas if a >= 0.75]
+    one_cta = I18N.t("One call to action at the end")
     if not ctas:
-        add("cta", "One call to action at the end", "warn", "No ask - end with ONE specific action and a reason "
-            "(“comment GUIDE and I'll send it”, “follow for part 2”).")
+        add("cta", one_cta, "warn", I18N.t("No ask - end with ONE specific action and a reason (“comment GUIDE and I'll "
+                                           "send it”, “follow for part 2”)."))
     elif len(kinds) > 2:
-        add("cta", "One call to action at the end", "warn", f"{len(kinds)} different asks ({', '.join(sorted(kinds))}) - "
-            "one ask works better than three.")
+        add("cta", one_cta, "warn", I18N.t("{n} different asks ({asks}) - one ask works better than three.",
+                                           n=len(kinds), asks=", ".join(sorted(kinds))))
     elif not late:
-        add("cta", "One call to action at the end", "warn", f"“{ctas[0][1]}” comes early - an ask before the value costs "
-            "viewers; move it to the last seconds.")
+        add("cta", one_cta, "warn", I18N.t("“{ask}” comes early - an ask before the value costs viewers; move it to the "
+                                           "last seconds.", ask=ctas[0][1]))
     else:
         line = next((s for s in reversed(sents) if _CTA.search(s)), late[-1])
-        add("cta", "One call to action at the end", "ok", f"“{_snip(line, 10)}” in the last seconds.")
+        add("cta", one_cta, "ok", I18N.t("“{line}” in the last seconds.", line=_snip(line, 10)))
 
     # 10. the last line
     last = sents[-1]
     weak = _WEAK_END.search(last)
     out["ending"] = {"text": last, "weak": weak.group(0) if weak else ""}
-    add("ending", "A strong last line", "warn" if weak else "ok",
-        f"Ends on “{weak.group(0)}” - end on the payoff or the ask (or a line that loops back to the first one)."
-        if weak else f"“{_snip(last, 10)}”")
+    add("ending", I18N.t("A strong last line"), "warn" if weak else "ok",
+        I18N.t("Ends on “{end}” - end on the payoff or the ask (or a line that loops back to the first one).",
+               end=weak.group(0)) if weak else f"“{_snip(last, 10)}”")
 
     # 11. what is on screen
-    add("cues", "What is on screen", "ok" if cues else "warn",
-        f"{cues} note{'s' if cues != 1 else ''} for the camera / the edit." if cues else
-        "No notes like [TEXT: ...] or [B-ROLL: ...] - say what is on screen while you talk, or the edit has to guess.")
+    add("cues", I18N.t("What is on screen"), "ok" if cues else "warn",
+        I18N.tn(cues, "{n} note for the camera / the edit.", "{n} notes for the camera / the edit.") if cues else
+        I18N.t("No notes like [TEXT: ...] or [B-ROLL: ...] - say what is on screen while you talk, or the edit has to "
+               "guess."))
     out["passed"] = sum(1 for c in out["checks"] if c["status"] == "ok")
     out["total"] = len(out["checks"])
     return out
@@ -413,11 +485,28 @@ def _like(v) -> list[str]:
     from . import style as ST
     like = [_clean(x, 160) for x in (v or []) if str(x).strip()]
     if len(like) > ST.MAX_REFS:
-        raise ValueError(f"at most {ST.MAX_REFS} videos for one style")
+        raise ValueError(I18N.t("at most {n} videos for one style", n=ST.MAX_REFS))
     for x in like:
         if ST.find(x) is None:
-            raise ValueError(f"no analysed video called {x!r}")
+            raise ValueError(I18N.t("no analysed video called {name}", name=repr(x)))
     return like
+
+
+LIKE_PROMPT_KINDS = ("script", "hook")
+
+
+def _like_prompts(v) -> list[str]:
+    """Prepare's *In the style of > Scripts & hooks* (2026-10-18, the user: "only look in style of "prompts" or
+    "videos" they already analize"): up to 3 scripts / hooks of the prompt library, checked against it."""
+    from . import style as ST
+    ids = list(dict.fromkeys(_clean(x, 40) for x in (v or []) if str(x).strip()))
+    if len(ids) > ST.MAX_REFS:
+        raise ValueError(I18N.t("at most {n} scripts or hooks for one style", n=ST.MAX_REFS))
+    for x in ids:
+        if not re.fullmatch(r"(script|hook)-\d{3,}", x):
+            raise ValueError(I18N.t("not a script or a hook of your library: {id}", id=repr(x)))
+        PR.get(x)                                        # ValueError "no prompt <id>" when it is not in the library
+    return ids
 
 
 def _length(v) -> float | None:
@@ -425,7 +514,7 @@ def _length(v) -> float | None:
         return None
     v = float(v)
     if not 5 <= v <= 3600:
-        raise ValueError("length: 5 seconds to 60 minutes")
+        raise ValueError(I18N.t("length: 5 seconds to 60 minutes"))
     return v
 
 
@@ -445,7 +534,7 @@ def save_new(body: dict) -> dict:
     """*Write one from zero*: the user's answers, checked -> a request for `/write-script request <id>`."""
     topic = _lines(body.get("topic"), 1500)
     if not topic:
-        raise ValueError("say what the video is about first")
+        raise ValueError(I18N.t("say what the video is about first"))
     where = body.get("where") or ""
     if where and where not in WHERE:
         raise ValueError(f"where: one of {', '.join(WHERE)}")
@@ -459,7 +548,8 @@ def save_new(body: dict) -> dict:
     req = {"kind": "new", "topic": topic, "audience": _lines(body.get("audience")), "takeaway": _lines(body.get("takeaway")),
            "angle": _lines(body.get("angle"), 3000), "points": _lines(body.get("points")), "length_s": _length(body.get("length_s")),
            "where": where, "tone": tone, "cta": cta, "cta_text": _clean(body.get("cta_text"), 300), "lang": lang,
-           "like": _like(body.get("like")), "extra": _lines(body.get("extra"))}
+           "like": _like(body.get("like")), "like_prompts": _like_prompts(body.get("like_prompts")),
+           "extra": _lines(body.get("extra"))}
     return _save(req)
 
 
@@ -468,19 +558,20 @@ def save_improve(body: dict) -> dict:
     they want (length, where, style, their words) for `/write-script improve <script id>`."""
     text = str(body.get("text") or "").replace("\r", "").strip()
     if len(_words(spoken(text)[0])) < 5:
-        raise ValueError("paste your script first (at least a sentence)")
+        raise ValueError(I18N.t("paste your script first (at least a sentence)"))
     if len(text) > 100_000:
-        raise ValueError("a script up to 100,000 characters")
+        raise ValueError(I18N.t("a script up to 100,000 characters"))
     where = body.get("where") or ""
     if where and where not in WHERE:
         raise ValueError(f"where: one of {', '.join(WHERE)}")
     like, length = _like(body.get("like")), _length(body.get("length_s"))
+    like_prompts = _like_prompts(body.get("like_prompts"))      # checked before the script is saved
     file = _clean(body.get("file"), 200)
     refs = [x for x in like if safe_name(x) == x and (ANALYSIS / x).is_dir()]   # a friend's card has no analysis here
     rec = PR.add({"kind": "script", "text": text, "source": {"type": "tested", **({"file": file} if file else {})},
                   "style_refs": refs})
     req = _save({"kind": "improve", "script": rec["id"], "want": _lines(body.get("want")), "length_s": length,
-                 "where": where, "like": like})
+                 "where": where, "like": like, "like_prompts": like_prompts})
     return {"script": rec, "request": req}
 
 
@@ -499,11 +590,12 @@ def save_title(body: dict) -> dict:
                    vertical, both kinds -> both)
       language     str, e.g. "es", "en" or a name
       style_refs   list of analysed videos (analysis folder names or friends' cards, style.find), up to style.MAX_REFS
+      like_prompts list of scripts / hooks of the prompt library (ids), up to style.MAX_REFS (2026-10-18)
       notes        str, anything else
     Returns the saved request {id: req-NNN, kind: title, ..., date}; raises ValueError with a plain message."""
     topic = _lines(body.get("topic"), 1500)
     if not topic:
-        raise ValueError("say what the video is about first")
+        raise ValueError(I18N.t("say what the video is about first"))
     plats = body.get("platforms") or []
     if isinstance(plats, str):
         plats = [x.strip() for x in plats.replace(",", " ").split() if x.strip()]
@@ -519,7 +611,32 @@ def save_title(body: dict) -> dict:
         orient = "both" if h and v else "horizontal" if h else "vertical"
     req = {"kind": "title", "topic": topic, "viewer": _lines(body.get("viewer")), "angle": _lines(body.get("angle"), 3000),
            "platforms": plats, "orientation": orient, "language": _clean(body.get("language"), 30),
-           "style_refs": _like(body.get("style_refs")), "notes": _lines(body.get("notes"))}
+           "style_refs": _like(body.get("style_refs")), "like_prompts": _like_prompts(body.get("like_prompts")),
+           "notes": _lines(body.get("notes"))}
+    return _save(req)
+
+
+def save_prompt(body: dict) -> dict:
+    """The prompt library's *Generate a new prompt from zero* and *Use it, change…* (2026-10-19 - the audit: the wish
+    went to Claude on the cmd line, cut at 600 characters, and lost % & | < >): the user's words, checked -> a request
+    with `"kind": "prompt"` for `/write-prompt request <id>` (the skill reads it with `tools\\script.py show <id>`).
+
+    body: kind (a prompt kind, prompts.KINDS), want (what to make; required unless `from` is given), from (a prompt
+    id: keep its structure and wording), change (what to change in it), for (list: what it is for - vlog, sfx ...),
+    model (the model or tool), style_refs (up to style.MAX_REFS analysed videos to copy the style of, style.find).
+    Returns the saved request {id: req-NNN, kind: prompt, ..., date}; raises ValueError with a plain message."""
+    kind = str(body.get("kind") or "")
+    if kind not in PR.KINDS:
+        raise ValueError(f"kind: one of {', '.join(PR.KINDS)}")
+    src = _clean(body.get("from"), 40)
+    if src:
+        PR.get(src)                                      # ValueError "no prompt <id>" when it is not in the library
+    want, change = _lines(body.get("want"), 6000), _lines(body.get("change"), 6000)
+    if not want and not src:
+        raise ValueError(I18N.t("say what you want to make first"))
+    tags = list(dict.fromkeys(_clean(x, 40).lower() for x in body.get("for") or [] if str(x).strip()))[:12]
+    req = {"kind": "prompt", "prompt_kind": kind, "want": want, "from": src, "change": change, "for": tags,
+           "model": _clean(body.get("model"), 160), "style_refs": _like(body.get("style_refs"))}
     return _save(req)
 
 
@@ -527,7 +644,7 @@ def requests() -> list[dict]:
     """Every saved request, newest first, with what was made from it (new / title: records whose `request` is its
     id - scripts and hooks, or title & thumbnail records; improve: the script it improves and the versions made from
     that one)."""
-    out = []
+    out, by_kind = [], {}
     items = PR.load_all("script") + PR.load_all("hook") + PR.load_all("title")
     for p in sorted(REQUESTS.glob("req-*.json"), reverse=True):
         try:
@@ -536,6 +653,11 @@ def requests() -> list[dict]:
             continue
         if r.get("kind") in ("new", "title"):
             r["made"] = [x["id"] for x in items if x.get("request") == r.get("id")]
+        elif r.get("kind") == "prompt":                  # 2026-10-19: what /write-prompt wrote from it
+            k = r.get("prompt_kind") or ""
+            if k not in by_kind:
+                by_kind[k] = PR.load_all(k)
+            r["made"] = [x["id"] for x in by_kind[k] if x.get("request") == r.get("id")]
         else:
             r["made"] = [x["id"] for x in items if r.get("script") in (x.get("made_from") or [])]
         out.append(r)
@@ -547,7 +669,7 @@ def get_request(rid: str) -> dict:
         raise ValueError(f"not a request id: {rid!r} (like req-001)")
     p = REQUESTS / f"{rid}.json"
     if not p.exists():
-        raise ValueError(f"no request {rid}")
+        raise ValueError(I18N.t("no request {id}", id=rid))
     return read_json(p)
 
 
@@ -568,6 +690,38 @@ def request_path(rid: str):
     return REQUESTS / f"{rid}.json"
 
 
+def _videos_words(keys) -> str:
+    """The picked videos for Claude: "<name> (<key>; this PC | from tekeo)" - the key is what style.py takes, a
+    friend's card is marked as a friend's (2026-10-18; before, a friend's card reached Claude as a bare video id)."""
+    from . import knowledge as KN
+    from . import style as ST
+    out = []
+    for k in keys or []:
+        c = ST.find(k)
+        if not c:
+            out.append(f"{k} (not on this PC any more)")
+            continue
+        who = "this PC" if c.get("origin") == "local" else f"from {c.get('author') or 'a friend'}"
+        out.append(f"{KN.label(c)['name']} ({k}; {who})")
+    return ", ".join(out)
+
+
+def _prompts_words(ids) -> str:
+    """The picked scripts / hooks for Claude: "<title> (<id>; yours | <creator>'s)" - read each with
+    `tools\\prompts.py show <id>`."""
+    out = []
+    for i in ids or []:
+        try:
+            p = PR.get(i)
+        except ValueError:
+            out.append(f"{i} (not in the library any more)")
+            continue
+        src = p.get("source") or {}
+        whose = f"{src.get('creator') or 'a creator'}'s" if src.get("type") == "creator" else "yours"
+        out.append(f"{p.get('title') or PR.auto_title(p.get('text', ''), p.get('kind', ''))} ({i}; {whose})")
+    return ", ".join(out)
+
+
 def describe_request(r: dict) -> str:
     """A request as text for Claude."""
     rows = [("about", r.get("topic")), ("for", r.get("audience")), ("they get", r.get("takeaway")),
@@ -575,15 +729,23 @@ def describe_request(r: dict) -> str:
             ("length", f"{r['length_s']:g} s" if r.get("length_s") else ""), ("where", WHERE.get(r.get("where") or "", "")),
             ("tone", TONES.get(r.get("tone") or "", "")),
             ("call to action", " - ".join(x for x in (CTAS.get(r.get("cta") or "", ""), r.get("cta_text")) if x)),
-            ("language", LANGS.get(r.get("lang") or "", r.get("lang") or "")), ("style like", ", ".join(r.get("like") or [])),
+            ("language", LANGS.get(r.get("lang") or "", r.get("lang") or "")), ("style like", _videos_words(r.get("like"))),
+            ("scripts / hooks like", _prompts_words(r.get("like_prompts"))),
             ("what the user wants", r.get("want")), ("also", r.get("extra"))]
     if r.get("kind") == "title":                         # 0.4.3 *Title & thumbnail first*
         rows = [("about", r.get("topic")), ("for", r.get("viewer")), ("the user's angle", r.get("angle")),
                 ("platforms", ", ".join(PLATFORMS.get(x, x) for x in r.get("platforms") or [])),
                 ("orientation", ORIENTATIONS.get(r.get("orientation") or "", "")),
                 ("language", LANGS.get(r.get("language") or "", r.get("language") or "")),
-                ("style like", ", ".join(r.get("style_refs") or [])), ("also", r.get("notes"))]
+                ("style like", _videos_words(r.get("style_refs"))),
+                ("scripts / hooks like", _prompts_words(r.get("like_prompts"))), ("also", r.get("notes"))]
+    if r.get("kind") == "prompt":                        # 2026-10-19: the prompt library's new prompt / Use it, change…
+        rows = [("what the user wants", r.get("want")), ("start from", _prompts_words([r["from"]]) if r.get("from") else ""),
+                ("change", r.get("change")), ("for", ", ".join(r.get("for") or [])), ("model", r.get("model")),
+                ("style like", _videos_words(r.get("style_refs")))]
     head = (f"{r.get('id')} - write a script from zero" if r.get("kind") == "new"
             else f"{r.get('id')} - title & thumbnail first (before filming)" if r.get("kind") == "title"
+            else f"{r.get('id')} - a new {r.get('prompt_kind')} prompt" + (f" like {r['from']}" if r.get("from") else "")
+            if r.get("kind") == "prompt"
             else f"{r.get('id')} - improve {r.get('script')}") + f" ({str(r.get('date', ''))[:16]})"
     return "\n".join([head] + [f"  {k}: {v}" for k, v in rows if v])

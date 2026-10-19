@@ -6,6 +6,8 @@ argument-hint: "[short | <version e.g. 0.3.5> | ideas]"
 
 # /whats-next
 
+If the first message says to reply in Spanish, talk to the user in Spanish (Spain, tu); keep what you write into the lab's files in English.
+
 `$ARGUMENTS`: empty = the full review with options; `short` = the status only, no options; a version (`0.3.5`) =
 that version in depth (read its whole section in `docs\plans.md`); `ideas` = the ideas list looked at again.
 
@@ -24,8 +26,8 @@ This skill only looks and advises. It starts no work, and changes files only whe
 ## 2. Answer (plain words, short; frame + timecode for any frame you mention)
 1. **Since the last release** (version, date): what is on GitHub but in no release yet (group the commit titles
    into 2-5 themes), whether friends have it (tested = main?), anything uncommitted. If a version's items are all
-   built, say it is ready to publish (`__version__`, a CHANGELOG section listing every unreleased commit's theme,
-   the user commits / pushes, GitHub's tests).
+   built, say it is ready to publish (`__version__`, a CHANGELOG section listing every unreleased commit's theme and
+   the same section in Spanish in `CHANGELOG.es.md`, the user commits / pushes, GitHub's tests).
 2. **Roadmap**: one line per version, in order: released / in progress (n of m items) / planned, with what is
    built and what is still open or blocked.
 3. **Waiting on the user**: only things they can do - try a new feature, verdicts / possible misses, rate prompts,
@@ -46,5 +48,7 @@ whether something planned needs it. Suggest at most 2 worth a small test. Ideas 
   headings), take it out of `docs\ideas.md`. Planned versions never go into CHANGELOG.md.
 - Adds, moves or re-orders versions: update `docs\plans.md`, then the roadmap - `tools\roadmap.py sync` (adds /
   drops versions to match plans.md and CHANGELOG.md), a short label for each new one and an icon + line for a new
-  major (x.y.0) in `docs\roadmap\roadmap.json`, `roadmap.py check`, `roadmap.py render`. The app's Home reads the
-  JSON live; the render is for README's picture.
+  major (x.y.0) in `docs\roadmap\roadmap.json` (its `phases`: Phase 2 runs from 0.5.0 to 1.0.0), the Spanish of every
+  new label / line / title as `"<English>|roadmap"` in `tools\motionlab\app\ui\i18n\parts\es.release.json` (+ its
+  `_by_key`), `roadmap.py check`, `roadmap.py render`. The app's Home reads the JSON live; the render is for README's
+  picture.

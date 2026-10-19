@@ -12,7 +12,11 @@
      Rules (HyperFrames): everything moves on the paused GSAP timeline `tl` - no CSS animations, timers or
      Math.random; the build-up ends at INTRO, the loop repeats seamlessly from INTRO to SECONDS.
      Look: the 4AM palette (near-black, white, amber #ffc400, greys), the lab's pixel font (motionlab\graphics.py
-     GLYPHS) and seven-segment digits, grain + vignette; icons = the app's own (ui\index.html). -->
+     GLYPHS) and seven-segment digits, grain + vignette; icons = the app's own (ui\index.html).
+     Phases (0.5.1): roadmap.json "phases" = brackets above the main line (Phase 2 = the path from 0.5.0 to 1.0.0).
+     Words: inside the app (Home's frame, roadmapBig) they follow the app's language - the app's own catalogue read
+     through window.parent, keys "<English>|roadmap" (tools\motionlab\app\ui\i18n\parts\es.release.json); rendered by
+     HyperFrames or opened alone: English. -->
 <script src="./gsap.min.js"></script>
 <style>
   :root { --bg: #0d0d0f; --panel: #141417; --white: #ececec; --text: #a9a9af; --grey: #808084; --dim: #3a3a3e;
@@ -47,8 +51,12 @@
   .tag.later { border: 1px solid var(--dim); color: var(--grey); }
   .eraghost { font: 400 13px/16px Consolas, monospace; color: #6a6a70; }
   /* header, footer (the strong / weak band and the risks line left on 2026-10-15 - the user: "i dont really care about that") */
-  #sub { right: 70px; top: 150px; font: 400 15px/18px Consolas, monospace; color: var(--grey); text-align: right; }
-  #legend { right: 70px; top: 176px; display: flex; gap: 18px; font: 400 13px/16px Consolas, monospace; color: var(--grey); }
+  #sub { right: 70px; top: 124px; font: 400 15px/18px Consolas, monospace; color: var(--grey); text-align: right; }
+  #legend { right: 70px; top: 150px; display: flex; gap: 18px; font: 400 13px/16px Consolas, monospace; color: var(--grey); }
+  /* a phase's name, on its bracket above the main line (0.5.1) */
+  .phase { font: 700 12px/18px Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+           padding: 0 10px; background: var(--bg); color: var(--grey); transform: translate(-50%, -50%); }
+  .phase.now { color: var(--amber); } .phase.later { color: #616166; }
   #legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; border-radius: 50%; }
   #foot { left: 96px; top: 1034px; width: 1728px; display: flex; justify-content: flex-end; font: 400 14px/18px Consolas, monospace; color: #8e8e94; }
   #msg { left: 96px; top: 480px; font: 400 22px/30px "Segoe UI", sans-serif; color: var(--grey); }
@@ -86,6 +94,15 @@
   const NS = "http://www.w3.org/2000/svg";
   const C = { bg: "#0d0d0f", white: "#ececec", grey: "#808084", dim: "#3a3a3e", amber: "#ffc400", later: "#5c5c62" };
 
+  // ---- the words in the app's language (0.5.1): inside the app (same origin) the page reads the app's catalogue,
+  // window.ML_I18N, through window.parent - keys "<English>|roadmap" (ui\i18n\parts\es.release.json). Rendered by
+  // HyperFrames or opened alone (no app around it): English, as before.
+  const APP = (() => { try { const p = window.parent; return p && p !== window && p.ML_I18N ? p : null; } catch (e) { return null; } })();
+  const LANG = APP ? (APP.document.documentElement.lang || "en") : "en";
+  const WORDS = APP && LANG !== "en" ? APP.ML_I18N : {};
+  const T = en => { const s = WORDS[en + "|roadmap"]; return typeof s === "string" && s ? s : en; };
+  if (LANG !== "en") document.documentElement.lang = LANG;
+
   // ---- the app's icons (ui\index.html symbols, 24 x 24, stroked)
   const ICONS = {
     analyze: '<circle cx="10.5" cy="10.5" r="6.8"/><path d="m15.4 15.4 5.1 5.1"/><path d="M6.6 10.9h1.7l1.2-2.7 1.9 5.2 1.3-2.5h1.6"/>',
@@ -114,6 +131,7 @@
     K: [[[0,0],[0,6]], [[0,3],[3,3]], [[3,3],[4,2],[4,0]], [[3,3],[4,4],[4,6]]], L: [[[0,0],[0,6],[4,6]]],
     M: [[[0,6],[0,0],[4,0],[4,6]], [[2,0],[2,4]]], N: [[[0,6],[0,0],[4,0],[4,6]]],
     O: [[[0,0],[4,0],[4,6],[0,6],[0,0]]], P: [[[0,6],[0,0],[4,0],[4,3],[0,3]]],
+    Q: [[[0,0],[4,0],[4,6],[0,6],[0,0]], [[2.2,4.2],[4.4,6.4]]],                        // the Spanish AQUÍ (0.5.1)
     R: [[[0,6],[0,0],[4,0],[4,3],[0,3]], [[2,3],[4,4],[4,6]]],
     S: [[[4,0],[0,0],[0,3],[4,3],[4,6],[0,6]]], T: [[[0,0],[4,0]], [[2,0],[2,6]]], U: [[[0,0],[0,6],[4,6],[4,0]]],
     V: [[[0,0],[0,4],[2,6],[4,4],[4,0]]], W: [[[0,0],[0,6],[4,6],[4,0]], [[2,2],[2,6]]],
@@ -125,15 +143,26 @@
     "9": [[[4,3],[0,3],[0,0],[4,0],[4,6],[0,6]]], "-": [[[0,3],[4,3]]], ".": [[[0,6],[0.01,6]]], "'": [[[0,0],[0,1.5]]],
   };
   const NARROW = "I1.'";
+  // a letter with an accent (the Spanish words: Á É Í Ó Ú Ñ Ü) = the plain letter + its mark above it, no extra width
+  const ACCENTS = { "́": [[[1.4, -1.2], [2.6, -2.4]]],
+                    "̃": [[[0.3, -1.4], [1.3, -2.4], [2.7, -1.4], [3.7, -2.4]]],
+                    "̈": [[[1, -1.6], [1.01, -1.6]], [[3, -1.6], [3.01, -1.6]]] };
   function pixelLayout(text, height, wscale = 1.5, tracking = 0.55) {
-    text = text.toUpperCase();
+    const chars = [];
+    for (const ch of String(text).toUpperCase().normalize("NFD")) {
+      if (ACCENTS[ch] && chars.length) chars[chars.length - 1].marks.push(ch); else chars.push({ ch, marks: [] });
+    }
     const u = height / 6, ux = u * wscale, st = Math.max(1, height * 0.085), pad = st * 2;
-    const widths = [...text].map(ch => ch === " " ? 2.2 * ux : (NARROW.includes(ch) ? st : 4 * ux + st));
-    const total = widths.reduce((a, b) => a + b, 0) + tracking * ux * 2 * Math.max(0, text.length - 1);
+    // a "1" draws its stem 2 units in: one with a character after it ("1.0") takes that room, so the next one follows
+    const widths = chars.map(({ ch }, i) => ch === " " ? 2.2 * ux : ch === "1" && i < chars.length - 1 ? 2 * ux + st
+                                           : (NARROW.includes(ch) ? st : 4 * ux + st));
+    const total = widths.reduce((a, b) => a + b, 0) + tracking * ux * 2 * Math.max(0, chars.length - 1);
     const lines_ = [], dots = [];
     let x = pad + st / 2;
-    [...text].forEach((ch, i) => {
-      for (const poly of GLYPHS[ch] || []) {
+    chars.forEach(({ ch, marks }, i) => {
+      const polys = [...(GLYPHS[ch] || [])];
+      for (const m of marks) for (const poly of ACCENTS[m]) polys.push(poly.map(([px, py]) => [NARROW.includes(ch) ? px - 2 : px, py]));
+      for (const poly of polys) {
         const pts = poly.map(([px, py]) => [x + px * ux, pad + st / 2 + py * u]);
         if (pts.length === 2 && Math.abs(pts[0][0] - pts[1][0]) < 0.5 && Math.abs(pts[0][1] - pts[1][1]) < 0.5) dots.push(pts[0]);
         else lines_.push(pts);
@@ -223,7 +252,7 @@
 
     // ---- header: MOTIONLAB (pixel), ROADMAP, the date in seven segments, a line, the legend
     const title = pixel("MOTIONLAB", 62, 70, 46, C.white, null, { glow: 0.55 });
-    const road = pixel("ROADMAP", 26, 74, 46 + title.H + 6, C.amber, null, { glow: 0.7 });
+    const road = pixel(T("ROADMAP"), 26, 74, 46 + title.H + 6, C.amber, null, { glow: 0.7 });
     const date = segLayout(D.date || "", 50), dateX = W - 70 - date.W;
     const dg = svgEl("g", { transform: `translate(${dateX},56)` });
     const ghost = svgEl("g", { fill: C.amber, opacity: 0.1 }, dg);
@@ -232,13 +261,13 @@
     const segs = [];
     for (const p of date.polys) { const pts = p.map(q => q.join(",")).join(" ");
       segs.push(svgEl("polygon", { points: pts, opacity: 0 }, dbody)); segs.push(svgEl("polygon", { points: pts, opacity: 0 }, dglow)); }
-    const sub = div("abs", {}, "where it stands and where it goes"); sub.id = "sub";
+    const sub = div("abs", {}, esc(T("where it stands and where it goes"))); sub.id = "sub";
     const legend = div("abs", {}, [
-      `<span><i style="background:${C.white}"></i>done</span>`,
-      `<span><i style="background:${C.amber};box-shadow:0 0 8px ${C.amber}"></i>you are here / next</span>`,
-      `<span><i style="border:2px solid ${C.amber}"></i>planned</span>`,
-      `<span><i style="border:2px dotted ${C.grey}"></i>later</span>`,
-      `<span><i style="border-radius:3px;background:${C.white};width:14px;height:14px;vertical-align:-3px"></i>major x.y.0</span>`].join(""));
+      `<span><i style="background:${C.white}"></i>${esc(T("done"))}</span>`,
+      `<span><i style="background:${C.amber};box-shadow:0 0 8px ${C.amber}"></i>${esc(T("you are here / next"))}</span>`,
+      `<span><i style="border:2px solid ${C.amber}"></i>${esc(T("planned"))}</span>`,
+      `<span><i style="border:2px dotted ${C.grey}"></i>${esc(T("later"))}</span>`,
+      `<span><i style="border-radius:3px;background:${C.white};width:14px;height:14px;vertical-align:-3px"></i>${esc(T("major x.y.0"))}</span>`].join(""));
     legend.id = "legend";
 
     // ---- the main line: shipped (solid white) -> up to the next major (dashed amber) -> later (dotted grey)
@@ -262,6 +291,28 @@
     svgEl("line", { x1: xFirst, y1: LINE_Y, x2: xHere, y2: LINE_Y, stroke: C.white, "stroke-width": 6,
                                      filter: "url(#glowS)", opacity: 0.35 }, mainG);
 
+    // ---- the phases (0.5.1, roadmap.json "phases"): a bracket above the main line from one version's place on it to
+    //      another's (Phase 2 = the path from 0.5.0 to 1.0.0); the phase "here" falls in is lit, a later one dotted
+    const PH_Y = 194, PH_TICK = 12;
+    const xOf = v => { const i = P.eras.findIndex(e => e.era === eraOf(v)); return i < 0 ? null : xs[i]; };
+    const phases = [];
+    (D.phases || []).forEach((ph, k, all) => {
+      let x0 = xOf(ph.from), x1 = xOf(ph.to);
+      if (x0 == null || x1 == null || x1 <= x0) return;
+      if (k > 0 && xOf(all[k - 1].to) === x0) x0 += 6;              // two phases meet at one badge: a small gap
+      if (k + 1 < all.length && xOf(all[k + 1].from) === x1) x1 -= 6;
+      const kind = cmp(P.here, ph.to) > 0 ? "done" : cmp(P.here, ph.from) >= 0 ? "now" : "later";
+      const d = `M ${x0} ${PH_Y + PH_TICK} V ${PH_Y} H ${x1} V ${PH_Y + PH_TICK}`;
+      const g = svgEl("g", { fill: "none" });
+      if (kind === "now") svgEl("path", { d, stroke: C.amber, "stroke-width": 5, filter: "url(#glowS)", opacity: 0.45 }, g);
+      svgEl("path", Object.assign({ d, stroke: kind === "now" ? C.amber : kind === "done" ? C.grey : C.later, "stroke-width": 2 },
+                                  kind === "later" ? { "stroke-dasharray": "2 7", "stroke-linecap": "round" } : {}), g);
+      const name = [T(ph.label || ""), `${ph.from} → ${ph.to}`, ph.line ? T(ph.line) : ""].filter(Boolean).join(" · ");
+      const lab = div("abs phase " + kind, { left: ((x0 + x1) / 2) + "px", top: PH_Y + "px" }, esc(name));
+      lab.title = name;
+      phases.push({ g, lab, x0 });
+    });
+
     // the comet: a light that runs along what shipped down to "you are here" (behind the badges)
     const comet = svgEl("g", { opacity: 0 });
     svgEl("circle", { r: 13, fill: C.amber, filter: "url(#glowA)", opacity: 0.9 }, comet);
@@ -273,6 +324,12 @@
     const lineT = x => { const f = Math.min(1, Math.max(0, (x - clipX) / clipW)); return LINE_START + LINE_DUR * Math.acos(1 - 2 * f) / Math.PI; };
     tl.set("#lineclipr", { attr: { x: clipX, width: 0 } }, 0);
     tl.to("#lineclipr", { attr: { width: clipW }, duration: LINE_DUR, ease: "sine.inOut" }, LINE_START);
+    phases.forEach(({ g, lab, x0 }) => {               // a phase's bracket grows when the main line reaches its start
+      const t0 = lineT(x0);
+      tl.set([g, lab], { opacity: 0 }, 0);
+      tl.fromTo(g, { opacity: 1, scaleX: 0, svgOrigin: `${x0} ${PH_Y}` }, { scaleX: 1, duration: 0.7, ease: "power2.out" }, t0);
+      tl.fromTo(lab, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, t0 + 0.35);
+    });
     let hereRow = null, hereBranch = null, ring = null, nextGlow = null;
     P.eras.forEach((e, i) => {
       const colL = MX + colW * i, gx = colL + 18, t0 = lineT(xs[i]);
@@ -290,14 +347,14 @@
         const ic = svgEl("g", { transform: "translate(-20,-20) scale(1.6667)", fill: "none", stroke: hot ? C.bg : done ? C.white : later ? C.grey : C.amber,
                                 "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round" }, badge);
         ic.innerHTML = ICONS[M.icon] || ICONS.update;
-        svgEl("title", {}, badge).textContent = `${M.v} - ${M.title || M.label} (${hot ? "next major" : M.st})`;
+        svgEl("title", {}, badge).textContent = `${M.v} - ${T(M.title || M.label)} (${T(hot ? "next major" : M.st)})`;
         const num = pixel(M.era, 26, cx + 52, LINE_Y - 50, hot ? C.amber : done ? C.white : C.grey, null, { glow: later ? 0 : 0.6 });
         const tag = div("abs tag " + (hot ? "nextmajor" : done ? "shipped" : "later"), { left: (cx + 54) + "px", top: (LINE_Y + 12) + "px" },
-                        hot ? "NEXT MAJOR" : done ? "SHIPPED" : M.st === "later" ? "LATER" : "PLANNED");
+                        esc(T(hot ? "NEXT MAJOR" : done ? "SHIPPED" : M.st === "later" ? "LATER" : "PLANNED")));
         const words = div("abs mj " + st, { left: (gx + 12) + "px", top: (LINE_Y + 56) + "px" },
-          `<div class="lb">${esc(M.label)}</div>${M.line ? `<div class="ln">${esc(M.line)}</div>` : ""}` +
-          (M.items && M.items.length ? `<div class="its">${M.items.map(s => `<span>${esc(s)}</span>`).join("")}</div>` : ""));
-        words.title = `${M.v} - ${M.title || M.label}`;
+          `<div class="lb">${esc(T(M.label))}</div>${M.line ? `<div class="ln">${esc(T(M.line))}</div>` : ""}` +
+          (M.items && M.items.length ? `<div class="its">${M.items.map(s => `<span>${esc(T(s))}</span>`).join("")}</div>` : ""));
+        words.title = `${M.v} - ${T(M.title || M.label)}`;
         textBottom = LINE_Y + 56 + words.offsetHeight;
         // motion: the badge pops when the line reaches it, the number draws, the words rise
         tl.set(badge, { scale: 0, transformOrigin: "50% 50%" }, 0);
@@ -346,7 +403,7 @@
           svgEl("circle", { cx: gx, cy: yc, r: 10, fill: C.amber, filter: "url(#glowA)", opacity: 0.8 }, g);
           svgEl("circle", { cx: gx, cy: yc, r: 6, fill: C.amber }, g);
           svgEl("path", { d: `M ${gx + 14} ${yc - 7} L ${gx + 24} ${yc} L ${gx + 14} ${yc + 7} Z`, fill: C.amber }, g);
-          const yah = pixel("YOU ARE HERE", 11, gx + 30, yc - 10, C.amber, g, { glow: 0.8, wscale: 1.3 });
+          const yah = pixel(T("YOU ARE HERE"), 11, gx + 30, yc - 10, C.amber, g, { glow: 0.8, wscale: 1.3 });
           hereRow = g;
           tl.set(g, { opacity: 0 }, 0);
           tl.set(yah.g.querySelectorAll("polyline"), { attr: { "stroke-dashoffset": 1 } }, 0);
@@ -360,8 +417,8 @@
           : x.st === "next" ? svgEl("circle", { cx: gx, cy: yr + 26, r: 6, fill: C.amber, stroke: C.bg, "stroke-width": 2 })
           : svgEl("circle", { cx: gx, cy: yr + 26, r: 5, fill: C.bg, stroke: x.st === "later" ? C.later : C.amber, "stroke-width": 2 });
         const row = div("abs row " + cls, { left: (gx + 14) + "px", top: yr + "px" },
-                        `<div class="vn">${esc(x.v)}${x.st === "next" ? "  · NEXT" : ""}</div><div class="rl">${esc(x.label)}</div>`);
-        row.title = `${x.v} - ${x.title || x.label}`;
+                        `<div class="vn">${esc(x.v)}${x.st === "next" ? "  · " + esc(T("NEXT")) : ""}</div><div class="rl">${esc(T(x.label))}</div>`);
+        row.title = `${x.v} - ${T(x.title || x.label)}`;
         tl.set([node, row], { opacity: 0 }, 0);
         tl.fromTo(node, { opacity: 0, scale: 0, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2.5)" }, tr);
         tl.fromTo(row, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out" }, tr + 0.03);
@@ -429,7 +486,8 @@
   }
   function fail(why) {
     const m = document.createElement("div"); m.id = "msg"; m.className = "abs";
-    m.textContent = "The roadmap could not be read (" + why + "). Open it from the app, or run tools\\roadmap.py check.";
+    m.textContent = T("The roadmap could not be read ({why}). Open it from the app, or run tools\\roadmap.py check.")
+      .replace("{why}", why);
     html.appendChild(m); if (!HF) fit();
   }
   if (window.ROADMAP) boot(window.ROADMAP);            // roadmap.py render inlines the data

@@ -1,17 +1,20 @@
 ---
 name: analyze-reference
-description: MotionLab - analyze a reference video (music video, short / reel, ad, motion graphics, documentary, vlog): detect every cut and edit effect frame-accurately, look at every contact sheet, classify each event and write analysis\<name>\report.html with Resolve/Fusion rebuild notes. Use for "/analyze-reference <path>" or whenever the user asks to analyze / break down the edits or effects of a video. Also use when the user pastes report feedback (text starting with "MOTIONLAB FEEDBACK"): turn it into lessons.md rules and config changes and re-check the events.
-argument-hint: <path to video>
+description: "MotionLab - analyse a video's edits frame-accurately (every cut and effect, every contact sheet, a rebuild note each), a channel's thumbnails or a set of scripts & prompts; apply MOTIONLAB FEEDBACK as lessons and config changes; review incoming lessons. Use for '/analyze-reference ...', 'break down the edits / effects of this video', 'Apply the MOTIONLAB FEEDBACK in <file>'."
+argument-hint: "<path to video> | batch <id> | thumbs <set> | texts <set>"
 ---
 
 # /analyze-reference
+
+If the first message says to reply in Spanish, talk to the user in Spanish (Spain, tu); keep what you write into the lab's files in English.
 
 Video: `$ARGUMENTS`
 
 Work from `C:\MotionLab`. Python is `.venv\Scripts\python.exe` (run tools as `.venv\Scripts\python tools\<tool>.py`).
 If no path was given, ask for one (or list `refs\`). If the user pasted feedback instead, jump to
 **Applying feedback** below. `batch <id>` = several videos in this one window: **Batch** below. `thumbs <set>` = a
-set of thumbnails, not a video: **Thumbnail sets** below.
+set of thumbnails, not a video: **Thumbnail sets** below. `texts <set>` = a set of scripts & prompts, not a video: read
+`.claude\skills\analyze-reference\texts.md` and follow it (none of the video sections apply).
 
 ## 0. Always first
 1. **Read the lessons completely** before anything else: the shared, reviewed ones in
@@ -29,6 +32,8 @@ set of thumbnails, not a video: **Thumbnail sets** below.
 2. Never modify, move, rename or re-encode the source video. The pipeline only reads it and writes into
    `analysis\<name>\` (it checks the SHA-256 before and after and says so in the report).
 3. Every frame you mention to the user gets its frame number AND timecode, e.g. `f480 (00:00:16:00)`.
+4. Read `.claude\skills\analyze-reference\review_rules.md`: section 2's steps 1-3 (how to read and judge each event),
+   the review.json format and the canonical types - your helpers read the same file.
 
 ## 1. Run the pipeline (skip it when the app already did)
 If the request says `the lab pass is done: analysis\<name>` (the app's "Analyse with Claude" / "Send to Claude"
@@ -46,30 +51,10 @@ previews, and writes `report.html`, `events.json`, `metrics.csv`, `overview.png`
 per-frame metrics cache (use after config changes); `--force` recomputes everything.
 
 ## 2. Review EVERY event (the pipeline's types are drafts until you have looked)
-Open `analysis\<name>\review_todo.md`. With the `motionlab` MCP tools (0.3.0; `mcp__motionlab__*`), use them instead
-of reading files: `events` (one line per event, filters by type / frames / unreviewed), `event` (evidence + auto
-draft of one), `sheet` (its contact sheet as a picture), `frames` (any frames, e.g. around a possible miss) - never
-read the whole `events.json` (~0.7 MB). For **each** event, in order:
-1. **Read every contact sheet** listed for it (`sheet`, or the Read tool on each `events\<ID>\sheet_NN.jpg`). Tiles are labelled
-   with frame number, timecode and a per-frame measurement (L = luma %, xN = scale per frame, %B = transition
-   progress, Npx = RGB offset, %/f = motion speed, =N = repeats frame N). Yellow border = effect frames, grey =
-   3 padding frames. CUT / BEAT / BAR / DROP flags mark cuts, beats, bar starts and drops.
-2. Read the event's measured evidence and auto draft (`events.json` > `events[i].auto`, or the todo table).
-3. Decide and write, for the event:
-   - **type** (one canonical key, list below; use `unknown` rather than forcing a category) and **what**: what
-     happens frame by frame, citing frame numbers;
-   - **origin** `post` / `camera` / `unclear` + **origin_why** (real camera move vs effect added in post, and why:
-     e.g. a pure 2D scale with no parallax = digital zoom in post);
-   - **easing** in unambiguous words ("accelerating (slow start)", "decelerating (slow end)", "S-curve", "linear",
-     "instant"), plus duration / timing if your reading differs from the measured draft;
-   - **confidence** `high` / `medium` / `low`;
-   - **rebuild**: one short paragraph - which Resolve tools / Fusion nodes, with the measured key values
-     (frames, scale, pixels, durations, easing) plugged in.
-   Use only measured numbers from the evidence; if you see something the measurements do not cover, say it is a
-   visual observation and lower the confidence. If the event is not an edit effect at all (camera, lighting,
-   subject motion), set `"false_alarm": true` and explain in `what`. If you notice an effect the pipeline did not
-   flag (e.g. in the padding frames), mention it in `notes` and in your summary.
-4. Write all reviews into `analysis\<name>\review.json` (format below; built from `review_parts\`, see "Working
+Steps 1-3, for **each** event in order - the MCP tools to use, read every contact sheet, read the evidence, decide
+and write - are in `.claude\skills\analyze-reference\review_rules.md` (section 0, item 4), with the review.json format
+and the canonical types. Then:
+4. Write all reviews into `analysis\<name>\review.json` (format: `review_rules.md`; built from `review_parts\`, see "Working
    through the sheets without waste" below). Keep `start`/`end` so reviews survive a
    re-run that renumbers events. Then run `.venv\Scripts\python tools\report.py <name>` - it must say
    `N/N events reviewed`.
@@ -97,7 +82,10 @@ read the whole `events.json` (~0.7 MB). For **each** event, in order:
      where the measured words are wrong - a warm set can read as a warm grade), `rhythm` (cuts vs beats and drops,
      speed changes), `sound`, `rebuild_tips`.
    - **both**: every key that applies.
-   Only these keys count: summary hook structure captions text_graphics broll sound cta transitions camera grade
+   - **always**: `name` = 3-6 words a person would call this video, e.g. "Neon kinetic-type promo for a studio" -
+     never the file name, a handle or "Video by ..." (the app and Claude's memory show it instead of the file's title;
+     2026-10-18, the user: names like "Video by yp.motionstudio" mean nothing to "normal people or my friends").
+   Only these keys count: name summary hook structure captions text_graphics broll sound cta transitions camera grade
    rhythm rebuild_tips. `tools\report.py <name>` puts it on the video's Overview page in the app.
 
 Every sheet of every event must be read - by you or by a helper. If `review.json` or `review_parts\` already has
@@ -107,7 +95,7 @@ finished ones unless the user asks.
 ### Working through the sheets without waste (the user, 2026-10-15: same quality, less usage)
 Every picture you open stays in the chat and is sent again with every later step, so the cost grows with pictures
 held x steps taken (a 33 s video once took 14 M tokens: ~80 sheets in one chat, read 3-5 per step, ~45 read twice).
-- **Save as you go.** After each batch of events, write their reviews (the per-event entries of the format below) to
+- **Save as you go.** After each batch of events, write their reviews (the per-event entries of the format in `review_rules.md`) to
   `analysis\<name>\review_parts\<first ID>-<last ID>.json` BEFORE you open more sheets. Never keep finished reviews
   only in your head: old pictures drop out of a long chat (a request limit) and reading them again doubles the cost.
   At the end merge all parts into `review.json` with `_meta`, `_near_misses` and `_breakdown`, run `report.py`, then
@@ -117,8 +105,8 @@ held x steps taken (a 33 s video once took 14 M tokens: ~80 sheets in one chat, 
   frame rate: the share of repeated frames in `metrics.csv` column `dup`; a recurring graphic). Then split the events
   into runs of consecutive events of ~10-12 sheets and start one helper per run, all in one message so they run in
   parallel (Agent tool, general-purpose). Each helper's prompt: the analysis folder and its event IDs (with the event
-  before and after, for context); the whole-video facts you found; read both lessons files and this file's section 2
-  steps 1-3, "review.json format" and "Canonical types" first; every sheet of its events; frame + timecode on every
+  before and after, for context); the whole-video facts you found; read both lessons files and
+  `.claude\skills\analyze-reference\review_rules.md` first (not this whole file); every sheet of its events; frame + timecode on every
   frame it names; write its reviews to `review_parts\<first ID>-<last ID>.json` and nothing else (no `review.json`, no
   `report.py`); reply with one line per event (ID, type, false alarm yes / no, confidence) plus what it saw beyond its
   events (an effect running into the next run, a possible miss). Then you: read the parts (text), make the runs agree
@@ -128,46 +116,16 @@ held x steps taken (a 33 s video once took 14 M tokens: ~80 sheets in one chat, 
 - **Fewer sheets: read them yourself**, 8-10 per step, saving each batch as above.
 Plain hard cuts are NOT reviewed visually (they are listed in the cuts table with on-beat yes/no).
 
-### review.json format
-```json
-{
-  "_meta": {"reviewer": "Claude", "reviewed": "YYYY-MM-DD", "lessons_applied": ["L001"]},
-  "E004": {
-    "start": 480, "end": 482,
-    "type": "flash_white",
-    "what": "f479 is the last frame of shot A; f480 is fully white (the cut is hidden under it); f481-482 fade back ...",
-    "origin": "post",
-    "origin_why": "the whole frame, including the darkest areas, goes pure white over a cut",
-    "easing": "instant attack, linear decay 100 > 66 > 33 > 0% over f480-483",
-    "confidence": "high",
-    "rebuild": "Cut at 480 on the drop; white Solid Color on V2 480-482, Opacity 100% > 0% by 483, linear ...",
-    "notes": "optional"
-  },
-  "_near_misses": {"270": "not an effect: the singer turns into the light"},
-  "_breakdown": {"summary": "...", "hook": "f0-89 (00:00:00:00-00:00:02:29): ...", "structure": ["...", "..."],
-                 "rebuild_tips": ["...", "..."]}
-}
-```
-Optional keys: `"false_alarm": true`, `"evidence": [...]` (only to ADD observations; measured evidence is kept),
-`"stacked": ["blur", ...]` (other effects that really happen inside this event - a reviewed `type` replaces the
-detector's stacked types, so list the ones you confirmed; they count in the report header),
-`"on_beat"` / `"on_drop"` (true/false - set them when the effect's real key frame differs from the detected range,
-which is what the table's Beat column is computed from), `"duration_text"` (when the real extent differs) and
-`"sub"` (a short sub-label; a re-typed event otherwise shows none).
-
-### Canonical types
-`hard_cut jump_cut flash_white flash flash_black dip_black dip_white fade_in fade_out crossfade zoom_transition
-zoom_in zoom_out whip_pan spin shake speed_ramp freeze stutter frame_repeat strobe rgb_split glitch blur
-flash_color invert sat_pop light_leak split_screen mirror multi_screen text wipe mask_reveal luma_fade push_slide
-unknown`
+### review.json format, canonical types
+In `.claude\skills\analyze-reference\review_rules.md` (section 0, item 4).
 
 ## 3. Report back to the user
 Give: video facts (fps, CFR/VFR, duration), BPM and drops, counts per effect family, the most notable events (with
 frame + timecode), the low-confidence events worth checking first, and the possible misses you think are real.
 Say in one line what the breakdown found (the hook / the signature). Then tell them the video is ready for their edits
 (Editor > New edit can use it), and the optional next step that teaches you, in the MotionLab app: Analyser > this video >
-**Effects** (Correct / Partly / Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses**
-tab, then **Send feedback to Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
+**Effects** (Correct / Partly / Wrong + a note on each; keys 1 2 3, J / K / N to move), the red **Possible misses &
+sound** tab, then **Send it to Claude** (it opens a new Claude Code window with the feedback - this chat can be closed). Without the app:
 `analysis\<name>\report.html` > Generate feedback > Copy, and paste it into a chat.
 
 ## Batch (`/analyze-reference batch <id>`, 0.4.5 - the app's *Add videos* with Claude's check, or *Continue the batch*)
@@ -188,6 +146,10 @@ Keep it lean across videos: don't re-read the lessons or tool docstrings per vid
 ## Thumbnail sets (`/analyze-reference thumbs <set>`, 0.4.5 - Analyser > Add thumbnails)
 A set = `analysis\thumbs\<set>\`: `set.json` (every picture: title, views, the lab's measures - colours, brightness,
 faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). Steps:
+0. **The user's verdicts first** (2026-10-18: the set's page *Send it to Claude* after reviewing the patterns):
+   `analysis\thumbs\<set>\verdicts.json` `{"patterns": {"P1": {"v": "correct|partly|wrong", "note"}}}` - keep the
+   Correct patterns (their words and examples), fix the Partly ones the way the note says, redo or drop the Wrong ones
+   (the note says why), and say in step 5 what changed. No file = the first look at the set.
 1. `.venv\Scripts\python tools\thumbsets.py show <set>` (the measured summary), then look at EVERY sheet.
 2. Name what repeats, with how many of the set and their numbers: the text (words per picture, capitals, outline /
    box / shadow, size, where), the font's STYLE in words ("heavy condensed sans, white, thick black outline") with the
@@ -208,18 +170,21 @@ faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). 
    listed words are written in -> `fontmatch.json`, and *In the style of <set>* uses that font instead of your guess.
    A text it could not measure says why (fix its box or drop it, run it again).
 5. Tell the user the 3-5 strongest patterns in plain words (with picture numbers), the measured font with its score
-   (e.g. "Inter 800, overlap 0.82 over 14 texts - your guess Montserrat 0.74"), and that the set's page in the
-   Analyser lets them mark each pattern Correct / Partly / Wrong; *Ready to post* can then make thumbnails "in the
-   style of <set>". Copy a style, never a design, a logo or a face.
+   (e.g. "Inter 800, overlap 0.82 over 14 texts - your guess Montserrat 0.74"), what changed since their verdicts
+   (step 0), and that the set's page in the Analyser lets them mark each pattern Correct / Partly / Wrong with a note
+   and send it back to you; *Ready to post* can then make thumbnails "in the style of <set>". Copy a style, never a
+   design, a logo or a face.
 
 ---
 
 ## Applying feedback (user pastes text starting with `MOTIONLAB FEEDBACK`, or gave it in the MotionLab app)
-1. Read both lessons files (section 0). Save the pasted text verbatim to `analysis\<name>\feedback\pasted_<YYYYMMDD-HHMM>.txt`
-   (Write tool) and run `.venv\Scripts\python tools\feedback.py <name> <that file>`. It archives the feedback and
+1. Read both lessons files and `review_rules.md` (section 0). Save the pasted text verbatim to `analysis\<name>\feedback\pasted_<YYYYMMDD-HHMM>.txt`
+   (Write tool) and run `.venv\Scripts\python tools\feedback.py <name> <that file> --import` (`--import` = pasted
+   feedback also goes into `verdicts.json`, where the app keeps the user's verdicts). It archives the feedback and
    prints each WRONG / PARTLY item with the event as it is now and its sheet paths (IDs are re-matched by frames).
    Feedback given in the app is already a file: the newest `analysis\<name>\feedback\app_<date time>.txt` (made by
-   its "Send feedback to Claude" button; `verdicts.json` next to it is the live state) - run `feedback.py` on it.
+   its "Send it to Claude" button; `verdicts.json` next to it is the live state) - run `feedback.py` on it (no
+   `--import`: the app's own export is in verdicts.json already).
    A note starting with `[save to library]` means the user wants that effect in `library\`. The section
    `--- possible misses ---` holds the user's answer per possible miss: `EFFECT | f<n>` = an effect the pipeline
    missed (with what it is in the note), `NOT AN EFFECT | f<n>` = confirmed nothing.
@@ -239,7 +204,9 @@ faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). 
    category tag only when the rule is specific to that kind of video (format at the top of the shared lessons.md).
    Example: "crossfade vs luma fade: check whether the highlights transition first - if the bright areas of the
    outgoing shot switch to the new shot before the dark areas, it is a luma fade, not a crossfade."
-   The lesson applies on this PC right away; the user shares it with *Claude's memory > Share my knowledge* in the app.
+   The lesson applies on this PC right away; the user shares it with *Claude's memory > Shared knowledge > Share my
+   knowledge* in the app (they tick what goes; a lesson whose source note says "test" stays on this PC until they tick
+   it, and one that names a file on this PC is flagged - so name the video and event, never a path).
 5. If config or code changed: re-run `.venv\Scripts\python tools\analyze.py "<source path>" --redetect`, then
    `.venv\Scripts\python tools\selftest.py --extended` - **all four self-tests must still PASS**; if one fails,
    rework or revert the change before continuing.
@@ -247,7 +214,8 @@ faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). 
    sheets, update `review.json`, run `tools\report.py <name>`.
 7. Tell the user exactly what changed: each lesson added (quoted), each config key `old -> new` and why, any code
    change, each re-checked event (old -> new type / frames, with timecodes), and the self-test result. Remind them
-   that *Claude's memory > Share my knowledge* sends the new lessons and the updated reference card to their friends.
+   that *Claude's memory > Shared knowledge > Share my knowledge* sends the new lessons and the updated reference card
+   to their friends (whatever they tick there).
 
 ---
 
@@ -260,5 +228,5 @@ faces, where the text sits) and `sheet_N.png` (15 numbered pictures per sheet). 
    keep the source note and add `from <author> <local id>` to it.
    Files named `*-making.md` hold lessons on MAKING videos (rebuilds, generated videos): review them the same way into
    `.claude\skills\recreate-video\lessons.md` with the next `M###` (format in its header) - never into this lessons.md.
-4. Delete the processed incoming files. Tell the user what was kept / merged / dropped, and that *Claude's memory > Share
-   my knowledge* puts the reviewed lessons.md on GitHub for everyone.
+4. Delete the processed incoming files. Tell the user what was kept / merged / dropped, and that *Claude's memory >
+   Shared knowledge > Share my knowledge* puts the reviewed lessons.md on GitHub for everyone.

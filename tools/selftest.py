@@ -435,6 +435,15 @@ def check_thumbsets() -> dict:
     return {"passed": TS.selfcheck()["passed"]}
 
 
+def check_textsets() -> dict:
+    """Sets of scripts & prompts (2026-10-18), no Claude: temp folders - splitting, measuring, and Claude's check saved
+    only when every quote is in THAT text (pieces out of order, paraphrases, words of another text refused), every
+    part a row or skipped, patterns counted by the tool (motionlab.textsets.selfcheck)."""
+    from motionlab import textsets as TX
+    print("\n=== text sets: scripts & prompts, Claude's quotes checked ===")
+    return {"passed": TX.selfcheck()["passed"]}
+
+
 def check_fonts() -> dict:
     """The font library (0.4.6), no render: the families read from the lab's fonts folder (licences, weights,
     variable ranges), a graphic gets only the fonts it uses, and every example / thumbnail design that has a font
@@ -572,21 +581,35 @@ def check_motion(extended: bool) -> dict:
         if not OVL.HF.exists():
             print("SKIP  snapshots: HyperFrames is not installed")
         else:
-            work, empty = LAB / ".app" / "dev" / "selftest_motion", []
-            _sh.rmtree(work, ignore_errors=True)
+            work = LAB / ".app" / "dev" / "selftest_motion"
+            alone = work.with_name(work.name + "_alone")
+            for w in (work, alone):
+                _sh.rmtree(w, ignore_errors=True)
+            import os as _os
             import time as _t
+            from concurrent.futures import ThreadPoolExecutor
             t0 = _t.time()
-            for t in lib:
-                dst = work / t["id"]
+
+            def snap(t: dict, w: Path = work) -> str | None:      # None = it draws, else what to report
+                dst = w / t["id"]
                 OVL.copy_sources(LAB / t["folder"], dst, t["id"])
                 try:
-                    arrs, _ = OVL.snapshots(dst, [int(t["thumb_f"])], work / f"{t['id']}_snap")
+                    arrs, _ = OVL.snapshots(dst, [int(t["thumb_f"])], w / f"{t['id']}_snap")
                     rgb = _np.asarray(OVL.on_checker(arrs[0]).convert("L"), _np.float32)
-                    if rgb.std() < 4:
-                        empty.append(t["id"])
+                    return t["id"] if rgb.std() < 4 else None
                 except SystemExit as e:
-                    empty.append(f"{t['id']} ({e})")
-            _sh.rmtree(work, ignore_errors=True)
+                    return f"{t['id']} ({e})"
+            # each template has its own copy, work folder and HyperFrames process (+ Chrome): up to 4 at a time
+            # (~cpu / 3); one that comes out empty under that load counts only when it is empty on its own too
+            with ThreadPoolExecutor(min(4, max(1, (_os.cpu_count() or 2) // 3))) as ex:
+                got = list(ex.map(snap, lib))
+            empty = []
+            for t, r in zip(lib, got):
+                r = r and snap(t, alone)
+                if r:
+                    empty.append(r)
+            for w in (work, alone):
+                _sh.rmtree(w, ignore_errors=True)
             print(("PASS  " if not empty else "FAIL  ") + f"every template draws something at its picture's frame "
                   f"({len(lib)} snapshots in {_t.time() - t0:.0f} s)" + (": empty " + ", ".join(empty) if empty else ""))
             passed = passed and not empty
@@ -612,7 +635,7 @@ def main() -> int:
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
-               "thumbsets": check_thumbsets(), "fonts": check_fonts(), "logos": check_logos(),
+               "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:
         results["synthetic_test"] = run_one(st / "synthetic_test.mp4", st / "synthetic_test_truth.json",

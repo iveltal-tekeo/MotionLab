@@ -55,6 +55,14 @@ def _z(x: np.ndarray) -> np.ndarray:
 
 
 def analyze(wav: Path, fps: float, n_frames: int, offset_s: float, cfg: dict) -> dict:
+    """Tempo, beats, onsets, downbeats, energy, builds, drops + the per-video-frame series, in this process."""
+    return per_frame(analyze_core(wav, fps, offset_s, cfg), fps, n_frames)
+
+
+def analyze_core(wav: Path, fps: float, offset_s: float, cfg: dict) -> dict:
+    """Everything but the per-frame series - it needs no frame count, so analyze.py runs it in a helper process
+    beside the signal pass (2026-10-19 speed audit); per_frame() finishes it. Logs nothing: its summary line travels
+    in the result and per_frame() logs it, at the same place in the job's log as before."""
     librosa = _librosa()
     import soundfile as sf
 
@@ -227,7 +235,30 @@ def analyze(wav: Path, fps: float, n_frames: int, offset_s: float, cfg: dict) ->
                  "end_frame": int(round(vt(b["t_audio_end"]) * fps)), "rise_db": b["rise_db"]}
                 for b in builds]
 
-    # per video frame series
+    return {
+        "available": True, "sr": sr, "hop": hop, "duration_s": round(dur, 3), "offset_s": offset_s,
+        "bpm": round(bpm, 2), "bpm_librosa": round(tempo_lib, 2),
+        "beat_period_frames": round(fps * 60.0 / bpm, 3) if bpm > 0 else None,
+        "downbeat_phase": downbeat_phase, "downbeat_confidence": round(db_conf, 2),
+        "beats": beats,
+        "onsets": [round(vt(t), 4) for t in onset_t_audio],
+        "drops": drops_v, "builds": builds_v,
+        "energy_curve": {"t": [round(vt(t), 3) for t in rms_t[::4]],
+                         "db": [round(float(x), 2) for x in e_fast[::4]]},
+        "_series": {"rms_t": rms_t, "rms_db": rms_db, "env_t": env_t, "oenv": oenv,
+                    "log": f"audio: {bpm:.1f} BPM ({len(beats)} beats, downbeat phase {downbeat_phase}, "
+                           f"conf {db_conf:.2f}), {len(onset_t_audio)} onsets, {len(drops_v)} drops, "
+                           f"{len(builds_v)} builds"},
+    }
+
+
+def per_frame(core: dict, fps: float, n_frames: int) -> dict:
+    """analyze_core's result + "per_frame": rms dB, onset strength, beat and downbeat flags per video frame."""
+    if not core.get("available"):
+        return core
+    res = dict(core)
+    s = res.pop("_series")
+    rms_t, rms_db, env_t, oenv, offset_s = s["rms_t"], s["rms_db"], s["env_t"], s["oenv"], res["offset_s"]
     fidx = np.arange(n_frames)
     ta0 = fidx / fps - offset_s
     pf_rms = np.interp(ta0 + 0.5 / fps, rms_t, rms_db, left=np.nan, right=np.nan)
@@ -239,24 +270,13 @@ def analyze(wav: Path, fps: float, n_frames: int, offset_s: float, cfg: dict) ->
             pf_on[n] = float(oenv[i0s[n]:i1s[n]].max())
     pf_beat = np.zeros(n_frames, dtype=np.int8)
     pf_down = np.zeros(n_frames, dtype=np.int8)
-    for b in beats:
+    for b in res["beats"]:
         k = int(round(b["frame"]))
         if 0 <= k < n_frames:
             pf_beat[k] = 1
             if b["downbeat"]:
                 pf_down[k] = 1
 
-    log(f"audio: {bpm:.1f} BPM ({len(beats)} beats, downbeat phase {downbeat_phase}, "
-        f"conf {db_conf:.2f}), {len(onset_t_audio)} onsets, {len(drops_v)} drops, {len(builds_v)} builds")
-    return {
-        "available": True, "sr": sr, "hop": hop, "duration_s": round(dur, 3), "offset_s": offset_s,
-        "bpm": round(bpm, 2), "bpm_librosa": round(tempo_lib, 2),
-        "beat_period_frames": round(fps * 60.0 / bpm, 3) if bpm > 0 else None,
-        "downbeat_phase": downbeat_phase, "downbeat_confidence": round(db_conf, 2),
-        "beats": beats,
-        "onsets": [round(vt(t), 4) for t in onset_t_audio],
-        "drops": drops_v, "builds": builds_v,
-        "energy_curve": {"t": [round(vt(t), 3) for t in rms_t[::4]],
-                         "db": [round(float(x), 2) for x in e_fast[::4]]},
-        "per_frame": {"rms_db": pf_rms, "onset": pf_on, "beat": pf_beat, "downbeat": pf_down},
-    }
+    log(s["log"])
+    res["per_frame"] = {"rms_db": pf_rms, "onset": pf_on, "beat": pf_beat, "downbeat": pf_down}
+    return res

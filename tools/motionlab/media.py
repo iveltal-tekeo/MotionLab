@@ -178,14 +178,16 @@ def extract_and_render(video: Path, info: dict, events: list[dict], plans: dict,
                     "-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "128k"]
         cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", str(pc["crf"]), "-pix_fmt", "yuv420p",
                 "-movflags", "+faststart", "-shortest", str(out)]
-        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        # stderr not piped: nobody reads it, and a full pipe would stall the encoder
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
         open_pipes[ev["id"]] = (p, ev, pb)
 
     log(f"extracting {len(need)} sheet frames and {len(events)} previews at {w}x{h}")
     q = ex["jpeg_quality"]
+    closing = []                           # finished previews: their encoders end while the decode goes on
     for i, frame in iter_frames(video, w, h, v.get("hdr", False)):
         # the RGB copy only for sheet frames and preview frames - most decoded frames are neither
-        rgb = np.ascontiguousarray(frame[..., ::-1]) if i in need or i in starts or open_pipes else None
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) if i in need or i in starts or open_pipes else None
         if i in need:
             Image.fromarray(rgb).save(frames_dir / f"f{i:06d}.jpg", quality=q)
         if i in befores or i in looks:
@@ -205,7 +207,8 @@ def extract_and_render(video: Path, info: dict, events: list[dict], plans: dict,
             start_pipe(ev)
         done = []
         for eid, (p, ev, pb) in open_pipes.items():
-            img = draw_preview_overlay(Image.fromarray(rgb.copy()), i, ev, fps, drop_tc,
+            # fromarray copies an RGB array into Pillow's own memory, so drawing never touches rgb
+            img = draw_preview_overlay(Image.fromarray(rgb), i, ev, fps, drop_tc,
                                        {**marks, "cuts": cut_set | set(ev.get("cuts", []))}, F)
             try:
                 p.stdin.write(img.tobytes())
@@ -220,11 +223,13 @@ def extract_and_render(video: Path, info: dict, events: list[dict], plans: dict,
                 p.stdin.close()
             except OSError:
                 pass
-            p.wait()
+            closing.append(p)
         if i >= last_needed and not open_pipes:
             break
     for eid, (p, _, _) in list(open_pipes.items()):
         p.stdin.close()
+        closing.append(p)
+    for p in closing:
         p.wait()
 
 

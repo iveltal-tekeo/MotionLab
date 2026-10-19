@@ -49,8 +49,10 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
 
 ## 3. Versions
 
-- **The lab**: semantic versions in `CHANGELOG.md` (`0.4.0` = Analyze / Edit / Generate). Minor = new
-  capability, patch = fix. Tag a release when the self-tests (and the Resolve test) pass.
+- **The lab**: semantic versions in `CHANGELOG.md` (`0.4.0` = Analyze / Edit / Generate; the same notes in Spanish in
+  `CHANGELOG.es.md` from 0.5.1 on). Minor = new capability, patch = fix. Tag a release when the self-tests (and the
+  Resolve test) pass. **Phases** (the user, 2026-10-18): Phase 1 = everything up to 0.5.0.1; Phase 2 = the path from
+  0.5.0 to 1.0.0, "deployment" (opened by 0.5.1; docs\plans.md).
 - **Edits**: already versioned: `edit_vN.py` -> `plan_vN.json` -> `<name>_vN.mp4` / `<name>_resolve_vN`.
   Keep that; record in each plan which lab version made it (`"lab_version"`), so a render can be reproduced.
 - **Knowledge**: every lesson / threshold change is a commit that names its source (feedback file, reference,
@@ -92,6 +94,35 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
   check-runs/<job id>/annotations` (the job id from `actions/runs/<run id>/jobs`). Fix and push again - friends keep the last tested version meanwhile. Only if the
   workflow itself is broken (not the lab) and an update must go out anyway: `git push origin main:tested`.
 
+### Install (since 2026-10-18)
+
+The user: "its very hard for people to read the steps or install git or do all fo that throught the terminal ... its
+just the setup that need a "idiot-proof" imporvment".
+- **One file, two modes**: `Install-MotionLab.cmd` (repo root, ASCII; its batch part is ONE line that hands the file
+  to PowerShell - so LF or CRLF endings and a rewrite while it runs are both fine; all its words in one table at the
+  top). Double-clicked from Downloads (install mode) it asks everything first - the folder (`C:\MotionLab`, Enter;
+  never a folder that holds other files; warnings for Downloads / Desktop / OneDrive / Temp / accents / long paths),
+  the plan (every program, what for, size, whether Windows asks permission), motion graphics (yes by default), the
+  name - then installs Git, clones and hands over to the CLONED copy's installer (`-Here -Yes` + the answers), so an
+  old download finishes with the newest tested steps. `-Here` (= double-clicking `setup.bat`) finishes / repairs the
+  folder it sits in: winget for what is missing (exit codes in plain words, "installed" only when found afterwards,
+  PATH re-read from the registry after each - no new window, no second run), Claude Code with Anthropic's own
+  installer + `claude auth login`, a ZIP copy connected through `updater.connect`, then `setup.bat /lab` (.venv, pip
+  only when requirements.txt changed - `.venv\.requirements.sha256` -, folders, the MCP approval, HyperFrames,
+  shortcuts). It refuses a "Run as administrator" start; a second run changes nothing; it never pulls, resets or
+  deletes; the window's text is kept in `.app\install.log`.
+- **The tested commit on a local main**: a new clone and *Connect to GitHub* check out `origin/tested` as a LOCAL
+  branch `main` that follows `origin/main` - the Update button's gate (`updater._upstream` follows tested only from a
+  branch called main; Share pushes `HEAD:main`).
+- **The download**: README links the file's page on the `tested` branch (*Download raw file*; that copy has LF
+  endings, which the one-line header handles). Optional later, the user's call: a GitHub Release per tagged version
+  with the file attached - one click, `releases/latest/download/Install-MotionLab.cmd` - a few lines in
+  `.github\scripts\mark_tested.sh --tag` (`gh release create`, the workflow already has `contents: write`).
+- **Tests**: `tools\dev\install_test.py` (about 2 minutes; never touches this PC: a fake winget + a test PATH file =
+  `ML_TEST_PATHFILE`, a fake GitHub with main + tested, scratch folders with spaces; the real shortcuts, settings and
+  user PATH are hashed before and after). Still needed by hand when it changes: one clean Windows 10 and 11 (Sandbox
+  or a VM) from the download to MotionLab open, with Settings > Programs all found.
+
 ## 4. Fix before a repo or before friends use it (judgement)
 
 1. Paths: move machine paths to `settings.json`; store footage paths in plans relative to the project folder.
@@ -104,7 +135,8 @@ Resolve's LUT folder. Today these are hard-coded in `resolve_build.py`, `storage
 5. Storage: the footage cache is raw 8-bit grey (2.6 GB per minute). Compress it or keep only half resolution for
    layout work before projects get long.
 6. Friends' PCs: Python 3.12 + ffmpeg + Resolve Studio (paid) are requirements; option 2 needs Studio's scripting.
-   An installer or a `setup.py doctor` that checks all three would save them an afternoon.
+   An installer or a `setup.py doctor` that checks all three would save them an afternoon. Done 2026-10-18:
+   `Install-MotionLab.cmd` (section 3, *Install*) - Resolve Studio stays the user's own install.
 
 ## 5. What `.gitignore` will need
 

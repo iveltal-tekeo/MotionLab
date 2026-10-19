@@ -70,6 +70,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
+from . import i18n as I18N
 from .util import ANALYSIS, LAB, read_json, safe_name, write_json
 
 ROOT = Path(os.environ.get("MOTIONLAB_THUMBS_ROOT") or (ANALYSIS / "thumbs"))
@@ -1044,18 +1045,19 @@ def add_links(name: str, urls: list[str], log=print, label: str | None = None) -
 # ------------------------------------------------------------------------------------------ public: change a set
 def remove_item(name: str, n: int) -> dict:
     """Picture #n out of the set (its lab-made copy deleted); the later ones move up a number (their files renamed,
-    their measures kept). Returns {"removed", "count"}."""
+    their measures kept). Returns {"removed", "count"}. Its two refusals are the set page's toasts (the app's
+    language; the CLI's remove-item stays English)."""
     with _lock(name):
         S = _need(name)
         d = set_dir(name)
         items = S["items"]
         i = next((k for k, it in enumerate(items) if it.get("n") == int(n)), None)
         if i is None:
-            raise ValueError(f"the set has no picture #{n}")
+            raise ValueError(I18N.t("the set has no picture #{n}", n=n))
         img = (d / "img").resolve()
         p = (d / items[i]["file"]).resolve()
         if img not in p.parents:
-            raise ValueError(f"refusing to delete {p}: not one of the set's own pictures")
+            raise ValueError(I18N.t("refusing to delete {path}: not one of the set's own pictures", path=p))
         p.unlink(missing_ok=True)
         del items[i]
         for it in items[i:]:

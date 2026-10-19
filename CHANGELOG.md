@@ -3,7 +3,100 @@
 What changed in each version of MotionLab, newest first. When a new version is on GitHub, MotionLab shows an
 **Update available** button in the sidebar; it opens the sections below that are newer than your copy.
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
-between them (fixes, upkeep, polish).
+between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
+
+## 0.5.1 - 2026-10-19 - Phase 2 begins: MotionLab in Spanish, analyses in half the time, a one-file install, one way to review
+
+- **Phase 2 starts here** - the path from 0.5.0 to 1.0.0, deployment. Phase 1 was everything up to 0.5.0.1. The
+  roadmap on Home shows both phases, and the planned versions each moved one number up: yapping mode is 0.5.2 now,
+  faster videos 0.5.3, the prompt generator 0.5.4, template packs 0.5.5, colour + DaVinci Resolve 0.5.6 and content
+  generation 0.5.7.
+- **Español** - *Settings > General > Language*: English or Español (Spain, tú). One click and the app reloads in that
+  language - every page, dialog, message and check, the dates ("hace 2 días"), the numbers (4,5) and the counts, the
+  names and settings of the Motion Graphics templates, a video's report and, from this version on, *What's new*. On a
+  Spanish Windows the installer speaks Spanish too, and the MotionLab it installs starts in Spanish. Claude answers you
+  in Spanish in every window the app opens; what it saves in MotionLab (reviews, lessons, its memory) stays in
+  English, so what you share reads the same for your friends.
+- **Installing is one file now** - *Install-MotionLab.cmd*: download it, double-click it, answer two small questions
+  (motion graphics, your name) and press Y. It installs Git, Python, ffmpeg, Claude Code (and signs you in), the
+  rest of the programs and MotionLab itself in one go - no terminal, no commands to type, no "open a new window and
+  run it again" - and opens MotionLab when it is done, with an icon on the Desktop and in the Start menu. It says
+  first what it will install, how big each part is and where Windows will ask for permission; it starts you on the
+  last tested version (the one the Update button installs). Run it again (or setup.bat) any time: it only does what
+  is missing. The README has the 3 steps, in English and in Spanish.
+- **setup.bat repairs**: a copy downloaded as a ZIP gets connected to GitHub by itself (updates work), a missing
+  program is installed after asking, and *Settings > Connect to GitHub* is filled in for you.
+- **Three ways into the Analyser**, like Prepare: **Videos**, **Thumbnails** and the new **Scripts & prompts** - each
+  says what is there and what Claude has not checked yet, and each kind has its own tab under them. On Home the first
+  card is *Analyze what works* - Videos, Thumbnails, Scripts.
+- **Scripts & prompts**: paste or drop up to 20 at once - talking scripts, hooks, prompts for AI video and image tools,
+  briefs (.txt, .md, .docx, .pdf). MotionLab numbers and measures them on the spot (their kind, length, the words they
+  share, twins); one Claude window then checks each one, part by part, and names what they have in common - you mark
+  each pattern Correct / Partly / Wrong. They live in your prompt library, so Optimize, Film it and your ratings work on
+  them too.
+- **Claude quotes, it doesn't invent**: Claude can no longer put words in your prompt's mouth - every part it quotes
+  from a prompt or a script is checked against the text before it is saved (a paraphrase, pieces out of order or words
+  from another prompt are sent back), and MotionLab keeps the exact words and where they are.
+- **Shared knowledge** - Claude's memory has its own tab for what you share with friends and what came from them: tick
+  what goes with your next share (anything whose name looks like a test stays on your PC until you tick it, and a lesson
+  that names a file on your PC is flagged), see what you shared before, and per friend their videos, their lessons
+  waiting for a review and the rules that came from them. Everything a friend shared carries a lime "from <name>" badge.
+- **In the style of** - every style picker lists only the videos you analysed on this PC, with their picture and a name
+  a person would use (no more "Video by ..." or "[VLDJ_-wrwj8]"); in Prepare you can also pick your own scripts and hooks.
+- **Honest counts** - "effects you confirmed" now counts only your own verdicts (your friends' are counted apart, so it
+  can drop - on a PC with only friends' videos it shows 0), and Claude tells you when something it made came from a
+  friend's knowledge.
+- **Names a person would use** - the Analyser and a video's page show the name you gave a video, Claude's name for it
+  or its title without the "[VLDJ_-wrwj8]", instead of the file name (point at the name to see the file's); Home's
+  Status lists your edits by the names you gave them, and the Jobs list and the Delete dialog use them too.
+- **Claude remembers your scripts & prompts** - Claude's memory now includes the sets of scripts & prompts you analysed
+  and the patterns you marked right (never shared); writing a script or a title reads a shorter memory, without how the
+  effects were made.
+- **One way to review** - reviewing looks and works the same everywhere - an analysed video's effects and possible
+  misses, a video's Review (Editor and Generator), a script or a prompt, a title, a thumbnail set, a set of scripts &
+  prompts: the thing on the left, your review on the right, the same ✓ ~ ✗ buttons (keys 1 2 3, J K to move), one note
+  that saves as you type, "N of M reviewed", and one last step: Send it to Claude.
+- **Is Claude right?** on scripts and prompts: say if Claude's check of each part is right (Correct / Partly / Wrong) -
+  Claude follows your verdicts when it improves them. Point at a part to see its words marked in the text.
+- Thumbnail sets and sets of scripts & prompts: your note on each pattern is kept, and *Send it to Claude* looks at the
+  patterns again with your verdicts - it keeps the ones you marked correct and fixes or drops the rest. A video made in
+  the Generator is improved by the Generator's own Claude skill.
+- Possible misses: "✓ Not an effect" is the first button now (key 1), "★ It's an effect" the second (key 2).
+- Prepare lists only your own scripts: other creators' scripts you analyse stay in their set and the prompt library.
+- MotionLab reads a PDF's text itself once the update installs its PDF reader (until then Claude reads PDFs, as before).
+- **Claude starts lighter** - the notes every Claude window reads first are about a third shorter (the same rules),
+  Claude reads its notes on an app page only when it changes that page, a helper reads only the part of a skill it
+  needs, and four of MotionLab's Claude skills had lost their description, so asking in your own words ("apply this
+  feedback", "remake my clips like this video") could miss them - they are back.
+- **Analyses take about half the time** - the lab pass now measures several frames at once on your PC's cores and
+  listens to the music at the same time, and the overview picture and the numbers file are written faster (a
+  30-second test video: 35 s -> 19 s). The results are the same as before.
+- **Faster to open** - the window appears about 3 seconds sooner after a double-click (MotionLab no longer waits on
+  two slow checks of its own port first), and the restart after an update is about 5 seconds shorter.
+- **Faster pages** - Home and Claude's memory answer several times faster: the Motion Graphics templates are no longer
+  worked out there only to be left out. Motion Graphics' tabs and the Generator's graphics dialog rebuild the
+  catalogue only after a template or a pack changed.
+- **Learned from with hundreds of clips** - the clips' pictures load as you scroll, and a clip loads only when you
+  point at it.
+- **Lighter in the background** - while the app is open it no longer starts PowerShell every 20 seconds to ask whether
+  DaVinci Resolve runs; it looks at the list of running programs (PowerShell only while Resolve is open).
+- Fixes: a note on a part of a video is no longer lost when you click away without pressing Enter; every Claude button
+  failed when the Windows user name or the MotionLab folder had an accent (José, María); a program installed while
+  MotionLab was closed is found at the next start without signing out; *Update yt-dlp* no longer brings a second copy
+  of ffmpeg along; "how to get it" hints point to setup.bat instead of terminal commands; a start that fails (for
+  example after an update whose install step broke) is now written to the app's log, so *Report a problem* and Claude
+  can see why; ffmpeg's own error now reaches the job log when a video's or a song's name has letters like Á or Í (a
+  Python error showed instead); *Generate a new prompt* and *Use it, change…* hand your words to Claude whole - a long
+  wish lost its end (and the style you picked), and signs like %, &, < or > were dropped on the way.
+- Analysis fixes: a damaged video can no longer make an analysis (or the preparation of your footage for an edit) hang
+  for ever; when a video is replaced by another one under the same file name, its new analysis no longer reuses the
+  old video's sound and frame copy; the mirror-symmetry and repeated-tile measurements now give exactly the same
+  numbers on every run.
+- For developers: the UI tests (smoke, the update test, `tools\dev\cdp.py`) use free ports and a browser profile of
+  their own, so two can run at once; a browser that does not start fails at once instead of after 2.5 minutes; the
+  self-test's 75 motion snapshots run 4 at a time. `tools\dev\i18n_check.py` checks the translations (every text has
+  its Spanish, its placeholders and tags kept, nothing unused), lists each area's work and merges the part files;
+  smoke.py runs it and opens Home once in Spanish.
 
 ## 0.5.0.1 - 2026-10-16 - Logos for your motion graphics
 

@@ -8,10 +8,14 @@
     "heading in plans.md / CHANGELOG.md - written by sync, shown on hover), status (optional: done | next | planned |",
     "later - normally derived: up to 'here' done, the first after it next, then planned up to the next major, later after).",
     "icons: analyze prepare edit generate memory library knowledge home videos prompts claude update news settings.",
+    "phases: [{label, line, from, to}] = spans of versions drawn as brackets above the main line (from / to = versions;",
+    "the one 'here' falls in is lit). Inside the app the page's words follow the app's language: the Spanish of every",
+    "label / line / item / title / phase = \"<English>|roadmap\" in tools/motionlab/app/ui/i18n/parts/es.release.json,",
+    "each key also in its _by_key (a new label gets its Spanish there in the same change).",
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
-  "date": "2026-10-16",
-  "here": "0.5.0.1",
+  "date": "2026-10-19",
+  "here": "0.5.1",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -33,15 +37,18 @@
     {"v": "0.4.6", "label": "Fonts + captions", "title": "Fonts and captions: 28 fonts, live previews, caption looks"},
     {"v": "0.5.0", "label": "Motion graphics", "icon": "generate", "line": "74 ready-made motion graphics, learned from pro template clips - change them live, use them anywhere.", "items": ["74 templates", "Live preview", "Any size", "Sound effects", "Generator uses them"], "title": "Motion Graphics: 74 ready-made graphics, and the Generator builds from them"},
     {"v": "0.5.0.1", "label": "Logos", "title": "Logos for your motion graphics"},
-    {"v": "0.5.1", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
-    {"v": "0.5.2", "label": "Faster videos", "title": "Faster videos: a minute of video in ten minutes of Claude"},
-    {"v": "0.5.3", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
-    {"v": "0.5.4", "label": "Template packs", "title": "Motion graphics: template packs, the motion check, formats"},
-    {"v": "0.5.5", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
-    {"v": "0.5.6", "label": "Content generation", "title": "Content generation: AI clips, voice and music"},
+    {"v": "0.5.1", "label": "Phase 2: Spanish, speed", "title": "Phase 2 begins: MotionLab in Spanish, analyses in half the time, a one-file install, one way to review"},
+    {"v": "0.5.2", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
+    {"v": "0.5.3", "label": "Faster videos", "title": "Faster videos: a minute of video in ten minutes of Claude"},
+    {"v": "0.5.4", "label": "Prompt generator", "title": "Prompt generator: every model, every specialty"},
+    {"v": "0.5.5", "label": "Template packs", "title": "Motion graphics: template packs, the motion check, formats"},
+    {"v": "0.5.6", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
+    {"v": "0.5.7", "label": "Content generation", "title": "Content generation: AI clips, voice and music"},
     {"v": "0.6.0", "label": "Describe video", "icon": "memory", "line": "What videos and courses say and show: topics, the steps taught, notes, collections.", "title": "Describe video: videos and courses as information"},
     {"v": "0.6.5", "label": "Templates by feel", "title": "Templates by feel"},
     {"v": "0.7.0", "label": "AI B-roll", "icon": "videos", "line": "Missing shots or whole sequences made by video models, used like your own clips.", "title": "AI B-roll and cinematics"},
-    {"v": "0.7.5", "label": "macOS", "title": "macOS"}
-  ]
+    {"v": "0.7.5", "label": "macOS", "title": "macOS"},
+    {"v": "1.0.0", "label": "Deployment", "icon": "update", "line": "The end of Phase 2. What it holds is still to be decided.", "title": "Deployment"}
+  ],
+  "phases": [{"label": "Phase 1", "from": "0.1.0", "to": "0.5.0.1"}, {"label": "Phase 2", "line": "the path to deployment", "from": "0.5.0", "to": "1.0.0"}]
 }

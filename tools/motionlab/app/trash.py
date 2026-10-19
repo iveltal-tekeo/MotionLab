@@ -14,6 +14,7 @@ import sys
 import time
 from pathlib import Path
 
+from motionlab import i18n as I18N
 from motionlab.util import ANALYSIS, LAB, REFS
 
 from . import data
@@ -21,6 +22,9 @@ from . import data
 ROOTS = (ANALYSIS, REFS, data.PROJECTS)
 RESOLVE_LUTS = Path(r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\MotionLab")
 BIG = 10 * 1000 ** 3                     # above this the dialog says Windows may ask before deleting for good
+# why a file stayed: deleted.log keeps this English, the page gets it in the app's language (recycle "why_shown")
+WHY_LEFT = ("Windows could not move it (code {code}): a program may still have it open (DaVinci Resolve, a player, "
+            "Explorer's preview) - close it and try again")
 
 
 def size_of(p: Path) -> tuple[int, int]:
@@ -43,7 +47,7 @@ def inside(p: Path | str) -> Path:
     and junctions are resolved first, so one pointing elsewhere is refused)."""
     r = Path(p).resolve()
     if not any(root in r.parents for root in ROOTS):
-        raise PermissionError(f"only files inside refs, analysis or projects can be deleted: {p}")
+        raise PermissionError(I18N.t("only files inside refs, analysis or projects can be deleted: {file}", file=p))
     return r
 
 
@@ -92,39 +96,58 @@ def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) ->
     us = us or users_of(src, skip_analysis)
     warn = []
     if us["analyses"]:
-        warn.append("also analysed as " + ", ".join(us["analyses"]) + " - that analysis keeps working only while the "
-                    "video is there")
+        warn.append(I18N.t("also analysed as {names} - that analysis keeps working only while the video is there",
+                           names=", ".join(us["analyses"])))
     if us["projects"]:
-        warn.append("used by your video(s) " + ", ".join(us["projects"]) + " (as the reference / soundtrack of an edit "
-                    "or in its DaVinci Resolve timeline) - deleting it breaks their renders and the Resolve timeline")
-    return {"key": "video", "label": "The video file", "path": data.rel(src), "bytes": b, "files": 1,
+        warn.append(I18N.tn(len(us["projects"]), "used by your video(s) {names} (as the reference / soundtrack of an "
+                                                 "edit or in its DaVinci Resolve timeline) - deleting it breaks their "
+                                                 "renders and the Resolve timeline",
+                            "used by your video(s) {names} (as the reference / soundtrack of an edit or in its DaVinci "
+                            "Resolve timeline) - deleting it breaks their renders and the Resolve timeline",
+                            names=", ".join(us["projects"])))
+    return {"key": "video", "label": I18N.t("The video file"), "path": data.rel(src), "bytes": b, "files": 1,
             "what": src.name, "default": not warn, "warn": warn}
+
+
+def _human(n: float | None) -> str:
+    """data.human in the app's language: Spanish writes 1,2 GB."""
+    h = data.human(n)
+    return h.replace(".", ",") if I18N.lang() == "es" else h
 
 
 def plan_reference(name: str) -> dict:
     d = ANALYSIS / data.safe_name(name)
-    if not d.is_dir() or d.name.lower() in ("thumbs", "templates"):   # thumbnail sets (kind "thumbs"), motion packs (0.5.0)
+    if not d.is_dir() or d.name.lower() in ("thumbs", "templates", "texts"):   # thumbnail sets (kind "thumbs"), motion
+        # packs (0.5.0), sets of scripts & prompts (kind "texts", 2026-10-18)
         raise FileNotFoundError(name)
     inside(d)
     ev = data.read_json(d / "events.json", {}) or {}
     src_s = (ev.get("source") or {}).get("path") or (data.read_json(d / "source.json", {}) or {}).get("path") or ""
     b, n = size_of(d)
     nv = sum(1 for s in data.load_verdicts(d.name)["events"].values() if s.get("v"))
-    items = [{"key": "analysis", "label": "The analysis", "path": data.rel(d), "bytes": b, "files": n,
-              "what": "frames, contact sheets, previews, report, Claude's review"
-                      + (f", your {nv} verdict{'s' if nv != 1 else ''} and notes" if nv else ""),
+    items = [{"key": "analysis", "label": I18N.t("The analysis"), "path": data.rel(d), "bytes": b, "files": n,
+              "what": I18N.tn(nv, "frames, contact sheets, previews, report, Claude's review, your {n} verdict and notes",
+                              "frames, contact sheets, previews, report, Claude's review, your {n} verdicts and notes")
+              if nv else I18N.t("frames, contact sheets, previews, report, Claude's review"),
               "default": True, "warn": []}]
     notes = []
     src = Path(src_s).resolve() if src_s else None
     if src and src.is_file() and REFS in src.parents:
         items.append(_video_item(src, d.name))
     elif src and src.is_file():
-        notes.append(f"The video stays where it is ({src}): only videos inside the lab's refs folder are deleted here.")
+        notes.append(I18N.t("The video stays where it is ({path}): only videos inside the lab's refs folder are "
+                            "deleted here.", path=src))
     elif src_s:
-        notes.append("The video file is not there any more.")
-    keeps = ["what the lab learned from it: its card in Claude's memory (pacing + every reviewed effect) and "
-             "the lessons"]
-    return {"kind": "reference", "name": d.name, "title": Path(src_s).stem if src_s else d.name, "items": items,
+        notes.append(I18N.t("The video file is not there any more."))
+    keeps = [I18N.t("what the lab learned from it: its card in Claude's memory (pacing + every reviewed effect) and "
+                    "the lessons")]
+    try:                                        # the name the pages show (knowledge.label(), 2026-10-19)
+        from motionlab import knowledge as KN
+        shown = (KN.style(d.name) or {}).get("label") or ""
+    except Exception:
+        shown = ""
+    return {"kind": "reference", "name": d.name, "title": shown or (Path(src_s).stem if src_s else d.name),
+            "items": items,
             "notes": notes, "keeps": keeps}
 
 
@@ -138,24 +161,27 @@ def plan_project(name: str, resolve_state: str = "") -> dict:
     cb = sum(p.stat().st_size for p in clips)
     ob = sum(p.stat().st_size for p in others)
     bb, bn = size_of(d / "build") if (d / "build").is_dir() else (0, 0)
-    parts = [f"your {len(clips)} clip{'s' if len(clips) != 1 else ''} ({data.human(cb)})"]
+    parts = [I18N.tn(len(clips), "your {n} clip ({size})", "your {n} clips ({size})", size=_human(cb))]
     if others:
-        parts.append(f"{len(others)} other file{'s' if len(others) != 1 else ''} of yours ({data.human(ob)})")
-    parts.append(f"everything the lab made for it: edit versions, renders, caches, Resolve files ({data.human(bb)})")
+        parts.append(I18N.tn(len(others), "{n} other file of yours ({size})", "{n} other files of yours ({size})",
+                             size=_human(ob)))
+    parts.append(I18N.t("everything the lab made for it: edit versions, renders, caches, Resolve files ({size})",
+                        size=_human(bb)))
     total, files = size_of(d)
     warn = []
     builds = sorted((d / "build" / "resolve").glob("*_build.json")) if (d / "build" / "resolve").is_dir() else []
     for m in builds:
         man = data.read_json(m, {}) or {}
-        warn.append(f"The DaVinci Resolve project '{man.get('project') or d.name}' (timeline "
-                    f"{man.get('timeline') or m.name[:-len('_build.json')]}) uses these clips: it will show them as "
-                    f"offline. MotionLab does not touch the Resolve project; its LUTs in {RESOLVE_LUTS} stay.")
+        warn.append(I18N.t("The DaVinci Resolve project '{project}' (timeline {timeline}) uses these clips: it will "
+                           "show them as offline. MotionLab does not touch the Resolve project; its LUTs in {folder} "
+                           "stay.", project=man.get("project") or d.name,
+                           timeline=man.get("timeline") or m.name[:-len("_build.json")], folder=RESOLVE_LUTS))
     if resolve_state in ("running", "not responding"):
-        warn.append("DaVinci Resolve is running: close it first, it may keep the clips open.")
-    items = [{"key": "project", "label": "The whole folder", "path": data.rel(d), "bytes": total, "files": files,
-              "what": "; ".join(parts), "default": True, "warn": warn}]
+        warn.append(I18N.t("DaVinci Resolve is running: close it first, it may keep the clips open."))
+    items = [{"key": "project", "label": I18N.t("The whole folder"), "path": data.rel(d), "bytes": total,
+              "files": files, "what": "; ".join(parts), "default": True, "warn": warn}]
     return {"kind": "project", "name": d.name, "title": d.name, "items": items, "notes": [],
-            "keeps": ["the references and everything learned"]}
+            "keeps": [I18N.t("the references and everything learned")]}
 
 
 def plan_file(relpath: str) -> dict:
@@ -169,19 +195,19 @@ def plan_file(relpath: str) -> dict:
             and ext in data.VIDEO_EXT | data.AUDIO_EXT | data.IMAGE_EXT:     # a photo: a downloaded post's part
         us = users_of(p)
         if us["analyses"]:
-            raise PermissionError(f"{p.name} has an analysis ({', '.join(us['analyses'])}): delete the reference "
-                                  f"instead (References > the video > Delete)")
+            raise PermissionError(I18N.t("{file} has an analysis ({names}): delete the reference instead (References > "
+                                         "the video > Delete)", file=p.name, names=", ".join(us["analyses"])))
         item = _video_item(p, None, us)
-        item.update(key="file", label="The downloaded file", default=True)
+        item.update(key="file", label=I18N.t("The downloaded file"), default=True)
         kind = "download"
     elif parts[0] == "projects" and len(parts) >= 4 and parts[2] == "build" and ext in (".mp4", ".mov") \
             and (len(parts) == 4 or (len(parts) == 5 and parts[3] in ("compare", "resolve"))):
         b, _ = size_of(p)
-        item = {"key": "file", "label": "The render", "path": data.rel(p), "bytes": b, "files": 1, "what": p.name,
-                "default": True, "warn": []}
+        item = {"key": "file", "label": I18N.t("The render"), "path": data.rel(p), "bytes": b, "files": 1,
+                "what": p.name, "default": True, "warn": []}
         kind = "render"
     else:
-        raise PermissionError(f"not something the app deletes: {relpath}")
+        raise PermissionError(I18N.t("not something the app deletes: {file}", file=relpath))
     return {"kind": kind, "name": data.rel(p), "title": p.name, "items": [item], "notes": [], "keeps": []}
 
 
@@ -195,14 +221,32 @@ def plan_thumbs(name: str) -> dict:
     b, n = size_of(d)
     label = (data.read_json(d / "set.json", {}) or {}).get("label") or d.name
     return {"kind": "thumbs", "name": d.name, "title": label, "notes": [], "keeps": [],
-            "items": [{"key": "set", "label": "The thumbnail set", "path": data.rel(d), "bytes": b, "files": n,
-                       "what": "the pictures (copies), their measures, Claude's patterns and your verdicts on them",
-                       "default": True, "warn": []}]}
+            "items": [{"key": "set", "label": I18N.t("The thumbnail set"), "path": data.rel(d), "bytes": b, "files": n,
+                       "what": I18N.t("the pictures (copies), their measures, Claude's patterns and your verdicts on "
+                                      "them"), "default": True, "warn": []}]}
+
+
+def plan_texts(name: str) -> dict:
+    """A set of scripts & prompts (2026-10-18, analysis\\texts\\<set>): the set's own files only - its list, the
+    measures, Claude's patterns, the user's verdicts on them. The texts themselves stay in the prompt library."""
+    d = data._texts_root() / data.safe_name(name)
+    if not d.is_dir():
+        raise FileNotFoundError(name)
+    inside(d)
+    b, n = size_of(d)
+    label = (data.read_json(d / "set.json", {}) or {}).get("label") or d.name
+    return {"kind": "texts", "name": d.name, "title": label, "notes": [],
+            "keeps": [I18N.t("the scripts and prompts stay in your prompt library")],
+            "items": [{"key": "set", "label": I18N.t("The set of scripts & prompts"), "path": data.rel(d), "bytes": b,
+                       "files": n, "what": I18N.t("the list of the texts, what MotionLab measured, Claude's patterns "
+                                                  "and your verdicts on them"), "default": True, "warn": []}]}
 
 
 def plan(kind: str, name: str, resolve_state: str = "") -> dict:
     if kind == "thumbs":
         out = plan_thumbs(name)
+    elif kind == "texts":
+        out = plan_texts(name)
     elif kind == "reference":
         out = plan_reference(name)
     elif kind == "project":
@@ -210,7 +254,7 @@ def plan(kind: str, name: str, resolve_state: str = "") -> dict:
     elif kind == "file":
         out = plan_file(name)
     else:
-        raise ValueError(f"unknown kind {kind!r}")
+        raise ValueError(I18N.t("unknown kind {kind}", kind=repr(kind)))
     out["bytes"] = sum(i["bytes"] for i in out["items"] if i["default"])
     out["big"] = any(i["bytes"] > BIG for i in out["items"])
     return out
@@ -221,14 +265,17 @@ def delete(kind: str, name: str, keys: list, resolve_state: str = "") -> dict:
     pl = plan(kind, name, resolve_state)
     chosen = [i for i in pl["items"] if i["key"] in set(map(str, keys or []))]
     if not chosen:
-        raise ValueError("nothing selected")
+        raise ValueError(I18N.t("nothing selected"))
     paths = [inside(LAB / i["path"]) for i in chosen]
     res = recycle(paths)
     data._cache.clear()
     moved = {Path(p) for p in res["moved"]}
-    return {"moved": [i["path"] for i, p in zip(chosen, paths) if p in moved],
-            "failed": [{"path": i["path"], "why": res["why"]} for i, p in zip(chosen, paths) if p not in moved],
-            "bytes": sum(i["bytes"] for i, p in zip(chosen, paths) if p in moved), "title": pl["title"]}
+    out = {"moved": [i["path"] for i, p in zip(chosen, paths) if p in moved],
+           "failed": [{"path": i["path"], "why": res["why"]} for i, p in zip(chosen, paths) if p not in moved],
+           "bytes": sum(i["bytes"] for i, p in zip(chosen, paths) if p in moved), "title": pl["title"]}
+    if res.get("why_shown"):                     # the page's words (server.py swaps them in after deleted.log)
+        out["why_shown"] = res["why_shown"]
+    return out
 
 
 # ------------------------------------------------------------------------------------------------- Recycle Bin
@@ -259,7 +306,7 @@ def recycle(paths: list[Path], tries: int = 3) -> dict:
     """Move files / folders to the Recycle Bin. A file that is still open (a video the window was just playing)
     gets a few more tries. Returns {"moved": [...], "left": [...], "why": ...}."""
     if sys.platform != "win32":
-        raise RuntimeError("deleting from the app works on Windows only for now")
+        raise RuntimeError(I18N.t("deleting from the app works on Windows only for now"))
     left = [Path(p) for p in paths]
     code = 0
     for k in range(tries):
@@ -269,6 +316,8 @@ def recycle(paths: list[Path], tries: int = 3) -> dict:
             break
         time.sleep(0.8)
     moved = [str(p) for p in paths if not Path(p).exists()]
-    why = "" if not left else (f"Windows could not move it (code {code:#x}): a program may still have it open "
-                               "(DaVinci Resolve, a player, Explorer's preview) - close it and try again")
-    return {"moved": moved, "left": [str(p) for p in left], "why": why}
+    why = "" if not left else WHY_LEFT.format(code=f"{code:#x}")
+    out = {"moved": moved, "left": [str(p) for p in left], "why": why}
+    if left:                                     # in the app's language for the page; "why" stays English (the log)
+        out["why_shown"] = I18N.t(WHY_LEFT, code=f"{code:#x}")
+    return out

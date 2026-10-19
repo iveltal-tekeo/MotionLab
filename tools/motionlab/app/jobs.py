@@ -17,6 +17,8 @@ import threading
 import time
 from pathlib import Path
 
+from motionlab import i18n as I18N
+from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
 from motionlab.styles import CATEGORIES, FOCUS, LEGACY, clean_tags
 from motionlab.util import ANALYSIS, LAB
@@ -40,8 +42,66 @@ def _latest_plan(project: str) -> Path:
     plans = sorted(b.glob("plan_v*.json"), key=lambda p: int(p.stem.split("_v")[-1]) if p.stem.split("_v")[-1].isdigit()
                    else 0)
     if not plans:
-        raise JobError(f"project {project} has no plan_vN.json")
+        raise JobError(I18N.t("project {video} has no plan_vN.json", video=project))
     return plans[-1]
+
+
+# every job's title: the Jobs page and its toasts show it in the app's language (Settings > Language; the Spanish by
+# key in ui\i18n\parts\es.server-app.json), while its log, .app\jobs\history.jsonl and Report a problem keep this
+# English (Job.title_en - job logs never follow the language)
+TITLES = {
+    "analyze": "Analyse {file}",
+    "report": "Rebuild report {name}",
+    "resolve_doctor": "Resolve check-up ({video})",
+    "resolve_diff": "Resolve: what changed by hand ({video})",
+    "content_transcript": "Transcript of {name}",
+    "content_stats": "Views and followers of {name}",
+    "storage": "Storage report",
+    "prune": "Free space ({target}: {what})",
+    "prune_dry": "Dry run: free space ({target}: {what})",
+    "selftest": "Self-test (extended)",
+    "overlays_install": "Install HyperFrames (HTML overlays)",
+    "overlays_upgrade_test": "Test the newest HyperFrames + GSAP on the overlay examples",
+    "overlay_render": "Render the graphic {graphic} ({video})",
+    "overlay_save": "Save the graphic {graphic} to the library as {name}",
+    "overlay_refresh": "Swap the graphic {graphic} in DaVinci Resolve",
+    "overlay_resolve_clip": "A clip of {graphic} for DaVinci Resolve",
+    "overlay_captions": "Captions for {video} from {file}",
+    "overlay_captions_speech": "Captions for {video} from {file} (speech to text)",
+    "speech_install": "Install speech to text (faster-whisper + the small model)",
+    "overlay_new": "Add the graphic {graphic} to {video} as {name}",
+    "resolve_mcp_install": "Connect Claude Code to DaVinci Resolve (MCP)",
+    "resolve_mcp_remove": "Disconnect the Resolve MCP",
+    "thumbs_fontmatch": "The font of {set}, measured",
+    "thumbs_refresh": "The numbers of {set} again",
+    "thumbs_more": "{n} more thumbnails for {set}",
+    "thumbs_fetch": "Thumbnails of {set}",
+    "thumbs_links": "Thumbnails for {set}",
+    "thumbs_measure": "Measure the thumbnails of {set}",
+    "colour": "Colour of {name}",
+    "draft": "Quick draft of {video}",
+    "verify_timing": "Timing check {render}",
+    "ytdlp_update": "Update yt-dlp",
+    "ytdlp_update_dry": "Dry run: Update yt-dlp",
+    "player_copy": "A copy of {file} that plays here",
+    "thumb_candidates": "Good moments for a thumbnail ({video})",
+    "thumb_render": "Thumbnail {id} again ({video})",
+    "thumb_check": "Check the thumbnails ({video})",
+    "thumb_make": "Thumbnail {id}: {words} ({video})",
+}
+
+
+def _title(key: str, **v) -> data.Words:
+    return data.words(TITLES[key], **v)
+
+
+def _named(n: str) -> str:
+    """The name the pages show for analysis n (knowledge.label() through the cached style(), 2026-10-19), else the
+    folder name. Only for job titles: the commands keep the folder name."""
+    try:
+        return (KN.style(n) or {}).get("label") or n
+    except Exception:                                   # a title never stops a job
+        return n
 
 
 def make(kind: str, a: dict) -> tuple[str, list[str], str]:
@@ -49,14 +109,14 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
     if kind == "analyze":
         v = Path(str(a.get("video", ""))).expanduser()
         if not v.is_file() or v.suffix.lower() not in data.VIDEO_EXT:
-            raise JobError(f"not a video file: {v}")
+            raise JobError(I18N.t("not a video file: {file}", file=v))
         if LAB in v.resolve().parents and v.resolve().parts[len(LAB.parts)] in ("analysis", ".app", "tools"):
-            raise JobError("pick the original video, not a file the lab made")
+            raise JobError(I18N.t("pick the original video, not a file the lab made"))
         cat = str(a.get("category") or a.get("style") or "")
         extra = []
         if cat:
             if cat not in CATEGORIES and cat not in LEGACY:
-                raise JobError(f"unknown category {cat}")
+                raise JobError(I18N.t("unknown category {id}", id=cat))
             system.save({"default_category": cat})          # the dialog offers it again next time
             extra += ["--category", cat]
         if "tags" in a:
@@ -64,113 +124,112 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         focus = str(a.get("focus") or "")
         if focus:
             if focus not in FOCUS:
-                raise JobError(f"unknown focus {focus} (content, cinematic or both)")
+                raise JobError(I18N.t("unknown focus {id} (content, cinematic or both)", id=focus))
             extra += ["--focus", focus]
-        return f"Analyse {v.name}", [PY, str(TOOLS / "analyze.py"), str(v)] + (
+        return _title("analyze", file=v.name), [PY, str(TOOLS / "analyze.py"), str(v)] + (
             ["--redetect"] if a.get("redetect") else []) + extra, "cpu"
     if kind == "report":
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
-            raise JobError(f"no analysis {n}")
-        return f"Rebuild report {n}", [PY, str(TOOLS / "report.py"), n], "light"
+            raise JobError(I18N.t("no analysis {name}", name=n))
+        return _title("report", name=_named(n)), [PY, str(TOOLS / "report.py"), n], "light"
     if kind in ("resolve_doctor", "resolve_diff"):
         plan = _latest_plan(str(a.get("project", "")))
         flag = "--doctor" if kind == "resolve_doctor" else "--diff"
-        what = "Resolve check-up" if kind == "resolve_doctor" else "Resolve: what changed by hand"
-        return f"{what} ({a['project']})", [PY, str(TOOLS / "resolve_build.py"), str(plan), flag], "resolve"
+        return _title(kind, video=a["project"]), [PY, str(TOOLS / "resolve_build.py"), str(plan), flag], "resolve"
     if kind in ("content_transcript", "content_stats"):         # analysis page > Content (0.3.5)
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
-            raise JobError(f"no analysis {n}")
+            raise JobError(I18N.t("no analysis {name}", name=n))
         if kind == "content_transcript":
-            return (f"Transcript of {n}", [PY, str(TOOLS / "content.py"), "transcript", n]
+            return (_title(kind, name=_named(n)), [PY, str(TOOLS / "content.py"), "transcript", n]
                     + (["--force"] if a.get("again") else []), "net")
-        return f"Views and followers of {n}", [PY, str(TOOLS / "content.py"), "stats", n], "net"
+        return _title(kind, name=_named(n)), [PY, str(TOOLS / "content.py"), "stats", n], "net"
     if kind == "storage":
-        return "Storage report", [PY, str(TOOLS / "storage.py")], "light"
+        return _title("storage"), [PY, str(TOOLS / "storage.py")], "light"
     if kind == "prune":
         target = str(a.get("target", ""))
         if target not in ("all", "selftest"):
             data.safe_name(target)
         what = [w for w in a.get("what", ["cache"]) if w in ("cache", "checks", "finals")] or ["cache"]
         yes = bool(a.get("yes"))
-        return (f"{'Free space' if yes else 'Dry run: free space'} ({target}: {', '.join(what)})",
+        return (_title("prune" if yes else "prune_dry", target=target, what=", ".join(what)),
                 [PY, str(TOOLS / "storage.py"), "--prune", target, "--what", ",".join(what)] + (["--yes"] if yes else []),
                 "exclusive" if yes else "light")
     if kind == "selftest":
-        return "Self-test (extended)", [PY, str(TOOLS / "selftest.py"), "--extended"], "cpu"
+        return _title("selftest"), [PY, str(TOOLS / "selftest.py"), "--extended"], "cpu"
     if kind == "overlays_install":                                 # Settings > Programs > HyperFrames > Install
-        return "Install HyperFrames (HTML overlays)", [PY, str(TOOLS / "overlay.py"), "install"], "net"
+        return _title(kind), [PY, str(TOOLS / "overlay.py"), "install"], "net"
     if kind == "overlays_upgrade_test":            # Settings > Programs > HyperFrames > Test it (scratch install)
-        return ("Test the newest HyperFrames + GSAP on the overlay examples",
-                [PY, str(TOOLS / "overlay.py"), "upgrade-test", "--gsap", "latest"], "cpu")
+        return (_title(kind), [PY, str(TOOLS / "overlay.py"), "upgrade-test", "--gsap", "latest"], "cpu")
     if kind in ("overlay_render", "overlay_save"):                 # Videos > Graphics: Render / Save to library
         f = data.overlay_folder(str(a.get("project", "")), str(a.get("overlay", "")))
         if kind == "overlay_render":
-            return f"Render the graphic {f.name} ({a['project']})", [PY, str(TOOLS / "overlay.py"), "render", str(f)], "cpu"
+            return (_title(kind, graphic=f.name, video=a["project"]), [PY, str(TOOLS / "overlay.py"), "render", str(f)],
+                    "cpu")
         name = str(a.get("name") or f.name)
         if not re.fullmatch(r"[\w.-]+", name):
-            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
-        return (f"Save the graphic {f.name} to the library as {name}",
+            raise JobError(I18N.t("not a usable name: {name} (letters, digits, - _ .)", name=repr(name)))
+        return (_title(kind, graphic=f.name, name=name),
                 [PY, str(TOOLS / "overlay.py"), "save", str(f), "--name", name] + (["--force"] if a.get("replace") else []),
                 "light")
     if kind in ("overlay_refresh", "overlay_resolve_clip"):    # Videos > Graphics > DaVinci Resolve
         f = data.overlay_folder(str(a.get("project", "")), str(a.get("overlay", "")))
         if kind == "overlay_refresh":
-            return (f"Swap the graphic {f.name} in DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "refresh", str(f)],
-                    "resolve")
-        return f"A clip of {f.name} for DaVinci Resolve", [PY, str(TOOLS / "overlay.py"), "resolve-clip", str(f)], "light"
+            return (_title(kind, graphic=f.name), [PY, str(TOOLS / "overlay.py"), "refresh", str(f)], "resolve")
+        return _title(kind, graphic=f.name), [PY, str(TOOLS / "overlay.py"), "resolve-clip", str(f)], "light"
     if kind == "overlay_captions":           # Videos > Graphics > Captions (a subtitle file, or a video's words)
         p = data.safe_name(str(a.get("project", "")))
         src = Path(str(a.get("file", "")).strip().strip('"')).expanduser()
         speech = src.suffix.lower() in data.VIDEO_EXT or src.suffix.lower() in (".wav", ".mp3", ".m4a", ".aac")
         if not src.is_file() or not (speech or src.suffix.lower() in (".srt", ".vtt", ".json")):
-            raise JobError(f"not a subtitle file (.srt / .vtt / a lab transcript.json) or a video: {src}")
+            raise JobError(I18N.t("not a subtitle file (.srt / .vtt / a lab transcript.json) or a video: {file}",
+                                  file=src))
         if speech:
             from motionlab import speech as SP
             if not SP.available():
-                raise JobError("speech to text is not installed: Settings > Programs > Speech to text > Install")
+                raise JobError(I18N.t("speech to text is not installed: Settings > Programs > Speech to text > Install"))
         else:
             _latest_plan(p)                                         # rate / size / length come from the edit plan
         extra = []
         if speech:
             model = str(a.get("model") or "small")
             if model not in ("small", "base"):
-                raise JobError(f"unknown model {model}")
+                raise JobError(I18N.t("unknown model {id}", id=model))
             names = re.sub(r"[\r\n\"]", " ", str(a.get("names") or ""))[:300]
             extra = ["--model", model] + (["--names", names] if names.strip() else [])
         name = str(a.get("name") or "captions")
         if not re.fullmatch(r"[\w.-]+", name):
-            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
+            raise JobError(I18N.t("not a usable name: {name} (letters, digits, - _ .)", name=repr(name)))
         dst = data.PROJECTS / p / "build" / "overlays" / name
         if dst.exists() and not (OS.conf(dst).get("captions")):
-            raise JobError(f"{p} already has a graphic called {name} that is not captions: pick another name")
-        return (f"Captions for {p} from {src.name}" + (" (speech to text)" if speech else ""),
+            raise JobError(I18N.t("{video} already has a graphic called {name} that is not captions: pick another name",
+                                  video=p, name=name))
+        return (_title("overlay_captions_speech" if speech else kind, video=p, file=src.name),
                 [PY, str(TOOLS / "overlay.py"), "captions", str(dst), "--from", str(src), "--render", *extra], "cpu")
     if kind == "speech_install":                               # Settings > Programs > Speech to text > Install
-        return "Install speech to text (faster-whisper + the small model)", [PY, str(TOOLS / "speech.py"), "install"], "net"
+        return _title(kind), [PY, str(TOOLS / "speech.py"), "install"], "net"
     if kind == "overlay_new":                       # Library > Graphics > Use in a video: a copy, rendered right away
         p = data.safe_name(str(a.get("project", "")))
         if not (data.PROJECTS / p).is_dir():
-            raise JobError(f"no video project {p}")
+            raise JobError(I18N.t("no video project {video}", video=p))
         graphic = str(a.get("graphic", ""))
         OS.find_graphic(graphic)                                    # ValueError when it does not exist
         name = str(a.get("name") or graphic)
         if not re.fullmatch(r"[\w.-]+", name):
-            raise JobError(f"not a usable name: {name!r} (letters, digits, - _ .)")
+            raise JobError(I18N.t("not a usable name: {name} (letters, digits, - _ .)", name=repr(name)))
         dst = data.PROJECTS / p / "build" / "overlays" / name
         if dst.exists():
-            raise JobError(f"{p} already has a graphic called {name}: pick another name")
+            raise JobError(I18N.t("{video} already has a graphic called {name}: pick another name", video=p, name=name))
         vals = a.get("values") or {}                                # 0.5.0: the words tried in Motion Graphics' preview
         if not isinstance(vals, dict):
-            raise JobError("values: a set of settings")
-        return (f"Add the graphic {graphic} to {p} as {name}",
+            raise JobError(I18N.t("values: a set of settings"))
+        return (_title(kind, graphic=graphic, video=p, name=name),
                 [PY, str(TOOLS / "overlay.py"), "new", str(dst), "--from", graphic, "--like-plan", "--render"]
                 + (["--values", json.dumps(vals, ensure_ascii=False)] if vals else []), "cpu")
     if kind in ("resolve_mcp_install", "resolve_mcp_remove"):      # Settings > Claude Code > DaVinci Resolve (MCP)
         install = kind == "resolve_mcp_install"
-        return ("Connect Claude Code to DaVinci Resolve (MCP)" if install else "Disconnect the Resolve MCP",
-                [PY, str(TOOLS / "resolve_mcp.py"), "install" if install else "remove"], "net")
+        return (_title(kind), [PY, str(TOOLS / "resolve_mcp.py"), "install" if install else "remove"], "net")
     if kind == "download":              # yt-dlp: one video into refs\ + its source in refs\downloads.json
         title, _ = system.download_cmd(str(a.get("url", "")), str(a.get("preset", "")))      # validates everything
         return title, [PY, str(TOOLS / "download.py"), str(a["url"]).strip(), str(a.get("preset", ""))], "net"
@@ -178,71 +237,71 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
                 "thumbs_fontmatch"):                                                                     # 0.4.6
         s = data.safe_name(str(a.get("set", "")))
         if not s.strip(" ."):
-            raise JobError("name the set")
+            raise JobError(I18N.t("name the set"))
         tool = [PY, str(TOOLS / "thumbsets.py")]
         order = str(a.get("order") or "newest")
         if order not in ("newest", "views"):
-            raise JobError("the newest or the most viewed")
+            raise JobError(I18N.t("the newest or the most viewed"))
         if kind == "thumbs_fontmatch":                # 0.4.6: the words Claude listed vs the font library (~2 s)
-            return f"The font of {s}, measured", tool + ["fontmatch", s], "light"
+            return _title(kind, set=s), tool + ["fontmatch", s], "light"
         if kind == "thumbs_refresh":                  # the set's page: the newest views, dates and lengths
-            return f"The numbers of {s} again", tool + ["refresh", s], "net"
+            return _title(kind, set=s), tool + ["refresh", s], "net"
         if kind == "thumbs_more":                     # the set's page: the next batch of its channel
             n = int(a.get("n") or 20)
             if not 1 <= n <= 100:
-                raise JobError("1 to 100 more thumbnails")
-            return f"{n} more thumbnails for {s}", tool + ["more", s, "--n", str(n), "--order", order], "net"
+                raise JobError(I18N.t("1 to 100 more thumbnails"))
+            return _title(kind, n=n, set=s), tool + ["more", s, "--n", str(n), "--order", order], "net"
         if kind == "thumbs_fetch":
             url, n, label = str(a.get("url", "")).strip(), int(a.get("n") or 15), " ".join(str(a.get("label") or "").split())[:80]
             if not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", url):
-                raise JobError("paste a full channel or playlist link starting with https://")
+                raise JobError(I18N.t("paste a full channel or playlist link starting with https://"))
             if not 1 <= n <= 100:
-                raise JobError("1 to 100 thumbnails")
-            return (f"Thumbnails of {label or s}", tool + ["fetch", s, url, "--n", str(n), "--order", order]
+                raise JobError(I18N.t("1 to 100 thumbnails"))
+            return (_title(kind, set=label or s), tool + ["fetch", s, url, "--n", str(n), "--order", order]
                     + (["--label", label] if label else []), "net")
         if kind == "thumbs_links":
             urls = [str(u).strip() for u in a.get("urls") or [] if str(u).strip()]
             if not 1 <= len(urls) <= 60 or any(not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", u) for u in urls):
-                raise JobError("1 to 60 video links, each starting with https://")
-            return f"Thumbnails for {s}", tool + ["links", s, *urls], "net"
-        return f"Measure the thumbnails of {s}", tool + ["measure", s], "light"
+                raise JobError(I18N.t("1 to 60 video links, each starting with https://"))
+            return _title(kind, set=s), tool + ["links", s, *urls], "net"
+        return _title("thumbs_measure", set=s), tool + ["measure", s], "light"
     if kind == "colour":                         # an analysis' Overview > Measure the colour (0.4): no decoding
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
-            raise JobError(f"no analysis {n}")
-        return f"Colour of {n}", [PY, str(TOOLS / "colour.py"), n], "light"
+            raise JobError(I18N.t("no analysis {name}", name=n))
+        return _title(kind, name=_named(n)), [PY, str(TOOLS / "colour.py"), n], "light"
     if kind == "draft":             # Edit > New edit > Quick draft (0.4): build\\edit_request.json -> draft_edit.py
         p = data.safe_name(str(a.get("project", "")))
         if not (data.PROJECTS / p).is_dir():
-            raise JobError(f"no project {p}")
+            raise JobError(I18N.t("no project {video}", video=p))
         try:
             extra = data.draft_args(data.edit_request(p))
         except (FileNotFoundError, ValueError) as e:
             raise JobError(str(e))
-        return f"Quick draft of {p}", [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"
+        return _title(kind, video=p), [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"
     if kind == "verify_timing":
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"
         render = data.safe_name(str(a.get("render", "")))
         if not (b / "verify_timing.py").exists() or not (b / f"{render}.mp4").exists():
-            raise JobError(f"{p}: no verify_timing.py or no {render}.mp4")
-        return f"Timing check {render}", [PY, str(b / "verify_timing.py"), render], "cpu"
+            raise JobError(I18N.t("{video}: no verify_timing.py or no {render}.mp4", video=p, render=render))
+        return _title(kind, render=render), [PY, str(b / "verify_timing.py"), render], "cpu"
     if kind == "ytdlp_update":          # Settings > Programs > Update yt-dlp (0.4.2.1); dry_run = print, run nothing
         if not system.find("yt-dlp"):
-            raise JobError("yt-dlp not found - " + system.HOW["yt-dlp"])
+            raise JobError(I18N.t("yt-dlp not found - {how}", how=I18N.t(system.HOW["yt-dlp"])))
         dry = bool(a.get("dry_run"))
-        return (("Dry run: " if dry else "") + "Update yt-dlp",
+        return (_title("ytdlp_update_dry" if dry else kind),
                 [PY, str(JOBTOOLS), "ytdlp-update"] + (["--dry-run"] if dry else []), "net")
     if kind == "player_copy":           # the player cannot play a video (HEVC / AV1 ...): an H.264 copy for it only
         rel = str(a.get("path", "")).replace("\\", "/").lstrip("/")
         src = (LAB / rel).resolve()
         if LAB not in src.parents or src.relative_to(LAB).parts[0] not in ("analysis", "projects", "refs") \
                 or not src.is_file() or src.suffix.lower() not in data.VIDEO_EXT:
-            raise JobError(f"not a video of the lab: {rel}")
-        return f"A copy of {src.name} that plays here", [PY, str(JOBTOOLS), "player-copy", str(src)], "cpu"
+            raise JobError(I18N.t("not a video of the lab: {file}", file=rel))
+        return _title(kind, file=src.name), [PY, str(JOBTOOLS), "player-copy", str(src)], "cpu"
     if kind.startswith("thumb_"):           # Edit > a video > Publish (0.4.3): tools\\thumbnail.py, build\\publish\\ only
         return _thumb_job(kind, a)
-    raise JobError(f"unknown job kind {kind!r}")
+    raise JobError(I18N.t("unknown job kind {kind}", kind=repr(kind)))
 
 
 THUMB_TEXT = re.compile(r"[^\r\n\"]{1,200}")
@@ -254,59 +313,59 @@ def _thumb_job(kind: str, a: dict) -> tuple[str, list[str], str]:
     changed), thumb_check (every thumbnail, with the title) - all group cpu, queued like the others."""
     p = data.safe_name(str(a.get("project", "")))
     if not (data.PROJECTS / p).is_dir():
-        raise JobError(f"no video project {p}")
+        raise JobError(I18N.t("no video project {video}", video=p))
     T = [PY, str(TOOLS / "thumbnail.py")]
     if kind == "thumb_candidates":
         n = int(a.get("n") or 12)
         if not 4 <= n <= 24:
-            raise JobError("between 4 and 24 moments")
-        return (f"Good moments for a thumbnail ({p})", T + ["candidates", p, "--n", str(n)]
+            raise JobError(I18N.t("between 4 and 24 moments"))
+        return (_title(kind, video=p), T + ["candidates", p, "--n", str(n)]
                 + (["--render"] if a.get("render") else []), "cpu")
     tid = str(a.get("id") or "")
     if kind in ("thumb_make", "thumb_render") and not re.fullmatch(r"[A-Z]", tid):
-        raise JobError("a thumbnail is A, B or C")
+        raise JobError(I18N.t("a thumbnail is A, B or C"))
     if kind == "thumb_render":
         data.thumb_folder(p, tid)                                   # it must exist
-        return f"Thumbnail {tid} again ({p})", T + ["render", p, "--id", tid], "cpu"
+        return _title(kind, id=tid, video=p), T + ["render", p, "--id", tid], "cpu"
     if kind == "thumb_check":
         title = " ".join(str(a.get("title") or "").split())
         if title and not THUMB_TEXT.fullmatch(title):
-            raise JobError("the title: one line, up to 200 characters")
-        return (f"Check the thumbnails ({p})", [PY, str(JOBTOOLS), "thumb-check", p] + (["--title", title] if title else []),
+            raise JobError(I18N.t("the title: one line, up to 200 characters"))
+        return (_title(kind, video=p), [PY, str(JOBTOOLS), "thumb-check", p] + (["--title", title] if title else []),
                 "cpu")
     if kind != "thumb_make":
-        raise JobError(f"unknown job kind {kind!r}")
+        raise JobError(I18N.t("unknown job kind {kind}", kind=repr(kind)))
     words = " ".join(str(a.get("words") or "").split())
     if not words or not THUMB_TEXT.fullmatch(words) or len(words) > 80:
-        raise JobError("type the 2-4 words for the thumbnail")
+        raise JobError(I18N.t("type the 2-4 words for the thumbnail"))
     style = str(a.get("style") or "")                   # 0.4.5: in the style of a thumbnail set
     if style and not (data._thumbs_root() / data.safe_name(style) / "style.json").exists():
-        raise JobError(f"the set {style} has no style yet - Claude finds its patterns first")
+        raise JobError(I18N.t("the set {set} has no style yet - Claude finds its patterns first", set=style))
     template = str(a.get("template") or ("" if style else "outline"))
     if template and (not re.fullmatch(r"[\w-]+", template)
                      or not (TOOLS / "overlays" / "thumbnails" / template / "index.html").exists()):
-        raise JobError(f"no design called {template}")
+        raise JobError(I18N.t("no design called {name}", name=template))
     cmd = T + ["make", p, "--id", tid, "--words", words] + (["--template", template] if template else []) \
         + (["--style", style] if style else [])
     if a.get("image"):
         img = Path(str(a["image"]).strip().strip('"')).expanduser()
         if not img.is_file() or img.suffix.lower() not in data.PUB_IMAGE_EXT:
-            raise JobError(f"not a picture (.jpg / .png / .webp): {img}")
+            raise JobError(I18N.t("not a picture (.jpg / .png / .webp): {file}", file=img))
         cmd += ["--image", str(img)]
     else:
         try:
             f = int(a.get("frame"))
         except (TypeError, ValueError):
-            raise JobError("pick a moment (a frame) or a picture first") from None
+            raise JobError(I18N.t("pick a moment (a frame) or a picture first")) from None
         if f < 0:
-            raise JobError("pick a moment (a frame) or a picture first")
+            raise JobError(I18N.t("pick a moment (a frame) or a picture first"))
         cmd += ["--frame", str(f)]
         clip = str(a.get("clip") or "")
         if clip:
             if not re.fullmatch(r"[\w .()\[\]&'+,-]{1,160}", clip):
-                raise JobError(f"not a clip: {clip!r}")
+                raise JobError(I18N.t("not a clip: {name}", name=repr(clip)))
             cmd += ["--clip", clip]
-    return f"Thumbnail {tid}: {words} ({p})", cmd, "cpu"
+    return _title(kind, id=tid, words=words, video=p), cmd, "cpu"
 
 
 def plural_videos(n: int) -> str:
@@ -325,6 +384,7 @@ def saved_file(lines: list[str]) -> Path | None:
 class Job:
     def __init__(self, jid: int, kind: str, args: dict, title: str, cmd: list[str], group: str):
         self.id, self.kind, self.args, self.title, self.cmd, self.group = jid, kind, args, title, cmd, group
+        self.title_en = getattr(title, "en", "") or str(title)      # the log, history.jsonl, Report a problem
         self.status, self.rc = "running", None
         self.started, self.ended = time.time(), None
         self.lines: list[str] = []
@@ -374,20 +434,20 @@ class Runner:
         title, cmd, group = make(kind, args or {})
         if then is not None:                                  # checked now, not when the download has ended
             if kind != "download":
-                raise JobError("only a download can be followed by an analysis")
+                raise JobError(I18N.t("only a download can be followed by an analysis"))
             if str(then.get("focus") or "") not in ("", *FOCUS):
-                raise JobError(f"unknown focus {then.get('focus')} (content, cinematic or both)")
+                raise JobError(I18N.t("unknown focus {id} (content, cinematic or both)", id=then.get("focus")))
             cat = str(then.get("category") or "")
             if cat and cat not in CATEGORIES and cat not in LEGACY:
-                raise JobError(f"unknown category {cat}")
+                raise JobError(I18N.t("unknown category {id}", id=cat))
         with self.lock:
             busy = self.running()
             if group == "exclusive" and (busy or self.queued()):
-                raise JobError("wait until the running jobs finish")
+                raise JobError(I18N.t("wait until the running jobs finish"))
             clash = [j for j in busy if j.group in (group, "exclusive")]
             waiting = [j for j in self.queued() if j.group == group]
             if (clash or waiting) and not queue:
-                raise JobError(f"'{(clash or waiting)[0].title}' is still running")
+                raise JobError(I18N.t("'{title}' is still running", title=(clash or waiting)[0].title))
             job = Job(next(self.ids), kind, args or {}, title, cmd, group)
             job.then, job.batch = (dict(then) if then else None), batch
             self.jobs[job.id] = job
@@ -408,7 +468,11 @@ class Runner:
                 return
             job.status, job.started = "running", time.time()
         LOGS.mkdir(parents=True, exist_ok=True)
-        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+        # MOTIONLAB_LANG = the app's language (Settings > Language, 2026-10-18): words a tool builds for the page can
+        # follow it (motionlab\i18n.py); its console output and the job's log stay English. The self-test measures
+        # the lab, so it always runs in English.
+        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8",
+                   MOTIONLAB_LANG="en" if job.kind == "selftest" else I18N.lang())
         job.proc = subprocess.Popen(job.cmd, cwd=str(LAB), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace",
                                     env=env, creationflags=NO_WINDOW)
@@ -418,7 +482,7 @@ class Runner:
 
     def _pump(self, job: Job):
         with open(job.log, "w", encoding="utf-8") as f:
-            f.write(f"# {job.title}\n# {' '.join(job.cmd)}\n")
+            f.write(f"# {job.title_en}\n# {' '.join(job.cmd)}\n")
             for line in job.proc.stdout:
                 line = line.rstrip("\r\n")
                 job.lines.append(line)
@@ -429,7 +493,7 @@ class Runner:
             job.rc = job.proc.wait()
             job.ended = time.time()
             job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
-            data.record_job(job.kind, job.title, job.args, job.started, job.ended, job.status)   # What it took (0.4.4)
+            data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
             if job.then_claude and job.status == "done":
                 if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it
                     self._collect(job, f)
@@ -538,7 +602,7 @@ class Runner:
     def cancel(self, jid: int) -> Job:
         job = self.jobs.get(jid)
         if not job:
-            raise JobError(f"no job {jid}")
+            raise JobError(I18N.t("no job {id}", id=jid))
         with self.lock:
             if job.status == "queued":                        # never started: it just leaves the queue
                 job.status, job.ended = "cancelled", time.time()

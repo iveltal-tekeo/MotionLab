@@ -264,7 +264,7 @@ def write_sound(prj: Project, d: Path, v, y: np.ndarray, stem: str | None = None
     wav, m4a = prj.check(d / f"{stem}.wav"), prj.check(d / f"{stem}.m4a")
     sf.write(str(wav), np.clip(y, -1, 1), SR, subtype="PCM_16")
     r = subprocess.run([tool("ffmpeg"), "-y", "-v", "error", "-nostdin", "-i", str(wav), "-c:a", "aac", "-b:a", "192k",
-                        str(m4a)], capture_output=True, text=True)
+                        str(m4a)], capture_output=True, text=True, encoding="utf-8", errors="replace")
     wav.unlink(missing_ok=True)
     if r.returncode:
         raise SystemExit(f"could not encode the sound: {r.stderr[-400:]}")

@@ -150,13 +150,14 @@ def write_all(out_dir: Path, data: dict) -> None:
 
 
 FOCUS_TODO = {   # what the user asked this analysis to look at (meta.json "focus") -> review.json "_breakdown"
-    "content": "Focus: CONTENT CREATION - also write `_breakdown` (SKILL.md \"Focus\"): summary, hook (first 3 s), "
-               "structure, captions, text_graphics, broll, sound, cta, rebuild_tips. Read content/transcript.txt.",
-    "cinematic": "Focus: CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\"): summary, transitions, camera, grade, "
-                 "rhythm, sound, rebuild_tips.",
+    "content": "Focus: CONTENT CREATION - also write `_breakdown` (SKILL.md \"Focus\"): name (3-6 words a person would "
+               "call it), summary, hook (first 3 s), structure, captions, text_graphics, broll, sound, cta, rebuild_tips. "
+               "Read content/transcript.txt.",
+    "cinematic": "Focus: CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\"): name (3-6 words a person would call "
+                 "it), summary, transitions, camera, grade, rhythm, sound, rebuild_tips.",
     "both": "Focus: CONTENT + CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\") with every key that applies: "
-            "summary, hook, structure, captions, text_graphics, broll, sound, cta, transitions, camera, grade, rhythm, "
-            "rebuild_tips. Read content/transcript.txt if there is one.",
+            "name (3-6 words a person would call it), summary, hook, structure, captions, text_graphics, broll, sound, "
+            "cta, transitions, camera, grade, rhythm, rebuild_tips. Read content/transcript.txt if there is one.",
 }
 
 
@@ -221,7 +222,8 @@ def rerender(out_dir: Path) -> dict:
 
 
 BREAKDOWN_KEYS = ("summary", "hook", "structure", "captions", "text_graphics", "broll", "sound", "cta", "transitions",
-                  "camera", "grade", "rhythm", "rebuild_tips")
+                  "camera", "grade", "rhythm", "rebuild_tips",
+                  "name")         # 2026-10-18: 3-6 words a person would call the video (knowledge.label)
 
 
 def attach_breakdown(data: dict, review: dict) -> None:

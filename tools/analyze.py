@@ -17,6 +17,8 @@ import datetime
 import hashlib
 import shutil
 import sys
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 
 import numpy as np
@@ -41,8 +43,10 @@ from motionlab.util import (ANALYSIS, SourceGuard, fix_dotted_names, load_config
 
 def pick_out_dir(src: Path, name: str | None) -> tuple[str, Path]:
     base = safe_name(name or src.stem)
-    if base.lower() in ("thumbs", "templates"):     # 0.4.5 / 0.5.0: analysis/thumbs = thumbnail sets, analysis/templates =
-        base = f"{base.lower()}_video"              # motion template packs
+    # analysis/thumbs = thumbnail sets (0.4.5), analysis/templates = motion template packs (0.5.0), analysis/texts = sets
+    # of scripts & prompts (2026-10-18): a video with one of these names gets "_video"
+    if base.lower() in ("thumbs", "templates", "texts"):
+        base = f"{base.lower()}_video"
     out = ANALYSIS / base
     sj = out / "source.json"
     if not name and sj.exists():
@@ -51,6 +55,39 @@ def pick_out_dir(src: Path, name: str | None) -> tuple[str, Path]:
             base = f"{base}_{hashlib.sha1(str(src).encode('utf-8')).hexdigest()[:6]}"
             out = ANALYSIS / base
     return base, out
+
+
+def end_with_analysis() -> None:
+    """The audio helper process's first step: it stops the moment analyze.py stops. The app's Cancel ends only
+    analyze.py (TerminateProcess); a helper left behind waits for ever to hand back its result and keeps the job's
+    output open, so the job would never end and the jobs queued after it would never start (measured 2026-10-19)."""
+    import multiprocessing
+    import os
+    import threading
+    from multiprocessing.connection import wait
+
+    parent = multiprocessing.parent_process()
+    if parent is None or parent.sentinel is None:
+        return
+
+    def watch():
+        wait([parent.sentinel])
+        os._exit(1)
+
+    threading.Thread(target=watch, daemon=True).start()
+
+
+def audio_core(fut, pool, wav: Path, fps: float, off: float, acfg: dict) -> dict:
+    """The sound's analysis started beside the signal pass (its errors, e.g. AU.VCRedistMissing, come back from
+    the helper process as they are) - or measured here when there was no helper process or it stopped."""
+    if fut is not None:
+        try:
+            return fut.result()
+        except BrokenProcessPool:
+            log("audio: the helper process stopped - measuring the sound here")
+        finally:
+            pool.shutdown()
+    return AU.analyze_core(wav, fps, off, acfg)
 
 
 def main() -> int:
@@ -83,10 +120,20 @@ def main() -> int:
     log(f"output folder: {out}")
 
     # ---- 0. fingerprint the source (read-only) -------------------------------------------------
+    try:                                                       # the video this folder was made from last time
+        prev_sha = read_json(out / "source.json").get("sha256") if (out / "source.json").exists() else None
+    except (OSError, ValueError, AttributeError):
+        prev_sha = None
     log("hashing source video (read-only)...")
     sha_before = sha256_file(src)
     source = {"path": str(src), "size": src.stat().st_size, "sha256": sha_before}
     write_json(guard.check(out / "source.json"), source)
+    # the same path now holds another video (re-exported, downloaded again): nothing made from the old one is reused
+    changed = bool(prev_sha) and prev_sha != sha_before
+    if changed:
+        log("the video differs from the one analysed here before (SHA-256 changed): its proxy, sound and "
+            "per-frame metrics are made again")
+    remake = args.force or changed
 
     # ---- 1. probe ----------------------------------------------------------------------------------
     info = PR.probe(src)
@@ -99,7 +146,7 @@ def main() -> int:
     analysis_video, info_a, proxy_fill = src, info, None
     if timing["vfr"]:
         proxy = guard.check(out / "proxy_cfr.mp4")
-        if args.force or not proxy.exists():
+        if remake or not proxy.exists():
             PR.make_cfr_proxy(src, proxy, fps, info, cfg["probe"])
         analysis_video = proxy
         info_a = PR.probe(proxy)
@@ -114,9 +161,23 @@ def main() -> int:
     cached = meta_p.exists() and (cache / "metrics.npz").exists() and (cache / "thumbs.u8").exists()
     if cached and not args.force:
         meta = read_json(meta_p)
-        if meta.get("sig") != sig and not args.redetect:
+        if (meta.get("sig") != sig and not args.redetect) or changed:     # changed: they measured another video
             cached = False
-    if cached and not args.force:
+    fresh = args.force or not cached
+    # the sound is extracted first and, beside a fresh signal pass, analysed in a helper process: it needs the frame
+    # count only for its per-frame series (2026-10-19 speed audit: ~6-10 s hidden; cached metrics: nothing to hide)
+    wav, ok, off, pool, core = None, False, 0.0, None, None
+    if info_a.get("audio"):
+        wav = guard.check(out / "audio.wav")
+        ok = AU.extract_wav(analysis_video, wav, cfg["audio"]["sample_rate"]) if remake or not wav.exists() else True
+        off = (info_a["audio"].get("start_time") or 0.0) - (info_a["video"].get("start_time") or 0.0)
+        if ok and fresh:
+            try:
+                pool = ProcessPoolExecutor(1, initializer=end_with_analysis)
+                core = pool.submit(AU.analyze_core, wav, fps, off, cfg["audio"])
+            except (OSError, RuntimeError):            # no helper process: measured here after the signal pass
+                pool = core = None
+    if not fresh:
         log("signal pass: using cached per-frame metrics")
         meta = read_json(meta_p)
         metrics = SG.load_metrics(out)
@@ -129,16 +190,10 @@ def main() -> int:
 
     # ---- 3. audio ------------------------------------------------------------------------------------------
     audio = None
-    if info_a.get("audio"):
-        wav = guard.check(out / "audio.wav")
-        if args.force or not wav.exists():
-            ok = AU.extract_wav(analysis_video, wav, cfg["audio"]["sample_rate"])
-        else:
-            ok = True
+    if wav is not None:
         if ok:
-            off = (info_a["audio"].get("start_time") or 0.0) - (info_a["video"].get("start_time") or 0.0)
             try:
-                audio = AU.analyze(wav, fps, N, off, cfg["audio"])
+                audio = AU.per_frame(audio_core(core, pool, wav, fps, off, cfg["audio"]), fps, N)
             except AU.VCRedistMissing as e:            # the app's Jobs page shows this as the job's last line
                 log(f"ERROR: {e}")
                 return 1
@@ -150,7 +205,6 @@ def main() -> int:
                 metrics["downbeat"] = np.asarray(pf["downbeat"], float)
     else:
         log("no audio stream: skipping beats / drops")
-        wav = None
     SG.save_metrics(metrics, out, fps, drop_tc)
     log("metrics.csv written")
 
@@ -181,9 +235,12 @@ def main() -> int:
                               marks, cfg, drop_tc, guard,
                               extra_frames={n["frame"] + d for n in near for d in (-1, 0, 1)})
         aspect = info_a["video"]["display_aspect"]
-        for ev in events:
+        with ThreadPoolExecutor(4) as ex:              # each event's sheets are its own files; Pillow decodes,
+            sheets = [ex.submit(ME.build_sheets, ev, plans[ev["id"]], out, fps, drop_tc, aspect, marks, cfg, guard)
+                      for ev in events]                # resizes and encodes outside the GIL
+        for ev, fut in zip(events, sheets):
             pl = plans[ev["id"]]
-            ev["sheets"] = ME.build_sheets(ev, pl, out, fps, drop_tc, aspect, marks, cfg, guard)
+            ev["sheets"] = fut.result()
             ev["preview"] = f"events/{ev['id']}/preview.mp4"
             ev["preview_range"] = pl["preview"]
             ev["sheet_frames"] = pl["sheet_frames"]

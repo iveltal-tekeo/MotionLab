@@ -66,6 +66,13 @@ def r1(x, nd=1):
     return None if x is None or not np.isfinite(x) else round(float(x), nd)
 
 
+def _edge_mag(g: np.ndarray) -> np.ndarray:
+    """Sobel gradient magnitude of a float32 grey image. np.sqrt, not cv2.magnitude: OpenCV's result moves in its
+    last bit with the buffer's memory address, so the same frames gave different numbers run to run."""
+    gx, gy = cv2.Sobel(g, cv2.CV_32F, 1, 0), cv2.Sobel(g, cv2.CV_32F, 0, 1)
+    return np.sqrt(gx * gx + gy * gy)
+
+
 def easing_from_steps(steps) -> str:
     """Guess easing from per-frame step sizes of a monotonic move (e.g. log-scale per frame)."""
     v = np.abs(np.asarray(steps, dtype=np.float64))
@@ -192,7 +199,7 @@ class Ctx:
         (letterbox bars, black backgrounds) are ignored."""
         a, b = self.thumb(i), self.thumb(j)
         g = cv2.cvtColor(a.astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(np.float32)
-        tex = cv2.magnitude(cv2.Sobel(g, cv2.CV_32F, 1, 0), cv2.Sobel(g, cv2.CV_32F, 0, 1)) > 20
+        tex = _edge_mag(g) > 20
         if tex.sum() < 30:
             return 0.0
         same = np.abs(a - b).max(axis=2) < 14
@@ -204,7 +211,7 @@ class Ctx:
         def edges(k):
             g = cv2.cvtColor(self.thumb(k).astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(np.float32)
             g = (g - g.mean()) / (g.std() + 1e-6)
-            return cv2.magnitude(cv2.Sobel(g, cv2.CV_32F, 1, 0), cv2.Sobel(g, cv2.CV_32F, 0, 1)).ravel()
+            return _edge_mag(g).ravel()
         a, b = edges(i), edges(j)
         a, b = a - a.mean(), b - b.mean()
         den = math.sqrt(float((a * a).sum()) * float((b * b).sum()))

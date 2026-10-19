@@ -1,8 +1,10 @@
 """App smoke test (GitHub Actions, and after any change to the app or the MCP server): every Python file compiles,
-every motionlab module imports, the app server answers its read-only routes, every page renders in headless Edge
-without a script error, and MotionLab's MCP server starts and lists its tools.
+every motionlab module imports, the Spanish catalogue passes tools\\dev\\i18n_check.py check, the app server answers
+its read-only routes, every page renders in headless Edge without a script error, Home loads in Spanish from a second
+test server (MOTIONLAB_LANG=es - settings.json is never written), and MotionLab's MCP server starts and lists its
+tools.
 
-    .venv\\Scripts\\python tools\\dev\\smoke.py [--port 8797] [--no-browser]
+    .venv\\Scripts\\python tools\\dev\\smoke.py [--port N] [--cdp-port N] [--no-browser]     (free ports by default)
 
 Read-only on the lab: a test server with --no-update (no update check), no clicks, only GET requests; the analysis
 page is opened for a self-test analysis (synthetic_*) only, never for your own references; .app\\server.json is put
@@ -31,6 +33,7 @@ PY = sys.executable
 FAILED: list[str] = []
 PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory", "#/memory/videos", "#/memory/effects",
          "#/memory/lessons", "#/memory/saved", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
+         "#/analyze/thumbs", "#/analyze/texts", "#/memory/shared",      # 2026-10-18: Analyser tabs, Shared knowledge
          "#/refs", "#/projects", "#/library", "#/knowledge"]              # 0.3 addresses: still work (rewritten)
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
           "/api/storage", "/api/jobs", "/api/skills", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
@@ -38,7 +41,8 @@ ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "
           "/api/edit/options", "/api/generate/options", "/api/script/requests",
           "/api/thumbs", "/api/estimate", "/api/batches", "/api/batches?kind=review",           # 0.4.5
           "/api/motion", "/api/motion/pick?want=a%20bold%20title",                              # 0.5.0
-          "/api/logos"]                                                                         # the logo library
+          "/api/logos",                                                                         # the logo library
+          "/api/texts", "/api/styles"]                      # 2026-10-18: sets of scripts & prompts, the style pickers
 
 
 def ok(cond, what: str) -> bool:
@@ -206,6 +210,68 @@ def check_graphics() -> None:
     ok(good, "captions: SRT -> words -> cues (sound tags dropped, the file's lines kept) -> SRT")
 
 
+def check_installer() -> None:
+    """Install-MotionLab.cmd (2026-10-18) is PowerShell after its one batch line: Windows PowerShell's parser finds no
+    error in it (Windows only; tools\\dev\\install_test.py runs the installer itself)."""
+    import os
+    if os.name != "nt":
+        return
+    f = LAB / "Install-MotionLab.cmd"
+    ps = ("$t = [IO.File]::ReadAllText('" + str(f).replace("'", "''") + "'); $e = $null; $k = $null; "
+          "[void][System.Management.Automation.Language.Parser]::ParseInput($t, [ref]$k, [ref]$e); exit $e.Count")
+    r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=120)
+    ok(f.exists() and r.returncode == 0, "Install-MotionLab.cmd parses" + (
+        "" if r.returncode == 0 else f" ({r.returncode} error(s)){(r.stderr or '')[-300:]}"))
+
+
+def check_i18n() -> None:
+    """The app's Spanish (0.5.1): every key the code uses has its Spanish, the placeholders and tags kept, no unused
+    keys (tools\\dev\\i18n_check.py check: the code is read as text, nothing written)."""
+    r = subprocess.run([PY, str(HERE / "i18n_check.py"), "check"], cwd=str(LAB), capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", timeout=300)
+    tail = (r.stdout or r.stderr or "").strip().splitlines()[-12:]
+    ok(r.returncode == 0, "i18n_check.py check (the Spanish catalogue)" + (
+        "" if r.returncode == 0 else "".join("\n      " + ln for ln in tail)))
+
+
+def check_spanish(cdp_port: int, no_browser: bool) -> None:
+    """Settings > Language = Español (0.5.1): a second test server in Spanish (MOTIONLAB_LANG=es overrides the
+    settings, so the user's settings.json is never written) serves the page with <html lang="es"> and its words inlined,
+    and Home loads in it with no page error."""
+    import os
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    srv = subprocess.Popen([PY, str(TOOLS / "app.py"), "--no-window", "--stay", "--no-update", "--port", str(port)],
+                           cwd=str(LAB), env={**os.environ, "MOTIONLAB_LANG": "es"})
+    try:
+        if not ok(wait_port(port), f"Spanish test server listens on 127.0.0.1:{port}"):
+            return
+        base = f"http://127.0.0.1:{port}"
+        st, body = get(base, "/")
+        html = body.decode("utf-8", "replace")
+        ok(st == 200 and '<html lang="es"' in html and "window.ML_I18N = {}" not in html and "{{t:" not in html,
+           'GET / in Spanish (<html lang="es">, the words inlined)')
+        if no_browser:
+            return
+        from cdp import Browser
+        b = Browser(port=cdp_port)
+        try:
+            b.goto(base, settle=2)
+            done = b.wait("(() => { const m = document.querySelector('#main'); return document.querySelector("
+                          "'#side a[data-nav]') && m && m.innerText.trim() && !m.querySelector('.loading'); })()",
+                          timeout=45)
+            lang = b.eval("document.documentElement.lang")
+            errs = b.eval("window.__errs.splice(0)") or []
+            ok(done and lang == "es" and not errs, "Home in Spanish" + ("" if done else " (still loading after 45 s)")
+               + ("" if lang == "es" else f" (lang {lang!r})") + "".join("\n      " + str(e) for e in errs))
+        finally:
+            b.close()
+    finally:
+        srv.kill()
+        srv.wait(timeout=10)
+
+
 def get(base: str, path: str, timeout: float = 60):
     with urllib.request.urlopen(base + path, timeout=timeout) as r:
         return r.status, r.read()
@@ -312,18 +378,24 @@ def check_mcp() -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--port", type=int, default=8797)
-    ap.add_argument("--cdp-port", type=int, default=9337)
+    ap.add_argument("--port", type=int, default=0, help="the test server's port (default: a free one)")
+    ap.add_argument("--cdp-port", type=int, default=0, help="headless Edge's DevTools port (default: a free one)")
     ap.add_argument("--no-browser", action="store_true", help="skip the headless-Edge page checks")
     args = ap.parse_args()
     from motionlab.util import setup_console
     setup_console()
     compile_all()
     import_all()
+    check_i18n()
+    check_installer()
     check_prompts()
     check_graphics()
     sj = LAB / ".app" / "server.json"                      # a test server writes it; the user's app reads it
     before = sj.read_bytes() if sj.exists() else None
+    if not args.port:                    # a free port: a second run or a forgotten test server is never tested instead
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            args.port = s.getsockname()[1]
     srv = subprocess.Popen([PY, str(TOOLS / "app.py"), "--no-window", "--stay", "--no-update", "--port", str(args.port)],
                            cwd=str(LAB))
     try:
@@ -335,6 +407,11 @@ def main() -> int:
     finally:
         srv.kill()
         srv.wait(timeout=10)
+        if before is not None:
+            sj.write_bytes(before)
+    try:
+        check_spanish(args.cdp_port, args.no_browser)
+    finally:
         if before is not None:
             sj.write_bytes(before)
     check_mcp()

@@ -152,7 +152,7 @@ def lab() -> list[str]:
         ov = OS.project_overlays(pr["name"])
         out.append(f"- video {pr['name']}: {len(pr['plans'])} edit version(s), {len(pr['renders'])} render(s), "
                    f"{len(ov)} graphic(s), Resolve timelines: {', '.join(pr['resolve']) or 'none'}")
-    lib = data.library()
+    lib = data.library(videos=False)
     out.append(f"- library: {len(lib['items'])} effect(s), {len(lib.get('graphics') or [])} graphic(s) "
                f"(incl. examples), {len(lib['picks'])} pick(s) waiting to be saved")
     items = PR.load_all()
