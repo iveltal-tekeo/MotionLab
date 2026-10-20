@@ -42,7 +42,7 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 | Version | Plan | State | Size |
 |---|---|---|---|
 | 0.5.2 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) | L |
-| 0.5.3 | Faster videos | planned - a minute of video in ~10 min of Claude: brief -> plan -> build -> one look (added 2026-10-15) | M-L, ships in parts |
+| 0.5.3 | Faster videos | planned - a minute of video in ~10 min of Claude: brief -> plan -> build -> one look (added 2026-10-15); + Claude's time on reviews and scripts (added 2026-10-20) | M-L, ships in parts |
 | 0.5.4 | Prompt generator | planned - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
 | 0.5.5 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly, templates used as they are, the motion check, formats, a preview before the render | L, ships in parts |
 | 0.5.6 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
@@ -606,6 +606,24 @@ laptop, so the number is given per PC.
 turns), then 3, 5 and 6.
 **Needs first**: nothing new - *What it took* (0.4.4) to measure, precheck and snapshots (0.4.2), the quick draft
 (0.4.0). From the user: the verdict on the re-made test videos and a 60 s talking clip for the last check.
+
+### Claude's time on reviews, scripts and videos (added 2026-10-20)
+The user (2026-10-20): "could you add to the plan or roadmap the plans you have to improve the time claude takes to
+review a video, write a script or generate a video?" - 0.5.1 made the lab's own steps faster (a lab pass 35.0 s ->
+18.9 s); Claude's minutes did not change. Quality first: nothing here may lower the user's verdicts or ratings.
+0. **Measure first**: What it took (`tools\usage.py`) already times Claude per step - 3 real runs each of a video
+   review, a script and a generated video; list the slowest steps with their minutes and tokens. No change ships
+   without these numbers.
+1. **Review a video** (`/analyze-reference`): the lab writes a draft per event from what it measured (type, frames +
+   timecodes, evidence), so Claude checks and corrects it instead of writing from zero; the category summary read
+   before a review keeps only verified effects (measured 2026-10-18: up to 50.7 KB, 77 % unverified). Claude still
+   looks at every contact sheet.
+2. **Write a script / title** (`/write-script`, `/write-title`): a short "your voice" card made from the user's
+   rated scripts, read instead of every past script; the request carries the script check's results so Claude starts
+   from them; only the guideline sections the request needs are read.
+3. **Generate a video**: this plan's steps above (brief -> plan -> build -> one look).
+*Ships when*: each of the three takes measurably less of Claude's time on the same inputs (usage.py before / after)
+and the user's ratings / verdicts do not drop.
 
 ## 0.5.2 - planned - Yapping mode: the yap-maxing framework
 
