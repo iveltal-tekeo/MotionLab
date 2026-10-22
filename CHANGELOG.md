@@ -5,6 +5,42 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.2 - 2026-10-22 - New edit, step by step, and a lighter app
+
+- **New edit, step by step** - *Editor > New edit* is now a pop-up of six numbered steps on a line, one at a time:
+  1 Clips, 2 Text, 3 References, 4 Style, 5 Sound, 6 Final. Only the clips are needed - leave the rest on Auto and
+  Claude decides. Back and Next at the bottom, a ✓ on every step you answered, and a click on a step jumps to it.
+- **Your clips as pictures** - step 1 shows each clip of the video as a frame with its length: play it, drop more in,
+  or remove one (to the Recycle Bin, after a yes). Picking an older video shows how many clips it has.
+- **Text** - what the video is about and the words on screen side by side, or a script or brief from Prepare.
+- **References** - up to 3 videos you analysed, as picture cards with their length: follow their style, or make an
+  exact copy.
+- **Style** - the ready-made styles in a row, a few short questions (where it was filmed, what kind of video, the
+  rhythm, the mood, the captions) with 4 answers each and + for the rest, and a big colour palette for the motion
+  graphics: 7 ready-made palettes or your own colours.
+- **Sound** - the music (the video's own song, a song you pick, the sound as filmed, or talking with the pauses cut),
+  how many sound effects and which kinds.
+- **Final** - the length and the format for each platform, a summary of every step (click one to change it) and about
+  how long Claude will take. Claude reads everything you picked first and follows it step by step; the quick draft
+  follows the references, the style, your words, the length, the format and the music.
+- **A script in three tabs** - a script's pop-up opens on **Script**: the whole text (no more *Show all*), its rhythm
+  as a bar of its parts and their seconds, and beside it the shots to film and the text on screen, each in its part's
+  colour. **Checks** has the check, Claude's check and the script again with the part you are reviewing highlighted -
+  Claude's tip for that part sits right in your review. **Details** has the rest. Prompts get the same three tabs.
+- **A script's road** - 1 The script, 2 Film it, 3 Edit it, 4 Post it on a line: what is done gets a ✓, the next step
+  is lit, with its button at the end. *Film it* shows the same line, and its last step has *Make it with Claude* on
+  the left and the quick draft on the right.
+- **A lighter Home and Claude's memory** - Home ends with the roadmap (no Claude's memory line, no Status panel).
+  Claude's memory keeps Overview, Lessons and Shared knowledge; the Videos, Effects and Graphics & saved effects tabs
+  are gone - Claude still reads all of it, and your saved graphics and effects stay in the library. Motion Graphics
+  moved to the bottom of the sidebar, above Jobs.
+- **The roadmap, planned again** - 0.5.3 faster videos (with Claude's time on reviews, scripts and videos), 0.5.4
+  **Sound** (real recorded sound effects, music and ambience from free libraries, a voice-over), 0.5.5 **Content
+  agency** (a *My Brand* page: your goal, audience, look and products), 0.5.6 template packs, 0.5.7 colour + DaVinci
+  Resolve, 0.5.8 content generation, 0.5.9 yapping mode; 0.6.0 is now *Take notes from videos*. The prompt generator
+  and templates by feel left the plan.
+- **Small things** - more room around the Analyser's "downloaded videos" row.
+
 ## 0.5.1 - 2026-10-19 - Phase 2 begins: MotionLab in Spanish, analyses in half the time, a one-file install, one way to review
 
 - **Phase 2 starts here** - the path from 0.5.0 to 1.0.0, deployment. Phase 1 was everything up to 0.5.0.1. The

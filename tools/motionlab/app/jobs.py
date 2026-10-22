@@ -17,6 +17,7 @@ import threading
 import time
 from pathlib import Path
 
+from motionlab import editreq as ER
 from motionlab import i18n as I18N
 from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
@@ -275,7 +276,7 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if not (data.PROJECTS / p).is_dir():
             raise JobError(I18N.t("no project {video}", video=p))
         try:
-            extra = data.draft_args(data.edit_request(p))
+            extra = ER.draft_args(data.edit_request(p))
         except (FileNotFoundError, ValueError) as e:
             raise JobError(str(e))
         return _title(kind, video=p), [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"

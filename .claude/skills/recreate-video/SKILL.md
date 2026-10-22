@@ -13,13 +13,21 @@ user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work f
 `.venv\Scripts\python`. This is long, multi-step work: the app starts it with effort xhigh. `batch <id>` = several
 of the user's videos edited the same way in this one window: section 7.
 
-The app's *Editor > New edit* (0.4; the section was called Edit until 2026-10-15) saves what the user picked in `projects\<project>\build\edit_request.json` and
-opens `/recreate-video request <project>`: read that file first - `how`: `copy` (1:1 of `like[0]`: the steps below),
-`style` (up to three videos in `like`, plus any `presets` / `want`) or `words` (`presets` and / or the user's own
-`want`, their words as they typed them) = **By feel** (section 6), `prompt` (`prompt:<id>` below); `length_s`,
-`format`, `music` (a song in the project folder), `sound` (auto / music / clips / talk), `resolve` (build option 2
-after the user approves the lab render). The same by typing: `feel:<video>[,<video>,<video>] <project> [- want: ...]`
-or `want:<preset ids> <project> - want: ...` (presets: `tools\draft_edit.py --presets`).
+The app's *Editor > New edit* (a page since 2026-10-22: A clips, B context, C style, D sound, E final - each optional
+but the clips) saves what the user picked as `projects\<project>\build\edit_request.json` + `build\edit_brief.md` and
+opens `/recreate-video request <project>`: **read `edit_brief.md` first** - the request in words, one section per
+step, each line what the user picked and what to do with it (which section of this skill, which tool); what they left
+on automatic is your call - say what you chose. The JSON beside it is the same data (`"v": 2`, `motionlab\editreq.py`):
+`like` + `exact` (an exact copy = 1:1 of `like[0]`: the steps below; else up to three videos' style = **By feel**,
+section 6), `prompt` (a script / hook / brief of the library: `prompt:<id>` below - now possibly beside `like`),
+`about` and `on_screen` (the words on screen, used exactly as written), `presets` / `want` (the user's words as typed),
+`style` {where, type, rhythm, moods, captions, palette = the colours of every title / caption / graphic, not a grade},
+`sfx` {amount none / few / some / many, kinds = groups of sfx.py cue kinds, notes} (section 4), `length_s`, `format`,
+`music` (a song in the folder, or `refs/audio/<file>` = a download), `sound` (auto / music / clips / talk), `resolve`
+(option 2 after the user approves the lab render); `how` = its main source (copy / style / prompt / words). A request
+saved before 2026-10-22 has no `"v"` and only how / like / presets / want / prompt / length_s / format / music / sound
+/ resolve. The same by typing: `feel:<video>[,<video>,<video>] <project> [- want: ...]` or `want:<preset ids>
+<project> - want: ...` (presets: `tools\draft_edit.py --presets`).
 
 More ways in (the app's *How did it turn out?*, 0.3.3):
 - `prompt:<id> <project>` - a video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is
@@ -144,7 +152,9 @@ In `.claude\skills\recreate-video\graphics.md` (read in section 0, item 5; /gene
   build\plan_vN.json` (+ `--song <file>` when the plan's sound is not the song) puts a whoosh / hit / riser on the
   plan's zooms, whips, flashes and speed-ups and the cues of its graphics, levelled against the sound under each;
   make the plan change it prints (the mix as `"audio"`; the effects alone = their own Resolve track). How many and
-  where: the reference's `"sound"` answer (section 0); `precheck.py --sfx` checks the levels before the final.
+  where: the request's `sfx` when the user picked it (edit_brief.md *5. Sound*: the amount, the kinds as the plan's
+  own `cues`, their notes; `none` = no effects), else the reference's `"sound"` answer (section 0); `precheck.py
+  --sfx` checks the levels before the final.
 - `tools\render_video.py build\plan_v1.json` -> `build\<project>_v1.mp4` (renders in parallel processes: ~3x
   faster, `--workers 1` = one process; any frame looks the same alone, in a range or in a chunk); `--compare` ->
   reference | render side by side in `build\compare\` (frame numbers burned in).
@@ -202,7 +212,8 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    (00:00:18:24)") and what is approximate.
 
 ## 7. Batch - several videos the same way (`/recreate-video batch <id>`, 0.4.5)
-The app's *Editor > Edit several videos* saved the same request in each video's `build\edit_request.json` and opened
+The app's *Editor > Edit several videos* saved the same request in each video's `build\edit_request.json` (+
+`edit_brief.md`) and opened
 ONE window for all (the user, 2026-10-15: "bulk edit stuff"). Read `.app\batches\<id>.json` (`items` = project
 folders, in order). Section 0 once for the whole batch. Then per video, one at a time and completely: its request
 (section 6 - a quick draft if it has none, then make it good), render, check - before the next, so a stop loses at

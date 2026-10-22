@@ -85,6 +85,7 @@
    "Instagram", "GitHub", "Motion Graphics", "Editor", "Teleprompter", "MP4", "MP3", "SFX", "BPM", "Fable", "Opus"]
  },
  "_nouns": {
+  "colour": ["color", "colores"],
   "Claude window": ["ventana de Claude", "ventanas de Claude"],
   "audio": ["audio", "audios"],
   "change": ["cambio", "cambios"],

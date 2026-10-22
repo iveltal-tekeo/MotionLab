@@ -31,8 +31,8 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(HERE))
 PY = sys.executable
 FAILED: list[str] = []
-PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory", "#/memory/videos", "#/memory/effects",
-         "#/memory/lessons", "#/memory/saved", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
+PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory",
+         "#/memory/lessons", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
          "#/analyze/thumbs", "#/analyze/texts", "#/memory/shared",      # 2026-10-18: Analyser tabs, Shared knowledge
          "#/refs", "#/projects", "#/library", "#/knowledge"]              # 0.3 addresses: still work (rewritten)
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",

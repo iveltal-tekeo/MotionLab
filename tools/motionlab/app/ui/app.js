@@ -483,7 +483,7 @@ document.addEventListener('click', e => {
 
 // the pages (0.4: Analyze / Edit - shown as Editor since 2026-10-15, #/edit stays - / Generate / Claude's memory); a 0.3
 // address is rewritten to its new name
-const ALIASES = {'#/refs': '#/analyze', '#/analyser': '#/analyze', '#/generator': '#/generate', '#/projects': '#/edit', '#/editor': '#/edit', '#/knowledge': '#/memory/shared', '#/library': '#/memory/saved',
+const ALIASES = {'#/refs': '#/analyze', '#/analyser': '#/analyze', '#/generator': '#/generate', '#/projects': '#/edit', '#/editor': '#/edit', '#/knowledge': '#/memory/shared', '#/library': '#/memory',
                  '#/memory/learned': '#/memory/shared'};     // 2026-10-18: Share with friends -> Shared knowledge
 const PAGES = [
   [/^#?\/?$/, pageHome, 'home'], [/^#\/analyze(?:\/(videos|thumbs|texts))?$/, pageRefs, 'analyze'],
@@ -515,7 +515,7 @@ window.addEventListener('hashchange', route);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 29;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 30;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
 function overlay(text) {
@@ -932,7 +932,7 @@ function overviewTab(el, R, showTab) {
   tookPanel($('#ovtook', el), 'analysis', R.name);
   $$('[data-ovgo]', el).forEach(b => b.onclick = () => showTab(b.dataset.ovgo, true));
   wireColour(el, R);
-  $('[data-use=edit]', el).onclick = () => createVideoModal({from: 'reference', pick: R.name});
+  $('[data-use=edit]', el).onclick = () => newEdit({from: 'reference', pick: R.name});
   $('[data-use=prompts]', el).onclick = () => aiPromptsModal('shot', R.name);
   $('[data-use=again]', el).onclick = () => addVideosModal({files: R.source ? [R.source] : [], focus: f === 'both' ? 'content' : 'both', pick: true, again: true});
 }
@@ -1094,34 +1094,21 @@ async function pageHome(main) {
   const an = [plural(s.references, 'video'), s.thumbs && plural(s.thumbs, 'thumbnail'), s.texts && tn(s.texts, '{n} script & prompts', '{n} scripts & prompts')].filter(Boolean);
   const foot = {analyze: an.length === 1 ? tn(s.references, '{n} video analysed', '{n} videos analysed') : an.join(' · '), prepare: plural(s.scripts || 0, 'script'), edit: plural(s.projects, 'edit'),
                 generate: t('{prompts} in your library', {prompts: plural(s.prompts || 0, 'prompt')})};
-  const icon = '<svg class="i"><use href="#i-claude"/></svg>';
   main.innerHTML = `
   ${heroAnim()}
   ${updateBox(s.update, s.update_result && (s.update_result.set_aside || []).length ? s.update_result : null)}
   <h2 class="ways-q">${t('What do you want to do?')}</h2>
   <div class="ways">${WAYS.map(([k, name, d]) => `<div class="way w-${k}"><div class="way-top"><svg class="ic"><use href="#i-${k}"/></svg></div>
       <h3>${name}</h3><p>${d}</p><div class="row way-act">${wayActs(k)}</div><a class="way-foot" href="#/${k}">${foot[k]} →</a></div>`).join('')}</div>
-  <a class="panel memline" href="#/memory"><svg class="ic"><use href="#i-memory"/></svg>
-    <div><b>${t("Claude's memory")}</b><span class="muted"> · ${plural(s.references, 'video')} · ${plural(s.events, 'effect')} · ${plural(s.lessons || 0, 'lesson')}</span>${(s.friends || {}).videos
-      ? `<span class="memfr" title="${ta('Shared knowledge: videos your friends analysed on their PCs ({authors}) - Claude uses them as their data', {authors: Object.keys(s.friends.authors || {}).join(', ')})}"> · <svg class="i"><use href="#i-shared"/></svg>${t('{n} from friends', {n: s.friends.videos})}</span>` : ''}
-      <div class="small muted">${t('What Claude learned from everything you analysed - it uses it when it edits or generates for you.')}</div></div>
-    <span class="grow"></span><span class="muted">→</span></a>
   ${s.setup.length ? `<div class="panel upd" style="margin-top:14px"><h2>${t('Setup')}</h2><ul class="next">${s.setup.map(tool => `<li>${t('<b>{name}</b> not found', {name: esc(t(tool.label))})} <span class="dim small">(${esc(t(tool.need))})</span><div class="small muted">${esc(t(tool.how))}</div></li>`).join('')}</ul>
     <a href="#/settings">${t('Settings → Programs')}</a></div>` : ''}
   ${s.roadmap_live ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>${t('Roadmap')}</h2><span class="hint">${t('click to enlarge')}</span></div>
     <div class="rmlive"><iframe src="${fileUrl(s.roadmap_live)}" title="${ta('MotionLab roadmap')}" loading="lazy" tabindex="-1"></iframe>
       <button class="rmhit" aria-label="${ta('Enlarge the roadmap')}"></button></div></div>`
   : s.roadmap ? `<div class="panel roadmap" style="margin-top:14px"><div class="row sp"><h2>${t('Roadmap')}</h2><span class="hint">${t('click to enlarge')}</span></div>
-    <img src="${fileUrl(s.roadmap)}" alt="${ta('roadmap')}"></div>` : ''}
-  <div class="panel" style="margin-top:14px"><h2>${t('Status')}</h2><div class="kv">
-      <b>Resolve</b><span>${esc(t(s.resolve.state))}${s.resolve.checked ? ` <span class="dim small">${t('(checked {when})', {when: esc(s.resolve.checked)})}</span>` : ''}</span>
-      <b>${t('Disk')}</b><span>${t('{free} free of {total} · <a href="#/storage">storage</a>', {free: bytes(s.free_bytes), total: bytes(s.total_bytes)})}</span>
-      <b>${t('Jobs')}</b><span>${s.jobs_running.length ? s.jobs_running.map(j => `<a href="#/jobs/${j.id}">${esc(j.title)}</a>`).join(', ') : t('none running')}</span>
-      <b>${t('Your edits')}</b><span>${s.projects_list.map(p => `<a href="#/project/${encodeURIComponent(p.name)}">${esc(pname(p))}</a>`).join(', ') || '–'}</span></div>
-      <h3>${t('Good to know')}</h3><div class="small muted">${t('Buttons with {icon} open Claude Code in a new window with the request already written. Use one window per task and close it when it is done.', {icon})}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" data-tips>${t('Tips for working with Claude')}</button></div></div>`;
+    <img src="${fileUrl(s.roadmap)}" alt="${ta('roadmap')}"></div>` : ''}`;
   $('#hero-go', main).onclick = () => addVideosModal();
-  const WAY_GO = {link: () => addVideosModal(), thumbs: () => addThumbsModal(), texts: () => addTextsModal(), edit: () => createVideoModal(),
+  const WAY_GO = {link: () => addVideosModal(), thumbs: () => addThumbsModal(), texts: () => addTextsModal(), edit: () => newEdit(),
                   gfx: () => generateModal('graphics'), ai: () => generateModal('ai'), simp: () => scriptImproveModal(), snew: () => scriptNewModal()};
   $$('[data-way]', main).forEach(b => b.onclick = () => WAY_GO[b.dataset.way]());
   wireUpdateBox(main, s.update_result);
@@ -2444,7 +2431,7 @@ async function pageRef(main, name, selId, openMisses, openReview) {
     const g = tg.closest('[data-tabgo]'); if (g) { ev.preventDefault(); showTab(g.dataset.tabgo, true); }
   };
   main.addEventListener('click', onClick); onCleanup(() => main.removeEventListener('click', onClick));
-  $('#recreate').onclick = () => createVideoModal({from: 'reference', pick: R.name});
+  $('#recreate').onclick = () => newEdit({from: 'reference', pick: R.name});
   $('#editmeta', main).onclick = e => { e.preventDefault(); metaModal(R); };
   KEYS = e => {                                          // the player's keys; 1 2 3, J K N belong to the panel on screen
     if (e.target.matches('input, textarea, select')) return;
@@ -2538,7 +2525,7 @@ async function pageProjects(main) {
     ${batchRows(BAT)}
     ${ps.length ? `<div class="cards pcards">${ps.map(projCard).join('')}</div>`
       : emptyHero('edit', t('Make your first edit'), t('Your clips and a style - up to three videos you analysed, or your own words. A quick draft takes minutes; Claude makes it great.'), cv(true))}`;
-  $('#cvnew', main).onclick = () => createVideoModal();
+  $('#cvnew', main).onclick = () => newEdit();
   const bk = $('#bkedit', main); if (bk) bk.onclick = () => bulkEditModal();
   wireBatchRows(main, () => pageProjects(main));
   wirePcards(main, ps);
@@ -2633,211 +2620,523 @@ function wirePcards(main, ps) {
   });
 }
 
-// ---- Edit > New edit (0.4, the user: "give the clips and use a reference video (previously analysed) or even more -
-// max 3 - or edit it with a given prompt: hooks, 3 s cuts, very fast paced... or slower, transitions, captions").
-// Four steps in one dialog: 1 select your clips (2026-10-16, the user: "choose between an old video clip or new clips,
-// intuitive and distinct": *Clips you already have* = a video + *Add clips…* | *New clips* = a name + a drop zone, the
-// video made on the first file), 2 how should it be edited (like analysed videos | your words | a script or brief - a
-// talking script / hook gets the talking quick draft), 3 length / format / sound, 4 = the *Make it with Claude* button
-// itself (+ the Resolve card) or a quick draft now (job "draft": rules, no Claude) - no "Make it" heading. What was picked
-// is saved as build\edit_request.json (POST /api/project/<p>/edit_request) - Claude and the draft both read it.
-const NE_HOW = [
-  ['like', 'i-analyze', t('Like videos you analysed'), t('Up to 3 - their rhythm, effects and captions, or an exact copy of one')],
-  ['words', 'i-edit', t('With your words'), t('A ready-made style - fast hooks, 3 s cuts, slow and cinematic… - or say what you want')],
-  ['prompt', 'i-prompts', t('From a script or brief'), t('A talking script you filmed, a hook, or a brief - from Prepare or your prompts')]];
-async function createVideoModal(pre = {}) {
-  const [S, PRM, ps, OPT] = await Promise.all([loadStyles(), api('/api/prompts'), api('/api/projects'), api('/api/edit/options')]);
-  const KL = Object.fromEntries(PRM.kinds.map(k => [k.id, k.label]));
-  const st = {how: pre.from === 'prompt' ? 'prompt' : pre.from === 'words' ? 'words' : pre.from === 'reference' || pre.pick ? 'like' : '',
-              like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false, presets: [], want: '', prompt: pre.from === 'prompt' ? pre.pick || '' : '',
-              length: '', format: '', sound: 'auto', music: '', resolve: false};
-  modal(`<h2>${t('New edit')}</h2><div class="small muted" style="margin-top:-4px">${t('Your clips, edited the way you want. Your clips are only read, never changed.')}</div>
-    <div class="nestep"><b>1</b>${t('Select your clips')}</div>
-    <div class="cvchoice nesrc">
-      <button class="cvopt" data-src="old" ${ps.length ? '' : 'disabled'}><svg class="ic"><use href="#i-videos"/></svg><b>${t('Clips you already have')}</b>
-        <span>${ps.length ? t('The clips of one of your videos ({videos})', {videos: plural(ps.length, 'video')}) : t('No video yet - start with new clips')}</span></button>
-      <button class="cvopt" data-src="new"><svg class="ic"><use href="#i-upload"/></svg><b>${t('New clips')}</b>
-        <span>${t('Recordings or clips from your PC - copied in, your originals stay where they are')}</span></button></div>
-    <div class="nesrcbox" id="nesrc-old" hidden><div class="row"><select id="cvp" style="max-width:340px">${ps.map(x => `<option value="${esc(x.name)}">${esc(pname(x))} (${plural(x.clips, 'clip')})</option>`).join('')}</select>
-      <label class="btn sm" id="cvadd" title="${ta('Copies more recordings or clips into this video - the originals stay where they are')}"><svg class="i"><use href="#i-folder"/></svg>${t('Add clips…')}<input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv"></label></div>
-      <div class="small muted" id="cvhint" style="margin-top:6px"></div></div>
-    <div class="nesrcbox" id="nesrc-new" hidden><div class="row"><input type="text" id="cvname" placeholder="${ta('Name the video, e.g. cooking vlog 1')}" style="max-width:320px"><span class="small muted" id="cvnewis"></span></div>
-      <label class="fidrop" id="cvdrop"><input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv">
-        <b>${t('Drop your clips here')}</b><span class="small muted">${t('or click to choose them - videos, and a song if you have one. Several files are fine.')}</span></label></div>
-    <div id="cvfiles"></div>
-    <div class="nestep"><b>2</b>${t('How should it be edited?')}</div>
-    <div class="cvchoice three">${NE_HOW.map(([k, ic, lb, s]) => `<button class="cvopt" data-m="${k}"><svg class="ic"><use href="#${ic}"/></svg><b>${lb}</b><span>${s}</span></button>`).join('')}</div>
-    <div id="cvpick"></div>
-    <div id="nedet" hidden><div class="nestep opt"><b>3</b>${t('Length, format, sound')} ${optTag(t('automatic unless you pick'))}</div>
-      <div class="nedet"><label>${t('Length')}</label><div class="seg" id="nelen">${[['', t('Auto')], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
-        <label>${t('Format')}</label><div class="seg" id="nefmt">${[['', t('Auto')], ['vertical', t('Vertical 9:16')], ['horizontal', t('Horizontal 16:9')], ['square', t('Square')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
-        <label>${t('Sound')}</label><select id="nesnd" style="max-width:420px"></select></div></div>
-    <div class="nefinal"><b id="nego-n">4</b>
-      <div class="nefc"><button class="btn pri big" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button>
-        <label class="neres"><input type="checkbox" id="neres"><span><b>${t('Also build it as a DaVinci Resolve project')}</b><span>${t('the same edit as a timeline you can keep editing by hand')}</span></span></label></div>
-      <div class="nefc nedraft" id="nedraft"><button class="btn big" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
-        <span class="small muted">${t('A first version in a few minutes, by rules - no Claude. Watch it, then let Claude make it better.')}</span></div></div>
-    <div class="small amber" id="nemsg" style="margin-top:8px"></div>`, el => {
-    const sel = $('#cvp', el), name = $('#cvname', el);
-    // step 1: clips of a video they already have ("old") or new clips copied into a new video ("new", st.newp once made)
-    st.src = pre.project && ps.some(x => x.name === pre.project) ? 'old' : ps.length ? '' : 'new'; st.newp = '';
-    if (st.src === 'old') sel.value = pre.project;
-    const proj = () => st.src === 'old' ? sel.value : st.src === 'new' ? st.newp : '';
-    const P = () => ps.find(x => x.name === proj());
-    const clipsLine = p => `${plural(p.clips, 'clip')}${(p.songs || []).length ? ` · ${plural(p.songs.length, 'song')}: ${p.songs.map(esc).join(', ')}` : ' · ' + t('no song in the folder (an .mp3 there is used as the music)')}`;
-    const talkPick = () => st.how === 'prompt' && /^(script|hook)-/.test(st.prompt);   // a talking video: the quick draft can cut it
-    const ready = () => {
-      if (!proj() || !P() || !P().clips) return '';
-      if (st.how === 'like') return st.like.length ? (st.exact ? 'copy' : 'style') : '';
-      if (st.how === 'words') return st.presets.length || st.want.trim() ? 'words' : '';
-      if (st.how === 'prompt') return st.prompt ? 'prompt' : '';
-      return '';
+// ---- Editor > New edit: a pop-up of steps (2026-10-22, the user: "the edit a video is our most powerful tool so we
+// kinda need to expand to give Claude the most options and customability ... simplicity and clarity rather than having
+// everything in a single section"; after a page that day: "still make it a pop up as before? and just show section per
+// section, make the sidebar steps with numbers isntead of letters, and make a line go through them so the user know
+// where to go", in the look of their mock-up new_edit_section.html; then: "a little preview when we have selected
+// clips ... manage them? delete ... there is too much text and it clutters the vision of the user ... less text and
+// more colors, icons and more distinct"). One step on screen at a time - 1 Clips (the clips as pictures), 2 Text (what
+// it is about | the words on screen, a script or brief from Prepare), 3 References (picture cards), 4 Style, 5 Sound,
+// 6 Final (length, format, the summary, Claude's time) - Back / Next in the footer; on the left the steps on a line:
+// done = a tick and the short answer, the one on screen = Now, the line gold up to it (a click jumps there). Words
+// only where a picture or an icon cannot say it; the rest in tooltips. Only the clips are needed: what is left on Auto
+// is Claude's call. One function per step draws it, writes ne.st and may return a refresh (run on every change);
+// neRows = what was picked, read by the steps and the summary. Saved as build\edit_request.json + build\edit_brief.md
+// (POST /api/project/<p>/edit_request, motionlab\editreq.py): Claude (/recreate-video request <p>) and the quick draft
+// read it. Was a four-step dialog (0.4 - 0.5.1, createVideoModal).
+const NE_STEPS = [   // [id, the name on the left, the step's title, its icon + colour in the summary]
+  ['clips', t('Clips'), t('Choose your clips'), 'i-videos', '--amber'],
+  ['text', t('Text'), t('Give Claude context'), 'i-pen', '--cyan'],
+  ['refs', t('References'), t('Add references'), 'i-refs', '--pink'],
+  ['style', t('Style'), t('Pick the style'), 'i-palette', '--violet'],
+  ['sound', t('Sound'), t('How does it sound?'), 'i-music', '--green'],
+  ['final', t('Final'), t('Last details'), 'i-clock', '--amber']];
+const neIcon = (id, colour = '') => `<svg class="i"${colour ? ` style="color:var(${colour})"` : ''}><use href="#${id}"/></svg>`;
+const neTalk = id => /^(script|hook)-/.test(id || '');          // a talking script / hook: the user films it
+async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'prompt', pick}
+  let S, PRM, ps, OPT;
+  try { [S, PRM, ps, OPT] = await Promise.all([loadStyles(), api('/api/prompts'), api('/api/projects'), api('/api/edit/options')]); }
+  catch (e) { toast(e.message, 'err'); return; }
+  const pick = pre.from === 'prompt' ? pre.pick || '' : '';
+  const st = {src: pre.project && ps.some(x => x.name === pre.project) ? 'old' : ps.length ? '' : 'new', project: pre.project || '', newp: '',
+              about: '', onscreen: '', prompt: pick, like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false,
+              where: '', type: '', rhythm: '', moods: [], captions: '', presets: [], want: '', palette: [],
+              sound: neTalk(pick) ? 'talk' : 'auto', sfx: '', kinds: [], snotes: '', length: '', format: '', resolve: false};
+  const ne = {S, PRM, ps, OPT, st, cur: 0};
+  ne.proj = () => st.src === 'old' ? st.project : st.src === 'new' ? st.newp : '';
+  ne.P = () => ps.find(x => x.name === ne.proj());
+  const N = NE_STEPS.length;
+  modal(`<div class="nemw"><div class="nehd"><h2>${t('New edit')}</h2><p>${t('Your clips, edited the way you want. They are only read, never changed.')}</p></div>
+    <nav class="nenav">${NE_STEPS.map(([id, name], i) => `<button data-go="${id}"${id === 'clips' ? '' : ' class="opt"'}><b>${i + 1}</b><span>${name}<small></small></span></button>`).join('')}</nav>
+    <div class="nepanes">${NE_STEPS.map(([id, , title]) => `<section class="nesec" id="ne-${id}" hidden><h2 class="nest">${title}${id === 'clips' ? '' : optTag()}<span class="nestx"></span></h2><div class="nesecb"></div></section>`).join('')}</div>
+    <div class="nefoot"><span class="small muted" id="nepos"></span>
+      <label class="neres" id="neresl" hidden><input type="checkbox" id="neres"><span><b>${t('Also build it as a DaVinci Resolve project')}</b><span>${t('the same edit as a timeline you can keep editing by hand')}</span></span></label>
+      <button class="btn" id="neback">${t('← Back')}</button><button class="btn pri" id="nenext"></button>
+      <button class="btn" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
+      <button class="btn pri" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button></div></div>`, el => {
+    ne.el = el;
+    const draw = {clips: neClips, text: neText, refs: neRefs, style: neStyle, sound: neSound, final: neFinal};
+    const refresh = [];
+    ne.changed = () => refresh.forEach(f => f());
+    NE_STEPS.forEach(([id]) => { const f = draw[id]($(`#ne-${id} .nesecb`, el), ne); if (f) refresh.push(f); });
+    refresh.push(() => neNav(el, ne));
+    const go = id => {
+      const i = NE_STEPS.findIndex(s => s[0] === id); if (i < 0) return;
+      const last = i === N - 1;
+      ne.cur = i;
+      NE_STEPS.forEach(([sid], j) => { $(`#ne-${sid}`, el).hidden = j !== i; });
+      $('.nepanes', el).scrollTop = 0;
+      $('#nepos', el).textContent = t('Step {n} of {total}', {n: i + 1, total: N});
+      $('#nepos', el).hidden = last; $('#neresl', el).hidden = !last;
+      $('#neback', el).hidden = !i;
+      $('#nenext', el).hidden = last; if (!last) $('#nenext', el).textContent = `${t('Next: {step}', {step: NE_STEPS[i + 1][1]})} →`;
+      $('#cvgo', el).hidden = $('#cvdraft', el).hidden = !last;
+      neNav(el, ne);
     };
-    const upd = () => {
-      $$('.nesrc .cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.src === st.src));
-      $('#nesrc-old', el).hidden = st.src !== 'old'; $('#nesrc-new', el).hidden = st.src !== 'new';
-      $('#cvhint', el).innerHTML = st.src !== 'old' || !P() ? ''
-        : !P().clips ? t('<span class="amber">No clips in {name} yet</span> - <b>Add clips…</b> copies them in (your originals stay where they are).', {name: esc(pname(P()))}) : clipsLine(P());
-      name.disabled = !!st.newp;
-      $('#cvnewis', el).innerHTML = st.newp && P() ? clipsLine(P()) : t('Leave it empty to name it after the first clip.');
-      const how = ready();
-      const det = how === 'style' || how === 'words' || how === 'prompt' && talkPick();
-      $('#nedet', el).hidden = !(st.how === 'like' && !st.exact || st.how === 'words' || talkPick());
-      $('#nego-n', el).textContent = $('#nedet', el).hidden ? '3' : '4';
-      $('#nedraft', el).hidden = !(st.how === 'words' || st.how === 'like' && !st.exact || talkPick());
-      $('#cvdraft', el).disabled = !det;
-      $('#cvgo', el).disabled = !how;
-      const snd = $('#nesnd', el), songs = (P() || {}).songs || [];
-      const cur = snd.value || (talkPick() ? 'talk' : 'auto');
-      snd.innerHTML = `<option value="auto">${t('Automatic - the song in the folder if there is one')}</option>${songs.map(s => `<option value="music:${esc(s)}">${t('The song: {name}', {name: esc(s)})}</option>`).join('')}
-        <option value="clips">${t("The clips' own sound")}</option><option value="talk">${t('Talking - keep what is said, cut the pauses')}</option><option value="none">${t("No song (the clips' own sound)")}</option>`;
-      snd.value = [...snd.options].some(o => o.value === cur) ? cur : 'auto';
-      $('#nemsg', el).textContent = st.how === 'like' && st.like.length > OPT.max_refs ? t('At most {n} videos.', {n: OPT.max_refs}) : '';
-    };
-    const showPick = () => {
-      $$('.cvopt', el).forEach(b => b.classList.toggle('on', b.dataset.m === st.how));
-      const box = $('#cvpick', el);
-      if (st.how === 'like') {
-        box.innerHTML = `<h3 style="margin:12px 0 0">${t('Which videos?')} <span class="small muted">${t('(up to {n} - Claude mixes their style)', {n: OPT.max_refs})}</span></h3>
-          <div id="cvvl"></div><div id="neexact"></div>`;
-        const exact = () => {               // an exact copy needs one video analysed on this PC (every picked one is)
-          const one = st.like.length === 1 && ownVideos(S).some(v => v.key === st.like[0]);
-          if (!one) st.exact = false;
-          $('#neexact', box).innerHTML = st.like.length ? `<div class="neexact"><label class="kopt${!st.exact ? ' on' : ''}"><input type="radio" name="nex" value="0" ${!st.exact ? 'checked' : ''}><span>${st.like.length > 1
-            ? t('<b>In their style</b> - your music, your length; Claude copies the rhythm, the effects and how they were made')
-            : t('<b>In its style</b> - your music, your length; Claude copies the rhythm, the effects and how they were made')}</span></label>
-            <label class="kopt${st.exact ? ' on' : ''}${one ? '' : ' off'}"><input type="radio" name="nex" value="1" ${st.exact ? 'checked' : ''} ${one ? '' : 'disabled'}><span>${t('<b>An exact copy</b> - the same song, the same cuts and effects, frame by frame, with your clips')}${one ? '' : ` <span class="small muted">${t('(one video analysed on this PC)')}</span>`}</span></label></div>` : '';
-          $$('input[name=nex]', box).forEach(r => r.onchange = () => { st.exact = r.value === '1'; exact(); upd(); });
-        };
-        stylePicker($('#cvvl', box), st, {S, purpose: 'edit', max: OPT.max_refs, onChange: () => { exact(); upd(); }});
-        exact();
-      } else if (st.how === 'words') {
-        box.innerHTML = `<h3 style="margin:12px 0 6px">${t('A ready-made style')} <span class="small muted">${t('(pick one or more, or none)')}</span></h3>
-          <div class="nepre">${OPT.presets.map(p => `<button class="nep${st.presets.includes(p.id) ? ' on' : ''}" data-p="${esc(p.id)}"><b>${esc(t(p.label))}</b><span>${esc(t(p.help))}</span></button>`).join('')}</div>
-          <h3 style="margin:14px 0 6px">${t('In your words')} ${optTag(t('Claude reads every word'))}</h3>
-          <textarea id="newant" rows="3" placeholder="${ta('e.g. a hook in the first second, 3 s cuts, very fast paced, bold captions word by word, slow zooms while I talk')}">${esc(st.want)}</textarea>`;
-        $$('.nep', box).forEach(b => b.onclick = () => {
-          const id = b.dataset.p; st.presets = st.presets.includes(id) ? st.presets.filter(x => x !== id) : [...st.presets, id];
-          b.classList.toggle('on', st.presets.includes(id));
-          const tk = OPT.presets.find(p => p.id === id);
-          if (tk && tk.talk && st.presets.includes(id)) { $('#nesnd', el).value = 'talk'; st.sound = 'talk'; }
-          upd(); });
-        $('#newant', box).oninput = e => { st.want = e.target.value; upd(); };
-      } else if (st.how === 'prompt') {
-        box.innerHTML = `<div class="row sp" style="margin-top:12px"><h3 style="margin:0">${t('Which script or brief?')}</h3><input type="search" id="cvq" placeholder="${ta('Search your scripts and briefs…')}" style="max-width:280px"></div>
-          <div class="cvlist" id="cvpl"></div>`;
-        const items = PRM.items.filter(x => ['brief', 'script', 'hook'].includes(x.kind));
-        const draw = q => { $('#cvpl', box).innerHTML = items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60)
-          .map(x => `<label class="cvitem${x.id === st.prompt ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === st.prompt ? 'checked' : ''}>
-            <span><b>${esc(x.title || x.title_auto || x.id)}</b> <span class="tag">${esc(t(KL[x.kind] || x.kind))}</span><br>
-            <span class="small muted">${esc(x.text.slice(0, 150))}${x.text.length > 150 ? '…' : ''}</span>${(x.style_refs || []).length
-              ? `<br><span class="small">${t('Style like: {names}', {names: x.style_refs.map(n => esc(((PRM.styles || {})[n] || {}).title || n)).join(', ')})}</span>` : ''}</span></label>`).join('')
-            || `<div class="empty">${items.length ? t('No prompt matches.') : t('No brief, script or hook yet - <a href="#/prompts" onclick="closeModal()">Prompts</a>.')}</div>`;
-          $$('input[name=cvr]', box).forEach(r => r.onchange = () => { st.prompt = r.value; $$('.cvitem', box).forEach(x => x.classList.toggle('on', $('input', x).checked));
-            if (talkPick()) { $('#nesnd', el).value = 'talk'; st.sound = 'talk'; } upd(); }); };
-        $('#cvq', box).oninput = debounce(e => draw(e.target.value.trim().toLowerCase()), 150);
-        draw('');
-      } else box.innerHTML = '';
-      upd();
-    };
-    const segPick = (id, key) => {
-      const seg = $(id, el);
-      const paint = () => $$('button', seg).forEach(b => b.classList.toggle('on', b.dataset.v === st[key]));
-      $$('button', seg).forEach(b => b.onclick = () => { st[key] = b.dataset.v; paint(); });
-      paint();
-    };
-    segPick('#nelen', 'length'); segPick('#nefmt', 'format');
-    $('#nesnd', el).onchange = e => { st.sound = e.target.value; };
-    $$('.cvopt', el).forEach(b => b.onclick = () => { st.how = b.dataset.m; showPick(); });
-    sel.onchange = () => { $('#cvfiles', el).innerHTML = ''; upd(); };
-    $$('.nesrc .cvopt', el).forEach(b => b.onclick = () => { if (st.busy || st.src === b.dataset.src) return;
-      st.src = b.dataset.src; $('#cvfiles', el).innerHTML = ''; upd(); });
-    // picked or dropped files -> the video's folder (a new video is made first, named by the user or after the first clip)
-    const addFiles = async list => {
-      let files = [...list];
-      const skip = files.filter(f => !CLIP_EXT.test(f.name)); files = files.filter(f => CLIP_EXT.test(f.name));
-      if (skip.length) toast(t('{files}: not a video or a sound file', {files: skip.map(f => f.name).join(', ')}), 'err');
-      if (!files.length || st.busy) return;
-      st.busy = true;
-      try {
-        if (st.src === 'new' && !st.newp) {
-          let nm = name.value.trim();
-          if (!nm) { const base = folderName(files[0].name.replace(/\.[^.]+$/, '')); nm = base;
-            for (let i = 2; ps.some(x => x.name.toLowerCase() === nm.toLowerCase()); i++) nm = `${base} ${i}`; }
-          const r = await api('/api/projects/new', {name: nm});
-          ps.unshift({name: r.name, label: null, clips: 0, songs: []}); st.newp = name.value = r.name;
-          sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${t('{name} (new)', {name: esc(r.name)})}</option>`);
-        }
-        const pj = proj(), box = $('#cvfiles', el);
-        $(`#nesrc-${st.src}`, el).append(box);               // the rows sit in the box in use
-        for (const f of files) {
-          const row = document.createElement('div'); row.className = 'fifile';
-          row.innerHTML = `<span class="grow">${esc(f.name)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
-          box.append(row);
-          try {
-            const r = await uploadClip(pj, f, talkPick() ? st.prompt : '', v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; });
-            $('.fibar i', row).style.width = '100%'; row.classList.add('ok');
-            $('[data-s]', row).textContent = r.kept ? t('already there') : t('copied ✓');
-            if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(f.name)) (P().songs = P().songs || []).push(r.file); else P().clips++; }
-          } catch (e) { row.classList.add('err'); $('[data-s]', row).textContent = e.message; }
-        }
-        const o = $(`#cvp option[value="${CSS.escape(pj)}"]`, el); if (o) o.textContent = `${pname(P())} (${plural(P().clips, 'clip')})`;
-      } catch (e) { toast(e.message, 'err'); }
-      st.busy = false; upd();
-    };
-    const addIn = $('#cvadd input', el);
-    addIn.onchange = () => { addFiles(addIn.files); addIn.value = ''; };
-    const drop = $('#cvdrop', el), dropIn = $('input', drop);
-    dropIn.onchange = () => { addFiles(dropIn.files); dropIn.value = ''; };
-    drop.ondragover = e => { e.preventDefault(); drop.classList.add('on'); };
-    drop.ondragleave = () => drop.classList.remove('on');
-    drop.ondrop = e => { e.preventDefault(); drop.classList.remove('on'); addFiles(e.dataTransfer.files); };
-    const request = async () => {
-      const how = ready(), snd = $('#nesnd', el).value;
-      const body = {how, like: st.like, presets: st.presets, want: st.want, prompt: st.prompt, length_s: st.length || null,
-                    format: st.format || null, music: snd.startsWith('music:') ? snd.slice(6) : snd === 'none' ? 'none' : '',
-                    sound: snd.startsWith('music:') ? 'music' : snd === 'none' ? 'clips' : snd, resolve: $('#neres', el).checked};
-      return api(`/api/project/${encodeURIComponent(proj())}/edit_request`, body);
-    };
+    $$('.nenav button', el).forEach(b => b.onclick = () => go(b.dataset.go));
+    $('#neback', el).onclick = () => go(NE_STEPS[ne.cur - 1][0]);
+    $('#nenext', el).onclick = () => go(NE_STEPS[ne.cur + 1][0]);
+    $('#neres', el).onchange = e => { st.resolve = e.target.checked; ne.changed(); };
+    const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, neBody(st));
     $('#cvgo', el).onclick = async () => {
-      try {
-        const pj = proj(), r = await request();
-        openClaude(r.command, 'recreate', `${ready()} → ${pj}`);
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(pj);
-      } catch (e) { toast(e.message, 'err'); }
+      try { const pj = ne.proj(), r = await save();
+        openClaude(r.command, 'recreate', `${r.request.how} → ${pj}`); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
+      catch (e) { toast(e.message, 'err'); }
     };
     $('#cvdraft', el).onclick = async () => {
-      try {
-        const pj = proj();
-        await request();
+      try { const pj = ne.proj(); await save();
         await api('/api/jobs', {kind: 'draft', args: {project: pj}, queue: true});
-        toast(t('The quick draft is on its way - it shows up here when it is ready'), 'ok');
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(pj);
-      } catch (e) { toast(e.message, 'err'); }
+        toast(t('The quick draft is on its way - it shows up here when it is ready'), 'ok'); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
+      catch (e) { toast(e.message, 'err'); }
     };
-    showPick();
-  }, 'wide');
+    ne.go = go;
+    ne.changed(); go('clips');
+  }, 'wide nemodal');
 }
+
+// 1. Clips: the clips of a video they already have ("old") or new clips copied into a new video ("new", st.newp once
+// made) - the two wide cards of 2026-10-16 (the user: "choose between an old video clip or new clips, intuitive and
+// distinct") - then the video's clips as pictures (GET /api/project/<p>'s sources, a frame each by /api/thumb): a click
+// plays one in the PC's player, the bin moves one to the Recycle Bin after a yes here (the app's delete route, a file
+// in the video's folder: trash.plan_file - the user's click, never Claude's), the + tile (or a drop) copies more in;
+// the folder's songs as chips under them. ne.addFiles = the copy, also used by 5's *Add a song…*.
+function neClips(box, ne) {
+  const {st, ps} = ne;
+  ne.clips = {};                     // per video: its clips as the server lists them (loaded once, again after a change)
+  box.innerHTML = `<div class="cvchoice nesrc">
+      <button class="cvopt" data-src="old" ${ps.length ? '' : 'disabled'}><svg class="ic"><use href="#i-videos"/></svg><b>${t('Clips you already have')}</b>
+        <span>${ps.length ? plural(ps.length, 'video') : t('No video yet - start with new clips')}</span></button>
+      <button class="cvopt" data-src="new"><svg class="ic"><use href="#i-upload"/></svg><b>${t('New clips')}</b><span>${t('From your PC - copied in')}</span></button></div>
+    <div class="nesrcrow" id="nesrc-old" hidden>${neIcon('i-videos', '--amber')}<select id="cvp">${ps.map(x => `<option value="${esc(x.name)}">${esc(pname(x))} (${plural(x.clips, 'clip')})</option>`).join('')}</select>
+      <span class="small muted" id="necount"></span><button class="btn sm ghost" id="nefold" title="${ta("the video's folder: your clips and everything made from them")}"><svg class="i"><use href="#i-folder"/></svg>${t('Folder')}</button></div>
+    <div class="nesrcrow" id="nesrc-new" hidden>${neIcon('i-pen', '--amber')}<input type="text" id="cvname" placeholder="${ta('Name the video, e.g. cooking vlog 1')}" title="${ta('Leave it empty to name it after the first clip.')}"></div>
+    <div id="neclips"></div><div id="nerm"></div><div id="cvfiles"></div>`;
+  const sel = $('#cvp', box), name = $('#cvname', box), rel = (pj, f) => `projects/${pj}/${f}`;
+  if (st.src === 'old') sel.value = st.project; else st.project = sel.value;
+  const load = async pj => {
+    ne.clips[pj] = 'loading';
+    let list = [];
+    try { list = (await api('/api/project/' + encodeURIComponent(pj))).sources.filter(s => s.exists !== false); } catch (e) { toast(e.message, 'err'); }
+    ne.clips[pj] = list;
+    const P = ps.find(x => x.name === pj), o = [...sel.options].find(x => x.value === pj);
+    if (P) { P.clips = list.length; if (o) o.textContent = `${pname(P)} (${plural(P.clips, 'clip')})`; }   // the count the list shows, kept true
+    ne.changed();
+  };
+  const tile = (pj, c) => `<div class="neclip" title="${esc(c.name)}">
+      <button class="neclipv" data-play="${esc(c.name)}" title="${ta('Play it')}"><img src="/api/thumb?video=${encodeURIComponent(rel(pj, c.name))}&f=12&fps=25" loading="lazy" alt="" onerror="this.remove()">
+        <svg class="i"><use href="#i-play"/></svg>${c.duration_s ? `<i>${ytOf(c.duration_s, 1)}</i>` : ''}</button>
+      <span class="neclipn">${esc(c.name)}</span>
+      <button class="neclipx" data-rm="${esc(c.name)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></div>`;
+  let drawn = '';
+  const paint = () => {
+    const pj = ne.proj(), P = ne.P(), songs = (P || {}).songs || [];
+    $$('.nesrc .cvopt', box).forEach(b => b.classList.toggle('on', b.dataset.src === st.src));
+    $('#nesrc-old', box).hidden = st.src !== 'old'; $('#nesrc-new', box).hidden = st.src !== 'new';
+    name.disabled = !!st.newp;
+    let C = pj ? ne.clips[pj] : [];
+    if (pj && C === undefined) { load(pj); C = ne.clips[pj]; }
+    const key = JSON.stringify([st.src, pj, C, songs]);
+    if (key === drawn) return;                         // the grid only when its clips change (not on every key typed)
+    drawn = key;
+    const el = $('#neclips', box), clips = Array.isArray(C) ? C : [];
+    $('#necount', box).textContent = P ? [plural(clips.length, 'clip'), songs.length ? plural(songs.length, 'song') : ''].filter(Boolean).join(' · ') : '';
+    $('#nefold', box).dataset.open = 'projects/' + pj;
+    if (!st.src) { el.innerHTML = ''; return; }
+    el.innerHTML = C === 'loading' ? `<div class="small muted">${t('Loading…')}</div>` : `<div class="neclips">${clips.map(c => tile(pj, c)).join('')}
+        <label class="neadd${clips.length ? '' : ' big'}"><input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv">${neIcon('i-plus')}
+          <b>${clips.length ? t('Add clips…') : t('Drop your clips here')}</b>${clips.length ? '' : `<span>${t('or click to choose them')}</span>`}</label></div>
+      ${songs.length ? `<div class="nesongs">${songs.map(s => `<span class="nesong">${neIcon('i-music')}${esc(s)}<button class="neclipx" data-rm="${esc(s)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></span>`).join('')}</div>` : ''}`;
+    const inp = $('.neadd input', el);
+    if (inp) inp.onchange = () => { ne.addFiles(inp.files); inp.value = ''; };
+    const grid = $('.neclips', el);
+    if (grid) {
+      grid.ondragover = e => { e.preventDefault(); grid.classList.add('on'); };
+      grid.ondragleave = () => grid.classList.remove('on');
+      grid.ondrop = e => { e.preventDefault(); grid.classList.remove('on'); ne.addFiles(e.dataTransfer.files); };
+    }
+    $$('[data-play]', el).forEach(b => b.onclick = () => api('/api/open', {path: rel(pj, b.dataset.play)}).catch(e => toast(e.message, 'err')));
+    $$('[data-rm]', el).forEach(b => b.onclick = () => remove(b.dataset.rm));
+  };
+  // the bin: what the Delete dialog would say (GET /api/delete), here in the step - a pop-up over this one would lose it
+  const remove = async file => {
+    const pj = ne.proj(), r = rel(pj, file), host = $('#nerm', box);
+    let pl;
+    try { pl = await api(`/api/delete?kind=file&name=${encodeURIComponent(r)}`); } catch (e) { toast(e.message, 'err'); return; }
+    const it = pl.items[0];
+    host.innerHTML = `<div class="nerm"><svg class="i"><use href="#i-trash"/></svg><div class="grow"><b>${t('Remove {name}?', {name: esc(file)})}</b>
+        <div class="small muted">${t('It goes to the Windows Recycle Bin - you can restore it from there.')} · ${bytes(it.bytes)}</div>
+        ${it.warn.map(w => `<div class="small warnline">⚠ ${esc(t(w))}</div>`).join('')}</div>
+      <button class="btn del" id="nermgo">${t('Move to the Recycle Bin')}</button><button class="btn" id="nermno">${t('Cancel')}</button></div>`;
+    $('#nermno', host).onclick = () => { host.innerHTML = ''; };
+    $('#nermgo', host).onclick = async () => {
+      $('#nermgo', host).disabled = true;
+      try {
+        const res = await api('/api/delete', {kind: 'file', name: r, keys: ['file']});
+        if (res.failed.length) { host.innerHTML = `<div class="nerm"><span class="bad">${esc(t(res.failed[0].why))}</span></div>`; return; }
+        host.innerHTML = '';
+        toast(t('Moved to the Recycle Bin ({size}): {list}', {size: bytes(res.bytes), list: res.moved.join(', ')}), 'ok');
+        const P = ne.P();
+        if (P && (P.songs || []).includes(file)) { P.songs = P.songs.filter(s => s !== file); if (st.sound === 'music:' + file) st.sound = 'auto'; }
+        delete ne.clips[pj];
+        ne.changed();
+      } catch (e) { toast(e.message, 'err'); $('#nermgo', host).disabled = false; }
+    };
+  };
+  sel.onchange = () => { st.project = sel.value; $('#cvfiles', box).innerHTML = $('#nerm', box).innerHTML = ''; ne.changed(); };
+  $$('.nesrc .cvopt', box).forEach(b => b.onclick = () => { if (st.busy || st.src === b.dataset.src) return;
+    st.src = b.dataset.src; $('#cvfiles', box).innerHTML = $('#nerm', box).innerHTML = ''; ne.changed(); });
+  // picked or dropped files -> the video's folder (a new video is made first, named by the user or after the first clip)
+  ne.addFiles = async (list, rows = $('#cvfiles', box)) => {
+    let files = [...list];
+    const skip = files.filter(f => !CLIP_EXT.test(f.name)); files = files.filter(f => CLIP_EXT.test(f.name));
+    if (skip.length) toast(t('{files}: not a video or a sound file', {files: skip.map(f => f.name).join(', ')}), 'err');
+    if (!files.length || st.busy) return;
+    if (!st.src) { toast(t('First pick where your clips come from (1. Clips)'), 'err'); ne.go('clips'); return; }
+    st.busy = true;
+    try {
+      if (st.src === 'new' && !st.newp) {
+        let nm = name.value.trim();
+        if (!nm) { const base = folderName(files[0].name.replace(/\.[^.]+$/, '')); nm = base;
+          for (let i = 2; ps.some(x => x.name.toLowerCase() === nm.toLowerCase()); i++) nm = `${base} ${i}`; }
+        const r = await api('/api/projects/new', {name: nm});
+        ps.unshift({name: r.name, label: null, clips: 0, songs: []}); st.newp = name.value = r.name;
+        sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${t('{name} (new)', {name: esc(r.name)})}</option>`);
+      }
+      const pj = ne.proj(), P = ne.P();
+      for (const f of files) {
+        const row = document.createElement('div'); row.className = 'fifile';
+        row.innerHTML = `<span class="grow">${esc(f.name)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
+        rows.append(row);
+        try {
+          const r = await uploadClip(pj, f, neTalk(st.prompt) ? st.prompt : '', v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; });
+          $('.fibar i', row).style.width = '100%'; row.classList.add('ok');
+          $('[data-s]', row).textContent = r.kept ? t('already there') : t('copied ✓');
+          if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(f.name)) (P.songs = P.songs || []).push(r.file); else P.clips++; }
+        } catch (e) { row.classList.add('err'); $('[data-s]', row).textContent = e.message; }
+      }
+      delete ne.clips[pj];                             // listed again: the new clips show as pictures
+      setTimeout(() => $$('.fifile.ok', rows).forEach(x => x.remove()), 2500);
+    } catch (e) { toast(e.message, 'err'); }
+    st.busy = false; ne.changed();
+  };
+  return paint;
+}
+
+// 2. Text: what Claude follows - what it is about | the words on screen as written (side by side), a script or brief
+// from Prepare / the prompt library (the list, the picked one read beside it)
+function neText(box, ne) {
+  const {st, PRM} = ne, KL = Object.fromEntries(PRM.kinds.map(k => [k.id, k.label]));
+  const items = PRM.items.filter(x => ['brief', 'script', 'hook'].includes(x.kind));
+  const badge = x => `<span class="kbadge k-${esc(x.kind)}">${esc(t(KL[x.kind] || x.kind))}</span>`;
+  box.innerHTML = `<div class="netwo"><div class="nef"><label for="neabout">${neIcon('i-pen', '--cyan')}${t('What is the video about?')}</label>
+        <textarea id="neabout" rows="4" placeholder="${ta('e.g. a day at the climbing gym with my friends - funny, it ends with me finally reaching the top')}">${esc(st.about)}</textarea></div>
+      <div class="nef"><label for="neons">${neIcon('i-type', '--pink')}${t('Text on screen')}</label>
+        <textarea id="neons" rows="4" placeholder="${ta('One per line - e.g. DAY 1 OF 30')}">${esc(st.onscreen)}</textarea></div></div>
+    <div class="nef"><label>${neIcon('i-scriptok', '--green')}${t('A script or brief from Prepare')}</label>
+      <div class="nepick"><div class="nelist"><div class="nelq"><input type="search" id="cvq" placeholder="${ta('Search your scripts and briefs…')}"></div><div class="cvlist" id="cvpl"></div></div>
+        <div class="neprev" id="neprev"></div></div></div>`;
+  $('#neabout', box).oninput = e => { st.about = e.target.value; ne.changed(); };
+  $('#neons', box).oninput = e => { st.onscreen = e.target.value; ne.changed(); };
+  const prev = () => { const x = items.find(i => i.id === st.prompt);
+    $('#neprev', box).innerHTML = x ? `<div class="row sp"><b>${esc(x.title || x.title_auto || x.id)}</b>${badge(x)}</div>
+      <p class="neptext">${esc(x.text.slice(0, 480))}${x.text.length > 480 ? '…' : ''}</p>` : `<div class="neprev0">${neIcon('i-sparkle', '--amber')}<span>${t('Nothing picked - Claude works from your notes and your clips.')}</span></div>`; };
+  const drawPrompts = q => {
+    const row = x => `<label class="cvitem${x.id === st.prompt ? ' on' : ''}"><input type="radio" name="cvr" value="${esc(x.id)}" ${x.id === st.prompt ? 'checked' : ''}>
+      <b class="grow">${esc(x.title || x.title_auto || x.id)}</b>${badge(x)}</label>`;
+    const hits = items.filter(x => !q || [x.id, x.title, x.text, ...(x.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 60);
+    $('#cvpl', box).innerHTML = items.length ? `<label class="cvitem${st.prompt ? '' : ' on'}"><input type="radio" name="cvr" value="" ${st.prompt ? '' : 'checked'}><b class="grow">${t('None')}</b></label>`
+        + (hits.map(row).join('') || `<div class="empty">${t('No prompt matches.')}</div>`)
+      : `<div class="empty">${t('No brief, script or hook yet - <a href="#/prompts" onclick="closeModal()">Prompts</a>.')}</div>`;
+    $$('input[name=cvr]', box).forEach(r => r.onchange = () => {
+      st.prompt = r.value; $$('#cvpl .cvitem', box).forEach(x => x.classList.toggle('on', $('input', x).checked));
+      if (neTalk(st.prompt) && st.sound === 'auto') st.sound = 'talk';
+      prev(); ne.changed(); });
+  };
+  $('#cvq', box).oninput = debounce(e => drawPrompts(e.target.value.trim().toLowerCase()), 150);
+  drawPrompts(''); prev();
+}
+
+// 3. References: this PC's analysed videos as picture cards (up to OPT.max_refs, the count by the title) - their style,
+// or an exact copy of one (two cards under them)
+function neRefs(box, ne) {
+  const {st, OPT} = ne, max = OPT.max_refs, vids = ownVideos(ne.S);
+  let q = '';
+  box.innerHTML = `${vids.length > 8 ? `<input type="search" class="nerq" placeholder="${ta('Search…')}">` : ''}<div class="nerefs"></div><div id="neexact"></div>`;
+  const count = $('.nestx', box.closest('.nesec'));
+  const exact = () => {               // an exact copy needs one video analysed on this PC (every picked one is)
+    const one = st.like.length === 1 && vids.some(v => v.key === st.like[0]);
+    if (!one) st.exact = false;
+    $('#neexact', box).innerHTML = st.like.length ? `<div class="neexact">
+      <button class="necard nexo${st.exact ? '' : ' on'}" data-x="0"><svg class="ic"><use href="#i-palette"/></svg><span><b>${st.like.length > 1 ? t('In their style') : t('In its style')}</b><span>${t('your music, your length')}</span></span></button>
+      <button class="necard nexo${st.exact ? ' on' : ''}" data-x="1" ${one ? '' : `disabled title="${ta('(one video analysed on this PC)')}"`}><svg class="ic"><use href="#i-copy"/></svg><span><b>${t('An exact copy')}</b><span>${t('the same song and cuts, with your clips')}</span></span></button></div>` : '';
+    $$('.nexo', box).forEach(b => b.onclick = () => { st.exact = b.dataset.x === '1'; exact(); ne.changed(); });
+  };
+  const draw = () => {
+    const keys = new Set(vids.map(v => v.key));
+    const list = [...st.like.filter(k => !keys.has(k)).map(k => ({key: k, label: k})), ...vids]       // picked elsewhere (a test video)
+      .filter(v => !q || [v.label, v.title, v.key, v.by, v.platform, v.category_label].join(' ').toLowerCase().includes(q));
+    // a card = its picture, its length and its name (2026-10-22: "i dont care about the cuts per min stuff, maybe just
+    // show duration and thats it"); the length = the end of its format label ("Horizontal · 2:35")
+    $('.nerefs', box).innerHTML = vids.length ? list.map(v => { const on = st.like.includes(v.key), full = !on && st.like.length >= max,
+      dur = (String(v.format || '').split(' · ')[1] || '').trim();
+      return `<button class="necard neref${on ? ' on' : ''}" data-k="${esc(v.key)}" ${full ? 'disabled' : ''} title="${esc(v.line || v.summary || v.label || v.key)}">
+        <span class="nerefp">${v.picture ? `<img src="${fileUrl(v.picture)}" loading="lazy" alt="">` : ''}${dur ? `<i>${esc(dur)}</i>` : ''}</span>
+        <b>${esc(v.label || v.title || v.key)}</b></button>`; }).join('')
+        || `<div class="small muted">${t('No video matches.')}</div>`
+      : `<div class="empty">${t('No video analysed on this PC yet - add one in the <a href="#/analyze" onclick="closeModal()">Analyser</a>.')}</div>`;
+    count.innerHTML = `<b>${st.like.length}</b> / ${max}`;
+    $$('.neref', box).forEach(b => b.onclick = () => { const k = b.dataset.k;
+      st.like = st.like.includes(k) ? st.like.filter(x => x !== k) : [...st.like, k].slice(0, max); draw(); exact(); ne.changed(); });
+  };
+  const qi = $('.nerq', box);
+  if (qi) qi.oninput = debounce(() => { q = qi.value.trim().toLowerCase(); draw(); }, 150);
+  draw(); exact();
+}
+
+// one question's answers as pills: one answer (an Auto pill first; a second click clears) or several (st[key] a list,
+// o.max; o.auto false = no Auto pill, nothing picked is Auto); o.help = where the picked answers' help goes (also each
+// pill's tooltip); o.top = only that many answers (o.first
+// first, then the table's order; a picked one always shows) and a "+N" pill for the rest (2026-10-22: "reduce the
+// questions A LOT, to 4-5 options if possible and a '+' sign if u want to answer more")
+function neChips(box, items, st, key, o = {}) {
+  const many = Array.isArray(st[key]);
+  const first = o.first || [], order = [...first.map(id => items.find(x => x.id === id)).filter(Boolean), ...items.filter(x => !first.includes(x.id))];
+  let open = !o.top;
+  const draw = () => {
+    const picked = x => many ? st[key].includes(x.id) : st[key] === x.id;
+    const shown = open ? order : order.filter((x, i) => i < o.top || picked(x)), more = order.length - shown.length;
+    box.innerHTML = (many || o.auto === false ? '' : `<button class="nech${st[key] ? '' : ' on'}" data-v="">${t('Auto')}</button>`) + shown.map(x => {
+      const on = picked(x), full = many && !on && o.max && st[key].length >= o.max;
+      return `<button class="nech${on ? ' on' : ''}" data-v="${esc(x.id)}" ${full ? 'disabled' : ''} ${x.help ? `title="${esc(t(x.help))}"` : ''}>${esc(t(x.label))}</button>`; }).join('')
+      + (more ? `<button class="nech nemore" title="${ta('Show all')}">+${more}</button>` : '');
+    if (o.help) o.help.textContent = items.filter(x => x.help && picked(x)).map(x => many ? `${t(x.label)}: ${t(x.help)}` : t(x.help)).join(' · ');
+    const m = $('.nemore', box); if (m) m.onclick = () => { open = true; draw(); };
+    $$('button[data-v]', box).forEach(b => b.onclick = () => { const v = b.dataset.v;
+      if (many) st[key] = st[key].includes(v) ? st[key].filter(x => x !== v) : [...st[key], v];
+      else st[key] = st[key] === v ? '' : v;
+      draw(); if (o.onChange) o.onChange(); });
+  };
+  draw();
+}
+
+// 4. Style (2026-10-22: "first make a row for the A ready-made style, then show the questions ... reduce ... to 4-5
+// options ... and a '+' ... show the color palette without having to scroll down ... make it more big"): the ready-made
+// styles in one row (their rhythm as bars: a shot each, the wider the longer; what each is = its tooltip), the
+// questions as one compact card (the question on the left, at most 4 answers + "+N" on the right; where, the type, the
+// rhythm, the mood, captions, the feel in their words), then the colour palette for titles, captions and graphics as
+// big cards
+const NE_Q = {where: ['i-pin', '--cyan'], type: ['i-film', '--violet'], rhythm: ['i-zap', '--amber'], moods: ['i-smile', '--pink'], captions: ['i-cc', '--green']};
+const NE_FIRST = {type: ['vlog', 'ad', 'music_video', 'tutorial']};     // the kinds of video the user makes most, first
+// the bars stay grey (2026-10-22: "dont put colors in ready-made style cuz that is for general feel of video" - colour
+// is the palette's job, below)
+const neBars = (r, hue = '#9a9aa6') => {
+  const m = (r || {}).median_shot_s; if (!m) return '';
+  const lo = r.p10_shot_s || m * 0.7, hi = r.p90_shot_s || m * 1.4, seq = [m, hi, lo, m, lo, hi, m, lo, hi, m, lo, m];
+  const out = []; let sum = 0;
+  for (let i = 0; sum < 9 && i < 40; i++) { const s = seq[i % seq.length]; sum += s;
+    out.push(`<i style="flex-grow:${s.toFixed(2)};background:${hue};opacity:${[1, 0.72, 0.5][i % 3]}"></i>`); }
+  return `<span class="nebars" title="${ta('Each bar is a shot - the wider, the longer it lasts')}">${out.join('')}</span>`;
+};
+function neStyle(box, ne) {
+  const {st, OPT} = ne;
+  const qs = [['where', t('Where was it filmed?'), OPT.where], ['type', t('Type of video'), OPT.types], ['rhythm', t('Rhythm'), OPT.rhythm],
+              ['moods', t('Mood'), OPT.moods, OPT.max_moods], ['captions', t('Captions'), OPT.captions]];
+  box.innerHTML = `<div class="nelab">${neIcon('i-sparkle', '--amber')}${t('A ready-made style')}</div>
+    <div class="nepre">${OPT.presets.map(p => `<button class="nep${st.presets.includes(p.id) ? ' on' : ''}" data-p="${esc(p.id)}" title="${esc(t(p.help))}"><b>${esc(t(p.label))}</b>${neBars(p.rhythm)}</button>`).join('')}</div>
+    <div class="neqs">${qs.map(([k, q, , max]) => `<div class="neqr"><label>${neIcon(...NE_Q[k])}${q}${max ? ` <span>${t('up to {n}', {n: max})}</span>` : ''}</label><div class="nechips" data-q="${k}"></div></div>`).join('')}
+      <div class="neqr"><label for="newant">${neIcon('i-pen', '--amber')}${t('The feel in your words')}</label>
+        <textarea id="newant" rows="1" placeholder="${ta('e.g. a hook in the first second, 3 s cuts, very fast paced, bold captions word by word, slow zooms while I talk')}">${esc(st.want)}</textarea></div></div>
+    <div class="nelab nepalh"><span title="${ta('for titles, captions and graphics - none picked = Claude takes it from your clips and references')}">${neIcon('i-palette', '--pink')}${t('Colour palette')}</span><div class="nepal" id="nemine"></div></div>
+    <div id="nepal"></div>`;
+  qs.forEach(([k, , items, max]) => neChips($(`[data-q=${k}]`, box), items, st, k, {max, top: 4, auto: false, first: NE_FIRST[k], onChange: ne.changed}));
+  $$('.nep', box).forEach(b => b.onclick = () => {
+    const id = b.dataset.p; st.presets = st.presets.includes(id) ? st.presets.filter(x => x !== id) : [...st.presets, id];
+    b.classList.toggle('on', st.presets.includes(id));
+    const tk = OPT.presets.find(p => p.id === id);
+    if (tk && tk.talk && st.presets.includes(id)) st.sound = 'talk';
+    ne.changed(); });
+  $('#newant', box).oninput = e => { st.want = e.target.value; ne.changed(); };
+  nePalette($('#nepal', box), ne, $('#nemine', box));
+}
+
+// the palette: Auto or a ready-made one as big cards (a strip of its colours each) in box, the colours themselves as big
+// swatches to change in mine, beside the palette's title (up to OPT.max_colours, the first = the main accent); none = Auto
+function nePalette(box, ne, mine) {
+  const {st, OPT} = ne;
+  const same = cs => cs.length === st.palette.length && cs.every((c, i) => c.toUpperCase() === st.palette[i]);
+  const draw = () => {
+    box.innerHTML = `<div class="nepals"><button class="nepl${st.palette.length ? '' : ' on'}" data-clear title="${ta('Auto - Claude picks')}"><span class="nestrip auto">${neIcon('i-sparkle')}</span><span>${t('Auto')}</span></button>
+        ${OPT.palettes.map(p => `<button class="nepl${same(p.colours) ? ' on' : ''}" data-p="${esc(p.id)}"><span class="nestrip">${p.colours.map(c => `<i style="background:${esc(c)}"></i>`).join('')}</span><span>${esc(t(p.label))}</span></button>`).join('')}</div>`;
+    mine.innerHTML = `${st.palette.map((c, i) => `<span class="nesw"><input type="color" value="${esc(c.toLowerCase())}" data-i="${i}" title="${esc(c)}"><button class="nesx" data-x="${i}" title="${ta('Remove')}">✕</button></span>`).join('')}
+        ${st.palette.length < OPT.max_colours ? `<button class="btn sm" data-add>${t('+ Add a colour')}</button>` : ''}`;
+    $$('input[type=color]', mine).forEach(c => {
+      c.oninput = () => { st.palette[+c.dataset.i] = c.value.toUpperCase(); ne.changed(); };
+      c.onchange = draw; });
+    $$('[data-x]', mine).forEach(b => b.onclick = () => { st.palette.splice(+b.dataset.x, 1); draw(); ne.changed(); });
+    const add = $('[data-add]', mine);
+    if (add) add.onclick = () => { st.palette.push(st.palette.length ? '#FFFFFF' : '#FF2D55'); draw(); ne.changed(); };
+    const clear = $('[data-clear]', box);
+    if (clear) clear.onclick = () => { st.palette = []; draw(); ne.changed(); };
+    $$('[data-p]', box).forEach(b => b.onclick = () => { st.palette = OPT.palettes.find(p => p.id === b.dataset.p).colours.map(c => c.toUpperCase()); draw(); ne.changed(); });
+  };
+  draw();
+}
+
+// 5. Sound: the music as four cards (Auto, a song - the folder's or a downloaded one, picked under them -, the clips'
+// own sound, talking), how many sound effects (a card each, with a strip of how often one plays) and which kinds
+// (motionlab\sfx.py's cue kinds, grouped), notes. Its refresh = the songs again (one added, another video, a talking
+// script picked).
+function neSound(box, ne) {
+  const {st, OPT} = ne;
+  const MUSIC = [['auto', 'i-sparkle', t('Auto'), t("the folder's song, if any")], ['music', 'i-music', t('A song'), ''],
+                 ['clips', 'i-film', t("The clips' own sound"), t('as filmed')], ['talk', 'i-mic', t('Talking'), t('pauses cut')]];
+  const TICKS = {none: 0, few: 3, some: 6, many: 11};
+  const amounts = [{id: '', label: t('Auto'), help: t('Claude decides')}, ...OPT.sfx_amount.map(x => ({id: x.id, label: t(x.label), help: t(x.help)}))];
+  const strip = id => `<span class="netrk${id ? '' : ' auto'}">${Array.from({length: 12}, (_, i) =>
+    `<i${id && Math.floor((i + 1) * TICKS[id] / 12) > Math.floor(i * TICKS[id] / 12) ? ' class="on"' : ''}></i>`).join('')}</span>`;
+  box.innerHTML = `<div class="neq"><label>${neIcon('i-music', '--violet')}${t('Music')}</label>
+      <div class="nemus">${MUSIC.map(([v, ic, l, s]) => `<button class="necard nemc" data-m="${v}" ${v === 'auto' ? `title="${ta('Automatic - the song in the folder if there is one')}"` : ''}><svg class="ic"><use href="#${ic}"/></svg><b>${l}</b><span data-ms="${v}">${s}</span></button>`).join('')}</div>
+      <div class="nesongrow" id="nesongrow" hidden><select id="nesnd"></select>
+        <label class="btn sm" id="nesong" title="${ta('Copies a song into this video - the original stays where it is')}"><svg class="i"><use href="#i-upload"/></svg>${t('Add a song…')}<input type="file" hidden accept="audio/*,.mp3,.m4a,.wav,.aac,.flac,.ogg"></label></div>
+      <div id="nesongf"></div></div>
+    <div class="neq"><label>${neIcon('i-volume', '--amber')}${t('Sound effects')}</label>
+      <div class="nesfx">${amounts.map(a => `<button class="necard nesfxc" data-a="${esc(a.id)}"><b>${esc(a.label)}</b><span>${esc(a.help)}</span>${strip(a.id)}</button>`).join('')}</div></div>
+    <div class="neq" id="nekinds"><label>${neIcon('i-zap', '--pink')}${t('Which kinds')}</label><div class="nechips" data-q="kinds"></div><div class="nechelp" data-h="kinds"></div></div>
+    <div class="nef"><label for="nesnotes">${neIcon('i-pen', '--cyan')}${t('Notes on sound')}</label>
+      <textarea id="nesnotes" rows="2" placeholder="${ta('e.g. a big hit when the logo appears, keep my voice clear over the music')}">${esc(st.snotes)}</textarea></div>`;
+  const sel = $('#nesnd', box), songIn = $('#nesong input', box);
+  const fill = () => {
+    const songs = (ne.P() || {}).songs || [];
+    sel.innerHTML = `${songs.length ? `<optgroup label="${ta("In this video's folder")}">${songs.map(s => `<option value="music:${esc(s)}">${esc(s)}</option>`).join('')}</optgroup>` : ''}
+      ${OPT.songs.length ? `<optgroup label="${ta('Downloaded songs')}">${OPT.songs.map(s => `<option value="music:${esc(s.rel)}">${esc(s.name)}</option>`).join('')}</optgroup>` : ''}`;
+    if (st.sound.startsWith('music:') && ![...sel.options].some(o => o.value === st.sound)) st.sound = sel.options.length ? sel.options[0].value : 'auto';
+    const mode = st.sound.startsWith('music:') ? 'music' : st.sound;
+    if (mode === 'music') sel.value = st.sound;
+    $$('.nemc', box).forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+    $('[data-ms=music]', box).textContent = mode === 'music' ? st.sound.slice(6).split('/').pop() : sel.options.length ? t('Pick a song') : t('Add a song…');
+    $('#nesongrow', box).hidden = mode !== 'music';
+    $$('.nesfxc', box).forEach(b => b.classList.toggle('on', b.dataset.a === st.sfx));
+    $('#nekinds', box).hidden = st.sfx === 'none';
+  };
+  $$('.nemc', box).forEach(b => b.onclick = () => { const m = b.dataset.m;
+    if (m !== 'music') st.sound = m;
+    else if (!st.sound.startsWith('music:')) { if (!sel.options.length) { songIn.click(); return; } st.sound = sel.options[0].value; }
+    ne.changed(); });
+  sel.onchange = () => { st.sound = sel.value; ne.changed(); };
+  songIn.onchange = async () => { const f = [...songIn.files]; songIn.value = '';
+    await ne.addFiles(f, $('#nesongf', box));
+    const songs = (ne.P() || {}).songs || [], s = f[0] && (songs.includes(f[0].name) ? f[0].name : songs[songs.length - 1]);
+    if (s) { st.sound = 'music:' + s; ne.changed(); } };
+  $$('.nesfxc', box).forEach(b => b.onclick = () => { st.sfx = b.dataset.a; ne.changed(); });
+  neChips($('[data-q=kinds]', box), OPT.sfx_kinds, st, 'kinds', {help: $('[data-h=kinds]', box), onChange: ne.changed});
+  $('#nesnotes', box).oninput = e => { st.snotes = e.target.value; ne.changed(); };
+  return fill;
+}
+
+// 6. Final: the length, the format (a card each, its shape drawn), then the summary - every step in one table, a click
+// on one goes back to it - and Claude's time as one chip. Its refresh also sets the footer's two buttons (what they do
+// = their tooltip; only a missing clip is said here).
+function neFinal(box, ne) {
+  const {st, OPT} = ne;
+  const lens = [['', t('Auto')], ['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30 min']];
+  const fmts = [['', t('Auto'), t("your clips' own shape")], ['vertical', t('Vertical 9:16'), 'TikTok · Reels · Shorts'],
+                ['horizontal', t('Horizontal 16:9'), 'YouTube'], ['square', t('Square 1:1'), t('a feed post')]];
+  box.innerHTML = `<div class="neq"><label>${neIcon('i-clock', '--cyan')}${t('Length')}</label><div class="nechips" id="nelen">${lens.map(([v, l]) => `<button class="nech" data-v="${v}">${l}</button>`).join('')}
+      <input type="number" id="nelenx" min="3" max="900" step="1" placeholder="${ta('or seconds')}"></div></div>
+    <div class="neq"><label>${neIcon('i-videos', '--violet')}${t('Format')}</label>
+      <div class="nefmts">${fmts.map(([v, l, s]) => `<button class="necard nefmt" data-f="${v}"><i class="neshape ${v || 'auto'}"></i><span><b>${l}</b><span>${s}</span></span></button>`).join('')}</div></div>
+    <div class="neq"><label>${neIcon('i-clipboard', '--green')}${t('Summary')}</label><div class="nesum" id="nesumc"></div></div>
+    <div class="nefinb"><span class="neest" id="neest"></span><span class="small amber" id="neneed"></span></div>`;
+  const seg = $('#nelen', box), other = $('#nelenx', box);
+  const paint = () => {
+    $$('[data-v]', seg).forEach(b => b.classList.toggle('on', b.dataset.v === st.length));
+    if (lens.some(([v]) => v === st.length)) other.value = '';
+    $$('[data-f]', box).forEach(b => b.classList.toggle('on', b.dataset.f === st.format));
+  };
+  $$('[data-v]', seg).forEach(b => b.onclick = () => { st.length = b.dataset.v; paint(); ne.changed(); });
+  other.oninput = () => { const v = Math.round(+other.value); st.length = v >= 3 && v <= 900 ? String(v) : ''; paint(); ne.changed(); };
+  $$('[data-f]', box).forEach(b => b.onclick = () => { st.format = b.dataset.f; paint(); ne.changed(); });
+  paint();
+  return () => {
+    const R = neRows(ne), P = ne.P(), clips = !!(P && P.clips);
+    $('#nesumc', box).innerHTML = NE_STEPS.map(([id, name, , ic, col]) => { const set = (R[id] || []).filter(r => !r.auto);
+      return `<button class="nesumr${id === 'clips' && !clips ? ' need' : ''}" data-go="${id}">${neIcon(ic, col)}<span>${name}</span><span class="nesv">${set.length ? set.map(r => `<span title="${esc(r.k)}">${r.v}</span>`).join(' · ')
+        : `<em>${id === 'clips' ? t('Pick your clips first') : t('Auto')}</em>`}</span></button>`; }).join('');
+    $$('#nesumc [data-go]', box).forEach(b => b.onclick = () => ne.go(b.dataset.go));
+    const m = st.length ? Math.round(+st.length * OPT.min_per_s) : 0, est = $('#neest', box);
+    est.innerHTML = `<svg class="i"><use href="#i-clock"/></svg><span>${m ? t('About <b>{time}</b> of Claude', {time: m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${pad(m % 60)} min`})
+      : t('Pick a length to see how long Claude may take')}</span>`;
+    est.title = t('We count about {n} min of Claude per second of video.', {n: numStr(OPT.min_per_s)});
+    const exactOk = !st.exact || st.like.length === 1;
+    const style = st.like.length || st.presets.length || st.want.trim() || st.rhythm || neTalk(st.prompt);
+    const go = $('#cvgo', ne.el), dr = $('#cvdraft', ne.el);
+    go.disabled = !(clips && exactOk); dr.disabled = !(clips && !st.exact && style);
+    go.title = clips ? t('Claude plans it with you, step by step') : t('First your clips (1)');
+    dr.title = st.exact ? t('An exact copy is made by Claude') : style || !clips
+      ? t('A first version in a few minutes, by rules - no Claude. Watch it, then let Claude make it better.')
+      : t('The quick draft needs a style: a reference (3), a rhythm or a ready-made style (4), or your words');
+    $('#neneed', box).textContent = clips ? '' : t('First your clips (1)');
+  };
+}
+
+// what was picked, per step: [{k: the question, v: the answer as html, s: a short plain answer for the steps on the left,
+// auto}] - the steps and the summary both read it, so they never disagree
+function neRows(ne) {
+  const {st, OPT, PRM} = ne, P = ne.P();
+  const lab = (list, id) => { const x = (list || []).find(o => o.id === id); return x ? t(x.label) : id; };
+  const plain = v => String(v).replace(/<[^>]+>/g, '').replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"}[e]));
+  const row = (k, v, s = '', auto = false) => ({k, v, s: s || plain(v), auto});     // s goes in as text, v as html
+  const pr = st.prompt && PRM.items.find(x => x.id === st.prompt);
+  const names = st.like.map(k => { const v = ownVideos(ne.S).find(x => x.key === k); return v ? v.label || v.title || k : k; });
+  const snd = st.sound.startsWith('music:') ? st.sound.slice(6).split('/').pop() : {auto: t('Automatic'), clips: t("The clips' own sound"), talk: t('Talking')}[st.sound];
+  const lines = st.onscreen.split('\n').filter(x => x.trim());
+  return {
+    clips: P ? [row(t('Video'), esc(pname(P)), pname(P)), row(t('Clips'), P.clips ? plural(P.clips, 'clip') : `<span class="amber">${t('no clips yet')}</span>`)] : [],
+    text: [st.about.trim() && row(t('What it is about'), esc(st.about.trim().slice(0, 140)) + (st.about.trim().length > 140 ? '…' : ''), t('notes')),
+      lines.length && row(t('Text on screen'), lines.map(esc).join(' · '), plural(lines.length, 'line')),
+      pr && row(t('Script or brief'), esc(pr.title || pr.title_auto || pr.id), t('a script'))].filter(Boolean),
+    refs: [st.like.length && row(st.exact ? t('An exact copy of') : t('In the style of'), names.map(esc).join(', '), plural(st.like.length, 'video'))].filter(Boolean),
+    style: [st.where && row(t('Filmed'), lab(OPT.where, st.where)), st.type && row(t('Type of video'), lab(OPT.types, st.type)),
+      st.rhythm && row(t('Rhythm'), lab(OPT.rhythm, st.rhythm)), st.moods.length && row(t('Mood'), st.moods.map(m => lab(OPT.moods, m)).join(', ')),
+      st.captions && row(t('Captions'), lab(OPT.captions, st.captions)),
+      st.presets.length && row(t('Ready-made'), st.presets.map(p => lab(OPT.presets, p)).join(', ')),
+      st.want.trim() && row(t('In your words'), esc(st.want.trim().slice(0, 140)), t('your words')),
+      st.palette.length && row(t('Palette'), st.palette.map(c => `<i class="nedot" style="background:${esc(c)}"></i>`).join(''), plural(st.palette.length, 'colour'))].filter(Boolean),
+    sound: [row(t('Music'), esc(snd), '', st.sound === 'auto'), row(t('Sound effects'), st.sfx ? lab(OPT.sfx_amount, st.sfx) : t('Auto'), '', !st.sfx),
+      st.kinds.length && st.sfx !== 'none' && row(t('Kinds'), st.kinds.map(k => lab(OPT.sfx_kinds, k)).join(', ')),
+      st.snotes.trim() && row(t('Notes'), esc(st.snotes.trim().slice(0, 140)), t('notes'))].filter(Boolean),
+    final: [row(t('Length'), st.length ? `${st.length} s` : t('Auto'), '', !st.length),
+      row(t('Format'), st.format ? {vertical: t('Vertical 9:16'), horizontal: t('Horizontal 16:9'), square: t('Square 1:1')}[st.format] : t('Auto'), '', !st.format),
+      st.resolve && row('DaVinci Resolve', t('yes, a project too'))].filter(Boolean)};
+}
+// the steps on the left: before the one on screen = a tick and the short answer (Auto when nothing was picked), the one
+// on screen = a gold ring and Now, the rest their number (dashed = optional) and their answer once something is picked;
+// red = no clips; .rchn = the line down to the next step is gold (that step is reached)
+function neNav(el, ne) {
+  const R = neRows(ne), clips = !!(ne.P() || {}).clips;
+  $$('.nenav button', el).forEach((b, i) => {
+    const id = b.dataset.go, s = (R[id] || []).filter(r => !r.auto).map(r => r.s), on = i === ne.cur, need = id === 'clips' && !clips && !on, done = i < ne.cur && !need;
+    b.classList.toggle('on', on); b.classList.toggle('done', done); b.classList.toggle('need', need); b.classList.toggle('rchn', i < ne.cur);
+    $('b', b).textContent = done ? '✓' : i + 1;
+    $('small', b).textContent = on ? t('Now|step') : need ? t('pick your clips') : s.length ? s.slice(0, 3).join(' · ') : done ? t('Auto') : '';
+  });
+}
+
+const neBody = st => ({like: st.like, exact: st.exact, prompt: st.prompt, about: st.about, on_screen: st.onscreen, presets: st.presets, want: st.want,
+  style: {where: st.where, type: st.type, rhythm: st.rhythm, moods: st.moods, captions: st.captions, palette: st.palette},
+  sfx: {amount: st.sfx, kinds: st.kinds, notes: st.snotes}, length_s: st.length || null, format: st.format || null,
+  music: st.sound.startsWith('music:') ? st.sound.slice(6) : '', sound: st.sound.startsWith('music:') ? 'music' : st.sound, resolve: st.resolve});
 
 // ---- Edit > a video (the user, 2026-10-15: "when I first click I want to see a thumbnail or the last render so I know
 // in which video I am, instead of How did it turn out? or random information shot in my face; then the two buttons -
@@ -2877,7 +3176,7 @@ async function pageProject(main, name, tab = 'overview') {
     try { await api(`/api/project/${encodeURIComponent(P.name)}/move`, {editor}); toast(editor ? t('Moved to the Editor') : t('Back in the Generator'), 'ok'); route(); }
     catch (e) { toast(e.message, 'err'); }
   };
-  if (gen) $('#pjmove').onclick = () => move(true); else $('#pjnew').onclick = () => createVideoModal({project: P.name});
+  if (gen) $('#pjmove').onclick = () => move(true); else $('#pjnew').onclick = () => newEdit({project: P.name});
   const bk = $('#pjback'); if (bk) bk.onclick = () => move(false);
   $('#pjren').onclick = () => renameModal(P);
   const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
@@ -2931,7 +3230,7 @@ const setNext = async (P, v) => { P.outcome = await api(`/api/project/${encodeUR
 async function startOver(P) {
   try { if ((P.outcome || {}).next !== 'start_over') await setNext(P, 'start_over'); }
   catch (e) { toast(e.message, 'err'); return; }
-  createVideoModal({project: P.name});
+  newEdit({project: P.name});
 }
 
 function projOverview(el, P, toPub = false) {
@@ -2944,7 +3243,7 @@ function projOverview(el, P, toPub = false) {
           `<button class="btn pri big" id="ovnew"><svg class="i"><use href="#i-edit"/></svg>${t('Edit it…')}</button>`)
       : emptyHero('edit', t('No edit yet'), t('{clips} Cut them like videos you analysed, the way you say, or from a script.', {clips: nClipsWords(P)}),
           `<button class="btn pri big" id="ovnew"><svg class="i"><use href="#i-edit"/></svg>${t('New edit…')}</button>`);
-    const b = $('#ovnew', el); if (b) b.onclick = () => scr ? createVideoModal({project: P.name, from: 'prompt', pick: scr.id}) : createVideoModal({project: P.name});
+    const b = $('#ovnew', el); if (b) b.onclick = () => scr ? newEdit({project: P.name, from: 'prompt', pick: scr.id}) : newEdit({project: P.name});
     return;
   }
   const mf = madeFromWords(P);
@@ -3157,7 +3456,7 @@ function projReview(el, P) {
   const choose = async v => { try { await pn.flush(); await setNext(P, v); again(); } catch (err) { toast(err.message, 'err'); } };
   const ov = $('[data-rvover]', el);
   if (ov) ov.onclick = e => { e.preventDefault(); if (gen) choose('start_over'); else startOver(P).then(again); };
-  const nw = $('[data-rvnew]', el); if (nw) nw.onclick = () => createVideoModal({project: P.name});
+  const nw = $('[data-rvnew]', el); if (nw) nw.onclick = () => newEdit({project: P.name});
   const fx = $('[data-rvfix]', el); if (fx) fx.onclick = e => { e.preventDefault(); choose('fix'); };
 }
 // 0.4.3, after posting: the click-through rate per thumbnail (A / B / C, read in YouTube Studio - MotionLab never logs
@@ -3644,7 +3943,7 @@ function projGraphics(el, P) {
   const top = `<div class="row sp" style="margin-bottom:12px"><div class="hint">${t('Titles, clocks, captions and other graphics, rendered as see-through clips for your video and for DaVinci Resolve. Change a setting, Save, then Render - it renders on this PC, no Claude and no tokens; the picture shows the result when it is done.')}</div>
     <button class="btn sm" id="gcap">${t('Captions…')}</button></div>`;
   if (!O.length) {
-    el.innerHTML = top + `<div class="empty">${t('No graphics in this video yet. Add one from <a href="#/memory/saved">Claude\'s memory</a> (Graphics → Use in a video), make captions from a subtitle file, or ask Claude for a new one when you recreate a video.')}</div>`;
+    el.innerHTML = top + `<div class="empty">${t('No graphics in this video yet. Make captions from a subtitle file, or ask Claude for a new one when you recreate a video.')}</div>`;
     captionsBtn(el, P);
     return;
   }
@@ -3850,21 +4149,23 @@ function projResolve(el, P) {
 // the lessons, the saved graphics and effects, sharing with friends; one search over all of it. Claude reads the same
 // as knowledge\local\memory.md (knowledge.memory_index) before an edit or a prompt.
 // 2026-10-18 (the user: "make the share knowledge a more distinct section in the claudes memory"): Share with friends
-// became Shared knowledge (#/memory/shared; #/memory/learned and #/knowledge lead there) - its own icon and count
-const MEM_TABS = [['overview', t('Overview')], ['videos', t('Videos')], ['effects', t('Effects')], ['lessons', t('Lessons')],
-                  ['saved', t('Graphics & saved effects')], ['shared', t('Shared knowledge')]];
+// became Shared knowledge (#/memory/shared; #/memory/learned and #/knowledge lead there) - its own icon and count.
+// 2026-10-22 (the user: "1) Graphics and saved effects 2) Effects 3) Videos - I dont understand what those sections do, I
+// have never used and when i go inside is just a bunch of text AI-written and for AI ... u can just remove those
+// sections"): Overview, Lessons, Shared knowledge. Claude still reads all of it (memory.md); the saved graphics and
+// Resolve effects stay in library\.
+const MEM_TABS = [['overview', t('Overview')], ['lessons', t('Lessons')], ['shared', t('Shared knowledge')]];
 async function pageMemory(main, tab = 'overview') {
   if (!MEM_TABS.some(([k]) => k === tab)) tab = 'overview';
-  main.innerHTML = `<div class="head"><div><h1>${t("Claude's memory")}</h1><div class="sub">${t('Everything Claude learned from the videos you analysed - their style, the effects and how they were made, your lessons - and the graphics and effects you saved. What your friends shared is marked {chip}. Claude reads it when it edits or generates for you.', {chip: sharedChip(t('a friend'))})}</div></div></div>
+  main.innerHTML = `<div class="head"><div><h1>${t("Claude's memory")}</h1><div class="sub">${t('What Claude learned from your videos and your ratings - it reads this before it edits or generates for you.')}</div></div></div>
     <div class="tabs">${MEM_TABS.map(([k, l]) => `<a href="#/memory/${k}" class="${k === tab ? 'on' : ''}${k === 'shared' ? ' tsh' : ''}">${k === 'shared'
       ? `<svg class="i"><use href="#i-shared"/></svg>${l}<b class="shn" id="shtabn" hidden></b>` : l}</a>`).join('')}</div>
     <div id="memtab"></div>`;
   const el = $('#memtab', main);
-  if (tab === 'saved') return memSaved(el);
   if (tab === 'shared') return memShared(el);
   const M = await api('/api/memory');
   memTabCount(M);
-  return ({overview: memOverview, videos: memVideos, effects: memEffects, lessons: memLessons})[tab](el, M);
+  return ({overview: memOverview, lessons: memLessons})[tab](el, M);
 }
 // the Shared knowledge tab's count: what came from friends (their videos + their lessons waiting for a review)
 function memTabCount(M, K) {
@@ -3874,45 +4175,7 @@ function memTabCount(M, K) {
   b.hidden = !n; b.textContent = n;
   b.closest('a').title = n ? t('{things} your friends shared - their videos and lessons', {things: plural(n, 'thing')}) : '';
 }
-const memFind = (q, ...xs) => !q || xs.join(' ').toLowerCase().includes(q);
-// the labels the page shows in another language, so a search finds what the user reads (nothing extra in English)
-const memTr = (...xs) => LANG === 'en' ? [] : xs.map(x => t(String(x || '')));
 const lessonText = t => String(t || '').replace(/^- \[[^\]]+\]\s*/, '');
-const vname = v => v.label || v.title;                // the name a person calls a video (knowledge.label)
-function memVideoCard(v) {
-  const P = v.pacing || {}, L = v.lines || {};
-  // the pacing in numbers (decimals in the reader's language) and the format's shape (knowledge: "Square · 0:10")
-  const pv = {cpm: numStr(P.cuts_per_min ?? '–'), shot: numStr(P.avg_shot_s ?? '–'), hook: numStr(P.hook_cuts_3s ?? 0),
-              epm: numStr(P.effects_per_min ?? '–'), bpm: numStr(P.bpm)}, fm = String(v.format || '').split(' · ');
-  return `<div class="card mvid${v.origin === 'local' ? '' : ' frv'}"><div class="cb">
-    <div class="row sp"><b class="ct">${esc(vname(v))}</b><span class="row" style="gap:6px;flex:none">${v.analysed ? `<span class="small dim" title="${ta('analysed {when}', {when: v.analysed})}">${esc(whenStr(v.analysed))}</span>` : ''}${v.origin === 'local' ? `<span class="tag">${t('yours')}</span>` : sharedChip(v.author, v.shared)}</span></div>
-    ${v.by || v.platform ? `<div class="small muted">${[v.by ? t('by {name}', {name: esc(v.by)}) : '', esc(v.platform || '')].filter(Boolean).join(' · ')}</div>` : ''}
-    <div class="small">${focusChip(v.focus)} ${v.category_label ? `<span class="tag">${esc(t(v.category_label))}</span>` : ''} <span class="muted">${esc([fm[0] && t(fm[0]), ...fm.slice(1)].join(' · '))}</span></div>
-    <div class="small">${P.bpm ? t('{cpm} cuts/min · shots {shot} s · {hook} cuts in 3 s · {epm} effects/min · {bpm} BPM', pv) : t('{cpm} cuts/min · shots {shot} s · {hook} cuts in 3 s · {epm} effects/min', pv)}</div>
-    ${[L.content, L.cinematic, L.colour].filter(Boolean).map(x => `<div class="small muted pline">${esc(x)}</div>`).join('')}
-    ${v.summary ? `<div class="small mvsum">${esc(v.summary)}</div>` : `<div class="small dim">${t('No breakdown from Claude yet.')}</div>`}</div>
-    <div class="cact">${v.analysis ? `<a class="btn sm" href="#/ref/${encodeURIComponent(v.analysis)}">${t('Open')}</a><button class="btn sm cl" data-like="${esc(v.analysis)}"><svg class="i"><use href="#i-edit"/></svg>${t('Edit like this')}</button>`
-      : v.origin === 'local' ? '' : `<button class="btn sm" data-card="${esc(v.file || v.id)}">${t('Open')}</button><span class="small dim">${t("analysed on {author}'s PC - Claude uses it as their data", {author: esc(v.author || t('a friend'))})}</span>`}</div></div>`;
-}
-function wireMemCards(el) {
-  $$('[data-like]', el).forEach(b => b.onclick = () => createVideoModal({from: 'reference', pick: b.dataset.like}));
-  $$('[data-card]', el).forEach(b => b.onclick = () => cardModal({_file: b.dataset.card}));     // a friend's card
-}
-function memEffectRow(g) {
-  const V = g.verdicts || {}, tot = (V.correct || 0) + (V.partly || 0) + (V.wrong || 0);
-  const Vm = g.verdicts_mine || V, Vf = g.verdicts_friends || {}, sum = o => (o.correct || 0) + (o.partly || 0) + (o.wrong || 0);
-  const vt = o => t('{correct} correct, {partly} partly, {wrong} wrong', {correct: o.correct || 0, partly: o.partly || 0, wrong: o.wrong || 0});
-  const same = String(g.family || '').toLowerCase().startsWith(String(g.label || '').toLowerCase());   // "Wipe" in "Wipe / mask / shape reveal"
-  const VW = {correct: t('correct|verdict'), partly: t('partly|verdict'), wrong: t('wrong|verdict')};    // the word; the id stays the class
-  const tv = {times: plural(g.count, 'time'), videos: plural(g.videos, 'video'), n: g.count - g.reviewed};
-  return `<details class="meff" data-type="${esc(g.type)}"><summary><span class="grow"><i class="sw" style="background:${FAM[g.family] || '#888'}"></i><b>${esc(t(g.label || ''))}</b>${same ? '' : ` <span class="small muted">${esc(t(g.family || ''))}</span>`}</span>
-      <span class="small muted">${g.reviewed < g.count ? t('{times} in {videos} · {n} not checked by Claude', tv) : t('{times} in {videos}', tv)}</span>
-      <span class="vbar" title="${ta("verdicts - yours {mine} · friends' {theirs}", {mine: sum(Vm), theirs: sum(Vf)})}&#10;${ta('yours: {verdicts}', {verdicts: vt(Vm)})}${sum(Vf) ? `&#10;${ta("friends': {verdicts}", {verdicts: vt(Vf)})}` : ''}">${tot ? `<i class="c" style="flex:${V.correct}"></i><i class="p" style="flex:${V.partly}"></i><i class="w" style="flex:${V.wrong}"></i>` : '<i class="n"></i>'}</span></summary>
-    <div class="mex">${g.examples.map(x => `<div class="mexi${x.origin === 'local' ? '' : ' frx'}"><div class="row sp"><span><b>${esc(x.label || x.title)}</b>${x.origin === 'local' ? '' : ' ' + sharedChip(x.author)} ${x.analysis
-        ? `<a class="fr" href="#/ref/${encodeURIComponent(x.analysis)}?e=${esc(x.id)}">f${x.start}</a>` : `<span class="fr">f${x.start}</span>`} <span class="tc">(${esc(x.tc || '')})</span></span>
-        ${x.verdict ? `<span class="small" title="${x.origin === 'local' ? ta('your verdict') : ta("{author}'s verdict", {author: x.author || t('a friend')})}"><span class="vdot ${esc(x.verdict)}"></span> ${x.origin === 'local' ? '' : esc(x.author || t('a friend')) + ': '}${esc(VW[x.verdict] || x.verdict)}</span>` : x.reviewed ? `<span class="small dim">${t('checked by Claude')}</span>` : `<span class="small amber">${t('a guess')}</span>`}</div>
-      ${x.what ? `<div class="small">${esc(x.what)}</div>` : ''}${x.rebuild ? `<div class="small muted">${t('<b>How it was made:</b> {how}', {how: esc(x.rebuild)})}</div>` : ''}${x.note ? `<div class="small amber">${x.origin === 'local' ? t('note: {note}', {note: esc(x.note)}) : t("{author}'s note: {note}", {author: esc(x.author || t('a friend')), note: esc(x.note)})}</div>` : ''}</div>`).join('')}</div></details>`;
-}
 // 0.4.2: the user's ratings of all their videos (How did it turn out?) as rules for every new video - a part rated bad
 // once stays a default (knowledge.ratings / ratings_lines; memory.md starts with the same rules)
 const RKIND = {bad: ['bad', t('Rule for every new video')], ok: ['amber', t('Could be better')], good: ['ok', t('Keep doing it')]};
@@ -3934,7 +4197,7 @@ function memRules(M) {
       : `<div class="small muted">${t('Nothing rated yet. When a video of yours is done, open it in the <a href="#/edit">Editor</a> and tell Claude how it turned out (sound, colour, graphics…): a part you rate bad becomes a rule for every new video.')}</div>`}</div>`;
 }
 function memOverview(el, M) {
-  const S = M.stats, F = S.focus || {}, sv = M.saved || {}, MK = (M.lessons || {}).making || {shared: [], local: []};
+  const S = M.stats, MK = (M.lessons || {}).making || {shared: [], local: []};
   const mk = (MK.shared || []).length + (MK.local || []).length;
   const tile = (n, l, href, tip = '') => `<a class="stat card" href="${href}" title="${esc(tip)}"><div class="n">${n}</div><div class="l">${l}</div></a>`;
   const waiting = Object.values(S.incoming || {}).reduce((a, x) => a + x, 0), authors = S.authors || [];
@@ -3943,88 +4206,20 @@ function memOverview(el, M) {
   const fv = {videos: plural(S.friends || 0, 'video'), lessons: plural(waiting, 'lesson'), authors: who};
   const fromFriends = S.friends && waiting ? t('{videos} and {lessons} waiting for a review from {authors}', fv)
     : S.friends ? t('{videos} from {authors}', fv) : waiting ? t('{lessons} waiting for a review from {authors}', fv) : t('Nothing from friends yet');
-  el.innerHTML = `<div class="msearch"><input type="search" id="mq" placeholder="${ta('Search everything Claude knows - a video, an effect (zoom, whip…), a word of a lesson')}"></div>
-    <div id="mres"></div>
-    <div id="mhome"><div class="mstats">
-      ${S.friends ? tile(`${S.mine} · ${S.friends}`, t('videos: yours · from friends'), '#/memory/videos', t('{videos} analysed on this PC, {friends} shared by friends', {videos: plural(S.mine, 'video'), friends: S.friends}))
-        : tile(S.videos, t('videos analysed'), '#/memory/videos')}
-      ${tile(`${F.content || 0} · ${F.cinematic || 0} · ${F.both || 0}`, t('content · cinematic · both'), '#/memory/videos')}
-      ${tile(S.types, tn(S.effects, 'kinds of effects · {n} seen', 'kinds of effects · {n} seen'), '#/memory/effects')}
-      ${tile(S.confirmed, t('effects you confirmed'), '#/memory/effects', S.confirmed_friends ? t("your Correct verdicts - your friends' {n} are not counted here", {n: S.confirmed_friends}) : t('your Correct verdicts'))}
-      ${tile(S.breakdowns, t("Claude's breakdowns"), '#/memory/videos', t('what makes each video work'))}
+  el.innerHTML = `<div class="mstats">
+      ${tile(S.friends ? S.mine : S.videos, t('videos analysed'), '#/analyze')}
       ${tile(S.lessons + mk, t('lessons'), '#/memory/lessons', mk ? t('{analysing} on analysing, {making} on making videos', {analysing: S.lessons, making: mk}) : '')}
-      ${tile((sv.graphics || 0) + (sv.effects || 0), t('graphics & effects saved'), '#/memory/saved')}
       ${tile(M.prompts || 0, t('prompts'), '#/prompts')}
       <a class="stat card shtile" href="#/memory/shared"><svg class="ic"><use href="#i-shared"/></svg><div class="grow"><b>${t('Shared knowledge')}</b>
         <div class="small muted">${t('{what} · what you share with them, and what you keep on this PC', {what: fromFriends})}</div></div><span class="muted">→</span></a></div>
     ${memRules(M)}
-    <div class="grid g2" style="margin-top:14px"><div class="panel"><h2>${t('How Claude uses it')}</h2><ul class="small mhow">
+    <div class="panel" style="margin-top:14px"><h2>${t('How Claude uses it')}</h2><ul class="small mhow">
         <li>${t("<b>When you edit</b> your clips like a video, Claude reads that video's style - rhythm, the hook, captions, signature effects, transitions, colour - and how its effects were made.")}</li>
         <li>${t('<b>When you generate</b>, Claude writes the prompts in the style of the videos you name, with the structure of your best-rated prompts.')}</li>
         <li>${t('<b>When it analyses</b> a new video, the lessons from your verdicts decide how effects are judged.')}</li></ul>
         <div class="row" style="margin-top:8px"><button class="btn sm" data-open="${esc((M.memory_md || '').replace(/\\/g, '/'))}">${t('What Claude reads (memory.md)')}</button><button class="btn sm ghost" id="mreb">${t('Rebuild it')}</button></div></div>
-      <div class="panel"><h2>${t('Effects seen most')}</h2>${M.effects.length ? `<div class="row" style="gap:6px">${M.effects.slice(0, 10).map(g => `<a class="chip" href="#/memory/effects" title="${esc(t(g.family || ''))}">${esc(t(g.label || ''))} <b>${g.count}</b></a>`).join('')}</div>`
-        : `<div class="small dim">${t('Nothing yet - analyse a video (Analyze) and let Claude check it.')}</div>`}</div></div>
-    ${M.videos.length ? `<div class="row sp" style="margin-top:18px"><h3 style="margin:0">${t('Latest videos')}</h3><a class="small" href="#/memory/videos">${t('all {n} →', {n: M.videos.length})}</a></div>
-      <div class="cards">${M.videos.slice(-4).reverse().map(memVideoCard).join('')}</div>`
-      : emptyHero('memory', t('Claude learns from the videos you analyse'), t("Analyse a video you like - its style, effects and Claude's breakdown land here, ready for your edits."), `<a class="btn pri big" href="#/analyze">${t('Analyze a video')}</a>`)}</div>`;
-  wireMemCards(el);
+    ${M.videos.length ? '' : emptyHero('memory', t('Claude learns from the videos you analyse'), t("Analyse a video you like - its style, effects and Claude's breakdown land here, ready for your edits."), `<a class="btn pri big" href="#/analyze">${t('Analyze a video')}</a>`)}`;
   $('#mreb', el).onclick = async () => { try { await api('/api/knowledge/summary', {}); toast(t('Rebuilt what Claude reads'), 'ok'); } catch (e) { toast(e.message, 'err'); } };
-  const q = $('#mq', el);
-  q.oninput = debounce(() => {
-    const qq = q.value.trim().toLowerCase(), res = $('#mres', el);
-    $('#mhome', el).hidden = !!qq;
-    if (!qq) { res.innerHTML = ''; return; }
-    const vs = M.videos.filter(v => memFind(qq, v.title, v.label, v.by, v.category_label, v.focus_label, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author, ...memTr(v.category_label, v.focus_label)));
-    const fx = M.effects.filter(g => memFind(qq, g.label, g.family, g.type, g.examples.map(x => x.what + ' ' + x.rebuild + ' ' + x.note).join(' '), ...memTr(g.label, g.family)));
-    const ls = [...M.lessons.shared, ...M.lessons.local, ...(MK.shared || []), ...(MK.local || [])].filter(x => memFind(qq, x.id, x.text));
-    res.innerHTML = `<div class="small muted" style="margin:8px 0">${plural(vs.length, 'video')} · ${plural(fx.length, 'effect')} · ${plural(ls.length, 'lesson')}</div>
-      ${vs.length ? `<h3>${t('Videos')}</h3><div class="cards">${vs.slice(0, 12).map(memVideoCard).join('')}</div>` : ''}
-      ${fx.length ? `<h3>${t('Effects')}</h3>${fx.slice(0, 12).map(memEffectRow).join('')}` : ''}
-      ${ls.length ? `<h3>${t('Lessons')}</h3>${ls.slice(0, 12).map(lessonItem).join('')}` : ''}
-      ${vs.length + fx.length + ls.length ? '' : `<div class="empty">${t("Nothing in Claude's memory matches.")}</div>`}`;
-    wireMemCards(res);
-  }, 150);
-}
-function memVideos(el, M) {
-  let q = '', foc = '', org = '';
-  const cats = [...new Set(M.videos.map(v => v.category_label).filter(Boolean))].sort();
-  if (LANG !== 'en') cats.sort((a, b) => t(a).localeCompare(t(b), LANG));     // in the order the user reads them
-  let cat = '';
-  el.innerHTML = `<div class="row" style="margin-bottom:12px"><input type="search" id="mvq" placeholder="${ta('Search videos…')}" style="max-width:280px">
-      <select id="mvf" class="ffil"><option value="">${t('Every focus')}</option>${Object.entries(FOCUS_SHORT).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>
-      <select id="mvc" class="ffil"><option value="">${t('Every kind')}</option>${cats.map(c => `<option value="${esc(c)}">${esc(t(c))}</option>`).join('')}</select>
-      <select id="mvo" class="ffil"><option value="">${t("Yours and friends'")}</option><option value="local">${t('Yours')}</option><option value="shared">${t("Friends'")}</option></select></div>
-    <div id="mvl"></div>`;
-  const draw = () => {
-    const vs = M.videos.slice().reverse().filter(v => (!foc || v.focus === foc) && (!cat || v.category_label === cat) && (!org || (org === 'local' ? v.origin === 'local' : v.origin !== 'local'))
-      && memFind(q, v.title, v.label, v.analysis, v.by, (v.tags || []).join(' '), Object.values(v.lines || {}).join(' '), v.summary, v.author));
-    $('#mvl', el).innerHTML = vs.length ? `<div class="cards">${vs.slice().reverse().map(memVideoCard).join('')}</div>`
-      : M.videos.length ? `<div class="empty">${t('No video matches.')}</div>`
-      : emptyHero('memory', t('No videos yet'), t('Analyse a video you like (Analyser) - its style lands here.'), `<a class="btn pri big" href="#/analyze">${t('Analyze a video')}</a>`);
-    wireMemCards(el);
-  };
-  $('#mvq', el).oninput = debounce(e => { q = e.target.value.trim().toLowerCase(); draw(); }, 150);
-  $('#mvf', el).onchange = e => { foc = e.target.value; draw(); };
-  $('#mvc', el).onchange = e => { cat = e.target.value; draw(); };
-  $('#mvo', el).onchange = e => { org = e.target.value; draw(); };
-  draw();
-}
-function memEffects(el, M) {
-  let q = '', fam = '';
-  const fams = [...new Set(M.effects.map(g => g.family))].sort();
-  if (LANG !== 'en') fams.sort((a, b) => t(a || '').localeCompare(t(b || ''), LANG));
-  el.innerHTML = `<div class="row" style="margin-bottom:12px"><input type="search" id="meq" placeholder="${ta('Search effects - a name, a word of how it was made…')}" style="max-width:340px">
-      <select id="mef" class="ffil"><option value="">${t('Every family')}</option>${fams.map(f => `<option value="${esc(f)}">${esc(t(f || ''))}</option>`).join('')}</select>
-      <span class="small muted">${t('Click an effect for its examples and how each was made.')}</span></div><div id="mel"></div>`;
-  const draw = () => {
-    const fx = M.effects.filter(g => (!fam || g.family === fam) && memFind(q, g.label, g.family, g.type, g.examples.map(x => x.what + ' ' + x.rebuild + ' ' + x.note).join(' '), ...memTr(g.label, g.family)));
-    $('#mel', el).innerHTML = fx.map(memEffectRow).join('') || (M.effects.length ? `<div class="empty">${t('No effect matches.')}</div>`
-      : emptyHero('memory', t('No effects yet'), t('Every effect Claude finds in your analysed videos - with how it was made - is listed here.'), `<a class="btn pri big" href="#/analyze">${t('Analyze a video')}</a>`));
-  };
-  $('#meq', el).oninput = debounce(e => { q = e.target.value.trim().toLowerCase(); draw(); }, 150);
-  $('#mef', el).onchange = e => { fam = e.target.value; draw(); };
-  draw();
 }
 // a lesson; a reviewed rule a friend shared ("from <author> <id>" in its note) carries the shared chip
 const lessonItem = x => `<div class="panel mles"><span class="tag">${esc(x.id)}</span>${x.from ? ' ' + sharedChip(x.from) : ''} ${esc(lessonText(x.text))}</div>`;
@@ -4046,60 +4241,6 @@ function memLessons(el, M) {
       ${incLine(inc('making'))}</div></div>
     ${(L.incoming || []).length ? `<div class="row" style="margin-top:12px">${claudeBtn('Review the incoming lessons in knowledge\\incoming\\ (see Reviewing incoming lessons in the analyze-reference skill; the *-making.md files are lessons on making videos for .claude\\skills\\recreate-video\\lessons.md) and merge the good ones', t('Review them in Claude Code'), 'lessons')}</div>` : ''}`;
 }
-async function memSaved(main) {
-  const L = await api('/api/library');
-  const say = 'Save the library picks as Fusion macros + recipes in library\\';
-  main.innerHTML = `<div class="memsec" id="msav-top"></div><h2 style="margin:22px 0 10px">${t('Effects saved for DaVinci Resolve')}</h2>
-    <div class="grid g2"><div class="panel"><h2>${t('Saved effects')}</h2>${L.items.length ? `<table class="t"><thead><tr><th>${t('Effect')}</th><th>${t('Recipe')}</th><th>${t('Macros')}</th><th>${t('Check in Resolve')}</th><th>${t('Saved')}</th></tr></thead><tbody>
-      ${L.items.map(i => `<tr><td><b>${esc(i.title)}</b></td><td><a href="#" data-open="${esc(i.recipe)}">${esc(i.name)}.md</a></td>
-        <td>${i.macros.map(m => `<a href="#" data-open="${esc(m)}" data-reveal>${esc(m.split('/').pop())}</a>`).join(', ') || `<span class="muted small">${t('recipe only')}</span>`}</td>
-        <td>${i.check ? `<a href="#" data-open="${esc(i.check)}" title="${ta('the macro rendered in DaVinci Resolve next to the real frame')}"><img src="${fileUrl(i.check)}" alt="${ta('check|picture')}" style="height:48px;border-radius:4px"></a>` : '–'}</td>
-        <td class="small muted">${esc(i.modified)}</td></tr>`).join('')}</tbody></table>
-      <div class="row" style="margin-top:8px"><button class="btn sm" data-open="library/README.md">${t('Library index')}</button><button class="btn sm" data-open="library" data-reveal><svg class="i"><use href="#i-folder"/></svg>${t('Folder')}</button></div>`
-      : `<div class="empty">${t('Nothing saved yet.')}</div>`}</div>
-    <div class="panel"><h2>${t('Picked for saving')}</h2>${L.picks.length ? `<ul>${L.picks.map(p => `<li><b>${esc(t(p.effect || ''))}</b> <span class="muted small">${t('from {project}', {project: `<a href="#/project/${encodeURIComponent(p.project)}/resolve">${esc(p.project)}</a>`})}</span>${p.note ? `<div class="small muted">${esc(p.note)}</div>` : ''}</li>`).join('')}</ul>
-      <div class="hint" style="margin-top:10px">${t('Claude saves them (it needs Resolve open). In Claude Code say:')}</div>
-      <div class="claude" style="margin-top:6px"><span>${esc(say)}</span><span class="row">${claudeBtn(say, t('Open in Claude Code'), 'library')}<button class="btn sm" id="cs">${t('Copy')}</button></span></div>`
-      : `<div class="empty">${t('Nothing picked yet. Open one of your edits (Editor) → “Resolve &amp; library” and tick the effects you want.')}</div>`}</div></div>`;
-  const cs = $('#cs'); if (cs) cs.onclick = () => copy(say);
-  // graphics (0.3.2): yours (library\graphics) + the examples that come with MotionLab
-  const G = L.graphics || [];
-  $('#msav-top', main).innerHTML = `<h2 style="margin:4px 0 4px">${t('Graphics')}</h2>
-    <div class="hint" style="margin-bottom:10px">${t('HTML graphics (titles, clocks, lower thirds…) whose text, colours and timing you change per video (Editor → a video → Graphics). “Yours” are the ones you saved from a video; the examples come with MotionLab. A saved one keeps its rendered clip: drag that .mov into a Power Bin in DaVinci Resolve to have it in every project.')}</div>
-    <div class="glib">${G.map(g => `<div class="gl"><div class="gthumb">${gthumb(g)}</div>
-      <div class="row sp" style="margin-top:8px"><b>${esc(g.name)}</b><span class="tag">${g.kind === 'yours' ? t('yours') : t('example')}</span></div>
-      <div class="small muted">${t('{frames} frames · {width}×{height} · {fps} fps · {settings}', {frames: g.frames, width: g.width, height: g.height, fps: g.fps, settings: plural(g.settings.length, 'setting')})}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" data-use="${esc(g.name)}">${t('Use in a video…')}</button>
-        ${g.mov ? `<button class="btn sm" data-open="${esc(g.mov)}" data-reveal>${t('The clip (.mov)')}</button>` : ''}</div></div>`).join('') || `<div class="empty">${t('No graphics.')}</div>`}</div>`;
-  $$('[data-use]', main).forEach(b => b.onclick = () => {
-    const g = G.find(x => x.name === b.dataset.use), V = L.videos || [];
-    const fits = v => !v.width || (v.width === g.width && v.height === g.height && Math.abs((v.fps || 0) - g.fps) < 0.01);
-    modal(`<h2>${t('Use “{name}” in a video', {name: esc(g.name)})}</h2>
-      <div class="small muted">${t("A copy goes into the video's build\\overlays folder and is rendered right away; then change its settings on the video's Graphics tab.")}</div>
-      ${V.length ? `<div class="row" style="margin-top:12px"><label>${t('Video')} <select id="guv">${V.map(v => `<option value="${esc(v.name)}" ${fits(v) ? '' : 'disabled'}>${esc(v.name)}${fits(v) ? '' : ' ' + t('(its edit is {width}×{height} at {fps} fps)', {width: v.width, height: v.height, fps: v.fps})}</option>`).join('')}</select></label>
-        <label>${t('Name')} <input id="gun" value="${esc(g.name)}" style="width:200px"></label></div>
-        <div class="hint" style="margin-top:6px">${t('{size} at {fps} fps: a video whose edit has another size or rate needs Claude to adapt the graphic.', {size: esc(g.width + '×' + g.height), fps: g.fps})}</div>
-        <div class="row" style="margin-top:12px"><button class="btn pri" id="gugo">${t('Add and render')}</button><span id="gumsg" class="small"></span></div><pre class="log" hidden></pre>`
-      : `<div class="empty" style="margin-top:12px">${t('No edits yet - start one in the Editor.')}</div>`}`, m => {
-      const go = $('#gugo', m);
-      if (!go) return;
-      const sel = $('#guv', m);
-      const first = [...sel.options].find(o => !o.disabled);
-      if (first) sel.value = first.value; else go.disabled = true;
-      go.onclick = async () => {
-        const project = sel.value, name = $('#gun', m).value.trim();
-        const j = await startJob('overlay_new', {project, graphic: g.name, name}, false);
-        if (!j) return;
-        go.disabled = true; const pre = $('pre.log', m); pre.hidden = false;
-        followJob(j.id, pre, jj => {
-          if (jj.status === 'done') { closeModal(); location.hash = `#/project/${encodeURIComponent(project)}/graphics`; }
-          else { $('#gumsg', m).innerHTML = `<span class="bad">${t('did not work - see the log')}</span>`; go.disabled = false; }
-        });
-      };
-    });
-  });
-}
-
 // ============================================================================================ prompts (0.4)
 // the prompt library: proven prompts per kind, split into their structure; Claude writes new ones like them
 // (/write-prompt). One file per prompt in knowledge\local\prompts\ - the ratings live there too.
@@ -4215,10 +4356,11 @@ const pquoteHtml = (text, at) => {
 const pCheckRow = x => { const [ic, lab] = STAT[x.status] || ['•', ''];
   return {id: x.slot, label: `<span class="rvcl st-${esc(x.status || 'plain')}"><i class="cdot">${ic}</i></span><b>${esc(slotLabel(x.slot))}</b>`,
     sub: lab ? t('Claude: {status}', {status: lab}) : t('Claude gave it no status')}; };
-// Claude's check (the left side of a prompt's dialog, read-only since 2026-10-18): a card per part (grouped for briefs)
-// with what the prompt says, Claude's status and tip; the parts Claude left out, with why. The user's answers - Is
-// Claude right? and what they want there - are the review panel's rows beside it.
-function pcheckBlock(p, R) {
+// Claude's check (the Checks tab of a prompt's dialog, read-only since 2026-10-18): the stars, how many parts are
+// clear / vague / missing, Claude's verdict, then the text itself with the part under review marked (2026-10-22, the
+// user: "when i go into the "your review" page i cant see all the text thats being highlighted or the section itself").
+// Each part's tip is on its row of the review panel beside (`pcheckTip`) - no second list of the parts.
+function pcheckHead(p, R) {
   const rv = p.review || {}, st = p.structure || [], checked = st.some(x => x.status);
   const slots = (R.kinds.find(k => k.id === p.kind) || {slots: []}).slots;
   const sk = p.skipped && typeof p.skipped === 'object' && !Array.isArray(p.skipped) ? Object.entries(p.skipped) : [];
@@ -4227,26 +4369,17 @@ function pcheckBlock(p, R) {
       : t('Claude reviews each part of this prompt - what is <b class="ok">clear</b>, <b class="amber">vague</b> or <b class="bad">missing</b>, with a tip for each - and writes an improved version: <b>Send it to Claude</b>, beside. This one stays as it is.')}</p>
     <div class="pchips">${slots.map(s => `<span class="pgneed">${esc(slotLabel(s))}</span>`).join('')}</div></div>`;
   const n = k => st.filter(x => x.status === k).length;
-  const work = st.filter(x => pIsWork(p, x)).length;
-  const part = x => { const [ic, lab] = STAT[x.status] || ['•', ''];
-    return `<div class="cpart st-${esc(x.status || 'plain')}" data-slot="${esc(x.slot)}"${pIsWork(p, x) ? '' : ' data-clear'}>
-      <div class="cpart-h"><span class="cdot">${ic}</span><b>${esc(slotLabel(x.slot))}</b>${lab ? `<span class="cstat">${lab}</span>` : ''}</div>
-      <div class="cpart-says">${x.text ? `“${esc(x.text)}”${checked && !(x.at || []).length ? ` <span class="cunver" title="${ta('Claude checked it before MotionLab looked its quoted words up in your text')}">${t('not verified - check it again')}</span>` : ''}` : `<i>${t('Not in your prompt')}</i>`}</div>
-      ${x.tip ? `<div class="cpart-tip"><b>${t('Tip')}</b> ${esc(x.tip)}</div>` : ''}</div>`; };
-  const group = (g, xs) => xs.length ? `<div class="cgrp"${xs.some(x => pIsWork(p, x)) ? '' : ' data-clear'}><div class="cgrp-h">${esc(g)}</div>${xs.map(part).join('')}</div>` : '';
-  let rows = group('', st);
-  if (p.kind === 'brief') {
-    const seen = new Set();
-    rows = BRIEF_GROUPS.map(([g, sl]) => { const xs = sl.flatMap(s => st.filter(x => x.slot === s)); xs.forEach(x => seen.add(x)); return group(g, xs); }).join('')
-      + group(t('Other|parts'), st.filter(x => !seen.has(x)));
-  }
   return `<div class="pchk"><div class="pchk-h"><h3>${t("Claude's check")}</h3>${rv.stars != null ? pstars(rv.stars) : ''}</div>
     ${checked ? `<div class="pchk-sum"><span class="pill clear">${tn(n('clear'), '✓ {n} clear', '✓ {n} clear')}</span><span class="pill vague">${tn(n('vague'), '~ {n} vague', '~ {n} vague')}</span><span class="pill missing">${tn(n('missing'), '✗ {n} missing', '✗ {n} missing')}</span></div>` : ''}
     ${rv.why || rv.fix ? `<div class="pchk-verdict">${rv.why ? `<p>${esc(rv.why)}</p>` : ''}${rv.fix ? `<p class="fix"><b>${t('Most important:')}</b> ${esc(rv.fix)}</p>` : ''}</div>` : ''}
-    <div class="cparts" data-view="${checked && work && work < st.length ? 'work' : 'all'}">${rows}</div>
     ${sk.length ? `<details class="cskip"><summary class="small muted">${isTalk(p) ? t('Not part of this script') : t('Not part of this prompt')} <span class="dim">(${sk.length})</span></summary>
       <ul class="small">${sk.map(([s, why]) => `<li><b>${esc(slotLabel(s))}</b> <span class="muted">- ${esc(why)}</span></li>`).join('')}</ul></details>` : ''}</div>`;
 }
+// a part's tip on its review row: Claude's tip; the quote itself when it cannot be marked in the text (no `at`)
+const pcheckTip = (p, x) => { const checked = (p.structure || []).some(y => y.status), marked = (x.at || []).length;
+  return `<div class="rvtip st-${esc(x.status || 'plain')}">${!x.text ? `<i>${isTalk(p) ? t('Not in your script') : t('Not in your prompt')}</i>`
+    : marked ? '' : `<div>“${esc(x.text)}”${checked ? ` <span class="cunver" title="${ta('Claude checked it before MotionLab looked its quoted words up in your text')}">${t('not verified - check it again')}</span>` : ''}</div>`}
+    ${x.tip ? `<div class="cpart-tip"><b>${t('Tip')}</b> ${esc(x.tip)}</div>` : ''}</div>`; };
 // a script's steps on its card (Film it): every one it reached - filmed, edited, posted (the user, 0.4.3.5: "a tag
 // like Filmed as well as Edited")
 const pstage = (p, R) => { if (p.kind !== 'script') return ''; const u = ((R || {}).used || {})[p.id] || [];
@@ -4323,6 +4456,45 @@ function scriptCheckHtml(c) {                         // the script check: n of 
   return `<div class="scsum"><b class="scscore ${cls}">${c.passed}<small>/${c.total}</small></b>
       <span>${tn(c.words, '<b>≈ {time}</b> · {n} words', '<b>≈ {time}</b> · {n} words', {time: fmtSecs(c.seconds)})}<br><span class="small muted">${t('at {wpm} words a minute ({from})', {wpm: c.wpm, from: esc(c.rate_from)})}</span></span></div>
     <ul class="sclist">${c.checks.map(x => `<li><b class="${SC_MARK[x.status][1]}">${SC_MARK[x.status][0]}</b><span><b>${esc(t(x.label))}</b> <span class="muted">${esc(x.detail)}</span></span></li>`).join('')}</ul>`;
+}
+// the same check on a script's Checks tab (2026-10-22, less text): the score, a coloured chip per rule (what it found
+// in its tooltip) and a line only for the rules that did not pass
+function scriptCheckChips(c) {
+  if (!c || !c.words) return '';
+  const cls = c.passed >= c.total - 1 ? 'ok' : c.passed >= c.total / 2 ? 'amber' : 'bad';
+  return `<div class="scsum"><b class="scscore ${cls}">${c.passed}<small>/${c.total}</small></b>
+      <span title="${ta('at {wpm} words a minute ({from})', {wpm: c.wpm, from: c.rate_from})}">${tn(c.words, '<b>≈ {time}</b> · {n} words', '<b>≈ {time}</b> · {n} words', {time: fmtSecs(c.seconds)})}</span></div>
+    <div class="scchips">${c.checks.map(x => `<span class="scchip ${SC_MARK[x.status][1]}" title="${esc(x.detail)}">${SC_MARK[x.status][0]} ${esc(t(x.label))}</span>`).join('')}</div>
+    ${c.checks.filter(x => x.status !== 'ok').map(x => `<div class="scbad ${SC_MARK[x.status][1]}"><b>${esc(t(x.label))}</b> ${esc(x.detail)}</div>`).join('')}`;
+}
+// what to film, before the words (2026-10-22, the user: "add some structure to know what to film before going into the
+// script? like assets or the general rhythm of the video"): from the script's cue cards (GET /api/script/cards, the
+// ones Film it shows) the parts as a bar of their seconds (the heading's "(3-7 s)", else its words at 150 a minute),
+// the shots to film and the words on screen, each in its part's colour. {bar, side}, both empty when there is nothing.
+const FILM_TAG = /^(B-?ROLL|VISUAL|SHOT|PLANO|CAM|CAMERA|CÁMARA)$/, SCREEN_TAG = /^(TEXT|TEXTO|ON[- ]?SCREEN|CAPTION|TITLE|TÍTULO)$/;
+const PART_HUE = [[/hook|gancho/i, 'var(--amber)'], [/cta|call|llamada/i, 'var(--pink)'], [/payoff|outro|end|cierre|final/i, 'var(--green)']];
+const PART_CYCLE = ['var(--blue)', 'var(--violet)', 'var(--cyan)'];
+function filmPlan(C) {
+  const parts = ((C || {}).parts || []).filter(x => x.lines.length || x.notes.length);
+  let k = 0;
+  const P = parts.map((x, i) => {
+    const m = /\(\s*(\d+(?:[.,]\d+)?)\s*s?\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*s\s*\)/i.exec(x.head || '');
+    const words = x.lines.join(' ').replace(/\[[^\]]*\]/g, ' ').split(/\s+/).filter(Boolean).length;
+    const secs = m ? Math.max(0.5, parseFloat(m[2].replace(',', '.')) - parseFloat(m[1].replace(',', '.'))) : words / 150 * 60;
+    const name = (x.head || '').replace(/\([^)]*\)/g, '').replace(/[\s:–-]+$/, '').trim() || t('Part {n}', {n: i + 1});
+    const hue = (PART_HUE.find(([re]) => re.test(name)) || [null, PART_CYCLE[k++ % PART_CYCLE.length]])[1];
+    return {name, secs, hue, notes: x.notes.filter(n => n.text)};
+  });
+  const total = P.reduce((a, x) => a + x.secs, 0);
+  const shots = P.flatMap(x => x.notes.filter(n => FILM_TAG.test(n.tag)).map(n => ({...n, x})));
+  const words = P.flatMap(x => x.notes.filter(n => SCREEN_TAG.test(n.tag)).map(n => ({...n, x})));
+  const bar = P.length > 1 ? `<div class="srhy"><div class="srhy-h"><svg class="i"><use href="#i-clock"/></svg><b>${t('Rhythm')}</b><span class="small muted">${fmtSecs(total)}</span></div>
+    <div class="srh">${P.map(x => `<span style="--ph:${x.hue};flex-grow:${Math.max(x.secs, total / 40).toFixed(2)}" title="${esc(x.name)} · ${fmtSecs(x.secs)}"><b>${esc(x.name)}</b><i>${fmtSecs(x.secs)}</i></span>`).join('')}</div></div>` : '';
+  const one = n => `<li class="sshot" style="--ph:${n.x.hue}" title="${esc(n.text)}"><small>${esc(n.x.name)}</small><span>${esc(n.text)}</span></li>`;
+  const side = shots.length || words.length ? `<aside class="stofilm">
+    ${shots.length ? `<h4><svg class="i"><use href="#i-film"/></svg>${t('Shots to film')}<span class="pmtb">${shots.length}</span></h4><ol class="sshots">${shots.map(one).join('')}</ol>` : ''}
+    ${words.length ? `<h4><svg class="i"><use href="#i-type"/></svg>${t('Text on screen')}<span class="pmtb">${words.length}</span></h4><div class="swords">${words.map(n => `<span style="--ph:${n.x.hue}" title="${esc(n.x.name)}">${esc(n.text)}</span>`).join('')}</div>` : ''}</aside>` : '';
+  return {bar, side};
 }
 // ---- shared knowledge (2026-10-18, the user: "associate a distinct icon to the shared knowledge and if something every
 // came from shared knowledge it would appear as a reminder"): the lime badge on everything a friend shared - its
@@ -4637,7 +4809,7 @@ async function pageGenerate(main) {
       <div class="gway"><div class="row"><svg class="ic"><use href="#i-library"/></svg><h2>${t('A motion-graphics video')}</h2></div>
         <p>${t('Kinetic text, titles, numbers, shapes and charts - built by Claude from your <a href="#/motion">Motion Graphics</a> templates as HTML and rendered to a video (HyperFrames), timed to your song. Every text, colour and timing stays editable afterwards.')}</p>
         <div class="row"><button class="btn pri" id="ggfx"${G.hyperframes ? '' : ' disabled'}><svg class="i"><use href="#i-claude"/></svg>${t('Make a motion-graphics video')}</button>
-          <a class="btn ghost" href="#/motion">${t('Motion templates')}</a><a class="btn ghost" href="#/memory/saved">${t('Your graphics')}</a></div>
+          <a class="btn ghost" href="#/motion">${t('Motion templates')}</a></div>
         <div class="small ${G.hyperframes ? 'muted' : 'amber'}">${G.hyperframes ? t('Claude writes it with you, then renders it - you watch it in the Editor.')
           : G.node ? t('Needs HyperFrames first - <a href="#/settings">Settings → Programs</a> installs it.')
           : t('Needs Node.js and HyperFrames first - <a href="#/settings">Settings → Programs</a> installs it.')}</div></div>
@@ -5035,9 +5207,6 @@ function scriptRoad(uses) {
   const st = {written: true, filmed: any('clips'), edited: any('renders'), posted: any('posted')};
   return {st, now: ['filmed', 'edited', 'posted'].find(k => !st[k]) || ''};
 }
-const ROAD = [['written', t('Written')], ['filmed', t('Filmed')], ['edited', t('Edited')], ['posted', t('Posted')]];
-const roadHtml = uses => { const {st, now} = scriptRoad(uses);
-  return `<ol class="sroad">${ROAD.map(([k, l]) => `<li class="${st[k] ? 'done' : k === now ? 'now' : ''}"><b>${st[k] ? '✓' : ''}</b>${l}</li>`).join('')}</ol>`; };
 // the teleprompter: the lines to say, big, scrolling at a speaking rate (Space = start / pause, arrows = speed)
 function teleprompter(lines) {
   const o = document.createElement('div'); o.className = 'tprompt';
@@ -5066,7 +5235,7 @@ async function filmItModal(p, step = 0) {
   const [C, ps, PRM] = await Promise.all([api('/api/script/cards?id=' + encodeURIComponent(p.id)), api('/api/projects'), api('/api/prompts')]);
   const uses = (PRM.used || {})[p.id] || [], parts = C.parts;
   const said = parts.flatMap(x => x.lines), notes = parts.flatMap(x => x.notes.map(n => ({...n, head: x.head})));
-  const toFilm = notes.filter(n => /^(B-?ROLL|VISUAL|SHOT|PLANO|CAM|CAMERA|CÁMARA)$/.test(n.tag) && n.text);
+  const toFilm = notes.filter(n => FILM_TAG.test(n.tag) && n.text);
   const inEdit = notes.filter(n => !toFilm.includes(n) && n.text);
   const checks = parts.filter(x => x.check || x.lines.some(l => /\[check\]/i.test(l)));
   const linked = uses.map(u => u.project).filter(n => ps.some(x => x.name === n));
@@ -5077,7 +5246,7 @@ async function filmItModal(p, step = 0) {
   const noteLi = n => `<li><b>${esc(n.tag)}</b> ${esc(n.text)}${n.head ? ` <span class="small dim">· ${esc(n.head)}</span>` : ''}</li>`;
   const clipsOpt = (x, from) => from ? t('{name} ({clips}) · from this script', {name: esc(pname(x)), clips: plural(x.clips, 'clip')}) : `${esc(pname(x))} (${plural(x.clips, 'clip')})`;
   modal(`<h2>${t('Film it')}</h2><div class="small muted" style="margin-top:-4px">${t('<b>{title}</b> - you film it with your phone or camera, add the recording here, and MotionLab cuts it.', {title: esc(ptitle(p))})}</div>
-    ${roadHtml(uses)}
+    <div class="sflow sflow-in">${flowSteps(uses, false)}</div>
     <div class="nestep"><b>1</b>${t('Film it')}</div>
     <div class="fi1"><div class="ficards">${parts.map(card).join('') || `<div class="empty">${t('No lines to say in this script.')}</div>`}</div>
       <div class="fiside"><div class="row"><button class="btn pri" id="fitp"><svg class="i"><use href="#i-scriptok"/></svg>${t('Teleprompter')}</button><button class="btn" id="ficopy"><svg class="i"><use href="#i-clipboard"/></svg>${t('Copy the lines')}</button></div>
@@ -5099,11 +5268,11 @@ async function filmItModal(p, step = 0) {
     <div class="nestep"><b>3</b>${t('Edit it')}</div>
     <div class="nedet"><label>${t('Format')}</label><div class="seg" id="fifmt">${[['', t('As filmed')], ['vertical', t('Vertical 9:16')], ['horizontal', t('Horizontal 16:9')], ['square', t('Square')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       <label>${t('Length')}</label><div class="seg" id="filen">${[['', t('All you said')], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div></div>
-    <div class="nego"><div class="negoc"><button class="btn big" id="fidraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
-        <span class="small muted">${t('In a few minutes, no Claude: the pauses cut, captions, a punch-in every other cut.')}</span></div>
-      <div class="negoc"><button class="btn pri big" id="figo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button>
+    <div class="nego"><div class="negoc"><button class="btn pri big" id="figo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button>
         <span class="small muted">${t('Claude follows the script: picks the good takes, puts the text, B-roll and zooms where the script says. It can take an hour.')}</span>
-        <label class="small"><input type="checkbox" id="fires"> ${t('then build it as a DaVinci Resolve project')}</label></div></div>
+        <label class="small"><input type="checkbox" id="fires"> ${t('then build it as a DaVinci Resolve project')}</label></div>
+      <div class="negoc"><button class="btn big" id="fidraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
+        <span class="small muted">${t('In a few minutes, no Claude: the pauses cut, captions, a punch-in every other cut.')}</span></div></div>
     <div class="small amber" id="fimsg" style="margin-top:8px"></div>`, el => {
     const sel = $('#fiv', el), name = $('#finame', el);
     sel.value = st.project;
@@ -5174,19 +5343,35 @@ async function filmItModal(p, step = 0) {
 // to do, then two columns - the prompt and Claude's check | your rating, what it makes, Style like, details
 const PSTEPS = [['check', t('Claude checks it')], ['want', t('You say what you want')], ['opt', t('Claude improves it')],
                 ['run', t('Run it')], ['rate', t('Rate the result')]];
-// a script / hook has no steps (the user, 0.4.3.5: "the steps are a little ambiguous so just remove them") - instead
-// the videos made from it, each with how far it got and a way there; a script not filmed yet points to Film it
+// a script / hook has no prompt steps (the user, 0.4.3.5: "the steps are a little ambiguous so just remove them") -
+// a script has its road instead (2026-10-22, the user: "id like for the "film it" to also show like a clear next step
+// in the whole process"): 1 the script ✓, 2 Film it, 3 Edit it, 4 Post it on a line, the step to do lit and its button
+// at the end (`scriptFlow`); under it the videos made from it, each with how far it got and a way there
 const VSTAGE = [['clips', 'filmed', t('Filmed')], ['renders', 'edited', t('Edited')], ['posted', 'posted', t('Posted')]];
 function talkVideos(p, R) {
   const uses = (R.used || {})[p.id] || [];
-  if (!uses.length) return p.kind === 'script' ? `<div class="pmvids"><div class="pmv-h">${roadHtml([])}</div>
-    <div class="small muted">${t('Not filmed yet - <b>Film it</b> shows the lines as cue cards and a teleprompter, then takes your recording and cuts it.')}</div></div>` : '';
+  if (!uses.length) return '';
   const head = p.kind === 'hook' ? tn(uses.length, 'Your video from this hook', 'Your videos from this hook')
     : tn(uses.length, 'Your video from this script', 'Your videos from this script');
-  return `<div class="pmvids"><div class="pmv-h"><h3>${head}</h3>${p.kind === 'script' ? roadHtml(uses) : ''}</div>
-    ${uses.map(u => `<a class="pmv" href="#/project/${encodeURIComponent(u.project)}" onclick="closeModal()"><svg class="i"><use href="#i-edit"/></svg><b class="grow">${esc(u.label || u.project)}</b>
+  return `<div class="pmvids">${p.kind === 'hook' ? `<div class="pmv-h"><h3>${head}</h3></div>` : ''}
+    ${uses.map(u => `<a class="pmv" href="#/project/${encodeURIComponent(u.project)}" onclick="closeModal()" title="${esc(head)}"><svg class="i"><use href="#i-edit"/></svg><b class="grow">${esc(u.label || u.project)}</b>
       ${VSTAGE.map(([k, c, l]) => (k === 'posted' ? u.posted : u[k] > 0) ? `<span class="pgstage ${c}">✓ ${l}</span>` : '').join('') || `<span class="small dim">${t('nothing filmed yet')}</span>`}
       <span class="pmv-go">${t('Open the video →')}</span></a>`).join('')}</div>`;
+}
+const SFLOW = [['written', t('The script'), t('Written')], ['filmed', t('Film it'), t('Filmed')], ['edited', t('Edit it'), t('Edited')], ['posted', t('Post it'), t('Posted')]];
+// the road's steps on a line; live = buttons (the script's pop-up), else a picture of where it stands (Film it)
+const flowSteps = (uses, live) => { const {st, now} = scriptRoad(uses), post = uses.some(u => u.renders > 0);
+  const tip = {written: '', filmed: st.filmed ? t('Film it again') : '', edited: st.edited ? t('Edit it again') : '', posted: post ? t('Open Ready to post') : ''};
+  return `<ol class="sflow-l">${SFLOW.map(([k, l, d], i) => { const c = st[k] ? 'done' : k === now ? 'now' : '';
+    const inner = `<b>${st[k] ? '✓' : i + 1}</b><span>${l}<small>${st[k] ? d : c ? t('Next|step') : ''}</small></span>`;
+    return `<li class="${c}">${live ? `<button type="button" class="sfl" data-flow="${k}"${c || (k === 'posted' && post) ? '' : ' disabled'}${tip[k] ? ` title="${esc(tip[k])}"` : ''}>${inner}</button>` : `<span class="sfl">${inner}</span>`}</li>`; }).join('')}</ol>`; };
+function scriptFlow(p, R) {
+  const uses = (R.used || {})[p.id] || [], {now} = scriptRoad(uses), post = uses.find(u => u.renders > 0);
+  const go = {filmed: `<button class="btn pri big" data-flow="filmed">▶ ${t('Film it')}</button>`,
+    edited: `<button class="btn pri big" data-flow="edited"><svg class="i"><use href="#i-edit"/></svg>${t('Edit it')}</button>`,
+    posted: post ? `<button class="btn pri big" data-flow="posted"><svg class="i"><use href="#i-upload"/></svg>${t('Post it')}</button>` : ''}[now]
+    || `<span class="sflow-done">✓ ${t('All done')}</span>`;
+  return `<div class="sflow">${flowSteps(uses, true)}${go}</div>${talkVideos(p, R)}`;
 }
 function pstate(p, R) {
   const st = p.structure || [], checked = st.some(x => x.status) || (p.review || {}).stars != null;
@@ -5210,8 +5395,8 @@ async function promptModal(id, ctx) {
   const res = p.result || {}, help = R.help || {}, S = pstate(p, R), cat = pcategory(p);
   const shot = p.kind === 'shot' || p.kind === 'image', ex = p.examples || [];
   const newest = S.versions[S.versions.length - 1];
-  const long = p.text.split('\n').length > 9 || p.text.length > 700;
   const st = p.structure || [], checked = st.some(x => x.status), work = st.filter(x => pIsWork(p, x)).length;
+  const plan = p.kind === 'script' ? filmPlan(await api('/api/script/cards?id=' + encodeURIComponent(p.id)).catch(() => null)) : {bar: '', side: ''};
   const ids = Array.isArray(ctx.ids) ? ctx.ids : null, at = ids ? ids.indexOf(p.id) : -1;
   const runBtn = (cls, attr = 'data-run') => `<button class="btn ${cls}" ${attr} title="${shot ? ta('Copies it - paste it into the site') : ta('Create a video with this prompt')}">▶ ${RUN[p.kind] || t('Run it')}</button>`;
   // the rating as the English showed it (good / OK / bad), in the user's words
@@ -5226,8 +5411,17 @@ async function promptModal(id, ctx) {
     rate: `<span>${t("How did it turn out? Your rating makes Claude's next prompts better.")}</span><button class="btn pri" data-gosec="pm-rate">${t('Rate it')}</button>`,
     '': `<span>${t('Done - you rated it <b>{rating}</b>. Another take?', {rating: esc(rated)})}</span><button class="btn" data-remix><svg class="i"><use href="#i-claude"/></svg>${t('Use it, change…')}</button>`,
   };
-  // two columns (2026-10-18, the one review pattern): the thing being judged on the left - the text, the measured
-  // check, Claude's check, what it makes, Style like, details - and the review panel on the right, in view while you read
+  // three tabs (2026-10-22, the user: "make the The check and claudes check into a separte section or tab ... we clutter
+  // the interface ... when we just want to go straight to the point"): the text alone (a script: its rhythm and what to
+  // film beside it, no notes - "i like that its only text"), Checks = the one review pattern (2026-10-18: the measured
+  // check, Claude's check and the text with the part under review marked on the left, the review panel on the right),
+  // Details = what it makes, Style like, the record. Reopened for the same prompt it keeps its tab; a text set opens
+  // on Checks.
+  const tab0 = (ctx.pmtab && (ctx.set || ctx.pmtab.id === p.id) && ctx.pmtab.tab) || (ctx.set ? 'checks' : 'text');
+  const tabBtn = (k, icon, label, badge = '') => `<button type="button" role="tab" data-pmtab="${k}"${k === tab0 ? ' class="on"' : ''}><svg class="i"><use href="#${icon}"/></svg>${label}${badge}</button>`;
+  const ckBadge = () => { const w = st.filter(x => pIsWork(p, x)).length;
+    return checked ? `<span class="pmtb ${w ? 'warn' : 'ok'}" title="${w ? esc(tn(w, '{n} part needs work', '{n} parts need work')) : ta('Every part is clear')}">${w || '✓'}</span>` : ''; };
+  const pane = k => `data-pmpane="${k}"${k === tab0 ? '' : ' hidden'}`;
   modal(`<div class="pm2 k-${esc(p.kind)}" id="pm-top">
     <div class="pmh"><div class="pmh-main">
         <div class="pmh-tags"><button class="kbadge k-${esc(p.kind)}" data-kind title="${ta('{help} - click to change the kind', {help: t(help[p.kind] || '')})}">${esc(KSHORT[p.kind] || p.kind)} ▾</button>
@@ -5235,13 +5429,18 @@ async function promptModal(id, ctx) {
           ${ids && at >= 0 ? `<span class="pmset"><button class="btn sm ghost" data-pmset="-1"${at <= 0 ? ' disabled' : ''} title="${ta('The one before it in the set')}">◀</button><span class="small muted">${t('{n} of {total}', {n: at + 1, total: ids.length})}</span><button class="btn sm ghost" data-pmset="1"${at >= ids.length - 1 ? ' disabled' : ''} title="${ta('The next one in the set')}">▶</button></span>` : ''}</div>
         <h2 class="pmh-title">${esc(ptitle(p))}</h2>
         <div class="pmh-needs"><span class="small muted">${t('Needs')}</span>${ptoolChip(p)}${pneeds(p).map(x => `<span class="pgneed">${esc(x)}</span>`).join('')}</div></div>
-      <div class="pmh-act">${runBtn('pri big')}<button class="btn" data-copy title="${isTalk(p) ? ta("Copies this script's text") : ta("Copies this prompt's text")}"><svg class="i"><use href="#i-clipboard"/></svg>${isTalk(p) ? t('Copy Script') : t('Copy Prompt')}</button></div></div>
-    ${isTalk(p) ? talkVideos(p, R) : `<div class="pmnext"><b class="pmnext-l">${S.now ? t('Next|step') : t('All done')}</b>${NEXT[S.now]}</div>`}
-    <div class="pmgrid"><div class="pmcol">
-        <section class="pms"><div class="pms-h"><h3>${isTalk(p) ? t('The script') : t('The prompt')}</h3><span class="grow"></span>${long ? `<button class="btn sm ghost" data-more>${t('Show all')}</button>` : ''}</div>
-          <div class="ptext2${long ? ' clamp' : ''}">${esc(p.text)}</div>${p.notes ? `<div class="pnotes"><b>${isTalk(p) ? t('Notes') : t('How to use')}</b> ${esc(p.notes)}</div>` : ''}</section>
+      <div class="pmh-act">${p.kind === 'script' ? '' : runBtn('pri big')}<button class="btn" data-copy title="${isTalk(p) ? ta("Copies this script's text") : ta("Copies this prompt's text")}"><svg class="i"><use href="#i-clipboard"/></svg>${isTalk(p) ? t('Copy Script') : t('Copy Prompt')}</button></div></div>
+    ${p.kind === 'script' ? scriptFlow(p, R) : isTalk(p) ? talkVideos(p, R) : `<div class="pmnext"><b class="pmnext-l">${S.now ? t('Next|step') : t('All done')}</b>${NEXT[S.now]}</div>`}
+    <nav class="pmtabs" role="tablist">${tabBtn('text', isTalk(p) ? 'i-mic' : 'i-prompts', isTalk(p) ? t('Script|tab') : t('Prompt|tab'))}${tabBtn('checks', 'i-scriptok', t('Checks|tab'), ckBadge())}${tabBtn('more', 'i-news', t('Details'))}</nav>
+    <div ${pane('text')}>${plan.bar}<div class="sgrid${plan.side ? '' : ' one'}">
+        <section class="pms"><div class="pms-h"><h3>${isTalk(p) ? t('The script') : t('The prompt')}</h3></div>
+          <div class="ptext2">${esc(p.text)}</div>${p.notes && !isTalk(p) ? `<div class="pnotes"><b>${t('How to use')}</b> ${esc(p.notes)}</div>` : ''}</section>${plan.side}</div></div>
+    <div class="pmgrid" ${pane('checks')}><div class="pmcol">
         ${isTalk(p) ? `<section class="pms spcheck"><div class="pms-h"><h3>${t('The check')}</h3><span class="grow"></span><span class="small muted">${t('measured · no Claude')}</span></div><div id="pm-sc"><div class="small dim">${t('Checking…')}</div></div></section>` : ''}
-        <section class="pms" id="pm-check">${pcheckBlock(p, R)}</section>
+        <section class="pms" id="pm-check">${pcheckHead(p, R)}<div class="ptext2 pmark" id="pm-ctext">${esc(p.text)}</div></section></div>
+      <aside id="pm-rvp"></aside></div>
+    <div class="pmcol" ${pane('more')}>
+        ${p.notes && isTalk(p) ? `<details class="pms pmnotes"><summary><h3>${t("Claude's notes")}</h3></summary><div class="pnotes">${esc(p.notes)}</div></details>` : ''}
         <section class="pms"><div class="pms-h"><h3>${t('What it makes')}</h3><span class="grow"></span><label class="btn sm ghost" title="${ta("Add a screenshot or clip of what this prompt made - your own result or the creator's example. It is only kept on this PC (never shared); the first one becomes the card's picture.")}">${t('+ Add picture / clip')}<input type="file" data-exadd accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" hidden></label></div>
           ${ex.length ? `<div class="pexlist">${ex.map(f => `<figure data-ex="${esc(f)}">${/\.(mp4|webm)$/i.test(f)
             ? `<video src="${pexUrl(R, f)}" controls muted loop playsinline preload="metadata"></video>` : `<img src="${pexUrl(R, f)}" alt="" loading="lazy" data-exview>`}
@@ -5258,22 +5457,28 @@ async function promptModal(id, ctx) {
           <b>${t('Saved')}</b><span>${p.updated && p.updated !== p.added ? t('{added} · changed {updated}', {added: esc(p.added || ''), updated: esc(p.updated)}) : esc(p.added || '')} · <span class="mono dim">${esc(p.id)}</span></span></div>
           <div class="row" style="margin-top:10px"><button class="btn sm cl" data-remix title="${ta('Claude keeps what worked in this prompt and changes what you say')}"><svg class="i"><use href="#i-claude"/></svg>${t('Use it, change…')}</button>
             <span class="grow"></span><button class="btn sm danger" data-pdel title="${ta('Move it to the Recycle Bin')}"><svg class="i"><use href="#i-trash"/></svg>${t('Delete')}</button></div></section>
-      </div>
-      <aside id="pm-rvp"></aside></div></div>`, c => {
+      </div></div>`, c => {
     const reopen = async () => { await ctx.reload(); promptModal(p.id, ctx); };
     if (isTalk(p)) api('/api/script/check', {text: p.text, like: p.style_refs || []})
-      .then(r => { const b = $('#pm-sc', c); if (b) b.innerHTML = scriptCheckHtml(r); }).catch(() => { /* the check is extra */ });
+      .then(r => { const b = $('#pm-sc', c); if (b) b.innerHTML = scriptCheckChips(r); }).catch(() => { /* the check is extra */ });
     const back = () => promptModal(p.id, ctx);
-    const post = rvQueue(), txt = $('.ptext2', c);
+    const post = rvQueue(), txt = $('#pm-ctext', c);
     let view = checked && work && work < st.length ? 'work' : 'all', curSlot = null, hover = null;
-    // the quoted words of a part marked in the text: the part under the pointer, else the current one
+    // the quoted words of a part marked in the text: the part under the pointer, else the current one; moving to a
+    // part brings its words into view
     const showMarks = () => { const x = st.find(y => y.slot === (hover || curSlot)); txt.innerHTML = x && (x.at || []).length ? pquoteHtml(p.text, x.at) : esc(p.text); };
-    const markWork = () => {                         // Needs work follows the answers (a wish, Partly / Wrong)
-      $$('.cpart[data-slot]', c).forEach(el => { const x = st.find(y => y.slot === el.dataset.slot); if (x) el.toggleAttribute('data-clear', !pIsWork(p, x)); });
-      $$('.cgrp', c).forEach(g => g.toggleAttribute('data-clear', $$('.cpart', g).every(x => x.hasAttribute('data-clear'))));
+    const toMark = () => { const m = $('mark.tq', txt); if (m && txt.offsetParent) m.scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
+    const markWork = () => { const b = $('[data-pmtab=checks] .pmtb', c), h = ckBadge(); if (b && h) b.outerHTML = h; };   // the tab's count follows the answers
+    const tab = k => {
+      ctx.pmtab = {id: p.id, tab: k};
+      $$('[data-pmtab]', c).forEach(b => b.classList.toggle('on', b.dataset.pmtab === k));
+      $$('[data-pmpane]', c).forEach(el => { el.hidden = el.dataset.pmpane !== k; });
+      $('.pmtabs', c).scrollIntoView({block: 'nearest'});
+      if (k === 'checks') toMark();
     };
+    $$('[data-pmtab]', c).forEach(b => b.onclick = () => tab(b.dataset.pmtab));
     const sections = [];
-    if (st.length) sections.push({id: 'check', ask: t('Is Claude right?'), intro: t('Claude\'s check of each part, on the left - the note is what you want there'), scale: 'claims', note: 'line',
+    if (st.length) sections.push({id: 'check', ask: t('Is Claude right?'), scale: 'claims', note: 'line',
       items: () => pCheckOrder(p).filter(x => view === 'all' || pIsWork(p, x) || x.slot === curSlot).map(pCheckRow),
       all: () => st.map(x => ({id: x.slot})),
       get: slot => ({v: (p.verdicts || {})[slot] || '', note: (p.wishes || {})[slot] || ''}),
@@ -5295,24 +5500,17 @@ async function promptModal(id, ctx) {
       hint: () => t('A note on what it made (saved as you type)')});
     const PN = reviewPanel($('#pm-rvp', c), {dialog: true, sections,
       filters: checked && work && work < st.length ? `<div class="seg"><button data-cv="work"${view === 'work' ? ' class="on"' : ''}>${t('Needs work')} <span>${work}</span></button><button data-cv="all"${view === 'all' ? ' class="on"' : ''}>${t('All parts')} <span>${st.length}</span></button></div>` : '',
-      onMove: (s, slot, first) => {
-        curSlot = s === 'check' ? slot : null;
-        $$('.cpart[data-slot]', c).forEach(el => el.classList.toggle('cur', el.dataset.slot === curSlot));
-        showMarks();
-        const card = !first && curSlot && $$('.cpart[data-slot]', c).find(el => el.dataset.slot === curSlot);
-        if (card) card.scrollIntoView({block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
-      },
+      onMove: (s, slot, first) => { curSlot = s === 'check' ? slot : null; showMarks(); if (!first) toMark(); },
+      extra: {item: (s, slot) => { const x = s === 'check' && st.find(y => y.slot === slot); return x ? pcheckTip(p, x) : ''; }},
       send: {hint: isTalk(p) ? (checked ? t('Claude rewrites it from its check, your verdicts and your notes - in your voice. This one stays.') : t('Claude checks each part first, then rewrites it in your voice. This one stays.'))
           : (checked ? t('Claude writes a better version from its check, your verdicts and your notes. This one stays.') : t('Claude checks each part first, then writes a better version. This one stays.')),
         cmd: optCmd(p), task: optTask(p), name: p.id, ready: () => true,
         more: checked ? claudeBtn(chkCmd(p), t('Check it again'), optTask(p), p.id, 'sm ghost') : ''}});
     $$('[data-cv]', PN.el).forEach(b => b.onclick = () => {
       view = b.dataset.cv; $$('[data-cv]', PN.el).forEach(x => x.classList.toggle('on', x === b));
-      const cp = $('.cparts', c); if (cp) cp.dataset.view = view;
       PN.redraw();
     });
     const hov = slot => { if (slot === hover) return; hover = slot; showMarks(); };
-    $$('.cpart[data-slot]', c).forEach(el => { el.onmouseenter = () => hov(el.dataset.slot); el.onmouseleave = () => hov(null); });
     PN.el.addEventListener('mouseover', e => { const li = e.target.closest('.rvrow'); hov(li && li.dataset.sec === 'check' ? li.dataset.id : null); });
     PN.el.addEventListener('mouseleave', () => hov(null));
     $$('[data-pmset]', c).forEach(b => b.onclick = async () => { await PN.flush(); promptModal(ids[at + +b.dataset.pmset], ctx); });
@@ -5324,10 +5522,18 @@ async function promptModal(id, ctx) {
     $$('[data-run]', c).forEach(b => b.onclick = () => {
       if (shot) { copy(p.text); toast(t('Copied - paste it into the site, then rate what it made here'), 'ok'); }
       else if (p.kind === 'script') filmItModal(p).then(() => modalBack(back));
-      else createVideoModal({from: 'prompt', pick: p.id}).then(() => modalBack(back));
+      else newEdit({from: 'prompt', pick: p.id}).then(() => modalBack(back));
+    });
+    // a script's road: Film it, Edit it (Film it's step 3), Post it (the video's Ready to post); the script = its tab
+    $$('[data-flow]', c).forEach(b => b.onclick = () => {
+      const k = b.dataset.flow, done = ((R.used || {})[p.id] || []).find(u => u.renders > 0);
+      if (k === 'written') tab('text');
+      else if (k === 'filmed' || k === 'edited') filmItModal(p, k === 'edited' ? 2 : 0).then(() => modalBack(back));
+      else if (k === 'posted' && done) { closeModal(); location.hash = `#/project/${encodeURIComponent(done.project)}/publish`; }
     });
     $$('[data-goto]', c).forEach(a => a.onclick = e => { e.preventDefault(); promptModal(a.dataset.goto, ctx); });
     $$('[data-gosec]', c).forEach(b => b.onclick = () => {
+      tab('checks');                                     // the review panel lives on the Checks tab
       if (b.dataset.gosec === 'pm-rvp') {                // Show the parts: the first one without an answer, its note ready
         PN.el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
         if (!PN.cur() || PN.cur().sec !== 'check') PN.nextOpen();
@@ -5338,8 +5544,6 @@ async function promptModal(id, ctx) {
       sec.scrollIntoView({behavior: 'smooth', block: 'start'});
       if (b.dataset.gosec === 'pm-rate') PN.select('result', 'result');
     });
-    const more = $('[data-more]', c);
-    if (more) more.onclick = () => { txt.classList.toggle('clamp'); more.textContent = txt.classList.contains('clamp') ? t('Show all') : t('Show less'); };
     $$('[data-opt]', c).forEach(b => b.onclick = async () => { await PN.flush(); openClaude(optCmd(p), optTask(p), p.id); });
     const setStyle = async (refs, msg) => {
       try { await api('/api/prompts/style', {id: p.id, refs}); toast(msg, 'ok'); await reopen(); }

@@ -1407,7 +1407,7 @@ def selfcheck(verbose: bool = True) -> dict:
         lines.append(("PASS " if cond else "FAIL ") + msg)
     from . import textsets as TXS
     names = ("LOCAL", "LOCAL_LESSONS", "LOCAL_MAKING", "SHARED_STATE", "INCOMING", "PROJECTS", "LOCAL_REFS",
-             "SHARED_REFS", "INBOX", "SHARED_LESSONS", "MAKING_LESSONS")
+             "SHARED_REFS", "INBOX", "SHARED_LESSONS", "MAKING_LESSONS", "ANALYSIS")
     saved = {n: globals()[n] for n in names}
     saved_tx = (TXS.ROOT, TXS.memory_lines)
     try:
@@ -1418,7 +1418,9 @@ def selfcheck(verbose: bool = True) -> dict:
                              LOCAL_MAKING=T / "local" / "lessons_making.md", SHARED_STATE=T / "local" / "shared.json",
                              INCOMING=T / "incoming", PROJECTS=T / "projects", LOCAL_REFS=T / "local" / "references",
                              SHARED_REFS=T / "references", INBOX=T / "inbox", SHARED_LESSONS=T / "shared_lessons.md",
-                             MAKING_LESSONS=T / "shared_making.md")
+                             MAKING_LESSONS=T / "shared_making.md",
+                             ANALYSIS=T / "analysis")   # 2026-10-22: else a PC's real analyses became cards here
+                                                        # (pending() builds them) - 7 cards, 41 verdicts on the user's
             ids = [next_lesson_id("making")]
             with LOCAL_MAKING.open("a", encoding="utf-8") as f:
                 f.write(f"- [{ids[0]}] (2026-10-14, from demo v1) rule one\n  Why: a check.   Tool: none\n")

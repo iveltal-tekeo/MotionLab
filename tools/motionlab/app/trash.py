@@ -3,7 +3,8 @@
 Deleting is always the user's click after a dialog that lists every item (plan_* below builds that list, with sizes
 and warnings); delete() re-plans on the server and moves only the items the user ticked. Allowed: a reference
 (its analysis folder + its video when that lies in refs\\), a download in refs\\ or refs\\audio\\ that no analysis
-uses, a video project (projects\\<name>\\: the user's clips + build\\) and single renders in a project's build\\.
+uses, a video project (projects\\<name>\\: the user's clips + build\\), one clip or song of a project (New edit's
+clips) and single renders in a project's build\\.
 Never: knowledge (cards, lessons), the library, tools, settings, or anything outside refs\\, analysis\\ and
 projects\\. Claude never calls these routes: the hard rule "never delete a source video" stays Claude's rule."""
 from __future__ import annotations
@@ -185,7 +186,8 @@ def plan_project(name: str, resolve_state: str = "") -> dict:
 
 
 def plan_file(relpath: str) -> dict:
-    """A download in refs\\ (refs\\audio\\) that no analysis uses, or a render in a project's build folder."""
+    """A download in refs\\ (refs\\audio\\) that no analysis uses, a clip or song in a project's folder, or a render
+    in a project's build folder."""
     p = inside(LAB / relpath)
     if not p.is_file():
         raise FileNotFoundError(relpath)
@@ -200,6 +202,19 @@ def plan_file(relpath: str) -> dict:
         item = _video_item(p, None, us)
         item.update(key="file", label=I18N.t("The downloaded file"), default=True)
         kind = "download"
+    elif parts[0] == "projects" and len(parts) == 3 and ext in data.VIDEO_EXT | data.AUDIO_EXT:
+        # one clip or song of a video (2026-10-22, New edit's clips, the user: "see which videos we have? or if we can
+        # manage them? delete") - its edits and a Resolve project may use it: said before the yes
+        b, _ = size_of(p)
+        srcs = (data.read_json(p.parent / "build" / "sources.json", {}) or {}).get("sources", {})
+        warn = [I18N.t("Its edits use it as clip {id}: a new render of them will miss it.", id=sid)
+                for sid, s in sorted(srcs.items()) if _same(s.get("path", ""), p)][:1]
+        if (p.parent / "build" / "resolve").is_dir() and any((p.parent / "build" / "resolve").glob("*_build.json")):
+            warn.append(I18N.t("A DaVinci Resolve project of this video may use it: it will show it as offline."))
+        item = {"key": "file", "label": I18N.t("The song") if ext in data.AUDIO_EXT else I18N.t("The clip"),
+                "path": data.rel(p), "bytes": b, "files": 1, "default": True, "warn": warn,
+                "what": I18N.t("in the folder of the video {name}", name=p.parent.name)}
+        kind = "clip"
     elif parts[0] == "projects" and len(parts) >= 4 and parts[2] == "build" and ext in (".mp4", ".mov") \
             and (len(parts) == 4 or (len(parts) == 5 and parts[3] in ("compare", "resolve"))):
         b, _ = size_of(p)

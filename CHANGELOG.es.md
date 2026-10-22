@@ -7,6 +7,46 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.2 - 2026-10-22 - Nueva edición paso a paso, y una app más ligera
+
+- **Nueva edición, paso a paso**: *Editor > Nueva edición* es ahora una ventana de seis pasos numerados sobre una
+  línea, uno cada vez: 1 Clips, 2 Texto, 3 Referencias, 4 Estilo, 5 Sonido, 6 Final. Solo hacen falta los clips: deja
+  el resto en Auto y Claude decide. Atrás y Siguiente abajo, un ✓ en cada paso que has respondido, y un clic en un
+  paso te lleva a él.
+- **Tus clips como imágenes**: el paso 1 muestra cada clip del vídeo como un fotograma con su duración: reprodúcelo,
+  suelta más o quita uno (a la Papelera de reciclaje, después de un sí). Al elegir un vídeo anterior ves cuántos clips
+  tiene.
+- **Texto**: de qué va el vídeo y las palabras en pantalla, uno al lado del otro, o un guion o un brief de Preparar.
+- **Referencias**: hasta 3 vídeos que has analizado, como tarjetas con su imagen y su duración: sigue su estilo o haz
+  una copia exacta.
+- **Estilo**: los estilos listos en una fila, unas pocas preguntas cortas (dónde se grabó, qué tipo de vídeo, el
+  ritmo, el ambiente, los subtítulos) con 4 respuestas cada una y + para el resto, y una paleta de colores grande para
+  los gráficos animados: 7 paletas listas o tus propios colores.
+- **Sonido**: la música (la canción del propio vídeo, una canción que eliges, el sonido tal como se grabó, o hablando
+  con las pausas cortadas), cuántos efectos de sonido y de qué tipos.
+- **Final**: la duración y el formato para cada plataforma, un resumen de todos los pasos (haz clic en uno para
+  cambiarlo) y más o menos cuánto tardará Claude. Claude lee primero todo lo que has elegido y lo sigue paso a paso;
+  el borrador rápido sigue las referencias, el estilo, tus palabras, la duración, el formato y la música.
+- **Un guion en tres pestañas**: la ventana de un guion se abre en **Guion**: el texto entero (ya no hay *Ver todo*),
+  su ritmo como una barra de sus partes y sus segundos, y al lado los planos que grabar y el texto en pantalla, cada
+  uno del color de su parte. **Revisiones** tiene la comprobación, la revisión de Claude y otra vez el guion con la
+  parte que estás revisando resaltada; el consejo de Claude para esa parte está en tu propia revisión. **Detalles**
+  tiene el resto. Los prompts tienen las mismas tres pestañas.
+- **El camino de un guion**: 1 El guion, 2 Grábalo, 3 Edítalo, 4 Publícalo sobre una línea: lo hecho lleva un ✓, el
+  siguiente paso se ilumina y su botón está al final. *Grábalo* muestra la misma línea, y su último paso tiene *Hazlo
+  con Claude* a la izquierda y el borrador rápido a la derecha.
+- **Inicio y la memoria de Claude, más ligeros**: *Inicio* termina con la hoja de ruta (sin la línea de la memoria de
+  Claude ni el panel de estado). La memoria de Claude se queda con Resumen, Lecciones y Conocimiento compartido; las
+  pestañas Vídeos, Efectos y Gráficos y efectos guardados ya no están. Claude lo sigue leyendo todo, y tus gráficos y
+  efectos guardados siguen en la biblioteca. Motion Graphics ha bajado al final de la barra lateral, encima de Tareas.
+- **La hoja de ruta, planificada de nuevo**: la 0.5.3 vídeos más rápidos (con el tiempo de Claude en revisiones,
+  guiones y vídeos), la 0.5.4 **Sonido** (efectos de sonido grabados de verdad, música y ambiente de bibliotecas
+  gratuitas, una voz en off), la 0.5.5 **Agencia de contenido** (una página *Mi marca*: tu objetivo, tu público, tu
+  imagen y tus productos), la 0.5.6 packs de plantillas, la 0.5.7 color + DaVinci Resolve, la 0.5.8 generación de
+  contenido y la 0.5.9 el modo yapping; la 0.6.0 es ahora *Tomar notas de vídeos*. El generador de prompts y las
+  plantillas por sensación salen del plan.
+- **Detalles pequeños**: más espacio alrededor de la fila de "vídeos descargados" del Analizador.
+
 ## 0.5.1 - 2026-10-19 - Empieza la fase 2: MotionLab en español, análisis en la mitad de tiempo, la instalación en un solo archivo y una sola forma de revisar
 
 - **Aquí empieza la fase 2**: el camino de la 0.5.0 a la 1.0.0, el despliegue. La fase 1 fue todo hasta la 0.5.0.1.

@@ -44,7 +44,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   | an analysis | #/ref/<name> · `pageRef`, `overviewTab`, `contentTab` | The analysis page |
   | bulk work, thumbnail sets | #/thumbs/<set> · `pageThumbs`, `addThumbsModal`, `bulkEditModal`, `batchRows` | Bulk and thumbnail sets |
   | sets of scripts & prompts | #/texts/<set> · `pageTexts`, `addTextsModal`, `textSetCard` | Text sets |
-  | Editor, a video | #/edit, #/project/<p>/<tab> · `pageProjects`, `projCard`, `createVideoModal`, `pageProject` | Editor and a video's page |
+  | Editor, New edit, a video | #/edit, #/project/<p>/<tab> · `pageProjects`, `projCard`, `newEdit` (a pop-up), `pageProject` | Editor and a video's page |
   | a video made from zero | `inGenerator(p)` | Generator vs Editor |
   | Generator | #/generate · `pageGenerate`, `generateModal` | Generator |
   | Motion Graphics, Logos | #/motion (/learned, /logos, /templates/<id>) · `pageMotion`, `motionModal` | Motion Graphics and Logos |
@@ -102,9 +102,17 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     `source.file` must be in that file; `--set` sorts a file into a set) and `textsets.save_check` (+ the draft's sha1
     = the item's; words of another item named). analysis\texts is never an analysis: `trash.plan_reference` refuses
     it, analyze.py names a video "texts" `texts_video`, storage.py has one row per set, `usage_names` has `texts`.
-  - **Editor and a video's page**: New edit's step 1 = *Select your clips* (2026-10-16, the user: "choose between an
-    old video clip or new clips, intuitive and distinct"); its answer's `command` = `/recreate-video <ref> <p>` for a
-    copy, `prompt:<id>`, else `/recreate-video request <p>`, so the user's words never pass through cmd. **The Edit
+  - **Editor and a video's page**: **New edit** is a pop-up of steps (`newEdit`, 2026-10-22, the user: "the edit a video
+    is our most powerful tool ... simplicity and clarity rather than having everything in a single section"; then "just
+    show section per section, make the sidebar steps with numbers ... and make a line go through them", in the look of
+    their mock-up new_edit_section.html): one step at a time - 1 Clips (2026-10-16: "choose between an old video clip
+    or new clips, intuitive and distinct"), 2 Text, 3 References, 4 Style, 5 Sound, 6 Final (+ the summary); the
+    steps on a gold line on the left, Back / Next in the footer; round 3 ("less text and more colors, icons"): a
+    coloured icon per question, help in tooltips, the clips as pictures with a bin (the Delete route's kind "clip" =
+    one file of the video's folder, the yes inside the step) and the references as picture cards; only the clips are
+    required, Auto = Claude's call; one
+    function per step; the request = `motionlab\editreq.py` (edit_request.json + edit_brief.md, the brief Claude
+    follows); its answer's `command` = always `/recreate-video request <p>`, so the user's words never pass through cmd. **The Edit
     page and a video's page** (the overhaul of 2026-10-15, the user: "the blocks are so big and show random info - at
     least a preview of some render"; "when I first click I want to see the last render so I know in which video I am,
     instead of How did it turn out? shot in my face"; round 2 the same day: "list by the newest render; a date on the
@@ -132,14 +140,26 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     Round 2 (the user: a title set and a talking script "appear to have different UIs ... I want it to be known before
     clicking"); `pagePrepare` (round 3, the user: "keep the old structure of 2 big buttons for scripts ... don't mess
     up the structure and workflow"). **Film it** (2026-10-15, the user: "I record a video of me reading the script but
-    I don't know where to go... it's not a prompt, it's a talking script... and then where does it go?").
+    I don't know where to go... it's not a prompt, it's a talking script... and then where does it go?"); 2026-10-22:
+    "i like the film it section seems very clear uknow but move the "make it with claude" button to the left and the
+    quick draft to the right and add some padding". A script's pop-up (2026-10-22): "id like for the "film it" to also
+    show like a clear next step in the whole process" = the road 1-4 on a line with the next step's button; "remove the
+    "Notes description when seeing the script..." i like that its only text but maybe add some structure to know what
+    to film before going into the script? like assets or the general rhythm of the video" = the Script tab: the whole
+    text, the rhythm bar, shots to film + text on screen beside it, never Claude's notes there (they sit folded in
+    Details).
   - **Title & thumbnail, Ready to post** (0.4.3; the user: the thumbnail and the title together decide the CTR,
     "horizontal and vertical"); Ready to post's Title, Thumbnails and *Make a thumbnail yourself* are one glowing box
     (the user: "all in one so the person isn't thrown around").
   - **Prompts** (the user's wishes, 0.3.4: "more user friendly", "too crowded", "3 per row, just the title, the
     rating, if I need Higgsfield / clips, the category - the tags are noise", "too ambiguous, hard on the eye";
     2026-10-13: "tell the user it reviews and improves"); no numbered steps for a script / hook since 0.4.3.5, the
-    user: "the steps are a little ambiguous so just remove them".
+    user: "the steps are a little ambiguous so just remove them" (a script's road - Film it, Edit it, Post it - is not
+    those steps). The pop-up in three tabs since 2026-10-22 (the user: "make the The check and claudes check into a
+    separte section or tab that its called "checks" ... we clutter the interface/ui with lots of information when we
+    just want to go straight to the point"): the text, Checks (the measured check, Claude's check, the text with the
+    part under review marked + the review panel), Details; never clamp the text again ("once i open the page i see half
+    the script which then i ahve to see the "show all"").
   - **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
     use those effects and that knowledge"); *effects you confirmed* = this PC's Correct verdicts only
     (`stats.confirmed`; friends' = `confirmed_friends`, since 2026-10-18 - it counted tekeo's 40 as the user's).
@@ -291,7 +311,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
-  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`; 29 since 2026-10-18: GET `/api/texts`, `/api/texts/<set>`, POST `/api/texts/split`, `/api/texts/new`, `/api/texts/<set>/add` | `/verdicts` | `/remove` | `/kind`, GET `/api/delete?kind=texts`, `/api/status` `thumbs` / `texts` / `friends` (Scripts & prompts, the Analyser's three ways); GET `/api/styles`, POST `/api/knowledge/private`, GET `/api/knowledge`'s sharing keys (`mine`, `next_share`, `kept`, `friends`, `imports`), POST `/api/reference/<name>/meta` `label`, POST `/api/knowledge/share` `names` / `lesson_ids` / `by_file`, POST `/api/script/improve` | `/api/script/request` | `/api/title/request` `like_prompts` (Shared knowledge, the one picker); POST `/api/prompts/wishes` `verdicts` (the one review pattern); GET `/api/settings` `home_repo` + `update.git` / `update.repo` measured on every call (the first install); GET `/api/references` + `/api/reference/<name>` `label` / `by`, `/api/status` without `references_list` (readable names, 2026-10-19); POST `/api/prompts/request` (a prompt wish as a request file), GET `/api/settings` `languages` + POST `/api/settings` `language` (Languages, 2026-10-19)). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`; 29 since 2026-10-18: GET `/api/texts`, `/api/texts/<set>`, POST `/api/texts/split`, `/api/texts/new`, `/api/texts/<set>/add` | `/verdicts` | `/remove` | `/kind`, GET `/api/delete?kind=texts`, `/api/status` `thumbs` / `texts` / `friends` (Scripts & prompts, the Analyser's three ways); GET `/api/styles`, POST `/api/knowledge/private`, GET `/api/knowledge`'s sharing keys (`mine`, `next_share`, `kept`, `friends`, `imports`), POST `/api/reference/<name>/meta` `label`, POST `/api/knowledge/share` `names` / `lesson_ids` / `by_file`, POST `/api/script/improve` | `/api/script/request` | `/api/title/request` `like_prompts` (Shared knowledge, the one picker); POST `/api/prompts/wishes` `verdicts` (the one review pattern); GET `/api/settings` `home_repo` + `update.git` / `update.repo` measured on every call (the first install); GET `/api/references` + `/api/reference/<name>` `label` / `by`, `/api/status` without `references_list` (readable names, 2026-10-19); POST `/api/prompts/request` (a prompt wish as a request file), GET `/api/settings` `languages` + POST `/api/settings` `language` (Languages, 2026-10-19); 30 since 2026-10-22: GET `/api/edit/options` = `editreq.options()` and POST `.../edit_request` "v": 2 (the New edit page)). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
@@ -331,10 +351,12 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   render - rate this one."; set = POST `.../outcome` {aspects: {k: {rating, note}}} per part; Send = `setNext('fix')` +
   `/recreate-video improve <p>` (task recreate) - a video made from zero `/generate-video improve <p>` (task generate;
   its Start over = next `start_over`, Claude starts again from the plan); more = *Not the right feel at all? Start
-  over* / after it *New edit with these clips…* + *Improve this one instead*); a **prompt / script** (`promptModal`:
-  left = the text - a part's quoted words marked from its `at` (code-point offsets) while the pointer is on it -, the
-  measured check, Claude's check read-only (`pcheckBlock`: says + tip, the current card lit, "not verified - check it
-  again" on a quote with no `at`, `skipped` parts under *Not part of this prompt*), what it makes, Style like, details;
+  over* / after it *New edit with these clips…* + *Improve this one instead*); a **prompt / script** (`promptModal`, its
+  **Checks** tab since 2026-10-22 - the text alone and Details are tabs of their own: left = the measured check
+  (scripts, `scriptCheckChips`), Claude's check read-only (`pcheckHead`: stars, counts, verdict, `skipped` parts under
+  *Not part of this prompt*) and the text with the current part's quoted words marked from its `at` (code-point
+  offsets; scrolled into view, the pointer on a row marks it too); each part's tip on its row (`extra.item` =
+  `pcheckTip`; the quote + "not verified - check it again" when it has no `at`) - no second list of the parts;
   right = **Is Claude right?** (the parts; *Needs work / All parts* is its filter; get = {v: `verdicts[part]`, note:
   `wishes[part]`}, set = POST `/api/prompts/wishes` {id, wishes, verdicts}) and **How did it turn out?** (`#pm-rate`,
   POST `/api/prompts/rate`); Send = Optimize (`optCmd`: `/write-script improve` | `/write-prompt optimize` - always

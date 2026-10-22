@@ -19,9 +19,15 @@ four-part `0.x.y.z` is a small step between them (fixes, upkeep, polish).
 steps in order, *Needs first*. At most two versions are "next" at a time: finish and release one before starting
 another.
 
-## Where it stands (2026-10-19)
+## Where it stands (2026-10-22)
 
-Built, released when the user pushes it: **0.5.1** (2026-10-19, CHANGELOG.md + CHANGELOG.es.md) - Phase 2 opens: the
+Built, released when the user pushes it: **0.5.2** (2026-10-22, CHANGELOG.md + CHANGELOG.es.md) - New edit, step
+by step (the pop-up's six steps, the clips as pictures, edit_brief.md for Claude), a script's pop-up in three tabs
+with its road, a lighter Home and Claude's memory. Its plan text: plans_history.md. Re-planned the same day from the user's notes (plans_history.md,
+*Renumbers*): 0.5.4 = Sound, 0.5.5 = Content agency, yapping mode -> 0.5.9; the prompt generator and templates by
+feel removed.
+
+Released last: **0.5.1** (2026-10-19, CHANGELOG.md + CHANGELOG.es.md) - Phase 2 opens: the
 whole app in Spanish (*Settings > General > Language*; what Claude stores in the lab stays English), analyses in about
 half the time and faster pages (the speed audit's kept findings), the one-file install (`Install-MotionLab.cmd`), the
 Analyser's three ways with *Scripts & prompts*, *Shared knowledge* in Claude's memory, one review pattern everywhere,
@@ -31,7 +37,7 @@ templates.py, overlay_settings.py, overlay.py, looks.py, template_match.py, temp
 library's own labels are translated; a template pack's clips decoded 4 times; `/api/motion/pick`'s cache; the overlay
 encodes' error text on accented names).
 
-Released last: **0.5.0.1** (2026-10-16) - the logo library: 92 app / platform / AI-tool logos for the motion graphics
+Before it **0.5.0.1** (2026-10-16) - the logo library: 92 app / platform / AI-tool logos for the motion graphics
 (`logos\`, `tools\logos.py`), the Logo wall template, *Pick a logo* / *+ Logo*, Motion Graphics > Logos. Before it
 **0.5.0** (2026-10-16) - Motion Graphics: 74 templates (57 learned from the Swishy clips, 17 MotionLab originals), the
 Motion Graphics page, Generate builds from them; with **0.4.6** (2026-10-16) - fonts and captions. The released plans'
@@ -41,14 +47,14 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.5.2 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) | L |
 | 0.5.3 | Faster videos | planned - a minute of video in ~10 min of Claude: brief -> plan -> build -> one look (added 2026-10-15); + Claude's time on reviews and scripts (added 2026-10-20) | M-L, ships in parts |
-| 0.5.4 | Prompt generator | planned - the library, `/write-prompt`, briefs and the title kind shipped in 0.3.x / 0.4.3 | M |
-| 0.5.5 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly, templates used as they are, the motion check, formats, a preview before the render | L, ships in parts |
-| 0.5.6 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
-| 0.5.7 | Content generation | planned - AI clips back into the lab, voice and music, pictures from image tools (from 0.5.0, 2026-10-15) | M |
-| 0.6.0 | Describe video + courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15 | L |
-| 0.6.5 | Templates by feel | later - first part shipped in 0.4.0 | L |
+| 0.5.4 | Sound | planned - recorded sound effects instead of the synthesised ones, music and ambience from public libraries, voice-over (added 2026-10-22; the synthesised effects shipped in 0.4.1.1) | M |
+| 0.5.5 | Content agency: My Brand | planned - a My Brand page above the Analyser: goal, audience, identity, the catalogue with prices from the website; used by Prepare, New edit, Motion Graphics; product motion (added 2026-10-22) | L, ships in parts |
+| 0.5.6 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly, templates used as they are, the motion check, formats, a preview before the render | L, ships in parts |
+| 0.5.7 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
+| 0.5.8 | Content generation | planned - AI clips back into the lab, pictures from image tools (voice and music moved to 0.5.4, 2026-10-22) | M |
+| 0.5.9 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22) | L |
+| 0.6.0 | Take notes from videos + courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15 | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
 | 0.7.5 | macOS | later | M |
 | 1.0.0 | Deployment | later - the end of Phase 2; what deployment means is the user's call (added 2026-10-19) | - |
@@ -96,8 +102,8 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   events.json), light and look (contact sheets + the plan's grade), subject from the user's story. Image-to-video
   starts from a frame of the user's own footage so the look matches.
 - **In `/recreate-video`**: step 3 ("where the footage has nothing comparable") offers *Generate this shot* with a
-  cost estimate; the user approves each paid generation. "By feel" edits (0.6.5) can ask for whole sequences.
-- **In *Generate***: 0.5.7 brings the clips the user made on a tool's site back into the lab (checked against the
+  cost estimate; the user approves each paid generation.
+- **In *Generate***: 0.5.8 brings the clips the user made on a tool's site back into the lab (checked against the
   shot list, cut on the beats, graphics and sound on top); 0.7.0 makes the same clips through the API instead of the
   site - the rest stays the same.
 - **Files**: `projects\<name>\build\generated\<id>.mp4` + `generated.json` (prompt, model, seed, reference frames,
@@ -109,30 +115,17 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   every spend logged. Generation runs as an app job (group net).
 - **Rules**: no likeness of real people without their consent; AI clips are labelled as generated in the project
   and its Resolve timeline; the provider's terms apply.
-- **Needs first**: 0.5.7 (AI clips back into the lab), 0.6.5 (story-driven edits); 0.3's colour pipeline (done).
+- **Needs first**: 0.5.8 (AI clips back into the lab); 0.3's colour pipeline (done).
 
-## 0.6.5 - planned - Templates by feel
-
-**Ships when**: an edit of the user's footage with their own story follows a reference's measured pacing (cuts per
-minute and shot lengths within ~15 %) and the structure of what is said, and the user rates it OK or better.
-
-- **Use a reference as a template**: its feel and pacing - shot lengths, cuts on the beat, effect families, the
-  structure of what is said (0.5.2's HEIT structure, the yapping profile) - with your own story, length and music
-  instead of a 1:1 copy. Builds on the pacing numbers (`knowledge.pacing`), the effect library and the HTML
-  graphics (0.3).
-  **Shipped in 0.4.0, the first part** (2026-10-13, the user's overhaul): *Editor > New edit* takes the style of up to
-  three analysed videos or the user's words / presets (`tools\style.py`), a quick draft by rules
-  (`tools\draft_edit.py`: beat-cut shots, the best moments, the style's effects, a talking mode) and
-  `/recreate-video` section 6 for Claude to refine it - and its colour matched to the references (0.4.0's colour
-  analysis, a match LUT). Still open: the story (the HEIT structure of what is said), captions and graphics made by
-  the draft itself (0.5.5's building blocks and sound effects are what the draft would place).
-
-## 0.6.0 - planned - Describe video: videos and courses as information
+## 0.6.0 - planned - Take notes from videos: videos and courses as information
 
 **Ships when**: a collection of ~10 analysed videos gives its topics with counts and quotes (frame + timecode), each
 video's content reviewed Correct / Partly / Wrong by the user like effects, and searchable from Claude; a course of
 ~10 lessons gives the steps each lesson teaches (frame + timecode, the screen shown) and a course summary Claude
 uses when it edits.
+
+**Renamed 2026-10-22** (the user: "Rename 'describe videos' to 'take notes froms videos'"); older notes call it
+*describe video*.
 
 **Courses** (the user, 2026-10-15: "and maybe in the future maybe bulk analyze courses? of davinci resolve or courses
 on content creation? (i think this is a similar idea we have for the 'describe video' version. what do you think?
@@ -142,7 +135,7 @@ content focus on 0.4.5's batch runner. Per lesson: the transcript, the steps tau
 screen, the panel, the values set), the tools and settings named (DaVinci Resolve's pages, nodes, values), the
 lesson's notes; per course: a summary, "how do I ...?" answered with the lesson + frame + timecode, and techniques
 Claude can rebuild (a Resolve technique from a course -> a recipe in the library, tested like the effects; the
-templates a course gives go through 0.5.5's template packs). Measure
+templates a course gives go through 0.5.6's template packs). Measure
 first: Claude's time per minute of a long lesson (0.4.4), then decide what is read from the transcript only and
 what needs pictures. **Rules**: courses are someone's paid work - the user's own copies only (paid platforms are
 usually locked against downloads), everything stays on the PC, only the user's notes can be shared.
@@ -152,7 +145,7 @@ without subtitles get their words by speech to text when it is installed (`conte
 Overview's Content creation panel (`motionlab\profile.py`: the hook - cuts, words, text in the first 3 s; words per
 minute and how much is talked; text on screen per minute; captions likely); Claude's breakdown per focus (review.json
 `_breakdown`: hook, structure, captions, text & graphics, B-roll, sound, CTA); all searchable in Claude's memory.
-**Moved to 0.5.2** (2026-10-14): the foundations - text on screen, the shots described, topics and claims per video
+**Moved to yapping mode** (2026-10-14; now 0.5.9): the foundations - text on screen, the shots described, topics and claims per video
 (`content.json`) - are yapping mode's first step; this plan builds on them. Still open here: notes, collections, the
 Topics page, the numbers saved at download and in cards, an `/analyze-content` skill.
 
@@ -174,8 +167,8 @@ instead of filmmaking / effects."
   player, the line being said is marked, search, *Get the transcript* / *Fetch again*). UI test 12/12. Not yet:
   saving the numbers at download time, the numbers in shared cards.
 - **Audio = what is said** and **video = what is shown** (topics, claims, numbers, tools / products, steps, hook and
-  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in 0.5.2's
-  first step. Here: across many videos.
+  call to action; one line per shot read from a sheet of one key frame per shot; text on screen): built in yapping mode's
+  first step (0.5.9). Here: across many videos.
 - **Performance**: views, likes, comments, the channel's followers and the upload date, saved by the download
   (yt-dlp knows them; today `refs\downloads.json` keeps link, platform, uploader, id, duration) -> an outperformer
   score (views against followers) that yapping mode turns into validated topics.
@@ -192,44 +185,148 @@ instead of filmmaking / effects."
 - **Sharing**: transcripts and descriptions are other people's work - they stay on the PC; only topic summaries,
   counts and short quotes go into shared cards. Also here if friends' verdicts are in: category profiles.
 
-## 0.5.7 - planned - Content generation: AI clips, voice and music
+## 0.5.9 - planned - Yapping mode: the yap-maxing framework
+
+**Ships when**: on 3-5 talking videos the user picked, the content foundations and the HEIT parts are there with frame
++ timecode and reviewed by the user; the yapping detectors pass their synthetic self-tests; the user's own recording
+is edited from a cut list they approved before anything rendered, every cut on a word boundary; a talking
+video made from a Prepare script has a clip - the user's or one MotionLab made - on every B-roll note (*The clips
+a script needs*, below).
+
+**Moved 2026-10-22** from 0.5.2 (the user: "move the current 0.5.2 'yapping' to later on, 0.5.9 for now").
+
+**Shipped in 0.4.0** (2026-10-13): first pieces of *Make* - the quick draft's talking mode (`draft_edit.py --sound
+talk`, New edit's *Talking + captions* preset: the spoken parts in order, the pauses cut - by loudness, not yet on
+word boundaries -, a punch-in every other cut, B-roll over the talking) and Claude's breakdown of a talking video
+(hook, structure, captions). **Built early (2026-10-14)**: Prepare - `/write-script` and the script check (step
+"Topic + script" below). Still open: the content foundations, HEIT labels, validated topics, delivery / environment
+numbers, the yapping detectors with self-tests, cuts on word boundaries with the user approving the cut list, the
+beats writer for the talking-head pack.
+
+**The user's notes (2026-10-12)** ("v0.3.5" = describe video, now 0.6.0 *Take notes from videos*): "using the v0.3.5 as an exceptional tool
+when creating a video: 'yapping mode' or talking to the camera. Focused on content creators: yap maxing framework.
+Influential videos, lots of views videos. Basically making content short or long form; take into account formats.
+HEIT framework = hook / explain / teach / illustrate. Validated topics. Copy and learn structure. Extras: 1) text on
+screen 2) environment: experiment different environments 3) delivery: authentic content 4) graphics: visual hooks."
+(Earlier, 2026-10-11: analyse talking-head creators AND edit the user's own recording that way.)
+
+- **Goal**: learn from talking-to-camera videos that work (many views) and make your own - short or long form - in
+  the same proven structure, from the topic to the finished edit in the lab and in DaVinci Resolve.
+- **First: the content foundations** (moved here from describe video, 2026-10-14 - this settles the order conflict
+  between the two; 0.6.0 builds on them): per analysed video `analysis\<name>\content\content.json`, reviewed by the
+  user Correct / Partly / Wrong like effects:
+  - **what is said**: the transcript (exists: `content.py`, `speech.py`) split into topics, with the claims,
+    numbers, tools / products, steps, the hook (first 3 s) and the call to action;
+  - **what is shown**: per shot (the lab already finds every cut) one line by Claude - setting / environment, who
+    and what is on screen, talking head or B-roll, graphics - read from a sheet of one key frame per shot (about 20
+    shots per picture keeps the tokens low);
+  - **text on screen** with a light OCR engine, measured first (Windows' built-in OCR needs no install).
+- **Learn** (from analyses of influential videos):
+  - **Validated topics**: topics of videos that outperform (views against the channel's followers / usual views,
+    `content.py stats` since 0.3.2), per niche - not just any topic, the ones the audience already proved.
+  - **HEIT structure**: every talk split into Hook / Explain / Illustrate / Teach parts with frame + timecode and
+    seconds; per format (short <= 90 s, mid, long; vertical / horizontal - measured already) the usual order and
+    share of each part = the structure to copy and learn.
+  - **The four extras, measured per video**: *text on screen* (how often, how many words, where); *environment* (the
+    setting of each shot - its shot descriptions; your own videos log theirs, so trying different environments
+    becomes a comparison); *delivery* (words per minute, pauses, energy = loudness changes, looking at the camera -
+    light numbers + Claude's notes on how authentic it feels); *graphics / visual hooks* (what happens on screen in
+    the first 3 s: a cut, a zoom, a text pop, a graphic - from the edit analysis).
+  - **The edit's yapping profile**: jump cuts inside one talking shot (a pause cut out), punch-ins (a 1.1-1.3x scale
+    step, held), word captions, B-roll cutaways over continuing speech - new detectors, each with a synthetic
+    self-test video and ground truth first.
+- **Make (yapping mode)**:
+  1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
+     HEIT script in the structure of the best videos of your format (the prompt library).
+  2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
+     to try.
+  3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
+     no platform subtitles), silences and fluffs cut on word boundaries, punch-ins at a chosen reference's rhythm,
+     text on screen and captions as HTML overlays timed to your words (0.3's HyperFrames, 0.3.2's captions; the SRT
+     onto Resolve's subtitle track by script, tested in the scratch project), a visual hook in the first 3 s, B-roll
+     slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
+     (every removed part with frame + timecode) before anything renders.
+  4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
+- **The clips a script needs** (added 2026-10-15, from the first talking video made from a Prepare script, *MotionLab
+  vs other AI editors*; its v4 note: "the script's B-roll (the report with its contact sheet, a generic AI editor,
+  your render beside the reference, the Prepare page) does not exist in the project, so those moments stay on you
+  with the punch-ins and the list". The user: "wouldn't it be better to know which clips to prepare or give you
+  before I make the decision to edit it with MotionLab? so maybe in the prepare section when creating the script,
+  you could advertise to create the specific clips (as vague as possible) and if not you could create it as I need
+  it?"). Today a script's `[B-ROLL]` / `[VISUAL]` notes are text: *Film it* lists them under *Film these too*,
+  nothing checks that they were filmed, and the edit finds out at the end. Moved here
+  from the motion-graphics plan (now 0.5.6, its step 12) on 2026-10-15.
+  - (a) **A clip list with the script**: `/write-script` turns each note into a clip to get - what it must show in
+    a few loose words, so whatever the user has fits ("your screen while a video is analysed", not a shot recipe),
+    its seconds and the part it covers, and the easiest ways to get it: film it, record your screen, a photo or clip
+    you already have, or *MotionLab makes it* (c). Saved in the script (`"clips"`: B1, B2... with the part, the
+    words, the seconds, the ways); the script check points at talking-only stretches with no clip.
+  - (b) **Film it as a checklist**: one row per clip; a file dropped on its row is copied into the video's folder
+    (as Film it does with the recording) and ticks it; *New edit* says before the edit "3 of 4 clips are here - B2:
+    MotionLab makes it, or a punch-in".
+  - (c) **What MotionLab makes when a clip is missing** (the user picks per clip; nothing paid without asking):
+    MotionLab's own screens - its report, a contact sheet, the Prepare page, an analysis' timeline - recorded by the
+    lab in headless Edge at the video's size, with a moving cursor (the app's tests drive Edge already:
+    `tools\dev\cdp.py`); the lab's pictures as clips with a slow push-in (a render beside its reference:
+    `compare_renders.py`; contact sheets: `sheet.py`); a motion graphic from 0.5.6's blocks (an app window, a
+    cursor, a list, numbers - "a generic AI editor, the same template on three clips" as a mock-up, no real
+    product's logo); a prompt for an AI video tool (`/write-prompt shot`, made on the tool's site, back into the lab
+    by 0.5.8's step 1; through the API in 0.7.0); else a punch-in with the words on screen (what v4 did). Made clips go to
+    `build\made\` and are named as made in the edit.
+  - (d) **The edit follows the list**: `/recreate-video` lays each clip over the words it belongs to (speech to text
+    gives the frames - v4: f310-450, f609-769, f770-888) and lists what is still missing before it renders. *Make*'s
+    step 3 (the B-roll slots, above) is this list.
+  - **What it needs**: the clip list in the script format (`/write-script`, guidelines section 9, `script.py check`
+    - text, small); Film it's checklist (the app, small); a recorder for MotionLab's own pages (new - its frame rate
+    and time measured on a laptop setting first; 3 of the first script's 4 B-roll notes were MotionLab screens);
+    0.5.6's blocks for the mock-ups; from the user, which stand-ins matter most for their videos.
+- **Steps**: (0) the content foundations above, on 3-5 influential talking videos you pick, analysed with the
+  content focus; (1) HEIT labels + the extras' numbers on them; (2) the yapping detectors + self-tests; (3) brief +
+  the edit of your own recording, with the clips its script needs (above).
+- **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
+  video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
+  (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
+  (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
+  `assets\beats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
+  `overlay.py fit <folder> --like <video>` takes a video's size / rate / length. First use: the user's
+  `projects\talk_test` (vertical 1080 x 1920, 30 fps): beats on the frames of the spoken words (57 at f1087
+  (00:00:36:07), the list's points at f1524 / f1601 / f1692), with the speech captions underneath; a 720p preview
+  went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
+  styles per category.
+
+## 0.5.8 - planned - Content generation: AI clips and pictures
 
 **Ships when**: the clips of a shot list made on an AI video tool's site come back into the lab, are checked against
-their shots (length, size, frame rate, a first / last frame sheet for continuity) and cut on the song with 0.5.5's
-blocks and sound effects on top - one video, in the lab and in DaVinci Resolve - and each clip is rated against its
-prompt; a voice-over or music only after step 1's measurements.
+their shots (length, size, frame rate, a first / last frame sheet for continuity) and cut on the song with 0.5.6's
+blocks and 0.5.4's sound on top - one video, in the lab and in DaVinci Resolve - and each clip is rated against its
+prompt.
 
 **The user's words (2026-10-14)**: "while moving from 0.4.1 to 0.5.4 id like to have the 0.5.4 version as a
 'contente generation oriented version' ... i want the generation of video through claude and other tools such as
-hyper frame or other to be more redefined and work better." On 2026-10-15 its motion-graphics part became 0.5.5
-(*Motion graphics*; the user: "yeah go ahead"); this plan keeps the rest. Steps 1 and 2 were 0.5.5's steps 5 and 8.
+hyper frame or other to be more redefined and work better." On 2026-10-15 its motion-graphics part became its own plan
+(now 0.5.6, *Motion graphics*; the user: "yeah go ahead"); on 2026-10-22 its voice and music went to 0.5.4 (*Sound*);
+this plan keeps the rest (its old step numbers: plans_history.md).
 
 **Where it stands**: *Generate*'s AI route (`/generate-video ai`) writes a shot list and every prompt into the prompt
 library, then hands off to *Editor > New edit*, which treats the clips as footage and forgets the shot list.
 
-1. **Voice and music** (from ideas.md, measure first): a voice-over for explainers and lists - ElevenLabs (the user's
-   own account) or a local text-to-speech measured on a laptop first (time per minute of speech, size, how natural);
-   its words timed like speech to text, so captions and scenes follow the voice. A voice only with the speaker's
-   consent. Music only with clear licences: the user's own song, a licensed library, or a music model whose terms
-   allow it.
-2. **AI clips back into the lab** (Generate's AI route, end to end): the user drops the clips made on the tool's
+1. **AI clips back into the lab** (Generate's AI route, end to end): the user drops the clips made on the tool's
    site into the project (named `01_<shot>.mp4`... as `ai_plan.md` asks); the lab matches them to the shot list,
    checks each one's length, size and frame rate against its shot, and makes a sheet of every clip's first and last
    frames (frame + timecode) so continuity - the same face, product, place, light - is checked on stills. Then it
    cuts them on the song's beats as the shot list says, and the blocks add titles, captions, graphics and sound
    effects on top -> one video, in the lab and in DaVinci Resolve. Each clip is rated against its prompt (good / ok /
-   bad + a note), so the prompt library learns per model (0.5.4); a shot to redo gets a new prompt that says what
+   bad + a note), so the prompt library learns per model; a shot to redo gets a new prompt that says what
    changes. Today the route ends at *Editor > New edit*, which treats the clips as footage and forgets the shot list.
-3. **Pictures from image tools** (was part of 0.5.5's step 10; measure first, only where a block cannot do it): Nano
+2. **Pictures from image tools** (was part of 0.5.6's step 10; measure first, only where a block cannot do it): Nano
    Banana / GPT Image for pictures in a scene, through the prompt library's `image` kind.
 
-**Order** (the user decides): 2 (it closes the AI route), 3, then 1 after measuring. **Size**: medium.
-**Rules**: AI clips and voices labelled as generated; a voice only with the speaker's consent; music only with clear
-licences; the paid API for AI video stays in 0.7.0.
-**Needs first**: 0.5.5's blocks and sound effects (what goes on top of the clips); the prompt library's ratings per
-model (0.5.4), to rate each clip against its prompt.
+**Order** (the user decides): 1 (it closes the AI route), then 2. **Size**: medium.
+**Rules**: AI clips labelled as generated; the paid API for AI video stays in 0.7.0.
+**Needs first**: 0.5.6's blocks and 0.5.4's sound (what goes on top of the clips); the prompt library's ratings per
+model, to rate each clip against its prompt.
 
-## 0.5.6 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
+## 0.5.7 - planned - Colour: measure a look, match it, grade in DaVinci Resolve
 
 **Ships when**: the transfer methods are measured on real shots (ΔE2000 to the reference, ms per frame on a laptop
 setting) and the best one is used; the user's own clips get white balance / exposure corrected (log / HDR detected
@@ -277,7 +374,7 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
   on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
   project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
 
-## 0.5.5 - planned - Motion graphics: template packs, the motion check, formats
+## 0.5.6 - planned - Motion graphics: template packs, the motion check, formats
 
 **Ships when**: (1) the user's template packs are read with no Claude - every template's moves, eases, timing and
 controls, plus a preview with a frame + timecode sheet - for at least two Resolve packs (Free Starter Pack 2.0 and
@@ -291,8 +388,8 @@ build.
 **The user's words (2026-10-15)**: "also look into a "motion graphics" oriented version? and where could i go cuz i am
 getting like a lot of free templates from some courses and wanted to give them to motionlab to analyze and possibly
 use in the future cuz they right now the motion graphics by default are very dull, lack creativity, very simple and
-honestly could be 100x times better. where could this version fit" - then, to Claude's proposal (this plan as 0.5.5,
-the rest of content generation as 0.5.7): "yeah go ahead". The plan it grew from (2026-10-14): "i want the generation
+honestly could be 100x times better. where could this version fit" - then, to Claude's proposal (this plan, now 0.5.6,
+the rest of content generation, now 0.5.8): "yeah go ahead". The plan it grew from (2026-10-14): "i want the generation
 of video through claude and other tools such as hyper frame or other to be more redefined and work better."
 
 **Where it stands** (2026-10-15): *Generate*'s motion-graphics videos are written by Claude from zero - HTML / CSS /
@@ -336,8 +433,9 @@ rules and the blocks decide how it moves.
 **Builds on 0.5.3** (*Faster videos*): the blocks (step 5), the formats (6) and Generate's quick draft (7) run through
 its one-page brief and its build command - Claude reads one page, writes a scene list, one command renders, checks
 and makes one sheet - so a video from zero gets the same brief -> plan -> build -> one look as an edit. **Moved out**
-(2026-10-15): voice and music, AI clips back into the lab and pictures from image tools -> 0.5.7 (*Content
-generation*); the clips a script needs -> 0.5.2 (yapping mode's B-roll slots are that list); faster renders -> 0.5.3;
+(2026-10-15): voice and music, AI clips back into the lab and pictures from image tools -> content generation (now
+0.5.8; voice and music since 2026-10-22 in 0.5.4 *Sound*); the clips a script needs -> 0.5.9 (yapping mode's B-roll
+slots are that list); faster renders -> 0.5.3;
 measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
 
 **Learn from the templates**
@@ -411,7 +509,7 @@ measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
    in a short gap before a loud line follows the gap; a -1 dBFS limiter; stem + mix + a level report; ~1 s per minute
    of video; self-check in `selftest.py`. The user's listen of the illdari v2 rebuild: "kinda too loud" -> every level
    3 dB lower, effects' peaks at most -6 dBFS, sparse sounds (sparks) measured near their peak: now 3.1 dB under
-   `sfx_v2.py` (median), none more than 2.9 dB over (was up to +10.6). Open: a `--sfx` flag for the quick draft):
+   `sfx_v2.py` (median), none more than 2.9 dB over (was up to +10.6). Open: a `--sfx` flag for the quick draft - now in 0.5.4 *Sound*, with recorded samples):
    `tools\sfx.py`, from `sfx_v2.py` - a graphic lists its cues (frame + kind:
    whoosh, click, key, pop, hit, riser...) next to its settings, so the sound follows when a setting moves the timing
    (the typed text); synthesised (no samples to license); each effect levelled against the song under it -
@@ -449,46 +547,78 @@ copy a style, never someone's content (their words, logos, characters, pictures)
 **Needs first**: 0.5.3's brief and build command (steps 5-7 run through them); 0.4.6's fonts (shipped 2026-10-16);
 from the user: which packs first, ~20 templates starred, the verdict on the remade "top 3" reel.
 
-## 0.5.4 - planned - Prompt generator: every model, every specialty
+## 0.5.5 - planned - Content agency: My Brand
 
-**Ships when**: every prompt has a specialty and the model it was written for; the Prompts page filters by both;
-`/write-prompt` copies examples of the same specialty and model first; at least one kind holds ~10 prompts the user
-rated after using them.
+**Ships when**: a *My Brand* page above the Analyser holds the user's goal on social media, their audience, identity
+(colours, fonts, logo, voice) and catalogue with prices - read from their website and checked by them; Prepare, New
+edit and Motion Graphics use it (a script in the brand's voice, the brand's colours as a palette, its logo); one video
+places a product - in passing or as a call to action at the end - and the user rates it OK or better.
 
-**The user's notes (2026-10-12):** "prompt generator (easier): we should have a 'database' of good prompts based on
-prompts we have given and you have analysed structurally so we can generate good prompts for our model agents
-(seedance, claude, chatgpt), every category or every specialty."
+**The user's words (2026-10-22)**: "0.5.5 Content Agency - implement a new section above Analyze which would be called
+'My Brand'". Their mock-up deck (`new_edit_section.html`, slides 10-11, in Spanish): *Mi marca* - "a page where Claude
+learns your goal on social media, your audience, your identity and the whole catalogue with prices, reading your web;
+used in Prepare, the Editor and Motion Graphics" ("that it knows the whole catalogue, prices included"); *Motion de
+producto* - "with My Brand's catalogue Claude puts a product in the video: indirectly or with a call to buy at the end,
+mixed with your clips in the same edit".
 
-- **Already shipped (0.3.1, 2026-10-12)**: the database and the generator for three kinds - the *Prompts* page,
-  `knowledge\local\prompts\<kind>\<id>.json`, `tools\prompts.py`, MCP `prompts()`, the `/write-prompt` skill: each
-  prompt split into its structure (slots), 3 new variants built on the best-rated examples, your rating of what the
-  model made (good / ok / bad + a note) moves the good ones to the top; shot prompts can be filled from a reference's
-  frames (measured camera move, look). Kinds: `shot` (Seedance / Higgsfield / Kling), `hook`, `script`. Empty until
-  you add your prompts (~10 per kind; the tested ones count most).
-- **To do**:
-  - **Text-model prompts** (Claude, ChatGPT, agents): a kind `agent` with its own slots - role, context, task, steps,
-    constraints, output format, examples - so a prompt that worked in one chat becomes a template for the next.
-    **First part built in 0.3.4** (the user's Spanish London vlog brief had landed under "script"): kind `brief` =
-    the user tells Claude how to make / edit a whole video, 14 parts (format & length ... questions first); Claude's
-    check marks each part clear / vague / missing with a tip, the user writes what they want per part, *Optimize
-    with Claude* writes a new version (`made_from`), *Run it* = Create video. Still open: other agent prompts.
-  - **Per category / specialty**: every prompt gets a specialty (the lab's categories - music video, vlog, cooking,
-    ... - plus your own, e.g. "make money online", "fitness"); the page filters by it and `/write-prompt` copies
-    examples of the same specialty and the same model first.
-  - **Per model**: the model a prompt was written for stays part of its structure (Seedance's lengths and camera
-    words, Claude's tags...); a new prompt for another model says what it changed.
-  - **Filled by the analyses**: the first 3 s of every analysed talking video become hook examples, its HEIT
-    structure a script example (0.5.2; describe video, 0.6.0, adds more), with the link and frame + timecode.
-  - **Sharing** your own prompts and ratings through *Claude's memory > Share* (text); creators' prompts stay on the PC.
-  - **A structure per purpose** (2026-10-12: "a vlog prompt differs from a talking head, SFX, transitions..."):
-    0.3.3 gave prompts their purposes (tags) and videos a "how did it turn out?" per part (`build\outcome.json`,
-    shown on the prompt as "Used in"); learn from those answers which structure works per purpose - needs a few
-    made videos rated first.
-  - **Style from analysed references** (built 2026-10-13, after 0.3.4: "the optimized prompt asks for a link to a
-    Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
-    references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
-    look measured too (0.5.6), and several references of one creator averaged into one style.
-- **Needs**: your prompts (the prompt library or pasted in the chat).
+1. **The page** (the sidebar, above the Analyser): goal, audience, identity, voice, catalogue - each a card the user
+   fills or corrects; stored on this PC (`knowledge\local\brand.json`), never in shared knowledge unless the user
+   shares it.
+2. **Read the website**: the user gives a link; MotionLab fetches that site's pages only, Claude takes the products /
+   services with their prices, the tone and the colours; the user ticks what is right before it is saved.
+3. **The brand kit in the app**: the brand's colours as the first palette in New edit's *Colour palette*, its fonts
+   (`fonts\` or added) and logo (`logos\` or the user's file) offered first in Motion Graphics and captions.
+4. **The skills read it**: `/write-script` and `/write-title` (voice, audience, goal), `/recreate-video` and
+   `/generate-video` (identity, products), `/write-prompt` (product shots).
+5. **Product motion**: a product from the catalogue in the video - in passing (a lower third, a card over B-roll) or a
+   call to action at the end (price, link) - built from the Motion Graphics library's templates.
+
+**Order** (the user decides): 1-3 first, then 4 and 5. **Size**: large, ships in parts.
+**Rules**: the brand stays on the PC; only the user's own site is read; prices shown as the user confirmed them.
+**Needs first**: nothing; from the user: their website and their goal.
+
+## 0.5.4 - planned - Sound: real sound effects, music and voice
+
+**Ships when**: an edit's sound effects come from recorded samples (every file's licence recorded) and the user rates
+them good - not "AI created" - on two videos (a talking video and a music edit); `precheck.py --sfx` passes on both; a
+laptop measures the library's size and the time it adds per minute of video.
+
+**The user's words (2026-10-22)**: "the Claude sounds we are getting are very dull, AI created and very plain (i want
+you to expand on this and see if its possible to improve the way u generate sound effects or ambiance music) if not we
+could search in the future to get some sounds from free libraries or pages or viral sounds"; then: "lets try to review
+the current roadmap and see if we can move all sound related ideas to 0.5.4 instead so we can remove that AI-look for
+SFX or maybe even create ambience music or random stuff from public libraries".
+
+**Where it stands**: `motionlab\sfx.py` synthesises 22 kinds from noise and tones (shipped in 0.4.1.1), each levelled
+against the music; New edit's step 5 asks how many effects and which kinds (0.5.2). Claude's assessment (2026-10-22):
+synthesis has a ceiling - more tuning helps a little but never sounds recorded; music models that run locally need a
+strong GPU, and their licences often forbid commercial use.
+
+1. **A sound library** (like `fonts\` and `logos\`): recorded effects sorted by the cue kinds (`sounds\<kind>\` +
+   `sounds.json`: source, author, licence, link per file). In the repo only CC0 and small (a few MB): Kenney's packs,
+   Freesound filtered to CC0. Free libraries whose terms forbid passing the files on (Sonniss' GDC bundles, Pixabay,
+   Mixkit - each licence checked live) stay on the PC: the user downloads them and `sfx.py` indexes them.
+2. **`sfx.py` prefers a sample**: per cue the closest kind and length, a different one each time (no repeats in a
+   row), a little pitch and level variation; the levelling against the music stays; synthesis is the fallback when
+   no sample fits. Measured before / after on the test videos - the user's listen decides.
+3. **Music and ambience from public libraries**: picked by mood, tempo and length (`beats.py` measures them), only
+   with clear licences (CC0 / free for commercial use; CC BY = its credit line goes into the publish package's
+   description); room tone and ambience beds (city, nature, a café) under talking videos. New edit's *Music* gets
+   *From the library*.
+4. **Voice-over** (was content generation's step 1, measure first): ElevenLabs (the user's own account) or a local
+   text-to-speech measured on a laptop first (time per minute of speech, size, how natural); its words timed like
+   speech to text, so captions and scenes follow the voice. A voice only with the speaker's consent.
+5. **Separate music from voice** (from ideas.md, measure first - heavy on CPU): Demucs stems for cleaner beats / drops
+   and cleaner speech, and to lower the music under the voice.
+6. **The quick draft's `--sfx`** (open since 0.4.1.1): the draft places its effects as cues, `sfx.py plan` makes them.
+
+**Not here**: viral / trending sounds are copyrighted - they are added in TikTok or Instagram when posting, never built
+into a render (the *Trending sounds* plan was scrapped 2026-10-15). Music made by a model stays out until a light one
+with clear commercial terms exists.
+**Order** (the user decides): 1 + 2 first (the AI look), then 3, 6, 4, 5. **Size**: medium.
+**Rules**: light and tested first; every file's licence recorded; music and voices only with clear licences and
+consent; generated voices labelled as generated.
+**Needs first**: nothing - New edit's sound step (0.5.2) already asks for it.
 
 ## 0.5.3 - planned - Faster videos: a minute of video in ten minutes of Claude
 
@@ -553,7 +683,7 @@ build -> one look**. Every new tool writes only inside `projects\<name>\build\` 
    one); (d) check renders at half size, the final at full; (e) for the lab's own render, frames straight into its
    cache instead of the ProRes encode -> decode round trip; ProRes only when Resolve asks; (f) motion-blur sub-frames
    only for the frames that move and (g) `overlay.py render --workers N` measured on a laptop setting - both moved
-   here from 0.5.5's step 7 (2026-10-15): HyperFrames found about a third of illdari's frames static, and a 750-frame
+   here from 0.5.6's step 7 (2026-10-15): HyperFrames found about a third of illdari's frames static, and a 750-frame
    graphic took 79-89 s plain against 6.5-9 min with motion blur 5; plain renders for the checks, the polish once
    (0.4.2's order of checks). *Can it work*: likely - an overlay took 62-108 s for 25-52 s of video; if (a) and (b)
    halve that or better, a 60 s build lands near 3-4 min. Not known yet: how much of HyperFrames' time follows the
@@ -591,8 +721,8 @@ build -> one look**. Every new tool writes only inside `projects\<name>\build\` 
    minutes and tokens, the user watches old | new side by side (`compare_renders.py`) and gives the verdict.
 
 **Videos from zero** (Generator): steps 1-4 and 6-9 apply too, but what makes them slow is the ~42 KB of animation
-code written for every video - 0.5.5's steps 5-7 (building blocks, formats, a quick draft for Generate). With this
-plan alone: ~15-20 min of Claude per minute of video; ~10 needs 0.5.5's blocks and formats, with hand-written code
+code written for every video - 0.5.6's steps 5-7 (building blocks, formats, a quick draft for Generate). With this
+plan alone: ~15-20 min of Claude per minute of video; ~10 needs 0.5.6's blocks and formats, with hand-written code
 only for one or two standout moments.
 
 **Could it work - Claude's estimate** (2026-10-15; replaced by the measurements of step 9): a 60 s talking video =
@@ -624,110 +754,3 @@ review a video, write a script or generate a video?" - 0.5.1 made the lab's own 
 3. **Generate a video**: this plan's steps above (brief -> plan -> build -> one look).
 *Ships when*: each of the three takes measurably less of Claude's time on the same inputs (usage.py before / after)
 and the user's ratings / verdicts do not drop.
-
-## 0.5.2 - planned - Yapping mode: the yap-maxing framework
-
-**Ships when**: on 3-5 talking videos the user picked, the content foundations and the HEIT parts are there with frame
-+ timecode and reviewed by the user; the yapping detectors pass their synthetic self-tests; the user's own recording
-is edited from a cut list they approved before anything rendered, every cut on a word boundary; a talking
-video made from a Prepare script has a clip - the user's or one MotionLab made - on every B-roll note (*The clips
-a script needs*, below).
-
-**Shipped in 0.4.0** (2026-10-13): first pieces of *Make* - the quick draft's talking mode (`draft_edit.py --sound
-talk`, New edit's *Talking + captions* preset: the spoken parts in order, the pauses cut - by loudness, not yet on
-word boundaries -, a punch-in every other cut, B-roll over the talking) and Claude's breakdown of a talking video
-(hook, structure, captions). **Built early (2026-10-14)**: Prepare - `/write-script` and the script check (step
-"Topic + script" below). Still open: the content foundations, HEIT labels, validated topics, delivery / environment
-numbers, the yapping detectors with self-tests, cuts on word boundaries with the user approving the cut list, the
-beats writer for the talking-head pack.
-
-**The user's notes (2026-10-12)** ("v0.3.5" = describe video, now 0.6.0): "using the v0.3.5 as an exceptional tool
-when creating a video: 'yapping mode' or talking to the camera. Focused on content creators: yap maxing framework.
-Influential videos, lots of views videos. Basically making content short or long form; take into account formats.
-HEIT framework = hook / explain / teach / illustrate. Validated topics. Copy and learn structure. Extras: 1) text on
-screen 2) environment: experiment different environments 3) delivery: authentic content 4) graphics: visual hooks."
-(Earlier, 2026-10-11: analyse talking-head creators AND edit the user's own recording that way.)
-
-- **Goal**: learn from talking-to-camera videos that work (many views) and make your own - short or long form - in
-  the same proven structure, from the topic to the finished edit in the lab and in DaVinci Resolve.
-- **First: the content foundations** (moved here from describe video, 2026-10-14 - this settles the order conflict
-  between the two; 0.6.0 builds on them): per analysed video `analysis\<name>\content\content.json`, reviewed by the
-  user Correct / Partly / Wrong like effects:
-  - **what is said**: the transcript (exists: `content.py`, `speech.py`) split into topics, with the claims,
-    numbers, tools / products, steps, the hook (first 3 s) and the call to action;
-  - **what is shown**: per shot (the lab already finds every cut) one line by Claude - setting / environment, who
-    and what is on screen, talking head or B-roll, graphics - read from a sheet of one key frame per shot (about 20
-    shots per picture keeps the tokens low);
-  - **text on screen** with a light OCR engine, measured first (Windows' built-in OCR needs no install).
-- **Learn** (from analyses of influential videos):
-  - **Validated topics**: topics of videos that outperform (views against the channel's followers / usual views,
-    `content.py stats` since 0.3.2), per niche - not just any topic, the ones the audience already proved.
-  - **HEIT structure**: every talk split into Hook / Explain / Illustrate / Teach parts with frame + timecode and
-    seconds; per format (short <= 90 s, mid, long; vertical / horizontal - measured already) the usual order and
-    share of each part = the structure to copy and learn.
-  - **The four extras, measured per video**: *text on screen* (how often, how many words, where); *environment* (the
-    setting of each shot - its shot descriptions; your own videos log theirs, so trying different environments
-    becomes a comparison); *delivery* (words per minute, pauses, energy = loudness changes, looking at the camera -
-    light numbers + Claude's notes on how authentic it feels); *graphics / visual hooks* (what happens on screen in
-    the first 3 s: a cut, a zoom, a text pop, a graphic - from the edit analysis).
-  - **The edit's yapping profile**: jump cuts inside one talking shot (a pause cut out), punch-ins (a 1.1-1.3x scale
-    step, held), word captions, B-roll cutaways over continuing speech - new detectors, each with a synthetic
-    self-test video and ground truth first.
-- **Make (yapping mode)**:
-  1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
-     HEIT script in the structure of the best videos of your format (0.5.4's database).
-  2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
-     to try.
-  3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
-     no platform subtitles), silences and fluffs cut on word boundaries, punch-ins at a chosen reference's rhythm,
-     text on screen and captions as HTML overlays timed to your words (0.3's HyperFrames, 0.3.2's captions; the SRT
-     onto Resolve's subtitle track by script, tested in the scratch project), a visual hook in the first 3 s, B-roll
-     slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
-     (every removed part with frame + timecode) before anything renders.
-  4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
-- **The clips a script needs** (added 2026-10-15, from the first talking video made from a Prepare script, *MotionLab
-  vs other AI editors*; its v4 note: "the script's B-roll (the report with its contact sheet, a generic AI editor,
-  your render beside the reference, the Prepare page) does not exist in the project, so those moments stay on you
-  with the punch-ins and the list". The user: "wouldn't it be better to know which clips to prepare or give you
-  before I make the decision to edit it with MotionLab? so maybe in the prepare section when creating the script,
-  you could advertise to create the specific clips (as vague as possible) and if not you could create it as I need
-  it?"). Today a script's `[B-ROLL]` / `[VISUAL]` notes are text: *Film it* lists them under *Film these too*,
-  nothing checks that they were filmed, and the edit finds out at the end. Moved here
-  from 0.5.5 (its step 12) on 2026-10-15.
-  - (a) **A clip list with the script**: `/write-script` turns each note into a clip to get - what it must show in
-    a few loose words, so whatever the user has fits ("your screen while a video is analysed", not a shot recipe),
-    its seconds and the part it covers, and the easiest ways to get it: film it, record your screen, a photo or clip
-    you already have, or *MotionLab makes it* (c). Saved in the script (`"clips"`: B1, B2... with the part, the
-    words, the seconds, the ways); the script check points at talking-only stretches with no clip.
-  - (b) **Film it as a checklist**: one row per clip; a file dropped on its row is copied into the video's folder
-    (as Film it does with the recording) and ticks it; *New edit* says before the edit "3 of 4 clips are here - B2:
-    MotionLab makes it, or a punch-in".
-  - (c) **What MotionLab makes when a clip is missing** (the user picks per clip; nothing paid without asking):
-    MotionLab's own screens - its report, a contact sheet, the Prepare page, an analysis' timeline - recorded by the
-    lab in headless Edge at the video's size, with a moving cursor (the app's tests drive Edge already:
-    `tools\dev\cdp.py`); the lab's pictures as clips with a slow push-in (a render beside its reference:
-    `compare_renders.py`; contact sheets: `sheet.py`); a motion graphic from 0.5.5's blocks (an app window, a
-    cursor, a list, numbers - "a generic AI editor, the same template on three clips" as a mock-up, no real
-    product's logo); a prompt for an AI video tool (`/write-prompt shot`, made on the tool's site, back into the lab
-    by 0.5.7's step 2; through the API in 0.7.0); else a punch-in with the words on screen (what v4 did). Made clips go to
-    `build\made\` and are named as made in the edit.
-  - (d) **The edit follows the list**: `/recreate-video` lays each clip over the words it belongs to (speech to text
-    gives the frames - v4: f310-450, f609-769, f770-888) and lists what is still missing before it renders. *Make*'s
-    step 3 (the B-roll slots, above) is this list.
-  - **What it needs**: the clip list in the script format (`/write-script`, guidelines section 9, `script.py check`
-    - text, small); Film it's checklist (the app, small); a recorder for MotionLab's own pages (new - its frame rate
-    and time measured on a laptop setting first; 3 of the first script's 4 B-roll notes were MotionLab screens);
-    0.5.5's blocks for the mock-ups; from the user, which stand-ins matter most for their videos.
-- **Steps**: (0) the content foundations above, on 3-5 influential talking videos you pick, analysed with the
-  content focus; (1) HEIT labels + the extras' numbers on them; (2) the yapping detectors + self-tests; (3) brief +
-  the edit of your own recording, with the clips its script needs (above).
-- **Started 2026-10-12** (the user asked for "minimal motion graphics for a good content creator talking head
-  video"; released in 0.3.3): `tools\overlays\examples\talking-head-pack` - progress bar, hook title, number pop-ups
-  (a counter for numbers that count up), a numbered list built point by point, an end card; the look = settings
-  (accent, text colour, font, size, height on screen, progress bar, panel opacity), WHAT shows WHEN =
-  `assets\beats.js` (texts + frames, written from the transcript - Claude's part in yapping mode).
-  `overlay.py fit <folder> --like <video>` takes a video's size / rate / length. First use: the user's
-  `projects\talk_test` (vertical 1080 x 1920, 30 fps): beats on the frames of the spoken words (57 at f1087
-  (00:00:36:07), the list's points at f1524 / f1601 / f1692), with the speech captions underneath; a 720p preview
-  went to the user's phone. Next: a beats writer (Claude from the transcript, HEIT labels) and the pack's
-  styles per category.

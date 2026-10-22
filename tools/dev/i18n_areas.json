@@ -444,7 +444,8 @@
    "tools/motionlab/profile.py",
    "tools/motionlab/usage.py",
    "tools/motionlab/speech.py",
-   "tools/motionlab/upstream.py"
+   "tools/motionlab/upstream.py",
+   "tools/motionlab/editreq.py"
   ]
  },
  "index.html": {

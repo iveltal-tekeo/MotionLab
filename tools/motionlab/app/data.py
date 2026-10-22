@@ -18,6 +18,7 @@ from motionlab import knowledge as KN
 from motionlab import overlay_settings as OS
 from motionlab import profile as PF
 from motionlab import prompts as PR
+from motionlab import editreq as ER
 from motionlab.styles import FOCUS, fmt as video_format, label as style_label
 from motionlab.timecode import frame_to_tc
 from motionlab.util import ANALYSIS, LAB
@@ -82,6 +83,13 @@ def write_json_atomic(p: Path, obj) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(p.suffix + ".tmp")
     tmp.write_text(json.dumps(obj, indent=1, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def write_text_atomic(p: Path, text: str) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, p)
 
 
@@ -1094,15 +1102,11 @@ def add_made_from(name: str, kind: str, ref: str) -> list:
     return items
 
 
-# ------------------------------------------------------------------ 0.4: New edit - what the user asked for
-EDIT_HOW = ("copy", "style", "words", "prompt")
-EDIT_SOUND = ("auto", "music", "clips", "talk")
-
-
+# ------------------------------------------------------------------ New edit - what the user asked for
 def edit_options() -> dict:
-    """The New edit dialog's choices: the presets of "With your words", how many videos a style may mix."""
-    from motionlab import style as ST
-    return {"presets": ST.presets_info(), "max_refs": ST.MAX_REFS, "formats": sorted(ST.SIZES)}
+    """New edit's choices (motionlab.editreq.options: the style questions, palettes, sound effects, presets,
+    downloaded songs, how many videos a style may mix)."""
+    return ER.options()
 
 
 def edit_request(name: str) -> dict:
@@ -1113,68 +1117,39 @@ def edit_request(name: str) -> dict:
 
 
 def save_edit_request(name: str, body: dict) -> dict:
-    """New edit (0.4): what the user picked - copy one analysed video 1:1, mix the style of up to three, a preset
-    or their own words, or a saved prompt; length, format, sound, Resolve or not - checked, then saved as
-    build\\edit_request.json. Claude (/recreate-video request <p>) and the quick draft (job "draft") both read it, so
-    the user's words never pass through a command line."""
-    from motionlab import style as ST
+    """New edit: what the user picked on the page's steps (clips, context, style, sound, final - motionlab.editreq),
+    checked, saved as build\\edit_request.json (the data: the quick draft reads it) + build\\edit_brief.md (the same
+    in words, step by step: what /recreate-video request <p> follows), and added to made_from.json. The user's words
+    never pass through a command line."""
     d = PROJECTS / safe_name(name)
     if not d.is_dir():
         raise FileNotFoundError(name)
-    how = str(body.get("how") or "")
-    if how not in EDIT_HOW:
-        raise ValueError(I18N.t("how: one of {choices}", choices=", ".join(EDIT_HOW)))
-    like = [" ".join(str(x).split()) for x in (body.get("like") or []) if str(x).strip()]
-    if len(like) > ST.MAX_REFS:
-        raise ValueError(I18N.t("at most {n} videos for one edit", n=ST.MAX_REFS))
-    for x in like:
-        if x.startswith("-") or len(x) > 160 or ST.find(x) is None:
-            raise ValueError(I18N.t("no analysed video called {name}", name=repr(x)))
-    if how in ("copy", "style") and not like:
-        raise ValueError(I18N.t("pick at least one analysed video"))
-    if how == "copy" and (len(like) != 1 or not re.fullmatch(r"[\w.\- \[\]()&'+,]+", like[0]) or ".." in like[0]
-                          or not (ANALYSIS / like[0] / "events.json").exists()):
-        raise ValueError(I18N.t("an exact copy needs one video analysed on this PC"))
-    presets = [str(x) for x in (body.get("presets") or [])]
-    bad = [x for x in presets if x not in ST.PRESETS]
-    if bad:
-        raise ValueError(I18N.t("unknown preset {id}", id=repr(bad[0])))
-    want = " ".join(str(body.get("want") or "").split())[:1500]
-    if how == "words" and not presets and not want:
-        raise ValueError(I18N.t("pick a style or write what you want"))
-    prompt = str(body.get("prompt") or "")
-    if how == "prompt" and not re.fullmatch(r"(shot|image|hook|script|brief|title)-\d{3,}", prompt):
-        raise ValueError(I18N.t("not a prompt id: {id}", id=repr(prompt)))
-    length = body.get("length_s")
-    if length not in (None, ""):
-        length = float(length)
-        if not 3 <= length <= 900:
-            raise ValueError(I18N.t("length: 3 to 900 seconds"))
-    else:
-        length = None
-    fmt = body.get("format") or None
-    if fmt is not None and fmt not in ST.SIZES:
-        raise ValueError(I18N.t("format: one of {choices}", choices=", ".join(ST.SIZES)))
-    music = str(body.get("music") or "")
-    if music and music != "none":
-        if Path(music).name != music or not (d / music).is_file() or (d / music).suffix.lower() not in AUDIO_EXT:
-            raise ValueError(I18N.t("{file}: not a song in projects\\{video}", file=music, video=d.name))
-    sound = str(body.get("sound") or "auto")
-    if sound not in EDIT_SOUND:
-        raise ValueError(I18N.t("sound: one of {choices}", choices=", ".join(EDIT_SOUND)))
-    req = {"how": how, "like": like if how in ("copy", "style") else [], "presets": presets if how in (
-        "words", "style") else [], "want": want if how != "prompt" else "", "prompt": prompt if how == "prompt" else None,
-        "length_s": length, "format": fmt, "music": music or None, "sound": sound,
-        "resolve": bool(body.get("resolve")), "date": stamp()}
+    req = ER.clean(body, d)
+    req["date"] = stamp()
     write_json_atomic(d / "build" / "edit_request.json", req)
-    kind, ref = {"copy": ("reference", like[0] if like else ""), "style": ("style", ", ".join(like)),
-                 "words": ("words", ", ".join(ST.PRESETS[x]["label"] for x in presets) or want[:120]),
-                 "prompt": ("prompt", prompt)}[how]
-    made = add_made_from(d.name, kind, ref)
-    cmd = (f"/recreate-video {like[0]} {d.name}" if how == "copy" and " " not in like[0] + d.name
-           else f"/recreate-video prompt:{prompt} {d.name}" if how == "prompt" and " " not in d.name
-           else f"/recreate-video request {d.name}")
-    return {"request": req, "made_from": made, "command": cmd}
+    write_text_atomic(d / "build" / "edit_brief.md", ER.brief(req, _brief_facts(d, req)))
+    made = []
+    for kind, ref in ER.made_from(req):
+        made = add_made_from(d.name, kind, ref)
+    return {"request": req, "made_from": made, "command": f"/recreate-video request {d.name}"}
+
+
+def _brief_facts(d: Path, req: dict) -> dict:
+    """What the brief names besides the request: the video's readable name, its clips and songs, the references'
+    readable names, the prompt's title."""
+    from motionlab import style as ST
+    files = [p for p in d.iterdir() if p.is_file()]
+    refs = {}
+    for k in req["like"]:
+        c = ST.find(k)
+        refs[k] = KN.label(c).get("name") if c else k
+    try:
+        pr = PR.get(req["prompt"]) if req["prompt"] else None
+    except ValueError:
+        pr = None
+    return {"project": d.name, "label": _label(d / "build"), "clips": sum(p.suffix.lower() in VIDEO_EXT for p in files),
+            "songs": sorted(p.name for p in files if p.suffix.lower() in AUDIO_EXT), "refs": refs,
+            "prompt": {"title": pr.get("title") or pr.get("title_auto"), "kind": pr.get("kind")} if pr else None}
 
 
 # ------------------------------------------------------------------ 0.4: Generate - a video from zero
@@ -1334,34 +1309,6 @@ def save_generate_request(body: dict) -> dict:
     made = add_made_from(d.name, "generated", "a motion-graphics video" if kind == "graphics"
                          else f"AI video tools{': ' + tool if tool else ''}")
     return {"request": req, "project": d.name, "made_from": made, "command": f"/generate-video request {d.name}"}
-
-
-def draft_args(req: dict) -> list[str]:
-    """draft_edit.py's arguments for a saved edit request (the quick draft job). A script or hook (Film it,
-    2026-10-15) = a talking video: the talking preset, its sound kept and the pauses cut."""
-    talk = req.get("how") == "prompt" and re.fullmatch(r"(script|hook)-\d{3,}", str(req.get("prompt") or ""))
-    if req.get("how") not in ("style", "words") and not talk:
-        raise ValueError(I18N.t("a quick draft is made from videos' style, your words or a talking script "
-                                "(an exact copy or another prompt: Claude)"))
-    out: list[str] = ["--preset", "talking"] if talk else []
-    for x in req.get("like") or []:
-        out += ["--like", x]
-    for x in req.get("presets") or []:
-        out += ["--preset", x]
-    if req.get("want"):
-        out += ["--want", req["want"]]
-    if req.get("length_s"):
-        out += ["--length", f"{float(req['length_s']):g}"]
-    if req.get("format"):
-        out += ["--format", req["format"]]
-    if req.get("music"):
-        out += ["--music", req["music"]]
-    sound = req.get("sound") or "auto"
-    if talk and sound == "auto":
-        sound = "talk"
-    if sound != "auto":
-        out += ["--sound", sound]
-    return out
 
 
 def save_outcome(name: str, body: dict) -> dict:

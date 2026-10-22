@@ -36,7 +36,6 @@
  "Kinetic text, titles, numbers, shapes and charts - built by Claude from your <a href=\"#/motion\">Motion Graphics</a> templates as HTML and rendered to a video (HyperFrames), timed to your song. Every text, colour and timing stays editable afterwards.": "Texto en movimiento, títulos, números, formas y gráficas: Claude lo construye en HTML con tus plantillas de <a href=\"#/motion\">Motion Graphics</a> y lo renderiza como vídeo (HyperFrames), al ritmo de tu canción. Cada texto, color y tiempo se puede editar después.",
  "Make a motion-graphics video": "Hacer un vídeo de gráficos animados",
  "Motion templates": "Plantillas animadas",
- "Your graphics": "Tus gráficos",
  "Claude writes it with you, then renders it - you watch it in the Editor.": "Claude lo escribe contigo y luego lo renderiza: lo ves en el Editor.",
  "Needs HyperFrames first - <a href=\"#/settings\">Settings → Programs</a> installs it.": "Primero necesita HyperFrames: <a href=\"#/settings\">Ajustes → Programas</a> lo instala.",
  "Needs Node.js and HyperFrames first - <a href=\"#/settings\">Settings → Programs</a> installs it.": "Primero necesita Node.js y HyperFrames: <a href=\"#/settings\">Ajustes → Programas</a> los instala.",

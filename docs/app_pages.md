@@ -15,19 +15,21 @@ and any never / always rule go into that file's **Pages** list; how the page doe
   **Prepare** (#/prepare, `pagePrepare`, green; below), **Editor** (shown as Edit until 2026-10-15, the user: "rename
   the entire edit page/section to Editor"; #/edit stays, #/editor = an alias; = Videos, `pageProjects`;
   #/project/<p>), **Generator** (shown as Generate until 0.4.3.5; #/generate, #/generator = an alias; `pageGenerate`;
-  the prompt library #/prompts belongs to it), **Motion Graphics** (0.5.0, #/motion, `pageMotion`, coral; below) - no
-  numbers (the user, 2026-10-14: they are not steps in an order), each row in its section's colour (`--rc`) - then
-  **Claude's memory** (below; #/memory/shared = Shared knowledge, `memShared` - #/memory/learned (0.3's Knowledge,
-  then Share with friends) and #/knowledge are aliases of it; #/memory/saved = Library, `memSaved`), at the bottom Jobs and Settings (tabs `setTabs`: General, Storage, Claude
+  the prompt library #/prompts belongs to it) - no numbers (the user, 2026-10-14: they are not steps in an order),
+  each row in its section's colour (`--rc`) - then **Claude's memory** (below; #/memory/shared = Shared knowledge,
+  `memShared` - #/memory/learned (0.3's Knowledge, then Share with friends) and #/knowledge are aliases of it; #/library
+  leads to #/memory since 2026-10-22), at the bottom **Motion Graphics** (0.5.0, #/motion, `pageMotion`, coral; below;
+  moved down to just above Jobs on 2026-10-22, the user: "move the motion graphics side bar section to down below above
+  the jobs section"), Jobs and Settings (tabs `setTabs`: General, Storage, Claude
   skills = #/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type it =
   `SKILL_INFO`; /whats-next is marked "for developers"). `ALIASES` rewrites the 0.3 addresses (#/refs, #/projects,
   #/knowledge, #/library). Home = the hero animation, **What do you want to do?** (`WAYS`: four cards with their
-  buttons and counts - `status()` carries `prompts` and `lessons`), the Claude's memory line, setup warnings, roadmap
+  buttons and counts - `status()` carries `prompts` and `lessons`), setup warnings, roadmap
   (`roadmap_live` = `docs\roadmap\index.html` in an iframe - a motion graphic that fetches `roadmap.json` and plays
   live, paused off screen, still with reduced motion; no clicks inside on Home, `.rmhit` = `roadmapBig()` full size;
   the PNG lightbox only when the page is missing; since 0.5.1 it draws the phases - roadmap.json `phases`: Phase 1 up
   to 0.5.0.1, Phase 2 from 0.5.0 to 1.0.0 - and inside the app its words follow the app's language: the page reads
-  `window.parent.ML_I18N`, keys `<English>|roadmap` in `ui\i18n\parts\es.release.json`), status; *Prompts for AI
+  `window.parent.ML_I18N`, keys `<English>|roadmap` in `ui\i18n\parts\es.release.json`); *Prompts for AI
   tools* = `aiPromptsModal` (Generate a new prompt, a shot picked). Each page sets
   `body[data-page]` (analyze / edit / generate / memory / jobs / settings) -> its accent colour (`--acc`: cyan / amber
   / fuchsia (`--gen`, the user's pick 2026-10-14; pink before) / violet / blue; Prepare green; CSS only, motion off
@@ -40,10 +42,12 @@ and any never / always rule go into that file's **Pages** list; how the page doe
 **Home**: `heroAnim()` first (a CSS-only motion graphic: 24 s loop of 4 scenes, transform + opacity only - measured
 1 layout and 10 ms main-thread work in 6 s; reduced motion = a still scene) with *Paste a link* (`addVideosModal`);
 no subtitle; setup warnings only when a program is missing; no "Updated to" box (only when an update set aside local
-changes); Status below the roadmap. (*Where to start*, the six `FLOW` steps as buttons, is no longer on Home.) The
+changes); the roadmap last. No Claude's memory line and no Status panel since 2026-10-22 (the user: "in Home: remove
+the Claudes memory section and the Status section"; Resolve's state is in the sidebar, the disk in Settings > Storage,
+the jobs on Jobs). (*Where to start*, the six `FLOW` steps as buttons, is no longer on Home.) The
 patterns every page follows - empty pages, the first row of actions, *Folder* buttons, Delete's wording, optional
-steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my footage* = `createVideoModal({from:
-'reference', pick})`.
+steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my footage* = `newEdit({from:
+'reference', pick})` (the New edit pop-up).
 
 ## Analyser
 
@@ -237,25 +241,60 @@ One analysis (#/ref/<name>, `?verdicts` = the Effects tab): tabs right
 
 ## Editor and a video's page
 
-Edit: **New edit** (0.4, `createVideoModal`,
-  four steps in one dialog: 1 your clips (a project, or *+ a new video* = POST `/api/projects/new`; its songs =
-  `list_projects` `songs`), 2 how (`NE_HOW`: *Like videos you analysed* = up to `max_refs` 3 of this PC's analyses
-  (`stylePicker`, GET `/api/styles` - friends' cards are no longer offered since 2026-10-18) - then *In its / their
-  style* or *An exact copy* (one local analysis) |
-  *With your words* = the presets of `style.PRESETS` (GET `/api/edit/options`) + a text | *From a script or brief*
-  (was *From a saved prompt*; a script / hook = `talkPick()`: sound Talking, the quick draft = `data.draft_args`
-  `--preset talking --sound talk`)), step 1 = *Select your clips* (2026-10-16, the user: "choose between an old video
-  clip or new clips, intuitive and distinct"): two wide cards `.nesrc` - *Clips you already have* (a video + *Add
-  clips…*; preselected when opened from a video, disabled with no video) | *New clips* (a name + the `.fidrop` drop
-  zone: the first file makes the video - POST `/api/projects/new`, named after the first clip when left empty, " 2"
-  on a clash - then `uploadClip`; preselected with no video); step 2 = *How should it be edited?* (was "cut"), 3
-  length / format / sound (style, words and a talking script), 4 = no heading, the *Make it with Claude* button itself
-  (`.nefinal`, the "Claude plans it with you…" line removed) with the Resolve option as its own card under it
-  (`.neres`, "Also build it as a DaVinci Resolve project") and *Quick draft now* beside (job `draft` = `draft_edit.py
-  <p> ... --render`; the video's page follows it with `progressPanel(el, onEnd, ['draft'], match)`) -> POST `/api/project/<p>/edit_request` (`data.save_edit_request`: checked,
-  saved as `build\edit_request.json`, appended to `made_from.json` - kinds reference / style / words / prompt; the
-  answer's `command` = `/recreate-video <ref> <p>` for a copy, `prompt:<id>`, else `/recreate-video request <p>`, so
-  the user's words never pass through cmd). A video's page has *New edit…*; Edit versions say how each was made (a
+Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four-step dialog `createVideoModal`, 0.4 -
+  0.5.1). The user: "the edit a video is our most powerful tool so we kinda need to expand to give Claude the most
+  options and customability ... simplicity and clarity rather than having everything in a single section"; a page for
+  a few hours that day, then: "still make it a pop up as before? and just show section per section, make the sidebar
+  steps with numbers isntead of letters, and make a line go through them so the user know where to go", in the look
+  of their mock-up (`new_edit_section.html`, a deck in the lab folder: gold ticks and rings, cards with a corner tick,
+  pills, a footer "Step n of 7"); round 3 the same day: "a little preview when we have selected clips ... manage them?
+  delete ... too much text and it clutters the vision of the user ... less text and more colors, icons and more
+  distinct" - so no line under the step titles, a coloured icon (`neIcon`, new sprite symbols) on every question, what
+  a choice means in its tooltip, clips and references as pictures. `.mbox.nemodal` (the Editor's gold wherever it opens): a header, the steps on the
+  left (`.nenav`: done = a gold tick + its short answer from `neRows`, on screen = a gold ring + *Now*, the rest grey;
+  red = no clips; the line gold down to the step on screen, `.rchn`; a click jumps there), ONE step on the right (a
+  title (+ a count on its right, `.nestx`), its cards and pills; `NE_STEPS`, one function each: `neClips`, `neText`, `neRefs`, `neStyle`,
+  `neSound`, `neFinal`; each draws its `<section>`, writes `ne.st` and may return a refresh run by `ne.changed()`), a
+  footer (*Step n of 6* | Back | *Next: <step> →*; on 6 the Resolve option + *Quick draft now* + *Make it with Claude*).
+  Picked = a gold border, a tint and a tick (`.necard` and the modal's `.cvopt` / `.nep`). Only 1 is
+  required; 2-6 carry `optTag()` and what is left on Auto is Claude's call. **1 Clips** = the two wide cards of
+  2026-10-16 (the user: "choose between an old video clip or new clips, intuitive and distinct": *Clips you already
+  have* = a video (a select with each video's clip count + *Folder*) | *New clips* = a name, the video made on the first file - POST
+  `/api/projects/new`, then `uploadClip`; `ne.addFiles`, also 5's *Add a song…*), then the video's clips as pictures
+  (`.neclips`: GET `/api/project/<p>`'s sources once per video, a frame each by `/api/thumb`; a click = the PC's player,
+  POST `/api/open`; the bin = the app's Delete route for ONE file of the video's folder - `trash.plan_file`'s kind
+  "clip": a clip or a song, warned when its edits use it or a Resolve project may - with the yes in the step itself,
+  `.nerm`, since a dialog over this one would lose it; the + tile or a drop copies more in, a big drop zone while there
+  are none) and the folder's songs as chips. **2 Text**: *What is the video about?* | *Text on screen* side by side
+  (`.netwo`; their hints = the placeholders), *A script or brief from Prepare* (the library's brief / script / hook in
+  a list with their coloured kind badge, *None* first, the picked one read beside it; a script / hook = a talking
+  video: sound Talking). **3 References** = picture cards of this PC's analyses (`ownVideos`; the picture, its length
+  - the end of the format label - and the name, nothing else: "i dont care about the cuts per min stuff"; up to
+  `max_refs` 3, "1 / 3" by the title, a search over 8) + two cards *In its / their style* or *An exact copy* (one
+  local analysis). **4 Style** (2026-10-22: "first make a row for the A ready-made style, then show the questions ...
+  reduce ... to 4-5 options ... and a '+' ... show the color palette without having to scroll down ... make it more
+  big"; fits a 1366x768 window, `@media (max-height: 820px)` trims the spacing): the ready-made styles in one row
+  (`style.PRESETS`; `presets_info` carries their rhythm, drawn as grey bars by `neBars`: a shot each, the wider the longer,
+  grey - colour is the palette's job; what each is = its tooltip), one compact card of questions (`.neqr`: the question left, pills right -
+  `neChips` with `top: 4` + a "+N" pill for the rest, `NE_FIRST` = which answers come first, no Auto pill: nothing
+  picked is Auto, a second click clears; every pill's help its tooltip) - where it was filmed, the type
+  (`styles.CATEGORIES`), the rhythm, the mood (up to 3), captions, the feel in their words -, then the **colour
+  palette** for titles / captions / graphics as big cards (`nePalette`: Auto + the ready-made palettes, a strip of
+  their colours each; the colours themselves, up to 6, as swatches beside its title; none = Auto). **5 Sound**: the music as four cards (Auto, *A song* - the folder's or the downloaded ones in `refs\audio`,
+  picked in a select under them, *Add a song…* -, the clips' own sound, Talking), sound effects - a card per amount (Auto / none / a few / some / many, a strip = how often
+  one plays) and which kinds (groups of `motionlab\sfx.py`'s cue kinds) -, notes. **6 Final**: length (pills or
+  seconds), format cards with the platforms (their shape drawn), the summary (one table, a row per step - a click =
+  back to it), the estimate as a chip ("About 30 min of Claude"; the rule in its tooltip: about 1 min of Claude per
+  second of video, `editreq.MIN_PER_S` -> options `min_per_s`; with no length it asks for one); what the two buttons
+  do = their tooltips; *Also build it as a DaVinci Resolve project* (`.neres`,
+  in the footer), *Make it with Claude* and *Quick draft now* (job `draft` = `draft_edit.py <p> ... --render`; needs a
+  style: a reference, a rhythm, a ready-made style, their words or a talking script) -> POST
+  `/api/project/<p>/edit_request` (`data.save_edit_request` -> `motionlab\editreq.py`: `clean` checks it - a request
+  of the old dialog still passes -, `build\edit_request.json` ("v": 2) + `build\edit_brief.md` = `brief()`, the same
+  in words per step for Claude, its sections numbered like the steps; `made_from` entries; the option tables =
+  `editreq.options()` via GET `/api/edit/options`, English labels translated on the page by key,
+  es.server-labels.json `_by_key`); the answer's
+  `command` is always `/recreate-video request <p>`, so the user's words never pass through cmd. A video's page has *New edit…*; Edit versions say how each was made (a
   quick draft: its style + *notes* = `draft_vN.md`; `_plan_info` `made_by` / `style` / `notes`); GET `/api/prompts`
   carries `used` (prompt -> videos + their ratings: "Used in").
   **The Edit page and a video's page** (the overhaul of 2026-10-15, the user: "the blocks are so big and show random
@@ -414,15 +453,18 @@ Edit: **New edit** (0.4, `createVideoModal`,
   place).
   **Film it** (2026-10-15, the user: "I record a video of me reading the script but I don't know where to go... it's
   not a prompt, it's a talking script... and then where does it go?"): a script card's run button (`RUN.script`, the
-  run step says *Film it*) = `filmItModal(p)`: the road `roadHtml` (Written > Filmed > Edited > Posted = `scriptRoad`
-  from GET `/api/prompts` `used`: per video `clips`, `renders`, `posted` = outcome packaging link; the card's
-  `pstage` chip), 1 Film it = cue cards (GET `/api/script/cards?id=` = `script.cue_cards`: parts with heading, lines,
+  run step says *Film it*) = `filmItModal(p, step)`: the road on a line (`flowSteps(uses, false)`, since 2026-10-22 the
+  same numbered steps as the script's pop-up - 1 The script, 2 Film it, 3 Edit it, 4 Post it, done = ✓, the next one
+  lit = `scriptRoad` from GET `/api/prompts` `used`: per video `clips`, `renders`, `posted` = outcome packaging link;
+  the card's `pstage` chip), 1 Film it = cue cards (GET `/api/script/cards?id=` = `script.cue_cards`: parts with heading, lines,
   notes; `[check]` kept in a line, a lone one = `check`), *Teleprompter* (`teleprompter(lines)`: full screen,
   `wpm` 150, Space / click, arrows, Esc only closes it; [check] left out), *Copy the lines*, *Film these too*
   (B-ROLL / VISUAL / SHOT notes), *The edit adds these*, tips; 2 Add your recording = a video (linked ones first) or
   a new one named after the script (`folderName`), drop / choose -> `uploadClip` with `prompt`; 3 Edit it = format /
-  length -> edit_request `how: prompt` + Quick draft (job draft) or *Make it with Claude* (`/recreate-video
-  prompt:<id> <p>`, which follows the script). A video made from a script: *Made from the script <title>*
+  length -> edit_request `how: prompt` + *Make it with Claude* (`/recreate-video prompt:<id> <p>`, which follows the
+  script) on the left and Quick draft (job draft) on the right (2026-10-22, the user: "move the "make it with claude"
+  button to the left and the quick draft to the right and add some padding"; `.nego`). `step` 2 = opened scrolled
+  to 3 Edit it (the pop-up's *Edit it*). A video made from a script: *Made from the script <title>*
   (`project()` adds `title` / `prompt_kind` to made_from), and with no edit yet the Overview says *Filmed - now edit
   it* (New edit with the script picked).
 
@@ -486,23 +528,45 @@ Edit: **New edit** (0.4, `createVideoModal`,
     edit a whole video) comes first; brief parts in `prompts.SLOTS`.
   - A click (or `#/prompts/<id>`) = `promptModal`: `.pm2` header in the kind's colour (`--kc`: kind badge =
     `kindModal` / POST `/api/prompts/kind`, title, needs, *Run it* (`RUN`: brief / script = Create video with it
-    picked, a hook = *Use current version in a video*; shot / image = copy for the site), *Copy Prompt* (clipboard
-    icon)); `PSTEPS` + `pstate()` (check / want / opt / run / rate, the current one lit, a Next box with its
-    button - not for a script / hook since 0.4.3.5, the user: "the steps are a little ambiguous so just remove them":
-    `talkVideos` instead = the videos made from it, each a link to its page with its tags ✓ Filmed / ✓ Edited /
-    ✓ Posted (`VSTAGE`), or "Not filmed yet" + the road; round 2: no numbered strip for any kind - the other kinds
-    keep only the Next box (`pstate().now`)); `.pmgrid` two columns, since 2026-10-18 in the one review pattern
-    (**Reviews** in `tools\motionlab\app\CLAUDE.md`; the `.rb` rating buttons and the wishes saved "on change" are
-    gone): left = the prompt (`.ptext2`; a part's quoted words marked from its `at` while the pointer is on its card
-    or row) + **Claude's check** `pcheckBlock`, read-only (unchecked: Send = *Optimize* = `/write-prompt optimize
-    <id>`, which checks it first; checked: a `.cpart` card per part coloured by status - ✓ clear / ~ vague / ✗
-    missing, plain words `SLOT_LABEL`, a brief's grouped by `BRIEF_GROUPS`: the plan / the edit / sound / look & text
-    / finish - with says + the tip; "not verified - check it again" on a quote with no `at`; `skipped` parts under
-    *Not part of this prompt*); right = the review panel alone: *Is Claude right?* (a row per part, *Needs work / All
-    parts* = its filter; the note = *what you want*, both saved by POST `/api/prompts/wishes` {id, wishes, verdicts})
-    and *How did it turn out?* (`#pm-rate`: Good / OK / Bad + a note, POST `/api/prompts/rate`, "Used in"); Send =
-    *Optimize* (a new prompt with `made_from`, "optimized by Claude"), more = *Check it again* = `/write-prompt
-    analyse <id>`. Below Claude's check on the left: **What it makes** (pictures / clips of the result, explained in the section: *+ Add picture /
+    picked, a hook = *Use current version in a video*; shot / image = copy for the site; a script has none - its road
+    below carries Film it), *Copy Prompt* (clipboard icon)); `PSTEPS` + `pstate()` (check / want / opt / run / rate,
+    the current one lit, a Next box with its button - not for a script / hook since 0.4.3.5, the user: "the steps are
+    a little ambiguous so just remove them": a hook lists the videos made from it (`talkVideos`, each a link to its
+    page with its tags ✓ Filmed / ✓ Edited / ✓ Posted, `VSTAGE`); round 2: no numbered strip for any kind - the
+    other kinds keep only the Next box (`pstate().now`)). **A script's road** (2026-10-22, the user: "id like for
+    the "film it" to also show like a clear next step in the whole process"): `scriptFlow` = `flowSteps(uses, true)`
+    - 1 The script, 2 Film it, 3 Edit it, 4 Post it as numbered circles on a line (done = ✓ in the kind's colour,
+    the next one ringed with NEXT), each a button (Film it = `filmItModal(p)`, Edit it = `filmItModal(p, 2)`, Post it
+    = the video's Ready to post; later steps disabled) and the next step's own big button at the end (*✓ All done*
+    when posted); the videos made from it under it.
+    **Three tabs** (2026-10-22, the user: "remove the "Notes description when seeing the script..." i like that its
+    only text but maybe add some structure to know what to film before going into the script? like assets or the
+    general rhythm of the video ... when i go into the "your review" page i cant see all the text thats being
+    highlighted or the section itself... make the The check and claudes check into a separte section or tab that its
+    called "checks" ... we clutter the interface/ui with lots of information when we just want to go straight to the
+    point"; `.pmtabs`, `data-pmtab` / `data-pmpane`; reopened for the same prompt it keeps its tab (`ctx.pmtab`), a
+    text set opens on Checks): **Script** / **Prompt** = the whole text, never clamped (*Show all* is gone); a script:
+    no notes, its rhythm above (`filmPlan` from GET `/api/script/cards`: each part a bar as wide as its seconds - the
+    heading's "(3-7 s)", else its words at 150 a minute - coloured by kind: hook amber, CTA pink, payoff green, the
+    rest blue / violet / cyan) and *Shots to film* (B-ROLL / VISUAL / SHOT notes, `FILM_TAG`) + *Text on screen*
+    (TEXT notes) beside it in their part's colour; another kind keeps *How to use*. **Checks** (the tab's badge = the
+    parts that need work, ✓ when none) = the one review pattern (**Reviews** in `tools\motionlab\app\CLAUDE.md`;
+    since 2026-10-18 - the `.rb` rating buttons and the wishes saved "on change" are gone): left = *The check*
+    (scripts: `scriptCheckChips` - the score, a chip per rule with what it found in its tooltip, a line only for the
+    rules that did not pass) + **Claude's check** `pcheckHead`, read-only (unchecked: what Claude checks + the kind's
+    parts; Send = *Optimize* = `/write-prompt optimize <id>`, which checks it first; checked: stars, ✓ clear / ~ vague
+    / ✗ missing counts, Claude's verdict + *Most important*, `skipped` parts under *Not part of this prompt*) and the
+    text again (`#pm-ctext`) with the part under review marked from its `at` (moving to a part scrolls its words into
+    view; the pointer on a row marks it too) - no list of part cards since 2026-10-22: each part's tip
+    (`pcheckTip`: the tip; the quote itself + "not verified - check it again" when it has no `at`; *Not in your
+    script* for a missing part) is on its review row (`extra.item`, under the part's name); right = the review panel
+    alone: *Is Claude right?* (a row per part in `pCheckOrder` - a brief's in `BRIEF_GROUPS` order, plain words
+    `SLOT_LABEL` -, *Needs work / All parts* = its filter; the note = *what you want*, both saved by POST
+    `/api/prompts/wishes` {id, wishes, verdicts}) and *How did it turn out?* (`#pm-rate`: Good / OK / Bad + a note,
+    POST `/api/prompts/rate`, "Used in"); Send = *Optimize* (a new prompt with `made_from`, "optimized by Claude"),
+    more = *Check it again* = `/write-prompt analyse <id>`; the Next box's *Show the parts* / *Rate it* switch to it.
+    **Details**: a script's *Claude's notes* folded (structure, other hooks, delivery - off the Script tab), then
+    **What it makes** (pictures / clips of the result, explained in the section: *+ Add picture /
     clip* = POST `/api/prompts/example` add (base64) / remove (Recycle Bin); `knowledge\local\prompts\examples\`,
     record `examples`; the first = the card's picture), **Style like** `pstyleBlock` (brief / script / hook: linked
     references `style_refs`, POST `/api/prompts/style`, each with its measured line `knowledge.style()` - format,
@@ -520,31 +584,31 @@ Edit: **New edit** (0.4, `createVideoModal`,
 ## Claude's memory
 
 - **Claude's memory** (0.4, the user: "once analysed it is stored in the mind of Claude, so editing or generating can
-  use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = Overview (one search `#mq` over
-  videos / effects / lessons, counts that link to their tab, *How Claude uses it* + *What Claude reads (memory.md)* /
-  *Rebuild it* = POST `/api/knowledge/summary`, effects seen most, the latest videos; tiles "videos: yours · from
-  friends", *effects you confirmed* = this PC's Correct verdicts only (`stats.confirmed`; friends' = `confirmed_friends`,
-  since 2026-10-18 - it counted tekeo's 40 as the user's), a full-width *Shared knowledge* tile), Videos (`memVideoCard`:
-  the readable name `vname` + by · platform, focus, kind, rhythm, the profile's lines, Claude's breakdown summary,
-  *Open* / *Edit like this*; a friend's = `sharedChip` + *Open* = `cardModal`; filters focus / kind / yours-friends'),
-  Effects (`memEffectRow`: per type how often, in how many videos, a bar of the verdicts - its tooltip "yours N ·
-  friends' N" from `verdicts_mine` / `verdicts_friends` - the best examples - correct first - with what happens and how
-  it was made, f<frame> links to the effect; a friend's example has the chip and "tekeo: correct" / "tekeo's note"),
-  Lessons (this PC's, shared - a rule whose note says "from <author> <id>" has the chip (`lessonItem`, `x.from` =
-  `knowledge.rule_author`) -, friends' lessons waiting grouped by who and when (no file names) + *Review them in
-  Claude Code*), Graphics & saved effects (`memSaved`), **Shared knowledge** (`memShared`, the next bullet; was Share
-  with friends = `memLearned`). GET `/api/memory` = `data.memory()` = `knowledge.memory()` (cached on the cards' and lessons'
-  mtimes; friends' cards too) + saved counts + prompts; it rewrites `knowledge\local\memory.md`
-  (`knowledge.memory_index()`, also rebuilt with the summary) when a card is newer - the file the skills read.
-  0.4.2: also when an `outcome.json` (`KN._outcomes()`), a lessons file of either kind or a `verdicts.json` (the sound
-  answer: memory.md says "sound effects: many - ... (the user's answer)" per video) is newer. 2026-10-19: also when a
-  set of scripts & prompts changed (`analysis\texts\*\*.json`) - memory.md ends with *Scripts & prompts you analysed*
-  (`textsets.memory_lines()`: each set's label, kinds, k of N checked, the patterns the user marked correct / partly
-  with their note; never shared); `memory_index(styles=True)` = the same without the effects block, never written
-  (`knowledge.py memory --styles`, MCP `knowledge("memory:styles")` - /write-script, /write-title). Overview (0.4.3.5: highlighted - 📌, an amber edge and glow, *Claude reads these first*): **Your ratings
-  -> rules for every new video** (`memRules`, `knowledge.ratings()`: bad = a rule for every new video, OK with a note,
-  then one line each for fine / keep doing it); Lessons: two columns, *Analysing videos* (L###) and *Making videos*
-  (`lessons.making`, M###), incoming split by `kind`; the lessons tile counts both.
+  use those effects and that knowledge"): `pageMemory(main, tab)`, tabs `MEM_TABS` = **Overview** (tiles: videos
+  analysed -> the Analyser, lessons, prompts, a full-width *Shared knowledge* tile; **Your ratings -> rules for every
+  new video** (`memRules`, `knowledge.ratings()`: bad = a rule for every new video, OK with a note, then one line each
+  for fine / keep doing it; highlighted - 📌, an amber edge, *Claude reads these first*); *How Claude uses it* +
+  *What Claude reads (memory.md)* / *Rebuild it* = POST `/api/knowledge/summary`), **Lessons** (two columns, *Analysing
+  videos* (L###) and *Making videos* (`lessons.making`, M###); this PC's, shared - a rule whose note says "from
+  <author> <id>" has the chip (`lessonItem`, `x.from` = `knowledge.rule_author`) -, friends' lessons waiting grouped by
+  who and when (no file names) + *Review them in Claude Code*), **Shared knowledge** (`memShared`, the next section).
+  **Removed 2026-10-22** (the user: "1) Graphics and saved effects 2) Effects 3) Videos - I dont understand what those
+  sections do, I have never used and when i go inside is just a bunch of text AI-written and for AI so i acctualy dont
+  care so u can just remove those sections"): the Videos tab (every analysed video's style card), the Effects tab
+  (every effect type, its verdicts and how it was made), *Graphics & saved effects* (`memSaved`: the HTML graphics
+  library with *Use in a video…* and the Resolve effects saved / picked for saving), and the Overview's parts that
+  showed or linked to them (the search, the effect / breakdown / saved tiles, *Effects seen most*, *Latest videos*).
+  Claude still reads all of it in memory.md; the saved graphics and effects stay in `library\` (Claude uses them;
+  `overlay.py`, `library.py`); old addresses (#/memory/videos, /effects, /saved) open the Overview. GET `/api/memory` =
+  `data.memory()` = `knowledge.memory()` (cached on the cards' and lessons' mtimes; friends' cards too) + saved counts +
+  prompts; it rewrites `knowledge\local\memory.md` (`knowledge.memory_index()`, also rebuilt with the summary) when a
+  card is newer - the file the skills read. 0.4.2: also when an `outcome.json` (`KN._outcomes()`), a lessons file of
+  either kind or a `verdicts.json` (the sound answer: memory.md says "sound effects: many - ... (the user's answer)" per
+  video) is newer. 2026-10-19: also when a set of scripts & prompts changed (`analysis\texts\*\*.json`) - memory.md
+  ends with *Scripts & prompts you analysed* (`textsets.memory_lines()`: each set's label, kinds, k of N checked, the
+  patterns the user marked correct / partly with their note; never shared); `memory_index(styles=True)` = the same
+  without the effects block, never written (`knowledge.py memory --styles`, MCP `knowledge("memory:styles")` -
+  /write-script, /write-title).
 
 ## Shared knowledge
 
@@ -596,7 +660,7 @@ Edit: **New edit** (0.4, `createVideoModal`,
   `/api/script/improve` / `/api/script/request` / `/api/title/request` -> `script._like_prompts` checks the ids;
   `describe_request` prints "<name> (<key>; this PC | from tekeo)" and "<title> (<id>; yours | <creator>'s)"; the
   write-script / write-title skills read them with `prompts.py show <id>`), `generateModal` (`tplDraw()` as onChange),
-  `bulkEditModal`, `createVideoModal`'s *Like videos you analysed* (its exact-copy radio kept). **The shared icon**
+  `bulkEditModal` (New edit's *3 References* draws `ownVideos` as picture cards of its own, 2026-10-22). **The shared icon**
   `#i-shared` (people), `--shared` lime `#a3e635`, `.shchip` = `sharedChip(author, what)` ("from tekeo"; what = when it
   was shared -> "it came with an update on 16 Oct", else what it is) on every friend item: Videos, Effects examples,
   Lessons, search results, `cardModal` (+ "tekeo's verdict" / "tekeo's note"), *Made from* (`madeFromWords` /

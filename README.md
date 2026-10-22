@@ -7,8 +7,9 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.5.1 - Phase 2 begins** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md)), the path from
-> 0.5.0 to 1.0.0: the app in English or Spanish, analyses in about half the time, a one-file install, one way to
+> **Status: v0.5.2 - New edit, step by step** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md)) - Phase 2,
+> the path from 0.5.0 to 1.0.0: New edit as six simple steps (clips, text, references, style with a colour palette,
+> sound, final), the app in English or Spanish, analyses in about half the time, a one-file install, one way to
 > review everything. **Analyse** videos you like (several at once, by focus: content creation, cinematic or both -
 > colour grading included), a channel's thumbnails and scripts & prompts, **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
@@ -280,13 +281,14 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 ## What comes next
 
-- [docs/plans.md](docs/plans.md) - the planned versions (0.5.2 yapping mode for talking-to-camera videos and the
-  clips a script needs, 0.5.3 faster videos: a minute of video in ~10 minutes of Claude, 0.5.4 prompt generator for
-  every model, 0.5.5 motion graphics from template packs - Resolve / After Effects packs read exactly, a motion check,
-  formats, a preview before the render, 0.5.6 colour: correct your own clips, adjustable grades in Resolve, 0.5.7
-  content generation: AI clips back into the lab, voice and music, 0.6 describe video: what videos and courses say and
-  show, 0.6.5 templates by feel: the story, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end
-  of Phase 2, which 0.5.1 opened), also shown in the app's *What's new*.
+- [docs/plans.md](docs/plans.md) - the planned versions (0.5.3 faster videos: a minute of video in ~10 minutes of Claude, 0.5.4 sound: recorded sound effects,
+  music and ambience from public libraries, voice-over, 0.5.5 content agency: a My Brand page - your goal, audience,
+  identity and catalogue, 0.5.6 motion graphics from template packs - Resolve / After Effects packs read exactly, a
+  motion check, formats, a preview before the render, 0.5.7 colour: correct your own clips, adjustable grades in
+  Resolve, 0.5.8 content generation: AI clips back into the lab, pictures from image tools, 0.5.9 yapping mode for
+  talking-to-camera videos and the clips a script needs, 0.6 take notes from videos: what videos and courses say and
+  show, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end of Phase 2, which 0.5.1 opened), also
+  shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 
 ## License

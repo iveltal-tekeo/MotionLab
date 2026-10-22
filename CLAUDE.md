@@ -17,6 +17,10 @@ Windows app (`MotionLab.bat`) + Python tools, shared with friends through GitHub
 3. Read `.claude\skills\analyze-reference\lessons.md` before every analysis and apply it.
 4. **The USER creates and uploads the repo** - never `git init` / `git push` / create the GitHub repo unasked (the
    app's own Share / Update buttons are the user's clicks).
+5. **Both languages in the same change** (the user, 2026-10-22): whatever you add, change or remove that the user
+   reads - the app's words, a label table, a release's notes - you do in Spanish too, in that change: new texts with
+   their Spanish in the area's part file, removed texts' keys removed (`tools\dev\i18n_check.py merge` + `check`
+   PASS), `CHANGELOG.es.md` beside `CHANGELOG.md` (*Languages* below).
 
 ## Read only what the task needs
 This file is loaded into every chat; the rest is read when a task needs it. Start from the matching entry and do not
@@ -75,7 +79,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   docstring names what it writes there; `boards\` = storyboard.py, `stills\` / `sheets\` = render_video.py):
   `sources.json` (IDs A, B, ... + SHA-256), `edit_vN.py` -> `plan_vN.json`
   (the edit) -> `<name>_vN.mp4`, `resolve\` (option 2), `library_picks.json` (the user's picks in the app),
-  `edit_request.json` (0.4: what *New edit* asked for), `generate_request.json` (0.4: a video from zero) +
+  `edit_request.json` + `edit_brief.md` (what *New edit* asked for: the data + the same in words, step by step,
+  for Claude - `motionlab\editreq.py`), `generate_request.json` (0.4: a video from zero) +
   `ai_plan.md` (the shots for AI tools), `made_from.json`, `outcome.json` (the user's review of the newest render:
   per-part ratings + notes, `next`, `moments`, `packaging`), `project.json` (`label` = the name the app shows; the
   folder keeps its name), `draft_vN.md` (the quick draft's notes), `publish\` (0.4.3: the ready-to-post package -
@@ -154,9 +159,9 @@ not say, or a rule.
 `MotionLab.bat` = a local server + an Edge app window. The sidebar = the user's ways in: Home, **Analyser** (#/analyze:
 Videos, Thumbnails, Scripts & prompts), **Prepare** (#/prepare: the script, the title and the thumbnail before filming),
 **Editor** (#/edit: the user's clips - new edits, renders, graphics, Review, Ready to post), **Generator** (#/generate:
-a video from zero; the prompt library #/prompts), **Motion Graphics** (#/motion), **Claude's memory** (#/memory: what
-Claude learned, and Shared knowledge - what the user shares, ticked or kept on this PC, and what came from each
-friend), then Jobs and Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude Code windows
+a video from zero; the prompt library #/prompts), **Claude's memory** (#/memory: the user's ratings as rules, the
+lessons, and Shared knowledge - what the user shares, ticked or kept on this PC, and what came from each friend), then
+at the bottom **Motion Graphics** (#/motion), Jobs and Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude Code windows
 the app opens with a fixed first message, a model (Opus by default, Fable for the long tasks when the user picks it)
 and an effort level per task. A video or an analysis may carry the user's own name (`build\project.json` /
 `meta.json` "label"): the folder keeps its name, so commands use the folder name.

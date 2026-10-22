@@ -17,15 +17,18 @@ the table below.
 | Bulk - thumbnails, videos, edits at once (0.4.5) | none (added 2026-10-15 night; 0.4.5 was *Trending sounds* that evening - scrapped) |
 | Fonts and customizations (0.4.6) | none (added 2026-10-15 night; released 2026-10-16) |
 | Phase 2 begins - Spanish, speed, the one-file install, the Analyser's three ways, Shared knowledge, one way to review (0.5.1) | none (built 2026-10-19; the user first said "a 0.5.5 version", the planned colour number - it took the next free one) |
-| Yapping mode (0.5.2) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16), 0.5.1 (2026-10-16 to 2026-10-19) |
+| New edit, step by step (0.5.2) | none (built 2026-10-22) |
+| Yapping mode (0.5.9) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16), 0.5.1 (2026-10-16 to 2026-10-19), 0.5.2 (2026-10-19 to 2026-10-22) |
 | Faster videos (0.5.3) | 0.4.8 (2026-10-15 night to 2026-10-16; earlier on 2026-10-15 0.4.8 was colour's number), 0.5.2 (2026-10-16 to 2026-10-19) |
-| Prompt generator (0.5.4) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16), 0.5.3 (2026-10-16 to 2026-10-19) |
+| Sound (0.5.4) | none (added 2026-10-22: content generation's voice and music, ideas.md's Demucs, the sound effects tool's open `--sfx`, the user's sound library) |
+| Content agency: My Brand (0.5.5) | none (added 2026-10-22) |
+| Prompt generator (removed 2026-10-22; open items in ideas.md) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16), 0.5.3 (2026-10-16 to 2026-10-19), 0.5.4 (2026-10-19 to 2026-10-22) |
 | Motion graphics - the library (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps; released 2026-10-16) |
-| Motion graphics - template packs, the motion check, formats (0.5.5) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N; 0.5.4 (2026-10-16 to 2026-10-19) |
-| Colour (0.5.6) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16), 0.5.5 (2026-10-16 to 2026-10-19) |
-| Content generation (0.5.7) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16), 0.5.6 (2026-10-16 to 2026-10-19); "0.5" before that meant templates by feel + macOS |
-| Describe video + courses (0.6.0) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
-| Templates by feel (0.6.5) | 0.5 (with macOS, 2026-10-07 to 2026-10-14) |
+| Motion graphics - template packs, the motion check, formats (0.5.6) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N; 0.5.4 (2026-10-16 to 2026-10-19), 0.5.5 (2026-10-19 to 2026-10-22) |
+| Colour (0.5.7) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16), 0.5.5 (2026-10-16 to 2026-10-19), 0.5.6 (2026-10-19 to 2026-10-22) |
+| Content generation (0.5.8) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16), 0.5.6 (2026-10-16 to 2026-10-19), 0.5.7 (2026-10-19 to 2026-10-22); "0.5" before that meant templates by feel + macOS |
+| Take notes from videos + courses (0.6.0; *Describe video* until 2026-10-22) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
+| Templates by feel (removed 2026-10-22) | 0.5 (with macOS, 2026-10-07 to 2026-10-14), 0.6.5 (2026-10-14 to 2026-10-22) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
 | macOS (0.7.5) | 0.5 (with templates by feel, 2026-10-07 to 2026-10-14) |
 | Deployment (1.0.0) | none (added 2026-10-19: the end of Phase 2, the user's words) |
@@ -117,6 +120,23 @@ yapping mode, in one of 2026-10-19 or later it is the release that opened Phase 
   packs 0.5.4 -> 0.5.5, colour + Resolve 0.5.5 -> 0.5.6, content generation 0.5.6 -> 0.5.7; 0.6.0 and later
   unchanged. New: **1.0.0 = Deployment**, the end of Phase 2 (what it holds is the user's to decide). The roadmap got
   "phases"; code comments keep the old numbers (the table above says which plan they mean).
+- **2026-10-22** (the user's "PART2", with New edit's overhaul built that day): **0.5.2 = New edit, step by step**
+  ("If you do all these changes it would be part of the 0.5.2 release"); yapping mode 0.5.2 -> **0.5.9** ("move the
+  current 0.5.2 'yapping' to later on, 0.5.9 for now"). The prompt generator (0.5.4) **removed** - the user asked
+  whether Prepare already covers it: Prepare is the words said on camera and the title / thumbnail, the prompt library
+  (*Generator > Prompts*, `/write-prompt`) holds prompts for AI tools, and the plan's core (the library, the check,
+  Optimize, variants from the best-rated) shipped in 0.3.1-0.3.4; what it still had open (specialty and model filters,
+  agent prompts, examples from analyses, sharing, a structure per purpose) went to ideas.md. **0.5.4 = Sound** - every
+  sound idea gathered ("move all sound related ideas to 0.5.4 ... remove that AI-look for SFX or maybe even create
+  ambience music or random stuff from public libraries"): a library of recorded effects instead of the synthesised
+  ones, music and ambience from public libraries, voice-over (content generation's step 1), Demucs stems (ideas.md),
+  the quick draft's `--sfx` (the sound effects tool's open item). **0.5.5 = Content agency: My Brand** (new: "implement a
+  new section above Analyze which would be called 'My Brand'"). Template packs 0.5.5 -> **0.5.6**, colour 0.5.6 ->
+  **0.5.7**, content generation 0.5.7 -> **0.5.8** (its steps 2 and 3 are now 1 and 2). Describe video renamed **Take
+  notes from videos** (0.6.0). **Templates by feel (0.6.5) removed** ("i think its kinda useless"): its first part
+  shipped in 0.4.0 (New edit's style of up to three videos, the quick draft, the colour match); what it still had open
+  - the story's HEIT structure, captions and graphics placed by the draft itself - is yapping mode's (0.5.9) and the
+  motion-graphics plan's (0.5.6).
 
 ## Where some plans came from
 
@@ -174,6 +194,37 @@ to the lab's texture.
   winget's full build: unchecked).
 
 ## Released plans (their text when they shipped)
+
+### 0.5.2 - built 2026-10-22 - New edit, step by step, and a lighter app
+
+**Ships when**: `selftest.py --extended` and `tools\dev\smoke.py` pass; the user makes one real edit from the new
+*New edit* (clips picked or removed there, a style, a palette, the sound) and both Claude's run (`/recreate-video
+request <p>`, which reads `edit_brief.md` first) and the quick draft follow what was picked; the Spanish check passes.
+
+**The user's words (2026-10-22, "PART1")**: "the edit a video is our most powerful tool so we kinda need to expand to
+give Claude the most options and customability ... simplicity and clarity rather than having everything in a single
+section ... the steps in a side bar at the left"; the same day: a pop-up "section per section", numbered steps on a
+line, in the look of their mock-up `new_edit_section.html`, "less text and more colors, icons", the clips as pictures
+they can manage. Then ("PART2"): "If you do all these changes it would be part of the 0.5.2 release".
+
+**Built 2026-10-22 (not released)**: *Editor > New edit* = a pop-up of six steps - 1 Clips (the video's clips as
+pictures: play, remove to the Recycle Bin after a yes, add more), 2 Text (what it is about | the words on screen, a
+script or brief from Prepare), 3 References (picture cards; their style or an exact copy), 4 Style (the ready-made
+styles in a row, a few questions with 4 answers + more, a big colour palette), 5 Sound (the music, how many sound
+effects and which kinds), 6 Final (length, format, the summary, Claude's time); only the clips are needed. Saved as
+`build\edit_request.json` + `build\edit_brief.md` (`motionlab\editreq.py`), what `/recreate-video request` reads
+first. The details: docs\app_pages.md *Editor and a video's page*.
+
+**Also in 0.5.2** (the same day, the user's rounds after New edit): a script's pop-up in three tabs - Script (the
+whole text, its rhythm, the shots to film and the text on screen), Checks (the check, Claude's check, the text with
+the part under review marked, the tips on the review rows), Details - and the script's road 1-4 with the next
+step's button (the other prompts got the same tabs); Film it: *Make it with Claude* left, the quick draft right;
+Home without the Claude's memory line and Status; Claude's memory without the Videos, Effects and Graphics & saved
+effects tabs; Motion Graphics at the bottom of the sidebar; more room around the Analyser's downloads row; the
+roadmap re-planned (*Renumbers*, 2026-10-22). The details: docs\app_pages.md.
+
+**Released 2026-10-22**: CHANGELOG.md + CHANGELOG.es.md *0.5.2*, `__version__` 0.5.2, the roadmap's "here".
+`selftest.py --extended` PASS and `tools\dev\smoke.py` PASS on 2026-10-22 - the first self-test run failed 4 checks of `knowledge.selfcheck` (sharing, honest counts): its scratch folder left `ANALYSIS` on the real one, so this PC's analyses became 7 cards and 41 Correct verdicts in the test; fixed by redirecting it too (GitHub's machines have no real analyses, so it never showed there). Left to the user: one real New edit (*Ships when*), the commit and the push.
 
 ### 0.5.1 - built 2026-10-19 - Phase 2 begins: the whole app in Spanish, speed, the first install, the Analyser, sharing, reviews
 

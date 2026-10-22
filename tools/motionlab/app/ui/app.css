@@ -362,8 +362,6 @@ html body .panel.rvp { border-color: color-mix(in srgb, var(--rvc) 50%, var(--li
 .gset input[type=text], .gset input[type=number], .gset select { width: 100%; padding: 4px 8px; }
 .gset input[type=color] { width: 56px; height: 26px; padding: 0 2px; }
 .gset .fprev { margin-top: 4px; font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* 0.4.6: the picked font */
-.glib { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 22px; }
-.gl { padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 @media (max-width: 760px) { .gcard { grid-template-columns: 1fr; } }
 .fx { display: grid; grid-template-columns: 200px 1fr; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 .fx.picked { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber-d); }
@@ -683,7 +681,6 @@ button.kbadge:hover { filter: brightness(1.25); }
 .pms-h { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; } .pms-h h3 { margin: 0; }
 .ptext2 { white-space: pre-wrap; font-size: 14.5px; line-height: 1.65; color: #e6e6ea; background: #0f0f12; border: 1px solid var(--line);
   border-radius: 10px; padding: 12px 14px; overflow-wrap: anywhere; }
-.ptext2.clamp { max-height: 11.5em; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 65%, transparent); mask-image: linear-gradient(180deg, #000 65%, transparent); }
 .pnotes { margin-top: 10px; font-size: 13px; color: var(--muted); } .pnotes b { color: var(--text); margin-right: 6px; }
 /* Claude's check: a card per part, coloured by its state */
 .pchk.none p { margin: 0 0 10px; color: #cfcfd6; }
@@ -698,7 +695,6 @@ button.kbadge:hover { filter: brightness(1.25); }
 .pchk-verdict { background: #0f0f12; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 13.5px; }
 .pchk-verdict p { margin: 0; color: #d4d4da; } .pchk-verdict p + p { margin-top: 6px; } .pchk-verdict .fix b { color: var(--amber); }
 .cparts { display: flex; flex-direction: column; gap: 12px; }
-.cparts[data-view=work] [data-clear] { display: none; }
 .cgrp { display: flex; flex-direction: column; gap: 8px; }
 .cgrp-h { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--kc); }
 .cgrp-h:empty { display: none; }
@@ -724,6 +720,72 @@ button.kbadge:hover { filter: brightness(1.25); }
 .pm2 .pstyle { border-radius: 12px; }
 .pm2 .pexlist figure { width: calc(50% - 5px); }
 .pdet .kv { row-gap: 8px; }
+/* 2026-10-22: the pop-up in three tabs - the text (a script: its rhythm + what to film), Checks (+ your review), Details */
+.pmtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); scroll-margin-top: 12px; }
+.pmtabs button { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  color: var(--muted); font: inherit; font-size: 14.5px; font-weight: 600; padding: 9px 16px 10px; cursor: pointer; }
+.pmtabs button .i { width: 17px; height: 17px; }
+.pmtabs button:hover { color: var(--text); }
+.pmtabs button.on { color: var(--text); border-bottom-color: var(--kc); } .pmtabs button.on .i { color: var(--kc); }
+.pmtb { font-size: 11.5px; font-weight: 700; min-width: 20px; padding: 1px 7px; border-radius: 999px; background: #23232a; color: var(--muted); text-align: center; }
+.pmtb.warn { background: var(--mid-bg); color: var(--amber); } .pmtb.ok { background: var(--pos-bg); color: var(--green); }
+.pm2 [data-pmpane][hidden] { display: none !important; }
+.pm2 .ptext2 { font-size: 15px; }
+.ptext2.pmark { margin-top: 12px; scroll-margin: 80px; }
+.pmnotes summary { cursor: pointer; list-style: none; } .pmnotes summary::-webkit-details-marker { display: none; }
+.pmnotes summary h3 { margin: 0; } .pmnotes[open] summary h3 { margin-bottom: 10px; } .pmnotes .pnotes { margin: 0; white-space: pre-wrap; line-height: 1.55; }
+.pmnotes summary h3::after { content: "▸"; margin-left: auto; color: var(--muted); font-size: 14px; } .pmnotes[open] summary h3::after { content: "▾"; }
+.pm2 .ptext2 mark.tq { background: color-mix(in srgb, var(--kc) 42%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--kc) 42%, transparent); }
+/* a script's road (2026-10-22): numbered steps on a line, the step to do lit, its button at the end */
+.sflow { display: flex; align-items: center; gap: 20px; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: #0f0f13; }
+.sflow + .pmvids { margin-top: -4px; padding: 0; border: 0; background: none; }
+.sflow-l { list-style: none; margin: 0; padding: 0; display: flex; flex: 1; min-width: 0; }
+.sflow-l li { flex: 1 1 0; min-width: 0; position: relative; }
+.sflow-l li::after { content: ""; position: absolute; top: 15px; left: 40px; right: 8px; height: 2px; border-radius: 1px; background: var(--line2); }
+.sflow-l li:last-child { flex: 0 0 auto; } .sflow-l li:last-child::after { display: none; }
+.sflow-l li.done::after { background: var(--kc, var(--acc)); }
+.sfl { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: none; border: 0; padding: 0; color: var(--muted); font: inherit; text-align: left; }
+button.sfl { cursor: pointer; } button.sfl:disabled { cursor: default; }
+.sfl > b { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; border: 2px solid var(--line2); background: #141418; color: var(--muted); }
+.sfl > span { font-size: 14px; font-weight: 600; line-height: 1.2; } .sfl small { display: block; font-size: 11.5px; font-weight: 500; color: var(--dim); margin-top: 2px; }
+.done > .sfl > b { background: var(--kc, var(--acc)); border-color: var(--kc, var(--acc)); color: #111; }
+.done > .sfl > span { color: var(--text); } .done > .sfl small { color: var(--muted); }
+.now > .sfl > b { border-color: var(--kc, var(--acc)); color: var(--kc, var(--acc)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--kc, var(--acc)) 18%, transparent); }
+.now > .sfl > span { color: var(--text); } .now > .sfl small { color: var(--kc, var(--acc)); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+button.sfl:not(:disabled):hover > b { border-color: var(--text); }
+.sflow-done { font-weight: 700; color: var(--green); white-space: nowrap; }
+.sflow-in { --kc: var(--green); margin-top: 12px; background: none; padding: 4px 0 0; border: 0; }
+/* what to film: the parts as a bar of their seconds, the shots and the words on screen in their part's colour */
+.srhy { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.srhy-h { display: flex; align-items: center; gap: 8px; font-size: 13.5px; } .srhy-h .i { width: 16px; height: 16px; color: var(--kc); }
+.srh { display: flex; gap: 4px; height: 50px; }
+.srh span { --ph: var(--blue); flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 10px; border-radius: 8px;
+  background: color-mix(in srgb, var(--ph) 16%, #121216); border-top: 3px solid var(--ph); overflow: hidden; }
+.srh b { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ph); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srh i { font-style: normal; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sgrid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); gap: 14px; align-items: start; }
+.sgrid.one { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 1000px) { .sgrid { grid-template-columns: minmax(0, 1fr); } }
+.stofilm { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: #131317; }
+.stofilm h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; } .stofilm h4 .i { width: 18px; height: 18px; color: var(--kc); }
+.stofilm h4 + * { margin-bottom: 6px; }
+.sshots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sshot { --ph: var(--blue); padding: 7px 10px 8px; border-radius: 8px; background: #0f0f12; border: 1px solid var(--line); border-left: 3px solid var(--ph); font-size: 13px; line-height: 1.4; }
+.sshot small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ph); }
+.sshot span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #d4d4da; }
+.swords { display: flex; flex-wrap: wrap; gap: 6px; }
+.swords span { --ph: var(--blue); padding: 4px 10px; border-radius: 6px; background: color-mix(in srgb, var(--ph) 14%, #121216); border: 1px solid color-mix(in srgb, var(--ph) 45%, transparent);
+  font-weight: 700; font-size: 12.5px; }
+/* the measured check on the Checks tab: a chip per rule, a line only for what did not pass */
+.scchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.scchip { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--pos-bg); color: var(--green); cursor: default; }
+.scchip.amber { background: var(--mid-bg); color: var(--amber); } .scchip.bad { background: var(--neg-bg); color: var(--red); }
+.scbad { margin-top: 8px; font-size: 13px; color: #d4d4da; padding-left: 10px; border-left: 3px solid var(--amber); } .scbad.bad { border-left-color: var(--red); }
+.pm2 .scsum { margin-top: 0; }
+/* Claude's tip on the part under review: under its name, above the answer */
+.pm2 .rvrow.cur > .rvx { order: 1; } .pm2 .rvrow.cur > :not(.rvlab):not(.rvx) { order: 2; }
+.rvtip { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #d4d4da; margin: 2px 0 4px; }
+.rvtip .cpart-tip { line-height: 1.45; }
 /* Tools > Skills */
 .skgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 1000px) { .skgrid { grid-template-columns: minmax(0, 1fr); } }
@@ -806,16 +868,13 @@ button.cvitem:hover { border-color: var(--cyan); }
 .way:hover { border-color: color-mix(in srgb, var(--wc) 55%, var(--line)); transform: translateY(-2px); }
 .w-analyze { --wc: var(--cyan); } .w-prepare { --wc: var(--green); } .w-edit { --wc: var(--amber); } .w-generate { --wc: var(--gen); }
 .way-top { display: flex; align-items: center; gap: 10px; }
-.way .ic, .gway .ic, .memline .ic { width: 26px; height: 26px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6;
+.way .ic, .gway .ic { width: 26px; height: 26px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6;
   stroke-linecap: round; stroke-linejoin: round; }
 .way .ic { color: var(--wc); }
 .way h3 { margin: 2px 0 0; font-size: 17px; color: var(--text); text-transform: none; letter-spacing: 0; }
 .way p { margin: 0; color: var(--muted); font-size: 13.5px; flex: 1; }
 .way-act { margin-top: 4px; }
 .way-foot { font-size: 12.5px; color: var(--wc); margin-top: 2px; }
-.memline { display: flex; align-items: center; gap: 12px; margin-top: 14px; color: var(--text); }
-.memline:hover { text-decoration: none; border-color: var(--violet); }
-.memline .ic { color: var(--violet); }
 .gways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .gway { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); display: flex; flex-direction: column; gap: 10px; }
 .gway h2 { margin: 0; }
@@ -865,27 +924,14 @@ button.cvitem:hover { border-color: var(--cyan); }
 select.ffil { width: auto; min-width: 170px; max-width: 280px; }
 
 /* ---------------- 0.4 Claude's memory: one search, stat tiles, video cards, the effects catalogue, lessons */
-.msearch input { width: 100%; font-size: 15px; padding: 10px 14px; border-radius: 10px; }
-.mstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.mstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }   /* 2026-10-22: videos, lessons, prompts */
 .mstats .stat { color: var(--text); }
 .mstats .stat:hover { text-decoration: none; border-color: var(--acc); }
 .mstats .stat .n { font-size: 24px; }
 .mhow { margin: 0; padding-left: 18px; color: #c9c9d0; }
 .mhow li { margin: 4px 0; }
-.mvid .cb { padding: 12px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
-.mvsum { color: #c9c9d0; border-left: 2px solid var(--acc); padding-left: 8px; margin-top: 4px; }
-.meff { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin-bottom: 8px; }
-.meff > summary { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer; list-style: none; }
-.meff > summary::-webkit-details-marker { display: none; }
-.meff .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; }
-.meff[open] > summary { border-bottom: 1px solid var(--line); }
-.vbar { display: flex; width: 90px; height: 6px; border-radius: 3px; overflow: hidden; background: var(--panel2); flex: none; }
-.vbar i { display: block; } .vbar .c { background: var(--green); } .vbar .p { background: var(--amber); } .vbar .w { background: var(--red); }
-.vbar .n { flex: 1; background: var(--line2); }
-.mex { padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; }
-.mexi { border-left: 2px solid var(--line2); padding-left: 10px; display: flex; flex-direction: column; gap: 3px; }
 .mles { margin-bottom: 8px; font-size: 13px; color: #c9c9d0; }
-@media (max-width: 1100px) { .mstats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .mstats { grid-template-columns: minmax(0, 1fr); } }
 
 /* 0.4 phase 4: New edit - four steps in one dialog */
 .nestep { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; font-weight: 600; font-size: 14.5px; }
@@ -901,7 +947,6 @@ select.ffil { width: auto; min-width: 170px; max-width: 280px; }
   background: color-mix(in srgb, var(--shared) 13%, transparent); border: 1px solid color-mix(in srgb, var(--shared) 45%, transparent); }
 .shchip svg.i { width: 12px; height: 12px; margin: 0; vertical-align: 0; stroke-width: 2; }
 svg.i.shic { color: var(--shared); }
-.memfr { color: var(--muted); } .memfr svg.i { color: var(--shared); margin: 0 3px 0 0; }
 .tabs a.tsh svg.i { color: var(--shared); margin-right: 6px; }
 .tabs a .shn { margin-left: 6px; font: 600 10.5px/16px var(--ui); padding: 0 6px; border-radius: 999px; color: #111; background: var(--shared); vertical-align: 1px; }
 .tabs a .shn[hidden] { display: none; }
@@ -909,8 +954,6 @@ svg.i.shic { color: var(--shared); }
   border-color: color-mix(in srgb, var(--shared) 35%, var(--line)); }
 .mstats .stat.shtile:hover { border-color: var(--shared); }
 .stat.shtile .ic { width: 26px; height: 26px; flex: none; fill: none; stroke: var(--shared); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.mvid.frv { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--shared) 60%, transparent); }
-.mexi.frx { border-left-color: color-mix(in srgb, var(--shared) 60%, transparent); }
 .mlinc { margin: 4px 0; }
 /* the one "In the style of" picker (stylePicker): picture rows of this PC's videos (+ scripts & hooks in Prepare) */
 .stp { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px 10px; background: #111114; }
@@ -973,8 +1016,8 @@ label.shrow { cursor: pointer; } .shrow:hover { border-color: var(--line2); }
 .nedet label { font-size: 13px; color: var(--muted); }
 .nedet > .seg, .nedet > select { justify-self: start; }
 .nedet .seg button.on { background: var(--acc); color: #111; font-weight: 600; }
-.nego { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.negoc { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #131317; }
+.nego { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0 8px; }   /* Film it's step 3: Claude left, the quick draft right */
+.negoc { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px; background: #131317; }
 .negoc[hidden] { display: none; }
 @media (max-width: 1100px) { .cvchoice.three, .nepre, .nego { grid-template-columns: 1fr; } }
 /* 2026-10-16: step 1 = two wide cards (icon left) - clips already in a video | new clips from the PC */
@@ -1000,6 +1043,255 @@ label.shrow { cursor: pointer; } .shrow:hover { border-color: var(--line2); }
 .neres:has(input:checked) { border-style: solid; border-color: var(--acc); background: var(--acc-soft); }
 .neres input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--acc); }
 .neres b { display: block; font-size: 13.5px; } .neres b + span { display: block; font-size: 12px; color: var(--muted); }
+/* 2026-10-22: New edit = a pop-up of steps (newEdit), in the look of the user's mock-up (new_edit_section.html): a
+   header, the steps on a line on the left (done = a gold tick, on screen = a gold ring + Now, the rest grey - dashed =
+   optional; the line gold down to the step on screen), one step on the right - a big title, its cards and pills - and a
+   footer (Step n of 6 | the Resolve option, Back, Next | Quick draft + Make it with Claude). Picked = a gold border, a
+   tint and a tick in the corner. Then "less text and more colors, icons": every question has a coloured icon, the clips
+   and references are pictures, what a choice means is its tooltip. Always the Editor's gold, wherever it opens. */
+.mbox.nemodal { --acc: var(--amber); --acc-soft: #ffc4001c; --necard: #141418; --nepick: color-mix(in srgb, var(--acc) 8%, #141418);
+  width: min(1180px, 95vw); height: min(860px, 94vh); max-height: none; padding: 0; overflow: hidden; }
+.nemodal .mbody { height: 100%; display: flex; flex-direction: column; }
+.nemodal .mback { margin: 12px 0 -6px 22px; align-self: flex-start; }
+.nemodal .mclose { top: 14px; right: 16px; }
+.nemodal svg.ic { width: 26px; height: 26px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nemw { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+.nehd { grid-column: 1 / -1; padding: 18px 60px 14px 26px; border-bottom: 1px solid var(--line); }
+.nemodal .nehd h2 { margin: 0; font-size: 20px; }
+.nehd p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+.nepanes { overflow: auto; padding: 26px 32px 30px; }
+.nefoot { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 12px 22px 12px 26px; border-top: 1px solid var(--line); }
+.nefoot [hidden] { display: none !important; }
+.nefoot #nepos, .nefoot #neresl { margin-right: auto; }
+.nefoot .btn { padding: 8px 16px; }
+.nefoot .neres { padding: 6px 14px 6px 10px; }
+/* the steps: a 30 px circle each, the line from under one circle to the next (gold once the next one is reached) */
+.nenav { display: flex; flex-direction: column; padding: 24px 14px 16px 24px; border-right: 1px solid var(--line); overflow: auto; }
+.nenav button { position: relative; display: flex; gap: 12px; align-items: flex-start; text-align: left; background: none; border: 0;
+  padding: 0 0 24px; color: var(--muted); font: inherit; cursor: pointer; }
+.nenav button:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 34px; bottom: 4px; width: 2px; border-radius: 1px; background: var(--line2); }
+.nenav button.rchn::after { background: var(--acc); }
+.nenav button > b { flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; font-weight: 700;
+  border: 1.5px solid var(--line2); color: var(--muted); background: var(--panel); }
+.nenav button.opt > b { border-style: dashed; }
+.nenav button.done > b { background: var(--acc); border: 1.5px solid var(--acc); color: #111; }
+.nenav button.need > b { border-color: var(--red); color: var(--red); }
+.nenav button.on > b { border: 1.5px solid var(--acc); color: var(--acc); box-shadow: 0 0 0 4px var(--acc-soft); }
+.nenav button > span { display: flex; flex-direction: column; min-width: 0; padding-top: 4px; font-weight: 600; font-size: 14.5px; }
+.nenav button.on > span, .nenav button.done > span, .nenav button:hover > span { color: var(--text); }
+.nenav small { font-weight: 400; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin-top: 2px; }
+.nenav small:empty { display: none; }
+.nenav button.on small { color: var(--acc); }
+.nenav button.need small { color: var(--red); }
+.nenav button:focus-visible { outline: 2px solid var(--acc); outline-offset: 4px; border-radius: 8px; }
+/* a step: its title (+ what is picked of how many, on the right), labels with a coloured icon */
+.nesec[hidden] { display: none; }
+.nemodal .nest { display: flex; align-items: center; gap: 10px; margin: 0 0 22px; font-size: 24px; }
+.nestx { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--muted); }
+.nestx b { color: var(--acc); font-size: 16px; }
+.nesub { display: flex; align-items: center; gap: 2px; margin: 22px 0 10px; font-size: 14.5px; }
+.nef, .neq { margin-bottom: 20px; }
+.nef label, .neq > label { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; margin-bottom: 9px; }
+.nef label span, .neq > label span { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.nemodal .nef label svg.i, .nemodal .neq > label svg.i, .nemodal .nesub svg.i { width: 17px; height: 17px; margin: 0 8px 0 0; vertical-align: 0; }
+.nemodal textarea, .nemodal input[type=text], .nemodal input[type=search], .nemodal input[type=number], .nemodal select { border-radius: 10px; }
+.nef textarea, #ne-style textarea { width: 100%; resize: vertical; }
+/* cards: picked = gold border, a tint and a tick */
+.necard, .nemodal .cvopt, .nemodal .nep { position: relative; background: var(--necard); border: 1px solid var(--line2); border-radius: 12px; }
+.necard { color: var(--text); font: inherit; text-align: left; }
+button.necard { cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+button.necard:hover:not(:disabled), .nemodal .nep:hover { border-color: var(--dim); }
+button.necard:disabled { opacity: .4; cursor: not-allowed; }
+.necard.on, .nemodal .cvopt.on, .nemodal .nep.on { border-color: var(--acc); background: var(--nepick); box-shadow: none; }
+.necard.on::after, .nemodal .cvopt.on::after, .nemodal .nep.on::after { content: "✓"; position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--acc); color: #111; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+/* pills: one answer or several; under them what the picked one means */
+.nechips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.nech { background: var(--necard); border: 1px solid var(--line2); color: var(--text); border-radius: 999px; padding: 6px 16px; font: inherit; font-size: 13.5px;
+  cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.nech:hover { border-color: var(--dim); }
+.nech.on { border-color: var(--acc); color: var(--acc); background: var(--nepick); }
+.nech:disabled { opacity: .45; cursor: not-allowed; }
+.nechelp { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.nechelp:empty { display: none; }
+/* 1. Clips: two cards, the video's row, its clips as pictures (+ a tile to add more; a big drop zone when there are
+   none), its songs as chips, the yes to a removal */
+.nemodal .nesrc { gap: 12px; }
+.nemodal .nesrc .cvopt { padding: 14px 40px 14px 18px; }
+.nemodal .nesrc .cvopt span { font-size: 12.5px; }
+.nesrcrow { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; }
+.nesrcrow[hidden] { display: none; }
+.nesrcrow svg.i { width: 18px; height: 18px; margin: 0; }
+.nesrcrow select { max-width: 340px; }
+.nesrcrow input[type=text] { max-width: 340px; flex: 1; }
+.nesrcrow input:disabled { opacity: .7; }
+.nesrcrow #nefold { margin-left: auto; }
+.neclips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px 12px; border-radius: 12px; }
+.neclips.on { outline: 2px dashed var(--acc); outline-offset: 6px; }
+.neclip { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.neclipv { position: relative; aspect-ratio: 16 / 10; padding: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--line2); cursor: pointer;
+  background: repeating-linear-gradient(135deg, #1b1b21 0 8px, #16161b 8px 16px); }
+.neclipv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.neclipv svg.i { position: absolute; inset: 0; margin: auto; width: 34px; height: 34px; padding: 9px; border-radius: 50%; background: #000a; color: #fff;
+  fill: currentColor; stroke: none; opacity: 0; transition: opacity .15s; }
+.neclipv:hover { border-color: var(--acc); } .neclipv:hover svg.i { opacity: 1; }
+.neclipv i { position: absolute; right: 6px; bottom: 6px; font-style: normal; font-size: 11px; padding: 1px 6px; border-radius: 6px; background: #000b; color: #fff; }
+.neclipn { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.neclipx { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; border-radius: 8px; border: 0; background: #000b; color: #fff;
+  display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.neclipx svg.i { margin: 0; width: 14px; height: 14px; }
+.neclip:hover .neclipx, .neclipx:focus-visible { opacity: 1; }
+.neclipx:hover { background: var(--red); }
+.neadd { aspect-ratio: 16 / 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1.5px dashed var(--line2);
+  border-radius: 10px; color: var(--muted); font-size: 12.5px; cursor: pointer; text-align: center; transition: border-color .15s, color .15s; }
+.neadd:hover { border-color: var(--acc); color: var(--text); }
+.neadd svg.i { width: 24px; height: 24px; margin: 0; color: var(--acc); }
+.neadd.big { grid-column: 1 / -1; aspect-ratio: auto; padding: 44px 20px; background: var(--necard); }
+.neadd.big b { font-size: 15px; color: var(--text); }
+.nesongs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.nesong { display: inline-flex; align-items: center; gap: 7px; padding: 4px 5px 4px 12px; border-radius: 999px; border: 1px solid var(--line2); background: var(--necard); font-size: 12.5px; }
+.nesong svg.i { margin: 0; color: var(--violet); }
+.nesong .neclipx { position: static; opacity: 1; width: 24px; height: 24px; border-radius: 50%; background: none; color: var(--muted); }
+.nesong .neclipx:hover { background: var(--red); color: #fff; }
+.nerm { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--red) 55%, transparent); background: color-mix(in srgb, var(--red) 8%, var(--necard)); }
+.nerm > svg.i { width: 20px; height: 20px; margin: 0; color: var(--red); }
+#cvfiles:empty, #nerm:empty { display: none; }
+/* 2. Text: the two fields side by side, the scripts list with the picked one read beside it */
+.netwo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.nemodal .cvlist { gap: 0; margin: 0; border: 1px solid var(--line2); border-radius: 12px; background: var(--necard); }
+.nemodal .cvlist .cvitem { gap: 12px; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); background: none; padding: 11px 14px; }
+.nemodal .cvlist .cvitem:last-child { border-bottom: 0; }
+.nemodal .cvlist .cvitem.on { background: var(--nepick); }
+.nemodal .cvitem input { accent-color: var(--acc); }
+.nemodal .cvlist .empty { margin: 10px; }
+.nepick { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.nelist { border: 1px solid var(--line2); border-radius: 12px; background: var(--necard); overflow: hidden; }
+.nelq { padding: 10px; border-bottom: 1px solid var(--line); }
+.nelq input { width: 100%; }
+.nelist .cvlist { border: 0; border-radius: 0; max-height: 260px; }
+.nelist .cvitem b { font-size: 13.5px; font-weight: 600; }
+.neprev { border: 1px solid var(--line2); border-radius: 12px; background: var(--necard); padding: 14px 16px; min-height: 120px; }
+.neprev p { margin: 0; }
+.neptext { margin: 10px 0 0 !important; white-space: pre-wrap; font-size: 13px; line-height: 1.55; color: var(--text); max-height: 230px; overflow: auto; }
+.neprev0 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 92px; text-align: center; color: var(--muted); font-size: 12.5px; }
+.neprev0 svg.i { width: 22px; height: 22px; margin: 0; }
+/* 3. References: picture cards, then its style or an exact copy */
+.nerq { width: 260px; margin-bottom: 14px; }
+.nerefs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.neref { display: flex; flex-direction: column; gap: 7px; padding: 8px 8px 10px; min-width: 0; }
+.nerefp { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: repeating-linear-gradient(135deg, #1b1b21 0 8px, #16161b 8px 16px); }
+.nerefp img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nerefp i { position: absolute; right: 6px; bottom: 6px; font-style: normal; font-size: 10.5px; padding: 1px 7px; border-radius: 6px; background: #000b; color: #fff; }
+.neref b { padding: 0 4px; font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.neexact { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.nexo { display: flex; gap: 14px; align-items: center; padding: 14px 40px 14px 16px; }
+.nexo .ic { color: var(--pink); } .nexo[data-x="1"] .ic { color: var(--cyan); }
+.nexo b { display: block; font-size: 14px; } .nexo span span { color: var(--muted); font-size: 12.5px; }
+/* 4. Style: the ready-made styles in one row (their rhythm as bars), the questions as one compact card (the question
+   left, 4 answers + "+N" right), then the palette as big cards - all of it without scrolling on a normal window */
+.nelab { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; margin: 0 0 9px; }
+.nelab svg.i { width: 17px; height: 17px; margin: 0 8px 0 0; }
+.nemodal .nepre { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.nemodal .nep { display: flex; flex-direction: column; gap: 0; padding: 10px 26px 11px 12px; }
+.nemodal .nep b { font-size: 13px; line-height: 1.25; }
+.nemodal .nep.on::after { top: 7px; right: 7px; width: 17px; height: 17px; font-size: 11px; }
+.nebars { display: flex; gap: 3px; height: 14px; margin: auto 0 0; padding-top: 9px; box-sizing: content-box; }
+.nebars i { min-width: 3px; border-radius: 3px; }
+.neqs { display: flex; flex-direction: column; gap: 6px; margin: 14px 0 16px; padding: 12px 14px; border: 1px solid var(--line2); border-radius: 12px; background: var(--necard); }
+.neqr { display: grid; grid-template-columns: 170px minmax(0, 1fr); align-items: center; gap: 10px; }
+.neqr > label { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; }
+.neqr > label span { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.neqr svg.i { width: 17px; height: 17px; margin: 0 8px 0 0; flex: none; }
+.neqr textarea { width: 100%; height: 32px; min-height: 32px; padding: 6px 10px; resize: vertical; scrollbar-width: none; }
+.neqr .nechips { gap: 6px; }
+.neqr .nech { padding: 4px 12px; font-size: 13px; }
+.nech.nemore { border-style: dashed; color: var(--acc); font-weight: 700; }
+.nemodal .nepals { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.nemodal .nepl { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 8px 8px 9px; border-radius: 12px;
+  background: var(--necard); border: 1px solid var(--line2); color: var(--text); font: inherit; font-size: 12px; text-align: center; cursor: pointer; }
+.nemodal .nepl:hover { border-color: var(--dim); }
+.nemodal .nepl span { margin: 0; }
+.nemodal .nepl.on { border-color: var(--acc); background: var(--nepick); }
+.nemodal .nepl.on::after { content: "✓"; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; border-radius: 50%; background: var(--acc);
+  color: #111; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.nestrip { display: flex; height: 44px; border-radius: 8px; overflow: hidden; border: 1px solid #0006; }
+.nestrip i { flex: 1; }
+.nestrip.auto { align-items: center; justify-content: center; border: 1.5px dashed var(--line2); color: var(--acc); }
+.nestrip.auto svg.i { width: 22px; height: 22px; margin: 0; }
+.nepalh { justify-content: space-between; gap: 12px; min-height: 36px; margin-bottom: 8px; }
+.nepalh > span { display: flex; align-items: center; }
+.nepal { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; }
+.nesw { position: relative; display: inline-flex; }
+.nesw input[type=color] { width: 50px; height: 34px; padding: 3px; border: 1px solid var(--line2); border-radius: 10px; background: var(--necard); cursor: pointer; }
+.nesx { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid var(--line2);
+  background: var(--panel); color: var(--muted); font-size: 10px; line-height: 1; cursor: pointer; }
+.nesx:hover { color: var(--text); }
+/* 5. Sound: the music as four cards (a colour each), a card per amount of effects (a strip = how often one plays) */
+.nemus { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.nemc { display: flex; flex-direction: column; gap: 3px; padding: 14px 34px 14px 14px; min-width: 0; }
+.nemc .ic { width: 24px; height: 24px; margin-bottom: 8px; }
+.nemc[data-m=auto] .ic { color: var(--amber); } .nemc[data-m=music] .ic { color: var(--violet); }
+.nemc[data-m=clips] .ic { color: var(--cyan); } .nemc[data-m=talk] .ic { color: var(--green); }
+.nemc b { font-size: 14px; } .nemc span { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.nesongrow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.nesongrow[hidden] { display: none; }
+.nesongrow select { max-width: 420px; }
+.nesfx { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.nesfxc { display: flex; flex-direction: column; gap: 3px; padding: 13px 14px 14px; }
+.nesfxc b { font-size: 14px; } .nesfxc > span:not(.netrk) { color: var(--muted); font-size: 12px; padding-right: 18px; }
+.netrk { display: flex; gap: 3px; height: 8px; margin-top: auto; padding-top: 10px; box-sizing: content-box; }
+.netrk i { flex: 1; border-radius: 2px; background: #26262d; }
+.netrk i.on { background: #ff8a3d; }
+.netrk.auto i { background: none; border: 1px dashed #3a3a44; }
+/* 6. Final: length pills, a card per format (its shape drawn), the summary as one table, Claude's time as a chip */
+#nelenx { width: 120px; border-radius: 999px; padding: 6px 14px; }
+.nefmts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.nefmt { display: flex; align-items: center; gap: 16px; padding: 14px 40px 14px 18px; }
+.nefmt b { display: block; font-size: 14.5px; } .nefmt span span { color: var(--muted); font-size: 12.5px; }
+.neshape { flex: none; border: 2px solid var(--muted); border-radius: 4px; }
+.neshape.vertical { width: 17px; height: 30px; } .neshape.horizontal { width: 32px; height: 18px; } .neshape.square { width: 24px; height: 24px; }
+.neshape.auto { width: 24px; height: 24px; border-style: dashed; }
+.nefmt.on .neshape { border-color: var(--acc); }
+.nesum { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; padding: 2px 18px; border: 1px solid var(--line2); border-radius: 12px; background: var(--necard); }
+.nesumr { display: grid; grid-template-columns: 18px 84px minmax(0, 1fr); gap: 10px; align-items: start; padding: 11px 0; border: 0; border-bottom: 1px solid var(--line);
+  background: none; color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.nesumr svg.i { margin: 1px 0 0; width: 16px; height: 16px; }
+.nesumr:nth-last-child(-n+2) { border-bottom: 0; }
+.nesumr > span:nth-of-type(1) { color: var(--muted); }
+.nesv { overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nesumr em { font-style: normal; color: var(--muted); }
+.nesumr:hover > span:nth-of-type(1) { color: var(--acc); }
+.nesumr.need > span:nth-of-type(1), .nesumr.need em { color: var(--red); }
+.nedot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 4px; vertical-align: -2px; border: 1px solid #0006; }
+.nefinb { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.neest { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent);
+  background: var(--acc-soft); font-size: 13px; cursor: help; }
+.neest svg.i { color: var(--acc); flex: none; margin: 0; }
+@media (max-height: 820px) {          /* a laptop screen: the Style step still shows its palette without scrolling */
+  .nehd p { display: none; }
+  .nehd { padding: 12px 60px 10px 26px; }
+  .nepanes { padding: 18px 30px 20px; }
+  .nemodal .nest { margin-bottom: 14px; font-size: 22px; }
+  .nenav { padding-top: 18px; } .nenav button { padding-bottom: 16px; }
+  .nefoot { padding-top: 9px; padding-bottom: 9px; }
+}
+@media (max-width: 1100px) {
+  .nepick { grid-template-columns: minmax(0, 1fr); }
+  .nemodal .nepre { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nemodal .nepals { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .neqr { grid-template-columns: 160px minmax(0, 1fr); }
+  .nesfx { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nemus { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .nemw { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .nenav { flex-direction: row; gap: 8px; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .nenav button { padding: 0; } .nenav button::after, .nenav button > span { display: none; }
+  .netwo, .nefmts, .nesum, .neexact, .nemodal .nepre { grid-template-columns: minmax(0, 1fr); }
+  .nesumr:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+}
 
 .gpre { display: flex; flex-wrap: wrap; gap: 6px; }                 /* Edit several videos' presets (0.4.5) */
 .gpre .fchip.on { border-color: var(--acc); color: var(--acc); background: var(--acc-soft); }
@@ -1369,7 +1661,7 @@ table.pbch input { padding: 4px 8px; }
 .pcard .pbadge.r { color: var(--muted); border-color: var(--line2); }
 .pcard .pbadge.todo { color: var(--amber); border-color: var(--amber-d); }
 /* 0.4.3.5 Analyser: the downloads nobody analysed = one thin row that opens their list (waitingModal) */
-.wbar { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 14px; padding: 9px 14px; text-align: left; cursor: pointer;
+.wbar { display: flex; align-items: center; gap: 10px; width: 100%; margin: 20px 0 22px; padding: 12px 16px; text-align: left; cursor: pointer;   /* 2026-10-22: room from the ways above */
   border: 1px dashed var(--amber-d); border-radius: 10px; background: color-mix(in srgb, var(--amber) 6%, var(--panel)); color: var(--text); font: inherit; font-size: 13.5px; }
 .wbar:hover { border-style: solid; border-color: var(--amber); }
 .wbar .i { color: var(--amber); }
@@ -1446,15 +1738,9 @@ details.pbself[open] > summary::before { content: '▾'; }
 @media (prefers-reduced-motion: reduce) { .pvnext .onx, .pvnext .onx .oar { transition: none; } .pvnext .onx:hover, .pvnext .onx:hover .oar { transform: none; } }
 
 /* ---------------- Film it (2026-10-15): a script's road - film it, add the recording, edit it */
-.sroad { list-style: none; display: flex; gap: 6px; margin: 12px 0 0; padding: 0; counter-reset: none; }
-.sroad li { display: flex; align-items: center; gap: 7px; padding: 5px 12px 5px 6px; border-radius: 999px; background: #141418;
-  border: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
-.sroad li > b { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; border: 1px solid var(--line2); }
-.sroad li.done { color: var(--text); } .sroad li.done > b { background: #12352a; border-color: #1f5f45; color: var(--green); }
-.sroad li.now { color: var(--text); border-color: var(--acc); font-weight: 600; } .sroad li.now > b { border-color: var(--acc); box-shadow: 0 0 8px var(--acc); }
-/* 0.4.3.5: a script / hook pop-up lists its videos (no steps): how far each got + a way there */
+/* 0.4.3.5: a script / hook pop-up lists its videos: how far each got + a way there (a script's road: .sflow) */
 .pmvids { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0f0f13; }
-.pmv-h { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .pmv-h h3 { margin: 0; } .pmv-h .sroad { margin: 0; }
+.pmv-h { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .pmv-h h3 { margin: 0; }
 .pmv { display: flex; gap: 8px; align-items: center; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line2); background: var(--panel);
   color: var(--text); text-decoration: none; transition: border-color .15s, background .15s; }
 .pmv:hover { border-color: var(--kc, var(--acc)); background: var(--acc-soft); text-decoration: none; }

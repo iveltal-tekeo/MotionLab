@@ -101,7 +101,6 @@
  "not verified - check it again": "sin verificar: revísalo otra vez",
  "Not in your prompt": "No está en tu prompt",
  "Tip": "Consejo",
- "Other|parts": "Otras",
  "✓ {n} clear": {"one": "✓ {n} clara", "other": "✓ {n} claras"},
  "~ {n} vague": {"one": "~ {n} vaga", "other": "~ {n} vagas"},
  "✗ {n} missing": {"one": "✗ {n} falta", "other": "✗ {n} faltan"},

@@ -440,9 +440,11 @@ def text(s: dict, fps: float | None = None) -> str:
 
 
 def presets_info() -> list[dict]:
-    """The presets for the app's Edit dialog."""
+    """The presets for the app's New edit (rhythm = the shot lengths its cards draw as bars)."""
     return [{"id": k, "label": p["label"], "help": p["help"], "words": p["words"], "for": p["for"],
-             "talk": p.get("mode") == "talk"} for k, p in PRESETS.items()]
+             "talk": p.get("mode") == "talk", "rhythm": {x: p.get("rhythm", {}).get(x) for x in
+                                                         ("median_shot_s", "p10_shot_s", "p90_shot_s")}}
+            for k, p in PRESETS.items()]
 
 
 def lognormal_sigma(p10: float, p90: float) -> float:
