@@ -37,8 +37,9 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
 4. Plan layer: `{"type": "overlay", "id": ..., "start": f0, "end": f1, "file": "<the .mov>", "blend": "normal"}`
    (`"add"` / `"screen"` for light, `"in"` = first clip frame). A template's move on a beat (0.5.3): `overlay.py new
    <folder> --from <id> --land "<track>@<plan frame>" [--start <cut>]` works out `start` / `in` from the template's
-   tracks (`templates.py tracks <id>` lists them with frames) - render prints that layer and `build.py` keeps the
-   plan's layer on it when settings change; no snapshot rounds to find an in-point. In Resolve it becomes a clip on its own track
+   tracks (`templates.py tracks <id>` lists them with frames) - render prints that layer with its `"land"`: keep it
+   in the plan and `build.py` lands it again when the copy's settings move the move (a layer you moved by hand
+   stays); no snapshot rounds to find an in-point. In Resolve it becomes a clip on its own track
    (a numbered copy - Resolve locks the files it uses; after a new render `overlay.py refresh <folder>` swaps it and
    keeps the user's edits; measured 2026-10-12: same frames as the lab within 2.3/255).
 5. One the user approves: `overlay.py save <folder> [--name N]` -> `library\graphics\<N>\` (or their Save to library

@@ -531,11 +531,17 @@ def cmd_render(a) -> int:
     if c.get("land"):                                 # new --land: landed again with today's settings (a "start")
         from motionlab import templates as TM
         ld = c["land"]
-        r = TM.land_target(str(folder), ld["track"], ld["at"], ld.get("asked"))
-        print(json.dumps({"type": "overlay", "id": c["name"], "start": r["start"], "end": r["end"], "in": r["in"],
-                          "file": str(out), "blend": "normal"}))
-        print(TM.land_line(r, fps))
-        return 0
+        try:
+            r = TM.land_target(str(folder), ld["track"], ld["at"], ld.get("asked"))
+        except (ValueError, KeyError, OSError) as e:  # the render is fine: a landing that no longer resolves is a note
+            log(f"rendered, but its landing on '{ld.get('track')}' no longer resolves ({e}) - place the layer by hand")
+            r = None
+        if r:
+            land = {"track": r["track"], "at": r["at"], "asked": ld.get("asked"), "start": r["start"], "in": r["in"]}
+            print(json.dumps({"type": "overlay", "id": c["name"], "start": r["start"], "end": r["end"], "in": r["in"],
+                              "file": str(out), "blend": "normal", "land": land}))
+            print(TM.land_line(r, fps) + "  (keep \"land\" in the plan: build.py lands it again when settings move it)")
+            return 0
     print(json.dumps({"type": "overlay", "id": c["name"], "start": 0, "end": m["frames"] - 1, "file": str(out),
                       "blend": "normal"}))
     print("(set start / end to the plan frames where it shows; end - start + 1 = its frames)")

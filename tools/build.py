@@ -12,7 +12,8 @@
           3. the composite (render_video.py; skipped when nothing it reads changed and the video exists)
           4. precheck.py on it (+ the sound report): vanishing parts, fast moves without blur, buried / loud cues
           5. plain builds: the cut-sheet (render_video.py --cuts): every cut and cue on one page - the one look
-          -> the summary + build\\checks\\<name>_build.json
+          -> the summary + build\\checks\\<name>_build.json. Exit 0 = built, nothing flagged; 2 = built, the
+          precheck flags something to look at; 1 = a step failed (STOPPED); 3 = too long for Claude's shell (a job)
           The newest plan_vN.json when none is named. A build longer than ~9 minutes (a --final with motion blur,
           a long video) refuses to run in Claude's shell: start it as a job - tools\\job.py start build
           project=<project> [final=1] - and wait with tools\\job.py wait <id>.
@@ -172,20 +173,30 @@ def main() -> int:
     if failed:
         print("\n".join(lines) + f"\nSTOPPED: {', '.join(failed)} did not render - fix it, then build again")
         return 1
-    # a graphic made with overlay.py new --land: its layer where the move lands (landed again with its settings)
+    # a landed graphic (the layer's own "land": overlay.py render prints it, an edit list's cuts move it): landed
+    # again only when its settings moved the landing AND the layer still sits where it was landed - a layer moved by
+    # hand stays; a landing that no longer resolves (a re-measured template) is a warning, never a failed build
     from motionlab import templates as TM
-    moved = []
+    moved, bad = [], []
     for L in plan.get("layers", []):
-        f = Path(L.get("file") or "")
-        c = OS.conf(f.parent) if L.get("type") == "overlay" and (f.parent / "overlay.json").exists() else {}
-        if c.get("land"):
-            r = TM.land_target(str(f.parent), c["land"]["track"], c["land"]["at"], c["land"].get("asked"))
-            if (L.get("start"), L.get("end"), L.get("in", 0)) != (r["start"], r["end"], r["in"]):
-                L.update(start=r["start"], end=r["end"], **{"in": r["in"]})
-                moved.append(f"{f.parent.name} start f{r['start']} in {r['in']}")
+        ld, f = L.get("land"), Path(L.get("file") or "")
+        if L.get("type") != "overlay" or not isinstance(ld, dict):
+            continue
+        if (L.get("start"), L.get("in", 0)) != (ld.get("start"), ld.get("in", 0)):
+            continue
+        try:
+            r = TM.land_target(str(f.parent), ld["track"], ld["at"], ld.get("asked"))
+        except (ValueError, KeyError, OSError) as e:
+            bad.append(f"{f.parent.name}: {e}")
+            continue
+        if (r["start"], r["in"]) != (L.get("start"), L.get("in", 0)):
+            L.update(start=r["start"], end=r["end"], **{"in": r["in"]})
+            ld.update(start=r["start"], **{"in": r["in"]})
+            moved.append(f"{f.parent.name} start f{r['start']} in {r['in']}")
     if moved:
         plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
-        lines.append(f"landed (plan layers set): {'; '.join(moved)}")
+        lines.append(f"landed again (its settings moved the move; plan layers set): {'; '.join(moved)}")
+    lines += [f"NOT landed again (left where it is): {b}" for b in bad]
     # 2. the sound
     audio = (plan.get("audio") or {}).get("path") or ""
     made_mix = Path(audio).parent.name == "sfx" and Path(audio).stem.endswith("_mix")
@@ -198,8 +209,11 @@ def main() -> int:
         stem = SFX.stem_name(plan.get("name") or plan_path.stem)
         mix, rep = build / "sfx" / f"{stem}_mix.wav", build / "sfx" / f"{stem}_sfx.json"
         cues = next((ln for ln in r.stdout.splitlines() if ln.startswith("cues:")), "")
-        if mix.exists() and str(mix.resolve()) != str(Path(audio).resolve() if audio else ""):
-            plan["audio"] = {**(plan.get("audio") or {}), "path": str(mix.resolve())}
+        new_audio = mix.exists() and str(mix.resolve()) != str(Path(audio).resolve() if audio else "")
+        if new_audio or not plan.get("sfx"):          # "sfx": true = kept on every build of this plan and its copies
+            if new_audio:
+                plan["audio"] = {**(plan.get("audio") or {}), "path": str(mix.resolve())}
+            plan["sfx"] = True
             plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
         lines.append(f"sound: {cues[6:] or 'made'} -> {mix.name} (the plan's audio)")
         report["sfx"] = str(rep)
@@ -252,7 +266,7 @@ def main() -> int:
           f"{frame_to_tc(N - 1, fps)}):")
     print("\n".join(lines))
     print(nxt)
-    return 0 if not fl else 1
+    return 0 if not fl else 2                   # 2 = built, with precheck flags to look at
 
 
 if __name__ == "__main__":

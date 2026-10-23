@@ -687,6 +687,7 @@ def apply_list(a, prj: Project) -> int:
             if o.get("land"):
                 r = TM.land_target(str(folder), o["land"], at, at)
                 L.update(start=r["start"], end=min(r["end"], int(P["frames"]) - 1), **{"in": r["in"]})
+                L["land"] = {"track": r["track"], "at": at, "asked": at, "start": r["start"], "in": r["in"]}
             P["layers"].append(L)
             done.append(f"graphic {o['id']} f{L['start']}-f{L['end']} ({frame_to_tc(L['start'], fps)})"
                         + (f", '{o['land']}' landed on f{at}" if o.get("land") else ""))
@@ -708,6 +709,9 @@ def apply_list(a, prj: Project) -> int:
             done += ["  " + m for m in missing]
     made = base.get("made_by") or {}
     talk = made.get("sound") in ("talk", "clips") and any(o["op"] == "cut" for o in ops)
+    base_audio = Path(str((base.get("audio") or {}).get("path") or ""))
+    if base_audio.parent.name == "sfx" and base_audio.stem.endswith("_mix"):
+        P["sfx"] = True                                 # the base had sound effects: build.py makes them again
     if talk:                                            # the clips' own sound follows the shots again
         _, clips, _, cfps = footage(prj, int(P["width"]), int(P["height"]))
         d = prj.check(prj.build / "draft")

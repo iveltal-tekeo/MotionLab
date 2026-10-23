@@ -103,19 +103,6 @@ def _src_at(L: dict, f: int) -> int:
     return j[1] if L.get("hold") else j[1] + int((f - j[0]) * float(L.get("speed", 1.0)) + 1e-6)
 
 
-def _zoom_of(L: dict, f: int) -> float:
-    z = L.get("zoom", 1.0)
-    if isinstance(z, (int, float)):
-        return float(z)
-    if isinstance(z, dict) and z.get("keys"):
-        v = z["keys"][0][1]
-        for k in z["keys"]:
-            if k[0] <= f:
-                v = k[1]
-        return float(v)
-    return 1.0
-
-
 def cut(plan: dict, a: int, b: int) -> None:
     """Remove timeline frames a..b: layers inside go, layers across are trimmed (their "in" / keys move with them),
     later ones move up by b - a + 1. In place."""
@@ -145,19 +132,27 @@ def cut(plan: dict, a: int, b: int) -> None:
             out.append(_shift(_trim_front(L, b + 1), -n))
     plan["layers"] = out
     plan["frames"] = int(plan["frames"]) - n
-    for q in plan.get("cues", []):
+    cues = [q for q in plan.get("cues", []) if not (isinstance(q.get("f"), int) and a <= q["f"] <= b)]
+    for q in cues:                                  # dropped on their own frames first, then the later ones move up
         if isinstance(q.get("f"), int) and q["f"] > b:
             q["f"] -= n
-    plan["cues"] = [q for q in plan.get("cues", []) if not (isinstance(q.get("f"), int) and a <= q["f"] <= b)]
+    plan["cues"] = cues
 
 
 def _trim_front(L: dict, f: int) -> dict:
-    """The layer starting at f instead: its source / overlay in-point moves on by the frames dropped."""
+    """The layer starting at f instead: its source / overlay in-point moves on by the frames dropped; a clip's jumps
+    after f (a stutter, a ramp) stay, from the source frame it shows at f."""
     if L.get("type") == "clip":
-        L["in"] = _src_at(L, f)
-        L.pop("jumps", None)
+        src = _src_at(L, f)
+        later = [[int(j[0]), j[1]] for j in L.get("jumps") or [] if int(j[0]) > f]
+        L["in"] = src
+        if later:
+            L["jumps"] = [[f, src]] + later
+        else:
+            L.pop("jumps", None)
     elif L.get("type") == "overlay":
         L["in"] = int(L.get("in", 0)) + (f - int(L["start"]))
+        L.pop("land", None)                         # its move no longer lands where it was landed: never re-landed
     L["start"] = f
     return L
 
@@ -177,7 +172,24 @@ def _shift(L: dict, d: int) -> dict:
             L[key] = [int(x) + d for x in L[key]]
     if L.get("flash_over"):
         L["flash_over"] = {str(int(k) + d): v for k, v in L["flash_over"].items()}
+    ld = L.get("land")
+    if isinstance(ld, dict):                        # a landed graphic: its landing moves with it (build.py)
+        for k in ("at", "asked", "start"):
+            if isinstance(ld.get(k), int):
+                ld[k] += d
     return L
+
+
+def _zoom_keys(L: dict, curves: dict) -> list:
+    """The layer's zoom as keys [[f, v, ease], ...] (a number, keys, a curve of frames or a named curve)."""
+    z = L.get("zoom", 1.0)
+    if isinstance(z, (int, float)):
+        return [[int(L["start"]), float(z), "hold"]]
+    if isinstance(z, dict) and z.get("keys"):
+        return [list(k) for k in z["keys"]]
+    from .compose import Curve                      # any other curve: sampled per frame
+    c = Curve(z, curves, 1.0)
+    return [[f, round(float(c(f)), 5), "linear"] for f in range(int(L["start"]), int(L["end"]) + 1)]
 
 
 def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
@@ -187,15 +199,17 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
     P.setdefault("cues", [])
     done, steps, punches = [], [], []
     for o in ops:
-        if o["op"] == "punch":
+        if o["op"] == "punch":                       # merged into the shot's zoom: earlier punches and keys stay
+            from .compose import Curve
             L = shot_at(P, o["f"])
-            z0 = _zoom_of(L, L["start"])
-            keys = [[L["start"], z0, "hold"]]
+            f, end = o["f"], o["f"] + o["ease"]
+            cur = Curve(L.get("zoom"), P.get("curves") or {}, 1.0)
+            keys = [k for k in _zoom_keys(L, P.get("curves") or {}) if not (f - 1 <= int(k[0]) <= end)]
             if o["ease"]:
-                keys += [[o["f"], z0, "smooth"], [o["f"] + o["ease"], o["z"], "hold"]]
+                new = [[f, round(float(cur(f)), 5), "smooth"], [end, o["z"], "hold"]]
             else:
-                keys += [[o["f"], o["z"], "hold"]]
-            L["zoom"] = {"keys": keys}
+                new = ([[f - 1, round(float(cur(f - 1)), 5), "hold"]] if f - 1 >= L["start"] else []) + [[f, o["z"], "hold"]]
+            L["zoom"] = {"keys": sorted(keys + new, key=lambda k: int(k[0]))}
             L.setdefault("anchor", [0.5, 0.42])
             punches.append(o["f"])
             done.append(f"punch-in {o['z']:g} at f{o['f']} on {L['id']}")

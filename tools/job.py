@@ -102,26 +102,63 @@ def start(kind: str, args: dict) -> int:
     env = dict(os.environ, HYPERFRAMES_RENDER_DETACHED="1", MOTIONLAB_JOB=jid, PYTHONUNBUFFERED="1",
                PYTHONIOENCODING="utf-8")
     runner = [sys.executable, str(Path(__file__).resolve()), "_run", jid]
+    proc, err = None, ""
     for extra in ((0x01000000,) if os.name == "nt" else ()) + (0,):          # CREATE_BREAKAWAY_FROM_JOB, then without
         try:
-            subprocess.Popen(runner, cwd=str(LAB), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, creationflags=flags | extra, close_fds=True)
+            proc = subprocess.Popen(runner, cwd=str(LAB), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL, creationflags=flags | extra, close_fds=True)
             break
-        except OSError:
-            continue
+        except OSError as e:
+            err = str(e)
+    if proc is None:                                        # never "running" for a runner that never started
+        st.update(status="failed", rc=-1, ended=time.time(), error=f"the runner could not start: {err}")
+        (LOGS / f"claude_{jid}.json").write_text(json.dumps(st, indent=1), encoding="utf-8")
+        raise SystemExit(f"job {jid}: the runner could not start ({err})")
+    st["pid"] = proc.pid
+    (LOGS / f"claude_{jid}.json").write_text(json.dumps(st, indent=1), encoding="utf-8")
     print(f"job {jid} started on its own (the app is not running): {st['title']}\n"
           f"wait for it: .venv\\Scripts\\python tools\\job.py wait {jid}")
     return 0
 
 
+def alive(pid: int | None) -> bool:
+    """The runner's process still exists (Windows: OpenProcess + its exit code; never os.kill, which ends it there)."""
+    if not pid:
+        return False
+    if os.name != "nt":
+        try:
+            os.kill(int(pid), 0)
+            return True
+        except OSError:
+            return False
+    import ctypes
+    k = ctypes.windll.kernel32
+    h = k.OpenProcess(0x1000, False, int(pid))              # PROCESS_QUERY_LIMITED_INFORMATION
+    if not h:
+        return False
+    code = ctypes.c_ulong()
+    ok = k.GetExitCodeProcess(h, ctypes.byref(code))
+    k.CloseHandle(h)
+    return bool(ok) and code.value == 259                   # STILL_ACTIVE
+
+
 def run(jid: str) -> int:
-    """The detached runner: the job's command, its log, its end recorded (What it took)."""
+    """The detached runner: the job's command, its log, its end recorded (What it took) - a final status whatever
+    happens (the kind's exit codes that mean done: motionlab.app.jobs OK_RC, build.py's 2 = built with flags)."""
     st = local_state(jid)
-    with open(st["log"], "w", encoding="utf-8") as f:
-        f.write(f"# {st['title']}\n# {' '.join(st['cmd'])}\n")
-        f.flush()
-        rc = subprocess.call(st["cmd"], cwd=str(LAB), stdout=f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
-    st.update(rc=rc, ended=time.time(), status="done" if rc == 0 else "failed")
+    rc = -1
+    try:
+        with open(st["log"], "w", encoding="utf-8") as f:
+            f.write(f"# {st['title']}\n# {' '.join(st['cmd'])}\n")
+            f.flush()
+            rc = subprocess.call(st["cmd"], cwd=str(LAB), stdout=f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+    except Exception as e:                                  # noqa: BLE001 - written down, never left "running"
+        st["error"] = str(e)
+    try:
+        from motionlab.app.jobs import OK_RC
+    except Exception:                                       # noqa: BLE001
+        OK_RC = {}
+    st.update(rc=rc, ended=time.time(), status="done" if rc in OK_RC.get(st["kind"], (0,)) else "failed")
     (LOGS / f"claude_{jid}.json").write_text(json.dumps(st, indent=1), encoding="utf-8")
     try:
         from motionlab.app import data as D
@@ -137,6 +174,13 @@ def wait(jid: str, most: float) -> int:
         while True:
             st = local_state(jid)
             if st["status"] in DONE or time.time() - t0 > most:
+                break
+            if st.get("pid") and not alive(st["pid"]):       # the runner died (sleep, reboot, a killed tree)
+                time.sleep(1)
+                st = local_state(jid)                         # it may have written its end just now
+                if st["status"] not in DONE:
+                    st.update(status="failed", ended=time.time(), error="the runner stopped before the job ended")
+                    (LOGS / f"claude_{jid}.json").write_text(json.dumps(st, indent=1), encoding="utf-8")
                 break
             time.sleep(3)
         try:

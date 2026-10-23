@@ -134,8 +134,16 @@ def main() -> int:
         beats, drops = out["beats"], [d["frame"] for d in out["drops"]]
     lines = [ln.strip() for ln in str(req.get("text") or "").splitlines() if ln.strip()]
     k = len(lines) if lines else max(3, round(length / SCENE_S))
+    k = max(1, min(k, N // FPS))                       # a scene lasts 1 s at least
     cuts = cuts_for(N, k, beats, drops)
     bounds = [0] + cuts + [N]
+    scenes = len(bounds) - 1
+    if len(lines) > scenes:                            # more lines than the length holds: lines share scenes, in
+        groups = [lines[round(j * len(lines) / scenes):round((j + 1) * len(lines) / scenes)]   # order (never dropped)
+                  for j in range(scenes)]
+        print(f"NOTE: {len(lines)} lines of words in {scenes} scenes ({length:g} s, 1 s a scene at least): "
+              "lines share a scene - more length, or fewer lines, gives each its own")
+        lines = [" / ".join(g) for g in groups]
     lib = {t["id"]: t for t in TM.library()}
     user = [x for x in req.get("templates") or [] if x in lib]
     look = req.get("look") if req.get("look") and req.get("look") != "surprise" else None
@@ -202,7 +210,7 @@ def main() -> int:
         r = subprocess.run([PY, str(TOOLS / "build.py"), str(p), f"plan_v{v}.json", "--sfx"], capture_output=True,
                            text=True, encoding="utf-8", errors="replace", cwd=str(LAB))
         print((r.stdout + r.stderr)[-3000:])
-        return 0 if r.returncode in (0, 1) else r.returncode
+        return 0 if r.returncode in (0, 2) else r.returncode      # 2 = built with flags
     return 0
 
 

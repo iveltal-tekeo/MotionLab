@@ -32,6 +32,7 @@ JOBTOOLS = Path(__file__).resolve().parent / "jobtools.py"       # the app's own
 _PY = Path(sys.executable)
 PY = str(_PY.with_name("python.exe")) if _PY.name.lower() == "pythonw.exe" else str(_PY)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+OK_RC = {"build": (0, 2)}      # 0.5.3: build.py 2 = built, with precheck flags to look at - not a failure
 
 
 class JobError(ValueError):
@@ -508,7 +509,8 @@ class Runner:
                 f.flush()
             job.rc = job.proc.wait()
             job.ended = time.time()
-            job.status = "cancelled" if job.status == "cancelling" else ("done" if job.rc == 0 else "failed")
+            job.status = "cancelled" if job.status == "cancelling" else (
+                "done" if job.rc in OK_RC.get(job.kind, (0,)) else "failed")
             data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
             if job.then_claude and job.status == "done":
                 if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it

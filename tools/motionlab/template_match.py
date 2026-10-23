@@ -106,8 +106,13 @@ def strip(ref: Path, render: Path, out: Path, cols: int = 8, title: str = "") ->
     if len(er) > 2 and cum[-1] > 0:
         ts += [float(np.searchsorted(cum, cum[-1] * (i + 0.5) / (cols - 2)) / (len(er) - 1)) for i in range(cols - 2)]
     ts = sorted(set(round(t, 4) for t in ts))
-    while len(ts) < cols:                                   # a clip with little motion: fill evenly
-        ts = sorted(set(ts) | {round(len(ts) / cols, 4)})
+    for k in range(1, 4 * cols):                            # a clip with little motion: fill evenly - only with times
+        if len(ts) >= cols:                                 # not there yet (a set that cannot grow never ends a loop)
+            break
+        for i in range(1, k):
+            v = round(i / k, 4)
+            if v not in ts and len(ts) < cols:
+                ts = sorted(set(ts) | {v})
     tw = 240
     th_r = int(tw * sr[0].shape[0] / sr[0].shape[1]) if sr else 135
     th_o = int(tw * so[0].shape[0] / so[0].shape[1]) if so else 135
