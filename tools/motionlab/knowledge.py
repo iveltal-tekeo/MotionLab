@@ -72,7 +72,8 @@ MAKING_HEAD = """# Lessons on making videos learned on this PC (not reviewed / s
 
 <!--
 Claude adds new rules here when an edit or a generated video taught something (ids local-make-1, local-make-2 ...),
-in the format of the shared .claude\\skills\\recreate-video\\lessons.md (M###). They apply right away on this PC.
+in the format of the shared .claude\\skills\\recreate-video\\lessons.md (M###), with its {kinds} tag (talking,
+generate, templates; none = every kind). They apply right away on this PC.
 "Share my knowledge" in the app sends them to knowledge\\incoming\\ (<author>-<when>-making.md), where they are
 reviewed into the shared file. Analysis lessons (how effects are judged) go to lessons.md next to this file instead.
 -->
@@ -504,6 +505,40 @@ def shared_lessons(kind: str = "analysis") -> list[tuple[str, str]]:
     return parse_lessons(p.read_text(encoding="utf-8")) if p.exists() else []
 
 
+MAKING_KINDS = ("talking", "generate", "templates")
+
+
+def lesson_tags(text: str) -> set[str]:
+    """A making lesson's kinds - `- [id] {talking, generate} (...)` (0.5.3); none = for every kind ("all");
+    "built" = the lab's tools do it now (its `Built:` line says which)."""
+    m = re.match(r"^- \[[^\]]+\]\s+\{([^}]*)\}", text)
+    return {t.strip() for t in m.group(1).split(",") if t.strip()} if m else {"all"}
+
+
+def lessons_for(kind: str) -> str:
+    """0.5.3 (C4): the making lessons a kind of work reads - the shared M### and this PC's local-make-N tagged with
+    that kind or "all", in full; the built ones (the tools do them now) as one line each; a footer naming what was
+    left out (other kinds), so nothing is dropped silently. kind "all" = every lesson in full."""
+    if kind not in MAKING_KINDS + ("all",):
+        raise ValueError(f"one of {', '.join(MAKING_KINDS)} or all")
+    full, built, other = [], [], []
+    for lid, text in shared_lessons("making") + local_lessons("making"):
+        tags = lesson_tags(text)
+        if "built" in tags:
+            b = re.search(r"^\s+Built: (.+)$", text, re.M)
+            built.append(f"- [{lid}] built into the lab: {b.group(1) if b else 'see the lesson'}")
+        elif kind == "all" or kind in tags or "all" in tags:
+            full.append(text)
+        else:
+            other.append(f"{lid} ({', '.join(sorted(tags))})")
+    L = [f"# Lessons on making videos - {kind}" + ("" if kind == "all" else " (+ those for every kind)"),
+         "Apply every rule below. A `Built:` line = the part the lab's tools now do; the rest of that lesson stays.", ""]
+    L += full + ([""] + ["## Built into the lab (the tools do these - no need to remember them)"] + built if built else [])
+    L += ["", f"Left out (other kinds of work): {', '.join(other) if other else 'none'} - "
+              "`knowledge.py lessons --kind all` prints every lesson."]
+    return "\n".join(L)
+
+
 def lesson_count() -> int:
     """How many lessons Claude follows: the shared rules + this PC's new ones, analysis and making videos (Home's
     Claude's memory)."""
@@ -896,10 +931,11 @@ def summary() -> str:
             for c in cs[:60]))
         L += [f"- Details: knowledge\\local\\summary\\{st['category']}.md", ""]
 
-        D = [f"# {st['label']} - every reviewed effect per reference", "",
+        D = [f"# {st['label']} - every effect a person checked, per reference", "",
              f"Built {time.strftime('%Y-%m-%d %H:%M')} from {len(cs)} card(s); the norms are in ..\\summary.md. "
              "[correct] / [partly] / [WRONG] = the verdict the reference's author gave (the user's own, or a friend's "
-             "marked from <name>); '<whose> note:' = their note.", ""]
+             "marked from <name>); '<whose> note:' = their note. Only verified effects are listed (0.5.3): one with no "
+             "verdict is Claude's own reading, counted on its reference's line, never context for a review.", ""]
         for c in cs:
             p, V = c.get("pacing") or {}, c.get("verdicts") or {}
             D.append(f"## {label(c)['name']} ({'this PC' if c.get('origin') == 'local' else 'from ' + (c.get('author') or '?')}; "
@@ -910,11 +946,15 @@ def summary() -> str:
                      f"bpm {p.get('bpm')}; verdicts {V.get('correct', 0)} correct / {V.get('partly', 0)} partly / "
                      f"{V.get('wrong', 0)} wrong of {V.get('events', 0)}" + (f"; tags {', '.join(c['tags'])}"
                                                                              if c.get("tags") else ""))
-            for e in [e for e in c.get("effects", []) if not e.get("false_alarm") and e.get("family") != "Hard cut"]:
-                tag = {"correct": " [correct]", "partly": " [partly]", "wrong": " [WRONG]"}.get(e.get("verdict"), "")
+            effs = [e for e in c.get("effects", []) if not e.get("false_alarm") and e.get("family") != "Hard cut"]
+            checked = [e for e in effs if e.get("verdict") in ("correct", "partly", "wrong")]
+            for e in checked:
+                tag = {"correct": " [correct]", "partly": " [partly]", "wrong": " [WRONG]"}[e["verdict"]]
                 note = f" - {whose(c)} note: {e['note'][:300]}" if e.get("note") else ""
                 D.append(f"- {e['label']} f{e['start']}-{e['end']} ({e.get('tc_start')}){tag}: "
                          f"{(e.get('what') or '')[:300]}{note}")
+            if len(effs) > len(checked):
+                D.append(f"- ({len(effs) - len(checked)} more effect(s) with no verdict yet - left out)")
             D.append("")
         f = SUMMARY_DIR / f"{st['category']}.md"
         f.write_text("\n".join(D) + "\n", encoding="utf-8")
@@ -1254,6 +1294,17 @@ def memory() -> dict:
     with _MEM_LOCK:
         _MEM["sig"], _MEM["data"] = sig, data
     return data
+
+
+def memory_rules() -> str:
+    """0.5.3 (C3): the ratings block alone - the user's ratings of all their videos as rules (~1.5 KB), what a
+    Generate brief and an edit by feel carry instead of the whole memory (`knowledge.py memory --rules`, MCP
+    knowledge("memory:rules")). memory.md stays the whole memory; a 1:1 copy of a reference still reads it."""
+    M = memory()
+    if not M["rating_rules"]:
+        return "No rated videos yet: no rules from the user's ratings."
+    return "\n".join([f"## Your ratings -> rules for every new video ({M['ratings']['videos']} rated video(s); "
+                      "a part rated bad once stays a default)", ""] + M["rating_rules"])
 
 
 def memory_index(write: bool = True, styles: bool = False) -> str:

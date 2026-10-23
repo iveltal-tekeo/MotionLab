@@ -21,7 +21,9 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
                       or first one there)
   --music-start auto  seconds into the song (auto: the strongest part - a drop - comes right after the hook)
   --sound auto        music | clips (the clips' own sound, shot by shot) | talk (the clips' own sound in order, the
-                      pauses cut out); auto = talk for a talking style, else music when there is a song, else clips
+                      pauses cut out; 0.5.3: the voice levelled to -26 dBFS RMS, one gain per take, peaks under
+                      -1 dBFS - `--per-shot` = per shot); auto = talk for a talking style, else music when there is a
+                      song, else clips
   --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
                       also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
@@ -233,8 +235,36 @@ def orientation(w, h) -> str:
     return "vertical" if h > w * 1.15 else "horizontal" if w > h * 1.15 else "square"
 
 
-def cut_sound(segs: list, clips: dict, fps: float, d: Path) -> np.ndarray:
-    """The clips' own sound for the shots, frame-exact, 8 ms fades at each cut (silence where a clip has none)."""
+VOICE_DB, VOICE_PEAK_DB = -26.0, -1.0     # a talking video's voice: RMS target, the highest a peak may go
+
+
+def level_voice(out: list, segs: list, per_shot: bool = False) -> list[str]:
+    """0.5.3 (A9): a talking video's voice at one level before the sound effects (local-make-3: a hook from one take
+    at -28 dBFS and the rest from another at -35 to -40 - a 9-12 dB jump at the first cut, and sfx.py levels every
+    effect against the voice under it). One gain per take (clip) - the user's rule, 2026-10-16 - or per shot: its
+    RMS brought to VOICE_DB, never a peak over VOICE_PEAK_DB. In place; returns a line per take / shot."""
+    groups: dict = {}
+    for k, (sid, a, b) in enumerate(segs):
+        groups.setdefault(k if per_shot else sid, []).append(k)
+    lines = []
+    for key, ks in groups.items():
+        y = np.concatenate([out[k] for k in ks]) if ks else np.zeros((0, 2), np.float32)
+        if not len(y) or float(np.abs(y).max()) < 1e-4:
+            continue
+        rms = 20 * np.log10(max(float(np.sqrt(np.mean(y.astype(np.float64) ** 2))), 1e-9))
+        peak = 20 * np.log10(float(np.abs(y).max()))
+        g = min(VOICE_DB - rms, VOICE_PEAK_DB - peak)
+        for k in ks:
+            out[k] *= np.float32(10 ** (g / 20))
+        sid, a, b = segs[ks[0]]
+        lines.append(f"{'shot ' + str(key) + ' (' + sid + ')' if per_shot else 'take ' + sid}: {rms:.1f} dBFS -> "
+                     f"{rms + g:.1f} ({g:+.1f} dB{', held by its peak' if g < VOICE_DB - rms - 0.05 else ''})")
+    return lines
+
+
+def cut_sound(segs: list, clips: dict, fps: float, d: Path, level: str | None = None) -> np.ndarray:
+    """The clips' own sound for the shots, frame-exact, 8 ms fades at each cut (silence where a clip has none).
+    level "take" / "shot" = a talking video's voice levelled (level_voice) - the levels are printed."""
     import soundfile as sf
     out, fade = [], int(0.008 * SR)
     ramp = np.linspace(0, 1, fade, dtype=np.float32)[:, None]
@@ -255,6 +285,9 @@ def cut_sound(segs: list, clips: dict, fps: float, d: Path) -> np.ndarray:
             seg[:fade] *= ramp
             seg[-fade:] *= ramp[::-1]
         out.append(seg)
+    if level and out:
+        for ln in level_voice(out, segs, per_shot=level == "shot"):
+            log(f"voice levelled: {ln}")
     return np.concatenate(out) if out else np.zeros((0, 2), np.float32)
 
 
@@ -552,7 +585,7 @@ def feel_notes(prj, run, k, slots, fps, N, w, h, color, sound_line, want, timing
                           "and levels here, not in colour."]) + [
         "- The user picks one, or mixes (\"B's pacing with A's colours\"): that is the plan. Pacing = a hook's rhythm "
         "line, colours = its grade, effects = its list. A mix = the full-length draft of the pacing's feel, then the "
-        "other hook's grade / effects in the plan (`/recreate-video` section 6).", ""]
+        "other hook's grade / effects in the plan (`/recreate-video` by_feel.md).", ""]
     for s in slots:
         D, st = s["D"], s["style"]
         R = st.get("rhythm") or {}
@@ -580,6 +613,127 @@ def feel_notes(prj, run, k, slots, fps, N, w, h, color, sound_line, want, timing
         L.append("")
     L += ["## Timings", ""] + [f"- {k_}: {v:.1f} s" for k_, v in timings.items()]
     return "\n".join(L) + "\n"
+
+
+def edit_words(prj: Project, plan: dict, fps: float) -> dict:
+    """The words said in the edit (0.5.3 D2): each talking shot's words from its clip's transcript (tools\\speech.py,
+    made when missing), moved to the shot's place on the timeline -> a lab transcript (lines of words with times)."""
+    import speech as SPT                                        # tools\speech.py (cached per clip)
+    from motionlab import editlist as EL
+    lines = []
+    for L in EL.shots(plan):
+        if L.get("hold") or float(L.get("speed", 1.0)) != 1.0:
+            continue
+        src = Path(str((plan["sources"].get(L["src"]) or {}).get("source", "")))
+        if not src.is_file():
+            continue
+        _, tr = SPT.transcript(src)
+        a = int(L.get("in", 0)) / fps
+        b = a + (int(L["end"]) - int(L["start"]) + 1) / fps
+        off = int(L["start"]) / fps - a
+        for ln in tr.get("lines", []):
+            ws = [{"t": round(float(w["t"]) + off, 3), "w": w["w"]} for w in ln.get("words") or []
+                  if a <= float(w["t"]) < b]
+            if ws:
+                lines.append({"t0": ws[0]["t"], "t1": min(float(ln["t1"]) + off, b + off), "text":
+                              " ".join(w["w"] for w in ws), "words": ws})
+    lines.sort(key=lambda x: x["t0"])
+    return {"source": "the edit's shots", "kind": "speech, moved through the edit", "lines": lines}
+
+
+def apply_list(a, prj: Project) -> int:
+    """0.5.3 (D1): draft_edit.py <project> --apply <list> - the edit list on the newest plan -> plan_v<N+1>.json +
+    edit_v<N+1>.list; captions / graphics through overlay.py; a talking edit's sound cut again after cuts."""
+    import json as _json
+    import shutil
+    from motionlab import editlist as EL
+    from motionlab import templates as TM
+    src = Path(a.apply)
+    if not src.is_file():
+        raise SystemExit(f"--apply: no such list file: {src}")
+    plans = sorted(prj.build.glob("plan_v*.json"), key=lambda q: int(re.sub(r"\D", "", q.stem) or 0))
+    if not plans:
+        raise SystemExit(f"no plan in {prj.build} - a quick draft first (draft_edit.py {prj.name} ...)")
+    base_p = plans[-1]
+    base = _json.loads(base_p.read_text(encoding="utf-8"))
+    try:
+        ops = EL.parse(src.read_text(encoding="utf-8"))
+        P, done, steps = EL.apply(base, ops)
+    except EL.ListError as e:
+        raise SystemExit(f"{src.name}:\n{e}")
+    fps, v = float(P["fps"]), next_version(prj.build, prj.name)
+    py, ov = sys.executable, str(LAB / "tools" / "overlay.py")
+
+    def run(cmd: list[str]) -> str:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(LAB))
+        if r.returncode:
+            raise SystemExit(f"{' '.join(Path(c).name for c in cmd[1:4])} failed:\n{(r.stdout + r.stderr)[-1200:]}")
+        return r.stdout
+    for k, o in enumerate(steps, 1):
+        if o["op"] == "graphic":
+            at = EL.moved(base, ops, o["f"])
+            if at is None:
+                done.append(f"graphic {o['id']} at f{o['f']}: LEFT OUT - that frame was cut")
+                continue
+            folder = prj.build / "overlays" / f"v{v}_{k:02d}_{o['id']}"
+            cmd = [py, ov, "new", str(folder), "--from", o["id"], "--frames", str(o["len"]), "--like-plan", "--force"]
+            if o["values"]:
+                cmd += ["--values", _json.dumps(o["values"], ensure_ascii=False)]
+            if o.get("land"):
+                cmd += ["--land", f"{o['land']}@{at}", "--start", str(at)]
+            run(cmd)
+            L = {"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"), "start": at,
+                 "end": min(at + o["len"] - 1, int(P["frames"]) - 1), "blend": "normal"}
+            if o.get("land"):
+                r = TM.land_target(str(folder), o["land"], at, at)
+                L.update(start=r["start"], end=min(r["end"], int(P["frames"]) - 1), **{"in": r["in"]})
+            P["layers"].append(L)
+            done.append(f"graphic {o['id']} f{L['start']}-f{L['end']} ({frame_to_tc(L['start'], fps)})"
+                        + (f", '{o['land']}' landed on f{at}" if o.get("land") else ""))
+        elif o["op"] == "caption":
+            words = prj.check(prj.build / f"captions_v{v}.json")
+            write_json(words, edit_words(prj, P, fps))
+            folder = prj.build / "overlays" / f"captions_v{v}"
+            if folder.exists():
+                shutil.rmtree(folder)
+            out = run([py, ov, "captions", str(folder), "--from", str(words), "--preset", o["preset"], "--fps",
+                       f"{fps:g}", "--width", str(P["width"]), "--height", str(P["height"]), "--frames",
+                       str(P["frames"])] + (["--script", o["script"]] if o.get("script") else []))
+            P["layers"].append({"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"),
+                                "start": 0, "end": int(P["frames"]) - 1, "blend": "normal"})
+            missing = [ln for ln in out.splitlines() if ln.startswith("NOT SAID")]
+            done.append(f"captions ({o['preset']}" + (f", script {o['script']}" if o.get("script") else "")
+                        + f") over f0-f{int(P['frames']) - 1}" + (f"; {len(missing)} script line(s) not said" if missing
+                                                                    else ""))
+            done += ["  " + m for m in missing]
+    made = base.get("made_by") or {}
+    talk = made.get("sound") in ("talk", "clips") and any(o["op"] == "cut" for o in ops)
+    if talk:                                            # the clips' own sound follows the shots again
+        _, clips, _, cfps = footage(prj, int(P["width"]), int(P["height"]))
+        d = prj.check(prj.build / "draft")
+        clip_sound(prj, clips, d, cfps, "clips", only={L["src"] for L in EL.shots(P)}, reuse=d)
+        by_id = {c["id"]: c for c in clips}
+        segs = [(L["src"], EL._src_at(L, L["start"]), EL._src_at(L, L["start"]) + L["end"] - L["start"])
+                for L in EL.shots(P)]
+        P["audio"] = {**(P.get("audio") or {}), "path": str(write_sound(prj, d, v, cut_sound(
+            segs, by_id, fps, d, level="take" if made.get("sound") == "talk" else None)))}
+        done.append("sound: the clips' own sound cut again to the shots" + (" (voice levelled per take)"
+                                                                            if made.get("sound") == "talk" else ""))
+    P["name"], P["output"] = f"{prj.name}_v{v}", f"{prj.name}_v{v}.mp4"
+    P["made_by"] = {"tool": "draft_edit.py --apply", "list": f"edit_v{v}.list", "from": base_p.name,
+                    "sound": made.get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
+    out = prj.check(prj.build / f"plan_v{v}.json")
+    write_json(out, P)
+    keep = prj.build / f"edit_v{v}.list"
+    if src.resolve() != keep.resolve():
+        shutil.copyfile(src, prj.check(keep))
+    print(f"{base_p.name} + {src.name} -> {out.name} ({int(P['frames'])} frames, "
+          f"{frame_to_tc(int(P['frames']) - 1, fps)} last):")
+    for ln in done:
+        print("  " + ln)
+    print(f"next: .venv\\Scripts\\python tools\\build.py {prj.name} {out.name}")
+    print(out)
+    return 0
 
 
 def feel_test(a, prj: Project, cfg: dict) -> int:
@@ -706,6 +860,9 @@ def main() -> int:
     ap.add_argument("--music")
     ap.add_argument("--music-start")
     ap.add_argument("--sound", choices=["auto", "music", "clips", "talk"], default="auto")
+    ap.add_argument("--apply", metavar="LIST", help="0.5.3: an edit list (motionlab\\editlist.py) on the newest plan "
+                    "-> plan_v<N+1>.json")
+    ap.add_argument("--per-shot", action="store_true", help="talk: level the voice per shot (default: one gain per take)")
     ap.add_argument("--colour", choices=["match", "grade", "none"], default="match")
     ap.add_argument("--colour-strength", type=float, default=0.8, help="how far toward the references' colour (0-1)")
     ap.add_argument("--seed", type=int, default=1)
@@ -725,6 +882,8 @@ def main() -> int:
     t0 = time.time()
     prj = Project(a.project)
     cfg = load_config()
+    if a.apply:
+        return apply_list(a, prj)
     if a.feel_test:
         return feel_test(a, prj, cfg)
     try:
@@ -782,8 +941,10 @@ def main() -> int:
                       + f", {len(beats)} beats, {len(drops)} drop(s) in the edit" + (f" ({info['note']})" if info.get("note")
                                                                                      else ""))
     else:
-        sound = write_sound(prj, d, v, cut_sound(D["sound"], by_id, fps, d))
-        sound_line = ("the clips' own sound in order, pauses cut out" if mode == "talk"
+        lvl = ("shot" if a.per_shot else "take") if mode == "talk" else None
+        sound = write_sound(prj, d, v, cut_sound(D["sound"], by_id, fps, d, level=lvl))
+        sound_line = ((f"the clips' own sound in order, pauses cut out, the voice levelled to {VOICE_DB:g} dBFS "
+                       f"(one gain per {lvl})") if mode == "talk"
                       else "the clips' own sound, shot by shot (no song in the project folder)")
     grade, colour_line = (D["grade"] if a.colour != "none" else dict(DR.NEUTRAL)), None
     if a.colour == "match" and style.get("lab") and color:

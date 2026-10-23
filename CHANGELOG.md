@@ -5,6 +5,26 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## Unreleased
+
+Faster videos (0.5.3, built - released once the re-runs show half of Claude's time with the same results):
+- **The Generator asks what Claude used to guess** - a look for the graphics (Editorial warm, Swiss signal, Night
+  edition or Surprise me) and *The song from last time* next to the song. All optional: Claude still picks when you
+  leave them.
+- **Claude starts from a brief** - when you save a request, MotionLab writes everything Claude needs into one page
+  (the song's beats, the templates that fit your words, your ratings as rules, the lessons for that kind of video) and
+  lists what it left out, so nothing is dropped.
+- **One build instead of many steps** - graphics, sound effects, the video, the checks and one sheet of every cut, in
+  one go; only the graphics that changed are rendered again, several at a time. Long final renders run as jobs on
+  the Jobs page.
+- **Fewer rounds of checking** - text that runs off the frame is flagged on the first snapshot, sound effects come out
+  at levels that pass the check, template moves land on the beat by their measured timing, and every template is
+  checked at vertical and square sizes.
+- **Talking videos** - captions keep your script's own words, the voice is levelled per take, black screen-recording
+  flashes are avoided, and Claude edits with a short list instead of a long program.
+- **Review** - *Send it to Claude* now says which parts the next version will change.
+- **What it took** shows how much of Claude's time was spent waiting for the lab's tools.
+
 ## 0.5.2 - 2026-10-22 - New edit, step by step, and a lighter app
 
 - **New edit, step by step** - *Editor > New edit* is now a pop-up of six numbered steps on a line, one at a time:

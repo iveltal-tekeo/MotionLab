@@ -330,7 +330,8 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   motion graphics, effects & transitions, pacing & cuts, title & thumbnail: optional; Overall first, the one required
   row; Good / OK / Bad + a note, saved per part = POST `.../outcome` {aspects: {k: {rating, note}}}); "These ratings
   were for an older render - rate this one." when `reviewed` is false; Send = `setNext('fix')` + `/recreate-video
-  improve <p>` (a video made from zero: `/generate-video improve <p>`); more = *Not the right feel at all? Start over*
+  improve <p>` (a video made from zero: `/generate-video improve <p>`; since 0.5.3 its line names the parts rated OK / Bad -
+  "It changes <parts> and keeps the rest." - a live `send.hint`); more = *Not the right feel at all? Start over*
   (or, after Start over, *New edit with these clips…* / *Improve this one instead*); the notes on moments (0.4.2, `momentNotes`) left the page on
   2026-10-15 ("for now u can remove") - saved ones stay in outcome.json `"moments"`, the route still takes them,
   Claude still reads them) | **Versions**
@@ -365,6 +366,11 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   POST `/api/generate/request` (`data.save_generate_request`: checked; makes `projects\<name>\` when new; saves
   `build\generate_request.json`; made_from kind `generated`) -> Claude `/generate-video request <name>` (task
   `generate`, effort xhigh). GET `/api/generate/options` = the tools, the downloaded songs, HyperFrames found.
+  0.5.3 (E1: what Claude used to guess, asked - each optional, Claude picks by default): a **Look** row (`#glook`:
+  Claude picks, the looks of `tools\overlays\motion\_looks` with their colours as dots, Surprise me -> the
+  request's `look`; options `looks`) and *The song from last time* beside the song (options `last_song` =
+  `sfx.last_song()`, only when it is a download); saving a request starts `tools\brief.py` in the background
+  (`data.start_brief`: `build\brief.md`, what Claude reads first) - New edit's save does the same.
 
 ## Motion Graphics and Logos
 
@@ -687,7 +693,8 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   step (`TASK_STEP`), + the app's jobs from `.app\jobs\history.jsonl` (`data.record_job`, called by `jobs._pump` when a
   job ends; only `JOB_STEP` kinds) + the other rounds of the same windows ("not counted"). Page: `tookPanel(box,
   kind, name, P)` = GET `/api/took/<kind>/<name>` -> `.took` panel (`.tkline` timeline: step, when, time - "(about)"
-  without a turn_duration -, model · effort, rounds, helpers; `.tktot` Total; "This 52 s video took ..."; the
+  without a turn_duration -, since 0.5.3 the part spent waiting on the lab's tools (`wait_minutes`: from a tool
+  call to its result, `usage.read_session`), model · effort, rounds, helpers; `.tktot` Total; "This 52 s video took ..."; the
   not-counted rounds folded; a note while jobs predate 0.4.4) at the end of a video's Overview (`#tooksec`, after
   `#pubsec`) and an analysis' Overview (`#ovtook`); the index item *What it took* (`pb-took`, `i-clock`, "40:24 min of
   Claude" from `TOOK[P.name]`; `drawIndex` keeps `_P/_pub/_I` on the box to redraw). **Time only, no tokens on any

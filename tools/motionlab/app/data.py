@@ -1128,10 +1128,27 @@ def save_edit_request(name: str, body: dict) -> dict:
     req["date"] = stamp()
     write_json_atomic(d / "build" / "edit_request.json", req)
     write_text_atomic(d / "build" / "edit_brief.md", ER.brief(req, _brief_facts(d, req)))
+    start_brief(d)
     made = []
     for kind, ref in ER.made_from(req):
         made = add_made_from(d.name, kind, ref)
     return {"request": req, "made_from": made, "command": f"/recreate-video request {d.name}"}
+
+
+def start_brief(d: Path) -> None:
+    """0.5.3 (C1/C2): tools\\brief.py <video> in the background - build\\brief.md is ready (a few seconds: the beats,
+    the styles) by the time Claude's window opens; the skills make it themselves when it is missing or older than
+    the request. Never fails the save."""
+    import subprocess
+    import sys
+    try:
+        py = Path(sys.executable)
+        py = py.with_name("python.exe") if py.name.lower() == "pythonw.exe" else py
+        subprocess.Popen([str(py), str(LAB / "tools" / "brief.py"), d.name], cwd=str(LAB), stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except OSError:
+        pass
 
 
 def _brief_facts(d: Path, req: dict) -> dict:
@@ -1161,10 +1178,19 @@ AI_TOOLS = ["Higgsfield", "Seedance", "Kling", "Runway", "Veo", "Sora", "Hailuo"
 def generate_options() -> dict:
     """Generate's dialogs: the AI tools offered, the songs downloaded (refs\\audio\\), HyperFrames ready or not."""
     from . import system
+    from motionlab import looks as LK
+    from motionlab import sfx as SFX
     songs = [{"name": p.name, "rel": rel(p)} for p in sorted((LAB / "refs" / "audio").glob("*"))
              if p.is_file() and p.suffix.lower() in AUDIO_EXT] if (LAB / "refs" / "audio").exists() else []
+    ls = SFX.last_song()                                # 0.5.3 (E1): what Claude would otherwise guess, asked
+    last = rel(Path(ls[0])) if ls and any(s["rel"] == rel(Path(ls[0])) for s in songs) else None
+    try:
+        looks = [{"id": i, "name": lk.get("name", i), "palette": list((lk.get("palette") or {}).values())[:4]}
+                 for i, lk in LK.all_looks().items()]
+    except (OSError, ValueError, KeyError):
+        looks = []
     return {"tools": AI_TOOLS, "songs": songs, "hyperframes": bool(system.find("hyperframes")),
-            "node": bool(system.find("node"))}
+            "node": bool(system.find("node")), "looks": looks, "last_song": last}
 
 
 _MOTION: dict = {"sig": None, "json": None}
@@ -1285,6 +1311,12 @@ def save_generate_request(body: dict) -> dict:
         raise ValueError(I18N.t("format: one of {choices}", choices=", ".join(ST.SIZES)))
     tool = " ".join(str(body.get("tool") or "").split())[:60]
     extra = {k: " ".join(str(body.get(k) or "").split())[:120] for k in ("colours", "font")}
+    look = str(body.get("look") or "")                 # 0.5.3 (E1): a look of the templates, "surprise" or Claude's
+    if look and look != "surprise":
+        from motionlab import looks as LK
+        if look not in LK.all_looks():
+            raise ValueError(I18N.t("no look {id}", id=repr(look)))
+    extra["look"] = look
     templates = [str(x) for x in (body.get("templates") or []) if str(x).strip()]      # 0.5.0: the Motion Graphics
     if templates:                                                                   # library's templates to use
         from motionlab import templates as TP
@@ -1306,6 +1338,7 @@ def save_generate_request(body: dict) -> dict:
            "format": fmt, "music": song, "tool": tool if kind == "ai" else "", **(extra if kind == "graphics" else {}),
            "date": stamp()}
     write_json_atomic(d / "build" / "generate_request.json", req)
+    start_brief(d)
     made = add_made_from(d.name, "generated", "a motion-graphics video" if kind == "graphics"
                          else f"AI video tools{': ' + tool if tool else ''}")
     return {"request": req, "project": d.name, "made_from": made, "command": f"/generate-video request {d.name}"}
@@ -1675,7 +1708,8 @@ JOB_STEP = {"draft": "Quick draft", "overlay_render": "Graphic rendered", "overl
             "thumb_candidates": "Good moments for a thumbnail", "thumb_make": "Thumbnail made",
             "thumb_render": "Thumbnail rendered", "thumb_check": "Thumbnails checked", "analyze": "Measured by the lab",
             "content_transcript": "Transcript", "content_stats": "Views and likes", "colour": "Colour measured",
-            "verify_timing": "Timing check", "resolve_doctor": "Resolve check-up", "report": "Report rebuilt"}
+            "verify_timing": "Timing check", "resolve_doctor": "Resolve check-up", "report": "Report rebuilt",
+            "build": "Claude's build", "build_final": "Claude's final render"}
 # a counted round's task (+ the command's first word) -> the step in words
 TASK_STEP = {("script", "request"): "Prepare · the script written", ("script", "improve"): "Prepare · the script improved",
              ("script", ""): "Prepare · the script checked", ("title", "request"): "Prepare · titles and thumbnail ideas",
@@ -1794,7 +1828,8 @@ def took(kind: str, name: str) -> dict:
         used.add(s["id"])
         info = U.round_info(s, r)
         if part is not None:
-            info.update(minutes=part, tokens={k: 0 for k in info["tokens"]}, total=0, helpers=[])
+            info.update(minutes=part, tokens={k: 0 for k in info["tokens"]}, total=0, helpers=[],
+                        wait_minutes=min(info["wait_minutes"], part))
         step = TASK_STEP.get((r["task"], r.get("mode") or ""), TASK_STEP.get((r["task"], ""), r["task"]))
         if part is not None:
             step += " (in a batch)"
@@ -1818,6 +1853,8 @@ def took(kind: str, name: str) -> dict:
                 prev["tokens"][k] += v
             prev["total"] += info["total"]
             prev["helpers"] += info["helpers"]
+            prev["wait_minutes"] = round(prev.get("wait_minutes", 0) + info["wait_minutes"], 2)
+            prev["tools"] = prev.get("tools", 0) + info["tools"]
             continue
         rows.append({"kind": "claude", "step": step, "what": what, "rounds": 1, **info})
     other = {"rounds": 0, "minutes": 0.0, "prompts": []}

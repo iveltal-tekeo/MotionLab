@@ -7,6 +7,27 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## Unreleased
+
+Vídeos más rápidos (0.5.3, construido; se publica cuando las nuevas pruebas muestren la mitad del tiempo de Claude con
+los mismos resultados):
+- **El Generador pregunta lo que Claude antes adivinaba**: un look para los gráficos (Editorial cálido, Señal suiza,
+  Edición nocturna o Sorpréndeme) y *La canción de la última vez* junto a la canción. Todo opcional: si lo dejas,
+  Claude elige.
+- **Claude empieza desde un resumen**: al guardar una petición, MotionLab escribe en una sola página todo lo que Claude
+  necesita (los beats de la canción, las plantillas que encajan con tus palabras, tus valoraciones como reglas, las
+  lecciones para ese tipo de vídeo) y dice lo que ha dejado fuera, para que no se pierda nada.
+- **Un solo montaje en vez de muchos pasos**: gráficos, efectos de sonido, el vídeo, las comprobaciones y una hoja con
+  cada corte, de una vez; solo se vuelven a renderizar los gráficos que cambian, varios a la vez. Los renders finales
+  largos van como tareas en la página de Tareas.
+- **Menos rondas de revisión**: el texto que se sale del encuadre se marca en la primera captura, los efectos de sonido
+  salen a niveles que pasan la comprobación, los movimientos de las plantillas caen en el beat según su tiempo medido,
+  y cada plantilla se comprueba en vertical y en cuadrado.
+- **Vídeos hablados**: los subtítulos mantienen las palabras de tu guion, la voz se nivela por toma, se evitan los
+  destellos negros de las grabaciones de pantalla, y Claude edita con una lista corta en vez de un programa largo.
+- **Revisión**: *Enviar a Claude* ahora dice qué partes cambiará la siguiente versión.
+- **Lo que ha costado** muestra cuánto del tiempo de Claude fue esperar a las herramientas del laboratorio.
+
 ## 0.5.2 - 2026-10-22 - Nueva edición paso a paso, y una app más ligera
 
 - **Nueva edición, paso a paso**: *Editor > Nueva edición* es ahora una ventana de seis pasos numerados sobre una

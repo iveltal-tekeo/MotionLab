@@ -46,6 +46,9 @@ from .util import ANALYSIS, LAB, safe_name, sha256_file
 
 ROOT = Path(os.environ.get("MOTIONLAB_TEMPLATES_ROOT") or (ANALYSIS / "templates"))
 MOTION = LAB / "tools" / "overlays" / "motion"          # the rebuilt templates (MotionLab's own, in the repo)
+MG = LAB / "library" / "motion_graphics"               # 2026-10-18: index.json (every template) + local\<pack>\<id>
+LOCAL = MG / "local"                                   # = templates learned from the user's own captured clips
+#                                                        (e.g. AutoAE): this PC only - gitignored, never shared
 VIDEO_EXT = {".mp4", ".mov", ".webm", ".mkv", ".m4v", ".gif"}
 STILL_FRAMES = 15        # a capture shorter than this is a picture, not a motion
 DIFF_LEVEL = 12          # grey levels (0-255) a pixel must change by to count
@@ -130,7 +133,9 @@ def verify(pack: str) -> list[str]:
 def library() -> list[dict]:
     """The Motion Graphics library: every rebuilt template (tools\\overlays\\motion\\<id>\\template.json + index.html)."""
     out = []
-    for p in sorted(MOTION.glob("*/template.json")) if MOTION.is_dir() else []:
+    found = [(p, None) for p in sorted(MOTION.glob("*/template.json"))] if MOTION.is_dir() else []
+    found += [(p, p.parent.parent.name) for p in sorted(LOCAL.glob("*/*/template.json"))] if LOCAL.is_dir() else []
+    for p, pack in found:
         try:
             t = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -138,11 +143,223 @@ def library() -> list[dict]:
         idx = p.parent / "index.html"
         if not idx.exists():
             continue
+        h = idx.read_text(encoding="utf-8", errors="replace")
         t["id"] = p.parent.name
         t["folder"] = rel(p.parent)
-        t["logos"] = "assets/logos/logos.js" in idx.read_text(encoding="utf-8", errors="replace")   # draws library logos
+        t["logos"] = "assets/logos/logos.js" in h                    # draws library logos
+        t["look_aware"] = "assets/looks/looks.js" in h               # takes the look tokens (motionlab\\looks.py)
+        t["local"] = pack is not None                                # learned from the user's own clips: this PC only
+        ms = measured(p.parent)                                      # 0.5.3: what the PC measured (tracks, sizes)
+        if ms.get("tracks") and not t.get("tracks"):
+            t["tracks"] = ms["tracks"]
+        if "sizes" in ms:
+            t["sizes_ok"] = sorted(s for s, r in ms["sizes"].items() if r.get("ok"))
+            t["sizes_bad"] = sorted(s for s, r in ms["sizes"].items() if not r.get("ok"))
+        if pack:
+            t["pack"] = pack
+            m = p.parent / "match.json"
+            if m.exists():
+                try:
+                    mj = json.loads(m.read_text(encoding="utf-8"))
+                    t["fidelity"] = {k: mj.get(k) for k in ("score", "status", "correlation", "duration_off")}
+                except (OSError, ValueError):
+                    pass
+            t["preview"] = rel(p.parent / "preview.mp4") if (p.parent / "preview.mp4").exists() else None
         out.append(t)
     return out
+
+
+# ------------------------------------------------------------------------- landing a move on a frame (0.5.3 A1)
+def measured(folder: Path) -> dict:
+    """<template>\\measured.json - what the PC measured on a template, never hand-written (templates.py tracks /
+    sizes): {"tracks": [...] (from a plain render, for templates without hand-written tracks), "tracks_date",
+    "sizes": {"1080x1920": {"ok", "flags": [...], "date"}}}. A file of its own so template.json stays as written."""
+    p = Path(folder) / "measured.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_measured(folder: Path, **kv) -> dict:
+    d = measured(folder) | kv
+    (Path(folder) / "measured.json").write_text(json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
+    return d
+
+
+def tracks_of(tid: str) -> tuple[list[dict], float]:
+    """A template's moves (template.json "tracks": hand-written for the AE templates; else measured.json's, from a
+    plain render - `templates.py tracks`) and its own frame rate. Each: name, what, start_f, length_f (+ fastest_f
+    when measured)."""
+    from . import overlay_settings as OS
+    folder = OS.find_graphic(tid)
+    t = json.loads((folder / "template.json").read_text(encoding="utf-8")) if (folder / "template.json").exists() else {}
+    return t.get("tracks") or measured(folder).get("tracks") or [], float(OS.conf(folder)["fps"])
+
+
+def find_track(tracks: list[dict], key: str) -> dict:
+    """A track by its number (1 = first), its exact name or the first name containing the words."""
+    if key.isdigit() and 1 <= int(key) <= len(tracks):
+        return tracks[int(key) - 1]
+    k = key.lower().strip()
+    for tr in tracks:
+        if (tr.get("name") or "").lower() == k:
+            return tr
+    for tr in tracks:
+        if k in (tr.get("name") or "").lower() or k in (tr.get("what") or "").lower():
+            return tr
+    raise ValueError(f"no track '{key}' - the tracks: " + "; ".join(
+        f"{i}. {tr.get('name')} f{tr['start_f']}+{tr['length_f']}" for i, tr in enumerate(tracks, 1)))
+
+
+def land(tracks: list[dict], track: str, at: int, *, start: int | None = None, hit: str = "start", k: float = 1.0,
+         shift: int = 0, frames: int | None = None) -> dict:
+    """Where a template's layer starts and which of its frames it starts from (the plan layer's "in") so a move
+    lands on plan frame `at`: hit = the move's start (default), its fastest frame (measured tracks) or its last
+    frame. k = the copy's fps / the template's (a retimed copy), shift = frames a timing setting moved everything by
+    (a "start" setting changed from its default). start = the layer's first plan frame (a cut); without it the
+    layer starts so the template plays from its frame 0. Pure arithmetic: SMASH's hit at f80, a cut at f136, the beat
+    f172 -> in 44."""
+    tr = find_track(tracks, track)
+    if hit == "end":
+        h = tr["start_f"] + tr["length_f"] - 1
+    elif hit == "peak":
+        h = tr.get("fastest_f", tr["start_f"])
+    else:
+        h = tr["start_f"]
+    h = round(h * k) + shift
+    asked = start
+    if start is None:
+        start, inn = at - h, 0
+    else:
+        inn = h - (at - start)
+    if start < 0:                    # the move comes too early in the template: skip its first frames instead
+        inn, start = inn - start, 0
+    if inn < 0:                      # the cut is before the template's frame 0 could reach the beat: start later
+        start, inn = start - inn, 0
+    out = {"track": tr.get("name"), "hit": hit, "template_frame": h, "at": at, "start": start, "in": inn,
+           "moved_from": asked if asked is not None and asked != start else None}
+    if frames:
+        out["end"] = start + frames - inn - 1
+    return out
+
+
+def land_target(target: str, track: str, at: int, start: int | None = None, hit: str = "start") -> dict:
+    """land() for a template id (its own rate and length) or a copy of one in a project (overlay.py new --from: the
+    copy's rate, its length, its "start" setting's change from the default)."""
+    from . import overlay_settings as OS
+    p = Path(target)
+    if (p / "overlay.json").exists():
+        c = OS.conf(p)
+        tid = c.get("from")
+        if not tid:
+            raise ValueError(f"{p.name} is not a copy of a template (overlay.json has no \"from\")")
+        tracks, fps_t = tracks_of(tid)
+        decl = {d["id"]: d for d in OS.declared(p)}
+        shift = 0
+        if "start" in decl:
+            try:
+                shift = round(float(OS.values(p).get("start", decl["start"].get("default", 0)))
+                              - float(decl["start"].get("default", 0)))
+            except (TypeError, ValueError):
+                shift = 0
+        k, frames = float(c["fps"]) / fps_t, int(c["frames"])
+    else:
+        tracks, fps_t = tracks_of(target)
+        k, shift, frames = 1.0, 0, int(OS.conf(OS.find_graphic(target))["frames"])
+        tid = target
+    if not tracks:
+        raise ValueError(f"{tid} has no tracks yet - measure them: templates.py tracks {tid}")
+    return land(tracks, track, at, start=start, hit=hit, k=k, shift=shift, frames=frames) | {"template": tid}
+
+
+def land_line(r: dict, fps: float) -> str:
+    """One line for Claude: where the layer goes and what lands where, frame + timecode."""
+    s = (f"'{r['track']}' ({r['hit']}, template f{r['template_frame']}) lands on f{r['at']} ({frame_to_tc(r['at'], fps)}): "
+         f"layer start f{r['start']} ({frame_to_tc(r['start'], fps)}), in {r['in']}")
+    if r.get("end") is not None:
+        s += f", end f{r['end']} ({frame_to_tc(r['end'], fps)})"
+    if r.get("moved_from") is not None:
+        s += f" - starts {r['start'] - r['moved_from']} f after the cut f{r['moved_from']} (the move comes sooner than that)"
+    return s
+
+
+# ------------------------------------------------------------------- local templates: spec, progress, index (2026-10-18)
+def local_folder(tid: str) -> Path | None:
+    hits = sorted(LOCAL.glob(f"*/{tid}/template.json")) if LOCAL.is_dir() else []
+    return hits[0].parent if hits else None
+
+
+def spec(folder: Path) -> dict:
+    """spec.json of a local template: what Generate and the user read - duration, canvas, tracks (start, length,
+    easing), text slots, media slots, tags, category, fidelity, the reference clip. Made from template.json +
+    overlay.json + the declared settings + match.json (one source each)."""
+    from . import overlay_settings as OS
+    folder = Path(folder)
+    t = json.loads((folder / "template.json").read_text(encoding="utf-8"))
+    c = OS.conf(folder)
+    fps, n = float(c["fps"]), int(c["frames"])
+    decl = {d["id"]: d for d in OS.declared(folder)}
+    m = json.loads((folder / "match.json").read_text(encoding="utf-8")) if (folder / "match.json").exists() else {}
+    tracks = [{"name": x.get("name"), "what": x.get("what", ""), "start_f": x["start_f"], "length_f": x["length_f"],
+               "start": f"f{x['start_f']} ({frame_to_tc(x['start_f'], fps)})",
+               "length_s": round(x["length_f"] / fps, 3), "easing": x.get("easing", "")} for x in t.get("tracks", [])]
+    return {"id": folder.name, "name": t.get("name"), "category": t.get("category"), "kind": t.get("kind"),
+            "what": t.get("what"), "use_for": t.get("use_for", []), "tags": t.get("tags", []),
+            "duration_s": round(n / fps, 3), "frames": n, "fps": fps,
+            "canvas": {"width": int(c["width"]), "height": int(c["height"]), "any_size": True},
+            "tracks": tracks, "core_points": t.get("core_points"),
+            "text_slots": [{"id": s, "label": decl.get(s, {}).get("label", s), "default": decl.get(s, {}).get("default")}
+                           for s in t.get("text_slots", [])],
+            "media_slots": t.get("media_slots", []),
+            "look_aware": "assets/looks/looks.js" in (folder / "index.html").read_text(encoding="utf-8"),
+            "fidelity": {k: m.get(k) for k in ("score", "status", "correlation", "duration_ref_s", "duration_render_s",
+                                               "duration_off")} if m else None,
+            "reference_clip": t.get("reference_clip"), "reference_partial": t.get("reference_partial", False),
+            "learned_from": t.get("learned_from", []), "pack": folder.parent.name}
+
+
+def progress_path(pack: str) -> Path:
+    return LOCAL / pack / "progress.json"
+
+
+def progress(pack: str) -> dict:
+    p = progress_path(pack)
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {"pack": pack, "templates": {}}
+
+
+def set_progress(pack: str, tid: str, **kv) -> dict:
+    """progress.json: one row per template - clips (the reference clips it stands for), status (building / ok /
+    needs-work), score, passes (improvement passes after the first verify), updated. Finished rows are never redone."""
+    import datetime as _dt
+    d = progress(pack)
+    row = d["templates"].setdefault(tid, {})
+    row.update(kv)
+    row["updated"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    d["updated"] = row["updated"]
+    progress_path(pack).parent.mkdir(parents=True, exist_ok=True)
+    progress_path(pack).write_text(json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
+    return row
+
+
+def write_index() -> Path:
+    """library\\motion_graphics\\index.json: every template (MotionLab's + this PC's local ones) in one list - id,
+    name, kind, category, local, look-aware, slots, fidelity, folder."""
+    rows = []
+    for t in library():
+        ms = t.get("media_slots", [])
+        rows.append({"id": t["id"], "name": t.get("name"), "kind": t.get("kind"), "category": t.get("category"),
+                     "local": t.get("local", False), "pack": t.get("pack"), "look_aware": t.get("look_aware", False),
+                     "text_slots": t.get("text_slots"), "media_slots": len(ms), "needs_media": bool(ms),
+                     "core_points": t.get("core_points"), "fidelity": t.get("fidelity"),
+                     "tracks": len(t.get("tracks") or []), "sizes_ok": t.get("sizes_ok"), "sizes_bad": t.get("sizes_bad"),
+                     "folder": t["folder"]})
+    MG.mkdir(parents=True, exist_ok=True)
+    p = MG / "index.json"
+    p.write_text(json.dumps({"_comment": "Every Motion Graphics template (tools\templates.py index). local = learned "
+                                         "from this PC's own clips (library\\motion_graphics\\local, never shared).",
+                             "templates": rows}, indent=1, ensure_ascii=False), encoding="utf-8")
+    return p
 
 
 _WORD = re.compile(r"[a-z0-9]+")

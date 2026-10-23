@@ -226,12 +226,16 @@ def read_session(path: Path) -> dict:
             cmd = _command(txt)
             cur = {"t0": t, "t1": t, "td": None, "prompt": _prompt_words(txt), "origin": origin or "human",
                    "command": cmd, "answers": 0, "tokens": _tokens0(), "models": Counter(), "efforts": Counter(),
-                   "skills": Counter(), "agents": [], "helpers": [], "end_turn": False, "last": None, "marks": []}
+                   "skills": Counter(), "agents": [], "helpers": [], "end_turn": False, "last": None, "marks": [],
+                   "wait": 0.0, "tools": 0, "tool_t": None}
             rounds.append(cur)
             continue
         if cur is None:
             continue
         cur["t1"] = max(cur["t1"], t)
+        if kind == "result" and cur["tool_t"] is not None:     # 0.5.3 (F4): the time a tool ran = waiting, not thinking
+            cur["wait"] += max(0.0, t - cur["tool_t"])
+            cur["tool_t"] = None
         if kind == "td":
             cur["td"] = (x or 0) / 1000
         elif kind == "answer":
@@ -240,6 +244,9 @@ def read_session(path: Path) -> dict:
             for c in content:
                 if isinstance(c, dict) and c.get("type") == "tool_use":
                     cur["last"] = (c.get("name"), c.get("input") or {})
+                    cur["tools"] += 1
+                    if cur["tool_t"] is None:
+                        cur["tool_t"] = t
                     if c.get("name") in ("Agent", "Task"):
                         cur["agents"].append(c.get("id"))
                     # what each tool touched (a path, a command): a batch round's time is split by it (split())
@@ -418,7 +425,8 @@ def round_info(s: dict, r: dict) -> dict:
             "measured": r["td"] is not None, "task": r.get("task"), "mode": r.get("mode", ""),
             "prompt": r["prompt"], "model": model_name(model) if model else None,
             "effort": r["efforts"].most_common(1)[0][0] if r["efforts"] else None,
-            "tokens": tok, "total": total(tok), "helpers": helpers, "answers": r["answers"]}
+            "tokens": tok, "total": total(tok), "helpers": helpers, "answers": r["answers"],
+            "wait_minutes": round(min(r.get("wait", 0.0) / 60, r["minutes"]), 2), "tools": r.get("tools", 0)}
 
 
 # ------------------------------------------------------------------------------------------------- live

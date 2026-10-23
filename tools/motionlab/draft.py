@@ -251,6 +251,24 @@ def _ovl(cut: dict | None, fps: float) -> int:
 
 
 # ------------------------------------------------------------------------------------------------ the clips
+DIP_SHARE, DIP_WIN = 0.6, 15     # a frame under 60 % of the luma median of the 15 frames each side = a dip
+
+
+def luma_dips(luma) -> list[int]:
+    """0.5.3 (A7): the 1-2 frame luma dips of a clip - a screen recording repaints BLACK for one frame at every page /
+    tab change (luma 6.5 against 11.4 around it, local-make-15), too small for the brightness jump test of a cut on a
+    dark recording. Frames whose luma is under DIP_SHARE of the median around them, the frames on both sides not."""
+    y = np.asarray(luma, float)
+    n = len(y)
+    out = []
+    for f in range(1, n - 1):
+        lo, hi = max(0, f - DIP_WIN), min(n, f + DIP_WIN + 1)
+        med = float(np.median(y[lo:hi]))
+        if med > 2 and y[f] < DIP_SHARE * med and (y[f - 1] >= DIP_SHARE * med or y[f + 1] >= DIP_SHARE * med):
+            out.append(f)
+    return out
+
+
 def quality(clip: dict, energy: str) -> tuple[np.ndarray, np.ndarray]:
     """Per frame: a quality score (sharp, well exposed, the right amount of motion) and 1 where the clip itself cuts
     (a jump in motion or brightness - a window should not contain one)."""
@@ -269,6 +287,7 @@ def quality(clip: dict, energy: str) -> tuple[np.ndarray, np.ndarray]:
     q = 0.8 * sh - 1.5 * expo + em
     med = float(np.median(mot)) if n else 0.0
     spike = (mot > max(5 * med, 12.0)) | (np.abs(np.diff(luma, prepend=luma[:1])) > 15)
+    spike[luma_dips(luma)] = True                       # a screen recording's black repaint: no shot across it
     spike[:1] = False
     return q, spike.astype(float)
 

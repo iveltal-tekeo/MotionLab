@@ -5,6 +5,10 @@
     ... --workers N   parallel processes for a render (default: half the CPUs, at most 8; 1 = one process)
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --sheet 0:3895:25     contact sheet of rendered frames
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --stills 480,1633     PNG stills
+    .venv\\Scripts\\python tools\\render_video.py <plan.json> --cuts   the cut-sheet (0.5.3): one page with a still at
+          every layer boundary (n and n-1), the sound cues (build\\sfx\\<name>_sfx.json, hits first), the first and
+          last frame - up to 32, frame + timecode + why on each; from the render when it is newer than the plan
+          -> build\\checks\\<name>_cuts_01.jpg - the one look before the final
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --compare             reference | render side by side
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --compare --left <a.mp4> --right <b.mp4>  any two
 Every output goes next to the plan (its build folder; side-by-sides in build\\compare\\); sources and the
@@ -24,7 +28,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from motionlab.compose import Renderer  # noqa: E402
+from motionlab.compose import Renderer, resolve_paths  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
 from motionlab.util import log, setup_console, tool  # noqa: E402
@@ -95,7 +99,7 @@ def _render_part(plan_path: str, s0: int, s1: int, seg: str, crf: int, preset: s
     """One worker process: frames s0..s1 of the plan -> a video-only segment (only the layers that touch them)."""
     import cv2
     cv2.setNumThreads(1)                                   # the parallelism is the processes
-    plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+    plan = resolve_paths(json.loads(Path(plan_path).read_text(encoding="utf-8")), Path(plan_path).parent)
     plan["layers"] = [L for L in plan["layers"] if int(L["end"]) >= s0 and int(L["start"]) <= s1]
     t0 = time.time()
     R = Renderer(plan)
@@ -162,6 +166,57 @@ def sheet(R: Renderer, frames: list[int], out: Path, title: str, cols: int = 6, 
     return make_sheets(tiles, out.parent, out.stem, title, cols, tile_w)
 
 
+def cut_frames(plan: dict, plan_path: Path, cap: int = 32) -> list[tuple[int, str]]:
+    """0.5.3 (A6) - the frames worth one look: frame 0, every layer boundary (the first frame of what comes, then the
+    last frame before it when there is room), the sound cues (build\\sfx\\<name>_sfx.json: hits first), the last
+    frame - at most `cap`, spread evenly when there are more. (frame, why)."""
+    N = int(plan["frames"])
+    bounds = sorted({int(L[k]) + (k == "end") for L in plan.get("layers", []) for k in ("start", "end")
+                     if L.get(k) is not None})
+    bounds = [b for b in bounds if 1 < b < N - 1]
+    if len(bounds) > cap - 2:                                   # more cuts than tiles: spread them
+        bounds = [bounds[int(i * len(bounds) / (cap - 2))] for i in range(cap - 2)]
+    want: dict[int, str] = {0: "start", N - 1: "end"} | {b: f"cut {plan_layer_at(plan, b)}".strip() for b in bounds}
+    from motionlab import sfx as SFX
+    rep = plan_path.parent / "sfx" / f"{SFX.stem_name(plan.get('name') or plan_path.stem)}_sfx.json"
+    cues = []
+    if rep.exists():
+        try:
+            cues = [(int(q["f"]), q.get("kind", ""), q.get("level", "")) for q in
+                    json.loads(rep.read_text(encoding="utf-8")).get("cues", []) if not q.get("skipped")]
+        except (OSError, ValueError, KeyError):
+            cues = []
+    for b in bounds:                                            # n-1 of each cut while there is room
+        if len(want) < cap and b - 1 not in want:
+            want[b - 1] = "before the cut"
+    cues.sort(key=lambda q: (q[2] not in ("hit", "hit_small"), q[0]))     # the hits first
+    cues = [(f, k) for f, k, _ in cues if 0 <= f < N and all(abs(f - g) > 1 for g in want)]
+    room = cap - len(want)
+    if len(cues) > room > 0:
+        cues = [cues[int(i * len(cues) / room)] for i in range(room)]
+    for f, k in cues[:max(room, 0)]:
+        want.setdefault(f, f"cue {k}")
+    return sorted(want.items())
+
+
+def plan_layer_at(plan: dict, f: int) -> str:
+    """The id of the top layer that starts at frame f (for a tile's label)."""
+    ids = [L.get("id") or L.get("type", "") for L in plan.get("layers", []) if int(L.get("start", -1)) == f]
+    return f"-> {ids[-1]}" if ids else ""
+
+
+def frames_from_video(video: Path, frames: list[int], W: int, H: int) -> dict[int, "np.ndarray"]:
+    """Decoded frames of a render at the plan's size (one pass, ffmpeg select) - what was rendered, not rendered
+    again."""
+    import numpy as np
+    sel = "+".join(f"eq(n\\,{f})" for f in frames)
+    r = subprocess.run([tool("ffmpeg"), "-v", "error", "-i", str(video), "-vf", f"select='{sel}'", "-vsync", "0",
+                        "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True)
+    n = len(r.stdout) // (W * H * 3)
+    arr = np.frombuffer(r.stdout[:n * W * H * 3], np.uint8).reshape(n, H, W, 3)
+    return dict(zip(sorted(frames)[:n], arr))
+
+
 def compare(ref: Path, ours: Path, out: Path, fps: float, n: int, label_l: str, label_r: str, crf: int = 20,
             first: int = 0, ours_first: int = 0):
     """reference | render, each 760 px wide, with a strip showing frame number + timecode on every frame.
@@ -214,6 +269,7 @@ def main() -> int:
     ap.add_argument("--range", nargs=2, type=int)
     ap.add_argument("--sheet")
     ap.add_argument("--stills")
+    ap.add_argument("--cuts", action="store_true", help="one sheet: every layer boundary and sound cue (up to 32)")
     ap.add_argument("--compare", action="store_true")
     ap.add_argument("--left", help="--compare: left video (default: the plan's reference)")
     ap.add_argument("--right", help="--compare: right video (default: the plan's render)")
@@ -223,7 +279,7 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=default_workers(), help="parallel render processes")
     a = ap.parse_args()
     plan_path = Path(a.plan).resolve()
-    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    plan = resolve_paths(json.loads(plan_path.read_text(encoding="utf-8")), plan_path.parent)
     build = plan_path.parent
     name = plan.get("name", plan_path.stem)
     if a.compare:
@@ -257,6 +313,24 @@ def main() -> int:
         for f in frames:
             p = _guard(build / "stills" / f"{name}_f{f:05d}.png", plan_path, plan)
             Image.fromarray(R.render(f)).save(p)
+            print(p)
+        return 0
+    if a.cuts:                                         # 0.5.3 (A6): the one look before the final
+        picks = cut_frames(plan, plan_path)
+        frames = [f for f, _ in picks]
+        video = Path(plan.get("output", f"{name}.mp4"))
+        video = video if video.is_absolute() else build / video
+        fresh = video.exists() and video.stat().st_mtime >= plan_path.stat().st_mtime
+        got = frames_from_video(video, frames, R.W, R.H) if fresh else {}
+        if len(got) != len(frames):                    # no render newer than the plan: render these frames
+            got = {f: R.render(f) for f in frames}
+        from storyboard import make_sheets
+        tiles = [(got[f], f"f{f} {frame_to_tc(f, R.fps)} {why}"[:34]) for f, why in picks]
+        out = _guard(build / "checks" / f"{name}_cuts", plan_path, plan)
+        cols = 8 if R.H > R.W else 6
+        for p in make_sheets(tiles, out.parent, out.name, f"{name}: every cut and cue "
+                             f"({'from the render' if fresh else 'rendered frames'})", cols, 200 if R.H > R.W else 240,
+                             rows=8):
             print(p)
         return 0
     if a.sheet:

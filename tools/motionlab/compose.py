@@ -705,6 +705,30 @@ LAYERS = {"clip": ClipLayer, "solid": SolidLayer, "text": TextLayer, "clock": Cl
 
 
 # ------------------------------------------------------------------------------------------------ renderer
+def resolve_paths(plan: dict, base: Path) -> dict:
+    """A plan's relative paths (a layer's "file", a source's "source", the audio) made absolute: next to the plan
+    (its build folder) first, else from the lab's folder - so the plan reads the same from any working folder
+    (0.5.3; before, sfx.py found no graphic cues in a plan with relative paths, local-make-11(3)). In place."""
+    from .util import LAB
+
+    def fix(p):
+        if not p or Path(p).is_absolute():
+            return p
+        for root in (Path(base), LAB):
+            if (root / p).exists():
+                return str((root / p).resolve())
+        return p
+    for L in plan.get("layers", []):
+        if L.get("file"):
+            L["file"] = fix(L["file"])
+    for s in (plan.get("sources") or {}).values():
+        if isinstance(s, dict) and s.get("source"):
+            s["source"] = fix(s["source"])
+    if isinstance(plan.get("audio"), dict) and plan["audio"].get("path"):
+        plan["audio"]["path"] = fix(plan["audio"]["path"])
+    return plan
+
+
 class Renderer:
     def __init__(self, plan: dict):
         self.plan = plan

@@ -1,7 +1,9 @@
 """What it took (0.4.4): Claude's minutes and tokens, read from Claude Code's own session logs on this PC (read-only).
 
     .venv\\Scripts\\python tools\\usage.py sessions [--all]     every session: when, minutes, tokens, what it was for
-    .venv\\Scripts\\python tools\\usage.py project <name>       a video's steps + jobs, as its Overview shows them
+    .venv\\Scripts\\python tools\\usage.py project <name> [--steps]   a video's steps + jobs, as its Overview shows them;
+                                                         --steps = per step Claude's thinking + writing vs the time
+                                                         its tools ran, and its tool calls (0.5.3: the measure)
     .venv\\Scripts\\python tools\\usage.py analysis <name>      the same for an analysis
     .venv\\Scripts\\python tools\\usage.py check                our sums against Claude Code's own cost notes (1 %)
     .venv\\Scripts\\python tools\\usage.py selfcheck            known answers on tools\\dev\\usage_samples (no real logs)
@@ -30,14 +32,25 @@ def _tok(n: int) -> str:
     return f"{n / 1e6:.1f} M" if n >= 1e6 else f"{n / 1e3:.0f} k" if n >= 1e3 else str(n)
 
 
-def show(d: dict) -> None:
+def show(d: dict, steps: bool = False) -> None:
     for r in d["rows"]:
         tail = f"{_tok(r['total'])} tokens · {r['model'] or '?'} · {r['effort'] or '?'}" if r["kind"] == "claude" \
             else "a lab job, no tokens"
-        print(f"{_when(r['t0'])}  {r['minutes']:6.1f} min  {r['step']}{' - ' + r['what'] if r.get('what') else ''}  ({tail})")
+        split = ""
+        if steps and r["kind"] == "claude":            # 0.5.3 (F4): thinking / writing vs waiting on the lab's tools
+            w = r.get("wait_minutes", 0)
+            split = (f"  [thinking + writing {r['minutes'] - w:.1f} min, waiting on tools {w:.1f} min, "
+                     f"{r.get('tools', 0)} tool calls, {r.get('rounds', 1)} round(s)]")
+        print(f"{_when(r['t0'])}  {r['minutes']:6.1f} min  {r['step']}{' - ' + r['what'] if r.get('what') else ''}  "
+              f"({tail}){split}")
     T = d["total"]
     print(f"TOTAL  {T['claude_minutes']:.1f} min of Claude in {T['windows']} window(s) + {T['job_minutes']:.1f} min of "
           f"lab jobs · {_tok(T['tokens'])} tokens")
+    if steps:
+        C = [r for r in d["rows"] if r["kind"] == "claude"]
+        w = sum(r.get("wait_minutes", 0) for r in C)
+        print(f"       of Claude's: thinking + writing {T['claude_minutes'] - w:.1f} min, waiting on tools {w:.1f} min, "
+              f"{sum(r.get('tools', 0) for r in C)} tool calls")
     if d["other"]["rounds"]:
         print(f"not counted: {d['other']['rounds']} other round(s) in the same windows, {d['other']['minutes']:.1f} min")
 
@@ -72,7 +85,7 @@ def main() -> int:
         return 1 if bad else 0
     if a[0] in ("project", "analysis") and len(a) > 1:
         from motionlab.app import data
-        show(data.took(a[0], a[1]))
+        show(data.took(a[0], a[1]), steps="--steps" in a)
         return 0
     print(__doc__)
     return 2

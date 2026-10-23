@@ -67,6 +67,7 @@
  "These ratings were for an older render - rate this one.": "Estas valoraciones eran de un render anterior: valora este.",
  "Claude starts it over from the plan, in a different feel - this one stays.": "Claude lo empieza de nuevo desde el plan, con otro estilo; este se queda.",
  "Claude makes the next version from your review - this one stays.": "Claude hace la siguiente versión a partir de tu revisión; esta se queda.",
+ "It changes <b>{parts}</b> and keeps the rest.": "Cambia <b>{parts}</b> y mantiene el resto.",
  "After posting: which thumbnail got clicked": "Después de publicar: qué miniatura se llevó los clics",
  "the click-through rate from YouTube Studio - MotionLab never logs in to your accounts": "el porcentaje de clics (CTR) de YouTube Studio - MotionLab nunca entra en tus cuentas",
  "the video's link (https://…)": "el enlace del vídeo (https://…)",

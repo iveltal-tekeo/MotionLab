@@ -1,0 +1,228 @@
+"""The brief (0.5.3): what Claude needs to start a video, made by the lab in one file - instead of ~70 k tokens of
+reading the lab before the first decision. Nothing is dropped: what is not in it is named at its end ("Left out"),
+with the command that prints it.
+
+    .venv\\Scripts\\python tools\\brief.py <project>      -> projects\\<project>\\build\\brief.md (prints its path + size)
+          A video from zero (build\\generate_request.json): the request with its blanks filled and marked (asked /
+          default / a guess - format, song, look), the song's beats from the start used (beats.py), the templates
+          that fit the words with their moves (tracks, frame + timecode), sizes they are checked at and text
+          settings, the style of the `like` videos (style.py; else the closest ones), the user's ratings as rules
+          (knowledge.py memory --rules), the lessons for this kind (knowledge.py lessons --kind generate).
+          An edit (build\\edit_request.json): the request in words (edit_brief.md), the clips (length, rate, size,
+          sound, their words if transcribed), the references' style, the ratings as rules, the lessons (talking
+          videos: --kind talking; others: every lesson).
+The app writes it when a request is saved; /generate-video and /recreate-video read it first (they run this when it
+is missing or older than the request). Reads only; writes brief.md.
+"""
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from motionlab import knowledge as KN  # noqa: E402
+from motionlab import overlay_settings as OS  # noqa: E402
+from motionlab import templates as TM  # noqa: E402
+from motionlab.timecode import frame_to_tc  # noqa: E402
+from motionlab.util import LAB, setup_console  # noqa: E402
+
+PY, TOOLS = sys.executable, LAB / "tools"
+PROJECTS = LAB / "projects"
+VIDEO_EXT = {".mp4", ".mov", ".mkv", ".m4v", ".webm", ".avi"}
+
+
+def tool(*args: str, timeout: int = 180) -> str:
+    """A lab tool's printed output (its log lines with [ 1.2s] stamps dropped)."""
+    r = subprocess.run([PY, str(TOOLS / args[0]), *args[1:]], capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", cwd=str(LAB), timeout=timeout)
+    return "\n".join(ln for ln in (r.stdout or "").splitlines() if not ln.startswith("[")).strip()
+
+
+def last_format(skip: str) -> tuple[str, str] | None:
+    """The format the user picked in their newest other Generate request: (format, project)."""
+    rows = []
+    for p in PROJECTS.glob("*/build/generate_request.json"):
+        if p.parents[1].name == skip:
+            continue
+        try:
+            f = json.loads(p.read_text(encoding="utf-8")).get("format")
+        except (OSError, ValueError):
+            continue
+        if f:
+            rows.append((p.stat().st_mtime, f, p.parents[1].name))
+    return max(rows)[1:] if rows else None
+
+
+def template_lines(ids: list[str], want: str, n: int = 10) -> tuple[list[str], int]:
+    lib = {t["id"]: t for t in TM.library()}
+    picked = [lib[i] for i in ids if i in lib]
+    for t in TM.pick(want, n + len(picked)):
+        if t["id"] not in {p["id"] for p in picked} and len(picked) < n + len(ids):
+            picked.append(lib.get(t["id"], t))
+    L = []
+    for t in picked:
+        c = OS.conf(LAB / t["folder"])
+        fps = float(c["fps"])
+        decl = OS.declared(LAB / t["folder"])
+        texts = t.get("text_slots") or [d["id"] for d in decl if d["type"] == "string" and not any(
+            w in d["id"] for w in ("media", "focus", "logo", "image", "photo", "video"))]
+        texts = [s["id"] if isinstance(s, dict) else s for s in texts]
+        tr = t.get("tracks") or []
+        moves = "; ".join(f"{i}. {x.get('name')} f{x['start_f']} ({frame_to_tc(x['start_f'], fps)}) +{x['length_f']}"
+                          for i, x in enumerate(tr[:6], 1)) + (f"; +{len(tr) - 6} more" if len(tr) > 6 else "")
+        sizes = ((f"ok at {', '.join(t['sizes_ok'])}" if t.get("sizes_ok") else "")
+                 + (f"; NOT at {', '.join(t['sizes_bad'])}" if t.get("sizes_bad") else "")) or "other sizes not checked yet"
+        L.append(f"- **{t['id']}** ({t.get('kind', '')}{', yours' if t['id'] in ids else ''}; {c['width']}x{c['height']} "
+                 f"{fps:g} fps {c['frames']} f; {sizes}) - {(t.get('what') or '')[:160]}"
+                 + (f"\n  moves: {moves}" if moves else "\n  moves: not measured yet (templates.py tracks --measure)")
+                 + (f"\n  words: {', '.join(texts)}" if texts else ""))
+    return L, len(lib) - len(picked)
+
+
+def generate_brief(p: Path, req: dict) -> list[str]:
+    want, words = req.get("want", ""), req.get("text", "")
+    L = [f"# Brief: {p.name} - a video from zero ({req.get('kind')})", "",
+         f"Made by the lab (tools\\brief.py, {time.strftime('%Y-%m-%d %H:%M')}) from build\\generate_request.json "
+         f"({req.get('date', '')}): everything to start with, in one read. *Left out* at the end names what is not "
+         "here and the command that prints it. A guess below is yours to change - say which you kept.", "",
+         "## The request", f"- what: {want}"]
+    if words:
+        L += ["- words on screen (the user's, one per line):"] + [f"  - {w}" for w in words.splitlines()]
+    L.append(f"- length: {req['length_s']:g} s (asked)" if req.get("length_s") else
+             "- length: not set - a guess: what the song's bars and the words need (30 s is the usual reel)")
+    fmt = req.get("format")
+    if fmt:
+        L.append(f"- format: {fmt} (asked)")
+    else:
+        lf = last_format(p.name)
+        L.append(f"- format: not set - a guess: {lf[0]} (what the user picked last time, {lf[1]})" if lf else
+                 "- format: not set - a guess: vertical 1080x1920 (the repo templates are drawn for it); AE "
+                 "templates only where the table below says ok at 1080x1920")
+    song, start = req.get("music"), 0.0
+    if song:
+        L.append(f"- song: {Path(song).name} (asked) - only read; a part of it = cut a copy into build\\")
+    elif req.get("kind") == "graphics":
+        from motionlab import sfx as SFX
+        ls = SFX.last_song()
+        if ls:
+            song, start = ls[0], ls[1]
+            L.append(f"- song: none chosen - a guess: {Path(song).name} from {start:g} s (the last reel's, {ls[2]}); "
+                     "ask before using it")
+        else:
+            L.append("- song: none - time it to the style's rhythm")
+    look = json.loads((TM.MOTION / "_looks" / "index.json").read_text(encoding="utf-8")).get("default") \
+        if (TM.MOTION / "_looks" / "index.json").exists() else None
+    L.append("- look: " + ", ".join(x for x in (
+        f"colours {req['colours']} (asked)" if req.get("colours") else "",
+        f"font {req['font']} (asked)" if req.get("font") else "",
+        ("a look of your own - surprise the user (asked): not the default look, not the last video's"
+         if req.get("look") == "surprise" else
+         f"the look '{req['look']}' (asked)" if req.get("look") else
+         f"the default look '{look}' (default - `templates.py looks` lists the others)" if look else "")) if x)
+             or "- look: the templates' own")
+    if req.get("templates"):
+        L.append(f"- templates the user picked (use every one): {', '.join(req['templates'])}")
+    if req.get("kind") == "ai":
+        L.append(f"- tool: {req.get('tool') or 'not named - ask'}")
+    if song and req.get("kind") == "graphics":
+        secs = req.get("length_s") or 60
+        L += ["", f"## The beats ({'the song asked' if req.get('music') else 'the guessed song'}, frame 0 = {start:g} s "
+                  "into it, 30 fps; tools\\beats.py)", "```", tool("beats.py", song, "--fps", "30", "--start",
+                                                                f"{start}", "--length", f"{secs}"), "```"]
+    left = []
+    if req.get("kind") == "graphics":
+        tl, rest = template_lines(req.get("templates") or [], f"{want} {words}")
+        L += ["", "## Templates that fit the words (the user's picks first; templates.py pick)",
+              "Land a move on a beat: `overlay.py new <folder> --from <id> --land \"<track>@<plan frame>\" [--start "
+              "<cut>]`. Their settings: `overlay.py settings <id>`."] + tl
+        left.append(f"the other {rest} templates: `templates.py library --brief` (one line each)")
+    like = req.get("like") or []
+    L += ["", "## Style"]
+    if like:
+        L += [f"The style of {', '.join(like)} (tools\\style.py) - copy the style, never the content:", "```",
+              tool("style.py", *like), "```"]
+    else:
+        L += ["No `like` video: the analysed videos whose measured style is closest to the words (style.py closest) - "
+              "60 % or more = suggest it as the style:", "```", tool("style.py", "closest", want or words or "video"),
+              "```"]
+    L += ["", KN.memory_rules(), "", KN.lessons_for("generate" if req.get("kind") == "graphics" else "all")]
+    left += ["Claude's memory beyond the ratings (every analysed video's style in one line, the effects seen and how "
+             "they were made): `knowledge.py memory` - for a copy of one reference's effects",
+             "the request as JSON: build\\generate_request.json"]
+    return L + ["", "## Left out (nothing silently)"] + [f"- {x}" for x in left]
+
+
+def clip_lines(p: Path) -> list[str]:
+    from motionlab import speech as SP
+    L = []
+    for v in sorted(x for x in p.iterdir() if x.is_file() and x.suffix.lower() in VIDEO_EXT):
+        try:
+            i = SP.probe(v)
+        except Exception:                                   # noqa: BLE001 - a clip that does not read is named
+            L.append(f"- {v.name}: could not be read")
+            continue
+        fps = float(i.get("fps") or 30)
+        n = int(i.get("frames") or 0)
+        words = sorted((p / "build" / "speech").glob(f"{v.stem}.*.json"))
+        L.append(f"- {v.name}: {n / fps if fps else 0:.1f} s, {n} frames at {fps:g} fps "
+                 f"({frame_to_tc(max(n - 1, 0), fps)} last), {i.get('width')}x{i.get('height')}"
+                 + (", sound" if i.get("has_audio") else ", no sound")
+                 + (f"; its words: build\\speech\\{words[-1].name}" if words else
+                    "; words not transcribed yet (tools\\speech.py transcribe)"))
+    return L or ["- no clips in the folder"]
+
+
+def edit_brief(p: Path, req: dict) -> list[str]:
+    b = p / "build" / "edit_brief.md"
+    talking = req.get("sound") == "talk" or str(req.get("prompt") or "").startswith(("script-", "hook-"))
+    L = [f"# Brief: {p.name} - an edit of the user's clips", "",
+         f"Made by the lab (tools\\brief.py, {time.strftime('%Y-%m-%d %H:%M')}): the request in words (what the app "
+         "saved), then the lab's facts - the clips, the references' style, the user's ratings as rules, the lessons. "
+         "*Left out* at the end names what is not here.", ""]
+    L += [b.read_text(encoding="utf-8").strip() if b.exists() else "(no edit_brief.md: the request is "
+          "build\\edit_request.json)", "", "## The clips (the lab measured them; only read)"] + clip_lines(p)
+    pid = str(req.get("prompt") or "")
+    rec = next(iter((KN.LOCAL / "prompts").glob(f"*/{pid}.json")), None) if pid else None
+    if rec:
+        r = json.loads(rec.read_text(encoding="utf-8"))
+        L += ["", f"## The {r.get('kind', 'text')} {pid}: {r.get('title', '')} (the prompt library, word for word)",
+              "```", str(r.get("text") or "").strip(), "```"]
+    like = req.get("like") or []
+    if like:
+        L += ["", "## The references' style (tools\\style.py)", "```", tool("style.py", *like), "```"]
+    L += ["", KN.memory_rules(), "", KN.lessons_for("talking" if talking else "all")]
+    left = ["Claude's memory beyond the ratings: `knowledge.py memory` (a 1:1 copy of a reference reads it whole)",
+            "the request as JSON: build\\edit_request.json"]
+    return L + ["", "## Left out (nothing silently)"] + [f"- {x}" for x in left]
+
+
+def make(project: str) -> Path:
+    p = Path(project)
+    p = (p if p.is_dir() else PROJECTS / project).resolve()
+    gen, ed = p / "build" / "generate_request.json", p / "build" / "edit_request.json"
+    req_p = max((x for x in (gen, ed) if x.exists()), key=lambda x: x.stat().st_mtime, default=None)
+    if not req_p:
+        raise SystemExit(f"{p.name}: no generate_request.json or edit_request.json in build\\")
+    req = json.loads(req_p.read_text(encoding="utf-8"))
+    L = generate_brief(p, req) if req_p == gen else edit_brief(p, req)
+    out = p / "build" / "brief.md"
+    out.write_text("\n".join(L).rstrip() + "\n", encoding="utf-8")
+    return out
+
+
+def main() -> int:
+    setup_console()
+    if len(sys.argv) != 2 or sys.argv[1] in ("-h", "--help"):
+        print(__doc__)
+        return 2
+    out = make(sys.argv[1])
+    print(f"{out} ({out.stat().st_size / 1024:.1f} KB)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

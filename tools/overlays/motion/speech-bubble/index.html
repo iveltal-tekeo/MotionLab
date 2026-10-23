@@ -67,7 +67,7 @@
   Object.assign(b.style, { font: `800 ${fs}px ${fam}`, color: V.text_color, background: col, padding: `${fs * (pill ? 0.42 : 0.5)}px ${fs * (pill ? 0.75 : 0.8)}px`,
     borderRadius: `${pill ? 999 : fs * 0.38}px`, boxShadow: `0 ${16 * U}px ${36 * U}px rgba(0,0,0,.22)`, letterSpacing: pill ? "0" : "0.04em" });
   q("tx").textContent = V.text;
-  if (pill) q("em").textContent = V.emoji || "👋"; else q("em").remove();
+  if (pill && V.emoji) q("em").textContent = V.emoji; else q("em").remove();     // an empty emoji = a plain pill
   const tail = q("tail"), tz = fs * 0.5;
   if (!pill && V.tail !== "none") Object.assign(tail.style, { bottom: `${-tz * 0.8}px`, [V.tail === "bottom-right" ? "right" : "left"]: `${fs * 0.6}px`,
     borderTop: `${tz}px solid ${col}`, [V.tail === "bottom-right" ? "borderLeft" : "borderRight"]: `${tz * 0.9}px solid transparent` });
@@ -87,8 +87,10 @@
       if (tail.isConnected) set(tail, { borderTopColor: k % 2 ? col : V.alt }, f + K(4));
     }
   } else {
-    gsap.set("#em", { transformOrigin: "70% 85%" });
-    for (let f = S + K(16); f + K(25) < FRAMES; f += K(40)) [22, -10, 22, -10, 0].forEach((r, i) => to("#em", { rotation: r }, f + i * K(5), f + (i + 1) * K(5), "sine.inOut"));
+    if (document.getElementById("em")) {
+      gsap.set("#em", { transformOrigin: "70% 85%" });
+      for (let f = S + K(16); f + K(25) < FRAMES; f += K(40)) [22, -10, 22, -10, 0].forEach((r, i) => to("#em", { rotation: r }, f + i * K(5), f + (i + 1) * K(5), "sine.inOut"));
+    }
     to(b, { y: cy - 10 * U }, S + K(17), FRAMES, "sine.inOut");
   }
   tl.set({}, {}, F(FRAMES));

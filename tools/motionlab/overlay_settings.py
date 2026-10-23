@@ -31,6 +31,8 @@ from .util import LAB
 LIBRARY = LAB / "library" / "graphics"
 EXAMPLES = LAB / "tools" / "overlays" / "examples"
 MOTION = LAB / "tools" / "overlays" / "motion"          # 0.5.0: the Motion Graphics library (motionlab\templates.py)
+LOCAL_MOTION = LAB / "library" / "motion_graphics" / "local"     # 2026-10-18: templates learned from the user's own
+#                                                     captured clips (<pack>\<id>\, e.g. autoae) - this PC only
 SOURCES = ("index.html", "overlay.json", "gsap.min.js", "hyperframes.json",      # + assets\ (what new / save copy)
            "presets.json")
 TYPES = ("string", "color", "number", "boolean", "enum")
@@ -177,11 +179,15 @@ def presets(folder: Path) -> dict:
     folder = Path(folder)
     p = folder / "presets.json"
     if not p.exists():
-        return {}
-    try:
-        raw = json.loads(p.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        raise ValueError(f"{p}: not valid JSON ({e})") from None
+        from . import looks as LK                   # a look-aware graphic: one ready-made look per look file
+        if not LK.is_look_aware(folder):
+            return {}
+        raw = LK.presets()
+    else:
+        try:
+            raw = json.loads(p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            raise ValueError(f"{p}: not valid JSON ({e})") from None
     decl = declared(folder)
     now = values(folder) if decl else {}
     out = {}
@@ -354,6 +360,31 @@ def library() -> list[dict]:
     return out
 
 
+def too_short(folder: Path) -> str | None:
+    """0.5.3: a copy of a template shorter than its template.json "min_frames" (a formula of its settings, e.g.
+    shape-wipe "start + 2 * cover_frames + hold_frames + 6 if reveal else ..." - it skips its clear when it would end
+    after the last frame, local-make-11(1)) -> the warning, else None."""
+    folder = Path(folder)
+    c = conf(folder)
+    try:
+        src = find_graphic(str(c.get("from") or ""))
+        t = json.loads((src / "template.json").read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return None
+    if not t.get("min_frames"):
+        return None
+    from .sfx import _FUNCS, formula
+    try:
+        n = int(math.ceil(float(formula(t["min_frames"], {**values(folder), **_FUNCS, "fps": float(c["fps"]),
+                                                          "frames": int(c["frames"])}))))
+    except (ValueError, TypeError, ZeroDivisionError, KeyError):
+        return None
+    if int(c["frames"]) >= n:
+        return None
+    return (f"TOO SHORT: {folder.name} has {c['frames']} frames, {c.get('from')} needs {n} at these settings - "
+            f"{t.get('min_why') or 'it cannot finish its move'}")
+
+
 def find_graphic(name: str) -> Path:
     """A library graphic, an example or a motion template by folder name (the user's own first)."""
     if not re.fullmatch(r"[\w.-]+", name or ""):
@@ -361,4 +392,7 @@ def find_graphic(name: str) -> Path:
     for root in (LIBRARY, EXAMPLES, MOTION):
         if (root / name / "index.html").exists():
             return root / name
-    raise ValueError(f"no graphic '{name}' in library\\graphics, tools\\overlays\\examples or tools\\overlays\\motion")
+    for p in sorted(LOCAL_MOTION.glob(f"*/{name}/index.html")) if LOCAL_MOTION.is_dir() else []:
+        return p.parent
+    raise ValueError(f"no graphic '{name}' in library\\graphics, tools\\overlays\\examples, tools\\overlays\\motion "
+                     "or library\\motion_graphics\\local")

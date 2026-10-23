@@ -77,6 +77,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from motionlab import fonts as FL  # noqa: E402
 from motionlab import logos as LG  # noqa: E402
+from motionlab import looks as LK  # noqa: E402
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import overlays as OV  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
@@ -188,7 +189,9 @@ def guard(folder: Path) -> Path:
     projects, scratch = (LAB / "projects").resolve(), (LAB / ".app").resolve()
     ok = scratch in f.parents or (projects in f.parents and "build" in f.relative_to(projects).parts[1:2])
     if not ok:
-        raise PermissionError(f"overlays go into projects\\<name>\\build\\overlays\\<overlay> (not {f})")
+        raise PermissionError(f"overlays go into projects\\<name>\\build\\overlays\\<overlay> (not {f}); to work on a "
+                              "template or library graphic make a copy first: overlay.py new projects\\<name>\\build\\"
+                              "overlays\\<overlay> --from <id> (settings <id> reads one as it is)")
     return f
 
 
@@ -279,11 +282,18 @@ def cmd_new(a) -> int:
     if (folder / "index.html").exists() and not a.force:
         raise SystemExit(f"{folder / 'index.html'} exists (--force replaces it)")
     if a.from_:
-        try:
-            src = OS.find_graphic(a.from_)
-        except ValueError as e:
-            raise SystemExit(str(e))
-        c = copy_sources(src, folder, folder.name, {"from": a.from_})
+        if (Path(a.from_) / "index.html").exists():     # 0.5.3: another graphic's folder (a previous version's), its
+            src = Path(a.from_).resolve()               # settings kept, the template it came from too (for --land)
+            origin = OS.conf(src).get("from")
+        else:
+            try:
+                src = OS.find_graphic(a.from_)
+            except ValueError as e:
+                raise SystemExit(f"{e} - or give a graphic's folder")
+            origin = a.from_
+        c = copy_sources(src, folder, folder.name, {"from": origin} if origin else {})
+        if c.pop("land", None) is not None:             # a landing belongs to the plan it was made for
+            (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
         # 0.5.0: a size-independent graphic (the motion templates, captions) takes the size / rate / length given, or
         # with --like-plan the project's newest edit plan's size and rate (its own length in seconds kept)
         want = {"fps": a.fps, "frames": a.frames, "width": a.width, "height": a.height}
@@ -308,6 +318,17 @@ def cmd_new(a) -> int:
         log(f"{folder.name}: a copy of the graphic '{a.from_}' ({c['frames']} frames at {float(c['fps']):g} fps, "
             f"{c['width']}x{c['height']}); change its settings in the app or with overlay.py set, then render")
         print(folder / "index.html")
+        if getattr(a, "land", None):                      # 0.5.3 (A1): a move landed on a plan frame by its track
+            from motionlab import templates as TM
+            track, _, at = a.land.rpartition("@")
+            try:
+                r = TM.land_target(str(folder), track, int(at), a.start)
+            except ValueError as e:
+                raise SystemExit(f"--land: {e}")
+            c = read_conf(folder)
+            c["land"] = {"track": r["track"], "at": r["at"], "asked": a.start}     # render lands it again (settings)
+            (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
+            print(TM.land_line(r, float(c["fps"])) + "  (kept in overlay.json: render prints the layer with it)")
         if a.render:
             return cmd_render(argparse.Namespace(folder=str(folder), workers=None, mp4=False))
         return 0
@@ -379,11 +400,12 @@ def write_thumb(folder: Path, png: Path, crop: list[int], box=(480, 270)) -> Non
     t.save(folder / "thumb.png")
 
 
-def write_render_info(folder: Path, vals: dict, frames: int) -> None:
+def write_render_info(folder: Path, vals: dict, frames: int, blur: int = 1) -> None:
     from motionlab import upstream as UP
     pins = UP.pinned()
     (folder / "render.json").write_text(json.dumps({
-        "inputs": OS.inputs_hash(folder), "values": vals, "frames": frames, "date": time.strftime("%Y-%m-%d %H:%M"),
+        "inputs": OS.inputs_hash(folder), "values": vals, "frames": frames, "motion_blur": blur,
+        "date": time.strftime("%Y-%m-%d %H:%M"),
         "hyperframes": pins.get("hyperframes"), "gsap": pins.get("gsap")}, indent=1, ensure_ascii=False),
         encoding="utf-8")
 
@@ -422,11 +444,13 @@ def cmd_render(a) -> int:
         (folder / "overlay.json").write_text(json.dumps(c, indent=1, ensure_ascii=False), encoding="utf-8")
     FL.ensure(folder, OS.values(folder), OS.declared(folder))   # 0.4.6: the bundled fonts its settings name, in assets
     _, unknown = LG.ensure(folder, OS.values(folder), OS.declared(folder))     # the library logos it names (logos.py)
+    LK.ensure(folder)                               # a look-aware graphic: the shared look.css / looks.js
     if unknown:
         log(f"not in the logo library: {', '.join(unknown)} - logos.py find \"{unknown[0]}\"")
     vargs, vals, vfile = variables_args(folder)
     if vals:
         log("settings: " + ", ".join(f"{k} = {v!r}" for k, v in vals.items()))
+    warn_bad_values(folder)
     if a.mp4 and n > 1:           # motion blur: sub-frames -> blurred PNGs -> an MP4 (Rec.709, like HyperFrames')
         out = folder / f"{c['name']}.mp4"
         frames_dir = folder / "frames"
@@ -499,11 +523,19 @@ def cmd_render(a) -> int:
             if vis.any():
                 worst = max(worst, int(np.abs(fr.astype(np.int16)[vis] - png[vis]).max()))
     write_thumb(folder, pngs[len(pngs) // 2], m["crop"])
-    write_render_info(folder, vals, len(pngs))
+    write_render_info(folder, vals, len(pngs), n)
     shutil.rmtree(frames_dir, ignore_errors=True)
     x, y, w, h = m["crop"]
     log(f"{out.name}: {m['frames']} frames, visible area {w}x{h} at {x},{y}; ProRes 4444 vs the frames: max "
         f"{worst}/255 on opaque pixels")
+    if c.get("land"):                                 # new --land: landed again with today's settings (a "start")
+        from motionlab import templates as TM
+        ld = c["land"]
+        r = TM.land_target(str(folder), ld["track"], ld["at"], ld.get("asked"))
+        print(json.dumps({"type": "overlay", "id": c["name"], "start": r["start"], "end": r["end"], "in": r["in"],
+                          "file": str(out), "blend": "normal"}))
+        print(TM.land_line(r, fps))
+        return 0
     print(json.dumps({"type": "overlay", "id": c["name"], "start": 0, "end": m["frames"] - 1, "file": str(out),
                       "blend": "normal"}))
     print("(set start / end to the plan frames where it shows; end - start + 1 = its frames)")
@@ -554,14 +586,12 @@ def on_checker(rgba: np.ndarray) -> Image.Image:
     return Image.fromarray(((img * (1 - fr[..., 3:]) + fr[..., :3] * fr[..., 3:]) * 255 + 0.5).astype(np.uint8))
 
 
-def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndarray], float]:
-    """HyperFrames' snapshot of <folder> at each frame's time (frame / fps, ascending), with the values a render
-    uses: RGBA arrays (H x W x 4) and the seconds it took. work = a scratch folder (a copy of the sources: the
-    settings go into its index.html as window.__hfVariables, the folder itself is never written)."""
+def runnable_copy(folder: Path, work: Path) -> Path:
+    """A copy of <folder>'s sources in work\\comp that HyperFrames can open with the values a render uses (the
+    settings go into its index.html as window.__hfVariables; fonts, logos and looks copied in) - the folder itself
+    is never written."""
     folder, work = Path(folder).resolve(), Path(work).resolve()       # HyperFrames runs in tools\overlays
-    c = read_conf(folder)
-    fps = exact_fps(float(c["fps"]))
-    src, raw = work / "comp", work / "raw"
+    src = work / "comp"
     shutil.rmtree(work, ignore_errors=True)
     src.mkdir(parents=True)
     for f in OS.SOURCES:
@@ -576,6 +606,7 @@ def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndar
     if decl:                                  # 0.4.6: the bundled fonts the settings name - into the copy only
         FL.ensure(src, OS.values(folder), decl)
     LG.ensure(src, OS.values(folder) if decl else {}, decl)                   # and the library logos it names
+    LK.ensure(src)                                                           # and the look files
     if decl:                                  # what the runtime's getVariables() reads (render: --variables-file)
         js = json.dumps(OS.values(folder), ensure_ascii=True).replace("</", "<\\/")
         html = (src / "index.html").read_text(encoding="utf-8")
@@ -584,6 +615,16 @@ def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndar
             raise SystemExit(f"{folder.name}: index.html has no <head>")
         html = html[:m.end()] + f"\n<script>window.__hfVariables = {js};</script>" + html[m.end():]
         (src / "index.html").write_text(html, encoding="utf-8")
+    return src
+
+
+def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndarray], float]:
+    """HyperFrames' snapshot of <folder> at each frame's time (frame / fps, ascending), with the values a render
+    uses: RGBA arrays (H x W x 4) and the seconds it took. work = a scratch folder (runnable_copy)."""
+    folder, work = Path(folder).resolve(), Path(work).resolve()
+    c = read_conf(folder)
+    fps = exact_fps(float(c["fps"]))
+    src, raw = runnable_copy(folder, work), work / "raw"
     t0 = time.time()
     r = hf("snapshot", str(src), "--at", ",".join(f"{f / fps:.9f}" for f in frames), "--no-end",
            "--describe", "false", "--output", str(raw), capture=True)
@@ -602,6 +643,48 @@ def snapshots(folder: Path, frames: list[int], work: Path) -> tuple[list[np.ndar
     return out, secs
 
 
+FIT_CODES = {"canvas_overflow": "off the frame", "text_box_overflow": "outside its box",
+             "container_overflow": "wider than its box", "text_overlap": "overlaps another text"}
+
+
+def fit_check(folder: Path, frames: list[int], work: Path) -> list[dict]:
+    """0.5.3 (A2): the text-fit check - HyperFrames' layout pass at each frame's time on the values a render uses:
+    text off the frame's edge, wider than its box, two texts overlapping. One flag per element: {"code" (the worst),
+    "codes", "what", "frames" (where seen), "selector", "text", "px" (the most it sticks out), "line"}. A flag, never a change;
+    text that slides in from off the frame on purpose shows here too - read it against the move."""
+    folder = Path(folder).resolve()
+    fps = exact_fps(float(read_conf(folder)["fps"]))
+    src = runnable_copy(folder, work)
+    r = hf("check", str(src), "--json", "--no-contrast", "--at", ",".join(f"{f / fps:.6f}" for f in frames),
+           capture=True)
+    try:
+        d = json.loads(r.stdout[r.stdout.index("{"):])
+    except ValueError:
+        raise SystemExit(f"HyperFrames check failed (exit {r.returncode}): {(r.stderr or r.stdout or '')[-400:]}")
+    out = {}
+    for x in d.get("layout", {}).get("findings", []):
+        if x.get("code") not in FIT_CODES:
+            continue
+        key = x.get("selector")
+        fr = {round(t * fps) for t in x.get("times") or [x.get("time", 0)]}
+        px = round(max([0] + [float(v) for v in (x.get("overflow") or {}).values()]))
+        text = " ".join((x.get("text") or "").split())
+        f = out.setdefault(key, {"codes": [], "frames": set(), "selector": key, "text": "", "px": 0})
+        if x["code"] not in f["codes"]:
+            f["codes"].append(x["code"])
+        f["frames"] |= fr
+        f["text"] = f["text"] or text
+        f["px"] = max(f["px"], px)
+    for f in out.values():
+        fl = f["frames"] = sorted(f["frames"])
+        f["code"] = min(f["codes"], key=list(FIT_CODES).index)          # the worst: off the frame first
+        f["what"] = ", ".join(FIT_CODES[k] for k in sorted(f["codes"], key=list(FIT_CODES).index))
+        where = f"f{fl[0]} ({frame_to_tc(fl[0], fps)})" + (f" +{len(fl) - 1} more" if len(fl) > 1 else "")
+        f["line"] = (f"FIT {where}: {f['selector']} \"{f['text'][:40]}\" {f['what']}"
+                     + (f" by {f['px']} px" if f["px"] else ""))
+    return list(out.values())
+
+
 def sheet(tiles: list[tuple[str, Image.Image]], path: Path, cols: int = 4, width: int = 400) -> None:
     """One page of stills (each labelled) - what Claude and the user look at first."""
     F = fonts(1.0)
@@ -616,10 +699,23 @@ def sheet(tiles: list[tuple[str, Image.Image]], path: Path, cols: int = 4, width
     page.save(path)
 
 
+def warn_bad_values(folder: Path) -> list[str]:
+    """overlay.json values the graphic refuses (out of range, not an option) - the render and the snapshot use the
+    default instead, so say it (pencil-annotate's w 4.5 under its minimum 5 became 50 with no word, local-make-16)."""
+    try:
+        _, bad = OS.check(OS.declared(folder), read_conf(folder).get("values") or {})
+    except ValueError:
+        return []
+    for b in bad:
+        print(f"IGNORED setting (its default is used): {b}")
+    return bad
+
+
 def cmd_snap(a) -> int:
     """Stills straight from the HTML (no render): <folder>\\snap\\<name>_fNNNN.png + sheet.png."""
     folder = guard(Path(a.folder))
     c = read_conf(folder)
+    warn_bad_values(folder)
     fps = float(c["fps"])
     frames = parse_frames(a.frames, int(c["frames"]))
     out = folder / "snap"
@@ -644,6 +740,15 @@ def cmd_snap(a) -> int:
         print(out / "sheet.png")
     log(f"{len(frames)} snapshot(s) in {secs:.1f} s ({secs / len(frames):.2f} s each) - no render; a snapshot has no "
         "motion blur")
+    if a.fit:
+        try:
+            flags = fit_check(folder, frames, work)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        for f in flags:
+            print(f["line"])
+        print(f"text fit: {len(flags)} flag(s)" if flags else "text fit: ok (no text off the frame, outside its box "
+              "or overlapping)")
     return 0
 
 
@@ -671,12 +776,21 @@ def cmd_stills(a) -> int:
 
 
 def cmd_settings(a) -> int:
-    folder = guard(Path(a.folder))
+    folder = Path(a.folder)
+    if not (folder / "index.html").exists():          # 0.5.3 (F2): a template or library graphic by id, read only
+        try:
+            folder = OS.find_graphic(a.folder)
+        except ValueError as e:
+            raise SystemExit(f"{e} - give a graphic's folder or an id from templates.py library / overlay.py graphics")
     s = OS.status(folder)
     if not s["settings"]:
         print(f"{s['name']}: no settings declared (data-composition-variables on <html> in index.html)")
     for d in s["settings"]:
-        extra = f"  (one of {', '.join(str(o['value']) for o in d['options'])})" if d["type"] == "enum" else ""
+        opts = [str(o["value"]) for o in d.get("options") or []]
+        if d["type"] == "enum" and len(opts) > 12 and not a.fonts:    # the font lists (34 names): --fonts shows them
+            extra = f"  (one of {len(opts)}: --fonts lists them)"
+        else:
+            extra = f"  (one of {', '.join(opts)})" if d["type"] == "enum" else ""
         dflt = "" if d["value"] == d.get("default") else f"   (default {d.get('default')!r})"
         print(f"  {d['id']:16s} {d['type']:8s} {d.get('label', ''):28s} = {d['value']!r}{dflt}{extra}")
     state = "up to date" if s["current"] else ("needs a re-render" if s["rendered"] else "not rendered yet")
@@ -762,6 +876,25 @@ def _plan_of(folder: Path) -> dict:
     return json.loads(plans[-1].read_text(encoding="utf-8")) if plans else {}
 
 
+def script_lines(arg: str) -> list[str]:
+    """The lines to say of a script: a prompt id of the library (script-005, hook-002) or a text file - read like the
+    cue cards (motionlab.script.cue_cards: headings and [TEXT] / [B-ROLL] notes are not said)."""
+    from motionlab import script as SC
+    p = Path(arg)
+    if p.is_file():
+        text = p.read_text(encoding="utf-8", errors="replace")
+    else:
+        hits = sorted((LAB / "knowledge" / "local" / "prompts").glob(f"*/{arg}.json")) if re.fullmatch(
+            r"[a-z]+-\d{3,}", arg) else []
+        if not hits:
+            raise SystemExit(f"--script: no file and no prompt '{arg}' in the prompt library")
+        text = json.loads(hits[0].read_text(encoding="utf-8")).get("text") or ""
+    lines = [ln.strip() for part in SC.cue_cards(text) for ln in part["lines"] if ln.strip()]
+    if not lines:
+        raise SystemExit(f"--script {arg}: no lines to say in it")
+    return lines
+
+
 def cmd_captions(a) -> int:
     """Captions timed to the words: <folder> becomes (or stays) a copy of the captions graphic, its words come from
     an SRT / WebVTT / lab transcript.json; writes assets\\captions.js, <name>.srt (for Resolve's subtitle track) and
@@ -799,9 +932,18 @@ def cmd_captions(a) -> int:
         words, est, what = CAP.load(src)
     except ValueError as e:
         raise SystemExit(str(e))
-    cues = CAP.in_frames(CAP.group(words, max_chars=a.max_chars, max_words=a.max_words), fps, a.offset)
+    missing = []
+    if a.script:                                    # 0.5.3 (A8): the script's lines and words at the transcript's times
+        lines = script_lines(a.script)
+        grouped, missing = CAP.align_script(words, lines, max_chars=a.max_chars)
+        what += f", lined up with the script ({len(lines)} lines)"
+    else:
+        grouped = CAP.group(words, max_chars=a.max_chars, max_words=a.max_words)
+    cues = CAP.in_frames(grouped, fps, a.offset)
     if not cues:
         raise SystemExit("no words to show")
+    for ln in missing:
+        print(f"NOT SAID (no caption): {ln[:90]}")
     frames = int(a.frames or plan.get("frames") or vid.get("frames") or cues[-1]["f1"] + 1)
     cues = [q for q in cues if q["f0"] < frames]
     if cues and cues[-1]["f1"] >= frames:
@@ -1012,6 +1154,7 @@ def _render_pngs(hf_bin: Path, gsap_js: Path, example: Path, work: Path) -> tupl
     shutil.copy2(gsap_js, src / "gsap.min.js")
     FL.ensure(src, OS.values(example), OS.declared(example))     # 0.4.6: its default font, bundled
     LG.ensure(src, OS.values(example), OS.declared(example))
+    LK.ensure(src)
     fps, _ = _example_conf(example)
     t0 = time.time()
     r = subprocess.run([node(), str(hf_bin), "render", str(src), "--format", "png-sequence", "--fps", fps_arg(fps),
@@ -1233,6 +1376,9 @@ def main() -> int:
     s.add_argument("--height", type=int, help="1080 for a new graphic; with --from: resize a size-independent one")
     s.add_argument("--like-plan", action="store_true", help="with --from: the project's newest plan's size and rate")
     s.add_argument("--values", help='with --from: settings to start with, JSON: {"text": "HELLO"}')
+    s.add_argument("--land", metavar="TRACK@FRAME", help='with --from a template: "<track>@<plan frame>" - where '
+                   'the layer starts and its "in" so that move lands on that frame (templates.py land)')
+    s.add_argument("--start", type=int, help="with --land: the layer's first plan frame (a cut)")
     s.add_argument("--force", action="store_true")
     s = sub.add_parser("render")
     s.add_argument("folder")
@@ -1246,10 +1392,12 @@ def main() -> int:
     s = sub.add_parser("snap", help="stills straight from the HTML at these frames (no render): 0,38,113-116")
     s.add_argument("folder")
     s.add_argument("frames")
+    s.add_argument("--no-fit", dest="fit", action="store_false", help="skip the text-fit check (~4 s)")
     s = sub.add_parser("check")
     s.add_argument("folder")
     s = sub.add_parser("settings", help="the settings an overlay declares and their values")
-    s.add_argument("folder")
+    s.add_argument("folder", help="a graphic's folder, or a template / library graphic by id (read only)")
+    s.add_argument("--fonts", action="store_true", help="list every font a font setting can take")
     s = sub.add_parser("set", help="change settings: id=value ... (then render again)")
     s.add_argument("folder")
     s.add_argument("values", nargs="+")
@@ -1279,6 +1427,8 @@ def main() -> int:
     s.add_argument("--offset", type=int, default=0, help="frames to move every caption by")
     s.add_argument("--max-chars", type=int, default=32)
     s.add_argument("--max-words", type=int, default=6)
+    s.add_argument("--script", metavar="FILE|PROMPT", help="one caption per line of this script (a text file or a "
+                   "prompt id like script-005), in its own words, at the times the words were said")
     s.add_argument("--preset", metavar="ID", help="start with a ready-made look: classic, clean_box (overlay.py preset)")
     s.add_argument("--render", action="store_true")
     s = sub.add_parser("preset", help="a graphic's ready-made looks: list them, or give it one (then render)")
@@ -1298,12 +1448,17 @@ def main() -> int:
     s.add_argument("--gsap")
     s.add_argument("--force", action="store_true")
     a = ap.parse_args()
-    return {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "snap": cmd_snap, "check": cmd_check,
-            "settings": cmd_settings,
-            "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions, "preset": cmd_preset,
-            "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip, "fit": cmd_fit,
-            "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
-            "pin": cmd_pin}[a.cmd](a)
+    rc = {"new": cmd_new, "render": cmd_render, "stills": cmd_stills, "snap": cmd_snap, "check": cmd_check,
+          "settings": cmd_settings,
+          "set": cmd_set, "save": cmd_save, "graphics": cmd_graphics, "captions": cmd_captions, "preset": cmd_preset,
+          "refresh": cmd_refresh, "resolve-clip": cmd_resolve_clip, "fit": cmd_fit,
+          "doctor": cmd_doctor, "install": cmd_install, "versions": cmd_versions, "upgrade-test": cmd_upgrade_test,
+          "pin": cmd_pin}[a.cmd](a)
+    if a.cmd in ("new", "set", "fit", "render") and not rc and (Path(a.folder) / "overlay.json").exists():
+        short = OS.too_short(Path(a.folder))          # 0.5.3: a template copy too short to finish its move
+        if short:
+            print(short)
+    return rc
 
 
 if __name__ == "__main__":

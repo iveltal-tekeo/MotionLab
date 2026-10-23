@@ -35,5 +35,7 @@
   26,
   32,
   40
- ]
+ ],
+ "min_frames": "start + 2 * cover_frames + hold_frames + 6 if reveal else start + cover_frames + 3",
+ "min_why": "it starts clearing at start + 3 + cover + hold + 3 and skips the clear when that would end after the last frame (the frame stays covered); put the cut at start + cover + 6"
 }

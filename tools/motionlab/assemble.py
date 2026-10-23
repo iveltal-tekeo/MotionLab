@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 from pathlib import Path
 
 from . import report_html, taxonomy
@@ -150,12 +151,12 @@ def write_all(out_dir: Path, data: dict) -> None:
 
 
 FOCUS_TODO = {   # what the user asked this analysis to look at (meta.json "focus") -> review.json "_breakdown"
-    "content": "Focus: CONTENT CREATION - also write `_breakdown` (SKILL.md \"Focus\"): name (3-6 words a person would "
+    "content": "Focus: CONTENT CREATION - also write `_breakdown` (review.md \"The focus\"): name (3-6 words a person would "
                "call it), summary, hook (first 3 s), structure, captions, text_graphics, broll, sound, cta, rebuild_tips. "
                "Read content/transcript.txt.",
-    "cinematic": "Focus: CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\"): name (3-6 words a person would call "
+    "cinematic": "Focus: CINEMATIC - also write `_breakdown` (review.md \"The focus\"): name (3-6 words a person would call "
                  "it), summary, transitions, camera, grade, rhythm, sound, rebuild_tips.",
-    "both": "Focus: CONTENT + CINEMATIC - also write `_breakdown` (SKILL.md \"Focus\") with every key that applies: "
+    "both": "Focus: CONTENT + CINEMATIC - also write `_breakdown` (review.md \"The focus\") with every key that applies: "
             "name (3-6 words a person would call it), summary, hook, structure, captions, text_graphics, broll, sound, "
             "cta, transitions, camera, grade, rhythm, rebuild_tips. Read content/transcript.txt if there is one.",
 }
@@ -178,11 +179,31 @@ def measured_lines(data: dict) -> list[str]:
     return out
 
 
+DRAFT_KEYS = ("type", "what", "origin", "origin_why", "easing", "rebuild", "on_beat", "on_drop")
+
+
+def write_draft(out_dir: Path, data: dict) -> None:
+    """0.5.3 (C8): review_draft.json - the lab's measured draft of every event in review.json's own format (type,
+    what, origin, easing, rebuild from events[i].auto; confidence "unchecked"), so Claude corrects an entry after
+    reading its sheets instead of writing it from zero. Never read as a review: review.json alone is Claude's."""
+    d = {"_note": "The lab's measured drafts, not a review. For each event read every sheet, then copy its entry into "
+                  "review_parts\\ / review.json and change what the sheets show differently; set confidence yourself "
+                  "(never leave 'unchecked'); keep start / end."}
+    for ev in data["events"]:
+        a = ev.get("auto") or {}
+        d[ev["id"]] = {"start": ev["start"], "end": ev["end"], **{k: a[k] for k in DRAFT_KEYS if a.get(k) is not None},
+                       "confidence": "unchecked"}
+    (out_dir / "review_draft.json").write_text(json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
 def write_todo(out_dir: Path, data: dict) -> None:
+    write_draft(out_dir, data)
     lines = [f"# Review todo - {data['name']}", "",
              "1. Read `.claude/skills/analyze-reference/lessons.md` first and apply every rule.",
              "2. Open every sheet below (Read tool). Classify from what you SEE, using the measured evidence.",
-             "3. Write `review.json` in this folder (format in SKILL.md), then run `tools/report.py " + data["name"] + "`.",
+             "3. Write `review.json` in this folder (format in review_rules.md; start each entry from "
+             "`review_draft.json`, the lab's measured draft in the same format), then run `tools/report.py "
+             + data["name"] + "`.",
              "4. " + FOCUS_TODO.get(data.get("focus") or "both", FOCUS_TODO["both"]),
              *measured_lines(data),
              "", "| ID | auto type | frames | timecode | reviewed | sheets | first evidence line |",

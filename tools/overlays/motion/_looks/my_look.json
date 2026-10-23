@@ -1,0 +1,20 @@
+{
+ "_comment": "Your look (2026-10-18): the design tokens every look-aware Motion Graphics template takes its colours, fonts, corners, shadow, grain and easing from. Edit freely, then: .venv\\Scripts\\python tools\\templates.py looks sync (rewrites the templates' defaults + the shared look.css / looks.js). Fonts = families of the font library (tools\\fonts.py list). Sizes in px for a 1080-px short side; shadow / grain 0 = none.",
+ "name": "Editorial warm",
+ "what": "Editorial, warm, tactile, confident. Paper and ink with one hot signal colour; a serif headline, a clean grotesk, a mono for small labels. Soft low shadows, light film grain. Not glossy, not neon.",
+ "fonts": {"display": "Instrument Serif", "body": "Hanken Grotesk", "accent": "Space Mono"},
+ "palette": {"ink": "#14120F", "paper": "#F2EDE4", "signal": "#FF4D2E", "deep": "#1C3D5A", "mustard": "#E6B422"},
+ "radius": 14,
+ "shadow": 1,
+ "grain": 8,
+ "motion": {
+  "personality": "confident",
+  "enter": "expo.out",
+  "exit": "expo.in",
+  "move": "expo.inOut",
+  "settle": "power3.out",
+  "pop": "back.out(1.4)",
+  "bounce": "back.out(2.2)",
+  "_comment": "GSAP ease names. Entrances expo-out, exits expo-in, short holds; 'bounce' only where the reference clearly bounces."
+ }
+}

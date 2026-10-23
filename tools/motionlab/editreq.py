@@ -277,14 +277,14 @@ def brief(req: dict, f: dict) -> str:
     if req.get("like"):
         refs = f.get("refs") or {}
         L.append("- **References** - " + ("an exact 1:1 copy: the same song, the same cuts and effects frame by frame "
-                                           "with the user's clips (skill sections 0-5):" if req.get("exact") else
+                                           "with the user's clips (the skill's copy.md):" if req.get("exact") else
                                            "their style, mixed: `tools\\style.py` with them (+ the presets and words "
                                            "of 4) - their rhythm, effects and captions, never their content "
-                                           "(skill section 6):"))
+                                           "(the skill's by_feel.md):"))
         L += [f"  - `{k}`" + (f" - {refs[k]}" if refs.get(k) and refs[k] != k else "") for k in req["like"]]
     else:
         L.append("- None: the style comes from 4. Style (nothing there either = `tools\\style.py closest \"<their "
-                 "words>\"` first, skill section 6.0).")
+                 "words>\"` first, the skill's by_feel.md step 0).")
     # 4. Style
     L += ["", "## 4. Style"]
     rows = []
@@ -336,8 +336,8 @@ def brief(req: dict, f: dict) -> str:
                           "automatic - the reference's for a 1:1 copy, else what the song and the story need."),
           "- Format: " + (FORMAT_WORDS.get(req["format"], req["format"]) + "." if req.get("format") else
                           "automatic - the footage's own shape (a 1:1 copy: the reference's)."),
-          "- DaVinci Resolve: " + ("yes - build it (skill section 5) once the user approves the lab render." if
-                                   req.get("resolve") else "no - the lab render only.")]
+          "- DaVinci Resolve: " + ("yes - build it (the skill's render.md, option 2) once the user approves the lab "
+                                   "render." if req.get("resolve") else "no - the lab render only.")]
     m = estimate_min(req)
     if m:
         L.append(f"- The app told the user this could take about {m:g} min of Claude (about {MIN_PER_S:g} min per "

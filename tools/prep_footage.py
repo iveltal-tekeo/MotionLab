@@ -194,8 +194,15 @@ def main() -> int:
             prep_source(prj, sid, ent, a.fps, a.width, a.height, color=not a.grey)
     bad = prj.verify_sources()
     print("sources unchanged:", "yes" if not bad else f"NO - {bad}")
+    from motionlab.draft import luma_dips
     for sid, ent in sorted(man["sources"].items()):
-        print(f"  {sid} = {ent['name']}")
+        st = prj.cache / f"{sid}_stats.npz"
+        dips = luma_dips(np.load(st)["luma"]) if st.exists() else []
+        ent["dips"] = dips                  # 0.5.3 (A7): cache frames that dip for 1-2 frames (a screen repaint)
+        print(f"  {sid} = {ent['name']}" + (f" - {len(dips)} one-frame dip(s) (a screen recording's repaint?) at cache "
+                                            f"f{', f'.join(map(str, dips[:8]))}" + (" ..." if len(dips) > 8 else "")
+                                            + ": keep shots inside the clean runs" if dips else ""))
+    write_json(prj.check(prj.manifest_path), man)
     return 0 if not bad else 3
 
 

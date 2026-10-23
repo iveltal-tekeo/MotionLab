@@ -81,6 +81,8 @@ TITLES = {
     "thumbs_measure": "Measure the thumbnails of {set}",
     "colour": "Colour of {name}",
     "draft": "Quick draft of {video}",
+    "build": "Claude's build of {video}",
+    "build_final": "Claude's final render of {video}",
     "verify_timing": "Timing check {render}",
     "ytdlp_update": "Update yt-dlp",
     "ytdlp_update_dry": "Dry run: Update yt-dlp",
@@ -280,6 +282,19 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         except (FileNotFoundError, ValueError) as e:
             raise JobError(str(e))
         return _title(kind, video=p), [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"
+    if kind == "build":             # 0.5.3: Claude's builds (tools\job.py start build ...) - on the Jobs page, kept alive
+        p = data.safe_name(str(a.get("project", "")))
+        b = data.PROJECTS / p / "build"
+        plan = str(a.get("plan") or "")
+        if plan and not re.fullmatch(r"plan_v\d+\.json", plan):
+            raise JobError(I18N.t("not a plan: {name}", name=repr(plan)))
+        if not b.is_dir() or (plan and not (b / plan).exists()):
+            raise JobError(I18N.t("no project {video}", video=p))
+        final = str(a.get("final", "")).lower() in ("1", "true", "yes")
+        cmd = [PY, str(TOOLS / "build.py"), p] + ([plan] if plan else []) + (["--final"] if final else [])
+        if str(a.get("sfx", "")).lower() in ("1", "true", "yes"):
+            cmd.append("--sfx")
+        return _title("build_final" if final else "build", video=p), cmd, "cpu"
     if kind == "verify_timing":
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"
@@ -472,7 +487,7 @@ class Runner:
         # MOTIONLAB_LANG = the app's language (Settings > Language, 2026-10-18): words a tool builds for the page can
         # follow it (motionlab\i18n.py); its console output and the job's log stay English. The self-test measures
         # the lab, so it always runs in English.
-        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8",
+        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8", MOTIONLAB_JOB=str(job.id),
                    MOTIONLAB_LANG="en" if job.kind == "selftest" else I18N.lang())
         job.proc = subprocess.Popen(job.cmd, cwd=str(LAB), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace",

@@ -169,6 +169,8 @@
  "Nothing counted yet. The Claude windows MotionLab opens for this video show up here - with the script it was filmed from and the lab's jobs.": "Aún no hay nada contado. Las ventanas de Claude que MotionLab abre para este vídeo aparecen aquí - con el guion con el que se grabó y las tareas del laboratorio.",
  "Nothing counted yet. The Claude windows MotionLab opens for this video show up here.": "Aún no hay nada contado. Las ventanas de Claude que MotionLab abre para este vídeo aparecen aquí.",
  "a lab job, no Claude": "una tarea del laboratorio, sin Claude",
+ "{time} waiting on the lab": "{time} esperando al laboratorio",
+ "While the lab's tools ran (renders, checks) - the rest is Claude thinking and writing": "Mientras se ejecutaban las herramientas del laboratorio (renders, comprobaciones); el resto es Claude pensando y escribiendo",
  "Claude Code wrote no turn time for it (stopped or interrupted): from its first to its last answer": "Claude Code no guardó el tiempo de este turno (se paró o se interrumpió): de su primera a su última respuesta",
  "(about)": "(aprox.)",
  "model not in the log": "modelo no registrado",

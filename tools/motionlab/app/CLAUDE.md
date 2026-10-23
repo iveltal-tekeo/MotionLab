@@ -343,7 +343,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   items: () => [{id, label, sub, optional, red}], all, get: id => {v, note}, set: (id, {v, note}) => Promise (the
   place's own save - its state at once, then the request, one at a time with `rvQueue()`; false = not saved), hint: v
   => the placeholder, empty, domId}], extra: {item: (sec, id) => html, panel}, start: true | {sec, id} | false, onMove:
-  (sec, id, first), onEnd, deselect, autoNext, stale, send: {hint, cmd, task, name, go, ready, glow, more}, dialog})`
+  (sec, id, first), onEnd, deselect, autoNext, stale, send: {hint (text, or a function redrawn with the answers - 0.5.3), cmd, task, name, go, ready, glow, more}, dialog})`
   -> `{el, redraw, select(sec, id), cur, next, nextOpen, focusNote, flush, saving, saved(ok), destroy}`; `items` /
   `get` / `set` work for any list. **The places**: an analysis' Effects and Possible misses & sound
   (`docs\app_pages.md` *The analysis page*; Send = `sendFeedback`); a video's **Review** (Editor and Generator, `projReview`: left = `renderPicker` + Player, right =

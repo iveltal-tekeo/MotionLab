@@ -1,6 +1,6 @@
 # Graphics as HTML overlays - /recreate-video section 3b
 
-The one home of these rules: /recreate-video reads this file in its section 0, /generate-video in its section 2.
+The one home of these rules: /recreate-video and /generate-video read this file when a video has graphics.
 
 ## 3b. Graphics = HTML overlays (HyperFrames, since 0.3.0)
 Titles, counters, lower thirds, shapes, glows, light leaks, particles: write them as HTML / CSS / SVG / GSAP, not as
@@ -28,10 +28,17 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    / enum with options `[{"value", "label"}]`) and is read from `V = window.__hyperframes.getVariables()`; the app's
    Videos > Graphics tab edits them (overlay.json `values`), `overlay.py settings | set` from here.
 3. First `tools\overlay.py snap <folder> 0,10,40` (no render, seconds: stills straight from the HTML + `snap\sheet.png`;
-   a cut as n-1, n, n+1) - look, fix; then `tools\overlay.py render <folder>` (prints the plan layer) and
-   `tools\overlay.py stills <folder> 0,10,40` (rendered frames, frame + timecode on a checkerboard) - fix, render again.
+   a cut as n-1, n, n+1; 0.5.3: its FIT lines name any text off the frame, outside its box or overlapping, with frame
+   + element + pixels - fix those without looking for them) - look, fix; then `tools\overlay.py render <folder>`
+   (prints the plan layer) and `tools\overlay.py stills <folder> 0,10,40` (rendered frames, frame + timecode on a
+   checkerboard) - fix, render again. In a whole video `tools\build.py` renders every graphic that changed (SKILL.md).
+   A copy of a template shorter than it can finish prints TOO SHORT (template.json "min_frames"); an overlay.json
+   value out of range prints IGNORED (the default is used).
 4. Plan layer: `{"type": "overlay", "id": ..., "start": f0, "end": f1, "file": "<the .mov>", "blend": "normal"}`
-   (`"add"` / `"screen"` for light, `"in"` = first clip frame). In Resolve it becomes a clip on its own track
+   (`"add"` / `"screen"` for light, `"in"` = first clip frame). A template's move on a beat (0.5.3): `overlay.py new
+   <folder> --from <id> --land "<track>@<plan frame>" [--start <cut>]` works out `start` / `in` from the template's
+   tracks (`templates.py tracks <id>` lists them with frames) - render prints that layer and `build.py` keeps the
+   plan's layer on it when settings change; no snapshot rounds to find an in-point. In Resolve it becomes a clip on its own track
    (a numbered copy - Resolve locks the files it uses; after a new render `overlay.py refresh <folder>` swaps it and
    keeps the user's edits; measured 2026-10-12: same frames as the lab within 2.3/255).
 5. One the user approves: `overlay.py save <folder> [--name N]` -> `library\graphics\<N>\` (or their Save to library

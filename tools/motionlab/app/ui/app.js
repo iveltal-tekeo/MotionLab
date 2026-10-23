@@ -288,7 +288,7 @@ function reviewPanel(host, opts) {
     <nav class="rvnav"><button type="button" class="btn sm" data-rvgo="-1">${t('◀ Previous')} <span class="kbd">J</span></button><button type="button" class="btn sm" data-rvgo="1">${t('Next ▶')} <span class="kbd">K</span></button><button type="button" class="btn sm ghost" data-rvgo="open">${t('Next not reviewed')} <span class="kbd">N</span></button></nav>
     ${(o.extra || {}).panel ? `<div class="rvp-extra">${o.extra.panel}</div>` : ''}
     ${o.autoNext === false ? '' : `<label class="chk small rvauto" title="${ta('after ~ or ✗ you write a note first')}"><input type="checkbox"${auto ? ' checked' : ''}> ${t('after ✓, go to the next one')}</label>`}
-    ${o.send ? `<footer class="rvsend"><div class="small muted rvsend-h">${o.send.hint || ''}</div>
+    ${o.send ? `<footer class="rvsend"><div class="small muted rvsend-h">${(typeof o.send.hint === 'function' ? o.send.hint() : o.send.hint) || ''}</div>
       <button type="button" class="btn pri big rvsendb"${o.send.cmd ? ` data-cmd="${esc(o.send.cmd)}"` : ''} disabled><svg class="i"><use href="#i-claude"/></svg>${t('Send it to Claude')}</button>
       ${o.send.more ? `<div class="rvmore small">${o.send.more}</div>` : ''}</footer>` : ''}`;
   const secEl = Object.fromEntries($$('.rvsec', host).map(el => [el.dataset.sec, el]));
@@ -345,6 +345,7 @@ function reviewPanel(host, opts) {
       if (!b.dataset.busy) b.disabled = !ok;
       b.title = ok ? '' : t('Give one answer first');
       $('.rvsend', host).classList.toggle('ready', ok && (o.send.glow ? !!o.send.glow() : done));
+      if (typeof o.send.hint === 'function') $('.rvsend-h', host).innerHTML = o.send.hint() || '';   // 0.5.3: live
     }
     const L = flat(); $$('[data-rvgo]', host).forEach(b => { b.disabled = !L.length; });
   };
@@ -3362,6 +3363,7 @@ async function tookPanel(box, kind, name, P) {
         <div class="tkm">${dt(x.t0)} · <b>${minWords(x.minutes)}</b> · ${t('a lab job, no Claude')}</div></div></li>`
     : `<li class="tk"><i class="tkdot"></i><div><div class="tkh"><b>${esc(stepW(x.step))}</b>${x.what ? ` <span class="muted">“${esc(x.what)}”</span>` : ''}</div>
         <div class="tkm">${dt(x.t0)} · <b>${minWords(x.minutes)}</b>${x.measured ? '' : `<span class="dim" title="${ta('Claude Code wrote no turn time for it (stopped or interrupted): from its first to its last answer')}"> ${t('(about)')}</span>`}
+          ${x.wait_minutes >= 0.05 ? `<span title="${ta("While the lab's tools ran (renders, checks) - the rest is Claude thinking and writing")}"> · ${t('{time} waiting on the lab', {time: minWords(x.wait_minutes)})}</span>` : ''}
           · ${esc(x.model || t('model not in the log'))}${x.effort ? ' · ' + esc(x.effort) : ''}${x.rounds > 1 ? ` · ${tn(x.rounds, '{n} round', '{n} rounds')}` : ''}${x.helpers.length ? `<span title="${esc(x.helpers.map(h => `${h.description || h.type} - ${h.model}`).join('\n'))}"> · ${plural(x.helpers.length, 'helper')}</span>` : ''}</div></div></li>`;
   const took = T.job_minutes ? t('<b>{claude}</b> of Claude and <b>{jobs}</b> of lab jobs', {claude: minWords(T.claude_minutes), jobs: minWords(T.job_minutes)})
     : t('<b>{time}</b> of Claude', {time: minWords(T.claude_minutes)});
@@ -3449,7 +3451,12 @@ function projReview(el, P) {
       },
       hint: v => v === 'ok' || v === 'bad' ? t('What should change? (saved as you type)') : t('What to keep or change (optional)')}],
     stale: () => P.reviewed === false && Object.keys(A()).length ? t('These ratings were for an older render - rate this one.') : '',
-    send: {hint: over && gen ? t('Claude starts it over from the plan, in a different feel - this one stays.') : t('Claude makes the next version from your review - this one stays.'),
+    send: {hint: () => {                             // 0.5.3 (E2): which parts the next version changes
+      if (over && gen) return t('Claude starts it over from the plan, in a different feel - this one stays.');
+      const ch = ASPECTS.filter(([k]) => k !== 'overall' && ['ok', 'bad'].includes((A()[k] || {}).rating)).map(([, l]) => esc(l));
+      return t('Claude makes the next version from your review - this one stays.')
+        + (ch.length ? ' ' + t('It changes <b>{parts}</b> and keeps the rest.', {parts: ch.join(', ')}) : '');
+    },
       cmd: gen ? `/generate-video improve ${P.name}` : `/recreate-video improve ${P.name}`, task: gen ? 'generate' : 'recreate', name: P.name, more,
       go: async () => { if (!(over && gen) && nx !== 'fix') { try { await setNext(P, 'fix'); } catch (e) { /* the review is saved: Claude reads it anyway */ } } }}});
   const again = () => { stopPlayer(pl); projReview(el, P); };
@@ -4853,10 +4860,12 @@ async function generateModal(kind, pre = {}) {
     <div id="gstp"></div>
     ${gfx && MG.library.length ? `<div class="nestep opt"><b>3</b>${t('Motion templates')} ${optTag(t('Claude builds the scenes from these'))}</div>
       <div class="gtpl" id="gtpl"></div><div class="small muted" id="gtplw" style="margin-top:4px"></div>` : ''}
-    <div class="nestep opt"><b>${gfx && MG.library.length ? 4 : 3}</b>${gfx ? t('Length, format, song') : t('Length, format')} ${optTag(t('30 s, Claude picks the format unless you change it'))}</div>
+    <div class="nestep opt"><b>${gfx && MG.library.length ? 4 : 3}</b>${gfx ? t('Length, format, song, look') : t('Length, format')} ${optTag(t('30 s, Claude picks the format unless you change it'))}</div>
     <div class="nedet"><label>${t('Length')}</label><div class="seg" id="glen">${[['15', '15 s'], ['30', '30 s'], ['45', '45 s'], ['60', '1 min'], ['90', '1:30']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
       <label>${t('Format')}</label><div class="seg" id="gfmt">${[['', t('Claude picks')], ['vertical', t('Vertical 9:16')], ['horizontal', t('Horizontal 16:9')], ['square', t('Square')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
-      ${gfx ? `<label>${t('Song')}</label><select id="gsong" style="max-width:420px"><option value="">${t('no song / I put one in the folder later')}</option>${G.songs.map(x => `<option value="${esc(x.rel)}">${esc(x.name)}</option>`).join('')}</select>
+      ${gfx ? `<label>${t('Song')}</label><div class="row" style="gap:8px"><select id="gsong" style="max-width:420px"><option value="">${t('no song / I put one in the folder later')}</option>${G.songs.map(x => `<option value="${esc(x.rel)}">${esc(x.name)}</option>`).join('')}</select>
+        ${G.last_song ? `<button class="fchip" id="glast" title="${ta(G.songs.find(x => x.rel === G.last_song)?.name || '')}">${t('The song from last time')}</button>` : ''}</div>
+      ${(G.looks || []).length ? `<label>${t('Look')}</label><div class="seg" id="glook">${[['', t('Claude picks')], ...G.looks.map(lk => [lk.id, t(lk.name), lk.palette]), ['surprise', t('Surprise me')]].map(([v, l, pal]) => `<button data-v="${esc(v)}">${pal ? pal.map(c => `<span class="lkdot" style="background:${esc(c)}"></span>`).join('') : ''}${esc(l)}</button>`).join('')}</div>` : ''}
       <label>${t('Colours')}</label><input type="text" id="gcol" placeholder="${ta('optional - e.g. black, white and my orange #ff6a00; font: Inter')}" style="max-width:420px">` : ''}</div>
     <div class="nestep"><b>${gfx && MG.library.length ? 5 : 4}</b>${t('Its name')}</div>
     <div class="row"><input type="text" id="gname" value="${esc(pre.name || n0)}" style="max-width:320px"><span class="small muted">${t('a folder in projects - a logo or a song you put there, Claude can use')}</span></div>
@@ -4865,6 +4874,9 @@ async function generateModal(kind, pre = {}) {
     const seg = (id, key) => { const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === st[key]));
       $$('button', b).forEach(x => x.onclick = () => { st[key] = x.dataset.v; paint(); }); paint(); };
     seg('#glen', 'length'); seg('#gfmt', 'format');
+    st.look = '';
+    if ($('#glook', el)) seg('#glook', 'look');
+    if ($('#glast', el)) $('#glast', el).onclick = () => { $('#gsong', el).value = G.last_song; };
     stylePicker($('#gstp', el), st, {S, purpose: gfx ? 'graphics' : 'ai', onChange: () => tplDraw()});
     // 0.5.0: the Motion Graphics templates that fit the words (GET /api/motion/pick, while typing): the picked ones
     // (a click) are what Claude must use; none picked + no style video = Claude starts from the suggested ones
@@ -4902,7 +4914,7 @@ async function generateModal(kind, pre = {}) {
       try {
         const r = await api('/api/generate/request', {kind, name: $('#gname', el).value, want, text: $('#gtext', el) ? $('#gtext', el).value : '',
           like: st.like, length_s: st.length || null, format: st.format || null, music: $('#gsong', el) ? $('#gsong', el).value : '',
-          tool, colours: $('#gcol', el) ? $('#gcol', el).value : '', templates: gfx ? st.tpl : []});
+          tool, colours: $('#gcol', el) ? $('#gcol', el).value : '', templates: gfx ? st.tpl : [], look: gfx ? st.look : ''});
         openClaude(r.command, 'generate', r.project);
         closeModal(); location.hash = '#/project/' + encodeURIComponent(r.project);
       } catch (e) { toast(e.message, 'err'); }

@@ -1,0 +1,10 @@
+{
+ "_comment": "An alternate look (proposed 2026-10-18): same motion, other tokens. See my_look.json for the fields.",
+ "name": "Swiss signal",
+ "what": "Graphic and exact: pure white and black, a red signal, a cobalt and a yellow, square corners, no shadow, no grain; a geometric grotesk headline.",
+ "fonts": {"display": "Space Grotesk", "body": "Inter", "accent": "Space Mono"},
+ "palette": {"ink": "#111111", "paper": "#FFFFFF", "signal": "#E4002B", "deep": "#0033A0", "mustard": "#FFC20E"},
+ "radius": 0,
+ "shadow": 0,
+ "grain": 0
+}

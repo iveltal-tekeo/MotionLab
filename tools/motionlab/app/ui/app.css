@@ -1016,6 +1016,8 @@ label.shrow { cursor: pointer; } .shrow:hover { border-color: var(--line2); }
 .nedet label { font-size: 13px; color: var(--muted); }
 .nedet > .seg, .nedet > select { justify-self: start; }
 .nedet .seg button.on { background: var(--acc); color: #111; font-weight: 600; }
+.seg button .lkdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 2px 0 0; opacity: 1; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(127,127,127,.5); }   /* 0.5.3: a look's colours on Generate's Look buttons */
+.seg button .lkdot:last-of-type { margin-right: 6px; }
 .nego { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 14px 0 8px; }   /* Film it's step 3: Claude left, the quick draft right */
 .negoc { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px; background: #131317; }
 .negoc[hidden] { display: none; }

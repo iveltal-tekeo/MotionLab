@@ -8,6 +8,12 @@
                                                                it before an edit or a prompt
     .venv\\Scripts\\python tools\\knowledge.py memory --styles    the same, printed without the effects and how they
                                                                were made (most of the file) - for scripts and titles
+    .venv\\Scripts\\python tools\\knowledge.py memory --rules     only your ratings as rules (~1.5 KB) - what a video
+                                                               made by feel or from zero needs (0.5.3)
+    .venv\\Scripts\\python tools\\knowledge.py lessons --kind <talking|generate|templates|all>
+                                                               the lessons on making videos for that kind of work
+                                                               (+ those for all), in full; the ones the lab's tools
+                                                               do now as one line each (0.5.3)
     .venv\\Scripts\\python tools\\knowledge.py pending            what "Share my knowledge" would send now - and what
                                                                stays on this PC (unticked in Claude's memory > Shared
                                                                knowledge, or looks like a test and not ticked)
@@ -34,7 +40,7 @@ from motionlab.util import LAB, setup_console  # noqa: E402
 
 def main() -> int:
     setup_console()
-    if len(sys.argv) < 2 or sys.argv[1] not in ("cards", "summary", "memory", "pending", "next-lesson-id", "share",
+    if len(sys.argv) < 2 or sys.argv[1] not in ("cards", "summary", "memory", "lessons", "pending", "next-lesson-id", "share",
                                                   "export", "import"):
         print(__doc__)
         return 2
@@ -48,7 +54,14 @@ def main() -> int:
         print(KN.SUMMARY)
     elif cmd == "memory":
         text = KN.memory_index()                            # memory.md stays the whole memory, rebuilt
-        print(KN.memory_index(write=False, styles=True) if "--styles" in sys.argv[2:] else text)
+        print(KN.memory_rules() if "--rules" in sys.argv[2:] else
+              KN.memory_index(write=False, styles=True) if "--styles" in sys.argv[2:] else text)
+    elif cmd == "lessons":
+        kind = sys.argv[sys.argv.index("--kind") + 1] if "--kind" in sys.argv[:-1] else "all"
+        try:
+            print(KN.lessons_for(kind))
+        except ValueError as e:
+            raise SystemExit(f"--kind: {e}")
     elif cmd == "pending":
         p = KN.pending()
         print(f"{len(p['cards'])} card(s): " + ", ".join(KN.label(c)["name"] for c in p["cards"]))

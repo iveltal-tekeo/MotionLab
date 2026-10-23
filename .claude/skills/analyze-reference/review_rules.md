@@ -1,8 +1,8 @@
-# How to review an event - /analyze-reference section 2 steps 1-3, the review.json format, the canonical types
+# How to review an event - /analyze-reference review.md section 2 steps 1-3, the review.json format, the canonical types
 
 The one home of these rules: the main window reads this file in section 0 of SKILL.md, and every helper reads it
-instead of the whole skill (SKILL.md section 2, *More than ~20 sheets: helpers read them*). Steps 4-6 of section 2
-stay in SKILL.md.
+instead of the whole skill (`review.md` section 2, *More than ~20 sheets: helpers read them*). Steps 4-6 of section 2
+are in `review.md`.
 
 ## Section 2, steps 1-3
 Open `analysis\<name>\review_todo.md`. With the `motionlab` MCP tools (0.3.0; `mcp__motionlab__*`), use them instead

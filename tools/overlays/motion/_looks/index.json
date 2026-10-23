@@ -1,0 +1,5 @@
+{
+ "_comment": "default = the look new templates and the Generator start in (the user's pick); order = the Look row's order.",
+ "default": "my_look",
+ "order": ["my_look", "swiss_signal", "night_edition"]
+}

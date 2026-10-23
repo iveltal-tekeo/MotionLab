@@ -1,0 +1,10 @@
+{
+ "_comment": "An alternate look (proposed 2026-10-18): same motion, other tokens. See my_look.json for the fields.",
+ "name": "Night edition",
+ "what": "The evening paper: warm off-white type on a deep charcoal, a soft orange signal, a dusk blue; a high-contrast serif headline, rounder corners, deeper shadows, more grain.",
+ "fonts": {"display": "Playfair Display", "body": "Hanken Grotesk", "accent": "Space Mono"},
+ "palette": {"ink": "#EFE8DA", "paper": "#16181D", "signal": "#FF7A45", "deep": "#2B4A66", "mustard": "#E6B422"},
+ "radius": 20,
+ "shadow": 1.6,
+ "grain": 12
+}

@@ -6,6 +6,9 @@
           overlay.json ("cues", next to its settings; format in motionlab\\sfx.py); --set tries a setting unsaved
     .venv\\Scripts\\python tools\\sfx.py make <graphic folder | cues.json | plan.json> --song <audio | none>
           [--song-start 0] [--song-db -2.5] [--ceiling -1] [--fade 0.8] [--out <folder>] [--name N] [--set id=value]
+          [--floor-vs-song -24 | off] [--all]   (0.5.3: no effect sits further under the song than -24 dB - the
+          precheck's "buried" line + 2 - so the levels pass first time; the output is a summary + the cues the
+          precheck would flag, --all = every cue)
           -> <out>\\<name>_sfx.wav   the effects alone, 24-bit 48 kHz from frame 0 (DaVinci Resolve: its own audio
                                     track at the timeline's start, 01:00:00:00)
              <out>\\<name>_mix.wav   the song (--song-db lower) + the effects, a peak limiter at --ceiling dBFS, a
@@ -58,7 +61,13 @@ def load_source(src: Path, override: dict) -> tuple[str, list, float, int, dict,
         if isinstance(d, dict) and "layers" in d:
             if override:
                 raise SystemExit("--set is for a graphic's settings, not a plan")
-            return "plan", SFX.plan_cues(d), float(d["fps"]), int(d["frames"]), {}, d
+            from motionlab.compose import resolve_paths
+            resolve_paths(d, src.resolve().parent)
+            notes: list[str] = []
+            cues = SFX.plan_cues(d, notes)
+            for n in notes:
+                print(f"NOTE {n}")
+            return "plan", cues, float(d["fps"]), int(d["frames"]), {}, d
         cues, fps, frames, vals = SFX.cues_file(src, override)
         return "cues", cues, fps, frames, vals, None
     except ValueError as e:
@@ -160,7 +169,8 @@ def cmd_make(a, plan_only: bool = False) -> int:
         except ValueError as e:
             raise SystemExit(f"ERROR: {e}")
     t1 = time.time()
-    res = SFX.build(cues, fps, frames, song, song_db, a.ceiling, a.fade)
+    res = SFX.build(cues, fps, frames, song, song_db, a.ceiling, a.fade,
+                    floor_vs_song=None if a.floor_vs_song.lower() == "off" else float(a.floor_vs_song))
     t2 = time.time()
     out.mkdir(parents=True, exist_ok=True)
     SFX.write_wav(files["stem"], res["stem"])
@@ -177,9 +187,26 @@ def cmd_make(a, plan_only: bool = False) -> int:
                   f" (only {len(sg) / SFX.SR:.1f} s long: silence after)" if len(sg) < res["N"] else ""))
     else:
         print("no song: every effect at its kind's lowest level")
-    print("  frame (timecode)     kind      song dBFS  effect dBFS (vs song)   peak         rule")
-    for r in res["rows"]:
-        print(SFX.level_line(r))
+    rows = [r for r in res["rows"] if "sample" in r]
+    if a.all or len(res["rows"]) <= 12:
+        print("  frame (timecode)     kind      song dBFS  effect dBFS (vs song)   peak         rule")
+        for r in res["rows"]:
+            print(SFX.level_line(r))
+    else:                                             # 0.5.3 (C5): a summary; --all = every cue as before
+        from collections import Counter
+        from motionlab import precheck as PC
+        kinds, rules = Counter(r["kind"] for r in rows), Counter(r["rule"] for r in rows)
+        vs = [r["vs_song_db"] for r in rows if r.get("vs_song_db") is not None]
+        print(f"cues: {', '.join(f'{n} {k}' for k, n in kinds.most_common())}; levels set by "
+              + ", ".join(f"{k} {n}" for k, n in rules.most_common())
+              + (f"; vs the song {min(vs):+.1f} to {max(vs):+.1f} dB" if vs else "")
+              + (f"; {len(res['rows']) - len(rows)} outside the video" if len(res["rows"]) > len(rows) else ""))
+        flagged = {f["frames"][0] for f in PC.sound_flags({"fps": fps, "cues": rows})}
+        for r in rows:
+            if r["f"] in flagged:
+                print("  FLAG " + SFX.level_line(r).strip())
+        print(f"  {len(flagged)} cue(s) the precheck would flag" + ("" if flagged else " - none")
+              + "; every cue: --all, or the report below")
     lim = res["limiter_frames"]
     print(f"mix: peak {res['mix_peak_before_db']:.1f} dBFS before the limiter, {res['mix_peak_db']:.1f} after (ceiling "
           f"{a.ceiling:g}); the limiter took up to {-res['limiter_max_db']:.1f} dB"
@@ -247,6 +274,9 @@ def main() -> int:
         s.add_argument("--out", help="the folder (default: the project's build\\sfx\\)")
         s.add_argument("--name", help="the files' name (default: the graphic's / plan's)")
         s.add_argument("--set", action="append", metavar="ID=VALUE", help="a graphic's setting, not saved")
+        s.add_argument("--floor-vs-song", default=str(SFX.FLOOR_VS_SONG_DB), metavar="DB",
+                       help="no effect further under the song than this (dB; the precheck's buried line + 2; off)")
+        s.add_argument("--all", action="store_true", help="print every cue's levels (default: a summary + flags)")
     sub.add_parser("kinds")
     sub.add_parser("selfcheck")
     a = ap.parse_args()

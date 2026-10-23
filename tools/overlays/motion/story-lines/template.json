@@ -11,5 +11,7 @@
  "scene": true,
  "general": 0.9,
  "thumb_f": 250,
- "check_frames": [0, 12, 40, 95, 110, 190, 250, 300, 340]
+ "check_frames": [0, 12, 40, 95, 110, 190, 250, 300, 340],
+ "min_frames": "start + 75 * ((card1 != '') + (card2 != '') + (card3 != '') + (card4 != '') + (card5 != '') + (card6 != ''))",
+ "min_why": "each card needs ~75 frames (~16 empty frames at a change, its key words typed over ~30): a shorter card is cut mid-word - for short cards use highlight-reveal or a kinetic text template"
 }

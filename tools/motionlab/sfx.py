@@ -74,6 +74,9 @@ TRIM_DB = -3.0                       # every level (against the song and the low
 LEVELS = {"hit": (-7, -25), "hit_small": (-11, -33), "click": (-20, -43), "pop": (-12, -35), "move": (-16, -38),
           "whip": (-19, -41), "key": (-20, -41), "tick": (-15, -38), "soft": (-21, -44)}
 SPARSE_DB = 20.0                     # a sound's level never reads more than this under its peak (sparks: 29 dB)
+FLOOR_VS_SONG_DB = -24.0             # 0.5.3 (A4): no effect is placed further under the song than this - the
+                                     # precheck's "buried" line (-26) + 2 dB, so a cue's own "db" offset (templates'
+                                     # -9..-13, set on a quiet reference) never lands it masked under a loud song
 
 
 # ------------------------------------------------------------------------------------------------ the sounds
@@ -532,8 +535,10 @@ def _animated(v) -> bool:
     return isinstance(v, (dict, str))
 
 
-def plan_cues(plan: dict) -> list[dict]:
-    """A plan's effects (its layers) + its graphics' cues + its own "cues" -> cues at the plan's fps."""
+def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
+    """A plan's effects (its layers) + its graphics' cues + its own "cues" -> cues at the plan's fps. A graphic whose
+    cues do not resolve (a formula naming a setting its index.html no longer declares, local-make-13) loses its own
+    cues, with a line in `notes` - the rest of the plan keeps its sound."""
     from .compose import Curve
     fps, N = float(plan["fps"]), int(plan["frames"])
     W, H = float(plan.get("width", 1920)), float(plan.get("height", 1080))
@@ -551,7 +556,14 @@ def plan_cues(plan: dict) -> list[dict]:
         if t == "overlay" and L.get("file"):
             folder = Path(L["file"]).parent
             if (folder / "overlay.json").exists():
-                gc, gfps, _, _ = graphic_cues(folder)
+                try:
+                    gc, gfps, _, _ = graphic_cues(folder)
+                except ValueError as ex:
+                    if notes is None:
+                        raise
+                    notes.append(f"{lid}: its own cues skipped - {ex} (fix its overlay.json \"cues\", or [] and "
+                                 "plan-level cues)")
+                    continue
                 inn = int(L.get("in", 0))
                 for q in gc:
                     f = s + math.floor((q["f"] - inn) * fps / gfps + 0.5)
@@ -723,8 +735,10 @@ def limit(x: np.ndarray, ceiling_db: float = CEILING_DB, hold_s: float = 0.02) -
 
 
 def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = None, song_db: float = SONG_DB,
-          ceiling_db: float = CEILING_DB, fade_s: float = FADE_S, peak_db: float = PEAK_DB) -> dict:
-    """The effects stem, the mix and a row per cue with its measured levels. song = stereo at SR from frame 0."""
+          ceiling_db: float = CEILING_DB, fade_s: float = FADE_S, peak_db: float = PEAK_DB,
+          floor_vs_song: float | None = FLOOR_VS_SONG_DB) -> dict:
+    """The effects stem, the mix and a row per cue with its measured levels. song = stereo at SR from frame 0.
+    floor_vs_song: an effect never sits further under the song where it sounds (rule "song floor"; None = off)."""
     N = int(round(frames / fps * SR))
     has_song = song is not None and len(song) > 0
     sg = np.zeros((N, 2))
@@ -746,6 +760,8 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
         want = max(s_db + rel, floor) if has_song else floor
         want += q["db"]
         rule = "floor" if (not has_song or s_db + rel < floor) else "song"
+        if has_song and floor_vs_song is not None and want < s_db + floor_vs_song:
+            want, rule = s_db + floor_vs_song, "song floor"
         gain = 10 ** ((want - fx_db) / 20)
         if gain > cap:
             gain, rule = cap, "peak cap"
@@ -947,6 +963,20 @@ def safe_out(folder: Path) -> Path:
     if not ok:
         raise PermissionError(f"sound effects go into projects\\<name>\\build\\... (not {f})")
     return f
+
+
+def last_song() -> tuple[str, float, str] | None:
+    """0.5.3: the song of the newest video with a sound report (projects\\*\\build\\sfx\\*_sfx.json) - (path, start
+    s, project): Generate's "the song from last time" and the brief's guess when a request names none."""
+    best = None
+    for rep in (LAB / "projects").glob("*/build/sfx/*_sfx.json"):
+        try:
+            s = json.loads(rep.read_text(encoding="utf-8")).get("song") or {}
+        except (OSError, ValueError):
+            continue
+        if s.get("path") and Path(s["path"]).exists() and (best is None or rep.stat().st_mtime > best[0]):
+            best = (rep.stat().st_mtime, s["path"], float(s.get("start_s") or 0), rep.parents[2].name)
+    return best[1:] if best else None
 
 
 def stem_name(text: str) -> str:

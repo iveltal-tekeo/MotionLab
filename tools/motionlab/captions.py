@@ -179,6 +179,61 @@ def group(words: list[dict], max_chars: int = 32, max_words: int = 6, max_gap: f
     return cues
 
 
+def _tok(w: str) -> str:
+    return re.sub(r"[^\w]+", "", w.lower())
+
+
+def align_script(words: list[dict], lines: list[str], hold: float = 0.5, max_chars: int = 32) -> tuple[list, list]:
+    """0.5.3 (A8): captions that keep the SCRIPT's lines and wording, at the transcript's times - instead of group()'s
+    own regrouping ("One:" joined its sentence, a 3-s cap split "take half the" / "time.", local-make-17) and speech to
+    text's mis-heard names ("rebuilds" -> "repels", local-make-2). Each line's words are matched to the transcript's
+    in order (difflib over the whole text); a line's cue runs from its first matched word to its last, held until the
+    next one (+hold s at most); unmatched words get times spread inside the line; a line over 2 x max_chars is split
+    into even parts. Returns (cues as group() makes them, the lines not found in what was said)."""
+    import difflib
+    toks = [_tok(w["w"]) for w in words]
+    script = [(i, w) for i, ln in enumerate(lines) for w in ln.split() if _tok(w)]
+    sm = difflib.SequenceMatcher(None, [_tok(w) for _, w in script], toks, autojunk=False)
+    hit = {}
+    for blk in sm.get_matching_blocks():
+        for k in range(blk.size):
+            hit[blk.a + k] = blk.b + k
+    cues, missing, pos = [], [], 0
+    for i, ln in enumerate(lines):
+        idx = [k for k, (li, _) in enumerate(script) if li == i]
+        if not idx:
+            continue
+        got = [hit[k] for k in idx if k in hit]
+        if not got:
+            missing.append(ln)
+            pos += len(idx)
+            continue
+        t0, t1 = float(words[min(got)]["t0"]), float(words[max(got)]["t1"])
+        ws = []
+        for j, k in enumerate(idx):                         # the script's words; a matched one takes its time
+            if k in hit:
+                a, b = float(words[hit[k]]["t0"]), float(words[hit[k]]["t1"])
+            else:
+                a = t0 + (t1 - t0) * j / len(idx)
+                b = t0 + (t1 - t0) * (j + 1) / len(idx)
+            ws.append({"w": script[k][1], "t0": round(a, 3), "t1": round(max(b, a + 0.04), 3)})
+        for j in range(1, len(ws)):                         # never back in time inside a line
+            ws[j]["t0"] = max(ws[j]["t0"], ws[j - 1]["t0"])
+        parts = max(1, math.ceil(len(ln) / (max_chars * 2)))
+        size = math.ceil(len(ws) / parts)
+        for p in range(0, len(ws), size):
+            chunk = ws[p:p + size]
+            cues.append({"t0": chunk[0]["t0"], "t1": chunk[-1]["t1"], "words": chunk,
+                         "text": " ".join(w["w"] for w in chunk)})
+        pos += len(idx)
+    cues.sort(key=lambda c: c["t0"])
+    for a, b in zip(cues, cues[1:]):
+        a["t1"] = max(a["t1"], min(b["t0"], a["t1"] + hold))
+    if cues:
+        cues[-1]["t1"] = cues[-1]["t1"] + hold
+    return cues, missing
+
+
 def in_frames(cues: list[dict], fps: float, offset: int = 0) -> list[dict]:
     """Cues with frames: f0 = first frame shown, f1 = last (inclusive), per word too; offset moves everything."""
     out = []
