@@ -5,9 +5,28 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
-## Unreleased
+## 0.5.3 - 2026-10-24 - Faster videos, photos in your edits and a thumbnail preview
 
-Asked by a friend who edits with MotionLab every day, and one of yours:
+Faster videos - Claude makes a video in fewer, shorter steps:
+- **The Generator asks what Claude used to guess** - a look for the graphics (Editorial warm, Swiss signal, Night
+  edition or Surprise me) and *The song from last time* next to the song. All optional: Claude still picks when you
+  leave them.
+- **Claude starts from a brief** - when you save a request, MotionLab writes everything Claude needs into one page
+  (the song's beats, the templates that fit your words, your ratings as rules, the lessons for that kind of video) and
+  lists what it left out, so nothing is dropped.
+- **One build instead of many steps** - graphics, sound effects, the video, the checks and one sheet of every cut, in
+  one go; only the graphics that changed are rendered again, several at a time. The final gives motion blur only to
+  graphics that move (captions and still graphics stay plain: a 60-second final went from 13.5 to 6.5 minutes).
+  Long final renders run as jobs on the Jobs page.
+- **Fewer rounds of checking** - text that runs off the frame is flagged on the first snapshot, sound effects come out
+  at levels that pass the check, template moves land on the beat by their measured timing, and every template is
+  checked at vertical and square sizes.
+- **Talking videos** - captions keep your script's own words, the voice is levelled per take, black screen-recording
+  flashes are avoided, and Claude edits with a short list instead of a long program.
+- **Review** - *Send it to Claude* now says which parts the next version will change.
+- **What it took** shows how much of Claude's time was spent waiting for the lab's tools.
+
+Also new - most of it asked by a friend who edits with MotionLab every day:
 - **Photos in your edits** - *New edit > 1. Clips* (and *Film it*) take photos as photos: JPG, PNG, WebP, HEIC / HEIF
   from an iPhone, AVIF, BMP, TIFF, GIF, the right way up. Each shows with its own picture and a yellow PHOTO badge,
   and a click on its length (3 / 5 / 8 s) sets how long it stays on screen. In the edit a photo is a still shot with
@@ -34,25 +53,6 @@ Asked by a friend who edits with MotionLab every day, and one of yours:
   *Where is mine?*. Your pictures are not saved.
 - **Fewer zooms in edits** - zooms, whips and pushes now keep their distance (one every few seconds, one every ~8 s on a
   talking video) and never jump between two shots of the same take; a build names an edit with too many of them.
-
-Faster videos (0.5.3, built - released once the re-runs show half of Claude's time with the same results):
-- **The Generator asks what Claude used to guess** - a look for the graphics (Editorial warm, Swiss signal, Night
-  edition or Surprise me) and *The song from last time* next to the song. All optional: Claude still picks when you
-  leave them.
-- **Claude starts from a brief** - when you save a request, MotionLab writes everything Claude needs into one page
-  (the song's beats, the templates that fit your words, your ratings as rules, the lessons for that kind of video) and
-  lists what it left out, so nothing is dropped.
-- **One build instead of many steps** - graphics, sound effects, the video, the checks and one sheet of every cut, in
-  one go; only the graphics that changed are rendered again, several at a time. The final gives motion blur only to
-  graphics that move (captions and still graphics stay plain: a 60-second final went from 13.5 to 6.5 minutes).
-  Long final renders run as jobs on the Jobs page.
-- **Fewer rounds of checking** - text that runs off the frame is flagged on the first snapshot, sound effects come out
-  at levels that pass the check, template moves land on the beat by their measured timing, and every template is
-  checked at vertical and square sizes.
-- **Talking videos** - captions keep your script's own words, the voice is levelled per take, black screen-recording
-  flashes are avoided, and Claude edits with a short list instead of a long program.
-- **Review** - *Send it to Claude* now says which parts the next version will change.
-- **What it took** shows how much of Claude's time was spent waiting for the lab's tools.
 
 ## 0.5.2 - 2026-10-22 - New edit, step by step, and a lighter app
 

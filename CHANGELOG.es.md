@@ -7,9 +7,29 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
-## Unreleased
+## 0.5.3 - 2026-10-24 - Vídeos más rápidos, fotos en tus montajes y una vista previa de tu miniatura
 
-Lo que ha pedido un amigo que edita con MotionLab cada día, y una petición tuya:
+Vídeos más rápidos: Claude hace un vídeo en menos pasos y más cortos:
+- **El Generador pregunta lo que Claude antes adivinaba**: un look para los gráficos (Editorial cálido, Señal suiza,
+  Edición nocturna o Sorpréndeme) y *La canción de la última vez* junto a la canción. Todo opcional: si lo dejas,
+  Claude elige.
+- **Claude empieza desde un resumen**: al guardar una petición, MotionLab escribe en una sola página todo lo que Claude
+  necesita (los beats de la canción, las plantillas que encajan con tus palabras, tus valoraciones como reglas, las
+  lecciones para ese tipo de vídeo) y dice lo que ha dejado fuera, para que no se pierda nada.
+- **Un solo montaje en vez de muchos pasos**: gráficos, efectos de sonido, el vídeo, las comprobaciones y una hoja con
+  cada corte, de una vez; solo se vuelven a renderizar los gráficos que cambian, varios a la vez. El final pone
+  desenfoque de movimiento solo a los gráficos que se mueven (los subtítulos y los gráficos quietos se quedan sin
+  él: un final de 60 segundos ha pasado de 13,5 a 6,5 minutos). Los renders finales largos van como tareas en la
+  página de Tareas.
+- **Menos rondas de revisión**: el texto que se sale del encuadre se marca en la primera captura, los efectos de sonido
+  salen a niveles que pasan la comprobación, los movimientos de las plantillas caen en el beat según su tiempo medido,
+  y cada plantilla se comprueba en vertical y en cuadrado.
+- **Vídeos hablados**: los subtítulos mantienen las palabras de tu guion, la voz se nivela por toma, se evitan los
+  destellos negros de las grabaciones de pantalla, y Claude edita con una lista corta en vez de un programa largo.
+- **Revisión**: *Enviar a Claude* ahora dice qué partes cambiará la siguiente versión.
+- **Lo que ha costado** muestra cuánto del tiempo de Claude fue esperar a las herramientas del laboratorio.
+
+También nuevo, casi todo pedido por un amigo que edita con MotionLab cada día:
 - **Fotos en tus montajes**: *Nueva edición > 1. Clips* (y *Grábalo*) aceptan fotos como fotos: JPG, PNG, WebP, HEIC /
   HEIF del iPhone, AVIF, BMP, TIFF, GIF, bien orientadas. Cada una se ve con su propia imagen y una etiqueta amarilla
   FOTO, y un clic en su duración (3 / 5 / 8 s) decide cuánto tiempo se ve. En el montaje una foto es un plano fijo con
@@ -40,27 +60,6 @@ Lo que ha pedido un amigo que edita con MotionLab cada día, y una petición tuy
 - **Menos zooms en los montajes**: los zooms, los barridos y los empujes guardan ahora la distancia (uno cada pocos
   segundos, uno cada ~8 s en un vídeo hablado) y nunca saltan entre dos planos de la misma toma; un montaje avisa
   cuando lleva demasiados.
-
-Vídeos más rápidos (0.5.3, construido; se publica cuando las nuevas pruebas muestren la mitad del tiempo de Claude con
-los mismos resultados):
-- **El Generador pregunta lo que Claude antes adivinaba**: un look para los gráficos (Editorial cálido, Señal suiza,
-  Edición nocturna o Sorpréndeme) y *La canción de la última vez* junto a la canción. Todo opcional: si lo dejas,
-  Claude elige.
-- **Claude empieza desde un resumen**: al guardar una petición, MotionLab escribe en una sola página todo lo que Claude
-  necesita (los beats de la canción, las plantillas que encajan con tus palabras, tus valoraciones como reglas, las
-  lecciones para ese tipo de vídeo) y dice lo que ha dejado fuera, para que no se pierda nada.
-- **Un solo montaje en vez de muchos pasos**: gráficos, efectos de sonido, el vídeo, las comprobaciones y una hoja con
-  cada corte, de una vez; solo se vuelven a renderizar los gráficos que cambian, varios a la vez. El final pone
-  desenfoque de movimiento solo a los gráficos que se mueven (los subtítulos y los gráficos quietos se quedan sin
-  él: un final de 60 segundos ha pasado de 13,5 a 6,5 minutos). Los renders finales largos van como tareas en la
-  página de Tareas.
-- **Menos rondas de revisión**: el texto que se sale del encuadre se marca en la primera captura, los efectos de sonido
-  salen a niveles que pasan la comprobación, los movimientos de las plantillas caen en el beat según su tiempo medido,
-  y cada plantilla se comprueba en vertical y en cuadrado.
-- **Vídeos hablados**: los subtítulos mantienen las palabras de tu guion, la voz se nivela por toma, se evitan los
-  destellos negros de las grabaciones de pantalla, y Claude edita con una lista corta en vez de un programa largo.
-- **Revisión**: *Enviar a Claude* ahora dice qué partes cambiará la siguiente versión.
-- **Lo que ha costado** muestra cuánto del tiempo de Claude fue esperar a las herramientas del laboratorio.
 
 ## 0.5.2 - 2026-10-22 - Nueva edición paso a paso, y una app más ligera
 
