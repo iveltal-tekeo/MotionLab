@@ -103,6 +103,7 @@
   "Titles and thumbnails",
   "Transcript",
   "Transcript of {name}",
+  "The newest videos of big channels (thumbnail preview)",
   "Update yt-dlp",
   "Views and followers of {name}",
   "Views and likes",
@@ -540,7 +541,6 @@
  "{file} has an analysis ({names}): delete the reference instead (References > the video > Delete)": "{file} tiene un análisis ({names}): elimina mejor la referencia (Referencias > el vídeo > Eliminar)",
  "{file}: not a picture ({types})": "{file}: no es una imagen ({types})",
  "{file}: not a song in the video's folder or in refs\\audio": "{file}: no es una canción de la carpeta del vídeo ni de refs\\audio",
- "{file}: not a video or a song ({types})": "{file}: no es un vídeo ni una canción ({types})",
  "{graphic} has no look '{look}'": "{graphic} no tiene el look '{look}'",
  "{name} is already a video - give this one another name": "{name} ya es un vídeo - ponle otro nombre a este",
  "{n} days old": {"one": "hace {n} día", "other": "hace {n} días"},
@@ -555,5 +555,14 @@
  "{video}: no edit request yet (Editor > New edit)": "{video}: aún no hay ninguna petición de edición (Editor > Nueva edición)",
  "{video}: no graphic {name}": "{video}: no hay ningún gráfico {name}",
  "{video}: no thumbnail {id} yet": "{video}: aún no hay miniatura {id}",
- "{video}: no verify_timing.py or no {render}.mp4": "{video}: falta verify_timing.py o {render}.mp4"
+ "{video}: no verify_timing.py or no {render}.mp4": "{video}: falta verify_timing.py o {render}.mp4",
+ "A job is running - try again when it has finished (Jobs).": "Hay una tarea en marcha: vuelve a intentarlo cuando termine (Tareas).",
+ "Its still-video copy": "Su copia como vídeo fijo",
+ "The photo": "La foto",
+ "{file} - made from the photo before MotionLab took photos": "{file}: hecha a partir de la foto antes de que MotionLab aceptara fotos",
+ "{file}: a hidden file a Mac or an iPhone leaves next to clips - not a clip": "{file}: un archivo oculto que un Mac o un iPhone deja junto a los clips; no es un clip",
+ "{file}: not a video, a photo or a song ({types})": "{file}: no es un vídeo, una foto ni una canción ({types})",
+ "no kept changes called {name}": "no hay cambios guardados llamados {name}",
+ "not a YouTube channel: {line}": "no es un canal de YouTube: {line}",
+ "The newest videos of big channels (thumbnail preview)": "Los vídeos más nuevos de grandes canales (previsualizar miniatura)"
 }

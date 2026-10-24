@@ -1,0 +1,35 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move across the frame",
+   "start_f": 1,
+   "length_f": 149,
+   "fastest_f": 1,
+   "easing": "linear (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f0 (00:00:00:00): #rain > div:nth-of-type(16) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 38 px",
+    "FIT f0 (00:00:00:00): #rain > div:nth-of-type(43) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 55 px",
+    "FIT f30 (00:00:01:00): #rain > div:nth-of-type(12) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 15 px",
+    "FIT f60 (00:00:02:00): #rain > div:nth-of-type(7) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 21 px",
+    "FIT f60 (00:00:02:00): #rain > div:nth-of-type(30) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 32 px",
+    "FIT f120 (00:00:04:00): #rain > div:nth-of-type(19) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 6 px",
+    "FIT f120 (00:00:04:00): #rain > div:nth-of-type(36) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 22 px",
+    "FIT f120 (00:00:04:00): #rain > div:nth-of-type(42) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 56 px",
+    "FIT f120 (00:00:04:00): #rain > div:nth-of-type(44) > svg:nth-of-type(1) > text:nth-of-type(1) \"$\" off the frame by 11 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

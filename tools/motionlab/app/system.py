@@ -161,6 +161,8 @@ def save(body: dict) -> dict:
         if k == "language" and v not in LANGUAGES:
             raise ValueError(I18N.t("unknown language {id}", id=v))
         s[k] = v
+    raw = data.read_json(SETTINGS, {}) or {}              # 2026-10-24: a key this version does not know (written by
+    s = {**{k: v for k, v in raw.items() if k not in DEFAULTS}, **s}     # a newer one, or by hand) is kept, not dropped
     data.write_json_atomic(SETTINGS, s)
     I18N.forget()                                         # the page reloads in the new language at once
     return s
@@ -599,7 +601,14 @@ def make_shortcut(where: str, folder: Path | None = None) -> dict:
                          creationflags=NO_WINDOW)
     if out.returncode != 0:
         raise RuntimeError(out.stderr.strip()[-300:] or I18N.t("could not create the shortcut"))
-    return {"ok": True, "path": out.stdout.strip().splitlines()[-1] if out.stdout.strip() else ""}
+    path = out.stdout.strip().splitlines()[-1] if out.stdout.strip() else ""
+    if path and sys.platform == "win32":                 # 2026-10-24: the window's own AppUserModelID (winicon): a
+        try:                                             # pinned MotionLab is MotionLab with its icon, not Edge
+            from . import winicon
+            winicon.tag_shortcut(Path(path), only_ours=False)
+        except Exception:                                # noqa: BLE001 - the shortcut works without it
+            pass
+    return {"ok": True, "path": path}
 
 
 def downloads() -> list[dict]:

@@ -12,6 +12,10 @@ Manager, in the browser) the first time something is pushed.
             requirements.txt changed; the caller restarts the app when code changed. A local change that clashes
             with the update (e.g. a threshold Claude tuned in config.json that the update changes too) is set aside in
             git's stash and the file gets the new version - the app never runs on a file with conflict markers.
+            Since 2026-10-24 it is also kept (.app\\local_changes\\<date>\\, "kept" in the result): the app names
+            the files and restore_kept() merges them back (the update's other changes stay, the user's lines win
+            where both changed). Thresholds tuned for this PC belong in tools\\config.local.json (not in git: an
+            update never touches it).
             The result (.app\\update_last.json) carries the CHANGELOG sections that came in: the restarted window
             shows them once ("What's new"), then mark_seen()
   share()   commit the staged knowledge files and push them (on failure everything is put back as it was)
@@ -278,7 +282,8 @@ def apply() -> dict:
     inc = _incoming(old, new) if old != new else {"new_cards": 0, "new_lessons": 0}
     lg = I18N.lang()
     out = {"updated": old != new, "from": old[:7], "to": new[:7], "changed": changed[:80], "pip": pip, "npm": npm,
-           "set_aside": set_aside, "when": time.time(), "version": version, "from_version": old_version,
+           "set_aside": set_aside, "kept": _KEPT_LAST if set_aside else None, "to_local": list(_LOCAL_LAST),
+           "when": time.time(), "version": version, "from_version": old_version,
            "code_changed": any(not _is_knowledge(f) for f in changed),
            "new_cards": inc["new_cards"], "new_lessons": inc["new_lessons"], "seen": False, "lang": lg,
            "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), old_version, version, local=local_changelog(lg))
@@ -296,16 +301,137 @@ def _read(p: Path) -> str:
         return ""
 
 
+def _diff_bytes(files: list[str]) -> bytes:
+    """git diff HEAD --binary of these files, as bytes (a file in another encoding stays whole)."""
+    r = subprocess.run([git_exe() or "git", "diff", "HEAD", "--binary", "--", *files], cwd=str(LAB),
+                       capture_output=True, timeout=60, creationflags=NO_WINDOW)
+    return r.stdout if r.returncode == 0 else b""
+
+
+def _show_bytes(ref_path: str) -> bytes | None:
+    """<ref>:<path> as bytes the way it is checked out (line endings as on disk: core.autocrlf) - None: a new file."""
+    r = subprocess.run([git_exe() or "git", "cat-file", "--filters", ref_path], cwd=str(LAB), capture_output=True,
+                       timeout=60, creationflags=NO_WINDOW)
+    return r.stdout if r.returncode == 0 else None
+
+
 def _pull(br: str) -> list[str]:
     """git pull --rebase --autostash from origin's branch `br`; returns the files whose local changes clashed with
     what came in. When the autostash cannot be put back cleanly git leaves conflict markers in those files (and
     keeps the changes in its stash, "autostash"): give them the version from GitHub, so the lab never runs on a
-    half-merged file."""
+    half-merged file. 2026-10-24 (a friend's ask: tuning lost in silence): those changes are also kept in
+    .app\\local_changes\\<date>\\ (kept.json, changes.patch, each file as it was before the update and with the
+    user's change) - the app names the files and brings them back in one click (restore_kept)."""
+    global _KEPT_LAST, _LOCAL_LAST
+    _LOCAL_LAST = []
+    mine = [f for f in git("diff", "HEAD", "--name-only").splitlines() if f]
+    head = git("rev-parse", "HEAD")
+    before = {f: (_show_bytes(f"{head}:{f}"), (LAB / f).read_bytes() if (LAB / f).is_file() else None,
+                  _diff_bytes([f])) for f in mine}       # each local change as it is before the update
     git("pull", "--rebase", "--autostash", "origin", br, timeout=300)
     clashed = git("diff", "--name-only", "--diff-filter=U").splitlines()
+    _KEPT_LAST = None
     if clashed:
         git("checkout", "HEAD", "--", *clashed)
+        if CONFIG in clashed and before.get(CONFIG, (None, None, None))[0] and before[CONFIG][1]:
+            _to_local(before[CONFIG][0], before[CONFIG][1])  # the user's thresholds stay in effect, no click
+        keep = [f for f in clashed if f in before and before[f][1] is not None and not (f == CONFIG and _LOCAL_LAST)]
+        if keep:
+            d = KEPT / time.strftime("%Y-%m-%d_%H%M%S")
+            for f in keep:
+                base, own, diff = before[f]
+                for side, data in (("base", base), ("mine", own)):
+                    if data is not None:
+                        (d / side / f).parent.mkdir(parents=True, exist_ok=True)
+                        (d / side / f).write_bytes(data)
+                with open(d / "changes.patch", "ab") as fh:
+                    fh.write(diff)
+            (d / "kept.json").write_text(json.dumps({"files": keep, "when": time.time(), "from": head[:7],
+                                                     "to": git("rev-parse", "--short", "HEAD")}, indent=1),
+                                         encoding="utf-8")
+            _KEPT_LAST = d.name
     return clashed
+
+
+KEPT = LAB / ".app" / "local_changes"                    # the user's own changes an update replaced (2026-10-24)
+_KEPT_LAST: str | None = None
+CONFIG = "tools/config.json"
+_LOCAL_LAST: list[str] = []
+
+
+def _leaf_diff(base, mine) -> dict:
+    """The values mine has that base does not (nested, leaf by leaf; a key the user removed is ignored)."""
+    out = {}
+    for k, v in mine.items() if isinstance(mine, dict) else []:
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            sub = _leaf_diff(base[k], v)
+            if sub:
+                out[k] = sub
+        elif k not in base or base[k] != v:
+            out[k] = v
+    return out
+
+
+def _to_local(base: bytes, mine: bytes) -> list[str]:
+    """The thresholds the user changed in config.json (before the update) -> tools\\config.local.json, laid over
+    whatever it holds (util.load_config reads it over config.json): they stay in effect after an update that
+    replaced config.json. Returns the dotted keys moved ("cut.jump_cut_diff_rel")."""
+    global _LOCAL_LAST
+    try:
+        diff = _leaf_diff(json.loads(base.decode("utf-8")), json.loads(mine.decode("utf-8")))
+    except ValueError:
+        return []
+    diff = {k: v for k, v in diff.items() if not k.startswith("_")}
+    if not diff:
+        return []
+    p = LAB / "tools" / "config.local.json"
+    try:
+        cur = json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
+    except (OSError, ValueError):
+        cur = {}
+    from motionlab.util import _over                     # the same merge load_config lays it over config.json with
+    p.write_text(json.dumps(_over(cur, diff), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    def keys(d, pre=""):
+        return [x for k, v in d.items() for x in (keys(v, f"{pre}{k}.") if isinstance(v, dict) else [pre + k])]
+    _LOCAL_LAST = keys(diff)
+    return _LOCAL_LAST
+
+
+def restore_kept(name: str) -> dict:
+    """Bring back the changes an update replaced (the app's *Bring them back*): per file a three-way merge of the
+    update's version with the user's (git merge-file, base = the file before the update) - the update's other
+    changes stay, and where both changed the same lines the user's lines win (they asked for their tuning back).
+    A file that cannot be merged (binary, gone) is named and left as the update made it; the kept copy stays for
+    Claude / a person. Done = the folder is renamed <name>.restored."""
+    d = KEPT / str(name)
+    if not re.fullmatch(r"[\w\-]+", str(name)) or not (d / "kept.json").is_file():
+        raise ValueError(I18N.t("no kept changes called {name}", name=name))
+    files = json.loads((d / "kept.json").read_text(encoding="utf-8")).get("files") or []
+    done, left = [], []
+    for f in files:
+        cur, base, own = LAB / f, d / "base" / f, d / "mine" / f
+        if not own.is_file() or LAB.resolve() not in cur.resolve().parents:
+            left.append(f)
+            continue
+        if not cur.is_file() or not base.is_file():       # new on one side: the user's file as it was
+            cur.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(own, cur)
+            done.append(f)
+            continue
+        tmp = d / "merge.tmp"
+        shutil.copyfile(cur, tmp)
+        r = subprocess.run([git_exe() or "git", "merge-file", "--theirs", "-q", str(tmp), str(base), str(own)],
+                           cwd=str(LAB), capture_output=True, timeout=60, creationflags=NO_WINDOW)
+        if r.returncode < 0 or r.returncode > 127 or b"\0" in tmp.read_bytes()[:8000]:
+            left.append(f)                                   # an error / a binary file: not merged
+        else:
+            shutil.copyfile(tmp, cur)
+            done.append(f)
+        tmp.unlink(missing_ok=True)
+    if not left:
+        os.replace(d, d.with_name(d.name + ".restored"))
+    return {"restored": not left, "files": done, "left": left}
 
 
 def last_result(max_age: float = 900) -> dict | None:
@@ -332,6 +458,30 @@ def _complete_old(r: dict) -> dict:
     return {**r, "from_version": frm, "version": ver, "seen": False, "code_changed": True, "lang": lg,
             "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver, local=local_changelog(lg))
             if frm and ver and frm != ver else ""}
+
+
+def kept_list() -> list[dict]:
+    """Every set of kept changes not brought back yet, newest first: {name, files, when} (Settings shows them)."""
+    out = []
+    for d in sorted(KEPT.iterdir(), reverse=True) if KEPT.is_dir() else []:
+        if d.name.endswith(".restored"):
+            continue
+        try:
+            k = json.loads((d / "kept.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        out.append({"name": d.name, "files": k.get("files") or [], "when": k.get("when")})
+    return out
+
+
+def mark_kept_restored() -> None:
+    """The kept changes went back in: the Home / What's new line about them goes."""
+    try:
+        r = json.loads(LAST.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    r["kept_restored"] = True
+    LAST.write_text(json.dumps(r, indent=1), encoding="utf-8")
 
 
 def mark_seen() -> None:
@@ -446,7 +596,9 @@ def share(files: list[Path], who: str, message: str) -> dict:
             lg = I18N.lang()
             LAST.parent.mkdir(exist_ok=True)
             LAST.write_text(json.dumps({"updated": True, "from": mine[:7], "to": out["commit"], "changed": pulled[:80],
-                                        "pip": None, "set_aside": set_aside, "when": time.time(), "version": ver,
+                                        "pip": None, "set_aside": set_aside,
+                                        "kept": _KEPT_LAST if set_aside else None, "to_local": list(_LOCAL_LAST),
+                                        "when": time.time(), "version": ver,
                                         "from_version": frm, "code_changed": True, "new_cards": 0, "new_lessons": 0,
                                         "seen": False, "lang": lg,
                                         "whats_new": whats_new(_read(LAB / "CHANGELOG.md"), frm, ver,

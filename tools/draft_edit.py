@@ -222,12 +222,21 @@ def load_clips(prj: Project) -> tuple[dict, list[dict], bool]:
     except SystemExit:
         srcs, color = FC.plan_sources(prj.build, False), False
     clips = []
+    req = prj.build / "edit_request.json"
+    asked = (read_json(req) or {}).get("photos") or {} if req.exists() else {}     # New edit: a photo's own length
     for sid, s in srcs.items():
         meta = read_json(FC.paths(prj.cache, sid, color)[1])
         st = dict(np.load(prj.cache / f"{sid}_stats.npz"))
-        clips.append({"id": sid, "name": Path(s["source"]).name, "source": s["source"], "frames": int(s["frames"]),
-                      "fps": float(meta["fps"]), "src_fps": float(meta.get("src_fps") or meta["fps"]),
-                      "w": meta.get("src_width"), "h": meta.get("src_height"), "stats": st})
+        c = {"id": sid, "name": Path(s["source"]).name, "source": s["source"], "frames": int(s["frames"]),
+             "fps": float(meta["fps"]), "src_fps": float(meta.get("src_fps") or meta["fps"]),
+             "w": meta.get("src_width"), "h": meta.get("src_height"), "stats": st}
+        if meta.get("photo"):              # a still shot: as long as the photo may show, its one frame's stats held
+            from motionlab import photos as PH
+            o = asked.get(c["name"]) or {}
+            c.update(photo=True, frames=max(1, int(round(float(o.get("seconds") or PH.SECONDS) * c["fps"]))),
+                     zoom=PH.KEN_BURNS if o.get("zoom", True) else 1.0, fit=o.get("fit") or "")
+            c["stats"] = {k: np.repeat(np.asarray(v)[:1], c["frames"]) for k, v in st.items()}
+        clips.append(c)
     return srcs, clips, color
 
 
@@ -344,7 +353,9 @@ def notes(prj, v, style, D, clips, fps, W, H, orient, sound_line, music_note, ar
         c = clips[sh["sid"]]
         k = int(round(sh["in"] / c["fps"] * c["src_fps"]))
         L.append(f"| {sh['n']} | f{sh['start']}-{sh['end']} ({tc(sh['start'])}-{tc(sh['end'])}) | {sh['sid']} "
-                 f"{c['name']} | f{k} ({frame_to_tc(k, c['src_fps'])}) | {sh['why']} |")
+                 f"{c['name']} | " + (("photo (a still, slow zoom)" if (c.get("zoom") or 1) > 1 else "photo (a still)")
+                                      if c.get("photo") else
+                                      f"f{k} ({frame_to_tc(k, c['src_fps'])})") + f" | {sh['why']} |")
     if D["broll"]:
         L += ["", "## B-roll over the talking", ""]
         for b in D["broll"]:
@@ -381,10 +392,18 @@ def pick_orientation(prj: Project, fmt: str | None, style: dict | None) -> str:
     if style and style.get("format"):
         return style["format"]
     shapes = Counter()
+    from motionlab import photos as PH
+    from motionlab.project import is_photo
     for f in files[:12]:
+        if is_photo(f):
+            try:
+                shapes[PH.info(f)["orientation"]] += 1
+            except Exception:                                   # noqa: BLE001 - a photo that does not open: no vote
+                pass
+            continue
         vv = probe(f)["video"]
         shapes[orientation(vv["display_width"], vv["display_height"])] += 1
-    return shapes.most_common(1)[0][0]
+    return shapes.most_common(1)[0][0] if shapes else "vertical"
 
 
 def footage(prj: Project, W: int, H: int) -> tuple[dict, list[dict], bool, float]:
@@ -404,6 +423,9 @@ def clip_sound(prj: Project, clips: list[dict], d: Path, fps: float, mode: str, 
     and, in talk mode, their spoken parts. only = just these clip IDs."""
     for c in clips:
         if only is not None and c["id"] not in only:
+            continue
+        if c.get("photo"):                                  # a photo is silent
+            c["wav"], c["offset_s"] = None, 0.0
             continue
         name = f"clip_{c['id']}_{_key(Path(c['source']))}.wav"
         if reuse is not None and (reuse / name).exists():

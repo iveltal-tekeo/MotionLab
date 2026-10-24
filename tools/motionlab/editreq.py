@@ -214,6 +214,18 @@ def clean(body: dict, folder: Path) -> dict:
         raise ValueError(I18N.t("sound: one of {choices}", choices=", ".join(SOUND)))
     ons = body.get("on_screen")                     # one line each (a list, or the text box as it is)
     ons = "\n".join(map(str, ons)) if isinstance(ons, list) else ons
+    photos = {}                                     # 2026-10-24: a photo's own length / zoom / fit (1. Clips)
+    for name, o in (body.get("photos") or {}).items() if isinstance(body.get("photos"), dict) else []:
+        if not isinstance(o, dict) or not (folder / str(name)).is_file() or Path(str(name)).name != name:
+            continue
+        sec = o.get("seconds")
+        sec = float(sec) if sec not in (None, "") else None
+        if sec is not None and not 0.5 <= sec <= 60:
+            raise ValueError(I18N.t("a photo shows for 0.5 to 60 seconds"))
+        x = {k: v for k, v in (("seconds", sec), ("zoom", False if o.get("zoom") is False else None),
+                                 ("fit", "contain" if o.get("fit") == "contain" else None)) if v is not None}
+        if x:
+            photos[str(name)] = x
     req = {"v": 2, "like": like, "exact": exact, "prompt": prompt or None,
            "about": _text(body.get("about"), 2000, lines=True),
            "on_screen": [x[:120] for x in _text(ons, 2000, lines=True).splitlines()[:12]],
@@ -225,7 +237,7 @@ def clean(body: dict, folder: Path) -> dict:
            "sfx": {"amount": _one(SFX_AMOUNT, sfx.get("amount"), "sfx"), "kinds": _some(SFX_KINDS, sfx.get("kinds"), "kinds"),
                    "notes": _text(sfx.get("notes"), 600)},
            "length_s": length, "format": fmt, "music": _music(body.get("music"), folder), "sound": sound,
-           "resolve": bool(body.get("resolve"))}
+           "resolve": bool(body.get("resolve")), "photos": photos}
     req["how"] = how_of(req)
     return req
 
@@ -254,6 +266,16 @@ def brief(req: dict, f: dict) -> str:
          "Claude's memory and their ratings, and say what you chose.", "",
          "## 1. Clips",
          f"- {f.get('clips', 0)} clip(s) in `projects\\{p}` - read-only; everything you make goes into `build\\`."]
+    if f.get("photos"):
+        from motionlab import photos as PH
+        own = req.get("photos") or {}
+        L.append(f"- {len(f['photos'])} photo(s) among them - still shots, not videos: place them in the story "
+                 f"({PH.SECONDS:g} s each with a slow zoom unless set here; silent; `build\\brief.md` *The photos*).")
+        L += [f"  - {n}: " + ", ".join(x for x in (f"{o['seconds']:g} s" if o.get("seconds") else "",
+                                                   "no zoom" if o.get("zoom") is False else "",
+                                                   "the whole photo, over a blurred copy" if o.get("fit") == "contain"
+                                                   else "") if x)
+              for n, o in own.items() if n in f["photos"]]
     if f.get("songs"):
         L.append(f"- Songs in the folder: {', '.join(f['songs'])}.")
     # 2. Text, 3. References

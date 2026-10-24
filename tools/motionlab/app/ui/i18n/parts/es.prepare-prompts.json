@@ -161,7 +161,6 @@
  "Improve my script": "Mejorar mi guion",
  "Paste the script you have. MotionLab checks it on the spot - the hook, the length, dead seconds, fillers, the call to action. Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.": "Pega el guion que tengas. MotionLab lo comprueba al momento: el gancho, la duración, los segundos muertos, las muletillas y la llamada a la acción. Después Claude marca cada parte (clara, vaga o falta) y lo reescribe con tu voz: un gancho más fuerte y nada que haga que la gente se vaya.",
  "Improve a script": "Mejorar un guion",
- "Your script stays as it is - the new version is saved next to it.": "Tu guion se queda como está: la versión nueva se guarda a su lado.",
  "Write one from zero": "Escribir uno desde cero",
  "Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script, timed to your length, with what goes on screen - in the style of talking videos you analysed.": "Responde unas preguntas: de qué va, para quién es, qué se llevan y tu historia. Claude escribe tres ganchos y el guion entero, ajustado a tu duración y con lo que sale en pantalla, al estilo de los vídeos a cámara que has analizado.",
  "Write a script with Claude": "Escribir un guion con Claude",
@@ -180,7 +179,6 @@
  "No script yet - improve yours or write one from zero, above.": "Aún no hay guiones: mejora el tuyo o escribe uno desde cero, arriba.",
  "No titles yet - <i>Only need a title or thumbnail?</i> above.": "Aún no hay títulos: <i>¿Solo necesitas un título o una miniatura?</i>, arriba.",
  "Forgotten": "Petición olvidada",
- "Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version next to yours.": "Pégalo tal como lo dirías. La comprobación de la derecha no necesita a Claude; después, Claude revisa cada parte y escribe una versión mejor junto a la tuya.",
  "Your script": "Tu guion",
  "Paste your script here…\n\nNotes for the camera can go in brackets: [TEXT: 3 mistakes] [B-ROLL: my desk]": "Pega aquí tu guion…\n\nLas notas para la cámara pueden ir entre corchetes: [TEXTO: 3 errores] [B-ROLL: mi escritorio]",
  "Attach a file (.txt, .md, .docx)": "Adjuntar un archivo (.txt, .md, .docx)",
@@ -228,5 +226,8 @@
  "Pick the video. Claude looks at what it says and shows, then writes the title, thumbnails A / B / C, the description and the hashtags - you find them under the video's <b>Ready to post</b>.": "Elige el vídeo. Claude mira lo que dice y lo que enseña, y después escribe el título, las miniaturas A / B / C, la descripción y los hashtags. Los encontrarás en <b>Listo para publicar</b>, dentro del vídeo.",
  "has a title": "tiene título",
  "Not in MotionLab, or not filmed yet?": "¿No está en MotionLab o aún no lo has grabado?",
- "Answer a few questions instead": "Responder unas preguntas"
+ "Answer a few questions instead": "Responder unas preguntas",
+ "Claude saves one improved version - it takes the place of the one you paste (that one goes to the Recycle Bin).": "Claude guarda una versión mejorada: ocupa el lugar de la que pegas (esa va a la Papelera de reciclaje).",
+ "Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version that takes its place.": "Pégalo tal como lo dirías. La comprobación de la derecha no necesita a Claude; después Claude revisa cada parte y escribe una versión mejor que ocupa su lugar.",
+ "improving…": "mejorando…"
 }

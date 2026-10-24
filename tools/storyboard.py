@@ -111,7 +111,8 @@ def main() -> int:
         end = m["frames"] - 1 if a.end is None else min(a.end, m["frames"] - 1)
         idx = list(range(a.start, end + 1, a.every))
         tiles = [(FC.image(m, arr, i), f"{sid} f{i}  {frame_to_tc(i, m['fps'])}") for i in idx]
-        title = f"{sid} = {m['name']}  ({m['frames']} f @ {m['fps']:g} fps = {m['frames'] / m['fps']:.1f}s)"
+        title = f"{sid} = {m['name']}  " + ("(a photo: a still shot)" if m.get("photo") else
+                                           f"({m['frames']} f @ {m['fps']:g} fps = {m['frames'] / m['fps']:.1f}s)")
         for p in make_sheets(tiles, out, f"{sid}", title, a.cols, a.tile):
             print(p)
         log(f"{sid}: {len(tiles)} tiles")

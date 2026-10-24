@@ -39,7 +39,15 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    {...}` for a one-off (`motionlab\editlist.py` lists them all; every frame = the draft's frame, cuts applied last)
    -> `tools\draft_edit.py <project> --apply build\edit_v<N+1>.list` = `plan_v<N+1>.json` (a talking edit's sound cut
    again and its voice levelled, captions in the script's own words at the said times, graphics from templates).
-   Write `build\edit_v<N+1>.py` (loads the draft's plan and changes it in code) only for what a list cannot say. Aim
+   **Moves** (zoom-throughs, whips, pushes, zoom in / out, shakes): only where the picture really changes (another
+   scene, a card, B-roll), never between two shots of the same take, at most one every ~3 s (a talking video: one
+   every ~8 s), and on a face a soft one (a zoom-through to ~1.25x, not 1.6x); the sentence changes of a talking take
+   are plain cuts or a static punch-in. The user, 2026-10-23, of a talking edit with a zoom-through at every
+   sentence: "it makes too many whip pans or zooms ... it's very weird". `build.py` flags both (`camera moves:`).
+   Write `build\edit_v<N+1>.py` (loads the draft's plan and changes it in code) only for what a list cannot say.
+   Graphics come from the Motion Graphics templates (`graphic` lines; a column or a pill beside the head on a
+   talking video) - a custom HTML design (`overlay.py new` from zero) only when the user asks for one: the
+   What's new 0.5.3 edit (2026-10-23) spent 20 minutes designing eight cards and 11 more rendering them. Aim
    for: a story - the strongest moment first (the hook), then build to the end; better moments where a pick is weak;
    the effects the style is known for, rebuilt as its examples say (their "how it was made"); captions in the
    style's look (`tools\speech.py` + `overlay.py captions`, `graphics.md`) and text / graphics where the references

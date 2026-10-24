@@ -9,10 +9,11 @@ with the command that prints it.
           settings, the style of the `like` videos (style.py; else the closest ones), the user's ratings as rules
           (knowledge.py memory --rules), the lessons for this kind (knowledge.py lessons --kind generate).
           An edit (build\\edit_request.json): the request in words (edit_brief.md), the clips (length, rate, size,
-          sound, their words if transcribed), the references' style, the ratings as rules, the lessons (talking
-          videos: --kind talking; others: every lesson).
+          sound, their words if transcribed), the photos (2026-10-24: size, shape, date taken, the user's length /
+          zoom, one sheet of them all), the references' style, the ratings as rules, the lessons (talking videos:
+          --kind talking; others: every lesson).
 The app writes it when a request is saved; /generate-video and /recreate-video read it first (they run this when it
-is missing or older than the request). Reads only; writes brief.md.
+is missing or older than the request). Reads only; writes brief.md (+ build\\photos\\photos_sheet.jpg).
 """
 from __future__ import annotations
 
@@ -156,10 +157,48 @@ def generate_brief(p: Path, req: dict) -> list[str]:
     return L + ["", "## Left out (nothing silently)"] + [f"- {x}" for x in left]
 
 
+def photo_lines(p: Path, req: dict) -> list[str]:
+    """The photos of the folder (2026-10-24): still shots - no motion, no sound, no words to transcribe. Their size,
+    shape, the date taken and the user's length / zoom for each, and ONE sheet with every photo and its name
+    (build\\photos\\photos_sheet.jpg) that Claude looks at to know what each shows."""
+    from motionlab import photos as PH
+    from motionlab.project import PHOTO_EXT, clip_files
+    ph = clip_files(p, PHOTO_EXT)
+    if not ph:
+        return []
+    asked = req.get("photos") or {}
+    L = ["", "## The photos (still shots: no motion, no sound; only read)",
+         f"Each is a clip of its own in the plan: a clip layer with `\"hold\": true, \"in\": 0` - {PH.SECONDS:g} s and "
+         f"a slow zoom to {PH.KEN_BURNS:g} unless the user set otherwise below; `\"fit\": \"contain\"` shows the whole "
+         "photo over a blurred copy of itself (a horizontal photo in a vertical video). Silent: the song or the "
+         "clips' sound goes on under it. Place them where they tell the story."]
+    sheet = p / "build" / "photos" / "photos_sheet.jpg"
+    try:
+        PH.sheet(ph, sheet)
+        L.append(f"**Look at `build\\photos\\photos_sheet.jpg` once** (every photo with its name) to know what each "
+                 "shows - no need to open them one by one.")
+    except Exception as e:                                   # noqa: BLE001 - no sheet: the list still says enough
+        L.append(f"(no sheet of the photos: {type(e).__name__}: {e} - open the photos themselves)")
+    for f in ph:
+        try:
+            i = PH.info(f)
+            what = f"{i['width']}x{i['height']} {i['orientation']} {i['format']}" + (f", taken {i['taken']}"
+                                                                                    if i["taken"] else "")
+        except Exception as e:                               # noqa: BLE001 - a photo that does not open is named
+            what = f"could not be read ({type(e).__name__})"
+        o = asked.get(f.name) or {}
+        mine = ", ".join(x for x in (f"{o['seconds']:g} s (the user's)" if o.get("seconds") else "",
+                                     "no zoom (the user's)" if o.get("zoom") is False else "",
+                                     "the whole photo (the user's)" if o.get("fit") == "contain" else "") if x)
+        L.append(f"- {f.name}: {what}" + (f"; {mine}" if mine else ""))
+    return L
+
+
 def clip_lines(p: Path) -> list[str]:
     from motionlab import speech as SP
+    from motionlab.project import clip_files
     L = []
-    for v in sorted(x for x in p.iterdir() if x.is_file() and x.suffix.lower() in VIDEO_EXT):
+    for v in clip_files(p, VIDEO_EXT):
         try:
             i = SP.probe(v)
         except Exception:                                   # noqa: BLE001 - a clip that does not read is named
@@ -173,7 +212,9 @@ def clip_lines(p: Path) -> list[str]:
                  + (", sound" if i.get("has_audio") else ", no sound")
                  + (f"; its words: build\\speech\\{words[-1].name}" if words else
                     "; words not transcribed yet (tools\\speech.py transcribe)"))
-    return L or ["- no clips in the folder"]
+    from motionlab.project import PHOTO_EXT, clip_files
+    return L or (["- no video clips - only photos (below)"] if clip_files(p, PHOTO_EXT) else
+                 ["- no clips in the folder"])
 
 
 def edit_brief(p: Path, req: dict) -> list[str]:
@@ -184,7 +225,8 @@ def edit_brief(p: Path, req: dict) -> list[str]:
          "saved), then the lab's facts - the clips, the references' style, the user's ratings as rules, the lessons. "
          "*Left out* at the end names what is not here.", ""]
     L += [b.read_text(encoding="utf-8").strip() if b.exists() else "(no edit_brief.md: the request is "
-          "build\\edit_request.json)", "", "## The clips (the lab measured them; only read)"] + clip_lines(p)
+          "build\\edit_request.json)", "", "## The clips (the lab measured them; only read)"] + clip_lines(p) \
+        + photo_lines(p, req)
     pid = str(req.get("prompt") or "")
     rec = next(iter((KN.LOCAL / "prompts").glob(f"*/{pid}.json")), None) if pid else None
     if rec:

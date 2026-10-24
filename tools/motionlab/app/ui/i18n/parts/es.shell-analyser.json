@@ -275,5 +275,6 @@
  "See what changed and install it": "Mira qué ha cambiado e instálalo",
  "Can't check: {err}": "No se puede comprobar: {err}",
  "Ask GitHub for a newer MotionLab (or new knowledge from your friends) and install it|update": "Pregunta a GitHub si hay un MotionLab más nuevo (o conocimiento nuevo de tus amigos) e instálalo",
- "{changes} on GitHub not released yet - offered once GitHub's tests pass (they run for a new version)": "{changes} en GitHub aún sin publicar: se ofrecen cuando pasan las pruebas de GitHub (se ejecutan con cada versión nueva)"
+ "{changes} on GitHub not released yet - offered once GitHub's tests pass (they run for a new version)": "{changes} en GitHub aún sin publicar: se ofrecen cuando pasan las pruebas de GitHub (se ejecutan con cada versión nueva)",
+ "NEW": "NUEVO"
 }

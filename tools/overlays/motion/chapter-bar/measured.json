@@ -1,0 +1,49 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move at the bottom",
+   "start_f": 3,
+   "length_f": 4,
+   "fastest_f": 5,
+   "easing": "linear (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the bottom left",
+   "start_f": 35,
+   "length_f": 2,
+   "fastest_f": 35,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 3",
+   "what": "a move at the bottom",
+   "start_f": 108,
+   "length_f": 3,
+   "fastest_f": 109,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 4",
+   "what": "a move at the bottom",
+   "start_f": 227,
+   "length_f": 4,
+   "fastest_f": 228,
+   "easing": "linear (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

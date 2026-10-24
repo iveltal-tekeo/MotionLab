@@ -1,4 +1,24 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python tools/*)",
+      "Bash(.venv\\Scripts\\python tools\\*)",
+      "PowerShell(.venv\\Scripts\\python tools\\*)",
+      "PowerShell(.venv/Scripts/python tools/*)",
+      "mcp__motionlab",
+      "Read(./analysis/**)",
+      "Read(./projects/**)",
+      "Read(./knowledge/**)",
+      "Read(./refs/**)",
+      "Read(./library/**)",
+      "Read(./docs/**)",
+      "Read(./tools/**)",
+      "Edit(./projects/*/build/**)",
+      "Write(./projects/*/build/**)",
+      "Edit(./analysis/**)",
+      "Write(./analysis/**)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

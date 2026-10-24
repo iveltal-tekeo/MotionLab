@@ -1,0 +1,52 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move at the top",
+   "start_f": 1,
+   "length_f": 9,
+   "fastest_f": 2,
+   "easing": "decelerating (slow end) (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the middle",
+   "start_f": 13,
+   "length_f": 26,
+   "fastest_f": 14,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 3",
+   "what": "a move at the middle",
+   "start_f": 69,
+   "length_f": 15,
+   "fastest_f": 73,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 4",
+   "what": "a move at the middle",
+   "start_f": 106,
+   "length_f": 5,
+   "fastest_f": 108,
+   "easing": "linear (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f14 (00:00:00:14) +6 more: #txt > div:nth-of-type(14) \"Where the time goes\" off the frame, outside its box by 8 px",
+    "FIT f84 (00:00:02:24) +2 more: #txt > div:nth-of-type(11) \"Posting\" off the frame, outside its box by 23 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

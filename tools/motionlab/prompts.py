@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import hashlib
+import time as _time
 import re
 import threading
 import unicodedata
@@ -120,9 +121,37 @@ def rank(r: dict) -> tuple:
             r.get("id", ""))
 
 
+def _last_path(kind: str) -> Path:
+    return HOME / kind / "_last_id.txt"
+
+
 def next_id(kind: str) -> str:
+    """The next number of a kind - never one given before (2026-10-24: a deleted script-014's number came back for
+    the next script, which then looked like the old one - its NEW badge, made_from links). _last_id.txt keeps the
+    highest number ever given."""
     nums = [int(p.stem.split("-")[1]) for p in (HOME / kind).glob(f"{kind}-*.json") if p.stem.split("-")[1].isdigit()]
+    try:
+        nums.append(int(_last_path(kind).read_text(encoding="utf-8").strip()))
+    except (OSError, ValueError):
+        pass
     return f"{kind}-{max(nums, default=0) + 1:03d}"
+
+
+def _given(pid: str) -> None:
+    kind, n = pid.rsplit("-", 1)
+    _last_path(kind).parent.mkdir(parents=True, exist_ok=True)
+    _last_path(kind).write_text(str(int(n)), encoding="utf-8")
+
+
+def created(r: dict) -> float:
+    """When a prompt was saved (seconds): "created" (since 2026-10-24), else its file's creation time."""
+    if r.get("created"):
+        return float(r["created"])
+    try:
+        st = _path(r["id"]).stat()
+        return getattr(st, "st_birthtime", None) or st.st_ctime
+    except (OSError, ValueError, KeyError):
+        return 0.0
 
 
 def _check(r: dict) -> None:
@@ -304,7 +333,9 @@ def add(rec: dict) -> dict:
     _check(r)
     with _LOCK:
         r["id"] = next_id(r["kind"])
+        r["created"] = round(_time.time(), 3)
         write_json(_path(r["id"]), {"id": r["id"], **r}, indent=1)
+        _given(r["id"])
     return get(r["id"])
 
 
@@ -360,6 +391,7 @@ def set_kind(pid: str, kind: str) -> dict:
         r.update(kind=kind, id=next_id(kind), updated=_today())
         _check(r)
         write_json(_path(r["id"]), r, indent=1)
+        _given(r["id"])
         old.unlink()
     return r
 
@@ -1226,6 +1258,7 @@ def overview() -> dict:
     for r in items:                                     # older prompts saved without a title (Claude's check adds one)
         if not r.get("title"):
             r["title_auto"] = auto_title(r.get("text", ""), r.get("kind", ""))
+        r["created"] = created(r)                       # the app's NEW badge (a reused id is a new card: id + time)
     return {"kinds": [{"id": k, "label": v, "count": sum(1 for r in items if r["kind"] == k),
                        "slots": SLOTS[k]} for k, v in KINDS.items()],
             "items": items, "template": TEMPLATE, "folder": FOLDER, "help": KIND_HELP, "statuses": list(STATUSES)}

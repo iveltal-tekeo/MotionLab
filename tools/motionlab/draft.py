@@ -40,6 +40,11 @@ TALK_OK = {"flash_white", "flash_black", "dip_black", "dip_white", "zoom_transit
            "rgb_split", "light_leak", "fade_in", "fade_out"}       # nothing that shifts the picture against the sound
 ZOOMY = {"zoom_in", "zoom_out", "shake", "zoom_transition"}
 SLIDE = {"push_slide", "whip_pan", "crossfade"}                  # the two shots overlap: both need spare frames
+# what moves the whole picture: each reads as a jolt. At most one this often, and never between two shots of the same
+# take (the same face lurching and snapping back) - the user, 2026-10-23, of a talking edit with a zoom-through at
+# every sentence: "it makes too many whip pans or zooms ... it's very weird"
+MOVES = ZOOMY | {"whip_pan", "push_slide"}
+MOVE_GAP_S = {"talk": 8.0, "other": 3.0}
 HOW = {
     "crossfade": "the next shot fades in over the last one", "dip_black": "a dip through black",
     "dip_white": "a dip through white", "flash_white": "an over-exposed flash into the next shot (L001)",
@@ -149,14 +154,21 @@ def _budget(style: dict, minutes: float, talk: bool, rng) -> tuple[list, list]:
 
 def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: list[float], downbeats: set,
                   drops: list[float], rng, talk: bool = False,
-                  max_src: int | None = None) -> tuple[dict, dict, list, list]:
+                  max_src: int | None = None, same: set | None = None) -> tuple[dict, dict, list, list]:
     """(effects per cut index, per shot index, at the edges, skipped types). A cut i = shots[i][0] (i >= 1).
-    max_src = the longest clip: a speed ramp only where the clip can give the frames it reads."""
+    max_src = the longest clip: a speed ramp only where the clip can give the frames it reads. same = the cuts whose
+    two shots come from the same take (no move there). Moves (MOVES) keep MOVE_GAP_S between them."""
     N = shots[-1][1] + 1
     want, skipped = _budget(style, N / fps / 60, talk, rng)
     at_cut: dict[int, dict] = {}
     at_shot: dict[int, dict] = {}
     edges: list[str] = []
+    same = same or set()
+    gap = _f(MOVE_GAP_S["talk" if talk else "other"], fps)
+    moved: list[int] = []                                    # frames of the moves placed so far
+
+    def crowded(f: int) -> bool:
+        return any(abs(f - m) < gap for m in moved)
     lens = [e - s + 1 for s, e in shots]
     drop_f = [int(round(d)) for d in drops]
     beat_f = [int(round(b)) for b in beats]
@@ -187,6 +199,8 @@ def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: 
                     a, b = lens[i - 1], lens[i]
                     if i in at_cut or min(a, b) < need:
                         continue
+                    if t in MOVES and (i in same or crowded(c)):
+                        continue
                     if t in ZOOMY and ((at_shot.get(i - 1) or {}).get("type") in ZOOMY
                                        or (at_shot.get(i) or {}).get("type") in ZOOMY):
                         continue
@@ -199,6 +213,8 @@ def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: 
                         best, best_s = i, sc
                 if best is not None:
                     at_cut[best] = {"type": t, "why": e.get("label") or t}
+                    if t in MOVES:
+                        moved.append(shots[best][0])
             else:
                 for i, (s, en) in enumerate(shots):
                     if i in at_shot or lens[i] < need:
@@ -206,6 +222,8 @@ def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: 
                     if t == "speed_ramp" and max_src and lens[i] + (lens[i] - lens[i] // 2) + 16 > max_src:
                         continue
                     if t in ZOOMY and any((at_cut.get(j) or {}).get("type") in ZOOMY for j in (i, i + 1)):
+                        continue
+                    if t in MOVES and crowded(s):
                         continue
                     if t == "shake" and any((at_cut.get(j) or {}).get("type") in SLIDE for j in (i, i + 1)):
                         continue
@@ -221,6 +239,8 @@ def place_effects(shots: list[tuple[int, int]], style: dict, fps: float, beats: 
                     inner = [b for b in beat_f if s + 3 <= b <= en - 4]
                     at_shot[best] = {"type": t, "why": e.get("label") or t,
                                      "beat": inner[len(inner) // 2] if inner else None}
+                    if t in MOVES:
+                        moved.append(s)
     return at_cut, at_shot, edges, skipped
 
 
@@ -327,6 +347,8 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
             best = (0.0, c, 0)
         _, c, a = best
         used[c["id"]][a:a + need] = True
+        if c.get("photo"):                   # a photo is one picture: once used, every window of it counts as seen
+            used[c["id"]][:] = True
         why = _why(c, a + pre, L) if c["frames"] >= need else "the longest clip - shorter than the shot, its end holds"
         picks.append({"sid": c["id"], "in": a + pre, "why": why})
         prev = c["id"]
@@ -511,6 +533,29 @@ def build_layers(shots, picks, at_cut, at_shot, edges, W, H, fps, rng, talk_zoom
     return layers, sorted(placed, key=lambda x: x["frame"])
 
 
+def photo_shots(layers: list, clips: list[dict]) -> int:
+    """Photos are still shots (2026-10-24): every clip layer of a photo holds its one frame ("hold", in 0) with a slow
+    zoom (Ken Burns: in, then out, by turns) unless an effect already zooms it, and the photo's "fit" ("contain" =
+    the whole photo over a blurred copy of itself). In place; returns how many layers are photos."""
+    ph = {c["id"]: c for c in clips if c.get("photo")}
+    n = 0
+    for L in layers:
+        c = ph.get(L.get("src")) if L.get("type") == "clip" else None
+        if not c:
+            continue
+        L["hold"], L["in"] = True, 0
+        L.pop("jumps", None)
+        L.pop("speed", None)
+        z = float(c.get("zoom") or 1.0)
+        if "zoom" not in L and z > 1.0 and L["end"] > L["start"]:
+            L["zoom"] = {"keys": [[L["start"], 1.0, "linear"], [L["end"], z]] if n % 2 == 0
+                         else [[L["start"], z, "linear"], [L["end"], 1.0]]}
+        if c.get("fit") == "contain":
+            L["fit"] = "contain"
+        n += 1
+    return n
+
+
 # ------------------------------------------------------------------------------------------------ talk mode
 def talk_shots(clips: list[dict], fps: float, max_frames: int | None) -> tuple[list, list]:
     """Talking clips in order (by ID), each spoken part a shot - the pauses between them are cut out. Returns the
@@ -568,7 +613,8 @@ def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | No
         shots, picks = talk_shots(usable, fps, N)
         if not shots:
             raise ValueError("nobody talks in the clips (no speech found) - use a music edit instead")
-        at_cut, at_shot, edges, skipped = place_effects(shots, style, fps, [], set(), [], rng, talk=True)
+        same = {i for i in range(1, len(picks)) if picks[i]["sid"] == picks[i - 1]["sid"]}     # jump cuts of one take
+        at_cut, at_shot, edges, skipped = place_effects(shots, style, fps, [], set(), [], rng, talk=True, same=same)
         broll, broll_notes = broll_layers(shots, usable, float(style.get("broll_every_s") or 0), fps, W, H, energy,
                                           rng)
     else:
@@ -585,6 +631,7 @@ def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | No
         picks = pick_windows(needs, usable, energy, fps, rng)
     layers, placed = build_layers(shots, picks, at_cut, at_shot, edges, W, H, fps, rng,
                                   talk_zoom=mode == "talk", broll=broll)
+    photo_shots(layers, clips)
     N = shots[-1][1] + 1
     sound = [(p["sid"], int(p["in"]), int(p["in"]) + (e - s)) for (s, e), p in zip(shots, picks)]
     if style.get("wrong"):

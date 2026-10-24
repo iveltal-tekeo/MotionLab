@@ -1,0 +1,35 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move across the frame",
+   "start_f": 2,
+   "length_f": 88,
+   "fastest_f": 59,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the middle",
+   "start_f": 94,
+   "length_f": 17,
+   "fastest_f": 96,
+   "easing": "decelerating (slow end) (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f120 (00:00:04:00): #cap \"summer ’26\" off the frame, outside its box by 9 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

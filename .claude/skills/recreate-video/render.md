@@ -19,8 +19,10 @@ reference's `"sound"` answer (`copy.md`); the precheck checks the levels before 
   processes, ~3x faster; any frame looks the same alone, in a range or in a chunk), `precheck.py` and the cut-sheet
   (`build\checks\<name>_cuts_01.jpg`) -> a 10-line summary (what rendered, flags with frame + timecode, the sheet).
   Read the flags, look at the cut-sheet once, fix, build again (unchanged parts are skipped).
-- The final, once the user approved the plain build: `tools\job.py start build project=<project> plan=plan_vN.json
-  final=1` (graphics with motion blur 5 - a graphic that hardly moves keeps its plain render -, the video, the
+- The final only after the user rated the plain build (Editor > Review) - never unasked: a final the user
+  then wants changed is its minutes lost twice. Then: `tools\job.py start build project=<project> plan=plan_vN.json
+  final=1` (graphics with motion blur 5 - a graphic that hardly moves keeps its plain render, captions always
+  render plain: the lines appear and fade, nothing travels -, the video, the
   precheck), then `tools\job.py wait <id>`. A build longer than ~9 minutes refuses to run in the shell and prints
   this job command.
 - `render_video.py build\plan_vN.json` alone (a quick render without the checks), `--compare` = reference | render

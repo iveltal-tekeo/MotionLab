@@ -4,7 +4,8 @@ Read after SKILL.md section 0 (the lessons, the summaries, the hard rules, `revi
 
 ## 1. Run the pipeline (skip it when the app already did)
 If the request says `the lab pass is done: analysis\<name>` (the app's "Analyse with Claude" / "Send to Claude"
-buttons), or `analysis\<name>\events.json` exists and is newer than `tools\config.json`, do NOT run it again: go to
+buttons), or `analysis\<name>\events.json` exists and is newer than `tools\config.json` (and `config.local.json`
+when there is one), do NOT run it again: go to
 step 2 (re-run only when the user asks or the config changed since). Otherwise:
 ```
 .venv\Scripts\python tools\analyze.py "<path>"

@@ -1,0 +1,25 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move at the middle",
+   "start_f": 6,
+   "length_f": 48,
+   "fastest_f": 23,
+   "easing": "decelerating (slow end) (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

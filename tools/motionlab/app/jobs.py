@@ -85,6 +85,7 @@ TITLES = {
     "build": "Claude's build of {video}",
     "build_final": "Claude's final render of {video}",
     "verify_timing": "Timing check {render}",
+    "thumb_feed": "The newest videos of big channels (thumbnail preview)",
     "ytdlp_update": "Update yt-dlp",
     "ytdlp_update_dry": "Dry run: Update yt-dlp",
     "player_copy": "A copy of {file} that plays here",
@@ -303,6 +304,10 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if not (b / "verify_timing.py").exists() or not (b / f"{render}.mp4").exists():
             raise JobError(I18N.t("{video}: no verify_timing.py or no {render}.mp4", video=p, render=render))
         return _title(kind, render=render), [PY, str(b / "verify_timing.py"), render], "cpu"
+    if kind == "thumb_feed":            # Preview your thumbnail (2026-10-24): the feed of big channels' newest videos
+        if not system.find("yt-dlp"):
+            raise JobError(I18N.t("yt-dlp not found - {how}", how=I18N.t(system.HOW["yt-dlp"])))
+        return _title(kind), [PY, str(JOBTOOLS), "thumb-feed"], "net"
     if kind == "ytdlp_update":          # Settings > Programs > Update yt-dlp (0.4.2.1); dry_run = print, run nothing
         if not system.find("yt-dlp"):
             raise JobError(I18N.t("yt-dlp not found - {how}", how=I18N.t(system.HOW["yt-dlp"])))

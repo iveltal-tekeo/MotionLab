@@ -85,6 +85,15 @@ blocks up to 9 minutes (exit 3 = still running: call it again). One build = one 
 4. The plan format and every layer type are defined by `tools\motionlab\compose.py` (read its docstrings /
    `ClipLayer`, `sample_patch`); graphics generators are in `tools\motionlab\graphics.py`. Paths in a plan may be
    relative to its build folder.
+5. **Photos** (2026-10-24): a project's folder may hold photos beside the clips (`brief.md` *The photos*: size,
+   shape, date taken, the user's length per photo, and `build\photos\photos_sheet.jpg` - look at it once to know
+   what each shows). A photo is a source of ONE cached frame (`prep_footage.py`): a clip layer with `"hold": true,
+   "in": 0`, 5 s and a slow zoom (`"zoom": {"keys": [[start, 1.0, "linear"], [end, 1.06]]}`) unless the user set
+   otherwise, `"fit": "contain"` = the whole photo over a blurred copy of itself (a horizontal photo in a vertical
+   video), silent (no clip sound under it). No motion, no speech: never transcribe or measure one. Place the photos
+   where they tell the story (an intro, a reveal, the end); the quick draft already does all this
+   (`motionlab\draft.py photo_shots`). The Resolve builder does not place photos yet - say so when the user wants
+   a Resolve project of an edit with photos.
 
 ## Keep it lean
 Don't re-read files you have already read in this chat (`brief.md` holds the request, the style, the rules and the

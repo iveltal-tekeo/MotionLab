@@ -53,8 +53,15 @@ its docstring (run it without arguments).
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
 - `tools\` the pipeline (Python 3.12 venv at `.venv\`, `requirements.txt`; ffmpeg on PATH); `tools\motionlab\` the
   package (`compose.py` compositor, `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
-  .comp text, `knowledge.py`, `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
-  explain units)
+  .comp text, `knowledge.py`, `photos.py` photos as still shots (2026-10-24: any format the right way up, HEIC through
+  pillow-heif, the brief's sheet), `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
+  explain units) + `tools\config.local.json` (2026-10-24, not in git: this PC's own values laid over it by
+  `util.load_config` - an update never touches it; the updater moves a clashing tuning there by itself)
+- `projects\<name>\` may hold photos beside the clips (2026-10-24): `project.clip_files` = videos + photos, never a
+  Mac's / iPhone's "._" files or an old add-on's `<photo>.jpg.mp4` twin; `prep_footage.py` caches a photo as ONE frame
+  (meta "photo": true), the quick draft makes it a still shot with a slow zoom (`draft.photo_shots`), compose.py's
+  clip layer `"fit": "contain"` shows a whole photo over a blurred copy; `resolve_build.py` refuses a plan with photos
+  (not placed in Resolve yet)
 - `docs\` hand-offs: `resolve_notes.md`, `option2_resolve.md`, `claude_tips.md`, `knowledge_sharing.md`,
   `organization.md` (repo/versioning plan), `app_pages.md` (the app's pages - read a page's section before changing
   it), `roadmap\` (`roadmap.json` = the roadmap's ONE data file, `index.html` = the motion graphic drawn from it,

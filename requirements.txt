@@ -13,3 +13,6 @@ mcp==1.30.0
 # 2026-10-18: a PDF's text for the prompt library and the Analyser's scripts & prompts (pure Python, BSD licence) -
 # without it a PDF goes to Claude to read, as before
 pypdf==6.21.1
+# 2026-10-24: iPhone photos (HEIC / HEIF) in an edit, read by Pillow (motionlab\photos.py; wheels for Windows, no
+# install of its own) - without it a HEIC photo is refused with a line saying to run setup.bat
+pillow-heif==1.8.1

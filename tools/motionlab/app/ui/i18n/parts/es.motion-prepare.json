@@ -240,7 +240,6 @@
  "then build it as a DaVinci Resolve project": "luego hazlo también como proyecto de DaVinci Resolve",
  "Add your recording first - step 2.": "Primero añade tu grabación (paso 2).",
  "No recording in {name} yet - step 2.": "Aún no hay ninguna grabación en {name} (paso 2).",
- "{names}: not a video or a sound file": "{names}: no es un archivo de vídeo ni de sonido",
  "{name} (new)": "{name} (nuevo)",
  "copying…": "copiando…",
  "already there": "ya estaba",

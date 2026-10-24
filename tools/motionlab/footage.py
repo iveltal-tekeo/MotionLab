@@ -62,6 +62,7 @@ def image(m: dict, arr: np.ndarray, i: int) -> np.ndarray:
 
 def plan_sources(build_dir: str | Path, color: bool = True) -> dict:
     """plan["sources"] for an edit script: every complete colour (or grey) cache of the project, by source ID."""
+    from .project import is_junk, is_photo_twin
     cache = Path(build_dir) / "cache"
     out = {}
     for meta_p in sorted(cache.glob("*.json")):
@@ -69,6 +70,9 @@ def plan_sources(build_dir: str | Path, color: bool = True) -> dict:
             continue
         m = json.loads(meta_p.read_text(encoding="utf-8"))
         if "id" not in m or not m.get("complete"):
+            continue
+        src = Path(str(m.get("source") or ""))
+        if src.name and (is_junk(src) or is_photo_twin(src)):   # cached by an older version (2026-10-24): not a clip
             continue
         out[m["id"]] = {"cache": str(paths(cache, m["id"], color)[0]), "format": m.get("format", "gray"),
                         "frames": m["frames"], "width": m["width"], "height": m["height"], "source": m["source"]}

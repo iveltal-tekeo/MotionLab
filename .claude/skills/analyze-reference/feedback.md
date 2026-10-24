@@ -19,9 +19,13 @@ Read after SKILL.md (hard rules). After it, remind the user of Claude's memory >
    own `_near_misses` verdict called "not an effect" but the user calls an effect is a lesson candidate.
 3. Decide the cause of each mistake:
    - **judgment / classification** -> a rule in `knowledge/local/lessons.md` (this PC's lessons);
-   - **a threshold** (missed, split, merged or false event; wrong frame range) -> change `tools\config.json`
-     (the `_comment` keys explain each section) and record it in the lesson;
-   - **detector logic** -> change `tools\motionlab\detect.py` only when a rule or threshold cannot fix it.
+   - **a threshold** (missed, split, merged or false event; wrong frame range) -> set it in
+     `tools\config.local.json` (this PC's own values laid over `tools\config.json`, same keys, only what differs,
+     e.g. `{"cut": {"jump_cut_diff_rel": 5.0}}`; not in git, so an update never takes it away - 2026-10-24) and
+     record it in the lesson; `tools\config.json` itself (the `_comment` keys explain each section) only for a fix
+     everyone's MotionLab needs, which the repo owner shares;
+   - **detector logic** -> change `tools\motionlab\detect.py` only when a rule or threshold cannot fix it (an update
+     may replace it: the app keeps the change and brings it back on a click, but tell the user).
 4. Add rules to **`knowledge/local/lessons.md`** (not to the shared lessons.md - that one only changes when lessons
    are reviewed, see below) - concrete and checkable, one per mistake pattern. Get the id with
    `.venv\Scripts\python tools\knowledge.py next-lesson-id` (`local-N`; it also creates the file):

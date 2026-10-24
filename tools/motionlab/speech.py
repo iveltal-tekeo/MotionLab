@@ -54,7 +54,8 @@ def probe(media: str | Path) -> dict:
     fps = min(RATES, key=lambda r_: abs(r_ - fps)) if fps else 30.0
     dur = float((d.get("format") or {}).get("duration") or 0)
     return {"width": v.get("width"), "height": v.get("height"), "fps": fps, "duration_s": dur,
-            "frames": int(round(dur * fps)), "has_video": bool(v)}
+            "frames": int(round(dur * fps)), "has_video": bool(v),
+            "has_audio": any(s.get("codec_type") == "audio" for s in d.get("streams", []))}
 
 
 def transcribe(media: str | Path, model: str = "small", names: str = "", language: str | None = None,

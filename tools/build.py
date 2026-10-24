@@ -6,11 +6,14 @@
           1. every composition the plan shows (its overlay layers' build\\overlays\\<name>\\<name>.mov) rendered when
              it changed since its last render (index.html, settings, size, assets, motion blur - overlay_settings
              .inputs_hash): a version that changed one graphic's settings renders one graphic; --jobs N at a time
-             (default by the CPU: 1-3); plain, or with --final motion blur (--motion-blur, default 5)
+             (default by the CPU: 1-3); plain, or with --final motion blur (--motion-blur, default 5; a graphic
+             that hardly moves keeps its plain render, captions are always rendered plain - nothing in them travels)
           2. the sound: with --sfx, a plan "sfx": true, or when the plan's audio is already a mix sfx.py made:
              sfx.py plan -> build\\sfx\\<name>_mix.wav becomes the plan's "audio" (made from the same song)
           3. the composite (render_video.py; skipped when nothing it reads changed and the video exists)
-          4. precheck.py on it (+ the sound report): vanishing parts, fast moves without blur, buried / loud cues
+          4. precheck.py on it (+ the sound report): vanishing parts, fast moves without blur, buried / loud cues;
+             and the plan's camera moves (2026-10-24, precheck.plan_moves): too many, or one between two shots of
+             the same take
           5. plain builds: the cut-sheet (render_video.py --cuts): every cut and cue on one page - the one look
           -> the summary + build\\checks\\<name>_build.json. Exit 0 = built, nothing flagged; 2 = built, the
           precheck flags something to look at; 1 = a step failed (STOPPED); 3 = too long for Claude's shell (a job)
@@ -129,18 +132,23 @@ def main() -> int:
     cpus = os.cpu_count() or 4
     jobs = a.jobs or (1 if cpus < 8 else min(3, cpus // 6))
     comps = compositions(plan, build)
-    todo = [c for c in comps if stale(c, blur, a.force)]
-    still = []
+    # captions' lines appear and fade, nothing travels: no blur to see, so a final renders them plain anyway (the
+    # What's new 0.5.3 final, 2026-10-23: 8 of its 11.5 minutes were 1502 caption frames x 5 sub-frames)
+    blur_of = {c: (1 if OS.conf(c).get("from") == "captions" else blur) for c in comps}
+    todo = [c for c in comps if stale(c, blur_of[c], a.force)]
+    still, plain = [], [c.name for c in todo if blur > 1 and blur_of[c] == 1]
     if a.final:                 # B2: a graphic that hardly moves gains nothing from motion blur - it stays plain
         from motionlab import precheck as PC
         for c in list(todo):
+            if blur_of[c] == 1:
+                continue
             mov = c / f"{OS.conf(c)['name']}.mov"
             if not stale(c, 1, False) and mov.exists():
                 fm = PC.run(mov, verbose=False, out=c / "precheck").get("fastest_move") or {}
                 if float(fm.get("px") or 0) < STILL_PX:
                     todo.remove(c)
                     still.append(f"{c.name} ({float(fm.get('px') or 0):.0f} px a frame at most)")
-    est = sum(int(OS.conf(c)["frames"]) * blur for c in todo) * SUB_S / max(1, min(jobs, len(todo) or 1)) + N * 0.05
+    est = sum(int(OS.conf(c)["frames"]) * blur_of[c] for c in todo) * SUB_S / max(1, min(jobs, len(todo) or 1)) + N * 0.05
     if est > LIMIT_S and not os.environ.get("MOTIONLAB_JOB"):
         print(f"{name}: about {mins(est)} of rendering ({len(todo)} graphics" + (f", motion blur {blur}" if a.final
               else "") + ") - longer than Claude's shell allows. Run it as a job:\n  .venv\\Scripts\\python "
@@ -157,7 +165,7 @@ def main() -> int:
               blur > 1 else "") + " ...", flush=True)
         workers = max(1, cpus // 2 // jobs) if jobs > 1 else None
         with ThreadPoolExecutor(jobs) as ex:
-            for folder, rc, secs, tail in ex.map(lambda c: render_one(c, blur, workers), todo):
+            for folder, rc, secs, tail in ex.map(lambda c: render_one(c, blur_of[c], workers), todo):
                 print(f"  {folder.name}: {'done' if rc == 0 else 'FAILED'} in {mins(secs)}", flush=True)
                 if rc:
                     failed.append(folder.name)
@@ -167,9 +175,11 @@ def main() -> int:
                  (f", motion blur {blur}" if blur > 1 else "") + f" - {mins(time.time() - t1)}")
     if still:
         lines.append(f"kept plain (hardly move, no blur to see): {', '.join(still)}")
+    if plain:
+        lines.append(f"rendered plain (captions: the lines appear, nothing travels): {', '.join(plain)}")
     lines += [s for s in (OS.too_short(c) for c in comps) if s]
     report["graphics"] = {"rendered": [c.name for c in todo], "failed": failed, "up_to_date": len(comps) - len(todo),
-                          "kept_plain": still}
+                          "kept_plain": still, "plain_captions": plain}
     if failed:
         print("\n".join(lines) + f"\nSTOPPED: {', '.join(failed)} did not render - fix it, then build again")
         return 1
@@ -247,6 +257,12 @@ def main() -> int:
     if len(fl) > 5:
         lines.append(f"  +{len(fl) - 5} more in {Path(res['json']).name}")
     report["precheck"] = {"status": res["status"], "flags": len(fl), "json": res["json"]}
+    mv = PC.plan_moves(plan)                    # 2026-10-24: too many camera moves / one inside a take (the plan)
+    if mv["flags"]:
+        lines.append(f"camera moves: {len(mv['flags'])} to look at ({len(mv['moves'])} moves in the plan)")
+        lines += [f"  {f['label']}: {f['reason']}"[:220] for f in mv["flags"][:6]]
+        fl = fl + mv["flags"]
+    report["moves"] = {"count": len(mv["moves"]), "flags": len(mv["flags"])}
     # 5. the cut-sheet (plain builds: the one look before the final)
     if not a.final:
         r = subprocess.run([PY, str(TOOLS / "render_video.py"), str(plan_path), "--cuts"], capture_output=True,

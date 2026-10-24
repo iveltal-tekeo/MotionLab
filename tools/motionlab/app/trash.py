@@ -157,7 +157,7 @@ def plan_project(name: str, resolve_state: str = "") -> dict:
     if not d.is_dir():
         raise FileNotFoundError(name)
     inside(d)
-    clips = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() in data.VIDEO_EXT]
+    clips = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() in data.CLIP_EXT]     # videos + photos
     others = [p for p in d.iterdir() if p.is_file() and p not in clips]
     cb = sum(p.stat().st_size for p in clips)
     ob = sum(p.stat().st_size for p in others)
@@ -202,7 +202,7 @@ def plan_file(relpath: str) -> dict:
         item = _video_item(p, None, us)
         item.update(key="file", label=I18N.t("The downloaded file"), default=True)
         kind = "download"
-    elif parts[0] == "projects" and len(parts) == 3 and ext in data.VIDEO_EXT | data.AUDIO_EXT:
+    elif parts[0] == "projects" and len(parts) == 3 and ext in data.CLIP_EXT | data.AUDIO_EXT:
         # one clip or song of a video (2026-10-22, New edit's clips, the user: "see which videos we have? or if we can
         # manage them? delete") - its edits and a Resolve project may use it: said before the yes
         b, _ = size_of(p)
@@ -211,10 +211,18 @@ def plan_file(relpath: str) -> dict:
                 for sid, s in sorted(srcs.items()) if _same(s.get("path", ""), p)][:1]
         if (p.parent / "build" / "resolve").is_dir() and any((p.parent / "build" / "resolve").glob("*_build.json")):
             warn.append(I18N.t("A DaVinci Resolve project of this video may use it: it will show it as offline."))
-        item = {"key": "file", "label": I18N.t("The song") if ext in data.AUDIO_EXT else I18N.t("The clip"),
+        item = {"key": "file", "label": I18N.t("The song") if ext in data.AUDIO_EXT else I18N.t("The photo")
+                if ext in data.PHOTO_EXT else I18N.t("The clip"),
                 "path": data.rel(p), "bytes": b, "files": 1, "default": True, "warn": warn,
                 "what": I18N.t("in the folder of the video {name}", name=p.parent.name)}
         kind = "clip"
+        twin = next((p.parent / (p.name + x) for x in (".mp4", ".mov") if (p.parent / (p.name + x)).is_file()), None)
+        if ext in data.PHOTO_EXT and twin:                   # an add-on's still video of the photo goes with it
+            tb, _ = size_of(twin)
+            items = [item, {"key": "twin", "label": I18N.t("Its still-video copy"), "path": data.rel(twin),
+                            "bytes": tb, "files": 1, "default": True, "warn": [],
+                            "what": I18N.t("{file} - made from the photo before MotionLab took photos", file=twin.name)}]
+            return {"kind": kind, "name": data.rel(p), "title": p.name, "items": items, "notes": [], "keeps": []}
     elif parts[0] == "projects" and len(parts) >= 4 and parts[2] == "build" and ext in (".mp4", ".mov") \
             and (len(parts) == 4 or (len(parts) == 5 and parts[3] in ("compare", "resolve"))):
         b, _ = size_of(p)

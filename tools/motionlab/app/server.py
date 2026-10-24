@@ -43,10 +43,10 @@ from motionlab import upstream as UP
 from motionlab.styles import CATEGORIES
 from motionlab.util import LAB, fix_dotted_names, tool
 
-from . import data, jobs, player, report, system, trash, updater
+from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 30                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 31                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -241,6 +241,25 @@ def thumb(video: Path, frame: int, fps: float) -> Path:
                        capture_output=True, timeout=60, creationflags=NO_WINDOW)
         if not out.exists():
             raise FileNotFoundError(I18N.t("frame {frame} of {file}", frame=frame, file=video.name))
+    return out
+
+
+def photo_thumb(photo: Path) -> Path:
+    """A photo as a small JPEG the right way up (cached in .app\\thumbs\\): Pillow + pillow-heif when the lab's
+    packages are there (imported only here - the app itself needs none), else ffmpeg."""
+    st = photo.stat()
+    out = THUMBS / f"{hashlib.sha1(f'{photo}|{st.st_mtime_ns}|{st.st_size}'.encode()).hexdigest()[:12]}_photo.jpg"
+    if not out.exists():
+        THUMBS.mkdir(parents=True, exist_ok=True)
+        try:
+            from motionlab import photos as PH
+            PH.thumbnail(photo, out)
+        except Exception:                                 # noqa: BLE001 - no Pillow / a format it cannot read
+            subprocess.run([tool("ffmpeg"), "-v", "error", "-y", "-i", str(photo), "-frames:v", "1", "-vf",
+                            "scale=480:-2", "-q:v", "4", str(out)], capture_output=True, timeout=60,
+                           creationflags=NO_WINDOW)
+        if not out.exists():
+            raise FileNotFoundError(I18N.t("frame {frame} of {file}", frame=0, file=photo.name))
     return out
 
 
@@ -496,7 +515,8 @@ class Handler(BaseHTTPRequestHandler):
                                # never checked at start-up, so the cached check may not exist yet
                                "home_repo": updater.HOME_REPO,
                                "update": {**(S.update or {}), "git": bool(updater.git_exe()),
-                                          "repo": updater.is_repo(), "phase": S.phase}})
+                                          "repo": updater.is_repo(), "phase": S.phase,
+                                          "kept": updater.kept_list()}})        # 2026-10-24: changes an update replaced
         if path == "/api/player":                         # the player: the file's codec + its player copy (0.4.2.1)
             v = lab_file(arg("path", ""))
             if v.suffix.lower() not in data.VIDEO_EXT:
@@ -512,6 +532,19 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.skills())
         if path == "/api/memory":                         # Claude's memory (0.4): videos, effects, lessons, saved
             return self._json(data.memory())
+        if path == "/api/changes":                       # 2026-10-24: a list page redraws itself when this changes
+            return self._json(live.changes(arg("s", "")))
+        if path == "/api/seen":                          # 2026-10-24: the NEW badge - what each section has seen
+            return self._json(live.seen())
+        if path == "/api/thumbtest":                     # 2026-10-24: Preview your thumbnail - the feed around yours
+            return self._json(data.thumb_test())
+        m = re.fullmatch(r"/api/thumbfeed/([\w\-]{6,20})\.jpg", path)     # its big channels' pictures (.app\thumbfeed)
+        if m:
+            from motionlab import thumbfeed as TF
+            p = TF.IMG / f"{m[1]}.jpg"
+            if not p.is_file():
+                raise FileNotFoundError(path)
+            return self._file(p)
         if path == "/api/styles":                         # 2026-10-18: every "In the style of" picker - this PC's
             return self._json(data.style_choices())      # analysed videos + the scripts and hooks, never friends'
         if path == "/api/knowledge":                      # Claude's memory > Shared knowledge
@@ -538,6 +571,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"path": arg("path"), "text": text})
         if path == "/api/thumb":
             v = lab_file(arg("video", ""))
+            if v.suffix.lower() in data.PHOTO_EXT:          # 2026-10-24: a photo of a video's clips (HEIC included)
+                return self._file(photo_thumb(v))
             if v.suffix.lower() not in data.VIDEO_EXT:
                 raise PermissionError(v.name)
             return self._file(thumb(v, int(arg("f", "0")), float(arg("fps", "25"))))
@@ -635,6 +670,21 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/picks", path)
         if m:
             return self._json(data.save_library_picks(urllib.parse.unquote(m[1]), body))
+        if path == "/api/script/tidy":                   # Improve my script: the paste replaced by its new version
+            try:                                          # (Prepare / Prompts call it before they load)
+                return self._json({"moved": data.tidy_improved()})
+            except Exception as e:                        # noqa: BLE001 - never at the cost of the page
+                log_error(f"tidy_improved: {e!r}")
+                return self._json({"moved": []})
+        if path == "/api/thumbfeed/channels":            # Preview your thumbnail: the channels its feed is made of
+            from motionlab import thumbfeed as TF
+            try:
+                return self._json({"channels": TF.set_channels([str(x) for x in body.get("channels") or []])})
+            except ValueError as e:
+                raise ValueError(I18N.t("not a YouTube channel: {line}", line=str(e).split(": ", 1)[-1])) from None
+        if path == "/api/seen":                          # the NEW badge: a section left, or a card clicked
+            return self._json(live.mark(str(body.get("section", "")), bool(body.get("leave")),
+                                        str(body.get("key", ""))))
         if path == "/api/projects/new":                   # Videos > Create video: an empty folder for the clips
             return self._json(data.new_project(str(body.get("name", ""))))
         if path == "/api/script/check":                   # Prepare: the script check while you type (no Claude)
@@ -769,6 +819,14 @@ class Handler(BaseHTTPRequestHandler):
             if S.update_result:
                 S.update_result["seen"] = True
             return self._json({"ok": True})
+        if path == "/api/update/restore":                # 2026-10-24: bring back the user's changes an update replaced
+            if S.runner.active():
+                raise ValueError(I18N.t("A job is running - try again when it has finished (Jobs)."))
+            r = updater.restore_kept(str(body.get("name", "")))
+            if r["restored"]:
+                updater.mark_kept_restored()
+                S.update_result = updater.last_result()
+            return self._json({**r, "restart": any(not f.startswith(("knowledge/", "docs/")) for f in r["files"])})
         if path == "/api/update/connect":
             r = updater.connect(str(body.get("url", "")))
             S.update = updater.check(fetch=False)
@@ -1000,7 +1058,7 @@ def edit_batch(body: dict) -> dict:
         d = data.PROJECTS / data.safe_name(n)
         if not d.is_dir():
             raise FileNotFoundError(n)
-        if not any(p.is_file() and p.suffix.lower() in data.VIDEO_EXT for p in d.iterdir()):
+        if not data.clip_files(d):                    # videos or photos
             raise ValueError(I18N.t("{video}: no clips in its folder yet", video=data._label(d / "build") or d.name))
         folders.append(d.name)
     for n in folders:
@@ -1166,4 +1224,7 @@ def make(port: int, auto_exit: bool, check_updates: bool = True) -> ThreadingHTT
     threading.Thread(target=watcher, args=(srv,), daemon=True).start()
     if check_updates:
         threading.Thread(target=startup_update, daemon=True).start()
+    if auto_exit:                           # the real app (a test server --stay leaves the windows alone): MotionLab's
+        from . import winicon               # own taskbar button and icon on its Edge windows (2026-10-24)
+        winicon.watch()
     return srv

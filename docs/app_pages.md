@@ -48,6 +48,20 @@ the jobs on Jobs). (*Where to start*, the six `FLOW` steps as buttons, is no lon
 patterns every page follows - empty pages, the first row of actions, *Folder* buttons, Delete's wording, optional
 steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my footage* = `newEdit({from:
 'reference', pick})` (the New edit pop-up).
+- **Pages that update by themselves + the NEW badge** (2026-10-24, a friend's asks: "what is created shows up without
+  going to another section and back"; "a red NEW, top left, on everything new - gone once I click it or go to another
+  section"): `liveTick` every 5 s asks GET `/api/changes?s=<data>` for a list page (`LIVE_PAGES`: Home, Analyser and
+  its tabs, Editor, Generator, Prepare, Prompts, Motion Graphics, Claude's memory; `live.changes` = directory listings
+  and file times, a few ms) and, when it changed, `route(true)` draws the page again - no *Loading…*, the scroll and
+  typed search words kept - but never while a dialog, the lightbox, the teleprompter or *Preview your thumbnail* is open,
+  while the user types or a video plays with sound (`userBusy`: it waits). A page of ONE thing is never redrawn by
+  itself. The badge: `newTag(key, when)` as the first child of a card (`.newtag`, #e5202e) when the card's time is
+  after its section's `at` (GET `/api/seen`, `.app\seen.json` - every window agrees; a section seen for the first time
+  starts now) and it was not clicked (a click = POST `/api/seen` {section, key}); leaving a section of the sidebar
+  (`route`, `NEW_SECTIONS`) clears its badges. The times: a video = its newest FINISHED render (`live.render_done`:
+  the MP4's boxes run to the end and one is "moov" - never a video only made or given clips; a new version is NEW
+  again), a prompt / script / title = `created` (key = id + time: a deleted script-014's number is never given again,
+  `prompts._last_id.txt`), an analysis = events.json's time, a set / a template = its folder's creation.
 
 ## Analyser
 
@@ -90,6 +104,21 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   checked by Claude yet" + the next thing (`flowNext`) and its button (`flowAction`). The downloads nobody analysed are one thin row
   (`.wbar`: "N downloaded videos wait to be analysed", music / photos counted apart) that opens `waitingModal` (the
   `waitRows` table, *Analyse all…* up to `AV_MAX`); filters focus / category / tag.
+- **Preview your thumbnail** (2026-10-24, the user: "upload ur thumbnails and have it like a test on a fake generated
+  yotubue page (updated if possible) like a preview layout thumnbail to see if the thumnbail matches the vibe or pops
+  from a normal youtube user feed", then "a button ... "preview your thumbnail" ... besides big youtubers like mrbeast
+  ... probably of highly viewed recent videos if possible"): `#ttest` on the Thumbnails way -> `thumbTest()`, a
+  full-window `.yttest` over the page (Esc / Close): a copy of today's YouTube - Home grid (4 columns, 12 px corners,
+  36 px avatars, Roboto from the font library), Search (500 px thumbnails), Up next (the 168 px column beside a
+  player), a phone - dark or light. The feed around the user's pictures = GET `/api/thumbtest` (`data.thumb_test`):
+  *Big creators - newest, most viewed* (the default: `motionlab\thumbfeed.py` - yt-dlp lists each channel's 10 newest
+  videos, the 5 most viewed are kept, pictures in `.app\thumbfeed\img\` served by GET `/api/thumbfeed/<id>.jpg`;
+  fetched by the job `thumb_feed` (`jobtools.py thumb-feed`, group net) at the first look and when older than a day -
+  *Get the newest videos*; *Channels…* = the list, POST `/api/thumbfeed/channels`, `.app\thumbfeed\channels.json`,
+  empty = the 16 usual ones), one analysed set, or all of them; *Or one made in MotionLab…* = Ready to post's
+  thumbnails. Theirs: picked or dropped (object URLs - nothing
+  is saved, nothing leaves the window), each with its title and channel to type; placed among the first ones seen,
+  *Shuffle* moves them, *Squint* blurs the page (what still reads is what pops), *Where is mine?* outlines them.
 
 ## The analysis page
 
@@ -344,6 +373,19 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   frame, 0-based at its fps; `data.clean_moment`; POST outcome `moment` / `remove_moment` = the note as listed);
   `project()` renders carry `version` (`_v2` -> "v2", else the name's rest), `mtime`, `fps` / `frames` / `width` /
   `height` (the plan's, else `player.codec` = ffprobe, cached). `/recreate-video improve` fixes exactly those moments.
+- **New edit > 1. Clips, a friend's asks** (2026-10-24): *Add a folder…* (`[data-add=folder]`, `webkitdirectory`) and
+  a dropped folder (`clipsFromDrop`: `webkitGetAsEntry`, `readEntries` until it returns nothing - at most 100 a call)
+  take every clip inside, sub-folders too, sorted by path with numbers as numbers; `clipNames` puts the parent
+  folder(s) in front of a name two files share ("19 octubre_C0001.MP4"); the toast says how many were found. `isJunk`
+  (a dot name or folder, Thumbs.db, desktop.ini) keeps a Mac's / iPhone's "._" files out - the server refuses them too,
+  and `project.clip_files` hides ones copied before (also by their AppleDouble header) and an old add-on's photo
+  twin (`IMG_0950.jpg.mp4` beside `IMG_0950.jpg` - left on disk, not listed). Photos (`PHOTO_EXT`, `CLIP_ACCEPT`
+  image/*): their own picture (GET `/api/thumb` makes one with Pillow + pillow-heif, the EXIF rotation applied), a
+  yellow PHOTO badge, no length, a click opens it; the pill under it (`.nephs`) goes round 3 / 5 / 8 s = edit_request
+  `photos` {name: {seconds}}. The same names in a batch already in the video keep `save_upload`'s rule (same size =
+  kept, else " (2)"). The new video's name (`#cvname`) stays editable after its folder exists: Enter / leaving it =
+  POST `.../rename` (the label; the folder keeps its name), "Name saved: …". *Film it* has the same folder button.
+  Footage tab: a photo shows PHOTO + its size.
 
 ## Generator vs Editor
 
@@ -473,6 +515,15 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   to 3 Edit it (the pop-up's *Edit it*). A video made from a script: *Made from the script <title>*
   (`project()` adds `title` / `prompt_kind` to made_from), and with no edit yet the Overview says *Filmed - now edit
   it* (New edit with the script picked).
+- **Improve my script keeps one card** (2026-10-24, a friend's ask: "only the improved script should remain"): the
+  request is saved with `replace` (`script.save_improve`); while it waits, the pasted script is not a card of its own
+  (`improving` in `pagePrepare`) and *Waiting for Claude* says "improving…"; once Claude saved the new version
+  (`made_from` = the paste, `request` = the req) POST `/api/script/tidy` (Prepare and the prompt library call it before
+  they load) runs `data.tidy_improved`: the paste - and a copy of the same words Claude saved after it - goes to the
+  Recycle Bin, never one a video was made from or another request's paste; the request is marked
+  `tidied` once. The improved card carries NEW. The skill (`write-script` section 3 step 5) saves only the improved
+  script and never imports the user's again. *Optimize with Claude* on an existing card is not a `replace` request:
+  both stay.
 
 ## Title & thumbnail, Ready to post
 
@@ -811,3 +862,14 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   `--cookies-from-browser <browser>`; About has *Report a problem…*. Bool settings (`BOOL_KEYS`) save as real
   booleans (before, `claude_ask` false was saved as true). Settings > General starts with **Language** (`langRow`):
   English | Español, a click saves it and reloads the page in it (2026-10-18).
+- **Your changes survive updates** (2026-10-24, a friend's ask): Settings > Sharing & updates lists every set of
+  changes an update replaced (`keptLine`, GET `/api/settings` `update.kept`) with *Bring them back* (POST
+  `/api/update/restore` = `updater.restore_kept`, a three-way merge; refused while a job runs; a restart banner when
+  code came back); Home's update box and What's new show the same line (`setAside`), and "Your own detection settings
+  stay in use on this PC: …" for thresholds the update moved into `tools\config.local.json`. Settings keys this
+  version does not know are kept when it saves.
+- **MotionLab's own taskbar button** (2026-10-24, a friend's ask): the real app's server (`auto_exit`, never a test
+  server) runs `winicon.watch()` - every 3 s its Edge windows titled "MotionLab" get the AppUserModelID "MotionLab",
+  the relaunch command (pythonw app.py), MotionLab.ico and the name (`SHGetPropertyStoreForWindow`, ctypes) + the icon
+  (WM_SETICON); the Desktop / Start-menu MotionLab.lnk get the same ID (once at start, and `make_shortcut`), so Windows
+  groups the window with them and *Pin to taskbar* pins MotionLab. `MOTIONLAB_NO_TASKBAR=1` turns it off.

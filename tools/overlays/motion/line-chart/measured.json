@@ -1,0 +1,33 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move at the middle",
+   "start_f": 5,
+   "length_f": 6,
+   "fastest_f": 7,
+   "easing": "linear (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the top right",
+   "start_f": 86,
+   "length_f": 2,
+   "fastest_f": 87,
+   "easing": "too short to tell (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

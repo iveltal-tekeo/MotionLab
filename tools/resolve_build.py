@@ -2001,6 +2001,14 @@ def main() -> int:
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     global TC_FPS
     TC_FPS = float(plan["fps"])
+    from motionlab.project import is_photo
+    used = {L.get("src") for L in plan.get("layers", []) if L.get("type") == "clip"}
+    photos = sorted(sid for sid, s in (plan.get("sources") or {}).items()
+                    if sid in used and is_photo(s.get("source", "")))      # a photo in the folder that no layer shows: fine
+    if photos and not (a.doctor or a.diff):              # 2026-10-24: photos are still shots in the lab render only
+        raise SystemExit(f"source(s) {', '.join(photos)} are photos: this Resolve builder (made on test_4am) does not "
+                         "place photos yet - the lab render has them; build the Resolve project from a plan "
+                         "without them, or add the photos by hand in Resolve")
     project = a.project or plan_path.parent.parent.name
     ver = plan.get("name", "v1").rsplit("_", 1)[-1]
     tname = a.timeline or f"{project}_resolve_{ver}"

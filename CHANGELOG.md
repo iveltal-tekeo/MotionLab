@@ -7,6 +7,34 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
 
 ## Unreleased
 
+Asked by a friend who edits with MotionLab every day, and one of yours:
+- **Photos in your edits** - *New edit > 1. Clips* (and *Film it*) take photos as photos: JPG, PNG, WebP, HEIC / HEIF
+  from an iPhone, AVIF, BMP, TIFF, GIF, the right way up. Each shows with its own picture and a yellow PHOTO badge,
+  and a click on its length (3 / 5 / 8 s) sets how long it stays on screen. In the edit a photo is a still shot with
+  a slow zoom; a horizontal photo in a vertical video can show whole over a blurred copy of itself. Claude sees a sheet
+  of your photos and places them in the story.
+- **Add a whole folder** - *Add a folder…* (or drop one) takes every video, photo and song inside, sub-folders too, in
+  order. Two files with the same name from different folders (C0001.MP4 of two days) both get in.
+- **No more black clips from a Mac or iPhone** - the hidden "._" files a Mac or an iPhone leaves next to your clips
+  are never copied in, and ones copied before no longer show.
+- **Rename the new video in step 1** - its name stays editable after the clips are in.
+- **Pages update by themselves** - a finished render, a script Claude wrote, a new analysis: they show up on the page
+  you are looking at within a few seconds - never while a dialog is open or you are typing.
+- **NEW on everything new** - a red NEW badge on new videos (a finished render), scripts, prompts, analyses, sets and
+  motion graphics; it goes when you click the card or move to another section.
+- **Improve my script keeps one card** - while Claude works your pasted script shows as *improving…*; when the new
+  version is saved it takes the old one's place (the old one goes to the Recycle Bin - never one you already filmed).
+- **Your changes survive updates** - thresholds tuned for this PC now live in their own file that updates never touch;
+  other changes an update replaces are kept and come back with *Bring them back*. Settings this version does not know
+  are kept too.
+- **MotionLab's own taskbar button** - the window and a pinned MotionLab show MotionLab's icon, not Microsoft Edge's.
+- **Preview your thumbnail** - *Analyser > Thumbnails* shows your thumbnail on a copy of YouTube's Home page (and
+  Search, Up next, a phone) next to the newest, most viewed videos of big creators - MrBeast, Mark Rober, MKBHD and
+  more; *Channels…* changes the list - or next to the thumbnails you analysed. Dark or light, *Squint* to see what pops,
+  *Where is mine?*. Your pictures are not saved.
+- **Fewer zooms in edits** - zooms, whips and pushes now keep their distance (one every few seconds, one every ~8 s on a
+  talking video) and never jump between two shots of the same take; a build names an edit with too many of them.
+
 Faster videos (0.5.3, built - released once the re-runs show half of Claude's time with the same results):
 - **The Generator asks what Claude used to guess** - a look for the graphics (Editorial warm, Swiss signal, Night
   edition or Surprise me) and *The song from last time* next to the song. All optional: Claude still picks when you
@@ -15,8 +43,9 @@ Faster videos (0.5.3, built - released once the re-runs show half of Claude's ti
   (the song's beats, the templates that fit your words, your ratings as rules, the lessons for that kind of video) and
   lists what it left out, so nothing is dropped.
 - **One build instead of many steps** - graphics, sound effects, the video, the checks and one sheet of every cut, in
-  one go; only the graphics that changed are rendered again, several at a time. Long final renders run as jobs on
-  the Jobs page.
+  one go; only the graphics that changed are rendered again, several at a time. The final gives motion blur only to
+  graphics that move (captions and still graphics stay plain: a 60-second final went from 13.5 to 6.5 minutes).
+  Long final renders run as jobs on the Jobs page.
 - **Fewer rounds of checking** - text that runs off the frame is flagged on the first snapshot, sound effects come out
   at levels that pass the check, template moves land on the beat by their measured timing, and every template is
   checked at vertical and square sizes.

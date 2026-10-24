@@ -1,0 +1,73 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move at the top",
+   "start_f": 1,
+   "length_f": 18,
+   "fastest_f": 1,
+   "easing": "decelerating (slow end) (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the middle",
+   "start_f": 25,
+   "length_f": 8,
+   "fastest_f": 32,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 3",
+   "what": "a move at the middle",
+   "start_f": 39,
+   "length_f": 8,
+   "fastest_f": 46,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 4",
+   "what": "a move at the middle",
+   "start_f": 53,
+   "length_f": 8,
+   "fastest_f": 60,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 5",
+   "what": "a move at the middle",
+   "start_f": 67,
+   "length_f": 8,
+   "fastest_f": 74,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 6",
+   "what": "a move at the middle",
+   "start_f": 81,
+   "length_f": 8,
+   "fastest_f": 88,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 7",
+   "what": "a move at the middle",
+   "start_f": 98,
+   "length_f": 22,
+   "fastest_f": 118,
+   "easing": "S-curve (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

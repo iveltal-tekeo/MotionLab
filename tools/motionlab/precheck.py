@@ -604,6 +604,72 @@ def _on_grey(rgba: np.ndarray) -> Image.Image:
     return Image.fromarray((rgba[..., :3] * a + chk * (1 - a)).astype(np.uint8))
 
 
+def plan_moves(plan: dict) -> dict:
+    """**Camera moves in a plan** (2026-10-24; the user, 2026-10-23, of a talking edit with a zoom-through at every
+    sentence: "it makes too many whip pans or zooms ... it's very weird"): every fast zoom / slide of a clip layer
+    (the thresholds sfx.py hears as a whoosh: a zoom faster than 0.6 e-folds a second, a slide faster than a frame a
+    second; a photo's slow zoom is not one), the two halves of a zoom-through or whip joined. Flags: moves closer
+    than the quick draft's draft.MOVE_GAP_S (talk: a plan whose sound is the clips' talk) more often than not, and a move between two
+    shots of the same take (the same source, under 60 s apart in it - the same face lurches and snaps back).
+    Returns {"moves": [(a, b, layer id)], "flags": [{check: "moves", frames, label, reason}]} - frames are the plan's."""
+    from .compose import Curve
+    from .draft import MOVE_GAP_S
+    fps, W, H = float(plan["fps"]), float(plan["width"]), float(plan["height"])
+    named = plan.get("curves", {})
+    clips = [L for L in plan.get("layers", []) if L.get("type") == "clip"]
+    raw = []
+    for L in clips:
+        s, e = int(L["start"]), int(L["end"])
+        for key in ("zoom", "dx", "dy"):
+            spec = L.get(key)
+            if not isinstance(spec, (dict, str)) or e <= s:
+                continue
+            cv = Curve(spec, named, 1.0 if key == "zoom" else 0.0)
+            v = np.array([cv(f) for f in range(s, e + 1)], float)
+            sp = (np.abs(np.diff(np.log(np.maximum(v, 1e-3)))) * fps if key == "zoom"
+                  else np.abs(np.diff(v)) / (W if key == "dx" else H) * fps)
+            fast = np.flatnonzero(sp >= (0.6 if key == "zoom" else 1.0))
+            if len(fast):
+                raw.append([s + int(fast[0]), s + int(fast[-1]) + 1, str(L.get("id") or L.get("src") or "")])
+    raw.sort()
+    moves = []
+    for m in raw:                                      # halves of one zoom-through / whip (and overlaps) = one move
+        if moves and m[0] <= moves[-1][1] + 2:
+            moves[-1][1] = max(moves[-1][1], m[1])
+        else:
+            moves.append(m)
+    talk = (plan.get("made_by") or {}).get("sound") == "talk"
+    gap = MOVE_GAP_S["talk" if talk else "other"]
+    tc = lambda f: frame_to_tc(f, fps)                  # noqa: E731
+    flags = []
+    close = [(a, b) for a, b in zip(moves, moves[1:]) if (b[0] - a[0]) / fps < gap]
+    if moves and len(close) * 2 >= len(moves):
+        n, secs = len(moves), int(plan["frames"]) / fps
+        flags.append({"check": "moves", "frames": [moves[0][0], moves[-1][1]],
+                      "label": f"{n} camera moves in {secs:.0f} s",
+                      "reason": f"one every {secs / n:.1f} s, {len(close)} closer than {gap:g} s"
+                                + (" on a talking video" if talk else "") + " - too many reads as the picture lurching "
+                                "(the user, 2026-10-23): keep the moves where the picture really changes, plain cuts "
+                                "or a static punch-in elsewhere"})
+
+    def src_at(L, f):                                  # the source frame a clip layer shows at plan frame f
+        if L.get("hold"):
+            return int(L.get("in", 0))
+        js = L.get("jumps") or [[int(L["start"]), int(L.get("in", 0))]]
+        j = [x for x in sorted(js) if x[0] <= f] or [sorted(js)[0]]
+        return int(j[-1][1]) + int((f - j[-1][0]) * float(L.get("speed", 1.0)))
+    for a, b, lid in moves:
+        before = [L for L in clips if int(L["start"]) < a <= int(L["end"]) + 1 and int(L["end"]) < b]
+        after = [L for L in clips if a <= int(L["start"]) <= b and int(L["end"]) > b]
+        same = [(x, y) for x in before for y in after if x.get("src") == y.get("src")
+                and abs(src_at(y, int(y["start"])) - src_at(x, int(x["end"]))) < 60 * fps]
+        if same:
+            flags.append({"check": "moves", "frames": [a, b], "label": f"f{a}-f{b} ({tc(a)}-{tc(b)})",
+                          "reason": f"a move between two shots of the same take ({same[0][0].get('src')}) - the same "
+                                    "picture lurches and snaps back; a plain cut or a static punch-in"})
+    return {"moves": [tuple(m) for m in moves], "flags": flags}
+
+
 def sheet_frames(flags: list[dict]) -> list[list[int]]:
     rows = []
     for f in flags:
@@ -726,6 +792,8 @@ def find_motion_blur(path: Path) -> tuple[int, str, bool]:
             continue
         if Path(str(pl.get("output", ""))).name.lower() != p.name.lower():
             continue
+        from .compose import resolve_paths
+        resolve_paths(pl, plan.parent)      # layer files relative to build\ (else every graphic reads as unblurred)
         mbs = []
         for L in pl.get("layers", []):
             if L.get("type") == "overlay" and L.get("file"):

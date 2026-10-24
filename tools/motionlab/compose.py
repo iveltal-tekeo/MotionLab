@@ -232,7 +232,8 @@ class Layer:
 
 
 class ClipLayer(Layer):
-    """A video panel (or still with "hold") from a cached source, placed in rect [x, y, w, h]."""
+    """A video panel (or still with "hold" - a photo is a one-frame source) from a cached source, placed in rect
+    [x, y, w, h]; "fit": "cover" (default) | "contain"."""
 
     def __init__(self, spec, R):
         super().__init__(spec, R)
@@ -257,6 +258,10 @@ class ClipLayer(Layer):
         self.mirror = bool(spec.get("mirror", False))
         t1, t2 = spec.get("tint"), g.get("tint")                # the layer's own tint (RGB split) x the grade's
         self.tint = [a * b for a, b in zip(t1, t2)] if t1 and t2 else (t1 or t2)
+        # "cover" (default) fills the rect and crops; "contain" (2026-10-24, photos: a horizontal photo in a vertical
+        # video) = the whole picture in the rect (zoom / anchor inside its own box), over a blurred, darker cover copy
+        self.fit = spec.get("fit", "cover")
+        self._bg = None
 
     def src_index(self, f: int) -> int:
         j = self.jumps[0]
@@ -278,23 +283,38 @@ class ClipLayer(Layer):
                 cov, X0, Y0 = out
                 blend(canvas, np.full(cov.shape, R.bg, np.float32), cov * op, X0, Y0)
             return
-        src = R.frame(self.src, self.src_index(f))
+        i = self.src_index(f)
+        src = R.frame(self.src, i)
         if self.lut3d is not None and src.ndim == 3:
             src = self.lut3d[src[..., 0] >> 1, src[..., 1] >> 1, src[..., 2] >> 1]
-        res = sample_patch(src, self.lut, x, y, w, h, self.zoom(f), self.ax(f), self.ay(f), R.W, R.H, self.mirror)
-        if res is None:
-            return
-        patch, cov, X0, Y0 = res
-        patch = saturate(patch, self.sat)
-        g = self.gain(f)
-        if g != 1.0:
-            patch = patch * g
-        if f in self.flash_over:                                # over-exposed flash frame (image still visible)
-            k = self.flash_over[f]
-            patch = patch + k * (1.0 - np.clip(patch, 0, 1))
-        if f in self.flash_white:                               # flat white frame (a trace of the image left)
-            patch = 0.86 + 0.06 * patch
-        blend(canvas, patch, cov * op, X0, Y0, self.mode, self.tint)
+        parts = []                                              # (sample_patch result, brightness)
+        if self.fit == "contain":
+            sh, sw = src.shape[:2]
+            if self._bg is None or self._bg[0] != i:            # the blurred copy behind, once per source frame
+                small = cv2.resize(src, (max(8, sw // 10), max(8, sh // 10)), interpolation=cv2.INTER_AREA)
+                self._bg = (i, cv2.GaussianBlur(small, (0, 0), 2.5))
+            parts.append((sample_patch(self._bg[1], self.lut, x, y, w, h, 1.0, 0.5, 0.5, R.W, R.H, self.mirror), 0.55))
+            ar = sw / sh                                         # the whole picture in the rect; the zoom (and its
+            cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)   # anchor) works inside that box
+            parts.append((sample_patch(src, self.lut, x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, self.zoom(f),
+                                       self.ax(f), self.ay(f), R.W, R.H, self.mirror), 1.0))
+        else:
+            parts.append((sample_patch(src, self.lut, x, y, w, h, self.zoom(f), self.ax(f), self.ay(f), R.W, R.H,
+                                       self.mirror), 1.0))
+        for res, k_dim in parts:
+            if res is None:
+                continue
+            patch, cov, X0, Y0 = res
+            patch = saturate(patch, self.sat)
+            g = self.gain(f)
+            if g != 1.0:
+                patch = patch * g
+            if f in self.flash_over:                            # over-exposed flash frame (image still visible)
+                k = self.flash_over[f]
+                patch = patch + k * (1.0 - np.clip(patch, 0, 1))
+            if f in self.flash_white:                           # flat white frame (a trace of the image left)
+                patch = 0.86 + 0.06 * patch
+            blend(canvas, patch * k_dim if k_dim != 1.0 else patch, cov * op, X0, Y0, self.mode, self.tint)
 
 
 def sample_box(x, y, w, h, W, H):

@@ -125,6 +125,10 @@ def main() -> int:
         return 0
     if a[0] == "thumb-check" and len(a) > 1:
         return thumb_check(a[1], a[a.index("--title") + 1] if "--title" in a[:-1] else None)
+    if a[0] == "thumb-feed":                # Preview your thumbnail (2026-10-24): big channels' newest videos
+        from motionlab import thumbfeed
+        f = thumbfeed.refresh(log=lambda s: print(s, flush=True))
+        return 0 if f["items"] else 1
     if a[0] == "selfcheck":
         bad = selfcheck()
         print("\n".join(bad) if bad else "jobtools selfcheck: PASS (scrubbing, the issue link, yt-dlp install kinds, "

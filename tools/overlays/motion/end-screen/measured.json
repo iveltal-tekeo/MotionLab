@@ -1,0 +1,89 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move across the frame",
+   "start_f": 1,
+   "length_f": 51,
+   "fastest_f": 16,
+   "easing": "decelerating (slow end) (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the middle",
+   "start_f": 73,
+   "length_f": 3,
+   "fastest_f": 73,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 3",
+   "what": "a move at the middle",
+   "start_f": 81,
+   "length_f": 4,
+   "fastest_f": 82,
+   "easing": "linear (measured from a render)"
+  },
+  {
+   "name": "move 4",
+   "what": "a move at the middle",
+   "start_f": 113,
+   "length_f": 3,
+   "fastest_f": 113,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 5",
+   "what": "a move at the middle",
+   "start_f": 121,
+   "length_f": 4,
+   "fastest_f": 122,
+   "easing": "linear (measured from a render)"
+  },
+  {
+   "name": "move 6",
+   "what": "a move at the middle",
+   "start_f": 153,
+   "length_f": 3,
+   "fastest_f": 153,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 7",
+   "what": "a move at the middle",
+   "start_f": 161,
+   "length_f": 4,
+   "fastest_f": 162,
+   "easing": "linear (measured from a render)"
+  },
+  {
+   "name": "move 8",
+   "what": "a move at the middle",
+   "start_f": 193,
+   "length_f": 3,
+   "fastest_f": 193,
+   "easing": "too short to tell (measured from a render)"
+  },
+  {
+   "name": "move 9",
+   "what": "a move at the middle",
+   "start_f": 201,
+   "length_f": 4,
+   "fastest_f": 202,
+   "easing": "linear (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

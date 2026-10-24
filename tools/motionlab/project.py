@@ -5,8 +5,51 @@ from pathlib import Path
 
 from .util import LAB, file_fingerprint, read_json, sha256_file, write_json
 
-VIDEO_EXT = {".mp4", ".mov", ".mkv", ".mxf", ".avi", ".m4v", ".mts"}
+VIDEO_EXT = {".mp4", ".mov", ".mkv", ".mxf", ".avi", ".m4v", ".mts", ".webm"}     # = the app's (a .webm recording too)
+# photos (2026-10-24, a friend's ask): a still shot of the edit, never turned into a video file in the folder; HEIC /
+# HEIF (iPhone) read through pillow-heif, AVIF through Pillow itself
+PHOTO_EXT = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif", ".bmp", ".tif", ".tiff", ".gif"}
+APPLE_DOUBLE = b"\x00\x05\x16\x07"             # the first bytes of a Mac's "._" file (Finder info, no picture)
+JUNK_NAMES = {"thumbs.db", "desktop.ini"}
 PROJECTS = LAB / "projects"
+
+
+def is_junk(p: Path) -> bool:
+    """A file a Mac, an iPhone or Windows leaves beside the clips, never a clip: a hidden name (._IMG_0912.mov - an
+    AppleDouble file of ~4 KB that showed as a black clip -, .DS_Store, .Trashes), Thumbs.db, desktop.ini, and an
+    AppleDouble file under any name (one copied in before 2026-10-24 lost its dot: _IMG_0912.mov)."""
+    n = p.name
+    if n.startswith(".") or n.lower() in JUNK_NAMES:
+        return True
+    try:
+        if p.stat().st_size <= 1 << 20:
+            with open(p, "rb") as f:
+                return f.read(4) == APPLE_DOUBLE
+    except OSError:
+        pass
+    return False
+
+
+def is_photo_twin(p: Path) -> bool:
+    """IMG_0950.jpg.mp4 beside IMG_0950.jpg: the still video a local add-on made so photos worked before MotionLab
+    took them (2026-10-24) - the photo is the clip, the twin is left alone and not listed."""
+    stem = p.name[:-len(p.suffix)] if p.suffix else p.name
+    return p.suffix.lower() in VIDEO_EXT and Path(stem).suffix.lower() in PHOTO_EXT \
+        and (p.parent / stem).is_file()
+
+
+def is_photo(p: Path | str) -> bool:
+    return Path(p).suffix.lower() in PHOTO_EXT
+
+
+def clip_files(d: Path, exts=VIDEO_EXT | PHOTO_EXT) -> list[Path]:
+    """The user's clips directly in a video's folder - videos and photos (exts), sorted by name - without the junk a
+    Mac / iPhone / Windows leaves there and without a photo's still-video twin."""
+    try:
+        files = [f for f in Path(d).iterdir() if f.is_file() and f.suffix.lower() in exts]
+    except OSError:
+        return []
+    return sorted(f for f in files if not is_junk(f) and not is_photo_twin(f))
 
 
 class Project:
@@ -22,7 +65,8 @@ class Project:
 
     # ------------------------------------------------------------------ the user's files (read-only)
     def footage_files(self) -> list[Path]:
-        return sorted(f for f in self.dir.iterdir() if f.is_file() and f.suffix.lower() in VIDEO_EXT)
+        """The clips: videos and photos (a photo is a still shot), never Mac / iPhone junk (clip_files)."""
+        return clip_files(self.dir)
 
     def check(self, target: str | Path) -> Path:
         """Every write goes through here: only inside build\\, never onto a source file."""
@@ -47,6 +91,8 @@ class Project:
                 key = _next_id(m["sources"])
                 m["sources"][key] = {"path": str(f), "name": f.name}
             ent = m["sources"][key]
+            if is_photo(f):
+                ent["photo"] = True
             fp = file_fingerprint(f)
             if with_hash and (ent.get("fingerprint") != fp or not ent.get("sha256")):
                 ent["sha256"] = sha256_file(f)

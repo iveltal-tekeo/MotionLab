@@ -570,8 +570,10 @@ def save_improve(body: dict) -> dict:
     refs = [x for x in like if safe_name(x) == x and (ANALYSIS / x).is_dir()]   # a friend's card has no analysis here
     rec = PR.add({"kind": "script", "text": text, "source": {"type": "tested", **({"file": file} if file else {})},
                   "style_refs": refs})
+    # replace (2026-10-24, a friend's ask: "only the improved script stays"): once Claude saved the new version, the
+    # app moves this pasted copy to the Recycle Bin (motionlab.app.data.tidy_improved) - never one filmed / used
     req = _save({"kind": "improve", "script": rec["id"], "want": _lines(body.get("want")), "length_s": length,
-                 "where": where, "like": like, "like_prompts": like_prompts})
+                 "where": where, "like": like, "like_prompts": like_prompts, "replace": True})
     return {"script": rec, "request": req}
 
 
@@ -747,5 +749,7 @@ def describe_request(r: dict) -> str:
             else f"{r.get('id')} - title & thumbnail first (before filming)" if r.get("kind") == "title"
             else f"{r.get('id')} - a new {r.get('prompt_kind')} prompt" + (f" like {r['from']}" if r.get("from") else "")
             if r.get("kind") == "prompt"
-            else f"{r.get('id')} - improve {r.get('script')}") + f" ({str(r.get('date', ''))[:16]})"
+            else f"{r.get('id')} - improve {r.get('script')}" + (
+                " - save ONLY your improved script (\"request\": this id, \"made_from\": the script); the app then "
+                "replaces the pasted one with it" if r.get("replace") else "")) + f" ({str(r.get('date', ''))[:16]})"
     return "\n".join([head] + [f"  {k}: {v}" for k, v in rows if v])

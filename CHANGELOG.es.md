@@ -9,6 +9,38 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
 
 ## Unreleased
 
+Lo que ha pedido un amigo que edita con MotionLab cada día, y una petición tuya:
+- **Fotos en tus montajes**: *Nueva edición > 1. Clips* (y *Grábalo*) aceptan fotos como fotos: JPG, PNG, WebP, HEIC /
+  HEIF del iPhone, AVIF, BMP, TIFF, GIF, bien orientadas. Cada una se ve con su propia imagen y una etiqueta amarilla
+  FOTO, y un clic en su duración (3 / 5 / 8 s) decide cuánto tiempo se ve. En el montaje una foto es un plano fijo con
+  un zoom lento; una foto horizontal en un vídeo vertical puede verse entera sobre una copia desenfocada de sí misma.
+  Claude ve una hoja con tus fotos y las coloca en la historia.
+- **Añadir una carpeta entera**: *Añadir carpeta…* (o soltar una) toma cada vídeo, foto y canción que hay dentro,
+  también en las subcarpetas, en orden. Dos archivos con el mismo nombre de carpetas distintas (el C0001.MP4 de dos
+  días) entran los dos.
+- **Se acabaron los clips negros de un Mac o un iPhone**: los archivos ocultos "._" que un Mac o un iPhone deja junto
+  a tus clips nunca se copian, y los que se copiaron antes ya no aparecen.
+- **Cambia el nombre del vídeo nuevo en el paso 1**: su nombre sigue siendo editable después de añadir los clips.
+- **Las páginas se actualizan solas**: un render terminado, un guion que ha escrito Claude, un análisis nuevo: aparecen
+  en la página que estás mirando en pocos segundos, nunca mientras hay un diálogo abierto o estás escribiendo.
+- **NUEVO en todo lo nuevo**: una etiqueta roja NUEVO en los vídeos nuevos (un render terminado), guiones, prompts,
+  análisis, conjuntos y gráficos animados; se va al hacer clic en la tarjeta o al pasar a otra sección.
+- **Mejorar mi guion deja una sola tarjeta**: mientras Claude trabaja, tu guion pegado aparece como *mejorando…*;
+  cuando se guarda la versión nueva, ocupa el lugar de la antigua (la antigua va a la Papelera de reciclaje, nunca una
+  que ya hayas grabado).
+- **Tus cambios sobreviven a las actualizaciones**: los umbrales ajustados para este PC viven ahora en su propio
+  archivo, que las actualizaciones nunca tocan; otros cambios que una actualización sustituye se guardan y vuelven con
+  *Recuperarlos*. También se guardan los ajustes que esta versión no conoce.
+- **Un botón propio de MotionLab en la barra de tareas**: la ventana y un MotionLab anclado muestran el icono de
+  MotionLab, no el de Microsoft Edge.
+- **Previsualiza tu miniatura**: *Analizador > Miniaturas* muestra tu miniatura en una copia de la página de Inicio de
+  YouTube (y Búsqueda, A continuación, un móvil) junto a los vídeos más nuevos y más vistos de grandes creadores
+  (MrBeast, Mark Rober, MKBHD y más; *Canales…* cambia la lista) o junto a las miniaturas que has analizado. Oscuro o
+  claro, *Entornar los ojos* para ver qué destaca, *¿Dónde está la mía?*. Tus imágenes no se guardan.
+- **Menos zooms en los montajes**: los zooms, los barridos y los empujes guardan ahora la distancia (uno cada pocos
+  segundos, uno cada ~8 s en un vídeo hablado) y nunca saltan entre dos planos de la misma toma; un montaje avisa
+  cuando lleva demasiados.
+
 Vídeos más rápidos (0.5.3, construido; se publica cuando las nuevas pruebas muestren la mitad del tiempo de Claude con
 los mismos resultados):
 - **El Generador pregunta lo que Claude antes adivinaba**: un look para los gráficos (Editorial cálido, Señal suiza,
@@ -18,8 +50,10 @@ los mismos resultados):
   necesita (los beats de la canción, las plantillas que encajan con tus palabras, tus valoraciones como reglas, las
   lecciones para ese tipo de vídeo) y dice lo que ha dejado fuera, para que no se pierda nada.
 - **Un solo montaje en vez de muchos pasos**: gráficos, efectos de sonido, el vídeo, las comprobaciones y una hoja con
-  cada corte, de una vez; solo se vuelven a renderizar los gráficos que cambian, varios a la vez. Los renders finales
-  largos van como tareas en la página de Tareas.
+  cada corte, de una vez; solo se vuelven a renderizar los gráficos que cambian, varios a la vez. El final pone
+  desenfoque de movimiento solo a los gráficos que se mueven (los subtítulos y los gráficos quietos se quedan sin
+  él: un final de 60 segundos ha pasado de 13,5 a 6,5 minutos). Los renders finales largos van como tareas en la
+  página de Tareas.
 - **Menos rondas de revisión**: el texto que se sale del encuadre se marca en la primera captura, los efectos de sonido
   salen a niveles que pasan la comprobación, los movimientos de las plantillas caen en el beat según su tiempo medido,
   y cada plantilla se comprueba en vertical y en cuadrado.

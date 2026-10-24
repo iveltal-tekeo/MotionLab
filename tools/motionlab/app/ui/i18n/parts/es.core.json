@@ -138,10 +138,10 @@
  "today {hm}": "hoy {hm}",
  "yesterday": "ayer",
  "yesterday {hm}": "ayer {hm}",
- "{n} days ago": "hace {n} días",
  "≈ today": "≈ hoy",
  "≈ {n} days ago": {"one": "≈ hace {n} día", "other": "≈ hace {n} días"},
  "≈ {n} weeks ago": {"one": "≈ hace {n} semana", "other": "≈ hace {n} semanas"},
  "≈ {n} months ago": {"one": "≈ hace {n} mes", "other": "≈ hace {n} meses"},
- "≈ {n} years ago": {"one": "≈ hace {n} año", "other": "≈ hace {n} años"}
+ "≈ {n} years ago": {"one": "≈ hace {n} año", "other": "≈ hace {n} años"},
+ "{n} days ago": {"one": "hace {n} día", "other": "hace {n} días"}
 }

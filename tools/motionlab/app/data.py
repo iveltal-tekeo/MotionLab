@@ -19,6 +19,8 @@ from motionlab import overlay_settings as OS
 from motionlab import profile as PF
 from motionlab import prompts as PR
 from motionlab import editreq as ER
+from motionlab.app import live as LV
+from motionlab.project import APPLE_DOUBLE, PHOTO_EXT, clip_files, is_junk
 from motionlab.styles import FOCUS, fmt as video_format, label as style_label
 from motionlab.timecode import frame_to_tc
 from motionlab.util import ANALYSIS, LAB
@@ -29,6 +31,8 @@ DOCS = LAB / "docs"
 VIDEO_EXT = {".mp4", ".mov", ".mkv", ".m4v", ".avi", ".webm", ".mts", ".mxf"}
 AUDIO_EXT = {".mp3", ".m4a", ".wav", ".aac", ".flac", ".ogg"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".heic"}     # the photos of a downloaded carousel / photo post
+# a video's clips (2026-10-24): videos and photos - a photo is a still shot of the edit (motionlab\photos.py)
+CLIP_EXT = VIDEO_EXT | PHOTO_EXT
 _cache: dict[str, tuple[float, object]] = {}
 _lock = threading.Lock()
 
@@ -403,6 +407,7 @@ def list_references(include_tests: bool = False) -> list[dict]:
             "events": len(evs), "reviewed": sum(1 for e in evs if e.get("review")),
             "verdicts": sum(1 for s in S["events"].values() if s.get("v")),
             "cuts": len(ev.get("hard_cuts", [])), "generated": ev.get("generated"), "thumb": thumb,
+            "done_t": _mtime(d / "events.json"),               # the NEW badge (2026-10-24): when the analysis ended
             **_kind(d.name, ev, v),
             "report": rel(d / "report.html") if (d / "report.html").exists() else None,
             "feedback_files": sorted(p.name for p in (d / "feedback").glob("*.txt")) if (d / "feedback").exists() else [],
@@ -601,8 +606,9 @@ def _picture(d: Path, b: Path, newest: Path | None, plan: dict) -> dict | None:
     gr = sorted((b / "overlays").glob("*/thumb.png"), key=lambda q: -q.stat().st_mtime) if (b / "overlays").is_dir() else []
     if gr:
         return {"image": rel(gr[0])}
-    clips = sorted(p for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT)
-    return {"video": rel(clips[0]), "f": 25, "fps": 25.0} if clips else None
+    clips = clip_files(d, VIDEO_EXT) or clip_files(d, PHOTO_EXT)     # a video's frame, else a photo (GET /api/thumb)
+    return {"video": rel(clips[0]), "f": 25 if clips[0].suffix.lower() in VIDEO_EXT else 0, "fps": 25.0} \
+        if clips else None
 
 
 def _label(b: Path) -> str | None:
@@ -655,7 +661,7 @@ def list_projects() -> list[dict]:
         if not d.is_dir():
             continue
         b = d / "build"
-        clips = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT]
+        clips = clip_files(d)                             # videos + photos, never a Mac's ._ file
         plans = sorted(b.glob("plan_v*.json")) if b.exists() else []
         boards = sorted((b / "boards").glob("*.jpg")) if (b / "boards").exists() else []
         renders = sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime) if b.exists() else []
@@ -675,6 +681,7 @@ def list_projects() -> list[dict]:
         created = _created(d)
         out.append({
             "name": d.name, "label": _label(b), "clips": len(clips), "footage_bytes": sum(p.stat().st_size for p in clips),
+            "photos": sum(p.suffix.lower() in PHOTO_EXT for p in clips),
             "songs": sorted(p.name for p in d.iterdir() if p.is_file() and p.suffix.lower() in AUDIO_EXT),
             "plans": [p.stem for p in plans],
             "renders": [p.name for p in sorted(renders)],
@@ -694,6 +701,8 @@ def list_projects() -> list[dict]:
             "rating": ((outcome.get("aspects") or {}).get("overall") or {}).get("rating"),
             "reviewed": _reviewed(b, outcome, nt),
             "next": outcome.get("next"), "title": pkg.get("title") or None,
+            # the NEW badge (2026-10-24): a finished render (whole file) - never a video only made or given clips
+            "done_t": (lambda r: r[-1].stat().st_mtime if r else None)(LV.renders_done(b)),
         })
     return out
 
@@ -844,7 +853,7 @@ def publish_info(name: str) -> dict:
             "records": recs, "fps": pl.get("fps"), "frames": pl.get("frames"), "plan": plan.name if plan else None,
             "templates": templates, "face_detector": face, "render": renders[-1].name if renders else None,
             "styles": _thumb_styles(),                       # 0.4.5: thumbnail sets whose patterns Claude found
-            "clips": sum(1 for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT),
+            "clips": len(clip_files(d, VIDEO_EXT)),
             "images": [{"name": p.name, "path": str(p), "rel": rel(p)} for p in sorted(imgs.iterdir(), key=lambda q: -q.stat().st_mtime)
                        if p.suffix.lower() in PUB_IMAGE_EXT] if imgs.is_dir() else []}
 
@@ -920,22 +929,28 @@ def project(name: str) -> dict:
         raise FileNotFoundError(name)
     b = d / "build"
     srcs = (read_json(b / "sources.json", {}) or {}).get("sources", {})
+    files = clip_files(d)                                 # videos + photos; never a Mac's ._ file or a photo's twin
+    listed = {p.name.lower() for p in files}
     sources = []
     for sid, s in sorted(srcs.items()):
+        if Path(s["path"]).name.lower() not in listed and Path(s["path"]).exists():
+            continue                                      # junk an older version registered: not a clip
         meta = (read_json(b / "cache" / f"{sid}.color.json", {}) or read_json(b / "cache" / f"{sid}.json", {})
                 or {})                                    # colour caches (0.3.0+) or grey ones
         p = Path(s["path"])
+        photo = p.suffix.lower() in PHOTO_EXT
         sources.append({"id": sid, "name": s["name"], "size": p.stat().st_size if p.exists() else None,
                         "exists": p.exists(), "fps": meta.get("src_fps"), "frames": meta.get("src_frames"),
-                        "duration_s": (meta.get("src_frames") or 0) / (meta.get("src_fps") or 1) or None,
+                        "duration_s": None if photo else (meta.get("src_frames") or 0) / (meta.get("src_fps") or 1) or None,
                         "resolution": f"{meta.get('src_width')}x{meta.get('src_height')}" if meta else None,
-                        "cached": bool(meta.get("complete")), "board": rel(b / "boards" / f"{sid}_01.jpg")
-                        if (b / "boards" / f"{sid}_01.jpg").exists() else None})
+                        "cached": bool(meta.get("complete")), "photo": photo,
+                        "board": rel(b / "boards" / f"{sid}_01.jpg") if (b / "boards" / f"{sid}_01.jpg").exists() else None})
     known = {Path(s["path"]).name.lower() for s in srcs.values() if s.get("path")}
-    for p in sorted(d.iterdir()):                         # clips not prepared yet (no sources.json entry): listed too
-        if p.is_file() and p.suffix.lower() in VIDEO_EXT and p.name.lower() not in known:
+    for p in files:                                       # clips not prepared yet (no sources.json entry): listed too
+        if p.name.lower() not in known:
             sources.append({"id": None, "name": p.name, "size": p.stat().st_size, "exists": True, "fps": None,
-                            "frames": None, "duration_s": None, "resolution": None, "cached": False, "board": None})
+                            "frames": None, "duration_s": None, "resolution": None, "cached": False, "board": None,
+                            "photo": p.suffix.lower() in PHOTO_EXT})
     plans = [_plan_info(p) for p in sorted(b.glob("plan_v*.json"))] if b.exists() else []
     renders = []
     for p in sorted(b.glob("*.mp4")) if b.exists() else []:
@@ -989,8 +1004,8 @@ def project(name: str) -> dict:
     overlays = OS.project_overlays(d.name)
     media = [{"label": I18N.t("render {name}", name=p.name), "path": str(p)}
              for p in sorted(b.glob("*.mp4"), key=lambda q: q.stat().st_mtime, reverse=True)] if b.exists() else []
-    media += [{"label": I18N.t("your clip {name}", name=p.name), "path": str(p)} for p in sorted(d.iterdir())
-              if p.is_file() and p.suffix.lower() in VIDEO_EXT]
+    media += [{"label": I18N.t("your clip {name}", name=p.name), "path": str(p)} for p in files
+              if p.suffix.lower() in VIDEO_EXT]
     from motionlab import speech as SP
     used = _overlays_in_plans(sorted(b.glob("plan_v*.json"))) if b.exists() and overlays else {}
     for o in overlays:
@@ -1164,7 +1179,9 @@ def _brief_facts(d: Path, req: dict) -> dict:
         pr = PR.get(req["prompt"]) if req["prompt"] else None
     except ValueError:
         pr = None
-    return {"project": d.name, "label": _label(d / "build"), "clips": sum(p.suffix.lower() in VIDEO_EXT for p in files),
+    clips = clip_files(d)
+    return {"project": d.name, "label": _label(d / "build"), "clips": len(clips),
+            "photos": [p.name for p in clips if p.suffix.lower() in PHOTO_EXT],
             "songs": sorted(p.name for p in files if p.suffix.lower() in AUDIO_EXT), "refs": refs,
             "prompt": {"title": pr.get("title") or pr.get("title_auto"), "kind": pr.get("kind")} if pr else None}
 
@@ -1252,7 +1269,8 @@ def motion() -> dict:
         th = f / "thumb.png"
         t.update(frames=int(c.get("frames") or 0), fps=float(c.get("fps") or 30), width=int(c.get("width") or 0),
                  height=int(c.get("height") or 0), settings=decl,
-                 thumb=rel(th) if th.exists() else None, thumb_v=int(th.stat().st_mtime) if th.exists() else 0)
+                 thumb=rel(th) if th.exists() else None, thumb_v=int(th.stat().st_mtime) if th.exists() else 0,
+                 created=_created(f))                     # the NEW badge: when it came (a new folder, an update)
     clips = {f"{p['pack']}/{it['id']}": it for p in cat["packs"] for it in p["items"]}
     for t in cat["library"]:                          # the clips a template learned from, ready to play beside it
         t["sources"] = [{"pack": s.get("pack"), "clip": s.get("clip"), "what": s.get("what", ""),
@@ -1458,6 +1476,57 @@ def prompt_styles(items: list[dict]) -> dict:
     return {"styles": styles, "suggest": sug}
 
 
+def tidy_improved() -> list[str]:
+    """Prepare > Improve my script (2026-10-24, a friend's ask: "only the new version should remain"): when Claude has
+    saved the improved script of a request marked "replace" (every request since then - older ones keep both), the
+    pasted original goes to the Recycle Bin, with any copy of the same words Claude saved again - never a script a
+    video was made from (filmed, edited, posted: made_from.json) or one that is not the user's paste. The request
+    is marked "tidied" once, so a script brought back from the Recycle Bin stays. Logged in .app\\deleted.log.
+    Returns the ids moved."""
+    from motionlab import script as SC
+    waiting = False                                       # cheap first: is any such request not tidied yet?
+    for p in SC.REQUESTS.glob("req-*.json") if SC.REQUESTS.is_dir() else []:
+        r0 = read_json(p, {}) or {}
+        if r0.get("kind") == "improve" and r0.get("replace") and not r0.get("tidied"):
+            waiting = True
+            break
+    if not waiting:
+        return []
+    every = [r for r in SC.requests() if r.get("kind") == "improve"]
+    reqs = [r for r in every if r.get("replace") and not r.get("tidied") and r.get("made")]
+    if not reqs:
+        return []
+    from . import trash
+    uses = prompt_uses()
+    items = {x["id"]: x for x in PR.load_all("script") + PR.load_all("hook")}
+    pasted = {r.get("script") for r in every}             # each request's own paste is never another's "copy"
+    moved: list[str] = []
+    for r in reqs:
+        orig, gone, left = items.get(r.get("script") or ""), [], []
+        if orig and not uses.get(orig["id"]) and (orig.get("source") or {}).get("type") == "tested":
+            sha = PR.text_sha(orig.get("text") or "")
+            since = PR.created(orig)                      # a copy Claude saved for THIS request: made after the paste
+            copies = [x for x in items.values() if x["id"] != orig["id"] and x["id"] not in pasted
+                      and not uses.get(x["id"]) and PR.created(x) >= since and PR.text_sha(x.get("text") or "") == sha]
+            if not [m for m in r["made"] if m not in {c["id"] for c in copies}]:
+                continue                                  # only a copy of the paste so far: wait for the new version
+            for x in [orig] + copies:
+                try:
+                    res = trash.recycle([PR.path_of(x["id"])])
+                except (ValueError, RuntimeError, OSError):
+                    left.append(x["id"])
+                    continue
+                (gone if res["moved"] else left).append(x["id"])
+            with open(LAB / ".app" / "deleted.log", "a", encoding="utf-8") as f:
+                f.write(f"{stamp()} improve {r['id']}: the pasted script {', '.join(gone) or '-'} moved to the "
+                        f"Recycle Bin (replaced by {', '.join(r['made'])})"
+                        + (f" - not moved: {', '.join(left)}" if left else "") + "\n")
+        p = SC.request_path(r["id"])
+        write_json_atomic(p, {**read_json(p, {}), "tidied": gone, "tidied_at": stamp()})
+        moved += gone
+    return moved
+
+
 def prompt_uses() -> dict:
     """prompt id -> the videos made from it and how they turned out (the prompt library's 'Used in')."""
     out: dict = {}
@@ -1469,7 +1538,7 @@ def prompt_uses() -> dict:
         outcome = read_json(b / "outcome.json", {}) or {}
         asp = outcome.get("aspects", {})
         # Film it (2026-10-15): a script's road - filmed (a clip in the folder), edited (a render), posted (the link)
-        clips = sum(1 for p in d.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXT)
+        clips = len(clip_files(d))
         renders = sum(1 for _ in b.glob("*.mp4"))
         posted = bool((outcome.get("packaging") or {}).get("link"))
         for x in made or []:
@@ -1484,30 +1553,43 @@ def save_upload(name: str, filename: str, stream, size: int, prompt: str = "") -
     motionlab"): a recording the user picks or drops in the app, copied into projects\\<name>\\ as a new clip. The
     original stays where it was (only read by the browser); a file of the same name is never overwritten - a copy
     that is already there (same size) is kept, another one gets " (2)". prompt = the script it was filmed from
-    (made_from.json, so the script card shows "Filmed")."""
+    (made_from.json, so the script card shows "Filmed"). 2026-10-24: photos too (copied as they are - a still shot
+    of the edit), never the files a Mac / iPhone leaves next to clips (a "._" name, or the AppleDouble header
+    00 05 16 07 under any name)."""
     d = PROJECTS / safe_name(name)
     if not d.is_dir():
         raise FileNotFoundError(name)
-    stem, ext = os.path.splitext(Path(str(filename)).name)
+    stem, ext = os.path.splitext(Path(str(filename).replace("\\", "/")).name)
     ext = ext.lower()
-    if ext not in VIDEO_EXT | AUDIO_EXT:
-        raise ValueError(I18N.t("{file}: not a video or a song ({types})", file=filename,
-                                types=", ".join(sorted(VIDEO_EXT | AUDIO_EXT))))
+    if is_junk(Path(f"{stem}{ext}")):                     # 2026-10-24: ._IMG_0912.mov, .DS_Store, Thumbs.db...
+        _drain(stream, size)
+        raise ValueError(I18N.t("{file}: a hidden file a Mac or an iPhone leaves next to clips - not a clip",
+                                file=filename))
+    if ext not in CLIP_EXT | AUDIO_EXT:
+        raise ValueError(I18N.t("{file}: not a video, a photo or a song ({types})", file=filename,
+                                types=", ".join(sorted(CLIP_EXT | AUDIO_EXT))))
     stem = re.sub(r"[^\w.\- \[\]()&'+,]", "_", stem).replace("..", "_").strip(" .") or "recording"
     if not 0 < size <= 200 * 2**30:
         raise ValueError(I18N.t("the file is empty or bigger than 200 GB"))
+    head = stream.read(min(size, 4))                      # an AppleDouble file under another name: refused too
+    if head == APPLE_DOUBLE:
+        _drain(stream, size - len(head))
+        raise ValueError(I18N.t("{file}: a hidden file a Mac or an iPhone leaves next to clips - not a clip",
+                                file=filename))
     dest, n = d / f"{stem}{ext}", 1
     while dest.exists():
         if dest.stat().st_size == size:                       # the same file added twice: keep the first copy
-            _drain(stream, size)
-            return {"file": dest.name, "kept": True, "made_from": add_made_from(d.name, "prompt", prompt) if prompt else None}
-        n += 1
+            _drain(stream, size - len(head))
+            return {"file": dest.name, "kept": True, "made_from": add_made_from(d.name, "prompt", prompt) if prompt
+                    else None, "photo": ext in PHOTO_EXT}
+        n += 1                                                # same name, another file (an iPhone's IMG_0986 again)
         dest = d / f"{stem} ({n}){ext}"
     part = d / "build" / "upload" / (dest.name + ".part")     # outside the clips until it is whole
     part.parent.mkdir(parents=True, exist_ok=True)
-    left = size
+    left = size - len(head)
     try:
         with open(part, "wb") as f:
+            f.write(head)
             while left:
                 buf = stream.read(min(left, 4 * 2**20))
                 if not buf:
@@ -1523,7 +1605,7 @@ def save_upload(name: str, filename: str, stream, size: int, prompt: str = "") -
         except OSError:
             pass
     made = add_made_from(d.name, "prompt", prompt) if prompt else None
-    return {"file": dest.name, "kept": False, "made_from": made}
+    return {"file": dest.name, "kept": False, "made_from": made, "photo": ext in PHOTO_EXT}
 
 
 def _drain(stream, size: int) -> None:
@@ -2080,9 +2162,54 @@ def _thumb_dir(name: str) -> Path:
     return d
 
 
+def thumb_test() -> dict:
+    """Preview your thumbnail (2026-10-24, the user: "upload ur thumbnails and have it like a test on a fake generated
+    youtube page ... to see if the thumbnail matches the vibe or pops from a normal youtube user feed", then "besides
+    big youtubers like mrbeast ... probably of highly viewed recent videos"): the feed around the user's pictures =
+    big channels' newest, most viewed videos (motionlab.thumbfeed: "feed", refreshed by the job thumb_feed) and the
+    thumbnails of the sets analysed on this PC (real ones: their title, channel, views, length), and the thumbnails
+    made in MotionLab (Ready to post) to pick from. Read-only."""
+    from motionlab import thumbfeed as TF
+    from motionlab import thumbsets as TS
+    F = TF.load()
+    big = [{"src": f"/api/thumbfeed/{x['id']}.jpg", "title": x["title"], "channel": x["channel"], "views": x["views"],
+            "duration": x.get("duration"), "set": "_big"} for x in F["items"]]
+    pool, sets = list(big), []
+    for s in TS.list_sets():
+        d = Path(TS.ROOT) / s["name"]
+        S = read_json(d / "set.json", {}) or {}
+        src = S.get("source") or {}
+        who = src.get("channel") or (S.get("channel") or {}).get("who") or ""
+        dur = {e.get("id"): e.get("duration") for e in (S.get("channel") or {}).get("entries") or [] if e.get("id")}
+        n = 0
+        for it in S.get("items") or []:
+            if not it.get("file") or not it.get("title") or not (d / it["file"]).is_file():
+                continue                                  # the user's own pictures (no title) are not the feed
+            try:
+                views = int(float(it.get("views") or 0))
+            except (TypeError, ValueError):
+                views = 0
+            pool.append({"img": rel(d / it["file"]), "title": it["title"], "channel": it.get("channel") or who or s["label"],
+                         "views": views, "duration": dur.get(it.get("id")), "set": s["name"]})
+            n += 1
+        if n:
+            sets.append({"name": s["name"], "label": s["label"], "count": n})
+    made = []
+    for d in sorted(PROJECTS.iterdir()) if PROJECTS.exists() else []:
+        pub = d / "build" / "publish"
+        if not pub.is_dir():
+            continue
+        title = ((read_json(pub / "package.json", {}) or {}).get("title") or _label(d / "build") or d.name)
+        for p in sorted(pub.glob("thumb_*_16x9.png")):
+            made.append({"img": rel(p), "title": title, "video": _label(d / "build") or d.name})
+    return {"pool": pool, "sets": sets, "made": made,
+            "big": {"count": len(big), "fetched": F.get("fetched"), "stale": F["stale"], "channels": F["channels"],
+                    "failed": F.get("failed") or []}}
+
+
 def thumb_sets() -> list[dict]:
     from motionlab import thumbsets as TS
-    return TS.list_sets()
+    return [{**s, "created": _created(TS.ROOT / s["name"])} for s in TS.list_sets()]   # created: the NEW badge
 
 
 def _thumb_styles() -> list[dict]:
@@ -2185,7 +2312,7 @@ def _text_dir(name: str) -> Path:
 
 def text_sets() -> list[dict]:
     from motionlab import textsets as TX
-    return TX.list_sets()
+    return [{**s, "created": _created(Path(TX.ROOT) / s["name"])} for s in TX.list_sets()]
 
 
 def text_set(name: str) -> dict:

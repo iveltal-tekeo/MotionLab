@@ -42,7 +42,9 @@ ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "
           "/api/thumbs", "/api/estimate", "/api/batches", "/api/batches?kind=review",           # 0.4.5
           "/api/motion", "/api/motion/pick?want=a%20bold%20title",                              # 0.5.0
           "/api/logos",                                                                         # the logo library
-          "/api/texts", "/api/styles"]                      # 2026-10-18: sets of scripts & prompts, the style pickers
+          "/api/texts", "/api/styles",                      # 2026-10-18: sets of scripts & prompts, the style pickers
+          "/api/seen", "/api/thumbtest", *(f"/api/changes?s={s}" for s in ("home", "analyze", "projects", "generate",
+                                                                            "prompts", "motion", "memory"))]   # 2026-10-24
 
 
 def ok(cond, what: str) -> bool:

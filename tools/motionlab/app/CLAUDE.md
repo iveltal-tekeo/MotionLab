@@ -6,8 +6,10 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
 - Files: `server.py` (routes, security, update/restart), `data.py` (everything the pages show, verdicts, the workflow
   state of a reference), `jobs.py` (the fixed list of jobs), `system.py` (settings, program detection, downloads, the
   Claude launcher, shortcuts), `trash.py` (Delete = Recycle Bin), `updater.py` (git), `player.py` (player copies),
-  `report.py` (Report a problem), `jobtools.py` (the app's own small jobs: yt-dlp update, player copy), `ui\` (plain
-  HTML/CSS/JS, no build step).
+  `report.py` (Report a problem), `jobtools.py` (the app's own small jobs: yt-dlp update, player copy), `live.py`
+  (2026-10-24: the list pages' change fingerprints + the NEW badge's `.app\seen.json`), `winicon.py` (2026-10-24:
+  MotionLab's own AppUserModelID + icon on its Edge windows and shortcuts, ctypes), `ui\` (plain HTML/CSS/JS, no build
+  step).
 - Python standard library only (nothing installed): a server on 127.0.0.1:8765 + Microsoft Edge in app mode (its
   own window, 1600x1000). It stops ~10 s after the window closes (3 min without heartbeat), unless a job runs.
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
@@ -20,7 +22,9 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `projects\<name>\` (*Create video*), since 2026-10-15 a recording / clip the user picks or drops (*Film it*, New
   edit's *Add clips…*: POST `/api/project/<p>/upload?name=&prompt=` = a raw body streamed by `data.save_upload` into
   `build\upload\<file>.part`, then moved to `projects\<p>\<file>` - a new file only: the same name + size = kept,
-  else " (2)"; video / audio extensions only; `prompt` adds the script to made_from), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
+  else " (2)"; video / audio / photo extensions (photos since 2026-10-24, `project.PHOTO_EXT`), never a Mac's / iPhone's
+  "._" file (`project.is_junk`: a dot name, Thumbs.db, the AppleDouble header 00 05 16 07); `prompt` adds the script
+  to made_from), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
   (`build\publish\thumbs\<id>\overlay.json` "values") + a picture the user brings (`build\publish\images\`) - never
   `package.json` itself (the tools own it; the words go through `publish.write`) - and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
@@ -32,7 +36,11 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   clips); POST `/api/delete` re-plans and moves the ticked items to the Windows Recycle Bin (`SHFileOperationW`,
   FOF_ALLOWUNDO; Windows asks before deleting for good when something does not fit). Refused while a job runs; only
   paths inside refs / analysis / projects (links resolved); knowledge cards and lessons always stay; each delete is
-  logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1).
+  logged in `.app\deleted.log`. Claude never calls these routes (hard rule 1). One move the app makes by itself, at
+  the user's ask (2026-10-24): *Improve my script*'s pasted script (a request marked `replace`) goes to the Recycle
+  Bin once Claude saved its improved version - never one a video was made from, never another request's paste
+  (`data.tidy_improved` = POST `/api/script/tidy`, which Prepare and the prompt library call before they load - never
+  a GET; logged, the request marked `tidied` so a restored script stays).
 - **Pages** (2026-10-19: the pages' details moved to `docs\app_pages.md`, one section per page). **Before you change a
   page, read its section there** - what the page shows, its helpers, how it came to be. Here stay the rules that hold
   everywhere, the contracts, and per page the user's own words and its never / always rules.
@@ -281,8 +289,13 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `seen`) makes the window show "What's new" once (POST `/api/update/seen`; records written by 0.2.x are completed
   from git). The sidebar's What's new button (`newsModal`) shows CHANGELOG.md (`/api/text`) as a timeline. Tested 2026-10-09 against a fake GitHub incl. a real 0.2.5 copy updating itself to 0.3. A local change that clashes with an update (e.g. a threshold tuned in
   `config.json` that the update changes too) is set aside: the file gets the new version, the change stays in git's
-  stash ("autostash"), and the restarted app says so (`.app\update_last.json`) - bring it back with
-  `git stash show -p` if it is still wanted. `share` commits only the knowledge paths and refuses while the copy
+  stash ("autostash"), and the restarted app says so (`.app\update_last.json`). Since 2026-10-24 (a friend's ask:
+  tuning lost in silence) `updater._pull` also keeps it: `tools\config.json`'s changed values move into
+  `tools\config.local.json` (git-ignored, laid over config.json by `util.load_config` - in effect at once, `to_local`
+  in the record); any other file is kept in `.app\local_changes\<date>\` (its base, the user's version, a patch) and
+  *Bring them back* (POST `/api/update/restore`, Home / What's new / Settings > Sharing & updates, GET `/api/settings`
+  `update.kept`) merges it back with `git merge-file --theirs` (the update's other changes stay, the user's lines win
+  where both changed; never conflict markers). Settings keys this version does not know are kept on save. `share` commits only the knowledge paths and refuses while the copy
   has commits that are not on GitHub (a push would publish them); a rejected push pulls (rebase) and pushes again;
   on failure our commit and new files are undone and the pack remains. If sharing pulled new code the server
   restarts too.
@@ -311,7 +324,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   17 since 0.4.2: outcome `next` / `moment` / `remove_moment`, verdicts `sound`; 18 since 0.4.2.1: GET `/api/player`,
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
-  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`; 29 since 2026-10-18: GET `/api/texts`, `/api/texts/<set>`, POST `/api/texts/split`, `/api/texts/new`, `/api/texts/<set>/add` | `/verdicts` | `/remove` | `/kind`, GET `/api/delete?kind=texts`, `/api/status` `thumbs` / `texts` / `friends` (Scripts & prompts, the Analyser's three ways); GET `/api/styles`, POST `/api/knowledge/private`, GET `/api/knowledge`'s sharing keys (`mine`, `next_share`, `kept`, `friends`, `imports`), POST `/api/reference/<name>/meta` `label`, POST `/api/knowledge/share` `names` / `lesson_ids` / `by_file`, POST `/api/script/improve` | `/api/script/request` | `/api/title/request` `like_prompts` (Shared knowledge, the one picker); POST `/api/prompts/wishes` `verdicts` (the one review pattern); GET `/api/settings` `home_repo` + `update.git` / `update.repo` measured on every call (the first install); GET `/api/references` + `/api/reference/<name>` `label` / `by`, `/api/status` without `references_list` (readable names, 2026-10-19); POST `/api/prompts/request` (a prompt wish as a request file), GET `/api/settings` `languages` + POST `/api/settings` `language` (Languages, 2026-10-19); 30 since 2026-10-22: GET `/api/edit/options` = `editreq.options()` and POST `.../edit_request` "v": 2 (the New edit page)). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+  GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`; 29 since 2026-10-18: GET `/api/texts`, `/api/texts/<set>`, POST `/api/texts/split`, `/api/texts/new`, `/api/texts/<set>/add` | `/verdicts` | `/remove` | `/kind`, GET `/api/delete?kind=texts`, `/api/status` `thumbs` / `texts` / `friends` (Scripts & prompts, the Analyser's three ways); GET `/api/styles`, POST `/api/knowledge/private`, GET `/api/knowledge`'s sharing keys (`mine`, `next_share`, `kept`, `friends`, `imports`), POST `/api/reference/<name>/meta` `label`, POST `/api/knowledge/share` `names` / `lesson_ids` / `by_file`, POST `/api/script/improve` | `/api/script/request` | `/api/title/request` `like_prompts` (Shared knowledge, the one picker); POST `/api/prompts/wishes` `verdicts` (the one review pattern); GET `/api/settings` `home_repo` + `update.git` / `update.repo` measured on every call (the first install); GET `/api/references` + `/api/reference/<name>` `label` / `by`, `/api/status` without `references_list` (readable names, 2026-10-19); POST `/api/prompts/request` (a prompt wish as a request file), GET `/api/settings` `languages` + POST `/api/settings` `language` (Languages, 2026-10-19); 30 since 2026-10-22: GET `/api/edit/options` = `editreq.options()` and POST `.../edit_request` "v": 2 (the New edit page); 31 since 2026-10-24: GET `/api/changes?s=` (the list pages update by themselves: `liveTick` every 5 s, `route(true)` = a soft redraw), GET / POST `/api/seen` (the NEW badge: `newTag`, sections left in `route`), POST `/api/update/restore`, GET `/api/settings` `update.kept`, GET `/api/thumbtest` + `/api/thumbfeed/<id>.jpg` + POST `/api/thumbfeed/channels` + POST `/api/script/tidy` + the job `thumb_feed` (*Preview your thumbnail*), `/api/thumb` for photos, edit_request `photos`). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
@@ -405,7 +418,10 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   the user's real references (that writes their verdicts.json) and never a Claude button (it starts Claude): use a
   copy of a self-test analysis (`analysis\synthetic_zz_*`, no knowledge card is made for synthetic_ names) and zz
   test files for delete tests. Updates / sharing are tested against a local bare repo as a fake GitHub with two
-  clones as friends (never the real remote; helpers in `tools\dev\`: `cdp.py` drives headless Edge (a free DevTools
+  clones as friends (never the real remote; calling `updater` functions from a test script: `git()` takes the lab
+  folder as its keyword-only default `cwd` - set `updater.git.__kwdefaults__["cwd"]` (and `updater.LAB`) to the scratch
+  clone and assert `git rev-parse --show-toplevel` is that clone before any pull - 2026-10-24 a test that patched
+  `__defaults__` instead ran its pull in the real lab; helpers in `tools\dev\`: `cdp.py` drives headless Edge (a free DevTools
   port and its own profile `.app\dev\edge-<pid>-*` per run, removed by `close()`, a dead run's swept at the next start;
   smoke.py picks free ports unless `--port` / `--cdp-port` are given), `upd_prepare.py`
   (setup / push a test version) + `upd_test.py` the update paths; scratch in `.app\dev\`). Close every headless Edge

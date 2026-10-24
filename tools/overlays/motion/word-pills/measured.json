@@ -1,0 +1,35 @@
+{
+ "tracks": [
+  {
+   "name": "move 1",
+   "what": "a move across the frame",
+   "start_f": 10,
+   "length_f": 77,
+   "fastest_f": 64,
+   "easing": "S-curve (measured from a render)"
+  },
+  {
+   "name": "move 2",
+   "what": "a move at the bottom",
+   "start_f": 131,
+   "length_f": 18,
+   "fastest_f": 142,
+   "easing": "S-curve (measured from a render)"
+  }
+ ],
+ "tracks_date": "2026-10-23",
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f146 (00:00:04:26): #pile > div:nth-of-type(8) \"IT\" off the frame by 46 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

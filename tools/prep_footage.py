@@ -2,7 +2,8 @@
 
     .venv\\Scripts\\python tools\\prep_footage.py <project name or folder> [--grey] [--fps 25] [--width 1520] [--height 1080]
 
-For every video file directly inside projects\\<name>\\ it writes, into projects\\<name>\\build\\:
+For every video file and photo directly inside projects\\<name>\\ (never the "._" files a Mac / iPhone leaves there:
+motionlab\\project.py clip_files) it writes, into projects\\<name>\\build\\:
   sources.json                     stable source IDs (A, B, ...) and the SHA-256 of every file
   cache\\<ID>.color.yuv + .json     colour frames (YUV 4:2:0, ~3.9 GB per minute of footage at 1520x1140) at the
                                    target fps, scaled so one frame covers the output frame (never above the clip's
@@ -10,6 +11,8 @@ For every video file directly inside projects\\<name>\\ it writes, into projects
   cache\\<ID>.u8 + .json            --grey: grey frames (~2.6 GB per minute) for black-and-white edits (test_4am)
   cache\\<ID>_stats.npz             per cache frame: luma mean/p05/p95, motion, sharpness, global shift (pan) in % of
                                    width
+A photo (2026-10-24: .jpg .png .webp .heic .heif .avif .bmp .tif .gif) is a cache of ONE frame, the right way up
+(motionlab\\photos.py) - a clip layer shows it on every frame of its shot (meta "photo": true, no sound, no motion).
 Formats and readers: tools\\motionlab\\footage.py (edit scripts take plan["sources"] from footage.plan_sources).
 Re-running skips sources whose cache is complete and whose file is unchanged. It refuses to start a cache that would
 leave less than 2 GB free on the disk.
@@ -64,8 +67,47 @@ def color_args(v: dict) -> str:
     return f":in_color_matrix={mat}:in_range={rng}"
 
 
+def prep_photo(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: int, color: bool = True) -> dict:
+    """A photo's cache: one frame, cover-fit like a clip's (never above the photo's own size), the stats of that
+    frame (no motion)."""
+    from motionlab import photos as PH
+    src = Path(ent["path"])
+    data_rel, meta_rel = FC.paths(prj.cache, sid, color)
+    if meta_rel.exists():
+        m = read_json(meta_rel)
+        if (m.get("fingerprint") == ent["fingerprint"] and m.get("fps") == fps_out and m.get("complete")
+                and m.get("out_size") == [ow, oh] and data_rel.exists()):
+            log(f"{sid} {src.name}: photo cache up to date")
+            return m
+    im = PH.open_rgb(src)
+    w, h = im.size
+    cw, ch = cache_size(w, h, ow, oh)
+    from PIL import Image
+    rgb = np.asarray(im.resize((cw, ch), Image.LANCZOS) if (cw, ch) != (w, h) else im)
+    prj.cache.mkdir(parents=True, exist_ok=True)
+    fr = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    with open(prj.check(data_rel), "wb") as f:
+        f.write((FC.encode(rgb) if color else fr).tobytes())
+    sm = cv2.resize(fr, (cw // 4, ch // 4), interpolation=cv2.INTER_AREA).astype(np.float32)
+    p05, p95 = np.percentile(sm, [5, 95]) / 2.55
+    np.savez(prj.check(prj.cache / f"{sid}_stats.npz"),
+             **{"luma": np.array([sm.mean() / 2.55], np.float32), "p05": np.array([p05], np.float32),
+                "p95": np.array([p95], np.float32), "sharp": np.array([cv2.Laplacian(sm, cv2.CV_32F).var()], np.float32),
+                **{k_: np.zeros(1, np.float32) for k_ in ("motion", "tx", "ty", "shift_resp")}})
+    meta = {"id": sid, "source": str(src), "name": src.name, "fingerprint": ent["fingerprint"], "photo": True,
+            "src_width": w, "src_height": h, "src_fps": None, "src_frames": 1,
+            "fps": fps_out, "step": None, "frames": 1, "width": cw, "height": ch, "out_size": [ow, oh],
+            "format": "i420" if color else "gray", "levels": "single",
+            "levels_note": "a photo, decoded by Pillow (full range, EXIF rotation applied)", "complete": True}
+    write_json(prj.check(meta_rel), meta)
+    log(f"{sid} {src.name}: photo {w}x{h} -> {'colour' if color else 'grey'} cache {cw}x{ch} (one frame)")
+    return meta
+
+
 def prep_source(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: int, color: bool = True) -> dict:
     src = Path(ent["path"])
+    if ent.get("photo"):
+        return prep_photo(prj, sid, ent, fps_out, ow, oh, color)
     data_rel, meta_rel = FC.paths(prj.cache, sid, color)
     if meta_rel.exists():
         m = read_json(meta_rel)
@@ -185,12 +227,13 @@ def main() -> int:
     prj = Project(a.project)
     files = prj.footage_files()
     if not files:
-        print(f"no video files in {prj.dir}")
+        print(f"no videos or photos in {prj.dir}")
         return 1
     log(f"project {prj.name}: {len(files)} source file(s); hashing (read-only)")
     man = prj.register_sources()
+    current = {str(f) for f in files}               # a junk file listed by an older version is never cached
     for sid, ent in sorted(man["sources"].items()):
-        if Path(ent["path"]).exists():
+        if Path(ent["path"]).exists() and ent["path"] in current:
             prep_source(prj, sid, ent, a.fps, a.width, a.height, color=not a.grey)
     bad = prj.verify_sources()
     print("sources unchanged:", "yes" if not bad else f"NO - {bad}")

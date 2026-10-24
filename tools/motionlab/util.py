@@ -33,10 +33,30 @@ def log(msg: str) -> None:
     print(f"[{time.time() - _T0:7.1f}s] {msg}", flush=True)
 
 
+CONFIG_LOCAL = TOOLS / "config.local.json"         # this PC's own thresholds (2026-10-24): not in git, never updated
+
+
 def load_config(path: Path | None = None) -> dict:
+    """tools\\config.json, with tools\\config.local.json laid over it (only for the default file): a threshold tuned
+    for this PC's videos goes there, so an update that changes config.json never takes it away. Same keys, only the
+    values that differ, e.g. {"cut": {"jump_cut_diff_rel": 5.0}}. MOTIONLAB_NO_LOCAL_CONFIG=1 (selftest.py sets it)
+    = config.json alone: the self-test measures the thresholds MotionLab ships, not this PC's."""
     with open(path or CONFIG_PATH, "r", encoding="utf-8") as f:
         cfg = json.load(f)
+    if path is None and CONFIG_LOCAL.is_file() and not os.environ.get("MOTIONLAB_NO_LOCAL_CONFIG"):
+        try:
+            with open(CONFIG_LOCAL, "r", encoding="utf-8") as f:
+                cfg = _over(cfg, json.load(f))
+        except (OSError, ValueError) as e:
+            print(f"WARNING: {CONFIG_LOCAL.name} is not valid JSON ({e}) - left out", file=sys.stderr)
     return _strip_comments(cfg)
+
+
+def _over(base, mine):
+    """mine laid over base, dict by dict (a list or a number is replaced whole)."""
+    if isinstance(base, dict) and isinstance(mine, dict):
+        return {**base, **{k: _over(base.get(k), v) for k, v in mine.items()}}
+    return mine
 
 
 def _strip_comments(obj):

@@ -626,6 +626,8 @@ def check_template() -> dict:
 
 def main() -> int:
     setup_console()
+    import os
+    os.environ["MOTIONLAB_NO_LOCAL_CONFIG"] = "1"     # the shipped thresholds, never this PC's config.local.json
     ap = argparse.ArgumentParser()
     ap.add_argument("--rebuild", action="store_true")
     ap.add_argument("--extended", action="store_true")

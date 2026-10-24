@@ -482,6 +482,26 @@ document.addEventListener('click', e => {
   if (o) { e.preventDefault(); openPath(o.dataset.open, o.hasAttribute('data-reveal')); }
 });
 
+// ---- the NEW badge (2026-10-24, a friend's ask: "a red NEW, top left, on everything new"): GET /api/seen = per
+// section of the sidebar when the user last left it + the cards clicked since (.app\seen.json - every window agrees).
+// A card is new when its own time (a render finished, a script saved, an analysis done) is after that and it was not
+// clicked; leaving the section clears them all (route), a click clears one. Keys carry the card's time: a reused id
+// (script-014 deleted, then a new script-014) is a new card. The Editor's videos count a finished render only.
+let SEEN = {}, SEEN_P = null;
+const NEW_SECTIONS = ['analyze', 'edit', 'generate', 'prepare', 'motion', 'memory'];
+const pkey = p => `${p.id}@${Math.round(p.created || 0)}`;          // a prompt / script / title: its id + when it was saved
+const isNew = (key, when, sec = document.body.dataset.page) => { const s = NEW_SECTIONS.includes(sec) && SEEN[sec];
+  return !!(s && when && when > s.at && !(s.clicked || []).includes(key)); };
+const newTag = (key, when, sec = document.body.dataset.page) => isNew(key, when, sec)
+  ? `<span class="newtag" data-newsec="${esc(sec)}" data-newkey="${esc(key)}">${t('NEW')}</span>` : '';
+const loadSeen = async () => { try { if (SEEN_P) await SEEN_P; SEEN = await api('/api/seen'); } catch (e) { /* no badges */ } };
+document.addEventListener('click', e => {                 // a click on a NEW card: that card is seen
+  const card = e.target.closest(':has(> .newtag)'), b = card && card.querySelector(':scope > .newtag');
+  if (!b) return;
+  b.remove();
+  api('/api/seen', {section: b.dataset.newsec, key: b.dataset.newkey}).then(r => { SEEN = r; }).catch(() => {});
+}, true);
+
 // the pages (0.4: Analyze / Edit - shown as Editor since 2026-10-15, #/edit stays - / Generate / Claude's memory); a 0.3
 // address is rewritten to its new name
 const ALIASES = {'#/refs': '#/analyze', '#/analyser': '#/analyze', '#/generator': '#/generate', '#/projects': '#/edit', '#/editor': '#/edit', '#/knowledge': '#/memory/shared', '#/library': '#/memory',
@@ -496,23 +516,73 @@ const PAGES = [
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/skills$/, pageSkills, 'settings']];
-async function route() {
+// soft = the same page drawn again with what changed (liveTick): no "Loading…", the scroll and typed search words kept
+async function route(soft) {
+  soft = soft === true;
+  const main = $('#main'), y = main.scrollTop;
+  const keep = soft ? $$('input[id], textarea[id], select[id]', main).filter(x => !['file', 'checkbox', 'radio'].includes(x.type)).map(x => [x.id, x.value]) : [];
   CLEAN.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); CLEAN = []; KEYS = null; hideTip();
   let h = location.hash || '#/';
   if (ALIASES[h]) { h = ALIASES[h]; history.replaceState(null, '', h); }
   for (const [rx, fn, nav] of PAGES) {
     const m = h.match(rx);
     if (!m) continue;
+    const prev = document.body.dataset.page;
+    if (!soft && prev && prev !== nav && NEW_SECTIONS.includes(prev))           // left a section: its NEW badges go
+      SEEN_P = api('/api/seen', {section: prev, leave: true}).then(r => { SEEN = r; }).catch(() => {});
     $$('#side a[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
     document.body.dataset.page = nav;                         // the section's accent colour (app.css)
-    const main = $('#main'); main.scrollTop = 0; main.innerHTML = `<div class="loading">${t('Loading…')}</div>`;
-    try { await fn(main, ...m.slice(1).map(x => x && decodeURIComponent(x))); }
+    if (!soft) { main.scrollTop = 0; main.innerHTML = `<div class="loading">${t('Loading…')}</div>`; liveBase(h); }
+    try { await loadSeen(); await fn(main, ...m.slice(1).map(x => x && decodeURIComponent(x))); }
     catch (e) { main.innerHTML = `<div class="empty">${t('This page could not load: {err}', {err: esc(e.message)})}</div>`; }
+    if (soft) {
+      keep.forEach(([id, v]) => { const x = document.getElementById(id);
+        if (x && main.contains(x) && x.value !== v) { x.value = v; x.dispatchEvent(new Event('input', {bubbles: true})); } });
+      main.scrollTop = y;
+    }
     return;
   }
   location.hash = '#/';
 }
-window.addEventListener('hashchange', route);
+window.addEventListener('hashchange', () => route());
+
+// ---- pages that update by themselves (2026-10-24, a friend's ask: "what is created shows up without going to another
+// section and back"): every 5 s a list page asks GET /api/changes?s=<its data> (directory listings and file times on
+// the server - live.py) and draws itself again when that changed. Never while a dialog, the lightbox or the
+// teleprompter is open, while the user types or a video plays with sound: it waits until then. A page of ONE thing
+// (a video, an analysis, a set) is never redrawn by itself.
+const LIVE_PAGES = [[/^#?\/?$/, 'home'], [/^#\/analyze(?:\/(?:videos|thumbs|texts))?$/, 'analyze'], [/^#\/edit$/, 'projects'],
+  [/^#\/generate$/, 'generate'], [/^#\/prepare$/, 'prompts'], [/^#\/prompts$/, 'prompts'], [/^#\/motion(?:\/(?:learned|logos))?$/, 'motion'],
+  [/^#\/memory(?:\/\w+)?$/, 'memory']];
+const LV = {hash: '', sig: null, due: false, busy: false};
+const liveOf = h => (LIVE_PAGES.find(([rx]) => rx.test(h)) || [])[1];
+function liveBase(h) {                                     // the page as drawn now = the fingerprint to compare with
+  LV.hash = h; LV.sig = null; LV.due = false;
+  const s = liveOf(h);
+  if (s) api('/api/changes?s=' + s).then(r => { if (LV.hash === h && LV.sig === null) LV.sig = r.sig; }).catch(() => {});
+}
+function userBusy() {
+  const a = document.activeElement;
+  return !$('#modal').hidden || !$('#lightbox').hidden || !!$('.tprompt, .yttest') || !!$('#main .nerm, #main .lgpop')
+    || !!(a && (a.isContentEditable || (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !['checkbox', 'radio', 'button', 'file'].includes(a.type))))
+    || $$('#main video').some(v => !v.paused && !v.muted);
+}
+async function liveTick() {
+  if (RELOADING || document.hidden || LV.busy) return;
+  const h = location.hash || '#/', s = liveOf(h);
+  if (!s || LV.hash !== h) return;
+  LV.busy = true;
+  try {
+    const r = await api('/api/changes?s=' + s);
+    if (LV.hash === h) {
+      if (LV.sig === null) LV.sig = r.sig;
+      else if (r.sig !== LV.sig) { LV.sig = r.sig; LV.due = true; }
+      if (LV.due && !userBusy() && (location.hash || '#/') === h) { LV.due = false; await route(true); }
+    }
+  } catch (e) { /* the next tick */ }
+  LV.busy = false;
+}
+setInterval(liveTick, 5000);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
@@ -1184,13 +1254,36 @@ async function checkUpdates() {                      // the sidebar's Check for 
   else toast(u.testing ? t('MotionLab {version} is up to date - {changes} on GitHub not released yet', {version: u.version, changes: plural(u.testing, 'newer change')})
     : t('MotionLab {version} is up to date', {version: u.version}), 'ok');
 }
+// the user's own changes an update replaced (2026-10-24, a friend's ask: tuning lost in silence): named, kept as a
+// patch on the server (updater.restore_kept) and back in one click; older records only had git's stash
+const setAside = res => {
+  const local = (res.to_local || []).length ? `<div class="small kept"><span>${t('Your own detection settings stay in use on this PC: {keys}', {keys: esc(res.to_local.join(', '))})}</span></div>` : '';
+  const rest = (res.set_aside || []).filter(f => !(res.to_local || []).length || f !== 'tools/config.json');
+  return local + (!rest.length ? '' : res.kept && !res.kept_restored ? keptLine(res.kept, rest)
+    : res.kept_restored ? '' : `<div class="small">${t('Your own changes to <b>{files}</b> clashed with the update: the file now has the new version and your changes are kept in git (<code>git stash list</code>) - ask Claude to bring them back if you still need them.', {files: esc(rest.join(', '))})}</div>`);
+};
+const keptLine = (name, files) => `<div class="small kept"><span>${t('The update replaced your own changes to <b>{files}</b> - they are kept.', {files: esc(files.join(', '))})}</span>
+  <button class="btn sm" data-kept="${esc(name)}">${t('Bring them back')}</button></div>`;
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-kept]');
+  if (!b) return;
+  b.disabled = true;
+  try {
+    const r = await api('/api/update/restore', {name: b.dataset.kept});
+    if (r.restored) {
+      b.closest('.kept').remove();
+      toast(t('Your changes are back: {files}', {files: r.files.join(', ')}), 'ok');
+      if (r.restart) banner('restart', `${t('Restart MotionLab to use them.')} <button class="btn sm pri">${t('Restart now')}</button>`, restartApp);
+    } else { b.disabled = false; toast(t('They could not go back by themselves - the update changed the same lines. Ask Claude to merge your kept changes.'), 'err'); }
+  } catch (err) { b.disabled = false; toast(err.message, 'err'); }
+});
 // update banner (home + settings): new version on GitHub, or the result of the last update
 function updateBox(u, res) {
   u = u || {};
   // "1 files" stays as the English always said it (the Spanish counts it right)
   if (res && res.updated) return `<div class="panel upd ok"><div class="row sp"><div><b>${res.code_changed === false ? t("Friends' knowledge added") : t('Updated to MotionLab {version}', {version: esc(res.version || '')})}</b> <span class="small muted">(${esc(res.from)} → ${esc(res.to)}, ${tn((res.changed || []).length, '{n} files', '{n} files')}${res.pip ? ', ' + t('Python packages updated') : ''})</span></div>
     ${res.whats_new ? `<button class="btn sm" data-shownew>${t("What's new")}</button>` : ''}</div>
-    ${res.set_aside && res.set_aside.length ? `<div class="small">${t('Your own changes to <b>{files}</b> clashed with the update: the file now has the new version and your changes are kept in git (<code>git stash list</code>) - ask Claude to bring them back if you still need them.', {files: esc(res.set_aside.join(', '))})}</div>` : ''}</div>`;
+    ${setAside(res)}</div>`;
   if (u.restart_needed) return `<div class="panel upd"><div class="row sp"><b>${t('MotionLab {version} is installed - restart to use it', {version: esc(u.disk_version || '')})}</b><button class="btn sm pri" data-restart>${t('Restart now')}</button></div></div>`;
   if (!u.can_update) return '';
   const kn = u.kind === 'knowledge';
@@ -1227,7 +1320,7 @@ function whatsNewModal(res) {                        // after an update (the win
   modal(`<h2>${kn ? t("Friends' knowledge added") : t('Updated to MotionLab {version}', {version: esc(res.version || '')})}</h2>
     <div class="small muted">${!kn && res.from_version ? t('from {version}', {version: esc(res.from_version)}) + ' · ' : ''}${plural((res.changed || []).length, 'file')}${res.pip === 'ok' ? ' · ' + t('Python packages updated') : ''}</div>
     ${res.pip && res.pip !== 'ok' ? `<div class="small bad" style="margin-top:8px">${t('Installing the new Python packages failed - run setup.bat again: {error}', {error: esc(res.pip)})}</div>` : ''}
-    ${res.set_aside && res.set_aside.length ? `<div class="small" style="margin-top:8px">${t('Your own changes to <b>{files}</b> clashed with the update: the file now has the new version and your changes are kept in git (<code>git stash list</code>) - ask Claude to bring them back if you still need them.', {files: esc(res.set_aside.join(', '))})}</div>` : ''}
+    ${setAside(res)}
     <div class="whatsnew">${res.whats_new ? `<div class="md">${md(res.whats_new)}</div>`
       : kn ? `<p>${t("{what} from your friends: Claude's memory shows them, and Claude reads them in your next analysis.", {what: esc(knowledgeText(res.new_cards || 0, res.new_lessons || 0) || t('Shared knowledge'))})}</p>
         <p><a href="#/memory/shared" onclick="closeModal()"><svg class="i"><use href="#i-shared"/></svg>${t("See who shared what in Claude's memory › Shared knowledge")}</a></p>`
@@ -1599,7 +1692,7 @@ const setSlug = s => String(s || '').normalize().replace(/[^\p{L}\p{N}_\-. ]+/gu
 const hexOk = c => /^#[0-9a-f]{6}$/i.test(String(c || ''));
 function setCard(s) {                               // s.label = the user's own name for the set (shown as it is)
   const tm = strTime(s.updated);
-  return `<div class="card pcard setcard"><a class="clink" href="#/thumbs/${encodeURIComponent(s.name)}">
+  return `<div class="card pcard setcard">${newTag(`ts:${s.name}@${Math.round(s.created || 0)}`, s.created)}<a class="clink" href="#/thumbs/${encodeURIComponent(s.name)}">
     <div class="ppic">${s.cover ? `<img src="${fileUrl(s.cover)}" loading="lazy" alt="">` : '<svg class="ic"><use href="#i-thumb"/></svg>'}
       <span class="pbadges">${s.has_style ? '' : `<span class="pbadge todo" title="${ta('Claude has not looked at them yet')}">${t('patterns not found yet')}</span>`}</span>
       ${tm ? `<span class="pwhen">${esc(whenWords(tm))}</span>` : ''}</div>
@@ -1607,6 +1700,134 @@ function setCard(s) {                               // s.label = the user's own 
       : plural(s.count, 'thumbnail')}${s.measured < s.count ? ' · ' + tn(s.measured, '{n} measured', '{n} measured') : ''}</div></div></a>
     <div class="pfacts"><span class="fchip sm">${t('Thumbnail set')}</span>${s.has_style ? `<span class="small ok">${t('✓ patterns found')}</span>` : ''}</div>
     <span class="pdel">${delBtn('thumbs', s.name)}</span></div>`;
+}
+// ---- Preview your thumbnail (2026-10-24, the user: "upload ur thumbnails and have it like a test on a fake generated
+// yotubue page (updated if possible) like a preview layout thumnbail to see if the thumnbail matches the vibe or pops
+// from a normal youtube user feed"): a full-window copy of today's YouTube layouts - Home grid, Search, the Up next
+// column, a phone - with the user's pictures among big channels' newest, most viewed videos (then: "besides big
+// youtubers like mrbeast ... probably of highly viewed recent videos" - motionlab\thumbfeed.py, the job thumb_feed,
+// *Channels…* = the list) or the real thumbnails of the sets analysed here (GET /api/thumbtest: their titles, channels,
+// views, lengths), and ones made in MotionLab (Ready to post). Dark / light, Shuffle, Squint (a blur: what still reads
+// is what pops), Where is mine? Nothing is saved: the pictures stay in this window.
+function thumbTest() {
+  const o = document.createElement('div'); o.className = 'yttest';
+  const T = {mine: [], layout: 'home', theme: 'dark', blur: false, set: '', seed: 1, pool: [], made: [], sets: [], big: {}, busy: false, edit: false};
+  const cf = new Intl.NumberFormat(LANG === 'es' ? 'es-ES' : 'en-US', {notation: 'compact', maximumFractionDigits: 1});
+  const views = n => t('{n} views', {n: cf.format(n || 0)});
+  const AGES = [[1, 'hour'], [5, 'hour'], [1, 'day'], [3, 'day'], [1, 'week'], [2, 'week'], [3, 'week'], [1, 'month'], [4, 'month'], [1, 'year']];
+  const ago = k => { const [n, u] = AGES[k % AGES.length];
+    return u === 'hour' ? tn(n, '{n} hour ago', '{n} hours ago') : u === 'day' ? tn(n, '{n} day ago', '{n} days ago')
+      : u === 'week' ? tn(n, '{n} week ago', '{n} weeks ago') : u === 'month' ? tn(n, '{n} month ago', '{n} months ago') : tn(n, '{n} year ago', '{n} years ago'); };
+  const dur = s => { s = Math.round(+s || 0); if (!s) return ''; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+    return h ? `${h}:${pad(m)}:${pad(x)}` : `${m}:${pad(x)}`; };
+  const rnd = k => { let x = Math.sin(T.seed * 9301 + k * 49297) * 233280; return x - Math.floor(x); };
+  const HUES = [4, 28, 48, 140, 190, 215, 265, 300, 330];
+  const avatar = (name, k) => `<span class="ytav" style="background:hsl(${HUES[(name || '?').charCodeAt(0) % HUES.length]} 55% ${T.theme === 'dark' ? 38 : 58}%)">${esc((name || '?').trim().charAt(0).toUpperCase())}</span>`;
+  // the feed: the pool (one set or all), shuffled by the seed, the user's pictures put among the first ones seen
+  const feed = (n, shift = 0) => {
+    const pool = T.pool.filter(x => !T.set || x.set === T.set).map((x, i) => ({...x, k: i})).sort((a, b) => rnd(a.k) - rnd(b.k));
+    const items = [];
+    for (let i = 0; i < n; i++) items.push(pool.length ? {...pool[i % pool.length], k: i} : {k: i, blank: true});
+    const slots = [1, 6, 9, 3, 11, 4].map(s => (s + shift + Math.floor(rnd(97) * 3)) % Math.max(n, 1));
+    T.mine.forEach((m, j) => { const at = slots[j % slots.length]; items.splice(at, 0, {...m, mine: true, k: 1000 + j}); });
+    return items.slice(0, Math.max(n, T.mine.length));
+  };
+  const med = () => { const v = T.pool.map(x => x.views).filter(Boolean).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : 12000; };
+  const meta = x => x.mine ? `${views(med())} · ${ago(2)}` : `${views(x.views)} · ${ago(x.k + Math.floor(rnd(x.k) * 4))}`;
+  const pic = (x, cls = '') => x.blank ? `<span class="ytpic blank ${cls}"></span>`
+    : `<span class="ytpic ${cls}${x.mine ? ' mine' : ''}"><img src="${esc(x.src || fileUrl(x.img))}" alt="" loading="lazy">${x.duration || x.mine ? `<i class="ytdur">${x.mine ? esc(x.len || '8:24') : dur(x.duration)}</i>` : ''}${!x.mine && rnd(x.k + 7) > 0.86 ? `<b class="ytwatched" style="width:${Math.round(20 + rnd(x.k) * 70)}%"></b>` : ''}</span>`;
+  const title = x => x.blank ? '<span class="ytline"></span><span class="ytline short"></span>' : esc(x.title || t('Your video title'));
+  const chan = x => x.blank ? '' : esc(x.channel || '');
+  const VIEWS = {
+    home: () => `<div class="ytchips">${[t('All'), t('Music'), t('Gaming'), t('Live'), t('Podcasts'), t('Recently uploaded'), t('New to you')].map((c, i) => `<span class="${i ? '' : 'on'}">${c}</span>`).join('')}</div>
+      <div class="ytgrid">${feed(12).map(x => `<div class="ytcard">${pic(x)}<div class="ytinfo">${x.blank ? '<span class="ytav"></span>' : avatar(x.channel, x.k)}<div><b>${title(x)}</b><span>${chan(x)}</span><span>${x.blank ? '' : meta(x)}</span></div></div></div>`).join('')}</div>`,
+    search: () => `<div class="ytsearch">${feed(6).map(x => `<div class="ytrow">${pic(x, 'big')}<div class="ytrinfo"><b>${title(x)}</b><span>${x.blank ? '' : meta(x)}</span>
+        <span class="ytrch">${x.blank ? '' : avatar(x.channel, x.k)}${chan(x)}</span><span class="ytsnip">${x.blank ? '' : esc(t('Watch it to the end - the best part is the last minute.'))}</span></div></div>`).join('')}</div>`,
+    upnext: () => { const L = feed(11, 2), first = L.find(x => !x.mine) || {blank: true};
+      return `<div class="ytwatch"><div class="ytplayer">${first.blank ? '' : `<img src="${esc(first.src || fileUrl(first.img))}" alt="">`}<span class="ytbar"><i></i></span></div>
+        <b class="ytwtitle">${title(first)}</b><div class="ytrch">${first.blank ? '' : avatar(first.channel, 0)}${chan(first)}</div></div>
+        <div class="ytside">${L.filter(x => x !== first).slice(0, 10).map(x => `<div class="ytsrow">${pic(x, 'small')}<div><b>${title(x)}</b><span>${chan(x)}</span><span>${x.blank ? '' : meta(x)}</span></div></div>`).join('')}</div>`; },
+    phone: () => `<div class="ytphone"><div class="ytpbar"><span class="ytlogo"><i></i>YouTube</span></div>${feed(6).map(x => `<div class="ytpcard">${pic(x)}<div class="ytinfo">${x.blank ? '<span class="ytav"></span>' : avatar(x.channel, x.k)}<div><b>${title(x)}</b><span>${x.blank ? '' : `${chan(x)} · ${meta(x)}`}</span></div></div></div>`).join('')}</div>`};
+  const LAYOUTS = [['home', t('Home')], ['search', t('Search')], ['upnext', t('Up next')], ['phone', t('Phone')]];
+  const draw = () => {
+    const q = T.layout === 'search' ? (T.mine[0] || {}).title || '' : '';
+    o.innerHTML = `<div class="yttools"><b class="yttt"><svg class="i"><use href="#i-thumb"/></svg>${t('Preview your thumbnail')}</b>
+        <label class="btn sm pri"><svg class="i"><use href="#i-upload"/></svg>${t('Add your thumbnail…')}<input type="file" hidden multiple accept="image/*,.heic,.avif"></label>
+        ${T.made.length ? `<select class="ytmade"><option value="">${t('Or one made in MotionLab…')}</option>${T.made.map((m, i) => `<option value="${i}">${esc(m.video)} · ${esc(m.img.split('/').pop())}</option>`).join('')}</select>` : ''}
+        <span class="grow"></span>
+        <div class="seg ytseg">${LAYOUTS.map(([k, l]) => `<button data-lay="${k}" class="${T.layout === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <div class="seg ytseg"><button data-th="dark" class="${T.theme === 'dark' ? 'on' : ''}">${t('Dark')}</button><button data-th="light" class="${T.theme === 'light' ? 'on' : ''}">${t('Light')}</button></div>
+        <select class="ytset" title="${ta('The videos around yours')}"><option value="_big" ${T.set === '_big' ? 'selected' : ''}>${t('Big creators - newest, most viewed')}</option>${T.sets.map(s => `<option value="${esc(s.name)}" ${T.set === s.name ? 'selected' : ''}>${esc(s.label)}</option>`).join('')}<option value="" ${T.set === '' ? 'selected' : ''}>${t('All of them')}</option></select>
+        <button class="btn sm${T.blur ? ' on' : ''}" data-blur title="${ta('Blurs the page: what you can still read from a distance is what pops')}">${t('Squint')}</button>
+        <button class="btn sm" data-shuf>${t('Shuffle')}</button><button class="btn sm" data-where ${T.mine.length ? '' : 'disabled'}>${t('Where is mine?')}</button>
+        <button class="btn sm" data-x>${t('Close')}</button></div>
+      <div class="ytmine">${T.mine.map((m, i) => `<span class="ytm"><img src="${esc(m.src)}" alt=""><input type="text" data-mt="${i}" value="${esc(m.title)}" placeholder="${ta('Your video title')}"><input type="text" data-mc="${i}" value="${esc(m.channel)}" placeholder="${ta('Your channel')}" class="ytmc"><button data-mrm="${i}" title="${ta('Take it out')}">✕</button></span>`).join('')}
+        ${T.mine.length ? '' : `<span class="small muted">${t('Add one or more of your thumbnails (16:9) - they show up among the others. Nothing is saved: the pictures stay in this window.')}</span>`}
+        <span class="grow"></span>${feedLine()}</div>${T.edit ? chanEditor() : ''}
+      <div class="ytpage yt-${T.theme}${T.blur ? ' blur' : ''} ytl-${T.layout}"><div class="ythead"><span class="ytburger"><i></i><i></i><i></i></span><span class="ytlogo"><i></i>YouTube</span>
+          <span class="ytq"><span>${esc(q) || t('Search')}</span><i></i></span><span class="ytme">${avatar((T.mine[0] || {}).channel || '?', 0)}</span></div>
+        <div class="ytbody yt-${T.layout}">${VIEWS[T.layout]()}</div></div>`;
+    const inp = $('input[type=file]', o);
+    inp.onchange = () => { [...inp.files].forEach(f => T.mine.push({src: URL.createObjectURL(f), title: f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), channel: T.me || t('You'), url: true})); inp.value = ''; draw(); };
+    const mk = $('.ytmade', o); if (mk) mk.onchange = () => { const m = T.made[+mk.value]; if (m) T.mine.push({src: fileUrl(m.img), title: m.title, channel: T.me || t('You')}); draw(); };
+    const ss = $('.ytset', o); if (ss) ss.onchange = () => { T.set = ss.value; draw(); };
+    const gf = $('[data-getfeed]', o); if (gf) gf.onclick = getFeed;
+    const ce = $('[data-chans]', o); if (ce) ce.onclick = () => { T.edit = !T.edit; draw(); };
+    const cs = $('[data-chsave]', o); if (cs) cs.onclick = async () => {
+      try { const r = await api('/api/thumbfeed/channels', {channels: $('.ytchans textarea', o).value.split('\n')});
+        T.big.channels = r.channels; T.edit = false; getFeed(); } catch (e) { toast(e.message, 'err'); } };
+    const cr = $('[data-chreset]', o); if (cr) cr.onclick = async () => {
+      try { const r = await api('/api/thumbfeed/channels', {channels: []}); T.big.channels = r.channels; draw(); } catch (e) { toast(e.message, 'err'); } };
+    $$('[data-lay]', o).forEach(b => b.onclick = () => { T.layout = b.dataset.lay; draw(); });
+    $$('[data-th]', o).forEach(b => b.onclick = () => { T.theme = b.dataset.th; draw(); });
+    $('[data-blur]', o).onclick = () => { T.blur = !T.blur; draw(); };
+    $('[data-shuf]', o).onclick = () => { T.seed++; draw(); };
+    $('[data-where]', o).onclick = () => { $$('.ytpic.mine', o).forEach(p => { p.classList.add('flash'); setTimeout(() => p.classList.remove('flash'), 1600); }); };
+    $('[data-x]', o).onclick = close;
+    const retitle = debounce(() => draw(), 600);
+    $$('[data-mt]', o).forEach(x => x.oninput = () => { T.mine[+x.dataset.mt].title = x.value; retitle(); });
+    $$('[data-mc]', o).forEach(x => x.oninput = () => { T.mine[+x.dataset.mc].channel = x.value; retitle(); });
+    $$('[data-mrm]', o).forEach(b => b.onclick = () => { const [m] = T.mine.splice(+b.dataset.mrm, 1); if (m.url) URL.revokeObjectURL(m.src); draw(); });
+    o.ondragover = e => e.preventDefault();
+    o.ondrop = e => { e.preventDefault(); [...e.dataTransfer.files].filter(f => /^image\//.test(f.type) || /\.(heic|avif)$/i.test(f.name))
+      .forEach(f => T.mine.push({src: URL.createObjectURL(f), title: f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), channel: T.me || t('You'), url: true})); draw(); };
+  };
+  // big channels' newest videos: what the feed holds, Get the newest videos (the job thumb_feed, followed here), Channels…
+  const feedLine = () => { const B = T.big || {};
+    return T.busy ? `<span class="small amber">${t('Getting the newest videos of big channels…')}</span>`
+      : `<span class="small muted">${B.count ? t('{n} videos of big channels · {when}', {n: B.count, when: esc(B.fetched || '')}) : t('No videos of big channels yet')}</span>
+        ${!B.count || B.stale ? `<button class="btn sm pri" data-getfeed title="${ta('Lists the newest videos of big channels and downloads their thumbnails - no video is downloaded')}">${t('Get the newest videos')}</button>` : ''}
+        <button class="btn sm ghost" data-chans>${t('Channels…')}</button>`; };
+  const chanEditor = () => `<div class="ytchans"><span class="small muted">${t('The channels the feed comes from, one per line (@handle or a channel link):')}</span>
+      <textarea rows="6">${esc((T.big.channels || []).join('\n'))}</textarea><div class="row"><button class="btn sm pri" data-chsave>${t('Save and get their videos')}</button>
+      <button class="btn sm ghost" data-chreset>${t('Back to the usual ones')}</button></div></div>`;
+  const load = async () => { const r = await api('/api/thumbtest'); T.pool = r.pool || []; T.made = r.made || []; T.sets = r.sets || []; T.big = r.big || {}; return r; };
+  const getFeed = async () => {
+    let j;
+    try { j = await api('/api/jobs', {kind: 'thumb_feed', args: {}, queue: true}); } catch (e) { toast(e.message, 'err'); return; }
+    T.busy = true; draw();
+    for (;;) {
+      await new Promise(r => setTimeout(r, 2000));
+      if (!o.isConnected) return;
+      let s; try { s = await api(`/api/jobs/${j.id}?since=0`); } catch (e) { continue; }
+      if (['running', 'queued', 'cancelling'].includes(s.status)) continue;
+      T.busy = false;
+      if (s.status !== 'done') toast(t('Could not get the newest videos: {why}', {why: (s.log || []).slice(-1)[0] || s.status}), 'err');
+      try { await load(); if (T.big.count) T.set = '_big'; } catch (e) { /* the old feed */ }
+      draw(); return;
+    }
+  };
+  const key = e => { if (e.key === 'Escape' && !/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement || {}).tagName)) { e.preventDefault(); e.stopPropagation(); close(); } };
+  const close = () => { T.mine.forEach(m => m.url && URL.revokeObjectURL(m.src)); o.remove(); window.removeEventListener('keydown', key, true); };
+  window.addEventListener('keydown', key, true);
+  document.body.append(o);
+  o.innerHTML = `<div class="loading">${t('Loading…')}</div>`;
+  Promise.all([load(), api('/api/settings').catch(() => ({}))]).then(([r, S]) => {
+    T.me = ((S.settings || {}).author || '').replace(/-/g, ' ');
+    T.set = T.big.count || !T.sets.length ? '_big' : '';
+    draw();
+    if (!T.big.count || T.big.stale) getFeed();                    // the first look: fetch them at once
+  }).catch(e => { toast(e.message, 'err'); close(); });
 }
 // a picture the user picked or dropped -> the set (a raw body, like Film it's uploads; the server copies it in)
 function uploadThumb(set, file) {
@@ -1828,7 +2049,7 @@ function textSetCard(s) {
   const badge = !s.count ? '' : !s.checked ? `<span class="pbadge todo" title="${ta('Claude has not checked them yet')}">${t('not checked by Claude')}</span>`
     : left ? `<span class="pbadge todo" title="${ta('the others wait for Claude')}">${t('Claude checked {n} of {total}', {n: s.checked, total: s.count})}</span>`
     : `<span class="pbadge" title="${ta('every text checked - every word Claude quotes was found in its text')}">${t('Claude checked all')}</span>`;
-  return `<div class="card pcard txcard"><a class="clink" href="#/texts/${encodeURIComponent(s.name)}">
+  return `<div class="card pcard txcard">${newTag(`tx:${s.name}@${Math.round(s.created || 0)}`, s.created)}<a class="clink" href="#/texts/${encodeURIComponent(s.name)}">
     <div class="ppic txpic">${s.first ? `<span class="txq">“${esc(s.first)}”</span>` : '<svg class="ic"><use href="#i-texts"/></svg>'}
       <span class="pbadges">${badge}</span>${when ? `<span class="pwhen">${esc(whenWords(when))}</span>` : ''}</div>
     <div class="cb"><span class="ct">${esc(s.label)}</span><div class="small">${txKinds(s.kinds) || plural(s.count, 'text')}${s.to_sort ? ` · <span class="amber">${t('{files} for Claude to read', {files: plural(s.to_sort, 'file')})}</span>` : ''}</div></div></a>
@@ -2080,7 +2301,7 @@ async function pageTexts(main, name) {
 }
 function refCard(r) {
   const fl = r.flow, when = strTime(r.generated), P = r.pacing || {}, fmt = ((r.format || {}).label || '').split(' · ')[0];   // the shape only: the length is shown
-  return `<div class="card pcard refcard ${fl.next ? 'n-' + fl.next : 'n-done'}"><a class="clink" href="#/ref/${encodeURIComponent(r.name)}">
+  return `<div class="card pcard refcard ${fl.next ? 'n-' + fl.next : 'n-done'}">${newTag(`r:${r.name}@${Math.round(r.done_t || 0)}`, r.done_t)}<a class="clink" href="#/ref/${encodeURIComponent(r.name)}">
     <div class="ppic">${r.thumb ? `<img src="${fileUrl(r.thumb)}" loading="lazy" alt="">` : '<svg class="ic"><use href="#i-analyze"/></svg>'}
       <span class="pbadges">${fl.next === 'claude' ? `<span class="pbadge todo" title="${ta('Claude has not checked its effects yet')}">${t('not checked by Claude')}</span>` : ''}</span>
       ${when ? `<span class="pwhen" title="${ta('analysed {when}', {when: r.generated})}">${esc(whenWords(when))}</span>` : ''}</div>
@@ -2136,7 +2357,7 @@ async function pageRefs(main, tab) {
         ${way('videos', 'videos', t('Videos'), t('Links or video files, up to {n} at a time. MotionLab finds every cut, effect and beat; Claude names them and writes what makes each one work.', {n: AV_MAX}),
           `<button class="btn pri" id="an"><svg class="i"><use href="#i-analyze"/></svg>${t('Add videos')}</button><button class="btn ghost" id="dl" title="${ta('Download a video or a song (MP3) from a link without analysing it - e.g. music for an edit')}"><svg class="i"><use href="#i-download"/></svg>${t('Download from link')}</button>`)}
         ${way('thumbs', 'thumb', t('Thumbnails'), t('A channel, some videos or your own pictures - only the pictures, no video. Claude finds what they have in common: the text, the font, the colours, the structure.'),
-          `<button class="btn pri" id="tadd"><svg class="i"><use href="#i-thumb"/></svg>${t('Add thumbnails')}</button>`)}
+          `<button class="btn pri" id="tadd"><svg class="i"><use href="#i-thumb"/></svg>${t('Add thumbnails')}</button><button class="btn ghost" id="ttest" title="${ta('See your thumbnail on a YouTube-like home page, next to the newest videos of big creators - does it pop?')}"><svg class="i"><use href="#i-play"/></svg>${t('Preview your thumbnail')}</button>`)}
         ${way('texts', 'texts', t('Scripts & prompts'), t('Paste or attach up to {n} - prompts for AI video and image tools, talking scripts, hooks. Claude checks each one on its own, part by part, then names what they have in common.', {n: TX_MAX}),
           `<button class="btn pri" id="txadd"><svg class="i"><use href="#i-texts"/></svg>${t('Add scripts or prompts')}</button>`)}</div>
       <div id="avprog"></div>${batchRows(BAT)}
@@ -2146,6 +2367,7 @@ async function pageRefs(main, tab) {
           <div id="antab">${list}</div>`}`;
     $('#an', main).onclick = () => addVideosModal();
     $('#tadd', main).onclick = () => addThumbsModal();
+    $('#ttest', main).onclick = () => thumbTest();
     $('#txadd', main).onclick = () => addTextsModal();
     $('#dl', main).onclick = downloadModal;
     wireBatchRows(main, draw);
@@ -2486,7 +2708,7 @@ function projCard(p) {
   const L = p.latest, href = '#/project/' + encodeURIComponent(p.name), pc = p.picture;
   const now = L ? lenWords(L.frames, L.fps) || t('rendered') : p.plans.length ? `<span class="amber">${t('not rendered yet')}</span>` : `<span class="muted">${p.generated ? t('not made yet') : t('no edit yet')}</span>`;
   const fr = pc && pc.video ? `f${pc.f} (${tc(pc.f, pc.fps)})` : '';
-  return `<div class="card pcard"><a class="clink" href="${href}">
+  return `<div class="card pcard">${newTag(`p:${p.name}@${Math.round(p.done_t || 0)}`, p.done_t)}<a class="clink" href="${href}">
     <div class="ppic"${L ? ` data-v="${esc(L.rel)}" data-t="${pc && pc.video === L.rel ? (pc.f + 0.5) / pc.fps : 0}"` : ''}>${pc ? `<img src="${picUrl(pc)}" loading="lazy" alt=""
       ${pc.video ? `title="${L && pc.video === L.rel ? ta('{frame} of the newest render', {frame: fr}) : fr}"` : ''}>` : `<svg class="ic"><use href="#i-${p.generated ? 'generate' : 'edit'}"/></svg>`}
       <span class="pbadges">${p.title ? `<span class="pbadge" title="${ta('title, thumbnails and description are ready')}">${t('ready to post')}</span>` : ''}${p.resolve.length ? `<span class="pbadge r" title="${ta('also built as a DaVinci Resolve project')}">Resolve</span>` : ''}</span>
@@ -2653,7 +2875,8 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
   const st = {src: pre.project && ps.some(x => x.name === pre.project) ? 'old' : ps.length ? '' : 'new', project: pre.project || '', newp: '',
               about: '', onscreen: '', prompt: pick, like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false,
               where: '', type: '', rhythm: '', moods: [], captions: '', presets: [], want: '', palette: [],
-              sound: neTalk(pick) ? 'talk' : 'auto', sfx: '', kinds: [], snotes: '', length: '', format: '', resolve: false};
+              sound: neTalk(pick) ? 'talk' : 'auto', sfx: '', kinds: [], snotes: '', length: '', format: '', resolve: false,
+              photos: {}};
   const ne = {S, PRM, ps, OPT, st, cur: 0};
   ne.proj = () => st.src === 'old' ? st.project : st.src === 'new' ? st.newp : '';
   ne.P = () => ps.find(x => x.name === ne.proj());
@@ -2712,6 +2935,9 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
 // plays one in the PC's player, the bin moves one to the Recycle Bin after a yes here (the app's delete route, a file
 // in the video's folder: trash.plan_file - the user's click, never Claude's), the + tile (or a drop) copies more in;
 // the folder's songs as chips under them. ne.addFiles = the copy, also used by 5's *Add a song…*.
+// 2026-10-24 (a friend's asks): *Add a folder…* (or a folder dropped - sub-folders too, clipsFromDrop / clipNames),
+// never a Mac's / iPhone's ._ files (isJunk), photos as photos (a PHOTO badge, its own picture, how long it shows -
+// st.photos -> edit_request "photos"), and the new video's name stays editable (POST .../rename = its label).
 function neClips(box, ne) {
   const {st, ps} = ne;
   ne.clips = {};                     // per video: its clips as the server lists them (loaded once, again after a change)
@@ -2734,40 +2960,52 @@ function neClips(box, ne) {
     if (P) { P.clips = list.length; if (o) o.textContent = `${pname(P)} (${plural(P.clips, 'clip')})`; }   // the count the list shows, kept true
     ne.changed();
   };
-  const tile = (pj, c) => `<div class="neclip" title="${esc(c.name)}">
-      <button class="neclipv" data-play="${esc(c.name)}" title="${ta('Play it')}"><img src="/api/thumb?video=${encodeURIComponent(rel(pj, c.name))}&f=12&fps=25" loading="lazy" alt="" onerror="this.remove()">
-        <svg class="i"><use href="#i-play"/></svg>${c.duration_s ? `<i>${ytOf(c.duration_s, 1)}</i>` : ''}</button>
+  const PH_S = [3, 5, 8];                             // a photo's length in the edit: a click on its pill goes round these
+  const phS = n => (st.photos[n] || {}).seconds || 5;
+  const tile = (pj, c) => { const ph = c.photo || PHOTO_EXT.test(c.name);
+    return `<div class="neclip${ph ? ' photo' : ''}" title="${esc(c.name)}">
+      <button class="neclipv" data-play="${esc(c.name)}" title="${ph ? ta('Open the photo') : ta('Play it')}"><img src="/api/thumb?video=${encodeURIComponent(rel(pj, c.name))}&f=${ph ? 0 : 12}&fps=25" loading="lazy" alt="" onerror="this.remove()">
+        <svg class="i"><use href="#${ph ? 'i-thumb' : 'i-play'}"/></svg>${ph ? `<b class="nephoto">${t('PHOTO')}</b>` : c.duration_s ? `<i>${ytOf(c.duration_s, 1)}</i>` : ''}</button>
       <span class="neclipn">${esc(c.name)}</span>
-      <button class="neclipx" data-rm="${esc(c.name)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></div>`;
+      ${ph ? `<button class="nephs" data-phs="${esc(c.name)}" title="${ta('The longest the photo shows in the edit - click to change')}">${t('{n} s', {n: phS(c.name)})}</button>` : ''}
+      <button class="neclipx" data-rm="${esc(c.name)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></div>`; };
   let drawn = '';
   const paint = () => {
     const pj = ne.proj(), P = ne.P(), songs = (P || {}).songs || [];
     $$('.nesrc .cvopt', box).forEach(b => b.classList.toggle('on', b.dataset.src === st.src));
     $('#nesrc-old', box).hidden = st.src !== 'old'; $('#nesrc-new', box).hidden = st.src !== 'new';
-    name.disabled = !!st.newp;
+    name.title = st.newp ? t('The name MotionLab shows for this video - change it whenever you like') : t('Leave it empty to name it after the first clip.');
     let C = pj ? ne.clips[pj] : [];
     if (pj && C === undefined) { load(pj); C = ne.clips[pj]; }
-    const key = JSON.stringify([st.src, pj, C, songs]);
+    const key = JSON.stringify([st.src, pj, C, songs, st.photos]);
     if (key === drawn) return;                         // the grid only when its clips change (not on every key typed)
     drawn = key;
     const el = $('#neclips', box), clips = Array.isArray(C) ? C : [];
     $('#necount', box).textContent = P ? [plural(clips.length, 'clip'), songs.length ? plural(songs.length, 'song') : ''].filter(Boolean).join(' · ') : '';
     $('#nefold', box).dataset.open = 'projects/' + pj;
     if (!st.src) { el.innerHTML = ''; return; }
-    el.innerHTML = C === 'loading' ? `<div class="small muted">${t('Loading…')}</div>` : `<div class="neclips">${clips.map(c => tile(pj, c)).join('')}
-        <label class="neadd${clips.length ? '' : ' big'}"><input type="file" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv">${neIcon('i-plus')}
-          <b>${clips.length ? t('Add clips…') : t('Drop your clips here')}</b>${clips.length ? '' : `<span>${t('or click to choose them')}</span>`}</label></div>
+    const big = !clips.length;
+    el.innerHTML = C === 'loading' ? `<div class="small muted">${t('Loading…')}</div>` : `<div class="neclips${big ? ' empty' : ''}">${clips.map(c => tile(pj, c)).join('')}
+        <label class="neadd${big ? ' big' : ''}" data-add="files"><input type="file" multiple hidden accept="${CLIP_ACCEPT}">${neIcon('i-plus')}
+          <b>${big ? t('Drop your clips here') : t('Add clips…')}</b>${big ? `<span>${t('videos, photos or a whole folder - or click to choose them')}</span>` : ''}</label>
+        <label class="neadd neaddf${big ? ' big' : ''}" data-add="folder" title="${ta('Every video, photo and song in a folder, its sub-folders too')}"><input type="file" hidden webkitdirectory multiple>${neIcon('i-folder')}
+          <b>${t('Add a folder…')}</b>${big ? `<span>${t('sub-folders too')}</span>` : ''}</label></div>
       ${songs.length ? `<div class="nesongs">${songs.map(s => `<span class="nesong">${neIcon('i-music')}${esc(s)}<button class="neclipx" data-rm="${esc(s)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></span>`).join('')}</div>` : ''}`;
-    const inp = $('.neadd input', el);
-    if (inp) inp.onchange = () => { ne.addFiles(inp.files); inp.value = ''; };
+    const inp = $('[data-add=files] input', el), dir = $('[data-add=folder] input', el);
+    if (inp) inp.onchange = () => { ne.addFiles([...inp.files]); inp.value = ''; };
+    if (dir) dir.onchange = () => { ne.addFiles([...dir.files].map(f => ({file: f, path: f.webkitRelativePath || f.name})), undefined, true); dir.value = ''; };
     const grid = $('.neclips', el);
     if (grid) {
       grid.ondragover = e => { e.preventDefault(); grid.classList.add('on'); };
       grid.ondragleave = () => grid.classList.remove('on');
-      grid.ondrop = e => { e.preventDefault(); grid.classList.remove('on'); ne.addFiles(e.dataTransfer.files); };
+      grid.ondrop = async e => { e.preventDefault(); grid.classList.remove('on');
+        try { const r = await clipsFromDrop(e.dataTransfer); ne.addFiles(r.files, undefined, r.folders); }
+        catch (err) { toast(err.message, 'err'); } };
     }
     $$('[data-play]', el).forEach(b => b.onclick = () => api('/api/open', {path: rel(pj, b.dataset.play)}).catch(e => toast(e.message, 'err')));
     $$('[data-rm]', el).forEach(b => b.onclick = () => remove(b.dataset.rm));
+    $$('[data-phs]', el).forEach(b => b.onclick = () => { const n = b.dataset.phs, s = PH_S[(PH_S.indexOf(phS(n)) + 1) % PH_S.length];
+      st.photos[n] = {...(st.photos[n] || {}), seconds: s}; ne.changed(); });
   };
   // the bin: what the Delete dialog would say (GET /api/delete), here in the step - a pop-up over this one would lose it
   const remove = async file => {
@@ -2783,9 +3021,9 @@ function neClips(box, ne) {
     $('#nermgo', host).onclick = async () => {
       $('#nermgo', host).disabled = true;
       try {
-        const res = await api('/api/delete', {kind: 'file', name: r, keys: ['file']});
+        const res = await api('/api/delete', {kind: 'file', name: r, keys: pl.items.filter(x => x.default).map(x => x.key)});   // + a photo's old still-video copy
         if (res.failed.length) { host.innerHTML = `<div class="nerm"><span class="bad">${esc(t(res.failed[0].why))}</span></div>`; return; }
-        host.innerHTML = '';
+        host.innerHTML = ''; delete st.photos[file];
         toast(t('Moved to the Recycle Bin ({size}): {list}', {size: bytes(res.bytes), list: res.moved.join(', ')}), 'ok');
         const P = ne.P();
         if (P && (P.songs || []).includes(file)) { P.songs = P.songs.filter(s => s !== file); if (st.sound === 'music:' + file) st.sound = 'auto'; }
@@ -2795,35 +3033,54 @@ function neClips(box, ne) {
     };
   };
   sel.onchange = () => { st.project = sel.value; $('#cvfiles', box).innerHTML = $('#nerm', box).innerHTML = ''; ne.changed(); };
+  // the new video's name: before its folder exists it names the folder; after, it is the name MotionLab shows (the
+  // folder keeps its own - the clips stay where they are), saved on Enter or when the field is left
+  const rename = async () => {
+    const v = name.value.trim(), P = ne.P();
+    if (!st.newp || !P || !v || v === pname(P)) return;
+    try { const r = await api(`/api/project/${encodeURIComponent(st.newp)}/rename`, {label: v});
+      P.label = r.label || null; name.value = pname(P);
+      const o = [...sel.options].find(x => x.value === st.newp); if (o) o.textContent = t('{name} (new)', {name: pname(P)});
+      toast(t('Name saved: {name}', {name: pname(P)}), 'ok'); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  name.onchange = rename;
+  name.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); rename(); } };
   $$('.nesrc .cvopt', box).forEach(b => b.onclick = () => { if (st.busy || st.src === b.dataset.src) return;
     st.src = b.dataset.src; $('#cvfiles', box).innerHTML = $('#nerm', box).innerHTML = ''; ne.changed(); });
   // picked or dropped files -> the video's folder (a new video is made first, named by the user or after the first clip)
-  ne.addFiles = async (list, rows = $('#cvfiles', box)) => {
-    let files = [...list];
-    const skip = files.filter(f => !CLIP_EXT.test(f.name)); files = files.filter(f => CLIP_EXT.test(f.name));
-    if (skip.length) toast(t('{files}: not a video or a sound file', {files: skip.map(f => f.name).join(', ')}), 'err');
+  // list = Files, or {file, path} from a folder (folder = true: the toast says what it found)
+  ne.addFiles = async (list, rows = $('#cvfiles', box), folder = false) => {
+    const all = [...list].map(x => x instanceof File ? {file: x, path: x.name} : x);
+    const {clips: files, skipped} = clipNames(all);
+    const odd = all.filter(x => !isJunk(x.file.name, x.path) && !CLIP_EXT.test(x.file.name));
+    if (folder) toast(files.length ? tn(files.length, '{n} clip found in the folder', '{n} clips found in the folder')
+      : t('No video, photo or sound files in that folder'), files.length ? 'ok' : 'err');
+    else if (odd.length) toast(t('{files}: not a video, a photo or a sound file', {files: odd.map(x => x.file.name).join(', ')}), 'err');
+    if (skipped && !folder && !odd.length) toast(t('Hidden files a Mac or an iPhone leaves next to clips were left out'));
     if (!files.length || st.busy) return;
     if (!st.src) { toast(t('First pick where your clips come from (1. Clips)'), 'err'); ne.go('clips'); return; }
     st.busy = true;
     try {
       if (st.src === 'new' && !st.newp) {
         let nm = name.value.trim();
-        if (!nm) { const base = folderName(files[0].name.replace(/\.[^.]+$/, '')); nm = base;
+        const top = folder && (all.find(x => x.path.includes('/')) || {}).path;           // a folder: named after it
+        if (!nm) { const base = folderName(top ? top.split('/')[0] : files[0].name.replace(/\.[^.]+$/, '')); nm = base;
           for (let i = 2; ps.some(x => x.name.toLowerCase() === nm.toLowerCase()); i++) nm = `${base} ${i}`; }
         const r = await api('/api/projects/new', {name: nm});
         ps.unshift({name: r.name, label: null, clips: 0, songs: []}); st.newp = name.value = r.name;
         sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${t('{name} (new)', {name: esc(r.name)})}</option>`);
       }
       const pj = ne.proj(), P = ne.P();
-      for (const f of files) {
+      for (const {file: f, name: nm} of files) {
         const row = document.createElement('div'); row.className = 'fifile';
-        row.innerHTML = `<span class="grow">${esc(f.name)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
+        row.innerHTML = `<span class="grow">${esc(nm)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
         rows.append(row);
         try {
-          const r = await uploadClip(pj, f, neTalk(st.prompt) ? st.prompt : '', v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; });
+          const r = await uploadClip(pj, f, neTalk(st.prompt) ? st.prompt : '', v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; }, nm);
           $('.fibar i', row).style.width = '100%'; row.classList.add('ok');
-          $('[data-s]', row).textContent = r.kept ? t('already there') : t('copied ✓');
-          if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(f.name)) (P.songs = P.songs || []).push(r.file); else P.clips++; }
+          $('[data-s]', row).textContent = r.kept ? t('already there') : r.file !== nm ? t('copied as {name} ✓', {name: r.file}) : t('copied ✓');
+          if (!r.kept) { if (/\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(nm)) (P.songs = P.songs || []).push(r.file); else P.clips++; }
         } catch (e) { row.classList.add('err'); $('[data-s]', row).textContent = e.message; }
       }
       delete ne.clips[pj];                             // listed again: the new clips show as pictures
@@ -3137,7 +3394,8 @@ function neNav(el, ne) {
 const neBody = st => ({like: st.like, exact: st.exact, prompt: st.prompt, about: st.about, on_screen: st.onscreen, presets: st.presets, want: st.want,
   style: {where: st.where, type: st.type, rhythm: st.rhythm, moods: st.moods, captions: st.captions, palette: st.palette},
   sfx: {amount: st.sfx, kinds: st.kinds, notes: st.snotes}, length_s: st.length || null, format: st.format || null,
-  music: st.sound.startsWith('music:') ? st.sound.slice(6) : '', sound: st.sound.startsWith('music:') ? 'music' : st.sound, resolve: st.resolve});
+  music: st.sound.startsWith('music:') ? st.sound.slice(6) : '', sound: st.sound.startsWith('music:') ? 'music' : st.sound, resolve: st.resolve,
+  photos: st.photos || {}});
 
 // ---- Edit > a video (the user, 2026-10-15: "when I first click I want to see a thumbnail or the last render so I know
 // in which video I am, instead of How did it turn out? or random information shot in my face; then the two buttons -
@@ -3518,7 +3776,7 @@ function projFootage(el, P) {
       <button class="btn sm" data-open="${esc('projects/' + P.name)}"><svg class="i"><use href="#i-folder"/></svg>${t('Folder')}</button></div>
     <div class="panel"><table class="t"><thead><tr><th>${t('ID')}</th><th>${t('File')}</th><th>${t('Format')}</th><th class="num">${t('Length')}</th><th class="num">${t('Size')}</th></tr></thead><tbody>
     ${P.sources.map(s => `<tr><td class="mono amber">${s.id || '–'}</td><td>${esc(s.name)}${s.exists ? '' : ` <span class="bad">${t('missing|file')}</span>`}</td>
-      <td class="small muted">${s.resolution ? `${esc(s.resolution)} · ${s.fps || '?'} fps` : t('measured when an edit uses it')}</td>
+      <td class="small muted">${s.photo ? `<b class="nephoto inl">${t('PHOTO')}</b>${s.resolution ? ' ' + esc(s.resolution) : ''}` : s.resolution ? `${esc(s.resolution)} · ${s.fps || '?'} fps` : t('measured when an edit uses it')}</td>
       <td class="num">${s.duration_s ? dec(s.duration_s, 1) + ' s' : '–'}</td><td class="num">${bytes(s.size)}</td></tr>`).join('')}</tbody></table></div>
     ${P.boards.length ? `<h3>${t('Storyboards (one frame per second of every clip)')}</h3>
     <div class="sheets" style="grid-template-columns:repeat(3,1fr)">${P.boards.map((b, i) => `<img src="${fileUrl(b)}" data-i="${i}" loading="lazy">`).join('')}</div>` : ''}`;
@@ -4398,7 +4656,7 @@ function promptCard(p, R) {
   const rating = res ? rvChip('result', res, t('what it made - your rating'))
     : rv.stars != null ? pstars(rv.stars) : p.kind === 'title' && (p.structure || []).some(x => x.status) ? `<span class="small ok">${t('checked by Claude')}</span>`
     : `<span class="small amber">${t('not checked yet')}</span>`;
-  return `<button class="pgc k-${esc(p.kind)}" data-id="${esc(p.id)}" title="${ta('{kind} · {id} - click to open', {kind: KSHORT[p.kind] || p.kind, id: p.id})}">
+  return `<button class="pgc k-${esc(p.kind)}" data-id="${esc(p.id)}" title="${ta('{kind} · {id} - click to open', {kind: KSHORT[p.kind] || p.kind, id: p.id})}">${newTag(pkey(p), p.created)}
     ${ex ? `<span class="pgthumb">${pexMedia(R, ex)}</span>` : ''}
     <span class="pgtop"><span class="kbadge k-${esc(p.kind)}">${esc(KSHORT[p.kind] || p.kind)}</span>${cat ? `<span class="pgcat">${esc(pcatWord(cat))}</span>` : ''}${pstage(p, R)}
       ${p.updated || p.added ? `<span class="pgwhen" title="${p.updated && p.updated !== p.added ? ta('saved {added} · changed {updated}', {added: p.added || '', updated: p.updated}) : ta('saved {date}', {date: p.added || p.updated})}">${esc(whenStr(p.updated || p.added))}</span>` : ''}</span>
@@ -4416,7 +4674,7 @@ function scriptCard(p, R) {
   const rating = res ? rvChip('result', res, t('what it made - your rating')) : rv.stars != null ? pstars(rv.stars) : '';
   // filmed and edited already: Film it stays (to film it again) but faded, not the card's main button
   const done = p.kind === 'script' && scriptRoad(((R || {}).used || {})[p.id] || []).st.edited;
-  return `<div class="spc k-${esc(p.kind)}" data-id="${esc(p.id)}" tabindex="0" title="${ta('Open it: the script, the check, your rating')}">
+  return `<div class="spc k-${esc(p.kind)}" data-id="${esc(p.id)}" tabindex="0" title="${ta('Open it: the script, the check, your rating')}">${newTag(pkey(p), p.created)}
     <div class="spc-top"><span class="spk">${p.kind === 'hook' ? t('Hook') : t('Talking script')}</span>${cat ? `<span class="pgcat">${esc(pcatWord(cat))}</span>` : ''}<span class="pgwhen">${esc(whenStr(p.updated || p.added))}</span><span class="pcact"><button class="btn sm ghost icon" data-pren="${esc(p.id)}" title="${ta('Rename…')}"><svg class="i"><use href="#i-pen"/></svg></button><button class="btn sm ghost icon" data-pdelc="${esc(p.id)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></span></div>
     <b class="spc-title">${esc(ptitle(p))}</b>
     ${hook ? `<div class="spc-hook">“${esc(hook.length > 140 ? hook.slice(0, 137) + '…' : hook)}”</div>` : ''}
@@ -4435,7 +4693,7 @@ const spcEnd = (took, btn, rating = '') => took || btn || rating ? `<div class="
   ? `<div class="spc-act">${btn}<span class="grow"></span>${rating}</div>` : ''}</div>` : '';
 function titleCard(p, R) {
   const ts = p.titles || [], cs = p.concepts || [], best = p.chosen || (ts[0] || {}).text || '';
-  return `<div class="ttc" data-id="${esc(p.id)}" tabindex="0" title="${ta('Open it: every title, the thumbnail ideas, the hook')}">
+  return `<div class="ttc" data-id="${esc(p.id)}" tabindex="0" title="${ta('Open it: every title, the thumbnail ideas, the hook')}">${newTag(pkey(p), p.created)}
     <div class="spc-top"><span class="spk">${t('Titles & thumbnails')}</span><span class="pgwhen">${esc(whenStr(p.updated || p.added))}</span><span class="pcact"><button class="btn sm ghost icon" data-pren="${esc(p.id)}" title="${ta('Rename…')}"><svg class="i"><use href="#i-pen"/></svg></button><button class="btn sm ghost icon" data-pdelc="${esc(p.id)}" title="${ta('Delete… (to the Recycle Bin)')}"><svg class="i"><use href="#i-trash"/></svg></button></span></div>
     <b class="spc-title">${esc(ptitle(p))}</b>
     ${best ? `<div class="ttc-best">“${esc(best)}”${p.chosen ? ` <span class="small ok">${t('your pick')}</span>` : ''}</div>` : ''}
@@ -4587,12 +4845,17 @@ function spSeg(el, id, st, key, onChange = () => {}) {
 }
 async function pagePrepare(main) {
   const ctx = {};
-  const load = async () => { [ctx.R, ctx.Q] = await Promise.all([api('/api/prompts'), api('/api/script/requests')]); };
+  const load = async () => { await api('/api/script/tidy', {}).catch(() => {});      // an improved script replaces its paste
+    [ctx.R, ctx.Q] = await Promise.all([api('/api/prompts'), api('/api/script/requests')]); };
   await load();
   const draw = () => {
     const R = ctx.R, Q = ctx.Q, byId = Object.fromEntries(R.items.map(p => [p.id, p]));
     // only the user's own (2026-10-18): the scripts of creators analysed in the Analyser stay in their set + the library
-    const mine = R.items.filter(p => (isTalk(p) || p.kind === 'title') && (p.source || {}).type !== 'creator').sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
+    // Improve my script (2026-10-24, a friend's ask): the pasted script is not a card of its own while Claude works on
+    // it - it shows under Waiting for Claude as "improving…" - and the server moves it to the Recycle Bin once the new
+    // version is saved (data.tidy_improved): one card, the improved one, with NEW
+    const improving = new Set(Q.items.filter(r => r.kind === 'improve' && r.replace && !(r.made || []).length).map(r => r.script));
+    const mine = R.items.filter(p => (isTalk(p) || p.kind === 'title') && (p.source || {}).type !== 'creator' && !improving.has(p.id)).sort((a, b) => (b.updated || b.added || '').localeCompare(a.updated || a.added || '') || b.id.localeCompare(a.id));
     const waiting = Q.items.filter(r => !(r.made || []).length && (r.kind === 'new' || r.kind === 'title' || byId[r.script])).slice(0, 8);
     const scripts = mine.filter(isTalk), titles = mine.filter(p => p.kind === 'title');
     // the old structure (the user, round 3): the two big ways for scripts, a slim row for a title / thumbnail only,
@@ -4603,7 +4866,7 @@ async function pagePrepare(main) {
         <div class="gway"><div class="row"><svg class="ic"><use href="#i-scriptok"/></svg><h2>${t('Improve my script')}</h2></div>
           <p>${t('Paste the script you have. MotionLab checks it on the spot - the hook, the length, dead seconds, fillers, the call to action. Then Claude marks every part (clear, vague or missing) and rewrites it in your voice: a stronger hook, nothing that makes people scroll away.')}</p>
           <div class="row"><button class="btn pri" id="sp-imp"><svg class="i"><use href="#i-claude"/></svg>${t('Improve a script')}</button></div>
-          <div class="small muted">${t('Your script stays as it is - the new version is saved next to it.')}</div></div>
+          <div class="small muted">${t('Claude saves one improved version - it takes the place of the one you paste (that one goes to the Recycle Bin).')}</div></div>
         <div class="gway"><div class="row"><svg class="ic"><use href="#i-prepare"/></svg><h2>${t('Write one from zero')}</h2></div>
           <p>${t('Answer a few questions - what it is about, who it is for, what they get, your story. Claude writes three hooks and the whole script, timed to your length, with what goes on screen - in the style of talking videos you analysed.')}</p>
           <div class="row"><button class="btn pri" id="sp-new"><svg class="i"><use href="#i-claude"/></svg>${t('Write a script with Claude')}</button></div>
@@ -4613,7 +4876,7 @@ async function pagePrepare(main) {
         <button class="btn" id="sp-title"><svg class="i"><use href="#i-claude"/></svg>${t('Create it with Claude')}</button></div>
       ${waiting.length ? `<h3 style="margin:22px 0 8px">${t('Waiting for Claude')}</h3><div class="spwait">${waiting.map(r => {
         const what = r.kind === 'new' || r.kind === 'title' ? `<b>${esc(r.topic.split('\n')[0].slice(0, 90))}</b> <span class="muted">· ${r.kind === 'title' ? t('titles and thumbnail ideas') : t('a script from zero')}</span>`
-          : `<b>${esc(ptitle(byId[r.script]))}</b> <span class="muted">· ${t('improve it')}</span>`;
+          : `<b>${esc(ptitle(byId[r.script]))}</b> <span class="muted">· ${r.replace ? `<span class="spinning">${t('improving…')}</span>` : t('improve it')}</span>`;
         const cmd = r.kind === 'new' ? `/write-script request ${r.id}` : r.kind === 'title' ? `/write-title request ${r.id}` : `/write-script improve ${r.script}`;
         return `<div class="spw"><span class="grow">${what} <span class="small dim">${esc(whenStr(r.date))}</span></span>
           ${claudeBtn(cmd, t('Open in Claude Code again'), r.kind === 'title' ? 'title' : 'script', r.id)}<button class="btn sm ghost" data-forget="${esc(r.id)}" title="${r.kind === 'improve' ? ta('Forget this request (your script stays)') : ta('Forget this request')}">✕</button></div>`; }).join('')}</div>` : ''}
@@ -4647,7 +4910,7 @@ async function scriptImproveModal(ctx, pre = {}) {
   const S = await loadStyles();
   const st = {like: [], likePrompts: [], length: '', where: '', file: ''};
   modal(`<h2>${t('Improve my script')}</h2>
-    <div class="small muted" style="margin-top:-4px">${t('Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version next to yours.')}</div>
+    <div class="small muted" style="margin-top:-4px">${t('Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version that takes its place.')}</div>
     <div class="spgrid"><div>
       <div class="nestep"><b>1</b>${t('Your script')}</div>
       <textarea id="stext" rows="13" style="width:100%" placeholder="${ta('Paste your script here…\n\nNotes for the camera can go in brackets: [TEXT: 3 mistakes] [B-ROLL: my desk]')}">${esc(pre.text || '')}</textarea>
@@ -4965,7 +5228,7 @@ function motionTemplates(body, M, L, clips) {
     if (kf && !ks.includes(kf)) kf = '';
     body.innerHTML = `<div class="hint" style="margin-bottom:10px">${t('Click one to play it and try your own words. Most were learned from the clips they name - their timing, eases and layout measured; the MotionLab originals fill the kinds template sites offer most (lower thirds, transitions, call-outs...). All are MotionLab\'s own graphics: free to use in any video.')}</div>
       <div class="row pfilters">${[['', t('All|templates')], ...ks.map(k => [k, mkind(k)])].map(([k, l]) => `<button class="fchip${k === kf ? ' on' : ''}" data-k="${esc(k)}">${esc(l)} <span class="dim">${k ? L.filter(tp => tp.kind === k).length : L.length}</span></button>`).join('')}</div>
-      <div class="mggrid">${L.filter(tp => !kf || tp.kind === kf).map(tp => `<div class="mgc" data-id="${esc(tp.id)}" tabindex="0">
+      <div class="mggrid">${L.filter(tp => !kf || tp.kind === kf).map(tp => `<div class="mgc" data-id="${esc(tp.id)}" tabindex="0">${newTag(`m:${tp.id}@${Math.round(tp.created || 0)}`, tp.created)}
         <div class="mgpic">${tp.thumb ? `<img src="${fileUrl(tp.thumb)}?v=${tp.thumb_v}" alt="" loading="lazy">` : `<span class="dim small">${t('no picture yet')}</span>`}</div>
         <div class="row sp" style="margin-top:8px"><b>${esc(t(tp.name))}</b><span class="chip">${esc(mkind(tp.kind))}</span></div>
         <div class="small muted mgwhat">${esc(t(tp.what || ''))}</div>
@@ -5151,6 +5414,7 @@ function motionClipModal(c, M) {
 const PFILTERS = [['', t('All|prompts')], ['tool', t('Needs another tool')], ['own', t('No other tool')], ['todo', t('Not checked yet')]];
 const pfilterOk = (p, f) => !f || (f === 'tool' ? !!ptool(p) : f === 'own' ? !ptool(p) : !p.structure && !p.review);
 async function pagePrompts(main, arg) {               // every kind in one grid; a click opens the prompt
+  await api('/api/script/tidy', {}).catch(() => {});     // an improved script replaces its paste (Improve my script)
   const ctx = {R: await api('/api/prompts')};
   let q = '', pf = '';
   try { pf = localStorage.getItem('ml.pfilter') || ''; } catch (e) { /* no storage: all */ }
@@ -5196,14 +5460,51 @@ async function pagePrompts(main, arg) {               // every kind in one grid;
 // road in one dialog - 1 film it (cue cards, a teleprompter, what to film besides you), 2 add the recording (copied
 // into the video's folder; the original stays where it is), 3 edit it (the talking quick draft or Claude). The
 // script and the video are linked (made_from.json), so its card shows Written > Filmed > Edited > Posted.
-const CLIP_EXT = /\.(mp4|mov|mkv|m4v|avi|webm|mts|mxf|mp3|m4a|wav|aac|flac|ogg)$/i;
+const CLIP_EXT = /\.(mp4|mov|mkv|m4v|avi|webm|mts|mxf|mp3|m4a|wav|aac|flac|ogg|jpe?g|png|webp|heic|heif|avif|bmp|tiff?|gif)$/i;
+const PHOTO_EXT = /\.(jpe?g|png|webp|heic|heif|avif|bmp|tiff?|gif)$/i;     // 2026-10-24: a photo = a still shot
+const CLIP_ACCEPT = 'video/*,audio/*,image/*,.mts,.mxf,.mkv,.heic,.heif,.avif';
+// what a Mac / iPhone / Windows leaves next to clips (._IMG_0912.mov = 4 KB of Finder info, shown as a black clip):
+// a hidden name or folder, Thumbs.db, desktop.ini - never copied in (the server refuses them too)
+const isJunk = (name, path = '') => /^\./.test(name) || /^(thumbs\.db|desktop\.ini)$/i.test(name) || String(path).split('/').slice(0, -1).some(s => s.startsWith('.'));
+// a folder picked (webkitdirectory) or dropped (folders inside folders too): every clip in it, in path order
+// (numbers as numbers), named so two files of the same name in different folders both get in ("19 octubre_C0001.MP4")
+async function clipsFromDrop(dt) {
+  const entries = [...(dt.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!entries.length || entries.every(e => e.isFile)) return {files: [...dt.files].map(f => ({file: f, path: f.name})), folders: false};
+  const out = [];
+  const walk = async (e, base) => {
+    if (e.isFile) { const f = await new Promise((ok, bad) => e.file(ok, bad)); out.push({file: f, path: base + f.name}); return; }
+    const rd = e.createReader();
+    for (;;) {                                       // readEntries gives at most 100 at a time: until it is empty
+      const batch = await new Promise((ok, bad) => rd.readEntries(ok, bad));
+      if (!batch.length) break;
+      for (const x of batch) await walk(x, base + e.name + '/');
+    }
+  };
+  for (const e of entries) await walk(e, '');
+  return {files: out, folders: true};
+}
+function clipNames(list) {                         // [{file, path}] -> the clips sorted, each with a unique name
+  const L = list.filter(x => !isJunk(x.file.name, x.path) && CLIP_EXT.test(x.file.name))
+    .sort((a, b) => a.path.localeCompare(b.path, undefined, {numeric: true, sensitivity: 'base'}));
+  const dirs = x => x.path.split('/').slice(0, -1);
+  const named = L.map(x => ({...x, name: x.file.name, up: 0}));
+  for (let round = 0; round < 8; round++) {          // the same name twice: put the parent folder(s) in front
+    const seen = {};
+    named.forEach(x => { const k = x.name.toLowerCase(); (seen[k] = seen[k] || []).push(x); });
+    const clash = Object.values(seen).filter(g => g.length > 1);
+    if (!clash.length) break;
+    clash.flat().forEach(x => { const d = dirs(x); if (x.up < d.length) { x.up++; x.name = [...d.slice(d.length - x.up), x.file.name].join('_'); } });
+  }
+  return {clips: named.map(x => ({file: x.file, name: x.name})), skipped: list.length - L.length};
+}
 const folderName = t => String(t || '').replace(/[^\p{L}\p{N}_.\- \[\]()&'+,]/gu, ' ').replace(/\.{2,}/g, '.')
   .replace(/\s+/g, ' ').trim().replace(/^[. ]+|[. ]+$/g, '').slice(0, 60) || 'my talking video';
 // a file the user picked or dropped -> projects\<p>\ (POST, raw body; the server never overwrites a clip)
-function uploadClip(project, file, prompt, onProg) {
+function uploadClip(project, file, prompt, onProg, name = file.name) {   // name: the clip's name in the folder
   return new Promise((ok, bad) => {
     const x = new XMLHttpRequest();
-    x.open('POST', `/api/project/${encodeURIComponent(project)}/upload?name=${encodeURIComponent(file.name)}${prompt ? '&prompt=' + encodeURIComponent(prompt) : ''}`);
+    x.open('POST', `/api/project/${encodeURIComponent(project)}/upload?name=${encodeURIComponent(name)}${prompt ? '&prompt=' + encodeURIComponent(prompt) : ''}`);
     x.setRequestHeader('X-ML-Token', TOKEN);
     x.setRequestHeader('Content-Type', 'application/octet-stream');
     x.upload.onprogress = e => { if (e.lengthComputable && onProg) onProg(e.loaded / e.total); };
@@ -5274,8 +5575,10 @@ async function filmItModal(p, step = 0) {
     <div class="row"><select id="fiv" style="max-width:360px">${ps.map(x => `<option value="${esc(x.name)}">${clipsOpt(x, linked.includes(x.name))}</option>`).join('')}
         <option value="">${t('+ a new video…')}</option></select>
       <input type="text" id="finame" value="${esc(st.name)}" style="max-width:280px" title="${ta('the new video\'s name')}"></div>
-    <label class="fidrop" id="fidrop"><input type="file" id="fifile" multiple hidden accept="video/*,audio/*,.mts,.mxf,.mkv">
+    <div class="fidrops"><label class="fidrop" id="fidrop"><input type="file" id="fifile" multiple hidden accept="${CLIP_ACCEPT}">
       <b>${t('Drop your recording here')}</b><span class="small muted">${t('or click to choose it - several files are fine. It is copied in; your original stays where it is.')}</span></label>
+      <label class="fidrop fidropf" title="${ta('Every video, photo and song in a folder, its sub-folders too')}"><input type="file" id="fidir" hidden webkitdirectory multiple>
+        <svg class="i"><use href="#i-folder"/></svg><b>${t('Add a folder…')}</b><span class="small muted">${t('sub-folders too')}</span></label></div>
     <div id="fifiles"></div>
     <div class="nestep"><b>3</b>${t('Edit it')}</div>
     <div class="nedet"><label>${t('Format')}</label><div class="seg" id="fifmt">${[['', t('As filmed')], ['vertical', t('Vertical 9:16')], ['horizontal', t('Horizontal 16:9')], ['square', t('Square')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
@@ -5301,10 +5604,13 @@ async function filmItModal(p, step = 0) {
     sel.onchange = upd;
     $('#fitp', el).onclick = () => teleprompter(said);
     $('#ficopy', el).onclick = () => copy(said.join('\n').replace(/\s*\[check\]/gi, ''));
-    const add = async files => {
-      files = [...files];
-      const bad = files.filter(f => !CLIP_EXT.test(f.name));
-      if (bad.length) { toast(t('{names}: not a video or a sound file', {names: bad.map(f => f.name).join(', ')}), 'err'); files = files.filter(f => CLIP_EXT.test(f.name)); }
+    const add = async (list, folder = false) => {         // Files, or {file, path} from a folder
+      const all = [...list].map(x => x instanceof File ? {file: x, path: x.name} : x);
+      const files = clipNames(all).clips;
+      const bad = all.filter(x => !isJunk(x.file.name, x.path) && !CLIP_EXT.test(x.file.name));
+      if (folder) toast(files.length ? tn(files.length, '{n} clip found in the folder', '{n} clips found in the folder')
+        : t('No video, photo or sound files in that folder'), files.length ? 'ok' : 'err');
+      else if (bad.length) toast(t('{files}: not a video, a photo or a sound file', {files: bad.map(x => x.file.name).join(', ')}), 'err');
       if (!files.length || st.busy) return;
       st.busy = true; upd();
       const box = $('#fifiles', el);
@@ -5314,26 +5620,28 @@ async function filmItModal(p, step = 0) {
           const x = {name: r.name, label: null, clips: 0, songs: []}; ps.push(x);
           sel.insertAdjacentHTML('afterbegin', `<option value="${esc(r.name)}">${t('{name} (new)', {name: esc(r.name)})}</option>`); sel.value = r.name;
         }
-        for (const f of files) {
+        for (const {file: f, name: nm} of files) {
           const row = document.createElement('div'); row.className = 'fifile';
-          row.innerHTML = `<span class="grow">${esc(f.name)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
+          row.innerHTML = `<span class="grow">${esc(nm)} <span class="small muted">${bytes(f.size)}</span></span><span class="fibar"><i></i></span><span class="small" data-s>${t('copying…')}</span>`;
           box.append(row);
           try {
-            const r = await uploadClip(sel.value, f, p.id, v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; });
+            const r = await uploadClip(sel.value, f, p.id, v => { $('.fibar i', row).style.width = `${Math.round(v * 100)}%`; }, nm);
             $('.fibar i', row).style.width = '100%'; row.classList.add('ok');
-            $('[data-s]', row).textContent = r.kept ? t('already there') : t('copied ✓');
-            if (!r.kept && /\.(mp4|mov|mkv|m4v|avi|webm|mts|mxf)$/i.test(f.name)) P().clips++;
+            $('[data-s]', row).textContent = r.kept ? t('already there') : r.file !== nm ? t('copied as {name} ✓', {name: r.file}) : t('copied ✓');
+            if (!r.kept && /\.(mp4|mov|mkv|m4v|avi|webm|mts|mxf)$/i.test(nm) || !r.kept && PHOTO_EXT.test(nm)) P().clips++;
           } catch (e) { row.classList.add('err'); $('[data-s]', row).textContent = e.message; }
         }
         $(`#fiv option[value="${CSS.escape(sel.value)}"]`, el).textContent = t('{name} ({clips}) · from this script', {name: pname(P()), clips: plural(P().clips, 'clip')});
       } catch (e) { toast(e.message, 'err'); }
       st.busy = false; upd();
     };
-    const drop = $('#fidrop', el), inp = $('#fifile', el);
-    inp.onchange = () => { add(inp.files); inp.value = ''; };
+    const drop = $('#fidrop', el), inp = $('#fifile', el), dir = $('#fidir', el);
+    inp.onchange = () => { add([...inp.files]); inp.value = ''; };
+    dir.onchange = () => { add([...dir.files].map(f => ({file: f, path: f.webkitRelativePath || f.name})), true); dir.value = ''; };
     drop.ondragover = e => { e.preventDefault(); drop.classList.add('on'); };
     drop.ondragleave = () => drop.classList.remove('on');
-    drop.ondrop = e => { e.preventDefault(); drop.classList.remove('on'); add(e.dataTransfer.files); };
+    drop.ondrop = async e => { e.preventDefault(); drop.classList.remove('on');
+      try { const r = await clipsFromDrop(e.dataTransfer); add(r.files, r.folders); } catch (err) { toast(err.message, 'err'); } };
     const request = () => api(`/api/project/${encodeURIComponent(sel.value)}/edit_request`, {how: 'prompt', prompt: p.id, sound: 'talk',
       format: st.format || null, length_s: st.length || null, resolve: $('#fires', el).checked});
     $('#figo', el).onclick = async () => {
@@ -6142,6 +6450,7 @@ async function pageSettings(main) {
   </div>
   <div class="panel" style="margin-top:14px"><h2>${ta('Sharing & updates')}</h2>
     ${updateBox(S.update, null)}
+    ${((S.update || {}).kept || []).map(k => keptLine(k.name, k.files)).join('')}
     <div class="form">
       <label for="who">${t('Your name')}</label><div><input type="text" id="who" value="${esc(st.author)}" placeholder="${ta('e.g. alex (shown on what you share)')}" style="max-width:320px">
         <div class="small muted">${t('Used for “Share my knowledge” - letters, numbers and - only.')}</div></div>

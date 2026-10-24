@@ -97,10 +97,14 @@ where the user writes what they want:
    want, or the length the check measured when they gave none. Keep their voice and every good line word for word.
 4. Write **3 hooks** in different patterns. Put the best one in the script; the other two go in `notes` ("Other
    hooks: ...").
-5. Save it as a NEW script (the original stays): a JSON list → `.venv\Scripts\python tools\prompts.py import <file>.json`
-   with `"kind": "script"`, `"source": {"type": "written"}`, `"made_from": ["<id>"]`, the same `tags` and
-   `style_refs`, title "<old title> - improved" ("- improved 2" for the next one), its own `structure` (mostly clear
-   now) + `review`, `pattern`, `notes`.
+5. Save ONLY the improved script: a JSON list with that one record → `.venv\Scripts\python tools\prompts.py import
+   <file>.json` with `"kind": "script"`, `"source": {"type": "written"}`, `"made_from": ["<id>"]`, `"request":
+   "<req-NNN>"` (the app's request, `script.py show` names it), the same `tags` and `style_refs`, title "<old title> -
+   improved" (just "<old title>" when the request is the app's *Improve my script*: the pasted one is replaced), its
+   own `structure` (mostly clear now) + `review`, `pattern`, `notes`. **Never import the user's script again** - it
+   is saved already (`<id>`); its check goes onto `<id>` with `annotate` (section 2). Since 2026-10-24 the app moves
+   the pasted script of an *Improve my script* request to the Recycle Bin once your version is saved (never one that
+   was filmed, edited or posted), so Prepare shows one card: yours, marked NEW.
 6. Run `.venv\Scripts\python tools\script.py check <new id>`. Fix what it still flags if the fix is right; if not,
    say why it doesn't apply (a 90 s story can have one longer stretch).
 7. Tell the user: the new id and title; before → after (checks n → m of 11, length, hook words, stars); the 3-5

@@ -64,7 +64,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   `summary\<category>.md`, `prompts\` (the prompt library), `shared.json`; `inbox\` / `outbox\` (packs)
 - `library\` approved effects (`library.py`), `graphics\`, `motion_graphics\` (`index.json`, `local\<pack>\<id>` = this
   PC's templates); `fonts\` and `logos\` (in the repo); `tools\` the pipeline (`motionlab\` the package, `config.json`
-  every threshold, `overlays\motion\<id>\` the Motion Graphics templates); `docs\`; `.app\` the app's cache, logs,
+  every threshold + `config.local.json` = this PC's own values, not in git, `overlays\motion\<id>\` the Motion Graphics
+  templates); `docs\`; `.app\` the app's cache, logs,
   jobs, batches, `dev\` scratch; `.claude\skills\` the skills
 - Repo files: `README.md`, `setup.bat`, `Install-MotionLab.cmd`, `LICENSE`, `CHANGELOG.md` + `CHANGELOG.es.md`,
   `.mcp.json`, `.claude\settings.json`, `.github\workflows\tests.yml`, `.gitignore` (refs, analysis, projects, library,
