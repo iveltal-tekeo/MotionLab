@@ -1,5 +1,6 @@
-"""Sound effects for a graphic or an edit (0.5.0): synthesised (no samples, nothing to license), the same every run,
-48 kHz, each one levelled against the song under it - measured, since Claude cannot hear (motionlab\\sfx.py).
+"""Sound effects for a graphic or an edit (0.5.0): recorded sounds from this PC's library (0.5.4, library\\sounds)
+where a kind has them, else made up (synthesised); the same every run, 48 kHz, each one levelled against the song
+under it - measured, since Claude cannot hear (motionlab\\sfx.py).
 
     .venv\\Scripts\\python tools\\sfx.py cues <graphic folder | cues.json | plan.json> [--set search_text="Hi"]
           the cues with frame + timecode, kind and level class - no sound made. A graphic's cues are in its
@@ -20,9 +21,17 @@
           (fast zooms, whips and slides, flashes, black frames, speed-ups, stutters, colour flashes, dips, shakes)
           + the cues of the graphics it shows + its own "cues"; the song = the plan's "audio" (a mix made here before:
           the song it was made from)
-    .venv\\Scripts\\python tools\\sfx.py kinds        the sounds and their level classes
+          make / plan --synth = made-up sounds only (the report's "sound" per cue: a library file or made-up)
+    .venv\\Scripts\\python tools\\sfx.py kinds        the sounds and their level classes (+ the library's counts)
+    .venv\\Scripts\\python tools\\sfx.py library [--synth-too whoosh,whip]   the recorded library per kind, sources,
+          licences; --synth-too = kinds that keep the made-up sound among their recorded ones
+    .venv\\Scripts\\python tools\\sfx.py import <folder | file> --from "<pack / site>" --licence "<what it allows>"
+          [--kind K] [--skip "apple*,*demo*"] [--dry-run]   recorded sounds into library\\sounds (never shared): the
+          kind from each folder + file name (or --kind), cut to the sound, its anchor measured, a 24-bit copy + its
+          row in sounds.json (source, licence, SHA-256); the files are only read. Check the licence first.
     .venv\\Scripts\\python tools\\sfx.py selfcheck    known answers, no video (onsets, levels, ceiling, same twice)
-Songs and videos are only read; files are written only into projects\\<name>\\build\\ (or the lab's .app\\).
+Songs, videos and sound packs are only read; files are written only into projects\\<name>\\build\\ (or the lab's
+.app\\), and import into library\\sounds\\.
 """
 from __future__ import annotations
 
@@ -148,6 +157,8 @@ def cmd_make(a, plan_only: bool = False) -> int:
         song_path, start = Path(a.song), a.song_start
     elif what == "plan":
         song_path, start, rec_db, song_note = song_of_plan(plan)
+        if rec_db is None and isinstance(plan.get("sfx"), dict):      # 0.5.4: a talking draft's voice = 0 dB
+            rec_db = plan["sfx"].get("song_db")
         if rec_db is not None and a.song_db == SFX.SONG_DB:
             song_db = float(rec_db)
     else:
@@ -169,8 +180,9 @@ def cmd_make(a, plan_only: bool = False) -> int:
         except ValueError as e:
             raise SystemExit(f"ERROR: {e}")
     t1 = time.time()
+    lib = None if a.synth else SFX.Library.load()
     res = SFX.build(cues, fps, frames, song, song_db, a.ceiling, a.fade,
-                    floor_vs_song=None if a.floor_vs_song.lower() == "off" else float(a.floor_vs_song))
+                    floor_vs_song=None if a.floor_vs_song.lower() == "off" else float(a.floor_vs_song), sounds=lib)
     t2 = time.time()
     out.mkdir(parents=True, exist_ok=True)
     SFX.write_wav(files["stem"], res["stem"])
@@ -188,6 +200,10 @@ def cmd_make(a, plan_only: bool = False) -> int:
     else:
         print("no song: every effect at its kind's lowest level")
     rows = [r for r in res["rows"] if "sample" in r]
+    rec = [r for r in rows if r.get("sound", "made-up") != "made-up"]
+    print(f"sounds: {len(rec)} recorded, {len(rows) - len(rec)} made-up" + (
+        " (--synth)" if a.synth else "" if lib else f" (no recorded sounds: {SFX.rel(SFX.SOUNDS)}\\sounds.json - "
+                                                    "sfx.py import)"))
     if a.all or len(res["rows"]) <= 12:
         print("  frame (timecode)     kind      song dBFS  effect dBFS (vs song)   peak         rule")
         for r in res["rows"]:
@@ -219,6 +235,7 @@ def cmd_make(a, plan_only: bool = False) -> int:
         "source": SFX.rel(src), "kind": what, "fps": fps, "frames": frames, "settings": vals,
         "song": ({"path": str(song_path.resolve()), "start_s": start, "db": song_db} if song_path else None),
         "ceiling_db": a.ceiling, "fade_s": a.fade, "levels": SFX.LEVELS, "peak_db": SFX.PEAK_DB,
+        "sounds": "made-up only (--synth)" if a.synth or not lib else SFX.rel(SFX.SOUNDS),
         "stem": SFX.rel(files["stem"]), "mix": SFX.rel(files["mix"]) if song is not None else None,
         **{k: res[k] for k in ("mix_peak_before_db", "mix_peak_db", "limiter_max_db", "limiter_frames",
                                "stem_peak_before_db", "stem_limited_db")},
@@ -253,6 +270,55 @@ def cmd_kinds(a) -> int:
         nums = ", ".join(f"{p}={v}" for p, v in d.items())
         print(f"  {k:9s} {lvl:9s} {what}" + (f"  [{nums}]" if nums else ""))
     print("also: " + ", ".join(f"{a} = {b}" for a, b in SFX.ALIASES.items()))
+    lib = SFX.Library.load()
+    if lib:
+        print("recorded: " + ", ".join(f"{k} {len(v)}" for k, v in sorted(lib.by_kind.items()))
+              + (f"; with the made-up sound too: {', '.join(sorted(lib.synth_too))}" if lib.synth_too else ""))
+    return 0
+
+
+def cmd_library(a) -> int:
+    jp = SFX.SOUNDS / "sounds.json"
+    data = json.loads(jp.read_text(encoding="utf-8")) if jp.exists() else None
+    if a.synth_too is not None:
+        if data is None:
+            raise SystemExit(f"no library yet ({SFX.rel(jp)}): sfx.py import first")
+        bad = [k for k in a.synth_too.split(",") if k.strip() and k.strip() not in SFX.KINDS]
+        if bad:
+            raise SystemExit(f"unknown kind(s) {', '.join(bad)}")
+        data["synth_too"] = sorted({k.strip() for k in a.synth_too.split(",") if k.strip()})
+        jp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    if data is None:
+        print(f"no recorded sounds yet ({SFX.rel(jp)}) - every effect is made up; add some: sfx.py import <folder>")
+        return 0
+    from collections import Counter
+    rows = data.get("sounds", [])
+    missing = [e["file"] for e in rows if not (SFX.SOUNDS / e["file"]).exists()]
+    print(f"{SFX.rel(SFX.SOUNDS)}: {len(rows)} recorded sounds" + (f", {len(missing)} files missing" if missing else ""))
+    by = Counter(e["kind"] for e in rows)
+    for k in SFX.KINDS:
+        extra = " + the made-up one" if k in data.get("synth_too", []) and by.get(k) else ""
+        print(f"  {k:9s} {by.get(k, 0):3d}{extra}" if by.get(k) else f"  {k:9s}   - made-up")
+    for src, n in Counter(e["source"].split(": ")[0] for e in rows).most_common():
+        lic = next(e["licence"] for e in rows if e["source"].split(": ")[0] == src)
+        print(f"  from {src}: {n}  (licence: {lic})")
+    return 0
+
+
+def cmd_import(a) -> int:
+    try:
+        r = SFX.import_sounds(Path(a.source), a.from_, a.licence, kind=a.kind,
+                              skip=[x for x in (a.skip or "").split(",") if x.strip()], dry=a.dry_run)
+    except (ValueError, PermissionError, FileNotFoundError) as e:
+        raise SystemExit(f"ERROR: {e}")
+    for row in r["added"]:
+        print(f"  {'would add' if a.dry_run else 'added'} {row['kind']:8s} {row['len_s']:5.2f} s, anchor "
+              f"{row['anchor_s']:.3f} s  {row['original']}")
+    for k in ("skipped", "same", "unknown"):
+        if r[k]:
+            print(f"{k} ({len(r[k])}): " + "; ".join(r[k]) + (" - give --kind, or rename the folder" if k == "unknown"
+                                                               else ""))
+    print(f"{len(r['added'])} sound(s) {'to add' if a.dry_run else 'added to ' + SFX.rel(SFX.SOUNDS)}")
     return 0
 
 
@@ -277,7 +343,17 @@ def main() -> int:
         s.add_argument("--floor-vs-song", default=str(SFX.FLOOR_VS_SONG_DB), metavar="DB",
                        help="no effect further under the song than this (dB; the precheck's buried line + 2; off)")
         s.add_argument("--all", action="store_true", help="print every cue's levels (default: a summary + flags)")
+        s.add_argument("--synth", action="store_true", help="made-up sounds only (not the recorded library)")
     sub.add_parser("kinds")
+    s = sub.add_parser("library")
+    s.add_argument("--synth-too", metavar="KINDS", help="kinds that keep the made-up sound among the recorded ones")
+    s = sub.add_parser("import")
+    s.add_argument("source", help="a sound file or a folder of them (only read)")
+    s.add_argument("--from", dest="from_", required=True, help="where they came from (pack / site / author)")
+    s.add_argument("--licence", required=True, help="what the licence allows (recorded with every file)")
+    s.add_argument("--kind", help="one kind for all (default: from each folder + file name)")
+    s.add_argument("--skip", help="file name patterns to leave out, comma-separated (\"apple*,*demo*\")")
+    s.add_argument("--dry-run", action="store_true", help="show what would be added, write nothing")
     sub.add_parser("selfcheck")
     a = ap.parse_args()
     if a.cmd == "cues":
@@ -288,6 +364,10 @@ def main() -> int:
         return cmd_make(a, plan_only=a.cmd == "plan")
     if a.cmd == "kinds":
         return cmd_kinds(a)
+    if a.cmd == "library":
+        return cmd_library(a)
+    if a.cmd == "import":
+        return cmd_import(a)
     if a.cmd == "selfcheck":
         return 0 if SFX.selfcheck()["ok"] else 1
     print(__doc__)

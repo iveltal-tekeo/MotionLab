@@ -19,7 +19,12 @@ four-part `0.x.y.z` is a small step between them (fixes, upkeep, polish).
 steps in order, *Needs first*. At most two versions are "next" at a time: finish and release one before starting
 another.
 
-## Where it stands (2026-10-24)
+## Where it stands (2026-10-25)
+
+Since 0.5.3, three small steps: **0.5.3.1** (114 Motion Graphics templates), **0.5.3.2** (Film it hands over to the
+Editor, Finish it with Claude) and **0.5.3.3** (2026-10-25: 0.5.4's steps 1, 2 and 6 - recorded sound effects from this
+PC's library, quick drafts with their own sound effects, every effect 2 dB lower). 0.5.4 stays open: music and
+ambience, voice-over, separating music from voice, and the rating on two real videos.
 
 Released last: **0.5.3** (2026-10-24, CHANGELOG.md + CHANGELOG.es.md) - Faster videos (one build, the brief, the edit list, quick drafts for Generate, the waits as jobs) + a friend's asks (photos in edits, folders, no Mac / iPhone junk, pages that update by themselves, the NEW badge, Improve my script keeping one card, changes that survive updates, MotionLab's own taskbar icon) + *Preview your thumbnail* + fewer zooms in edits. Its plan text: plans_history.md. Still open from it: the re-runs (ae_50_test, testing_entire_workflow, What's new 0.4.3) with `usage.py project <name> --steps` before / after - the halving was not measured before the release (the user's call, 2026-10-24) - and F3 (the effort per task) after them; the Resolve builder does not place photos.
 
@@ -549,7 +554,8 @@ from the user: which packs first, ~20 templates starred, the verdict on the rema
 **Ships when**: a *My Brand* page above the Analyser holds the user's goal on social media, their audience, identity
 (colours, fonts, logo, voice) and catalogue with prices - read from their website and checked by them; Prepare, New
 edit and Motion Graphics use it (a script in the brand's voice, the brand's colours as a palette, its logo); one video
-places a product - in passing or as a call to action at the end - and the user rates it OK or better.
+places a product - in passing or as a call to action at the end - and the user rates it OK or better; a cut and a
+caption fixed in the mini-editor render again without Claude.
 
 **The user's words (2026-10-22)**: "0.5.5 Content Agency - implement a new section above Analyze which would be called
 'My Brand'". Their mock-up deck (`new_edit_section.html`, slides 10-11, in Spanish): *Mi marca* - "a page where Claude
@@ -569,8 +575,19 @@ mixed with your clips in the same edit".
    `/generate-video` (identity, products), `/write-prompt` (product shots).
 5. **Product motion**: a product from the catalogue in the video - in passing (a lower third, a card over B-roll) or a
    call to action at the end (price, link) - built from the Motion Graphics library's templates.
+6. **The mini-editor** (the user, 2026-10-25: "for the 0.5.5 agency brand section i need you to add also a
+   "mini-editor" so we can handle small cuts or edits withotu having to re-run the entire program under claude"): on
+   a video's page, the newest render's plan as a strip of shots under the player (each shot's picture, its first frame
+   + timecode, its length). Small changes by hand, no Claude window: trim a shot's start / end frame by frame, delete
+   a shot (what comes after closes up - graphics, captions and sound effects move with it), move a cut, swap a shot
+   for another take from the same clips, fix a caption's or a graphic's words, drop or nudge a sound effect, the
+   song's start and volume. *Save* = the next plan (`plan_v(N+1).json`, the old one stays) + a `build.py` job (only
+   what changed renders again: a trim = the video and the sound, no graphic). Bigger wishes (a new effect, another
+   style, re-timing to the music) stay Claude's: *Ask Claude* writes the change as a request. What the user fixed by
+   hand goes into `outcome.json` so Claude reads it next time (the cuts it got wrong are lessons too). Measure first:
+   a one-shot trim's build time on a laptop. Never touches the clips (hard rule 1).
 
-**Order** (the user decides): 1-3 first, then 4 and 5. **Size**: large, ships in parts.
+**Order** (the user decides): 1-3 first, then 4 and 5; 6 needs nothing from My Brand. **Size**: large, ships in parts.
 **Rules**: the brand stays on the PC; only the user's own site is read; prices shown as the user confirmed them.
 **Needs first**: nothing; from the user: their website and their goal.
 
@@ -598,6 +615,11 @@ strong GPU, and their licences often forbid commercial use.
 2. **`sfx.py` prefers a sample**: per cue the closest kind and length, a different one each time (no repeats in a
    row), a little pitch and level variation; the levelling against the music stays; synthesis is the fallback when
    no sample fits. Measured before / after on the test videos - the user's listen decides.
+   **Built 2026-10-25, released in 0.5.3.3** (with step 1: `library\sounds\`, 108 recorded, on this PC only). The user's listen
+   of the A/B demo (28 cues on EsDeeKid - Century): **B, the library, sounds better** ("b sounds better i guess") -
+   not yet the *Ships when* rating on two real videos. Then "the sounds are a kind too high but other than that good
+   enough" -> `sfx.TRIM_DB` -3 -> -5 (every level 2 dB lower; the -24 dB song floor holds, so the quiet ones - clicks,
+   keys, air - move less). The demo page's third player = B at the new level.
 3. **Music and ambience from public libraries**: picked by mood, tempo and length (`beats.py` measures them), only
    with clear licences (CC0 / free for commercial use; CC BY = its credit line goes into the publish package's
    description); room tone and ambience beds (city, nature, a café) under talking videos. New edit's *Music* gets
@@ -608,6 +630,14 @@ strong GPU, and their licences often forbid commercial use.
 5. **Separate music from voice** (from ideas.md, measure first - heavy on CPU): Demucs stems for cleaner beats / drops
    and cleaner speech, and to lower the music under the voice.
 6. **The quick draft's `--sfx`** (open since 0.4.1.1): the draft places its effects as cues, `sfx.py plan` makes them.
+   **Built 2026-10-25, released in 0.5.3.3**: `draft_edit.py --sfx few | some | many | auto [--sfx-kinds]` (New edit's step 5
+   passes it; Auto = few for a talking video, else some) -> the plan's `"sfx"` {amount, kinds, first = the drops} thins
+   the effects' cues (`sfx.choose`: the drops first, then hits > risers > whips > whooshes, 5 / 2 / 0 s apart), the
+   mix becomes its audio; punch-ins on one take = a whip peaking on the cut (a talking draft had no effect with a
+   sound before); *Finish it with Claude* lists them under *Stays*. Self-test `check_draft`. Measured on the
+   synthetic test clips: a 30 s music draft = 3 effects (2 hits, 1 tick, all recorded), a talking draft = 3 whips,
+   each peaking inside its cut frame; ~1.5 s added. Still open: plain cuts get no sound (a beat montage's 31 cuts ->
+   3 effects at *some*) - the user's listen decides.
 
 **Not here**: viral / trending sounds are copyrighted - they are added in TikTok or Instagram when posting, never built
 into a render (the *Trending sounds* plan was scrapped 2026-10-15). Music made by a model stays out until a light one

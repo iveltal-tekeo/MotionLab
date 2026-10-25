@@ -11,7 +11,9 @@ the precheck would flag, `--all` = every cue); `build.py --sfx` runs it and puts
 (the effects alone = their own Resolve track). How many and where: the request's `sfx` when the user picked it
 (`brief.md` *5. Sound*: the amount, the kinds as the plan's own `cues`, their notes; `none` = no effects), else the
 reference's `"sound"` answer (`copy.md`); the precheck checks the levels before the final. A talking video's voice:
-`--song-db 0` (the voice is not a song to duck).
+`--song-db 0` (the voice is not a song to duck). A plan's `"sfx": {"amount": few | some | many, "kinds": [...],
+"first": [drop frames], "song_db": 0}` (0.5.4: the quick draft's `--sfx`, from the request) thins the effects' own
+cues the same way on every build - your `cues` and the graphics' are never thinned.
 
 ## The build and the final
 - One plain build: `.venv\Scripts\python tools\build.py <project> build\plan_vN.json [--sfx]` = every graphic whose

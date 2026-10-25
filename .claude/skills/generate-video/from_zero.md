@@ -84,7 +84,8 @@ with the polish (motion blur, the sound mix, Resolve) - once, as a job (SKILL.md
    **Sound effects** (none was rated bad - always add them): while writing a graphic, give each move its cue in
    overlay.json `"cues"` (`{"f": <frame or a formula of the settings>, "kind": ..., "what": ...}`; typed text = one
    key per character, `"repeat": "len(<setting>)"`; kinds: `tools\sfx.py kinds`); templates bring theirs. `build.py
-   --sfx` runs `sfx.py plan` on the whole plan: synthesised (no samples to license), each effect levelled against
+   --sfx` runs `sfx.py plan` on the whole plan: recorded sounds from this PC's library where a kind has them (0.5.4,
+   `sfx.py library`), else made up; each effect levelled against
    the song under it and never more than 24 dB under it (so the precheck passes first time); its mix becomes the
    plan's `"audio"`, `build\sfx\<name>_sfx.wav` goes on its own track in Resolve at 01:00:00:00. Read the summary (the
    cues the precheck would flag; `sfx.py plan <plan> --all` = every cue); to change one set the cue's `"db"` or

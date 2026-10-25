@@ -38,7 +38,9 @@ own words (may name other things - follow them); `from` = the draft version they
   effects at the request's `sfx` amount and kinds (`render.md` *The sound*); colour = one look in `plan["grades"]`
   (the references' or the request's mood; a draft that already matched the references' colour keeps its LUT under
   it). The request's `style.palette` colours every title, caption and graphic. What is not in `add` stays as the
-  draft has it (no captions / sound effects the user did not tick).
+  draft has it (no captions / sound effects the user did not tick). A quick draft since 0.5.4 has its sound effects
+  already (the plan's `"sfx"` = {amount, kinds, first}, its `"audio"` = the mix; the dialog then lists them under
+  *Stays*): every build remakes them from the plan, the new graphics' cues with them - nothing to add.
 - `build\brief.md` holds the request in words (the script word for word, the words on screen, the palette, the sound
   effect kinds; `tools\brief.py <project>` when it is missing or older than `edit_request.json`) - read it, not the
   JSON again.

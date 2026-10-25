@@ -3502,8 +3502,8 @@ const FINISH_ADD = [['graphics', 'i-motion', t('Motion graphics'), t('titles, te
   ['colour', 'i-palette', t('Colour'), t('one colour look over the whole video')]];
 function finishModal(P, from, done) {
   const a = P.asked || {}, last = (P.outcome || {}).finish, again = last && last.from === from;
-  const on = new Set(again ? last.add : ['graphics', ...(a.captions === 'none' || !(a.captions || a.talk) ? [] : ['captions']), ...(a.sfx === 'none' ? [] : ['sfx'])]);
-  const keep = [t('Pacing & cuts'), t('Effects & transitions'), t('Sound & music')];
+  const on = new Set(again ? last.add : ['graphics', ...(a.captions === 'none' || !(a.captions || a.talk) ? [] : ['captions']), ...(a.sfx === 'none' || a.sfx_made ? [] : ['sfx'])]);
+  const keep = [t('Pacing & cuts'), t('Effects & transitions'), t('Sound & music'), ...(a.sfx_made ? [t('Sound effects')] : [])];
   modal(`<h2>${t('Finish it with Claude')}</h2>
     <div class="finrow"><b class="finlab">${t('Stays')}</b><div class="finkeep">${keep.map(k => `<span>✓ ${esc(k)}</span>`).join('')}</div></div>
     <div class="finrow"><b class="finlab">${t('Claude adds')}</b><div class="finadd">${FINISH_ADD.map(([k, ic, l, h]) =>

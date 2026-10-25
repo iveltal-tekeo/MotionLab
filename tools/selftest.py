@@ -355,6 +355,22 @@ def check_draft() -> dict:
           and T["frames"] == 300 and T["sound"] == [("T", 0, 99), ("T", 130, 229), ("T", 260, 359)]
           and [L.get("zoom", 1.0) for L in T["layers"][:3]] == [1.0, 1.12, 1.0],
           "draft: talking - the spoken parts in order, pauses cut, the sound with them, a punch-in every other cut")
+    from motionlab import sfx as SFX                          # 0.5.4: the draft's own sound effects (--sfx)
+    P = {"fps": 25.0, "frames": D["frames"], "width": 1080, "height": 1920, "layers": D["layers"]}
+    by = {amt: [q["f"] for q in SFX.plan_cues({**P, "sfx": {"amount": amt, "first": [400]}})]
+          for amt in ("few", "some", "many", "none")}
+    spaced = all(b - a >= 125 for a, b in zip(by["few"], by["few"][1:])) and all(
+        b - a >= 50 for a, b in zip(by["some"], by["some"][1:]))
+    only = {q["kind"] for q in SFX.plan_cues({**P, "sfx": {"amount": "many", "kinds": ["impact"]}})}
+    PT = {"fps": 25.0, "frames": T["frames"], "width": 1080, "height": 1920, "layers": T["layers"]}
+    pt = [(q["f"], q["kind"]) for q in SFX.plan_cues({**PT, "sfx": {"amount": "few"}})]
+    own = [(q["f"], q["kind"]) for q in SFX.plan_cues({**PT, "cues": [{"f": 100, "kind": "pop"}]})]
+    check(by["many"] == [q["f"] for q in SFX.plan_cues(P)] and len(by["few"]) < len(by["some"]) < len(by["many"])
+          and spaced and 400 in by["few"] and not by["none"] and only == {"impact"} and pt == [(99, "whip")]
+          and own == [(100, "pop")],
+          f"draft: sound effects - many {len(by['many'])}, some {len(by['some'])} (2 s apart), few {len(by['few'])} "
+          "(5 s apart, the drop's hit f400 (00:00:16:00) first), only the kinds asked; a talking draft's punch-in at "
+          "f100 (00:00:04:00) = a whip peaking on the cut, a cue placed there wins")
     W = ST.presets(["three_sec"], "fast paced, 2 s cuts, captions word by word")
     check(W["rhythm"]["median_shot_s"] == 2.0 and W.get("captions") and W["energy"] == "high",
           "draft: the user's words - '2 s cuts', 'fast paced', 'captions' - change the style")

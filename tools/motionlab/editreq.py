@@ -89,7 +89,7 @@ SFX_KINDS = {
     "whoosh": {"label": "Whooshes", "help": "transitions, fast moves", "kinds": ["whoosh", "whip", "air"]},
     "impact": {"label": "Impacts", "help": "drops, big reveals", "kinds": ["impact", "thump"]},
     "riser": {"label": "Risers", "help": "build-ups before a cut", "kinds": ["riser"]},
-    "ui": {"label": "Clicks & pops", "help": "text, buttons, pop-ins", "kinds": ["click", "pop", "key", "tick", "chime"]},
+    "ui": {"label": "Clicks & pops", "help": "text, buttons, pop-ins", "kinds": ["click", "pop", "key", "tick", "chime", "shutter"]},
     "glitch": {"label": "Glitches", "help": "glitches, inverted frames", "kinds": ["zap", "buzz", "crackle"]},
     "playful": {"label": "Playful & 8-bit", "help": "games, money, fun", "kinds": ["chip", "chip_hit", "ching", "cork"]},
     "sparkle": {"label": "Sparkle", "help": "glows, light leaks", "kinds": ["shimmer", "flutter", "ghost"]},
@@ -398,4 +398,10 @@ def draft_args(req: dict) -> list[str]:
         sound = "talk"
     if sound != "auto":
         out += ["--sound", sound]
+    sx = req.get("sfx") or {}                       # 0.5.4: the draft's own sound effects (Auto = few / some)
+    if sx.get("amount") != "none":
+        out += ["--sfx", sx.get("amount") or "auto"]
+        kinds = [k for g in sx.get("kinds") or [] if g in SFX_KINDS for k in SFX_KINDS[g]["kinds"]]
+        if kinds:
+            out += ["--sfx-kinds", ",".join(kinds)]
     return out

@@ -223,7 +223,7 @@ def main() -> int:
         if new_audio or not plan.get("sfx"):          # "sfx": true = kept on every build of this plan and its copies
             if new_audio:
                 plan["audio"] = {**(plan.get("audio") or {}), "path": str(mix.resolve())}
-            plan["sfx"] = True
+            plan["sfx"] = plan.get("sfx") or True    # a quick draft's {"amount", "kinds"} stays (0.5.4)
             plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
         lines.append(f"sound: {cues[6:] or 'made'} -> {mix.name} (the plan's audio)")
         report["sfx"] = str(rep)

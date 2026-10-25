@@ -24,6 +24,10 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
                       pauses cut out; 0.5.3: the voice levelled to -26 dBFS RMS, one gain per take, peaks under
                       -1 dBFS - `--per-shot` = per shot); auto = talk for a talking style, else music when there is a
                       song, else clips
+  --sfx none          0.5.4: few | some | many | auto (few for a talking video, else some) - a sound on the draft's
+                      effects (zooms, whips, flashes, speed-ups...), recorded from library\\sounds where a kind has
+                      them, each levelled against the sound under it (tools\\sfx.py plan); the plan's "audio" = the
+                      mix, its "sfx" = the choice (build.py keeps it). --sfx-kinds whoosh,impact = only these kinds
   --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
                       also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
@@ -52,6 +56,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motionlab import audio as AU  # noqa: E402
 from motionlab import draft as DR  # noqa: E402
 from motionlab import footage as FC  # noqa: E402
+from motionlab import sfx as SFX  # noqa: E402
 from motionlab import style as ST  # noqa: E402
 from motionlab import taxonomy  # noqa: E402
 from motionlab.probe import probe  # noqa: E402
@@ -311,6 +316,33 @@ def write_sound(prj: Project, d: Path, v, y: np.ndarray, stem: str | None = None
     if r.returncode:
         raise SystemExit(f"could not encode the sound: {r.stderr[-400:]}")
     return m4a
+
+
+def add_sfx(plan_p: Path, plan: dict, amount: str, kinds: list[str], talk: bool, drops: list[float]) -> str:
+    """0.5.4 (step 6): the draft's own effects get their sounds - the plan's "sfx" {amount, kinds, first = the drops'
+    frames, kept first} picks which (motionlab\\sfx.py choose), tools\\sfx.py plan levels each against the sound under
+    it (a voice is not lowered) and its mix becomes the plan's "audio"; build.py makes them again on every build of
+    this plan and its copies."""
+    plan["sfx"] = {"amount": amount, **({"kinds": kinds} if kinds else {}),
+                   **({"first": [int(round(x)) for x in drops]} if drops else {}), **({"song_db": 0.0} if talk else {})}
+    if not SFX.plan_cues(plan):
+        del plan["sfx"]
+        return "no sound effects: none of the draft's effects " + (f"is a {' / '.join(kinds)}" if kinds else "has one")
+    write_json(plan_p, plan)
+    r = subprocess.run([sys.executable, str(TOOLS / "sfx.py"), "plan", str(plan_p)], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", cwd=str(LAB))
+    if r.returncode:
+        raise SystemExit(f"sfx.py plan failed:\n{(r.stdout + r.stderr)[-1200:]}")
+    stem = SFX.stem_name(plan["name"])
+    mix, rep = plan_p.parent / "sfx" / f"{stem}_mix.wav", plan_p.parent / "sfx" / f"{stem}_sfx.json"
+    rows = [q for q in read_json(rep).get("cues", []) if not q.get("skipped")]
+    plan["audio"] = {**plan["audio"], "path": str(mix.resolve())}
+    write_json(plan_p, plan)
+    rec = sum(1 for q in rows if q.get("sound", "made-up") != "made-up")
+    kinds_n = Counter(q["kind"] for q in rows)
+    return (f"{len(rows)} sound effects ({amount}: {', '.join(f'{n} {k}' for k, n in kinds_n.most_common())}; "
+            f"{rec} recorded, {len(rows) - rec} made up), each levelled against the sound under it - every cue with "
+            f"frame + timecode: build\\sfx\\{rep.name}")
 
 
 def match_colour(prj: Project, v: int, clips: list[dict], style: dict, strength: float) -> tuple[dict, str]:
@@ -733,7 +765,7 @@ def apply_list(a, prj: Project) -> int:
     talk = made.get("sound") in ("talk", "clips") and any(o["op"] == "cut" for o in ops)
     base_audio = Path(str((base.get("audio") or {}).get("path") or ""))
     if base_audio.parent.name == "sfx" and base_audio.stem.endswith("_mix"):
-        P["sfx"] = True                                 # the base had sound effects: build.py makes them again
+        P["sfx"] = P.get("sfx") or True                 # the base had sound effects: build.py makes them again
     if talk:                                            # the clips' own sound follows the shots again
         _, clips, _, cfps = footage(prj, int(P["width"]), int(P["height"]))
         d = prj.check(prj.build / "draft")
@@ -891,6 +923,9 @@ def main() -> int:
     ap.add_argument("--per-shot", action="store_true", help="talk: level the voice per shot (default: one gain per take)")
     ap.add_argument("--colour", choices=["match", "grade", "none"], default="match")
     ap.add_argument("--colour-strength", type=float, default=0.8, help="how far toward the references' colour (0-1)")
+    ap.add_argument("--sfx", choices=["none", "auto", *SFX.AMOUNT_GAP_S], default="none",
+                    help="0.5.4: sound effects on the draft's effects (auto = few for a talking video, else some)")
+    ap.add_argument("--sfx-kinds", help="sound effects: only these kinds, comma-separated (tools\\sfx.py kinds)")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--render", action="store_true")
     ap.add_argument("--presets", action="store_true", help="list the presets")
@@ -912,6 +947,10 @@ def main() -> int:
         return apply_list(a, prj)
     if a.feel_test:
         return feel_test(a, prj, cfg)
+    sfx_kinds = [SFX.ALIASES.get(k.strip(), k.strip()) for k in (a.sfx_kinds or "").split(",") if k.strip()]
+    if [k for k in sfx_kinds if k not in SFX.KINDS]:
+        raise SystemExit(f"--sfx-kinds: unknown {', '.join(k for k in sfx_kinds if k not in SFX.KINDS)} "
+                         "(tools\\sfx.py kinds)")
     try:
         if a.feel:
             if a.like or a.preset:
@@ -992,6 +1031,11 @@ def main() -> int:
                         "style": ST.summary(style)}}
     plan_p = prj.check(prj.build / f"plan_v{v}.json")
     write_json(plan_p, plan)
+    if a.sfx != "none":
+        sfx_line = add_sfx(plan_p, plan, ("few" if mode == "talk" else "some") if a.sfx == "auto" else a.sfx,
+                           sfx_kinds, mode == "talk", drops)
+        log(f"sound: {sfx_line}")
+        sound_line += f"; {sfx_line}"
     args_line = " ".join(sys.argv[1:])
     md = notes(prj, v, style, D, by_id, fps, W, H, orient, sound_line, music_note, args_line, colour_line)
     prj.check(prj.build / f"draft_v{v}.md").write_text(md, encoding="utf-8")

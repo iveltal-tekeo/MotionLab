@@ -7,6 +7,19 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.3.3 - 2026-10-25 - Efectos de sonido grabados, y borradores rápidos con sonido
+
+- **Efectos de sonido grabados de verdad**: los whoosh, subidas, golpes, clics, pops y sonidos de cámara de tus
+  montajes ahora salen de efectos grabados de tu propia biblioteca de sonidos, no solo de sonidos inventados. Cada uno
+  cae en su fotograma como antes (el pico del whoosh en el movimiento, el final de la subida en el drop) y cada vez
+  suena uno distinto. Claude puede añadir un pack gratuito que descargues; se queda en tu PC. Los tipos que aún no
+  tienen nada grabado mantienen el sonido inventado. Además suenan un poco más bajos bajo la canción (2 dB), nunca
+  tanto como para que la canción los tape.
+- **Los borradores rápidos llegan con efectos de sonido**: un borrador rápido de Nueva edición ahora pone un sonido en
+  sus propios efectos: un golpe en el drop y en los destellos, una subida antes de un acelerón, un swish rápido en
+  cada zoom de un vídeo hablado. Cuántos y de qué tipos lo decide el paso *Sonido* de Nueva edición (Auto = unos pocos
+  en un vídeo hablado, algunos en un montaje musical; Ninguno = ninguno). *Termínalo con Claude* los mantiene.
+
 ## 0.5.3.2 - 2026-10-25 - Grábalo te lleva al Editor, y Termínalo con Claude
 
 - **Grábalo te lleva al Editor**: el *Grábalo* de un guion mantiene el teleprompter, las frases y añadir tu grabación;

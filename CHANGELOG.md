@@ -5,6 +5,18 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.3.3 - 2026-10-25 - Recorded sound effects, and quick drafts with sound
+
+- **Sound effects from real recordings** - the whooshes, risers, hits, clicks, pops and camera sounds in your edits
+  now come from recorded sound effects in your own sound library, not only made-up ones. Each one lands on its frame
+  like before (a whoosh's peak on the move, a riser's end on the drop) and a different one plays each time. Claude
+  can add a free pack you download; it stays on your PC. Kinds with nothing recorded yet keep the made-up sound.
+  They also sit a little lower under the song (2 dB), never so low that the song buries them.
+- **Quick drafts come with sound effects** - a quick draft from New edit now puts a sound on its own effects: a hit on
+  the drop and on flashes, a riser before a speed-up, a quick swish on each punch-in of a talking video. How many and
+  which kinds follow New edit's *Sound* step (Auto = a few on a talking video, some on a music edit; None = none).
+  *Finish it with Claude* keeps them.
+
 ## 0.5.3.2 - 2026-10-25 - Film it hands over to the Editor, and Finish it with Claude
 
 - **Film it hands over to the Editor** - a script's *Film it* keeps the teleprompter, the lines and adding your

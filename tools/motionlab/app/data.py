@@ -1028,12 +1028,16 @@ def project(name: str) -> dict:
 
 def _asked(b: Path) -> dict:
     """What New edit asked for the layers a quick draft leaves to Claude (captions, sound effects; a talking video) -
-    *Finish it with Claude* starts from it (2026-10-24). {} = no request."""
+    *Finish it with Claude* starts from it (2026-10-24). {} = no request. `sfx_made` (0.5.4) = the newest plan has its
+    sound effects already (a quick draft makes them): they stay, the dialog does not offer them again."""
+    plans = sorted(b.glob("plan_v*.json"), key=lambda p: int(re.sub(r"\D", "", p.stem) or 0)) if b.is_dir() else []
+    made = bool(plans) and bool((read_json(plans[-1], {}) or {}).get("sfx"))
     req = read_json(b / "edit_request.json", {}) or {}
     if not isinstance(req, dict) or not req:
-        return {}
+        return {"sfx_made": True} if made else {}
     return {"captions": (req.get("style") or {}).get("captions") or "", "sfx": (req.get("sfx") or {}).get("amount") or "",
-            "talk": req.get("sound") == "talk" or bool(re.fullmatch(ER.TALK_ID, str(req.get("prompt") or "")))}
+            "talk": req.get("sound") == "talk" or bool(re.fullmatch(ER.TALK_ID, str(req.get("prompt") or ""))),
+            "sfx_made": made}
 
 
 # ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out

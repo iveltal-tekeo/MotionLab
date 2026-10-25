@@ -283,7 +283,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 - [docs/plans.md](docs/plans.md) - the planned versions (0.5.3 faster videos: a minute of video in ~10 minutes of Claude, 0.5.4 sound: recorded sound effects,
   music and ambience from public libraries, voice-over, 0.5.5 content agency: a My Brand page - your goal, audience,
-  identity and catalogue, 0.5.6 motion graphics from template packs - Resolve / After Effects packs read exactly, a
+  identity and catalogue, and a mini-editor for small cuts without Claude, 0.5.6 motion graphics from template packs - Resolve / After Effects packs read exactly, a
   motion check, formats, a preview before the render, 0.5.7 colour: correct your own clips, adjustable grades in
   Resolve, 0.5.8 content generation: AI clips back into the lab, pictures from image tools, 0.5.9 yapping mode for
   talking-to-camera videos and the clips a script needs, 0.6 take notes from videos: what videos and courses say and

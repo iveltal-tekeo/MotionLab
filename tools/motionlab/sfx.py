@@ -1,7 +1,11 @@
-"""Sound effects (0.5.0 step 4, from projects\\illdari_test_copy_1\\build\\sfx_v2.py): every sound is synthesised here
-(no samples, nothing to license), seeded (the same cues give the same file, sample for sample) at 48 kHz, placed on a
-graphic's or a plan's frames and levelled against the song under it - measured, since Claude cannot hear.
-tools\\sfx.py is the command line.
+"""Sound effects (0.5.0 step 4, from projects\\illdari_test_copy_1\\build\\sfx_v2.py): each sound is made up here
+(synthesised) or, since 0.5.4, a recorded one from this PC's library (`Library`: library\\sounds\\<kind>\\*.wav +
+sounds.json with each file's source, licence and anchor; `import_sounds` adds a pack, never changing it), seeded (the
+same cues give the same file, sample for sample) at 48 kHz, placed on a graphic's or a plan's frames and levelled
+against the song under it - measured, since Claude cannot hear. A recorded sound lands by its anchor where the made-up
+one lands (`key_moment`: a whoosh's loudest point, a riser's end, else its onset on the frame), a little faster /
+slower and louder / softer each use, never the file the previous cue of its kind used; a kind with no files (and
+the kinds in "synth_too") keeps the made-up sound. tools\\sfx.py is the command line.
 
 **Cues** - a graphic lists them in its overlay.json next to its settings ("cues"; overlay.py keeps keys it does not
 know, `new --from`, `save` and `set` copy the whole file, and a cue is not part of the render's inputs):
@@ -27,8 +31,12 @@ frame + timecode to check against `overlay.py stills`.
 **A plan** (`plan_cues`): the effects drawn in its layers become cues - fast zooms and slides (whoosh / whip, one per
 move, the two halves of a zoom-through or a whip joined), flashes (impact / thump / click by strength), black frames,
 speed-ups (a riser that lands on the change), stutter jumps (ticks), short colour / RGB flashes (zap), dips (air),
-shakes (thump), light leaks (shimmer); plus the cues of every overlay graphic it shows (moved to where the layer
-starts) and the plan's own "cues" list (the same format, no settings).
+shakes (thump), light leaks (shimmer), punch-ins / -outs on a cut within one take (whip, 0.5.4); plus the cues of
+every overlay graphic it shows (moved to where the layer starts) and the plan's own "cues" list (the same format, no
+settings) - a punch-in's whip within 2 frames of one of the plan's own cues is left out. A plan's "sfx": {"amount": few | some |
+many | none, "kinds": [...], "first": [frames kept first], "song_db": 0} (0.5.4: the quick draft, from New edit's
+step 5) thins the effects' cues (`choose`) and sets how much the sound under them is lowered (0 for a voice);
+"sfx": true = all of them.
 
 **Levels**: each kind has a level class = (dB against the song, the lowest level in dBFS) - stereo RMS, all TRIM_DB
 lower (the user's ear). The song is measured where the effect sounds: the quieter of 400 ms centred on the effect's
@@ -63,8 +71,9 @@ SONG_DB = -2.5                       # the song is lowered this much to make roo
 FADE_S = 0.8                         # the mix fades out over the last 0.8 s (0 = off)
 WINDOW_S, PRE_S = 0.4, 0.05          # the song window: centred on the effect's loud part, +50 ms each side, >= 0.4 s
 NEAR_S = 0.1                         # ... and its loud part alone (>= 0.1 s): the quieter of the two counts
-TRIM_DB = -3.0                       # every level (against the song and the lowest one): the user heard the first
-                                     # version as "kinda too loud" (2026-10-14, illdari v2's rebuild)
+TRIM_DB = -5.0                       # every level (against the song and the lowest one): the user heard the first
+                                     # version as "kinda too loud" (2026-10-14, illdari v2's rebuild: -3), the
+                                     # recorded library's A/B demo as "a kind too high" (2026-10-25: -2 more)
 # (dB against the song where the effect sounds, the lowest level in dBFS) - stereo RMS of the effect's loud part.
 # sfx_v2's numbers, converted 2026-10-14: it measured only the samples within 13 dB of the sound's peak, which reads
 # 4-8 dB louder than the whole loud part (14 dB for a click), so the same numbers here came out ~6 dB louder; minus
@@ -346,11 +355,19 @@ KINDS = {
     "cork": (s_cork, {}, "pop", "a champagne cork"),
     "flutter": (s_flutter, {"dur": 0.5}, "soft", "wings: quick soft air puffs"),
     "ghost": (s_ghost, {"dur": 0.7}, "soft", "a breathy swell with a slow vibrato tone"),
+    "shutter": (s_click, {}, "click", "a camera shutter or flash (a photo pops in, a freeze frame) - recorded only, "
+                                      "else a click"),
 }
-ALIASES = {"hit": "impact", "swish": "whip", "type": "key", "keystroke": "key", "slam": "impact", "sparks": "crackle"}
+ALIASES = {"hit": "impact", "swish": "whip", "type": "key", "keystroke": "key", "slam": "impact", "sparks": "crackle",
+           "camera": "shutter"}
 SEEDED = {"whoosh", "whip", "riser", "air", "key", "zap", "chip_hit", "crackle", "shimmer", "flutter", "ghost"}
 CUE_KEYS = {"f", "kind", "what", "repeat", "if", "level", "db", "pan", "seed"}
 HITS = ("impact", "thump", "click")             # a plan's flashes, strongest first
+# 0.5.4 (step 6): how many of a plan's effects get a sound - the plan's "sfx": {"amount", "kinds"} (New edit's step 5;
+# the quick draft writes it). At least this many seconds apart (editreq.SFX_AMOUNT's words: few = one every 5-8 s,
+# some = one every 2-4 s, many = every move); the biggest moments are kept first (RANK)
+AMOUNT_GAP_S = {"few": 5.0, "some": 2.0, "many": 0.0}
+RANK = ("impact", "riser", "whip", "thump", "whoosh", "zap", "shimmer", "air", "tick", "click")
 
 
 def synth(kind: str, params: dict | None = None, seed: int = 1) -> np.ndarray:
@@ -617,6 +634,23 @@ def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
                 k = int(np.argmax(vals))
                 if vals[k] >= 0.9 and 0 < k < len(vals) - 1:
                     add(s, "air", f"{lid}: dip", dur=(e - s + 1) / fps)
+    # 0.5.4: a punch-in / -out = a cut to the same take at another fixed zoom (a talking draft's every other cut), seen
+    # (no later clip layer over the cut) -> a whip whose loudest point lands on the cut
+    clips = [(i, L) for i, L in enumerate(plan.get("layers", [])) if L.get("type") == "clip"]
+    wp = KINDS["whip"][1]
+    lead = int(round(wp["peak"] * wp["dur"] * fps))
+    punch: set[int] = set()
+    for i, L in clips:
+        c = int(L.get("start", 0))
+        prev = next((o for _, o in clips if o is not L and o.get("src") == L.get("src")
+                     and int(o.get("end", -9)) + 1 == c), None)
+        if prev is None or c <= 0 or _animated(L.get("zoom")) or _animated(prev.get("zoom")):
+            continue
+        z0, z1 = float(prev.get("zoom") or 1.0), float(L.get("zoom") or 1.0)
+        if abs(z1 / z0 - 1) >= 0.04 and not any(j > i and int(o.get("start", 0)) <= c <= int(o.get("end", N - 1))
+                                                for j, o in clips):
+            add(c - lead, "whip", f"{L.get('id', 'clip')}: punch-{'in' if z1 > z0 else 'out'} on the cut f{c}")
+            punch.add(c - lead)
     # the moves: the two halves of a zoom-through (out, then in) or of a whip (both shots slide) are one sound
     moves.sort(key=lambda m: (m["axis"], m["a"]))
     merged: list[dict] = []
@@ -654,8 +688,251 @@ def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
         if any(k["kind"] == q["kind"] and abs(k["f"] - q["f"]) <= 1 for k in kept[-6:]):
             continue                                       # the same sound twice within a frame = once
         kept.append(q)
-    out = kept + shown + resolve(plan.get("cues") or [], {}, fps, N, "plan cues")
-    return sorted(out, key=lambda q: q["f"])
+    own = resolve(plan.get("cues") or [], {}, fps, N, "plan cues")
+    kept = [q for q in kept if not (q["kind"] == "whip" and q["f"] in punch     # a punch-in's own cue wins
+                                    and any(abs(q["f"] - o["f"]) <= 2 for o in own))]
+    sx = plan.get("sfx") if isinstance(plan.get("sfx"), dict) else {}
+    kept = choose(kept, fps, sx.get("amount"), sx.get("kinds"), sx.get("first"))
+    return sorted(kept + shown + own, key=lambda q: q["f"])
+
+
+def choose(cues: list[dict], fps: float, amount: str | None = None, kinds: list[str] | None = None,
+           first: list[int] | None = None) -> list[dict]:
+    """The effects' cues an amount and kinds keep (a plan's "sfx" dict): only the kinds named (none = all), then the
+    biggest moments first - those within 2 frames of a frame in `first` (a song's drops), then by RANK - each at
+    least AMOUNT_GAP_S from those kept; "none" = no cue, no amount = all. The graphics' and the plan's own cues are
+    not passed here - they were placed on purpose."""
+    if amount == "none":
+        return []
+    if kinds:
+        cues = [q for q in cues if q["kind"] in set(kinds)]
+    gap = AMOUNT_GAP_S.get(amount or "many", 0.0) * fps
+    if gap <= 0:
+        return cues
+    rank = {k: i for i, k in enumerate(RANK)}
+    kept: list[dict] = []
+    for q in sorted(cues, key=lambda q: (not any(abs(q["f"] - int(x)) <= 2 for x in first or []),
+                                         rank.get(q["kind"], len(RANK)), q["f"])):
+        if all(abs(q["f"] - k["f"]) >= gap for k in kept):
+            kept.append(q)
+    return sorted(kept, key=lambda q: q["f"])
+
+
+# ------------------------------------------------------------------------------------------------ recorded sounds (0.5.4)
+SOUNDS = LAB / "library" / "sounds"                   # this PC's library (library\ is never shared): <kind>\*.wav +
+                                                      # sounds.json - the source, licence and anchor of every file
+PEAK_KINDS = ("whoosh", "whip", "riser", "air")       # placed by their loudest moment, the rest by their onset
+VARY_PITCH, VARY_DB = 0.03, 1.0                       # every use a little different: +-3 % speed, +-1 dB
+AUDIO_EXT = (".wav", ".mp3", ".flac", ".ogg", ".aif", ".aiff", ".m4a")
+CAP_S = {"riser": 6.0, "whoosh": 3.0, "whip": 1.5, "impact": 3.5, "shutter": 3.0}    # an imported sound's longest
+KIND_WORDS = (  # an imported file's kind from its folder + name: the first match wins (--kind sets it instead)
+    ("shutter", r"shutter|camera|flash"), ("riser", r"riser|build ?up|reverse|uplifter"),
+    ("whip", r"swish|swipe|\bwhip\b"), ("whoosh", r"whoosh|swoosh|woosh|transition"),
+    ("thump", r"thump|thud|deep hit"), ("impact", r"impact|\bhit\b|boom|bang|slam|braam"),
+    ("chime", r"chime|success|notification|achievement|game start|bell"), ("pop", r"\bpop\b|bubble|blip"),
+    ("key", r"keyboard|typing|typewriter|keystroke"), ("tick", r"\btick|clock"), ("zap", r"\bzap|glitch|static"),
+    ("ching", r"\bcoins?\b|cash|money|register"), ("click", r"click|button|hover|\bui\b|toggle|switch"))
+
+
+def key_moment(kind: str, params: dict | None = None) -> float:
+    """Seconds after a cue's frame where its sound lands (the made-up one's design): a whoosh's loudest point, a
+    riser's end, a dip's swell; 0 = it starts on the frame. A recorded sound's anchor is placed there."""
+    p = {**KINDS[kind][1], **(params or {})}
+    if kind in ("whoosh", "whip"):
+        return float(p["dur"]) * float(p["peak"])
+    if kind == "riser":
+        return float(p["dur"])
+    if kind == "air":
+        return float(p["dur"]) * 0.45
+    return 0.0
+
+
+def _env10(x: np.ndarray, win_s: float = 0.01) -> np.ndarray:
+    m = np.square(x if x.ndim == 1 else x.mean(1))
+    return np.sqrt(np.maximum(uniform_filter1d(m, max(1, int(win_s * SR)), mode="constant"), 0.0))
+
+
+def anchor_of(x: np.ndarray, kind: str) -> int:
+    """The sample a recorded sound is placed by: its loudest moment (PEAK_KINDS - the loudest 50 ms finds where, so
+    a stuttery riser's single spike does not win over its climax; the loudest 10 ms within 50 ms of it says exactly
+    where: a riser that stops at its loudest is not placed 25 ms early), else its onset (the first sample within
+    20 dB of its peak, 2 ms earlier)."""
+    e = _env10(x)
+    if not e.size or e.max() <= 0:
+        return 0
+    if kind in PEAK_KINDS:
+        c, w = int(np.argmax(_env10(x, 0.05))), int(0.05 * SR)
+        lo = max(0, c - w)
+        return lo + int(np.argmax(e[lo:c + w + 1]))
+    on = np.flatnonzero(e >= e.max() * 0.1)
+    return max(0, int(on[0]) - int(0.002 * SR)) if on.size else 0
+
+
+class Library:
+    """The recorded sounds of a library folder (sounds.json + <kind>\\*.wav). pick() = the sound for a cue: one of
+    its kind's files (or the made-up sound for a kind listed in "synth_too"), seeded by the cue, never the one the
+    previous cue of that kind used; place() = that file put so its anchor lands on the cue's key moment."""
+    SYNTH = {"synth": True, "file": "made-up"}
+
+    def __init__(self, root: Path, data: dict):
+        self.root, self.data = Path(root), data
+        self.by_kind: dict[str, list[dict]] = {}
+        for e in data.get("sounds", []):
+            if (self.root / e["file"]).exists():
+                self.by_kind.setdefault(e["kind"], []).append(e)
+        self.synth_too = set(data.get("synth_too") or [])
+        self._cache: dict[str, np.ndarray] = {}
+
+    @classmethod
+    def load(cls, root: Path = SOUNDS) -> "Library | None":
+        p = Path(root) / "sounds.json"
+        if not p.exists():
+            return None
+        lib = cls(root, json.loads(p.read_text(encoding="utf-8")))
+        return lib if lib.by_kind else None
+
+    def pool(self, kind: str) -> list[dict]:
+        rec = self.by_kind.get(kind, [])
+        return rec + [self.SYNTH] if rec and kind in self.synth_too else list(rec)
+
+    def pick(self, q: dict, last: dict | None) -> dict | None:
+        pool = self.pool(q["kind"])
+        if not pool:
+            return None
+        if last is not None and len(pool) > 1:
+            pool = [e for e in pool if e is not last]
+        rng = np.random.default_rng([int(q["seed"]), zlib.crc32(q["kind"].encode())])
+        w = np.ones(len(pool))
+        if q["kind"] == "riser":                       # a rise about as long as the cue's
+            want = key_moment("riser", q["params"])
+            w = np.array([1.0 if e.get("synth") else 1 / (1 + abs(e["anchor_s"] - want)) for e in pool])
+        return pool[int(rng.choice(len(pool), p=w / w.sum()))]
+
+    def audio(self, e: dict) -> np.ndarray:
+        if e["file"] not in self._cache:
+            import soundfile as sf
+            x, sr = sf.read(str(self.root / e["file"]), dtype="float64", always_2d=True)
+            x = np.repeat(x, 2, 1) if x.shape[1] == 1 else x[:, :2]
+            if sr != SR:
+                t = np.arange(int(len(x) * SR / sr)) * sr / SR
+                x = np.stack([np.interp(t, np.arange(len(x)), x[:, c]) for c in range(2)], 1)
+            self._cache[e["file"]] = x / (np.abs(x).max() + 1e-9)       # peak 1, like synth(): PEAK_DB caps the same
+        return self._cache[e["file"]]
+
+    def place(self, e: dict, q: dict, s: int, n_total: int) -> tuple[np.ndarray, int, float]:
+        """(the sound, stereo; the sample it starts on; a level offset in dB) - a little faster or slower and louder
+        or softer each use (seeded), its anchor on the cue's key moment; a long build-up before it is shortened to
+        about the cue's own (faded in), the part before the video's start cut."""
+        rng = np.random.default_rng([int(q["seed"]), 7])
+        rate = 1 + float(rng.uniform(-VARY_PITCH, VARY_PITCH))
+        vary = float(rng.uniform(-VARY_DB, VARY_DB))
+        x = self.audio(e)
+        t = np.arange(int(len(x) / rate)) * rate
+        x = np.stack([np.interp(t, np.arange(len(x)), x[:, c]) for c in range(2)], 1)
+        anchor = int(round(e["anchor_s"] * SR / rate))
+        k = int(round(key_moment(q["kind"], q["params"]) * SR))
+        if q["kind"] in PEAK_KINDS:
+            keep = max(int(1.6 * k), int((0.4 if q["kind"] == "riser" else 0.25) * SR))
+            if anchor > keep:
+                x, anchor = x[anchor - keep:].copy(), keep
+                fi = max(1, min(anchor, int(0.08 * SR)))
+                x[:fi] *= np.linspace(0, 1, fi)[:, None]
+        start = s + k - anchor
+        if start < 0:
+            x = x[-start:].copy()
+            fi = max(1, min(len(x), int(0.01 * SR)))
+            x[:fi] *= np.linspace(0, 1, fi)[:, None]
+            start = 0
+        return x[:max(0, n_total - start)], start, vary
+
+
+def guess_kind(name: str) -> str | None:
+    low = name.lower().replace("_", " ")
+    return next((k for k, rx in KIND_WORDS if re.search(rx, low)), None)
+
+
+def import_sounds(src: Path, source: str, licence: str, kind: str | None = None, skip: list[str] | None = None,
+                  root: Path = SOUNDS, dry: bool = False) -> dict:
+    """Recorded sounds into the library: each file (or every audio file in a folder, kind from its folder + name,
+    or `kind` for all) is read (never changed), cut to its sound (silence off; at most CAP_S; a whoosh / whip /
+    riser kept around its loudest moment), its anchor measured, a 24-bit 48 kHz copy written to <root>\\<kind>\\
+    and its row to sounds.json: the source, the licence, the original file's SHA-256 (the same file twice = once).
+    A whoosh by name whose sound is under 0.35 s becomes a whip."""
+    import fnmatch
+    import soundfile as sf
+    src, root = Path(src), Path(root).resolve()
+    if not (root == SOUNDS.resolve() or (LAB / ".app").resolve() in root.parents
+            or Path(__import__("tempfile").gettempdir()).resolve() in root.parents):
+        raise PermissionError(f"the sound library is {rel(SOUNDS)} (not {root})")
+    if kind and kind not in KINDS:
+        raise ValueError(f"unknown kind '{kind}' (kinds: {', '.join(KINDS)})")
+    files = [src] if src.is_file() else sorted(p for p in src.rglob("*") if p.suffix.lower() in AUDIO_EXT)
+    jp = root / "sounds.json"
+    data = json.loads(jp.read_text(encoding="utf-8")) if jp.exists() else {
+        "_comment": "This PC's recorded sounds (motionlab\\sfx.py import_sounds): file, kind, anchor_s = the moment "
+                    "placed on a cue (whoosh / whip / riser / air: the loudest; the rest: the onset), the source and "
+                    "its licence. library\\ is never shared.", "synth_too": [], "sounds": []}
+    have = {(e["sha256"], e["kind"]) for e in data["sounds"]}
+    taken = {e["file"] for e in data["sounds"]}
+    out = {"added": [], "skipped": [], "unknown": [], "same": []}
+    for p in files:
+        name = p.name if src.is_file() else p.relative_to(src).as_posix()
+        if any(fnmatch.fnmatch(p.name.lower(), pat.strip().lower()) for pat in (skip or []) if pat.strip()):
+            out["skipped"].append(name)
+            continue
+        k = kind or guess_kind(name)
+        if not k:
+            out["unknown"].append(name)
+            continue
+        sha = hashlib.sha256(p.read_bytes()).hexdigest()
+        if (sha, k) in have:
+            out["same"].append(name)
+            continue
+        x = load_audio(p)
+        e = _env10(x)
+        if not e.size or e.max() <= 0:
+            out["skipped"].append(name + " (silent)")
+            continue
+        on = np.flatnonzero(e >= e.max() * 10 ** (-50 / 20))
+        x = x[max(0, on[0] - int(0.005 * SR)):on[-1] + 1]
+        guessed = kind is None
+        if guessed and k == "whoosh":
+            a, b = loud_part(x.mean(1))
+            if (b - a) / SR < 0.35:
+                k = "whip"
+        cap = int(CAP_S.get(k, 2.0) * SR)
+        if len(x) > cap:
+            pk = int(np.argmax(_env10(x)))
+            if k == "riser":
+                lo = max(0, min(pk + int(0.6 * SR), len(x)) - cap)
+            elif k in PEAK_KINDS:
+                lo = max(0, min(pk - int(cap * 0.6), len(x) - cap))
+            else:
+                lo = 0
+            x = x[lo:lo + cap].copy()
+            fo = int(0.04 * SR)
+            x[-fo:] *= np.linspace(1, 0, fo)[:, None]
+            if lo:
+                fi = int(0.03 * SR)
+                x[:fi] *= np.linspace(0, 1, fi)[:, None]
+        base = f"{k}/{stem_name(p.stem).lower()[:60]}"
+        f, j = f"{base}.wav", 2
+        while f in taken:
+            f, j = f"{base}_{j}.wav", j + 1
+        row = {"file": f, "kind": k, "anchor_s": round(anchor_of(x, k) / SR, 4), "len_s": round(len(x) / SR, 3),
+               "source": source, "original": name, "sha256": sha, "licence": licence,
+               "added": time.strftime("%Y-%m-%d")}
+        out["added"].append(row)
+        taken.add(f)
+        have.add((sha, k))
+        if not dry:
+            (root / k).mkdir(parents=True, exist_ok=True)
+            sf.write(str(root / f), np.clip(x, -1, 1), SR, subtype="PCM_24")
+            data["sounds"].append(row)
+    if not dry and out["added"]:
+        root.mkdir(parents=True, exist_ok=True)
+        jp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return out
 
 
 # ------------------------------------------------------------------------------------------------ song, levels, mix
@@ -736,9 +1013,11 @@ def limit(x: np.ndarray, ceiling_db: float = CEILING_DB, hold_s: float = 0.02) -
 
 def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = None, song_db: float = SONG_DB,
           ceiling_db: float = CEILING_DB, fade_s: float = FADE_S, peak_db: float = PEAK_DB,
-          floor_vs_song: float | None = FLOOR_VS_SONG_DB) -> dict:
+          floor_vs_song: float | None = FLOOR_VS_SONG_DB, sounds: Library | None = None) -> dict:
     """The effects stem, the mix and a row per cue with its measured levels. song = stereo at SR from frame 0.
-    floor_vs_song: an effect never sits further under the song where it sounds (rule "song floor"; None = off)."""
+    floor_vs_song: an effect never sits further under the song where it sounds (rule "song floor"; None = off).
+    sounds = a Library: a cue whose kind has recorded sounds gets one of them (Library.pick / place), the rest the
+    made-up sound; None = made-up sounds only (the same samples every run either way)."""
     N = int(round(frames / fps * SR))
     has_song = song is not None and len(song) > 0
     sg = np.zeros((N, 2))
@@ -747,18 +1026,30 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
         sg[:k] = song[:k, :2] * 10 ** (song_db / 20)
     stem = np.zeros((N, 2))
     rows, cap = [], 10 ** (peak_db / 20)
+    last: dict[str, dict] = {}                              # kind -> the recorded sound its previous cue used
     for q in sorted(cues, key=lambda c: c["f"]):
         s = int(round(q["f"] * SR / fps))
         if not 0 <= s < N:
             rows.append({**_row_base(q, fps), "skipped": "outside the video"})
             continue
-        x = synth(q["kind"], q["params"], q["seed"])[:N - s]
-        a, b = loud_part(x)
+        e = sounds.pick(q, last.get(q["kind"])) if sounds is not None else None
+        vary, used = 0.0, "made-up"
+        if e is None or e.get("synth"):
+            x = synth(q["kind"], q["params"], q["seed"])[:N - s]
+        else:
+            x, s, vary = sounds.place(e, q, s, N)
+            used = e["file"]
+        if e is not None:
+            last[q["kind"]] = e
+        if not len(x):
+            rows.append({**_row_base(q, fps), "skipped": "outside the video", "sound": used})
+            continue
+        a, b = loud_part(x if x.ndim == 1 else x.mean(1))
         fx_db = fx_level(x, a, b) - 10 * math.log10(2)     # placed with an equal-power pan: each channel 3 dB under
         rel, floor = (v + TRIM_DB for v in LEVELS[q["level"]])
         s_db, (w0, w1) = song_level(sg, s, a, b) if has_song else (None, song_window(s, a, b, N))
         want = max(s_db + rel, floor) if has_song else floor
-        want += q["db"]
+        want += q["db"] + vary
         rule = "floor" if (not has_song or s_db + rel < floor) else "song"
         if has_song and floor_vs_song is not None and want < s_db + floor_vs_song:
             want, rule = s_db + floor_vs_song, "song floor"
@@ -768,15 +1059,17 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
         p = np.linspace(q["pan"][0], q["pan"][1], len(x))
         ang = (p + 1) * np.pi / 4
         y = x * gain
-        stem[s:s + len(x), 0] += y * np.cos(ang)
-        stem[s:s + len(x), 1] += y * np.sin(ang)
+        left, right = (y, y) if y.ndim == 1 else (y[:, 0], y[:, 1])     # a recorded sound keeps its stereo
+        stem[s:s + len(x), 0] += left * np.cos(ang)
+        stem[s:s + len(x), 1] += right * np.sin(ang)
         got = fx_db + db(gain)
         rows.append({**_row_base(q, fps), "sample": s, "song_db": None if s_db is None else round(s_db, 2),
                      "target_db": round(want, 2), "fx_db": round(got, 2), "gain_db": round(db(gain), 2),
                      "vs_song_db": None if s_db is None else round(got - s_db, 2), "rule": rule,
-                     "peak_dbfs": round(db(gain * max(float(np.abs(x * np.cos(ang)).max()),
-                                                      float(np.abs(x * np.sin(ang)).max()))), 2),
-                     "loud": [s + a, s + b], "window": [w0, w1]})
+                     "peak_dbfs": round(db(max(float(np.abs(left * np.cos(ang)).max()),
+                                               float(np.abs(right * np.sin(ang)).max()))), 2),
+                     "loud": [s + a, s + b], "window": [w0, w1], "sound": used,
+                     **({"vary_db": round(vary, 2)} if vary else {})})
     mix = sg + stem
     if fade_s > 0:
         k = min(N, int(fade_s * SR))
@@ -939,6 +1232,50 @@ def selfcheck(verbose: bool = True) -> dict:
     check(not miss and not extra, f"a plan's effects -> {len(pc)} cues: "
           + ", ".join(f"{q['kind']} f{q['f']} ({frame_to_tc(q['f'], fps)})" for q in pc)
           + (f"; missing {miss}" if miss else "") + (f"; not expected {extra}" if extra else ""))
+    # 0.5.4 recorded sounds: a made-up library in a temp folder (never this PC's) - clicks land on their frame by their
+    # onset, a whoosh by its loudest moment on f + peak * dur, a riser's loudest moment on its landing frame; the next
+    # click never repeats the last file; a kind with no files keeps its made-up sound; two runs give the same samples
+    import tempfile
+    import soundfile as _sf
+    with tempfile.TemporaryDirectory(prefix="ml_sfx_") as td:
+        tmp = Path(td)
+
+        def tone(f0, pre_s):
+            t = np.arange(int(0.08 * SR)) / SR
+            return np.concatenate([np.zeros(int(pre_s * SR)), np.sin(2 * np.pi * f0 * t) * np.exp(-t / 0.01)])
+        tw, tr = np.arange(int(0.6 * SR)) / SR, np.arange(int(1.0 * SR)) / SR
+        files = {"click/a.wav": tone(1500, 0.03), "click/b.wav": tone(2200, 0.02),
+                 "whoosh/w.wav": _noise(0.6, 5) * np.exp(-((tw - 0.3) / 0.06) ** 2),     # loudest at 0.30 s
+                 "riser/r.wav": _noise(1.0, 6) * tr ** 3}                                  # loudest at its end
+        rows_ = []
+        for f, x in files.items():
+            (tmp / f).parent.mkdir(parents=True, exist_ok=True)
+            _sf.write(str(tmp / f), np.stack([x, x], 1), SR, subtype="PCM_24")
+            k = f.split("/")[0]
+            rows_.append({"file": f, "kind": k, "anchor_s": anchor_of(np.stack([x, x], 1), k) / SR})
+        data = {"synth_too": [], "sounds": rows_}
+        rq = resolve([{"f": 15, "kind": "click"}, {"f": 45, "kind": "click"}, {"f": 75, "kind": "click"},
+                      {"f": 120, "kind": "whoosh", "dur": 0.4, "peak": 0.5}, {"f": 180, "kind": "riser", "dur": 0.5},
+                      {"f": 240, "kind": "pop"}], {}, fps, frames, "library")
+        r1 = build(rq, fps, frames, None, sounds=Library(tmp, data))
+        r2 = build(rq, fps, frames, None, sounds=Library(tmp, data))
+    used = [r.get("sound") for r in r1["rows"]]
+    env = _env10(r1["stem"])
+
+    def lands(f, key_s, peak):                   # ms from where the sound should land to where it does
+        s = int(round(f * SR / fps)) + int(key_s * SR)
+        lo = max(0, s - int(0.15 * SR))
+        seg = env[lo:s + int(0.15 * SR)]
+        i = int(np.argmax(seg)) if peak else int(np.flatnonzero(seg >= seg.max() * 0.1)[0])
+        return (lo + i - s) / SR * 1000
+    off = [lands(15, 0, False), lands(45, 0, False), lands(75, 0, False), lands(120, 0.2, True), lands(180, 0.5, True)]
+    check(all(abs(o) <= 4 for o in off[:3]) and all(abs(o) <= 12 for o in off[3:])
+          and all(u.startswith("click/") for u in used[:3]) and used[0] != used[1] != used[2]
+          and used[3] == "whoosh/w.wav" and used[4] == "riser/r.wav" and used[5] == "made-up"
+          and np.array_equal(r1["stem"], r2["stem"]),
+          "recorded sounds: clicks on their frame " + ", ".join(f"{o:+.1f}" for o in off[:3]) + " ms, a whoosh's "
+          f"loudest moment {off[3]:+.1f} ms and a riser's {off[4]:+.1f} ms from where they land; " + " > ".join(used[:3])
+          + f" (no repeat); pop = {used[5]}; two runs the same")
     secs = time.time() - t0
     lines.append(f"{'PASS' if ok else 'FAIL'}: onsets within {worst_ms:.2f} ms (1 frame = {1000 / fps:.1f} ms), levels "
                  f"within {worst_db:.2f} dB, {len(cues)} cues on {frames / fps:g} s, {secs:.1f} s")
