@@ -1020,14 +1020,26 @@ def project(name: str) -> dict:
             "edit_scripts": [rel(p) for p in sorted(b.glob("edit_v*.py"))] if b.exists() else [],
             "library_picks": picks.get("picks", {}), "picks_updated": picks.get("updated"),
             "made_from": made, "outcome": outcome, "reviewed": _reviewed(b, outcome, newest["mtime"] if newest else None),
+            "asked": _asked(b),
             "generated": any(x.get("kind") == "generated" for x in made if isinstance(x, dict)), "in_editor": _in_editor(b),
             "picture": _picture(d, b, LAB / newest["rel"] if newest else None, newest or {}),
             "publish": (b / "publish" / "package.json").exists()}
 
 
+def _asked(b: Path) -> dict:
+    """What New edit asked for the layers a quick draft leaves to Claude (captions, sound effects; a talking video) -
+    *Finish it with Claude* starts from it (2026-10-24). {} = no request."""
+    req = read_json(b / "edit_request.json", {}) or {}
+    if not isinstance(req, dict) or not req:
+        return {}
+    return {"captions": (req.get("style") or {}).get("captions") or "", "sfx": (req.get("sfx") or {}).get("amount") or "",
+            "talk": req.get("sound") == "talk" or bool(re.fullmatch(ER.TALK_ID, str(req.get("prompt") or "")))}
+
+
 # ------------------------------------------------------------------ 0.3.3: create a video, and how it turned out
 ASPECTS = ("sound", "sfx", "colour", "captions", "graphics", "effects", "pacing", "packaging", "overall")
-OUTCOME_NEXT = ("fix", "start_over")          # 0.4.2: How did it turn out? - fix this version / start over
+OUTCOME_NEXT = ("fix", "start_over", "finish")    # 0.4.2: How did it turn out? - fix this version / start over;
+FINISH_ADD = ("graphics", "captions", "sfx", "colour")  # 2026-10-24: finish a quick draft = these layers on its cuts
 CTR_IDS = re.compile(r"[A-Z]")                # 0.4.3: a thumbnail variant (thumbnail.py make --id A / B / C)
 
 
@@ -1384,7 +1396,18 @@ def save_outcome(name: str, body: dict) -> dict:
     if "next" in body:
         nxt = body["next"] or None
         if nxt not in (None, *OUTCOME_NEXT):
-            raise ValueError(I18N.t("next: fix or start_over (got {value})", value=repr(nxt)))
+            raise ValueError(I18N.t("next: fix, start_over or finish (got {value})", value=repr(nxt)))
+    # 2026-10-24: *Finish it with Claude* on a quick draft - what to add on its cuts, the user's words, which version
+    fin = cur.get("finish")
+    if body.get("finish") is not None:
+        fb = body["finish"] if isinstance(body["finish"], dict) else {}
+        add = [k for k in FINISH_ADD if k in (fb.get("add") or [])]
+        words = " ".join(str(fb.get("words") or "").split())[:600]
+        if not add and not words:
+            raise ValueError(I18N.t("finish: pick what to add ({choices}) or say it in your words",
+                                    choices=", ".join(FINISH_ADD)))
+        frm = str(fb.get("from") or "")
+        fin = {"add": add, "words": words, "from": frm if re.fullmatch(r"v\d{1,4}", frm) else None, "date": stamp()}
     moments = [m for m in (cur.get("moments") or []) if isinstance(m, dict)]
     if body.get("moment") is not None:
         moments.append(clean_moment(body["moment"]))
@@ -1398,6 +1421,8 @@ def save_outcome(name: str, body: dict) -> dict:
     moments.sort(key=lambda m: (str(m.get("version", "")), int(m.get("f", 0))))
     out = {**cur, "aspects": {k: v for k, v in asp.items() if v.get("rating") or v.get("note")}, "updated": stamp(),
            "next": nxt, "moments": moments}                  # every other key (0.4.3 "packaging", newer ones) stays
+    if fin:
+        out["finish"] = fin
     if body.get("aspects"):                   # when the ratings last changed: a newer render = "not reviewed yet"
         out["rated_ts"] = time.time()
     if body.get("packaging") is not None:
@@ -1731,7 +1756,8 @@ SKILL_INFO = {
                                 "DaVinci Resolve.",
                        "uses": ["/recreate-video <reference> <your video>", "/recreate-video feel:<video>,<video> <your video>",
                                 "/recreate-video want:fast_hook <your video> - want: <your words>",
-                                "/recreate-video prompt:<prompt id> <your video>", "/recreate-video improve <your video>"],
+                                "/recreate-video prompt:<prompt id> <your video>", "/recreate-video improve <your video>",
+                                "/recreate-video finish <your video>"],
                        "task": "recreate",
                        "where": "Edit - New edit, How did it turn out?"},
     "generate-video": {"brief": "Claude makes a video from zero: a motion-graphics video written as HTML and rendered "

@@ -47,7 +47,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 31                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 32                                     # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -761,7 +761,7 @@ class Handler(BaseHTTPRequestHandler):
         if m:
             return self._json(data.move_project(urllib.parse.unquote(m[1]), bool(body.get("editor"))))
         # how it turned out (0.4.2 also: "next" fix / start_over, "moment" / "remove_moment" = notes on moments of a
-        # render) / what it is made from
+        # render; 2026-10-24: "next" finish + "finish" = Finish it with Claude) / what it is made from
         m = re.fullmatch(r"/api/project/([^/]+)/(outcome|made_from)", path)
         if m:
             name = urllib.parse.unquote(m[1])

@@ -137,7 +137,7 @@ where the user writes what they want:
 
 ## 6. After filming
 The user films it from the script card's *Film it* (cue cards, a teleprompter, what to film besides them; then the
-recording is added there - copied into a new video named after the script - and edited: the talking quick draft or
-`/recreate-video prompt:<id>`, which follows the script; the
-talking quick draft cuts the pauses). How it turned out (the video's *How did it turn out?*) and their rating on the
+recording is added there - copied into a new video named after the script; then *Continue in the Editor* opens
+New edit with that video and the script loaded, and the edit is the Editor's: the talking quick draft (it cuts the
+pauses) or `/recreate-video request <video>`, which follows the script). How it turned out (the video's *How did it turn out?*) and their rating on the
 card tell you what works for them next time. Repeat those patterns and drop the ones rated bad.

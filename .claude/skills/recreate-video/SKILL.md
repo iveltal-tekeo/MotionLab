@@ -1,7 +1,7 @@
 ---
 name: recreate-video
 description: "MotionLab - edit the user's own clips like videos they analysed (an exact 1:1 copy of one, or the style of up to three), or from their words, a preset or a library prompt; a lab render, optionally an editable DaVinci Resolve project; improve a made video from their review; several videos in one batch. Use for '/recreate-video ...', 'remake / recreate / edit my clips like this video'."
-argument-hint: "<reference> <project> | request <project> | feel:<a>[,<b>,<c>] <project> | want:<presets> <project> - want: ... | prompt:<id> <project> | improve <project> | batch <id>"
+argument-hint: "<reference> <project> | request <project> | feel:<a>[,<b>,<c>] <project> | want:<presets> <project> - want: ... | prompt:<id> <project> | improve <project> | finish <project> | batch <id>"
 ---
 
 # /recreate-video
@@ -21,6 +21,7 @@ user's clips). If one is missing, list `analysis\` / `projects\` and ask. Work f
 | `feel:<a>[,<b>,<c>] <project> [- want: ...]`, `want:<presets> <project> - want: ...` | by feel: the style of up to three videos, or the user's words (presets: `tools\draft_edit.py --presets`) | `by_feel.md` + `render.md` |
 | `prompt:<id> <project>` | a video from a prompt of the library (brief / script / hook / shot / image) | `by_feel.md` (*From a prompt*) + `render.md` |
 | `improve <project>` | the video's Review tab: *Send it to Claude* | `improve.md` + `render.md` |
+| `finish <project>` | a quick draft's *Finish it with Claude*: its cuts kept, the layers the user ticked added | `improve.md` (*Finish a quick draft*) + `render.md` |
 | `batch <id>` | several videos edited the same way in this one window | `batch.md` (+ `by_feel.md`, `render.md`) |
 
 Graphics, titles and captions (HTML overlays): `graphics.md` - read it when the edit has any (/generate-video reads

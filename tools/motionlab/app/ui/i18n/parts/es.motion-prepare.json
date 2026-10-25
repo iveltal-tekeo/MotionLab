@@ -232,17 +232,13 @@
  "Drop your recording here": "Suelta aquí tu grabación",
  "or click to choose it - several files are fine. It is copied in; your original stays where it is.": "o haz clic para elegirla (pueden ser varios archivos). Se copia; tu original se queda donde está.",
  "Edit it": "Edítalo",
- "As filmed": "Como se grabó",
- "All you said": "Todo lo que dijiste",
+ "Continue in the Editor": "Seguir en el Editor",
+ "New edit opens with your recording and this script - the style, the sound, the length and the format are picked there.": "Se abre Nueva edición con tu grabación y este guion; allí eliges el estilo, el sonido, la duración y el formato.",
  "Quick draft now": "Borrador rápido ahora",
- "In a few minutes, no Claude: the pauses cut, captions, a punch-in every other cut.": "En unos minutos, sin Claude: sin pausas, con subtítulos y un zoom de golpe cada dos cortes.",
- "Claude follows the script: picks the good takes, puts the text, B-roll and zooms where the script says. It can take an hour.": "Claude sigue el guion: elige las tomas buenas y pone el texto, el B-roll y los zooms donde dice el guion. Puede tardar una hora.",
- "then build it as a DaVinci Resolve project": "luego hazlo también como proyecto de DaVinci Resolve",
  "Add your recording first - step 2.": "Primero añade tu grabación (paso 2).",
  "No recording in {name} yet - step 2.": "Aún no hay ninguna grabación en {name} (paso 2).",
  "{name} (new)": "{name} (nuevo)",
  "copying…": "copiando…",
  "already there": "ya estaba",
- "copied ✓": "copiado ✓",
- "The quick draft is on its way - it plays on the video's page when it is ready": "El borrador rápido está en camino: se reproduce en la página del vídeo cuando esté listo"
+ "copied ✓": "copiado ✓"
 }

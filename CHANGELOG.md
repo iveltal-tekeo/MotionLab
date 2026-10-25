@@ -5,6 +5,17 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.3.2 - 2026-10-25 - Film it hands over to the Editor, and Finish it with Claude
+
+- **Film it hands over to the Editor** - a script's *Film it* keeps the teleprompter, the lines and adding your
+  recording; its last step is now **Continue in the Editor**, which opens New edit with your recording and the script
+  already loaded, so a talking video gets every New edit option (references, style, palette, sound effects, length,
+  format). The script's *Edit it* step goes straight there too.
+- **Finish it with Claude** - when the newest version of a video is a quick draft, its page shows *Happy with the cuts?
+  Finish it with Claude*: tick what to add (motion graphics, captions, sound effects, colour - ticked already from
+  what you picked in New edit), say anything else in your words, and Claude makes the next version on top of the
+  draft. The cuts, transitions and timing stay as they are; the draft stays too.
+
 ## 0.5.3.1 - 2026-10-25 - 114 new Motion Graphics templates
 
 - **114 new Motion Graphics templates** - text reveals, charts, social posts, app screens, a logo reveal and a

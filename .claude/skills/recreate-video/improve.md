@@ -20,3 +20,27 @@ part and pressed *Send it to Claude*.
   inputs changed and skips the rest.
 - In every mode the ratings of ALL the user's videos are rules (`knowledge.py memory --rules`): a part rated bad once
   is a default.
+
+## Finish a quick draft (`finish <project>`, 2026-10-24)
+The user liked the quick draft's cuts and pressed *Finish it with Claude* on the video's page (the user: "it worked
+good and actually made some good cuts and transitions but then what? how do i tell him to go next step which is some
+motion graphics and stuff?"). `build\outcome.json` has `"next": "finish"` and `"finish": {"add": [...], "words":
+"...", "from": "v1", "date"}` - `add` = what to put on it: `graphics` | `captions` | `sfx` | `colour`; `words` = their
+own words (may name other things - follow them); `from` = the draft version they watched (else the newest render's).
+- **Keep the draft's edit as it is**: start from `build\plan_<from>.json` (+ `draft_<from>.md`: every shot with frame +
+  timecode) - every cut, shot, transition, punch-in and the timing stay; no new cuts, no moved shots, no new camera
+  moves, unless `words` asks for them. Rules made the cuts; the user approved them by pressing Finish.
+- **Add only the layers in `add`** (and what `words` asks), as an edit list on the draft (`by_feel.md` step 3):
+  `build\edit_v<N+1>.list` with `graphic` / `caption` / `sfx` lines -> `tools\draft_edit.py <project> --apply
+  build\edit_v<N+1>.list` = `plan_v<N+1>.json`. Graphics = the Motion Graphics templates (`graphics.md`; a talking
+  video: a column or a pill beside the head, never over the face) where the script / `about` / `on_screen` put them;
+  captions in the request's `style.captions` (a talking video: the script's own words at the said times); sound
+  effects at the request's `sfx` amount and kinds (`render.md` *The sound*); colour = one look in `plan["grades"]`
+  (the references' or the request's mood; a draft that already matched the references' colour keeps its LUT under
+  it). The request's `style.palette` colours every title, caption and graphic. What is not in `add` stays as the
+  draft has it (no captions / sound effects the user did not tick).
+- `build\brief.md` holds the request in words (the script word for word, the words on screen, the palette, the sound
+  effect kinds; `tools\brief.py <project>` when it is missing or older than `edit_request.json`) - read it, not the
+  JSON again.
+- One build (`build.py <project> build\plan_v<N+1>.json [--sfx]`), fix what it flags, then tell the user what was added
+  where, each with frame + timecode, and that `from` stays as it was.

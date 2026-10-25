@@ -352,6 +352,19 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   draws); then two big cards (`.pvnext .onx`, an icon circle, the section colour / violet, lift on hover)
   *Something not right? Review it and improve it* (saves `next: "fix"`, goes to Review) and *Start over*
   (`startOver`: `next: "start_over"` + New edit with these clips - never a v2 of a feel the user did not want);
+  when the newest render is a **quick draft** (its plan `made_by` draft_edit.py) a third card on the whole row above
+  them, glowing: *Happy with the cuts? Finish it with Claude* (`.onx.fin`, 2026-10-24, the user: "when i go to quick
+  draft now, and the draft is done like what should i use next? improve with claude? ... it worked good and actually
+  made some good cuts and transitions but then what? how do i tell him to go next step which is some motion graphis
+  and stuff?") -> `finishModal(P, version)`: *Stays* (green chips: pacing & cuts, effects & transitions, sound &
+  music) and *Claude adds* = four tiles `FINISH_ADD` (motion graphics, captions, sound effects, colour - what each is in
+  its tooltip), pre-ticked from New edit's answers (`project()` `asked` = edit_request.json's captions / sfx amount /
+  talking: graphics always, captions unless "none" or nothing asked on a video that is not talking, sound effects
+  unless "none") or this version's last finish; a line in their words (optional); the button is off with nothing
+  ticked and no words -> POST `.../outcome` {next: "finish", finish: {add, words, from}} (`data.save_outcome`:
+  `FINISH_ADD` only, the words on one line, `from` = vN or null, `date`; nothing ticked and no words = refused) ->
+  Claude `/recreate-video finish <p>` (task recreate; the skill's improve.md *Finish a quick draft*: every cut of the
+  draft kept, only these layers added). Never fake ratings to ask for a layer (the ratings are rules for every video);
   `reviewSummary` = one line of the parts rated; *undo* clears `next`; then **Ready to post** = `projPublish` inside
   `#pubsec`, below) | **Review** (`projReview`, only with a render or ratings; since 2026-10-18 the one review pattern,
   **Reviews** in `tools\motionlab\app\CLAUDE.md` - `outcomePanel` / `wireOutcome` are gone: left = `renderPicker` +
@@ -501,18 +514,25 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   place).
   **Film it** (2026-10-15, the user: "I record a video of me reading the script but I don't know where to go... it's
   not a prompt, it's a talking script... and then where does it go?"): a script card's run button (`RUN.script`, the
-  run step says *Film it*) = `filmItModal(p, step)`: the road on a line (`flowSteps(uses, false)`, since 2026-10-22 the
+  run step says *Film it*) = `filmItModal(p)`: the road on a line (`flowSteps(uses, false)`, since 2026-10-22 the
   same numbered steps as the script's pop-up - 1 The script, 2 Film it, 3 Edit it, 4 Post it, done = ✓, the next one
   lit = `scriptRoad` from GET `/api/prompts` `used`: per video `clips`, `renders`, `posted` = outcome packaging link;
   the card's `pstage` chip), 1 Film it = cue cards (GET `/api/script/cards?id=` = `script.cue_cards`: parts with heading, lines,
   notes; `[check]` kept in a line, a lone one = `check`), *Teleprompter* (`teleprompter(lines)`: full screen,
   `wpm` 150, Space / click, arrows, Esc only closes it; [check] left out), *Copy the lines*, *Film these too*
   (B-ROLL / VISUAL / SHOT notes), *The edit adds these*, tips; 2 Add your recording = a video (linked ones first) or
-  a new one named after the script (`folderName`), drop / choose -> `uploadClip` with `prompt`; 3 Edit it = format /
-  length -> edit_request `how: prompt` + *Make it with Claude* (`/recreate-video prompt:<id> <p>`, which follows the
-  script) on the left and Quick draft (job draft) on the right (2026-10-22, the user: "move the "make it with claude"
-  button to the left and the quick draft to the right and add some padding"; `.nego`). `step` 2 = opened scrolled
-  to 3 Edit it (the pop-up's *Edit it*). A video made from a script: *Made from the script <title>*
+  a new one named after the script (`folderName`), drop / choose -> `uploadClip` with `prompt`; 3 Edit it = ONE big
+  card in the Editor's gold, **Continue in the Editor** (`.ficont`, 2026-10-24, the user: "we spent a lot of time
+  going through changes and improving the edit page and now in the film it page u do the same thing (add clips... a
+  little of style) but dont get no benefits from the edit section ... keep the teleprompter and other stuff but the
+  step 3 make it "continue in editor" and it pop ups the new edit section but loading the prompt and videos i loaded
+  in the film it section") = `newEdit({project, from: 'prompt', pick: <script>})`: New edit opens on 1 Clips with
+  that video's clips, 2 Text has the script picked, 5 Sound = Talking; its Back = Film it again (then where Film it
+  came from). Chips on the card = what goes along (the video · its clips, the script); disabled until the picked
+  video has a clip (`#fimsg` says why). The format / length pills and Film it's own *Make it with Claude* / *Quick
+  draft now* left with it (2026-10-22's "make it with claude left, quick draft right" is gone): the edit is the
+  Editor's only. The script pop-up's road step *Edit it* = the same `newEdit` with the first video from this script
+  that has clips. A video made from a script: *Made from the script <title>*
   (`project()` adds `title` / `prompt_kind` to made_from), and with no edit yet the Overview says *Filmed - now edit
   it* (New edit with the script picked).
 - **Improve my script keeps one card** (2026-10-24, a friend's ask: "only the improved script should remain"): the
@@ -593,7 +613,7 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
     other kinds keep only the Next box (`pstate().now`)). **A script's road** (2026-10-22, the user: "id like for
     the "film it" to also show like a clear next step in the whole process"): `scriptFlow` = `flowSteps(uses, true)`
     - 1 The script, 2 Film it, 3 Edit it, 4 Post it as numbered circles on a line (done = ✓ in the kind's colour,
-    the next one ringed with NEXT), each a button (Film it = `filmItModal(p)`, Edit it = `filmItModal(p, 2)`, Post it
+    the next one ringed with NEXT), each a button (Film it = `filmItModal(p)`, Edit it = `newEdit` with the filmed video + the script, Post it
     = the video's Ready to post; later steps disabled) and the next step's own big button at the end (*✓ All done*
     when posted); the videos made from it under it.
     **Three tabs** (2026-10-22, the user: "remove the "Notes description when seeing the script..." i like that its

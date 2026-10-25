@@ -15,7 +15,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-25",
-  "here": "0.5.3.1",
+  "here": "0.5.3.2",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -41,6 +41,7 @@
     {"v": "0.5.2", "label": "New edit", "title": "New edit, step by step, and a lighter app"},
     {"v": "0.5.3", "label": "Faster videos", "title": "Faster videos, photos in your edits and a thumbnail preview"},
     {"v": "0.5.3.1", "label": "114 templates", "title": "114 new Motion Graphics templates"},
+    {"v": "0.5.3.2", "label": "Film it to the Editor", "title": "Film it hands over to the Editor, and Finish it with Claude"},
     {"v": "0.5.4", "label": "Sound", "title": "Sound: real sound effects, music and voice"},
     {"v": "0.5.5", "label": "Content agency", "title": "Content agency: My Brand"},
     {"v": "0.5.6", "label": "Template packs", "title": "Motion graphics: template packs, the motion check, formats"},

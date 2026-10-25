@@ -7,6 +7,18 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.3.2 - 2026-10-25 - Grábalo te lleva al Editor, y Termínalo con Claude
+
+- **Grábalo te lleva al Editor**: el *Grábalo* de un guion mantiene el teleprompter, las frases y añadir tu grabación;
+  su último paso ahora es **Seguir en el Editor**, que abre Nueva edición con tu grabación y el guion ya cargados, así
+  que un vídeo hablado tiene todas las opciones de Nueva edición (referencias, estilo, paleta, efectos de sonido,
+  duración, formato). El paso *Edítalo* del guion también va directo allí.
+- **Termínalo con Claude**: cuando la versión más nueva de un vídeo es un borrador rápido, su página muestra *¿Te
+  gustan los cortes? Termínalo con Claude*: marca qué añadir (gráficos animados, subtítulos, efectos de sonido, color;
+  ya vienen marcados según lo que elegiste en Nueva edición), di lo que quieras con tus palabras y Claude hace la
+  siguiente versión encima del borrador. Los cortes, las transiciones y el ritmo se quedan como están; el borrador
+  también.
+
 ## 0.5.3.1 - 2026-10-25 - 114 plantillas nuevas de Motion Graphics
 
 - **114 plantillas nuevas de Motion Graphics**: textos que aparecen, gráficas, publicaciones de redes, pantallas de

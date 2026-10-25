@@ -586,7 +586,7 @@ setInterval(liveTick, 5000);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 31;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 32;            // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
 function overlay(text) {
@@ -3491,9 +3491,43 @@ async function startOver(P) {
   catch (e) { toast(e.message, 'err'); return; }
   newEdit({project: P.name});
 }
+// *Finish it with Claude* (2026-10-24, the user: "when i go to quick draft now, and the draft is done like what should
+// i use next? ... it worked good and actually made some good cuts and transitions but then what? how do i tell him to
+// go next step which is some motion graphics and stuff?"): a quick draft = the cuts; this = the layers on top of them.
+// The tiles start from New edit's answers (project() "asked") or this version's last finish; saved as outcome.json
+// "next": "finish" + "finish" {add, words, from} -> /recreate-video finish <p> (the words never pass through cmd)
+const FINISH_ADD = [['graphics', 'i-motion', t('Motion graphics'), t('titles, text and graphics from your Motion Graphics templates')],
+  ['captions', 'i-cc', t('Captions'), t('what is said, on screen')],
+  ['sfx', 'i-volume', t('Sound effects'), t('whooshes, pops and hits on the moves')],
+  ['colour', 'i-palette', t('Colour'), t('one colour look over the whole video')]];
+function finishModal(P, from, done) {
+  const a = P.asked || {}, last = (P.outcome || {}).finish, again = last && last.from === from;
+  const on = new Set(again ? last.add : ['graphics', ...(a.captions === 'none' || !(a.captions || a.talk) ? [] : ['captions']), ...(a.sfx === 'none' ? [] : ['sfx'])]);
+  const keep = [t('Pacing & cuts'), t('Effects & transitions'), t('Sound & music')];
+  modal(`<h2>${t('Finish it with Claude')}</h2>
+    <div class="finrow"><b class="finlab">${t('Stays')}</b><div class="finkeep">${keep.map(k => `<span>✓ ${esc(k)}</span>`).join('')}</div></div>
+    <div class="finrow"><b class="finlab">${t('Claude adds')}</b><div class="finadd">${FINISH_ADD.map(([k, ic, l, h]) =>
+      `<button class="fintile${on.has(k) ? ' on' : ''}" data-k="${k}" title="${esc(h)}">${neIcon(ic)}<b>${esc(l)}</b></button>`).join('')}</div></div>
+    <textarea id="finwords" rows="2" placeholder="${ta('In your words (optional) - e.g. a big title at the hook, the key point in a pill beside my head')}">${esc(again ? last.words : '')}</textarea>
+    <div class="row finfoot"><button class="btn pri big" id="fingo" title="${ta('{version} stays as it is - Claude makes the next version on top of it', {version: from || t('the draft')})}"><svg class="i"><use href="#i-claude"/></svg>${t('Finish it with Claude')}</button></div>`, el => {
+    const go = $('#fingo', el), words = $('#finwords', el);
+    const upd = () => { go.disabled = !on.size && !words.value.trim(); };
+    $$('.fintile', el).forEach(b => b.onclick = () => { const k = b.dataset.k; if (on.has(k)) on.delete(k); else on.add(k); b.classList.toggle('on', on.has(k)); upd(); });
+    words.oninput = upd;
+    go.onclick = async () => {
+      go.disabled = true;
+      try { P.outcome = await api(`/api/project/${encodeURIComponent(P.name)}/outcome`, {next: 'finish',
+          finish: {add: FINISH_ADD.map(x => x[0]).filter(k => on.has(k)), words: words.value.trim(), from}});
+        openClaude(`/recreate-video finish ${P.name}`, 'recreate', P.name); closeModal(); if (done) done(); }
+      catch (e) { toast(e.message, 'err'); upd(); }
+    };
+    upd();
+  }, 'finmodal');
+}
 
 function projOverview(el, P, toPub = false) {
   const R = newestFirst(P), nx = (P.outcome || {}).next || null, enc = encodeURIComponent(P.name);
+  const draft = R.length > 0 && planOfRender(P, R[0]).made_by === 'draft_edit.py';     // the newest = a quick draft
   if (!P.plans.length && !R.length) {
     const scr = (P.made_from || []).filter(x => x.kind === 'prompt' && /^(script|hook)-/.test(x.id)).pop();
     el.innerHTML = P.generated
@@ -3517,11 +3551,13 @@ function projOverview(el, P, toPub = false) {
       ${mf.length ? `<div class="small muted pvmade">${t('Made from {list}', {list: mf.join(', ')})}</div>` : ''}</div>
       <nav class="panel pvindex" id="pvidx"></nav></div>
     ${R.length ? `<div class="pvnext">
+        ${draft ? `<button class="onx fin${nx === 'finish' ? ' on' : ''}" data-go="finish"><span class="oic"><svg class="i"><use href="#i-sparkle"/></svg></span>
+          <span class="otx"><b>${t('Happy with the cuts? Finish it with Claude')}</b><span>${t('the cuts and transitions stay - Claude adds motion graphics, captions, sound effects')}</span></span><span class="oar">→</span></button>` : ''}
         <button class="onx fix${nx === 'fix' ? ' on' : ''}" data-go="fix"><span class="oic"><svg class="i"><use href="#i-scriptok"/></svg></span>
           <span class="otx"><b>${t('Something not right? Review it and improve it')}</b><span>${t('rate each part beside the video - Claude makes the next version from your ratings')}</span></span><span class="oar">→</span></button>
         <button class="onx over${nx === 'start_over' ? ' on' : ''}" data-go="start_over"><span class="oic"><svg class="i"><use href="#i-restart"/></svg></span>
           <span class="otx"><b>${t('Start over')}</b><span>${t('a different feel - a new edit with these clips, not a new version of this one')}</span></span><span class="oar">→</span></button></div>
-      ${reviewSummary(P)}${nx ? `<div class="small muted" style="margin-top:4px">${t('You chose: {what} · <a href="#" id="pvclr">undo</a>', {what: nx === 'fix' ? t('improve this version') : t('start over with a different feel')})}</div>` : ''}` : ''}
+      ${reviewSummary(P)}${nx ? `<div class="small muted" style="margin-top:4px">${t('You chose: {what} · <a href="#" id="pvclr">undo</a>', {what: nx === 'fix' ? t('improve this version') : nx === 'finish' ? t('finish it with Claude') : t('start over with a different feel')})}</div>` : ''}` : ''}
     <div id="pubsec"></div>
     <div id="tooksec"></div>`;
   liveLine(LIVE);
@@ -3544,6 +3580,7 @@ function projOverview(el, P, toPub = false) {
   const op = $('#pvopen', el); if (op) op.onclick = () => openPath(cur.rel);
   $$('[data-go]', el).forEach(b => b.onclick = async () => {
     if (b.dataset.go === 'start_over') return startOver(P);
+    if (b.dataset.go === 'finish') return finishModal(P, R[0].version || '', () => projOverview(el, P));
     try { if (nx !== 'fix') await setNext(P, 'fix'); } catch (e) { toast(e.message, 'err'); return; }
     location.hash = `#/project/${enc}/review`;
   });
@@ -5549,7 +5586,10 @@ function teleprompter(lines) {
   $('[data-x]', o).onclick = close;
   show(); requestAnimationFrame(loop);
 }
-async function filmItModal(p, step = 0) {
+// Film it (2026-10-24, the user: "keep the teleprompter and other stuff but the step 3 make it "continue in editor" and
+// it pop ups the new edit section but loading the prompt and videos i loaded in the film it section"): 1 the lines and
+// the teleprompter, 2 the recording copied in, 3 New edit with both loaded - the edit itself is the Editor's only
+async function filmItModal(p) {
   const [C, ps, PRM] = await Promise.all([api('/api/script/cards?id=' + encodeURIComponent(p.id)), api('/api/projects'), api('/api/prompts')]);
   const uses = (PRM.used || {})[p.id] || [], parts = C.parts;
   const said = parts.flatMap(x => x.lines), notes = parts.flatMap(x => x.notes.map(n => ({...n, head: x.head})));
@@ -5557,7 +5597,7 @@ async function filmItModal(p, step = 0) {
   const inEdit = notes.filter(n => !toFilm.includes(n) && n.text);
   const checks = parts.filter(x => x.check || x.lines.some(l => /\[check\]/i.test(l)));
   const linked = uses.map(u => u.project).filter(n => ps.some(x => x.name === n));
-  const st = {project: linked[0] || '', name: folderName(ptitle(p)), format: '', length: '', busy: false};
+  const st = {project: linked[0] || '', name: folderName(ptitle(p)), busy: false};
   while (!st.project && ps.some(x => x.name.toLowerCase() === st.name.toLowerCase())) st.name = st.name.replace(/( \d+)?$/, m => ` ${(+m || 1) + 1}`);
   const chk = `<span class="tpchk">${t('check')}</span>`;
   const card = x => `<div class="ficard">${x.head ? `<div class="fihead">${esc(x.head)}</div>` : ''}${x.lines.map(l => `<p>${esc(l).replace(/\[check\]/gi, () => chk)}</p>`).join('')}</div>`;
@@ -5586,13 +5626,9 @@ async function filmItModal(p, step = 0) {
         <svg class="i"><use href="#i-folder"/></svg><b>${t('Add a folder…')}</b><span class="small muted">${t('sub-folders too')}</span></label></div>
     <div id="fifiles"></div>
     <div class="nestep"><b>3</b>${t('Edit it')}</div>
-    <div class="nedet"><label>${t('Format')}</label><div class="seg" id="fifmt">${[['', t('As filmed')], ['vertical', t('Vertical 9:16')], ['horizontal', t('Horizontal 16:9')], ['square', t('Square')]].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>
-      <label>${t('Length')}</label><div class="seg" id="filen">${[['', t('All you said')], ['30', '30 s'], ['45', '45 s'], ['60', '1 min']].map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div></div>
-    <div class="nego"><div class="negoc"><button class="btn pri big" id="figo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button>
-        <span class="small muted">${t('Claude follows the script: picks the good takes, puts the text, B-roll and zooms where the script says. It can take an hour.')}</span>
-        <label class="small"><input type="checkbox" id="fires"> ${t('then build it as a DaVinci Resolve project')}</label></div>
-      <div class="negoc"><button class="btn big" id="fidraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
-        <span class="small muted">${t('In a few minutes, no Claude: the pauses cut, captions, a punch-in every other cut.')}</span></div></div>
+    <button class="ficont" id="figo" disabled title="${ta('New edit opens with your recording and this script - the style, the sound, the length and the format are picked there.')}">
+      <span class="oic"><svg class="i"><use href="#i-edit"/></svg></span>
+      <span class="otx"><b>${t('Continue in the Editor')}</b><span class="fiwith" id="fiwith"></span></span><span class="oar">→</span></button>
     <div class="small amber" id="fimsg" style="margin-top:8px"></div>`, el => {
     const sel = $('#fiv', el), name = $('#finame', el);
     sel.value = st.project;
@@ -5600,12 +5636,10 @@ async function filmItModal(p, step = 0) {
     const upd = () => {
       name.hidden = !!sel.value;
       const n = P() ? P().clips : 0;
-      $('#fidraft', el).disabled = $('#figo', el).disabled = !n || st.busy;
+      $('#figo', el).disabled = !n || st.busy;
+      $('#fiwith', el).innerHTML = `${n ? `<span><svg class="i"><use href="#i-videos"/></svg>${esc(pname(P()))} · ${plural(n, 'clip')}</span>` : ''}<span><svg class="i"><use href="#i-scriptok"/></svg>${esc(ptitle(p))}</span>`;
       $('#fimsg', el).textContent = st.busy ? '' : !sel.value ? t('Add your recording first - step 2.') : !n ? t('No recording in {name} yet - step 2.', {name: pname(P())}) : '';
     };
-    const seg = (id, k) => { const s = $(id, el), paint = () => $$('button', s).forEach(b => b.classList.toggle('on', b.dataset.v === st[k]));
-      $$('button', s).forEach(b => b.onclick = () => { st[k] = b.dataset.v; paint(); }); paint(); };
-    seg('#fifmt', 'format'); seg('#filen', 'length');
     sel.onchange = upd;
     $('#fitp', el).onclick = () => teleprompter(said);
     $('#ficopy', el).onclick = () => copy(said.join('\n').replace(/\s*\[check\]/gi, ''));
@@ -5647,21 +5681,11 @@ async function filmItModal(p, step = 0) {
     drop.ondragleave = () => drop.classList.remove('on');
     drop.ondrop = async e => { e.preventDefault(); drop.classList.remove('on');
       try { const r = await clipsFromDrop(e.dataTransfer); add(r.files, r.folders); } catch (err) { toast(err.message, 'err'); } };
-    const request = () => api(`/api/project/${encodeURIComponent(sel.value)}/edit_request`, {how: 'prompt', prompt: p.id, sound: 'talk',
-      format: st.format || null, length_s: st.length || null, resolve: $('#fires', el).checked});
-    $('#figo', el).onclick = async () => {
-      try { const r = await request(); openClaude(r.command, 'recreate', `${ptitle(p)} → ${sel.value}`);
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value); }
-      catch (e) { toast(e.message, 'err'); }
-    };
-    $('#fidraft', el).onclick = async () => {
-      try { await request(); await api('/api/jobs', {kind: 'draft', args: {project: sel.value}, queue: true});
-        toast(t('The quick draft is on its way - it plays on the video\'s page when it is ready'), 'ok');
-        closeModal(); location.hash = '#/project/' + encodeURIComponent(sel.value); }
-      catch (e) { toast(e.message, 'err'); }
-    };
+    // 3 = the Editor's New edit with this video's clips and this script picked (Back = Film it again, then where
+    // Film it came from)
+    $('#figo', el).onclick = () => { const back = MODAL_BACK;
+      newEdit({project: sel.value, from: 'prompt', pick: p.id}).then(() => modalBack(() => filmItModal(p).then(() => { if (back) modalBack(back); }))); };
     upd();
-    if (step) { const se = $$('.nestep', el)[step]; if (se) setTimeout(() => se.scrollIntoView({block: 'start'}), 50); }
   }, 'wide');
 }
 // one prompt in focus: a header in the kind's colour (what it is, what it needs, Run it), five steps with the next one
@@ -5849,11 +5873,13 @@ async function promptModal(id, ctx) {
       else if (p.kind === 'script') filmItModal(p).then(() => modalBack(back));
       else newEdit({from: 'prompt', pick: p.id}).then(() => modalBack(back));
     });
-    // a script's road: Film it, Edit it (Film it's step 3), Post it (the video's Ready to post); the script = its tab
+    // a script's road: Film it, Edit it (New edit with the filmed video and this script, as Film it's step 3), Post it
+    // (the video's Ready to post); the script = its tab
     $$('[data-flow]', c).forEach(b => b.onclick = () => {
-      const k = b.dataset.flow, done = ((R.used || {})[p.id] || []).find(u => u.renders > 0);
+      const k = b.dataset.flow, uses = (R.used || {})[p.id] || [], done = uses.find(u => u.renders > 0), filmed = uses.find(u => u.clips > 0);
       if (k === 'written') tab('text');
-      else if (k === 'filmed' || k === 'edited') filmItModal(p, k === 'edited' ? 2 : 0).then(() => modalBack(back));
+      else if (k === 'filmed') filmItModal(p).then(() => modalBack(back));
+      else if (k === 'edited') newEdit({project: filmed ? filmed.project : '', from: 'prompt', pick: p.id}).then(() => modalBack(back));
       else if (k === 'posted' && done) { closeModal(); location.hash = `#/project/${encodeURIComponent(done.project)}/publish`; }
     });
     $$('[data-goto]', c).forEach(a => a.onclick = e => { e.preventDefault(); promptModal(a.dataset.goto, ctx); });
