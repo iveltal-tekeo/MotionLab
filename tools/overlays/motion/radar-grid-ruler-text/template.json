@@ -1,0 +1,118 @@
+{
+ "name": "Radar grid and ruler",
+ "kind": "text",
+ "category": "Text",
+ "what": "An upright radar-screen opener: a red grid, a big text dropping in word by word beside a sweeping radar and a dashed frame, then the camera dives through them to a rising red column that fills the screen and fades into a red ruler with a second text in its middle.",
+ "use_for": [
+  "opener",
+  "intro",
+  "tech",
+  "hud",
+  "gaming",
+  "title",
+  "countdown",
+  "reveal"
+ ],
+ "tags": [
+  "text",
+  "radar",
+  "grid",
+  "hud",
+  "ruler",
+  "zoom",
+  "opener",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4-f10: the words of the big text drop in one by one (each 133 px above and 1.33x big, settling in 10 f); f6-f18 radar discs fade in with a sweeping wedge, a dashed frame pops in at f10; f18-f48 the camera zooms in (accelerating) while the grid scrolls up and away (f24-f58) and a red column rises (f28-f48); f50-f66 the column zooms to fill the frame and fades to black (f55-f78); f68-f80 a red ruler scrolls up and the second text fades in (f72-f80); then it holds to f159. Everything changes every second frame (a setting).",
+ "tracks": [
+  {
+   "name": "big text",
+   "what": "the words drop in one by one, big to normal",
+   "start_f": 4,
+   "length_f": 16,
+   "easing": "ease-out cubic (position), smoothstep (scale)"
+  },
+  {
+   "name": "radar",
+   "what": "two discs fade in, a wedge sweeps round",
+   "start_f": 6,
+   "length_f": 12,
+   "easing": "linear"
+  },
+  {
+   "name": "dive",
+   "what": "the camera zooms in about a low-left point; text, discs and frame fly past",
+   "start_f": 18,
+   "length_f": 30,
+   "easing": "accelerating (measured table)"
+  },
+  {
+   "name": "grid",
+   "what": "the grid panel scrolls up and away",
+   "start_f": 24,
+   "length_f": 34,
+   "easing": "accelerating then slowing (measured table)"
+  },
+  {
+   "name": "column",
+   "what": "a red isometric column rises, then zooms to fill the frame",
+   "start_f": 28,
+   "length_f": 40,
+   "easing": "decelerating rise, accelerating zoom"
+  },
+  {
+   "name": "fade",
+   "what": "the red fades to black",
+   "start_f": 55,
+   "length_f": 23,
+   "easing": "linear"
+  },
+  {
+   "name": "ruler",
+   "what": "the red ruler scrolls up from below and stops",
+   "start_f": 66,
+   "length_f": 14,
+   "easing": "S-curve (bell-shaped speed)"
+  },
+  {
+   "name": "second text",
+   "what": "fades in at the middle of the ruler",
+   "start_f": 72,
+   "length_f": 8,
+   "easing": "linear"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 80,
+   "length_f": 80,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 30,
+ "check_frames": [
+  4,
+  10,
+  20,
+  28,
+  36,
+  44,
+  54,
+  62,
+  72,
+  110
+ ]
+}

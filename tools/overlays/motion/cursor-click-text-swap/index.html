@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "line", "type": "string", "label": "The sentence (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Is it really worth it..."},
+  {"id": "word_a", "type": "string", "label": "Small word that gets clicked", "default": "Perhaps"},
+  {"id": "word_b", "type": "string", "label": "What it turns into", "default": "Yes!"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 66, "min": 20, "max": 200, "step": 1},
+  {"id": "pick", "type": "enum", "label": "Colour of the selection", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "exit", "type": "boolean", "label": "Zoom and blur everything away at the end", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "cursor-click-text-swap" (2026-10-22): a sentence slides in from the right, sharpening as it settles (f6-f15); a small word rises in after
+     it (f34-f48); a cursor glides in from the lower right (f50-f66), clicks (f77-f84) and drags a selection across the
+     word (f80-f91); the word turns into another one that grows a little as it arrives (f102-f122); then everything
+     zooms toward the viewer with a horizontal blur and is gone (f132-f140). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #row { position: absolute; white-space: nowrap; font-synthesis: none; line-height: 1.25; letter-spacing: -0.005em; }
+  #ln { display: inline-block; }
+  #wd { position: relative; display: inline-grid; vertical-align: baseline; margin-left: 0.32em; }
+  #wd > .wv { grid-area: 1 / 1; display: inline-block; }
+  #hl { position: absolute; left: -0.3em; right: -0.12em; top: 0.02em; bottom: 0.02em; transform-origin: 0% 50%; }
+  #cur { position: absolute; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="mbX" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur id="mbXg" stdDeviation="0 0"/></filter>
+  </svg>
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="row" class="ml-body">
+      <span id="ln"></span><span id="wd"><span id="hl"></span><span id="wa" class="wv"></span><span id="wb" class="wv"></span><svg id="cur" viewBox="0 0 24 30"><path d="M3 2.5 L3 22.5 L8.2 17.8 L11.6 25.8 L15.2 24.3 L11.8 16.5 L18.6 16.5 Z" stroke-width="1.9" stroke-linejoin="round"/></svg></span>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const EC = {};
+  const ez = e => typeof e === "function" ? e : (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const t = Math.min(1, Math.max(0, (g - f0) / (f1 - f0))); return e ? ez(e)(t) : t; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const plain = s => String(s || "").replace(/[*_=^]/g, "");
+  const rich = (el, text, o) => {
+    if (window.MLLook) return MLLook.rich(el, text, o);
+    el.textContent = String(text || ""); return { words: [], marks: [] };
+  };
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? L.paper : "transparent" });
+
+  // ---- the sentence and the small word, in one row at the left of the middle
+  const row = q("row"), ln = q("ln"), wa = q("wa"), wb = q("wb"), hl = q("hl"), cur = q("cur"), wd = q("wd");
+  const nAll = plain(V.line).length + Math.max(plain(V.word_a).length, plain(V.word_b).length * 1.2) + 2;
+  const fs = Math.min(V.size * U, 0.86 * W / (Math.max(8, nAll) * 0.42));
+  const RX = W * 0.065, RY = H * 0.5;
+  Object.assign(row.style, { left: `${RX}px`, top: `${RY}px`, fontSize: `${fs}px`, fontWeight: String(fw(V.body_font, 400)), color: L.ink });
+  gsap.set(row, { yPercent: -50, transformOrigin: `${W * 0.235}px 50%` });
+  rich(ln, V.line, { look: L, family: V.body_font });
+  rich(wa, V.word_a, { look: L, family: V.body_font });
+  rich(wb, V.word_b, { look: L, family: V.body_font });
+  const selC = L[V.pick] || L.deep;
+  Object.assign(hl.style, { background: mix(L.paper, selC, 0.28), border: `${Math.max(1, U)}px solid ${mix(L.paper, selC, 0.55)}`, borderRadius: `${6 * U}px` });
+  // the cursor: an arrow, white with a dark outline, its tip on the word
+  const ch = fs * 2.3, cw = ch * 24 / 30;
+  Object.assign(cur.style, { width: `${cw}px`, height: `${ch}px` });
+  cur.querySelector("path").setAttribute("fill", L.paper); cur.querySelector("path").setAttribute("stroke", L.ink);
+  cur.style.filter = `drop-shadow(0 ${2 * U}px ${3 * U}px rgba(0,0,0,0.25))`;
+  Object.assign(cur.style, { left: "58%", top: "46%", marginLeft: `${-3 / 24 * cw}px`, marginTop: `${-2.5 / 30 * ch}px`, transformOrigin: `${3 / 24 * cw}px ${2.5 / 30 * ch}px` });
+  gsap.set(wb, { transformOrigin: "0% 50%" });
+
+  // ---- the motion, frame by frame from one proxy (seek-safe)
+  const S = Math.round(V.start);
+  const off0 = 0.46 * W, EXIT = !!V.exit;
+  function render(t) {
+    const g = t * FPS - S;
+    // the sentence slides in from the right (linear, f6-f14.5), sharpening and darkening as it lands
+    const pi = P(g, 6, 14.5), po = P(g, 6, 16);
+    // the whole row at the end: zooms toward the viewer, accelerating, horizontal blur; gone at f140
+    const z = EXIT && g > 132 ? 1 + 2.4 * Math.pow((g - 132) / 8, 3) : 1;
+    const gone = EXIT && g >= 139.5;
+    const bx = z > 1 ? Math.min(60 * U, (z - 1) * 14 * U) : 0;
+    q("mbXg").setAttribute("stdDeviation", `${bx.toFixed(2)} 0`);
+    const blurIn = (1 - po) * 12 * U;
+    row.style.filter = bx > 0.4 ? "url(#mbX)" : (blurIn > 0.2 ? `blur(${blurIn.toFixed(2)}px)` : "none");
+    gsap.set(row, { x: (1 - pi) * off0, scale: z, opacity: gone || g < 6 ? 0 : P(g, 6, 16) });
+    // the small word: rises in from below, grey to dark, f34-f48
+    const pw = P(g, 34, 48, "power3.out");
+    const wc = mix(L.paper, L.ink, lerp(0.3, 1, P(g, 34, 48)));
+    // the swap: the first word blurs away (f102-f114), the second grows in (f106-f122)
+    const sa = P(g, 102, 114, "power2.inOut"), sb = P(g, 106, 122, "power2.inOut");
+    gsap.set(wa, { y: (1 - pw) * 1.8 * fs, opacity: g < 34 ? 0 : (P(g, 34, 42)) * (1 - sa), color: wc });
+    wa.style.filter = sa > 0.02 ? `blur(${(sa * 6 * U).toFixed(2)}px)` : "none";
+    gsap.set(wb, { opacity: sb, scale: lerp(0.72, 1.18, sb) });
+    wb.style.filter = sb > 0 && sb < 0.98 ? `blur(${((1 - sb) * 6 * U).toFixed(2)}px)` : "none";
+    // the selection: drawn from the left across the word, f80-f91
+    gsap.set(hl, { scaleX: P(g, 80, 91, "power2.out"), opacity: g < 80 ? 0 : 1 });
+    // the cursor: glides in from the lower right (f50-f66), a slow drift, a click (f77-f84: shrinks, then back)
+    const pc = P(g, 50, 66, "power3.out");
+    const dr = P(g, 60, 126) * 0.03 * W;
+    const click = g < 77 ? 1 : g < 79 ? lerp(1, 0.78, P(g, 77, 79)) : g < 83 ? 0.78 : lerp(0.78, 1, P(g, 83, 86));
+    gsap.set(cur, { x: (1 - pc) * 0.3 * W + dr, y: (1 - pc) * 0.27 * H + dr * 0.15, scale: click, opacity: g < 50 ? 0 : 1 });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 11 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{
+ "name": "Flowchart tree cards",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A flowchart of glowing cards on a dark woven wall, filmed by a moving camera: the main card fades in as the camera dollies onto it, a white line grows out of it and the camera swings along to the first branch card, then drifts down the column as the other branch cards fade in with their lines, and finally pulls back to show the whole 1-to-3 tree.",
+ "use_for": [
+  "flowchart",
+  "steps",
+  "roadmap",
+  "timeline",
+  "schedule",
+  "plan",
+  "process",
+  "series",
+  "course outline",
+  "tree"
+ ],
+ "tags": [
+  "chart",
+  "flowchart",
+  "tree",
+  "cards",
+  "branches",
+  "camera move",
+  "perspective",
+  "3D look",
+  "lines",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f10-f16 the main card fades in while the camera dollies in on it (f10-f28) and holds (to f44); f44-f54 a white line grows out of its right edge and up to the first branch while the camera swings after it (f46-f64); the first branch card fades in f57-f70, the second f73-f88 with its arm f76-f80, the third f99-f117 with the line running down f103-f110 and its arm f109-f116, the camera drifting down the column (f64-f114) and resting (to f146); f146-f186 it pulls back (decelerating) to show the whole tree; the camera is the measured plane-to-screen homography of each frame",
+ "tracks": [
+  {
+   "name": "main card",
+   "what": "the main card fades in as the camera dollies in on it",
+   "start_f": 9,
+   "length_f": 7,
+   "easing": "linear (fade), camera: decelerating"
+  },
+  {
+   "name": "line out",
+   "what": "a white line grows out of the main card's right edge and up to the first branch",
+   "start_f": 44,
+   "length_f": 11,
+   "easing": "decelerating"
+  },
+  {
+   "name": "camera swing",
+   "what": "the camera swings from the main card to the first branch card (a fast pan with a settle)",
+   "start_f": 46,
+   "length_f": 20,
+   "easing": "S-curve (measured table)"
+  },
+  {
+   "name": "branch 1",
+   "what": "the first branch card fades in and its arm draws",
+   "start_f": 54,
+   "length_f": 17,
+   "easing": "decelerating"
+  },
+  {
+   "name": "branch 2",
+   "what": "the second branch card fades in with its arm; the camera drifts down",
+   "start_f": 73,
+   "length_f": 16,
+   "easing": "decelerating"
+  },
+  {
+   "name": "branch 3",
+   "what": "the line runs down, the third card fades in with its arm; the camera drifts down to rest",
+   "start_f": 99,
+   "length_f": 18,
+   "easing": "decelerating"
+  },
+  {
+   "name": "pull back",
+   "what": "the camera pulls back to show the whole tree",
+   "start_f": 146,
+   "length_f": 41,
+   "easing": "decelerating (slow end)"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "main",
+  "head",
+  "subs",
+  "heads",
+  "unit"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 226,
+ "check_frames": [
+  14,
+  30,
+  50,
+  60,
+  80,
+  100,
+  130,
+  166,
+  226
+ ]
+}

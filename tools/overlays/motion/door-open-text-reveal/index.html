@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "burst", "type": "string", "label": "Burst text (comes out of the door - *bold* _italic_ ==highlight== ^signal colour^)", "default": "Step inside"},
+  {"id": "final", "type": "string", "label": "Final title (the text it settles into)", "default": "Your big idea"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 180, "min": 40, "max": 320, "step": 1},
+  {"id": "tint", "type": "enum", "label": "Text colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "glow", "type": "number", "label": "Glow and rim round the letters (0 = none, 100 = strong)", "default": 60, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "door-open-text-reveal" (2026-10-22): a small white double door stands open in the dark; the camera pushes in through it (f0-f7, an
+     accelerating zoom: x1 -> x6), a tiny glint of text shows in the opening (f3), grows x3 a frame as a smeared
+     streak (f4-f5) and bursts out over the door as a huge line (f6, x2.3 of its size, f6-f13 with a jolt), then
+     settles to its size (f13-f20, linear, ending soft). It slides right (f20-f36, S-curve), is pulled back left
+     with heavy smear (f36-f39) and is swapped at f40 for the final title, which slides in from the right and
+     decelerates to rest (f40-f52); then it floats and tilts a little. The camera zoom, the text's scale and its
+     position were measured from the clip's frames. Look-aware: the ground (a soft vignette of the ink), the door
+     (paper, brass = mustard), the text colour + rim, the body font and the film grain come from the look tokens
+     (tools\overlays\motion\_looks). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #door { position: absolute; left: 0; top: 0; overflow: visible; }
+  #tl { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .tx { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.02em; transform: translate(-50%, -50%); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <svg id="door" width="400" height="400" viewBox="-200 -200 400 400"></svg>
+    <div id="tl"><div id="t1" class="tx ml-body"></div><div id="t2" class="tx ml-body"></div></div>
+  </div>
+  <svg width="0" height="0" style="position:absolute"><defs><filter id="mb" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur id="gb" stdDeviation="0 0"/></filter></defs></svg>
+</div>
+<script>
+  const FPS = 30, FRAMES = 90;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const R = Math.min(W, H) / 720;                       // the reference's 1280x720 px
+  const S = Math.round(V.start);
+
+  // ---- the look: a dark ground with a soft vignette, a white door, brass handles, a yellow line with a warm rim
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? `radial-gradient(ellipse at 50% 50%, ${mix(night, glare, 0.085)} 0%, ${mix(night, glare, 0.05)} 45%, ${night} 100%)` : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the door (drawn at the reference's size, centred on the frame; the camera pushes it with one scale)
+  const door = q("door");
+  Object.assign(door.style, { left: `${W / 2 - 200 * R}px`, top: `${H / 2 - 200 * R}px`, width: `${400 * R}px`, height: `${400 * R}px` });
+  (() => {
+    const NS = "http://www.w3.org/2000/svg", leaf = mix(glare, night, 0.06), leafIn = mix(glare, night, 0.34), pan = mix(glare, night, 0.17), line = mix(glare, night, 0.42);
+    const el = (n, a, p) => { const e = document.createElementNS(NS, n); Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v)); (p || door).appendChild(e); return e; };
+    const defs = el("defs", {});
+    [-1, 1].forEach((sd, i) => {
+      const g = el("linearGradient", { id: `lg${i}`, x1: sd < 0 ? "0" : "1", y1: "0", x2: sd < 0 ? "1" : "0", y2: "0" }, defs);
+      el("stop", { offset: "0", "stop-color": leaf }, g); el("stop", { offset: "1", "stop-color": leafIn }, g);
+    });
+    // the opening and its frame
+    el("rect", { x: -81, y: -143, width: 162, height: 286, fill: mix(night, "#000000", 0.35) });
+    el("rect", { x: -83, y: -151, width: 166, height: 8, fill: mix(glare, night, 0.12) });
+    el("rect", { x: -83, y: 143, width: 166, height: 7, fill: mix(glare, night, 0.12) });
+    [-1, 1].forEach((sd, i) => {
+      const A = [sd * 137, -164], B = [sd * 81, -143], C = [sd * 81, 143], D = [sd * 137, 164];
+      const P = (u, v) => [0, 1].map(j => (1 - u) * (1 - v) * A[j] + u * (1 - v) * B[j] + u * v * C[j] + (1 - u) * v * D[j]);
+      const poly = pts => pts.map(p => p.join(",")).join(" ");
+      el("polygon", { points: poly([A, B, C, D]), fill: `url(#lg${i})`, stroke: line, "stroke-width": 0.9, "stroke-linejoin": "round" });
+      [[0.14, 0.46], [0.56, 0.88]].forEach(([u0, u1]) => [[0.05, 0.22], [0.27, 0.49], [0.54, 0.73], [0.78, 0.95]].forEach(([v0, v1]) => {
+        el("polygon", { points: poly([P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)]), fill: pan, stroke: line, "stroke-width": 0.7, "stroke-linejoin": "round" });
+      }));
+      const h = P(0.1, 0.56);                                   // the brass lever near the free (outer) edge
+      el("ellipse", { cx: h[0], cy: h[1], rx: 2.6, ry: 6.5, fill: L.mustard, stroke: mix(L.mustard, "#000000", 0.4), "stroke-width": 0.6 });
+      el("circle", { cx: h[0], cy: h[1] - 8, r: 2.2, fill: mix(L.mustard, "#000000", 0.25) });
+    });
+  })();
+
+  // ---- the two lines of text (the same size; the burst one is swapped for the final one at f40)
+  const fam = V.body_font, wt = String(fw(fam, 900));
+  const tint = V.tint === "paper" ? glare : (L[V.tint] || L.mustard), rim = mix(L.signal, "#000000", 0.1);
+  const g01 = clamp(V.glow / 100, 0, 1);
+  const fs = V.size * U;
+  const tw = q("tl"), t1 = q("t1"), t2 = q("t2");
+  [t1, t2].forEach((t, i) => {
+    Object.assign(t.style, { fontSize: `${fs}px`, fontWeight: wt, color: tint,
+      textShadow: g01 > 0 ? `0 0 ${1.6 * U}px ${rim}, 0 0 ${2.4 * U}px ${rim}, 0 0 ${4 * U}px ${window.MLLook ? MLLook.rgba(L.signal, 0.75 * g01) : rim}, 0 0 ${28 * U * g01}px ${window.MLLook ? MLLook.rgba(tint, 0.55 * g01) : tint}` : "none" });
+    if (window.MLLook) MLLook.rich(t, i ? V.final : V.burst, { look: L, family: fam, weight: 800 }); else t.textContent = String(i ? V.final : V.burst);
+  });
+  const gb = q("gb");
+  t1.style.filter = t2.style.filter = "url(#mb)";                    // the smear of a fast move (its size set each frame)
+
+  // ---- the measured moves (reference px, frames)
+  const ZA = 0.0794, ZB = 0.0261;                                             // door zoom: s = exp(ZA f + ZB f^2), f0-f7
+  const doorScale = g => Math.exp(ZA * g + ZB * g * g);
+  const KS = [[2, 0], [3, 0.059], [4, 0.193], [5, 0.588], [6, 2.35], [7, 2.2], [8, 2.26], [9, 2.31], [10, 2.34], [11, 2.3], [12, 2.36], [13, 2.25], [14, 2.08],
+    [15, 1.85], [16, 1.63], [17, 1.42], [18, 1.23], [19, 1.08], [20, 1.0]];      // the burst line's scale (x its size)
+  const YC = [[3, 421], [4, 420], [5, 413], [6, 376], [7, 397], [8, 393.5], [9, 392], [10, 390], [11, 387.5], [12, 369.5], [13, 371], [14, 369.5], [15, 369], [20, 366]];
+  const X1 = [[0, 640], [20, 640], [21, 646], [22, 660], [23, 682], [24, 708], [25, 739], [26, 774], [27, 812], [28, 852], [29, 889], [30, 926], [31, 960], [32, 990],
+    [33, 1015], [34, 1034], [35, 1044], [36, 1046], [37, 1030], [38, 983], [39, 920]];                  // the burst line's centre x
+  const X2 = [[40, 979], [41, 927], [42, 874], [43, 825], [44, 780], [45, 741], [46, 708], [47, 683], [48, 660], [49, 641], [50, 629], [51, 623], [52, 621]];   // the final line's
+  const ROT = [[40, 4], [52, 3.4], [60, 3.2], [66, 2.6], [72, 1.8], [80, 2.4], [89, 2.8]];             // the final line's slow tilt (deg)
+  let prevX = 640;
+  function state(g) {                                    // -> {x, y, k, rot, which, sx, sy}
+    if (g < 40) {
+      const k = tab(KS, g)[0], kp = tab(KS, g - 1)[0];
+      const x = tab(X1, g)[0], xp = tab(X1, g - 1)[0];
+      const y = tab(YC, g)[0];
+      const dk = Math.max(0, k - kp);
+      let sx = Math.min(16, 0.1 * dk * 637) + 0.28 * Math.abs(x - xp), sy = Math.min(3, 0.012 * dk * 637);
+      if (g >= 36) sx = Math.max(sx, 0.28 * Math.abs(x - xp));
+      return { x, y, k, rot: 1.5, which: 0, sx, sy, vis: g >= 3 };
+    }
+    const x = tab(X2, g)[0], xp = g > 40 ? tab(X2, g - 1)[0] : x + 52;
+    return { x, y: 366 + (g > 52 ? 3 * Math.sin((g - 52) / 25) : 0), k: 1, rot: tab(ROT, g)[0], which: 1, sx: 0.28 * Math.abs(x - xp), sy: 0, vis: true };
+  }
+  function render(tt) {
+    const g = tt * FPS - S;
+    const on = g >= 0;
+    door.style.visibility = on && g < 8 ? "visible" : "hidden";
+    tw.style.visibility = on ? "visible" : "hidden";
+    if (!on) return;
+    const s = doorScale(g);
+    door.style.transform = `scale(${s.toFixed(4)})`;
+    const st = state(g);
+    t1.style.visibility = st.vis && st.which === 0 ? "visible" : "hidden";
+    t2.style.visibility = st.which === 1 ? "visible" : "hidden";
+    tw.style.transform = `translate(${(st.x * R).toFixed(2)}px, ${(st.y * R).toFixed(2)}px) rotate(${st.rot.toFixed(3)}deg) scale(${st.k.toFixed(4)})`;
+    gb.setAttribute("stdDeviation", `${(st.sx * R / Math.max(0.2, st.k)).toFixed(2)} ${(st.sy * R / Math.max(0.2, st.k)).toFixed(2)}`);
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 7, hits: V.shake > 0 ? [{ f: S + 6, amount: 3 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

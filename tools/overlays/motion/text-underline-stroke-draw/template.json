@@ -1,0 +1,81 @@
+{
+ "name": "Glowing title, swoosh underline",
+ "kind": "text",
+ "category": "Text",
+ "what": "A glowing title and subtitle rise from below the frame, overshoot a little and settle; then a hot dot lights up at the left and a hand-drawn swoosh underline is drawn under them, left to right, ending in a small hook.",
+ "use_for": [
+  "title",
+  "subtitle",
+  "underline",
+  "highlight",
+  "headline",
+  "promo",
+  "intro",
+  "neon"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "underline",
+  "swoosh",
+  "hand-drawn",
+  "title",
+  "subtitle",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f19 (00:00:00:00-00:00:00:19) the title rises from below the frame, overshoots its place by about 100 px at f10 (00:00:00:10) and settles; the subtitle does the same 2 frames later (f2-f20); f11-f30 (00:00:00:11-00:00:01:00) a hot dot lights up at the left and grows into a swoosh drawn left to right, accelerating until f24 then decelerating, fat and bright at birth and thinning; f30-f44 everything holds",
+ "tracks": [
+  {
+   "name": "title rises",
+   "what": "the title rises from below the frame, overshoots by about 100 px and settles back",
+   "start_f": 0,
+   "length_f": 19,
+   "easing": "ease-out with an overshoot (measured offsets)"
+  },
+  {
+   "name": "subtitle rises",
+   "what": "the subtitle does the same, 2 frames later and slightly less",
+   "start_f": 2,
+   "length_f": 18,
+   "easing": "ease-out with an overshoot (measured offsets)"
+  },
+  {
+   "name": "swoosh draws",
+   "what": "a hot dot grows into a tapered swoosh drawn left to right and ending in a hook; it starts fat and bright and thins to its resting width",
+   "start_f": 11,
+   "length_f": 19,
+   "easing": "accelerating then decelerating (measured tip positions)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 30,
+   "length_f": 15,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "title",
+  "subtitle"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 40,
+ "check_frames": [
+  1,
+  4,
+  10,
+  14,
+  18,
+  22,
+  26,
+  30,
+  44
+ ]
+}

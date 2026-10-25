@@ -1,0 +1,36 @@
+{
+ "name": "podium-ranking-logos",
+ "frames": 90,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 300,
+   "to": 1800,
+   "db": -10,
+   "what": "the highest podium rises"
+  },
+  {
+   "f": "start + round(19 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2000,
+   "db": -12,
+   "what": "the third podium rises"
+  },
+  {
+   "f": "start + round(23 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2000,
+   "db": -12,
+   "what": "the second podium rises"
+  }
+ ]
+}

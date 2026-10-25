@@ -1,0 +1,100 @@
+{
+ "name": "Year ruler to title",
+ "kind": "text",
+ "category": "Text",
+ "what": "A tall ruler of years, out of focus at first, scrolls down with a tick and a big year every step, comes into focus, slows to a stop in the middle of the frame, then topples over to the left and is gone; a title then fades in word by word on a warm glow.",
+ "use_for": [
+  "timeline",
+  "history",
+  "years",
+  "chapter title",
+  "intro",
+  "date reveal",
+  "story",
+  "documentary",
+  "title reveal"
+ ],
+ "tags": [
+  "text",
+  "timeline",
+  "ruler",
+  "years",
+  "scroll",
+  "title",
+  "glow",
+  "chronological",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f34 the ruler scrolls down (the speed builds to ~55 px a frame at f17 and eases to a stop at f34), shrinking to 0.77 x and sliding to the middle; f0-f14 it comes into focus; f34-f44 it topples to the left about a point below the frame (an accelerating rotation); f46 it is gone; f55-f90 the title fades in word by word (a word every 12 f); then it holds to the end",
+ "tracks": [
+  {
+   "name": "scroll",
+   "what": "the ruler scrolls down and eases to a stop",
+   "start_f": 0,
+   "length_f": 34,
+   "easing": "S-curve speed (measured)"
+  },
+  {
+   "name": "settle",
+   "what": "the ruler shrinks to 0.77 x and slides to the middle of the frame",
+   "start_f": 0,
+   "length_f": 32,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "focus",
+   "what": "the ruler comes into focus",
+   "start_f": 0,
+   "length_f": 14,
+   "easing": "decelerating"
+  },
+  {
+   "name": "topple",
+   "what": "the ruler topples to the left about a point below the frame and is gone",
+   "start_f": 34,
+   "length_f": 11,
+   "easing": "accelerating (measured)"
+  },
+  {
+   "name": "title",
+   "what": "the title fades in word by word",
+   "start_f": 55,
+   "length_f": 36,
+   "easing": "linear per word (12 f each)"
+  },
+  {
+   "name": "hold",
+   "what": "the title holds (the film grain moves)",
+   "start_f": 91,
+   "length_f": 59,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "title"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  6,
+  12,
+  18,
+  26,
+  34,
+  38,
+  40,
+  42,
+  56,
+  66,
+  78,
+  120
+ ]
+}

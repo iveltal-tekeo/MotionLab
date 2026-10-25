@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "bg_media", "type": "string", "label": "Behind the glass: your picture or video, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "bg_focus", "type": "string", "label": "What stays in view behind the glass (x% y%)", "default": "50% 50%"},
+  {"id": "title", "type": "string", "label": "Title in the glass (*bold* _italic_ ==highlight== ^signal^)", "default": "New collection"},
+  {"id": "text_colour", "type": "enum", "label": "Title colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "ink", "label": "Ink"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "size", "type": "number", "label": "Title size (px at a 1080-px short side)", "default": 57, "min": 20, "max": 160, "step": 1},
+  {"id": "frost", "type": "number", "label": "Frost of the glass (blur, px at a 1080-px short side)", "default": 21, "min": 0, "max": 60, "step": 1},
+  {"id": "wobble", "type": "number", "label": "Liquid wobble when it drops (%)", "default": 100, "min": 0, "max": 250, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "shine", "type": "boolean", "label": "A slow band of light across the glass while it holds (not in the original)", "default": false},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "frosted-glass-pill-title" (2026-10-22): a frosted-glass pill with a title over the user's picture or video. It starts low in the frame
+     with the title blurred and dim, shoots up past its resting place (f2-f10, with an overshoot) and settles at the
+     middle (f10-f34) while the title comes into focus (f0-f18); it holds (the glass catches a slow sheen); at f130
+     it rises a hair, then drops fast (f142-f149) back to the starting place with a liquid wobble of its outline,
+     the title blurring out again - the end is the start. The glass is a real backdrop blur of what is behind it.
+     Numbers measured from the reference's frames (720 x 1280 units). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #bgm { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+  #pill { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  #glass { position: absolute; }
+  #pfx { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  #rim { position: absolute; overflow: visible; }
+  #pt { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; font-synthesis: none; transform-origin: 50% 50%; }
+  .orb { position: absolute; border-radius: 50%; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="mbp" x="-10%" y="-60%" width="120%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbpg" stdDeviation="0 0"/></filter>
+</defs></svg>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="stage">
+    <div id="bgm"></div>
+    <div id="pill"><div id="glass"></div><div id="pfx"><svg id="rim"></svg><div id="pt" class="ml-body"></div></div></div>
+  </div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const kx = W / 720, ky = H / 1280;                       // the reference is 720 x 1280: its numbers below are in those units
+
+  gsap.set("#bgfill", { width: W, height: H, background: "transparent" });
+  const hand = q("hand"), stage = q("stage");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- what is behind the glass: the user's picture / video, else a dim gradient with a few soft glows
+  const bgm = q("bgm");
+  const vt = window.MLLook ? MLLook.media(bgm, V.bg_media, { look: L, kind: "video", label: "your picture", fit: "cover", focus: V.bg_focus, seed: 53, r: 0,
+    start: S / FPS, duration: Math.max(0.2, (FRAMES - S) / FPS), id: "bg1", slot: "bg_media" }) : null;
+  if (vt && vt.tagName === "VIDEO") {
+    vt.setAttribute("data-start", (Math.floor(S / FPS * 1e6) / 1e6).toFixed(6));          // rounded down: never a hair after the frame
+    vt.setAttribute("data-duration", Math.max(0.2, (FRAMES - S) / FPS).toFixed(4));
+  }
+  bgm.style.backgroundColor = L.deep;                  // an opaque base: the placeholder's gradient is see-through
+  if (!V.bg_media) {
+    const mk = (x, y, d, c, a, bl) => { const o = document.createElement("div"); o.className = "orb";
+      Object.assign(o.style, { left: `${x * W - d / 2}px`, top: `${y * H - d / 2}px`, width: `${d}px`, height: `${d}px`,
+        background: `radial-gradient(circle, ${rgba(c, a)} 0%, ${rgba(c, 0)} 70%)`, filter: `blur(${bl}px)` }); bgm.insertBefore(o, bgm.firstChild); };
+    mk(0.26, 0.22, 420 * U, L.signal, 0.55, 20 * U); mk(0.76, 0.40, 520 * U, L.mustard, 0.5, 24 * U);
+    mk(0.62, 0.66, 360 * U, L.signal, 0.5, 18 * U); mk(0.20, 0.78, 300 * U, L.mustard, 0.4, 16 * U); mk(0.84, 0.86, 260 * U, L.paper, 0.3, 14 * U);
+  }
+  bgm.style.visibility = V.background ? "visible" : "hidden";
+
+  // ---- the glass pill: 590 x 141 units of the reference, a stadium; centred at 0.496 of the width
+  const pw = 590 * kx, ph = 141 * ky, pad = 60 * U, R = ph / 2;
+  const pill = q("pill"), glass = q("glass"), pfx = q("pfx"), rim = q("rim"), pt = q("pt");
+  Object.assign(glass.style, { left: `${-pw / 2 - pad}px`, top: `${-ph / 2 - pad}px`, width: `${pw + 2 * pad}px`, height: `${ph + 2 * pad}px`,
+    background: `linear-gradient(180deg, ${rgba(L.paper, 0.34)} 0%, ${rgba(L.paper, 0.16)} 55%, ${rgba(L.paper, 0.22)} 100%)`,
+    backdropFilter: `blur(${V.frost * U}px) saturate(1.5)`, webkitBackdropFilter: `blur(${V.frost * U}px) saturate(1.5)` });
+  Object.assign(rim.style, { left: `${-pw / 2 - pad}px`, top: `${-ph / 2 - pad}px` });
+  rim.setAttribute("width", pw + 2 * pad); rim.setAttribute("height", ph + 2 * pad);
+  const NS = "http://www.w3.org/2000/svg";
+  const defs = document.createElementNS(NS, "defs");
+  defs.innerHTML = `<linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.paper}" stop-opacity="0.95"/>` +
+    `<stop offset="0.45" stop-color="${L.paper}" stop-opacity="0.28"/><stop offset="1" stop-color="${L.paper}" stop-opacity="0.8"/></linearGradient>` +
+    `<linearGradient id="sh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${L.paper}" stop-opacity="0"/><stop offset="0.5" stop-color="${L.paper}" stop-opacity="0.5"/><stop offset="1" stop-color="${L.paper}" stop-opacity="0"/></linearGradient>`;
+  rim.appendChild(defs);
+  const rimPath = document.createElementNS(NS, "path");
+  Object.assign(rimPath.style, { fill: "none" });
+  rimPath.setAttribute("stroke", "url(#rg)"); rimPath.setAttribute("stroke-width", String(Math.max(2, 2.6 * U))); rimPath.setAttribute("stroke-linejoin", "round");
+  rim.appendChild(rimPath);
+  const shine = document.createElementNS(NS, "rect");        // a slow band of light slid across the glass (clipped to the pill by clip-path)
+  shine.setAttribute("fill", "url(#sh)");
+  rim.insertBefore(shine, rimPath);
+  const clip = document.createElementNS(NS, "clipPath"); clip.setAttribute("id", "pc");
+  const clipPath = document.createElementNS(NS, "path"); clip.appendChild(clipPath); defs.appendChild(clip);
+  shine.setAttribute("clip-path", "url(#pc)");
+
+  // the outline: an exact stadium, or (while it wobbles) a polygon of 96 points pushed by a travelling wave
+  const outline = (A, g) => {
+    const x0 = pad, y0 = pad, x1 = pad + pw, y1 = pad + ph;
+    if (A < 0.3) return `M ${x0 + R} ${y0} H ${x1 - R} A ${R} ${R} 0 0 1 ${x1 - R} ${y1} H ${x0 + R} A ${R} ${R} 0 0 1 ${x0 + R} ${y0} Z`;
+    const pts = [], straight = pw - 2 * R, arc = Math.PI * R, per = 2 * straight + 2 * arc, N = 96;
+    for (let i = 0; i < N; i++) {
+      let s = per * i / N, x, y;
+      if (s < straight) { x = x0 + R + s; y = y0; }
+      else if ((s -= straight) < arc) { const a = -Math.PI / 2 + s / R; x = x1 - R + R * Math.cos(a); y = y0 + R + R * Math.sin(a); }
+      else if ((s -= arc) < straight) { x = x1 - R - s; y = y1; }
+      else { s -= straight; const a = Math.PI / 2 + s / R; x = x0 + R + R * Math.cos(a); y = y0 + R + R * Math.sin(a); }
+      const u = (x - x0) / pw, v = (y - y0) / ph;
+      y += A * Math.sin(2 * Math.PI * 1.35 * u - 0.55 * g + 0.4);
+      x += 0.22 * A * Math.sin(2 * Math.PI * 1.1 * v + 0.7 * g);
+      pts.push(`${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+    return `M ${pts.join(" L ")} Z`;
+  };
+  shine.setAttribute("y", pad); shine.setAttribute("height", ph); shine.setAttribute("width", pw * 0.32);
+
+  // ---- the title
+  const tcol = { ink: L.ink, signal: L.signal, deep: L.deep, mustard: L.mustard, paper: L.paper }[V.text_colour] || L.paper;
+  Object.assign(pt.style, { fontSize: `${V.size * U}px`, fontWeight: String(fw(V.body_font, 600)), color: tcol,
+    textShadow: `0 ${1.5 * U}px ${6 * U}px ${rgba("#000000", 0.28)}` });
+  if (window.MLLook) MLLook.rich(pt, V.title, { look: L, family: V.body_font, weight: 600 }); else pt.textContent = V.title;
+
+  // ---- the measured tables (720 x 1280 units; g = the frame minus "Starts at frame")
+  // CY = the pill's centre height; WB = the outline's wobble (units, pushed along the pill); TB = the title's blur
+  // (units) and TO = its brightness - the same at the start and the end
+  const CY = [[0,762],[2,756.5],[4,688],[6,636.5],[8,624.5],[10,620],[12,620.5],[14,625],[16,631.5],[18,635.5],[20,639],[22,641],[24,641.5],[26,640],[28,639],[30,638.5],[34,637.5],
+    [124,637.5],[125,641],[127,641.5],[129,640.5],[131,638.5],[132,636.5],[133,634],[134,632],[135,629],[136,625.5],[137,622.5],[138,621],[139,619],[140,618.5],[141,619.5],[142,623],[143,625],[144,635.5],[145,645],[146,679],[147,714.5],[148,747],[149,762],[150,761.5]];
+  const WB = [[0,0],[141,0],[143,3],[145,8],[147,14],[148,17],[149,14],[150,10],[152,5],[154,1.5],[156,0]];
+  const TB = [[0,10],[2,10],[4,8],[6,6],[8,4.5],[10,3],[12,2],[14,1.2],[16,0.6],[18,0],[142,0],[143,0.5],[144,1.5],[146,4],[148,7],[150,9],[152,10]];
+  const TO = [[0,0.45],[4,0.55],[10,0.8],[14,1],[142,1],[146,0.8],[150,0.55],[152,0.45]];
+  let fit = 1, wT = 1, hT = 1;
+  const px = { pw0: pw };
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    stage.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const cy = tab(CY, g)[0] * ky;
+    pill.style.transform = `translate(${(0.496 * W).toFixed(2)}px, ${cy.toFixed(2)}px)`;
+    const A = V.wobble / 100 * tab(WB, g)[0] * ky;
+    const d = outline(A, g);
+    clipPath.setAttribute("d", d); rimPath.setAttribute("d", d);
+    glass.style.clipPath = `path('${d}')`;
+    // a band of light drifts slowly across the glass while it holds
+    const sp = clamp01((g - 24) / 100), sx = pad - pw * 0.32 + (pw * 1.32) * sp;
+    shine.setAttribute("x", sx.toFixed(1));
+    shine.setAttribute("opacity", V.shine ? String((0.5 * Math.sin(Math.PI * sp)).toFixed(3)) : "0");
+    // the title: out of focus at the start and the end, sharp while it holds; it sways a hair with the wobble
+    const bl = tab(TB, g)[0] * U * 1.5, op = tab(TO, g)[0];
+    const sway = 0.35 * A * Math.sin(2 * Math.PI * 0.3 - 0.55 * g + 0.4);
+    pt.style.transform = `translate(${(-wT / 2).toFixed(2)}px, ${(-hT / 2 + sway).toFixed(2)}px) scale(${fit.toFixed(4)})`;
+    pt.style.opacity = String(op.toFixed(3));
+    pt.style.filter = bl > 0.3 ? `blur(${bl.toFixed(2)}px)` : "none";
+    // a vertical smear on the rim and title while the pill moves fast
+    const v = Math.abs(tab(CY, g + 0.5)[0] - tab(CY, g - 0.5)[0]) * ky, sg = 0.1 * v;
+    if (sg > 0.4) { q("mbpg").setAttribute("stdDeviation", `0 ${sg.toFixed(2)}`); pfx.style.filter = "url(#mbp)"; } else pfx.style.filter = "none";
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  const hits = V.shake > 0 ? [{ f: S + 148, amount: 3 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 15, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 31 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the title is
+  // measured here, with the real font, to fit the pill
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    wT = pt.offsetWidth; hT = pt.offsetHeight;
+    fit = Math.min(1, (pw * 0.8) / Math.max(1, wT));
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

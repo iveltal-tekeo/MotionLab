@@ -1,0 +1,112 @@
+{
+ "name": "Neon capsule and rings",
+ "kind": "text",
+ "category": "Text",
+ "what": "A light headline slides in word by word on a dark dot grid while a colour wave runs through its letters; it tilts, spins into a neon outlined capsule that unwinds to level, three thin rings spread out round it, and a second line is typed inside the capsule with a trailing colour wave and a blinking cursor, under a soft glow that sweeps along the top of the frame.",
+ "use_for": [
+  "saas",
+  "app",
+  "title",
+  "tagline",
+  "statement",
+  "product intro",
+  "typed line",
+  "hook"
+ ],
+ "tags": [
+  "text",
+  "capsule",
+  "rings",
+  "neon",
+  "outline",
+  "typed",
+  "colour wave",
+  "gradient",
+  "saas",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f38 the headline's words fade in one by one while the line scrolls left into place; f20-f45 a colour wave runs through the letters; f47-f55 the line tilts clockwise to 30 degrees; f56 it is replaced by a neon capsule at 1.63x and 41 degrees that unwinds to level and 1.0x by f78 (x0.86 a frame); rings appear at f62, f68 and f74; f83-f108 a second line is typed inside the capsule, cursor blinking from f112; hold to f145",
+ "tracks": [
+  {
+   "name": "headline in",
+   "what": "the words fade in one after another and the line scrolls left into place",
+   "start_f": 6,
+   "length_f": 32,
+   "easing": "S-curve (measured scroll)"
+  },
+  {
+   "name": "colour wave",
+   "what": "a colour wave runs left to right through the letters and drains out",
+   "start_f": 20,
+   "length_f": 26,
+   "easing": "linear"
+  },
+  {
+   "name": "tilt",
+   "what": "the line tilts clockwise, accelerating",
+   "start_f": 47,
+   "length_f": 9,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "capsule unwinds",
+   "what": "a neon capsule replaces the line, big and tilted, and unwinds to level and size",
+   "start_f": 56,
+   "length_f": 23,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "rings",
+   "what": "three thin rings appear round the capsule, one every 6 frames",
+   "start_f": 62,
+   "length_f": 13,
+   "easing": "none"
+  },
+  {
+   "name": "typing",
+   "what": "a second line is typed inside the capsule with a trailing colour wave",
+   "start_f": 83,
+   "length_f": 25,
+   "easing": "linear"
+  },
+  {
+   "name": "hold",
+   "what": "the typed line, the cursor blinking (the glow keeps sweeping)",
+   "start_f": 108,
+   "length_f": 38,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "text1",
+  "text2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 130,
+ "check_frames": [
+  0,
+  10,
+  16,
+  24,
+  32,
+  46,
+  54,
+  56,
+  58,
+  62,
+  68,
+  74,
+  84,
+  96,
+  108,
+  124,
+  140
+ ]
+}

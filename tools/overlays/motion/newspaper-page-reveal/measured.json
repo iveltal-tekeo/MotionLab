@@ -1,0 +1,33 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f65 (00:00:02:05) +1 more: #lays > div:nth-of-type(7) > div:nth-of-type(3) \"\" wider than its box by 60 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(7) \"The mayor promised a full report before \" off the frame by 19 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(8) \"Volunteers will walk the route on Saturd\" off the frame by 19 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(9) \"Officials say the first stalls could ope\" off the frame by 36 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(12) \"Harbour ferry adds a late service\" off the frame by 34 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(14) \"Corner bakery wins a national prize\" off the frame by 34 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(15) \"Volunteers will walk the route on Saturd\" off the frame, wider than its box by 369 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(16) \"The mayor promised a full report before \" off the frame, wider than its box by 385 px",
+    "FIT f0 (00:00:00:00) +1 more: #lays > div:nth-of-type(1) > div:nth-of-type(19) \"\" wider than its box by 24 px",
+    "FIT f11 (00:00:00:11): #lays > div:nth-of-type(2) > div:nth-of-type(5) \"A final vote is expected next month, onc\" off the frame by 156 px",
+    "FIT f11 (00:00:00:11): #lays > div:nth-of-type(2) > div:nth-of-type(7) \"Volunteers will walk the route on Saturd\" off the frame, wider than its box by 526 px",
+    "FIT f11 (00:00:00:11): #lays > div:nth-of-type(2) > div:nth-of-type(9) \"Library opens its doors for longer\" off the frame, wider than its box by 160 px",
+    "FIT f11 (00:00:00:11): #lays > div:nth-of-type(2) > div:nth-of-type(11) \"\" wider than its box by 345 px",
+    "FIT f25 (00:00:00:25) +1 more: #lays > div:nth-of-type(3) > div:nth-of-type(5) \"Residents spoke for nearly three hours, \" off the frame by 412 px",
+    "FIT f25 (00:00:00:25) +1 more: #lays > div:nth-of-type(3) > div:nth-of-type(6) \"A final vote is expected next month, onc\" off the frame by 378 px",
+    "FIT f25 (00:00:00:25) +1 more: #lays > div:nth-of-type(3) > div:nth-of-type(7) \"Officials say the first stalls could ope\" off the frame by 412 px",
+    "FIT f25 (00:00:00:25) +1 more: #lays > div:nth-of-type(3) > div:nth-of-type(9) \"Cycle lanes reach the old market\" off the frame by 419 px",
+    "FIT f25 (00:00:00:25) +1 more: #lays > div:nth-of-type(3) > div:nth-of-type(10) \"Students plan a river clean-up\" off the frame by 419 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

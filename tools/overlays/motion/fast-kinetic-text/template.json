@@ -1,0 +1,126 @@
+{
+ "name": "Fast kinetic text",
+ "kind": "text",
+ "category": "Text",
+ "what": "A hard-hitting line in three scenes: a short line on black with a warning triangle drawn around it zooms at you until the letters fill the screen with white; a second line comes in word by word on white with a red underline; then a red panel grows out of the left edge, a third line stacks up on it with big faint echoes, a red bar flashes and the last line lands in white.",
+ "use_for": [
+  "hook",
+  "warning",
+  "mistake",
+  "attention grabber",
+  "opener",
+  "kinetic text",
+  "short video intro",
+  "talking head hook"
+ ],
+ "tags": [
+  "text",
+  "kinetic",
+  "zoom",
+  "warning",
+  "underline",
+  "reveal",
+  "hook",
+  "fast",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f9 the first line fades in and a warning triangle with a '!' draws itself; f9-f34 the whole scene zooms at the viewer, accelerating (x1 to x13); f32-f37 white floods the screen; f40-f45 the second line comes in word by word and f41-f49 a red underline slides under it; f49-f62 a red panel grows out of the left edge while f51-f65 a third line stacks up on it, word by word, with big faint echoes; f69-f71 a red bar flashes; f72 the last line lands in white and f84 it grows a little; then it holds",
+ "tracks": [
+  {
+   "name": "first line",
+   "what": "fades in (last word a moment after the first)",
+   "start_f": 0,
+   "length_f": 6,
+   "easing": "ease-in"
+  },
+  {
+   "name": "triangle",
+   "what": "a warning triangle and '!' draw themselves, red to white",
+   "start_f": 0,
+   "length_f": 9,
+   "easing": "accelerating"
+  },
+  {
+   "name": "zoom",
+   "what": "the whole scene zooms at the viewer, x1 to x13",
+   "start_f": 9,
+   "length_f": 25,
+   "easing": "accelerating (exponential)"
+  },
+  {
+   "name": "flood",
+   "what": "the screen floods white",
+   "start_f": 32,
+   "length_f": 5,
+   "easing": "linear"
+  },
+  {
+   "name": "second line",
+   "what": "comes in word by word on white",
+   "start_f": 40,
+   "length_f": 5,
+   "easing": "ease-in"
+  },
+  {
+   "name": "underline",
+   "what": "a red underline slides under the second line",
+   "start_f": 41,
+   "length_f": 8,
+   "easing": "linear"
+  },
+  {
+   "name": "red panel",
+   "what": "grows out of the left edge to fill the frame",
+   "start_f": 49,
+   "length_f": 13,
+   "easing": "decelerating"
+  },
+  {
+   "name": "third line",
+   "what": "three words rise into place with big faint echoes",
+   "start_f": 51,
+   "length_f": 14,
+   "easing": "decelerating"
+  },
+  {
+   "name": "bar",
+   "what": "a red bar flashes for 3 f",
+   "start_f": 69,
+   "length_f": 3,
+   "easing": "none"
+  },
+  {
+   "name": "last line",
+   "what": "lands in white, drifts smaller, then grows a little",
+   "start_f": 72,
+   "length_f": 17,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3",
+  "text_4"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 11,
+ "check_frames": [
+  3,
+  12,
+  22,
+  32,
+  44,
+  56,
+  66,
+  70,
+  86
+ ]
+}

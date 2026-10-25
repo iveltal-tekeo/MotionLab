@@ -1,0 +1,104 @@
+{
+ "name": "Ring and orbit arc",
+ "kind": "text",
+ "category": "Text",
+ "what": "On black, a huge glowing ring shrinks onto a centre title that is typed in letter by letter, then rises to the top; below it a coloured arc draws from a dot on the left round to a dot on the right while two more texts are typed along it.",
+ "use_for": [
+  "three points",
+  "list of three",
+  "tech intro",
+  "title",
+  "explainer",
+  "steps",
+  "gaming",
+  "app promo"
+ ],
+ "tags": [
+  "text",
+  "ring",
+  "glow",
+  "arc",
+  "typing",
+  "orbit",
+  "dark",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f8: a ring bigger than the frame fades in and shrinks (36 px a frame to f22, then decelerating to f46) onto the middle; letters of the centre text are typed every 10 f from f19; f36-f52 the ring rises to the upper middle; f28-f42 a dot fades in at the left and f41-f78 an arc draws round below the ring (decelerating) to a second dot (f76-f84); two texts are typed along it, a letter every 3 f, from f48 (left) and f66 (right); it holds to f148.",
+ "tracks": [
+  {
+   "name": "ring",
+   "what": "a huge ring shrinks onto the middle of the frame, a glow stays behind",
+   "start_f": 8,
+   "length_f": 38,
+   "easing": "linear to f22, then decelerating (measured table)"
+  },
+  {
+   "name": "centre text",
+   "what": "typed in, a letter every 10 f, each fading in out of a blur",
+   "start_f": 19,
+   "length_f": 56,
+   "easing": "steps of 10 f"
+  },
+  {
+   "name": "ring rises",
+   "what": "the ring and its text rise to the upper middle",
+   "start_f": 34,
+   "length_f": 18,
+   "easing": "S-curve (measured table)"
+  },
+  {
+   "name": "arc",
+   "what": "a coloured arc draws round below the ring, from a left dot to a right dot",
+   "start_f": 41,
+   "length_f": 38,
+   "easing": "decelerating (ease-out cubic)"
+  },
+  {
+   "name": "arc text 1",
+   "what": "typed along the left of the arc, a letter every 3 f",
+   "start_f": 48,
+   "length_f": 18,
+   "easing": "steps of 3 f"
+  },
+  {
+   "name": "arc text 2",
+   "what": "typed along the right of the arc, a letter every 3 f",
+   "start_f": 66,
+   "length_f": 18,
+   "easing": "steps of 3 f"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 84,
+   "length_f": 65,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "main_text",
+  "label_2",
+  "label_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  10,
+  18,
+  24,
+  30,
+  42,
+  50,
+  60,
+  72,
+  84,
+  120
+ ]
+}

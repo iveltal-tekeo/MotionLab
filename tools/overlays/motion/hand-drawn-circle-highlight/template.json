@@ -1,0 +1,113 @@
+{
+ "name": "Highlight and pen loop",
+ "kind": "text",
+ "category": "Text",
+ "what": "A word is typed in small on a paper page and grows to full size, a highlight wipes across behind it, a subtitle grows in underneath, then a hand-drawn pen loop circles both and its tail runs out to a small slanted note.",
+ "use_for": [
+  "emphasis",
+  "key word",
+  "callout",
+  "title",
+  "highlight",
+  "hand drawn",
+  "social",
+  "explainer"
+ ],
+ "tags": [
+  "text",
+  "highlight",
+  "hand drawn",
+  "circle",
+  "pen",
+  "paper",
+  "typing",
+  "callout",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f16 (00:00:00:02-00:00:00:16) the word is typed in small, letter by letter, then grows to full size at f14-f20 (00:00:00:14-00:00:00:20); f24-f56 (00:00:00:24-00:00:01:26) a highlight bar appears at its right end and wipes left behind it (fastest f30-f38); f49-f64 (00:00:01:19-00:00:02:04) the subtitle grows in word by word; f60-f84 (00:00:02:00-00:00:02:24) a pen draws a loop up the left, over the top, down the right and back under (on twos); f84-f106 (00:00:02:24-00:00:03:16) its tail runs on to the left; f108-f120 (00:00:03:18-00:00:04:00) a small slanted note pops in at the tail and settles; then it holds to f209 (00:00:06:29)",
+ "tracks": [
+  {
+   "name": "type the word",
+   "what": "the word is typed in small, letter by letter",
+   "start_f": 2,
+   "length_f": 14,
+   "easing": "one letter every 4 frames"
+  },
+  {
+   "name": "grow",
+   "what": "the typed word grows to full size",
+   "start_f": 14,
+   "length_f": 6,
+   "easing": "decelerating"
+  },
+  {
+   "name": "highlight wipe",
+   "what": "a highlight bar appears at the right end and wipes left behind the word",
+   "start_f": 24,
+   "length_f": 32,
+   "easing": "S-curve (fastest f30-f38)"
+  },
+  {
+   "name": "subtitle",
+   "what": "the subtitle grows in word by word under the box",
+   "start_f": 49,
+   "length_f": 15,
+   "easing": "decelerating"
+  },
+  {
+   "name": "pen loop",
+   "what": "a hand-drawn loop circles the word and subtitle (up the left, over the top, down the right, back under)",
+   "start_f": 60,
+   "length_f": 25,
+   "easing": "measured positions, on twos"
+  },
+  {
+   "name": "pen tail",
+   "what": "the loop's tail runs on to the left, slowing down",
+   "start_f": 85,
+   "length_f": 22,
+   "easing": "decelerating"
+  },
+  {
+   "name": "note",
+   "what": "a small slanted note pops in at the tail's end and settles",
+   "start_f": 108,
+   "length_f": 12,
+   "easing": "decelerating"
+  },
+  {
+   "name": "hold",
+   "what": "everything rests",
+   "start_f": 121,
+   "length_f": 89,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "text",
+  "sub",
+  "note"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.65,
+ "thumb_f": 150,
+ "check_frames": [
+  4,
+  12,
+  18,
+  30,
+  40,
+  56,
+  68,
+  76,
+  90,
+  110,
+  150
+ ]
+}

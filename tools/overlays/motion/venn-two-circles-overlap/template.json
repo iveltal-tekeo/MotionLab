@@ -1,0 +1,95 @@
+{
+ "name": "Venn circles",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two glowing circles, each with a word, on a dark ground: the rings draw themselves, the circles drift apart, rush together until they overlap like a Venn diagram, then breathe closer and farther while the words swell with them and each letter wiggles.",
+ "use_for": [
+  "comparison",
+  "overlap",
+  "two things",
+  "versus",
+  "combine",
+  "intersection",
+  "explainer",
+  "venn"
+ ],
+ "tags": [
+  "text",
+  "circles",
+  "venn",
+  "glow",
+  "overlap",
+  "explainer",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f28 each ring draws itself as an arc chasing its tail while the word fades up (f5-f30); f12-f45 the circles drift apart and grow slowly (r 139 to 172); f45-f66 they rush together and grow (r 172 to 259, a 515 px gap down to 445 px) so they overlap from f58; f66-f120 they shrink and draw closer (r 259 to 220); f120-f177 they open out and grow back to r 259; the words follow the circles' size, each letter wiggling a little",
+ "tracks": [
+  {
+   "name": "rings draw",
+   "what": "each ring draws itself as an arc chasing its own tail",
+   "start_f": 2,
+   "length_f": 27,
+   "easing": "measured"
+  },
+  {
+   "name": "words in",
+   "what": "the words fade up inside the rings",
+   "start_f": 5,
+   "length_f": 26,
+   "easing": "power2.out"
+  },
+  {
+   "name": "drift apart",
+   "what": "the circles grow slowly and drift a little apart",
+   "start_f": 12,
+   "length_f": 33,
+   "easing": "linear"
+  },
+  {
+   "name": "rush together",
+   "what": "the circles grow fast and rush toward each other until they overlap",
+   "start_f": 45,
+   "length_f": 21,
+   "easing": "S-curve (fast middle, soft stop)"
+  },
+  {
+   "name": "breathe in",
+   "what": "the circles shrink and draw closer",
+   "start_f": 66,
+   "length_f": 54,
+   "easing": "sine in-out"
+  },
+  {
+   "name": "breathe out",
+   "what": "the circles open out and grow back to the full overlap",
+   "start_f": 120,
+   "length_f": 57,
+   "easing": "sine in-out"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  4,
+  8,
+  12,
+  24,
+  45,
+  55,
+  66,
+  100,
+  148,
+  179
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "name": "balance-scale-seesaw",
+ "frames": 240,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the scale drops in from above"
+  },
+  {
+   "f": "start + round(95 * fps / 30)",
+   "kind": "thump",
+   "db": -6,
+   "what": "the left label lands in its pan and the beam tips"
+  },
+  {
+   "f": "start + round(135 * fps / 30)",
+   "kind": "impact",
+   "db": -9,
+   "what": "the right label lands and the beam swings over"
+  }
+ ]
+}

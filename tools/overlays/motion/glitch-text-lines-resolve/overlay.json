@@ -1,0 +1,22 @@
+{
+ "name": "glitch-text-lines-resolve",
+ "frames": 121,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((15 + 15 * i) * fps / 30)",
+   "kind": "zap",
+   "repeat": "3",
+   "db": -10,
+   "what": "a glitch bar clears into its line"
+  },
+  {
+   "f": "start + round(36 * fps / 30)",
+   "kind": "thump",
+   "db": -12,
+   "what": "the block squashes flat and swings back"
+  }
+ ]
+}

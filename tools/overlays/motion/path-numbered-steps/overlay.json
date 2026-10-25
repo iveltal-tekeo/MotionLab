@@ -1,0 +1,24 @@
+{
+ "name": "path-numbered-steps",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(21 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the dashed line is drawn through the dots"
+  },
+  {
+   "f": "start + round(33 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the first name pops in"
+  }
+ ]
+}

@@ -1,0 +1,95 @@
+{
+ "name": "Audience growth chart card",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Rows of glossy glass spheres fill the bottom of a dark page like an audience, a dark chart card rises from behind them with a soft glowing beam, a thin line is drawn across it, the title rises into place word by word and a light travels round the card's edge before the card starts to lift away.",
+ "use_for": [
+  "audience growth",
+  "followers",
+  "views",
+  "growth",
+  "social media",
+  "stats",
+  "reach",
+  "chart story",
+  "vertical short"
+ ],
+ "tags": [
+  "chart",
+  "line chart",
+  "card",
+  "spheres",
+  "audience",
+  "glass",
+  "glow",
+  "title",
+  "vertical",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f24 the chart card rises from behind the spheres (slow start, quick middle, long soft finish); f8-f68 the line is drawn across the card; f42 and f49 the two title words rise into place from about 60 px below, fading in, each settling over about 27 f; f30-f97 a light travels round the card edge; f90-f97 the card starts to lift away, faster and faster (the clip stops there)",
+ "tracks": [
+  {
+   "name": "card rises",
+   "what": "the chart card rises about 230 px from behind the spheres",
+   "start_f": 0,
+   "length_f": 24,
+   "easing": "slow start, quick middle, long soft finish (measured)"
+  },
+  {
+   "name": "chart line",
+   "what": "the line is drawn across the card, point by point",
+   "start_f": 8,
+   "length_f": 60,
+   "easing": "S-curve along its length (measured)"
+  },
+  {
+   "name": "title words",
+   "what": "each title word rises into place and fades in, the next one 7 f later",
+   "start_f": 42,
+   "length_f": 34,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "edge light",
+   "what": "a light travels round the card edge",
+   "start_f": 30,
+   "length_f": 67,
+   "easing": "steady, then faster (measured)"
+  },
+  {
+   "name": "card lifts",
+   "what": "the card starts to lift away",
+   "start_f": 90,
+   "length_f": 8,
+   "easing": "accelerating (slow start, measured)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "title",
+  "data_y",
+  "data_x"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 75,
+ "check_frames": [
+  0,
+  4,
+  8,
+  14,
+  24,
+  40,
+  46,
+  52,
+  60,
+  72,
+  90,
+  97
+ ]
+}

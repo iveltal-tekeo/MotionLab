@@ -1,0 +1,38 @@
+{
+ "name": "footage-slabs-text-replace",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "media_start": {
+  "top_media": 6,
+  "bottom_media": 20
+ },
+ "cues": [
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the upper slab flies up"
+  },
+  {
+   "f": "start + round(22 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the lower slab swings in"
+  },
+  {
+   "f": "start + round((66 + 2.14 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "min(len(text), 10)",
+   "db": -10,
+   "what": "a letter of the text lands"
+  }
+ ]
+}

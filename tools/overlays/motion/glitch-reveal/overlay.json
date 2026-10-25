@@ -1,0 +1,30 @@
+{
+ "name": "glitch-reveal",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "zap",
+   "db": -8,
+   "what": "the text glitches in"
+  },
+  {
+   "f": "start + round(48 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 2800,
+   "to": 900,
+   "db": -10,
+   "what": "the glint sweeps across the text"
+  },
+  {
+   "f": "start + round(112 * fps / 30)",
+   "kind": "shimmer",
+   "db": -12,
+   "what": "one letter lights up"
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "pie-chart-slice-highlight",
+ "frames": 110,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 400,
+   "to": 2000,
+   "db": -12,
+   "what": "the slice sweeps round to the top"
+  },
+  {
+   "f": "start + round(25 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 2400,
+   "db": -12,
+   "what": "the leader line is drawn"
+  },
+  {
+   "f": "start + round(56 * fps / 30)",
+   "kind": "tick",
+   "db": -3,
+   "what": "the callout words start to rise"
+  }
+ ]
+}

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "card_media", "type": "string", "label": "The card: your picture or video, 4:3 (empty = a placeholder)", "default": ""},
+  {"id": "card_focus", "type": "string", "label": "What stays in view on the card (x% y%)", "default": "50% 50%"},
+  {"id": "label", "type": "string", "label": "Label on the card (*bold* _italic_ ==highlight== ^signal colour^; empty = none)", "default": "Your footage here"},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 84, "min": 20, "max": 200, "step": 1},
+  {"id": "glow", "type": "number", "label": "Warm glow in the corners (0 = none, 100 = strong)", "default": 80, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "envelope-card-reveal" (2026-10-22): a dark envelope slides up from the bottom of a dark scene with warm light in two corners
+     (f13-f29, S-curve), stays small (f29-f34), then grows x1.6 and settles lower (f34-f68, S-curve) - the way the
+     reference's camera comes in on it. Its flap flips open (f66-f71, through edge-on to flat up, a black inside
+     showing), and the user's card (a picture / video slot, else a signal-to-mustard gradient with a label) slides
+     up out of the pocket (f72-f97, a slow start, a fast middle and a long soft finish) and stays, the envelope's
+     front flaps cutting its lower corners. The envelope's size and place by frame, the flap's angle and the card's
+     height were measured from the clip's frames. Look-aware: the ground and envelope from the ink, the card's
+     gradient from the signal and the mustard, the corner glow from the mustard, the label from the body font and
+     the film grain from the look tokens (tools\overlays\motion\_looks). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; }
+  #env { position: absolute; left: 0; top: 0; width: 704px; height: 445px; transform-origin: 0 0; }
+  #env > * { position: absolute; left: 0; top: 0; }
+  #cclip { left: 0; top: -420px; width: 704px; height: 865px; overflow: hidden; }
+  #card { position: absolute; overflow: hidden; }
+  #lab { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; line-height: 1.1; font-synthesis: none; }
+  .flap { width: 704px; height: 263px; transform-origin: 50% 0%; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="stage"><div id="env">
+    <svg id="flapB" class="flap" viewBox="0 0 704 263"></svg>
+    <svg id="inside" width="704" height="445" viewBox="0 0 704 445"></svg>
+    <div id="cclip"><div id="card"><div id="lab" class="ml-body"></div></div></div>
+    <svg id="front" width="704" height="445" viewBox="0 0 704 445" style="overflow:visible"></svg>
+    <svg id="flapF" class="flap" viewBox="0 0 704 263"></svg>
+  </div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const R = Math.min(W, H) / 720;                       // the reference's 1280x720 px; the stage is that size, scaled and centred
+  const S = Math.round(V.start);
+
+  // ---- the look: a dark ground with warm light in two corners (the reference's amber, here the mustard)
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const g01 = clamp01(V.glow / 100);
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ?
+    `radial-gradient(circle ${640 * R}px at 100% 4%, ${rgba(L.mustard, 0.66 * g01)} 0%, ${rgba(L.mustard, 0.4 * g01)} 28%, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(circle ${380 * R}px at 0% 98%, ${rgba(L.mustard, 0.55 * g01)} 0%, ${rgba(L.mustard, 0.28 * g01)} 30%, ${rgba(L.mustard, 0)} 100%), ${night}` : "transparent" });
+  const hand = q("hand"), stage = q("stage"), env = q("env");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(stage.style, { left: `${(W - 1280 * R) / 2}px`, top: `${(H - 720 * R) / 2}px`, transform: `scale(${R})` });
+
+  // ---- the envelope, in its final size (704 x 445) with its top-left corner at (0, 0); posed by one transform
+  const NS = "http://www.w3.org/2000/svg";
+  const sv = (n, a, p) => { const e = document.createElementNS(NS, n); Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v)); p.appendChild(e); return e; };
+  const bodyC = mix(night, glare, 0.075), flapC = mix(night, glare, 0.06), lineC = rgba(glare, 0.3), inC = mix(night, "#000000", 0.9);
+  // the pocket: the front's top edge dips into a trapezoid notch (wide at the top edge, 250 wide at depth 145)
+  const NOTCH = "C 44 5 84 13 114 31 L 227 145 L 477 145 L 590 31 C 620 13 660 5 704 0";
+  sv("path", { d: `M 0 0 L 704 0 C 660 5 620 13 590 31 L 477 145 L 227 145 L 114 31 C 84 13 44 5 0 0 Z`, fill: inC }, q("inside"));
+  sv("path", { d: `M 0 0 ${NOTCH} L 704 445 L 0 445 Z`, fill: bodyC }, q("front"));
+  sv("path", { d: `M 0 0 ${NOTCH}`, fill: "none", stroke: lineC, "stroke-width": 1.3, "stroke-linejoin": "round" }, q("front"));
+  [["M 227 145 L 56 291 C 46 303 40 315 34 335"], ["M 477 145 L 648 291 C 658 303 664 315 670 335"]].forEach(([d]) => sv("path", { d, fill: "none", stroke: lineC, "stroke-width": 1.3, "stroke-linecap": "round" }, q("front")));
+  // the flap: a trapezoid hinged on the top edge, 263 long, its free edge 89 in on each side, corners rounded
+  const FLAP = "M 0 0 L 704 0 L 627 232 Q 619 263 586 263 L 118 263 Q 85 263 77 232 Z";
+  ["flapB", "flapF"].forEach(id => {
+    sv("path", { d: FLAP, fill: flapC }, q(id));
+    sv("path", { d: "M 0 0 L 77 232 Q 85 263 118 263 L 586 263 Q 619 263 627 232 L 704 0", fill: "none", stroke: lineC, "stroke-width": 1.3, "stroke-linejoin": "round" }, q(id));
+  });
+
+  // ---- the card: 592 x 444 (4:3) at x 60, its top at y -205 when it has come up; the user's media or a gradient
+  const card = q("card");
+  const cr = Math.min(30, 1.3 * L.radius / R);
+  Object.assign(card.style, { left: "60px", top: "0px", width: "592px", height: "444px", borderRadius: `${cr}px` });
+  if (V.card_media) {
+    if (window.MLLook) MLLook.media(card, V.card_media, { look: L, kind: "image", fit: "cover", focus: V.card_focus, seed: 5, r: cr,
+      start: (S + 74) / FPS, duration: Math.max(0.2, (FRAMES - S - 74) / FPS), id: "card-media", slot: "card_media" });
+  } else {
+    card.style.background = `linear-gradient(180deg, ${L.signal} 0%, ${mix(L.signal, L.mustard, 0.5)} 45%, ${L.mustard} 100%)`;
+  }
+  const lab = q("lab");
+  card.appendChild(lab);
+  const fam = V.body_font;
+  Object.assign(lab.style, { top: "108px", fontSize: `${V.size * U / R}px`, fontWeight: String(fw(fam, 700)), color: glare, textShadow: V.card_media ? "0 2px 14px rgba(0,0,0,0.5)" : "none" });
+  if (window.MLLook) MLLook.rich(lab, V.label, { look: L, family: fam, weight: 700 }); else lab.textContent = String(V.label || "");
+  lab.style.display = V.label ? "block" : "none";
+
+  // ---- the measured moves (reference px, frames)
+  const RISE = [[13, 725], [15, 650], [17, 600], [19, 530], [21, 435], [23, 320], [25, 230], [27, 190], [29, 181]];     // the envelope's top edge while it rises (small, 432 wide)
+  const FLAPA = [[66, 0], [67, 61], [69, 128], [71, 178], [73, 181], [76, 180]];                                      // the flap's angle (deg): 0 = hanging over the front, 180 = up
+  const CARDY = [[70, 540], [73, 505], [75, 472], [77, 452], [79, 420], [81, 365], [83, 265], [85, 195], [87, 158], [89, 141], [91, 131], [93, 125], [95, 121], [97, 120]];   // the card's top edge (slow start, fast middle, long soft end)
+  const FIN = { l: 296, r: 1000, t: 325 }, SMALL = { l: 429, r: 861, t: 186 };
+  const ss = u => { u = clamp01(u); return u * u * (3 - 2 * u); };
+  function render(tt) {
+    const g = tt * FPS - S;
+    const on = g >= 13;
+    env.style.visibility = on ? "visible" : "hidden"; env.style.opacity = on ? "1" : "0";      // (opacity too: a video tag keeps its own visibility)
+    if (!on) return;
+    let l, r, t;
+    if (g < 34) { l = SMALL.l; r = SMALL.r; t = tab(RISE, g)[0]; }
+    else { const p = ss((g - 34) / 34); l = lerp(SMALL.l, FIN.l, p); r = lerp(SMALL.r, FIN.r, p); t = lerp(SMALL.t, FIN.t, p); }
+    const s = (r - l) / 704;
+    env.style.transform = `translate(${l.toFixed(2)}px, ${t.toFixed(2)}px) scale(${s.toFixed(4)})`;
+    // the flap: in front of everything while it hangs, behind the card once it is up
+    const a = tab(FLAPA, g)[0], tr = `perspective(1500px) rotateX(${a.toFixed(2)}deg)`;
+    q("flapF").style.transform = tr; q("flapB").style.transform = tr;
+    q("flapF").style.display = a < 90 ? "block" : "none"; q("flapB").style.display = a < 90 ? "none" : "block";
+    // the card: its top edge in the frame's px -> in the envelope's own px (the envelope is at its full size by f68)
+    const cy = tab(CARDY, g)[0] - FIN.t;
+    card.style.top = `${(cy + 420).toFixed(2)}px`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 3, hits: V.shake > 0 ? [{ f: S + 69, amount: 1.5 }, { f: S + 83, amount: 1.5 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 19 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

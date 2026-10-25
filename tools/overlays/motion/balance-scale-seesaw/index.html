@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "label_a", "type": "string", "label": "Left label (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Option A"},
+  {"id": "label_b", "type": "string", "label": "Right label (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Option B"},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 45, "min": 16, "max": 90, "step": 1},
+  {"id": "tilt_one", "type": "number", "label": "First tilt, when the left label lands (degrees, - = left side down)", "default": -10, "min": -30, "max": 30, "step": 0.5},
+  {"id": "tilt_two", "type": "number", "label": "Final tilt, when the right label lands (degrees, + = right side down, 0 = level)", "default": 20, "min": -30, "max": 30, "step": 0.5},
+  {"id": "col", "type": "enum", "label": "Scale and label colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "balance-scale-seesaw" (2026-10-23): a balance scale hangs from a rod and weighs two labels. The whole scale drops in from above the frame
+     (f9-f45, accelerating, then a short rebound f45-f62) and its two pans swing like pendulums for ~45 frames; the
+     left label falls in with a vertical motion blur and lands in the left pan (f84-f95): the beam tilts to the left
+     over 19 frames (a quick start, a long soft end) and the empty right pan swings; the right label falls in and
+     lands (f127-f135) and the beam snaps over to the right, ending 20 degrees (f135-f150: the first frame covers a
+     third of it) while the scale sags and settles, the left pan swinging up; a last slow creep f179-f194. Both
+     tilts, the labels and the colour are settings. Numbers measured from the reference's frames (720 x 1280 units).
+     Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #stage > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .pan { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  .pan > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; transform-origin: 50% 50%; }
+  .lt { white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0">
+    <defs>
+      <filter id="mb1" x="-30%" y="-250%" width="160%" height="600%"><feGaussianBlur id="mb1g" stdDeviation="0 0"/></filter>
+      <filter id="mb2" x="-30%" y="-250%" width="160%" height="600%"><feGaussianBlur id="mb2g" stdDeviation="0 0"/></filter>
+      <linearGradient id="gBody" gradientUnits="userSpaceOnUse" x1="-91" y1="0" x2="91" y2="0"><stop id="gb0" offset="0" stop-color="#000"/><stop id="gb1" offset="1" stop-color="#000"/></linearGradient>
+      <linearGradient id="gRim" gradientUnits="userSpaceOnUse" x1="-91" y1="0" x2="91" y2="0"><stop id="gr0" offset="0" stop-color="#000"/><stop id="gr1" offset="1" stop-color="#000"/></linearGradient>
+      <linearGradient id="gShade" gradientUnits="userSpaceOnUse" x1="0" y1="157" x2="0" y2="204"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.2"/></linearGradient>
+    </defs>
+  </svg>
+  <div id="hand" class="abs"><div id="stage"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.3;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, mustard: L.mustard, deep: L.deep, paper: glare };
+  const C = pick[V.col] || L.signal;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const seq = (f0, a, g) => { const x = g - f0; if (x <= 0) return a[0]; if (x >= a.length - 1) return a[a.length - 1]; const i = Math.floor(x), k = x - i; return a[i] + (a[i + 1] - a[i]) * k; };
+  const T1 = Number(V.tilt_one), T2 = Number(V.tilt_two);
+
+  // ---- the ground: a very dark page with a soft lighter patch behind the scale
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 90% 55% at 50% 51%, ${rgba(glare, 0.07)} 0%, ${rgba(glare, 0)} 100%), ${night}`;
+
+  // ---- the stage: the reference's 720 x 1280 units, scaled to the frame
+  const stage = q("stage");
+  stage.style.transform = `scale(${K})`;
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, parent) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; };
+  const bowlL = mixC(C, "#000000", 0.26), bowlR = mixC(C, "#000000", 0.57), dotC = mixC(C, "#ffffff", 0.08);
+  q("gb0").setAttribute("stop-color", bowlL); q("gb1").setAttribute("stop-color", bowlR);
+  q("gr0").setAttribute("stop-color", mixC(bowlL, "#ffffff", 0.4)); q("gr1").setAttribute("stop-color", mixC(bowlR, "#ffffff", 0.4));
+
+  // the rod and the beam
+  const HL = 198.5;                                          // half the beam, dot to dot
+  const bsvg = el("svg", { width: 720, height: 1280 }, stage);
+  const rod = el("rect", { x: 357.85, y: -3000, width: 4.3, height: 3000, fill: glare }, bsvg);
+  const beam = el("g", {}, bsvg);
+  el("rect", { x: -HL, y: -1.75, width: 2 * HL, height: 3.5, rx: 1.75, fill: glare }, beam);
+  const pivot = el("circle", { cx: 0, cy: 0, r: 6, fill: dotC }, beam);
+
+  // the two pans: strings, bowl and the hanging dot, drawn about the dot (0, 0)
+  const pans = [0, 1].map(() => {
+    const d = document.createElement("div"); d.className = "pan"; stage.appendChild(d);
+    const s = el("svg", { width: 1, height: 1 }, d);
+    el("line", { x1: 0, y1: 0, x2: -91, y2: 157, stroke: glare, "stroke-width": 1.6, "stroke-linecap": "round" }, s);
+    el("line", { x1: 0, y1: 0, x2: 91, y2: 157, stroke: glare, "stroke-width": 1.6, "stroke-linecap": "round" }, s);
+    el("path", { d: "M -91 157 A 91 46.5 0 0 0 91 157 Z", fill: "url(#gBody)" }, s);
+    el("path", { d: "M -91 157 A 91 46.5 0 0 0 91 157 Z", fill: "url(#gShade)" }, s);
+    el("ellipse", { cx: 0, cy: 157, rx: 91, ry: 12.5, fill: "url(#gRim)" }, s);
+    el("circle", { cx: 0, cy: 0, r: 6, fill: dotC }, s);
+    return d;
+  });
+
+  // the labels (they fall, land in a pan, then hang in it)
+  const tcol = lum(C) > 0.62 ? L.ink : "#ffffff";
+  const fs0 = V.size * U / K;
+  const mkLab = (text) => {
+    const d = document.createElement("div"); d.className = "lab"; stage.appendChild(d);
+    const t = document.createElement("div"); t.className = "lt ml-body"; d.appendChild(t);
+    if (window.MLLook) MLLook.rich(t, text, { look: L, family: V.body_font, weight: 500 }); else t.textContent = text;
+    Object.assign(t.style, { color: tcol, fontSize: `${fs0}px`, fontWeight: String(fw(V.body_font, 500)) });
+    d.style.background = `linear-gradient(105deg, ${C} 0%, ${mixC(C, "#ffffff", 0.28)} 100%)`;
+    d.style.boxShadow = `0 0 12px ${rgba(C, 0.55)}, 0 0 30px ${rgba(C, 0.3)}`;
+    d.style.borderRadius = `${Math.max(0, L.radius / K)}px`;
+    return { el: d, t, w: 142, h: 59 };
+  };
+  const labs = [mkLab(V.label_a), mkLab(V.label_b)];
+
+  // ---- the measured tables (g = the frame minus "Starts at frame"; clip units)
+  // the beam centre's height: the scale drops in from above the frame (accelerating), stops with a bounce at f45 and settles
+  const PIV = [-204, -201.5, -199.5, -196.5, -193.5, -189.5, -185.5, -180.5, -175.5, -170.5, -165.5, -158.5, -151.5, -145.5, -137.5, -128.5, -119.5, -109.5, -99.5, -87.5, -75.5, -63.5, -49.5, -35.5, -19.5, -1.5,
+               17.5, 37.5, 59.5, 83.5, 109.5, 139.0, 171.5, 209.0, 252.5, 304.5, 373.5, 513.3, 503.5, 499.5, 496.5, 493.5, 491.5, 490.5, 488.5, 487.5, 486.5, 485.5, 485.2, 484.5, 483.5, 483.5, 483.5, 482.5];   // from f8
+  // the sag when the second label lands, then the slow creep (from f135)
+  const PV2 = [482.3, 502.7, 511.6, 517.8, 522.6, 526.3, 529.3, 531.7, 533.7, 535.2, 536.4, 537.4, 538.2, 538.6, 538.9, 539.0, 538.9, 538.6, 538.2, 537.6, 536.8, 535.8, 534.7, 533.4, 532.0, 530.7, 529.4, 528.0, 526.9, 525.8,
+               524.8, 523.9, 523.2, 522.5, 521.9, 521.5, 521.1, 520.8, 520.6, 520.4, 520.4, 520.3, 520.4, 520.5, 520.7, 521.0, 521.3, 521.8, 522.3, 522.9, 523.5, 524.0, 524.5, 525.0, 525.5, 525.9, 526.2, 526.5, 526.8, 527.0,
+               527.1, 527.3, 527.4, 527.4, 527.5];
+  // the beam's angle as a share of its tilt: the first weigh-in (from f94) and the second (from f135)
+  const U1 = [-0.0, -0.0, -3.04, -4.43, -5.44, -6.21, -6.87, -7.42, -7.87, -8.26, -8.59, -8.87, -9.11, -9.33, -9.55, -9.59, -9.74, -9.81, -9.91, -9.93, -9.95].map(v => v / -9.95);
+  const U2 = [-9.95, 0.83, 5.53, 8.81, 11.32, 13.28, 14.88, 16.18, 17.22, 18.05, 18.7, 19.23, 19.59, 19.82, 19.99, 20.04, 20.05, 20.04].map(v => Math.min(1, (v + 9.95) / 29.98));
+  // the pans' swing (degrees, clockwise +): both after the drop (from f44), the empty pan after the first weigh-in (from
+  // f95), the pan that rises after the second (from f135)
+  const P1 = [0, 0.2, 3.7, 5.3, 6.1, 6.9, 7.4, 7.9, 8.2, 8.5, 8.8, 8.9, 8.9, 9.2, 8.9, 9.1, 8.8, 8.4, 7.5, 6.3, 4.4, 2.0, -0.3, -2.1, -3.4, -4.0, -4.5, -4.8, -4.8, -4.4, -3.6, -2.5, -0.7, 0.6, 1.7, 2.4, 2.5, 2.5, 2.4, 2.3, 1.9, 1.6,
+              1.2, 1.1, 0.9, 0.6, 0.6, 0.4, 0.5, 0.4, 0.3, 0.3];
+  const P2 = [0.5, 4.6, 6.2, 7.2, 7.8, 8.1, 8.2, 8.3, 8.2, 8.2, 7.7, 7.5, 6.5, 5.8, 4.8, 3.5, 2.6, 1.3, 0.0, -0.7, -1.5, -2.0, -2.2, -2.2, -2.0, -1.8, -1.5, -1.1, -0.7, -0.5, -0.2, 0.0, 0.4, 0.7, 0.6, 0.6, 0.6];
+  const P3 = [0.0, -6.4, -8.5, -9.4, -9.6, -9.4, -9.1, -8.5, -7.5, -6.7, -5.7, -4.4, -3.1, -2.1, -0.7, 0.2, 1.1, 2.0, 2.4, 2.9, 3.1, 3.3, 2.9, 2.9, 2.6, 2.6, 2.6, 2.2, 1.8, 1.7, 1.5, 1.3, 1.1, 0.7, 0.7, 0.2, 0.2, 0.0, 0.2, 0.2, 0.2, 0.2, 0.2];
+  // the labels: the fall (the label's centre height, accelerating; the first one also drifts sideways) and how it sits in
+  // the pan after landing (its centre against the bowl's bottom)
+  const FALL = [[83, [-34, -20.5, -7.5, 8.5, 28.5, 54, 83, 120, 166, 224, 300, 412, 614]], [126, [-40, -25.5, -11.5, 8.5, 38, 77, 134, 213, 337, 600]]];
+  const DRIFT1 = [19, 18.5, 11.5, 8.5, 4.5, 3.5, 2.5, 1.5, 0.5, -0.5, 0, 0, 0];
+  const SIT = [[-72, -73, -73.5, -74, -74.5, -75], [-51.7, -68, -69, -71, -70.5, -73, -73, -73.5, -74, -74.5, -75]];
+  const LAND = [95, 135];
+
+  // ---- the layout: each label's box fits its words (measured with the real font)
+  let ready = false;
+  function layout() {
+    labs.forEach(lb => {
+      lb.t.style.fontSize = `${fs0}px`;
+      const pad = 24, maxw = 172;
+      let tw = lb.t.offsetWidth;
+      if (tw + 2 * pad > maxw && tw > 0) { lb.t.style.fontSize = `${fs0 * (maxw - 2 * pad) / tw}px`; tw = lb.t.offsetWidth; }
+      lb.w = Math.max(142, tw + 2 * pad); lb.h = 59;
+      Object.assign(lb.el.style, { width: `${lb.w}px`, height: `${lb.h}px` });
+    });
+    ready = true;
+  }
+
+  // ---- one frame
+  const sin = d => Math.sin(d * Math.PI / 180), cos = d => Math.cos(d * Math.PI / 180);
+  function state(g) {
+    const piv = g >= 135 ? seq(135, PV2, g) : seq(8, PIV, g);
+    const th = g < 95 ? 0 : g < 135 ? T1 * seq(94, U1, g) : T1 + (T2 - T1) * seq(135, U2, g);
+    const ph = [0, 0];
+    if (g < 95) { ph[0] = ph[1] = seq(44, P1, g); }
+    else if (g < 135) {
+      const s = Math.abs(T1) / 9.95;
+      if (T1 <= 0) ph[1] = seq(95, P2, g) * s; else ph[0] = -seq(95, P2, g) * s;
+    } else {
+      const d = T2 - T1, s = Math.abs(d) / 29.98;
+      if (d >= 0) ph[0] = seq(135, P3, g) * s; else ph[1] = -seq(135, P3, g) * s;
+    }
+    const dots = [[360 - HL * cos(th), piv - HL * sin(th)], [360 + HL * cos(th), piv + HL * sin(th)]];
+    return { piv, th, ph, dots };
+  }
+  function labelAt(i, g, st) {
+    const fall = FALL[i], f0 = fall[0], tab = fall[1], last = f0 + tab.length - 1;
+    const land = LAND[i];
+    if (g < f0 + 1) return null;                              // not in the frame yet
+    if (g < land) {                                           // falling: the label's own motion, straight down (blurred)
+      const sl = state(land), dl = sl.dots[i], yl = dl[1] + 203.5 + SIT[i][0];
+      const e = (v) => (v - tab[0]) / (tab[tab.length - 1] - tab[0]);
+      const yAt = gg => tab[0] + (yl - tab[0]) * e(seq(f0, tab, gg));
+      const dx = i === 0 ? seq(f0, DRIFT1, g) : 0;
+      return { x: st.dots[i][0] + dx, y: yAt(g), rot: 0, speed: Math.abs(yAt(g) - yAt(g - 1)) };
+    }
+    const off = seq(land, SIT[i], g), ly = 203.5 + off, a = st.ph[i];
+    return { x: st.dots[i][0] - ly * sin(a), y: st.dots[i][1] + ly * cos(a), rot: a, speed: 0 };
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    stage.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const st = state(g);
+    rod.setAttribute("height", Math.max(0, st.piv + 3000));
+    beam.setAttribute("transform", `translate(360 ${st.piv.toFixed(2)}) rotate(${st.th.toFixed(3)})`);
+    pans.forEach((p, i) => { p.style.transform = `translate(${st.dots[i][0].toFixed(2)}px, ${st.dots[i][1].toFixed(2)}px) rotate(${st.ph[i].toFixed(3)}deg)`; });
+    labs.forEach((lb, i) => {
+      const p = labelAt(i, g, st);
+      if (!p) { lb.el.style.visibility = "hidden"; return; }
+      lb.el.style.visibility = "visible";
+      lb.el.style.transform = `translate(${(p.x - lb.w / 2).toFixed(2)}px, ${(p.y - lb.h / 2).toFixed(2)}px) rotate(${p.rot.toFixed(3)}deg)`;
+      const sd = p.speed * 0.2;
+      q(`mb${i + 1}g`).setAttribute("stdDeviation", `0 ${sd.toFixed(2)}`);
+      lb.el.style.filter = sd > 0.4 ? `url(#mb${i + 1})` : "none";
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 9, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 17 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the labels are measured
+  // here, with the real font
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

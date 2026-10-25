@@ -1,0 +1,125 @@
+{
+ "name": "Image strip into text",
+ "kind": "text",
+ "category": "Social",
+ "what": "A strip of wide image cards slides across the middle of a dark frame, starting slowly, racing past in a sideways smear and slowing again as the last card slides out to the left; then a line of text in a glow slides in from the right and settles in the middle.",
+ "use_for": [
+  "photo set",
+  "slideshow",
+  "gallery intro",
+  "montage",
+  "title card",
+  "reveal",
+  "social post",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "images",
+  "slider",
+  "motion blur",
+  "strip",
+  "reveal",
+  "glow",
+  "needs media",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f3-f35 the strip slides in from the right and speeds up (from 9 to 290 px a frame at 1280 wide), f35-f70 it slows down again and the last card slides out to the left; the sideways motion blur follows its speed; f56-f89 the text slides in from the right and settles in the middle (decelerating); then it holds to the end",
+ "tracks": [
+  {
+   "name": "strip",
+   "what": "eight cards slide left along the middle, speeding up then slowing down (speed peaks at f35)",
+   "start_f": 3,
+   "length_f": 67,
+   "easing": "accelerating, then decelerating (measured positions)"
+  },
+  {
+   "name": "blur",
+   "what": "a sideways-only blur whose size follows the strip's speed",
+   "start_f": 3,
+   "length_f": 67,
+   "easing": "follows the speed"
+  },
+  {
+   "name": "text",
+   "what": "slides in from the right edge and settles in the middle, with a glow",
+   "start_f": 56,
+   "length_f": 34,
+   "easing": "decelerating (measured positions)"
+  },
+  {
+   "name": "hold",
+   "what": "the text stays still (the film grain moves)",
+   "start_f": 90,
+   "length_f": 31,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [
+  {
+   "id": "image_1_media",
+   "label": "Image 1 (the first card in)",
+   "accept": [
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1920,
+   "fit": "cover",
+   "focus_setting": "image_1_focus",
+   "focus": "50% 50%",
+   "placeholder": "a card with diagonal stripes in the look and the words 'your image 1'"
+  },
+  {
+   "id": "image_2_media",
+   "label": "Image 2",
+   "accept": [
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1920,
+   "fit": "cover",
+   "focus_setting": "image_2_focus",
+   "focus": "50% 50%",
+   "placeholder": "a card with diagonal stripes in the look and the words 'your image 2'"
+  },
+  {
+   "id": "image_3_media",
+   "label": "Image 3 (the last card out)",
+   "accept": [
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1920,
+   "fit": "cover",
+   "focus_setting": "image_3_focus",
+   "focus": "50% 50%",
+   "placeholder": "a card with diagonal stripes in the look and the words 'your image 3'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  8,
+  16,
+  24,
+  30,
+  36,
+  44,
+  52,
+  60,
+  68,
+  76,
+  100
+ ]
+}

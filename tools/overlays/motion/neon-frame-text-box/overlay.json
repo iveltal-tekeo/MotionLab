@@ -1,0 +1,34 @@
+{
+ "name": "neon-frame-text-box",
+ "frames": 301,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 400,
+   "to": 1800,
+   "db": -10,
+   "what": "the neon ring draws itself"
+  },
+  {
+   "f": "start + round(92 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.4",
+   "db": -9,
+   "what": "the box spins half a turn"
+  },
+  {
+   "f": "start + round(197 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.4",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the neon lines slash across"
+  }
+ ]
+}

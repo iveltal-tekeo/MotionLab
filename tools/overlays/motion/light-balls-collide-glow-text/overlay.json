@@ -1,0 +1,31 @@
+{
+ "name": "light-balls-collide-glow-text",
+ "frames": 165,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(20 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.9",
+   "from": 300,
+   "to": 2000,
+   "db": -10,
+   "what": "the two balls swing in from the edges"
+  },
+  {
+   "f": "start + round(80 * fps / 30)",
+   "kind": "impact",
+   "db": -6,
+   "what": "the balls burst into the spinning title"
+  },
+  {
+   "f": "start + round(82 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.5",
+   "db": -9,
+   "what": "the title spins to a stop"
+  }
+ ]
+}

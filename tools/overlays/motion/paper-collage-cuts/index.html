@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Strip text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Make it count"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 80, "min": 20, "max": 200, "step": 1},
+  {"id": "strip_colour", "type": "enum", "label": "Paper strip colour", "default": "mix", "options": [{"value": "mix", "label": "Mixed, like the original (red, cream, wine)"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "ink", "label": "Ink"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "cut", "type": "number", "label": "Frames between cuts (7 = the original)", "default": 7, "min": 3, "max": 30, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "paper-collage-cuts" (2026-10-22): an upright frame with a torn paper strip carrying one line of text, lying on a tabletop that cuts to a
+     new surface every 7 frames (28 cuts in the clip: paper, linen, stone, kraft, cutting mats, plaster, wood in
+     several tones...) while the strip stays: the strip changes colour (red, cream, wine) and size a little at each cut
+     and grows a touch and tilts a little more over the whole clip (0 deg -> -5.5 deg, 583 -> 737 px of the 720-px
+     original). Inside each cut the surface pushes in linearly (+0.65 % scale, -0.18 deg, ~5 px of drift in 6 frames
+     - measured) and the strip with it. The surfaces are drawn here (seeded, no pictures), tinted from the look's
+     colours with soft window-light bands. Look-aware. MotionLab's own code. Size-independent (1 px of the 720 x 1280
+     original = 1.5 px at 1080 wide). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #bgw canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: none; }
+  #strip { position: absolute; left: 0; top: 0; }
+  #strip > .abs { width: 100%; height: 100%; }
+  #stx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; }
+  #stt { white-space: nowrap; line-height: 1.1; font-synthesis: none; letter-spacing: -0.005em; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6.533333" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="bgw" class="abs"></div>
+    <div id="vig" class="abs"></div>
+    <div id="strip"><div id="rim" class="abs"></div><div id="pap" class="abs"></div><div id="fib" class="abs"></div><div id="stx"><div id="stt" class="ml-body"></div></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 196;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixv = (a, b, t) => { const x = Array.isArray(a) ? a : hex(a), y = Array.isArray(b) ? b : hex(b); return x.map((v, i) => v + (y[i] - v) * t); };
+  const rgbs = v => `rgb(${v.map(c => Math.max(0, Math.min(255, Math.round(c)))).join(",")})`;
+  const lumv = v => (0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]) / 255;
+  const seeded = window.MLLook ? MLLook.rnd : (s => () => 0.5);
+  const S = Math.round(V.start);
+  const R = 1.5 * U;                                   // one px of the 720 x 1280 original = 1.5 px at 1080 wide
+  const px = n => `${n}px`;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: px(W), height: px(H) });
+  Object.assign(q("bgfill").style, { width: px(W), height: px(H) });
+
+  // ---- the look's colours -> the surfaces (all from the five tokens)
+  const INK = hex(L.ink), PAPER = hex(L.paper), SIG = hex(L.signal), DEEP = hex(L.deep), MUS = hex(L.mustard);
+  const tone = (a, b, t) => mixv(a, b, t);
+  const COL = {
+    paper: tone(PAPER, [255, 255, 255], 0.35), linen: tone(tone(PAPER, MUS, 0.3), INK, 0.22), stone: tone(tone(INK, MUS, 0.3), PAPER, 0.1),
+    kraft: tone(tone(MUS, SIG, 0.18), INK, 0.4), olive: tone(tone(DEEP, MUS, 0.3), INK, 0.35), plaster: tone(tone(PAPER, MUS, 0.16), [255, 255, 255], 0.1),
+    owood: tone(tone(MUS, SIG, 0.35), INK, 0.5), navy: tone(DEEP, INK, 0.35), pink: tone(PAPER, SIG, 0.38), dwood: tone(tone(MUS, INK, 0.72), SIG, 0.12),
+    blue: tone(PAPER, DEEP, 0.3), teal: tone(tone(DEEP, MUS, 0.1), INK, 0.12), slate: tone(INK, PAPER, 0.05), lwood: tone(tone(PAPER, INK, 0.2), MUS, 0.08)
+  };
+  // [type, colour key, seed]: 14 surfaces, the clip's order
+  const SURF = [["paper", "paper", 1], ["linen", "linen", 2], ["stone", "stone", 3], ["paper", "kraft", 4], ["mat", "olive", 5], ["stone", "plaster", 6], ["wood", "owood", 7],
+    ["mat", "navy", 8], ["paper", "pink", 9], ["wood", "dwood", 10], ["paper", "blue", 11], ["mat", "teal", 12], ["stone", "slate", 13], ["wood", "lwood", 14]];
+  // the clip's 28 cuts: surface index, strip colour (r red, c cream, w wine), strip width (px of the 720-px original) and tilt (deg), centre x / y
+  const SC = [[0,"r",583,0.3,360,609],[1,"r",604,0.4,362,602],[2,"r",588,-0.4,361,595],[3,"c",600,-0.6,361,596],[4,"c",610,-0.8,360,604],[5,"r",623,-0.7,359,612],[6,"r",625,-0.7,359,611],
+    [7,"r",605,-1.7,361,597],[8,"w",664,-1.2,360,610],[9,"r",595,-1.6,357,597],[10,"r",668,-2.2,360,606],[11,"c",638,-2.4,359,593],[12,"c",649,-2.3,358,592],[13,"r",639,-2.4,358,595],
+    [0,"r",653,-2.8,357,605],[10,"r",692,-3.2,360,605],[2,"r",655,-3.5,359,590],[3,"c",666,-3.3,357,591],[10,"r",707,-3.8,360,605],[5,"r",694,-4.0,355,610],[6,"r",695,-3.8,358,609],
+    [7,"r",674,-4.7,359,592],[8,"w",725,-4.3,356,611],[9,"r",658,-4.7,354,593],[10,"r",737,-5.2,357,603],[11,"c",708,-5.4,355,588],[12,"c",722,-5.5,357,587],[13,"r",703,-5.2,355,590]];
+
+  // ---- surfaces: drawn once, small (360 x 640) and stretched, seeded
+  const TW = 360, TH = 640;
+  const field = (rnd, cx, cy) => {                     // smooth value noise, cell sizes cx, cy
+    const gw = Math.ceil(TW / cx) + 3, gh = Math.ceil(TH / cy) + 3, g = new Float32Array(gw * gh);
+    for (let i = 0; i < g.length; i++) g[i] = rnd();
+    return (x, y) => { const fx = x / cx, fy = y / cy, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+      const a = g[iy * gw + ix], b = g[iy * gw + ix + 1], c = g[(iy + 1) * gw + ix], d = g[(iy + 1) * gw + ix + 1];
+      return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+  };
+  function surface(type, key, seed) {
+    const rnd = seeded(seed * 7919), cv = document.createElement("canvas"); cv.width = TW; cv.height = TH;
+    const ctx = cv.getContext("2d"), im = ctx.createImageData(TW, TH), base = COL[key];
+    const f1 = field(rnd, type === "wood" ? 120 : 70, type === "wood" ? 5 : 70), f2 = field(rnd, type === "wood" ? 40 : 22, type === "wood" ? 2 : 22), f3 = field(rnd, 9, 9);
+    const k = { paper: [0.07, 0.05, 0.035], stone: [0.22, 0.16, 0.07], mat: [0.06, 0.05, 0.035], wood: [0.2, 0.22, 0.04], linen: [0.1, 0.07, 0.04] }[type] || [0.2, 0.15, 0.05];
+    const PH = 128, amp = key === "plaster" ? 0.5 : 1;
+    for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
+      let n = ((f1(x, y) - 0.5) * k[0] + (f2(x, y) - 0.5) * k[1] + (f3(x, y) - 0.5) * k[2]) * amp;
+      if (type === "wood") { const p = Math.floor(y / PH); n += ((Math.sin(p * 12.9) * 43758.5 % 1 + 1) % 1 - 0.5) * 0.16; if (y % PH < 2) n -= 0.45; else if (y % PH === 2) n += 0.12; }
+      if (type === "linen") n += 0.06 * Math.sin(x * 1.9) * Math.sin(y * 1.9) + 0.04 * Math.sin(x * 0.95 + y * 0.2);
+      const i = (y * TW + x) * 4, m = 1 + n;
+      im.data[i] = base[0] * m; im.data[i + 1] = base[1] * m; im.data[i + 2] = base[2] * m; im.data[i + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+    if (type === "paper") {                            // creases: a pale and a dark line side by side
+      for (let i = 0; i < 20; i++) { const x0 = rnd() * TW, y0 = rnd() * TH, a = rnd() * Math.PI, l = 60 + rnd() * 240;
+        for (const [dx, col] of [[0, "rgba(255,255,255,0.07)"], [1.6, "rgba(0,0,0,0.07)"]]) { ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x0 + dx, y0);
+          ctx.lineTo(x0 + Math.cos(a) * l * 0.5 + dx, y0 + Math.sin(a) * l * 0.5 + (rnd() - 0.5) * 14); ctx.lineTo(x0 + Math.cos(a) * l + dx, y0 + Math.sin(a) * l); ctx.stroke(); } }
+    }
+    if (type === "mat") {                              // a cutting mat: a fine grid, heavier every 5, a few scratches
+      for (let x = 0; x < TW; x += 18) { ctx.fillStyle = `rgba(255,255,255,${(x / 18) % 5 ? 0.09 : 0.17})`; ctx.fillRect(x, 0, 1, TH); }
+      for (let y = 0; y < TH; y += 18) { ctx.fillStyle = `rgba(255,255,255,${(y / 18) % 5 ? 0.09 : 0.17})`; ctx.fillRect(0, y, TW, 1); }
+      for (let i = 0; i < 60; i++) { ctx.strokeStyle = `rgba(255,255,255,${0.05 + rnd() * 0.1})`; ctx.lineWidth = 1; ctx.beginPath(); const x0 = rnd() * TW, y0 = rnd() * TH; ctx.moveTo(x0, y0); ctx.lineTo(x0 + (rnd() - 0.5) * 50, y0 + (rnd() - 0.5) * 50); ctx.stroke(); }
+    }
+    if (type === "wood") {                             // a few knots
+      for (let i = 0; i < 3; i++) { const x0 = rnd() * TW, y0 = (Math.floor(rnd() * 5) + 0.5) * PH + (rnd() - 0.5) * 40;
+        for (let r2 = 14; r2 > 2; r2 -= 4) { ctx.fillStyle = `rgba(0,0,0,${0.05 + (14 - r2) * 0.012})`; ctx.beginPath(); ctx.ellipse(x0, y0, r2 * 1.7, r2 * 0.8, 0, 0, 6.3); ctx.fill(); } }
+    }
+    // window light: soft pale and dark bands running up to the right
+    const out = document.createElement("canvas"); out.width = TW; out.height = TH;
+    const o = out.getContext("2d"); if (type !== "mat") o.filter = "blur(1.6px)"; o.drawImage(cv, 0, 0); o.filter = "none";
+    o.filter = "blur(7px)";
+    const ang = (58 + rnd() * 12) * Math.PI / 180, nx = Math.cos(ang), ny = Math.sin(ang);
+    for (let i = 0; i < 6; i++) {
+      const c0 = -300 + rnd() * 900, w = 30 + rnd() * 70, light = i % 2 === 0;
+      o.fillStyle = light ? `rgba(255,244,225,${0.14 + rnd() * 0.1})` : `rgba(0,0,0,${0.16 + rnd() * 0.12})`;
+      o.beginPath(); o.moveTo(c0, TH + 80); o.lineTo(c0 + w, TH + 80); o.lineTo(c0 + w + 700 * ny / nx * 0.7, -80); o.lineTo(c0 + 700 * ny / nx * 0.7, -80); o.closePath(); o.fill();
+    }
+    o.filter = "none";
+    return out;
+  }
+  const bgw = q("bgw");
+  Object.assign(bgw.style, { width: px(W * 1.04), height: px(H * 1.04), left: px(-W * 0.02), top: px(-H * 0.02) });
+  const CAN = V.background ? SURF.map(([t, c, s]) => { const cv = surface(t, c, s); bgw.appendChild(cv); return cv; }) : [];
+  Object.assign(q("vig").style, { width: px(W), height: px(H), pointerEvents: "none", display: V.background ? "block" : "none",
+    background: `radial-gradient(ellipse 95% 80% at 50% 48%, transparent 55%, rgba(0,0,0,0.28) 100%)` });
+
+  // ---- the strip: a torn piece of paper (a ragged pale rim under a ragged coloured sheet), a soft shadow, one line of text
+  const strip = q("strip"), rim = q("rim"), pap = q("pap"), fib = q("fib"), stt = q("stt");
+  const tear = (seed, inset) => {                      // polygon in %, jagged along all four edges
+    const r = seeded(seed), pts = [], n = 46, j = 2.4;
+    const E = (x, y) => pts.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+    for (let i = 0; i <= n; i++) E(inset + (100 - 2 * inset) * i / n, inset * 1.6 + r() * j + (r() < 0.12 ? r() * 2.6 : 0));
+    for (let i = 1; i < 8; i++) E(100 - inset - r() * 1.2, 100 * i / 8 + (r() - 0.5) * 3);
+    for (let i = n; i >= 0; i--) E(inset + (100 - 2 * inset) * i / n, 100 - inset * 1.6 - r() * j - (r() < 0.12 ? r() * 2.6 : 0));
+    for (let i = 7; i > 0; i--) E(inset + r() * 1.2, 100 * i / 8 + (r() - 0.5) * 3);
+    return `polygon(${pts.join(",")})`;
+  };
+  rim.style.clipPath = tear(31, 0); pap.style.clipPath = tear(47, 0.9); fib.style.clipPath = tear(47, 0.9);
+  const fcv = document.createElement("canvas"); fcv.width = 300; fcv.height = 100;
+  { const c = fcv.getContext("2d"), r = seeded(77); c.fillStyle = "#808080"; c.fillRect(0, 0, 300, 100);
+    for (let i = 0; i < 700; i++) { c.strokeStyle = `rgba(${r() < 0.5 ? "255,255,255" : "0,0,0"},${0.04 + r() * 0.08})`; c.lineWidth = 1; c.beginPath(); const x = r() * 300, y = r() * 100, a = r() * 6.3, l = 3 + r() * 9; c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); } }
+  fib.style.backgroundImage = `url(${fcv.toDataURL()})`; fib.style.backgroundSize = "100% 100%"; fib.style.mixBlendMode = "overlay"; fib.style.opacity = "0.9";
+  strip.style.filter = `drop-shadow(${3 * R}px ${5 * R}px ${6 * R}px rgba(0,0,0,0.45))`;
+  const RED = tone(SIG, INK, 0.08), WINE = tone(SIG, INK, 0.62), CREAM = tone(PAPER, MUS, 0.18);
+  const FIX = { signal: SIG, paper: PAPER, ink: INK, deep: DEEP, mustard: MUS };
+  const stripCol = c => FIX[V.strip_colour] || (c === "r" ? RED : c === "w" ? WINE : CREAM);
+  if (window.MLLook) MLLook.rich(stt, V.text, { look: L, family: V.body_font, weight: 700 }); else stt.textContent = V.text;
+  stt.style.fontWeight = "700"; stt.style.fontSize = px(V.size * U);
+
+  // ---- the motion: a hard cut every V.cut frames (7 in the clip) through the 28 recorded cuts; inside a cut the surface and
+  // the strip push in linearly (+0.0011 scale, -0.03 deg, -0.75 / -0.52 px drift a frame, measured)
+  const CUT = Math.max(1, Math.round(V.cut));
+  let SHOWN = -1;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const sc = Math.min(Math.floor(g / CUT), 9999), lf = g - sc * CUT, k = sc % SC.length, row = SC[k];
+    if (V.background && SHOWN !== row[0]) { CAN.forEach((c, i) => { c.style.display = i === row[0] ? "block" : "none"; }); SHOWN = row[0]; }
+    const s = 1 + 0.0011 * lf, rot = -0.03 * lf, tx = -0.75 * lf * R, ty = -0.52 * lf * R;
+    bgw.style.transformOrigin = "0 0";
+    bgw.style.transform = `translate(${(tx).toFixed(2)}px, ${(ty).toFixed(2)}px) rotate(${rot.toFixed(3)}deg) scale(${s.toFixed(5)})`;
+    const sw = row[2] * R, sh = sw * 0.345, c = stripCol(row[1]), c2 = tone(c, [255, 255, 255], 0.5);
+    Object.assign(strip.style, { width: px(sw), height: px(sh), left: px(row[4] * R - sw / 2), top: px(row[5] * R - sh / 2), transformOrigin: "50% 50%",
+      transform: `rotate(${(row[3] + rot).toFixed(3)}deg) scale(${s.toFixed(5)})` });
+    rim.style.background = rgbs(c2); pap.style.background = rgbs(c);
+    stt.style.color = lumv(c) > 0.55 ? rgbs(tone(INK, c, 0.05)) : rgbs(tone(PAPER, [255, 255, 255], 0.5));
+    stt.style.textShadow = lumv(c) > 0.55 ? "none" : `0 ${R}px ${2 * R}px rgba(0,0,0,0.25)`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 6 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the line is fitted
+  // to the narrowest strip here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 600, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    const maxW = 0.8 * 583 * R;
+    if (stt.offsetWidth > maxW) stt.style.fontSize = px(V.size * U * maxW / stt.offsetWidth);
+    render(0);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+{
+ "name": "Ball drags the line",
+ "kind": "text",
+ "category": "Text",
+ "what": "A glowing ball dives in from the right on a dashed string and drags a thin glowing line, with a word standing on it, into the frame; the ball and line slide to the middle, then the ball is flung away to the upper left, yanks the line out of the frame and the word eases to the centre in a soft glow.",
+ "use_for": [
+  "title",
+  "reveal",
+  "statement",
+  "keyword",
+  "tech",
+  "UI",
+  "intro",
+  "neon"
+ ],
+ "tags": [
+  "text",
+  "ball",
+  "line",
+  "string",
+  "drag",
+  "glow",
+  "reveal",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f10-f30 the ball dives in from the right at y 221 (decelerating, smeared) on a dashed string tied to the left end of a glowing line; f13-f28 the line, with the word on its right half, is pulled in behind it so the word slides in from the right edge; f35-f58 the ball sags down and right; f61-f89 ball and line slide left together (S-curve, 280 px); f97-f115 the ball sags again; f124-f158 the ball is flung to the upper left (accelerating, fastest f150), yanking the line out the left edge by f164 while the word is whipped to a stop at f150 and eases to the centre by f182; a soft glow gathers behind the word from f147",
+ "tracks": [
+  {
+   "name": "ball dives in",
+   "what": "the ball flies in from the right edge and settles at the upper middle-right",
+   "start_f": 10,
+   "length_f": 20,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "line pulled in",
+   "what": "the line and the word on it are pulled in behind the ball from the right edge",
+   "start_f": 13,
+   "length_f": 16,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "ball sags",
+   "what": "the ball sags a little down and right",
+   "start_f": 35,
+   "length_f": 24,
+   "easing": "ease in-out"
+  },
+  {
+   "name": "slide left",
+   "what": "ball, string and line slide left together",
+   "start_f": 61,
+   "length_f": 28,
+   "easing": "S-curve"
+  },
+  {
+   "name": "ball sags again",
+   "what": "the ball sags a little down and right again",
+   "start_f": 97,
+   "length_f": 19,
+   "easing": "ease in-out"
+  },
+  {
+   "name": "fling",
+   "what": "the ball is flung to the upper left, yanking the line out of the frame and whipping the word to a stop",
+   "start_f": 124,
+   "length_f": 40,
+   "easing": "S-curve (accelerating, fastest at f150)"
+  },
+  {
+   "name": "word settles",
+   "what": "the word eases to the centre inside a soft glow",
+   "start_f": 150,
+   "length_f": 32,
+   "easing": "decelerating (slow end)"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  12,
+  16,
+  29,
+  70,
+  78,
+  100,
+  146,
+  150,
+  154,
+  175,
+  239
+ ]
+}

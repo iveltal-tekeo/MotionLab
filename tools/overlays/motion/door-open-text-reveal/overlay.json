@@ -1,0 +1,31 @@
+{
+ "name": "door-open-text-reveal",
+ "frames": 90,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 400,
+   "to": 2600,
+   "db": -8,
+   "what": "the camera pushes in through the door"
+  },
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "impact",
+   "db": -6,
+   "what": "the text bursts out of the door"
+  },
+  {
+   "f": "start + round(36 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.3",
+   "db": -8,
+   "what": "the line is whipped away and the final title slides in"
+  }
+ ]
+}

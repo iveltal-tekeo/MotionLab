@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text on the line (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Big idea"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 135, "min": 40, "max": 300, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Capital letters", "default": true},
+  {"id": "colour", "type": "enum", "label": "Glow colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "glow", "type": "number", "label": "Glow (0-100)", "default": 70, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "ball-drag-line-text-reveal" (2026-10-22): a glowing ball drags a line and the word on it into the frame. The ball dives in from the right
+     (f10-f30, decelerating, horizontally smeared) at the end of a dashed string that is tied to the left end of a
+     thin glowing line; the line, with the word standing on its right half, is pulled in behind it (f13-f28, slowing),
+     so the word slides into view from the right edge. The ball then sags down and right (f35-f58), the ball and the
+     whole line slide left together to the middle (f61-f89, an S-curve), the ball sags again (f97-f115), and at f121
+     it is flung to the upper left (f124-f158, accelerating): the line is yanked after it and leaves out of the left
+     edge while the word, whipped to a stop at f150, eases to the centre (f150-f182) in a soft glow. Positions are the
+     clip's measured tables. Look-aware. MotionLab's own code. Size-independent (U). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #haze { position: absolute; left: 0; top: 0; border-radius: 50%; }
+  #line { position: absolute; left: 0; top: 0; border-radius: 99px; }
+  #ball { position: absolute; left: 0; top: 0; border-radius: 50%; }
+  #tt { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; transform-origin: 50% 50%; }
+  #tt .w { display: inline-block; }
+  #tt .ch { display: inline-block; transform-origin: 50% 60%; }
+  #str { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute"><defs>
+    <filter id="fb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur id="fbg" stdDeviation="0 0"/></filter>
+    <filter id="ft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur id="ftg" stdDeviation="0 0"/></filter>
+  </defs></svg>
+  <div id="hand" class="abs">
+    <div id="haze"></div>
+    <div id="line"></div>
+    <svg id="str" width="1920" height="1080" viewBox="0 0 1920 1080"><line id="sl" stroke-linecap="butt"/></svg>
+    <div id="tt" class="ml-display"></div>
+    <div id="ball"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: true, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+
+  // reference geometry: the clip is 1280 x 720; KR = template px per reference px
+  const KR = 1.5 * U;
+  const Z = n => n * KR, X = x => W / 2 + (x - 640) * KR, Y = y => H / 2 + (y - 360) * KR;
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const ramp = (g, a, b, e) => { const x = clamp((g - a) / Math.max(1e-6, b - a)); return e ? e(x) : x; };
+  const eo2 = x => 1 - (1 - x) * (1 - x);
+  const S = Math.round(V.start);
+  const hex = h => { const s = String(h).replace("#", ""); return [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); };
+  const mixw = (c, t) => { const A = hex(c); return `rgb(${A.map(v => Math.round(v + (255 - v) * t)).join(",")})`; };
+  const COL = L[V.colour] || L.signal, rgba = L.rgba;
+  // a table of [frame, a, b...] rows, linear between the rows (held at both ends)
+  const tab = (rows, g) => {
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    for (let i = 0; i < rows.length - 1; i++) if (g < rows[i + 1][0]) { const a = rows[i], b = rows[i + 1], t = (g - a[0]) / (b[0] - a[0]); return a.slice(1).map((v, k) => v + (b[k + 1] - v) * t); }
+    return rows[rows.length - 1].slice(1);
+  };
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background
+    ? `radial-gradient(ellipse 52% 64% at 50% 50%, ${rgba(L.paper, 0.075)} 0%, ${rgba(L.paper, 0.075)} 40%, ${rgba(L.paper, 0)} 100%), ${L.ink}` : "transparent" });
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the measured tables (reference px, a frame apart where it moves fast)
+  // the ball's centre [frame, x, y]
+  const BT = [[9, 1340, 221], [10, 1271, 221], [11, 1257, 220], [12, 1217, 220], [13, 1152, 219], [14, 1065, 219], [15, 994, 220], [16, 946, 220],
+    [17, 913, 220], [18, 889, 220], [19, 870, 221], [20, 855, 221], [21, 844, 221], [22, 835, 221], [23, 828, 221], [24, 822, 221], [25, 818, 221],
+    [26, 814, 221], [27, 812, 221], [28, 811, 221], [29, 810, 221], [34, 810, 221], [35, 811, 222], [37, 812, 223], [39, 814, 224], [40, 816, 226],
+    [41, 818, 227], [42, 821, 230], [43, 825, 233], [44, 830, 236], [45, 835, 240], [46, 839, 243], [49, 846, 248], [52, 850, 250], [55, 851, 252],
+    [58, 852, 252], [62, 851, 252], [64, 849, 252], [65, 847, 252], [66, 844, 251], [67, 841, 251], [68, 837, 250], [69, 832, 250], [70, 825, 249],
+    [71, 815, 248], [72, 803, 247], [73, 787, 245], [74, 762, 242], [75, 722, 238], [76, 676, 233], [77, 645, 229], [78, 625, 227], [79, 611, 225],
+    [80, 601, 224], [81, 594, 223], [82, 588, 223], [83, 584, 222], [84, 580, 222], [85, 578, 221], [86, 576, 221], [87, 574, 221], [88, 573, 221],
+    [94, 573, 221], [97, 575, 222], [100, 578, 225], [103, 587, 231], [106, 604, 243], [109, 611, 248], [112, 614, 251], [115, 616, 252], [121, 616, 252],
+    [124, 614, 252], [127, 608, 252], [130, 600, 251], [133, 587, 250], [136, 568, 248], [139, 543, 246], [142, 508, 243], [143, 492, 241], [144, 477, 240],
+    [145, 458, 239], [146, 436, 237], [147, 410, 235], [148, 377, 232], [149, 331, 229], [150, 219, 213], [151, 151, 189], [152, 109, 175], [153, 77, 164],
+    [154, 50, 155], [155, 27, 148], [156, 15, 141], [157, 7, 135], [158, 0, 129], [160, -40, 110]];
+  // the word's left edge for the clip's 337 px wide "YOUR TEXT" [frame, T]; the line starts 172 px to its left
+  const TT = [[13, 1450], [14, 1363], [15, 1308], [16, 1274], [17, 1246], [18, 1227], [19, 1215], [20, 1202], [21, 1194], [22, 1188], [23, 1184],
+    [24, 1181], [25, 1178], [26, 1177], [27, 1176], [28, 1175], [40, 1172], [60, 1171], [61, 1170], [63, 1168], [65, 1166], [66, 1164], [67, 1160],
+    [68, 1156], [69, 1150], [70, 1144], [71, 1134], [72, 1124], [73, 1108], [74, 1084], [75, 1052], [76, 1005], [77, 966], [78, 946], [79, 931],
+    [80, 920], [81, 914], [82, 908], [83, 902], [84, 900], [85, 897], [86, 894], [87, 893], [88, 892], [123, 890], [124, 888], [125, 887], [126, 884],
+    [127, 882], [128, 880], [129, 878], [130, 874], [131, 870], [132, 866], [133, 860], [134, 854], [135, 848], [136, 842], [137, 834], [138, 826],
+    [139, 816], [140, 806], [141, 794], [142, 780], [143, 766], [144, 750], [145, 730], [146, 707], [147, 680], [148, 646], [149, 585], [150, 524],
+    [151, 513], [152, 510], [154, 502], [156, 497], [158, 492], [160, 489], [162, 486], [164, 484], [166, 481], [168, 479], [170, 478], [172, 476],
+    [174, 476], [176, 474], [178, 474], [180, 472], [240, 472]];
+  // after f148 the line is yanked on its own: its left end [frame, x] (the word has stopped)
+  const LT = [[148, 474], [149, 400], [150, 250], [152, 8], [154, -73], [156, -171], [158, -251], [160, -331], [162, -395], [164, -431], [166, -520], [170, -700]];
+  const DW = 337, LEAD = 172, TAIL = 8;                                    // the clip's word width, the line's lead and overshoot
+  const LINE_Y = 395, TXT_Y = 358.5;
+
+  // ---- the parts
+  const ball = q("ball"), line = q("line"), tt = q("tt"), haze = q("haze"), sl = q("sl");
+  const BR = 31;
+  Object.assign(ball.style, { width: `${Z(BR * 2)}px`, height: `${Z(BR * 2)}px`, background: mixw(COL, 0.42) });
+  if (window.MLLook) MLLook.glow(ball, COL, Math.min(100, V.glow * 1.5), { kind: "box", U: U * 1.3 });
+  const lineCol = mixw(COL, 0.5);
+  Object.assign(line.style, { height: `${Z(5)}px`, background: lineCol });
+  if (window.MLLook) MLLook.glow(line, COL, Math.min(100, V.glow * 1.4), { kind: "box", U: U * 0.8 });
+  sl.setAttribute("stroke", rgba(L.paper, 0.6)); sl.setAttribute("stroke-width", String(Z(2.2)));
+  sl.setAttribute("stroke-dasharray", `${Z(7)} ${Z(5)}`);
+  const hz = Z(700);
+  Object.assign(haze.style, { width: `${hz}px`, height: `${hz}px`, background: `radial-gradient(circle, ${rgba(COL, 0.13)} 0%, ${rgba(COL, 0.065)} 40%, ${rgba(COL, 0)} 70%)` });
+  const letters = [];
+  tt.style.fontSize = `${V.size * U}px`; tt.style.color = COL; tt.style.webkitTextStroke = `${V.size * U * 0.022}px ${COL}`;
+  if (V.caps) tt.style.textTransform = "uppercase";
+  const words = window.MLLook ? MLLook.rich(tt, V.text, { look: L, family: V.display_font, weight: 400 }).words : (tt.textContent = String(V.text || ""), []);
+  const rnd = window.MLLook ? MLLook.rnd(97) : Math.random;
+  words.forEach(w => { const t = w.textContent; w.textContent = ""; Array.from(t).forEach(ch => {
+    const s = document.createElement("span"); s.className = "ch"; s.textContent = ch;
+    s.style.transform = `translateY(${(rnd() - 0.5) * 0.045 * V.size * U}px) rotate(${(rnd() - 0.5) * 4.2}deg)`;
+    w.appendChild(s); letters.push(s); }); });
+  if (window.MLLook) MLLook.glow(tt, COL, V.glow * 0.8, { kind: "text", U });
+
+  const fbg = q("fbg"), ftg = q("ftg");
+  function render(f) {
+    const g = (f - S) * 30 / FPS;
+    // -- the ball
+    const b = tab(BT, g), b0 = tab(BT, g - 0.5), b1 = tab(BT, g + 0.5);
+    const bvx = (b1[0] - b0[0]) * KR, bvy = (b1[1] - b0[1]) * KR;
+    const showBall = g >= 9 && g <= 160;
+    ball.style.opacity = showBall ? "1" : "0";
+    ball.style.left = `${X(b[0]) - Z(BR)}px`; ball.style.top = `${Y(b[1]) - Z(BR)}px`;
+    const sx = Math.min(30 * U, Math.abs(bvx) * 0.15), sy = Math.min(30 * U, Math.abs(bvy) * 0.15);
+    if (sx + sy > 0.4) { fbg.setAttribute("stdDeviation", `${sx.toFixed(2)} ${sy.toFixed(2)}`); ball.style.filter = "url(#fb)"; } else ball.style.filter = "none";
+    // -- the word and the line
+    const T = tab(TT, g)[0], T0 = tab(TT, g - 0.5)[0], T1 = tab(TT, g + 0.5)[0];
+    const el = tt; const tw = Math.max(1, el.offsetWidth) / KR;            // the word's width in reference px
+    const C = T + DW / 2;                                                   // its centre follows the clip's table
+    const textLeft = C - tw / 2;
+    el.style.transform = `translate(${X(C)}px, ${Y(TXT_Y)}px) translate(-50%, -50%)`;
+    const tsx = Math.min(24 * U, Math.abs(T1 - T0) * KR * 0.25);
+    if (tsx > 0.4) { ftg.setAttribute("stdDeviation", `${tsx.toFixed(2)} 0`); el.style.filter = "url(#ft)"; line.style.filter = "url(#ft)"; }
+    else { el.style.filter = "none"; line.style.filter = "none"; }
+    el.style.opacity = g >= 13 ? "1" : "0";
+    // the line: its left end follows the word until the yank, then its own table
+    let Ldef = T - LEAD;
+    if (g > 148) Ldef = tab(LT, g)[0];
+    const Lx = Ldef - (tw - DW) / 2, Rx = Lx + tw + LEAD - TAIL + 0;      // right end = word's right edge less the overshoot
+    const lineOn = g >= 13 && Rx > -20 && Lx < 1400;
+    line.style.opacity = lineOn ? "1" : "0";
+    line.style.left = `${X(Lx)}px`; line.style.width = `${Math.max(0, Z(Rx - Lx))}px`; line.style.top = `${Y(LINE_Y) - Z(2)}px`;
+    // -- the dashed string from the ball to the line's left end; it trails off behind the ball at the fling
+    const dir = [478 - 377, 395 - 232], dl = Math.hypot(dir[0], dir[1]);
+    let ex = Lx, ey = LINE_Y;
+    let sa = g >= 10 ? 1 : 0;
+    if (g > 148) { const len = (1 - ramp(g, 148, 154)) * dl; ex = b[0] + dir[0] / dl * len; ey = b[1] + dir[1] / dl * len; sa = 1 - ramp(g, 152, 155); }
+    sl.setAttribute("x1", X(b[0])); sl.setAttribute("y1", Y(b[1])); sl.setAttribute("x2", X(ex)); sl.setAttribute("y2", Y(ey));
+    sl.setAttribute("stroke-opacity", String(sa * (g <= 160 ? 1 : 0)));
+    // -- the soft glow behind the word that comes in as the line leaves
+    const ha = ramp(g, 147, 168);
+    haze.style.opacity = String(ha);
+    haze.style.left = `${X(C) - hz / 2}px`; haze.style.top = `${Y(TXT_Y) - hz / 2}px`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, t => render(t * FPS)); else render(0);
+
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 29 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

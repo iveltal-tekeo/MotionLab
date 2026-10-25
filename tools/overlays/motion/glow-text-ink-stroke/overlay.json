@@ -1,0 +1,42 @@
+{
+ "name": "glow-text-ink-stroke",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(7 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 700,
+   "to": 2600,
+   "db": -9,
+   "what": "the ink stroke flies in"
+  },
+  {
+   "f": "start + round(19 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 600,
+   "to": 1800,
+   "db": -12,
+   "what": "the stroke cuts through the word"
+  },
+  {
+   "f": "start + round(53 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 500,
+   "to": 3000,
+   "db": -6,
+   "what": "the last pass, the word blooms"
+  },
+  {
+   "f": "start + round(57 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the word lights up"
+  }
+ ]
+}

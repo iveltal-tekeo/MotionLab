@@ -1,0 +1,30 @@
+{
+ "name": "rain-neon-text-reveal",
+ "frames": 240,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(7 * fps / 30)",
+   "kind": "crackle",
+   "dur": "0.6",
+   "db": -7,
+   "what": "the neon sign switches on"
+  },
+  {
+   "f": "start + round(71 * fps / 30)",
+   "kind": "crackle",
+   "dur": "0.3",
+   "db": -6,
+   "what": "the neon flickers"
+  },
+  {
+   "f": "start + round(106 * fps / 30)",
+   "kind": "crackle",
+   "dur": "0.35",
+   "db": -6,
+   "what": "the neon flickers twice"
+  }
+ ]
+}

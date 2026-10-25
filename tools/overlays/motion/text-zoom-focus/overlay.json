@@ -1,0 +1,63 @@
+{
+ "name": "text-zoom-focus",
+ "frames": 211,
+ "fps": 30,
+ "width": 1280,
+ "height": 720,
+ "cues": [
+  {
+   "f": "start + round((2 + 4 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "12",
+   "db": -10,
+   "what": "the top line types in"
+  },
+  {
+   "f": "start + round(50 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 600,
+   "to": 2800,
+   "db": -9,
+   "what": "the camera whips out and up"
+  },
+  {
+   "f": "start + round((54 + 8 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "5",
+   "db": -10,
+   "what": "a letter of the main word lands"
+  },
+  {
+   "f": "start + round(86 * fps / 30)",
+   "kind": "riser",
+   "dur": "0.7",
+   "from": 400,
+   "to": 3200,
+   "db": -10,
+   "what": "the camera dives into the main word"
+  },
+  {
+   "f": "start + round(108 * fps / 30)",
+   "kind": "thump",
+   "db": -8,
+   "what": "the dive lands"
+  },
+  {
+   "f": "start + round((92 + 5 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "8",
+   "db": -12,
+   "what": "the bottom line types in"
+  },
+  {
+   "f": "start + round(152 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 2800,
+   "to": 500,
+   "db": -9,
+   "what": "the camera pulls back out"
+  }
+ ]
+}

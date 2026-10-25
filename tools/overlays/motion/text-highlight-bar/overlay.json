@@ -1,0 +1,31 @@
+{
+ "name": "text-highlight-bar",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(10 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the top line comes up"
+  },
+  {
+   "f": "start + round((43 + 5.5 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "5",
+   "db": -10,
+   "what": "a word of the second line pops up"
+  },
+  {
+   "f": "start + round(66 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.1",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the highlight bar sweeps across"
+  }
+ ]
+}

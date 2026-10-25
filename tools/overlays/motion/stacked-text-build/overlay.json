@@ -1,0 +1,22 @@
+{
+ "name": "stacked-text-build",
+ "frames": 121,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + 1 + 20 * i",
+   "kind": "pop",
+   "repeat": "4",
+   "db": -8,
+   "what": "a line pops in"
+  },
+  {
+   "f": "start + 81",
+   "kind": "thump",
+   "db": -4,
+   "what": "the last, largest line lands"
+  }
+ ]
+}

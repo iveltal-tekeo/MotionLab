@@ -1,0 +1,115 @@
+{
+ "name": "Six pop-up texts on a picture",
+ "kind": "text",
+ "category": "Text",
+ "what": "Your picture fills the frame and six short texts pop in around its subject one after another - each starts small and blurred, springs a little past its size and settles - in white with a soft warm glow.",
+ "use_for": [
+  "list over a photo",
+  "facts around a person",
+  "pros and cons",
+  "keywords",
+  "tags on a picture",
+  "product features",
+  "mood board",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "pop",
+  "glow",
+  "photo",
+  "keywords",
+  "needs media",
+  "6 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "the picture drifts in about 3 % (the reference's photo has smoke moving in it); text 1 pops in at f3, text 2 at f5, text 3 at f11, text 4 at f25, text 5 at f31, text 6 at f36 - each starts small (x0.5) and blurred, overshoots to x1.22 two frames later, rebounds to x1.04 and settles at x1 by +6 f; then everything holds",
+ "tracks": [
+  {
+   "name": "text 1",
+   "what": "pops in at top left",
+   "start_f": 3,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  },
+  {
+   "name": "text 2",
+   "what": "pops in at top right",
+   "start_f": 5,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  },
+  {
+   "name": "text 3",
+   "what": "pops in at the left",
+   "start_f": 11,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  },
+  {
+   "name": "text 4",
+   "what": "pops in at the right",
+   "start_f": 25,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  },
+  {
+   "name": "text 5",
+   "what": "pops in at the bottom left",
+   "start_f": 31,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  },
+  {
+   "name": "text 6",
+   "what": "pops in at the bottom right",
+   "start_f": 36,
+   "length_f": 6,
+   "easing": "spring pop (overshoot x1.22)"
+  }
+ ],
+ "core_points": 6,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3",
+  "text_4",
+  "text_5",
+  "text_6"
+ ],
+ "media_slots": [
+  {
+   "id": "photo_media",
+   "label": "Your picture",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 1.5,
+   "fit": "cover",
+   "focus_setting": "photo_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient in the look, labelled 'your picture'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 44,
+ "check_frames": [
+  3,
+  4,
+  5,
+  7,
+  11,
+  13,
+  26,
+  33,
+  38,
+  44
+ ]
+}

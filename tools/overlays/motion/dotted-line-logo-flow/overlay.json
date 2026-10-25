@@ -1,0 +1,30 @@
+{
+ "name": "dotted-line-logo-flow",
+ "frames": 351,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 2400,
+   "to": 500,
+   "db": -10,
+   "what": "the logos drop in from above as pixel mosaics"
+  },
+  {
+   "f": "start + round(99 * fps / 30)",
+   "kind": "pop",
+   "db": -4,
+   "what": "the line reaches a logo and its mosaic resolves (the same at f174, f210, f243, f280)"
+  },
+  {
+   "f": "start + round(334 * fps / 30)",
+   "kind": "chime",
+   "db": -8,
+   "what": "the last dash lights and the padlock opens"
+  }
+ ]
+}

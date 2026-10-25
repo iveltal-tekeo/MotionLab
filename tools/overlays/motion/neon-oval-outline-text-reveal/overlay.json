@@ -1,0 +1,33 @@
+{
+ "name": "neon-oval-outline-text-reveal",
+ "frames": 146,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(48 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 400,
+   "to": 2000,
+   "db": -10,
+   "what": "the headline tilts and spins into the capsule"
+  },
+  {
+   "f": "start + round(62 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 300,
+   "to": 1600,
+   "db": -12,
+   "what": "the rings spread out round the capsule"
+  },
+  {
+   "f": "start + round(83 * fps / 30)",
+   "kind": "key",
+   "db": -6,
+   "what": "the typing starts"
+  }
+ ]
+}

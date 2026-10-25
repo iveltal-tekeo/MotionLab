@@ -1,0 +1,100 @@
+{
+ "name": "Ball writes a circle",
+ "kind": "text",
+ "category": "Text",
+ "what": "A shaded ball pops in at the centre, rises to the top and rolls one lap round an invisible circle; the letters of your text pop in around the circle behind it, one by one, then the ball rolls off the top, drops to the centre and shrinks away, leaving the ring of text.",
+ "use_for": [
+  "circular text",
+  "title",
+  "orbit",
+  "badge",
+  "stamp",
+  "intro",
+  "slogan",
+  "round text"
+ ],
+ "tags": [
+  "text",
+  "ball",
+  "circle",
+  "orbit",
+  "ring text",
+  "letters",
+  "reveal",
+  "upright",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f30 the ball pops in at the centre, grows past its size (f18) and settles; f42-f56 it rises to the top of the circle (decelerating); f56-f72 it waits; f74-f130 one clockwise lap (slow start, fastest at f88 at the bottom, slow end) while each letter of the text pops in as the ball passes it (f76-f122); f136-f158 the ball rolls off the top and drops to the centre on a curve; f158-f164 it shrinks away; the ring of text stays",
+ "tracks": [
+  {
+   "name": "ball pops in",
+   "what": "the ball grows at the centre, overshoots and settles",
+   "start_f": 5,
+   "length_f": 26,
+   "easing": "overshoot"
+  },
+  {
+   "name": "ball rises",
+   "what": "the ball rises to the top of the circle",
+   "start_f": 42,
+   "length_f": 15,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "lap",
+   "what": "the ball makes one clockwise lap of the circle",
+   "start_f": 74,
+   "length_f": 57,
+   "easing": "S-curve (fastest at f88)"
+  },
+  {
+   "name": "letters pop in",
+   "what": "each letter pops in as the ball passes it",
+   "start_f": 76,
+   "length_f": 52,
+   "easing": "power3.out"
+  },
+  {
+   "name": "ball drops",
+   "what": "the ball rolls off the top and drops to the centre",
+   "start_f": 136,
+   "length_f": 24,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "ball shrinks",
+   "what": "the ball shrinks away at the centre",
+   "start_f": 158,
+   "length_f": 6,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 170,
+ "check_frames": [
+  8,
+  18,
+  30,
+  48,
+  80,
+  84,
+  88,
+  96,
+  112,
+  130,
+  142,
+  150,
+  162,
+  170
+ ]
+}

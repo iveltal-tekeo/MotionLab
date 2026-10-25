@@ -1,0 +1,105 @@
+{
+ "name": "Three colour stripes",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three tilted stripes slide in one after another, the left and right ones from the top and the middle one from below, each carrying a short word. The group then straightens into three side-by-side columns with a smooth turn, and the outer stripes flash another colour for a moment on the way.",
+ "use_for": [
+  "three points",
+  "list",
+  "features",
+  "steps",
+  "comparison",
+  "title",
+  "intro",
+  "chapter",
+  "opener"
+ ],
+ "tags": [
+  "text",
+  "stripes",
+  "columns",
+  "three",
+  "tilt",
+  "side by side",
+  "colour flash",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f8 the left stripe slides down; f9-f17 the middle one slides up, dark to white by f32; f21-f26 the right one slides down; each word glides in after its stripe (f5, f13, f25); f4-f114 the whole group untilts from 15 degrees to straight with one S-curve (slightly zoomed out as it straightens); f44-f55 the outer stripes shift half-way to another colour and snap back at f56; the last frames hold",
+ "tracks": [
+  {
+   "name": "left stripe",
+   "what": "slides down from the top, fading in",
+   "start_f": 1,
+   "length_f": 13,
+   "easing": "linear slide, power2.out fade"
+  },
+  {
+   "name": "middle stripe",
+   "what": "slides up from below and turns from dark to white",
+   "start_f": 9,
+   "length_f": 23,
+   "easing": "linear slide f9-f17, power3.out brightness"
+  },
+  {
+   "name": "right stripe",
+   "what": "slides down from the top, fast, fading in",
+   "start_f": 21,
+   "length_f": 17,
+   "easing": "linear slide f21-f26, power2.out fade"
+  },
+  {
+   "name": "words",
+   "what": "each word glides into its column after its stripe (left f5-f19, middle f13-f27, right f25-f37)",
+   "start_f": 5,
+   "length_f": 32,
+   "easing": "power2.out"
+  },
+  {
+   "name": "untilt",
+   "what": "the group straightens from the start tilt to 0 and eases from 1.12x to 1x",
+   "start_f": 4,
+   "length_f": 110,
+   "easing": "cubic-bezier(0.65, 0.55, 0.55, 0.8)"
+  },
+  {
+   "name": "colour flash",
+   "what": "the outer stripes (and the middle word) turn half-way to the flash colour, then snap back",
+   "start_f": 44,
+   "length_f": 12,
+   "easing": "power1.out in, hard cut out"
+  },
+  {
+   "name": "hold",
+   "what": "three columns, still (the film grain moves)",
+   "start_f": 114,
+   "length_f": 6,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 119,
+ "check_frames": [
+  0,
+  3,
+  8,
+  13,
+  17,
+  25,
+  32,
+  47,
+  70,
+  119
+ ]
+}

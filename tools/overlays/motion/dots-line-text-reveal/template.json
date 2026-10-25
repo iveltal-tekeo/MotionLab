@@ -1,0 +1,107 @@
+{
+ "name": "Dots, lines and typed text",
+ "kind": "text",
+ "category": "Text",
+ "what": "White dots hang on a dark screen while the whole scene zooms in slowly. Thin glowing lines connect them one after another, a line runs in from the left edge, the text is typed letter by letter beside the big dot, and the dots on the right connect too, with a last line running off the frame.",
+ "use_for": [
+  "title",
+  "network",
+  "connection",
+  "tech",
+  "hook",
+  "statement",
+  "lower third",
+  "opener",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "dots",
+  "lines",
+  "connect",
+  "typed",
+  "glow",
+  "network",
+  "dark",
+  "slow zoom",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f100 the whole scene zooms in 25 % (S-curve, slow start); f24-f34 a line runs in from the left edge to the first dot; f39-f44 it continues down to the big dot; f44-f56 the text is typed, letter by letter (about 1.6 f apart, hard cuts); f57-f61 the right-hand big dot connects to the small one; f61-f66 a last line runs off the right edge; then the scene holds still while the zoom finishes",
+ "tracks": [
+  {
+   "name": "slow zoom",
+   "what": "the whole scene (dots, lines, text) zooms in about its middle",
+   "start_f": 0,
+   "length_f": 100,
+   "easing": "cubic-bezier(0.35, 0.05, 0.7, 1)"
+  },
+  {
+   "name": "line in",
+   "what": "a line runs in from off the left edge to the first dot",
+   "start_f": 24,
+   "length_f": 10,
+   "easing": "power1.out"
+  },
+  {
+   "name": "line down",
+   "what": "it continues from the first dot to the big dot",
+   "start_f": 39,
+   "length_f": 5,
+   "easing": "power1.out"
+  },
+  {
+   "name": "typed text",
+   "what": "the letters appear one by one, no fade",
+   "start_f": 44,
+   "length_f": 12,
+   "easing": "steps"
+  },
+  {
+   "name": "right line",
+   "what": "the right-hand dots connect",
+   "start_f": 57,
+   "length_f": 4,
+   "easing": "power1.out"
+  },
+  {
+   "name": "last line",
+   "what": "a line runs from the small right dot off the right edge",
+   "start_f": 61,
+   "length_f": 5,
+   "easing": "power1.out"
+  },
+  {
+   "name": "hold",
+   "what": "everything stands still while the zoom finishes (the film grain moves)",
+   "start_f": 100,
+   "length_f": 20,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 119,
+ "check_frames": [
+  0,
+  19,
+  28,
+  34,
+  42,
+  46,
+  50,
+  56,
+  60,
+  66,
+  90,
+  119
+ ]
+}

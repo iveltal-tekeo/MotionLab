@@ -1,0 +1,26 @@
+{
+ "name": "cycle-nodes-connect",
+ "frames": 170,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(max(8, 6.4 + i * min(34.75, 138.6 / count)) * fps / 30)",
+   "repeat": "count",
+   "kind": "pop",
+   "db": -4,
+   "what": "a circle appears"
+  },
+  {
+   "f": "start + round(157 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2400,
+   "db": -10,
+   "if": "zoom_end",
+   "what": "the cycle pushes in"
+  }
+ ]
+}

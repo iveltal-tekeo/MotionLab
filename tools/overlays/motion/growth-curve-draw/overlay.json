@@ -1,0 +1,30 @@
+{
+ "name": "growth-curve-draw",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.4",
+   "from": 300,
+   "to": 1800,
+   "db": -12,
+   "what": "the curve starts to draw and the camera glides along it"
+  },
+  {
+   "f": "start + round(49 * fps / 30)",
+   "kind": "thump",
+   "db": -4,
+   "what": "the cut out to the whole card"
+  },
+  {
+   "f": "start + round(84 * fps / 30)",
+   "kind": "chime",
+   "db": -6,
+   "what": "the curve reaches its end"
+  }
+ ]
+}

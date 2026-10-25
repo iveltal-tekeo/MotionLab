@@ -1,0 +1,27 @@
+{
+ "name": "horizontal-bars-percentage",
+ "frames": 300,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 500,
+   "to": 2000,
+   "db": -12,
+   "what": "the tracks grow out of the middle, row by row"
+  },
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the fills run out to their values"
+  }
+ ]
+}

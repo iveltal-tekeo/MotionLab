@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "SMASH IT"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 170, "min": 60, "max": 400, "step": 1},
+  {"id": "text_colour", "type": "enum", "label": "Text and ball colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "glow", "type": "number", "label": "Glow around the text and ball (0 = none, 100 = as in the original)", "default": 100, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "text-shatter-shards" (2026-10-22): a chunky glowing word is typed in letter by letter, a ball flies in and drifts above it, then dives
+     through it and the word shatters. The word is typed one letter every ~2 frames (f2-f19) and shrinks about 9 %
+     (f31-f40), then squeezes a little taller and narrower to f79 as the ball's dive nears it. The ball enters from the
+     left edge (f16), slows to rest above the word's left end (f49), is thrown up and to the right to rest again
+     (f53-f67), winds up (f69-f77) and dives: it passes through the word at f80, which bursts into wedge-shaped
+     pieces around the impact point - pieces fly outward at a steady 24 px a frame or so and fall (about 3.8 px a
+     frame squared from f81), tilting, the middle pieces fastest - and the ball leaves at the bottom right (f86). The
+     frame is empty again from f103 (the clip loops). The ball's and the word's paths are the reference's measured
+     ones. Look-aware: the ground, the text and ball colours, the glow, the font and the film grain come from the
+     look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  svg { position: absolute; left: 0; top: 0; overflow: hidden; }
+  text { font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><svg id="sv" width="1920" height="1080" viewBox="0 0 1920 1080"></svg></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const KR = H / 720;                                      // the reference's pixels (1280 x 720) -> this frame's
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark ground with a soft vignette (the centre a touch lighter), the text and ball in one colour
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const tc = V.text_colour === "signal" ? L.signal : V.text_colour === "paper" ? glare : V.text_colour === "deep" ? L.deep : L.mustard;
+  const GL = Math.max(0, V.glow) / 100;
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background ? `radial-gradient(ellipse 80% 90% at 50% 50%, ${mixh(night, glare, 0.11)} 0%, ${mixh(night, glare, 0.06)} 55%, ${night} 100%)` : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the scene, in the reference's pixels (1280 x 720) scaled up by one group
+  const NS = "http://www.w3.org/2000/svg", sv = q("sv");
+  const mk = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); (par || sv).appendChild(e); return e; };
+  const defs = mk("defs");
+  const world = mk("g", { transform: `scale(${KR})` });
+  const fam = V.body_font, FS0 = V.size * U / KR, TX = 640, TY = 396, CXT = 642, CYT = 356;     // baseline 396, centre of the word (642, 356)
+  const tf = mk("filter", { id: "tglow", x: "-5%", y: "-40%", width: "110%", height: "180%", "color-interpolation-filters": "sRGB" }, defs);
+  mk("feGaussianBlur", { in: "SourceGraphic", stdDeviation: 3.2, result: "b" }, tf);
+  mk("feColorMatrix", { in: "b", type: "matrix", values: `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${0.9 * GL} 0`, result: "b2" }, tf);
+  const tm = mk("feMerge", {}, tf); mk("feMergeNode", { in: "b2" }, tm); mk("feMergeNode", { in: "SourceGraphic" }, tm);
+  const wordG = mk("g", { filter: "url(#tglow)" }, world);
+  const tg = mk("g", {}, wordG);                                           // the intact word (typed, shrinking, squeezing)
+  const style = { "text-anchor": "middle", fill: tc, "font-family": `'${fam}', sans-serif`, "font-weight": fw(fam, 900), "letter-spacing": "0.01em" };
+  const mkText = (par, id) => mk("text", Object.assign({ x: TX, y: TY, id }, style), par);
+  const tmain = mkText(tg, "tmain"), tshard = mkText(defs, "tshard");
+  // the characters, one by one (a space is a non-breaking one, so it keeps its width), with *bold* _italic_ ^signal^ ==highlight==
+  const chars = (() => {
+    const re = /(\*[^*]+\*|_[^_]+_|==[^=]+==|\^[^^]+\^)/g, s = String(V.text == null ? "" : V.text), out = []; let last = 0, m;
+    const add = (t, o) => { [...t].forEach(ch => out.push(Object.assign({ ch: ch === " " ? " " : ch }, o || {}))); };
+    while ((m = re.exec(s))) { add(s.slice(last, m.index)); const k = m[0]; add(k[0] === "=" ? k.slice(2, -2) : k.slice(1, -1), { b: k[0] === "*", i: k[0] === "_", h: k[0] === "=", c: k[0] === "^" }); last = m.index + k.length; }
+    add(s.slice(last)); return out;
+  })();
+  const mkChars = par => chars.map(c => {
+    const sp = mk("tspan", {}, par); sp.textContent = c.ch;
+    if (c.b) sp.setAttribute("font-weight", "900"); if (c.i) sp.setAttribute("font-style", "italic");
+    if (c.c) sp.setAttribute("fill", L.signal); if (c.h) sp.setAttribute("fill", mixh(L.mustard, tc, 0.5));
+    return sp;
+  });
+  const tsp = mkChars(tmain); mkChars(tshard);
+  const TT = chars.map((_, i) => Math.round(2 + 2.125 * i));              // one character every ~2 frames from f2 (a space is a character too)
+  const SX = [[19, 1], [24, .991], [31, .988], [34, .962], [37, .932], [40, .907], [43, .910], [46, .915], [49, .918], [52, .921], [55, .923], [58, .923], [61, .921], [64, .918], [67, .917], [70, .909], [73, .901], [76, .898], [79, .896]];
+  const SY = [[19, 1], [24, .987], [31, 1], [34, .974], [37, .949], [40, .936], [46, .936], [52, .923], [58, .923], [61, .936], [64, .949], [67, .962], [70, .974], [79, .974]];
+  const sxy = g => [tab(SX, g)[0], tab(SY, g)[0]];
+  const tgT = ([sx, sy]) => `translate(${CXT} ${CYT}) scale(${sx.toFixed(4)} ${sy.toFixed(4)}) translate(${-CXT} ${-CYT})`;
+
+  // ---- the shatter: pieces around the impact point (a Voronoi map of seed points on rings round it: many small
+  // wedges close in, a few big chunks far out), each a clipped copy of the word (frozen as it was at f79); only the
+  // pieces that touch the word are made
+  const PT = [606, 342], RS = [[40, 7], [90, 8], [170, 6], [270, 5], [420, 5], [650, 5]];
+  const rg = rnd(77), seeds = [{ p: PT, r: 0 }];
+  RS.forEach(([r, n]) => { const off = rg() * 2 * Math.PI; for (let j = 0; j < n; j++) { const a = off + (j + (rg() - 0.5) * 0.6) * 2 * Math.PI / n, rr = r * (1 + (rg() - 0.5) * 0.18);
+    seeds.push({ p: [PT[0] + rr * Math.cos(a), PT[1] + rr * Math.sin(a)], r: rr }); } });
+  const clipHalf = (poly, m, d) => {                                       // keep the part of poly with (x - m) . d <= 0
+    const out = [];
+    poly.forEach((a, i) => { const b = poly[(i + 1) % poly.length], fa = (a[0] - m[0]) * d[0] + (a[1] - m[1]) * d[1], fb = (b[0] - m[0]) * d[0] + (b[1] - m[1]) * d[1];
+      if (fa <= 0) out.push(a);
+      if ((fa <= 0) !== (fb <= 0)) { const k = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]); } });
+    return out;
+  };
+  const shardLayer = mk("g", { visibility: "hidden" }, wordG);
+  const cells = [];
+  seeds.forEach((sd, si) => {
+    let pl = [[-400, -300], [1700, -300], [1700, 1000], [-400, 1000]];
+    seeds.forEach((ot, oi) => { if (oi !== si && pl.length) pl = clipHalf(pl, [(sd.p[0] + ot.p[0]) / 2, (sd.p[1] + ot.p[1]) / 2], [ot.p[0] - sd.p[0], ot.p[1] - sd.p[1]]); });
+    if (pl.length < 3) return;
+    const xs = pl.map(p => p[0]), ys = pl.map(p => p[1]);
+    if (Math.max(...xs) < 300 || Math.min(...xs) > 985 || Math.max(...ys) < 305 || Math.min(...ys) > 412) return;
+    const cx = xs.reduce((a, b) => a + b, 0) / pl.length, cy = ys.reduce((a, b) => a + b, 0) / pl.length;
+    const dx = sd.p[0] - PT[0], dy = sd.p[1] - PT[1], rd = sd.r;
+    const area = Math.abs(pl.reduce((s, p, i) => { const n = pl[(i + 1) % pl.length]; return s + (p[0] * n[1] - n[0] * p[1]); }, 0)) / 2;
+    const base = rd < 60 ? 34 : rd < 130 ? 27 : rd < 230 ? 23 : 21, sp = base * (0.75 + 0.7 * rg());
+    const ang = (rd < 1 ? rg() * 6.28 : Math.atan2(dy, dx)) + (rg() - 0.5) * 0.3;
+    const id = `cp${cells.length}`;
+    mk("path", { d: "M " + pl.map(p => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(" L ") + " Z" }, mk("clipPath", { id }, defs));
+    const outer = mk("g", {}, shardLayer), inner = mk("g", { "clip-path": `url(#${id})` }, outer);
+    mk("use", { href: "#tshard" }, mk("g", { transform: tgT([0.896, 0.974]) }, inner));
+    cells.push({ outer, cx: (cx * 0 + sd.p[0]), cy: (cy * 0 + sd.p[1]), vx: sp * Math.cos(ang), vy: sp * Math.sin(ang), w: (rg() - 0.5) * 2 * 3.2 / (1 + area / 12000) });
+  });
+  const GRAV = 3.8;
+
+  // ---- the ball: a gold disc that is paler at the rim, with a warm glow (copies across the frame = motion blur)
+  const bright = mixh(tc, "#ffffff", 0.3), warm = mixh(tc, L.signal, 0.22);
+  const bg = mk("radialGradient", { id: "bgrad", cx: 0.58, cy: 0.56, r: 0.66 }, defs);
+  [[0, warm], [0.55, mixh(warm, bright, 0.55)], [1, bright]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, bg));
+  const gg = mk("radialGradient", { id: "bglow" }, defs);
+  [[0.55, rgba(L.signal, 0.28 * GL)], [1, rgba(L.signal, 0)]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, gg));
+  const ballG = mk("g", { visibility: "hidden" }, world);
+  const NB = 16, balls = Array.from({ length: NB }, () => ({ glow: mk("circle", { fill: "url(#bglow)" }, ballG), disc: mk("circle", { fill: "url(#bgrad)" }, ballG) }));
+  const BR = 49;
+  // where the ball is (the middle of the disc, reference px) and how big: measured frame by frame
+  const BALL = [[15, -75, 214, 1], [16, -45, 205, 1], [17, -17, 196, 1], [18, 6, 191, 1], [19, 26, 186, 1], [21, 79, 177, 1], [23, 125, 173, 1], [25, 166, 174, 1], [27, 202, 176, 1], [29, 233, 179, 1], [31, 260, 182, 1], [33, 282, 185, 1], [35, 301, 188, 1],
+    [37, 317, 189, 1], [39, 328, 192, 1], [41, 338, 194, 1], [43, 345, 195, 1], [45, 350, 196, 1], [47, 353, 197, 1], [49, 355, 197, 1], [51, 355, 195, 1], [53, 375, 185, 1], [55, 436, 164, 1], [57, 466, 154, 1], [59, 482, 149, 1],
+    [61, 492, 147, 1], [63, 497, 145, 1], [65, 499, 144, 1], [67, 501, 144, 1], [69, 500, 144, 1], [71, 502, 149, 1], [73, 506, 158, 1.02], [75, 513, 174, 1.05], [77, 525, 202, 1.1], [79, 546, 251, 1.14], [80, 590, 346, 1.18], [81, 635, 442, 1.2],
+    [82, 676, 535, 1.15], [83, 714, 627, 1.1], [84, 737, 673, 1.05], [85, 750, 697, 1], [86, 760, 740, 1], [88, 780, 800, 1]];
+  const SHUT = 1.0;
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  const S = Math.round(V.start);
+  let lastFS = 0;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S, gi = Math.round(g);
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    // fit the word to the frame (84 % of the width at most when it is at full size)
+    tmain.setAttribute("font-size", FS0.toFixed(2));
+    const len = Math.max(1, tmain.getComputedTextLength ? tmain.getComputedTextLength() : 1), fs = FS0 * Math.min(1, 0.84 * 1280 / len);
+    tmain.setAttribute("font-size", fs.toFixed(2));
+    if (Math.abs(fs - lastFS) > 0.01) { tshard.setAttribute("font-size", fs.toFixed(2)); lastFS = fs; }
+    // the word: typed in, shrinking, squeezing; from f81 the pieces
+    tsp.forEach((sp, i) => sp.setAttribute("fill-opacity", gi >= TT[i] ? "1" : "0"));
+    tg.setAttribute("transform", tgT(sxy(Math.min(gi, 79))));
+    tg.setAttribute("visibility", gi <= 80 ? "visible" : "hidden");
+    const burst = gi >= 81;
+    shardLayer.setAttribute("visibility", burst ? "visible" : "hidden");
+    if (burst) {
+      const tt = g - 80, tg2 = Math.max(0, g - 81);
+      cells.forEach(c => {
+        const x = c.vx * tt, y = c.vy * tt + 0.5 * GRAV * tg2 * tg2, r = c.w * tt;
+        c.outer.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${r.toFixed(2)} ${c.cx.toFixed(2)} ${c.cy.toFixed(2)})`);
+      });
+    }
+    // the ball (copies at moments across the frame: a streak when it is fast)
+    const on = g >= 15.5 && g < 88;
+    ballG.setAttribute("visibility", on ? "visible" : "hidden");
+    if (on) {
+      const per = 1 - Math.pow(0.015, 1 / NB), perG = 1 - Math.pow(0.4, 1 / NB);
+      balls.forEach((b, i) => {
+        const gg2 = g + (i / (NB - 1) - 0.5) * SHUT, [bx, by, bs] = tab(BALL, gg2), r = BR * bs;
+        b.disc.setAttribute("cx", bx.toFixed(2)); b.disc.setAttribute("cy", by.toFixed(2)); b.disc.setAttribute("r", r.toFixed(2)); b.disc.setAttribute("opacity", per.toFixed(3));
+        b.glow.setAttribute("cx", bx.toFixed(2)); b.glow.setAttribute("cy", by.toFixed(2)); b.glow.setAttribute("r", (r + 34).toFixed(2)); b.glow.setAttribute("opacity", perG.toFixed(3));
+      });
+    }
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 15 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 41 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font); the word is measured per frame to fit the frame, so it is fitted with the right font
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

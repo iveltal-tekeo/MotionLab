@@ -1,0 +1,88 @@
+{
+ "name": "Neon question hook",
+ "kind": "text",
+ "category": "Text",
+ "what": "A big neon-outlined question mark on a black screen swings its hook like a pendulum while a question fades in above it word by word; then the mark and the question fall out of the frame and a closing line pops in at the centre and holds.",
+ "use_for": [
+  "hook",
+  "question",
+  "opener",
+  "call to action",
+  "teaser",
+  "short form",
+  "intro",
+  "curiosity"
+ ],
+ "tags": [
+  "text",
+  "question",
+  "neon",
+  "hook",
+  "call to action",
+  "dark",
+  "swing",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f10 the mark settles up 56 px (each frame closes 30 % of the gap); f0-f104 its hook swings about the dot, 12 deg each way, one swing every 58 f (right-most at f24 and f82, left-most at f53); the question's words fade in at f2, f7 and f12 (4 f each); f104-f120 the mark and the question fall out together (ease-in, power 2.3); the closing line pops in at f124 and holds to f179",
+ "tracks": [
+  {
+   "name": "mark settle",
+   "what": "the question mark settles up 56 px",
+   "start_f": 0,
+   "length_f": 10,
+   "easing": "exponential settle (each frame closes 30 % of the gap)"
+  },
+  {
+   "name": "hook swing",
+   "what": "the hook swings about the dot, 12 deg each way, 58 frames a cycle",
+   "start_f": 0,
+   "length_f": 104,
+   "easing": "sine (cosine, right-most at f24 and f82)"
+  },
+  {
+   "name": "question words",
+   "what": "the question fades in word by word, 5 f apart, 4 f each",
+   "start_f": 2,
+   "length_f": 14,
+   "easing": "linear"
+  },
+  {
+   "name": "fall",
+   "what": "the mark and the question fall out of the frame together",
+   "start_f": 104,
+   "length_f": 16,
+   "easing": "ease-in, power 2.3"
+  },
+  {
+   "name": "closing line",
+   "what": "the closing line pops in to 80 % and settles to full",
+   "start_f": 123,
+   "length_f": 6,
+   "easing": "exponential settle"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text1",
+  "text2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 24,
+ "check_frames": [
+  0,
+  5,
+  14,
+  24,
+  53,
+  108,
+  114,
+  124,
+  150
+ ]
+}

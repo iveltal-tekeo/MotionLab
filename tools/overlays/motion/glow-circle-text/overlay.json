@@ -1,0 +1,33 @@
+{
+ "name": "glow-circle-text",
+ "frames": 300,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "pop",
+   "db": -11,
+   "what": "the first circle ripples open"
+  },
+  {
+   "f": "start + round(47 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 500,
+   "to": 2200,
+   "db": -9,
+   "what": "the camera swings across to the second circle"
+  },
+  {
+   "f": "start + round(98 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 600,
+   "to": 2000,
+   "db": -11,
+   "what": "the camera pulls back so both circles sit side by side"
+  }
+ ]
+}

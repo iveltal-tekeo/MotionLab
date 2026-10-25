@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "from_media", "type": "string", "label": "Scene before: your video or picture, 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "to_media", "type": "string", "label": "Scene after: your video or picture, 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "from_focus", "type": "string", "label": "What stays in view, scene before (x% y%)", "default": "50% 50%"},
+  {"id": "to_focus", "type": "string", "label": "What stays in view, scene after (x% y%)", "default": "50% 50%"},
+  {"id": "sheet", "type": "enum", "label": "The sweeping sheet", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "bend", "type": "number", "label": "How bent the sheet is (degrees of arc)", "default": 80, "min": 0, "max": 170, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "blur", "type": "number", "label": "Blur between the scenes (px at a 1080-px short side)", "default": 22, "min": 0, "max": 80, "step": 1},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "paper-sweep-transition" (2026-10-18): a transition between two scenes (media slots: the user's videos or pictures). Scene A pushes in
+     slowly; a curved sheet tumbles in from the top right and sweeps diagonally down to the bottom left (f54-f190);
+     behind it scene A blurs out, scene B crossfades in through the blur (f83-f108) and sharpens (to f165), then holds
+     with a slow push. Look-aware: the sheet is paper (or a look colour) with soft shading. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .scene { position: absolute; left: 0; top: 0; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; perspective: 1600px; }
+  #sheet { position: absolute; transform-style: preserve-3d; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="9.066667" data-width="1920"
+     data-height="1080">
+  <div id="hand" class="abs">
+  <div id="sa" class="scene"></div>
+  <div id="sb" class="scene"></div>
+  <div id="stage"><div id="sheet"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 272;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const K = n => Math.max(1, Math.round(n * FPS / 30));
+  const tl = gsap.timeline({ paused: true });
+  const END = 0.5 / FPS + 0.002;
+  const dur = (f0, f1) => Math.max(F(f1 - f0) - END, 0.004);
+  const set = (t, v, f) => tl.set(t, v, f <= 0 ? 0 : AT(f));
+  const to = (t, v, f0, f1, ease = "none") => tl.to(t, { ...v, duration: dur(f0, f1), ease }, F(f0));
+  const ft = (t, a, b, f0, f1, ease = "none") => { set(t, a, f0); return tl.fromTo(t, a, { ...b, duration: dur(f0, f1), ease, immediateRender: false }, F(f0)); };
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+
+  // ---- the two scenes (media slots), full frame, cover at their focus points
+  const sa = q("sa"), sb = q("sb");
+  [sa, sb].forEach(s => Object.assign(s.style, { width: `${W}px`, height: `${H}px` }));
+  if (window.MLLook) {
+    MLLook.media(sa, V.from_media, { look: L, kind: "video", label: "scene before", fit: "cover", focus: V.from_focus, seed: 61, r: 0, slot: "from_media" });
+    MLLook.media(sb, V.to_media, { look: L, kind: "video", label: "scene after", fit: "cover", focus: V.to_focus, seed: 62, r: 0, slot: "to_media", light: true });
+  }
+  // ---- the sheet: a bent page in 3D (MLLook.sheet: 20 strips on an arc, each shaded by how it faces the light),
+  // the reference's rolled panel; a soft shadow under the whole stage
+  const sw = 0.26 * W, sh = 0.72 * H, sheet = q("sheet"), base = L[V.sheet] || L.paper;
+  Object.assign(q("stage").style, { width: `${W}px`, height: `${H}px`, filter: `drop-shadow(0 ${26 * U}px ${40 * U}px ${rgba("#000000", 0.30)})` });
+  const page = window.MLLook ? MLLook.sheet(sheet, { w: sw, h: sh, strips: 20, color: base, look: L, U, radius: Math.max(L.radius * 2.5, 34 * U), bend: V.bend }) : null;
+  // ---- the motion (30 fps frames; K() keeps them at any rate)
+  const bl = V.blur * U;
+  // scene A pushes in slowly; blurs out f60-f95; scene B crossfades in f83-f108 through the blur, sharpens to f165
+  ft(sa, { scale: 1 }, { scale: 1.06 }, 0, K(95), "sine.inOut");
+  ft(sa, { filter: "blur(0px)" }, { filter: `blur(${bl}px)` }, K(60), K(95), "power2.in");
+  set(sb, { opacity: 0 }, 0);
+  ft(sb, { opacity: 0, filter: `blur(${bl}px)`, scale: 1.08 }, { opacity: 1, filter: `blur(${bl * 0.7}px)`, scale: 1.05 }, K(83), K(108), "power1.inOut");
+  ft(sb, { filter: `blur(${bl * 0.7}px)`, scale: 1.05 }, { filter: "blur(0px)", scale: 1.0 }, K(108), K(165), E());
+  ft(sb, { scale: 1.0 }, { scale: 1.03 }, K(165), FRAMES, "sine.inOut");
+  function E() { return window.MLLook ? MLLook.EASE.settle : "power3.out"; }
+  // the sheet: snaps in from beyond the top right (f52-f68, decelerating), drifts slowly down-left while it turns
+  // (f68-f160), then leaves past the bottom left (f160-f190, accelerating); it turns on all three axes throughout
+  set(sheet, { opacity: 0 }, 0);
+  set(sheet, { opacity: 1 }, K(52));
+  ft(sheet, { x: 1.15 * W, y: -0.25 * H, rotation: -35 }, { x: 0.72 * W, y: 0.36 * H, rotation: -12 }, K(52), K(68), "expo.out");
+  ft(sheet, { x: 0.72 * W, y: 0.36 * H, rotation: -12 }, { x: 0.30 * W, y: 0.58 * H, rotation: 58 }, K(68), K(160), "power1.inOut");
+  ft(sheet, { x: 0.30 * W, y: 0.58 * H, rotation: 58 }, { x: -0.30 * W, y: 1.05 * H, rotation: 80 }, K(160), K(190), "expo.in");
+  ft(sheet, { rotationY: -50, rotationX: 18 }, { rotationY: 30, rotationX: -12 }, K(52), K(190), "sine.inOut");
+  if (page) {
+    const bd = { b: V.bend * 1.5 };
+    const draw = () => page.setBend(bd.b);
+    ft(bd, { b: V.bend * 1.5 }, { b: V.bend * 0.7, onUpdate: draw }, K(52), K(110), "sine.inOut");
+    ft(bd, { b: V.bend * 0.7 }, { b: V.bend * 1.2, onUpdate: draw }, K(110), K(190), "sine.inOut");
+  }
+  set(sheet, { opacity: 0 }, K(190));
+  q("hand").style.width = `${W}px`; q("hand").style.height = `${H}px`;
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 7 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

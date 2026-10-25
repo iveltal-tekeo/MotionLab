@@ -1,0 +1,91 @@
+{
+ "name": "Crowd with glowing title",
+ "kind": "text",
+ "category": "Text",
+ "what": "A glowing title standing over a crowd of flat white people seen from above: the letters fade in out of the dark in random order while the camera swings back and up, the text shrinks from giant to rest and the people fall into rows; then figure after figure flashes to an alert colour.",
+ "use_for": [
+  "statement",
+  "numbers",
+  "community",
+  "audience",
+  "social proof",
+  "alert",
+  "title",
+  "vertical",
+  "intro",
+  "stat"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "crowd",
+  "silhouettes",
+  "3d camera",
+  "glow",
+  "alert",
+  "vertical",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f22 the letters fade in from blur in random order while the brightness climbs from black; f5-f48 the camera swings back and up (slow start, fastest f15, long settle): the text shrinks from 2.5 times its size to rest, the people drop into rows; f60-f102 figure after figure turns the alert colour (a pink step between) and stays; then it holds to the end",
+ "tracks": [
+  {
+   "name": "letters",
+   "what": "the letters of both lines fade in from blur in random order",
+   "start_f": 1,
+   "length_f": 22,
+   "easing": "linear"
+  },
+  {
+   "name": "brightness",
+   "what": "the big line and the crowd climb from black to full",
+   "start_f": 1,
+   "length_f": 47,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "camera",
+   "what": "the camera swings back and up: text 2.5 times to 1, the crowd falls into rows",
+   "start_f": 5,
+   "length_f": 43,
+   "easing": "S-curve"
+  },
+  {
+   "name": "alert",
+   "what": "figures turn the alert colour one after another and stay",
+   "start_f": 57,
+   "length_f": 48,
+   "easing": "linear"
+  },
+  {
+   "name": "hold",
+   "what": "everything rests",
+   "start_f": 105,
+   "length_f": 16,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 110,
+ "check_frames": [
+  3,
+  6,
+  10,
+  15,
+  20,
+  30,
+  48,
+  75,
+  110
+ ]
+}

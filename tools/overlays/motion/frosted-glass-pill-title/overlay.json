@@ -1,0 +1,33 @@
+{
+ "name": "frosted-glass-pill-title",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 2200,
+   "db": -9,
+   "what": "the glass pill shoots up and settles"
+  },
+  {
+   "f": "start + round(142 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 500,
+   "db": -9,
+   "what": "the pill drops"
+  },
+  {
+   "f": "start + round(148 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the pill lands, wobbling"
+  }
+ ]
+}

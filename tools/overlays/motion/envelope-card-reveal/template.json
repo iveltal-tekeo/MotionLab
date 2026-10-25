@@ -1,0 +1,104 @@
+{
+ "name": "Envelope card reveal",
+ "kind": "text",
+ "category": "Social",
+ "what": "A dark envelope slides up into a warm-lit dark scene, grows and settles, flips its flap open on a black inside, and a card - your picture or video, with a label - slides up out of it.",
+ "use_for": [
+  "announcement",
+  "invite",
+  "new message",
+  "reveal a photo",
+  "reveal a video",
+  "newsletter",
+  "gift",
+  "product drop",
+  "teaser"
+ ],
+ "tags": [
+  "envelope",
+  "card",
+  "reveal",
+  "flap",
+  "mail",
+  "needs media",
+  "image",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f13-f29 a small closed envelope slides up from the bottom (S-curve); f29-f34 it waits; f34-f68 it grows x1.6 and settles lower (S-curve); f66-f71 its flap flips open (through edge-on) on a black inside; f72-f97 the card slides up out of the pocket (slow start, fast middle, long soft finish, its lower corners cut by the front flaps); then it holds",
+ "tracks": [
+  {
+   "name": "envelope rise",
+   "what": "a small closed envelope slides up from the bottom of the frame",
+   "start_f": 13,
+   "length_f": 16,
+   "easing": "S-curve"
+  },
+  {
+   "name": "envelope grow",
+   "what": "it grows x1.6 and settles lower in the frame",
+   "start_f": 34,
+   "length_f": 34,
+   "easing": "S-curve"
+  },
+  {
+   "name": "flap",
+   "what": "the flap flips open (through edge-on) on a black inside",
+   "start_f": 66,
+   "length_f": 6,
+   "easing": "accelerating"
+  },
+  {
+   "name": "card",
+   "what": "the card slides up out of the pocket and stops",
+   "start_f": 72,
+   "length_f": 25,
+   "easing": "slow start, fast middle, long soft end"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 97,
+   "length_f": 143,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "label"
+ ],
+ "media_slots": [
+  {
+   "id": "card_media",
+   "label": "The card",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "4:3",
+   "min_px": 1080,
+   "max_s": 5.5,
+   "fit": "cover",
+   "focus_setting": "card_focus",
+   "focus": "50% 50%",
+   "placeholder": "a signal-to-mustard gradient card in the look, labelled 'Your footage here'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  20,
+  40,
+  60,
+  68,
+  72,
+  80,
+  90,
+  120
+ ]
+}

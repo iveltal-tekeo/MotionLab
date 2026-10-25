@@ -1,0 +1,35 @@
+{
+ "name": "point-to-point-line",
+ "frames": 91,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "media_start": {
+  "card1_media": 20,
+  "card2_media": 50
+ },
+ "cues": [
+  {
+   "f": "start + round(5 * fps / 30)",
+   "kind": "pop",
+   "db": -9,
+   "what": "the first point lands"
+  },
+  {
+   "f": "start + round(31 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 400,
+   "to": 2600,
+   "db": -9,
+   "what": "the group slides left and the line is drawn to the second point"
+  },
+  {
+   "f": "start + round((20 + 30 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "2",
+   "db": -12,
+   "what": "a footage card blurs in under a point"
+  }
+ ]
+}

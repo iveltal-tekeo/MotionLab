@@ -1,0 +1,29 @@
+{
+ "name": "strike-through-text",
+ "frames": 195,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + 55 + 61 * i",
+   "kind": "whip",
+   "repeat": "2",
+   "dur": "0.2",
+   "db": -6,
+   "what": "the marker line is drawn"
+  },
+  {
+   "f": "start + 69 + round(i * 12 / n)",
+   "kind": "key",
+   "repeat": "max(5, round(len(sub_1) * 0.75))",
+   "what": "subtext 1 is typed (about 3 keys per 4 letters)"
+  },
+  {
+   "f": "start + 126 + round(i * 12 / n)",
+   "kind": "key",
+   "repeat": "max(5, round(len(sub_2) * 0.75))",
+   "what": "subtext 2 is typed (about 3 keys per 4 letters)"
+  }
+ ]
+}

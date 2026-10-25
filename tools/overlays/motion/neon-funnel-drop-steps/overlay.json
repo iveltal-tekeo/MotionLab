@@ -1,0 +1,30 @@
+{
+ "name": "neon-funnel-drop-steps",
+ "frames": 121,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(8 * fps / 30)",
+   "kind": "thump",
+   "db": -4,
+   "what": "the first tier lands and jumps back up"
+  },
+  {
+   "f": "start + round(41 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2200,
+   "db": -12,
+   "what": "the first logo flies in"
+  },
+  {
+   "f": "start + round(61 * fps / 30)",
+   "kind": "pop",
+   "db": -4,
+   "what": "the second caption pops in"
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "name": "light-streak-text",
+ "frames": 240,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the first word lights up"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the second word lights up"
+  },
+  {
+   "f": "start + round(38 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 600,
+   "to": 2800,
+   "db": -9,
+   "what": "the spark sweeps across the text"
+  }
+ ]
+}

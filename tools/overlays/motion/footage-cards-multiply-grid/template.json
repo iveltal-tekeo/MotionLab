@@ -1,0 +1,241 @@
+{
+ "name": "Footage cards multiply",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "One upright card with your video rises into view on a dark page, shrinks, and nine more cards fan out from under it into a grid of ten while the view count on every card steps up from 0 to millions.",
+ "use_for": [
+  "views",
+  "viral",
+  "growth",
+  "reach",
+  "channel stats",
+  "milestone",
+  "social proof",
+  "clips",
+  "reel",
+  "short form"
+ ],
+ "tags": [
+  "social",
+  "cards",
+  "grid",
+  "counter",
+  "views",
+  "multiply",
+  "footage",
+  "needs media",
+  "10 clips",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f11-f60 one card rises from below the frame, overshoots by 30 px and settles; f60-f78 it shrinks to 70 %; f79-f101 nine more cards fan out from under it and all ten spread into a 5 x 2 grid (sharp S-curve, the first card on top); f110-f163 the view count on every card steps up about every 9 f (100, 1K, 100K, 500K, 900K, 1M, 2M)",
+ "tracks": [
+  {
+   "name": "card rises",
+   "what": "one card comes up from below the frame, overshoots and settles",
+   "start_f": 11,
+   "length_f": 49,
+   "easing": "accelerating, then a soft overshoot (measured)"
+  },
+  {
+   "name": "card shrinks",
+   "what": "the card shrinks to 70 % and drifts a little to the right",
+   "start_f": 60,
+   "length_f": 18,
+   "easing": "S-curve (measured)"
+  },
+  {
+   "name": "cards fan out",
+   "what": "nine more cards slide out from under the first and all ten settle into a 5 x 2 grid",
+   "start_f": 79,
+   "length_f": 22,
+   "easing": "sharp S-curve (measured)"
+  },
+  {
+   "name": "view count",
+   "what": "the number on every card steps up all at once, about every 9 f",
+   "start_f": 110,
+   "length_f": 54,
+   "easing": "steps"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "counts",
+  "unit",
+  "card_text"
+ ],
+ "media_slots": [
+  {
+   "id": "v1_media",
+   "label": "Card 1: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 6.8,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v2_media",
+   "label": "Card 2: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v3_media",
+   "label": "Card 3: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v4_media",
+   "label": "Card 4: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v5_media",
+   "label": "Card 5: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v6_media",
+   "label": "Card 6: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v7_media",
+   "label": "Card 7: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v8_media",
+   "label": "Card 8: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v9_media",
+   "label": "Card 9: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  },
+  {
+   "id": "v10_media",
+   "label": "Card 10: your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft pink-purple gradient card in the look's accent, with the card text"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 180,
+ "check_frames": [
+  11,
+  20,
+  30,
+  44,
+  68,
+  80,
+  86,
+  90,
+  96,
+  112,
+  130,
+  155,
+  180
+ ]
+}

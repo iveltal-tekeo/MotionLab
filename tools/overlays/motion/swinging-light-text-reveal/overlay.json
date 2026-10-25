@@ -1,0 +1,30 @@
+{
+ "name": "swinging-light-text-reveal",
+ "frames": 153,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2000,
+   "db": -10,
+   "what": "the lamp is flung through its first swing"
+  },
+  {
+   "f": "start + round(47 * fps / 30)",
+   "kind": "click",
+   "db": -4,
+   "what": "the pull cord is pulled"
+  },
+  {
+   "f": "start + round(59 * fps / 30)",
+   "kind": "pop",
+   "db": -6,
+   "what": "the lamp switches on and lights the headline"
+  }
+ ]
+}

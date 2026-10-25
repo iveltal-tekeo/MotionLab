@@ -1,0 +1,87 @@
+{
+ "name": "Swinging light headline",
+ "kind": "text",
+ "category": "Text",
+ "what": "A dark headline waits in the dark while a small lamp on a thread swings in, a pull cord is tugged and the lamp switches on: the letters near it light up in a warm colour with a soft halo and follow the lamp as its swing dies away.",
+ "use_for": [
+  "title",
+  "headline",
+  "reveal",
+  "intro",
+  "vertical",
+  "short",
+  "illuminated text",
+  "teaser"
+ ],
+ "tags": [
+  "text",
+  "light",
+  "lamp",
+  "swing",
+  "reveal",
+  "dark",
+  "vertical",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f34 the lamp on its thread is flung out to the left, swings through the bottom to the far right (f18) and back to the left; f39-f58 a pull cord appears beside it, is pulled down f39-f47 and let go f52-f58 while the lamp swings on (second left swing to f45); f59 the lamp switches on - white core, halo, the headline lit near it; f59-f133 the swing dies away (about -15 deg at f82, -4 deg from f133) with the lit part following the lamp; then it holds to f152",
+ "tracks": [
+  {
+   "name": "swing",
+   "what": "the lamp on its thread swings from the left over the bottom to the right and back, twice more to the left (measured angle per frame), smeared by motion blur",
+   "start_f": 0,
+   "length_f": 59,
+   "easing": "pendulum (measured per frame)"
+  },
+  {
+   "name": "pull cord",
+   "what": "a short cord appears at the pivot, is pulled down about 11 px and let go",
+   "start_f": 39,
+   "length_f": 20,
+   "easing": "linear"
+  },
+  {
+   "name": "light on",
+   "what": "the lamp switches on: white core, warm halo, the letters near it lit",
+   "start_f": 59,
+   "length_f": 1,
+   "easing": "none"
+  },
+  {
+   "name": "swing dies away",
+   "what": "the lamp keeps swinging, smaller and smaller; the lit part of the headline follows it",
+   "start_f": 59,
+   "length_f": 75,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the lamp hangs still, the headline lit around it",
+   "start_f": 134,
+   "length_f": 19,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  8,
+  21,
+  34,
+  45,
+  58,
+  59,
+  72,
+  82,
+  152
+ ]
+}

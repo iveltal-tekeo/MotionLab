@@ -1,0 +1,33 @@
+{
+ "name": "cursor-click-text-swap",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 1800,
+   "db": -12,
+   "what": "the sentence slides in"
+  },
+  {
+   "f": "start + round(78 * fps / 30)",
+   "kind": "click",
+   "db": -10,
+   "what": "the cursor clicks the word"
+  },
+  {
+   "f": "start + round(132 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 600,
+   "to": 2600,
+   "db": -9,
+   "what": "everything zooms away"
+  }
+ ]
+}

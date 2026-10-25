@@ -1,0 +1,92 @@
+{
+ "name": "Pie slice callout",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A soft glossy pie sits on a light page and pushes in slowly while a slice is cut into it: a thin line swings round from the left up to the top and widens into a deep wedge; a dot, a leader line and a text callout then appear above it, the words rising one after another; at the end everything slides down and fades out. The slice size, where it points and the words are yours.",
+ "use_for": [
+  "share",
+  "percentage",
+  "market share",
+  "highlight one number",
+  "pie chart",
+  "breakdown",
+  "stats",
+  "callout",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "pie",
+  "slice",
+  "highlight",
+  "callout",
+  "leader line",
+  "light",
+  "push-in",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f100 the pie pushes in slowly (x1.15, linear); f2-f20 the slice sweeps clockwise from the left (-78 degrees) round to the top while it widens to 18 degrees (the two edges on their own S-curves, fastest at f10-f11); f24 a dot appears above the slice, f25-f33 the leader is drawn up and to the right, f32-f60 along; f56 / f62 / f68 the callout words rise one after another from under a mask (exponential ease, 8.5 f) and fade in; f99-f108 everything slides down and fades out while the slice swings about 20 degrees",
+ "tracks": [
+  {
+   "name": "push-in",
+   "what": "the whole pie scales up slowly about its centre (x1.15)",
+   "start_f": 0,
+   "length_f": 100,
+   "easing": "linear"
+  },
+  {
+   "name": "slice sweep",
+   "what": "the slice swings clockwise from the left round to the top and widens into a wedge",
+   "start_f": 2,
+   "length_f": 18,
+   "easing": "S-curve (measured, each edge on its own)"
+  },
+  {
+   "name": "leader",
+   "what": "a dot appears above the slice, a leader is drawn up and to the right and then along",
+   "start_f": 24,
+   "length_f": 40,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "callout words",
+   "what": "the words rise one after another from under a mask and fade in",
+   "start_f": 55,
+   "length_f": 40,
+   "easing": "exponential, 8.5 f, 6.6 f apart (measured)"
+  },
+  {
+   "name": "slide out",
+   "what": "everything slides down and fades out while the slice swings away",
+   "start_f": 99,
+   "length_f": 9,
+   "easing": "accelerating"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "label"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 90,
+ "check_frames": [
+  3,
+  7,
+  11,
+  15,
+  19,
+  30,
+  45,
+  62,
+  76,
+  98,
+  104,
+  106
+ ]
+}

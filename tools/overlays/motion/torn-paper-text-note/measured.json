@@ -1,0 +1,18 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f20 (00:00:00:20) +4 more: #lines > div:nth-of-type(4) > span:nth-of-type(1) \"every\" off the frame, outside its box by 34 px",
+    "FIT f32 (00:00:01:02) +3 more: #lines > div:nth-of-type(5) > span:nth-of-type(1) \"small\" off the frame by 141 px",
+    "FIT f40 (00:00:01:10) +2 more: #lines > div:nth-of-type(6) > span:nth-of-type(1) \"win\" off the frame by 249 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

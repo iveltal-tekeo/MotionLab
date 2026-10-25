@@ -1,0 +1,108 @@
+{
+ "name": "Newspaper page cuts",
+ "kind": "text",
+ "category": "Text",
+ "what": "A dark photo above a printed newspaper page; every third of a second the page cuts to a new layout (an italic headline, a big serif one, a sans one, a condensed one over a strip of pictures...), each cut smeared sideways for a frame, with a slow push-in between cuts. Your headline lands in each layout.",
+ "use_for": [
+  "documentary opener",
+  "news",
+  "headline",
+  "true story",
+  "investigation",
+  "intro",
+  "title",
+  "podcast",
+  "history"
+ ],
+ "tags": [
+  "text",
+  "newspaper",
+  "headline",
+  "cuts",
+  "photo",
+  "documentary",
+  "needs media",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f139: a hard cut every 10 f (f10, f20 ... f130) through 7 page layouts, twice; the cut frame is smeared sideways, the next is nearly sharp (f11), the page then holds with a slow push-in (0.9 % in 9 f) and the last frame of each page smears a little; the photo above is re-cropped at every cut",
+ "tracks": [
+  {
+   "name": "page cuts",
+   "what": "a hard cut to the next of 7 page layouts every 10 frames (the cycle runs twice)",
+   "start_f": 10,
+   "length_f": 130,
+   "easing": "none (hard cuts)"
+  },
+  {
+   "name": "cut smear",
+   "what": "the cut frame smears sideways (about 7 px), the next frame is nearly sharp, the last frame of each page smears a little",
+   "start_f": 10,
+   "length_f": 2,
+   "easing": "none"
+  },
+  {
+   "name": "push-in",
+   "what": "each page and its photo push in slowly (0.9 % in 9 frames)",
+   "start_f": 0,
+   "length_f": 9,
+   "easing": "linear"
+  },
+  {
+   "name": "photo crop",
+   "what": "the photo above is re-cropped (zoomed 1.0 to 1.55 times) at every cut and the page's top edge moves",
+   "start_f": 10,
+   "length_f": 130,
+   "easing": "none (hard cuts)"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "headline"
+ ],
+ "media_slots": [
+  {
+   "id": "photo_media",
+   "label": "The photo above the page",
+   "accept": [
+    "image"
+   ],
+   "aspect": "3:2",
+   "min_px": 1080,
+   "fit": "cover",
+   "focus_setting": "photo_focus",
+   "focus": "50% 60%",
+   "placeholder": "a dark soft gradient in the look, labelled 'your photo'"
+  },
+  {
+   "id": "faces_media",
+   "label": "The pictures on the page",
+   "accept": [
+    "image"
+   ],
+   "aspect": "4:5",
+   "min_px": 600,
+   "fit": "cover",
+   "focus_setting": "faces_focus",
+   "focus": "50% 35%",
+   "placeholder": "soft gradient pictures in the look (the big one labelled 'your photo')"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 52,
+ "check_frames": [
+  0,
+  10,
+  11,
+  25,
+  45,
+  55,
+  65,
+  100,
+  135
+ ]
+}

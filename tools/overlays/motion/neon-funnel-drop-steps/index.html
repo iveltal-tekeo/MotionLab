@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "captions", "type": "string", "label": "Captions, one for each step (| between, 1 to 3; *bold* _italic_ ==highlight== ^signal colour^)", "default": "Visitors|Sign-ups|Customers"},
+  {"id": "size", "type": "number", "label": "Caption size (px at a 1080-px short side)", "default": 125, "min": 30, "max": 300, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Write the captions in capitals (like the original)", "default": true},
+  {"id": "tiers", "type": "number", "label": "Funnel tiers (2 to 6)", "default": 4, "min": 2, "max": 6, "step": 1},
+  {"id": "balls", "type": "number", "label": "Logos dropping in (0 to 8, 8 = like the original)", "default": 8, "min": 0, "max": 8, "step": 1},
+  {"id": "neon", "type": "enum", "label": "Neon colour of the funnel", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "first_logo", "type": "string", "label": "First logo: a logo of the library (e.g. youtube) or your picture (empty = a placeholder)", "default": ""},
+  {"id": "second_logo", "type": "string", "label": "Second logo: a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "third_logo", "type": "string", "label": "Third logo: a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<script src="assets/logos/logos.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "neon-funnel-drop-steps" (2026-10-23): a neon funnel of tiers drops in from above one tier after another (the smallest first: they fall
+     straight down at about 139 units a frame, land every 5 frames at the funnel's slots and each jumps back up ~70
+     units and lands again), a soft haze fades in behind it (f15-f30), the first caption scales in at f20 with a
+     little overshoot (a new caption every 41 frames; the old one is replaced at once, a horizontal blur while it grows)
+     and a wave of light runs down the tiers (top to bottom, 5 frames apart, a new wave every 30 frames from f35).
+     From f41 round logos fly in from the sides in arcs and sink into the funnel mouth, one after another (8 in the
+     original). Logos are three slots; an empty slot shows a neutral ring. Tiers, captions, logos and colour are
+     settings. Numbers measured from the reference's frames (720 x 1280 units). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #stage > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #haze { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; }
+  #balls { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; }
+  .bl { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .bg { position: absolute; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .bg img, .bg svg { display: block; }
+  #capw { position: absolute; left: 0; width: 720px; height: 0; }
+  .cap { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4.0333" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0">
+    <defs><filter id="tbl" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur id="tblg" stdDeviation="0 0"/></filter></defs>
+  </svg>
+  <div id="hand" class="abs">
+    <div id="stage">
+      <div id="haze"></div>
+      <svg id="fsv" width="720" height="1280" viewBox="0 0 720 1280"></svg>
+      <div id="balls"></div>
+      <div id="capw"></div>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 121;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.3;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, mustard: L.mustard, deep: L.deep, paper: glare };
+  const neon = pick[V.neon] || L.signal;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rg = (c, a) => { const [r, g, b] = hex(c); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const neonLite = mixC(neon, glare, 0.45), neonDark = mixC(neon, "#000000", 0.78), neonDeep = mixC(neon, "#000000", 0.55), lit = mixC(neon, glare, 0.82);
+
+  // ---- the ground: nearly black
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixC(night, "#000000", 0.85);
+  const stage = q("stage");
+  stage.style.transform = `scale(${K})`;
+  const haze = q("haze");
+
+  // ---- the funnel: tiers measured on the reference's last frame (the top tier first). cx, rim centre y, rim rx / ry, hole rx / ry / dy
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (par) par.appendChild(e); return e; };
+  const TB = { cx: [361.5, 363.5, 366, 368], cy: [627, 757.5, 872, 973], rx: [307, 257.5, 216, 181], ry: [32, 30.5, 26.8, 24],
+               hx: [263, 220, 184, 155], hy: [24, 18, 14, 14], hd: [1, -5.5, -5, -3] };
+  const NT = Math.max(2, Math.min(6, Math.round(V.tiers)));
+  const samp = (arr, j) => { const u = NT === 1 ? 0 : j / (NT - 1) * 3, i = Math.min(2, Math.floor(u)), k = u - i; return arr[i] + (arr[i + 1] - arr[i]) * k; };
+  const geo = [];
+  for (let j = 0; j < NT; j++) geo.push({ cx: samp(TB.cx, j), cy: samp(TB.cy, j), rx: samp(TB.rx, j), ry: samp(TB.ry, j), hx: samp(TB.hx, j), hy: samp(TB.hy, j), hd: samp(TB.hd, j) });
+  geo.forEach((g, j) => {
+    const nx = geo[j + 1];
+    g.rxb = nx ? nx.rx * 0.97 : g.rx * 0.83;
+    g.ryb = g.rxb * (g.ry / g.rx) * 1.1;
+    g.cyb = nx ? nx.cy - g.ryb + 5 : 1057;
+  });
+  const fsv = q("fsv");
+  const defs = el("defs", {}, fsv);
+  const tiers = [];
+  geo.forEach((g, j) => {
+    const grp = el("g", {}, fsv);
+    const gv = el("linearGradient", { id: `gv${j}`, gradientUnits: "userSpaceOnUse", x1: 0, y1: g.cy, x2: 0, y2: g.cyb + g.ryb }, defs);
+    [[0, rg(neonDark, 0.9)], [0.45, rg(neonDark, 0.85)], [0.78, rg(neonDeep, 0.9)], [1, rgba(neon, 0.95)]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, gv));
+    const gh = el("linearGradient", { id: `gh${j}`, gradientUnits: "userSpaceOnUse", x1: g.cx - g.rx, y1: 0, x2: g.cx + g.rx, y2: 0 }, defs);
+    [[0, rgba(neon, 0.65)], [0.1, rgba(neon, 0.3)], [0.28, rgba(neon, 0)], [0.72, rgba(neon, 0)], [0.9, rgba(neon, 0.3)], [1, rgba(neon, 0.65)]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, gh));
+    const xl = g.cx - g.rx, xr = g.cx + g.rx, xbl = g.cx - g.rxb, xbr = g.cx + g.rxb;
+    const bodyD = `M ${xl} ${g.cy} A ${g.rx} ${g.ry} 0 0 0 ${xr} ${g.cy} L ${xbr} ${g.cyb} A ${g.rxb} ${g.ryb} 0 0 1 ${xbl} ${g.cyb} Z`;
+    const outD = `M ${xl} ${g.cy} A ${g.rx} ${g.ry} 0 0 1 ${xr} ${g.cy} L ${xbr} ${g.cyb} A ${g.rxb} ${g.ryb} 0 0 1 ${xbl} ${g.cyb} Z`;
+    // the hole (the inside, a grey-violet disc) first, then the body, the lit wash, then the neon lines
+    el("ellipse", { cx: g.cx, cy: g.cy + g.hd, rx: g.hx, ry: g.hy, fill: rgba(glare, 0.2) }, grp);
+    el("path", { d: bodyD, fill: `url(#gv${j})` }, grp);
+    el("path", { d: bodyD, fill: `url(#gh${j})` }, grp);
+    const wash = el("path", { d: bodyD, fill: lit, opacity: 0 }, grp);
+    const lines = [{ tag: "ellipse", at: { cx: g.cx, cy: g.cy, rx: g.rx, ry: g.ry } }, { tag: "ellipse", at: { cx: g.cx, cy: g.cy + g.hd, rx: g.hx, ry: g.hy } },
+      { tag: "path", at: { d: `M ${xl} ${g.cy} L ${xbl} ${g.cyb} A ${g.rxb} ${g.ryb} 0 0 0 ${xbr} ${g.cyb} L ${xr} ${g.cy}` } }];
+    const glows = [];
+    [[14, 0.09, neonLite], [7, 0.22, neonLite], [2.6, 0.95, glare]].forEach(([w, a, c]) => {
+      lines.forEach(l => { const e = el(l.tag, { ...l.at, fill: "none", stroke: c, "stroke-width": w, "stroke-opacity": a, "stroke-linejoin": "round", "stroke-linecap": "round" }, grp); if (w === 14 || w === 7) glows.push({ e, a }); });
+    });
+    tiers.push({ grp, wash, glows, g });
+  });
+
+  // ---- the logos that drop in: round discs (a logo or a neutral ring) with a short trail, clipped by the funnel's mouth
+  const top0 = geo[0];
+  const clip = el("clipPath", { id: "mouth" }, defs);
+  el("rect", { x: -200, y: -200, width: 1120, height: top0.cy + top0.hd + 200 }, clip);
+  el("ellipse", { cx: top0.cx, cy: top0.cy + top0.hd, rx: top0.hx, ry: top0.hy }, clip);
+  const ballsBox = q("balls");
+  const clipHost = document.createElementNS(NS, "svg");         // an HTML layer cannot take an SVG clipPath on its own: use CSS clip-path url()
+  ballsBox.style.clipPath = "url(#mouth)";
+  const TR = [
+    [[41, 747, 398], [42, 711, 341], [43, 663, 311], [44, 610, 308], [45, 564, 339], [46, 527, 390], [47, 497, 443], [48, 475, 498], [49, 453, 545], [50, 434, 590], [51, 426, 632]],
+    [[47, 2, 76], [48, 63, 98], [49, 99, 158], [50, 142, 228], [51, 185, 299], [52, 211, 368], [53, 235, 436], [54, 254, 498], [55, 273, 554], [56, 286, 605]],
+    [[52, 722, 314], [53, 659, 327], [54, 604, 362], [55, 557, 410], [56, 522, 464], [57, 492, 519], [58, 465, 558], [59, 445, 600], [60, 428, 645]],
+    [[53, 729, 159], [54, 683, 129], [55, 625, 110], [56, 562, 107], [57, 501, 124], [58, 468, 193], [59, 435, 262], [60, 402, 330], [61, 387, 398], [62, 373, 457], [63, 367, 518], [64, 360, 568], [65, 352, 622]],
+    [[54, 23, 221], [55, 92, 232], [56, 167, 257], [57, 224, 303], [58, 265, 365], [59, 295, 429], [60, 316, 491], [61, 335, 548], [62, 350, 606]],
+    [[59, -37, 497], [60, 1, 451], [61, 55, 406], [62, 103, 371], [63, 161, 353], [64, 218, 367], [65, 262, 410], [66, 294, 465], [67, 316, 520], [68, 330, 565], [69, 340, 613]],
+    [[64, 735, 123], [65, 685, 83], [66, 627, 95], [67, 574, 129], [68, 543, 203], [69, 513, 277], [70, 490, 344], [71, 471, 410], [72, 455, 473], [73, 440, 529], [74, 428, 580], [75, 420, 632]],
+    [[72, -6, 79], [73, 82, 72], [74, 167, 90], [75, 244, 127], [76, 292, 200], [77, 337, 273], [78, 364, 349], [79, 380, 421], [80, 393, 489], [81, 399, 549], [82, 404, 607]]];
+  const trackPos = (tr, f) => {
+    const n = tr.length;
+    if (f <= tr[0][0]) { const s = (f - tr[0][0]); return [tr[0][1] + (tr[1][1] - tr[0][1]) / (tr[1][0] - tr[0][0]) * s, tr[0][2] + (tr[1][2] - tr[0][2]) / (tr[1][0] - tr[0][0]) * s]; }
+    if (f >= tr[n - 1][0]) { const s = (f - tr[n - 1][0]); return [tr[n - 1][1] + (tr[n - 1][1] - tr[n - 2][1]) / (tr[n - 1][0] - tr[n - 2][0]) * s, tr[n - 1][2] + (tr[n - 1][2] - tr[n - 2][2]) / (tr[n - 1][0] - tr[n - 2][0]) * s]; }
+    const r = tab(tr, f); return [r[0], r[1]];
+  };
+  const NB = Math.max(0, Math.min(8, Math.round(V.balls)));
+  const slots = [V.first_logo, V.second_logo, V.third_logo];
+  const BR = 42;                                               // disc radius
+  const discCol = mixC(neon, "#000000", 0.5), darkDisc = lum(discCol) < 0.45;
+  const balls = [];
+  for (let b = 0; b < NB; b++) {
+    const box = document.createElement("div"); box.className = "bl"; ballsBox.appendChild(box);
+    const ghosts = [];
+    [[-0.66, 0.22], [-0.33, 0.4], [0, 1]].forEach(([dt, a]) => {
+      const d = document.createElement("div"); d.className = "bg";
+      Object.assign(d.style, { left: `${-BR}px`, top: `${-BR}px`, width: `${BR * 2}px`, height: `${BR * 2}px`, opacity: a,
+        background: `radial-gradient(circle at 34% 28%, ${mixC(neon, glare, 0.6)} 0%, ${neon} 42%, ${mixC(neon, "#000000", 0.6)} 100%)`,
+        boxShadow: `0 0 ${BR * 0.5}px ${rgba(neon, 0.6)}, inset 0 0 0 2px ${rgba(glare, 0.35)}` });
+      const slot = slots[b % 3];
+      let has = false;
+      if (slot && window.MLLogo) {
+        has = MLLogo.fill(d, slot, { scale: MLLogo.is(slot) ? 0.58 : 1, dark: darkDisc });
+        if (has && !MLLogo.is(slot)) d.querySelectorAll("img").forEach(m => Object.assign(m.style, { objectFit: "cover", objectPosition: "50% 50%" }));
+      }
+      if (!has) {                                              // an empty slot: a neutral ring
+        const ring = document.createElement("div");
+        Object.assign(ring.style, { width: `${BR * 0.9}px`, height: `${BR * 0.9}px`, borderRadius: "50%", border: `${BR * 0.13}px solid ${glare}`, opacity: 0.95 });
+        d.appendChild(ring);
+      }
+      box.appendChild(d); ghosts.push({ d, dt });
+    });
+    balls.push({ box, ghosts, tr: TR[b] });
+  }
+
+  // ---- the captions: each scales in from small with a little overshoot and a horizontal blur; the old one is replaced at once
+  const caps = String(V.captions == null ? "" : V.captions).split("|").map(x => x.trim()).filter(x => x.length).slice(0, 3);
+  if (!caps.length) caps.push("Step");
+  const NC = caps.length;
+  const capw = q("capw");
+  capw.style.top = "192px";
+  const capEls = caps.map(t => {
+    const e = document.createElement("div"); e.className = "cap ml-display"; capw.appendChild(e);
+    if (window.MLLook) MLLook.rich(e, V.caps ? t.toUpperCase() : t, { look: L, family: V.display_font, weight: 700 }); else e.textContent = V.caps ? t.toUpperCase() : t;
+    Object.assign(e.style, { fontSize: `${V.size * U / K}px`, color: glare, fontWeight: String(fw(V.display_font, 900)), visibility: "hidden" });
+    if (window.MLLook) MLLook.glow(e, glare, 85, { kind: "text", U: 1.4 / K });
+    return e;
+  });
+  const SC = [[0, 0.1], [1, 0.29], [2, 0.51], [3, 0.745], [4, 0.944], [5, 1.07], [6, 1.1], [7, 1.089], [8, 1.06], [9, 1.03], [10, 1.01], [11, 1]];
+  const CT0 = 20, CPER = 41;                                   // caption k starts at f20 + 41 k
+  const tblg = q("tblg");
+
+  // ---- the measured motion (frames; g = the frame minus "Starts at frame")
+  const LAND = i => 8 + 4.97 * i;                              // tier i (0 = the smallest, at the bottom) lands
+  const BH = [77, 74, 80, 64, 64, 64], BT = 11;                // how high each jumps back up (units), and how long it is in the air
+  const FALL = 139;                                            // units a frame
+  const dyTier = (i, g) => {
+    const Lf = LAND(i);
+    if (g <= Lf + 0.5) return -(Lf - g) * FALL;
+    const u = (g - Lf - 0.5) / BT;
+    return u >= 1 ? 0 : -BH[i] * 4 * u * (1 - u);
+  };
+  const HP = [[-5, 0], [-4, 0.3], [-3, 0.52], [-2, 0.7], [-1, 0.86], [0, 1], [1, 0.88], [2, 0.72], [3, 0.52], [4, 0.3], [5, 0]];
+  const flashAt = (j, g) => { let m = 0; for (let w = 0; w < NC; w++) { const u = g - (35 + 30 * w + 5 * j); if (u > -5 && u < 5) m = Math.max(m, tab(HP, u)[0]); } return m; };
+
+  let ready = false;
+  function layout() {
+    capEls.forEach(e => { const w = e.offsetWidth; if (w > 0.86 * 720) e.style.fontSize = `${parseFloat(e.style.fontSize) * 0.86 * 720 / w}px`; });
+    ready = true;
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    stage.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    // the haze behind the funnel
+    const ha = clamp01((g - 14) / 17), he = 1 - (1 - ha) * (1 - ha);
+    haze.style.background = he > 0.001 ? `radial-gradient(ellipse 520px 340px at 360px 500px, ${rgba(neon, 0.17 * he)} 0%, ${rgba(neon, 0.15 * he)} 40%, ${rgba(neon, 0.07 * he)} 75%, ${rgba(neon, 0)} 100%)` : "none";
+    // the tiers: fall, land, jump back up; the wave of light
+    tiers.forEach((tr, j) => {
+      const i = NT - 1 - j;
+      const dy = dyTier(i, g);
+      tr.grp.setAttribute("transform", `translate(0 ${dy.toFixed(2)})`);
+      tr.grp.style.visibility = (tr.g.cy + dy < -200 && tr.g.cyb + dy < -60) ? "hidden" : "visible";
+      const f = flashAt(j, g);
+      tr.wash.setAttribute("opacity", (f * (i === 0 ? 0.62 : 0.5)).toFixed(3));
+      tr.glows.forEach(o => o.e.setAttribute("stroke-opacity", (o.a * (1 + 1.6 * f)).toFixed(3)));
+    });
+    // the logos
+    balls.forEach(b => {
+      b.ghosts.forEach(gh => { const p = trackPos(b.tr, g + gh.dt); gh.d.style.transform = `translate(${p[0].toFixed(2)}px, ${p[1].toFixed(2)}px)`; });
+    });
+    // the caption
+    let blurX = 0;
+    capEls.forEach((e, k) => {
+      const t0 = CT0 + CPER * k, t1 = k + 1 < NC ? CT0 + CPER * (k + 1) : 1e9;
+      const shown = g >= t0 + 0.5 && g < t1 - 0.5;
+      e.style.visibility = shown ? "visible" : "hidden";
+      if (!shown) return;
+      const s = tab(SC, g - t0)[0], s1 = tab(SC, g - 1 - t0)[0];
+      e.style.transform = `translate(-50%, -50%) scale(${s.toFixed(4)})`;
+      e.style.left = "360px";
+      blurX = 0.2 * Math.abs(s - s1) * e.offsetWidth * (g - t0 < 5.5 ? 1 : 0.4);
+      e.style.filter = blurX > 0.5 ? "url(#tbl)" : "none";
+    });
+    tblg.setAttribute("stdDeviation", `${(blurX * K).toFixed(2)} 0`);
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the captions are measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

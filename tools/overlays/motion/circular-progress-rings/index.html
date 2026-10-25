@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (*bold* _italic_ ==highlight== ^signal colour^)", "default": "My *progress*"},
+  {"id": "values", "type": "string", "label": "Numbers, one for each ring (| between, 1 to 5)", "default": "25|50|75"},
+  {"id": "labels", "type": "string", "label": "Names under the rings (| between; *bold* _italic_ ==highlight== ^signal colour^)", "default": "Design|Writing|Editing"},
+  {"id": "unit", "type": "string", "label": "Sign after each number (empty = none)", "default": "%"},
+  {"id": "max", "type": "number", "label": "A full ring = this number", "default": 100, "min": 1, "max": 100000, "step": 1},
+  {"id": "count", "type": "boolean", "label": "Count the numbers up while the rings fill (not in the original)", "default": false},
+  {"id": "title_size", "type": "number", "label": "Title size (px at a 1080-px short side)", "default": 108, "min": 30, "max": 300, "step": 1},
+  {"id": "num_size", "type": "number", "label": "Number size (px at a 1080-px short side)", "default": 108, "min": 30, "max": 300, "step": 1},
+  {"id": "label_size", "type": "number", "label": "Name size (px at a 1080-px short side)", "default": 42, "min": 16, "max": 120, "step": 1},
+  {"id": "stroke", "type": "number", "label": "Ring thickness (px at a 1080-px short side)", "default": 27, "min": 4, "max": 80, "step": 1},
+  {"id": "ring_a", "type": "enum", "label": "First ring colour (the next rings repeat the three)", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "ring_b", "type": "enum", "label": "Second ring colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "ring_c", "type": "enum", "label": "Third ring colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "float", "type": "number", "label": "Slow float of the whole chart (0 = still, 1 = like the original)", "default": 1, "min": 0, "max": 2, "step": 0.1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "circular-progress-rings" (2026-10-22): a title is typed letter by letter (f5-f40); the outlines of the rings are drawn one after another,
+     clockwise from the top (f1-f26, f13-f38, f29-f54, each 25 f, slow start, quick middle, soft end); then a bright
+     arc fills each ring up to its number (f57-f86, f66-f93, f77-f105), the numbers fade in inside (f64-f91, f72-f98,
+     f79-f112) and the names under the rings appear letter by letter in a scattered order (f75, f85, f95); the whole
+     chart then floats a few pixels to the end. The numbers, names and the number of rings are settings, the arcs
+     always take the same time. Measured from the reference's frames (1280 x 720 units). Look-aware. MotionLab's own
+     code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #grp { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #grp > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .bx { position: absolute; text-align: center; line-height: 1; white-space: nowrap; font-synthesis: none; }
+  .bx > span.in { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="grp"><svg id="rs" width="1920" height="1080"></svg></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 300;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  // a CSS-style cubic-bezier as a GSAP ease (the reference's measured curves)
+  const bz = (x1, y1, x2, y2) => t => { let s = t; for (let i = 0; i < 8; i++) { const x = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s - t;
+    const d = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2); if (Math.abs(d) < 1e-6) break; s = Math.min(1, Math.max(0, s - x / d)); }
+    return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s; };
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { paper: glare, signal: L.signal, mustard: L.mustard, deep: L.deep };
+  const nums = s => String(s == null ? "" : s).split("|").map(x => parseFloat(x)).filter(x => !isNaN(x));
+  const labs = String(V.labels == null ? "" : V.labels).split("|").map(x => x.trim());
+  const vals = nums(V.values).slice(0, 5);
+  const N = vals.length;
+  const MAXV = Math.max(1e-6, V.max);
+  const unit = String(V.unit == null ? "" : V.unit);
+  const fmt = x => { const r = Math.round(x * 10) / 10; return String(r); };
+
+  // ---- the ground: a dark page with signal colour washing in from the bottom left
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 78% 105% at 0% 100%, ${rgba(L.signal, 0.52)} 0%, ${rgba(L.signal, 0)} 100%), linear-gradient(90deg, ${rgba(L.signal, 0.16)} 0%, ${rgba(L.signal, 0.04)} 60%, ${rgba(L.signal, 0)} 100%), ${night}`;
+
+  // ---- the layout (clip units, x K): rings 290 across, 1.23 apart, centred on y = 360; the title above, names under
+  const GAP = 1.23;
+  const D = N ? Math.min(290, 1180 / ((N - 1) * GAP + 1)) : 290, SP = D * GAP, RS = D / 290;
+  const cxs = i => 640 + (i - (N - 1) / 2) * SP;
+  const CYR = 360;
+  const sw = V.stroke * U;
+  const Rc = D * K / 2 - sw / 2, CIRC = 2 * Math.PI * Rc;
+  const cols = [V.ring_a, V.ring_b, V.ring_c].map(k => pick[k] || L.signal);
+  const NS = "http://www.w3.org/2000/svg";
+  const rs = q("rs"), grp = q("grp");
+  const mkCircle = (cx, cy, col) => { const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", Rc); c.setAttribute("fill", "none"); c.setAttribute("stroke", col);
+    c.setAttribute("stroke-width", sw); c.setAttribute("stroke-linecap", "round"); c.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
+    c.setAttribute("stroke-dasharray", `0 ${CIRC * 2}`); c.style.visibility = "hidden"; rs.appendChild(c); return c; };
+  const mkBox = (css, cls) => { const d = document.createElement("div"); d.className = "bx " + cls; Object.assign(d.style, css);
+    const s = document.createElement("span"); s.className = "in"; d.appendChild(s); grp.appendChild(d); return { box: d, inner: s }; };
+
+  // ---- the title (typed letter by letter), the rings, the numbers and the names
+  const rnd = window.MLLook ? MLLook.rnd(41) : (() => 0.5);
+  const splitLetters = (inner) => { const out = [];
+    inner.querySelectorAll("span.w").forEach((w, wi) => { const s = w.textContent; w.textContent = "";
+      for (const ch of s) { const sp = document.createElement("span"); sp.textContent = ch; sp.style.display = "inline-block"; w.appendChild(sp); out.push({ el: sp, wi }); } });
+    return out; };
+  const tt = mkBox({ left: "0px", width: `${W}px`, top: `${(102 * K - V.title_size * U / 2).toFixed(2)}px`, color: glare, fontSize: `${V.title_size * U}px`, fontWeight: String(fw(V.display_font, 700)), letterSpacing: "0.01em" }, "ml-display");
+  if (window.MLLook) MLLook.rich(tt.inner, V.title, { look: L, family: V.display_font, weight: 700 }); else tt.inner.textContent = V.title;
+  const tLet = splitLetters(tt.inner);
+  { let u = 0, pw = -1;                                      // a letter every 3 f, a word break costs 9 f; a long title is squeezed into 36 f
+    tLet.forEach((o, k) => { if (k > 0) u += (o.wi !== pw) ? 3 : 1; pw = o.wi; o.u = u; });
+    const step = Math.min(3, 36 / Math.max(1, u));
+    tLet.forEach(o => { o.f = 5 + step * o.u; }); }
+
+  const TS = [1, 13, 29], PS = [57, 66, 77], PL = [29, 27, 28], NSF = [64, 72, 79], NL = [27, 26, 33], LSF = [75, 85, 95];
+  const at3 = (a, i, step) => i < a.length ? a[i] : a[a.length - 1] + step * (i - a.length + 1);
+  const ez = { track: bz(0.8, 0, 0.4, 0.8), prog: bz(0.7, 0, 0.35, 1), num: bz(0.6, 0.1, 0.35, 0.9) };
+  const rings = [];
+  const nfs = V.num_size * U * Math.min(1, RS * 1.15), lfs = V.label_size * U;
+  for (let i = 0; i < N; i++) {
+    const cx = cxs(i) * K, cy = CYR * K, col = cols[i % 3];
+    const o = { i, cx, cy, v: vals[i], fr: clamp01(vals[i] / MAXV) };
+    o.track = mkCircle(cx, cy, rgba(col, 0.32));
+    o.prog = mkCircle(cx, cy, col);
+    o.nb = mkBox({ left: `${cx - 200 * K}px`, width: `${400 * K}px`, top: `${(cy + 5 * K * RS - nfs / 2).toFixed(2)}px`, color: glare, fontSize: `${nfs}px`, fontWeight: String(fw(V.accent_font, 700)), opacity: 0 }, "ml-accent");
+    o.nb.inner.textContent = fmt(o.v) + unit;
+    o.lb = mkBox({ left: `${cx - SP * K / 2}px`, width: `${SP * K}px`, top: `${(cy + (D / 2 + 45) * K * 1 - lfs / 2).toFixed(2)}px`, color: glare, fontSize: `${lfs}px`, fontWeight: String(fw(V.accent_font, 700)), textTransform: "uppercase", letterSpacing: "0.03em" }, "ml-accent");
+    const lt = labs[i] || "";
+    if (window.MLLook) MLLook.rich(o.lb.inner, lt, { look: L, family: V.accent_font, weight: 700 }); else o.lb.inner.textContent = lt;
+    o.letters = splitLetters(o.lb.inner);
+    o.letters.forEach(l => { l.off = Math.floor(rnd() * 5); });
+    rings.push(o);
+  }
+
+  // ---- the measured float of the whole chart (the title's position, clip px; every part moves together)
+  const FXA = [[0, 0], [20, 2], [40, 6.5], [50, 12.5], [60, 14.5], [70, 13.5], [80, 8.5], [90, 2.5], [100, -2.5], [110, -4.5], [120, -6.5], [130, -5.5], [140, -3.5], [150, -1.5], [160, -0.5],
+               [170, 2.5], [180, 5.5], [190, 7.5], [200, 7.5], [210, 4.5], [220, 0.5], [230, -1.5], [240, -0.5], [250, 1.5], [260, 4.5], [270, 4.5], [280, 2.5], [290, -3.5], [299, -7.5]];
+  const FYA = [[0, 0], [40, 0], [50, -1], [60, -2], [70, -2], [80, 0], [90, 2], [100, 4], [110, 7], [120, 9], [130, 10], [140, 9], [150, 7], [160, 5], [170, 1], [180, -4], [190, -9], [200, -11],
+               [210, -10], [220, -7], [230, -5], [240, -3], [250, -2], [260, -1], [270, 0], [280, 1], [290, 1], [299, 0]];
+
+  let ready = false;
+  function layout() {                                        // the text is measured here, with the real fonts: nothing may overflow
+    const fit = (b, maxw) => { const w = b.inner.offsetWidth; const s = w > maxw ? maxw / w : 1; b.box.style.transform = s < 1 ? `scale(${s.toFixed(4)})` : "none"; b.box.style.transformOrigin = "50% 50%"; };
+    fit(tt, W * 0.9);
+    rings.forEach(o => { fit(o.nb, (D * K - sw * 2) * 0.86); fit(o.lb, SP * K * 0.94); });
+    ready = true;
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    grp.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const fl = V.float;
+    grp.style.transform = `translate(${(tab(FXA, g)[0] * K * fl).toFixed(2)}px, ${(tab(FYA, g)[0] * K * fl).toFixed(2)}px)`;
+    tLet.forEach(o => { const a = clamp01((g - o.f) / 5); o.el.style.opacity = a.toFixed(3); const bl = (1 - a) * 5 * U; o.el.style.filter = bl > 0.05 ? `blur(${bl.toFixed(2)}px)` : "none"; });
+    rings.forEach(o => {
+      const i = o.i, ts = at3(TS, i, 16), ps = at3(PS, i, 10), pl = at3(PL, i, 0) || 28, ns = at3(NSF, i, 7), nl = at3(NL, i, 0) || 33, ls = at3(LSF, i, 10);
+      o.track.style.visibility = g >= ts ? "visible" : "hidden";
+      o.track.setAttribute("stroke-dasharray", `${(ez.track(clamp01((g - ts) / 25)) * CIRC).toFixed(2)} ${(CIRC * 2).toFixed(2)}`);
+      const pb = ez.prog(clamp01((g - ps) / pl));
+      o.prog.style.visibility = g >= ps ? "visible" : "hidden";
+      o.prog.setAttribute("stroke-dasharray", `${(pb * o.fr * CIRC).toFixed(2)} ${(CIRC * 2).toFixed(2)}`);
+      o.nb.box.style.opacity = ez.num(clamp01((g - ns) / nl)).toFixed(3);
+      if (V.count) o.nb.inner.textContent = fmt(Number.isInteger(o.v) ? Math.round(o.v * pb) : o.v * pb) + unit;
+      o.letters.forEach(l => { l.el.style.opacity = clamp01((g - (ls + l.off)) / 5).toFixed(3); });
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the text is measured
+  // here, with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

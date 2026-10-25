@@ -1,0 +1,17 @@
+{
+ "name": "paper-collage-cuts",
+ "frames": 196,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((7 + 7 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "27",
+   "freq": 1500,
+   "db": -3,
+   "what": "the table cuts to the next surface"
+  }
+ ]
+}

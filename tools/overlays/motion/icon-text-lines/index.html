@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Level up today"},
+  {"id": "sub", "type": "string", "label": "Subtitle (plain text)", "default": "Join the club"},
+  {"id": "size", "type": "number", "label": "Title size (px at a 1080-px short side)", "default": 190, "min": 40, "max": 280, "step": 1},
+  {"id": "sub_size", "type": "number", "label": "Subtitle size (px at a 1080-px short side)", "default": 180, "min": 40, "max": 300, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Title and icon colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "glow", "type": "number", "label": "Glow around the text (0-100)", "default": 80, "min": 0, "max": 100, "step": 1},
+  {"id": "dust", "type": "boolean", "label": "Film dust specks", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "icon-text-lines" (2026-10-22): a glowing title whose letters swoop in one after the other from below, big and blurred, shrinking onto
+     the line (f2-f20, a wave running left to right); a small gold crown drops onto its left end (f24-f38) and the
+     camera then pans up and in (f54-f94) so the title leaves through the top while a white subtitle comes in
+     pixelated and sharpens (f68-f92); the camera pans again (f134-f150) and a heart and a coin rise from the bottom,
+     blurred and dim, and settle with a glow (f156-f176). The whole piece moves on twos, like the reference, with a
+     few film-dust specks over a dark ground with a faint grid. Look-aware: the ground, the title and icon colour and
+     the white of the subtitle come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #tg { position: absolute; left: 0; top: 0; white-space: nowrap; transform-origin: 50% 50%; }
+  #tl { position: relative; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.005em; }
+  .ch { display: inline-block; }
+  .ico { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7.033333" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 211;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark ground (the ink, lifted a little), the title and icons in one token colour, white text
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const tc = V.colour === "signal" ? L.signal : V.colour === "paper" ? glare : L.mustard;
+  const tcDark = mixh(tc, "#000000", 0.62), tcMid = mixh(tc, "#000000", 0.22), tcHi = mixh(tc, "#ffffff", 0.35);
+  const gl = V.glow / 100, fam = V.body_font;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixh(night, glare, 0.1);
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.grid(hand, tl, { kind: "flat", size: 150, U, W, H, look: L, color: glare, alpha: 0.05, vignette: false });
+
+  // ---- the subtitle: drawn on a canvas so it can be pixelated (a mosaic that sharpens)
+  const sc = document.createElement("canvas"); sc.width = W; sc.height = H; sc.className = "abs"; hand.appendChild(sc);
+  const scx = sc.getContext("2d");
+  const tmp = document.createElement("canvas"); tmp.width = W; tmp.height = H; const tmx = tmp.getContext("2d");
+  const small = document.createElement("canvas"); const smx = small.getContext("2d");
+  const subText = String(V.sub || "").replace(/\*|_|\^|==/g, "");
+
+  // ---- the title (letters) with the crown, as one group the camera moves
+  const FS = V.size * U;
+  const tg = document.createElement("div"); tg.id = "tg"; hand.appendChild(tg);
+  const tline = document.createElement("div"); tline.id = "tl"; tline.className = "ml-body";
+  Object.assign(tline.style, { fontSize: `${FS}px`, fontWeight: String(fw(fam, 800)), color: tc,
+    textShadow: `0 ${0.012 * FS}px 0 ${tcDark}, 0 0 ${0.06 * FS}px ${rgba(tc, 0.7 * gl)}, 0 0 ${0.17 * FS}px ${rgba(tc, 0.5 * gl)}, 0 0 ${0.4 * FS}px ${rgba(tc, 0.22 * gl)}` });
+  tg.appendChild(tline);
+  const rr = window.MLLook ? MLLook.rich(tline, V.title, { look: L, family: fam, weight: 800 }) : { words: [] };
+  if (!window.MLLook) tline.textContent = V.title;
+  const lets = [];
+  rr.words.forEach(w => { const s = w.textContent; w.textContent = "";
+    [...s].forEach(ch => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; w.appendChild(sp); lets.push(sp); }); });
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = (w, h, vb, inner) => { const s = document.createElementNS(NS, "svg"); s.setAttribute("width", w); s.setAttribute("height", h); s.setAttribute("viewBox", vb);
+    s.setAttribute("preserveAspectRatio", "none"); s.style.overflow = "visible"; s.innerHTML = inner; return s; };
+  // the crown: a gold band, three peaks with balls, a few gems - simple shapes in the title colour
+  const CW = 0.11 * W, CH = 0.16 * H;
+  const crown = svg(CW, CH, "0 0 100 82", `
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${tcHi}"/><stop offset="0.5" stop-color="${tc}"/><stop offset="1" stop-color="${tcDark}"/></linearGradient></defs>
+    <path d="M8 66 L4 26 L28 44 L50 10 L72 44 L96 26 L92 66 Z" fill="url(#cg)" stroke="${tcDark}" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="8" y="58" width="84" height="14" rx="3" fill="${tcMid}" stroke="${tcDark}" stroke-width="2"/>
+    <circle cx="4" cy="22" r="5" fill="${tcHi}" stroke="${tcDark}" stroke-width="1.5"/><circle cx="50" cy="6" r="5.5" fill="${tcHi}" stroke="${tcDark}" stroke-width="1.5"/><circle cx="96" cy="22" r="5" fill="${tcHi}" stroke="${tcDark}" stroke-width="1.5"/>
+    <circle cx="28" cy="65" r="3.6" fill="${L.signal}"/><circle cx="50" cy="65" r="3.6" fill="${glare}"/><circle cx="72" cy="65" r="3.6" fill="${L.signal}"/>`);
+  Object.assign(crown.style, { position: "absolute", left: "0px", top: "0px", visibility: "hidden", filter: `drop-shadow(0 0 ${12 * U}px ${rgba(tc, 0.5 * gl)})` });
+  tg.appendChild(crown);
+
+  // ---- the heart and the coin
+  const HW = 0.211 * W, HH = 0.341 * H, KW = 0.204 * W, KH = 0.359 * H;
+  const heart = svg(HW, HH, "0 0 100 90", `<path d="M50 88 C10 58 0 34 14 16 C26 2 44 8 50 24 C56 8 74 2 86 16 C100 34 90 58 50 88 Z" fill="${tc}"/>`);
+  const coin = svg(KW, KH, "0 0 100 100", `<circle cx="50" cy="50" r="49" fill="${tc}"/><circle cx="50" cy="50" r="40" fill="none" stroke="${tcMid}" stroke-width="3"/>
+    <path d="M63 33 C52 26 36 30 37 40 C38 52 62 49 63 61 C64 72 46 76 35 67" fill="none" stroke="${tcDark}" stroke-width="8" stroke-linecap="round"/><path d="M50 20 L50 80" stroke="${tcDark}" stroke-width="7" stroke-linecap="round"/>`);
+  [heart, coin].forEach(e => { e.setAttribute("class", "ico"); e.style.visibility = "hidden"; hand.appendChild(e); });
+
+  // ---- film dust: a few grey specks that live a few frames, seeded
+  const fx = document.createElement("canvas"); fx.width = W; fx.height = H; fx.className = "abs"; hand.appendChild(fx);
+  const fxx = fx.getContext("2d");
+  const dr = window.MLLook ? MLLook.rnd(77) : (() => 0.5);
+  const SPECKS = Array.from({ length: 70 }, () => ({ s: Math.floor(dr() * 205 / 2) * 2, life: 8 + 2 * Math.floor(dr() * 3), x: 0.03 + dr() * 0.94, y: 0.03 + dr() * 0.94, r: 2 + dr() * 4.5,
+    bl: Array.from({ length: 4 }, () => [(dr() - 0.5) * 12, (dr() - 0.5) * 8, 0.5 + dr()]) }));
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  // the reference moves on twos (every other frame repeats), except the camera pan f58-f68
+  const TY = [[0, 0.4735, 1], [50, 0.4735, 1], [52, 0.4705, 1], [54, 0.462, 1.009], [56, 0.447, 1.023], [58, 0.425, 1.042], [60, 0.397, 1.061], [62, 0.354, 1.073], [64, 0.295, 1.1],
+    [66, 0.232, 1.14], [68, 0.185, 1.17], [70, 0.157, 1.2], [72, 0.138, 1.214], [74, 0.119, 1.232], [76, 0.098, 1.246], [78, 0.082, 1.247], [80, 0.066, 1.26], [82, 0.052, 1.27],
+    [84, 0.038, 1.28], [86, 0.028, 1.285], [88, 0.02, 1.29], [90, 0.018, 1.3], [94, 0.014, 1.3], [110, 0.014, 1.3]];
+  const TOP = [[0, 1], [80, 1], [86, 0.8], [90, 0.55], [94, 0.35], [100, 0.25], [108, 0]];
+  const DY = [[0, 0], [1, 0.05], [2, 0.2], [3, 0.3], [4, 0.42], [6, 0.6]];                                 // how far below its place a letter is, Delta frames before it settles
+  const DS = [[0, 1], [1, 1.25], [2, 1.7], [3, 2.1], [4, 2.5], [6, 3.2]];                                  // its scale
+  const DB = [[0, 0], [1, 4], [2, 14], [3, 22], [4, 28], [6, 34]];                                         // its blur (px at 1920)
+  const DX = [[0, 0], [1, 0], [2, -0.02], [3, -0.05], [4, -0.085], [6, -0.12]];                            // a little from the left (fraction of the width)
+  const CROWN = [[24, -0.3975], [26, -0.2925], [28, -0.1865], [30, -0.1005], [32, -0.1145], [34, -0.0975], [36, -0.0945], [38, -0.0935], [40, -0.0925], [42, -0.0915], [46, -0.0905]];
+  const SUBY = [[68, 0.6], [72, 0.575], [74, 0.56], [78, 0.549], [80, 0.53], [84, 0.517], [88, 0.511], [92, 0.507], [100, 0.507], [114, 0.504], [130, 0.508], [134, 0.503], [136, 0.492], [138, 0.473],
+    [140, 0.443], [142, 0.403], [144, 0.356], [146, 0.314], [148, 0.287], [150, 0.279], [200, 0.274], [210, 0.274]];
+  const SUBS = [[68, 0.87], [74, 0.9], [80, 0.935], [84, 0.986], [90, 1], [134, 1], [136, 0.995], [140, 0.975], [144, 0.94], [148, 0.9], [150, 0.887], [210, 0.887]];
+  const PIX = [[67, 40], [68, 34], [70, 26], [72, 22], [74, 17], [76, 14], [78, 12], [80, 10], [82, 8], [84, 6], [86, 5], [88, 3], [90, 1.5], [92, 0]];     // mosaic block (px at 1920)
+  const SUBO = [[66, 0], [68, 0.85], [72, 1]];
+  const HEART = [[154, 1.02, 0.7, 0, 10], [156, 0.98, 0.75, 0.25, 9], [158, 0.835, 0.78, 0.38, 8], [160, 0.716, 0.8, 0.53, 6], [162, 0.6505, 0.846, 0.7, 4.5], [164, 0.647, 0.9, 0.78, 3.5], [166, 0.66, 0.944, 0.8, 2],
+    [168, 0.673, 0.977, 0.9, 1], [170, 0.6785, 0.99, 0.95, 0.4], [172, 0.6785, 1, 0.97, 0], [174, 0.6785, 1, 1, 0]];
+  const COIN = [[158, 1.05, 0.7, 0, 10], [160, 0.96, 0.75, 0.25, 9], [162, 0.87, 0.76, 0.38, 8], [164, 0.7715, 0.78, 0.6, 6], [166, 0.6815, 0.83, 0.8, 3.5], [168, 0.652, 0.88, 0.9, 2], [170, 0.659, 0.92, 0.95, 1],
+    [172, 0.6685, 0.965, 0.97, 0.4], [174, 0.6755, 0.995, 1, 0], [176, 0.6765, 1, 1, 0]];
+  const HX = 0.3395, KX = 0.626;
+  const S = Math.round(V.start);
+  function measure() {
+    const x0 = lets.length ? lets[0].offsetLeft + lets[0].offsetWidth / 2 : 0, x1 = lets.length ? lets[lets.length - 1].offsetLeft + lets[lets.length - 1].offsetWidth / 2 : 1;
+    return lets.map(sp => lets.length > 1 ? ((sp.offsetLeft + sp.offsetWidth / 2) - x0) / Math.max(1, x1 - x0) : 0);
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const gq = (g >= 58 && g < 69) ? Math.floor(g) : Math.floor(g / 2) * 2;
+    // the title group
+    const tw = Math.max(1, tline.offsetWidth), th = Math.max(1, tline.offsetHeight);
+    const fit = Math.min(1, 0.77 * W / tw);
+    const ty = tab(TY, gq), op = tab(TOP, gq)[0];
+    const showT = op > 0.01;
+    tg.style.visibility = showT ? "visible" : "hidden";
+    if (showT) {
+      tg.style.opacity = String(op);
+      tg.style.transform = `translate(${(0.4935 * W).toFixed(2)}px, ${(ty[0] * H).toFixed(2)}px) translate(-50%, -50%) scale(${(ty[1] * fit).toFixed(4)})`;
+      const pos = measure();
+      lets.forEach((sp, k) => {
+        const tk = 6 + 12 * pos[k], D = tk - gq;
+        if (D <= 0) { sp.style.transform = "none"; sp.style.filter = "none"; return; }
+        const dy = tab(DY, D)[0] * H / ty[1], dx = tab(DX, D)[0] * W / ty[1], s = tab(DS, D)[0], b = tab(DB, D)[0] * U;
+        sp.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${s.toFixed(3)})`;
+        sp.style.filter = b > 0.3 ? `blur(${b.toFixed(1)}px)` : "none";
+      });
+      // the crown drops onto the left end of the title at f24-f32
+      if (gq >= 24) {
+        const off = tab(CROWN, gq)[0];
+        crown.style.visibility = "visible";
+        crown.style.left = `${(0.02 * W - CW / 2).toFixed(1)}px`;
+        crown.style.top = `${(th / 2 + off * H - CH / 2).toFixed(1)}px`;
+        crown.style.transform = "rotate(-14deg)";
+      } else crown.style.visibility = "hidden";
+    }
+    // the subtitle: pixelated, sharpening, then panned up with the camera
+    scx.setTransform(1, 0, 0, 1, 0, 0); scx.clearRect(0, 0, W, H);
+    const so = tab(SUBO, gq)[0];
+    if (gq >= 68 && so > 0 && subText) {
+      const fpx = V.sub_size * U, wt = fw(fam, 800);
+      tmx.setTransform(1, 0, 0, 1, 0, 0); tmx.clearRect(0, 0, W, H);
+      tmx.font = `${wt} ${fpx}px '${fam}', sans-serif`; tmx.textAlign = "center"; tmx.textBaseline = "middle";
+      const w0 = Math.max(1, tmx.measureText(subText).width), sf = Math.min(1, 0.728 * W / w0) * tab(SUBS, gq)[0];
+      tmx.save(); tmx.translate(0.4965 * W, tab(SUBY, gq)[0] * H); tmx.scale(sf, sf);
+      tmx.fillStyle = glare;
+      tmx.shadowColor = rgba(glare, 0.55 * gl); tmx.shadowBlur = 0.3 * fpx; tmx.fillText(subText, 0, 0);
+      tmx.shadowColor = rgba(glare, 0.8 * gl); tmx.shadowBlur = 0.09 * fpx; tmx.fillText(subText, 0, 0);
+      tmx.shadowColor = "transparent"; tmx.shadowBlur = 0; tmx.fillText(subText, 0, 0);
+      tmx.restore();
+      const b = tab(PIX, gq)[0] * U;
+      scx.globalAlpha = so;
+      if (b > 1.2) {
+        small.width = Math.ceil(W / b); small.height = Math.ceil(H / b);
+        smx.imageSmoothingEnabled = true; smx.clearRect(0, 0, small.width, small.height); smx.drawImage(tmp, 0, 0, small.width, small.height);
+        scx.imageSmoothingEnabled = false; scx.drawImage(small, 0, 0, small.width, small.height, 0, 0, small.width * b, small.height * b);
+      } else scx.drawImage(tmp, 0, 0);
+      scx.globalAlpha = 1;
+    }
+    // the heart and the coin rise from the bottom
+    [[heart, HEART, HX, HW, HH], [coin, COIN, KX, KW, KH]].forEach(([el, tb, x, w, h]) => {
+      if (gq < tb[0][0] + 2) { el.style.visibility = "hidden"; return; }
+      const r = tab(tb, gq);
+      el.style.visibility = "visible";
+      el.style.opacity = String(r[2].toFixed(3));
+      el.style.transform = `translate(${(x * W - w / 2).toFixed(1)}px, ${(r[0] * H - h / 2).toFixed(1)}px) scale(${r[1].toFixed(4)})`;
+      const bl = r[3] * U * 1.5;
+      el.style.filter = `${bl > 0.2 ? `blur(${bl.toFixed(1)}px) ` : ""}drop-shadow(0 0 ${14 * U}px ${rgba(tc, 0.55 * gl * r[2])})`;
+    });
+    // dust
+    fxx.clearRect(0, 0, W, H);
+    if (V.dust) SPECKS.forEach(sp => {
+      if (gq < sp.s || gq >= sp.s + sp.life) return;
+      fxx.fillStyle = rgba(glare, 0.5);
+      sp.bl.forEach(b => { fxx.beginPath(); fxx.arc(sp.x * W + b[0] * U, sp.y * H + b[1] * U, sp.r * b[2] * U, 0, Math.PI * 2); fxx.fill(); });
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "Big word, typed letter by letter (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Create"},
+  {"id": "text_2", "type": "string", "label": "Second line", "default": "Better Videos"},
+  {"id": "text_3", "type": "string", "label": "Third line", "default": "With"},
+  {"id": "text_4", "type": "string", "label": "Fourth line", "default": "Your Studio"},
+  {"id": "size", "type": "number", "label": "Big word size (px at a 1080-px short side)", "default": 240, "min": 60, "max": 420, "step": 1},
+  {"id": "small", "type": "number", "label": "Other lines size (px at a 1080-px short side)", "default": 100, "min": 30, "max": 220, "step": 1},
+  {"id": "glow", "type": "number", "label": "Colour glow behind the words (0 = none)", "default": 100, "min": 0, "max": 100, "step": 5},
+  {"id": "disc_logo", "type": "string", "label": "Round logo: a logo of the library (e.g. youtube) or your picture (empty = a placeholder)", "default": ""},
+  {"id": "video_media", "type": "string", "label": "On the card: your video or picture, 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "video_focus", "type": "string", "label": "What stays in view on the card (x% y%)", "default": "50% 50%"},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<script src="assets/logos/logos.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "blur-glow-text-to-footage-card" (2026-10-22): an upright title sequence over a soft colour glow on a dark ground. A big word types on
+     letter by letter (f5-f38), then slides out to the left, speeding up (f34-f50), while the next line pops up
+     small and sharpens word by word (f47-f62); that line slides out the same way (f67-f85) as the next one blurs
+     in (f82-f90), which slides out (f100-f118) as the fourth blurs in (f108-f118) and shrinks away with the glow
+     (f139-f147). Then a round logo pops in turning (f148-f158), shrinks (f165-f173), and a 16:9 footage card slams
+     in big, settles (f174-f185) and swings up in perspective to fill the frame, tilted (f187-f213), then holds to the
+     end. The words carry one colour gradient fixed to the screen (pale at the left, vivid at the right) so each
+     word changes colour as it slides. Look-aware: ground, glow, text and disc colours, fonts, corners and film grain
+     come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ph { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; transform-origin: 0 0; }
+  .ph .u { display: inline-block; }
+  .blob { position: absolute; border-radius: 50%; }
+  #disc { position: absolute; left: 0; top: 0; border-radius: 50%; overflow: hidden; transform-origin: 0 0; }
+  #dl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #card { position: absolute; }
+  #cbox { position: absolute; inset: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="arcs" class="abs"></div>
+    <div id="glow" class="abs"></div>
+    <div id="words" class="abs"></div>
+    <div id="disc"><div id="dl"></div></div>
+    <div id="card"><div id="cbox"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 300;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  try { if (document.fonts && document.fonts.load) document.fonts.load(`600 100px "${V.body_font}"`, "CreateBetterVideos"); } catch (e) {}   // start the weight loading before the first frame
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const cl = x => Math.max(0, Math.min(1, x));
+  const hx = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const A = hx(a), B = hx(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+  const bz = (x1, y1, x2, y2) => t => { let s = t; for (let i = 0; i < 8; i++) { const x = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s - t;
+    const d = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2); if (Math.abs(d) < 1e-6) break; s = Math.min(1, Math.max(0, s - x / d)); }
+    return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s; };
+  const eOut = bz(0.2, 0.6, 0.3, 1);                     // a decelerating settle
+  const K = W / 720;                                     // the reference (720 x 1280 px) -> this frame
+
+  // ---- the look: a near-black ground, pale words fading into the signal colour, a signal / deep glow
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const c0 = mix(glare, L.signal, 0.1), c1 = L.signal, c2 = mix(L.signal, night, 0.3);
+  const GRAD = `linear-gradient(90deg, ${c0} 0%, ${c0} 26%, ${c1} 67%, ${c1} 78%, ${c2} 100%)`;   // fixed to the screen
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = night;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // faint arcs in the top-right corner (a big soft disc with a crisp edge, as a studio curtain's fold)
+  Object.assign(q("arcs").style, { width: `${W}px`, height: `${H}px`,
+    background: `radial-gradient(circle at ${1050 * K}px 0px, ${L.rgba(L.deep, 0.34)} 0px, ${L.rgba(L.deep, 0.2)} ${520 * K}px, ${L.rgba(L.deep, 0.16)} ${596 * K}px, rgba(0,0,0,0) ${600 * K}px)` });
+
+  // ---- the glow: soft ellipses along an arc, signal at the lower left -> deep at the upper right, blurred together
+  const glow = q("glow");
+  Object.assign(glow.style, { width: `${W}px`, height: `${H}px`, filter: `blur(${58 * K}px)`, transformOrigin: `0px ${800 * K}px`, opacity: "0" });
+  [[-10, 800, 300, 210, 0, 0.66], [150, 745, 230, 165, 0.25, 0.58], [290, 690, 200, 150, 0.55, 0.58], [380, 600, 170, 150, 0.85, 0.7], [410, 520, 120, 120, 1, 0.55]].forEach(([x, y, rx, ry, m, a]) => {
+    const b = document.createElement("div"); b.className = "blob";
+    Object.assign(b.style, { left: `${(x - rx) * K}px`, top: `${(y - ry) * K}px`, width: `${2 * rx * K}px`, height: `${2 * ry * K}px`,
+      background: mix(L.signal, L.deep, m), opacity: String(a) });
+    glow.appendChild(b);
+  });
+
+  // ---- the words: a phrase = letters / words (spans), each with the screen-fixed gradient
+  const FAM = V.body_font;
+  const NS = Math.max(0.5, V.small / 100);
+  const phrases = [
+    { t: V.text_1, fs: V.size, wt: 600, by: 679, letters: true, ex: 528 },
+    { t: V.text_2, fs: V.small * 0.88, wt: 500, by: 654, ex: 447 },
+    { t: V.text_3, fs: V.small * 1.12, wt: 500, by: 666, ex: 148 },
+    { t: V.text_4, fs: V.small, wt: 500, by: 655, ex: 0 }
+  ].map(p => {
+    const el = document.createElement("div"); el.className = "ph ml-body";
+    Object.assign(el.style, { fontSize: `${p.fs * U}px`, fontWeight: String(fw(FAM, p.wt)), display: "none" });
+    q("words").appendChild(el);
+    const r = window.MLLook ? MLLook.rich(el, p.t, { look: L, family: FAM, weight: p.wt }) : { words: [] };
+    if (!window.MLLook) el.textContent = p.t;
+    let units = r.words;
+    if (p.letters) {
+      units = [];
+      r.words.forEach(w => { const s = w.textContent; w.textContent = ""; [...s].forEach(ch => {
+        const u = document.createElement("span"); u.textContent = ch; w.appendChild(u); units.push(u); }); });
+    }
+    const probe = document.createElement("span");
+    Object.assign(probe.style, { display: "inline-block", width: "0px", height: "0px" });
+    el.appendChild(probe);
+    units.forEach(u => {
+      u.classList.add("u");
+      const host = u.parentElement && u.parentElement.classList.contains("w") ? u.parentElement : u;
+      u.dataset.solid = host.style.color ? "1" : "";
+      if (!u.dataset.solid) Object.assign(u.style, { backgroundImage: GRAD, backgroundRepeat: "no-repeat", webkitBackgroundClip: "text", backgroundClip: "text",
+        webkitTextFillColor: "transparent", color: "transparent" });
+      u.style.opacity = "0";
+    });
+    return { ...p, el, units, probe };
+  });
+
+  // ---- tables: [frame, ...] in the reference's frames and px (720 x 1280); dx = the phrase centre's offset from the
+  // middle of the frame
+  const DX_A = [[0, 1], [34, 1], [35, -1], [36, -5], [37, -13], [38, -21], [39, -33], [40, -49], [41, -67], [42, -87], [43, -112], [44, -141], [45, -175], [46, -213], [47, -256], [48, -305],
+    [49, -362], [50, -425], [52, -560]];
+  const DX_B = [[0, 1.5], [67, 1.5], [68, 1], [69, -1], [70, -5], [71, -11], [72, -18.5], [73, -27], [74, -38.5], [75, -52], [76, -68], [77, -86], [78, -107], [79, -131], [80, -158.5],
+    [81, -189.5], [82, -224.5], [83, -263.5], [84, -306.5], [85, -355], [86, -408], [88, -520]];
+  const DX_C = [[0, 6], [100, 5], [101, 2.5], [102, -1.5], [103, -8], [104, -16.5], [105, -27.5], [106, -40.5], [107, -56], [108, -74.5], [109, -96.5], [110, -121], [111, -149.5],
+    [112, -182], [113, -219], [114, -261], [115, -310], [116, -365], [117, -425], [118, -490], [120, -600]];
+  const S_B = [[47, 0.44], [48, 0.46], [49, 0.5], [50, 0.55], [51, 0.6], [52, 0.65], [53, 0.71], [54, 0.77], [55, 0.825], [56, 0.88], [57, 0.925], [58, 0.955], [59, 0.978], [60, 0.992], [61, 1]];
+  const S_D = [[138, 1], [139, 0.987], [140, 0.936], [141, 0.868], [142, 0.783], [143, 0.7], [144, 0.64], [145, 0.58], [146, 0.54], [147, 0.5]];
+  const LT_ST = [5, 11.5, 14.5, 17.5, 21.5, 28], LT_EN = [11, 14, 17, 21, 27, 38];                // each letter of the big word fades in
+  const lerpArr = (a, u) => { const i = Math.min(a.length - 2, Math.floor(u)); return a[i] + (a[i + 1] - a[i]) * (u - i); };
+  const wordsIn = (g, i, n, f0, gap, len, blur) => { const s = f0 + gap * i, o = cl((g - s) / len), b = blur * (1 - cl((g - s) / (len + 1))); return [o, b]; };
+
+  function phraseState(i, g) {
+    const p = phrases[i], n = p.units.length;
+    if (i === 0) {
+      const un = n > 1 ? n - 1 : 1;
+      return { vis: g < 52, s: 1, dx: tab(DX_A, g)[0], ex: 1, w: p.units.map((u, k) => { const k5 = n > 1 ? k * 5 / un : 0, s0 = lerpArr(LT_ST, k5), e0 = lerpArr(LT_EN, k5); return [cl((g - s0) / (e0 - s0)), 0]; }) };
+    }
+    if (i === 1) {
+      const gap = n <= 2 ? 7 : 4;
+      return { vis: g >= 47 && g < 88, s: tab(S_B, g)[0], dx: tab(DX_B, g)[0], ex: 1, w: p.units.map((u, k) => wordsIn(g, k, n, 47, gap, 9, 8)) };
+    }
+    if (i === 2) {
+      const gap = 4, e = eOut(cl((g - 82) / 8));
+      return { vis: g >= 82 && g < 120, s: 1, dx: tab(DX_C, g)[0] + 30 * (1 - e), ex: 1, w: p.units.map((u, k) => wordsIn(g, k, n, 82, gap, 7, 8)) };
+    }
+    const e = eOut(cl((g - 108) / 10));
+    return { vis: g >= 108 && g < 148, s: tab(S_D, g)[0], dx: 28 * (1 - e), ex: 0, w: p.units.map((u, k) => wordsIn(g, k, n, 108, 4, 9, 8)) };
+  }
+
+  // ---- the round logo + the footage card
+  const D0 = 260 * K, disc = q("disc"), dl = q("dl");
+  Object.assign(disc.style, { width: `${D0}px`, height: `${D0}px`, background: L.deep, boxShadow: L.shadow, display: "none" });
+  const hasLogo = V.disc_logo && window.MLLogo && MLLogo.fill(dl, V.disc_logo, { scale: MLLogo.is(V.disc_logo) ? 0.56 : 0.86, dark: true });
+  if (hasLogo && !MLLogo.is(V.disc_logo)) dl.querySelectorAll("img").forEach(i => Object.assign(i.style, { objectFit: "cover", borderRadius: "50%" }));
+  if (!hasLogo) {
+    dl.textContent = "";
+    const NSv = "http://www.w3.org/2000/svg";
+    const sv = document.createElementNS(NSv, "svg"); sv.setAttribute("viewBox", "0 0 100 100");
+    Object.assign(sv.style, { position: "absolute", left: "22%", top: "10%", width: "56%", height: "56%" });
+    [["50,4 96,92 4,92", 0.0], ["50,38 74,92 26,92", 0.55]].forEach(([pts, m]) => {
+      const pg = document.createElementNS(NSv, "polygon"); pg.setAttribute("points", pts);
+      pg.setAttribute("fill", m === 0 ? mix(L.deep, night, 0.45) : L.deep); sv.appendChild(pg); });
+    dl.appendChild(sv);
+    const lb = document.createElement("div"); lb.className = "ml-display"; lb.textContent = "LOGO";
+    Object.assign(lb.style, { position: "absolute", left: "0", right: "0", top: "50%", textAlign: "center", fontSize: `${D0 * 0.2}px`, lineHeight: "1", fontWeight: String(fw(V.display_font, 800)),
+      color: glare, letterSpacing: "0.02em", transform: "translateY(-30%)", textShadow: `0 ${3 * K}px ${6 * K}px ${L.rgba(night, 0.5)}` });
+    dl.appendChild(lb);
+  }
+  const DS = [[148, 1.277], [149, 1.215], [150, 1.154], [151, 1.123], [152, 1.092], [153, 1.062], [154, 1.046], [155, 1.03], [156, 1.015], [157, 1.007], [158, 1], [165, 1], [166, 0.98],
+    [167, 0.942], [168, 0.896], [169, 0.842], [170, 0.78], [171, 0.735], [172, 0.68], [173, 0.635]];
+  const DR = [[148, -17], [149, -14.5], [150, -12], [151, -9.5], [152, -8], [153, -6.5], [154, -5], [155, -4], [156, -3], [157, -1.5], [158, 0]];
+
+  const CW = 535 * K, CH = CW * 9 / 16, card = q("card"), cbox = q("cbox");
+  Object.assign(card.style, { left: `${W / 2 - CW / 2}px`, top: `${H / 2 - CH / 2}px`, width: `${CW}px`, height: `${CH}px`, display: "none" });
+  if (window.MLLook) { MLLook.card(cbox, L); MLLook.card(card, L, { shadow: false }); card.style.boxShadow = L.shadow; }
+  if (window.MLLook) {
+    const mv = MLLook.media(cbox, V.video_media, { look: L, kind: "video", label: "your video", fit: "cover", focus: V.video_focus, seed: 23,
+      r: L.radius, start: 174 / FPS, duration: (FRAMES - 174) / FPS, id: "card-media", slot: "video_media" });
+    if (!mv && cbox.lastElementChild) Object.assign(cbox.lastElementChild.style, { left: "50%", bottom: "50%", transform: "translateX(-50%)", opacity: "0.7" });   // the label stays on the visible part of the tilted card
+  }
+  const CS = [[174, 1.45], [175, 1.35], [176, 1.287], [177, 1.225], [178, 1.175], [179, 1.131], [180, 1.087], [181, 1.062], [182, 1.05], [183, 1.012], [184, 1.0], [185, 0.997], [186, 0.997],
+    [187, 0.99], [188, 1.003], [189, 1.016], [190, 1.035], [191, 1.057], [192, 1.084], [193, 1.12], [194, 1.159], [195, 1.215], [196, 1.3], [197, 1.39], [198, 1.5], [199, 1.6], [200, 1.69],
+    [201, 1.75], [202, 1.8], [203, 1.84], [204, 1.865], [205, 1.885], [206, 1.9], [207, 1.91], [208, 1.915], [209, 1.92]];
+  const PERSP = 1500 * K;
+
+  // ---- the motion, frame by frame from one proxy (seek-safe); g = the frame minus "Starts at frame"
+  const S = Math.round(V.start);
+  const maxW = 0.8 * W;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    // the glow
+    const ag = cl((g - 15) / 4) * (1 - cl((g - 139) / 9)), sg = g < 139 ? tab([[15, 0.35], [20, 0.5], [24, 0.62], [28, 0.7], [34, 0.8], [40, 0.9], [48, 1]], g)[0] : 1 - 0.45 * cl((g - 139) / 9);
+    glow.style.opacity = String(ag * Number(V.glow) / 100);
+    glow.style.transform = `scale(${sg.toFixed(4)})`;
+    // the words
+    phrases.forEach((p, i) => {
+      const st = phraseState(i, g);
+      p.el.style.display = st.vis ? "block" : "none";
+      if (!st.vis) return;
+      const w = p.el.offsetWidth || 1, base = p.probe.offsetTop;
+      const fit = Math.min(1, maxW / w), s = st.s * fit;
+      const wsc = w * fit, dx = st.dx * K * (p.ex ? Math.max(1, wsc / (p.ex * K)) : 1);
+      p.el.style.transform = `translate(${W / 2}px, ${H / 2}px) scale(${s.toFixed(4)}) translate(${dx.toFixed(2)}px, ${((p.by - 640) * K).toFixed(2)}px) translate(${(-w / 2).toFixed(2)}px, ${(-base).toFixed(2)}px)`;
+      p.units.forEach((u, k) => {
+        const [o, b] = st.w[k] || [1, 0];
+        u.style.opacity = o.toFixed(3);
+        u.style.filter = b > 0.05 ? `blur(${(b * K).toFixed(2)}px)` : "none";
+        if (!u.dataset.solid) {
+          const sl = W / 2 + s * (u.offsetLeft - w / 2 + dx);
+          u.style.backgroundSize = `${(W / s).toFixed(1)}px 100%`;
+          u.style.backgroundPosition = `${(-sl / s).toFixed(1)}px 0px`;
+        }
+      });
+    });
+    // the round logo
+    if (g >= 148 && g < 174) {
+      const ds = tab(DS, g)[0], dr = tab(DR, g)[0];
+      disc.style.display = "block";
+      disc.style.transform = `translate(${W / 2}px, ${H / 2}px) rotate(${dr.toFixed(2)}deg) scale(${ds.toFixed(4)}) translate(${-D0 / 2}px, ${-D0 / 2}px)`;
+    } else disc.style.display = "none";
+    // the footage card
+    if (g >= 174) {
+      const s = tab(CS, g)[0], pr = g >= 187 ? cl((s - 0.99) / 0.93) : 0, th = 23.5 * pr, tx = 28 * pr * K, ty = 29 * pr * K;
+      card.style.display = "block";
+      card.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) perspective(${PERSP}px) rotateY(${th.toFixed(3)}deg) scale(${s.toFixed(4)})`;
+    } else card.style.display = "none";
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 17 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 600, 700, 800].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

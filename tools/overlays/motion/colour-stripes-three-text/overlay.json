@@ -1,0 +1,36 @@
+{
+ "name": "colour-stripes-three-text",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 600,
+   "to": 2400,
+   "db": -9,
+   "what": "the left stripe slides down"
+  },
+  {
+   "f": "start + round(10 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 2400,
+   "to": 600,
+   "db": -9,
+   "what": "the middle stripe slides up"
+  },
+  {
+   "f": "start + round(21 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 600,
+   "to": 2600,
+   "db": -9,
+   "what": "the right stripe slides down"
+  }
+ ]
+}

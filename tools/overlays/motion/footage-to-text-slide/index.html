@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "footage_media", "type": "string", "label": "The card: your video or picture, wide 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "footage_focus", "type": "string", "label": "What stays in view on the card (x% y%)", "default": "50% 50%"},
+  {"id": "text", "type": "string", "label": "Text beside the card (*bold* _italic_ ==highlight== ^signal colour^)", "default": "BOLD MOVE"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 270, "min": 60, "max": 520, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Text colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}]},
+  {"id": "blur", "type": "number", "label": "Motion blur while it moves (% of the real speed)", "default": 100, "min": 0, "max": 200, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "footage-to-text-slide" (2026-10-22): the user's footage card fills the frame, then spins and tilts away in 3D, shrinking to about 80 %
+     (f2-f9, decelerating) and settles tilted for a held beat (it barely drifts, f16-f39); then it shrinks and slides
+     to the left while a bold two-line text slides in from the right in a horizontal motion blur (f40-f51), the card
+     and the text both dipping a little before they settle. The card is a flat 16:9 rectangle put in perspective by a
+     four-corner transform measured on the reference's frames. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #cwrap { position: absolute; left: 0; top: 0; }
+  #card { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }
+  .plate { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0.3em 0.8em 0.25em; text-align: center;
+           text-transform: uppercase; line-height: 1.02; white-space: nowrap; font-weight: 800; letter-spacing: 0.04em; }
+  #tx { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  #tt { position: absolute; left: 0; top: 0; text-align: center; text-transform: uppercase; line-height: 0.96; font-synthesis: none;
+        letter-spacing: -0.01em; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="mbc" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbcg" stdDeviation="0 0"/></filter>
+  <filter id="mbt" x="-40%" y="-5%" width="180%" height="110%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbtg" stdDeviation="0 0"/></filter>
+</defs></svg>
+<div id="root" data-composition-id="main" data-start="0" data-duration="2.857143" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="cwrap"><div id="card"></div></div>
+    <div id="tx"><div id="tt" class="ml-body"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 28, FRAMES = 80;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  // the four corners of a flat w x h rectangle put where quad p = [x0,y0 .. x3,y3] (TL, TR, BR, BL) says
+  const homog = (w, h, p) => {
+    const src = [[0, 0], [w, 0], [w, h], [0, h]], A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = src[i], X = p[2 * i], Y = p[2 * i + 1];
+      A.push([x, y, 1, 0, 0, 0, -x * X, -y * X]); b.push(X);
+      A.push([0, 0, 0, x, y, 1, -x * Y, -y * Y]); b.push(Y);
+    }
+    for (let c = 0; c < 8; c++) {
+      let m = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r;
+      [A[c], A[m]] = [A[m], A[c]]; [b[c], b[m]] = [b[m], b[c]];
+      for (let r = c + 1; r < 8; r++) { const k = A[r][c] / A[c][c]; for (let j = c; j < 8; j++) A[r][j] -= k * A[c][j]; b[r] -= k * b[c]; }
+    }
+    const s = new Array(8);
+    for (let r = 7; r >= 0; r--) { let v = b[r]; for (let j = r + 1; j < 8; j++) v -= A[r][j] * s[j]; s[r] = v / A[r][r]; }
+    const [a, bb, c, d, e, f, g, hh] = s;
+    return `matrix3d(${a},${d},0,${g},${bb},${e},0,${hh},0,0,1,0,${c},${f},0,1)`;
+  };
+
+  // ---- the look: a dark ground from the ink with a slightly lighter middle
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(circle at 50% 50%, ${mix(night, glare, 0.1)} 0%, ${mix(night, glare, 0.05)} 48%, ${night} 100%)`;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(q("cwrap").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the card: a flat 16:9 rectangle, full frame to start with
+  const card = q("card"), cr = Math.min(L.radius * 0.7, 14 * U);
+  Object.assign(card.style, { width: `${W}px`, height: `${H}px` });
+  const sp = 100 * U;
+  card.style.background = `repeating-linear-gradient(120deg, ${L.signal} 0px, ${L.signal} ${sp}px, ${glare} ${sp}px, ${glare} ${2 * sp}px)`;
+  if (window.MLLook) {
+    MLLook.media(card, V.footage_media, { look: L, kind: "video", label: "​", fit: "cover", focus: V.footage_focus, seed: 23, r: 0,
+      start: 0, duration: FRAMES / FPS, id: "m1", slot: "footage_media" });
+  }
+  if (!V.footage_media) {                       // the placeholder: stripes in the look and a plate with the words
+    card.style.background = `repeating-linear-gradient(120deg, ${L.signal} 0px, ${L.signal} ${sp}px, ${glare} ${sp}px, ${glare} ${2 * sp}px)`;
+    const pl = document.createElement("div"); pl.className = "plate ml-body";
+    Object.assign(pl.style, { fontSize: `${H * 0.1}px`, background: night, color: glare, borderRadius: `${Math.max(L.radius, 10 * U)}px` });
+    pl.innerHTML = "your<br>footage";
+    card.appendChild(pl);
+  }
+  card.style.backgroundColor = L.deep;
+
+  // ---- the text: heavy, centred in the right half, wrapped to a narrow column
+  const fam = V.body_font, tx = q("tx"), tt = q("tt");
+  const tcol = V.colour === "signal" ? L.signal : V.colour === "mustard" ? L.mustard : glare;
+  const CXR = W * 0.72, CY = H * 0.516, maxW = W * 0.42;
+  Object.assign(tx.style, { left: `${CXR}px`, top: `${CY}px` });
+  Object.assign(tt.style, { fontSize: `${V.size * U}px`, fontWeight: String(fw(fam, 900)), color: tcol, width: `${maxW}px` });
+  const rr = window.MLLook ? MLLook.rich(tt, V.text, { look: L, family: fam, weight: 900 }) : { words: [] };
+  if (!window.MLLook) tt.textContent = V.text;
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  // CARD = the card's four corners on each frame of the reference (fractions of the frame: TL, TR, BR, BL);
+  // TXT = the text's distance from its resting place (fraction of the width) and its size, f41-f51
+  const CARD = [[0,0,0,1,0,1,1,0,1],[1,0,0,1,0,1,1,0,1],[2,0.0162,0.0139,0.9715,0.025,0.973,0.9778,0.0162,0.9986],[3,0.0162,0.0139,0.9715,0.025,0.973,0.9778,0.0162,0.9986],[4,0.0378,0.0333,0.9429,0.0542,0.9475,0.9472,0.0378,0.9819],[5,0.0656,0.0569,0.9097,0.0875,0.9174,0.9139,0.0679,0.9625],[6,0.0988,0.0833,0.8742,0.1208,0.8858,0.8778,0.1026,0.9347],[7,0.1343,0.1111,0.841,0.1542,0.8542,0.8472,0.1397,0.9056],[8,0.1682,0.1375,0.8133,0.1833,0.8272,0.8167,0.1744,0.875],[9,0.2168,0.1736,0.7747,0.2208,0.7909,0.7806,0.2261,0.8333],[10,0.2222,0.175,0.7708,0.2236,0.787,0.7778,0.2307,0.8306],[11,0.2222,0.175,0.7708,0.2236,0.787,0.7778,0.2307,0.8306],[12,0.216,0.1708,0.7747,0.2194,0.7909,0.7819,0.2253,0.8361],[13,0.2068,0.1597,0.7816,0.2125,0.7986,0.7903,0.2153,0.8458],[14,0.196,0.1486,0.7886,0.2042,0.8063,0.7986,0.2052,0.8583],[15,0.1883,0.1403,0.794,0.1972,0.8125,0.8042,0.1968,0.8653],[16,0.186,0.1389,0.7955,0.1958,0.814,0.8056,0.1952,0.8708],[20,0.186,0.1389,0.7955,0.1958,0.8148,0.8056,0.1952,0.8708],[27,0.186,0.1389,0.7978,0.1958,0.8164,0.8056,0.1952,0.8708],[32,0.186,0.1389,0.7978,0.1917,0.8171,0.8056,0.1944,0.8708],[37,0.1852,0.1417,0.7986,0.1903,0.8187,0.8056,0.1944,0.8708],[38,0.1844,0.1417,0.7978,0.1917,0.8179,0.8042,0.1944,0.8694],[39,0.1836,0.1444,0.7978,0.1917,0.8179,0.8042,0.1921,0.8653],[40,0.1705,0.1611,0.7739,0.2056,0.7909,0.7972,0.1813,0.8556],[41,0.1528,0.1778,0.7323,0.2181,0.7485,0.7833,0.1613,0.8347],[42,0.1335,0.1986,0.686,0.2333,0.6998,0.7681,0.1412,0.8153],[43,0.1142,0.2208,0.6366,0.25,0.6489,0.7514,0.1211,0.7931],[44,0.0725,0.2861,0.49,0.3014,0.4977,0.6986,0.0779,0.7292],[45,0.0671,0.3042,0.4491,0.3181,0.4545,0.6833,0.0718,0.7083],[46,0.0671,0.3042,0.4491,0.3181,0.4545,0.6833,0.0718,0.7083],[47,0.0671,0.3208,0.4167,0.3347,0.4213,0.6681,0.071,0.6903],[48,0.0687,0.3278,0.4043,0.3389,0.409,0.6611,0.0733,0.6833],[49,0.0617,0.3222,0.4097,0.3333,0.4144,0.6681,0.0671,0.6903],[50,0.0548,0.3153,0.4159,0.3278,0.4205,0.6736,0.0586,0.6958],[51,0.0509,0.3125,0.4182,0.3236,0.4244,0.6764,0.054,0.7]];
+  const TXT = [[40,0.45,1],[41,0.4213,1],[42,0.3534,1],[43,0.284,1],[44,0.091,1],[45,0.0328,0.976],[46,0.0328,0.976],[47,-0.0216,0.908],[48,-0.0397,0.905],[49,-0.0258,0.934],[50,-0.01,0.969],[51,0,1]];
+  const S = Math.round(V.start), BL = V.blur / 100;
+  const cg = q("mbcg"), tg = q("mbtg");
+  const pxq = (c, k) => c[k] * (k % 2 ? H : W);
+  // sideways speed (px a frame) of the card's corners / of the text, from its neighbours
+  const cardV = g => { const a = tab(CARD, g - 1), b = tab(CARD, g + 1); let m = 0; for (let k = 0; k < 8; k += 2) m = Math.max(m, Math.abs(b[k] - a[k]) * W / 2); return m; };
+  const textV = g => Math.abs(tab(TXT, g + 1)[0] - tab(TXT, g - 1)[0]) * W / 2;
+  function render(t) {
+    const g = t * FPS - S;
+    const c = tab(CARD, g).map((v, i) => v * (i % 2 ? H : W));
+    card.style.transform = homog(W, H, c);
+    card.style.borderRadius = `${(cr * clamp01((g - 1) / 3)).toFixed(2)}px`;
+    const sc = 0.08 * cardV(g) * BL;
+    if (sc > 0.4) { cg.setAttribute("stdDeviation", `${sc.toFixed(2)} 0`); q("cwrap").style.filter = "url(#mbc)"; } else q("cwrap").style.filter = "none";
+    // the text
+    const on = g >= 40.5;
+    tx.style.visibility = on ? "visible" : "hidden";
+    if (on) {
+      const r = tab(TXT, g), w = tt.offsetWidth, h = tt.offsetHeight;
+      let longest = 1;
+      rr.words.forEach(wd => { longest = Math.max(longest, wd.offsetWidth); });
+      const fit = Math.min(1, maxW / longest);
+      tt.style.transform = `translate(${(r[0] * W - w / 2).toFixed(2)}px, ${(-h / 2).toFixed(2)}px) scale(${(r[1] * fit).toFixed(4)})`;
+      const st = 0.13 * textV(g) * BL;
+      if (st > 0.4) { tg.setAttribute("stdDeviation", `${st.toFixed(2)} 0`); tt.style.filter = "url(#mbt)"; } else tt.style.filter = "none";
+    }
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  const hits = V.shake > 0 ? [{ f: S + 48, amount: 2 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 3, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

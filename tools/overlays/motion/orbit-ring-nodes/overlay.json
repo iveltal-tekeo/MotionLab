@@ -1,0 +1,19 @@
+{
+ "name": "orbit-ring-nodes",
+ "frames": 320,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((37 + i * 80) * fps / 30)",
+   "repeat": "4",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2000,
+   "db": -12,
+   "what": "the dot swings to the next step"
+  }
+ ]
+}

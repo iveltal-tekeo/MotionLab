@@ -1,0 +1,27 @@
+{
+ "name": "footage-card-side-text",
+ "frames": 91,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(17 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2400,
+   "to": 500,
+   "db": -10,
+   "what": "the card zooms in on the dissolve"
+  },
+  {
+   "f": "start + round(27 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2200,
+   "db": -12,
+   "what": "the two texts slide out"
+  }
+ ]
+}

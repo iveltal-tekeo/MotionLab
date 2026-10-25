@@ -1,0 +1,105 @@
+{
+ "name": "Growth curve close-up",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A dark card with a glowing top edge and two dashed axes, seen in a close-up while a growth curve is drawn from the origin and the camera glides along it; a hard cut pulls out to the whole tilted card, the curve finishes and a caption fades in underneath. The curve points and the caption are yours.",
+ "use_for": [
+  "growth",
+  "revenue",
+  "results",
+  "trend",
+  "progress",
+  "stats",
+  "explainer",
+  "before and after",
+  "analytics"
+ ],
+ "tags": [
+  "chart",
+  "growth",
+  "curve",
+  "line chart",
+  "close-up",
+  "cut",
+  "3D look",
+  "glow",
+  "caption",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4-f48 close-up: the curve is drawn from the origin (slow start, then steady) while the camera glides right along it and pulls back a little; f49 hard cut to the whole card (tilted a few degrees), the curve already 56 % drawn; f49-f58 the caption fades in; f49-f88 the curve finishes (a long soft end); f49-f100 the card drifts slowly (shrinks and turns a little); then everything holds to f149; a light runs round the card edge the whole time",
+ "tracks": [
+  {
+   "name": "curve close-up",
+   "what": "the curve is drawn from the origin while the camera glides right along it and pulls back about 10 %",
+   "start_f": 4,
+   "length_f": 45,
+   "easing": "slow start, then steady (measured)"
+  },
+  {
+   "name": "cut out",
+   "what": "a hard cut from the close-up to the whole card",
+   "start_f": 49,
+   "length_f": 1,
+   "easing": "cut"
+  },
+  {
+   "name": "caption",
+   "what": "the caption fades in under the card",
+   "start_f": 49,
+   "length_f": 9,
+   "easing": "linear"
+  },
+  {
+   "name": "curve finish",
+   "what": "the curve is drawn to its end",
+   "start_f": 49,
+   "length_f": 39,
+   "easing": "steady, then a long soft end (measured)"
+  },
+  {
+   "name": "card drift",
+   "what": "the whole card shrinks and turns a little (about 5 % and 2 degrees)",
+   "start_f": 49,
+   "length_f": 51,
+   "easing": "linear"
+  },
+  {
+   "name": "edge light",
+   "what": "a light runs round the card edge: a sharp front and a soft tail, one lap in about 135 frames",
+   "start_f": 0,
+   "length_f": 150,
+   "easing": "linear"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the edge light and the film grain move)",
+   "start_f": 100,
+   "length_f": 50,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "caption",
+  "values"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  8,
+  24,
+  40,
+  48,
+  49,
+  56,
+  72,
+  100
+ ]
+}

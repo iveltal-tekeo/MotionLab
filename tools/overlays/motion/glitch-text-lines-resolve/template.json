@@ -1,0 +1,100 @@
+{
+ "name": "Three glitch lines",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three lines of text stacked down a dark frame start as blocky glitch bars and clear into clean glowing text one after the other, fifteen frames apart, while the whole block drifts, squashes flat for a moment and swings back, then breathes a little sideways until the last frame.",
+ "use_for": [
+  "list of three",
+  "three points",
+  "steps",
+  "agenda",
+  "tech",
+  "glitch",
+  "title stack",
+  "statement"
+ ],
+ "tags": [
+  "text",
+  "glitch",
+  "pixel",
+  "mosaic",
+  "lines",
+  "stack",
+  "glow",
+  "list",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f5 the block moves up and right (decelerating); f15 line 1 clears from its glitch bar into clean text, f30 line 2, f45 line 3; f18-f25 it swings right, f25-f41 over to the left while it is squashed flat (down to 66 % at f40-f41), f41-f60 it comes back and rises to full height and home; then it breathes a little sideways (about 2 %) until the last frame, which is empty",
+ "tracks": [
+  {
+   "name": "drift",
+   "what": "the whole block moves up and to the right",
+   "start_f": 0,
+   "length_f": 6,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "line 1",
+   "what": "the glitch bar clears into clean text",
+   "start_f": 15,
+   "length_f": 1,
+   "easing": "cut"
+  },
+  {
+   "name": "line 2",
+   "what": "the glitch bar clears into clean text",
+   "start_f": 30,
+   "length_f": 1,
+   "easing": "cut"
+  },
+  {
+   "name": "line 3",
+   "what": "the glitch bar clears into clean text",
+   "start_f": 45,
+   "length_f": 1,
+   "easing": "cut"
+  },
+  {
+   "name": "swing and squash",
+   "what": "the block swings right, then left while squashed flat, then back home at full height",
+   "start_f": 18,
+   "length_f": 42,
+   "easing": "measured positions"
+  },
+  {
+   "name": "breathe",
+   "what": "the text widens and narrows by about 2 %",
+   "start_f": 60,
+   "length_f": 59,
+   "easing": "slow wave (about 27 f)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  5,
+  14,
+  15,
+  29,
+  30,
+  41,
+  44,
+  45,
+  56,
+  80,
+  120
+ ]
+}

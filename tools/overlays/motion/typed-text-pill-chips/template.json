@@ -1,0 +1,102 @@
+{
+ "name": "Text field and dark bubble",
+ "kind": "text",
+ "category": "UI",
+ "what": "A text field with a handle at each end opens out of a single handle and fills with words that fade in one by one; then it grows, a dark bubble with a tail rises above it and is typed letter by letter, and both slide left to show their right ends before rising away.",
+ "use_for": [
+  "app promo",
+  "ui demo",
+  "caption",
+  "tip",
+  "tutorial",
+  "chat",
+  "key points",
+  "text input",
+  "short form"
+ ],
+ "tags": [
+  "ui",
+  "text field",
+  "handles",
+  "bubble",
+  "typed",
+  "tooltip",
+  "slide",
+  "app",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f12 the field opens out of one handle (fast, decelerating) and keeps widening with its words (f14-f80, one word at a time); f108-f136 it scales up to 2.2 x (slow start, S-curve); f126-f159 a dark bubble rises from behind it and is typed; f137-f192 the group slides left in two pushes (f137-f146, f160-f172) and settles; f171-f193 it rises, accelerating",
+ "tracks": [
+  {
+   "name": "field opens",
+   "what": "the field opens out of a single handle, then widens as words fade in",
+   "start_f": 0,
+   "length_f": 102,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "words",
+   "what": "the five words fade in one after another",
+   "start_f": 14,
+   "length_f": 66,
+   "easing": "none (each word fades over 12-16 f)"
+  },
+  {
+   "name": "scale up",
+   "what": "the field scales up to 2.2 x about a point left of it",
+   "start_f": 108,
+   "length_f": 28,
+   "easing": "slow start, S-curve (measured)"
+  },
+  {
+   "name": "bubble",
+   "what": "a dark bubble rises from behind the field and its text is typed",
+   "start_f": 126,
+   "length_f": 33,
+   "easing": "decelerating rise, typed 0.9 f a letter"
+  },
+  {
+   "name": "slide left",
+   "what": "field and bubble slide left in two pushes until their right ends show",
+   "start_f": 137,
+   "length_f": 56,
+   "easing": "decelerating pushes (measured)"
+  },
+  {
+   "name": "rise",
+   "what": "the group rises at the end",
+   "start_f": 171,
+   "length_f": 23,
+   "easing": "accelerating (measured)"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "field_text",
+  "bubble_text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 176,
+ "check_frames": [
+  0,
+  2,
+  6,
+  24,
+  45,
+  90,
+  120,
+  128,
+  134,
+  140,
+  150,
+  168,
+  176,
+  194
+ ]
+}

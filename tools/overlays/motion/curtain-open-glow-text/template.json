@@ -1,0 +1,74 @@
+{
+ "name": "Curtain reveal glow title",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two velvet stage curtains meet at the centre and are drawn apart to the sides, bunching up as they go; through the gap a giant glowing title shrinks down to rest on a softly lit dark stage, then holds.",
+ "use_for": [
+  "opening",
+  "title",
+  "reveal",
+  "event",
+  "premiere",
+  "show",
+  "announcement",
+  "intro",
+  "trailer"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "curtain",
+  "stage",
+  "reveal",
+  "glow",
+  "spotlight",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f2 the curtains meet at the centre; f3-f21 they are drawn apart (the gap grows about 29 px a frame, fast at first) and gather at the sides, clear at f21; f3-f30 the title behind them shrinks from 3.4 times its size to rest (fast at first, then settling); then it holds to the end",
+ "tracks": [
+  {
+   "name": "curtains",
+   "what": "the two curtains are drawn apart and bunch up at the sides",
+   "start_f": 3,
+   "length_f": 18,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "title",
+   "what": "the glowing title shrinks from 3.4 times its size to rest",
+   "start_f": 3,
+   "length_f": 27,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the title rests on the lit stage (the film grain moves)",
+   "start_f": 30,
+   "length_f": 60,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 60,
+ "check_frames": [
+  1,
+  4,
+  7,
+  10,
+  14,
+  18,
+  22,
+  30,
+  60
+ ]
+}

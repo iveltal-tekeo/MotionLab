@@ -1,0 +1,88 @@
+{
+ "name": "Glow lines and big word",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two lines of glowing gold text fade up on a black grid, their letters squeezing together as the glow builds, then one huge word pops in underneath with a warm glow flooding in behind it while the whole block sways gently.",
+ "use_for": [
+  "title",
+  "hook",
+  "statement",
+  "intro",
+  "opener",
+  "headline",
+  "keyword"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "3d",
+  "extruded",
+  "grid",
+  "bold word",
+  "title",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f12 (00:00:00:01-00:00:00:12) the two lines fade up and their stretched letters squeeze to normal while the glow builds; f13 (00:00:00:13) the big word pops in under them (one letter wipes down f13-f15, one grows from a dot f15-f20) and a warm glow floods in behind it to f21 (00:00:00:21); then the block sways gently down and up to f44 (00:00:01:14)",
+ "tracks": [
+  {
+   "name": "lines fade up",
+   "what": "the two lines fade up with their letters stretched wide",
+   "start_f": 1,
+   "length_f": 2,
+   "easing": "fast"
+  },
+  {
+   "name": "lines squeeze",
+   "what": "the letters squeeze back to normal spacing while the glow builds",
+   "start_f": 1,
+   "length_f": 11,
+   "easing": "decelerating"
+  },
+  {
+   "name": "big word pops",
+   "what": "the huge word pops in under the lines, letter by letter",
+   "start_f": 13,
+   "length_f": 8,
+   "easing": "pop, one letter grows from a dot"
+  },
+  {
+   "name": "glow behind",
+   "what": "a warm glow floods in behind the big word",
+   "start_f": 13,
+   "length_f": 8,
+   "easing": "linear"
+  },
+  {
+   "name": "sway",
+   "what": "the whole block sways slowly up and down",
+   "start_f": 22,
+   "length_f": 23,
+   "easing": "slow wave"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "word"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 30,
+ "check_frames": [
+  1,
+  2,
+  6,
+  12,
+  13,
+  15,
+  17,
+  20,
+  38
+ ]
+}

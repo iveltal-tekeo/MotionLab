@@ -1,0 +1,31 @@
+{
+ "name": "shake-shrink-text",
+ "frames": 92,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + 3",
+   "kind": "pop",
+   "db": -8,
+   "what": "the text pops in"
+  },
+  {
+   "f": "start + 20",
+   "kind": "riser",
+   "dur": "1.9",
+   "db": -10,
+   "what": "the shake builds up"
+  },
+  {
+   "f": "start + 79",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 2400,
+   "to": 300,
+   "db": -8,
+   "what": "the text shrinks away"
+  }
+ ]
+}

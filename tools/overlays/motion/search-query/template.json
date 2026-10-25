@@ -1,0 +1,103 @@
+{
+ "name": "Search query",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "A search bar under a round picture: the query types in word by word, each word going from blurred to sharp as it rises a little; a loading ring fades in under the bar and turns, then rises to touch it.",
+ "use_for": [
+  "search",
+  "question",
+  "hook",
+  "prompt",
+  "AI",
+  "query",
+  "how to",
+  "intro",
+  "UI"
+ ],
+ "tags": [
+  "ui",
+  "search bar",
+  "typing",
+  "blur",
+  "loading",
+  "spinner",
+  "avatar",
+  "needs media",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f18 a still hold; from f19 one word every 4 f, each 10 f from blurred, faint and 10 px low to sharp (expo out); f42 the ring fades in (8 f) and turns once every 24 f; from f58 it rises 15 f until it touches the bar (accelerating)",
+ "tracks": [
+  {
+   "name": "hold",
+   "what": "the picture and the empty bar, still",
+   "start_f": 0,
+   "length_f": 19,
+   "easing": "none"
+  },
+  {
+   "name": "words",
+   "what": "one word every 4 f, each blurred -> sharp, rising 10 px",
+   "start_f": 19,
+   "length_f": 34,
+   "easing": "expo.out (cubic-bezier(0.16, 1, 0.3, 1))"
+  },
+  {
+   "name": "ring in",
+   "what": "the loading ring fades and grows in",
+   "start_f": 42,
+   "length_f": 8,
+   "easing": "expo.out"
+  },
+  {
+   "name": "ring turns",
+   "what": "one turn every 24 f",
+   "start_f": 42,
+   "length_f": 32,
+   "easing": "linear"
+  },
+  {
+   "name": "ring rises",
+   "what": "until it touches the bar",
+   "start_f": 58,
+   "length_f": 15,
+   "easing": "power2.in (cubic-bezier(0.55, 0, 1, 0.45))"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "query"
+ ],
+ "media_slots": [
+  {
+   "id": "avatar_logo",
+   "label": "The round picture above the bar",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 40%",
+   "placeholder": "a soft disc in the look's deep, paper and mustard",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  19,
+  25,
+  31,
+  37,
+  45,
+  55,
+  73
+ ]
+}

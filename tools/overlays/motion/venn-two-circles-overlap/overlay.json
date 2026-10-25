@@ -1,0 +1,25 @@
+{
+ "name": "venn-two-circles-overlap",
+ "frames": 180,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.3",
+   "db": -8,
+   "what": "the two rings draw themselves"
+  },
+  {
+   "f": "start + round(46 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 400,
+   "to": 2200,
+   "db": -9,
+   "what": "the circles rush together into the overlap"
+  }
+ ]
+}

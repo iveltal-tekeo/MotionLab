@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "quote", "type": "string", "label": "The quote (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Curiosity is the habit of asking *one more question*."},
+  {"id": "scene_media", "type": "string", "label": "Scene: your photo or video, landscape 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "scene_focus", "type": "string", "label": "What stays in view in the scene (x% y%)", "default": "30% 40%"},
+  {"id": "size", "type": "number", "label": "Quote size (px at a 1080-px short side)", "default": 56, "min": 20, "max": 140, "step": 1},
+  {"id": "width", "type": "number", "label": "Quote width (% of the frame)", "default": 41, "min": 20, "max": 70, "step": 1},
+  {"id": "text_colour", "type": "enum", "label": "Quote text colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}]},
+  {"id": "mark_colour", "type": "enum", "label": "Quote marks colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "marks", "type": "number", "label": "Quote marks size (%)", "default": 100, "min": 40, "max": 200, "step": 1},
+  {"id": "scrim", "type": "number", "label": "Darken the right side behind the quote (0 = none, 100 = strong)", "default": 55, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "quote-over-scene" (2026-10-22): a quote over the user's photo or video (a media slot, a dark placeholder in the look until then). The
+     scene opens zoomed in on its left side, pulls back f12-f40 (fast at f24, slow end) and pans right f45-f70 until it
+     sits in its final framing, then floats a few pixels to the last frame. At f113 the opening quote mark rises in
+     from below, sliding right, its two halves 2 f apart (decelerating, until f140); at f126 the closing mark slides
+     in from the lower right (decelerating, until f148); the quote then types in letter by letter from f142, each
+     letter fading in, quick in the middle and slowing at the end (done by f208). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #qt { position: absolute; font-style: italic; text-align: left; }
+  .ch { display: inline; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="12.866667" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 386;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s;
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark scene (night), light quote text (day), marks in a token colour
+  const night = L.dark ? L.paper : L.ink, day = L.dark ? L.ink : L.paper;
+  const txc = V.text_colour === "mustard" ? L.mustard : V.text_colour === "signal" ? L.signal : day;
+  const mkc = V.mark_colour === "mustard" ? L.mustard : V.mark_colour === "paper" ? day : L.signal;
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? night : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the scene: a layer a little bigger than the frame (12.5 % to the right, 4.5 % above) so the pull-back and
+  // the pan never show an edge; it is moved by one transform about the frame's top-left corner
+  const mr = 0.125 * W, mt = 0.045 * H;
+  const scene = document.createElement("div");
+  Object.assign(scene.style, { position: "absolute", left: "0px", top: `${-mt}px`, width: `${W + mr}px`, height: `${H + mt}px`, overflow: "hidden",
+    transformOrigin: `0px ${mt}px`, background: night, display: V.background ? "block" : "none" });
+  hand.appendChild(scene);
+  if (window.MLLook) MLLook.media(scene, V.scene_media, { look: L, kind: "image", label: "your photo", fit: "cover", focus: V.scene_focus, seed: 14,
+    r: 0, start: 0, duration: FRAMES / FPS, id: "scene-media", slot: "scene_media" });
+  // a darker right side so the quote reads on any picture
+  const sk = V.scrim / 100;
+  const scrim = document.createElement("div");
+  Object.assign(scrim.style, { position: "absolute", left: "0px", top: "0px", width: `${W}px`, height: `${H}px`, pointerEvents: "none",
+    display: V.background && sk > 0 ? "block" : "none",
+    background: `linear-gradient(90deg, ${rgba(night, 0)} 28%, ${rgba(night, 0.62 * sk)} 62%, ${rgba(night, 0.78 * sk)} 100%)` });
+  hand.appendChild(scrim);
+
+  // ---- the quote marks: a bold comma drawn as a path; the opening mark is two commas, the closing one the same turned round
+  const mScale = V.marks / 100;
+  const comma = (k, rot) => { const d = document.createElement("div");
+    Object.assign(d.style, { position: "absolute", width: `${44 * k}px`, height: `${88 * k}px`, transform: rot ? "rotate(180deg)" : "none" });
+    d.innerHTML = `<svg viewBox="0 0 44 88" width="${44 * k}" height="${88 * k}" style="display:block;overflow:visible"><path d="M0 88V40C0 18 12 5 38 0L44 14C32 18 28 25 28 38H44V88Z" fill="${mkc}"/></svg>`;
+    return d; };
+  const ko = 0.205 * H * mScale / 88, kc = 0.132 * H * mScale / 88;
+  const open = document.createElement("div"), shut = document.createElement("div");
+  Object.assign(open.style, { position: "absolute", left: `${0.477 * W}px`, top: `${0.22 * H}px`, width: `${102 * ko}px`, height: `${88 * ko}px` });
+  Object.assign(shut.style, { position: "absolute", left: `${0.969 * W - 102 * kc}px`, top: `${0.9 * H - 88 * kc}px`, width: `${102 * kc}px`, height: `${88 * kc}px` });
+  const oa = comma(ko, false), ob = comma(ko, false), sa = comma(kc, true), sb = comma(kc, true);
+  oa.style.left = "0px"; ob.style.left = `${58 * ko}px`; sa.style.left = "0px"; sb.style.left = `${58 * kc}px`;
+  open.appendChild(oa); open.appendChild(ob); shut.appendChild(sa); shut.appendChild(sb);
+  hand.appendChild(open); hand.appendChild(shut);
+
+  // ---- the quote: word spans (rich text), every letter its own span so it can type in; the layout is final from the start
+  const fs = V.size * U, lh = 1.68;
+  const qt = document.createElement("div"); qt.id = "qt"; qt.className = "ml-body";
+  Object.assign(qt.style, { left: `${0.558 * W}px`, top: `${0.47 * H - fs * lh / 2}px`, width: `${V.width / 100 * W}px`, fontSize: `${fs}px`,
+    lineHeight: String(lh), color: txc, fontWeight: "500", letterSpacing: "0.005em" });
+  const rr = window.MLLook ? MLLook.rich(qt, V.quote, { look: L, family: V.body_font, weight: 500 }) : { words: [] };
+  if (!window.MLLook) qt.textContent = V.quote;
+  const units = [];                                        // letters in order, null = a space (typed like a letter)
+  rr.words.forEach((w, i) => {
+    if (i > 0) units.push(null);
+    const s = w.textContent; w.textContent = "";
+    [...s].forEach(ch => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; w.appendChild(sp); units.push(sp); });
+  });
+  hand.appendChild(qt);
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame"
+  // the scene: [frame, scale, x, y] against its final framing, measured on the clip (px at 1280 x 720)
+  const SCENE = [[0, 1.424, -434, -25], [4, 1.420, -435, -22], [8, 1.409, -432, -19], [12, 1.389, -422, -15], [16, 1.354, -402, -12],
+    [20, 1.293, -364, -10], [24, 1.181, -292, -8], [28, 1.087, -231, -6.5], [32, 1.049, -205, -7], [36, 1.031, -189, -7.6], [40, 1.022, -178, -8],
+    [45, 1.017, -165, -7.5], [50, 1.015, -149, -6.5], [55, 1.012, -122, -5.4], [60, 1.009, -71, -3.9], [65, 1.006, -32, -2.6], [70, 1.005, -16, -0.8],
+    [80, 1.005, -6, 5], [100, 1.002, -8, 16], [120, 1, -10, 23], [140, 1, -7, 11], [169, 1, 0, 0], [190, 1, 0, 6.5], [202, 1, 0.3, 14.6],
+    [230, 1, -4, 27], [260, 1, -5, 24.5], [286, 1, -7, 13.8], [304, 1, 0, 11], [318, 1, 7, 7], [345, 1, 0.5, 1], [364, 1, -9.6, 0], [385, 1, -7, 5]];
+  // letters typed so far (the clip's 49 letters): slow start, quick in the middle, slowing at the end
+  const TYPE = [[140, 0], [142, 0.5], [148, 1.05], [152, 1.6], [156, 2.6], [160, 4], [164, 7], [168, 10], [172, 15.5], [176, 24], [180, 32.6],
+    [184, 38.6], [188, 42.5], [192, 45], [196, 46.5], [200, 47.6], [204, 48.6], [208, 49]];
+  const out3 = x => 1 - Math.pow(1 - clamp01(x), 3), out2 = x => 1 - Math.pow(1 - clamp01(x), 2);
+  const S = Math.round(V.start), N = units.length;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const [sc, tx, ty] = tab(SCENE, Math.max(0, g));
+    scene.style.transform = `translate(${(tx * W / 1280).toFixed(2)}px, ${(ty * H / 720).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    // the opening mark: its two halves rise from below, sliding right (f113 / f115 -> f138 / f140)
+    [[oa, 113, 138], [ob, 115, 140]].forEach(([el, a, b]) => {
+      const p = out3((g - a) / (b - a)), o = clamp01((g - a) / 3);
+      el.style.opacity = String(o);
+      el.style.transform = `translate(${(-(1 - p) * 0.045 * W).toFixed(2)}px, ${((1 - p) * 0.13 * H).toFixed(2)}px)`;
+    });
+    // the closing mark: slides in from the lower right (f126-f148, decelerating)
+    const pc = out2((g - 126) / 22);
+    shut.style.opacity = g >= 126 ? "1" : "0";
+    shut.style.transform = `translate(${((1 - pc) * 0.117 * W).toFixed(2)}px, ${((1 - pc) * 0.146 * H).toFixed(2)}px)`;
+    // the letters
+    const c = tab(TYPE, g)[0] * N / 49;
+    units.forEach((sp, i) => { if (sp) sp.style.opacity = String(clamp01(c - i)); });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

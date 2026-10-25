@@ -1,0 +1,22 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) > span:nth-of-type(1) \"Your\" off the frame, outside its box by 24 px",
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) > span:nth-of-type(3) \"idea\" off the frame, outside its box by 41 px",
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) \"\" wider than its box by 15 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) > span:nth-of-type(1) \"Your\" off the frame, outside its box by 24 px",
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) > span:nth-of-type(3) \"idea\" off the frame, outside its box by 41 px",
+    "FIT f2 (00:00:00:02) +7 more: #world > div:nth-of-type(2) \"\" wider than its box by 15 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

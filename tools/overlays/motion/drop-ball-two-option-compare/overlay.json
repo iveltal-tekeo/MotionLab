@@ -1,0 +1,30 @@
+{
+ "name": "drop-ball-two-option-compare",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(14 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 300,
+   "to": 1800,
+   "db": -12,
+   "what": "the first ball drops"
+  },
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the ball hits the left circle and bounces off"
+  },
+  {
+   "f": "start + round(110 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the second ball lands in the right circle and it ripples"
+  }
+ ]
+}

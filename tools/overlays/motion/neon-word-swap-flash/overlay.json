@@ -1,0 +1,31 @@
+{
+ "name": "neon-word-swap-flash",
+ "frames": 90,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(15 * i * fps / 30)",
+   "kind": "pop",
+   "repeat": "3",
+   "db": -10,
+   "what": "a word hits and snaps to size"
+  },
+  {
+   "f": "start + round(39 * fps / 30)",
+   "kind": "thump",
+   "db": -8,
+   "what": "the flash hits"
+  },
+  {
+   "f": "start + round(47 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2400,
+   "to": 500,
+   "db": -12,
+   "what": "the flash drops away"
+  }
+ ]
+}

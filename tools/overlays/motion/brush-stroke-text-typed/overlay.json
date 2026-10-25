@@ -1,0 +1,23 @@
+{
+ "name": "brush-stroke-text-typed",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.3",
+   "db": -9,
+   "what": "the brush stroke wipes in"
+  },
+  {
+   "f": "start + round((2 + 3 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "len(text)",
+   "db": -8,
+   "what": "a character is typed"
+  }
+ ]
+}

@@ -1,0 +1,109 @@
+{
+ "name": "Shaking glow word",
+ "kind": "text",
+ "category": "Text",
+ "what": "One glowing word grows out of the dark, pops bigger, then shakes harder and harder - tilting, blurring and dimming - and strobes until a burst of colour swaps it for a second word in a warm orange glow, which rocks gently and burns out.",
+ "use_for": [
+  "hook",
+  "warning",
+  "drop",
+  "shock",
+  "beat drop",
+  "title",
+  "reveal",
+  "countdown"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "shake",
+  "colour shift",
+  "burn",
+  "strobe",
+  "dark",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f26 only the ground; f27-f56 the first word fades up and grows from a speck to full size with its glow; f60-f77 a second pop to 1.43x with a bigger bloom, hold, f88-f98 snaps back; f97-f172 it shakes with growing jumps, a tilt to ~20 deg, a growing blur, dimming; f173-f192 a strobe (dark every 4th frame); f193-f205 the colour shift: the second word lands blurred and orange, sharpens and turns yellow; it rocks to f280, then burns out f281-f295",
+ "tracks": [
+  {
+   "name": "grow in",
+   "what": "the first word fades up and grows from a speck to full size; the glow builds",
+   "start_f": 27,
+   "length_f": 30,
+   "easing": "S-curve (slow start, decelerating finish)"
+  },
+  {
+   "name": "pop",
+   "what": "the word pops to 1.43x with a stronger bloom",
+   "start_f": 60,
+   "length_f": 18,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "snap back",
+   "what": "it falls back to full size",
+   "start_f": 88,
+   "length_f": 11,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "shake",
+   "what": "jumps that grow, a tilt to ~20 deg, a growing blur, dimming colour and glow",
+   "start_f": 97,
+   "length_f": 76,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "strobe",
+   "what": "faint, blurred, jumping; dark every 4th frame; a ghost of the last frame",
+   "start_f": 173,
+   "length_f": 20,
+   "easing": "none"
+  },
+  {
+   "name": "colour shift",
+   "what": "the second word lands smeared by a heavy blur, orange turning yellow, growing to full size",
+   "start_f": 193,
+   "length_f": 13,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "rock",
+   "what": "the second word rocks slowly (about +-7 deg) in its orange glow",
+   "start_f": 205,
+   "length_f": 76,
+   "easing": "S-curve"
+  },
+  {
+   "name": "burn out",
+   "what": "the second word and its glow fade out",
+   "start_f": 281,
+   "length_f": 15,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 240,
+ "check_frames": [
+  44,
+  56,
+  77,
+  120,
+  160,
+  176,
+  196,
+  240,
+  288
+ ]
+}

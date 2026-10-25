@@ -1,0 +1,112 @@
+{
+ "name": "Glow words, camera fly-through",
+ "kind": "text",
+ "category": "Text",
+ "what": "Four glowing words seen by a flying camera: the first drifts closer, the camera whips round to the second which swings in and settles, then flies through the first as a huge blurred flash, passes the third and lands on the fourth, which tilts upright and pushes in a little to the end.",
+ "use_for": [
+  "four key points",
+  "list reveal",
+  "title sequence",
+  "hook",
+  "statement",
+  "tips",
+  "kinetic text",
+  "promo"
+ ],
+ "tags": [
+  "text",
+  "3d",
+  "camera",
+  "fly through",
+  "glow",
+  "fire",
+  "kinetic",
+  "motion blur",
+  "tilt",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f30 word 1 drifts closer (words 2-4 around it); f31-f63 the camera whips round: word 1 shoots off right, word 2 swings in from the left and settles (decelerating); f66-f118 word 2 drifts left growing as word 1 returns from the right growing; f80-f128 the camera flies through word 1 (a huge blurred flash); f123-f198 word 3 appears and drifts down-left, tilting, while word 4 slides in from the upper right and tilts upright; f213-f239 word 4 pushes in; then it holds",
+ "tracks": [
+  {
+   "name": "drift",
+   "what": "word 1 drifts closer, words 3 and 4 slide right with it",
+   "start_f": 0,
+   "length_f": 30,
+   "easing": "slow, steady"
+  },
+  {
+   "name": "whip",
+   "what": "the camera whips round: word 1 shoots off right, word 2 swings in from the left",
+   "start_f": 31,
+   "length_f": 33,
+   "easing": "fast start, decelerating (measured)"
+  },
+  {
+   "name": "word 2 hold",
+   "what": "word 2 sits in the middle, easing back left a little",
+   "start_f": 63,
+   "length_f": 15,
+   "easing": "none, then accelerating"
+  },
+  {
+   "name": "fly-through",
+   "what": "word 2 sweeps off left growing while word 1 returns growing and the camera flies through it",
+   "start_f": 78,
+   "length_f": 50,
+   "easing": "accelerating (measured)"
+  },
+  {
+   "name": "word 3",
+   "what": "appears from behind the flash and drifts down-left, tilting, out of the frame",
+   "start_f": 123,
+   "length_f": 80,
+   "easing": "slow start, accelerating"
+  },
+  {
+   "name": "word 4",
+   "what": "slides in from the upper right, tilting upright, and settles in the middle",
+   "start_f": 126,
+   "length_f": 78,
+   "easing": "decelerating"
+  },
+  {
+   "name": "push in",
+   "what": "word 4 pushes in a little",
+   "start_f": 213,
+   "length_f": 27,
+   "easing": "S-curve (measured)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "word1",
+  "word2",
+  "word3",
+  "word4"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 36,
+ "check_frames": [
+  0,
+  30,
+  33,
+  40,
+  63,
+  100,
+  112,
+  118,
+  121,
+  126,
+  131,
+  150,
+  180,
+  195,
+  239
+ ]
+}

@@ -1,0 +1,84 @@
+{
+ "name": "Cycle of connected circles",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "On a plain page, a coloured circle with a word in it fades in, a thin line is drawn around a big circle and the next circles fade in one after another just before the line reaches them, until four circles are linked in a cycle; the cycle then pushes in toward the viewer.",
+ "use_for": [
+  "process",
+  "steps",
+  "cycle",
+  "workflow",
+  "loop",
+  "diagram",
+  "explainer",
+  "roadmap",
+  "how it works"
+ ],
+ "tags": [
+  "chart",
+  "diagram",
+  "cycle",
+  "nodes",
+  "circles",
+  "line",
+  "steps",
+  "upright",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f10 the first circle fades in at the top (slow start); f10-f149 a thin line is drawn around a big circle at a steady pace (about 35 f for each circle); f32-f42, f67-f77, f103-f113 the next circles fade in (linear, 10 f each) just before the line reaches them; f157-f169 the whole cycle pushes in toward the viewer (accelerating)",
+ "tracks": [
+  {
+   "name": "first circle",
+   "what": "the top circle and its text fade in",
+   "start_f": 0,
+   "length_f": 10,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "line",
+   "what": "a thin line is drawn clockwise around the big circle, passing behind the circles",
+   "start_f": 10,
+   "length_f": 139,
+   "easing": "linear"
+  },
+  {
+   "name": "next circles",
+   "what": "circles 2, 3 and 4 fade in, each just before the line reaches it (f32, f67, f103)",
+   "start_f": 32,
+   "length_f": 81,
+   "easing": "linear per circle (10 f each)"
+  },
+  {
+   "name": "push in",
+   "what": "the whole cycle scales up about 8 % toward the viewer, still speeding up when the clip ends",
+   "start_f": 157,
+   "length_f": 13,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 150,
+ "check_frames": [
+  4,
+  10,
+  30,
+  40,
+  70,
+  76,
+  108,
+  113,
+  140,
+  160,
+  169
+ ]
+}

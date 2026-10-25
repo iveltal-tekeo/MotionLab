@@ -1,0 +1,35 @@
+{
+ "name": "footage-cards-view-count-compare",
+ "frames": 150,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((8 + 4.35 * i) * fps / 30)",
+   "repeat": "3",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2000,
+   "db": -11,
+   "what": "a card rises"
+  },
+  {
+   "f": "start + round((39 + 2.5 * i) * fps / 30)",
+   "repeat": "3",
+   "kind": "pop",
+   "db": -4,
+   "what": "a count slides in"
+  },
+  {
+   "f": "start + round(63 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2200,
+   "db": -11,
+   "what": "the row grows"
+  }
+ ]
+}

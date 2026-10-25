@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_a", "type": "string", "label": "First source (top left; *bold* _italic_ ==highlight== ^signal colour^)", "default": "Survey data"},
+  {"id": "text_b", "type": "string", "label": "Second source (top right; *bold* _italic_ ==highlight== ^signal colour^)", "default": "Sales reports"},
+  {"id": "text_c", "type": "string", "label": "Conclusion (bottom; typed - all but the last word first, the last word after a pause)", "default": "One clear answer"},
+  {"id": "size", "type": "number", "label": "Text size of the two top boxes (px at a 1080-px short side)", "default": 48, "min": 20, "max": 120, "step": 1},
+  {"id": "line_w", "type": "number", "label": "Thickest part of the curved lines (px at a 1080-px short side)", "default": 8, "min": 2, "max": 30, "step": 0.5},
+  {"id": "glow", "type": "number", "label": "Glow and light streaks when the bottom box arrives (0 = none, 100 = like the original)", "default": 100, "min": 0, "max": 150, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "two-sources-merge" (2026-10-23): two source boxes fade in at the top, side by side, rising a few pixels as they settle and deblur
+     (f6-f36, the names fading in f12-f29); two thin tapered curves are drawn out of them (f52-f108, slowly at first,
+     faster and faster) and flow down into one point; there a conclusion box grows out of a dot (f106-f118) while its
+     text is typed (all but the last word, f110-f118), a white rim, a glow and wide light streaks flare around it
+     (f114-f144), then the rest of the text is typed (f130) and the glow settles. The three texts, the sizes, the line
+     width and the glow are settings (a box widens for a long text). Numbers measured from the reference's frames
+     (720 x 1280 units). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #grp { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #grp > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .bx { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; }
+  .bx > .bg { position: absolute; inset: 0; }
+  .bx > .gl { position: absolute; height: 2px; }
+  .bx > .tx { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .bx .ti { white-space: nowrap; line-height: 1; font-synthesis: none; text-transform: uppercase; letter-spacing: 0.01em; }
+  .bx .ti span.w { display: inline-block; }
+  .fx { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6.0333" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="grp">
+      <svg id="ls" width="1080" height="1920"></svg>
+      <div id="bloom" class="fx"></div><div id="st1" class="fx"></div><div id="st2" class="fx"></div>
+      <div id="ba" class="bx"><div class="bg"></div><div class="tx"><div class="ti ml-body"></div></div></div>
+      <div id="bb" class="bx"><div class="bg"></div><div class="tx"><div class="ti ml-body"></div></div></div>
+      <div id="bc" class="bx"><div class="bg"></div><div class="tx"><div class="ti ml-body"></div></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 181;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const GL = Math.max(0, V.glow) / 100;
+
+  // ---- the ground: a dark page with a faint lighter disc
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 80% 42% at 50% 45%, ${rgba(glare, 0.05)} 0%, ${rgba(glare, 0.018)} 55%, ${rgba(glare, 0)} 100%), ${night}`;
+
+  // ---- the figure (clip units x K): top boxes centred at (172, 377) and (547, 377), 268 x 80; the conclusion box at (359.5, 886.5), 366 x 112
+  const CXL = 172 * K, CXR = 547 * K, CXM = 359.5 * K, CYT = 377 * K, CYB = 886.5 * K;
+  const tfs = V.size * U, bfs = tfs * 1.17;
+  const TH = tfs * 2.5, BH = bfs * 2.99;
+  const grp = q("grp"), ls = q("ls");
+  const boxes = { a: q("ba"), b: q("bb"), c: q("bc") };
+  const texts = {}; Object.keys(boxes).forEach(k => { texts[k] = boxes[k].querySelector(".ti"); });
+  const fam = V.body_font;
+  const setText = (el, txt, fs) => {
+    Object.assign(el.style, { fontSize: `${fs}px`, fontWeight: String(fw(fam, 700)), color: glare });
+    if (window.MLLook) MLLook.rich(el, String(txt == null ? "" : txt), { look: L, family: fam, weight: 700 }); else el.textContent = String(txt == null ? "" : txt);
+  };
+  setText(texts.a, V.text_a, tfs); setText(texts.b, V.text_b, tfs); setText(texts.c, V.text_c, bfs);
+  // the typed conclusion: every character is a span; all but the last word first, then a space and the last word
+  const lettersC = [];
+  { const ws = Array.from(texts.c.querySelectorAll("span.w")), nW = ws.length;
+    let u = 0, pw = -1;
+    const p1 = [], p2 = [];
+    ws.forEach((w, wi) => { const s = w.textContent; w.textContent = "";
+      Array.from(s).forEach((ch, k) => { const sp = document.createElement("span"); sp.textContent = ch; sp.style.display = "inline-block"; w.appendChild(sp);
+        if (nW >= 2 && wi === nW - 1) p2.push({ el: sp, j: 1 + k });
+        else { if (p1.length && wi !== pw) u += 1; pw = wi; p1.push({ el: sp, u }); u += 1; } }); });
+    const s1 = Math.min(2.5, 7.5 / Math.max(1, u - 1)), n2 = p2.length + 1, s2 = Math.min(1, 5 / Math.max(1, n2));
+    p1.forEach(o => lettersC.push({ el: o.el, t: 110 + s1 * o.u }));
+    p2.forEach(o => lettersC.push({ el: o.el, t: 130 + s2 * o.j }));
+  }
+  // the box fill (a soft diagonal grey made of the look), a thin rim, and the two glints at the top and bottom edge
+  const mkBox = (k, w, h, bright) => {
+    const b = boxes[k], bg = b.querySelector(".bg");
+    Object.assign(b.style, { width: `${w}px`, height: `${h}px` });
+    Object.assign(bg.style, { background: `linear-gradient(165deg, ${rgba(glare, bright ? 0.27 : 0.31)} 0%, ${rgba(glare, bright ? 0.2 : 0.22)} 100%)`, border: `${1.5 * K}px solid ${rgba(glare, 0.13)}` });
+    if (window.MLLook) MLLook.card(bg, L, { r: Math.max(L.radius * 1.4, h * 0.2), shadow: false });
+    ["top", "bottom"].forEach(side => { const gl = document.createElement("div"); gl.className = "gl";
+      Object.assign(gl.style, { left: "36%", width: "28%", [side]: `${-1}px`, background: `linear-gradient(90deg, ${rgba(glare, 0)}, ${rgba(glare, 0.8)}, ${rgba(glare, 0)})` }); b.appendChild(gl); });
+    return bg;
+  };
+  const bgs = {};
+
+  // ---- the two curves (cubic Beziers with vertical ends, drawn as tapered, glowing shapes)
+  const NS = "http://www.w3.org/2000/svg";
+  const curves = [];
+  let YA = 0, YB = 0;
+  const mkCurve = cx => {
+    const poly = document.createElementNS(NS, "polygon"); poly.setAttribute("fill", glare); ls.appendChild(poly);
+    return { cx, poly, pts: [] };
+  };
+  curves.push(mkCurve(CXL), mkCurve(CXR));
+  ls.style.filter = `drop-shadow(0 0 ${5 * U}px ${rgba(glare, 0.55)}) drop-shadow(0 0 ${16 * U}px ${rgba(glare, 0.22)})`;
+  const NB = 140;
+  const bez = (cx, span) => {
+    const p0 = [cx, YA], p1 = [cx, YA + 0.405 * span], p2 = [CXM, YB - 0.377 * span], p3 = [CXM, YB];
+    return Array.from({ length: NB + 1 }, (_, i) => { const t = i / NB, a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, c = 3 * (1 - t) * t * t, d = t ** 3;
+      return [a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]]; });
+  };
+  const drawCurve = (c, h) => {                               // h = how far down the line has got (0-1 of its height)
+    if (h <= 0.001) { c.poly.setAttribute("points", ""); return; }
+    const span = YB - YA, ylim = YA + h * span;
+    let m = 1; while (m < NB && c.pts[m][1] < ylim) m++;
+    const p = c.pts.slice(0, m + 1);
+    const last = c.pts[m], prev = c.pts[m - 1], k = last[1] > prev[1] ? clamp01((ylim - prev[1]) / (last[1] - prev[1])) : 1;
+    p[m] = [prev[0] + (last[0] - prev[0]) * k, prev[1] + (last[1] - prev[1]) * k];
+    const n = p.length, wmax = V.line_w * U, left = [], right = [];
+    for (let i = 0; i < n; i++) {
+      const a = p[Math.max(0, i - 1)], b = p[Math.min(n - 1, i + 1)];
+      let dx = b[0] - a[0], dy = b[1] - a[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      const wd = Math.max(0.5 * U, wmax * Math.pow(Math.sin(Math.PI * i / (n - 1)), 0.8)) / 2;
+      left.push(`${(p[i][0] - dy * wd).toFixed(2)},${(p[i][1] + dx * wd).toFixed(2)}`); right.push(`${(p[i][0] + dy * wd).toFixed(2)},${(p[i][1] - dx * wd).toFixed(2)}`);
+    }
+    c.poly.setAttribute("points", left.concat(right.reverse()).join(" "));
+  };
+
+  // ---- the measured timings (g = the frame minus "Starts at frame")
+  const OPA = [[5, 0], [8, 0.15], [10, 0.38], [12, 0.51], [14, 0.6], [16, 0.69], [18, 0.76], [20, 0.8], [22, 0.85], [24, 0.89], [28, 0.93], [32, 0.97], [38, 1]];            // the top boxes fade in
+  const YO = [[6, 44], [8, 35], [10, 26], [12, 20], [14, 15], [16, 12], [18, 9], [20, 7], [22, 5], [24, 4], [26, 3], [28, 2], [30, 1], [36, 0]];                              // ... rising this many clip px
+  const TXO = [[12, 0], [14, 0.1], [16, 0.35], [18, 0.59], [20, 0.71], [22, 0.83], [24, 0.88], [26, 0.95], [29, 1]];                                                          // the names
+  const HD = [[52, 0], [54, 0.006], [58, 0.017], [62, 0.034], [66, 0.056], [70, 0.089], [74, 0.128], [78, 0.176], [82, 0.232], [86, 0.296], [90, 0.366], [94, 0.45], [98, 0.545], [102, 0.668], [104, 0.754], [106, 0.852], [108, 1]];   // the lines' tips
+  const GS = [[105, 0], [106, 0.014], [107, 0.044], [108, 0.104], [109, 0.197], [110, 0.333], [111, 0.473], [112, 0.585], [113, 0.672], [114, 0.751], [115, 0.82], [116, 0.875], [117, 0.93], [118, 0.99], [119, 1]];   // the conclusion box grows from a dot
+  const GG = [[113, 0], [115, 0.004], [116, 0.04], [117, 0.155], [118, 0.36], [119, 0.57], [120, 0.74], [121, 0.85], [122, 0.91], [123, 0.93], [124, 0.955], [126, 0.99], [127, 1], [128, 0.98], [129, 0.92], [130, 0.86], [131, 0.79], [132, 0.72], [134, 0.58], [136, 0.47], [138, 0.38], [140, 0.31], [142, 0.26], [144, 0.25]];   // its outer glow
+  const RM = [[113, 0], [116, 0.4], [118, 1], [126, 1], [130, 0.9], [136, 0.5], [142, 0.12]];                                                                                    // the white rim
+  const FL = [[116, 0], [119, 0.45], [121, 0.85], [123, 1], [126, 0.95], [128, 0.6], [129, 0.2], [130, 0]];                                                                      // the wide light streaks
+  const IN = [[116, 0], [117, 0.06], [118, 0.69], [119, 1], [120, 0.85], [121, 0.41], [122, 0.15], [123, 0.03], [124, 0]];                                                         // the flash inside the rim
+
+  let ready = false, cw = 0;
+  function layout() {                                        // the text is measured here, with the real fonts: nothing may overflow
+    // measure the natural text widths first (the text box fills its parent, so measure the inner content)
+    const natural = (k) => { const t = texts[k], r = document.createRange(); r.selectNodeContents(t); return r.getBoundingClientRect().width; };
+    const wa = Math.min(320 * K, Math.max(268 * K, natural("a") + 2 * tfs * 0.8)), wb = Math.min(320 * K, Math.max(268 * K, natural("b") + 2 * tfs * 0.8));
+    const wc = Math.min(W - 80 * U, Math.max(366 * K, natural("c") + 2 * bfs * 0.8));
+    [["a", wa, TH, tfs, CXL, CYT], ["b", wb, TH, tfs, CXR, CYT], ["c", wc, BH, bfs, CXM, CYB]].forEach(([k, w, h, fs, cx, cy]) => {
+      bgs[k] = mkBox(k, w, h, k === "c");
+      const t = texts[k], tw = natural(k);
+      if (tw > w - 2 * fs * 0.8) t.style.fontSize = `${(fs * (w - 2 * fs * 0.8) / tw).toFixed(2)}px`;
+      boxes[k]._c = [cx, cy, w, h];
+    });
+    cw = wc;
+    YA = CYT + TH / 2 + 28 * K; YB = CYB - BH / 2 - 28 * K;
+    curves.forEach(c => { c.pts = bez(c.cx, YB - YA); });
+    // the effects behind the conclusion box: a soft bloom and two wide light streaks along its top and bottom edge
+    const bl = q("bloom"), s1 = q("st1"), s2 = q("st2");
+    Object.assign(bl.style, { width: `${W * 1.6}px`, height: `${BH * 3.4}px`, left: `${CXM - W * 0.8}px`, top: `${CYB - BH * 1.7}px`,
+      background: `radial-gradient(ellipse 50% 50% at 50% 50%, ${rgba(glare, 0.5)} 0%, ${rgba(glare, 0.18)} 40%, ${rgba(glare, 0)} 70%)` });
+    [[s1, CYB - BH / 2], [s2, CYB + BH / 2]].forEach(([e, y]) => Object.assign(e.style, { width: `${W * 1.5}px`, height: `${34 * K}px`, left: `${CXM - W * 0.75}px`, top: `${y - 17 * K}px`,
+      background: `radial-gradient(ellipse 50% 50% at 50% 50%, ${rgba(glare, 0.8)} 0%, ${rgba(glare, 0.3)} 38%, ${rgba(glare, 0)} 72%)` }));
+    ready = true;
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    grp.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    // the two source boxes: fade in, rise, deblur; their names fade in a little later
+    const op = tab(OPA, g)[0], yo = tab(YO, g)[0] * K, tx = tab(TXO, g)[0];
+    ["a", "b"].forEach(k => {
+      const [cx, cy, w, h] = boxes[k]._c, b = boxes[k];
+      b.style.opacity = op.toFixed(3); b.style.filter = op < 0.98 ? `blur(${(7 * (1 - op) * U).toFixed(2)}px)` : "none";
+      b.style.transform = `translate(${(cx - w / 2).toFixed(2)}px, ${(cy - h / 2 + yo).toFixed(2)}px)`;
+      texts[k].style.opacity = tx.toFixed(3);
+    });
+    // the curves
+    const hd = tab(HD, g)[0];
+    curves.forEach(c => drawCurve(c, hd));
+    // the conclusion box: grows from a dot, its letters typed, a rim + glow + streaks flare around it
+    const sc = tab(GS, g)[0], c = boxes.c, [cx, cy, w, h] = c._c;
+    c.style.visibility = sc > 0.002 ? "visible" : "hidden";
+    c.style.transform = `translate(${(cx - w / 2).toFixed(2)}px, ${(cy - h / 2).toFixed(2)}px) scale(${Math.max(0.001, sc).toFixed(4)})`;
+    const gg = tab(GG, g)[0] * GL, rm = tab(RM, g)[0] * GL, inn = tab(IN, g)[0] * GL;
+    const bgc = bgs.c;
+    bgc.style.border = `${1.5 * K * (1 + 0.8 * rm)}px solid ${rgba(glare, 0.13 + 0.8 * rm)}`;
+    bgc.style.boxShadow = `0 0 ${(14 * K * rm).toFixed(1)}px ${rgba(glare, 0.7 * rm)}, 0 0 ${(46 * K * gg).toFixed(1)}px ${rgba(glare, 0.5 * gg)}, 0 0 ${(120 * K * gg).toFixed(1)}px ${rgba(glare, 0.3 * gg)}, inset 0 0 ${(26 * K * inn).toFixed(1)}px ${rgba(glare, 0.8 * inn)}`;
+    const fl = tab(FL, g)[0] * GL;
+    q("st1").style.opacity = fl.toFixed(3); q("st2").style.opacity = fl.toFixed(3);
+    q("bloom").style.opacity = Math.min(1, fl * 0.7 + gg * 0.25).toFixed(3);
+    lettersC.forEach(o => { o.el.style.opacity = g >= o.t - 0.01 ? "1" : "0"; });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 14, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 41 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the text is measured
+  // here, with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

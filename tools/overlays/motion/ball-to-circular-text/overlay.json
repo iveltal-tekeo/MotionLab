@@ -1,0 +1,33 @@
+{
+ "name": "ball-to-circular-text",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the ball pops in"
+  },
+  {
+   "f": "start + round(44 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 1800,
+   "db": -12,
+   "what": "the ball rises to the top of the circle"
+  },
+  {
+   "f": "start + round(76 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the ball laps the circle and the letters pop in behind it"
+  }
+ ]
+}

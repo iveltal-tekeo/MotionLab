@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "Left stripe text", "default": "Write"},
+  {"id": "text_2", "type": "string", "label": "Middle stripe text", "default": "Film"},
+  {"id": "text_3", "type": "string", "label": "Right stripe text", "default": "Post"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 150, "min": 30, "max": 300, "step": 1},
+  {"id": "stripe", "type": "enum", "label": "Colour of the outer stripes", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "flash", "type": "enum", "label": "Colour flash in the middle of the move", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "ink", "label": "Ink"}, {"value": "none", "label": "No flash"}]},
+  {"id": "tilt", "type": "number", "label": "Tilt at the start (degrees)", "default": 15, "min": 0, "max": 30, "step": 0.5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "colour-stripes-three-text" (2026-10-22): three tilted stripes side by side, a short word on each. The left stripe slides down from the top
+     (f1-f8), the middle one slides up from below and turns from dark to white (f9-f32), the right one slides down
+     (f21-f26); each word glides in after its stripe. The whole group starts tilted about 15 degrees and straightens
+     with one smooth S-curve (f4-f114) while it settles from 1.12x to 1x; at f45-f55 the outer stripes flash another
+     colour and snap back. Look-aware (colours, fonts, grain from the look tokens). MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .stripe { position: absolute; overflow: hidden; }
+  .tx { position: absolute; white-space: nowrap; text-align: center; font-synthesis: none; line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="grp" class="abs">
+      <div id="sl" class="stripe"><div id="t1" class="tx ml-display"></div></div>
+      <div id="sm" class="stripe"><div id="t2" class="tx ml-display"></div></div>
+      <div id="sr" class="stripe"><div id="t3" class="tx ml-display"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixc = (a, b, t) => { const x = hex(a), y = hex(b); return x.map((v, i) => v + (y[i] - v) * t); };
+  const css = (c, a) => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${a})`;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const EC = {};
+  const ez = e => typeof e === "function" ? e : (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const t = Math.min(1, Math.max(0, (g - f0) / (f1 - f0))); return e ? ez(e)(t) : t; };
+  const bz = (x1, y1, x2, y2) => t => { let s = t; for (let i = 0; i < 8; i++) { const x = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s - t;
+    const d = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2); if (Math.abs(d) < 1e-6) break; s = Math.min(1, Math.max(0, s - x / d)); }
+    return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+
+  // the dark ground with a soft glow in the middle (painted only when asked: off = see-through)
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? `radial-gradient(circle at 50% 50%, ${css(mixc(L.ink, L.paper, 0.07), 1)} 0%, ${L.ink} 72%)` : "transparent" });
+
+  // ---- layout: the columns at rest (left 32 %, middle 35 %, right 33 % of the width)
+  const wm = W * 0.352, lx = (W - wm) / 2;
+  const sl = q("sl"), sm = q("sm"), sr = q("sr"), grp = q("grp");
+  Object.assign(grp.style, { width: `${W}px`, height: `${H}px` });
+  const colL = { x: -W, w: W + lx }, colM = { x: lx, w: wm }, colR = { x: lx + wm, w: W - lx - wm + W };
+  [[sl, colL], [sm, colM], [sr, colR]].forEach(([el, c]) => Object.assign(el.style, { left: `${c.x}px`, width: `${c.w}px`, height: `${3 * H}px` }));
+  const cx = [lx / 2, W / 2, W - lx / 2];                      // the words stand in the middle of each column at rest
+  const stripeC = L[V.stripe] || L.signal, flashC = V.flash === "none" ? null : (L[V.flash] || L.mustard);
+  const words = [[q("t1"), V.text_1, L.paper, colL, 0], [q("t2"), V.text_2, null, colM, 1], [q("t3"), V.text_3, L.paper, colR, 2]];
+  words.forEach(([el, text, colr, col, k]) => {
+    const n = Math.max(1, String(text || "").length);
+    const fs = Math.min(V.size * U, 0.9 * (k === 1 ? wm : lx + 0) / (n * 0.66));
+    Object.assign(el.style, { fontSize: `${fs}px`, fontWeight: String(fw(V.display_font, 900)) });
+    if (window.MLLook) MLLook.rich(el, text, { look: L, family: V.display_font, weight: fw(V.display_font, 900) }); else el.textContent = text;
+    gsap.set(el, { xPercent: -50, yPercent: -50 });
+    if (colr) { el.style.color = colr; el.style.textShadow = `${3 * U}px ${5 * U}px ${7 * U}px ${css(hex(L.ink), 0.5)}`; }
+  });
+
+  // ---- the motion, frame by frame from one proxy (seek-safe)
+  const S = Math.round(V.start);
+  const eRot = bz(0.65, 0.55, 0.55, 0.8);
+  const TY = 0.5 * H - 6 * U;                                  // the words' height in the group
+  function render(t) {
+    const g = t * FPS - S;
+    // the whole group: tilted at the start, straightening with one S-curve, settling from 1.12x to 1x
+    const th = V.tilt * (1 - P(g, 4, 114, eRot));
+    gsap.set(grp, { rotation: th, scale: 1 + 0.0083 * th, transformOrigin: "50% 50%" });
+    // the colour flash of the outer stripes: f44-f48 to the flash colour, a hold, a snap back at f56
+    const k = flashC && g >= 44 && g < 55.5 ? 0.5 * P(g, 44, 48, "power1.out") : 0;
+    const oc = flashC ? mixc(stripeC, flashC, k) : hex(stripeC);
+    // left stripe: slides down from the top (its bottom edge 0.17 H a frame), fading in; its word follows
+    const yb = Math.min(1.7 * H, 0.17 * H * g);
+    const aL = P(g, 1, 11, "power2.out");
+    sl.style.top = `${yb - 3 * H}px`; sl.style.background = css(oc, aL);
+    // middle stripe: slides up from below (top edge 0.185 H a frame), going from dark to white
+    const yt = Math.max(-0.45 * H, 1.1 * H - (g - 9) * 0.185 * H);
+    sm.style.top = `${yt}px`; sm.style.background = css(hex(L.paper), g < 9 ? 0 : P(g, 10, 32, "power3.out"));
+    // right stripe: slides down from the top, fast (0.3 H a frame), fading in
+    const ybR = g < 21 ? -0.2 * H : Math.min(2.4 * H, -0.1 * H + (g - 21) * 0.3 * H);
+    sr.style.top = `${ybR - 3 * H}px`; sr.style.background = css(oc, P(g, 22, 44, "power2.out"));
+    // the words: each glides into place after its stripe (left from above, middle from below, right from above)
+    const o1 = -0.5 * H * (1 - P(g, 5, 19, "power2.out")), o2 = 0.5 * H * (1 - P(g, 13, 27, "power2.out")), o3 = -0.5 * H * (1 - P(g, 25, 37, "power2.out"));
+    const place = (el, st, col, x, yAbs) => { el.style.left = `${x - col.x}px`; el.style.top = `${yAbs - parseFloat(st.style.top || "0")}px`; };
+    place(q("t1"), sl, colL, cx[0], TY + o1);
+    place(q("t2"), sm, colM, cx[1], TY + o2);
+    place(q("t3"), sr, colR, cx[2], TY + o3);
+    q("t2").style.color = css(oc, 1);
+    q("t2").style.textShadow = `${3 * U}px ${5 * U}px 0 ${css(mixc(css0(oc), L.ink, 0.55), 1)}`;
+  }
+  function css0(c) { return `#${c.map(v => Math.round(v).toString(16).padStart(2, "0")).join("")}`; }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 7 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 19 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

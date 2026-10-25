@@ -1,0 +1,33 @@
+{
+ "name": "donut-chart-segments-labels",
+ "frames": 360,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 400,
+   "to": 2000,
+   "db": -11,
+   "what": "the first segment sweeps round the ring"
+  },
+  {
+   "f": "start + round(45 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 400,
+   "to": 2000,
+   "db": -12,
+   "what": "the second segment sweeps"
+  },
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "tick",
+   "db": -6,
+   "what": "the first leader line draws and its label appears"
+  }
+ ]
+}

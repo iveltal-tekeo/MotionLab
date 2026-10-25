@@ -1,0 +1,33 @@
+{
+ "name": "envelope-card-reveal",
+ "frames": 240,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(13 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 300,
+   "to": 1000,
+   "db": -10,
+   "what": "the envelope slides up from the bottom"
+  },
+  {
+   "f": "start + round(67 * fps / 30)",
+   "kind": "thump",
+   "db": -6,
+   "what": "the flap flips open"
+  },
+  {
+   "f": "start + round(76 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2200,
+   "db": -8,
+   "what": "the card slides up out of the envelope"
+  }
+ ]
+}

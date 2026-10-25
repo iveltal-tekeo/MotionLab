@@ -1,0 +1,31 @@
+{
+ "name": "question-mark-hook-text",
+ "frames": 180,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "shimmer",
+   "dur": "0.7",
+   "db": -6,
+   "what": "the neon question mark lights up"
+  },
+  {
+   "f": "start + round(106 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2400,
+   "to": 500,
+   "db": -9,
+   "what": "the mark and the question fall out of the frame"
+  },
+  {
+   "f": "start + round(124 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the closing line pops in"
+  }
+ ]
+}

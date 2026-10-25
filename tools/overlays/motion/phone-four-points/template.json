@@ -1,0 +1,109 @@
+{
+ "name": "Phone with four points",
+ "kind": "photos",
+ "category": "Logos",
+ "what": "A column of phones scrolls down like a feed and settles on the middle one, which plays your video; a progress bar fills along its bottom edge, then four curly arrows draw out of its sides to four short points, two on each side.",
+ "use_for": [
+  "explain a video",
+  "reel breakdown",
+  "tips",
+  "four points",
+  "app",
+  "social media",
+  "feature list",
+  "mockup",
+  "short form"
+ ],
+ "tags": [
+  "phone",
+  "mockup",
+  "arrows",
+  "callouts",
+  "points",
+  "feed",
+  "progress bar",
+  "needs media",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f30 the column scrolls down and settles (slow start, long settle, cubic-bezier(0.45, 0, 0.2, 1)); f44-f66 the progress bar fills (S-curve); f80-f90 four arrows draw out (expo out), heads f87-f91; f90-f106 the points rise in 2 f apart (10 f each); then a slow drift",
+ "tracks": [
+  {
+   "name": "phones",
+   "what": "the column scrolls down 0.76 of a phone and settles on the middle one",
+   "start_f": 0,
+   "length_f": 30,
+   "easing": "cubic-bezier(0.45, 0, 0.2, 1)"
+  },
+  {
+   "name": "progress",
+   "what": "the bar fills along the screen's bottom edge",
+   "start_f": 44,
+   "length_f": 22,
+   "easing": "power2.inOut (cubic-bezier(0.45, 0, 0.55, 1))"
+  },
+  {
+   "name": "arrows",
+   "what": "four curly arrows draw out of the phone's sides",
+   "start_f": 80,
+   "length_f": 10,
+   "easing": "expo.out"
+  },
+  {
+   "name": "points",
+   "what": "the four points rise in, 2 f apart",
+   "start_f": 90,
+   "length_f": 16,
+   "easing": "expo.out"
+  },
+  {
+   "name": "drift",
+   "what": "the column drifts 10 px",
+   "start_f": 30,
+   "length_f": 145,
+   "easing": "sine.inOut"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "point1",
+  "point2",
+  "point3",
+  "point4"
+ ],
+ "media_slots": [
+  {
+   "id": "screen_media",
+   "label": "The phone's screen",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 5.8,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient screen in the look, labelled 'your video'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 130,
+ "check_frames": [
+  0,
+  8,
+  14,
+  22,
+  30,
+  55,
+  84,
+  92,
+  100,
+  130
+ ]
+}

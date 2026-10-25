@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "main", "type": "string", "label": "Main text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Big idea"},
+  {"id": "head", "type": "string", "label": "Small line above the main text", "default": "Your topic"},
+  {"id": "subs", "type": "string", "label": "Branch texts (| between, 1 to 5)", "default": "First step|Second step|Third step"},
+  {"id": "heads", "type": "string", "label": "Small line above each branch (| between)", "default": "Part one|Part two|In this part"},
+  {"id": "unit", "type": "string", "label": "Word before each number", "default": "Day"},
+  {"id": "first", "type": "number", "label": "First number (the main card; the branches count on from it)", "default": 1, "min": 0, "max": 99, "step": 1},
+  {"id": "size", "type": "number", "label": "Text size (% of the original)", "default": 100, "min": 50, "max": 150, "step": 1},
+  {"id": "col", "type": "enum", "label": "Card colour", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "num", "type": "enum", "label": "Number colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "flowchart-tree-branch" (2026-10-23): a flowchart of cards on a dark woven wall, seen by a moving camera. A main card fades in (f10-f16) while the
+     camera dollies in on it (f10-f28, a hold to f44); a white line grows out of its right edge and up (f44-f54), the
+     camera swings after it (f46-f64) to the first branch card, which fades in (f57-f70); the camera drifts down the
+     column as the next cards fade in with their lines (second f73-f88, third f99-f117: the line runs down f103-f110) and
+     rests (f114-f146); then it pulls back (f146-f186, decelerating) to show the whole tree. The cards, lines and wall
+     sit on one plane; the camera is the measured homography of each frame (plane -> screen, every 2 frames), so the
+     foreshortening and the zoom are the clip's. The number of branches (1 to 5) re-aims the camera along the column.
+     Numbers measured from the reference's frames (1280 x 720 units, scaled x1.5; the plane in units where a branch card
+     is 1000 wide). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #plane { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  #plane > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #wall { position: absolute; }
+  .card { position: absolute; overflow: visible; }
+  .hd { position: absolute; left: 0; top: 0; right: 0; height: 82px; display: flex; align-items: center; padding-left: 46px; white-space: nowrap; }
+  .bd { position: absolute; left: 0; top: 82px; right: 0; bottom: 0; display: flex; align-items: center; padding: 0 70px 0 38px; }
+  .tx { flex: 1; min-width: 0; white-space: nowrap; line-height: 1.05; font-synthesis: none; }
+  .nm { display: flex; align-items: baseline; white-space: nowrap; line-height: 1; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7.5666" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="plane"></div></div>
+  <div id="vig" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 227;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.3;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const words = s => String(s == null ? "" : s).split("|").map(x => x.trim());
+  const pickC = { deep: L.deep, signal: L.signal, mustard: L.mustard, ink: glare, paper: glare };
+
+  // ---- the measured camera: plane (units) -> the reference's 1280 x 720 frame, every 2 frames from f10
+  const CAM = [[0.3525,0.0041,561.3,0.0051,0.2867,167.3,3.9e-05,-6e-06],
+    [0.3961,0.0049,576.8,0.0042,0.3242,150.3,3.9e-05,-6e-06],
+    [0.4374,0.0058,591.5,0.0038,0.3597,142.7,3.9e-05,-6e-06],
+    [0.4926,0.0068,617.3,0.0032,0.4069,135.4,3.9e-05,-6e-06],
+    [0.5712,0.015,719.4,0.0208,0.461,106.3,9e-05,-2.4e-05],
+    [0.6281,0.0281,855.5,0.0371,0.5104,62.2,0.000132,-2.1e-05],
+    [0.6403,0.0264,934.3,0.0501,0.5112,40.2,0.000159,-5.4e-05],
+    [0.6529,0.03,996.7,0.0573,0.5245,20.1,0.000172,-5.8e-05],
+    [0.6636,0.0358,1041.0,0.0609,0.539,3.5,0.000181,-5.4e-05],
+    [0.6672,0.0368,1065.4,0.0643,0.5424,-3.3,0.000186,-5.7e-05],
+    [0.6695,0.0377,1078.8,0.0662,0.5464,-7.9,0.000189,-5.7e-05],
+    [0.6695,0.0377,1078.8,0.0662,0.5465,-7.9,0.000189,-5.7e-05],
+    [0.6572,0.0233,1068.9,0.0674,0.5254,-0.2,0.00019,-8.5e-05],
+    [0.6693,0.0349,1080.1,0.0669,0.5437,-5.5,0.00019,-6.1e-05],
+    [0.6639,0.0268,1069.6,0.0672,0.5347,0.6,0.000189,-7.6e-05],
+    [0.676,0.0364,1069.8,0.0676,0.5504,-0.4,0.000191,-5.8e-05],
+    [0.6737,0.0297,1045.6,0.0688,0.5397,10.5,0.000195,-7.5e-05],
+    [0.6911,0.0362,1033.4,0.0687,0.5615,13.4,0.000196,-6e-05],
+    [0.707,0.0365,996.7,0.0704,0.5731,28.2,0.000201,-6.1e-05],
+    [0.7355,0.0378,930.3,0.0729,0.5945,54.7,0.000209,-6.2e-05],
+    [0.7913,0.0409,798.8,0.0767,0.6357,107.2,0.000224,-6.7e-05],
+    [0.8726,0.0609,635.4,0.0769,0.7188,164.5,0.00024,-4.4e-05],
+    [0.8747,0.062,628.1,0.0759,0.7276,166.3,0.000239,-3.7e-05],
+    [0.8912,0.0704,578.5,0.0725,0.7883,178.9,0.000234,1.4e-05],
+    [0.9161,0.083,503.6,0.0672,0.88,197.9,0.000226,9.1e-05],
+    [0.9409,0.0956,428.7,0.062,0.9717,216.9,0.000218,0.000168],
+    [0.9574,0.104,379.2,0.0585,1.0324,229.5,0.000213,0.000219],
+    [0.9599,0.1052,371.8,0.058,1.0414,231.4,0.000212,0.000227],
+    [0.9802,0.0634,371.5,0.0656,1.0214,225.0,0.000231,0.000161],
+    [0.9866,0.0269,372.8,0.0712,0.9925,216.3,0.000245,9.1e-05],
+    [0.9905,0.01,374.9,0.0742,0.9774,202.6,0.000253,5.7e-05],
+    [0.9899,0.0078,375.1,0.0749,0.9711,182.9,0.000254,5.2e-05],
+    [0.9884,0.0093,373.3,0.0757,0.9641,152.7,0.000254,5.5e-05],
+    [0.9837,0.0068,368.9,0.078,0.9484,102.7,0.000254,4.9e-05],
+    [0.9768,0.0064,361.3,0.0812,0.9269,28.5,0.000252,5e-05],
+    [0.9709,0.0067,354.7,0.0834,0.9092,-30.7,0.000251,5.1e-05],
+    [0.9631,0.0241,345.0,0.0853,0.8758,-60.8,0.000251,2.6e-05],
+    [0.9606,0.0341,339.6,0.0869,0.8579,-79.9,0.000253,1.2e-05],
+    [0.9608,0.033,336.1,0.087,0.8386,-90.1,0.00026,-9e-06],
+    [0.96,0.0314,333.2,0.087,0.8247,-97.7,0.000264,-2.5e-05],
+    [0.9604,0.0316,330.6,0.0873,0.8179,-105.5,0.000266,-3.2e-05],
+    [0.9604,0.0317,330.6,0.0873,0.818,-105.5,0.000266,-3.2e-05],
+    [0.9605,0.0322,327.9,0.0881,0.8141,-114.5,0.000267,-3.6e-05],
+    [0.9598,0.0322,324.9,0.0884,0.8113,-125.9,0.000267,-3.7e-05],
+    [0.9594,0.0325,321.3,0.0893,0.8095,-142.9,0.000268,-3.7e-05],
+    [0.9566,0.0317,316.5,0.0899,0.8045,-170.8,0.000267,-3.7e-05],
+    [0.9514,0.0312,309.2,0.0912,0.7958,-223.3,0.000265,-3.6e-05],
+    [0.9436,0.0298,300.2,0.0932,0.7842,-294.5,0.000262,-3.6e-05],
+    [0.9372,0.0278,294.4,0.0943,0.7746,-336.5,0.00026,-3.9e-05],
+    [0.934,0.0271,290.9,0.0952,0.7698,-359.1,0.000259,-3.9e-05],
+    [0.9232,0.0347,280.8,0.0959,0.7472,-361.0,0.000257,-5.4e-05],
+    [0.9179,0.0406,274.4,0.0964,0.736,-363.5,0.000257,-6.1e-05],
+    [0.9138,0.043,271.0,0.0972,0.7267,-363.4,0.000257,-6.7e-05],
+    [0.9109,0.0429,269.8,0.0979,0.7187,-361.6,0.000258,-7.3e-05],
+    [0.9091,0.0434,269.4,0.0986,0.7146,-360.2,0.000258,-7.6e-05],
+    [0.9074,0.043,269.9,0.0991,0.7116,-358.7,0.000258,-7.8e-05],
+    [0.9074,0.0431,269.9,0.0991,0.7116,-358.7,0.000258,-7.8e-05],
+    [0.9066,0.0427,270.9,0.0996,0.7103,-358.5,0.000259,-7.9e-05],
+    [0.9061,0.0423,271.9,0.1,0.7101,-359.1,0.000258,-7.9e-05],
+    [0.9055,0.0416,273.1,0.1004,0.7098,-359.7,0.000258,-7.9e-05],
+    [0.9058,0.0411,274.3,0.101,0.71,-361.1,0.000258,-7.9e-05],
+    [0.9054,0.0404,275.4,0.1013,0.7098,-362.3,0.000258,-7.9e-05],
+    [0.9056,0.04,276.5,0.1018,0.71,-364.0,0.000258,-7.9e-05],
+    [0.9054,0.0395,277.6,0.102,0.7099,-365.5,0.000257,-7.9e-05],
+    [0.9052,0.039,278.7,0.102,0.71,-367.1,0.000257,-7.9e-05],
+    [0.905,0.0387,279.9,0.1022,0.7099,-368.3,0.000257,-7.9e-05],
+    [0.9029,0.0384,282.7,0.1019,0.7086,-367.5,0.000256,-7.8e-05],
+    [0.8983,0.0379,287.5,0.1012,0.7053,-364.0,0.000254,-7.8e-05],
+    [0.8918,0.0376,294.2,0.1004,0.7004,-357.9,0.000252,-7.7e-05],
+    [0.8819,0.037,303.6,0.0988,0.693,-348.1,0.000249,-7.6e-05],
+    [0.8689,0.0366,315.9,0.0969,0.6831,-334.5,0.000245,-7.4e-05],
+    [0.8689,0.0366,315.9,0.0969,0.6832,-334.5,0.000245,-7.4e-05],
+    [0.8515,0.0363,331.7,0.0943,0.6705,-316.4,0.000239,-7.2e-05],
+    [0.8301,0.0362,351.6,0.0911,0.6544,-293.1,0.000233,-6.9e-05],
+    [0.8021,0.0356,377.3,0.0871,0.6332,-262.8,0.000224,-6.6e-05],
+    [0.7661,0.0347,410.3,0.0823,0.606,-224.1,0.000214,-6.3e-05],
+    [0.7197,0.0334,452.7,0.0762,0.5707,-174.1,0.0002,-5.9e-05],
+    [0.6598,0.0314,507.2,0.0685,0.525,-109.6,0.000182,-5.3e-05],
+    [0.5935,0.0298,566.9,0.0603,0.4747,-38.2,0.000163,-4.7e-05],
+    [0.5435,0.0285,611.7,0.0541,0.4369,15.3,0.000148,-4.2e-05],
+    [0.5135,0.0275,638.6,0.0503,0.414,47.3,0.000139,-4e-05],
+    [0.4949,0.0271,655.2,0.048,0.3998,67.2,0.000133,-3.8e-05],
+    [0.4824,0.0267,666.1,0.0464,0.3901,80.4,0.00013,-3.7e-05],
+    [0.4737,0.0268,673.6,0.0452,0.3837,89.7,0.000127,-3.6e-05],
+    [0.4674,0.0267,678.8,0.0445,0.3788,96.5,0.000125,-3.6e-05],
+    [0.4627,0.0267,682.5,0.0439,0.3752,101.6,0.000124,-3.5e-05],
+    [0.4627,0.0267,682.5,0.0439,0.3752,101.6,0.000124,-3.5e-05],
+    [0.4593,0.0264,684.9,0.0435,0.3724,105.6,0.000123,-3.6e-05],
+    [0.4568,0.0263,686.5,0.0433,0.3704,108.6,0.000122,-3.6e-05],
+    [0.4552,0.0265,687.3,0.0431,0.3693,110.8,0.000122,-3.5e-05],
+    [0.4543,0.0265,687.4,0.043,0.3685,112.4,0.000121,-3.5e-05],
+    [0.4541,0.0264,687.2,0.043,0.3683,113.5,0.000121,-3.5e-05],
+    [0.4544,0.0264,686.7,0.0431,0.3684,114.3,0.000121,-3.5e-05],
+    [0.4547,0.0264,686.2,0.0432,0.3686,115.0,0.000121,-3.5e-05],
+    [0.4549,0.0262,685.7,0.0434,0.3686,115.9,0.000122,-3.6e-05],
+    [0.4553,0.0262,685.4,0.0436,0.369,116.7,0.000122,-3.5e-05],
+    [0.4557,0.0261,685.1,0.0438,0.3692,117.4,0.000122,-3.6e-05],
+    [0.456,0.0263,684.9,0.0441,0.3696,118.1,0.000122,-3.5e-05],
+    [0.4563,0.0258,684.9,0.0444,0.3696,118.8,0.000122,-3.6e-05],
+    [0.4564,0.0257,684.9,0.0447,0.3699,119.4,0.000123,-3.6e-05],
+    [0.4565,0.0256,684.9,0.0451,0.37,119.8,0.000123,-3.6e-05],
+    [0.4565,0.0256,684.9,0.0451,0.37,119.9,0.000123,-3.6e-05],
+    [0.4565,0.0253,685.1,0.0454,0.3699,120.2,0.000123,-3.6e-05],
+    [0.4563,0.0251,685.3,0.0456,0.3698,120.5,0.000123,-3.6e-05],
+    [0.4561,0.0252,685.6,0.0457,0.3698,120.7,0.000123,-3.6e-05],
+    [0.4557,0.0249,685.8,0.0458,0.3693,121.2,0.000123,-3.6e-05],
+    [0.4555,0.0247,686.0,0.0458,0.3691,121.6,0.000123,-3.6e-05],
+    [0.4552,0.0247,686.2,0.0457,0.3689,122.0,0.000122,-3.6e-05],
+    [0.455,0.0243,686.5,0.0456,0.3684,122.5,0.000122,-3.7e-05]];
+  // ---- the content
+  const subsT = words(V.subs).filter(x => x.length).slice(0, 5);
+  const N = Math.max(1, subsT.length || 3);
+  const heads = words(V.heads);
+  const PITCH = 495.5, CH = 294, CW = 1000, MW = 1064, MH = 304, JU = -150;
+  const subTop = k => k * PITCH;
+  const colMid = ((N - 1) * PITCH + CH) / 2;                // the main card is centred on the column
+  const mainTop = colMid - MH / 2, mainLeft = -1310;
+  const armV = k => subTop(k) + 172, juncV = colMid + 25.5;
+  const base = pickC[V.col] || L.deep;
+  const cTop = lum(base) < 0.4 ? mixC(base, glare, 0.14) : base, cBot = mixC(cTop, "#000000", 0.58), cHead = mixC(cTop, "#000000", 0.66);
+  const numC = pickC[V.num] || L.signal, dayC = mixC(numC, "#000000", 0.35);
+  const plane = q("plane");
+
+  // the wall: a dark woven cloth on the plane
+  const wall = document.createElement("div"); wall.id = "wall"; plane.appendChild(wall);
+  Object.assign(wall.style, { left: "-6500px", top: "-6000px", width: "15500px", height: "12500px" });
+  const wb = mixC(night, glare, L.dark ? 0.05 : 0.11);
+  if (V.background) wall.style.background = `repeating-linear-gradient(90deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 22px), repeating-linear-gradient(0deg, ${rgba(glare, 0.035)} 0px, ${rgba(glare, 0.035)} 7px, rgba(0,0,0,0.12) 7px, rgba(0,0,0,0.12) 14px), ${wb}`;
+  else wall.style.display = "none";
+  const vig = q("vig");
+  Object.assign(vig.style, { width: `${W}px`, height: `${H}px`, pointerEvents: "none" });
+  if (V.background) vig.style.background = "radial-gradient(ellipse 78% 82% at 50% 46%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.92) 100%)";
+
+  // the lines (white, with a soft glow)
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, parent) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; };
+  const lsvg = el("svg", { width: 1, height: 1 }, plane);
+  lsvg.style.filter = `drop-shadow(0 0 7px ${rgba(glare, 0.45)})`;
+  const lineAt = { stroke: glare, "stroke-width": 10, "stroke-linecap": "butt", fill: "none" };
+  const lnMain = el("line", lineAt, lsvg), lnVert = el("line", lineAt, lsvg);
+  const lnArm = Array.from({ length: N }, () => el("line", lineAt, lsvg));
+
+  // the cards
+  const mkCard = (x, y, w, h, head, text, nStr, big) => {
+    const d = document.createElement("div"); d.className = "card"; plane.appendChild(d);
+    Object.assign(d.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, opacity: 0 });
+    const hd = document.createElement("div"); hd.className = "hd ml-body"; d.appendChild(hd);
+    Object.assign(hd.style, { background: cHead, color: rgba(glare, 0.88), fontSize: `${30 * V.size / 100}px`, fontWeight: String(fw(V.body_font, 400)) });
+    const hi = document.createElement("div"); hd.appendChild(hi);                      // (rich text makes inline words: a flex row would drop the spaces)
+    if (window.MLLook) MLLook.rich(hi, head, { look: L, family: V.body_font, weight: 400 }); else hi.textContent = head;
+    const bd = document.createElement("div"); bd.className = "bd"; d.appendChild(bd);
+    bd.style.background = `linear-gradient(180deg, ${cTop} 0%, ${mixC(cTop, cBot, 0.5)} 55%, ${cBot} 100%)`;
+    const tx = document.createElement("div"); tx.className = "tx ml-display"; bd.appendChild(tx);
+    const fs = (big ? 95 : 70) * V.size / 100;
+    if (window.MLLook) MLLook.rich(tx, text, { look: L, family: V.display_font, weight: 700 }); else tx.textContent = text;
+    Object.assign(tx.style, { color: glare, fontSize: `${fs}px`, fontWeight: String(fw(V.display_font, 700)), fontStyle: "italic",
+      textShadow: `0 0 10px ${rgba(glare, 0.6)}, 0 0 28px ${rgba(numC, 0.5)}` });
+    const nm = document.createElement("div"); nm.className = "nm ml-accent"; bd.appendChild(nm);
+    const dy = document.createElement("span"); dy.textContent = V.unit; Object.assign(dy.style, { color: dayC, fontSize: `${38 * V.size / 100}px`, marginRight: "14px", fontWeight: String(fw(V.accent_font, 700)), textShadow: `0 0 14px ${rgba(numC, 0.5)}` });
+    const nu = document.createElement("span"); nu.textContent = nStr; Object.assign(nu.style, { color: numC, fontSize: `${165 * V.size / 100}px`, fontWeight: String(fw(V.accent_font, 800)), textShadow: `0 0 18px ${rgba(numC, 0.6)}` });
+    nm.appendChild(dy); nm.appendChild(nu);
+    return { d, tx, hd, nm };
+  };
+  const mainCard = mkCard(mainLeft, mainTop, MW, MH, V.head, V.main, String(Math.round(V.first)), true);
+  const subCards = subsT.map((t, k) => mkCard(0, subTop(k), CW, CH, heads[k] !== undefined ? heads[k] : (heads[heads.length - 1] || ""), t, String(Math.round(V.first) + k + 1), false));
+  // the subtexts and the main text shrink to fit (measured with the real font) - a long text must not run under the number
+  let ready = false;
+  function layout() {
+    [mainCard].concat(subCards).forEach((c, i) => {
+      const room = c.tx.clientWidth;
+      if (c.tx.scrollWidth > room + 1 && room > 0) c.tx.style.fontSize = `${parseFloat(c.tx.style.fontSize) * room / c.tx.scrollWidth}px`;
+    });
+    ready = true;
+  }
+
+  // ---- the timeline (frames; g = the frame minus "Starts at frame")
+  const ease = (x, p) => 1 - Math.pow(1 - clamp01(x), p);
+  const T_SUB = [57, 73, 99], T_END = [70, 88, 117], T_ARM = [54, 76, 109];        // each branch card's fade (start, end) and its arm's start
+  const subStart = k => k < 3 ? T_SUB[k] : 99 + (k - 2) * 21, subEnd = k => k < 3 ? T_END[k] : 117 + (k - 2) * 21;
+  const armStart = k => k < 3 ? T_ARM[k] : 109 + (k - 2) * 21;
+  // camera helpers: the matrix of a frame (interpolated), the plane point under the screen centre, the zoom
+  const camAt = g => { const x = (g - 10) / 2; if (x <= 0) return CAM[0]; if (x >= CAM.length - 1) return CAM[CAM.length - 1]; const i = Math.floor(x), k = x - i; return CAM[i].map((v, j) => v + (CAM[i + 1][j] - v) * k); };
+  const toM = r => [[r[0], r[1], r[2]], [r[3], r[4], r[5]], [r[6], r[7], 1]];
+  const mul = (A, B) => A.map((_, i) => [0, 1, 2].map(j => A[i][0] * B[0][j] + A[i][1] * B[1][j] + A[i][2] * B[2][j]));
+  const inv3 = m => { const [a, b, c] = m[0], [d, e, f] = m[1], [g, h, i] = m[2]; const A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, det = a * A + b * B + c * C;
+    return [[A / det, (c * h - b * i) / det, (b * f - c * e) / det], [B / det, (a * i - c * g) / det, (c * d - a * f) / det], [C / det, (b * g - a * h) / det, (a * e - b * d) / det]]; };
+  const centreOf = m => { const r = inv3(m), x = r[0][0] * 640 + r[0][1] * 360 + r[0][2], y = r[1][0] * 640 + r[1][1] * 360 + r[1][2], w = r[2][0] * 640 + r[2][1] * 360 + r[2][2]; return [x / w, y / w]; };
+  const zoomOf = m => Math.sqrt(Math.abs(m[0][0] * m[1][1] - m[0][1] * m[1][0]));
+  const trans = (tx, ty) => [[1, 0, tx], [0, 1, ty], [0, 0, 1]];
+  const zoomC = k => [[k, 0, 640 * (1 - k)], [0, k, 360 * (1 - k)], [0, 0, 1]];
+  // the original's anchors (N = 3), measured: the camera frames the main card to f48, the branches f64-f144, the whole tree at f226
+  const MA = toM(camAt(40)), MB = toM(camAt(64)), ME = toM(camAt(144)), MF = toM(camAt(226));
+  const vA = centreOf(MB)[1], vE = centreOf(ME)[1], vF = centreOf(MF)[1], sE = zoomOf(ME), sF = zoomOf(MF);
+  const vEn = Math.max(vA, (N - 1) * PITCH - 12), vFn = colMid - 19.5;
+  const dMain = colMid - 642.5;                                  // the main card sits at a different height when the column is taller / shorter
+  const Ht = (N - 1) * PITCH + CH, kFinal = Math.min(1, 1330 / Ht);
+  const uA = centreOf(toM(camAt(48)))[0], uB = centreOf(MB)[0];
+  function camera(g) {
+    let M = toM(camAt(g));
+    const [uc, vc] = centreOf(M), s = zoomOf(M);
+    let dv, kz = 1;
+    if (g <= 48) dv = dMain;
+    else if (g < 64) { const p = clamp01((uc - uA) / (uB - uA)); dv = dMain * (1 - p); }
+    else if (g <= 144) { dv = (vA + (vc - vA) * (vEn - vA) / (vE - vA)) - vc; }
+    else { const w = clamp01((sE - s) / (sE - sF)), dE = (vA + (vE - vA) * (vEn - vA) / (vE - vA)) - vE; dv = dE + ((vFn - vF) - dE) * w; kz = 1 + (kFinal - 1) * w; }
+    M = mul(M, trans(0, -dv));
+    if (kz !== 1) M = mul(zoomC(kz), M);
+    return M;
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    plane.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const M = camera(g), k = K;
+    const m = [[M[0][0] * k, M[0][1] * k, M[0][2] * k], [M[1][0] * k, M[1][1] * k, M[1][2] * k], [M[2][0], M[2][1], M[2][2]]];
+    plane.style.transform = `matrix3d(${m[0][0]},${m[1][0]},0,${m[2][0]}, ${m[0][1]},${m[1][1]},0,${m[2][1]}, 0,0,1,0, ${m[0][2]},${m[1][2]},0,${m[2][2]})`;
+    // the main card fades in, the branch cards after it
+    mainCard.d.style.opacity = clamp01((g - 9) / 7).toFixed(3);
+    subCards.forEach((c, i) => { c.d.style.opacity = ease((g - subStart(i)) / (subEnd(i) - subStart(i)), 1.8).toFixed(3); });
+    // the lines: out of the main card, up to the first branch, then each arm and the way down
+    const mainX1 = mainLeft + MW, p0 = ease((g - 43.5) / 4.5, 1.8);
+    setLine(lnMain, mainX1, juncV, mainX1 + (JU - mainX1) * p0, juncV, p0);
+    const a0 = armV(0), upP = clamp01((g - 47) / 7);                      // up to the first arm (if it is above the junction)
+    let yTop = juncV, yBot = juncV;
+    if (a0 < juncV - 1) yTop = juncV + (a0 - juncV) * upP;
+    for (let i = 0; i < N; i++) { if (armV(i) > juncV + 1) { const f = clamp01((g - (armStart(i) - 7)) / 7); yBot = Math.max(yBot, juncV + (armV(i) - juncV) * f); } }
+    setLine(lnVert, JU, yTop, JU, yBot, 1);
+    for (let i = 0; i < N; i++) { const dur = i === 0 ? 4 : i === 1 ? 4 : 7, pa = ease((g - armStart(i)) / dur, 1.6); setLine(lnArm[i], JU, armV(i), JU + (0 - JU) * pa, armV(i), pa); }
+  }
+  function setLine(ln, x1, y1, x2, y2, p) {
+    ln.setAttribute("x1", x1.toFixed(2)); ln.setAttribute("y1", y1.toFixed(2)); ln.setAttribute("x2", x2.toFixed(2)); ln.setAttribute("y2", y2.toFixed(2));
+    ln.style.visibility = p > 0.001 ? "visible" : "hidden";
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the card texts are measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 800].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

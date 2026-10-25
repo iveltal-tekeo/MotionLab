@@ -1,0 +1,114 @@
+{
+ "name": "Footage card, text slides in",
+ "kind": "text",
+ "category": "Social",
+ "what": "Your footage fills the frame, then spins and tilts away in 3D, shrinking into a tilted card; after a held beat the card shrinks and slides to the left while a bold two-line text slides in from the right in a sideways blur, both dipping a little before they settle.",
+ "use_for": [
+  "video title",
+  "reveal",
+  "opener",
+  "intro",
+  "statement beside a clip",
+  "social post",
+  "feature highlight",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "card",
+  "3d",
+  "spin",
+  "slide in",
+  "motion blur",
+  "needs media",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f9 the card, full frame, spins and tilts in 3D and shrinks to about 80 % (decelerating), f9-f16 it swings back a little and settles tilted; f16-f39 it holds (a slight drift); f40-f51 it shrinks and slides left while the text slides in from the right in a sideways blur (f41-f45), both dipping at f48 and settling by f51; then it holds to the end",
+ "tracks": [
+  {
+   "name": "spin",
+   "what": "the full-frame card spins and tilts in 3D and shrinks to about 80 %",
+   "start_f": 2,
+   "length_f": 8,
+   "easing": "decelerating (measured corners)"
+  },
+  {
+   "name": "settle",
+   "what": "it swings back a little and settles tilted",
+   "start_f": 9,
+   "length_f": 8,
+   "easing": "decelerating (measured corners)"
+  },
+  {
+   "name": "hold",
+   "what": "the card holds, drifting a hair",
+   "start_f": 16,
+   "length_f": 24,
+   "easing": "none"
+  },
+  {
+   "name": "slide",
+   "what": "the card shrinks and slides to the left, dipping a little before it settles",
+   "start_f": 40,
+   "length_f": 12,
+   "easing": "accelerating, then an S-curve settle"
+  },
+  {
+   "name": "text",
+   "what": "the text slides in from the right in a sideways blur, dips smaller and settles",
+   "start_f": 41,
+   "length_f": 11,
+   "easing": "accelerating (slow start), then an S-curve settle"
+  },
+  {
+   "name": "hold end",
+   "what": "everything still (the footage keeps playing, the film grain moves)",
+   "start_f": 52,
+   "length_f": 28,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The card's footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 2.8,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "a card with diagonal stripes in the look and the words 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  3,
+  6,
+  9,
+  16,
+  30,
+  41,
+  43,
+  45,
+  48,
+  55
+ ]
+}

@@ -1,0 +1,93 @@
+{
+ "name": "Progress bars compared",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Under a title, four labelled grey bars fill with a soft light glow - one gets far, the others only a little - then the light turns into your accent colour and every bar rushes on to the same end.",
+ "use_for": [
+  "comparison",
+  "progress",
+  "paths",
+  "options",
+  "same result",
+  "stats",
+  "explainer",
+  "report",
+  "ui"
+ ],
+ "tags": [
+  "chart",
+  "progress bar",
+  "bars",
+  "comparison",
+  "glow",
+  "colour change",
+  "labels",
+  "data",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f68 the bars fill in a light colour with a glow, one to 75 % and the others to 10 % (all on one slow S-curve); f68-f108 hold; f108-f147 the light colour turns into the accent colour on the bars and all the texts (linear); f110-f148 every bar rushes on to 90 % (slow start, very fast middle, soft end)",
+ "tracks": [
+  {
+   "name": "first fill",
+   "what": "the bars fill in a light colour, each to its first number",
+   "start_f": 0,
+   "length_f": 68,
+   "easing": "cubic-bezier(0.6, 0, 0.4, 1)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still",
+   "start_f": 68,
+   "length_f": 40,
+   "easing": "none"
+  },
+  {
+   "name": "colour change",
+   "what": "the bars, the glow, the names and the title turn from light to the accent colour",
+   "start_f": 108,
+   "length_f": 39,
+   "easing": "linear"
+  },
+  {
+   "name": "rush to the end",
+   "what": "every bar goes on to its last number, all on the same curve",
+   "start_f": 110,
+   "length_f": 38,
+   "easing": "cubic-bezier(0.65, 0, 0.1, 1)"
+  },
+  {
+   "name": "end hold",
+   "what": "everything still",
+   "start_f": 148,
+   "length_f": 62,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "title",
+  "labels",
+  "first",
+  "last"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 180,
+ "check_frames": [
+  0,
+  20,
+  36,
+  60,
+  110,
+  122,
+  126,
+  132,
+  148,
+  180
+ ]
+}

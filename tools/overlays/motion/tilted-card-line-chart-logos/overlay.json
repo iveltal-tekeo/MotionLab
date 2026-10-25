@@ -1,0 +1,30 @@
+{
+ "name": "tilted-card-line-chart-logos",
+ "frames": 192,
+ "fps": 24,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(50 * fps / 24)",
+   "kind": "thump",
+   "db": -4,
+   "what": "the cut to the card facing us"
+  },
+  {
+   "f": "start + round(79 * fps / 24)",
+   "kind": "tick",
+   "db": -2,
+   "what": "the price counter starts"
+  },
+  {
+   "f": "start + round(136 * fps / 24)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 400,
+   "to": 2400,
+   "db": -9,
+   "what": "the card slides away"
+  }
+ ]
+}

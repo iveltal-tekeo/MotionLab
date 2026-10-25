@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "First text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Think"},
+  {"id": "text_2", "type": "string", "label": "Second text", "default": "Build"},
+  {"id": "text_3", "type": "string", "label": "Third text", "default": "Share"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 540, "min": 60, "max": 900, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Capital letters", "default": true},
+  {"id": "text_colour", "type": "enum", "label": "Text colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "text-carousel-blur-swap" (2026-10-22): a carousel of huge words. The first word fills the frame and shrinks slowly (f17-f54, 100 % to
+     92 %); at f55 it slides out to the left, shrinking and smeared by a sideways motion blur that grows with its
+     speed, while the second word flies in from the right (f60-f72), big at first (121 %) and settling at 93 %; the
+     first word stays at the left edge as a soft sliver. The second word shrinks slowly (f72-f109), then the same swap
+     brings the third word (out f110, in f115-f128) and it shrinks slowly to the end (f163). Every position and size
+     is the reference's, frame by frame (with its stutters). Look-aware: ground, text colour, font and film grain
+     come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .tx { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5.466667" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0"><defs id="defs"></defs></svg>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 164;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  try { if (document.fonts && document.fonts.load) document.fonts.load(`900 100px "${V.body_font}"`, "THINKBUILDSHARE"); } catch (e) {}   // start the heavy weight loading before the first frame
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a black-ish ground (the ink), the words in one token colour
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const tc = V.text_colour === "signal" ? L.signal : V.text_colour === "deep" ? L.deep : V.text_colour === "mustard" ? L.mustard : glare;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = night;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the reference (1290 x 720 px): three words, each [frame, centre x, size] where size 1 = the first word's size at
+  // frame 0 (its capitals are half the frame's height); the middle of the capitals sits at 49.65 % of the height.
+  // KX / KY = reference px -> this frame
+  const KX = W / 1290, KY = H / 720, YC = 357.5;
+  const IT = [
+    { // word 1: still at the middle shrinking slowly, then out to the left, shrinking, ending as a sliver at the edge
+      cx: [[0, 636.7], [54, 636.7], [55, 583.3], [56, 534.6], [57, 470.2], [58, 470.2], [59, 396], [60, 322], [61, 239.5], [62, 165], [63, 88.3], [64, 15], [65, -50.6], [66, -158.5],
+        [67, -204.4], [68, -204.4], [69, -274.4], [70, -274.4], [71, -291], [72, -295], [75, -294], [80, -291], [85, -285], [89, -281], [94, -273], [99, -269], [104, -264],
+        [109, -263], [110, -272], [111, -292], [112, -321], [113, -355], [114, -380], [140, -380]],
+      s: [[0, 1], [18, 1], [21, 0.9944], [24, 0.9888], [27, 0.9832], [30, 0.9721], [33, 0.9665], [36, 0.9497], [39, 0.9441], [42, 0.9385], [45, 0.9274], [48, 0.9274], [51, 0.9218],
+        [54, 0.9218], [55, 0.916], [56, 0.896], [57, 0.883], [58, 0.883], [59, 0.87], [60, 0.843], [61, 0.83], [62, 0.8], [63, 0.78], [64, 0.763], [65, 0.743], [66, 0.7], [67, 0.69], [109, 0.66]],
+      rest: [[0, 0], [66, 0], [72, 6]] },
+    { // word 2: flies in from the right (big, shrinking), still, then out to the left like word 1 but stopping near the edge
+      cx: [[0, 2100], [59, 2000], [60, 1830], [61, 1664], [62, 1502], [63, 1346.5], [64, 1203], [65, 1071], [66, 863], [67, 781], [68, 781], [69, 666], [70, 666], [71, 639.5], [72, 633.5],
+        [108, 634.5], [109, 634.4], [110, 620.6], [111, 589], [112, 545], [113, 491], [114, 491], [115, 429], [116, 361.8], [117, 290], [118, 219], [119, 153], [120, 26], [121, -31],
+        [122, -78], [123, -120], [124, -120], [125, -158], [126, -200], [127, -220], [128, -225], [163, -190]],
+      s: [[0, 1.25], [59, 1.25], [60, 1.213], [61, 1.173], [62, 1.134], [63, 1.095], [64, 1.059], [65, 1.025], [66, 0.986], [67, 0.969], [68, 0.969], [69, 0.938], [70, 0.938], [71, 0.933],
+        [72, 0.933], [75, 0.9302], [78, 0.9274], [81, 0.9162], [84, 0.9134], [87, 0.905], [90, 0.8994], [93, 0.8939], [96, 0.8827], [99, 0.8771], [102, 0.8715], [105, 0.8687], [108, 0.8659],
+        [109, 0.866], [110, 0.86], [111, 0.856], [112, 0.846], [113, 0.831], [114, 0.831], [115, 0.816], [116, 0.8], [117, 0.786], [118, 0.771], [119, 0.75], [120, 0.72], [121, 0.71],
+        [122, 0.696], [123, 0.69], [163, 0.65]],
+      rest: [[0, 0], [121, 0], [128, 6]] },
+    { // word 3: flies in from the right and settles, shrinking slowly to the end
+      cx: [[0, 2400], [114, 2300], [115, 1812.8], [116, 1674.7], [117, 1533.7], [118, 1398.3], [119, 1263.8], [120, 1023.5], [121, 922.2], [122, 850.6], [123, 776.5], [124, 776.5],
+        [125, 714.3], [126, 672], [127, 646.3], [128, 640.5], [163, 641]],
+      s: [[0, 1.2], [114, 1.2], [115, 1.168], [116, 1.134], [117, 1.1], [118, 1.073], [119, 1.04], [120, 0.983], [121, 0.96], [122, 0.957], [123, 0.955], [124, 0.955], [125, 0.944],
+        [126, 0.933], [127, 0.927], [128, 0.927], [129, 0.9274], [132, 0.9218], [135, 0.9162], [138, 0.9106], [141, 0.905], [144, 0.8994], [147, 0.8883], [150, 0.8827], [153, 0.8771],
+        [156, 0.8715], [159, 0.8603], [163, 0.8603]],
+      rest: [[0, 0], [200, 0]] }
+  ];
+
+  // ---- the words (heavy text font), each with a horizontal blur filter
+  const NS = "http://www.w3.org/2000/svg", defs = q("defs");
+  const texts = [V.text_1, V.text_2, V.text_3], fam = V.body_font, FS = V.size * U;
+  const maxW = 0.82 * W;                                  // a word's width at size 1 (the reference's: 80-83 % of the frame)
+  const els = texts.map((txt, i) => {
+    const t = document.createElement("div"); t.className = "tx ml-body"; t.id = `tx${i}`;
+    Object.assign(t.style, { fontSize: `${FS}px`, fontWeight: String(fw(fam, 900)), color: tc, textTransform: V.caps ? "uppercase" : "none" });
+    if (window.MLLook) MLLook.rich(t, txt, { look: L, family: fam, weight: 900 }); else t.textContent = txt;
+    hand.appendChild(t);
+    const f = document.createElementNS(NS, "filter"); f.setAttribute("id", `bl${i}`); f.setAttribute("x", "-15%"); f.setAttribute("width", "130%");
+    f.setAttribute("color-interpolation-filters", "sRGB");
+    const b = document.createElementNS(NS, "feGaussianBlur"); b.setAttribute("stdDeviation", "0 0"); f.appendChild(b); defs.appendChild(f);
+    return { t, b };
+  });
+
+  // ---- the motion, frame by frame from one proxy (seek-safe); g = the frame minus "Starts at frame"
+  const S = Math.round(V.start);
+  const SHUT = 0.14;                                      // blur sigma = speed * 0.14 (a sideways smear that grows with speed)
+  const spd = (it, g) => { const d = f => Math.abs(tab(it.cx, f)[0] - tab(it.cx, f - 1)[0]); return Math.max(d(Math.round(g)), 0.7 * d(Math.round(g) - 1)); };
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    els.forEach(({ t, b }, i) => {
+      const it = IT[i], cx = tab(it.cx, g)[0], s = tab(it.s, g)[0];
+      const fit = Math.min(1, maxW / Math.max(1, t.offsetWidth)), sc = s * fit;
+      t.style.transform = `translate(${(cx * KX).toFixed(2)}px, ${(YC * KY).toFixed(2)}px) scale(${sc.toFixed(4)}) translate(-50%, -52%)`;
+      // sideways smear: the word's speed (reference px a frame, 0 when it is still) plus the soft focus of a word left behind
+      const sg = Math.sqrt(Math.pow(SHUT * spd(it, g), 2) + Math.pow(tab(it.rest, g)[0], 2)) * KX;
+      if (sg > 0.5) { b.setAttribute("stdDeviation", `${(sg / Math.max(0.05, sc)).toFixed(2)} 0`); t.style.filter = `url(#bl${i})`; } else t.style.filter = "none";
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 7 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 31 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

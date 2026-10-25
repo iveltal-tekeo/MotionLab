@@ -1,0 +1,29 @@
+{
+ "name": "explosion-reveal",
+ "frames": 101,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((1 + 1.7 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "16",
+   "db": -6,
+   "what": "the letters type themselves on"
+  },
+  {
+   "f": "start + round(50 * fps / 30)",
+   "kind": "impact",
+   "db": -6,
+   "what": "the line blows apart"
+  },
+  {
+   "f": "start + round(51 * fps / 30)",
+   "kind": "crackle",
+   "dur": "0.9",
+   "db": -8,
+   "what": "the sparks fly out and fizzle"
+  }
+ ]
+}

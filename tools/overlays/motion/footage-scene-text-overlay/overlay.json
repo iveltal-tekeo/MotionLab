@@ -1,0 +1,39 @@
+{
+ "name": "footage-scene-text-overlay",
+ "frames": 231,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "media_start": {
+  "scene2_media": 56
+ },
+ "cues": [
+  {
+   "f": "start + round(16 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 1800,
+   "db": -10,
+   "what": "the glass tag glides up"
+  },
+  {
+   "f": "start + round(58 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 500,
+   "to": 3200,
+   "db": -5,
+   "what": "the first video whips away"
+  },
+  {
+   "f": "start + round(126 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 300,
+   "to": 1500,
+   "db": -10,
+   "what": "the big text rises"
+  }
+ ]
+}

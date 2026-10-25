@@ -1,0 +1,109 @@
+{
+ "name": "Two glowing circles",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two glowing circles open one after the other on a dark board, each with a word typed into it: a dot swells and ripples out into nested rings, the camera swings across to the second circle, then pulls back so both sit side by side and drift gently until the end.",
+ "use_for": [
+  "two options",
+  "A or B",
+  "before and after",
+  "two words",
+  "title pair",
+  "intro",
+  "tech",
+  "glow"
+ ],
+ "tags": [
+  "text",
+  "circle",
+  "glow",
+  "typing",
+  "camera pan",
+  "two items",
+  "ripple",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f3-f8 (00:00:00:03-00:00:00:08) a dot swells; f9-f12 (00:00:00:09-00:00:00:12) it ripples out into a ring; f5-f20 (00:00:00:05-00:00:00:20) the first word types in letter by letter while rings settle; f41-f66 (00:00:01:11-00:00:02:06) the camera pans across to circle B (S-curve, fastest f49-f56), which opens and types on the way in (f51-f56); f92-f116 (00:00:03:02-00:00:03:26) the camera pulls back and swings home so both circles sit side by side; then a slow drift up and down to f299 (00:00:09:29)",
+ "tracks": [
+  {
+   "name": "circle A opens",
+   "what": "a dot swells, ripples out into a ring and settles into three nested rings",
+   "start_f": 3,
+   "length_f": 27,
+   "easing": "measured sizes"
+  },
+  {
+   "name": "word A types",
+   "what": "the first word appears letter by letter inside circle A",
+   "start_f": 4,
+   "length_f": 16,
+   "easing": "slow first letter, then quicker"
+  },
+  {
+   "name": "hold",
+   "what": "the camera rests on circle A",
+   "start_f": 21,
+   "length_f": 20,
+   "easing": "none"
+  },
+  {
+   "name": "pan to B",
+   "what": "the camera swings across to the second circle",
+   "start_f": 41,
+   "length_f": 26,
+   "easing": "S-curve"
+  },
+  {
+   "name": "circle B opens and types",
+   "what": "the second circle ripples open and its word types in as the camera arrives",
+   "start_f": 40,
+   "length_f": 17,
+   "easing": "same as circle A"
+  },
+  {
+   "name": "hold on B",
+   "what": "the camera rests on circle B",
+   "start_f": 67,
+   "length_f": 25,
+   "easing": "none"
+  },
+  {
+   "name": "pull back",
+   "what": "the camera zooms out and swings home so both circles sit side by side",
+   "start_f": 93,
+   "length_f": 24,
+   "easing": "S-curve"
+  },
+  {
+   "name": "drift",
+   "what": "both circles float gently up and down",
+   "start_f": 117,
+   "length_f": 183,
+   "easing": "slow wave"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_a",
+  "text_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 130,
+ "check_frames": [
+  5,
+  9,
+  12,
+  20,
+  50,
+  54,
+  104,
+  130,
+  250
+ ]
+}

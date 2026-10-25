@@ -1,0 +1,75 @@
+{
+ "name": "Drawn line chart",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A dashed grid with two axes and the names stacked under it stands on a dark page; a thick line is drawn from point to point in bursts, and every point shows its number counting up, until the whole jagged line is there; the chart floats a few pixels to the end.",
+ "use_for": [
+  "monthly data",
+  "trend",
+  "growth",
+  "sales",
+  "stats",
+  "line chart",
+  "report",
+  "analytics",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "line chart",
+  "grid",
+  "data",
+  "months",
+  "numbers",
+  "trend",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0 the grid, the axes and the names are already there; the line starts at the first point f3 and is drawn point to point in bursts (f3-f16, f26-f38, f47-f58, f66-f76, ... one every ~20 f, each ~10 f, a steep S-curve with soft ends, updated every 2nd frame); each point's number fades in and counts up (f7, f26, f45, f63, ... one every ~18 f, ~6 f to count); the line is complete at f218; the whole chart floats about 10 px to the end (f0-f299)",
+ "tracks": [
+  {
+   "name": "line",
+   "what": "the thick line is drawn from point to point, in bursts",
+   "start_f": 3,
+   "length_f": 215,
+   "easing": "steep S-curve per segment (cubic-bezier(0.5, 0.2, 0.38, 0.99)), ~10 f each, every ~20 f, on twos"
+  },
+  {
+   "name": "numbers",
+   "what": "each point's number fades in and counts up to its value",
+   "start_f": 7,
+   "length_f": 209,
+   "easing": "cubed count (slow start, fast end), ~6 f each, one every ~18 f"
+  },
+  {
+   "name": "float",
+   "what": "the grid, the line and the names float together up to ~16 px (at 1280 wide)",
+   "start_f": 0,
+   "length_f": 300,
+   "easing": "slow, uneven (measured)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "labels",
+  "values"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 250,
+ "check_frames": [
+  4,
+  10,
+  20,
+  30,
+  50,
+  80,
+  120,
+  170,
+  250
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "name": "radiant-circle-idea-expansion",
+ "frames": 210,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the centre ring pops in"
+  },
+  {
+   "f": "start + round(27 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "a small ring is born from its rim"
+  },
+  {
+   "f": "start + round(104 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 2200,
+   "to": 500,
+   "db": -9,
+   "what": "the camera pulls back to show all three"
+  }
+ ]
+}

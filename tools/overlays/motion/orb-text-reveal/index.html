@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text (the letters light up as the ball passes)", "default": "Lights on"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 150, "min": 40, "max": 400, "step": 1},
+  {"id": "glow", "type": "enum", "label": "Ball and light colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "orb_size", "type": "number", "label": "Ball size (% of the original)", "default": 100, "min": 40, "max": 200, "step": 1},
+  {"id": "text_glow", "type": "number", "label": "Light around the letters (%)", "default": 100, "min": 0, "max": 200, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "orb-text-reveal" (2026-10-22): a word sits invisible on a dark ground; a glowing ball swings in from the left edge, climbs onto a wide
+     oval around the word and circles it once, clockwise (top f24, right f59, bottom f72, left f113), fast down the
+     lower right and slow along the lower left, then climbs over the top and leaves at the right edge with a long
+     blur (f126). Each letter is lit by how near the ball is (full light within ~300 px of the 1280-px original,
+     none beyond ~650 px - measured from the clip), so the word is lit where the ball is and dims behind it. The path,
+     the ball's size (60 px far, 80 px near) and the light come from the clip's frames, measured. Look-aware: ground,
+     ball and letters come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #tt { position: absolute; white-space: pre; line-height: 1; font-synthesis: none; letter-spacing: -0.005em; }
+  #tt span { display: inline-block; }
+  #orb { position: absolute; left: 0; top: 0; border-radius: 50%; will-change: transform; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="tt" class="ml-display"></div><div id="orb"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixv = (a, b, t) => { const x = hex(a), y = hex(b); return x.map((v, i) => Math.round(v + (y[i] - v) * t)); };
+  const mix = (a, b, t) => `rgb(${mixv(a, b, t).join(",")})`;
+  const S = Math.round(V.start);
+  const KX = W / 1280, KY = H / 720;                     // the reference is 1280 x 720: the numbers below are in those units
+  const CX = 640, CY = 365;                              // the word's centre in the reference
+
+  // ---- the look: a dark ground (the ink; the paper when the look is dark) with a faint lighter middle
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { ink: L.ink, paper: L.paper, signal: L.signal, deep: L.deep, mustard: L.mustard };
+  const colour = pick[V.glow] || L.mustard;
+  const hot = mix(colour, "#ffffff", 0.35);
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 75% 85% at 50% 50%, ${mix(night, glare, 0.075)} 0%, ${mix(night, glare, 0.04)} 55%, ${night} 100%)`;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the word: one span per letter, each lit by its distance to the ball
+  const tt = q("tt"), LET = [];
+  Array.from(String(V.text == null ? "" : V.text)).forEach(ch => { const s = document.createElement("span"); s.textContent = ch; tt.appendChild(s); LET.push({ el: s, x: CX, y: CY }); });
+  Object.assign(tt.style, { left: `${CX * KX}px`, top: `${CY * KY}px`, fontSize: `${V.size * U}px`, transform: "translate(-50%, -50%)", color: "transparent" });
+  LET.forEach(l => { l.el.style.color = "rgba(0,0,0,0)"; });
+
+  // ---- the ball's path, measured from the clip (reference px: f, x, y, diameter), one row a frame from f13
+  const P0 = 13;
+  const PATH = [[13,-70,420,60],[14,-45,392,60],[15,-20,364,60],[16,9,336,60],[17,57,294,60],[18,135,244,60],[19,249,194,60],[20,363,160,60],[21,457,143,60],[22,527,137,60],[23,585,134,61],[24,632,134,66],[25,673,135,68],[26,708,137,71],[27,738,140,72],[28,766,144,75],[29,790,147,76],[30,812,151,77],[31,833,156,78],[32,851,160,79],[33,868,164,79],[34,883,168,79],[35,897,173,80],[36,911,177,80],[37,923,182,80],[38,934,186,80],[39,944,191,80],[40,954,195,81],[41,963,200,80],[42,972,205,80],[43,982,210,80],[44,992,215,80],[45,1002,221,80],[46,1012,227,80],[47,1022,233,80],[48,1032,240,80],[49,1042,248,80],[50,1052,256,80],[51,1062,265,80],[52,1072,274,80],[53,1082,285,80],[54,1091,296,80],[55,1099,309,80],[56,1107,323,79],[57,1112,338,79],[58,1116,356,79],[59,1116,374,79],[60,1113,393,79],[61,1106,413,78],[62,1095,432,78],[63,1080,451,77],[64,1061,470,76],[65,1038,489,74],[66,1009,508,71],[67,971,527,67],[68,921,547,65],[69,846,567,55],[70,741,582,55],[71,660,584,55],[72,608,582,56],[73,572,578,58],[74,543,574,58],[75,519,570,60],[76,499,566,60],[77,481,562,60],[78,465,558,60],[79,451,554,60],[80,438,550,60],[81,425,546,60],[82,414,542,60],[83,403,539,60],[84,393,535,60],[85,383,532,60],[86,374,528,60],[87,366,525,60],[88,357,521,60],[89,349,518,60],[90,342,514,60],[91,334,511,60],[92,328,508,60],[93,321,504,60],[94,314,501,59],[95,308,498,59],[96,302,495,59],[97,296,492,59],[98,290,489,59],[99,285,485,58],[100,279,482,58],[101,272,478,59],[102,265,474,60],[103,258,469,60],[104,250,463,60],[105,240,457,59],[106,231,450,59],[107,221,441,59],[108,210,432,59],[109,199,420,59],[110,188,406,59],[111,178,389,59],[112,170,369,59],[113,165,346,59],[114,167,319,59],[115,178,290,60],[116,199,261,61],[117,229,232,62],[118,268,204,62],[119,320,176,62],[120,390,147,62],[121,489,116,62],[122,644,86,60],[123,897,66,60],[124,1100,72,80],[125,1216,83,84],[126,1265,95,84]];
+  const P1 = PATH[PATH.length - 1][0];
+  const at = g => PATH[Math.max(0, Math.min(PATH.length - 1, Math.round(g) - P0))];
+
+  const orb = q("orb");
+  const OR = 0.5 * (V.orb_size / 100);
+  Object.assign(orb.style, { background: `radial-gradient(circle, ${hot} 0%, ${colour} 62%, ${colour} 100%)`, display: "none" });
+  const TG = (V.text_glow / 100);
+  const LIT0 = 650, LIT1 = 280;                          // reference px: no light beyond LIT0, full light within LIT1 (measured)
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    const on = g >= P0 && g <= P1;
+    let ox = -9999, oy = -9999;
+    if (on) {
+      const p = at(g), a = at(g - 1), b = at(g + 1);
+      const vx = (b[1] - a[1]) / 2, vy = (b[2] - a[2]) / 2, sp = Math.hypot(vx, vy);
+      const d = p[3] * 2 * OR * KX, len = (p[3] + 0.5 * Math.max(0, sp - 25)) * 2 * OR * KX;
+      ox = p[1] * KX; oy = p[2] * KY;
+      const ang = Math.atan2(vy, vx) * 180 / Math.PI;
+      Object.assign(orb.style, { display: "block", width: `${d}px`, height: `${d}px`, boxShadow: `0 0 ${0.5 * d}px ${0.14 * d}px ${rgba(colour, 0.5)}`,
+        transform: `translate(${ox - d / 2}px, ${oy - d / 2}px) rotate(${ang.toFixed(2)}deg) scale(${(len / d).toFixed(3)}, ${(sp > 80 ? 0.85 : 1).toFixed(2)})` });
+    } else orb.style.display = "none";
+    LET.forEach(l => {
+      let f = 0;
+      if (on) { const dd = Math.hypot(l.x * KX - ox, l.y * KY - oy) / KX; f = Math.pow(Math.min(1, Math.max(0, (LIT0 - dd) / (LIT0 - LIT1))), 1.5); }
+      l.el.style.color = f > 0.004 ? `rgba(${mixv(colour, "#ffffff", 0.22 * f).join(",")}, ${f.toFixed(3)})` : "rgba(0,0,0,0)";
+      l.el.style.textShadow = f > 0.004 && TG > 0 ? `0 0 ${0.05 * V.size * U}px ${rgba(colour, Math.min(1, 0.7 * f * TG))}, 0 0 ${0.16 * V.size * U}px ${rgba(colour, Math.min(1, 0.8 * f * TG))}` : "none";
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 19 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the word is fitted
+  // inside the ball's loop and each letter's place is measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    const maxW = 0.6 * W;
+    if (tt.offsetWidth > maxW) tt.style.fontSize = `${V.size * U * maxW / tt.offsetWidth}px`;
+    const x0 = CX * KX - tt.offsetWidth / 2;
+    LET.forEach(l => { l.x = (x0 + l.el.offsetLeft + l.el.offsetWidth / 2) / KX; l.y = CY; });
+    render(0);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

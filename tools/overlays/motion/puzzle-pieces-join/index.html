@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "labels", "type": "string", "label": "Labels, one for each piece (| between; *bold* _italic_ ==highlight== ^signal colour^)", "default": "Plan|Build|Launch"},
+  {"id": "pieces", "type": "number", "label": "Puzzle pieces (2 to 4)", "default": 3, "min": 2, "max": 4, "step": 1},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 87, "min": 20, "max": 200, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Colour of the glass pieces", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "twos", "type": "boolean", "label": "Stepped motion, 16 steps a second (like the original; off = smooth)", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "puzzle-pieces-join" (2026-10-23): glass puzzle pieces on a pale page. The first piece rises from below the frame, tilted (21 degrees), and
+     settles upright at the centre (f10-f42, decelerating); a curly leader line is drawn from its edge (f33-f57) and its
+     label fades in word by word (f44-f58). A second piece slides in from the right and snaps into the first one's notch
+     (f57-f92, the camera pans left and pulls back about 7 % as it joins), its leader and label follow (f84-f116); a third
+     one slides in the same way (f112-f149, the camera stays) with its label (f137-f171). The original is stepped:
+     eight different pictures in every 15 frames (16 steps a second), which the "stepped" setting keeps. Pieces,
+     labels and colour are settings. Numbers measured from the reference's frames (1280 x 720 units; scene units =
+     the first piece at full size). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; }
+  #world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  #world > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .lb { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .lb .w { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8.2333" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="stage"><div id="world"><svg id="psv" width="10" height="10" viewBox="0 0 10 10"></svg><svg id="lsv" width="10" height="10" viewBox="0 0 10 10"></svg></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 247;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720: its numbers below are in those units
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const rg = (c, a) => { const [r, g, b] = hex(c); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const pickC = { signal: L.signal, deep: L.deep, mustard: L.mustard, ink: L.ink };
+  const C0 = pickC[V.colour] || L.signal;
+  const cLight = mixC(C0, "#ffffff", 0.6), cLite2 = mixC(C0, "#ffffff", 0.22), cDark = mixC(C0, "#000000", 0.5), cText = mixC(C0, "#ffffff", 0.14);
+
+  // ---- the ground
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixC(L.paper, "#ffffff", 0.45);
+  const stage = q("stage"), world = q("world");
+  stage.style.transform = `scale(${K})`;
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (par) par.appendChild(e); return e; };
+  const psv = q("psv"), lsv = q("lsv");
+  const NP = Math.max(2, Math.min(4, Math.round(V.pieces)));
+
+  // ---- the pieces (scene units: the first piece at full size). A body 335 x 317; domes on the first and last piece; a notch on the right of every piece but the last, a knob on the left of every piece but the first
+  const BW = 335, BH = 317, DA = 83, DT = 86, DB = 81, DX = 173, KR = 88, RC = 5;
+  const defs = el("defs", {}, psv);
+  const gp = el("linearGradient", { id: "gp", x1: 0, y1: 0, x2: 0.12, y2: 1 }, defs);
+  [[0, cLight], [0.34, cLite2], [0.62, C0], [1, cDark]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, gp));
+  const shapeD = (w, domes, notch, knob) => {
+    const h = BH, cy = h / 2, cx = Math.min(DX, w / 2 + 6);
+    let d = `M ${RC} 0`;
+    if (domes) d += ` L ${cx - DA} 0 C ${cx - DA} ${-DT * 0.58} ${cx - DA * 0.55} ${-DT} ${cx} ${-DT} C ${cx + DA * 0.55} ${-DT} ${cx + DA} ${-DT * 0.58} ${cx + DA} 0`;
+    d += ` L ${w - RC} 0 Q ${w} 0 ${w} ${RC}`;
+    if (notch) d += ` L ${w} ${cy - KR} A ${KR} ${KR} 0 0 0 ${w} ${cy + KR}`;
+    d += ` L ${w} ${h - RC} Q ${w} ${h} ${w - RC} ${h}`;
+    if (domes) d += ` L ${cx + DA} ${h} C ${cx + DA} ${h + DB * 0.58} ${cx + DA * 0.55} ${h + DB} ${cx} ${h + DB} C ${cx - DA * 0.55} ${h + DB} ${cx - DA} ${h + DB * 0.58} ${cx - DA} ${h}`;
+    d += ` L ${RC} ${h} Q 0 ${h} 0 ${h - RC}`;
+    if (knob) d += ` L 0 ${cy + KR} A ${KR} ${KR} 0 0 1 0 ${cy - KR}`;
+    d += ` L 0 ${RC} Q 0 0 ${RC} 0 Z`;
+    return d;
+  };
+  const PW = [335, 337, 337, 337];                              // body widths
+  const pcs = [];
+  for (let k = 0; k < NP; k++) {
+    const last = k === NP - 1, first = k === 0;
+    const w = last && k > 0 ? 347 : PW[k];
+    const g = el("g", {}, psv);
+    el("path", { d: shapeD(w, first || last, !last, !first), fill: "url(#gp)", stroke: rg(mixC(C0, "#ffffff", 0.78), 0.75), "stroke-width": 4.5, "stroke-linejoin": "round" }, g);
+    pcs.push({ g, w, h: BH, k });
+  }
+  if (window.MLLook) MLLook.glow(psv, C0, 35, { kind: "drop", U: 1 / K });
+
+  // ---- the world: where each piece sits when the puzzle is done (body left edges) and the camera that frames it
+  const LEFT = [472, 798, 1136, 1473];                           // the body's left edge, in scene units
+  const rowRight = LEFT[NP - 1] + pcs[NP - 1].w, rowW = rowRight - LEFT[0];
+  const SF = Math.min(0.93, 1060 / rowW), LF = 704.5 - (rowW / 2) * SF;
+  const DYP = [0, -3, -5, -6];
+  const BY = 218;                                                // the body's top edge
+  // the first piece: centre x, how far below its place, the tilt (degrees clockwise) - measured at the frames where the picture changes
+  const P1 = [[8, 455, 640, 21.5], [10, 470, 528, 21], [12, 492, 443, 20.3], [14, 515, 370, 19.5], [15, 533.8, 306, 19], [17, 552.2, 250, 17.8], [19, 570.5, 200, 15.7], [21, 588, 155, 12.9],
+    [23, 601, 118, 10.7], [25, 612.4, 88, 8.1], [27, 620.5, 64, 6.4], [29, 626.9, 44, 4.9], [30, 631.8, 28, 3.6], [32, 635, 17, 2.8], [34, 637.4, 9, 1.9], [36, 639.1, 4, 1.1],
+    [38, 639.5, 2, 0.9], [40, 639.5, 2, 0.2], [42, 639.5, 0, 0]];
+  // how far a piece still has to slide (scene units): the second piece (slides in from f57), the next ones (the same curve a little later)
+  const R2 = [[56, 700], [57, 660], [60, 571], [62, 525], [64, 457], [66, 383], [68, 313.5], [70, 253], [72, 202], [74, 158], [75, 123.5], [77, 95], [79, 69], [81, 50], [83, 35], [85, 22], [87, 12], [89, 5], [90, 2], [92, 0]];
+  const R3 = [[110, 760], [113, 700], [119, 505], [120, 417], [122, 340], [124, 275], [126, 219], [128, 172], [130, 135.5], [132, 103], [134, 77.5], [135, 56], [137, 38.8], [139, 26], [141, 15], [143, 7.6], [145, 3.3], [147, 1.1], [149, 0]];
+  const remain = (k, g) => k === 1 ? tab(R2, g)[0] : tab(R3, g - 55 * (k - 2))[0];
+  // the camera while the second piece joins: 0 = as at the start, 1 = framed for the finished row
+  const CAM = [[59, 0], [60, 0.042], [62, 0.126], [64, 0.244], [66, 0.378], [68, 0.496], [70, 0.597], [72, 0.681], [74, 0.756], [75, 0.815], [77, 0.857], [79, 0.899], [81, 0.929], [83, 0.95], [85, 0.975], [87, 0.983], [89, 0.992], [90, 1]];
+
+  // ---- the curly leader lines + labels (points measured on the last frame, in units from the line's start; x2 = scene units / 0.93)
+  const LA = [[0, 0], [-0.75, 17.5], [-3.75, 33.75], [-8.25, 47.5], [-16.25, 60.75], [-31.25, 55], [-39.25, 38.75], [-31.25, 24.5], [-17.5, 23.75], [-6.25, 34.5], [3.75, 47.5], [8.75, 65], [3.75, 81.25], [-16.25, 95], [-43.75, 102.5], [-71.25, 105.75], [-86.25, 107]];
+  const LB = [[0, 0], [5.75, -13.75], [10.75, -28], [20.75, -39.5], [29.5, -45.75], [40.75, -41.25], [47, -28.75], [44.5, -16.25], [35.75, -7.5], [28.25, -6.25], [19.5, -11.25], [12.5, -25], [5.75, -40], [4, -52.5], [7, -65], [15.75, -72.5], [32, -77], [52, -79.5], [72, -79.75], [92, -78], [106.5, -74.5]];
+  const SC = 1 / 0.93;
+  const crPath = pts => {                                        // a smooth curve through the points (Catmull-Rom as Beziers)
+    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      d += ` C ${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(2)} ${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(2)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(2)} ${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+    }
+    return d;
+  };
+  const labs = String(V.labels == null ? "" : V.labels).split("|").map(x => x.trim());
+  const fs = V.size * U / K / SF;
+  const lbs = [];
+  for (let k = 0; k < NP; k++) {
+    const kind = k === 0 ? 0 : k === NP - 1 ? 2 : 1;           // the first: below, text to the left / the middle ones: above, text to the right / the last: below, text to the right
+    const above = kind === 1 || kind === 3, mir = kind === 2 || kind === 3;
+    const base = (above ? LB : LA).map(p => [p[0] * SC * (mir ? -1 : 1), p[1] * SC]);
+    const pth = el("path", { d: crPath(base), fill: "none", stroke: cText, "stroke-width": 2.6, "stroke-linecap": "round", "stroke-linejoin": "round", pathLength: 1000 }, lsv);
+    const end = base[base.length - 1];
+    const lbl = document.createElement("div"); lbl.className = "lb ml-body"; world.appendChild(lbl);
+    const words = labs[k] ? (window.MLLook ? MLLook.rich(lbl, labs[k], { look: L, family: V.body_font, weight: 300 }).words : (lbl.textContent = labs[k], [])) : [];
+    Object.assign(lbl.style, { fontSize: `${fs}px`, color: cText, fontWeight: String(fw(V.body_font, 300)) });
+    lbs.push({ pth, end, lbl, words, above, mir, kind });
+  }
+  const LS = k => k === 0 ? 33 : k === 1 ? 84 : 137 + 53 * (k - 2);
+  const TS = k => k === 0 ? 44 : k === 1 ? 104 : 160 + 53 * (k - 2);
+  const LP = [[0, 0], [1, 0.07], [3, 0.17], [5, 0.28], [7, 0.38], [9, 0.48], [11, 0.58], [13, 0.68], [15, 0.77], [17, 0.85], [19, 0.92], [21, 0.97], [23, 1]];
+  // the stepped look of the original: 8 new pictures in every 15 frames
+  const stepped = g => V.twos ? 15 * Math.floor(g / 15) + 2 * Math.floor((g % 15) / 2) : g;
+
+  let ready = false;
+  function layout() { ready = true; }
+  function render(t) {
+    const g0 = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g0 >= 0;
+    stage.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const g = stepped(g0);
+    // the camera
+    const c = tab(CAM, g)[0], sc = 1 - (1 - SF) * c, Lx = 472 + (LF - 472) * c;
+    world.style.transform = `translate(${(Lx - 472 * sc).toFixed(3)}px, ${(373 - 373 * sc).toFixed(3)}px) scale(${sc.toFixed(5)})`;
+    // the pieces
+    const x0 = [], y0 = [];
+    pcs.forEach((p, k) => {
+      let bx, by = BY + DYP[k], rot = 0, vis = true;
+      if (k === 0) {
+        const r = tab(P1, g);
+        bx = r[0] - p.w / 2; by = BY + r[1]; rot = r[2]; vis = g >= 8;
+      } else {
+        const tip = LEFT[k] - KR + remain(k, g);
+        bx = tip + KR;
+        vis = g >= (k === 1 ? 56 : 110 + 55 * (k - 2));
+      }
+      x0[k] = bx; y0[k] = by;
+      p.g.style.visibility = vis ? "visible" : "hidden";
+      p.g.setAttribute("transform", `translate(${bx.toFixed(2)} ${by.toFixed(2)}) rotate(${rot.toFixed(2)} ${p.w / 2} ${BH / 2})`);
+    });
+    // the leaders and labels follow their piece
+    lbs.forEach((b, k) => {
+      const p = pcs[k], px = x0[k];
+      const sx = px + (b.kind === 0 ? 45 : b.kind === 1 ? 112 : b.kind === 2 ? 37.6 : p.w - 112), sy = y0[k] + (b.above ? 0 : BH);
+      const prog = k === 0 && g < 42 ? 0 : tab(LP, g - LS(k))[0];
+      b.pth.setAttribute("transform", `translate(${sx.toFixed(2)} ${sy.toFixed(2)})`);
+      b.pth.setAttribute("stroke-dasharray", `${(prog * 1000).toFixed(1)} 3000`);
+      b.pth.style.visibility = (prog > 0.003 && g >= 30) ? "visible" : "hidden";
+      const ex = sx + b.end[0], ey = sy + b.end[1];
+      const left = b.kind === 0 || b.kind === 3;                  // text on the left of the line's end
+      b.lbl.style.left = `${(left ? ex - (b.above ? 29 : 14) * SC : ex + 29 * SC).toFixed(2)}px`;
+      b.lbl.style.top = `${(ey + (b.above ? -27 : 5.4) * SC).toFixed(2)}px`;
+      b.lbl.style.transform = left ? "translate(-100%, -50%)" : "translate(0, -50%)";
+      const gt = g - TS(k);
+      b.words.forEach((w, i) => { w.style.opacity = clamp01((gt - 6 * Math.min(i, 3)) / 6).toFixed(3); });
+      b.lbl.style.visibility = g >= TS(k) - 1 ? "visible" : "hidden";
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [300, 400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

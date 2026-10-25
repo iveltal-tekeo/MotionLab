@@ -1,0 +1,98 @@
+{
+ "name": "Camera ride along a line",
+ "kind": "text",
+ "category": "Charts & Data",
+ "what": "A glowing line is drawn through five points over a dark woven ground while the camera rides its tip: it starts close on the first point, loops down and rushes up and over past a big title, then pulls back to show the whole S-shaped line with the title behind it and a second line fading in letter by letter in front.",
+ "use_for": [
+  "steps",
+  "process",
+  "roadmap",
+  "tips",
+  "numbered list",
+  "journey",
+  "intro",
+  "five points",
+  "tutorial"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "line",
+  "curve",
+  "points",
+  "camera",
+  "glow",
+  "steps",
+  "needs no media",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f3-f21 a square pops out of the first point; f21-f102 the camera rides the tip (slow start, fastest f55-f71, slowing to rest on the last point at f102) at 1.6 times zoom while the points A-D are left behind at f3, f55, f64, f72; f84-f160 the camera pulls back from 1.6 to 1.0 times (fastest f131) while the colours settle to red in the middle and cold at the ends; f150-f180 the second line blurs in letter by letter; f160-f230 a slow drift of 24 px",
+ "tracks": [
+  {
+   "name": "first point",
+   "what": "a spinning square pops out of the first point",
+   "start_f": 3,
+   "length_f": 18,
+   "easing": "S-curve"
+  },
+  {
+   "name": "line",
+   "what": "the line is drawn along its path with the camera on its tip (slow start, fastest in the middle, slowing to the last point)",
+   "start_f": 21,
+   "length_f": 81,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "camera",
+   "what": "pulls back from 1.6 times to the whole picture",
+   "start_f": 102,
+   "length_f": 58,
+   "easing": "S-curve"
+  },
+  {
+   "name": "colours",
+   "what": "from red at the tip and cold behind to red in the middle and cold at both ends",
+   "start_f": 96,
+   "length_f": 44,
+   "easing": "S-curve"
+  },
+  {
+   "name": "second line",
+   "what": "blurs in letter by letter in front of the title, which dims",
+   "start_f": 150,
+   "length_f": 30,
+   "easing": "linear"
+  },
+  {
+   "name": "drift",
+   "what": "the picture settles 24 px",
+   "start_f": 160,
+   "length_f": 70,
+   "easing": "decelerating (slow end)"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 230,
+ "check_frames": [
+  9,
+  30,
+  50,
+  60,
+  70,
+  84,
+  114,
+  135,
+  230
+ ]
+}

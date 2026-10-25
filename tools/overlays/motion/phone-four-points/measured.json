@@ -1,0 +1,40 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f92 (00:00:03:02) +2 more: #root > div:nth-of-type(4) > span:nth-of-type(1) \"Hook\" off the frame, outside its box by 71 px",
+    "FIT f92 (00:00:03:02) +2 more: #root > div:nth-of-type(4) > span:nth-of-type(2) \"in\" off the frame by 119 px",
+    "FIT f92 (00:00:03:02) +2 more: #root > div:nth-of-type(4) > span:nth-of-type(3) \"2\" off the frame by 152 px",
+    "FIT f92 (00:00:03:02) +2 more: #root > div:nth-of-type(4) > span:nth-of-type(4) \"seconds\" off the frame by 319 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(1) \"One\" off the frame, outside its box by 46 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(2) \"idea\" off the frame by 139 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(3) \"per\" off the frame by 214 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(4) \"shot\" off the frame by 307 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(1) \"Cut\" off the frame by 263 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(2) \"on\" off the frame by 184 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(3) \"the\" off the frame by 124 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(4) \"beat\" off the frame, outside its box by 51 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(1) \"End\" off the frame by 319 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(2) \"on\" off the frame by 229 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(3) \"a\" off the frame by 168 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(4) \"question\" off the frame, outside its box by 135 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f92 (00:00:03:02) +2 more: #root > div:nth-of-type(4) > span:nth-of-type(4) \"seconds\" off the frame, outside its box by 155 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(3) \"per\" off the frame, outside its box by 47 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(5) > span:nth-of-type(4) \"shot\" off the frame by 141 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(1) \"Cut\" off the frame by 96 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(6) > span:nth-of-type(2) \"on\" off the frame, outside its box by 18 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(1) \"End\" off the frame by 152 px",
+    "FIT f100 (00:00:03:10) +1 more: #root > div:nth-of-type(7) > span:nth-of-type(2) \"on\" off the frame by 62 px",
+    "FIT f130 (00:00:04:10): #root > div:nth-of-type(7) > span:nth-of-type(3) \"a\" off the frame, outside its box by 2 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

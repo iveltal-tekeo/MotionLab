@@ -1,0 +1,103 @@
+{
+ "name": "Door burst title",
+ "kind": "text",
+ "category": "Text",
+ "what": "A small white double door stands open in the dark; the camera rushes in through it, a glint of yellow text in the opening explodes out over the door as a huge line, settles, is whipped away to the right and swapped for a final title that slides in and rests with a slight float.",
+ "use_for": [
+  "reveal",
+  "title reveal",
+  "intro",
+  "teaser",
+  "announcement",
+  "opening",
+  "coming soon",
+  "big statement"
+ ],
+ "tags": [
+  "text",
+  "door",
+  "reveal",
+  "zoom",
+  "burst",
+  "slide",
+  "swap",
+  "motion blur",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f7 the camera pushes into the open door (zoom x1 -> x6, accelerating); f3-f5 a glint of text in the opening grows x3 a frame as a smeared streak; f6 it bursts out over the door at x2.3 its size and holds with a jolt to f13; f13-f20 it settles to its size; f20-f36 it slides right (S-curve); f36-f39 it is pulled back left with heavy smear; f40 it is swapped for the final title, which slides in from the right and decelerates to rest by f52; then it floats and tilts a little",
+ "tracks": [
+  {
+   "name": "door push",
+   "what": "the camera zooms through the open door; its leaves fly out of the frame",
+   "start_f": 0,
+   "length_f": 8,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "glint",
+   "what": "a streak of text in the opening grows x3 a frame, smeared sideways",
+   "start_f": 3,
+   "length_f": 3,
+   "easing": "accelerating"
+  },
+  {
+   "name": "burst",
+   "what": "the text is huge over the door and holds, jolting",
+   "start_f": 6,
+   "length_f": 8,
+   "easing": "none"
+  },
+  {
+   "name": "settle",
+   "what": "the text shrinks to its size",
+   "start_f": 13,
+   "length_f": 8,
+   "easing": "linear, soft end"
+  },
+  {
+   "name": "slide right",
+   "what": "the text slides to the right",
+   "start_f": 20,
+   "length_f": 16,
+   "easing": "S-curve"
+  },
+  {
+   "name": "swap",
+   "what": "the text is pulled back left with heavy smear and replaced by the final title, which slides in and rests",
+   "start_f": 36,
+   "length_f": 16,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "float",
+   "what": "the final title tilts and drifts a few px",
+   "start_f": 52,
+   "length_f": 38,
+   "easing": "sine"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "burst",
+  "final"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 5,
+ "check_frames": [
+  0,
+  3,
+  5,
+  6,
+  13,
+  20,
+  30,
+  40,
+  60
+ ]
+}

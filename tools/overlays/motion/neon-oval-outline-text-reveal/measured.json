@@ -1,0 +1,64 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(1) \"w\" off the frame, outside its box by 7 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(1) \"M\" off the frame by 376 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(2) \"e\" off the frame by 420 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(3) \"e\" off the frame by 463 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(4) \"t\" off the frame by 491 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(2) \"a\" off the frame, outside its box by 3 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(3) \"l\" off the frame by 24 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(4) \"m\" off the frame by 92 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(1) \"w\" off the frame, outside its box by 239 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(2) \"a\" off the frame, outside its box by 282 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(3) \"y\" off the frame by 324 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(9) > span:nth-of-type(1) \"t\" off the frame by 185 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(9) > span:nth-of-type(2) \"o\" off the frame by 232 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(1) \"s\" off the frame by 337 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(2) \"h\" off the frame by 381 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(3) \"i\" off the frame by 399 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(4) \"p\" off the frame by 448 px",
+    "FIT f96 (00:00:03:06): #l2 > span:nth-of-type(5) > span:nth-of-type(3) \"o\" off the frame by 40 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(2) \"h\" off the frame by 46 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(3) \"o\" off the frame by 87 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(1) \"c\" off the frame by 143 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(2) \"a\" off the frame by 182 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(3) \"r\" off the frame by 208 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(4) \"e\" off the frame by 246 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(1) \"w\" off the frame, outside its box by 7 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(1) \"M\" off the frame by 376 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(2) \"e\" off the frame by 420 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(3) \"e\" off the frame by 463 px",
+    "FIT f10 (00:00:00:10) +1 more: #l1 > span:nth-of-type(1) > span:nth-of-type(4) \"t\" off the frame by 491 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(2) \"a\" off the frame, outside its box by 3 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(3) \"l\" off the frame by 24 px",
+    "FIT f24 (00:00:00:24): #l1 > span:nth-of-type(5) > span:nth-of-type(4) \"m\" off the frame by 92 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(1) \"w\" off the frame, outside its box by 239 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(2) \"a\" off the frame, outside its box by 282 px",
+    "FIT f24 (00:00:00:24) +3 more: #l1 > span:nth-of-type(7) > span:nth-of-type(3) \"y\" off the frame by 324 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(9) > span:nth-of-type(1) \"t\" off the frame by 185 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(9) > span:nth-of-type(2) \"o\" off the frame by 232 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(1) \"s\" off the frame by 337 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(2) \"h\" off the frame by 381 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(3) \"i\" off the frame by 399 px",
+    "FIT f32 (00:00:01:02) +2 more: #l1 > span:nth-of-type(11) > span:nth-of-type(4) \"p\" off the frame by 448 px",
+    "FIT f96 (00:00:03:06): #l2 > span:nth-of-type(5) > span:nth-of-type(3) \"o\" off the frame by 40 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(2) \"h\" off the frame by 46 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(7) > span:nth-of-type(3) \"o\" off the frame by 87 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(1) \"c\" off the frame by 143 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(2) \"a\" off the frame by 182 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(3) \"r\" off the frame by 208 px",
+    "FIT f108 (00:00:03:18) +2 more: #l2 > span:nth-of-type(9) > span:nth-of-type(4) \"e\" off the frame by 246 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

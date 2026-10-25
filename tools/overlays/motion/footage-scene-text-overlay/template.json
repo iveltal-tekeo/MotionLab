@@ -1,0 +1,148 @@
+{
+ "name": "Whip between two scenes",
+ "kind": "text",
+ "category": "Social",
+ "what": "Your first video pushes in while a frosted-glass tag rises from the bottom and its words appear one by one; then the video whips away to the right with the tag and light streaks sweeping across, your second video settles in from the left, and a big glowing text rises through it and holds.",
+ "use_for": [
+  "scene change",
+  "announcement",
+  "new arrival",
+  "video opener",
+  "reveal",
+  "short form",
+  "story",
+  "social post"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "glass",
+  "whip",
+  "transition",
+  "light streaks",
+  "glow",
+  "needs media",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f8-f40 the glass tag rises from below the frame (accelerating, then a short settle) and its words appear at f28 and f35; f40-f50 it holds; f50-f77 the first video whips away to the right (accelerating, the tag riding with it, light streaks f62-f88); the second video settles in from the left f56-f103 (decelerating) and pushes in slowly f104-f142; f112-f162 a big glowing text rises and settles; then it holds to the end",
+ "tracks": [
+  {
+   "name": "first video",
+   "what": "pushes in slowly",
+   "start_f": 0,
+   "length_f": 54,
+   "easing": "decelerating (fast start, measured)"
+  },
+  {
+   "name": "glass tag",
+   "what": "rises from below the frame and settles in the middle",
+   "start_f": 8,
+   "length_f": 32,
+   "easing": "accelerating, then a short settle (measured)"
+  },
+  {
+   "name": "tag words",
+   "what": "the words appear one by one, out of a small blur",
+   "start_f": 28,
+   "length_f": 13,
+   "easing": "fade"
+  },
+  {
+   "name": "whip",
+   "what": "the first video and the tag slide away to the right",
+   "start_f": 50,
+   "length_f": 28,
+   "easing": "accelerating (measured speed curve)"
+  },
+  {
+   "name": "streaks",
+   "what": "soft light streaks sweep across during the whip",
+   "start_f": 62,
+   "length_f": 26,
+   "easing": "swell and fade"
+  },
+  {
+   "name": "second video",
+   "what": "slides in from the left and settles, zooming out a little, then pushes in",
+   "start_f": 56,
+   "length_f": 86,
+   "easing": "decelerating (measured speed curve)"
+  },
+  {
+   "name": "big text",
+   "what": "rises through the second video out of a blur and settles",
+   "start_f": 112,
+   "length_f": 50,
+   "easing": "slow start, then steady (measured)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the videos keep playing, the film grain moves)",
+   "start_f": 162,
+   "length_f": 69,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "tag",
+  "subtext"
+ ],
+ "media_slots": [
+  {
+   "id": "scene1_media",
+   "label": "The first scene",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 7.7,
+   "fit": "cover",
+   "focus_setting": "scene1_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient in the look, labelled 'your first video'"
+  },
+  {
+   "id": "scene2_media",
+   "label": "The second scene",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 5.8,
+   "fit": "cover",
+   "focus_setting": "scene2_focus",
+   "focus": "50% 50%",
+   "placeholder": "a light gradient in the look, labelled 'your second video'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 160,
+ "check_frames": [
+  0,
+  14,
+  26,
+  36,
+  50,
+  62,
+  68,
+  72,
+  76,
+  82,
+  92,
+  120,
+  140,
+  162,
+  200
+ ]
+}

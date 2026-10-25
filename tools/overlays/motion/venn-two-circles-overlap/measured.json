@@ -1,0 +1,26 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f12 (00:00:00:12) +3 more: #tA > span:nth-of-type(1) > span:nth-of-type(1) \"I\" off the frame, outside its box by 4 px",
+    "FIT f12 (00:00:00:12) +5 more: #tB > span:nth-of-type(1) > span:nth-of-type(6) \"s\" off the frame, outside its box by 11 px",
+    "FIT f24 (00:00:00:24) +2 more: #tA > span:nth-of-type(1) > span:nth-of-type(2) \"d\" off the frame, outside its box by 3 px",
+    "FIT f24 (00:00:00:24) +1 more: #tB > span:nth-of-type(1) > span:nth-of-type(5) \"l\" off the frame, outside its box by 3 px",
+    "FIT f45 (00:00:01:15): #tB > span:nth-of-type(1) > span:nth-of-type(4) \"l\" off the frame, outside its box by 6 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f12 (00:00:00:12) +3 more: #tA > span:nth-of-type(1) > span:nth-of-type(1) \"I\" off the frame, outside its box by 4 px",
+    "FIT f12 (00:00:00:12) +5 more: #tB > span:nth-of-type(1) > span:nth-of-type(6) \"s\" off the frame, outside its box by 11 px",
+    "FIT f24 (00:00:00:24) +2 more: #tA > span:nth-of-type(1) > span:nth-of-type(2) \"d\" off the frame, outside its box by 3 px",
+    "FIT f24 (00:00:00:24) +1 more: #tB > span:nth-of-type(1) > span:nth-of-type(5) \"l\" off the frame, outside its box by 3 px",
+    "FIT f45 (00:00:01:15): #tB > span:nth-of-type(1) > span:nth-of-type(4) \"l\" off the frame, outside its box by 6 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

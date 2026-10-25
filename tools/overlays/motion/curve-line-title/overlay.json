@@ -1,0 +1,39 @@
+{
+ "name": "curve-line-title",
+ "frames": 239,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "pop",
+   "db": -9,
+   "what": "the first point pops out"
+  },
+  {
+   "f": "start + round(48 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 400,
+   "to": 2600,
+   "db": -8,
+   "what": "the camera rushes along the line"
+  },
+  {
+   "f": "start + round(105 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.3",
+   "from": 2400,
+   "to": 500,
+   "db": -9,
+   "what": "the camera pulls back to show the whole line"
+  },
+  {
+   "f": "start + round(160 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the second line appears"
+  }
+ ]
+}

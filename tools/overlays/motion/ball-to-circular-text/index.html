@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text on the circle (spaces make a gap)", "default": "Words that go around"},
+  {"id": "size", "type": "number", "label": "Letter size (px at a 1080-px short side)", "default": 92, "min": 30, "max": 160, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Capital letters", "default": true},
+  {"id": "ball", "type": "enum", "label": "Ball colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "letters", "type": "enum", "label": "Letter colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "ball-to-circular-text" (2026-10-22): a shaded ball pops in and rolls round a ring that writes itself behind it. Upright. A ball pops in
+     at the centre of a grey ground (f6-f30: grows past its size and settles), rises to the top of the ring (f42-f56,
+     decelerating), waits (to f72), then makes one clockwise lap of the circle (f74-f130, slow, fast at the bottom,
+     slow again) and every letter of the text, set round the ring counter-clockwise, pops in as the ball passes it.
+     The ball then rolls off the top (f136), drops to the centre on a curve (f138-f158) and shrinks away (f158-f164),
+     leaving the ring of letters. The ball's laps, the letters' angles and the pops are the clip's measured tables.
+     Look-aware. MotionLab's own code. Size-independent (U). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #ball { position: absolute; left: 0; top: 0; border-radius: 50%; transform-origin: 50% 50%; }
+  .lt { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; font-synthesis: none; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="ring"></div>
+    <div id="ball"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+
+  // reference geometry: the clip is 720 x 1280; KR = template px per reference px
+  const KR = 1.5 * U;
+  const Z = n => n * KR, X = x => W / 2 + (x - 360) * KR, Y = y => H / 2 + (y - 640) * KR;
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const ramp = (g, a, b, e) => { const x = clamp((g - a) / Math.max(1e-6, b - a)); return e ? e(x) : x; };
+  const eo2 = x => 1 - (1 - x) * (1 - x), eo3 = x => 1 - Math.pow(1 - x, 3);
+  const S = Math.round(V.start);
+  const hex = h => { const s = String(h).replace("#", ""); return [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
+  const tab = (rows, g) => {
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    for (let i = 0; i < rows.length - 1; i++) if (g < rows[i + 1][0]) { const a = rows[i], b = rows[i + 1], t = (g - a[0]) / (b[0] - a[0]); return a.slice(1).map((v, k) => v + (b[k + 1] - v) * t); }
+    return rows[rows.length - 1].slice(1);
+  };
+
+  // a warm grey ground, a little lighter at the top (the look's paper pulled toward its ink)
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? `linear-gradient(to bottom, ${mix(L.paper, L.ink, 0.30)}, ${mix(L.paper, L.ink, 0.42)})` : "transparent" });
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the ball: a shaded sphere (highlight, body, rim from the look)
+  const ball = q("ball"), BD = 122;
+  const bodyC = L[V.ball] || L.signal;
+  Object.assign(ball.style, { width: `${Z(BD)}px`, height: `${Z(BD)}px`,
+    background: `radial-gradient(circle at 30% 24%, ${mix(bodyC, L.mustard, 0.65)} 0%, ${mix(bodyC, L.mustard, 0.3)} 22%, ${bodyC} 52%, ${mix(bodyC, L.ink, 0.62)} 100%)`,
+    boxShadow: `${Z(7)}px ${Z(11)}px ${Z(20)}px ${L.rgba(L.ink, 0.33)}` });
+  const BS = [[5, 0], [6, 0.21], [7, 0.45], [8, 0.69], [9, 0.82], [10, 0.92], [12, 1.03], [14, 1.10], [16, 1.13], [18, 1.16], [20, 1.16], [22, 1.156],
+    [24, 1.10], [26, 1.07], [28, 1.03], [30, 1.0], [158, 1.0], [159, 0.88], [160, 0.75], [161, 0.6], [162, 0.46], [163, 0.2], [164, 0]];
+  const RISE = [[41, 356, 632], [42, 356, 627], [43, 356, 590], [44, 356, 538], [45, 357, 490], [46, 357, 452], [47, 358, 430], [48, 358, 416],
+    [49, 358, 405], [50, 358, 397], [52, 358, 388], [54, 358, 384], [56, 358, 383], [72, 358, 383]];
+  // the lap: the ball's angle round the circle (degrees clockwise from the top) a frame or two apart
+  const LAP = [[74, 0.5], [76, 3.5], [78, 10.8], [80, 24.8], [82, 50.4], [84, 90], [86, 139.2], [88, 180.9], [90, 211], [92, 235.8], [94, 255.7],
+    [96, 272.1], [98, 285.8], [100, 297.7], [102, 307.7], [104, 316.3], [106, 323.6], [108, 330], [110, 335.3], [112, 339.2], [114, 344.6],
+    [116, 348.2], [118, 351], [120, 353.2], [122, 354.8], [124, 356.2], [126, 357.4], [128, 358.1], [130, 360]];
+  const DROP = [[136, 364, 396], [138, 384, 399], [140, 417, 438], [142, 414, 507], [144, 401, 549], [146, 390, 577], [148, 382, 596], [150, 376, 610],
+    [152, 371, 620], [154, 367, 628], [156, 364, 634], [158, 362, 638], [160, 360, 641], [162, 359, 643]];
+  const OC = [359, 641], OR = 246;
+  const orbit = th => [OC[0] + OR * Math.sin(th * Math.PI / 180), OC[1] - OR * Math.cos(th * Math.PI / 180)];
+  const bpos = g => {
+    if (g < 41) return [356, 632];
+    if (g < 72) return tab(RISE, g);
+    if (g < 74) { const a = [358, 383], b = orbit(0.5), t = (g - 72) / 2; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+    if (g <= 130) return orbit(tab(LAP, g)[0]);
+    if (g < 136) return [359, 395];
+    return tab(DROP, g);
+  };
+
+  // ---- the letters on the ring: counter-clockwise from the top-left, a pitch that fills the circle (the clip's 16.4 degrees at most)
+  const ring = q("ring");
+  const raw = String(V.text || "");
+  const txt = V.caps ? raw.toUpperCase() : raw;
+  const items = [];                                      // the letters (not the spaces) with their slot position
+  let slot = 0, started = false, pendingSpace = 0;
+  Array.from(txt).forEach(ch => {
+    if (!ch.trim()) { if (started) pendingSpace += 0.57; return; }
+    if (started) slot += 1 + pendingSpace; started = true; pendingSpace = 0;
+    items.push({ ch, slot });
+  });
+  const span = items.length ? items[items.length - 1].slot : 0;
+  const pitch = span > 0 ? Math.min(17.2, 335 / span) : 0;
+  const A0 = 339.6, RC = [362, 655], RR = 240.5;
+  const lapTime = th => { // the frame the ball reaches an angle
+    const a = Math.max(0, Math.min(360, th));
+    for (let i = 0; i < LAP.length - 1; i++) if (a <= LAP[i + 1][1]) { const p = LAP[i], r = LAP[i + 1], t = (a - p[1]) / Math.max(1e-6, r[1] - p[1]); return p[0] + (r[0] - p[0]) * t; }
+    return LAP[LAP.length - 1][0];
+  };
+  const lcol = L[V.letters] || L.mustard;
+  items.forEach(it => {
+    const th = ((A0 - it.slot * pitch) % 360 + 360) % 360;
+    it.th = th;
+    it.x = RC[0] + RR * Math.sin(th * Math.PI / 180); it.y = RC[1] - RR * Math.cos(th * Math.PI / 180);
+    it.t0 = lapTime(th) + 1.5;
+    const el = document.createElement("div"); el.className = "lt ml-body"; el.textContent = it.ch;
+    Object.assign(el.style, { fontSize: `${V.size * U}px`, fontWeight: "800", color: lcol, opacity: "0", webkitTextStroke: `${V.size * U * 0.03}px ${lcol}` });
+    ring.appendChild(el); it.el = el;
+  });
+
+  function render(f) {
+    const g = (f - S) * 30 / FPS;
+    // -- the ball
+    const s = tab(BS, g)[0];
+    const p = bpos(g), p0 = bpos(g - 0.5), p1 = bpos(g + 0.5);
+    const vx = p1[0] - p0[0], vy = p1[1] - p0[1], v = Math.hypot(vx, vy);
+    ball.style.opacity = g >= 5 && g < 164 ? "1" : "0";
+    const k = 1 + clamp((v - 25) / 400, 0, 0.12), ang = Math.atan2(vy, vx) * 180 / Math.PI;
+    ball.style.left = `${X(p[0]) - Z(BD) / 2}px`; ball.style.top = `${Y(p[1]) - Z(BD) / 2}px`;
+    ball.style.transform = v > 20 ? `rotate(${ang}deg) scale(${s * k}, ${s / Math.sqrt(k)}) rotate(${-ang}deg)` : `scale(${s})`;
+    // -- the letters pop in as the ball passes
+    items.forEach(it => {
+      const a = ramp(g, it.t0, it.t0 + 5), sc = 0.5 + 0.5 * eo3(ramp(g, it.t0, it.t0 + 6));
+      it.el.style.opacity = String(a);
+      it.el.style.transform = `translate(${X(it.x)}px, ${Y(it.y)}px) translate(-50%, -50%) rotate(${it.th + 180}deg) scale(${sc})`;
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, t => render(t * FPS)); else render(0);
+
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 37 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 800, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

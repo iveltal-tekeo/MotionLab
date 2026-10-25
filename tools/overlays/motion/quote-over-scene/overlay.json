@@ -1,0 +1,30 @@
+{
+ "name": "quote-over-scene",
+ "frames": 386,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + 12",
+   "kind": "whoosh",
+   "dur": "0.95",
+   "from": 2200,
+   "to": 500,
+   "db": -8,
+   "what": "the scene pulls back"
+  },
+  {
+   "f": "start + 113",
+   "kind": "pop",
+   "db": -10,
+   "what": "the opening quote mark rises in"
+  },
+  {
+   "f": "start + 142 + round(i * 62 / n)",
+   "kind": "key",
+   "repeat": "max(8, round(len(quote) * 0.4))",
+   "what": "the quote types in (about one key per 2.5 letters)"
+  }
+ ]
+}

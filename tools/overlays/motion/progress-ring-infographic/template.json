@@ -1,0 +1,101 @@
+{
+ "name": "Progress ring infographic",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "An upright infographic on a soft tile-grid page: a headline comes in word by word over a marker bar, a short text follows word by word, then a progress ring fades in at the right with its number inside.",
+ "use_for": [
+  "goal tracking",
+  "progress",
+  "percentage",
+  "stat",
+  "KPI",
+  "infographic",
+  "report",
+  "explainer",
+  "key number"
+ ],
+ "tags": [
+  "chart",
+  "progress ring",
+  "percentage",
+  "infographic",
+  "headline",
+  "marker bar",
+  "word by word",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f9-f55 the headline comes in word by word, each word fading in as the one before finishes; f16-f26 the marker bar fades in behind it; f61-f177 the text under it comes in word by word (quick at first, slowing to a soft finish); f175-f184 the ring fades in already drawn up to its number; f189-f232 the number fades in inside it; then it holds to the end",
+ "tracks": [
+  {
+   "name": "headline",
+   "what": "the headline's words fade in one after another",
+   "start_f": 9,
+   "length_f": 46,
+   "easing": "each word on its own, slowing down (measured)"
+  },
+  {
+   "name": "marker bar",
+   "what": "the bar behind the headline fades in",
+   "start_f": 16,
+   "length_f": 10,
+   "easing": "linear"
+  },
+  {
+   "name": "text",
+   "what": "the text's words fade in one after another with a soft, slightly blurred edge",
+   "start_f": 61,
+   "length_f": 116,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "ring",
+   "what": "the progress ring fades in, already drawn up to its number",
+   "start_f": 175,
+   "length_f": 10,
+   "easing": "linear"
+  },
+  {
+   "name": "number",
+   "what": "the number fades in inside the ring",
+   "start_f": 189,
+   "length_f": 43,
+   "easing": "near linear (measured)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 233,
+   "length_f": 70,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "title",
+  "body",
+  "value",
+  "unit"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 260,
+ "check_frames": [
+  0,
+  14,
+  20,
+  40,
+  70,
+  100,
+  140,
+  178,
+  200,
+  230,
+  280
+ ]
+}

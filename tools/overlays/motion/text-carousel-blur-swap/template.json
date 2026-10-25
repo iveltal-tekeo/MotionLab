@@ -1,0 +1,92 @@
+{
+ "name": "Huge word carousel",
+ "kind": "text",
+ "category": "Text",
+ "what": "One huge word fills the frame and slowly shrinks; then it slides out to the left, smeared by motion blur and shrinking, while the next word flies in from the right, big at first, and settles; the old word stays at the edge as a soft sliver. It happens twice, for three words.",
+ "use_for": [
+  "three words",
+  "keywords",
+  "list",
+  "hook",
+  "title",
+  "statement",
+  "steps",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "carousel",
+  "slide",
+  "motion blur",
+  "swap",
+  "big type",
+  "minimal",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f17 (00:00:00:00-00:00:00:17) word 1 still; f17-f54 (00:00:00:17-00:00:01:24) it shrinks slowly from 100 % to 92 %; f55-f72 (00:00:01:25-00:00:02:12) it slides out to the left shrinking to 69 % with a sideways blur while word 2 flies in from the right (f60-f72) at 121 % and settles at 93 %, word 1 left as a blurred sliver at the left edge; f72-f109 (00:00:02:12-00:00:03:19) word 2 shrinks slowly to 87 %; f110-f128 (00:00:03:20-00:00:04:08) the same swap brings word 3 (in f115-f128); f128-f163 (00:00:04:08-00:00:05:13) word 3 shrinks slowly to 86 %",
+ "tracks": [
+  {
+   "name": "word 1 holds",
+   "what": "the first word fills the frame and shrinks slowly",
+   "start_f": 0,
+   "length_f": 55,
+   "easing": "linear, easing out at the end"
+  },
+  {
+   "name": "swap 1",
+   "what": "word 1 slides out to the left, smaller and blurred; word 2 flies in from the right, big at first, and lands",
+   "start_f": 55,
+   "length_f": 18,
+   "easing": "word 1 accelerating, word 2 decelerating (measured positions, with the reference's stutter)"
+  },
+  {
+   "name": "word 2 holds",
+   "what": "the second word shrinks slowly",
+   "start_f": 72,
+   "length_f": 38,
+   "easing": "linear"
+  },
+  {
+   "name": "swap 2",
+   "what": "word 2 slides out to the left and stops near the edge; word 3 flies in the same way",
+   "start_f": 110,
+   "length_f": 19,
+   "easing": "measured positions"
+  },
+  {
+   "name": "word 3 holds",
+   "what": "the third word shrinks slowly to the end",
+   "start_f": 128,
+   "length_f": 36,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  40,
+  56,
+  60,
+  64,
+  68,
+  90,
+  112,
+  118,
+  122,
+  128,
+  160
+ ]
+}

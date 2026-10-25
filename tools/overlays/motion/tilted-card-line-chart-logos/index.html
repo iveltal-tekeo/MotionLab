@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "ticker", "type": "string", "label": "Short name next to the logo (top right of the card)", "default": "ABC"},
+  {"id": "coin_logo", "type": "string", "label": "Logo at the top right of the card: a logo of the library (e.g. youtube) or your picture (empty = a placeholder)", "default": ""},
+  {"id": "values", "type": "string", "label": "Line: one value for each point, as a % of the chart height (| between, 6 to 60; the default draws the original line)", "default": "19.8|21.3|22.9|24.5|26.1|27.1|27.2|26.5|25.2|25.9|27.3|29.4|31.8|33.6|34.3|35|35.7|36.2|36.6|36.3|37|40.9|46.9|54.9|65.8|68.4|64.5|95.9|82.5|75.3|79|62.5|58.5|63.2|52.1|30.6"},
+  {"id": "price", "type": "number", "label": "The counter at the bottom right counts up to", "default": 60000, "min": 0, "max": 1000000000, "step": 100},
+  {"id": "unit", "type": "string", "label": "Sign before the counter (empty = none)", "default": "$"},
+  {"id": "closing", "type": "string", "label": "Closing line, shown when the card slides away (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Grow with us"},
+  {"id": "size", "type": "number", "label": "Closing line size (px at a 1080-px short side)", "default": 110, "min": 30, "max": 300, "step": 1},
+  {"id": "line", "type": "enum", "label": "Colour the line turns to", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "light", "type": "enum", "label": "Colour of the light running round the card edge", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<script src="assets/logos/logos.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "tilted-card-line-chart-logos" (2026-10-23): a dark card with a logo + short name at its top right, a grid and a line chart. For the first 49
+     frames the card is seen almost edge-on in strong 3D, turning very slowly while its dashed axes are drawn (the
+     vertical one downward f12-f44, the horizontal one from f44) and the line starts to grow (f14); at f50 the view CUTS
+     to the card facing the camera (a slow drift to the end), the line keeps growing (steady, then over the spike
+     f86-f94, the tail fades) and goes from grey to the accent colour (f80-f112) while the counter at the bottom right
+     counts up (f79-f119, one step a frame); a light runs round the card edge the whole time. At f132 the card
+     accelerates away to the left with a horizontal blur (f132-f152) and uncovers a closing line that settles
+     (f132-f160). 24 frames a second. The card is measured as four screen corners (A: f0-f48, B: f50-f132), not a
+     3D model. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #cardw { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; }
+  #card { position: absolute; left: 0; top: 0; width: 1080px; height: 700px; transform-origin: 0 0; overflow: hidden; }
+  #card > * { position: absolute; left: 0; top: 0; }
+  #card svg { overflow: visible; }
+  #cl { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; }
+  .tk { white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .coin { border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .coin img, .coin svg { display: block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0">
+    <defs><filter id="cblur" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur id="cblurg" stdDeviation="0 0"/></filter></defs>
+  </svg>
+  <div id="hand" class="abs">
+    <div id="stage">
+      <div id="cl" class="ml-display"></div>
+      <div id="cardw">
+        <div id="card">
+          <div id="cbg"></div>
+          <svg id="gsv" width="1080" height="700" viewBox="0 0 1080 700"></svg>
+          <svg id="asv" width="1080" height="700" viewBox="0 0 1080 700"></svg>
+          <div id="tick"></div>
+          <div id="prc" class="tk ml-body"></div>
+          <svg id="lsv" width="1080" height="700" viewBox="0 0 1080 700"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 24, FRAMES = 192;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.3;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, mustard: L.mustard, deep: L.deep, paper: glare };
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const rg = (c, a) => { const [r, g, b] = hex(c); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const lineHot = mixC(pick[V.line] || L.signal, "#000000", 0.12), lineGrey = mixC(glare, night, 0.42), lightC = mixC(pick[V.light] || L.deep, "#ffffff", 0.45);
+
+  // ---- the ground: black
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixC(night, "#000000", 0.88);
+  const stage = q("stage"), card = q("card"), cardw = q("cardw");
+  stage.style.transform = `scale(${K})`;
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (par) par.appendChild(e); return e; };
+
+  // ---- the card (1080 x 700 units): a grey gradient, a faint grid, dashed axes, the line, the logo + name, the counter
+  const CW = 1080, CH = 700, RAD = 24;
+  Object.assign(card.style, { borderRadius: `${RAD}px`, background: night });
+  q("cbg").style.cssText += `width:${CW}px;height:${CH}px;background:linear-gradient(180deg, ${mixC(night, "#000000", 0.5)} 0%, ${mixC(night, glare, 0.1)} 55%, ${mixC(night, glare, 0.19)} 100%)`;
+  const gsv = q("gsv"), asv = q("asv"), lsv = q("lsv");
+  [160, 260, 360, 455, 550, 645, 745, 840, 940].forEach(x => el("line", { x1: x, y1: 70, x2: x - 6 + (x > 550 ? 8 : 0), y2: 560, stroke: rg(glare, 0.085), "stroke-width": 2.6 }, gsv));
+  [105, 165, 225, 285, 340, 400, 460, 520].forEach(y => el("line", { x1: 120, y1: y, x2: 960, y2: y, stroke: rg(glare, 0.085), "stroke-width": 2.6 }, gsv));
+  const axC = mixC(glare, night, 0.2);
+  const axA = { stroke: axC, "stroke-width": 3.6, "stroke-dasharray": "13 11", fill: "none" };
+  const axV = el("line", { x1: 50, y1: 22, x2: 50, y2: 22, ...axA }, asv), axH = el("line", { x1: 50, y1: 615, x2: 50, y2: 615, ...axA }, asv);
+
+  // the line: a Catmull-Rom spline through the values (evenly spaced from x = 115 to 902; 0 % = the x axis at y = 615, 100 % = y 60)
+  const LX0 = 115, LX1 = 902, LY0 = 615, LY1 = 60;
+  const nums = s => String(s == null ? "" : s).split("|").map(x => parseFloat(x)).filter(x => !isNaN(x));
+  let vv = nums(V.values); if (vv.length < 4) vv = nums("19.8|21.3|22.9|24.5|26.1|27.1|27.2|26.5|25.2|25.9|27.3|29.4|31.8|33.6|34.3|35|35.7|36.2|36.6|36.3|37|40.9|46.9|54.9|65.8|68.4|64.5|95.9|82.5|75.3|79|62.5|58.5|63.2|52.1|30.6"); if (vv.length > 60) vv = vv.slice(0, 60);
+  const nV = vv.length;
+  const pts = vv.map((v, i) => [LX0 + (LX1 - LX0) * i / (nV - 1), LY0 - (LY0 - LY1) * Math.max(-20, Math.min(120, v)) / 100]);
+  const ext = [[2 * pts[0][0] - pts[1][0], 2 * pts[0][1] - pts[1][1]]].concat(pts, [[2 * pts[nV - 1][0] - pts[nV - 2][0], 2 * pts[nV - 1][1] - pts[nV - 2][1]]]);
+  let ld = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+  for (let i = 0; i < nV - 1; i++) {
+    const p0 = ext[i], p1 = ext[i + 1], p2 = ext[i + 2], p3 = ext[i + 3];
+    ld += ` C ${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(2)} ${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(2)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(2)} ${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+  }
+  const ldefs = el("defs", {}, lsv);
+  const gl = el("linearGradient", { id: "gl", gradientUnits: "userSpaceOnUse", x1: 100, y1: 0, x2: 200, y2: 0 }, ldefs);
+  el("stop", { offset: 0, "stop-color": "#fff", "stop-opacity": 0.12 }, gl); el("stop", { offset: 1, "stop-color": "#fff", "stop-opacity": 1 }, gl);
+  const gt = el("linearGradient", { id: "gt", gradientUnits: "userSpaceOnUse", x1: 0, y1: 330, x2: 0, y2: 450 }, ldefs);
+  el("stop", { offset: 0, "stop-color": "#000", "stop-opacity": 0 }, gt); el("stop", { offset: 1, "stop-color": "#000", "stop-opacity": 1 }, gt);
+  const mk = el("mask", { id: "lm", maskUnits: "userSpaceOnUse", x: 0, y: 0, width: CW, height: CH }, ldefs);
+  el("rect", { x: 0, y: 0, width: CW, height: CH, fill: "#000" }, mk);
+  el("rect", { x: 90, y: 0, width: CW, height: CH, fill: "url(#gl)" }, mk);
+  el("rect", { x: 860, y: 330, width: 400, height: 140, fill: "url(#gt)" }, mk);
+  const lg = el("g", { mask: "url(#lm)" }, lsv);
+  const crv = el("path", { d: ld, fill: "none", stroke: lineGrey, "stroke-width": 4.6, "stroke-linecap": "round", "stroke-linejoin": "round", pathLength: 1000 }, lg);
+
+  // the logo + short name (top right) and the counter (bottom right)
+  const tick = q("tick"), prc = q("prc");
+  const coin = document.createElement("div"); coin.className = "coin";
+  Object.assign(coin.style, { position: "absolute", left: "815px", top: "-3px", width: "66px", height: "66px" });
+  const slot = V.coin_logo;
+  let has = false;
+  if (slot && window.MLLogo) {
+    has = MLLogo.fill(coin, slot, { scale: MLLogo.is(slot) ? 0.62 : 1, dark: true });
+    if (has && !MLLogo.is(slot)) coin.querySelectorAll("img").forEach(m => Object.assign(m.style, { objectFit: "cover", objectPosition: "50% 50%" }));
+    if (has) coin.style.background = rg(glare, 0.14);
+  }
+  if (!has) {                                                    // an empty slot: a plain gold disc with a ring (no brand mark)
+    coin.style.background = `radial-gradient(circle at 38% 32%, ${mixC(L.mustard, "#ffffff", 0.45)} 0%, ${L.mustard} 55%, ${mixC(L.mustard, "#000000", 0.25)} 100%)`;
+    const ring = document.createElement("div");
+    Object.assign(ring.style, { width: "42px", height: "42px", borderRadius: "50%", border: `5px solid ${rg(mixC(L.mustard, "#000000", 0.5), 0.55)}` });
+    coin.appendChild(ring);
+  }
+  tick.appendChild(coin);
+  const sep = document.createElement("div");
+  Object.assign(sep.style, { position: "absolute", left: "900px", top: "-8px", width: "3px", height: "80px", background: glare });
+  tick.appendChild(sep);
+  const tkt = document.createElement("div"); tkt.className = "tk ml-body"; tkt.textContent = V.ticker;
+  Object.assign(tkt.style, { position: "absolute", left: "925px", top: "30px", transform: "translateY(-50%)", fontSize: "44px", fontWeight: String(fw(V.body_font, 700)), color: glare });
+  tick.appendChild(tkt);
+  Object.assign(prc.style, { left: "0px", top: "0px", fontSize: "52px", fontWeight: String(fw(V.body_font, 600)), textAlign: "right" });
+
+  // ---- the closing line (behind the card; the card's exit uncovers it)
+  const cl = q("cl");
+  if (window.MLLook) MLLook.rich(cl, V.closing, { look: L, family: V.display_font, weight: 700 }); else cl.textContent = V.closing;
+  Object.assign(cl.style, { fontSize: `${V.size * U / K}px`, color: glare, fontWeight: String(fw(V.display_font, 800)), textShadow: "0 3px 8px rgba(0,0,0,0.55)", visibility: "hidden" });
+
+  // ---- the edge light: a short soft streak made of dashes on a rounded-rect path
+  const PR = RAD - 2, PW = CW - 3, PH = CH - 3;
+  const PP = 2 * (PW - 2 * PR) + 2 * (PH - 2 * PR) + 2 * Math.PI * PR;
+  const rp = `M ${1.5 + PR} 1.5 H ${PW + 1.5 - PR} A ${PR} ${PR} 0 0 1 ${PW + 1.5} ${1.5 + PR} V ${PH + 1.5 - PR} A ${PR} ${PR} 0 0 1 ${PW + 1.5 - PR} ${PH + 1.5} H ${1.5 + PR} A ${PR} ${PR} 0 0 1 1.5 ${PH + 1.5 - PR} V ${1.5 + PR} A ${PR} ${PR} 0 0 1 ${1.5 + PR} 1.5 Z`;
+  const SEGS = 16, SEGL = 12, lsegs = [];
+  for (let i = 0; i < SEGS; i++) {
+    const a = Math.pow(Math.sin(Math.PI * (i + 0.5) / SEGS), 1.4);
+    lsegs.push({ a, i, core: el("path", { d: rp, fill: "none", stroke: lightC, "stroke-width": 6, "stroke-linecap": "butt", pathLength: PP }, lsv),
+      glow: el("path", { d: rp, fill: "none", stroke: lightC, "stroke-width": 22, "stroke-linecap": "butt", pathLength: PP, opacity: 0 }, lsv) });
+  }
+  const SIDES = [CW, CH, CW, CH], CUM = [0, CW, CW + CH, 2 * CW + CH, 2 * CW + 2 * CH];
+  const sideT = v => { const i = Math.min(3, Math.max(0, Math.floor(v))); return CUM[i] + (v - i) * SIDES[i]; };
+
+  // ---- the measured motion (frames; g = the frame minus "Starts at frame")
+  // the card's four corners on the screen (units of the 720 x 1280 frame): TLx TLy TRx TRy BRx BRy BLx BLy. A = the close, tilted shot (f0-f48), B = the card facing us (f50-f132)
+  const CA = [[0, 139.4, 233.4, 475.4, 551.2, 542.2, 842.6, 206.7, 804.6], [6, 134.4, 220.4, 479, 551.5, 547.4, 846.8, 201.4, 808.7], [12, 128.2, 208, 482, 547.7, 552.8, 851.2, 195.7, 813],
+    [18, 122.1, 202, 483.8, 537.7, 558.6, 855.9, 189.2, 817.5], [24, 116.4, 201.4, 484.5, 523, 564.7, 860.7, 181.9, 822.2], [30, 110.6, 202.1, 485.1, 507, 571.2, 865.9, 173.8, 827.1],
+    [36, 103.8, 199.2, 486.6, 493.7, 578.2, 871.3, 164.9, 832.4], [42, 95.9, 190.7, 489.7, 486.1, 585.5, 877, 155.4, 838], [49, 87.9, 180.3, 494.6, 484.8, 593.1, 883, 145, 843.7]];
+  const CB = [[50, 122.6, 408.6, 622.8, 421.3, 643.9, 758.2, 104.9, 757.8], [56, 119.7, 413.5, 625.7, 413.7, 641.8, 758.4, 103, 758.7], [64, 115.8, 417.5, 627.8, 411.5, 641.1, 758.8, 100.4, 759.7],
+    [72, 111.9, 419.1, 628.5, 414.2, 641.4, 759.4, 97.8, 760.3], [80, 108.2, 418.9, 628.6, 418.2, 642, 760.4, 95.3, 760.7], [88, 104.5, 417.3, 628.3, 421, 642.2, 761.7, 92.8, 760.8],
+    [96, 101, 414.8, 628.1, 421.2, 641.6, 763.2, 90.4, 760.9], [104, 97.5, 411.9, 628.2, 418.7, 640.3, 764.5, 88.1, 761.2], [112, 93.9, 409, 628.4, 414.4, 638.5, 765.1, 85.8, 761.9],
+    [120, 90.2, 406.6, 628.9, 410.1, 636.6, 764.3, 83.3, 763.5], [128, 86.3, 405.1, 629.2, 409.2, 635.6, 761.4, 80.7, 766.5], [132, 84.2, 404.8, 629.1, 411.3, 635.8, 758.8, 79.3, 768.6], [192, 84.2, 404.8, 629.1, 411.3, 635.8, 758.8, 79.3, 768.6]];
+  // the card's slide to the left (units), and the closing line's settle
+  const TX = [[131, 0], [132, 0], [133, -3], [134, -9], [135, -17], [136, -28], [137, -43], [138, -63], [139, -88], [140, -122], [141, -169], [142, -227], [143, -297], [144, -374], [145, -440], [146, -496],
+    [147, -536], [148, -568], [149, -592], [150, -611], [151, -624], [152, -640], [153, -700]];
+  // the line's head along its length (a fraction), and the axes
+  const HD = [[13, 0], [14, 0.001], [18, 0.002], [24, 0.03], [30, 0.054], [36, 0.087], [42, 0.123], [48, 0.163], [54, 0.197], [58, 0.232], [62, 0.275], [66, 0.316], [70, 0.363], [74, 0.409], [78, 0.448],
+    [82, 0.492], [86, 0.544], [90, 0.625], [94, 0.688], [100, 0.747], [106, 0.836], [112, 0.958], [118, 0.984], [124, 1]];
+  const AV = [[11, 22], [12, 62], [14, 79], [16, 87], [18, 101], [20, 105], [22, 125], [24, 138], [26, 144], [28, 185], [30, 214], [32, 244], [34, 289], [36, 338], [38, 394], [40, 457], [42, 530], [44, 612]];
+  const AH = [[44, 57], [46, 147], [48, 244], [50, 294], [52, 407], [54, 492], [58, 633], [62, 730], [66, 810], [72, 900], [80, 985], [84, 1000]];
+  // the light round the edge (a side + how far along it: 0.5 = the middle of the top edge, 1.5 = the middle of the right edge ...)
+  const LB = [[50, 0.41], [54, 0.46], [58, 0.59], [62, 1.01], [66, 1.06], [70, 1.16], [74, 1.24], [78, 1.34], [82, 1.49], [86, 1.64], [90, 1.74], [94, 1.89], [98, 1.99], [102, 2.16], [106, 2.26],
+    [110, 2.31], [114, 2.41], [118, 2.49], [122, 2.54], [126, 2.59], [130, 2.64], [192, 3.2]];
+  const matrix = c => {                                            // card (0..CW, 0..CH) -> the four screen corners, as a CSS matrix3d
+    const s = [[0, 0], [CW, 0], [CW, CH], [0, CH]], d = [[c[0], c[1]], [c[2], c[3]], [c[4], c[5]], [c[6], c[7]]];
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      A.push([s[i][0], s[i][1], 1, 0, 0, 0, -d[i][0] * s[i][0], -d[i][0] * s[i][1]]); b.push(d[i][0]);
+      A.push([0, 0, 0, s[i][0], s[i][1], 1, -d[i][1] * s[i][0], -d[i][1] * s[i][1]]); b.push(d[i][1]);
+    }
+    for (let i = 0; i < 8; i++) { let m = i; for (let r = i + 1; r < 8; r++) if (Math.abs(A[r][i]) > Math.abs(A[m][i])) m = r;
+      [A[i], A[m]] = [A[m], A[i]]; [b[i], b[m]] = [b[m], b[i]];
+      for (let r = i + 1; r < 8; r++) { const f = A[r][i] / A[i][i]; for (let k = i; k < 8; k++) A[r][k] -= f * A[i][k]; b[r] -= f * b[i]; } }
+    const x = new Array(8).fill(0);
+    for (let i = 7; i >= 0; i--) { let sm = b[i]; for (let k = i + 1; k < 8; k++) sm -= A[i][k] * x[k]; x[i] = sm / A[i][i]; }
+    return `matrix3d(${x[0]},${x[3]},0,${x[6]},${x[1]},${x[4]},0,${x[7]},0,0,1,0,${x[2]},${x[5]},0,1)`;
+  };
+
+  let ready = false;
+  function layout() {
+    const w = cl.offsetWidth, room = 0.88 * 720;
+    if (w > room && w > 0) cl.style.fontSize = `${parseFloat(cl.style.fontSize) * room / w}px`;
+    ready = true;
+  }
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    stage.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    // the card
+    const base = g < 49.5 ? tab(CA, g) : tab(CB, g);
+    const tx = g > 131 ? tab(TX, g)[0] : 0;
+    const c = base.slice(); for (let i = 0; i < 8; i += 2) c[i] += tx;
+    card.style.transform = matrix(c);
+    const sp = g > 131 ? Math.abs(tab(TX, g + 0.5)[0] - tab(TX, g - 0.5)[0]) : 0;
+    const bx = sp * 0.3;
+    q("cblurg").setAttribute("stdDeviation", `${bx.toFixed(2)} 0`);
+    cardw.style.filter = bx > 0.4 ? "url(#cblur)" : "none";
+    // the closing line
+    const sm = u => u * u * (3 - 2 * u);
+    cl.style.visibility = g >= 131.5 ? "visible" : "hidden";
+    cl.style.left = `${(359 - 61 * (1 - sm(clamp01((g - 132) / 28)))).toFixed(2)}px`;
+    cl.style.top = "640px"; cl.style.transform = "translate(-50%, -50%)";
+    // axes
+    const yv = g < 11 ? 22 : tab(AV, g)[0], xh = g < 44 ? 50 : tab(AH, g)[0];
+    axV.setAttribute("y2", yv.toFixed(1)); axH.setAttribute("x2", Math.max(50, xh).toFixed(1));
+    axV.style.visibility = g >= 11 ? "visible" : "hidden"; axH.style.visibility = g >= 44 ? "visible" : "hidden";
+    // the line
+    const p = tab(HD, g)[0];
+    crv.setAttribute("stroke-dasharray", `${(p * 1000).toFixed(2)} 3000`);
+    crv.style.visibility = p > 0.0005 ? "visible" : "hidden";
+    crv.setAttribute("stroke", mixC(lineGrey, lineHot, clamp01((g - 80) / 32)));
+    // the counter
+    const shown = g >= 55;
+    prc.style.visibility = shown ? "visible" : "hidden";
+    if (shown) {
+      prc.textContent = `${V.unit || ""}${fmt(V.price * clamp01((g - 79) / 40))}`;
+      prc.style.color = mixC(glare, lineHot, clamp01((g - 98) / 16));
+      prc.style.left = `${1000 - prc.offsetWidth}px`; prc.style.top = `${580 - prc.offsetHeight / 2}px`;
+    }
+    // the edge light
+    const sPos = g < 49.5 ? (0.24 + 0.0088 * g) * CW : sideT(tab(LB, g)[0]);
+    lsegs.forEach(sg => {
+      const mid = sPos - (SEGS * SEGL) / 2 + (sg.i + 0.5) * SEGL;
+      const start = (((mid - SEGL / 2 - PR) % PP) + PP) % PP;
+      sg.core.setAttribute("stroke-dasharray", `${SEGL + 1} ${(PP - SEGL - 1).toFixed(2)}`);
+      sg.core.setAttribute("stroke-dashoffset", (-start).toFixed(2));
+      sg.core.setAttribute("opacity", (sg.a * 0.95).toFixed(3));
+      sg.glow.setAttribute("stroke-dasharray", `${SEGL + 1} ${(PP - SEGL - 1).toFixed(2)}`);
+      sg.glow.setAttribute("stroke-dashoffset", (-start).toFixed(2));
+      sg.glow.setAttribute("opacity", (sg.a * 0.32).toFixed(3));
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the closing line is measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 600, 700, 800].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

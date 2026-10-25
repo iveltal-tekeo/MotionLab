@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "sentence", "type": "string", "label": "Sentence, typed in word by word (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Great edits feel effortless."},
+  {"id": "line_2", "type": "string", "label": "Second line, at the top", "default": "Now look closely."},
+  {"id": "size", "type": "number", "label": "Sentence size (px at a 1080-px short side)", "default": 76, "min": 30, "max": 140, "step": 1},
+  {"id": "shape", "type": "enum", "label": "Shape and icon colour", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "text-sequence-shape-morph-icon" (2026-10-22): a sentence typed in word by word on a plain ground, then a shape that slides in and opens
+     into an eye icon. The four words (cuts at f0, f3, f9, f16) are one block that slides in from the left (f0-f13,
+     decelerating) while each word fades from light grey to full colour and rises from below its line (the later the
+     word, the lower it starts; about 40 frames to settle), then the block grows 5 % very slowly (f22-f57), slides
+     off to the right faster and faster (f57-f71) and is cut at f72. At f72 the second line appears at the top (a
+     cut) and a pointed oval (the eye's outline, an upper lid covering all of it) slides in from the left, slowing
+     to rest at the centre by f83 while it widens (f74-f89, 495 to 605 px at the reference's 720 px wide); from f80
+     the lid's lower edge lifts (f80-f89), showing a pale gradient eye with the iris sliding in from the left and
+     settling in the middle (the pupil and a highlight on it); everything is clipped by the oval. All the curves
+     are the reference's measured ones. Look-aware: the ground, the text, the icon colours, the font and the film
+     grain come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #row { position: absolute; display: flex; gap: 0.26em; white-space: nowrap; line-height: 1; font-synthesis: none; transform-origin: 50% 50%; }
+  #row .wd { display: block; white-space: nowrap; will-change: transform; }
+  #top { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; visibility: hidden; }
+  svg { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="row" class="ml-body"></div>
+    <div id="top" class="ml-body"></div>
+    <svg id="sv" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 90;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const KR = W / 720;                                      // the reference's pixels (720 x 1280) -> this frame's
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a light ground, ink text, one colour for the shape and the icon
+  const light = L.dark ? L.ink : L.paper, dark = L.dark ? L.paper : L.ink;
+  const sc = V.shape === "signal" ? L.signal : V.shape === "mustard" ? L.mustard : V.shape === "ink" ? dark : L.deep;
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background ? light : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the sentence: one row of words (a flex row), each word its own piece
+  const fam = V.body_font, FS0 = V.size * U, CX = 360, YM = 631.5;          // centre (reference px): the middle of the sentence's lines
+  const row = q("row"), top2 = q("top");
+  Object.assign(row.style, { fontSize: `${FS0}px`, fontWeight: String(fw(fam, 500)), color: dark, left: `${CX * KR}px`, top: `${YM * KR}px` });
+  const rr = window.MLLook ? MLLook.rich(row, V.sentence, { look: L, family: fam, weight: 500 }) : { words: [] };
+  if (!window.MLLook) row.textContent = V.sentence;
+  const wd = rr.words; wd.forEach(w => { w.classList.add("wd"); });
+  Object.assign(top2.style, { fontSize: `${FS0 * 0.87}px`, fontWeight: String(fw(fam, 500)), color: dark, left: `${CX * KR}px`, top: `${177.5 * KR}px` });
+  if (window.MLLook) MLLook.rich(top2, V.line_2, { look: L, family: fam, weight: 500 }); else top2.textContent = V.line_2;
+
+  // ---- the measured curves (g = frame; reference px; every word shares one slide, each has its own rise and fade)
+  const DXIN = [[0, -163], [1, -129], [2, -99], [3, -75], [4, -55], [5, -38], [6, -29], [7, -20], [8, -14], [9, -9], [10, -6], [11, -4], [12, -1], [13, 0]];     // the block sliding in from the left
+  const DXOUT = [[57, 0], [58, 1], [59, 2.5], [60, 4.5], [61, 7.5], [62, 11], [63, 15], [64, 20.5], [65, 27], [66, 35], [67, 45], [68, 56], [69, 71], [70, 88], [71, 108]];   // and off to the right
+  const SG = [[0, 0.993], [22, 0.995], [24, 0.9967], [26, 0.9984], [27, 1.0], [29, 1.0033], [31, 1.0066], [33, 1.0115], [35, 1.0164], [37, 1.0214], [39, 1.0263], [41, 1.0312], [43, 1.0345], [45, 1.0378], [47, 1.0411], [49, 1.0444],
+    [51, 1.0477], [54, 1.0493], [57, 1.051], [60, 1.0526], [63, 1.0543], [71, 1.0543]];                                                                                 // the block's slow growth
+  const WORD = [   // per word: [frame, rise from its line (px), opacity]; the first row is the frame it appears
+    [[0, 45, .49], [1, 40, .6], [2, 37, .62], [3, 36, .69], [4, 31, .72], [5, 29, .74], [6, 27, .77], [7, 24, .79], [8, 22, .82], [9, 20, .83], [10, 17, .86], [11, 16, .87], [12, 15, .91], [14, 11, .92], [15, 10, .95], [16, 9, .98], [17, 8, 1],
+      [21, 6, 1], [28, 2, 1], [31, 1, 1], [36, 0.3, 1], [40, 0, 1]],
+    [[3, 69, .19], [4, 60, .37], [5, 53, .4], [6, 48, .47], [7, 44, .53], [8, 40, .58], [9, 36, .64], [10, 33, .67], [11, 30, .69], [12, 28, .77], [14, 23, .8], [15, 21, .82], [16, 19, .85], [17, 17, .87], [18, 16, .9], [19, 14, .91],
+      [21, 13, .94], [28, 6, 1], [34, 4, 1], [37, 1, 1], [40, 0, 1]],
+    [[9, 76, .08], [10, 65, .26], [11, 57, .36], [12, 51, .44], [14, 41, .57], [15, 38, .62], [16, 35, .65], [17, 33, .68], [18, 29, .74], [19, 26, .75], [21, 22, .83], [28, 11, .93], [29, 10, .98], [32, 7, 1], [37, 6, 1], [40, 4, 1],
+      [42, 1, 1], [45, 0, 1]],
+    [[16, 67, .21], [17, 60, .35], [18, 52, .44], [19, 48, .46], [21, 39, .61], [28, 21, .82], [29, 19, .87], [30, 17, .9], [32, 14, .94], [34, 14, .96], [36, 15, .99], [37, 14, 1], [39, 12, 1], [40, 9, 1], [42, 7, 1], [45, 5, 1], [55, 0, 1]]];
+  const gap = (i) => i < 4 ? WORD[i] : WORD[3].map(r => [r[0] + 7 * (i - 3), r[1], r[2]]);      // a fifth word and on: the last one's curve, 7 frames later each
+
+  // ---- the eye: an oval (pointed at both ends) whose parts are clipped by it; an upper lid covers all of it at first
+  const NS = "http://www.w3.org/2000/svg", sv = q("sv");
+  const mk = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); (par || sv).appendChild(e); return e; };
+  const defs = mk("defs");
+  const eg = mk("g", { transform: `scale(${KR})`, visibility: "hidden" });
+  const clip = mk("clipPath", { id: "almond" }, defs), clipP = mk("path", {}, clip);
+  const pale = mixh(sc, light, 0.5), irisHi = mixh(sc, light, 0.3), irisLo = mixh(sc, dark, 0.5);
+  const gs = mk("linearGradient", { id: "gs", gradientUnits: "userSpaceOnUse", x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+  [[0, light], [0.14, light], [0.6, pale], [1, pale]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, gs));
+  const gi = mk("linearGradient", { id: "gi", gradientUnits: "objectBoundingBox", x1: 0.1, y1: 0.1, x2: 0.9, y2: 0.9 }, defs);
+  [[0, irisLo], [0.5, mixh(irisLo, irisHi, 0.7)], [1, irisHi]].forEach(([o, c]) => mk("stop", { offset: o, "stop-color": c }, gi));
+  const inner = mk("g", { "clip-path": "url(#almond)" }, eg);
+  const scl = mk("rect", { fill: "url(#gs)" }, inner);
+  const iris = mk("circle", { fill: "url(#gi)" }, inner), pupil = mk("circle", { fill: dark }, inner), spark = mk("circle", { fill: light }, inner);
+  const lid = mk("path", { fill: sc }, eg);
+  const EY = [[72, 175.5, 495, 542, 755, 755, -130], [73, 221.5, 495, 542, 755, 755, -112], [74, 256.5, 497, 542, 755, 755, -105], [75, 284.5, 497, 542, 755, 755, -99], [76, 307.5, 499, 542, 755, 755, -94], [77, 324.5, 501, 541, 755, 755, -91],
+    [78, 337.5, 503, 540, 755, 755, -90], [79, 346.5, 505, 540, 755, 755, -89], [80, 353.5, 507, 539, 756, 749, -76.4], [81, 358.5, 513, 538, 758, 744, -66.6], [82, 361.5, 519, 536, 760, 730, -55.9], [83, 365, 532, 534, 763, 705, -48.9],
+    [84, 364.5, 541, 532, 766, 675, -41.9], [85, 364.5, 557, 528, 769, 651, -35.8], [86, 364.5, 573, 526, 773, 639, -31.2], [87, 365, 588, 522, 776, 631, -26.2], [88, 364.5, 597, 520.5, 778, 627, -21.8], [89, 364.5, 605, 520, 779, 626, -18]];
+  const TIPY = 655, EXC = 4.5;                                     // the tips' height; the whole icon is set 4.5 px left of the clip's, to centre it
+  const f1 = x => x.toFixed(2);
+  function eye(g) {
+    const [cx0, w, yt, yb, yl, irx] = tab(EY, g), cx = cx0 - EXC, s = w / 605, xl = cx - w / 2, xr = cx + w / 2, cy = (yt + yb) / 2;
+    const arc = (y) => `Q ${f1(cx)} ${f1(2 * y - TIPY)}`;
+    clipP.setAttribute("d", `M ${f1(xl)} ${TIPY} ${arc(yt)} ${f1(xr)} ${TIPY} ${arc(yb)} ${f1(xl)} ${TIPY} Z`);
+    lid.setAttribute("d", `M ${f1(xl - 0.6)} ${TIPY} Q ${f1(cx)} ${f1(2 * (yt - 0.6) - TIPY)} ${f1(xr + 0.6)} ${TIPY} Q ${f1(cx)} ${f1(2 * (yl + 0.6) - TIPY)} ${f1(xl - 0.6)} ${TIPY} Z`);
+    gs.setAttribute("x1", f1(xl)); gs.setAttribute("x2", f1(xr));
+    Object.entries({ x: xl, y: yt - 2, width: w, height: yb - yt + 4 }).forEach(([k, v]) => scl.setAttribute(k, f1(v)));
+    const ix = cx + irx * s, iy = cy + 76 * s;
+    Object.entries({ cx: ix, cy: iy, r: 78 * s }).forEach(([k, v]) => iris.setAttribute(k, f1(v)));
+    Object.entries({ cx: ix, cy: iy, r: 42.5 * s }).forEach(([k, v]) => pupil.setAttribute(k, f1(v)));
+    Object.entries({ cx: ix + 18.5 * s, cy: iy - 27.5 * s, r: 14 * s }).forEach(([k, v]) => spark.setAttribute(k, f1(v)));
+  }
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  const S = Math.round(V.start);
+  const CUT = 72;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    // the sentence: fit the block to the frame (at its largest), scale it, slide it, and give each word its curve
+    row.style.fontSize = `${FS0}px`;
+    const rw = Math.max(1, row.offsetWidth), fit = Math.min(1, 0.92 * W / (rw * 1.06));
+    row.style.fontSize = `${FS0 * fit}px`;
+    const sg = tab(SG, g)[0], dxi = g < 13 ? tab(DXIN, g)[0] : 0, dxo = g >= 57 ? tab(DXOUT, Math.min(g, 71))[0] : 0;
+    row.style.transform = `translate(-50%, -50%) translate(${((dxi + dxo) * KR).toFixed(2)}px, 0px) scale(${sg.toFixed(4)})`;
+    row.style.visibility = g < CUT ? "visible" : "hidden";
+    wd.forEach((w, i) => {
+      const rows = gap(i);
+      if (g < rows[0][0]) { w.style.opacity = "0"; return; }
+      const [dy, op] = tab(rows, g);
+      w.style.opacity = op.toFixed(3);
+      w.style.transform = `translate(0px, ${(dy * KR / sg).toFixed(2)}px)`;
+    });
+    // the second line and the eye appear at f72
+    const show = g >= CUT;
+    top2.style.visibility = show ? "visible" : "hidden";
+    if (show) {
+      top2.style.fontSize = `${FS0 * 0.87}px`;
+      top2.style.fontSize = `${FS0 * 0.87 * Math.min(1, 0.9 * W / Math.max(1, top2.offsetWidth))}px`;
+      top2.style.transform = "translate(-50%, -50%)";
+      eye(Math.round(g));
+    }
+    eg.setAttribute("visibility", show ? "visible" : "hidden");
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font); the sentence is measured per frame to fit the frame, so it is fitted with the right font
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

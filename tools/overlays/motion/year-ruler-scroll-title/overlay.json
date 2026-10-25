@@ -1,0 +1,25 @@
+{
+ "name": "year-ruler-scroll-title",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the year ruler scrolls down"
+  },
+  {
+   "f": "start + round(35 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.3",
+   "db": -9,
+   "what": "the ruler topples over and out"
+  }
+ ]
+}

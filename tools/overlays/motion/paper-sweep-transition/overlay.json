@@ -1,0 +1,28 @@
+{
+ "name": "paper-sweep-transition",
+ "frames": 272,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "media_start": {
+  "to_media": 83
+ },
+ "cues": [
+  {
+   "f": "round(54 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.6",
+   "from": 300,
+   "to": 2200,
+   "db": -6,
+   "what": "the sheet sweeps across"
+  },
+  {
+   "f": "round(83 * fps / 30)",
+   "kind": "riser",
+   "dur": "0.8",
+   "db": -12,
+   "what": "the scenes cross through the blur"
+  }
+ ]
+}

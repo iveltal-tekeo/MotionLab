@@ -1,0 +1,30 @@
+{
+ "name": "text-shatter-shards",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "key",
+   "db": -8,
+   "what": "the first letter is typed"
+  },
+  {
+   "f": "start + round(17 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 400,
+   "to": 1800,
+   "db": -12,
+   "what": "the ball flies in from the left"
+  },
+  {
+   "f": "start + round(80 * fps / 30)",
+   "kind": "impact",
+   "db": -6,
+   "what": "the ball smashes through the text"
+  }
+ ]
+}

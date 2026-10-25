@@ -48,7 +48,7 @@ ROOT = Path(os.environ.get("MOTIONLAB_TEMPLATES_ROOT") or (ANALYSIS / "templates
 MOTION = LAB / "tools" / "overlays" / "motion"          # the rebuilt templates (MotionLab's own, in the repo)
 MG = LAB / "library" / "motion_graphics"               # 2026-10-18: index.json (every template) + local\<pack>\<id>
 LOCAL = MG / "local"                                   # = templates learned from the user's own captured clips
-#                                                        (e.g. AutoAE): this PC only - gitignored, never shared
+#                                                        - this PC only, gitignored, never shared
 VIDEO_EXT = {".mp4", ".mov", ".webm", ".mkv", ".m4v", ".gif"}
 STILL_FRAMES = 15        # a capture shorter than this is a picture, not a motion
 DIFF_LEVEL = 12          # grey levels (0-255) a pixel must change by to count

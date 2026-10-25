@@ -14,7 +14,7 @@ pop and transition, frame-accurately - so you can learn its style and pacing and
 > colour grading included), a channel's thumbnails and scripts & prompts, **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
 > makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools),
-> **Motion Graphics** - 74 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
+> **Motion Graphics** - 189 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
 > screens...) you change live and put in any video - and **Claude's memory**: everything it learned, in one place,
 > used when it edits or generates for you. Since 0.3: colour rebuilds, 3x faster renders,
 > graphics written as HTML, Claude Code connected to the lab and to DaVinci Resolve, updates that only offer versions

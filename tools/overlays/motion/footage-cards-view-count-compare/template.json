@@ -1,0 +1,174 @@
+{
+ "name": "Three cards, view counts",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Three upright cards with your videos rise one after another from below a dark frame, a view count with an eye sign slides up from the edge of each card, the row grows a little and a thin colour outline is drawn round every count.",
+ "use_for": [
+  "view count",
+  "compare videos",
+  "which video won",
+  "channel stats",
+  "top three",
+  "reel results",
+  "social proof",
+  "milestone",
+  "short form"
+ ],
+ "tags": [
+  "social",
+  "cards",
+  "videos",
+  "counter",
+  "views",
+  "comparison",
+  "outline",
+  "logos",
+  "needs media",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f8-f39 the three cards rise from below the frame one after another, right to left (f8, f12, f17; each decelerating over 22 f, vertical blur while fast); f39-f49 the eye sign and the count slide up from under each card edge, left to right (f39, f41, f44); f63-f81 the whole row grows 12 % (fast start, soft end); f63-f93 a thin outline is drawn clockwise round each count",
+ "tracks": [
+  {
+   "name": "cards rise",
+   "what": "the right card rises first, then the middle, then the left one, with a vertical blur while fast",
+   "start_f": 8,
+   "length_f": 31,
+   "easing": "decelerating (measured, 22 f each)"
+  },
+  {
+   "name": "counts slide in",
+   "what": "an eye sign and the view count slide up from under each card's lower edge, left to right",
+   "start_f": 39,
+   "length_f": 14,
+   "easing": "expo.out"
+  },
+  {
+   "name": "row grows",
+   "what": "the three cards grow 12 % together about the middle of the row",
+   "start_f": 63,
+   "length_f": 18,
+   "easing": "cubic-bezier(0.35, 0.1, 0.1, 0.8)"
+  },
+  {
+   "name": "outlines",
+   "what": "a thin outline, yellow to orange, is drawn clockwise round each count",
+   "start_f": 63,
+   "length_f": 30,
+   "easing": "cubic-bezier(0.35, 0.1, 0.1, 0.8)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "counts",
+  "card_text"
+ ],
+ "media_slots": [
+  {
+   "id": "v1_media",
+   "label": "Card 1 (left): your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a dark coloured card in the look with the card text and a simple mark"
+  },
+  {
+   "id": "v2_media",
+   "label": "Card 2 (middle): your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a dark coloured card in the look with the card text and a simple mark"
+  },
+  {
+   "id": "v3_media",
+   "label": "Card 3 (right): your video or picture, upright 9:16 (empty = a placeholder)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 4.5,
+   "fit": "cover",
+   "focus_setting": "focus",
+   "focus": "50% 50%",
+   "placeholder": "a dark coloured card in the look with the card text and a simple mark"
+  },
+  {
+   "id": "l1_logo",
+   "label": "Card 1: a logo of the library (e.g. youtube) or your picture (empty = a simple mark)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a simple geometric mark in the card's colour (big on an empty card, nothing on a card with a video)",
+   "optional": true
+  },
+  {
+   "id": "l2_logo",
+   "label": "Card 2: a logo of the library (e.g. tiktok) or your picture (empty = a simple mark)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a simple geometric mark in the card's colour (big on an empty card, nothing on a card with a video)",
+   "optional": true
+  },
+  {
+   "id": "l3_logo",
+   "label": "Card 3: a logo of the library (e.g. instagram) or your picture (empty = a simple mark)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a simple geometric mark in the card's colour (big on an empty card, nothing on a card with a video)",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 110,
+ "check_frames": [
+  9,
+  12,
+  16,
+  22,
+  30,
+  41,
+  46,
+  66,
+  70,
+  78,
+  100
+ ]
+}

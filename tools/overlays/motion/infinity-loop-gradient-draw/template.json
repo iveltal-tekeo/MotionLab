@@ -1,0 +1,108 @@
+{
+ "name": "Infinity loop draw",
+ "kind": "text",
+ "category": "Text",
+ "what": "A gradient line draws an infinity loop round two labels while a camera follows the pen: it starts at a dot on the right, circles over to the left end, waits, then draws the rest and closes the loop at the first dot; a soft band appears under the loop and the camera finally pulls back to show the whole loop.",
+ "use_for": [
+  "process",
+  "cycle",
+  "loop",
+  "two concepts",
+  "continuous",
+  "before and after",
+  "infinity",
+  "explainer"
+ ],
+ "tags": [
+  "text",
+  "loop",
+  "infinity",
+  "line draw",
+  "gradient",
+  "camera follow",
+  "two labels",
+  "process",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f25 the right dot and its label fade in; f28-f71 the pen draws from the dot down round the right lobe and over the top of the left lobe while the camera races left and settles from 1.54x to 1.24x; f55-f80 the left label fades in, f69-f81 the left dot; f71-f102 the pen waits while the camera slides on and the soft band fades in (f79-f122); f102-f161 the pen draws the bottom of the left lobe and up to the right dot, closing the loop, with the camera sliding back right; f168-f205 the camera zooms out to the whole loop; hold to f242",
+ "tracks": [
+  {
+   "name": "first dot and label",
+   "what": "the right dot and its label fade in, the camera holds",
+   "start_f": 1,
+   "length_f": 24,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "pen, first half",
+   "what": "the line draws from the right dot down round the right lobe, through the crossing and over the left lobe to the left end; the camera follows, zooming out a little",
+   "start_f": 28,
+   "length_f": 43,
+   "easing": "S-curve (measured path)"
+  },
+  {
+   "name": "left label and dot",
+   "what": "the left label fades in, then the left dot",
+   "start_f": 55,
+   "length_f": 26,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "wait",
+   "what": "the pen waits at the left end while the camera slides back and the soft band under the loop fades in",
+   "start_f": 71,
+   "length_f": 51,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "pen, second half",
+   "what": "the line draws the bottom of the left lobe, up through the crossing and over the right lobe to close at the right dot; the camera slides back right",
+   "start_f": 102,
+   "length_f": 59,
+   "easing": "S-curve (measured path)"
+  },
+  {
+   "name": "pull back",
+   "what": "the camera zooms out to show the whole loop",
+   "start_f": 168,
+   "length_f": 38,
+   "easing": "S-curve"
+  },
+  {
+   "name": "hold",
+   "what": "the whole loop, still (the film grain moves)",
+   "start_f": 206,
+   "length_f": 37,
+   "easing": "none"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "text1",
+  "text2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 235,
+ "check_frames": [
+  0,
+  12,
+  30,
+  40,
+  50,
+  62,
+  76,
+  100,
+  118,
+  132,
+  150,
+  170,
+  188,
+  235
+ ]
+}

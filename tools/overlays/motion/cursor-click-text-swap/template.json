@@ -1,0 +1,116 @@
+{
+ "name": "Click and swap word",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "A sentence slides in from the right and sharpens on a clean page, a small word rises in after it, a cursor glides in, clicks it and drags a soft selection across it, the word turns into another one that grows a little as it arrives, and then everything zooms toward the viewer in a blur and is gone.",
+ "use_for": [
+  "interactive text",
+  "click",
+  "answer",
+  "reveal",
+  "before and after",
+  "UI",
+  "explainer",
+  "hook",
+  "mobile",
+  "question"
+ ],
+ "tags": [
+  "ui",
+  "cursor",
+  "click",
+  "selection",
+  "text swap",
+  "blur",
+  "zoom",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f15 the sentence slides in from the right (linear), blurred and faint to sharp; f34-f48 the small word rises in, grey to dark; f50-f66 the cursor glides in from the lower right (decelerating); f77-f84 it clicks (shrinks and returns); f80-f91 the selection is drawn across the word; f102-f122 the word blurs into the new one, which grows to 1.18x; f132-f140 everything zooms (accelerating) with a horizontal blur and is gone; f140-f149 blank",
+ "tracks": [
+  {
+   "name": "sentence in",
+   "what": "slides in from the right, blurred and faint to sharp",
+   "start_f": 6,
+   "length_f": 10,
+   "easing": "linear"
+  },
+  {
+   "name": "word in",
+   "what": "the small word rises in under its place, grey to dark",
+   "start_f": 34,
+   "length_f": 14,
+   "easing": "power3.out"
+  },
+  {
+   "name": "cursor in",
+   "what": "glides in from the lower right to the word",
+   "start_f": 50,
+   "length_f": 16,
+   "easing": "power3.out (decelerating)"
+  },
+  {
+   "name": "click",
+   "what": "the cursor shrinks a little and returns",
+   "start_f": 77,
+   "length_f": 9,
+   "easing": "linear"
+  },
+  {
+   "name": "selection",
+   "what": "a soft blue box is drawn from the left across the word",
+   "start_f": 80,
+   "length_f": 11,
+   "easing": "power2.out"
+  },
+  {
+   "name": "swap",
+   "what": "the word blurs into the new one, which grows from 0.72x to 1.18x",
+   "start_f": 102,
+   "length_f": 20,
+   "easing": "S-curve (power2.inOut)"
+  },
+  {
+   "name": "zoom out",
+   "what": "everything zooms toward the viewer with a horizontal blur and is gone",
+   "start_f": 132,
+   "length_f": 8,
+   "easing": "accelerating (cubic)"
+  },
+  {
+   "name": "blank",
+   "what": "an empty page, so the clip can loop",
+   "start_f": 140,
+   "length_f": 10,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "line",
+  "word_a",
+  "word_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  9,
+  16,
+  40,
+  60,
+  70,
+  84,
+  94,
+  112,
+  120,
+  136,
+  145
+ ]
+}

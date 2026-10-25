@@ -1,0 +1,27 @@
+{
+ "name": "footage-pop-texts-around-subject",
+ "frames": 45,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the first text pops in"
+  },
+  {
+   "f": "start + round(11 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the third text pops in"
+  },
+  {
+   "f": "start + round(31 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the fifth text pops in"
+  }
+ ]
+}

@@ -1,0 +1,101 @@
+{
+ "name": "Two-sided bars",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A title and two bar names above rows of paired bars: grey tracks grow out of the middle row by row, then a bright fill runs out of the middle of each track to its value and the row names fade in, on a dark page washed with the accent colour; then everything holds.",
+ "use_for": [
+  "comparison",
+  "two groups",
+  "percentages",
+  "split",
+  "survey results",
+  "stats",
+  "this vs that",
+  "report",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "bars",
+  "horizontal bars",
+  "comparison",
+  "percentage",
+  "data",
+  "labels",
+  "2 series",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1 two dots stand in the middle of the first row and grow outwards into grey tracks over 18 f (a quick S-curve), the next rows every ~9 f (f10, f18, f27); the title fades in f2-f15, the bar names f7-f20 and f18-f32; the fills grow out of the middle f30, f40, f50, f60 (18 f each, the same curve); the row names fade in f26, f50, f77, f101 (10 f each); then it holds to the end",
+ "tracks": [
+  {
+   "name": "tracks",
+   "what": "two dots in the middle of each row grow outwards into two grey tracks, row by row",
+   "start_f": 1,
+   "length_f": 44,
+   "easing": "cubic-bezier(0.214, 0.106, 0.283, 0.964) (measured), 18 f a row"
+  },
+  {
+   "name": "title",
+   "what": "the title fades in",
+   "start_f": 2,
+   "length_f": 13,
+   "easing": "linear"
+  },
+  {
+   "name": "bar names",
+   "what": "the two names with their colour pills fade in one after the other",
+   "start_f": 7,
+   "length_f": 25,
+   "easing": "linear (13-14 f each)"
+  },
+  {
+   "name": "fills",
+   "what": "a bright fill grows out of the middle of each track to its value, row by row",
+   "start_f": 30,
+   "length_f": 48,
+   "easing": "cubic-bezier(0.214, 0.106, 0.283, 0.964) (measured), 18 f a row"
+  },
+  {
+   "name": "row names",
+   "what": "each row name fades in above its bars",
+   "start_f": 26,
+   "length_f": 85,
+   "easing": "linear (10 f each)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 111,
+   "length_f": 189,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "title",
+  "legend_a",
+  "legend_b",
+  "labels",
+  "values_a",
+  "values_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 200,
+ "check_frames": [
+  3,
+  10,
+  20,
+  34,
+  48,
+  62,
+  90,
+  120,
+  250
+ ]
+}

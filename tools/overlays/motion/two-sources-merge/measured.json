@@ -1,0 +1,29 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f112 (00:00:03:22) +5 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(1) \"O\" off the frame by 267 px",
+    "FIT f112 (00:00:03:22) +5 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(2) \"n\" off the frame by 267 px",
+    "FIT f116 (00:00:03:26) +4 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(3) \"e\" off the frame by 281 px",
+    "FIT f116 (00:00:03:26) +4 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2) > span:nth-of-type(1) \"c\" off the frame by 281 px",
+    "FIT f116 (00:00:03:26) +4 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2) > span:nth-of-type(2) \"l\" off the frame by 281 px",
+    "FIT f116 (00:00:03:26) +4 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2) > span:nth-of-type(3) \"e\" off the frame by 281 px",
+    "FIT f120 (00:00:04:00) +3 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2) > span:nth-of-type(4) \"a\" off the frame by 286 px",
+    "FIT f120 (00:00:04:00) +3 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2) > span:nth-of-type(5) \"r\" off the frame by 286 px",
+    "FIT f132 (00:00:04:12) +1 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(3) > span:nth-of-type(1) \"a\" off the frame by 286 px",
+    "FIT f132 (00:00:04:12) +1 more: #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(3) > span:nth-of-type(2) \"n\" off the frame by 286 px",
+    "FIT f160 (00:00:05:10): #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(3) > span:nth-of-type(3) \"s\" off the frame by 286 px",
+    "FIT f160 (00:00:05:10): #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(3) > span:nth-of-type(4) \"w\" off the frame by 286 px",
+    "FIT f160 (00:00:05:10): #bc > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(3) > span:nth-of-type(5) \"e\" off the frame by 286 px",
+    "FIT f160 (00:00:05:10): span.w > span:nth-of-type(6) \"r\" off the frame by 286 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

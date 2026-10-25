@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "Left option label (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Plan A"},
+  {"id": "text_2", "type": "string", "label": "Right option label", "default": "Plan B"},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 54, "min": 20, "max": 140, "step": 1},
+  {"id": "colour_1", "type": "enum", "label": "Left circle colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "colour_2", "type": "enum", "label": "Right circle colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "drop-ball-two-option-compare" (2026-10-22): two glowing circles with a label under each (a two-option compare) on a dark ground. A small
+     ball drops from the top onto the left circle (f6-f30, gravity: slow start, accelerating, stretching along its
+     speed), the circle dips as it hits and the ball bounces off to the left and out of the frame (f30-f50); then a
+     second ball drops onto the right circle (f72-f110, a little slower), which flashes and sends two rings outward
+     (f110-f131); then it holds. Look-aware (a dark ground from the look's ink, light text from its paper).
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .disc { position: absolute; border-radius: 50%; }
+  .grp { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .lbl { position: absolute; white-space: nowrap; transform: translate(-50%, -50%); line-height: 1.1; font-synthesis: none;
+         text-transform: uppercase; letter-spacing: 0.01em; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const rgba = (h, a) => { const c = hex(h); return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`; };
+  // hex of a mix (the helpers above want hex input)
+  const mixHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const plain = s => String(s || "").replace(/[*_=^]/g, "");
+  const rich = (el, text, o) => {
+    if (window.MLLook) return MLLook.rich(el, text, o);
+    el.textContent = String(text || ""); return { words: [], marks: [] };
+  };
+
+  // a dark scene: the look's ink is the ground, its paper the light (a dark-paper look swaps them)
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  gsap.set("#bgfill", { width: W, height: H, background: V.background
+    ? `radial-gradient(ellipse 80% 42% at 50% 47%, ${rgba(glare, 0.05)}, ${rgba(glare, 0)} 100%), ${night}` : "transparent" });
+
+  // ---- the clip is 720 x 1280: z() takes its pixels to this size
+  const Z = W / 720;
+  const z = n => n * Z;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const disc = (parent, d, bg, extra) => {
+    const e = document.createElement("div"); e.className = "disc";
+    Object.assign(e.style, { left: `${-z(d) / 2}px`, top: `${-z(d) / 2}px`, width: `${z(d)}px`, height: `${z(d)}px`, background: bg }, extra || {});
+    parent.appendChild(e); return e;
+  };
+  const group = (x, y) => {
+    const g = document.createElement("div"); g.className = "grp";
+    g.style.transform = `translate(${z(x)}px, ${z(y)}px)`; hand.appendChild(g); return g;
+  };
+  const tone = k => k === "paper" ? mixHex(glare, night, 0.42) : (L[k] || L.signal);
+  const sphereBg = c => `radial-gradient(circle at 50% 28%, ${mix(c, glare, 0.38)}, ${mix(c, glare, 0)} 58%, ${mix(c, night, 0.32)} 100%)`;
+
+  const CY = 596, LY = 716;                           // the circles' height, the labels' height (clip px)
+  const nAll = Math.max(plain(V.text_1).length, plain(V.text_2).length, 4);
+  const fs = Math.min(V.size * U, 0.44 * W / (nAll * 0.7));
+  const opts = [{ x: 164, key: V.colour_1, text: V.text_1 }, { x: 556, key: V.colour_2, text: V.text_2 }].map(o => {
+    o.col = tone(o.key);
+    // the label's two soft rings (behind everything else of this option)
+    const lg = group(o.x, LY);
+    [250, 150].forEach(d => disc(lg, d, rgba(o.col, 0.06)));
+    // the circle: soft rings around a shaded sphere (one group, so it can dip when the ball lands)
+    o.sg = group(o.x, CY);
+    [304, 216, 170, 134].forEach(d => disc(o.sg, d, rgba(o.col, 0.05)));
+    o.sph = disc(o.sg, 95, sphereBg(o.col));
+    // the ripple rings (option 2 uses them)
+    const rc = mix(o.col, glare, 0.22);
+    o.rings = [0, 1].map(() => disc(o.sg, 100, "transparent", { border: `${z(4)}px solid ${rc}`, opacity: "0" }));
+    o.rc = rc;
+    const tx = document.createElement("div"); tx.className = "lbl ml-body";
+    Object.assign(tx.style, { left: `${z(o.x)}px`, top: `${z(LY)}px`, fontSize: `${fs}px`, fontWeight: String(fw(V.body_font, 700)),
+      color: o.key === "paper" ? glare : mix(o.col, glare, 0.16) });
+    rich(tx, o.text, { look: L, family: V.body_font, weight: 600 });
+    hand.appendChild(tx);
+    return o;
+  });
+
+  // the ball: a small light sphere with a two-ring halo; it stretches along its speed
+  const ball = group(0, 0);
+  [232, 122].forEach(d => disc(ball, d, rgba(glare, 0.06)));
+  const bsph = disc(ball, 58, sphereBg(mixHex(glare, night, 0.05)));
+
+  // ---- the measured path (clip px, 720 x 1280): [frame, x, y]; the ball falls, accelerating, onto the left circle,
+  // bounces off to the left out of the frame, then a second, slightly slower ball falls onto the right circle
+  const R1 = [[0, 164, -67], [6, 164, -55], [8, 164, -49], [10, 164, -39], [12, 164, -25], [14, 164, -5], [16, 164, 15], [18, 164, 38],
+    [20, 164, 68], [22, 164, 108], [24, 164, 160], [26, 164, 226], [28, 164, 326], [30, 150, 496], [32, 90, 440], [34, 50, 410],
+    [36, 20, 396], [38, -10, 390], [40, -36, 388], [42, -60, 386], [44, -80, 385], [46, -98, 385], [48, -116, 385], [52, -150, 385], [56, -190, 385]];
+  const R2 = [[72, 556, -60], [76, 556, -52], [80, 556, -42], [82, 556, -35], [84, 556, -22], [86, 556, -10], [88, 556, 1], [90, 556, 17],
+    [93, 556, 44], [96, 556, 84], [99, 556, 130], [102, 556, 192], [105, 556, 276], [108, 556, 406], [109, 556, 478], [110, 556, 545]];
+  const P1 = [[28, 0], [30, 9], [31, 12], [33, 9], [35, 4], [37, -1], [39, -4], [41, -3], [44, -1], [47, 0]];      // the left circle dips
+  const P2 = [[108, 0], [110, 8], [111, 10], [113, 7], [116, 2], [119, -2], [122, -1], [125, 0]];                    // the right circle dips
+  const FL = [[109, 0], [111, 1], [116, 0.4], [122, 0]];                                                              // its flash
+  const RA = [[110, 100, 0, 5], [111, 100, 0.9, 4.5], [114, 136, 0.95, 4.2], [117, 160, 0.8, 3.5], [120, 182, 0.6, 3], [123, 196, 0.4, 2.5],
+    [126, 212, 0.22, 2], [129, 222, 0.08, 1.5], [131, 226, 0, 1]];
+  const RB = [[110, 100, 0, 4], [113, 100, 0, 4], [114, 118, 0.7, 3.8], [117, 140, 0.6, 3], [120, 164, 0.45, 2.5], [123, 180, 0.3, 2],
+    [126, 196, 0.15, 1.5], [129, 206, 0.05, 1], [131, 210, 0, 1]];
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+
+  const S = Math.round(V.start);
+  const sphere2 = opts[1].sph;
+  function render(t) {
+    const g = t * FPS - S;
+    // ---- the ball: drop 1 until f60, drop 2 after; it is gone at the second landing
+    const first = g < 60, rows = first ? R1 : R2, imp = first ? 30 : 110;
+    const here = tab(rows, g);
+    const a = g < imp ? tab(rows, g - 1) : here, b = g < imp ? here : tab(rows, g + 1);
+    const vx = b[0] - a[0], vy = b[1] - a[1], sp = Math.hypot(vx, vy);
+    const vis = first ? clamp01((g - 2) / 4) * (g < 58 ? 1 : 0) : clamp01((g - 72) / 5) * (g < 110.4 ? 1 : 0);
+    ball.style.transform = `translate(${z(here[0])}px, ${z(here[1])}px)`;
+    ball.style.opacity = String(vis);
+    const ang = sp > 0.5 ? Math.atan2(-vx, vy) * 180 / Math.PI : 0;
+    bsph.style.transform = `rotate(${ang.toFixed(2)}deg) scale(${Math.max(0.74, 1 - 0.0025 * sp).toFixed(3)}, ${(1 + 0.0075 * sp).toFixed(3)})`;
+    // ---- the circles dip when the ball lands
+    opts[0].sg.style.transform = `translate(${z(opts[0].x)}px, ${z(CY + tab(P1, g)[0])}px)`;
+    opts[1].sg.style.transform = `translate(${z(opts[1].x)}px, ${z(CY + tab(P2, g)[0])}px)`;
+    // ---- the right circle flashes and sends two rings out
+    sphere2.style.filter = `brightness(${(1 + 0.3 * tab(FL, g)[0]).toFixed(3)})`;
+    [[opts[1].rings[0], RA], [opts[1].rings[1], RB]].forEach(([el, rr]) => {
+      const r = tab(rr, g), d = z(r[0]);
+      Object.assign(el.style, { left: `${-d / 2}px`, top: `${-d / 2}px`, width: `${d}px`, height: `${d}px`,
+        borderWidth: `${z(r[2]).toFixed(2)}px`, opacity: String(r[1]),
+        boxShadow: r[1] > 0.02 ? `0 0 ${z(8)}px ${rgba(opts[1].col, 0.5 * r[1])}` : "none" });
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  const hits = V.shake > 0 ? [{ f: S + 30, amount: 2 }, { f: S + 110, amount: 2 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 17, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

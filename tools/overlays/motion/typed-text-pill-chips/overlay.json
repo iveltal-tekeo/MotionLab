@@ -1,0 +1,31 @@
+{
+ "name": "typed-text-pill-chips",
+ "frames": 195,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "click",
+   "db": -6,
+   "what": "the text field appears and opens"
+  },
+  {
+   "f": "start + round(116 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 500,
+   "to": 2200,
+   "db": -10,
+   "what": "the field grows and the bubble rises"
+  },
+  {
+   "f": "start + round((126.5 + 0.9 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "len(bubble_text)",
+   "db": -11,
+   "what": "a letter of the bubble is typed"
+  }
+ ]
+}

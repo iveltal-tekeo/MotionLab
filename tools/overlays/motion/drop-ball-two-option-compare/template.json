@@ -1,0 +1,90 @@
+{
+ "name": "Ball drop compare",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two glowing circles with a label under each, on a dark ground: a small ball drops onto the left one, dips it and bounces away off the side of the frame, then a second ball drops into the right one, which flashes and sends two rings outward.",
+ "use_for": [
+  "compare",
+  "this or that",
+  "two options",
+  "versus",
+  "poll",
+  "choice",
+  "a or b",
+  "pros and cons"
+ ],
+ "tags": [
+  "text",
+  "compare",
+  "two options",
+  "ball",
+  "drop",
+  "impact",
+  "ripple",
+  "glow",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f30 a ball falls onto the left circle (slow start, accelerating, stretching with its speed); f30 the circle dips and the ball bounces off to the left, gone by f52; f72-f110 a second ball falls onto the right circle (a little slower); f110-f131 that circle flashes and two rings spread out and fade; then it holds (the reference's corner logo is left out)",
+ "tracks": [
+  {
+   "name": "ball 1",
+   "what": "falls onto the left circle",
+   "start_f": 6,
+   "length_f": 24,
+   "easing": "accelerating (gravity)"
+  },
+  {
+   "name": "bounce",
+   "what": "the ball bounces off to the left and out of the frame; the left circle dips",
+   "start_f": 30,
+   "length_f": 22,
+   "easing": "decelerating"
+  },
+  {
+   "name": "ball 2",
+   "what": "falls onto the right circle",
+   "start_f": 72,
+   "length_f": 38,
+   "easing": "accelerating (gravity)"
+  },
+  {
+   "name": "ripple",
+   "what": "the right circle flashes and two rings spread out and fade",
+   "start_f": 110,
+   "length_f": 21,
+   "easing": "decelerating"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 131,
+   "length_f": 49,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 114,
+ "check_frames": [
+  0,
+  18,
+  26,
+  30,
+  36,
+  100,
+  108,
+  112,
+  122,
+  150
+ ]
+}

@@ -1,0 +1,118 @@
+{
+ "name": "Balance scale seesaw",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A balance scale hangs from a rod and drops into frame; two labels fall one after another into its pans, the first tips the beam to one side and the second swings it over to the other, with the pans swaying like pendulums, then it rests. Use it to weigh two ideas against each other.",
+ "use_for": [
+  "compare",
+  "versus",
+  "pros and cons",
+  "this or that",
+  "two options",
+  "decision",
+  "balance",
+  "opposing ideas",
+  "weigh up"
+ ],
+ "tags": [
+  "chart",
+  "balance",
+  "scale",
+  "seesaw",
+  "compare",
+  "versus",
+  "labels",
+  "pendulum",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f9-f45 the scale drops in from above the frame (accelerating), f45-f62 it rebounds and settles while the two pans swing like pendulums (to f92); f84-f95 the left label falls in with a vertical blur and lands, the beam tips -10 degrees over f95-f114 (quick start, long soft end) and the empty pan swings; f127-f135 the right label falls and lands, the beam snaps to +20 degrees over f135-f150 while the scale sags and the left pan swings up; a last slow creep f179-f194; then it holds",
+ "tracks": [
+  {
+   "name": "scale drop",
+   "what": "the whole scale drops in from above the frame and stops at its lowest point",
+   "start_f": 9,
+   "length_f": 36,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "rebound",
+   "what": "the scale springs back up 30 units and settles",
+   "start_f": 45,
+   "length_f": 18,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "pans swing",
+   "what": "both pans swing like pendulums about the beam ends and die away",
+   "start_f": 45,
+   "length_f": 48,
+   "easing": "damped swing (measured)"
+  },
+  {
+   "name": "left label",
+   "what": "the left label falls in with a vertical motion blur and lands in the left pan",
+   "start_f": 84,
+   "length_f": 12,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "first tilt",
+   "what": "the beam tips to the first angle (the left side down) and the empty pan swings",
+   "start_f": 95,
+   "length_f": 20,
+   "easing": "decelerating (quick start, long soft end)"
+  },
+  {
+   "name": "right label",
+   "what": "the right label falls in with a blur and lands in the right pan",
+   "start_f": 127,
+   "length_f": 9,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "second tilt",
+   "what": "the beam swings over to the final angle (the right side down), the scale sags and the left pan swings up",
+   "start_f": 135,
+   "length_f": 16,
+   "easing": "decelerating (a third of it in the first frame)"
+  },
+  {
+   "name": "creep",
+   "what": "the scale settles slowly back up, then a last small drop",
+   "start_f": 151,
+   "length_f": 44,
+   "easing": "S-curve"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 195,
+   "length_f": 45,
+   "easing": "none"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "label_a",
+  "label_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 160,
+ "check_frames": [
+  20,
+  40,
+  56,
+  90,
+  100,
+  130,
+  140,
+  160,
+  239
+ ]
+}

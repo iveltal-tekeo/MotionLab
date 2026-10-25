@@ -1,0 +1,141 @@
+{
+ "name": "Neon funnel with logos",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A neon funnel of tiers drops in from above one tier after another, each landing with a little bounce, on a soft glowing haze; a caption scales in with a blur and is replaced by the next one while a wave of light runs down the tiers and round logos fly in from the sides and sink into the funnel's mouth. Put your logos on the three slots and your own words on the captions.",
+ "use_for": [
+  "sales funnel",
+  "steps",
+  "stages",
+  "conversion",
+  "pipeline",
+  "logos",
+  "process",
+  "marketing",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "funnel",
+  "neon",
+  "logos",
+  "captions",
+  "steps",
+  "glow",
+  "bounce",
+  "needs media",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f8 the smallest tier falls straight down (139 units a frame) and lands, then a tier every 5 frames (f13, f18, f23) each jumping back up about 70 units and landing again; f15-f30 the haze fades in; f20 the first caption scales in with an overshoot and a blur (f61 the second, f102 the third; each replaces the one before at once); a wave of light runs down the tiers from f35 (5 frames apart, a new wave every 30 frames); f41-f82 eight round logos fly in from the sides in arcs and sink into the funnel's mouth",
+ "tracks": [
+  {
+   "name": "tiers fall",
+   "what": "the four tiers fall one after another and land at their slots",
+   "start_f": 1,
+   "length_f": 22,
+   "easing": "constant speed, then a bounce (measured)"
+  },
+  {
+   "name": "tier bounce",
+   "what": "each tier jumps back up about 70 units and lands again",
+   "start_f": 8,
+   "length_f": 27,
+   "easing": "parabola (gravity)"
+  },
+  {
+   "name": "haze",
+   "what": "a soft glowing haze fades in behind the funnel",
+   "start_f": 15,
+   "length_f": 16,
+   "easing": "decelerating"
+  },
+  {
+   "name": "captions",
+   "what": "each caption scales in from small with an overshoot and a horizontal blur and replaces the previous one",
+   "start_f": 20,
+   "length_f": 82,
+   "easing": "back-out, 11 f each (measured)"
+  },
+  {
+   "name": "light wave",
+   "what": "a wave of light runs down the tiers, top to bottom, 5 frames apart; one wave for each caption",
+   "start_f": 30,
+   "length_f": 85,
+   "easing": "tent, 10 f each"
+  },
+  {
+   "name": "logos",
+   "what": "round logos fly in from the sides in arcs and sink into the funnel's mouth, one after another",
+   "start_f": 41,
+   "length_f": 42,
+   "easing": "arcs (measured frame by frame)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "captions"
+ ],
+ "media_slots": [
+  {
+   "id": "first_logo",
+   "label": "First logo",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a round disc with a ring",
+   "optional": true
+  },
+  {
+   "id": "second_logo",
+   "label": "Second logo",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a round disc with a ring",
+   "optional": true
+  },
+  {
+   "id": "third_logo",
+   "label": "Third logo",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a round disc with a ring",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 70,
+ "check_frames": [
+  8,
+  13,
+  23,
+  36,
+  50,
+  61,
+  64,
+  80,
+  95,
+  110
+ ]
+}

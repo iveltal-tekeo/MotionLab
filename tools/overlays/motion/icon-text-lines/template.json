@@ -1,0 +1,115 @@
+{
+ "name": "Swoop title and icons",
+ "kind": "text",
+ "category": "Text",
+ "what": "A glowing title whose letters swoop in one after another from below, big and blurred, while a small gold crown drops onto its end; the camera then pans up so a white subtitle comes in pixelated and sharpens, and a heart and a coin rise from the bottom and settle with a glow.",
+ "use_for": [
+  "title",
+  "intro",
+  "membership",
+  "subscribe",
+  "premium",
+  "love",
+  "money",
+  "channel intro",
+  "list of perks"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "icons",
+  "crown",
+  "heart",
+  "coin",
+  "swoop",
+  "pixelate",
+  "camera pan",
+  "film dust",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f20 (00:00:00:02-00:00:00:20) the title's letters swoop in left to right from below, big and blurred, shrinking onto the line; f24-f38 (00:00:00:24-00:00:01:08) a gold crown drops onto its left end and settles; f54-f94 (00:00:01:24-00:00:03:04) the camera pans up and in (fastest f62-f66) so the title leaves through the top and dims; f68-f92 (00:00:02:08-00:00:03:02) the white subtitle comes in pixelated and sharpens; f134-f150 (00:00:04:14-00:00:05:00) the camera pans again to put the subtitle high; f156-f176 (00:00:05:06-00:00:05:26) a heart then a coin rise from the bottom, dim and blurred, and settle with a glow; hold to f210 (00:00:07:00). Everything moves on twos except the first pan.",
+ "tracks": [
+  {
+   "name": "letters swoop",
+   "what": "the title's letters swoop in left to right from below, big and blurred, shrinking onto the line",
+   "start_f": 2,
+   "length_f": 18,
+   "easing": "decelerating, wave left to right"
+  },
+  {
+   "name": "crown drop",
+   "what": "a gold crown drops onto the title's left end and bounces once",
+   "start_f": 24,
+   "length_f": 14,
+   "easing": "falling, small bounce"
+  },
+  {
+   "name": "camera pan up",
+   "what": "the title moves up and grows, leaving through the top and dimming",
+   "start_f": 54,
+   "length_f": 40,
+   "easing": "S-curve (fastest f62-f66)"
+  },
+  {
+   "name": "subtitle",
+   "what": "the white subtitle comes in as a mosaic that sharpens, drifting up and growing",
+   "start_f": 68,
+   "length_f": 24,
+   "easing": "decelerating"
+  },
+  {
+   "name": "second pan",
+   "what": "the camera pans again so the subtitle sits high",
+   "start_f": 134,
+   "length_f": 16,
+   "easing": "S-curve"
+  },
+  {
+   "name": "heart rises",
+   "what": "a heart rises from the bottom, dim and blurred, and settles with a small overshoot",
+   "start_f": 156,
+   "length_f": 18,
+   "easing": "decelerating, small overshoot"
+  },
+  {
+   "name": "coin rises",
+   "what": "a coin follows the heart and settles beside it",
+   "start_f": 160,
+   "length_f": 16,
+   "easing": "decelerating, small overshoot"
+  },
+  {
+   "name": "hold",
+   "what": "everything rests, a little dust drifting by",
+   "start_f": 177,
+   "length_f": 34,
+   "easing": "none"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "title",
+  "sub"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 190,
+ "check_frames": [
+  2,
+  6,
+  10,
+  16,
+  30,
+  62,
+  72,
+  84,
+  110,
+  160,
+  166
+ ]
+}

@@ -1,0 +1,121 @@
+{
+ "name": "Scramble and lock title",
+ "kind": "text",
+ "category": "Text",
+ "what": "Your footage blurs and darkens at its edges while a big white title flickers as random letters that lock into place one by one from the left; the title then shrinks and rises to the top and an open yellow padlock rises from the bottom and snaps shut beneath it.",
+ "use_for": [
+  "secure",
+  "locked",
+  "private",
+  "reveal",
+  "title",
+  "tech",
+  "security",
+  "intro",
+  "hook"
+ ],
+ "tags": [
+  "text",
+  "scramble",
+  "decode",
+  "lock",
+  "padlock",
+  "title",
+  "footage",
+  "video",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f30: the footage blurs (to f22) and its edges darken; f16-f28 the title fades in out of a blur as flickering random letters (a new letter every 2 f); f28-f44 the letters lock in one by one from the left, one every 2 f; f46-f66 the title shrinks to 0.6x and rises to the top (decelerating, small overshoot, settling at 0.65x by f80); f80-f90 an open padlock rises from the bottom (decelerating, tilted 15 degrees), f90-f98 the shackle drops in and the body swings straight with a small bounce; it floats a few pixels to f150.",
+ "tracks": [
+  {
+   "name": "footage",
+   "what": "blurs and darkens at its edges",
+   "start_f": 0,
+   "length_f": 30,
+   "easing": "linear to f22, accelerating vignette (measured table)"
+  },
+  {
+   "name": "scramble",
+   "what": "the title fades in out of a blur as random letters, a new one every 2 f",
+   "start_f": 16,
+   "length_f": 12,
+   "easing": "linear fade (measured table)"
+  },
+  {
+   "name": "lock in",
+   "what": "the letters lock in left to right, one every 2 f",
+   "start_f": 28,
+   "length_f": 18,
+   "easing": "steps of 2 f"
+  },
+  {
+   "name": "title up",
+   "what": "the title shrinks to 0.6x and rises to the top, then eases back to 0.65x",
+   "start_f": 46,
+   "length_f": 34,
+   "easing": "accelerating then decelerating (measured table)"
+  },
+  {
+   "name": "padlock rises",
+   "what": "an open padlock rises from the bottom of the frame, tilted",
+   "start_f": 80,
+   "length_f": 10,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "padlock snaps shut",
+   "what": "the shackle drops in and the body swings straight with a small bounce",
+   "start_f": 90,
+   "length_f": 10,
+   "easing": "ease-out with a small overshoot (measured table)"
+  },
+  {
+   "name": "hold",
+   "what": "the padlock floats a few pixels (the film grain moves)",
+   "start_f": 100,
+   "length_f": 51,
+   "easing": "slow drift"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The footage behind the title",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 5.03,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient in the look, labelled 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  14,
+  20,
+  26,
+  32,
+  40,
+  54,
+  66,
+  86,
+  94,
+  120
+ ]
+}

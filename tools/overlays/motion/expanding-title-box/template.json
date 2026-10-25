@@ -1,0 +1,69 @@
+{
+ "name": "Expanding title box",
+ "kind": "text",
+ "category": "Text",
+ "what": "One title in a box that opens from a hairline: a thin line stands at the centre, opens sideways into a box nearly the size of the frame and reveals the title inside it, then holds.",
+ "use_for": [
+  "title",
+  "chapter title",
+  "statement",
+  "opener",
+  "quote",
+  "minimal",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "box",
+  "reveal",
+  "minimal",
+  "line",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0: a hairline at the centre; it opens sideways into the box over 38 f (slow start, long decelerating finish, cubic-bezier(0.25, 0, 0.24, 1)), the title revealed by the box's edges; then it holds to the end",
+ "tracks": [
+  {
+   "name": "box",
+   "what": "a hairline opening sideways into the box (width 0 -> box_w)",
+   "start_f": 0,
+   "length_f": 38,
+   "easing": "cubic-bezier(0.25, 0, 0.24, 1)"
+  },
+  {
+   "name": "title",
+   "what": "revealed by the box's edges (it does not move)",
+   "start_f": 0,
+   "length_f": 38,
+   "easing": "cubic-bezier(0.25, 0, 0.24, 1)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 38,
+   "length_f": 195,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "title"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  4,
+  8,
+  14,
+  22,
+  38,
+  120
+ ]
+}

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "field_text", "type": "string", "label": "Text typed into the field (words fade in; *bold* _italic_ ==highlight== ^signal^)", "default": "Motion graphics made simple today."},
+  {"id": "bubble_text", "type": "string", "label": "Text of the dark bubble (typed letter by letter)", "default": "Create polished edits in minutes."},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 33, "min": 14, "max": 90, "step": 1},
+  {"id": "accent", "type": "enum", "label": "Handles and arrow colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "typed-text-pill-chips" (2026-10-22): a text field with a selection handle at each end. A single handle stands on the first frame; the box
+     opens out of it (f0-f12 fast, then slowly widening with the words as they fade in one by one, f14-f80). At f108 the
+     field starts to scale up to 2.2 x about a point left of the box (f108-f136, slow start, S-curve; the handles' dots
+     only grow a tenth); a dark bubble with a tail rises out from behind its top edge and is typed letter by letter
+     (f126-f159); the whole group then slides left (a fast push f137-f146, a slow drift, a second push f160-f172 that
+     settles by f192) until the field's right handle and the bubble's arrow are in view, rising at the very end
+     (f171-f193, accelerating). Numbers measured from the reference's frames (720 x 1280 units). Look-aware.
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #grp { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; }
+  #bub, #fbox, #ftxt, .pin, .pin div, #btail, #barrow { position: absolute; }
+  #ftxt, #btxt { white-space: nowrap; line-height: 1; font-synthesis: none; }
+  #btxt span { display: inline-block; white-space: pre; }
+  #ftxt .w { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6.5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="grp">
+    <div id="bub"><div id="btxt" class="ml-body" style="position:absolute"></div><div id="barrow"></div></div>
+    <div id="btail"></div>
+    <div id="fbox"><div id="ftxt" class="ml-body"></div></div>
+    <div id="pl" class="pin"><div class="ln"></div><div class="dot"></div></div>
+    <div id="pr" class="pin"><div class="ln"></div><div class="dot"></div></div>
+  </div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 195;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const mixa = (a, b, t, al) => { const x = hex(a), y = hex(b); return `rgba(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")},${al})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const smooth = x => { const c = clamp01(x); return c * c * (3 - 2 * c); };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const pick = { ink: L.ink, paper: L.paper, signal: L.signal, deep: L.deep, mustard: L.mustard };
+  const acc = pick[V.accent] || L.signal;
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+
+  // ---- the look: a soft page that goes from deep (top) to light (bottom right)
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) {
+    const topc = mix(night, L.deep, 0.5), warm = mix(L.paper, L.signal, 0.3);
+    ground.style.background = `radial-gradient(ellipse 85% 45% at 100% 100%, ${glare} 0%, ${rgba(glare, 0)} 100%), linear-gradient(172deg, ${topc} 0%, ${L.deep} 26%, ${mix(L.deep, L.paper, 0.45)} 52%, ${warm} 82%, ${mix(L.paper, L.signal, 0.12)} 100%)`;
+  }
+
+  // ---- the parts (positions in the base layout, clip px x K)
+  const DY = 596 * K, PIN_END = 675 * K, BT = 607 * K, BH = 61 * K, PAD = 18 * K;
+  const grp = q("grp"), fbox = q("fbox"), ftxt = q("ftxt"), bub = q("bub"), btxt = q("btxt"), barrow = q("barrow"), btail = q("btail");
+  const fam = V.body_font, fs0 = V.size * U;
+  const mkPin = (id) => { const p = q(id); Object.assign(p.style, { left: "0px", top: "0px", width: "0px", height: "0px" });
+    const ln = p.querySelector(".ln"), dot = p.querySelector(".dot");
+    Object.assign(ln.style, { left: `${-1.6 * K}px`, top: "0px", width: `${3.2 * K}px`, height: `${PIN_END - DY}px`, background: acc, transformOrigin: "50% 0%", borderRadius: `${1.6 * K}px` });
+    Object.assign(dot.style, { left: `${-11 * K}px`, top: `${-11 * K}px`, width: `${22 * K}px`, height: `${22 * K}px`, background: acc, borderRadius: "50%", transformOrigin: "50% 50%" });
+    return { p, ln, dot }; };
+  const PL = mkPin("pl"), PR = mkPin("pr");
+  Object.assign(fbox.style, { top: `${BT}px`, height: `${BH}px`, overflow: "hidden", background: mixa(L.deep, L.paper, 0.5, 0.78), width: "0px", left: "0px" });
+  Object.assign(ftxt.style, { left: `${PAD}px`, fontSize: `${fs0}px`, fontWeight: String(fw(fam, 500)), color: L.ink, top: "0px" });
+  const rich = window.MLLook ? MLLook.rich(ftxt, V.field_text, { look: L, family: fam, weight: 500 }) : { words: [] };
+  if (!window.MLLook) ftxt.textContent = V.field_text;
+  const words = rich.words;
+  Object.assign(btxt.style, { fontSize: `${fs0}px`, fontWeight: String(fw(fam, 500)), color: glare });
+  const bstr = String(V.bubble_text == null ? "" : V.bubble_text);
+  const bl = Array.from(bstr).map(ch => { const sp = document.createElement("span"); sp.textContent = ch; sp.style.opacity = "0"; btxt.appendChild(sp); return sp; });
+  Object.assign(barrow.style, { width: "0px", height: "0px", borderLeft: `${14 * K}px solid ${acc}`, borderTop: `${8 * K}px solid transparent`, borderBottom: `${8 * K}px solid transparent` });
+  Object.assign(bub.style, { borderRadius: `${Math.max(L.radius * 1.3, 16 * K)}px`, opacity: "0" });
+  Object.assign(btail.style, { width: "0px", height: "0px", borderLeft: `${14 * K}px solid transparent`, borderRight: `${14 * K}px solid transparent`, borderTop: `${15 * K}px solid ${rgba(night, 0.8)}`, opacity: "0" });
+
+  // ---- the measured tables (g = the frame minus "Starts at frame")
+  // the field: box width as a share of its final width, and its centre (clip px) - it opens out of one handle, off to the left of centre
+  const WC = [[0, 0, 310.5], [1, 0.107, 316.5], [2, 0.162, 319.5], [3, 0.208, 320.5], [4, 0.246, 323.5], [5, 0.284, 324.5], [6, 0.313, 325.5], [7, 0.34, 327], [8, 0.368, 328.5],
+              [9, 0.389, 329.5], [10, 0.41, 330.5], [11, 0.431, 331.5], [12, 0.452, 332.5], [18, 0.557, 337.5], [24, 0.637, 340.5], [30, 0.704, 344.5], [36, 0.756, 347],
+              [42, 0.8, 349.5], [48, 0.84, 351], [54, 0.874, 352], [60, 0.901, 353.5], [66, 0.926, 355.5], [72, 0.945, 356], [78, 0.964, 356.5], [84, 0.977, 357.5], [90, 0.987, 358],
+              [96, 0.998, 358.5], [102, 1, 359]];
+  const WS = [14, 32, 48, 56, 66], WD = [16, 13, 12, 13, 14];                   // when each word starts to fade in, and how long it takes
+  const ST = [[108, 1], [110, 1.02], [112, 1.02], [114, 1.03], [116, 1.045], [118, 1.07], [120, 1.1], [122, 1.18], [124, 1.33], [126, 1.61], [128, 1.82], [130, 1.94], [132, 2.06], [134, 2.12], [136, 2.2]];
+  // the slide to the left, as a share of the whole (the clip's own two pushes), and the rise at the end (clip px)
+  const PX = [[136, 0], [137, 15.3], [138, 39.4], [139, 71.9], [140, 99.7], [141, 117.8], [142, 131], [143, 140.9], [144, 148.8], [145, 155.2], [146, 160.4], [148, 169.6], [150, 177.7],
+              [152, 185.5], [154, 193.4], [156, 202.1], [158, 212.3], [160, 225.4], [162, 242.6], [164, 266.9], [165, 283.6], [166, 304.9], [167, 333.7], [168, 374.8], [169, 434.7],
+              [170, 499.4], [171, 545.7], [172, 577.6], [173, 600.8], [174, 618.8], [175, 633], [176, 644.8], [178, 662.7], [180, 675.6], [182, 684.8], [184, 691.7], [186, 696.5],
+              [188, 699.7], [190, 701.7], [192, 702.6]].map(r => [r[0], r[1] / 702.6]);
+  const TY = [[170, 0], [171, 0.4], [172, 1.3], [173, 2.4], [174, 4.1], [175, 6.1], [176, 8.4], [177, 11.4], [178, 14.7], [179, 18.6], [180, 23.3], [181, 28.4], [182, 34.3], [183, 41.1],
+              [184, 48.8], [185, 57.6], [186, 67.6], [187, 79.3], [188, 92.6], [189, 108.6], [190, 128.3], [191, 153.3], [192, 189.5], [193, 242.2]];
+  const AX = 196 * K, AY = 499 * K;                                             // the point the field scales about
+
+  let ready = false, wFinal = 0, txFinal = 0, bw = 0, bh = 70 * K;
+  function layout() {
+    // fit the field text on the screen
+    let fs = fs0; ftxt.style.fontSize = `${fs}px`;
+    let tw = ftxt.offsetWidth; const maxW = 0.86 * W - 2 * PAD;
+    if (tw > maxW) { fs = fs0 * maxW / tw; ftxt.style.fontSize = `${fs}px`; tw = ftxt.offsetWidth; }
+    // keep the bubble text in step
+    btxt.style.fontSize = `${fs}px`;
+    const th = ftxt.offsetHeight; ftxt.style.top = `${(BH - th) / 2}px`;
+    wFinal = tw + 2 * PAD;
+    const cEnd = 359 * K, Lf = cEnd - wFinal / 2, Rf = cEnd + wFinal / 2;
+    // the bubble: text, a left margin (for the tail) and the arrow on the right
+    const btw = btxt.offsetWidth, bth = btxt.offsetHeight;
+    bw = 55 * K + btw + 62 * K;
+    // the slide ends with the bubble's right end (or the field's handle + 66, if that is further) 580 px (clip) from the left
+    const farR = Math.max(Rf + 66 * K, Lf + 20 * K + bw);
+    txFinal = 580 * K - (AX + 2.2 * (farR - AX));
+    Object.assign(bub.style, { left: `${Lf + 20 * K}px`, top: `${(586 - 70) * K}px`, width: `${bw}px`, height: `${bh}px` });
+    Object.assign(btxt.style, { left: `${55 * K}px`, top: `${(bh - bth) / 2}px` });
+    Object.assign(barrow.style, { left: `${bw - 29 * K}px`, top: `${bh / 2 - 8 * K}px` });
+    Object.assign(btail.style, { left: `${Lf + 20 * K + 32 * K}px`, top: `${586 * K - 1}px` });
+    ready = true;
+  }
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    grp.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0 || !ready) return;
+    const s = g < 108 ? 1 : tab(ST, g)[0];
+    const tx = g < 136 ? 0 : tab(PX, g)[0] * txFinal, ty = g < 170 ? 0 : -tab(TY, g)[0] * K;
+    grp.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) translate(${AX}px, ${AY}px) scale(${s.toFixed(4)}) translate(${-AX}px, ${-AY}px)`;
+    // the field opens out of a single handle
+    const wc = tab(WC, g), w = wc[0] * wFinal, c = wc[1] * K, Lx = c - w / 2, Rx = c + w / 2;
+    fbox.style.left = `${Lx.toFixed(2)}px`; fbox.style.width = `${Math.max(0, w).toFixed(2)}px`;
+    fbox.style.visibility = w > 1 ? "visible" : "hidden";
+    const dsc = (1 + 0.11 * clamp01((s - 1) / 1.2)) / s;                       // the handles' dots and lines hardly grow while the field does
+    [[PL, Lx], [PR, Rx]].forEach(([P, x]) => { P.p.style.transform = `translate(${x.toFixed(2)}px, ${DY}px)`;
+      P.dot.style.transform = `scale(${dsc.toFixed(4)})`; P.ln.style.transform = `scaleX(${dsc.toFixed(4)})`; });
+    words.forEach((wd, i) => { const st = i < WS.length ? WS[i] : WS[WS.length - 1] + 10 * (i - WS.length + 1), du = i < WD.length ? WD[i] : 12;
+      wd.style.opacity = clamp01((g - st) / du).toFixed(3); });
+    // the dark bubble: rises from behind the field's top edge while its text is typed
+    const a = 0.25 + 0.75 * smooth((g - 126) / 32), up = 1 - (1 - Math.pow(1 - clamp01((g - 126) / 8), 2)) ;
+    const on = g >= 126;
+    bub.style.opacity = on ? "1" : "0";
+    btail.style.opacity = on ? String(clamp01((g - 126) / 4)) : "0";
+    if (on) {
+      const dy = 21 * K * up;
+      bub.style.transform = `translateY(${dy.toFixed(2)}px)`;
+      btail.style.transform = `translateY(${dy.toFixed(2)}px)`;
+      bub.style.background = `linear-gradient(90deg, ${rgba(night, (0.62 * a).toFixed(3))} 0%, ${rgba(night, a.toFixed(3))} 100%)`;
+      btail.style.borderTopColor = rgba(night, (0.62 * a).toFixed(3));
+      bub.style.boxShadow = `0 ${8 * K}px ${26 * K}px ${rgba(night, (0.3 * a).toFixed(3))}`;
+    }
+    bl.forEach((sp, i) => { sp.style.opacity = clamp01((g - (126.5 + 0.9 * i)) / 3).toFixed(3); });
+    barrow.style.opacity = clamp01((g - 150) / 10).toFixed(3);
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 19 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the texts are measured
+  // here, with the real font, to fit
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

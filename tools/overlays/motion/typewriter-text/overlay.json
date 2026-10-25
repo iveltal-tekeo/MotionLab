@@ -1,0 +1,16 @@
+{
+ "name": "typewriter-text",
+ "frames": 300,
+ "fps": 30,
+ "width": 1280,
+ "height": 720,
+ "cues": [
+  {
+   "f": "start + round((31 + 1.77 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "14",
+   "db": -8,
+   "what": "a letter is typed"
+  }
+ ]
+}

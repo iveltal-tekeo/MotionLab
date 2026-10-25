@@ -1,0 +1,35 @@
+{
+ "name": "torn-paper-text-note",
+ "frames": 121,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "thump",
+   "db": -6,
+   "what": "the headline lands on the sheet"
+  },
+  {
+   "f": "start + round(8 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the second line lands"
+  },
+  {
+   "f": "start + round((13 + 6 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "2",
+   "db": -12,
+   "what": "a line of the note lands"
+  },
+  {
+   "f": "start + round((28 + 6 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "2",
+   "db": -12,
+   "what": "a line of the note lands"
+  }
+ ]
+}

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "word1", "type": "string", "label": "Word 1 - seen first, big (*bold* _italic_ ==highlight== ^signal^)", "default": "Make"},
+  {"id": "word2", "type": "string", "label": "Word 2 - the camera swings to it", "default": "EVERY"},
+  {"id": "word3", "type": "string", "label": "Word 3 - the camera flies past word 1 to it", "default": "WORD"},
+  {"id": "word4", "type": "string", "label": "Word 4 - the last one, it stays", "default": "Count"},
+  {"id": "core", "type": "enum", "label": "Letter colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "signal", "label": "Signal"}]},
+  {"id": "glow_colour", "type": "enum", "label": "Glow colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "glow", "type": "number", "label": "Glow (%)", "default": 100, "min": 0, "max": 150, "step": 5},
+  {"id": "size", "type": "number", "label": "Word size (px at a 1080-px short side, word 1)", "default": 460, "min": 100, "max": 700, "step": 5},
+  {"id": "blur", "type": "number", "label": "Motion blur while the camera moves (% of the real speed)", "default": 100, "min": 0, "max": 200, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "glow-text-camera-fly-through" (2026-10-22): four glowing words in a 3D scene seen by a flying camera. Word 1 is big on the left and
+     drifts closer (f0-f30) while words 2-4 are around it (word 2 half in at the left edge, words 3 and 4 small and
+     far to the right, word 4 tilted). At f31 the camera whips round: word 1 shoots out to the right, word 2 swings
+     in from the left and settles in the middle (f31-f63, decelerating). Word 2 then drifts left and grows as the
+     camera moves on (f66-f118) while word 1 comes back from the right, growing, and the camera flies through it
+     (f80-f128, a huge blurred flash); word 3 appears from behind it and drifts down-left, tilting (f123-f198) as
+     word 4 slides in from the upper right, tilting upright (f126-f204), and pushes in a little to the end. Each word's
+     path is tracked on the reference's frames (1280 x 720 units). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .wd { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.015em; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="mbw0" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbg0" stdDeviation="0 0"/></filter>
+  <filter id="mbw1" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbg1" stdDeviation="0 0"/></filter>
+  <filter id="mbw2" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbg2" stdDeviation="0 0"/></filter>
+  <filter id="mbw3" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur id="mbg3" stdDeviation="0 0"/></filter>
+</defs></svg>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="stage">
+    <div id="w3" class="wd ml-body"></div>
+    <div id="w2" class="wd ml-body"></div>
+    <div id="w1" class="wd ml-body"></div>
+    <div id="w0" class="wd ml-body"></div>
+  </div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const kx = W / 1280, ky = H / 720;                       // the reference is 1280 x 720: its numbers below are in those units
+
+  // ---- the look: a dark ground (the ink) with a faint lighter middle
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse at 50% 50%, ${mix(night, glare, 0.1)} 0%, ${mix(night, glare, 0.05)} 40%, ${night} 100%)`;
+  const hand = q("hand"), stage = q("stage");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the measured tracks (one table per phase of a word's life): [frame, centre x, centre y, scale, rotation deg]
+  const WORDS = [{"w0":491,"h0":226,"rel":1.0,"phases":[[0,58,[[0,543.5,346.0,1.0,0],[3,546.0,347.0,1.007,0],[6,550.0,349.0,1.018,0],[9,555.0,351.5,1.031,0],[12,558.5,353.5,1.042,0],[15,563.0,356.5,1.054,0],[18,567.5,360.0,1.068,0],[21,572.5,364.0,1.085,0],[24,577.0,369.0,1.096,0],[27,582.0,374.5,1.109,0],[28,583.0,376.5,1.111,0],[29,584.5,377.0,1.114,0],[30,583.5,377.0,1.112,0],[31,626.5,374.0,1.105,0],[32,741.5,371.5,1.105,0],[33,861.0,370.0,1.108,0],[34,955.0,369.0,1.12,0],[35,1031.0,368.0,1.12,0],[36,1095.0,367.0,1.12,0],[37,1150.0,366.0,1.12,0],[38,1197.0,365.0,1.12,0],[39,1239.0,364.5,1.12,0],[40,1275.0,363.5,1.12,0],[42,1335.0,362.5,1.12,0],[45,1404.0,359.5,1.12,0],[48,1457.0,359.0,1.12,0],[51,1495.0,358.5,1.12,0],[54,1522.0,358.0,1.12,0],[57,1541.0,358.0,1.12,0],[60,1550.0,358.0,1.12,0]]],[80,129,[[80,1530.2,359.8,1.06,0],[81,1528.2,359.8,1.06,0],[82,1524.2,359.8,1.06,0],[84,1518.2,359.8,1.06,0],[87,1507.5,360.3,1.065,0],[90,1493.7,360.9,1.07,0],[93,1480.1,362.9,1.088,0],[96,1460.0,364.3,1.1,0],[99,1437.9,367.0,1.124,0],[102,1409.3,369.9,1.15,0],[105,1373.2,374.0,1.186,0],[108,1333.6,381.0,1.257,0],[109,1315.2,383.6,1.28,0],[110,1295.2,385.9,1.3,0],[111,1274.5,388.3,1.33,0],[112,1249.9,391.7,1.36,0],[113,1220.2,395.1,1.39,0],[114,1190.1,399.6,1.43,0],[115,1152.3,405.2,1.48,0],[116,1109.8,410.5,1.535,0],[117,1058.8,417.8,1.6,0],[118,996.9,426.5,1.686,0],[119,921.0,437.1,1.78,0],[120,827.4,451.5,1.916,0],[121,703.6,469.0,2.08,0],[122,517,490,2.27,0],[123,374,510,2.5,0],[124,126,535,2.75,0],[125,-138,560,3.0,0],[126,-406,585,3.3,0],[127,-648,610,3.6,0],[128,-856,640,3.9,0]]]]},{"w0":399,"h0":180,"rel":0.8,"phases":[[0,119,[[0,-61.8,341.0,0.911,0],[3,-60.9,342.5,0.917,0],[6,-59.1,344.5,0.928,0],[9,-54.2,347.0,0.933,0],[12,-48.3,350.5,0.939,0],[15,-41.4,354.0,0.944,0],[18,-36.6,358.0,0.956,0],[21,-30.7,362.5,0.961,0],[24,-24.8,367.0,0.967,0],[27,-23.1,372.0,0.978,0],[28,-22.1,373.0,0.978,0],[29,-21.1,374.0,0.978,0],[30,-22.2,373.5,0.983,0],[31,12.8,371.5,0.983,0],[32,95.8,370.5,0.983,0],[33,178.7,369.0,0.989,0],[34,244.5,368.0,1.0,0],[35,300.0,367.5,1.0,0],[36,346.0,366.5,1.0,0],[37,384.5,366.0,1.0,0],[38,418.5,365.5,1.0,0],[39,448.0,365.0,1.0,0],[40,474.0,365.0,1.0,0],[42,517.5,364.0,1.0,0],[45,567.5,363.0,1.0,0],[48,603.5,362.5,1.0,0],[51,629.5,362.0,1.0,0],[54,647.5,361.5,1.0,0],[57,658.5,361.0,1.0,0],[60,664.0,361.0,1.0,0],[63,665.5,361.0,1.0,0],[66,662.5,361.0,1.0,0],[69,658.0,361.0,1.0,0],[72,652.0,361.0,1.0,0],[75,643.5,361.5,1.0,0],[78,634.0,362.0,1.0,0],[81,621.5,362.5,1.0,0],[84,607.0,363.0,1.02,0],[87,589.0,363.5,1.03,0],[90,567.0,365.0,1.04,0],[93,542.0,366.0,1.05,0],[96,511.0,367.0,1.07,0],[99,474.0,369.0,1.09,0],[102,428.0,371.5,1.12,0],[105,370.0,374.5,1.16,0],[108,296.0,378.5,1.205,0],[109,266.5,380.5,1.217,0],[110,237.7,382.0,1.244,0],[111,201.2,384.5,1.272,0],[112,160.6,387.0,1.3,0],[113,114.0,390.0,1.333,0],[114,60.2,393.5,1.372,0],[115,-1.6,397.5,1.417,0],[116,-73.6,402.0,1.467,0],[117,-160.0,407.5,1.539,0],[118,-261.2,413.0,1.6,0]]]]},{"w0":362,"h0":163,"rel":0.72,"phases":[[0,34,[[0,929.0,340.0,0.254,0],[3,935.0,340.0,0.254,0],[6,947.5,341.0,0.257,0],[9,963.0,342.5,0.26,0],[12,981.5,343.5,0.262,0],[15,1002.0,344.5,0.265,0],[18,1022.5,345.5,0.268,0],[21,1042.0,347.0,0.271,0],[24,1059.0,349.0,0.271,0],[27,1071.5,352.0,0.273,0],[28,1074.5,353.0,0.273,0],[29,1076.5,353.0,0.273,0],[30,1078.0,352.5,0.276,0],[31,1103.0,351.0,0.287,0],[32,1170.0,350.5,0.287,0],[33,1238.5,349.5,0.29,0]]],[123,240,[[123,1148.3,408.5,0.67,0],[124,1070.5,417.0,0.77,0],[125,979.0,424.0,0.83,0],[126,891.5,430.5,0.9,0],[127,814.0,435.5,0.92,0],[128,752.0,439.5,0.955,0],[129,705.0,443.0,0.978,0],[130,671.5,445.5,0.99,0],[131,649.5,447.0,0.997,0],[132,639.0,447.5,0.99,-1.3],[135,636.5,448.5,0.995,-1.1],[138,635.5,448.5,1.0,-1.0],[141,633.5,449.0,1.0,-0.9],[144,631.5,450.0,1.0,-0.9],[147,627.5,451.5,1.0,-0.8],[150,622.5,453.0,1.002,-0.8],[153,616.5,455.5,1.005,-0.5],[156,609.0,458.0,1.01,-0.4],[159,599.5,461.0,1.013,0],[162,588.0,464.5,1.014,0.3],[165,575.0,469.0,1.016,0.8],[168,558.0,474.0,1.017,1.3],[171,538.0,479.5,1.018,1.9],[174,514.0,485.5,1.019,2.6],[177,484.0,492.5,1.025,3.5],[180,445.5,500.0,1.03,4.5],[183,395.0,508.5,1.04,5.9],[186,325.0,516.5,1.052,7.5],[189,224.5,523.0,1.068,10],[192,106.1,527.5,1.1,14.1],[195,2.0,539.0,1.12,16],[198,-81.9,529.0,1.15,18],[201,-137.6,521.0,1.2,20],[204,-160.6,521.0,1.2,20],[207,-170.6,517.0,1.2,20],[210,-173.6,516.0,1.2,20],[213,-173.6,516.0,1.2,20],[216,-176.6,518.5,1.2,20],[219,-181.6,522.0,1.2,20],[222,-190.6,525.5,1.2,20],[225,-203.6,524.5,1.2,20],[228,-216.6,519.5,1.2,20],[231,-226.6,518.5,1.2,20],[234,-260,515,1.2,20]]]]},{"w0":216,"h0":108,"rel":0.48,"phases":[[0,32,[[0,1057.0,283.5,0.208,-20.5],[3,1063.5,284.0,0.204,-20.5],[6,1077.0,284.5,0.208,-20.5],[9,1095.5,285.0,0.212,-20.5],[12,1116.5,285.0,0.212,-20.5],[15,1140.0,285.0,0.217,-20.5],[18,1163.0,285.5,0.217,-20.5],[21,1184.5,285.5,0.221,-20.5],[24,1204.0,287.0,0.225,-20.5],[27,1218.0,288.5,0.225,-20.5],[28,1221.0,289.0,0.225,-20.5],[29,1223.0,289.5,0.225,-20.5],[30,1226.0,289.0,0.233,-20.5],[31,1257,288,0.235,-20.5]]],[126,240,[[126,1325,237,0.7,-21.5],[127,1286,229.5,0.75,-21.5],[128,1255,217.5,0.8,-21.5],[129,1231,211.5,0.83,-21.5],[130,1215,194.5,0.86,-21.5],[131,1204,193,0.88,-21.5],[132,1200,192,0.89,-21.5],[135,1198,191.5,0.893,-21.5],[138,1198,192.5,0.893,-21.5],[141,1197,193.5,0.893,-21.5],[144,1195,195.5,0.893,-21.5],[147,1192,197.5,0.893,-21.3],[150,1188,200,0.89,-21],[153,1183,204,0.89,-20.7],[156,1177,208,0.888,-20.3],[159,1170,213.5,0.881,-20.3],[162,1160,219.5,0.874,-20.3],[165,1149.5,227,0.88,-19.8],[168,1137,235.5,0.88,-19.4],[171,1122,245,0.884,-19.0],[174,1104,256.5,0.887,-18.1],[177,1081.5,269,0.891,-17.3],[180,1052.5,284.5,0.9,-16.4],[183,1014.5,302,0.916,-15.0],[186,962,321,0.934,-13.6],[189,886.5,343.5,0.955,-11.7],[192,800,364,0.981,-9.1],[195,718,379,1.004,-5.7],[198,651,383,1.007,-2.4],[201,612,382,1.0,-1.0],[204,591.5,380,1.005,0],[207,582.5,379,1.0,0],[210,580,379,1.0,0],[213,581.5,379,1.0,0],[216,585.5,380.5,1.014,0],[219,592,382.5,1.037,0],[222,600.5,384,1.07,0],[225,610,384.5,1.1,0],[228,619.5,386.5,1.144,0],[231,629.5,388,1.171,0],[234,637,390,1.194,0],[237,640,390.5,1.204,0],[239,640.5,390.5,1.208,0]]]]}];
+
+  // ---- the four glowing words: a hot core, a glow stack, and a stack of offset copies for depth
+  const pick = { mustard: L.mustard, paper: L.paper, signal: L.signal, deep: L.deep };
+  const core = mix(pick[V.core] || L.mustard, "#ffffff", 0.16), gcol = pick[V.glow_colour] || L.signal, gk = V.glow / 100;
+  const side = mix(gcol, "#000000", 0.62);
+  const BASE = 300 * U;                                      // the words are laid out at this size and scaled by the tracks
+  const sizeRatio = V.size / 460;
+  const texts = [V.word1, V.word2, V.word3, V.word4];
+  const els = WORDS.map((wd, i) => {
+    const e = q(`w${i}`);
+    Object.assign(e.style, { fontSize: `${BASE}px`, fontWeight: String(fw(V.body_font, 900)), color: core });
+    const ext = [1, 2, 3, 4, 5, 6].map(k => `${(1.3 * k * U).toFixed(1)}px ${(2.3 * k * U).toFixed(1)}px 0 ${side}`);
+    const gl = [[0, 3, 1.0], [0, 10, 1.0], [0, 26, 0.95], [0, 56, 0.75], [0, 110, 0.45]].map(([, r, a]) => `0 0 ${(r * U).toFixed(1)}px ${rgba(gcol, Math.min(1, a * gk))}`);
+    e.style.textShadow = (gk > 0 ? gl.join(", ") + ", " : "") + ext.join(", ");
+    if (window.MLLook) MLLook.rich(e, texts[i], { look: L, family: V.body_font, weight: 900 }); else e.textContent = texts[i];
+    return { e, wd, nat: [1, 1], kfit: 1, bg: q(`mbg${i}`) };
+  });
+  els[0].e.style.zIndex = "4"; els[1].e.style.zIndex = "2"; els[2].e.style.zIndex = "3"; els[3].e.style.zIndex = "1";
+  const SH = 0.15 * (V.blur / 100);
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    stage.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    els.forEach(o => {
+      const ph = o.wd.phases.find(p => g >= p[0] - 0.001 && g <= p[1] + 0.001);
+      if (!ph) { o.e.style.display = "none"; return; }
+      const rows = ph[2], [cx, cy, s, rot] = tab(rows, g);
+      const sc = o.kfit * s;
+      const hw = 0.5 * o.wd.w0 * kx * sizeRatio * s + 80 * U, hh = 0.5 * o.wd.h0 * ky * sizeRatio * s + 80 * U;
+      const X = cx * kx, Y = cy * ky;
+      if (X < -hw || X > W + hw || Y < -hh || Y > H + hh) { o.e.style.display = "none"; return; }
+      o.e.style.display = "block";
+      o.e.style.transform = `translate(${(X - o.nat[0] / 2).toFixed(2)}px, ${(Y - o.nat[1] / 2).toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
+      // a smear along the way it moves (and out from the centre as it grows)
+      const a = tab(rows, Math.min(g + 0.5, ph[1])), b = tab(rows, Math.max(g - 0.5, ph[0]));
+      const dcx = Math.abs(a[0] - b[0]) * kx, dcy = Math.abs(a[1] - b[1]) * ky, ds = Math.abs(a[2] - b[2]);
+      const sx = SH * (dcx + 0.5 * ds * o.wd.w0 * kx * sizeRatio * s) / Math.max(0.05, sc);
+      const sy = SH * (dcy + 0.5 * ds * o.wd.h0 * ky * sizeRatio * s) / Math.max(0.05, sc);
+      if (sx > 0.4 || sy > 0.4) { o.bg.setAttribute("stdDeviation", `${sx.toFixed(2)} ${sy.toFixed(2)}`); o.e.style.filter = `url(#mbw${els.indexOf(o)})`; } else o.e.style.filter = "none";
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  const hits = V.shake > 0 ? [{ f: S + 31, amount: 4 }, { f: S + 119, amount: 5 }, { f: S + 196, amount: 2 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 21, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the words are
+  // measured here, with the real fonts, to fit the boxes the tracks were measured on
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    els.forEach(o => {
+      o.e.style.display = "block";
+      o.nat = [o.e.offsetWidth, o.e.offsetHeight];
+      const kw = (o.wd.w0 * kx * sizeRatio) / Math.max(1, o.nat[0]);              // a little wider than the reference's word (a heavier, wider font)
+      const kh = (1.3 * o.wd.h0 * ky * sizeRatio) / (0.72 * BASE);                // but its capitals not taller than 1.3 of the reference's
+      o.kfit = Math.min(kw * 1.2, kh);
+    });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

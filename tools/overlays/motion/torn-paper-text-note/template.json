@@ -1,0 +1,104 @@
+{
+ "name": "Torn paper note",
+ "kind": "text",
+ "category": "Text",
+ "what": "A torn sheet of ruled notebook paper with a folded corner lies on a speckled concrete floor, and bold lines of text fade onto it one after another: a big headline, a second line, then the note, one word a line, the last one running under the folded corner, while the whole scene pushes in slowly.",
+ "use_for": [
+  "note",
+  "quote",
+  "reminder",
+  "title",
+  "social post",
+  "handwritten feel",
+  "intro",
+  "tip"
+ ],
+ "tags": [
+  "text",
+  "paper",
+  "torn paper",
+  "note",
+  "notebook",
+  "stagger",
+  "slow zoom",
+  "social",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f119 (00:00:00:00-00:00:03:29) the whole scene pushes in about 20 % about the frame centre (a gentle S-curve, fastest around f57); the six lines fade in on an ease-in curve, each over about 6 frames: the headline at f2 (00:00:00:02), the second line at f6 (00:00:00:06), then the note's four lines at f11, f16, f26 and f32; then everything holds to the end. The reference only changes every third frame (10 fps content) and so does the template by default (the Choppy motion setting; 1 = a new picture on every frame)",
+ "tracks": [
+  {
+   "name": "push in",
+   "what": "the sheet and the floor scale up about the frame centre, 1 x to 1.2 x",
+   "start_f": 0,
+   "length_f": 119,
+   "easing": "S-curve (smoothstep)"
+  },
+  {
+   "name": "headline",
+   "what": "the big headline fades onto the sheet",
+   "start_f": 2,
+   "length_f": 4,
+   "easing": "ease-in fade"
+  },
+  {
+   "name": "second line",
+   "what": "the bold second line fades in",
+   "start_f": 6,
+   "length_f": 6,
+   "easing": "ease-in fade"
+  },
+  {
+   "name": "note line 1",
+   "what": "the first word of the note fades in at the left",
+   "start_f": 11,
+   "length_f": 6,
+   "easing": "ease-in fade"
+  },
+  {
+   "name": "note line 2",
+   "what": "the second word fades in, right-aligned",
+   "start_f": 16,
+   "length_f": 5,
+   "easing": "ease-in fade"
+  },
+  {
+   "name": "note line 3",
+   "what": "the third word fades in, centred",
+   "start_f": 26,
+   "length_f": 6,
+   "easing": "ease-in fade"
+  },
+  {
+   "name": "note line 4",
+   "what": "the fourth word fades in, centred, partly under the folded corner",
+   "start_f": 32,
+   "length_f": 4,
+   "easing": "ease-in fade"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "headline",
+  "subhead",
+  "note"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  3,
+  8,
+  14,
+  20,
+  32,
+  40,
+  80,
+  120
+ ]
+}

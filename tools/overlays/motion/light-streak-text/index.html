@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text (*bold* _italic_ ==highlight== ^signal colour^) - the words light up one by one", "default": "Light it up"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 180, "min": 40, "max": 320, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Text colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "glow", "type": "number", "label": "Glow around the text (0-100)", "default": 80, "min": 0, "max": 100, "step": 1},
+  {"id": "spark", "type": "boolean", "label": "Spark of light that sweeps across the text", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "light-streak-text" (2026-10-22): one line of glowing text on a dark vignette. The words light up one after another (the first fades up on
+     f1-f4 and its glow builds to f8, the second does the same from f12, the third from f24); a small spark of light
+     appears to the left of the text at f24, brightens, then sweeps across the text f34-f56 with a soft streak and a
+     warm bloom behind it and comes to rest just below the line's right end, while the ground warms. Later single
+     letters flicker like a failing neon tube (f81-f89, f180-f217). Look-aware: the ground, the text colour, its glow
+     and the spark come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; white-space: nowrap; text-align: center; font-synthesis: none; transform: translate(-50%, -50%); }
+  .ch { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="world" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 240;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark vignette ground (the ink), text in a token colour (a gradient top -> bottom) with a coloured glow
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const topc = V.colour === "signal" ? mixh(L.signal, "#ffffff", 0.3) : V.colour === "paper" ? glare : mixh(L.mustard, "#ffffff", 0.3);
+  const botc = V.colour === "signal" ? L.signal : V.colour === "paper" ? mixh(glare, L.mustard, 0.3) : mixh(L.mustard, L.signal, 0.6);
+  const gc = V.colour === "paper" ? L.mustard : L.signal;       // the glow
+  const spk = mixh(V.colour === "paper" ? L.mustard : L.mustard, "#ffffff", 0.35);
+  const gl = V.glow / 100, fam = V.body_font;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse at 50% 50%, ${mixh(night, glare, 0.07)} 0%, ${night} 78%)`;
+  const hand = q("hand"), world = q("world");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(world.style, { width: `${W}px`, height: `${H}px` });
+
+  // the warm tint the ground takes on while the spark passes
+  const warm = document.createElement("div"); warm.className = "abs";
+  Object.assign(warm.style, { width: `${W}px`, height: `${H}px`, opacity: "0", display: V.background ? "block" : "none",
+    background: `radial-gradient(ellipse at 50% 50%, ${rgba(L.mustard, 0.15)} 0%, ${rgba(L.signal, 0.07)} 55%, ${rgba(L.signal, 0)} 100%)` });
+  world.appendChild(warm);
+  // the bloom behind the spark, the streak that trails it and the spark itself
+  const bloom = document.createElement("div"); bloom.className = "abs";
+  const BD = 1000 * U;
+  Object.assign(bloom.style, { width: `${BD}px`, height: `${BD * 0.5}px`, opacity: "0", pointerEvents: "none",
+    background: `radial-gradient(ellipse at 50% 50%, ${rgba(L.mustard, 0.5)} 0%, ${rgba(gc, 0.24)} 38%, ${rgba(gc, 0)} 70%)` });
+  const streak = document.createElement("div"); streak.className = "abs";
+  const SW = 640 * U, SH = 84 * U;
+  Object.assign(streak.style, { width: `${SW}px`, height: `${SH}px`, opacity: "0", pointerEvents: "none",
+    background: `radial-gradient(ellipse at 88% 50%, ${rgba(spk, 0.95)} 0%, ${rgba(L.mustard, 0.5)} 22%, ${rgba(gc, 0.2)} 52%, ${rgba(gc, 0)} 75%)` });
+  const orb = document.createElement("div"); orb.className = "abs";
+  const OD = 104 * U;
+  Object.assign(orb.style, { width: `${OD}px`, height: `${OD}px`, opacity: "0", pointerEvents: "none", borderRadius: "50%",
+    background: `radial-gradient(circle at 50% 50%, ${rgba("#ffffff", 0.95)} 0%, ${rgba(spk, 0.95)} 7%, ${rgba(L.mustard, 0.7)} 20%, ${rgba(gc, 0.3)} 46%, ${rgba(gc, 0)} 70%)` });
+  if (V.spark) { world.appendChild(bloom); world.appendChild(streak); }
+
+  // ---- the text: two layers with the same letters, a glow layer under the gradient-filled one
+  const FS = V.size * U;
+  const rnd = window.MLLook ? MLLook.rnd(5) : (() => 0.5);
+  const mkLine = (front) => {
+    const el = document.createElement("div"); el.className = "ln ml-body";
+    Object.assign(el.style, { left: `${W / 2}px`, top: `${H * 0.5}px`, fontSize: `${FS}px`, fontWeight: String(fw(fam, 800)), lineHeight: "1.1", letterSpacing: "0.005em" });
+    const rr = window.MLLook ? MLLook.rich(el, V.text, { look: L, family: fam, weight: 800 }) : { words: [], marks: [] };
+    if (!window.MLLook) el.textContent = V.text;
+    if (!front) rr.marks.forEach(m => { m.style.backgroundImage = "none"; });
+    const out = [];
+    rr.words.forEach((w, wi) => {
+      const s = w.textContent, wc = w.style.color; w.textContent = "";
+      [...s].forEach((c, ci) => {
+        const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = c;
+        if (front) {
+          if (wc) sp.style.color = wc;
+          else { sp.style.color = "transparent"; sp.style.backgroundImage = `linear-gradient(180deg, ${topc} 0%, ${topc} 32%, ${botc} 100%)`;
+            sp.style.webkitBackgroundClip = "text"; sp.style.backgroundClip = "text"; }
+        } else { sp.style.color = "transparent"; sp.dataset.gc = wc || gc; }
+        w.appendChild(sp); out.push({ sp, wi, ci });
+      });
+    });
+    world.appendChild(el);
+    return { el, out };
+  };
+  const GL = mkLine(false), FR = mkLine(true);
+  world.appendChild(orb);
+  const lets = FR.out.map((o, i) => ({ f: o.sp, g: GL.out[i].sp, wi: o.wi, ci: o.ci, d: o.wi >= 2 ? Math.floor(rnd() * 3) : 0 }));
+  const nw = lets.length ? lets[lets.length - 1].wi + 1 : 0;
+  const firstOf = k => Math.max(0, lets.findIndex(l => l.wi === Math.min(k, nw - 1)));
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  const WS = [1, 12, 24];
+  const wstart = k => k < 3 ? WS[k] : 24 + (k - 2) * 11;
+  const OP = [[0, 0.3], [1, 0.55], [2, 0.8], [3, 1]];                               // a word fading up
+  const GL0 = [[0, 0], [3, 0.1], [5, 0.55], [7, 0.9], [8, 1]];                      // the first word's glow builds slowly
+  const GL1 = [[0, 0], [2, 0.25], [4, 0.8], [5, 1]];                                // the next words' glow builds fast
+  // single letters that flicker like a failing tube (opacity of the letter, its glow with it)
+  const FA = [[180, 1], [182, 0.5], [184, 0.95], [186, 1], [188, 0.12], [192, 0.15], [194, 0.7], [196, 1], [203, 1], [204, 0.5], [206, 1]];
+  const FB = [[180, 1], [182, 0.5], [184, 0.25], [186, 0.1], [192, 0.12], [196, 0.1], [198, 0.7], [200, 1], [203, 1], [204, 0.35], [206, 1], [221, 1], [222, 0.6], [224, 1]];
+  const FC = [[205, 1], [206, 0.5], [208, 0.12], [210, 0.25], [214, 0.3], [216, 1]];
+  const FD = [[80, 1], [82, 0.3], [83, 0.2], [84, 1], [86, 1], [87, 0.4], [89, 1]];
+  const iA = 0, iB = firstOf(1) === 0 ? Math.min(4, lets.length - 1) : firstOf(1), iC = lets.length - 1, iD = Math.min(lets.length - 1, iB + 1);
+  // the spark's path along the text (0 = left end, 1 = right end; x in text widths) and its height (fraction of the frame)
+  const PX = [[24, -0.24], [34, -0.24], [38, -0.15], [40, -0.01], [43, 0.35], [46, 0.74], [50, 1.0], [56, 1.14], [60, 1.21], [70, 1.25], [81, 1.26]];
+  const PY = [[24, -0.024], [34, -0.024], [40, -0.01], [46, -0.01], [56, 0.04], [60, 0.045], [81, 0.045]];
+  const PA = [[23, 0], [24, 0.2], [28, 0.45], [34, 0.8], [40, 1], [56, 0.85], [60, 0.8]];
+  const PS = [[34, 0.9], [40, 1.2], [46, 1.5], [52, 1.2], [58, 1], [81, 1]];
+  const BA = [[34, 0], [40, 0.45], [46, 0.6], [52, 0.3], [60, 0.12]];
+  const SA = [[34, 0], [40, 0.35], [44, 0.6], [48, 0.35], [54, 0]];
+  const WARM = [[26, 0], [60, 1]];
+  const S = Math.round(V.start);
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    warm.style.opacity = String(tab(WARM, g)[0]);
+    const tw = Math.max(1, GL.el.offsetWidth), cx = W / 2, cy = H * 0.5;
+    // letters
+    const fl = lets.map(() => 1);
+    if (lets.length) { fl[iA] *= tab(FA, g)[0]; fl[iB] *= tab(FB, g)[0]; fl[iC] *= tab(FC, g)[0]; fl[iD] *= tab(FD, g)[0]; }
+    lets.forEach((l, i) => {
+      const rel = g - wstart(l.wi) - l.d;
+      const o = rel < 0 ? 0 : tab(OP, rel)[0];
+      const k = gl * (rel < 0 ? 0 : tab(l.wi === 0 ? GL0 : GL1, rel)[0]);
+      const op = o * fl[i];
+      l.f.style.opacity = String(op); l.g.style.opacity = String(op);
+      const col = l.g.dataset.gc;
+      l.g.style.textShadow = k > 0.001 ? [`0 0 ${(0.02 * FS).toFixed(1)}px ${rgba(col, 1 * k)}`, `0 0 ${(0.05 * FS).toFixed(1)}px ${rgba(col, 1 * k)}`, `0 0 ${(0.11 * FS).toFixed(1)}px ${rgba(col, 0.85 * k)}`, `0 0 ${(0.26 * FS).toFixed(1)}px ${rgba(col, 0.55 * k)}`].join(", ") : "none";
+    });
+    if (!V.spark) return;
+    // the spark, its streak and the bloom
+    const ox = cx - tw / 2 + tab(PX, g)[0] * tw, oy = cy + tab(PY, g)[0] * H;
+    const oa = tab(PA, g)[0], os = tab(PS, g)[0];
+    orb.style.opacity = String(oa);
+    orb.style.transform = `translate(${(ox - OD / 2).toFixed(1)}px, ${(oy - OD / 2).toFixed(1)}px) scale(${os.toFixed(3)})`;
+    streak.style.opacity = String(tab(SA, g)[0]);
+    streak.style.transform = `translate(${(ox - SW * 0.88).toFixed(1)}px, ${(oy - SH / 2).toFixed(1)}px)`;
+    bloom.style.opacity = String(tab(BA, g)[0]);
+    bloom.style.transform = `translate(${(ox - BD / 2).toFixed(1)}px, ${(oy - BD * 0.25).toFixed(1)}px)`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 8 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

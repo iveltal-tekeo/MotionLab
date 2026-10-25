@@ -1,0 +1,34 @@
+{
+ "name": "ribbon-swoosh-text-reveal",
+ "frames": 211,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + 3",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 700,
+   "to": 3000,
+   "db": -8,
+   "what": "the ribbon sweeps across and the wave slides away"
+  },
+  {
+   "f": "start + 108",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 400,
+   "to": 2200,
+   "db": -9,
+   "what": "the band opens into the horn"
+  },
+  {
+   "f": "start + 124",
+   "kind": "crackle",
+   "dur": "1.0",
+   "db": -10,
+   "what": "the name's letters flicker in"
+  }
+ ]
+}

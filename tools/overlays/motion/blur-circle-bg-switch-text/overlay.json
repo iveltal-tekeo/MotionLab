@@ -1,0 +1,25 @@
+{
+ "name": "blur-circle-bg-switch-text",
+ "frames": 151,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(28 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 400,
+   "to": 2600,
+   "db": -9,
+   "what": "the big circle shrinks away"
+  },
+  {
+   "f": "start + round((86 + 3 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "8",
+   "db": -12,
+   "what": "a soft tick for each letter of the bold line"
+  }
+ ]
+}

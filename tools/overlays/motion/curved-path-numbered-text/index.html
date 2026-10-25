@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "line1", "type": "string", "label": "Line 1 (*bold* _italic_ ==highlight== ^signal colour^)", "default": "01. Plan the shot"},
+  {"id": "line2", "type": "string", "label": "Line 2", "default": "02. Film it clean"},
+  {"id": "line3", "type": "string", "label": "Line 3", "default": "03. Cut on the beat"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 140, "min": 40, "max": 300, "step": 1},
+  {"id": "path", "type": "enum", "label": "Path colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "curved-path-numbered-text" (2026-10-22): a dashed path curves across a dark ground and a camera flies along it in 3D, stopping at three
+     stations. Each station is a line of text lying on the ground that types out letter by letter (about 2 f a letter):
+     line 1 at f2-f40 with the camera still, then the camera accelerates (f49-f97, cruising at ~f66-f90) and stops on
+     line 2, which types as it arrives (f52-f90); a short hold (f98-f132); then a second flight (f132-f184: it builds
+     speed to ~f153 and runs out in a long decelerating finish) over the big arc of the path onto line 3, typed
+     f155-f192; then it holds. The camera (focus, heading, tilt, zoom) was fitted to the reference's measured text
+     corners (about 10 px at 1280x720), so the perspective, the swing and the stops match; far dashes fade into the
+     dark, texts in motion smear. Look-aware: ground, text and path colours, the display font and the film grain come
+     from the look tokens (tools\overlays\motion\_looks). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  .dash { position: absolute; }
+  .tx { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; }
+  .tx .w { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8.033333" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="cam"><div id="world"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 241;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const tab = (rows, g) => {                       // linear table [[frame, value...]]
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark ground (the ink, or the paper in a dark look), white-ish text, the path in the mustard
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? night : "transparent" });
+  const pathCol = V.path === "paper" ? glare : (L[V.path] || L.mustard);
+
+  // ---- units: the reference's 1280x720 px, scaled; the 3D camera (perspective P, anchor at the frame's centre)
+  const R = Math.min(W, H) / 720;
+  const P = 1100 * R, AX = W / 2, AY = H / 2;
+  const hand = q("hand"), cam = q("cam"), world = q("world");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  cam.style.perspective = `${P}px`; cam.style.perspectiveOrigin = `${AX}px ${AY}px`;
+  const T = [[0, 0], [819.9, -554.2], [2503.1, 806.1]].map(p => [p[0] * R, p[1] * R]);       // the three stations (world px)
+
+  // camera: focus (the world point at the frame's centre), heading (deg), tilt (deg), zoom (px toward the viewer)
+  const K = (fx, fy, h, p, zc) => ({ fx: fx * R, fy: fy * R, h, p, zc: zc * R });
+  const K0 = K(2.97, 40.87, -5.24, 20.65, 2.69), K1 = K(766.84, -518.35, -3.24, 19.77, -225.73);
+  const K1b = K(766.84 + 14, -518.35 + 9, -3.24, 19.77, -225.73), K2 = K(2500.13, 850.46, 2.44, -1.22, -19.72);
+  const CT1 = [128.23 * R, -521.99 * R], CT2 = [2231.38 * R, 60.52 * R];                     // the curve of the flight
+  const BUMP1 = [-2.12, -6.16, 38.19 * R];                                                      // heading / tilt / zoom swing mid-flight 1
+  const H2 = [[132, -3.24, 19.77, -225.73], [138, -3.2, 28.2, -196.4], [144, 7.6, 29.7, -167.1], [150, 21.2, 37.8, -137.8], [156, 9.7, 16.2, -108.4],
+    [162, 11.1, 6.0, -78.9], [170, 3.9, 0.8, -49.3], [183, 2.44, -1.22, -19.72]];             // flight 2: heading / tilt / zoom by frame
+  // how far along flight 1 the camera is, by frame (measured from the texts' speed)
+  const A1 = [[48, 0], [54, 0.04], [60, 0.136], [66, 0.272], [72, 0.428], [78, 0.583], [84, 0.736], [90, 0.884], [96, 0.988], [98, 1]];
+  const FOG = [[0, 0], [136, 0], [146, 0.2], [162, 0.2], [174, 0.08], [186, 0]];
+  const A2 = g => g <= 132 ? 0 : g >= 183 ? 1 : g < 153 ? 0.4565 * Math.pow((g - 132) / 21, 2) : 0.4565 + 0.5435 * (1 - Math.pow(1 - (g - 153) / 30, 2.4));
+  const mixCam = (ka, kb, a, ctl, bump) => {
+    const b = Math.sin(Math.PI * a), i = 1 - a;
+    return { fx: i * i * ka.fx + 2 * a * i * ctl[0] + a * a * kb.fx, fy: i * i * ka.fy + 2 * a * i * ctl[1] + a * a * kb.fy,
+      h: lerp(ka.h, kb.h, a) + bump[0] * b, p: lerp(ka.p, kb.p, a) + bump[1] * b, zc: lerp(ka.zc, kb.zc, a) + bump[2] * b };
+  };
+  const camAt = g => {
+    if (g <= 48) return K0;
+    if (g < 98) return mixCam(K0, K1, tab(A1, g)[0], CT1, BUMP1);
+    if (g < 132) { const k = (g - 98) / 34, e = k * k * (3 - 2 * k); return mixCam(K1, K1b, e, [(K1.fx + K1b.fx) / 2, (K1.fy + K1b.fy) / 2], [0, 0, 0]); }
+    if (g < 184) { const a = A2(g), i = 1 - a, k = tab(H2, g); return { fx: i * i * K1b.fx + 2 * a * i * CT2[0] + a * a * K2.fx, fy: i * i * K1b.fy + 2 * a * i * CT2[1] + a * a * K2.fy, h: k[0], p: k[1], zc: k[2] * R }; }
+    return K2;
+  };
+  const rad = d => d * Math.PI / 180;
+  const project = (c, x, y) => {                   // world px -> [screen x, screen y, scale]
+    const dx = x - c.fx, dy = y - c.fy, ch = Math.cos(rad(c.h)), sh = Math.sin(rad(c.h));
+    const X = dx * ch - dy * sh, Y = dx * sh + dy * ch;
+    const s = P / (P - (Y * Math.sin(rad(c.p)) + c.zc));
+    return [AX + X * s, AY + Y * Math.cos(rad(c.p)) * s, s];
+  };
+
+  // ---- the texts: each line lies on the ground at its station; its letters are separate spans (typed in)
+  const fam = V.body_font;
+  const fw = (f, want) => { const i = window.MLLook && MLLook.FONTS[f]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const plain = s => String(s || "").replace(/[*_=^]/g, "");
+  const texts = [V.line1, V.line2, V.line3].map((s, i) => {
+    const el = document.createElement("div");
+    el.className = "tx ml-body";
+    el.style.color = glare; el.style.fontWeight = String(fw(fam, 900)); el.style.textTransform = "uppercase";
+    el.style.left = `${T[i][0]}px`; el.style.top = `${T[i][1]}px`;
+    el.style.transform = "translate(-50%, -50%)";
+    world.appendChild(el);
+    const r = window.MLLook ? MLLook.rich(el, s, { look: L, family: fam, weight: 800 }) : (el.textContent = String(s || ""), { words: [], marks: [] });
+    const lets = [];
+    r.words.forEach(w => {
+      const t = w.textContent; w.textContent = "";
+      [...t].forEach(ch => { const sp = document.createElement("span"); sp.textContent = ch; w.appendChild(sp); lets.push(sp); });
+    });
+    return { el, lets, n: Math.max(1, plain(s).replace(/\s/g, "").length), t0: [2, 52, 155][i], smear: [[48, 140], null, [140, 184]][i], cx: T[i][0], cy: T[i][1] };
+  });
+  // one size for all lines: V.size, but the longest line stays within ~0.8 of the frame's width
+  const layout = () => {
+    const maxW = W * 0.8;
+    let fs = V.size * U;
+    texts.forEach(t => { t.el.style.fontSize = `${fs}px`; });
+    const wmax = Math.max(...texts.map(t => t.el.offsetWidth), 1);
+    if (wmax > maxW) { fs *= maxW / wmax; texts.forEach(t => { t.el.style.fontSize = `${fs}px`; }); }
+    texts.forEach(t => { t.w = t.el.offsetWidth; t.h = t.el.offsetHeight; });
+  };
+  layout();
+
+  // ---- the path: dashes along a curve (world px), from just above line 1 round to line 3
+  const PTS = [[-41, -126], [-93, -278], [-57, -404], [10, -464], [79, -500], [203, -527], [369, -535], [755, -480], [1258, -629], [1452, -614],
+    [1754, -576], [2036, -463], [2277, -284], [2463, -51], [2580, 220], [2619, 512], [2622, 705]].map(p => [p[0] * R, p[1] * R]);
+  const samples = [];                              // Catmull-Rom through the points
+  for (let i = 0; i < PTS.length - 1; i++) {
+    const p0 = PTS[Math.max(0, i - 1)], p1 = PTS[i], p2 = PTS[i + 1], p3 = PTS[Math.min(PTS.length - 1, i + 2)];
+    for (let k = 0; k < 24; k++) {
+      const t = k / 24, t2 = t * t, t3 = t2 * t;
+      samples.push([0, 1].map(j => 0.5 * ((2 * p1[j]) + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3)));
+    }
+  }
+  samples.push(PTS[PTS.length - 1]);
+  const cum = [0]; for (let i = 1; i < samples.length; i++) cum.push(cum[i - 1] + Math.hypot(samples[i][0] - samples[i - 1][0], samples[i][1] - samples[i - 1][1]));
+  const at = s => { let i = 1; while (i < cum.length - 1 && cum[i] < s) i++; const k = (s - cum[i - 1]) / Math.max(1e-6, cum[i] - cum[i - 1]); return [lerp(samples[i - 1][0], samples[i][0], k), lerp(samples[i - 1][1], samples[i][1], k)]; };
+  const DL = 77 * R, DG = 44 * R, DT = 18.6 * R;
+  const dashes = [];
+  for (let s = 0; s + DL <= cum[cum.length - 1] + 1; s += DL + DG) {
+    const a = at(s), b = at(s + DL), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const el = document.createElement("div"); el.className = "dash";
+    Object.assign(el.style, { width: `${DL}px`, height: `${DT}px`, borderRadius: `${DT / 2}px`, background: pathCol,
+      left: `${m[0] - DL / 2}px`, top: `${m[1] - DT / 2}px`, transform: `rotate(${Math.atan2(b[1] - a[1], b[0] - a[0])}rad)` });
+    world.insertBefore(el, world.firstChild);
+    dashes.push({ el, x: m[0], y: m[1], on: 1 });
+  }
+  const behind = (d, t) => Math.abs(d.x - t.cx) < t.w / 2 + 24 * R && Math.abs(d.y - t.cy) < t.h / 2 + 40 * R;
+
+  // ---- one frame: the camera, the typed letters, the smear of a text in flight, the dashes' fade into the dark
+  const S = Math.round(V.start);
+  const step = t => clamp(36 / t.n, 0.8, 2.6);       // frames a letter (about 2 for the sample line)
+  function render(tt) {
+    const g = tt * FPS - S;
+    world.style.opacity = g < 0 ? "0" : "1";
+    if (g < 0) return;
+    const c = camAt(g), cp = camAt(g - 1);
+    world.style.transform = `translate3d(${AX}px, ${AY}px, ${c.zc}px) rotateX(${c.p}deg) rotateZ(${c.h}deg) translate3d(${-c.fx}px, ${-c.fy}px, 0px)`;
+    const sFocus = P / (P - c.zc), boost = tab(FOG, g)[0];   // the reference's camera comes close to the big arc: its dashes stay bright
+    texts.forEach(t => {
+      const st = step(t);
+      t.lets.forEach((sp, i) => { sp.style.visibility = g >= t.t0 + i * st - 0.001 ? "visible" : "hidden"; });
+      const a = project(c, t.cx, t.cy), b = project(cp, t.cx, t.cy), sp = Math.hypot(a[0] - b[0], a[1] - b[1]) / R;
+      const bl = t.smear && g < t.smear[1] && g >= t.smear[0] ? Math.max(0, 0.13 * sp - 0.3) * R : 0;     // line 1 leaving and line 3 arriving smear
+      t.el.style.filter = bl > 0.4 ? `blur(${bl.toFixed(2)}px)` : "none";
+      t.el.style.visibility = g < t.t0 - 1 || a[0] < -2 * W || a[0] > 3 * W ? "hidden" : "visible";
+    });
+    dashes.forEach(d => {
+      const pr = project(c, d.x, d.y), r = pr[2] / sFocus;
+      let o = clamp(0.4 + 6 * (r + boost - 0.9), 0.4, 1);
+      if (pr[1] < -80 * R || pr[1] > H + 80 * R || pr[0] < -140 * R || pr[0] > W + 140 * R) o = 0;      // out of view: not drawn
+      else if (texts.some(t => behind(d, t))) o = 0;                                                      // behind a line of text
+      if (o !== d.on) { d.el.style.opacity = o.toFixed(3); d.on = o; }
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: V.shake > 0 ? [{ f: S + 97, amount: 1.5 }, { f: S + 183, amount: 1.5 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 17 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font); the lines are measured again with the real font first
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { layout(); render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+{
+ "name": "Dotted path steps",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A row of light dots across a dark frame while the camera slowly pushes in; a dashed glowing line is drawn through them from the left, faster and faster, and every named dot gets its name the moment the line reaches it; the dots then turn to a second colour.",
+ "use_for": [
+  "steps",
+  "roadmap",
+  "timeline",
+  "process",
+  "journey",
+  "milestones",
+  "3 points",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "path",
+  "dots",
+  "dashed line",
+  "steps",
+  "roadmap",
+  "labels",
+  "push-in",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0 the dots are there and the camera starts a slow push-in (x1.25 by f104); from f14 the dashed line is drawn through them from the left edge, slowly at first and then faster and faster to f44; each name grows from nothing in 9 f (decelerating) as the line reaches its dot (f33, f38, f40); f64-f76 the dots turn from light to a second colour; then it holds to the end",
+ "tracks": [
+  {
+   "name": "push-in",
+   "what": "the whole scene scales up about its centre (x1.25)",
+   "start_f": 0,
+   "length_f": 105,
+   "easing": "slow start, almost linear, soft end (measured)"
+  },
+  {
+   "name": "dashed line",
+   "what": "the dashed glowing line is drawn through the dots from the left",
+   "start_f": 14,
+   "length_f": 30,
+   "easing": "accelerating: slow start, then faster and faster (measured)"
+  },
+  {
+   "name": "names",
+   "what": "each name grows from nothing as the line reaches its dot",
+   "start_f": 33,
+   "length_f": 17,
+   "easing": "cubic-bezier(0.232, 0.54, 0.124, 0.918), 9 f each"
+  },
+  {
+   "name": "dots turn",
+   "what": "the dots change from light to the second colour",
+   "start_f": 64,
+   "length_f": 12,
+   "easing": "quick first frames, then linear"
+  },
+  {
+   "name": "hold",
+   "what": "everything still except the push-in tail (the film grain moves)",
+   "start_f": 105,
+   "length_f": 15,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  18,
+  28,
+  36,
+  42,
+  50,
+  70,
+  80,
+  118
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "radar-grid-ruler-text",
+ "frames": 160,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the big text's first word drops in"
+  },
+  {
+   "f": "start + round(20 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 500,
+   "to": 2600,
+   "db": -8,
+   "what": "the camera dives toward the radar"
+  },
+  {
+   "f": "start + round(66 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 400,
+   "to": 2200,
+   "db": -9,
+   "what": "the ruler scrolls in"
+  }
+ ]
+}

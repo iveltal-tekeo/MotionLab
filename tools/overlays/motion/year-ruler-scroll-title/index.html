@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (words fade in one by one; *bold* _italic_ ==highlight== ^signal^)", "default": "A new chapter begins"},
+  {"id": "year", "type": "number", "label": "First year on the ruler (the tick near the top of the first frame)", "default": 1988, "min": 1, "max": 2999, "step": 1},
+  {"id": "step", "type": "number", "label": "Years from one tick to the next", "default": 1, "min": 1, "max": 100, "step": 1},
+  {"id": "title_size", "type": "number", "label": "Title size (px at a 1080-px short side; it shrinks to fit)", "default": 68, "min": 20, "max": 220, "step": 1},
+  {"id": "label_size", "type": "number", "label": "Year size (px at a 1080-px short side)", "default": 215, "min": 60, "max": 400, "step": 5},
+  {"id": "ruler_colour", "type": "enum", "label": "Ruler colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "year-ruler-scroll-title" (2026-10-22): a vertical ruler of years (a thick line, a tick and a big year every step) starts out of focus and
+     scrolls down (the speed builds from rest to ~55 px a frame at f17 and eases to a stop at f34), shrinking to 0.77 x
+     and sliding to the middle of the frame as it settles (f0-f32); it comes into focus by f14. At f34 it topples to the
+     left about a point below the frame (a rotation that accelerates, f34-f44) and is gone by f46. A title then fades in
+     word by word (f55-f90) on a warm glow that is there all along. Numbers measured from the reference's frames
+     (720 x 1280 units: the ticks' spacing, the line's place, the scroll speed, the tilt). Look-aware. MotionLab's own
+     code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #ruler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; }
+  #ruler .tk, #ruler .yr, #rline { position: absolute; left: 0; top: 0; }
+  .yr { white-space: nowrap; line-height: 1; font-synthesis: none; }
+  #ttl { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.1; letter-spacing: 0.05em; font-synthesis: none; }
+  #ttl .w { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="ruler"><div id="rline"></div></div>
+    <div id="ttl" class="ml-body"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const pick = { ink: L.ink, paper: L.paper, signal: L.signal, deep: L.deep, mustard: L.mustard };
+  const rc = pick[V.ruler_colour] || L.signal;
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+
+  // ---- the ground: a dark page with a warm glow low in the middle (it is there all along)
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `linear-gradient(180deg, ${rgba(night, 0)} 62%, ${rgba(night, 0.35)} 100%), radial-gradient(ellipse 95% 56% at 50% 64%, ${rgba(L.signal, 0.26)} 0%, ${rgba(L.signal, 0.17)} 45%, ${rgba(L.signal, 0)} 100%), ${night}`;
+
+  // ---- the measured tables (g = the frame minus "Starts at frame"; clip px)
+  const SP = [[0, 196], [4, 196], [5, 195.5], [6, 195], [7, 194.5], [8, 193], [9, 191.5], [10, 190], [11, 188], [12, 188], [13, 184.5], [14, 181.5], [15, 178.5], [16, 175], [17, 171],
+              [18, 167.5], [19, 164], [20, 161], [21, 159], [22, 158], [23, 156], [24, 155], [25, 154], [26, 153.5], [27, 153], [28, 152], [30, 152], [31, 151.5], [32, 151]].map(r => [r[0], r[1] / 196]);   // scale
+  const LX = [[0, 423], [2, 422], [4, 421], [6, 419], [8, 416], [10, 412], [12, 408], [14, 400], [16, 390], [18, 380], [20, 372], [22, 368], [24, 364], [26, 361], [28, 360], [30, 359], [32, 358]];   // the line's x
+  const MV = [0, 1.1, 2, 3, 5, 5.9, 9, 10, 12.1, 15.2, 19.3, 22.7, 28, 32.7, 40.5, 46.2, 53.2, 55.6, 54.9, 50, 41.7, 34.6, 29, 22.3, 19.3, 15.4, 11.7, 9.8, 7.6, 7, 5, 3.9, 1.9, 1, 1];   // px a frame the ruler moves down
+  const BL = [[0, 6], [4, 5], [8, 3.4], [12, 1.4], [15, 0]];                                     // out-of-focus blur (px)
+  const TH = [[33, 0], [34, 0.13], [35, 0.61], [36, 1.44], [37, 2.76], [38, 4.64], [39, 7.18], [40, 10.57], [41, 13.94], [42, 17.67], [43, 26.1], [44, 34.8], [45, 46]];   // the topple (deg)
+  const scaleAt = g => tab(SP, g)[0];
+  // the distance scrolled so far in ruler units (a frame's move divided by the scale it had)
+  const DS = [0];
+  for (let f = 1; f <= 50; f++) DS.push(DS[f - 1] + (f < MV.length ? MV[f] : 0) / scaleAt(f));
+  const dist = g => { const i = Math.floor(clamp01(g / 50) * 50); const a = DS[Math.min(i, 50)], b = DS[Math.min(i + 1, 50)]; return a + (b - a) * (g - i); };
+  const S0 = 196, Y0 = 217 - 640;                            // tick spacing at scale 1; where the first year's tick starts (clip px from the middle)
+
+  // ---- the ruler: a line, a tick and a year for each step; the last year is 4 steps up from the first
+  const ruler = q("ruler"), rline = q("rline");
+  const NB = 8;                                              // ticks below the first year (the ruler ends one step past the last year)
+  const fam = V.display_font, fsY = V.label_size * U;
+  const ticks = [];
+  for (let k = -NB; k <= 4; k++) {                           // k = steps up from the first year
+    const tk = document.createElement("div"); tk.className = "tk"; tk.style.background = rc; ruler.appendChild(tk);
+    const yr = document.createElement("div"); yr.className = "yr ml-display"; yr.textContent = String(Math.round(V.year + k * V.step));
+    Object.assign(yr.style, { fontSize: `${fsY}px`, fontWeight: String(fw(fam, 700)), color: glare }); ruler.appendChild(yr);
+    ticks.push({ k, tk, yr, w: 0, h: 0 });
+  }
+  rline.style.background = rc;
+
+  // ---- the title
+  const ttl = q("ttl");
+  const tfam = V.body_font;
+  Object.assign(ttl.style, { fontSize: `${V.title_size * U}px`, fontWeight: String(fw(tfam, 300)), color: glare });
+  const rich = window.MLLook ? MLLook.rich(ttl, V.title, { look: L, family: tfam, weight: 300 }) : { words: [] };
+  if (!window.MLLook) ttl.textContent = V.title;
+  const words = rich.words;
+  let ready = false, tw = 0, th = 0;
+  function layout() {
+    let fs = V.title_size * U; ttl.style.fontSize = `${fs}px`;
+    const w0 = ttl.offsetWidth, maxW = 0.9 * W;
+    if (w0 > maxW) { fs *= maxW / w0; ttl.style.fontSize = `${fs}px`; }
+    tw = ttl.offsetWidth; th = ttl.offsetHeight;
+    ttl.style.left = `${((W - tw) / 2).toFixed(2)}px`; ttl.style.top = `${((H / 2) - th / 2).toFixed(2)}px`;
+    ticks.forEach(T => { T.w = T.yr.offsetWidth; T.h = T.yr.offsetHeight; });
+    ready = true;
+  }
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on1 = g >= 0 && g < 46;
+    ruler.style.display = on1 ? "block" : "none";
+    ttl.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0 || !ready) return;
+    if (on1) {
+      const gs = Math.min(g, 33), s = scaleAt(gs), lx = tab(LX, gs)[0] * K, D = dist(g);
+      const th_ = g >= 33 ? tab(TH, g)[0] : 0;
+      ruler.style.transform = `rotate(${(-th_).toFixed(3)}deg)`;
+      ruler.style.transformOrigin = `${360 * K}px ${1705 * K}px`;
+      const blur = tab(BL, g)[0] * K;
+      ruler.style.filter = blur > 0.2 ? `blur(${blur.toFixed(2)}px)` : "none";
+      const ty = k => 640 + s * (-k * S0 + Y0 + D);          // a tick's y (clip px)
+      ticks.forEach(T => {
+        const y = ty(T.k) * K, on = y > -300 * K && y < 1700 * K;
+        T.tk.style.display = T.yr.style.display = on ? "block" : "none";
+        if (!on) return;
+        const tw_ = 246 * s * K, th__ = 15 * s * K;
+        Object.assign(T.tk.style, { width: `${tw_.toFixed(2)}px`, height: `${th__.toFixed(2)}px`, transform: `translate(${(lx - tw_ / 2).toFixed(2)}px, ${(y - th__ / 2).toFixed(2)}px)`, borderRadius: `${(th__ / 2).toFixed(2)}px` });
+        const xr = lx - 153 * s * K, yc = y - 12 * s * K;
+        T.yr.style.transformOrigin = `${T.w}px ${T.h / 2}px`;
+        T.yr.style.transform = `translate(${(xr - T.w).toFixed(2)}px, ${(yc - T.h / 2).toFixed(2)}px) scale(${s.toFixed(4)})`;
+      });
+      // the line: from one step above the last year down past the frame's foot
+      const ltop = ty(4 + 1) * K, lw = 20 * s * K;
+      Object.assign(rline.style, { width: `${lw.toFixed(2)}px`, height: `${(4000 * K).toFixed(0)}px`, transform: `translate(${(lx - lw / 2).toFixed(2)}px, ${ltop.toFixed(2)}px)`, borderRadius: `${(lw / 2).toFixed(2)}px` });
+    }
+    // the title: the words fade in one by one (a word every 12 f, each over 12 f)
+    words.forEach((wd, i) => { wd.style.opacity = clamp01((g - (55 + 12 * i)) / 12).toFixed(3); });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 8, hits: V.shake > 0 ? [{ f: S + 38, amount: 2 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 27 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the years and the title
+  // are measured here, with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [300, 400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

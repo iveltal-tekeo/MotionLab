@@ -1,0 +1,107 @@
+{
+ "name": "Neon word swap with flash",
+ "kind": "text",
+ "category": "Text",
+ "what": "Bold glowing words hit one after another in the same spot, each one slamming in big and blurred and snapping to size; then a bright flash fills the frame and drops away to black, and the last, bigger word appears letter by letter and holds with its glow.",
+ "use_for": [
+  "hook",
+  "title",
+  "statement",
+  "list of words",
+  "intro",
+  "neon",
+  "punchline",
+  "opener"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "word swap",
+  "flash",
+  "slam",
+  "neon",
+  "bold",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f4 (00:00:00:00-00:00:00:04) the first word slams in big and blurred and snaps to size; f15-f17 (00:00:00:15-00:00:00:17) and f30-f32 (00:00:01:00-00:00:01:02) the next two do the same, each cutting away the one before; f39 (00:00:01:09) a white flash fills the frame and turns pale yellow to f44; f40-f54 (00:00:01:10-00:00:01:24) the last word's letters appear one after another; f45-f50 (00:00:01:15-00:00:01:20) the flash drops away to black; then it holds to f89 (00:00:02:29)",
+ "tracks": [
+  {
+   "name": "word 1 slams",
+   "what": "the first word hits big and blurred and snaps down to size with a small bounce",
+   "start_f": 0,
+   "length_f": 5,
+   "easing": "decelerating (fast)"
+  },
+  {
+   "name": "word 2 slams",
+   "what": "the next word cuts in the same way",
+   "start_f": 15,
+   "length_f": 3,
+   "easing": "decelerating (fast)"
+  },
+  {
+   "name": "word 3 slams",
+   "what": "the third word cuts in the same way",
+   "start_f": 30,
+   "length_f": 3,
+   "easing": "decelerating (fast)"
+  },
+  {
+   "name": "flash",
+   "what": "a full-frame flash, white turning pale yellow, over the third word",
+   "start_f": 39,
+   "length_f": 6,
+   "easing": "stepped"
+  },
+  {
+   "name": "last word",
+   "what": "the last word's letters appear one after another under the flash",
+   "start_f": 40,
+   "length_f": 15,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "flash drops",
+   "what": "the flash falls away to black and the glow switches on",
+   "start_f": 45,
+   "length_f": 6,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the last word holds with its glow",
+   "start_f": 55,
+   "length_f": 35,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3",
+  "text_4"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.65,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  1,
+  3,
+  16,
+  31,
+  39,
+  42,
+  44,
+  45,
+  48,
+  52,
+  70
+ ]
+}

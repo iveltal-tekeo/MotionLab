@@ -1,0 +1,87 @@
+{
+ "name": "Glow text, ink stroke",
+ "kind": "text",
+ "category": "Text",
+ "what": "A heavy word sits small and dim in the middle of a dark frame; a glowing ink stroke with a long tail loops around it, cuts through it twice and sweeps out to the right, and the word grows, thickens and lights up with a soft glow, then drifts a hair bigger to the end.",
+ "use_for": [
+  "title",
+  "statement",
+  "hook",
+  "word reveal",
+  "neon",
+  "music",
+  "intro",
+  "kinetic text",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "neon",
+  "ink",
+  "stroke",
+  "brush",
+  "grow",
+  "bloom",
+  "dark",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f7-f58 a tapered ink stroke flies a looping path around the word (in from the left f7, over the top f12, down to the lower left f16, through the word f19-f21, round the right side f27-f34, across the word f36, round the upper left f39-f43, down to the lower left f45-f52, out through the top of the word to the right f55-f58); f36-f88 the word grows to 1.33 times (an S-curve), gets bolder and brighter, and blooms in a soft glow (f50-f68); then it drifts a hair bigger to the end",
+ "tracks": [
+  {
+   "name": "ink stroke",
+   "what": "a tapered stroke with a thick head loops around the word and out to the right",
+   "start_f": 7,
+   "length_f": 52,
+   "easing": "a fast, looping path (measured head positions)"
+  },
+  {
+   "name": "word grows",
+   "what": "the word grows to 1.33 times and thickens as the stroke finishes",
+   "start_f": 36,
+   "length_f": 52,
+   "easing": "S-curve (measured)"
+  },
+  {
+   "name": "bloom",
+   "what": "the word brightens and a soft glow spreads around it",
+   "start_f": 44,
+   "length_f": 24,
+   "easing": "ease in"
+  },
+  {
+   "name": "drift",
+   "what": "the word drifts a hair bigger",
+   "start_f": 96,
+   "length_f": 24,
+   "easing": "slow"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  9,
+  12,
+  16,
+  20,
+  28,
+  36,
+  44,
+  50,
+  56,
+  62,
+  80,
+  100
+ ]
+}

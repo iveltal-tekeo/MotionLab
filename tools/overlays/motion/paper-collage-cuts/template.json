@@ -1,0 +1,82 @@
+{
+ "name": "Paper strip collage cuts",
+ "kind": "text",
+ "category": "Text",
+ "what": "A torn paper strip with one line of text lies on a tabletop that cuts to a new surface every 7 frames - paper, linen, stone, kraft, cutting mats, plaster, wood - while the strip stays; it changes colour (red, cream, wine) and size a little at each cut, and grows and tilts a touch more as it goes.",
+ "use_for": [
+  "headline",
+  "opener",
+  "title",
+  "hook",
+  "intro",
+  "craft",
+  "diy",
+  "short form",
+  "rapid cuts"
+ ],
+ "tags": [
+  "text",
+  "paper",
+  "torn",
+  "strip",
+  "collage",
+  "cuts",
+  "tabletop",
+  "texture",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f195: a hard cut of the surface every 7 f (f7, f14 ... f189; 28 pictures); at each cut the strip changes colour and size a little; inside a cut the surface and the strip push in linearly (+0.65 % scale, -0.18 deg, about 5 px drift in 6 f); over the whole clip the strip grows (583 to 737 px of the 720-px original) and tilts (0 to -5.5 deg)",
+ "tracks": [
+  {
+   "name": "surface cuts",
+   "what": "the tabletop cuts to a new surface (14 different ones, cycled twice)",
+   "start_f": 7,
+   "length_f": 189,
+   "easing": "none (hard cuts, every 7 f)"
+  },
+  {
+   "name": "strip per cut",
+   "what": "the strip changes colour (red, cream, wine) and size a little at each cut",
+   "start_f": 7,
+   "length_f": 189,
+   "easing": "none (hard cuts)"
+  },
+  {
+   "name": "push-in",
+   "what": "inside each cut the surface and the strip push in a little (+0.65 %, -0.18 deg, 5 px)",
+   "start_f": 0,
+   "length_f": 6,
+   "easing": "linear"
+  },
+  {
+   "name": "grow and tilt",
+   "what": "over the clip the strip grows about 26 % and tilts from 0 to -5.5 deg",
+   "start_f": 0,
+   "length_f": 196,
+   "easing": "steady, stepped at the cuts"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  6,
+  7,
+  24,
+  40,
+  58,
+  100,
+  150,
+  195
+ ]
+}

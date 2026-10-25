@@ -1,0 +1,27 @@
+{
+ "name": "shaking-glow-text",
+ "frames": 300,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(60 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the word pops to 1.4x with a stronger glow"
+  },
+  {
+   "f": "start + round(173 * fps / 30)",
+   "kind": "zap",
+   "db": -9,
+   "what": "the strobe starts"
+  },
+  {
+   "f": "start + round(193 * fps / 30)",
+   "kind": "impact",
+   "db": -6,
+   "what": "the colour shift: the second word lands"
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "neon-circle-spin-text-reveal",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 400,
+   "to": 2400,
+   "db": -10,
+   "what": "the neon ring spins shut"
+  },
+  {
+   "f": "start + round(44 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 2200,
+   "to": 450,
+   "db": -11,
+   "what": "the rings contract"
+  },
+  {
+   "f": "start + round(63 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the disc opens and the word appears"
+  }
+ ]
+}

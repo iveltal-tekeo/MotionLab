@@ -1,0 +1,34 @@
+{
+ "name": "ball-drag-line-text-reveal",
+ "frames": 240,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(10 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 2600,
+   "to": 500,
+   "db": -8,
+   "what": "the ball dives in from the right and drags the line"
+  },
+  {
+   "f": "start + round(72 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2200,
+   "db": -10,
+   "what": "the ball and the line slide left together"
+  },
+  {
+   "f": "start + round(146 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.3",
+   "db": -6,
+   "what": "the ball is flung away and the line is yanked out"
+  }
+ ]
+}

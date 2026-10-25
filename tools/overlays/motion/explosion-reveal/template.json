@@ -1,0 +1,90 @@
+{
+ "name": "Exploding text",
+ "kind": "text",
+ "category": "Text",
+ "what": "A line of glowing fire-coloured capitals types itself on in the middle of a dark scene, holds, then blows apart: every letter tumbles out across the whole frame, drifting to rest, shrinking and fading, changing colour from gold to red as it drops.",
+ "use_for": [
+  "explosion",
+  "impact",
+  "drop",
+  "hype title",
+  "big reveal",
+  "countdown",
+  "transition out",
+  "sale",
+  "gaming",
+  "music"
+ ],
+ "tags": [
+  "text",
+  "explosion",
+  "scatter",
+  "letters",
+  "typing",
+  "glow",
+  "fire",
+  "particles",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f30 the line types on letter by letter (about 1.5 f a letter); f31-f49 it holds; f50 the letters smear and twist; f51-f56 they fly most of the way out across the frame; f56-f80 they drift the last bit and stop (a fast burst, then a long soft end); f60-f97 they shrink to ~0.6 and fade out; each letter's colour follows its height in the frame (gold above the middle, red below)",
+ "tracks": [
+  {
+   "name": "type on",
+   "what": "the line types on letter by letter",
+   "start_f": 1,
+   "length_f": 30,
+   "easing": "none"
+  },
+  {
+   "name": "hold",
+   "what": "the glowing line holds while the grid sways",
+   "start_f": 31,
+   "length_f": 18,
+   "easing": "none"
+  },
+  {
+   "name": "burst",
+   "what": "the letters smear, twist and fly out across the frame",
+   "start_f": 50,
+   "length_f": 6,
+   "easing": "fast start, decelerating"
+  },
+  {
+   "name": "drift",
+   "what": "the letters drift the last bit and stop; they shrink",
+   "start_f": 56,
+   "length_f": 24,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "fade",
+   "what": "the letters fade out",
+   "start_f": 60,
+   "length_f": 38,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 53,
+ "check_frames": [
+  0,
+  10,
+  30,
+  49,
+  50,
+  51,
+  53,
+  60,
+  80
+ ]
+}

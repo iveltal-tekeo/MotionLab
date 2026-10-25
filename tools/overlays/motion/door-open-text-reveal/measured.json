@@ -1,0 +1,18 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f60 (00:00:02:00): #t2 > span:nth-of-type(3) \"idea\" off the frame by 368 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f60 (00:00:02:00): #t2 > span:nth-of-type(3) \"idea\" off the frame by 368 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Make it glow"},
+  {"id": "subtitle", "type": "string", "label": "Subtitle", "default": "Underline what matters"},
+  {"id": "size", "type": "number", "label": "Title size (px at a 1080-px short side)", "default": 230, "min": 40, "max": 400, "step": 1},
+  {"id": "sub_pct", "type": "number", "label": "Subtitle size (% of the title)", "default": 58, "min": 30, "max": 100, "step": 1},
+  {"id": "text_colour", "type": "enum", "label": "Text colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "signal", "label": "Signal"}]},
+  {"id": "line", "type": "enum", "label": "Underline colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "glow", "type": "number", "label": "Glow (0 = none)", "default": 70, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, height=720">
+<!-- MotionLab motion template "text-underline-stroke-draw" (2026-10-22): a glowing title and subtitle with a hand-drawn swoosh underline. On a dark ground the title
+     rises from below the frame (f0-f19) and overshoots its place by ~100 px before settling back (the subtitle does the
+     same two frames later, f2-f20); a red-hot dot lights up at the left at f11 and grows into a tapered swoosh that is
+     drawn left to right with a hook at the end (f11-f30, accelerating then decelerating), fat and bright at birth and
+     thinning to its resting width; then everything holds. Every offset and the swoosh's centre line are the reference's,
+     measured per frame. Look-aware: ground, text colours, fonts and film grain come from the look tokens. MotionLab's
+     own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .tx { position: absolute; left: 50%; white-space: nowrap; line-height: 1.1; font-synthesis: none; transform-origin: 50% 50%; text-align: center; }
+  #sv { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="1.5" data-width="1280"
+     data-height="720">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <svg id="sv" viewBox="0 0 1280 720" width="1280" height="720">
+      <defs>
+        <filter id="b1" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1480" height="920"><feGaussianBlur id="g1" stdDeviation="8"/></filter>
+        <filter id="b2" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1480" height="920"><feGaussianBlur id="g2" stdDeviation="22"/></filter>
+      </defs>
+      <path id="p2" filter="url(#b2)" d=""/><path id="p1" filter="url(#b1)" d=""/><path id="p0" d=""/><path id="pc" d=""/>
+    </svg>
+    <div id="t1" class="tx ml-display"></div><div id="t2" class="tx ml-body"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 45;
+  const W = 1280, H = 720;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  try { if (document.fonts && document.fonts.load) { document.fonts.load(`400 100px "${V.display_font}"`, "Make it glow"); document.fonts.load(`700 100px "${V.body_font}"`, "Underline what matters"); } } catch (e) {}
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark ground (the ink), glowing words and a hot swoosh in token colours
+  const night = L.dark ? L.paper : L.ink, lit = L.dark ? L.ink : L.paper;
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background ? night : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const tc = V.text_colour === "signal" ? L.signal : V.text_colour === "paper" ? lit : L.mustard;
+  const lc = V.line === "mustard" ? L.mustard : V.line === "paper" ? lit : L.signal;
+  const GL = Math.max(0, V.glow) / 70;
+  const glowOf = fs => GL > 0 ? [`0 0 ${(0.1 * fs).toFixed(1)}px ${L.rgba(tc, Math.min(1, 0.7 * GL))}`, `0 0 ${(0.4 * fs).toFixed(1)}px ${L.rgba(tc, Math.min(1, 0.55 * GL))}`,
+    `0 0 ${(0.85 * fs).toFixed(1)}px ${L.rgba(tc, Math.min(1, 0.34 * GL))}`].join(", ") : "none";
+  const FT = V.size * U, FS = FT * V.sub_pct / 100;
+  const TY = 248, SY = 420;                                          // resting centres (reference 1280 x 720)
+  const els = [q("t1"), q("t2")];
+  [[V.title, FT, V.display_font, 400, TY], [V.subtitle, FS, V.body_font, 700, SY]].forEach(([txt, fs, fam, wt, y], i) => {
+    const el = els[i];
+    Object.assign(el.style, { fontSize: `${fs}px`, color: tc, top: `${y}px`, fontWeight: String(fw(fam, wt)), textShadow: glowOf(fs) });
+    if (window.MLLook) MLLook.rich(el, txt, { look: L, family: fam, weight: wt }); else el.textContent = txt;
+  });
+  const MAXW = [0.8 * W, 0.94 * W];
+
+  // ---- the words: offsets from the resting place in px (negative = above it), measured per frame; the title leaves
+  // the bottom edge at f1 and overshoots by ~105 px at f10, the subtitle follows 2 frames later and overshoots ~100 px at f12
+  const OT = [[0, 597], [1, 379], [2, 248], [3, 148.5], [4, 69], [5, 13], [6, -33], [7, -67], [8, -87], [9, -100], [10, -105], [11, -95], [12, -69], [13, -49], [14, -31], [15, -23], [16, -13], [17, -8], [18, -3], [19, 0]];
+  const OS = [[0, 665], [1, 550], [2, 384], [3, 253], [4, 154], [5, 79], [6, 23], [7, -20.5], [8, -51], [9, -77], [10, -90], [11, -97], [12, -100], [13, -82], [14, -51], [15, -31], [16, -18], [17, -11.5], [18, -5], [19, -2.5], [20, 0]];
+
+  // ---- the swoosh: its centre line (x, y) at rest, the x of its drawing tip per frame, and its width profile
+  const CL = [[91, 604], [117, 598], [165, 590], [213, 582], [261, 573], [309, 564], [357, 556], [405, 549], [453, 540], [501, 533], [549, 527], [597, 522], [645, 517], [693, 515],
+    [741, 512], [789, 509], [837, 509], [885, 506], [933, 505], [981, 502], [1029, 499], [1077, 491], [1125, 484], [1149, 476], [1173, 466], [1197, 453], [1213, 445]];
+  const HEAD = [[11, 96], [12, 100], [13, 126], [14, 146], [15, 173], [16, 207], [17, 250], [18, 302], [19, 364], [20, 434], [21, 516], [22, 606], [23, 704], [24, 804], [25, 910],
+    [26, 1008], [27, 1094], [28, 1164], [29, 1190], [30, 1205]];
+  const X0 = 91, X1 = 1213;
+  const yAt = x => { let i = 0; while (i < CL.length - 2 && CL[i + 1][0] < x) i++; const a = CL[i], b = CL[i + 1]; return a[1] + (b[1] - a[1]) * Math.min(1, Math.max(0, (x - a[0]) / (b[0] - a[0]))); };
+  const bodyCol = lc, coreCol = V.line === "mustard" ? lit : L.mustard;
+  [["p2", lc, 0.5], ["p1", lc, 0.9], ["p0", bodyCol, 1], ["pc", coreCol, 0.55]].forEach(([id, c, o]) => { q(id).setAttribute("fill", c); q(id).setAttribute("fill-opacity", String(o)); });
+  q("g1").setAttribute("stdDeviation", String(8 * U / 0.667)); q("g2").setAttribute("stdDeviation", String(22 * U / 0.667));
+  function swoosh(g) {
+    const head = tab(HEAD, g)[0];
+    const show = g >= 11.5;
+    if (!show) { ["p2", "p1", "p0", "pc"].forEach(id => q(id).setAttribute("d", "")); return; }
+    const xe = Math.min(Math.max(head, X0 + 34), X1);
+    const th = Math.min(90, (xe - X0) * 0.7 + 10);
+    const a = g < 15 ? 1.0 * (g - 11) / 4 : Math.max(0, 1.0 * (1 - (g - 15) / 14));    // fat and bright at birth, thinning with time
+    const built = g < 11.5 ? 0 : Math.min(1, (g - 11.2) / 1.6);                                  // the glow lights up over 3 frames
+    [["p2", 34], ["p1", 22], ["p0", 13], ["pc", 5.5]].forEach(([id, base]) => {
+      const top = [], bot = [], n = Math.max(6, Math.ceil((xe - X0) / 10));
+      for (let i = 0; i <= n; i++) {
+        const x = X0 + (xe - X0) * i / n, y = yAt(x);
+        const tp = Math.pow(Math.min(1, (x - X0) / 110), 0.6) * Math.pow(Math.min(1, (X1 - x) / 260), 0.8) * (xe < 1205 ? Math.pow(Math.min(1, (xe - x) / th), 0.8) : 1);
+        const hw = base * U / 0.667 * tp * (1 + a * Math.exp(-(x - 110) / 130)) * built;
+        top.push(`${x.toFixed(1)} ${(y - hw).toFixed(1)}`); bot.push(`${x.toFixed(1)} ${(y + hw).toFixed(1)}`);
+      }
+      q(id).setAttribute("d", `M ${top.join(" L ")} L ${bot.reverse().join(" L ")} Z`);
+    });
+  }
+
+  const S = Math.round(V.start);
+  function render(t) {
+    const g0 = Math.round(t * FPS * 1000) / 1000 - S, g = Math.max(0, g0);
+    hand.style.opacity = (g0 < 0 && !V.background) ? "0" : "1";
+    els.forEach((el, i) => {
+      const fit = Math.min(1, MAXW[i] / Math.max(1, el.offsetWidth));
+      const off = tab(i ? OS : OT, g)[0];
+      el.style.transform = `translate(-50%, -50%) translateY(${off.toFixed(2)}px) scale(${fit.toFixed(4)})`;
+    });
+    swoosh(g);
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 9 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 21 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

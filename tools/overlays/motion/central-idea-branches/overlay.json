@@ -1,0 +1,27 @@
+{
+ "name": "central-idea-branches",
+ "frames": 180,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 2400,
+   "to": 500,
+   "db": -9,
+   "what": "the title and ring pull back out of the blur"
+  },
+  {
+   "f": "start + round(24 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.3",
+   "from": 400,
+   "to": 2000,
+   "db": -12,
+   "what": "the branches grow out of the ring one after another"
+  }
+ ]
+}

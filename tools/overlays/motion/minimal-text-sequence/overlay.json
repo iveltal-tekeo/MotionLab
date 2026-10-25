@@ -1,0 +1,34 @@
+{
+ "name": "minimal-text-sequence",
+ "frames": 135,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 2600,
+   "to": 500,
+   "db": -9,
+   "what": "the opening word zooms out from huge"
+  },
+  {
+   "f": "start + round((22 + 2.6 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "max(1, min(len(text_2), 8))",
+   "db": -12,
+   "what": "a soft tick for each typed letter"
+  },
+  {
+   "f": "start + round(111 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 500,
+   "to": 2600,
+   "db": -10,
+   "what": "the closing text wipes in"
+  }
+ ]
+}

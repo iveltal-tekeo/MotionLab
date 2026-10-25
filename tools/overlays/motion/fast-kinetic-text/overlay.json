@@ -1,0 +1,31 @@
+{
+ "name": "fast-kinetic-text",
+ "frames": 89,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "riser",
+   "dur": "0.9",
+   "db": -12,
+   "what": "the zoom builds up to the white flood"
+  },
+  {
+   "f": "start + round(49 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the red panel grows out of the left edge"
+  },
+  {
+   "f": "start + round(72 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the last line lands"
+  }
+ ]
+}

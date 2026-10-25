@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Typed title (it appears small, then grows)", "default": "YOUR TITLE"},
+  {"id": "slot1_media", "type": "string", "label": "Tile 1 (left): your video or picture, about square (empty = a placeholder)", "default": ""},
+  {"id": "slot1_focus", "type": "string", "label": "What stays in view in tile 1 (x% y%)", "default": "50% 50%"},
+  {"id": "slot2_media", "type": "string", "label": "Tile 2 (middle): your video or picture, about square (empty = a placeholder)", "default": ""},
+  {"id": "slot2_focus", "type": "string", "label": "What stays in view in tile 2 (x% y%)", "default": "50% 50%"},
+  {"id": "slot3_media", "type": "string", "label": "Tile 3 (right): your video or picture, about square (empty = a placeholder)", "default": ""},
+  {"id": "slot3_focus", "type": "string", "label": "What stays in view in tile 3 (x% y%)", "default": "50% 50%"},
+  {"id": "text_size", "type": "number", "label": "Title size (px at a 1080-px short side; it shrinks to fit)", "default": 225, "min": 60, "max": 420, "step": 5},
+  {"id": "glow", "type": "number", "label": "Title glow (0 = none)", "default": 70, "min": 0, "max": 100, "step": 5},
+  {"id": "glow_colour", "type": "enum", "label": "Corner glow colour", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "float", "type": "number", "label": "Slow float of the scene once the tiles have landed (0 = still, 1 = like the original)", "default": 1, "min": 0, "max": 2, "step": 0.1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "text-zoom-out-footage-slots" (2026-10-22): a title is typed small, letter by letter out of a blur (f12-f53), then grows to its full size
+     about its bottom-left corner while a soft glow comes up (f45-f56, accelerating); it holds, drifting a hair (f56-f92).
+     Then three footage tiles, tilted in the same perspective as the title, slide in and cover most of it: the left one
+     from the left edge (f93-f140, decelerating), the middle one up from the bottom edge (f112-f150), the right one from
+     the right edge (f120-f160); the scene then floats a few pixels to the end (f140-f300). Each tile and the title are a
+     flat rectangle warped by a homography (matrix3d) built from corners measured in the reference's frames (1280 x 720
+     units). A video slot starts when its tile appears. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #ttext, .tile { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #tin { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; letter-spacing: 0.03em; font-synthesis: none; }
+  #tin span { display: inline-block; }
+  .tile { overflow: hidden; visibility: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10.033333" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="world">
+    <div id="ttext"><div id="tin" class="ml-body"></div></div>
+    <div id="t1" class="tile"></div><div id="t2" class="tile"></div><div id="t3" class="tile"></div>
+  </div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 301;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720: its numbers below are in those units
+  const pick = { ink: L.ink, paper: L.paper, signal: L.signal, deep: L.deep, mustard: L.mustard };
+
+  // ---- the ground: a dark page with a glow in two corners (bottom left, top right)
+  const night = L.dark ? L.paper : L.ink, tcol = L.dark ? L.ink : L.paper, gcol = pick[V.glow_colour] || L.deep;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 62% 78% at 0% 100%, ${rgba(gcol, 0.95)} 0%, ${rgba(gcol, 0.5)} 38%, transparent 78%), radial-gradient(ellipse 50% 70% at 100% 0%, ${rgba(gcol, 0.7)} 0%, ${rgba(gcol, 0.3)} 40%, transparent 80%), ${night}`;
+
+  // ---- a flat rectangle (src corners) -> a quad (dst corners) as a CSS matrix3d (a homography, solved here)
+  function homog(src, dst) {
+    const n = 8, M = [];
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = src[i], [X, Y] = dst[i];
+      M.push([x, y, 1, 0, 0, 0, -X * x, -X * y, X]);
+      M.push([0, 0, 0, x, y, 1, -Y * x, -Y * y, Y]);
+    }
+    for (let c = 0; c < n; c++) {
+      let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      [M[c], M[p]] = [M[p], M[c]];
+      for (let r = c + 1; r < n; r++) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+    }
+    const h = new Array(n).fill(0);
+    for (let r = n - 1; r >= 0; r--) { let s = M[r][n]; for (let k = r + 1; k < n; k++) s -= M[r][k] * h[k]; h[r] = s / M[r][r]; }
+    const f = v => v.toFixed(9);
+    return `matrix3d(${f(h[0])},${f(h[3])},0,${f(h[6])},${f(h[1])},${f(h[4])},0,${f(h[7])},0,0,1,0,${f(h[2])},${f(h[5])},0,1)`;
+  }
+
+  // ---- the title: typed small out of a blur, then it grows about its bottom-left corner
+  const tt = q("ttext"), tin = q("tin");
+  const fam = V.body_font, str = String(V.text == null ? "" : V.text);
+  const fs0 = V.text_size * U;
+  Object.assign(tin.style, { fontSize: `${fs0}px`, fontWeight: String(fw(fam, 300)), color: tcol });
+  const letters = Array.from(str).map(ch => { const sp = document.createElement("span"); sp.textContent = ch; sp.style.opacity = "0"; tin.appendChild(sp); return sp; });
+  const probe = document.createElement("span"); probe.style.cssText = "display:inline-block;width:0;height:0"; tin.appendChild(probe);
+  const LT = [12, 18, 22, 24, 28, 33, 38, 45, 53];                        // the frame each letter is sharp (the clip's own rhythm), then 2.5 f a letter
+  const when = j => j < LT.length ? LT[j] : LT[LT.length - 1] + 2.5 * (j - LT.length + 1);
+  const SZ = [[44, 0.368], [45, 0.386], [48, 0.463], [50, 0.555], [52, 0.676], [54, 0.846], [56, 1.0]];   // growth (final size = 1)
+  const X0 = 337, YB = 402, XV = -127, DV = 3450;                          // the title's left edge, baseline, and the vanishing point of its verticals (clip px)
+  let ready = false, bo = 0, capH = 0, twd = 0;
+  function layoutText() {
+    const maxW = (1165 - X0) * K;
+    let fs = fs0; tin.style.fontSize = `${fs}px`;
+    const w0 = Math.max(1, tin.offsetWidth);
+    if (w0 > maxW) { fs = fs0 * maxW / w0; tin.style.fontSize = `${fs}px`; }
+    twd = tin.offsetWidth; bo = probe.offsetTop; capH = 0.7 * fs;
+    const sL = (X0 - XV) / DV, sR = (X0 + twd / K - XV) / DV;
+    const x0 = X0 * K, yb = YB * K;
+    const dst = [[x0, yb - capH], [x0 + twd, yb - capH], [x0 + twd + capH * sR, yb], [x0 + capH * sL, yb]];
+    tt.dataset.m = homog([[0, bo - capH], [twd, bo - capH], [twd, bo], [0, bo]], dst);
+    tin.style.transformOrigin = `0px ${bo}px`;
+    ready = true;
+  }
+  const smooth = x => { const c = clamp01(x); return c * c * (3 - 2 * c); };
+
+  // ---- the three tiles: corners at rest (clip px: top-left, top-right, bottom-right, bottom-left), how they move
+  const Q1 = [[138, 224], [446, 218], [501, 491], [157, 529]], Q2 = [[514, 226], [783, 226], [863, 482], [566, 516]], Q3 = [[842, 228], [1093, 240], [1159, 500], [920, 499]];
+  // tile 1: slides in from the left; D = how far (px) it still has to go; its corners move at different speeds (perspective)
+  const D1 = [[93, 496], [95, 454], [97, 406], [99, 353], [101, 304], [103, 259], [105, 220], [108, 185], [110, 155], [112, 129], [114, 112], [116, 90], [118, 70],
+              [120, 54], [123, 42], [125, 32], [127, 23], [129, 16], [131, 10], [133, 6], [135, 3], [137, 1], [140, 0]];
+  const R1 = [1.1, 0.89, 1.0, 1.2];
+  // tile 2: rises from the bottom edge; e = how far (px) its top edge is below its resting place
+  const E2 = [[112, 456], [114, 388], [116, 327], [118, 275], [120, 230], [123, 192], [125, 159], [127, 131], [129, 106], [131, 86], [133, 68], [135, 53], [137, 40], [139, 30], [145, 12], [150, 0]];
+  const RX2 = [0.14, 0.24, 0.29, 0.18], RY2 = [1.03, 0.98, 1.15, 1.23];
+  // tile 3: slides in from the right
+  const D3 = [[120, 418], [123, 372], [125, 326], [127, 282], [129, 241], [131, 205], [133, 173], [135, 144], [137, 120], [139, 98], [145, 56], [150, 26], [155, 10], [160, 2], [165, 0]];
+  const R3 = [1.0, 0.85, 1.0, 1.1];
+  const EPS = 5;                                                           // the measured corners sit a little inside the rounded tile
+  const grow = (p, e) => { const cx = (p[0][0] + p[1][0] + p[2][0] + p[3][0]) / 4, cy = (p[0][1] + p[1][1] + p[2][1] + p[3][1]) / 4;
+    return p.map(([x, y]) => { const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) || 1; return [x + dx / d * e, y + dy / d * e]; }); };
+  const len = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const TILES = [
+    { id: "t1", Q: Q1, start: 93, n: 1, quad: g => { const d = tab(D1, g)[0]; return Q1.map(([x, y], i) => [x - d * R1[i], y]); } },
+    { id: "t2", Q: Q2, start: 112, n: 2, quad: g => { const e = tab(E2, g)[0]; return Q2.map(([x, y], i) => [x + e * RX2[i], y + e * RY2[i]]); } },
+    { id: "t3", Q: Q3, start: 120, n: 3, quad: g => { const d = tab(D3, g)[0]; return Q3.map(([x, y], i) => [x + d * R3[i], y]); } },
+  ];
+  TILES.forEach(T => {
+    const el = q(T.id), Qg = grow(T.Q, EPS);
+    T.w = ((len(Qg[0], Qg[1]) + len(Qg[3], Qg[2])) / 2) * K; T.h = ((len(Qg[0], Qg[3]) + len(Qg[1], Qg[2])) / 2) * K;
+    Object.assign(el.style, { width: `${T.w}px`, height: `${T.h}px` });
+    T.el = el;
+    if (window.MLLook) {
+      const st = (S + T.start) / FPS, du = Math.max(0.2, (FRAMES - S - T.start) / FPS);
+      const vid = MLLook.media(el, V[`slot${T.n}_media`], { look: L, kind: "video", label: `your video ${T.n}`, fit: "cover", focus: V[`slot${T.n}_focus`], seed: 40 + T.n,
+        r: Math.max(L.radius * 2, 0.07 * Math.min(T.w, T.h)), start: st, duration: du, id: `m${T.n}`, slot: `slot${T.n}_media` });
+      if (vid && vid.tagName === "VIDEO") {                      // starts when its tile shows up (frame + "Starts at frame"), rounded down
+        vid.setAttribute("data-start", (Math.floor(st * 1e6) / 1e6).toFixed(6));
+        vid.setAttribute("data-duration", du.toFixed(4));
+      }
+      el.style.backgroundColor = L.deep;                         // an opaque base: the placeholder's gradient is see-through
+      el.style.boxShadow = L.shadow;
+    }
+  });
+
+  // ---- the slow float after the tiles land: where the scene is (clip px) against its resting place
+  const SW = [[140, 0, 0], [150, 0, 0], [160, 0, -2], [170, -3, -4], [180, -9, -6], [190, -14, -4], [200, -15, -2], [210, -14, 0], [220, -12, 0], [230, -10, 0], [240, -10, 0],
+              [250, -12, 1], [260, -16, 2], [270, -18, 0], [280, -18, -3], [290, -14, -8], [300, -6, -12]];
+  const world = q("world");
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    world.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0 || !ready) return;
+    const fl = g > 140 ? tab(SW, g) : [0, 0];
+    world.style.transform = `translate(${(fl[0] * K * V.float).toFixed(2)}px, ${(fl[1] * K * V.float).toFixed(2)}px)`;
+    // the title: letters out of a blur, growth about the bottom-left corner, glow, a hair of drift
+    const sz = tab(SZ, g)[0], gl = (V.glow / 100) * (0.3 + 0.7 * clamp01((sz - 0.4) / 0.6)), dr = smooth((g - 56) / 36);
+    tt.style.transform = `translate(${(-10 * dr * K).toFixed(2)}px, ${(5 * dr * K).toFixed(2)}px) ${tt.dataset.m}`;
+    tin.style.transform = `scale(${sz.toFixed(4)})`;
+    const fsz = parseFloat(tin.style.fontSize);
+    tin.style.textShadow = gl > 0.01 ? `0 0 ${(0.05 * fsz).toFixed(1)}px ${rgba(tcol, 0.6 * gl)}, 0 0 ${(0.2 * fsz).toFixed(1)}px ${rgba(tcol, 0.4 * gl)}, 0 0 ${(0.5 * fsz).toFixed(1)}px ${rgba(tcol, 0.22 * gl)}` : "none";
+    letters.forEach((sp, j) => {
+      const p = clamp01((g - (when(j) - 5)) / 5);
+      sp.style.opacity = p.toFixed(3);
+      const b = 7 * K * (1 - p) / Math.max(0.2, sz);
+      sp.style.filter = b > 0.3 ? `blur(${b.toFixed(2)}px)` : "none";
+    });
+    // the tiles
+    TILES.forEach(T => {
+      const on = g >= T.start;
+      T.el.style.visibility = on ? "visible" : "hidden";
+      if (!on) return;
+      const Qg = grow(T.quad(g), EPS).map(([x, y]) => [x * K, y * K]);
+      T.el.style.transform = homog([[0, 0], [T.w, 0], [T.w, T.h], [0, T.h]], Qg);
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 21, hits: V.shake > 0 ? [{ f: S + 56, amount: 2 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 33 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the title is measured
+  // here, with the real font, to fit
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [300, 400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layoutText();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

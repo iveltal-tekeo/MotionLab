@@ -1,0 +1,33 @@
+{
+ "name": "avatar-chart-story",
+ "frames": 98,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 300,
+   "to": 1800,
+   "db": -9,
+   "what": "the chart card rises from behind the spheres"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.6",
+   "from": 500,
+   "to": 2200,
+   "db": -12,
+   "what": "the chart line is drawn across the card"
+  },
+  {
+   "f": "start + round(43 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the first title word rises into place"
+  }
+ ]
+}

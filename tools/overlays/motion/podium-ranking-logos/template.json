@@ -1,0 +1,123 @@
+{
+ "name": "Podium with logos",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Three podium blocks rise one after another from below the frame, the highest in the middle, each carrying a round logo disc, on a soft backdrop washed with the podium colour; the camera then pushes in slowly. Put a logo from the library or your own picture on each podium.",
+ "use_for": [
+  "ranking",
+  "top 3",
+  "winners",
+  "podium",
+  "comparison",
+  "brands",
+  "tools",
+  "best of",
+  "reveal"
+ ],
+ "tags": [
+  "chart",
+  "podium",
+  "ranking",
+  "logos",
+  "top 3",
+  "winners",
+  "3D look",
+  "needs media",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f8 an empty backdrop; the highest podium and its logo rise from below the frame f9-f34 (25 f), the third (right) f19-f38, the second (left) f23-f42 (19 f each), all on the same quick-start, soft-landing curve cubic-bezier(0.546, 0.266, 0.166, 0.919); from f27 the camera pushes in slowly (x1.03 by f89)",
+ "tracks": [
+  {
+   "name": "first podium",
+   "what": "the highest podium and its logo rise from below the frame",
+   "start_f": 9,
+   "length_f": 25,
+   "easing": "cubic-bezier(0.546, 0.266, 0.166, 0.919) (measured)"
+  },
+  {
+   "name": "third podium",
+   "what": "the third podium and its logo rise (right)",
+   "start_f": 19,
+   "length_f": 19,
+   "easing": "cubic-bezier(0.546, 0.266, 0.166, 0.919)"
+  },
+  {
+   "name": "second podium",
+   "what": "the second podium and its logo rise (left)",
+   "start_f": 23,
+   "length_f": 19,
+   "easing": "cubic-bezier(0.546, 0.266, 0.166, 0.919)"
+  },
+  {
+   "name": "push-in",
+   "what": "the whole scene scales up slowly about its centre (x1.03)",
+   "start_f": 27,
+   "length_f": 62,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [],
+ "media_slots": [
+  {
+   "id": "first_logo",
+   "label": "Logo on the highest podium",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a dark disc with the word LOGO",
+   "optional": true
+  },
+  {
+   "id": "second_logo",
+   "label": "Logo on the second podium (left)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a dark disc with the word LOGO",
+   "optional": true
+  },
+  {
+   "id": "third_logo",
+   "label": "Logo on the third podium (right)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a dark disc with the word LOGO",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  9,
+  14,
+  18,
+  22,
+  26,
+  30,
+  36,
+  50,
+  89
+ ]
+}

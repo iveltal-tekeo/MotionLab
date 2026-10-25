@@ -1,0 +1,30 @@
+{
+ "name": "comment-cta-text-stack",
+ "frames": 106,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(36 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 600,
+   "to": 2400,
+   "db": -8,
+   "what": "the opening line swells and slides off to the left"
+  },
+  {
+   "f": "start + round(54 * fps / 30)",
+   "kind": "pop",
+   "db": -11,
+   "what": "the button lands"
+  },
+  {
+   "f": "start + round(74 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the final lines rise in"
+  }
+ ]
+}

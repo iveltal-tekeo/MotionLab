@@ -1,0 +1,104 @@
+{
+ "name": "Neon ring text reveal",
+ "kind": "text",
+ "category": "Text",
+ "what": "A neon ring spins shut on a dark ground, stutters off and on, contracts to the middle while a soft disc of the same colour opens from it, and a glowing word appears inside; the word holds with a faint flicker and one letter that twitches.",
+ "use_for": [
+  "title",
+  "hook",
+  "reveal",
+  "neon",
+  "night",
+  "intro",
+  "statement",
+  "logo-style text"
+ ],
+ "tags": [
+  "text",
+  "neon",
+  "glow",
+  "circle",
+  "ring",
+  "reveal",
+  "flicker",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4-f28 (00:00:00:04-00:00:00:28) a neon ring is drawn from the top clockwise and grows as it spins shut, three finer rings following it a few frames apart; f32-f33 and f36 (00:00:01:02-00:00:01:06) the ring stutters off; f40-f66 (00:00:01:10-00:00:02:06) the rings contract to the middle, the thick one fastest, and fade; f63-f78 (00:00:02:03-00:00:02:18) a soft disc opens from the middle, widens and fades while the word appears inside it and its glow builds; then it holds with a faint flicker to f119 (00:00:03:29)",
+ "tracks": [
+  {
+   "name": "ring spins shut",
+   "what": "the thick ring is drawn clockwise from the top and grows",
+   "start_f": 4,
+   "length_f": 13,
+   "easing": "S-curve"
+  },
+  {
+   "name": "finer rings",
+   "what": "three finer rings follow it, a few frames apart",
+   "start_f": 7,
+   "length_f": 21,
+   "easing": "decelerating"
+  },
+  {
+   "name": "stutter",
+   "what": "the ring blinks off at f32, f33 and f36",
+   "start_f": 32,
+   "length_f": 5,
+   "easing": "stepped"
+  },
+  {
+   "name": "rings contract",
+   "what": "the rings shrink toward the middle and fade out",
+   "start_f": 40,
+   "length_f": 26,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "disc opens",
+   "what": "a soft disc of the neon colour opens from the middle, widens and fades",
+   "start_f": 63,
+   "length_f": 15,
+   "easing": "decelerating"
+  },
+  {
+   "name": "word appears",
+   "what": "the word shows inside the disc, dim at first, then its glow builds",
+   "start_f": 63,
+   "length_f": 15,
+   "easing": "linear"
+  },
+  {
+   "name": "flicker",
+   "what": "the glow flickers faintly and one letter twitches",
+   "start_f": 78,
+   "length_f": 42,
+   "easing": "stepped"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  4,
+  8,
+  12,
+  16,
+  22,
+  33,
+  40,
+  54,
+  64,
+  68,
+  76,
+  100
+ ]
+}

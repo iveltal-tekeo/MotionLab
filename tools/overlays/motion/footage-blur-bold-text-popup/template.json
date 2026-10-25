@@ -1,0 +1,120 @@
+{
+ "name": "Blurred footage, bold text",
+ "kind": "text",
+ "category": "Social",
+ "what": "Your footage fills the frame, then eases back and blurs while two lines of bold glowing text slide in over it; a second piece of footage rises under the text as a card, they drift up together and then fall out of the bottom, leaving the blurred backdrop.",
+ "use_for": [
+  "quote over footage",
+  "title over video",
+  "social post",
+  "reel text",
+  "caption",
+  "headline",
+  "b-roll swap",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "blur",
+  "glow",
+  "card",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4-f36 the backdrop footage eases back (a 17 % shrink, S-curve) while it blurs and dims; f27-f40 two lines of bold glowing text slide in from the left, wiped on (line 1 a little slower); f64-f78 a second footage card rises and grows under the text (it fades in); f40-f132 text and card drift up slowly; f132-f144 both fall out of the bottom with a vertical blur (accelerating, slow start); then the blurred backdrop holds",
+ "tracks": [
+  {
+   "name": "backdrop",
+   "what": "the footage eases back while it blurs and dims",
+   "start_f": 4,
+   "length_f": 32,
+   "easing": "cubic-bezier(0.4, 0, 0.3, 1) (S-curve)"
+  },
+  {
+   "name": "text in",
+   "what": "two bold lines slide in from the left and are wiped on",
+   "start_f": 27,
+   "length_f": 13,
+   "easing": "decelerating"
+  },
+  {
+   "name": "card",
+   "what": "the second footage rises, grows and fades in as a card",
+   "start_f": 63,
+   "length_f": 15,
+   "easing": "decelerating"
+  },
+  {
+   "name": "drift",
+   "what": "text and card drift up slowly",
+   "start_f": 40,
+   "length_f": 92,
+   "easing": "linear"
+  },
+  {
+   "name": "fall",
+   "what": "text and card fall out of the bottom with a vertical blur",
+   "start_f": 132,
+   "length_f": 12,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_1_media",
+   "label": "The backdrop footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 6.1,
+   "fit": "cover",
+   "focus_setting": "footage_1_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient in the look, labelled 'your footage 1'"
+  },
+  {
+   "id": "footage_2_media",
+   "label": "The card footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 3.8,
+   "fit": "cover",
+   "focus_setting": "footage_2_focus",
+   "focus": "50% 50%",
+   "placeholder": "a light gradient card in the look, labelled 'your footage 2'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  16,
+  30,
+  38,
+  66,
+  72,
+  100,
+  134,
+  138,
+  160
+ ]
+}

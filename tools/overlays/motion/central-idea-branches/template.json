@@ -1,0 +1,98 @@
+{
+ "name": "Central idea branches",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A neon central idea in a glowing ring: the figure opens big and blurred, the camera pulls back to the real size while the ring draws itself, and curved wavy branches grow out of it one after another, each ending in a small rotated label that fades in.",
+ "use_for": [
+  "mind map",
+  "central idea",
+  "key points",
+  "overview",
+  "topics",
+  "pillars",
+  "features",
+  "agenda",
+  "brainstorm",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "mind map",
+  "branches",
+  "neon",
+  "glow",
+  "labels",
+  "radial",
+  "camera pull-back",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f9 the ring draws itself clockwise from the top while the title slides up out of a heavy blur (f1-f10); f2-f66 the camera pulls back from x2.4 to x1 (a plateau at x1.75 around f20-f30, then an S-curve); from f21 the six branches grow out of the ring one after another, counter-clockwise from the bottom right (starts f21, f26, f35, f37, f40, f46, about 28 f each, slow start and soft landing), tapering to a point; each label fades in over 10 f (f51-f78); then it holds",
+ "tracks": [
+  {
+   "name": "ring and title",
+   "what": "the ring draws clockwise from the top and the title slides up out of a blur into focus",
+   "start_f": 1,
+   "length_f": 15,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "camera pull-back",
+   "what": "the whole figure zooms out from x2.4 to x1 about the frame, pausing near x1.75",
+   "start_f": 2,
+   "length_f": 64,
+   "easing": "decelerating, a plateau, then S-curve (measured table)"
+  },
+  {
+   "name": "branch 1",
+   "what": "the bottom-right branch grows out of the ring (the others follow counter-clockwise)",
+   "start_f": 21,
+   "length_f": 28,
+   "easing": "S-curve (slow start, soft landing)"
+  },
+  {
+   "name": "branch 2-6",
+   "what": "the next branches grow in the same way, 5 to 9 frames apart",
+   "start_f": 26,
+   "length_f": 51,
+   "easing": "S-curve (slow start, soft landing)"
+  },
+  {
+   "name": "labels",
+   "what": "each branch label fades in as its branch ends",
+   "start_f": 49,
+   "length_f": 31,
+   "easing": "linear"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 78,
+   "length_f": 102,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "title",
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 150,
+ "check_frames": [
+  4,
+  8,
+  14,
+  24,
+  34,
+  44,
+  54,
+  66,
+  150
+ ]
+}

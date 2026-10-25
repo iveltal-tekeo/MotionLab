@@ -1,0 +1,109 @@
+{
+ "name": "Soft bars with two lines",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Soft translucent bars and two thin axes fade in on a red-washed dark page, the scale and the labels come in one after another, then two lines (a white one and a red one) rise point by point until they show your data; the chart floats a few pixels to the end.",
+ "use_for": [
+  "trend comparison",
+  "two data series",
+  "growth",
+  "report",
+  "stats",
+  "chart",
+  "analytics",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "line chart",
+  "bars",
+  "axes",
+  "labels",
+  "data",
+  "comparison",
+  "2 series",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f26 the bars and axes fade in; f9-f51 the scale labels come in bottom to top, f15-f57 the names under the bars left to right; f24-f51 the second line is drawn along the axis; f66-f130 the first line rises point by point (each point on its own S-curve); f124-f198 the second line rises point by point; the chart floats a few pixels to the end (f0-f299)",
+ "tracks": [
+  {
+   "name": "bars and axes",
+   "what": "the soft bars and the two axes fade in",
+   "start_f": 0,
+   "length_f": 26,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "scale labels",
+   "what": "the numbers on the left fade in one after another, bottom to top",
+   "start_f": 9,
+   "length_f": 42,
+   "easing": "linear per label (20 f each)"
+  },
+  {
+   "name": "name labels",
+   "what": "the names under the bars fade in one after another, left to right",
+   "start_f": 15,
+   "length_f": 42,
+   "easing": "linear per label (20 f each)"
+  },
+  {
+   "name": "second line flat",
+   "what": "the second line is drawn along the axis, left to right",
+   "start_f": 24,
+   "length_f": 27,
+   "easing": "S-curve (measured)"
+  },
+  {
+   "name": "first line",
+   "what": "the first line rises point by point",
+   "start_f": 66,
+   "length_f": 64,
+   "easing": "S-curve per point (measured)"
+  },
+  {
+   "name": "second line",
+   "what": "the second line rises point by point",
+   "start_f": 124,
+   "length_f": 74,
+   "easing": "S-curve per point (measured)"
+  },
+  {
+   "name": "float",
+   "what": "bars, axes, labels and the first line float together up to 23 px (at 1280 wide); the second line stays put",
+   "start_f": 0,
+   "length_f": 300,
+   "easing": "slow, uneven (measured)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "labels",
+  "series_a",
+  "series_b",
+  "bars"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 250,
+ "check_frames": [
+  4,
+  12,
+  22,
+  34,
+  50,
+  74,
+  88,
+  104,
+  126,
+  142,
+  160,
+  190,
+  250
+ ]
+}

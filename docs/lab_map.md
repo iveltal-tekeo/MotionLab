@@ -92,8 +92,9 @@ not say, or a rule.
 - Sets that are not a video: `thumbsets.py` (thumbnail sets; Claude's patterns = `/analyze-reference thumbs <set>`,
   used by `thumbnail.py make / check --style <set>`), `textsets.py` (scripts & prompts, 2026-10-18: Claude's check of
   a text is saved only when every quote is found in THAT text - `prompts.verify_check`, also behind `prompts.py
-  annotate` / a JSON `import`), `templates.py` (captured template clips + the Motion Graphics library: 75 templates in
-  `tools\overlays\motion\`, 57 rebuilt from the Swishy clips and 18 MotionLab originals)
+  annotate` / a JSON `import`), `templates.py` (captured template clips + the Motion Graphics library: 189 templates in
+  `tools\overlays\motion\`, 57 rebuilt from the Swishy clips, 18 MotionLab originals and 114 MotionLab builds in the
+  Editorial warm look)
 - Making: `prep_footage.py`, `storyboard.py`, `render_video.py`, `compare_renders.py`, `draft_edit.py` (the quick
   draft by rules; `--feel-test`), `style.py` (the style of up to 3 analysed videos; `closest "<words>"`), `overlay.py`
   (graphics as HTML via HyperFrames, pinned in `tools\overlays\`; `snap` = stills straight from the HTML, the cheapest

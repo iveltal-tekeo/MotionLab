@@ -1,0 +1,17 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f56 (00:00:01:26): #row3 > span:nth-of-type(2) > span:nth-of-type(1) \"YOU\" off the frame by 9 px",
+    "FIT f56 (00:00:01:26) +1 more: #row3 > span:nth-of-type(2) > span:nth-of-type(2) > span:nth-of-type(1) \"YOU\" off the frame, outside its box by 108 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

@@ -1,0 +1,102 @@
+{
+ "name": "Ball smashes text",
+ "kind": "text",
+ "category": "Text",
+ "what": "A chunky glowing word is typed in letter by letter while a ball flies in from the left and floats above it; the ball is thrown up and to the side, winds up, then dives through the word, which bursts into wedge-shaped pieces that fly outward and fall out of the frame.",
+ "use_for": [
+  "hook",
+  "title reveal",
+  "impact",
+  "smash",
+  "intro",
+  "gaming",
+  "trailer",
+  "beat drop",
+  "punchline"
+ ],
+ "tags": [
+  "text",
+  "shatter",
+  "ball",
+  "impact",
+  "typed",
+  "glow",
+  "destruction",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f19 the word is typed in, a letter about every 2 frames; f16-f49 the ball flies in from the left edge and settles above the word's left end; f31-f40 the word shrinks 9 %; f53-f67 the ball is thrown up and right and rests; f58-f79 the word squeezes taller and narrower; f69-f79 the ball winds up and dives; f80 it hits the word, which bursts into wedge pieces (f81-f103) that fly outward at a steady speed and fall (gravity); the ball leaves at the bottom right (f86); empty again to f119",
+ "tracks": [
+  {
+   "name": "typed in",
+   "what": "letter by letter, a space being a pause, each letter appears at once",
+   "start_f": 2,
+   "length_f": 18,
+   "easing": "linear steps"
+  },
+  {
+   "name": "ball flies in",
+   "what": "from the left edge it slows to rest above the word",
+   "start_f": 16,
+   "length_f": 34,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "word shrinks",
+   "what": "the word scales down about 9 %",
+   "start_f": 31,
+   "length_f": 10,
+   "easing": "S-curve"
+  },
+  {
+   "name": "ball thrown",
+   "what": "up and to the right, then rests",
+   "start_f": 51,
+   "length_f": 16,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "wind-up and dive",
+   "what": "the word squeezes taller and narrower while the ball winds up, then dives through it",
+   "start_f": 69,
+   "length_f": 12,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "shatter",
+   "what": "wedge-shaped pieces fly outward from the impact point and fall under gravity, tilting; the ball leaves at the bottom right",
+   "start_f": 80,
+   "length_f": 24,
+   "easing": "linear + gravity"
+  },
+  {
+   "name": "empty",
+   "what": "only the ground (the clip loops)",
+   "start_f": 104,
+   "length_f": 16,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 61,
+ "check_frames": [
+  6,
+  19,
+  40,
+  55,
+  70,
+  80,
+  82,
+  86,
+  94
+ ]
+}

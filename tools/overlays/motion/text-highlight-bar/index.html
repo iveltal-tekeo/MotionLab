@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "top", "type": "string", "label": "Top line (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Rule one"},
+  {"id": "line", "type": "string", "label": "Highlighted line", "default": "Say more with fewer words today"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 68, "min": 20, "max": 200, "step": 1},
+  {"id": "text_colour", "type": "enum", "label": "Text colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "bar", "type": "enum", "label": "Highlight bar colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "text-highlight-bar" (2026-10-22): small bold words on a dark ground that come up one by one - each word rises about 58 px, grows from half
+     size while its letter-spacing closes up, and fades in (a top line from f8, then the second line word by word from
+     f41, each word with its own timing, the last one slow). Then a bar sweeps behind the second line, left to right
+     (f64-f105, an S-curve), while its text turns from light to dark (f77-f90) so it reads dark on the bar. Look-aware:
+     ground, text colour, bar colour, font and film grain come from the look tokens. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; width: max-content; }
+  .ln .w { transform-origin: 50% 80%; }
+  #bar { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="bar"></div><div id="l1" class="ln ml-body"></div><div id="l2" class="ln ml-body"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+  const lum = h => { const [r, g, b] = hex(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark ground (the ink); light words, a bar in a token colour, dark words on it
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = n => n === "signal" ? L.signal : n === "deep" ? L.deep : n === "paper" ? glare : L.mustard;
+  const cLight = pick(V.text_colour), cBar = pick(V.bar);
+  const cDark = lum(cBar) > 0.45 ? night : glare;           // the words over the bar
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = night;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const bar = q("bar"), l1 = q("l1"), l2 = q("l2");
+  bar.style.background = cBar;
+  if (window.MLLook) MLLook.card(bar, L, { shadow: false });
+
+  // ---- the reference (1280 x 720 px): both lines are the same size (caps 31 px, 46 px type), baselines at 47.4 % and
+  // 56.5 % of the height, the second line 971 px wide; the bar runs 13 px past the words on the left, 19 on the right,
+  // from 43 px above the baseline to 22 below. KY = reference px -> this frame
+  const KY = H / 720, Y1 = 0.4743 * H, Y2 = 0.5653 * H;
+  // each word: its start frame and its progress (0 -> 1) on every frame from there (measured on the reference)
+  const PROF = [
+    { s: 8, p: [0, 0.03, 0.11, 0.19, 0.27, 0.37, 0.46, 0.56, 0.65, 0.75, 0.84, 0.94, 1] },
+    { s: 20, p: [0, 0.07, 0.15, 0.24, 0.31, 0.37, 0.42, 0.49, 0.54, 0.59, 0.64, 0.68, 0.73, 0.76, 0.8, 0.83, 0.86, 0.88, 0.9, 0.93, 0.95, 0.97, 0.98, 1] },
+    { s: 41, p: [0, 0.07, 0.17, 0.28, 0.41, 0.57, 0.74, 0.93, 1] },
+    { s: 49, p: [0, 0.22, 0.44, 0.68, 0.92, 1] },
+    { s: 54, p: [0, 0.24, 0.49, 0.73, 0.98, 1] },
+    { s: 59, p: [0, 0.24, 0.46, 0.69, 0.91, 1] },
+    { s: 64, p: [0, 0.14, 0.31, 0.46, 0.61, 0.75, 0.88, 1] },
+    { s: 72, p: [0, 0.1, 0.2, 0.29, 0.37, 0.46, 0.53, 0.59, 0.66, 0.71, 0.76, 0.8, 0.85, 0.89, 0.93, 0.96, 0.98, 1] }
+  ];
+  // the bar's sweep (0 -> 1 of its length) per frame
+  const BAR = [[64, 0], [65, 0.009], [67, 0.027], [69, 0.057], [71, 0.101], [73, 0.16], [75, 0.233], [77, 0.32], [79, 0.416], [81, 0.513], [83, 0.605], [85, 0.688], [87, 0.76],
+    [89, 0.82], [91, 0.868], [93, 0.907], [95, 0.938], [97, 0.962], [99, 0.979], [101, 0.991], [103, 0.998], [105, 1]];
+
+  // ---- the words (heavy text font), each an inline-block of fixed width so letter-spacing never moves its neighbours
+  const fam = V.body_font, FS0 = V.size * U;
+  let wordsA = [], wordsB = [];
+  [l1, l2].forEach((ln, i) => {
+    Object.assign(ln.style, { fontSize: `${FS0}px`, fontWeight: String(fw(fam, 800)), color: cLight });
+    const r = window.MLLook ? MLLook.rich(ln, i ? V.line : V.top, { look: L, family: fam, weight: 800 }) : null;
+    if (r) (i ? wordsB : wordsA).push(...r.words); else ln.textContent = i ? V.line : V.top;
+  });
+  const words = [...wordsA, ...wordsB];
+  words.forEach(sp => sp.style.opacity = "0");
+  const probe = document.createElement("span"); probe.style.cssText = "display:inline-block;width:0;height:0";
+  let geo = null;
+  const fontsOK = () => !(document.fonts && document.fonts.check) || document.fonts.check(`800 ${FS0}px "${fam}"`, "Say more with fewer words");
+  function layout() {                                           // once the font is there: fit, fix each word's width, find the baseline
+    let fs = FS0;
+    [l1, l2].forEach(ln => ln.style.fontSize = `${fs}px`);
+    const fit = Math.min(1, 0.9 * W / Math.max(1, l2.offsetWidth), 0.9 * W / Math.max(1, l1.offsetWidth));
+    fs = FS0 * fit;
+    [l1, l2].forEach(ln => { ln.style.fontSize = `${fs}px`; ln.appendChild(probe.cloneNode()); });
+    words.forEach(sp => { sp.style.width = `${sp.offsetWidth}px`; sp.style.textAlign = "center"; });
+    const b = l2.lastChild.offsetTop, cw1 = l1.offsetWidth, cw2 = l2.offsetWidth;
+    l1.style.left = `${(W - cw1) / 2}px`; l1.style.top = `${Y1 - b}px`;
+    l2.style.left = `${(W - cw2) / 2}px`; l2.style.top = `${Y2 - b}px`;
+    const pad = 0.36 * fs, bx0 = (W - cw2) / 2 - pad, bw = cw2 + 2 * pad;
+    Object.assign(bar.style, { left: `${bx0}px`, top: `${Y2 - 0.95 * fs}px`, height: `${1.44 * fs}px` });
+    geo = { fs, bw };
+  }
+  const prof = k => k < PROF.length ? PROF[k] : { s: PROF[PROF.length - 1].s + 6 * (k - PROF.length + 1), p: PROF[PROF.length - 1].p };
+  const prog = (pf, g) => { const i = g - pf.s; if (i < 0) return -1; if (i >= pf.p.length - 1) return 1; const a = Math.floor(i), f = i - a; return pf.p[a] + (pf.p[a + 1] - pf.p[a]) * f; };
+
+  // ---- the motion, frame by frame from one proxy (seek-safe); g = the frame minus "Starts at frame"
+  const S = Math.round(V.start);
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0 || !fontsOK()) return;
+    if (!geo) layout();
+    words.forEach((sp, k) => {
+      const p = prog(prof(k), g);
+      if (p < 0) { sp.style.opacity = "0"; return; }
+      const ls = 0.29 * (1 - p), sc = 0.5 + 0.5 * p;
+      sp.style.opacity = String(Math.min(1, 0.13 + 1.05 * p).toFixed(3));
+      sp.style.letterSpacing = `${ls.toFixed(3)}em`; sp.style.textIndent = `${ls.toFixed(3)}em`;
+      sp.style.transform = `translateY(${(58 * KY * (1 - p)).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    });
+    // the second line: light until f77, then fading to dark by f90 (the words keep to the bar's colour pair)
+    const dq = Math.max(0, Math.min(1, (g - 77) / 13));
+    l2.style.color = mix(cLight, cDark, dq);
+    bar.style.width = `${(geo.bw * tab(BAR, g)[0]).toFixed(2)}px`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 8 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

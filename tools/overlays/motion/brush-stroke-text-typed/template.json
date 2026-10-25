@@ -1,0 +1,91 @@
+{
+ "name": "Brush stroke typed title",
+ "kind": "text",
+ "category": "Text",
+ "what": "A worn-tape teaser title: on a dark, noisy ground one line of text types on, a character every 3 frames, over a rough brush stroke that wipes in from the left; thin tech marks, a circuit line and a turning wireframe globe sharpen in around it while the picture slowly zooms.",
+ "use_for": [
+  "teaser",
+  "hook",
+  "title",
+  "question",
+  "retro",
+  "vhs",
+  "cyber",
+  "horror",
+  "intro",
+  "vertical"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "typing",
+  "brush stroke",
+  "grunge",
+  "vhs",
+  "hud",
+  "globe",
+  "vertical",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2 the first character appears and one more every 3 f; f3-f25 the brush stroke wipes in from the left with a ragged front (fast start, long settle), its ragged edges re-drawing every 10 f; f5-f16 the tech marks, circuit line and globe sharpen in from blur; f3-f170 the ground zooms slowly (15 %, decelerating); the worn-tape speckle changes every frame to the end",
+ "tracks": [
+  {
+   "name": "typing",
+   "what": "one character at a time, spaces included",
+   "start_f": 2,
+   "length_f": 42,
+   "easing": "none (a step every 3 f)"
+  },
+  {
+   "name": "brush stroke",
+   "what": "a rough stroke wipes in from the left under the text",
+   "start_f": 3,
+   "length_f": 22,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "tech marks",
+   "what": "marks, circuit line and globe sharpen in from blur",
+   "start_f": 5,
+   "length_f": 11,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "zoom",
+   "what": "the worn ground slowly zooms in 15 %",
+   "start_f": 3,
+   "length_f": 167,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "worn tape",
+   "what": "fresh speckle every frame, the stroke's edges re-draw every 10 f",
+   "start_f": 0,
+   "length_f": 180,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  2,
+  4,
+  6,
+  9,
+  14,
+  25,
+  60,
+  120,
+  178
+ ]
+}

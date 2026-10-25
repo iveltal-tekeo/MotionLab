@@ -1,0 +1,104 @@
+{
+ "name": "Radiant ring expansion",
+ "kind": "text",
+ "category": "Text",
+ "what": "A glowing ring with a word in the middle pops in on a dark ground; the camera drifts and three small labelled rings are born from its rim one after another and fly out in arcs; then the view pulls back and the three settle around the big ring.",
+ "use_for": [
+  "three ideas",
+  "list of three",
+  "topic with three points",
+  "explainer",
+  "concept",
+  "steps",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "ring",
+  "glow",
+  "orbit",
+  "satellites",
+  "list",
+  "dark",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f15: the centre ring pops in (1.1x overshoot, blurred); f26-f62 the ring drifts up then down while a small ring is born at f26 (lower left) and flies out in an arc; f57 a second one (upper left), f86 a third (right); f80-f92 the first two fly off to the left edge and f100-f118 back; f104-f118 the camera pulls back to 0.72x (blurred) and the three settle around the big ring; they float a few pixels to f209.",
+ "tracks": [
+  {
+   "name": "centre ring",
+   "what": "pops in with a small overshoot",
+   "start_f": 1,
+   "length_f": 14,
+   "easing": "ease-out with overshoot (measured)"
+  },
+  {
+   "name": "centre ring drift",
+   "what": "the ring drifts up, holds, then down and sideways as the camera follows the small rings",
+   "start_f": 20,
+   "length_f": 98,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "ring 1",
+   "what": "born at the rim, flies out in an arc to the lower left, then to the left edge and back",
+   "start_f": 26,
+   "length_f": 92,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "ring 2",
+   "what": "born at the rim, flies out to the upper left, to the left edge and back",
+   "start_f": 57,
+   "length_f": 61,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "ring 3",
+   "what": "born at the rim, flies out to the right and settles",
+   "start_f": 86,
+   "length_f": 32,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "pull back",
+   "what": "everything shrinks to 0.72x about the middle, with motion blur",
+   "start_f": 104,
+   "length_f": 14,
+   "easing": "S-curve (measured table)"
+  },
+  {
+   "name": "float",
+   "what": "the four rings float a few pixels",
+   "start_f": 118,
+   "length_f": 91,
+   "easing": "slow drift"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "main_text",
+  "label_1",
+  "label_2",
+  "label_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 150,
+ "check_frames": [
+  5,
+  15,
+  30,
+  45,
+  62,
+  85,
+  100,
+  110,
+  130,
+  190
+ ]
+}

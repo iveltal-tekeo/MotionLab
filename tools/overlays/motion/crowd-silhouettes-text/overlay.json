@@ -1,0 +1,25 @@
+{
+ "name": "crowd-silhouettes-text",
+ "frames": 121,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(5 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.3",
+   "from": 2400,
+   "to": 500,
+   "db": -8,
+   "what": "the camera swings back and up"
+  },
+  {
+   "f": "start + round((60 + 3.5 * i) * fps / 30)",
+   "kind": "thump",
+   "repeat": "alerts",
+   "db": -10,
+   "what": "a figure turns the alert colour"
+  }
+ ]
+}

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Title, typed letter by letter (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Seen this yet?"},
+  {"id": "size", "type": "number", "label": "Title size (px at a 1080-px short side)", "default": 120, "min": 40, "max": 260, "step": 1},
+  {"id": "stroke_colour", "type": "enum", "label": "Brush stroke colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "hud", "type": "boolean", "label": "Small tech marks, circuit line and globe", "default": true},
+  {"id": "grunge", "type": "number", "label": "Worn tape grunge (0 = clean)", "default": 100, "min": 0, "max": 100, "step": 5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "brush-stroke-text-typed" (2026-10-22): a worn-tape teaser title. On a dark, noisy, vignetted ground (a fresh speckle every frame, two
+     bright scan lines, a slow decelerating zoom of 15 % over the clip) one line of text types on, one character every
+     3 frames from f2 (spaces too), over a brush stroke that wipes in from the left (f4-f25, fast start, long settle)
+     with a ragged front and ragged edges that re-draw every 10 frames. Thin tech marks, a circuit line and a turning
+     wireframe globe sharpen in from blur (f5-f16). Look-aware: ground, stroke, text and mark colours, fonts and film
+     grain come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #bg, #hud, #tg, #stroke { position: absolute; left: 0; top: 0; }
+  #txt { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.005em; }
+  #txt .u { display: inline-block; }
+  .hudtxt { font-family: var(--font-accent); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="bg"><div id="blot" class="abs"></div><div id="spk" class="abs"></div><div id="ln1" class="abs"></div><div id="ln2" class="abs"></div></div>
+    <div id="vig" class="abs"></div>
+    <svg id="hud" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280" width="1080" height="1920"></svg>
+    <div id="tg"><svg id="stroke" xmlns="http://www.w3.org/2000/svg"></svg><div id="txt" class="ml-body"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  try { if (document.fonts && document.fonts.load) document.fonts.load(`400 100px "${V.body_font}"`, "Seenthisyet?"); } catch (e) {}   // start the weight loading before the first frame
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const cl = x => Math.max(0, Math.min(1, x));
+  const hx = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const A = hx(a), B = hx(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+  const rnd = (window.MLLook && MLLook.rnd) || (seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
+  const K = W / 720;                                     // the reference (720 x 1280 px) -> this frame
+  const NS = "http://www.w3.org/2000/svg";
+
+  // ---- the look: a near-black ground, pale marks and text, a signal brush stroke
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const stc = { signal: L.signal, mustard: L.mustard, deep: L.deep, paper: glare }[V.stroke_colour] || L.signal;
+  const txc = (V.stroke_colour === "paper" || V.stroke_colour === "mustard") ? night : glare;
+  const GR = Number(V.grunge) / 100;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mix(night, "#000000", 0.35);
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the worn-tape ground: blotches (once) + 4 speckle sheets that take turns, shifted at random every frame
+  const CWd = 360, CHt = 640, big = (cv) => cv.toDataURL();
+  const bg = q("bg"), blot = q("blot"), spk = q("spk");
+  [bg, blot, spk].forEach(e => Object.assign(e.style, { width: `${W}px`, height: `${H}px` }));
+  bg.style.transformOrigin = "50% 50%";
+  const mkCanvas = () => { const c = document.createElement("canvas"); c.width = CWd; c.height = CHt; return c; };
+  {
+    const c = mkCanvas(), x = c.getContext("2d"), r = rnd(101);
+    for (let i = 0; i < 110; i++) {
+      const cx = r() * CWd, cy = r() * CHt, rad = 14 + r() * 100, dark = r() < 0.35, a = (0.02 + r() * 0.06) * (dark ? 1.6 : 1);
+      const gr = x.createRadialGradient(cx, cy, 0, cx, cy, rad);
+      gr.addColorStop(0, dark ? `rgba(0,0,0,${a * 3})` : L.rgba(glare, a)); gr.addColorStop(1, "rgba(0,0,0,0)");
+      x.fillStyle = gr; x.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+    }
+    for (let i = 0; i < 9; i++) { const vx = r() * CWd; x.fillStyle = L.rgba(glare, 0.03 + r() * 0.04); x.fillRect(vx, 0, 1, CHt); }
+    blot.style.backgroundImage = `url(${big(c)})`; blot.style.backgroundSize = `${W}px ${H}px`; blot.style.opacity = String(GR);
+  }
+  const sheets = [0, 1, 2, 3].map(k => {
+    const c = mkCanvas(), x = c.getContext("2d"), r = rnd(200 + k * 7);
+    const im = x.createImageData(CWd, CHt), d = im.data, gc = hx(glare);          // fine grain on every pixel, a few bright specks
+    for (let i = 0; i < CWd * CHt; i++) { const a = Math.pow(r(), 2.4) * 0.42 + (r() < 0.012 ? 0.3 : 0); d[i * 4] = gc[0]; d[i * 4 + 1] = gc[1]; d[i * 4 + 2] = gc[2]; d[i * 4 + 3] = Math.round(Math.min(1, a) * 255); }
+    x.putImageData(im, 0, 0);
+    for (let i = 0; i < 24; i++) {
+      const sx = r() * CWd, sy = r() * CHt, ln = 4 + r() * 34, an = (r() - 0.5) * 1.2 + (r() < 0.5 ? 0 : Math.PI / 2);
+      x.strokeStyle = L.rgba(glare, 0.12 + r() * 0.3); x.lineWidth = 1; x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + Math.cos(an) * ln, sy + Math.sin(an) * ln); x.stroke();
+    }
+    return big(c);
+  });
+  Object.assign(spk.style, { backgroundSize: `${W}px ${H}px`, opacity: String(0.25 + 0.75 * GR) });
+  const scanline = (el, y, th, a) => Object.assign(el.style, { top: `${y * K - th * K / 2}px`, width: `${W}px`, height: `${th * K}px`,
+    background: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${L.rgba(glare, a)} 12%, ${L.rgba(glare, a * 0.35)} 45%, ${L.rgba(glare, a * 0.9)} 70%, ${L.rgba(glare, a * 0.5)} 90%, rgba(0,0,0,0) 100%)`, opacity: String(GR) });
+  scanline(q("ln1"), 383, 2, 0.5); scanline(q("ln2"), 876, 2, 0.4);
+  if (V.background) Object.assign(q("vig").style, { width: `${W}px`, height: `${H}px`,
+    background: `radial-gradient(ellipse 75% 62% at 50% 48%, rgba(0,0,0,0) 28%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.88) 100%)` });
+
+  // ---- the tech marks (drawn in the reference's 720 x 1280 px)
+  const hud = q("hud"), mk = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); (par || hud).appendChild(e); return e; };
+  const hg = mk("g", { stroke: glare, fill: "none", "stroke-width": 1.6, opacity: 0.55 });
+  const barcode = (x, y, w, h, seed) => { const r = rnd(seed); let cx = x; while (cx < x + w) { const bw = 1 + Math.floor(r() * 3); mk("rect", { x: cx, y, width: bw, height: h, fill: glare, stroke: "none" }, hg); cx += bw + 1 + Math.floor(r() * 3); } mk("rect", { x, y: y + h + 3, width: w, height: 1.4, fill: glare, stroke: "none" }, hg); };
+  const icon = (x, y) => { mk("circle", { cx: x, cy: y, r: 9 }, hg); mk("circle", { cx: x, cy: y, r: 3.4, fill: glare, stroke: "none" }, hg); };
+  const cross = (x, y) => { mk("circle", { cx: x, cy: y, r: 7 }, hg); mk("path", { d: `M ${x - 4} ${y} H ${x + 4} M ${x} ${y - 4} V ${y + 4}`, "stroke-width": 1.2 }, hg); };
+  const label = (x, y, t) => { const e = mk("text", { x, y, fill: glare, stroke: "none", "font-size": 13, class: "hudtxt" }, hg); e.textContent = t; };
+  icon(134, 217); barcode(171, 211, 86, 12, 5); label(343, 144, "666"); label(377, 230, "666"); cross(291, 220); cross(506, 140); barcode(560, 128, 70, 9, 9);
+  icon(137, 1134); barcode(172, 1128, 80, 11, 13); cross(523, 1097); barcode(555, 1124, 74, 9, 17);
+  const circ = mk("g", { stroke: glare, fill: "none", "stroke-width": 2, opacity: 0.8 }, hud);
+  const cpath = mk("polyline", { points: "246,300 380,300 437,371 551,374" }, circ);
+  const cd1 = mk("circle", { cx: 246, cy: 300, r: 8, fill: glare, stroke: "none" }, circ), cd2 = mk("circle", { cx: 551, cy: 374, r: 8, fill: glare, stroke: "none" }, circ);
+  const CLEN = 134 + Math.hypot(57, 71) + 114;
+  const gx = 377, gy = 1171, GRr = 62, gb = mk("g", { stroke: glare, fill: "none", opacity: 0.5 }, hud);
+  mk("circle", { cx: gx, cy: gy, r: GRr, "stroke-width": 4.5 }, gb);
+  const mer = [0, 1, 2, 3, 4].map(() => mk("ellipse", { cx: gx, cy: gy, rx: GRr, ry: GRr, "stroke-width": 4.5 }, gb));
+  const lat = [-60, -30, 0, 30, 60].map(a => { const c = Math.cos(a * Math.PI / 180), s = Math.sin(a * Math.PI / 180);
+    return mk("ellipse", { cx: gx, cy: gy + GRr * s * 0.92, rx: GRr * c, ry: GRr * c * 0.24, "stroke-width": 3.6 }, gb); });
+  const turn = th => mer.forEach((e, k) => e.setAttribute("rx", Math.max(1, GRr * Math.abs(Math.cos(th + k * Math.PI / 5))).toFixed(2)));
+  turn(0);
+  if (!V.hud) hud.style.display = "none";
+
+  // ---- the title: one character at a time, over the brush stroke
+  const tg = q("tg"), txt = q("txt"), stroke = q("stroke");
+  Object.assign(tg.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(stroke.style, { width: `${W}px`, height: `${H}px`, overflow: "visible" });
+  Object.assign(txt.style, { fontSize: `${V.size * U}px`, fontWeight: String(fw(V.body_font, 400)), color: txc });
+  const rich = window.MLLook ? MLLook.rich(txt, V.text, { look: L, family: V.body_font, weight: 400 }) : null;
+  if (!rich) txt.textContent = V.text;
+  const chars = [];
+  [...txt.childNodes].forEach(n => {
+    if (n.nodeType === 3) { [...n.textContent].forEach(() => chars.push(null)); return; }
+    const s = n.textContent; n.textContent = "";
+    [...s].forEach(ch => { const u = document.createElement("span"); u.className = "u"; u.textContent = ch; n.appendChild(u); chars.push(u); });
+  });
+  const probe = document.createElement("span");
+  Object.assign(probe.style, { display: "inline-block", width: "0px", height: "0px" });
+  txt.appendChild(probe);
+  const szr = V.size / 120, CX = W / 2 + 3 * K, BASE = 691 * K;
+
+  // the stroke: a ragged shape, 4 variants that re-draw every 10 frames; the wipe's front is ragged too
+  const STH = 133 * K * szr, PADL = 54 * K * szr, PADR = 66 * K * szr;
+  const variants = [0, 1, 2, 3].map(k => { const r = rnd(300 + k * 11), jt = [], jb = [], jl = [], jr = [], st = [];
+    for (let i = 0; i < 80; i++) { jt.push(r()); jb.push(r()); jl.push(r()); jr.push(r()); }
+    for (let i = 0; i < 4; i++) st.push([0.3 + r() * 0.5, 0.18 + r() * 0.64, 0.12 + r() * 0.3]);
+    return { jt, jb, jl, jr, st }; });
+  const front = Array.from({ length: 12 }, (_, i) => rnd(77 + i)());
+  const pathFor = (v, w, h) => {
+    const t = Math.max(6 * U, h * 0.04), pts = [];
+    const nx = Math.max(6, Math.round(w / (12 * U)));
+    for (let i = 0; i <= nx; i++) { const x = 16 * U + (w - 30 * U) * i / nx; pts.push([x, t * (0.2 + v.jt[i % 80] * 1.6) - t * 0.4]); }                // top edge
+    const ny = 9;
+    for (let i = 0; i <= ny; i++) { const y = h * 0.02 + h * 0.96 * i / ny; pts.push([w - (v.jr[i % 80] < 0.5 ? 0 : (6 + v.jr[i % 80] * 22) * U), y]); }  // right: bristle teeth
+    for (let i = nx; i >= 0; i--) { const x = 16 * U + (w - 30 * U) * i / nx; pts.push([x, h - t * (0.2 + v.jb[(i + 7) % 80] * 1.7) + t * 0.5]); }          // bottom edge
+    for (let i = ny; i >= 0; i--) { const y = h * 0.02 + h * 0.96 * i / ny; pts.push([v.jl[i % 80] * 16 * U, y]); }                                           // left end
+    return "M " + pts.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ") + " Z";
+  };
+  const spath = mk("path", { fill: stc }, stroke), streaks = [0, 1, 2, 3].map(() => mk("rect", { fill: mix(stc, "#000000", 0.35), opacity: 0.35 }, stroke));
+  const WIPE = [[3, 0.02], [4, 0.146], [5, 0.226], [6, 0.336], [7, 0.45], [8, 0.545], [9, 0.628], [10, 0.683], [11, 0.738], [12, 0.784], [13, 0.818], [14, 0.852], [15, 0.879], [16, 0.905],
+    [17, 0.92], [18, 0.94], [19, 0.955], [20, 0.958], [22, 0.977], [24, 0.99], [25, 1]];
+  const ZOOM = [[0, 1], [3, 1], [10, 1.045], [20, 1.072], [30, 1.085], [40, 1.098], [60, 1.107], [100, 1.125], [170, 1.148], [180, 1.15]];
+  const HZOOM = [[0, 0.94], [5, 0.94], [13, 0.953], [38, 1], [60, 1.012], [100, 1.025], [179, 1.038]];
+  let lastKey = "";
+
+  // ---- the motion, frame by frame from one proxy (seek-safe); g = the frame minus "Starts at frame"
+  const S = Math.round(V.start);
+  const maxW = 0.9 * W;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const gi = Math.floor(g + 1e-6), z = tab(ZOOM, g)[0], nz = 2 * Math.floor(gi / 5) + (gi % 5 >= 3 ? 1 : 0);   // the speckle refreshes at f3, f5, f8, f10, f13...: twelve times a second
+    // the worn ground: a new speckle every frame, a slow zoom
+    const rr = rnd(5000 + nz * 13);
+    spk.style.backgroundImage = `url(${sheets[nz % 4]})`;
+    spk.style.backgroundPosition = `${Math.floor(rr() * W)}px ${Math.floor(rr() * H)}px`;
+    bg.style.transform = `scale(${z.toFixed(4)})`;
+    // the marks
+    const ho = cl((g - 5) / 11), hb = 9 * (1 - cl((g - 5) / 12)), go = cl((g - 6) / 10);
+    hud.style.transformOrigin = "50% 50%"; hud.style.transform = `scale(${tab(HZOOM, g)[0].toFixed(4)})`;
+    hg.setAttribute("opacity", (0.65 * ho).toFixed(3)); hud.style.filter = hb > 0.1 ? `blur(${(hb * K).toFixed(2)}px)` : "none";
+    const cp = cl((g - 6) / 10);
+    circ.setAttribute("opacity", (0.8 * cl((g - 5) / 4)).toFixed(3));
+    cpath.setAttribute("stroke-dasharray", `${(CLEN * cp).toFixed(1)} ${CLEN}`);
+    cd2.setAttribute("opacity", cl((g - 12) / 4).toFixed(3));
+    gb.setAttribute("opacity", (0.62 * go).toFixed(3)); turn(0.012 * g);
+    // the title
+    const w = txt.offsetWidth || 1, base = probe.offsetTop, stw = w + PADL + PADR, fit = Math.min(1, maxW / stw);
+    const left = CX - stw / 2;
+    Object.assign(txt.style, { transform: `translate(${(left + PADL).toFixed(1)}px, ${(BASE - base).toFixed(1)}px)` });
+    tg.style.transformOrigin = `${CX}px ${BASE}px`; tg.style.transform = `scale(${fit.toFixed(4)})`;
+    chars.forEach((u, i) => { if (u) u.style.opacity = g >= 2 + 3 * i ? "1" : "0"; });
+    // the stroke
+    const vi = Math.floor(Math.max(0, g) / 10) % 4, key = `${vi}|${Math.round(stw)}|${V.stroke_colour}`;
+    if (key !== lastKey) {
+      lastKey = key;
+      spath.setAttribute("d", pathFor(variants[vi], stw, STH));
+      spath.setAttribute("transform", `translate(${left.toFixed(1)}, ${(BASE - 113 * K * szr).toFixed(1)})`);
+      streaks.forEach((s, k) => { const a = variants[vi].st[k]; s.setAttribute("x", (left + stw * a[0]).toFixed(1)); s.setAttribute("y", (BASE - 113 * K * szr + STH * a[1]).toFixed(1));
+        s.setAttribute("width", (stw * a[2]).toFixed(1)); s.setAttribute("height", (2.2 * K * szr).toFixed(1)); });
+    }
+    const p = tab(WIPE, g)[0], fx = left + stw * p;
+    if (g < 3) stroke.style.clipPath = "polygon(0 0, 0 0, 0 0)";
+    else {
+      const top = BASE - 113 * K * szr - 10, hh = STH + 20, n = front.length;
+      const poly = [`${(left - 30).toFixed(1)}px ${top.toFixed(1)}px`];
+      for (let i = 0; i < n; i++) poly.push(`${(fx + (p < 1 ? (front[i] - 0.5) * 36 * K * szr * (1 - p * 0.6) : 0) + 14 * K * (p < 1 ? 1 : 3)).toFixed(1)}px ${(top + hh * i / (n - 1)).toFixed(1)}px`);
+      poly.push(`${(left - 30).toFixed(1)}px ${(top + hh).toFixed(1)}px`);
+      stroke.style.clipPath = `polygon(${poly.join(", ")})`;
+    }
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 9 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 21 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

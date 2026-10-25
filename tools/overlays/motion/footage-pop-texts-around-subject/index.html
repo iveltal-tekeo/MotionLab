@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "photo_media", "type": "string", "label": "Your picture or video, 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "photo_focus", "type": "string", "label": "What stays in view (x% y%)", "default": "50% 50%"},
+  {"id": "text_1", "type": "string", "label": "Text 1, top left (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Quiet room"},
+  {"id": "text_2", "type": "string", "label": "Text 2, top right", "default": "Loud mind"},
+  {"id": "text_3", "type": "string", "label": "Text 3, left", "default": "One light"},
+  {"id": "text_4", "type": "string", "label": "Text 4, right", "default": "No rush"},
+  {"id": "text_5", "type": "string", "label": "Text 5, bottom left", "default": "Slow burn"},
+  {"id": "text_6", "type": "string", "label": "Text 6, bottom right", "default": "Last word"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 100, "min": 30, "max": 220, "step": 1},
+  {"id": "glow", "type": "number", "label": "Glow around the text (0 = none, 100 = strong)", "default": 80, "min": 0, "max": 100, "step": 1},
+  {"id": "dim", "type": "number", "label": "Darken the picture (%)", "default": 12, "min": 0, "max": 80, "step": 1},
+  {"id": "push", "type": "number", "label": "Slow push-in on the picture (% over the whole clip, 0 = still)", "default": 3, "min": 0, "max": 12, "step": 0.5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "footage-pop-texts-around-subject" (2026-10-22): the user's picture fills the frame (it drifts in a few percent) and six short texts pop in
+     around its subject, one after another (f3, f5, f11, f25, f31, f36): each starts small and blurred, overshoots to
+     about x1.25 two frames later and settles in four more (a quick springy pop), white with a soft warm glow and a
+     dark halo so it reads on any picture. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #pic { overflow: hidden; }
+  .pt { position: absolute; white-space: nowrap; line-height: 1.05; font-synthesis: none; letter-spacing: -0.005em; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="1.5" data-width="1920"
+     data-height="1080">
+  <div id="gnd" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="pic" class="abs"></div>
+    <div id="dimmer" class="abs"></div>
+    <div id="txts" class="abs"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 45;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const rgba = (h, a) => { const s = String(h).replace("#", ""); const c = [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const plain = s => String(s || "").replace(/[*_=^]/g, "");
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  gsap.set("#gnd", { width: W, height: H, background: V.background ? night : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  ["pic", "dimmer", "txts"].forEach(id => Object.assign(q(id).style, { width: `${W}px`, height: `${H}px` }));
+
+  // ---- the picture (still) and a darkening layer
+  if (window.MLLook) MLLook.media(q("pic"), V.photo_media, { look: L, kind: "image", label: "your picture", fit: "cover", focus: V.photo_focus, seed: 31,
+    r: 0, start: 0, duration: FRAMES / FPS, id: "m1", slot: "photo_media" });
+  q("dimmer").style.background = rgba(night, V.dim / 100);
+
+  // ---- the six texts: centre (fractions of the frame) and the frame each one starts on
+  const POS = [[0.223, 0.256, 3], [0.865, 0.315, 5], [0.146, 0.437, 11], [0.81, 0.512, 25], [0.248, 0.637, 31], [0.80, 0.692, 36]];
+  const texts = [V.text_1, V.text_2, V.text_3, V.text_4, V.text_5, V.text_6];
+  const nMax = Math.max(...texts.map(s => plain(s).length), 4);
+  const fs = Math.min(V.size * U, 0.34 * W / (nMax * 0.6));
+  const wt = String(fw(V.body_font, 800));
+  const gl = V.glow / 100;
+  const warm = L.mustard;
+  const els = POS.map(([x, y, f0], i) => {
+    const el = document.createElement("div"); el.className = "pt ml-body";
+    // keep the text (with its x1.22 overshoot) inside the frame: a longer text moves in from the edge it is nearest to
+    const hw = Math.max(plain(texts[i]).length, 1) * 0.58 * fs / 2 * 1.22, cx = Math.min(Math.max(W * x, 0.03 * W + hw), 0.97 * W - hw);
+    Object.assign(el.style, { left: `${cx}px`, top: `${H * y}px`, fontSize: `${fs}px`, fontWeight: wt, color: glare,
+      textShadow: [`0 0 ${5 * U}px ${rgba(warm, 0.9 * gl)}`, `0 0 ${16 * U}px ${rgba(warm, 0.6 * gl)}`, `0 0 ${38 * U}px ${rgba(warm, 0.3 * gl)}`,
+        `0 ${2 * U}px ${5 * U}px ${rgba("#000000", 0.75)}`].join(", ") });
+    if (window.MLLook) MLLook.rich(el, texts[i], { look: L, family: V.body_font, weight: 700 }); else el.textContent = texts[i];
+    q("txts").appendChild(el);
+    return { el, f0 };
+  });
+
+  // ---- the pop (frames since a text starts): small and blurred, an overshoot at +2, a settle with a little rebound
+  const POP = [[0, 0.5], [1, 0.95], [2, 1.22], [3, 1.14], [4, 1.03], [5, 1.04], [6, 1.0]];
+  const BLR = [[0, 7], [1, 3], [2, 0.6], [3, 0]];
+  const OP = [[0, 0.75], [1, 1]];
+  const S = Math.round(V.start);
+  function render(t) {
+    const g = t * FPS - S;
+    // a still picture drifts in a little so it never sits dead (the reference's photo has smoke moving in it)
+    q("pic").style.transform = `scale(${(1 + V.push / 100 * clamp01(g / FRAMES)).toFixed(5)})`;
+    els.forEach(({ el, f0 }) => {
+      const n = g - f0;
+      if (n < 0) { el.style.opacity = "0"; return; }
+      const k = tab(POP, n)[0], b = tab(BLR, n)[0] * U;
+      el.style.opacity = String(tab(OP, n)[0]);
+      el.style.transform = `translate(-50%, -50%) scale(${k.toFixed(4)})`;
+      el.style.filter = b > 0.2 ? `blur(${b.toFixed(2)}px)` : "none";
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  const hits = V.shake > 0 ? [{ f: S + 5, amount: 1.5 }, { f: S + 25, amount: 1.5 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 15, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "Text in the left circle", "default": "Ideas"},
+  {"id": "text_2", "type": "string", "label": "Text in the right circle", "default": "Skills"},
+  {"id": "size", "type": "number", "label": "Text size (% of the circle)", "default": 100, "min": 40, "max": 160, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Circle and text colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "line_w", "type": "number", "label": "Circle line width (px at a 1080-px short side)", "default": 7, "min": 1, "max": 24, "step": 0.5},
+  {"id": "glow", "type": "number", "label": "Glow (0-100)", "default": 85, "min": 0, "max": 100, "step": 1},
+  {"id": "wiggle", "type": "number", "label": "Letter wiggle (0 = still, 10 = lively)", "default": 5, "min": 0, "max": 10, "step": 0.5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "venn-two-circles-overlap" (2026-10-22): two glowing circles, each with a word, on a dark ground. Each ring draws itself in f2-f28 (an arc that
+     chases its own tail round the circle, the word fading up inside it); the circles drift apart and grow slowly
+     (f12-f45), rush together and grow to overlap like a Venn diagram (f45-f66, the measured sizes and positions),
+     then breathe - closer and smaller to f120, back out and bigger to f177 - the words scaling with the circles and
+     each letter wiggling a little. The geometry is the clip's measured table (a sample every 3 frames, a smooth curve
+     between). Look-aware: the ground, the circle colour and the fonts come from the look tokens. MotionLab's own
+     code. Size-independent (U). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .disc { position: absolute; left: 0; top: 0; border-radius: 50%; mix-blend-mode: screen; }
+  .tx { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; transform-origin: 50% 50%; }
+  .tx .w { display: inline-block; }
+  .tx .ch { display: inline-block; transform-origin: 50% 60%; }
+  #rings { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="dA" class="disc"></div><div id="dB" class="disc"></div>
+    <svg id="rings" width="1920" height="1080" viewBox="0 0 1920 1080"><path id="rA" fill="none" stroke-linecap="round"/><path id="rB" fill="none" stroke-linecap="round"/></svg>
+    <div id="tA" class="tx ml-display"></div><div id="tB" class="tx ml-display"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: true, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+
+  // reference geometry: the clip is 1280 x 720; KR = template px per reference px
+  const KR = 1.5 * U;
+  const CX = 641, CY = 358;
+  const Z = n => n * KR, X = x => W / 2 + (x - 640) * KR, Y = y => H / 2 + (y - 360) * KR;
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const ramp = (g, a, b, e) => { const x = clamp((g - a) / Math.max(1e-6, b - a)); return e ? e(x) : x; };
+  const eo2 = x => 1 - (1 - x) * (1 - x);
+  const S = Math.round(V.start);
+  const COL = L[V.colour] || L.mustard;
+  const rgba = L.rgba;
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background
+    ? `radial-gradient(ellipse 52% 64% at 50% 50%, ${rgba(L.paper, 0.075)} 0%, ${rgba(L.paper, 0.075)} 40%, ${rgba(L.paper, 0)} 100%), ${L.ink}` : "transparent" });
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the measured geometry: radius and the two centres' x (reference px), a sample every 3 frames from f12
+  const GEO = [[139.5, 348.5, 931.5], [145, 345, 934], [149, 342, 937], [152.5, 338.5, 939.5], [155, 335, 944], [157.5, 331.5, 947.5],
+    [160, 328, 951], [162.5, 325.5, 954.5], [165, 323, 957], [167, 320, 959], [169, 317, 962], [172, 315, 963], [177, 317, 962],
+    [187, 326, 953], [211, 355, 927], [239, 391, 893], [251.5, 407.5, 878.5], [257, 416, 870], [259, 421, 866], [259, 424, 862],
+    [257, 425, 860], [255, 426, 859], [252, 426, 858], [248, 426, 858], [245, 428, 856], [242, 431, 854], [240, 435, 850],
+    [238, 439, 846], [235.5, 443.5, 842.5], [232.5, 445.5, 839.5], [230.5, 447.5, 836.5], [227.5, 447.5, 835.5], [225, 448, 835],
+    [222.5, 448.5, 835.5], [220.5, 449.5, 835.5], [220, 450, 835], [220.5, 451.5, 833.5], [222, 453, 832], [223, 454, 832],
+    [224.5, 452.5, 832.5], [226.5, 450.5, 832.5], [228, 448, 836], [230, 445, 839], [231, 440, 844], [233.5, 437.5, 846.5],
+    [237, 436, 849], [241, 436, 850], [244, 434, 852], [248, 434, 853], [250.5, 430.5, 854.5], [253, 428, 857], [255, 425, 860],
+    [256.5, 421.5, 862.5], [257, 419, 866], [257.5, 416.5, 868.5], [259, 418, 868]];
+  // before f12 the ring is still being drawn: its size grows into the table
+  const EARLY = [[2, 100], [3, 108], [4, 112], [5, 116], [6, 119], [9, 132], [12, 139.5]];
+  const catmull = (p0, p1, p2, p3, t) => 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
+  const geo = g => {
+    // -> {r, d} : radius and half the distance between the centres, reference px
+    if (g < 12) {
+      let r = EARLY[0][1];
+      for (let i = 0; i < EARLY.length - 1; i++) if (g >= EARLY[i][0]) { const a = EARLY[i], b = EARLY[i + 1]; r = a[1] + (b[1] - a[1]) * clamp((g - a[0]) / (b[0] - a[0])); }
+      const d0 = (GEO[0][2] - GEO[0][1]) / 2;
+      return { r, d: d0 };
+    }
+    const p = clamp((g - 12) / 3, 0, GEO.length - 1), i = Math.min(GEO.length - 2, Math.floor(p)), t = p - i;
+    const at = k => GEO[clamp(k, 0, GEO.length - 1)];
+    const out = [0, 1, 2].map(c => catmull(at(i - 1)[c], at(i)[c], at(i + 1)[c], at(i + 2)[c], t));
+    return { r: out[0], d: (out[2] - out[1]) / 2 };
+  };
+  // the ring draws itself: an arc between a tail and a head (degrees clockwise from 12 o'clock) [frame, tail, head]
+  const ARC = [[2, -44, -40], [3, -50, -32], [4, -58, -10], [5, -80, 20], [6, -90, 100], [7, -30, 150], [8, -5, 165], [9, 5, 220],
+    [10, 25, 240], [11, 18, 262], [12, 22, 300], [14, 25, 342], [17, 18, 352], [22, 12, 358], [28, 0, 360]];
+  const arcAt = g => {
+    if (g <= ARC[0][0]) return null;
+    if (g >= ARC[ARC.length - 1][0]) return [0, 360];
+    for (let i = 0; i < ARC.length - 1; i++) if (g < ARC[i + 1][0]) { const a = ARC[i], b = ARC[i + 1], t = (g - a[0]) / (b[0] - a[0]); return [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+    return [0, 360];
+  };
+  const arcPath = (cx, cy, R, a0, a1) => {
+    const P = a => { const r = a * Math.PI / 180; return [cx + R * Math.sin(r), cy - R * Math.cos(r)]; };
+    if (a1 - a0 >= 359.5) { const [x0, y0] = P(0), [x1, y1] = P(180); return `M ${x0} ${y0} A ${R} ${R} 0 1 1 ${x1} ${y1} A ${R} ${R} 0 1 1 ${x0} ${y0}`; }
+    const [xa, ya] = P(a0), [xb, yb] = P(a1);
+    return `M ${xa} ${ya} A ${R} ${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${xb} ${yb}`;
+  };
+
+  // ---- the parts
+  const rA = q("rA"), rB = q("rB"), dA = q("dA"), dB = q("dB"), tA = q("tA"), tB = q("tB");
+  [rA, rB].forEach(p => { p.setAttribute("stroke", COL); p.setAttribute("stroke-width", String(Math.max(1, V.line_w * U))); });
+  if (window.MLLook) MLLook.glow(q("rings"), COL, V.glow, { kind: "drop", U });
+  const BASE = Z(100);
+  const letters = (el, text) => {
+    el.style.fontSize = `${BASE}px`; el.style.color = COL;
+    const ws = window.MLLook ? MLLook.rich(el, text, { look: L, family: V.display_font, weight: 400 }).words : (el.textContent = String(text || ""), []);
+    const out = [];
+    ws.forEach(w => { const t = w.textContent; w.textContent = ""; Array.from(t).forEach(ch => { const s = document.createElement("span"); s.className = "ch"; s.textContent = ch; w.appendChild(s); out.push(s); }); });
+    if (window.MLLook) MLLook.glow(el, COL, V.glow, { kind: "text", U });
+    return out;
+  };
+  const lA = letters(tA, V.text_1), lB = letters(tB, V.text_2);
+  [dA, dB].forEach(d => {
+    d.style.background = `radial-gradient(circle at 50% 50%, ${rgba(L.paper, 0.10)} 0%, ${rgba(L.paper, 0.07)} 62%, ${rgba(COL, 0.20)} 100%)`;
+    d.style.boxShadow = `inset 0 0 ${Z(36)}px ${rgba(COL, 0.22)}`;
+  });
+  const PH = (seed, n) => { const r = window.MLLook ? MLLook.rnd(seed) : Math.random; return Array.from({ length: n }, () => r() * Math.PI * 2); };
+  const phA = PH(71, 9), phB = PH(83, 9);
+  const wig = (g, k, ph) => {
+    const i = k % 3, W_ = Number(V.wiggle || 0) / 5;
+    return { rot: W_ * 3.4 * (0.6 * Math.sin(2 * Math.PI * g / 37 + ph[k]) + 0.4 * Math.sin(2 * Math.PI * g / 23 + ph[(k + 3) % 9])),
+             dy: W_ * 2.6 * Math.sin(2 * Math.PI * g / 29 + ph[(k + 6) % 9]) };
+  };
+
+  function render(f) {
+    const g = (f - S) * 30 / FPS;
+    const { r, d } = geo(Math.max(g, 2));
+    const arc = arcAt(g);
+    const rc = Math.max(1, r - 2.5);
+    const cA = [CX - d, CY], cB = [CX + d, CY];
+    [[rA, cA], [rB, cB]].forEach(([p, c]) => {
+      if (!arc) { p.setAttribute("d", ""); return; }
+      p.setAttribute("d", arcPath(X(c[0]), Y(c[1]), Z(rc), arc[0], arc[1]));
+    });
+    [[dA, cA], [dB, cB]].forEach(([e, c]) => {
+      const dd = Z(rc * 2);
+      Object.assign(e.style, { width: `${dd}px`, height: `${dd}px`, left: `${X(c[0]) - dd / 2}px`, top: `${Y(c[1]) - dd / 2}px`, opacity: String(ramp(g, 10, 40) * (g > 2 ? 1 : 0)) });
+    });
+    // the words: size follows the circle, kept inside it, fading up with the ring
+    const al = g < 5 ? 0 : eo2(ramp(g, 5, 30));
+    [[tA, lA, cA, phA], [tB, lB, cB, phB]].forEach(([el, ls, c, ph]) => {
+      const w100 = Math.max(1, el.offsetWidth);
+      const s = Math.min((0.58 * rc * (V.size / 100) * KR) / BASE, (1.22 * rc * KR) / w100);
+      el.style.transform = `translate(${X(c[0])}px, ${Y(c[1] + 2)}px) translate(-50%, -50%) scale(${s})`;
+      el.style.opacity = String(al);
+      ls.forEach((sp, k) => { const w = wig(g, k % 9, ph); sp.style.transform = `translateY(${w.dy * BASE / 100}px) rotate(${w.rot}deg)`; });
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, t => render(t * FPS)); else render(0);
+
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 23 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 47 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

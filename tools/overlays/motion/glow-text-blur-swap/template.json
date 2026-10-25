@@ -1,0 +1,88 @@
+{
+ "name": "Glow text whip swap",
+ "kind": "text",
+ "category": "Text",
+ "what": "A big glowing word whips in from the right with a sideways motion blur that clears as it lands, holds for a moment, then is swapped for a second word that whips in from the left, overshoots the middle a little and settles sharp.",
+ "use_for": [
+  "title swap",
+  "two words",
+  "before and after",
+  "hook",
+  "statement",
+  "punchline",
+  "intro",
+  "reveal"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "motion blur",
+  "whip",
+  "swap",
+  "transition",
+  "bold",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f10 (00:00:00:00-00:00:00:10) the first word whips in from the right, sideways-blurred, with a small overshoot to the left at f8 (00:00:00:08); hold to f22 (00:00:00:22); f23-f26 (00:00:00:23-00:00:00:26) it shrinks away while the second word whips in from the left (f24-f27), blurred the other way; f28 (00:00:00:28) it overshoots the middle a little and clears to sharp by f30 (00:00:01:00); then it holds to the last frame f60 (00:00:02:00)",
+ "tracks": [
+  {
+   "name": "word 1 whips in",
+   "what": "slides in from the right with a sideways blur that clears as it lands, overshooting a little",
+   "start_f": 0,
+   "length_f": 10,
+   "easing": "decelerating with a small overshoot (measured positions)"
+  },
+  {
+   "name": "hold 1",
+   "what": "the first word rests, sharp and glowing",
+   "start_f": 10,
+   "length_f": 13,
+   "easing": "none"
+  },
+  {
+   "name": "word 1 shrinks away",
+   "what": "the first word shrinks to about 86 % and is gone",
+   "start_f": 23,
+   "length_f": 4,
+   "easing": "decelerating"
+  },
+  {
+   "name": "word 2 whips in",
+   "what": "slides in from the left with a sideways blur, overshoots the middle a little and clears to sharp",
+   "start_f": 23,
+   "length_f": 8,
+   "easing": "accelerating, then a small overshoot (measured positions)"
+  },
+  {
+   "name": "hold 2",
+   "what": "the second word rests, sharp and glowing",
+   "start_f": 31,
+   "length_f": 30,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 40,
+ "check_frames": [
+  1,
+  3,
+  5,
+  8,
+  14,
+  24,
+  26,
+  28,
+  40
+ ]
+}

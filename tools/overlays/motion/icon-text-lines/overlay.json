@@ -1,0 +1,31 @@
+{
+ "name": "icon-text-lines",
+ "frames": 211,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 400,
+   "to": 2400,
+   "db": -9,
+   "what": "the title's letters swoop in"
+  },
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the crown lands"
+  },
+  {
+   "f": "start + round((160 + 4 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "2",
+   "db": -12,
+   "what": "the heart, then the coin, pops up"
+  }
+ ]
+}

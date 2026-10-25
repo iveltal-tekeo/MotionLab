@@ -1,0 +1,33 @@
+{
+ "name": "footage-to-text-slide",
+ "frames": 80,
+ "fps": 28,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 28)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 2200,
+   "to": 500,
+   "db": -10,
+   "what": "the card spins and shrinks"
+  },
+  {
+   "f": "start + round(40 * fps / 28)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2600,
+   "db": -8,
+   "what": "the card slides left and the text slides in"
+  },
+  {
+   "f": "start + round(47 * fps / 28)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the text lands"
+  }
+ ]
+}

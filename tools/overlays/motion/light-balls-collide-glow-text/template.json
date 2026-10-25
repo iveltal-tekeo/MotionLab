@@ -1,0 +1,97 @@
+{
+ "name": "Light balls burst text",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two glowing balls swing in from opposite edges in long opposite arcs over the top and round the bottom, shrink away, and burst into a title that spins fast on its centre with an echoed blur, slows to level, grows to full size and glows; at the end it blurs and fades out, ready to loop.",
+ "use_for": [
+  "title",
+  "reveal",
+  "hook",
+  "statement",
+  "impact",
+  "intro",
+  "glow",
+  "logo reveal"
+ ],
+ "tags": [
+  "text",
+  "balls",
+  "glow",
+  "burst",
+  "spin",
+  "reveal",
+  "fade out",
+  "loop",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f20-f79 two balls swing in from the left and right edges in opposite arcs (over the top, down the far side, round the bottom), streaking at speed and shrinking over the last 6 frames; f80 they are replaced by the title spinning fast with an echoed blur (about 80 degrees of fan), the spin slowing by x0.82 a frame to level at f98 at 0.71x size; f98-f126 the title grows to full size; hold to f134; f136-f164 it blurs and fades out",
+ "tracks": [
+  {
+   "name": "balls swing",
+   "what": "two balls swing in from the left and right edges in opposite arcs, point-symmetric about the centre, shrinking at the end",
+   "start_f": 20,
+   "length_f": 60,
+   "easing": "S-curve (measured path)"
+  },
+  {
+   "name": "burst and spin",
+   "what": "the title replaces the balls, spinning fast with an echoed blur and slowing to level",
+   "start_f": 80,
+   "length_f": 18,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "grow",
+   "what": "the title grows from 0.77x to full size",
+   "start_f": 98,
+   "length_f": 28,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the glowing title, still",
+   "start_f": 126,
+   "length_f": 10,
+   "easing": "none"
+  },
+  {
+   "name": "fade out",
+   "what": "the title blurs and fades away, ready to loop",
+   "start_f": 136,
+   "length_f": 28,
+   "easing": "S-curve"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 120,
+ "check_frames": [
+  0,
+  22,
+  32,
+  45,
+  60,
+  72,
+  78,
+  80,
+  81,
+  82,
+  86,
+  92,
+  100,
+  108,
+  128,
+  142,
+  150,
+  160
+ ]
+}

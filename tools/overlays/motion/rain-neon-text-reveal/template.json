@@ -1,0 +1,80 @@
+{
+ "name": "Rain and neon text",
+ "kind": "text",
+ "category": "Text",
+ "what": "Rain streaks fall on a dark ground and a glowing neon text switches on in the middle, blurred at first, then sharp, flickering twice while the rain crosses the letters; at the end it fades out again and the rain thins away, so it loops.",
+ "use_for": [
+  "title",
+  "night",
+  "moody",
+  "neon",
+  "intro",
+  "opener",
+  "mystery",
+  "music"
+ ],
+ "tags": [
+  "text",
+  "neon",
+  "rain",
+  "glow",
+  "dark",
+  "flicker",
+  "loop",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4-f60: rain thickens to a full field (streaks fall at 34 px a frame, 15.8 degrees right of vertical); f7-f36 the neon text fades in, blurred 8 px and 0.86x, sharpening to 1x while the glow builds; f71-f76, f106-f114 and f168-f176 it flickers (a dip to ~85 % light, ~70 % glow); f204-f232 it fades out blurred and shrinking to 0.78x while the rain thins out by f236.",
+ "tracks": [
+  {
+   "name": "rain",
+   "what": "a field of falling streaks that thickens, then thins out at the end",
+   "start_f": 4,
+   "length_f": 232,
+   "easing": "linear fall; density ramps over f4-f60 and f204-f236"
+  },
+  {
+   "name": "neon on",
+   "what": "the text fades in, blurred and 0.86x, then sharpens and grows to full size",
+   "start_f": 7,
+   "length_f": 29,
+   "easing": "decelerating (measured table)"
+  },
+  {
+   "name": "flicker",
+   "what": "short dips in light and glow, three bursts",
+   "start_f": 71,
+   "length_f": 106,
+   "easing": "steps (measured)"
+  },
+  {
+   "name": "neon off",
+   "what": "the text fades out blurred and shrinking (the entry played backwards)",
+   "start_f": 204,
+   "length_f": 28,
+   "easing": "accelerating (measured table)"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 100,
+ "check_frames": [
+  8,
+  12,
+  20,
+  40,
+  73,
+  108,
+  170,
+  215,
+  226
+ ]
+}

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Text revealed by the smash", "default": "Big idea"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 170, "min": 50, "max": 360, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Capital letters", "default": true},
+  {"id": "colour", "type": "enum", "label": "Ball, square and text colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "glow", "type": "number", "label": "Glow (0-100)", "default": 40, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "ball-smash-text-reveal" (2026-10-22): a ball circles a square and smashes it into a title. A square stands at the centre from the first
+     frame. A ball swings in from the left edge (f4), sweeps down and round the bottom (to f28), up the right side to a
+     pause (f58-f64), flicks up (f66-f76), floats to the top (f92) and dives back down-left onto the square (f94-f109).
+     The square shatters into four shards (f111) that drift apart on curved paths while the ball bounces away off the
+     bottom edge (f111-f127); at f145 the shards open into three blurred, rotated chunks of the title (f146-f148) that
+     swing flat and sharpen (f148-f154). Every path is the clip's measured table. Look-aware. MotionLab's own code.
+     Size-independent (U). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #sq, #dot { position: absolute; left: 0; top: 0; }
+  #dot { border-radius: 50%; }
+  #tt { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; font-synthesis: none; text-align: center; transform-origin: 50% 50%; }
+  #tt .ck { display: inline-block; white-space: pre; transform-origin: 50% 50%; }
+  #sh { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7.5" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="sq"></div>
+    <svg id="sh" width="1920" height="1080" viewBox="0 0 1920 1080"><polygon id="pA"/><polygon id="pB"/><polygon id="pC"/><polygon id="pD"/></svg>
+    <div id="dot"></div>
+    <div id="tt" class="ml-display"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 225;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: true, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+
+  // reference geometry: the clip is 1280 x 720; KR = template px per reference px
+  const KR = 1.5 * U;
+  const Z = n => n * KR, X = x => W / 2 + (x - 640) * KR, Y = y => H / 2 + (y - 360) * KR;
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const S = Math.round(V.start);
+  const COL = L[V.colour] || L.mustard, rgba = L.rgba;
+  const tab = (rows, g) => {
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    for (let i = 0; i < rows.length - 1; i++) if (g < rows[i + 1][0]) { const a = rows[i], b = rows[i + 1], t = (g - a[0]) / (b[0] - a[0]); return a.slice(1).map((v, k) => v + (b[k + 1] - v) * t); }
+    return rows[rows.length - 1].slice(1);
+  };
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background
+    ? `radial-gradient(ellipse 52% 64% at 50% 50%, ${rgba(L.paper, 0.075)} 0%, ${rgba(L.paper, 0.075)} 40%, ${rgba(L.paper, 0)} 100%), ${L.ink}` : "transparent" });
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the measured paths (reference px): the ball's centre
+  const BALL = [[3, -45, 180], [4, -36, 191], [5, -31, 202], [6, -24, 214], [7, -16, 229], [8, -5, 247], [9, 7, 268], [10, 22, 291], [11, 40, 315],
+    [12, 59, 342], [13, 83, 371], [14, 110, 400], [16, 174, 456], [18, 247, 506], [20, 326, 545], [22, 406, 572], [24, 482, 588], [26, 552, 595],
+    [28, 616, 596], [30, 672, 592], [32, 721, 585], [34, 764, 578], [36, 802, 569], [38, 834, 561], [40, 862, 553], [42, 885, 545], [44, 905, 539],
+    [46, 922, 533], [48, 935, 527], [50, 947, 523], [52, 955, 520], [54, 961, 517], [56, 966, 515], [58, 968, 514], [60, 969, 514], [62, 969, 513],
+    [64, 971, 509], [65, 972, 506], [66, 974, 501], [67, 976, 496], [68, 979, 488], [69, 982, 479], [70, 986, 466], [71, 991, 449], [72, 997, 425],
+    [73, 1003, 387], [74, 1003, 325], [75, 980, 250], [76, 949, 206], [77, 924, 184], [78, 905, 171], [79, 890, 163], [80, 879, 157], [82, 862, 150],
+    [84, 852, 146], [86, 846, 144], [88, 843, 144], [90, 842, 144], [92, 841, 144], [94, 839, 147], [96, 834, 152], [98, 828, 159], [100, 819, 169],
+    [102, 806, 182], [104, 788, 201], [105, 776, 214], [106, 763, 228], [107, 746, 246], [108, 724, 269], [109, 684, 311], [110, 610, 385], [111, 545, 448],
+    [112, 500, 512], [113, 469, 546], [114, 443, 574], [115, 421, 598], [116, 402, 619], [117, 384, 638], [118, 369, 655], [119, 355, 671],
+    [120, 342, 685.5], [121, 330, 698.5], [122, 320, 710.5], [123, 310, 721.5], [124, 301, 731.5], [125, 292, 741.5], [126, 285, 749.5], [127, 277, 757.5],
+    [128, 270, 766]];
+  // the four shards' centres, a frame (or two) apart: [frame, x, y]
+  const SA = [[111, 500, 425], [112, 454, 439], [114, 382, 453], [116, 329, 459], [118, 289, 459], [120, 257, 454], [122, 231, 447], [124, 212, 437],
+    [126, 199, 425], [128, 192, 412], [130, 188, 401], [132, 186, 391], [134, 186, 384], [136, 187, 377], [138, 188, 368], [140, 190, 356], [142, 197, 342],
+    [144, 216, 326], [145, 235, 320]];
+  const SB = [[111, 575, 392], [112, 548, 409], [113, 534, 427], [114, 522, 442], [115, 511, 455], [116, 503, 466], [117, 493, 465], [118, 483, 470],
+    [119, 474, 473], [120, 465, 474], [121, 457, 475], [122, 449, 475], [123, 442, 474], [124, 436, 473], [126, 424, 470], [128, 415, 466], [130, 407, 462],
+    [132, 400, 459], [134, 395, 455], [136, 389, 451], [138, 383, 445], [140, 379, 435], [141, 380, 428], [142, 383, 422], [143, 390, 415], [144, 400, 408],
+    [145, 413, 400]];
+  const SC = [[111, 600, 405], [112, 576, 423], [113, 562, 441], [114, 550, 456], [115, 539, 469], [116, 531, 480], [117, 529, 483], [118, 526, 494],
+    [119, 523, 505], [120, 520, 515], [122, 518, 533], [124, 517, 548], [126, 517, 562], [128, 519, 573], [130, 521, 583], [132, 524, 591], [134, 528, 598],
+    [136, 533, 606], [138, 541, 616], [140, 553, 630], [141, 562, 638], [142, 576, 645], [143, 595, 648], [144, 621, 643], [145, 654, 620]];
+  const SD = [[111, 626, 421], [112, 615, 444], [113, 607, 464], [114, 601, 481], [115, 597, 496], [116, 594, 510], [117, 592, 523], [118, 591, 534],
+    [119, 590, 545], [120, 591, 555], [122, 593, 572], [124, 596, 587], [126, 601, 599], [128, 607, 609], [130, 613, 617], [132, 620, 623], [134, 626, 628],
+    [136, 633, 633], [138, 644, 639], [140, 660, 646], [141, 672, 649], [142, 687, 650], [143, 706, 649], [144, 730, 640], [145, 763, 619]];
+  const SHARDS = [
+    { el: q("pA"), path: SA, pts: [[-21, -24], [21, -27], [24, 23], [-18, 27]], a0: 10, spin: 3.2 },
+    { el: q("pB"), path: SB, pts: [[-16, -12], [14, -17], [18, 12], [-12, 16]], a0: 40, spin: 5.0 },
+    { el: q("pC"), path: SC, pts: [[-15, -22], [17, -20], [16, 24], [-19, 21]], a0: -20, spin: -4.0 },
+    { el: q("pD"), path: SD, pts: [[-23, -18], [22, -23], [25, 20], [-20, 22]], a0: 25, spin: -3.0 }];
+  SHARDS.forEach(s => s.el.setAttribute("fill", COL));
+  // the three chunks of the title, [frame, dx, dy, rotation, scaleX, scaleY, blur] away from their finished place (reference px)
+  const CK = [
+    [[146, -223, -105, -80, 0.8, 0.7, 7], [147, -100, -70, -50, 0.95, 0.95, 4.5], [148, -44, -39, -17, 1, 1, 2.5], [149, -22, -21, -8, 1, 1, 1.5],
+      [150, -12, -13, -3, 1, 1, 0.8], [151, -7, -8, -1, 1, 1, 0.3], [152, -3, -4, 0, 1, 1, 0], [154, 0, 0, 0, 1, 1, 0]],
+    [[146, -194, 19, 60, 0.8, 0.7, 7], [147, -96, -8, 10, 0.95, 0.95, 4.5], [148, -40, -15, -30, 1, 1, 2.5], [149, -21, -10, -21, 1, 1, 1.5],
+      [150, -11, -6, -12, 1, 1, 0.8], [151, -6, -3, -7, 1, 1, 0.3], [152, -2, -1, -3, 1, 1, 0], [154, 0, 0, 0, 1, 1, 0]],
+    [[146, -81, 213, 60, 0.8, 0.7, 7], [147, -61, 133, 40, 0.95, 0.95, 4.5], [148, -4, 58, 30, 1, 1, 2.5], [149, -3, 43, 25, 1, 1, 1.5],
+      [150, 2, 29, 18, 1, 1, 0.8], [151, 1, 17, 10, 1, 1, 0.3], [152, 0, 8, 4, 1, 1, 0], [154, 0, 0, 0, 1, 1, 0]]];
+
+  // ---- the square, the ball, the title
+  const sq = q("sq"), dot = q("dot"), tt = q("tt");
+  Object.assign(sq.style, { width: `${Z(64)}px`, height: `${Z(64)}px`, left: `${X(640) - Z(32)}px`, top: `${Y(360) - Z(32)}px`, background: COL });
+  Object.assign(dot.style, { width: `${Z(82)}px`, height: `${Z(82)}px`, background: COL });
+  if (window.MLLook) { MLLook.glow(sq, COL, V.glow, { kind: "box", U }); MLLook.glow(dot, COL, V.glow, { kind: "box", U }); }
+  tt.style.fontSize = `${V.size * U}px`; tt.style.color = COL; tt.style.webkitTextStroke = `${V.size * U * 0.02}px ${COL}`;
+  const raw = String(V.text || "");
+  const txt = V.caps ? raw.toUpperCase() : raw;
+  const chars = Array.from(txt);
+  const idx = chars.map((c, i) => (c.trim() ? i : -1)).filter(i => i >= 0);
+  const n = idx.length || 1;
+  const n1 = Math.max(1, Math.round(n * 0.25)), n2 = Math.max(1, Math.round(n * 0.25));
+  const cut1 = idx[Math.min(idx.length - 1, n1 - 1)] + 1, cut2 = idx[Math.min(idx.length - 1, n1 + n2 - 1)] + 1;
+  const parts = [chars.slice(0, cut1).join(""), chars.slice(cut1, cut2).join(""), chars.slice(cut2).join("")];
+  const cks = parts.map(p => { const s = document.createElement("span"); s.className = "ck"; s.textContent = p; tt.appendChild(s); return s; });
+  tt.style.transform = `translate(${X(640)}px, ${Y(351)}px) translate(-50%, -50%)`;
+  if (window.MLLook) MLLook.glow(tt, COL, V.glow * 0.7, { kind: "text", U });
+
+  function render(f) {
+    const g = (f - S) * 30 / FPS;
+    // -- the square: still until the ball hits it
+    sq.style.opacity = g < 110.5 ? "1" : "0";
+    // -- the ball
+    const showBall = g >= 3 && g <= 128;
+    const b = tab(BALL, g), b0 = tab(BALL, g - 0.5), b1 = tab(BALL, g + 0.5);
+    const vx = b1[0] - b0[0], vy = b1[1] - b0[1], sp = Math.hypot(vx, vy);
+    dot.style.opacity = showBall ? "1" : "0";
+    dot.style.left = `${X(b[0]) - Z(41)}px`; dot.style.top = `${Y(b[1]) - Z(41)}px`;
+    const st = 1 + clamp((sp - 30) / 300, 0, 0.12), ang = Math.atan2(vy, vx) * 180 / Math.PI;
+    dot.style.transform = sp > 2 ? `rotate(${ang}deg) scale(${st}, ${1 / Math.sqrt(st)})` : "none";
+    dot.style.filter = sp > 25 ? `blur(${Math.min(2, sp / 40) * U}px)` : "none";
+    // -- the four shards, from the smash to the opening
+    const showSh = g >= 110.5 && g < 146;
+    SHARDS.forEach(s => {
+      if (!showSh) { s.el.setAttribute("opacity", "0"); return; }
+      const p = tab(s.path, g), a = (s.a0 + s.spin * (g - 111)) * Math.PI / 180, c = Math.cos(a), d = Math.sin(a);
+      s.el.setAttribute("points", s.pts.map(([x, y]) => `${X(p[0] + x * c - y * d).toFixed(1)},${Y(p[1] + x * d + y * c).toFixed(1)}`).join(" "));
+      s.el.setAttribute("opacity", "1");
+    });
+    // -- the title: three chunks swinging flat and sharpening
+    cks.forEach((el, i) => {
+      if (g < 146) { el.style.opacity = "0"; return; }
+      const p = tab(CK[i], g);
+      el.style.opacity = "1";
+      el.style.transform = `translate(${Z(p[0])}px, ${Z(p[1])}px) rotate(${p[2]}deg) scale(${p[3]}, ${p[4]})`;
+      el.style.filter = p[5] > 0.05 ? `blur(${Z(p[5])}px)` : "none";
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, t => render(t * FPS)); else render(0);
+
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 31 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 59 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+ "name": "text-zoom-blur-to-footage-frame",
+ "frames": 121,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((2 + 2 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "len(intro_1)",
+   "db": -9,
+   "what": "a letter of the first line is typed"
+  },
+  {
+   "f": "start + round(60 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 2600,
+   "db": -8,
+   "what": "the page zooms out and rushes away"
+  },
+  {
+   "f": "start + round(71 * fps / 30)",
+   "kind": "impact",
+   "db": -9,
+   "what": "the footage frame rushes in and settles"
+  }
+ ]
+}

@@ -1,0 +1,132 @@
+{
+ "name": "Ribbon swoosh reveal",
+ "kind": "text",
+ "category": "Text",
+ "what": "A thick ribbon swoops across the screen along a wave, carrying three words and five round pictures that ride away with it; the wave flattens into a band that opens into a wide horn, and your name's letters flicker in on it.",
+ "use_for": [
+  "brand reveal",
+  "product launch",
+  "intro",
+  "logo reveal",
+  "tagline",
+  "team",
+  "saas",
+  "social"
+ ],
+ "tags": [
+  "text",
+  "ribbon",
+  "swoosh",
+  "wave",
+  "path draw",
+  "avatars",
+  "brand reveal",
+  "logos",
+  "intro",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f3-f26 the ribbon head sweeps across (drawn along a wave) while the whole wave slides left from f12 (fastest at f36, stopping by f99); the three words and the round pictures are fixed to the wave (each fades or grows in as the ribbon reaches it); f50-f99 the wave flattens into a straight band whose end rests at 27 % of the width; f100-f138 the band opens into a horn that grows right (accelerating) and fills the right side; f122-f158 the name's letters flicker in; then it holds to f210",
+ "tracks": [
+  {
+   "name": "ribbon drawn",
+   "what": "the head of the ribbon is drawn along the wave",
+   "start_f": 3,
+   "length_f": 96,
+   "easing": "cubic-bezier(0.182, 0.071, 0.307, 1.083)"
+  },
+  {
+   "name": "wave slides left",
+   "what": "everything on the wave scrolls left 3.4 frame widths",
+   "start_f": 12,
+   "length_f": 87,
+   "easing": "cubic-bezier(0.257, -0.03, 0.244, 1.018) (peak speed at f36)"
+  },
+  {
+   "name": "words and pictures",
+   "what": "three words fade in (one blurred), five round pictures grow from a dot as the ribbon reaches them",
+   "start_f": 3,
+   "length_f": 53,
+   "easing": "ease-out"
+  },
+  {
+   "name": "horn opens",
+   "what": "the straight band opens into a horn that reaches the right edge",
+   "start_f": 100,
+   "length_f": 38,
+   "easing": "cubic-bezier(0.356, 0.003, 0.681, 0.692) (accelerating)"
+  },
+  {
+   "name": "name flickers in",
+   "what": "each letter of the name flickers on its own, settling by f158",
+   "start_f": 122,
+   "length_f": 36,
+   "easing": "random flicker"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 158,
+   "length_f": 53,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "word_1",
+  "word_2",
+  "word_3",
+  "brand"
+ ],
+ "media_slots": [
+  {
+   "id": "avatar1_logo",
+   "label": "Round picture 1 (used 3 times)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 40%",
+   "placeholder": "a soft disc in the look with a simple head and shoulders",
+   "optional": true
+  },
+  {
+   "id": "avatar2_logo",
+   "label": "Round picture 2 (used 2 times)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 40%",
+   "placeholder": "a soft disc in the look with a simple head and shoulders",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 190,
+ "check_frames": [
+  6,
+  12,
+  18,
+  26,
+  36,
+  50,
+  70,
+  99,
+  112,
+  124,
+  134,
+  146,
+  190
+ ]
+}

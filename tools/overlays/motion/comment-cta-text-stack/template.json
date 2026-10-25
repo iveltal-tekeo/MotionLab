@@ -1,0 +1,116 @@
+{
+ "name": "Button and text stack",
+ "kind": "text",
+ "category": "UI Elements",
+ "what": "A glowing line fades in on a dark screen, swells and slides off to the left in a blur while a rounded button slides in from the right and climbs up. Two lines then rise in under it, the first light and the last word in a bright highlight colour with a glow.",
+ "use_for": [
+  "call to action",
+  "comment",
+  "follow",
+  "subscribe",
+  "hook",
+  "outro",
+  "social",
+  "prompt",
+  "mobile"
+ ],
+ "tags": [
+  "text",
+  "ui",
+  "button",
+  "pill",
+  "cta",
+  "glow",
+  "blur",
+  "stack",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f10 the opening line fades in at the middle (grey to light, glowing); f17-f40 it swells to 1.55x (slow start and end); f36-f53 it slides off to the left (accelerating, then steady) with a horizontal blur; f45-f56 the button slides in from the right (decelerating); f56-f71 it climbs to the upper third (S-curve); f72-f80 the first line rises in from 12 % of the height below, blurred and faint to sharp; f76-f84 the highlighted line does the same; the last frames hold",
+ "tracks": [
+  {
+   "name": "opening line in",
+   "what": "fades from grey to light, with a glow",
+   "start_f": 1,
+   "length_f": 9,
+   "easing": "power1.out"
+  },
+  {
+   "name": "opening line swells",
+   "what": "grows to 1.55x",
+   "start_f": 17,
+   "length_f": 23,
+   "easing": "S-curve (power2.inOut)"
+  },
+  {
+   "name": "opening line out",
+   "what": "slides off to the left with a horizontal motion blur",
+   "start_f": 36,
+   "length_f": 17,
+   "easing": "accelerating, then linear"
+  },
+  {
+   "name": "button in",
+   "what": "slides in from the right edge, blurred while it is fast",
+   "start_f": 45,
+   "length_f": 11,
+   "easing": "power2.out"
+  },
+  {
+   "name": "button climbs",
+   "what": "rises from the middle to the upper third",
+   "start_f": 56,
+   "length_f": 15,
+   "easing": "S-curve (power2.inOut)"
+  },
+  {
+   "name": "first line up",
+   "what": "rises in under the button, blurred and faint to sharp",
+   "start_f": 72,
+   "length_f": 8,
+   "easing": "power2.out"
+  },
+  {
+   "name": "last line up",
+   "what": "the highlighted word rises in the same way, with a coloured glow",
+   "start_f": 76,
+   "length_f": 8,
+   "easing": "power2.out"
+  },
+  {
+   "name": "hold",
+   "what": "button and lines stand still (the film grain moves)",
+   "start_f": 84,
+   "length_f": 22,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "lead",
+  "pill",
+  "stack"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 105,
+ "check_frames": [
+  0,
+  5,
+  16,
+  30,
+  40,
+  47,
+  52,
+  60,
+  66,
+  76,
+  82,
+  105
+ ]
+}

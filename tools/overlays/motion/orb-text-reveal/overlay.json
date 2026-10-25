@@ -1,0 +1,34 @@
+{
+ "name": "orb-text-reveal",
+ "frames": 150,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(16 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the ball swings in from the left edge"
+  },
+  {
+   "f": "start + round(24 * fps / 30)",
+   "kind": "shimmer",
+   "dur": "0.9",
+   "db": -6,
+   "what": "the word lights up as the ball settles onto its loop"
+  },
+  {
+   "f": "start + round(119 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 3000,
+   "db": -8,
+   "what": "the ball flies off over the top to the right"
+  }
+ ]
+}

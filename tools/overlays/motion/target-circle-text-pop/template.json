@@ -1,0 +1,95 @@
+{
+ "name": "Retro target label",
+ "kind": "text",
+ "category": "Text",
+ "what": "A dot and a tiny disc appear, a comet sweeps round the disc leaving an orange and a yellow ring behind it while a tilted label grows on the disc and straightens; the ring blinks twice and the whole target swells to full size around the label, then holds.",
+ "use_for": [
+  "title",
+  "label",
+  "badge",
+  "callout",
+  "retro",
+  "hook",
+  "statement",
+  "sticker"
+ ],
+ "tags": [
+  "text",
+  "circle",
+  "target",
+  "retro",
+  "rings",
+  "pulse",
+  "label",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f4 (00:00:00:04) a dot appears left of the centre and a tiny disc at the centre; f8-f42 (00:00:00:08-00:00:01:12) the comet sweeps round (orange band, the yellow band 4 f behind), the disc grows to 0.6 of the ring and the label straightens from sideways to level by f40 (00:00:01:10); f42 the orange ring closes; f44 and f48 (00:00:01:14, 00:00:01:18) the yellow ring blinks off for two frames while the target swells; it grows to full size by f86 (00:00:02:26) with a decelerating curve; hold to f149 (00:00:04:29)",
+ "tracks": [
+  {
+   "name": "dot and disc",
+   "what": "an orange dot beside the centre and a tiny disc at the centre appear",
+   "start_f": 4,
+   "length_f": 4,
+   "easing": "none"
+  },
+  {
+   "name": "comet",
+   "what": "the orange band sweeps round clockwise, the yellow band follows 4 frames behind; both close into rings",
+   "start_f": 8,
+   "length_f": 34,
+   "easing": "S-curve (slow start, fast middle, long decelerating end)"
+  },
+  {
+   "name": "disc and label",
+   "what": "the disc grows to 0.6 of the ring size; the label grows on it and straightens from sideways to level",
+   "start_f": 8,
+   "length_f": 32,
+   "easing": "decelerating"
+  },
+  {
+   "name": "pulse",
+   "what": "the yellow ring blinks off for two frames, twice, as the target starts to swell",
+   "start_f": 44,
+   "length_f": 6,
+   "easing": "none"
+  },
+  {
+   "name": "swell",
+   "what": "the whole target grows from 0.6 to full size",
+   "start_f": 42,
+   "length_f": 44,
+   "easing": "decelerating"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 86,
+   "length_f": 64,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 100,
+ "check_frames": [
+  4,
+  8,
+  12,
+  16,
+  20,
+  28,
+  44,
+  46,
+  56,
+  100
+ ]
+}

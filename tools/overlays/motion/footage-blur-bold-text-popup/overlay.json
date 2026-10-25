@@ -1,0 +1,36 @@
+{
+ "name": "footage-blur-bold-text-popup",
+ "frames": 181,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "media_start": {
+  "footage_2_media": 64
+ },
+ "cues": [
+  {
+   "f": "start + round(27 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the bold text pops in"
+  },
+  {
+   "f": "start + round(66 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 300,
+   "to": 1600,
+   "db": -12,
+   "what": "the second footage rises"
+  },
+  {
+   "f": "start + round(132 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 2600,
+   "db": -9,
+   "what": "text and card fall away"
+  }
+ ]
+}

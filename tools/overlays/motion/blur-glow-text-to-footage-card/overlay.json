@@ -1,0 +1,35 @@
+{
+ "name": "blur-glow-text-to-footage-card",
+ "frames": 300,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "media_start": {
+  "video_media": 174
+ },
+ "cues": [
+  {
+   "f": "start + round((34 + 33 * i) * fps / 30)",
+   "kind": "whoosh",
+   "repeat": "3",
+   "dur": "0.5",
+   "from": 400,
+   "to": 2400,
+   "db": -9,
+   "what": "a line slides out to the left and the next one sharpens in"
+  },
+  {
+   "f": "start + round(148 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the round logo pops in, turning"
+  },
+  {
+   "f": "start + round(174 * fps / 30)",
+   "kind": "impact",
+   "dur": "0.45",
+   "db": -6,
+   "what": "the footage card slams in"
+  }
+ ]
+}

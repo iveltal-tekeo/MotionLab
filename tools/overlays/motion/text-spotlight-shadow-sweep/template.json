@@ -1,0 +1,95 @@
+{
+ "name": "Spotlight shadow sweep",
+ "kind": "text",
+ "category": "Text",
+ "what": "Two lines of tilted text on a page that starts in deep shadow: a soft beam opens at the top corner and swings across while the first line's words rise in one by one, then the view jumps in and the second line rises into the middle as the beam edges keep turning slowly.",
+ "use_for": [
+  "two lines",
+  "title",
+  "reveal",
+  "statement",
+  "quote",
+  "moody",
+  "hook",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "spotlight",
+  "shadow",
+  "light",
+  "reveal",
+  "tilted",
+  "stagger",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f7 (00:00:00:00-00:00:00:07) the frame is in shadow; f8-f29 (00:00:00:08-00:00:00:29) a beam opens at the top right corner and its left edge swings from nearly flat to tilted the other way, decelerating, while line 1's words rise in one after another (f6-f47); f41-f48 (00:00:01:11-00:00:01:18) line 2 starts to rise in the right-hand shadow; f49 (00:00:01:19) the view jumps in about 1.19 x, line 1 is left as a clipped tail at the left edge; f49-f114 (00:00:01:19-00:00:03:24) line 2's words settle into one line while the beam edges keep turning; f115-f239 the beam almost stops, then holds",
+ "tracks": [
+  {
+   "name": "beam swings in",
+   "what": "the beam's left edge swings round from nearly flat to tilted the other way (about 100 degrees)",
+   "start_f": 8,
+   "length_f": 22,
+   "easing": "steady turn, decelerating at the end"
+  },
+  {
+   "name": "line 1 rises",
+   "what": "the first line's words rise in one after another, each about 6.5 frames after the last, fading in",
+   "start_f": 6,
+   "length_f": 42,
+   "easing": "exponential ease-out"
+  },
+  {
+   "name": "line 2 rises",
+   "what": "the second line's words rise in the same way, first hidden in the shadow, then in the beam",
+   "start_f": 41,
+   "length_f": 40,
+   "easing": "exponential ease-out"
+  },
+  {
+   "name": "view jump",
+   "what": "the whole view re-frames about 1.19 x in a single frame",
+   "start_f": 49,
+   "length_f": 1,
+   "easing": "hard cut"
+  },
+  {
+   "name": "beam settles",
+   "what": "the beam's edges keep turning slowly and stop",
+   "start_f": 49,
+   "length_f": 82,
+   "easing": "decelerating (measured positions)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 131,
+   "length_f": 109,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  8,
+  14,
+  20,
+  26,
+  44,
+  49,
+  56,
+  80,
+  114
+ ]
+}

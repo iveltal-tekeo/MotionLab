@@ -1,0 +1,36 @@
+{
+ "name": "footage-strips-stretch-to-text",
+ "frames": 121,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.5",
+   "from": 300,
+   "to": 3000,
+   "db": -8,
+   "what": "the cards speed away to the left"
+  },
+  {
+   "f": "start + round(48 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 2600,
+   "to": 500,
+   "db": -10,
+   "what": "the last card slows out"
+  },
+  {
+   "f": "start + round(56 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 2400,
+   "to": 600,
+   "db": -10,
+   "what": "the text slides in"
+  }
+ ]
+}

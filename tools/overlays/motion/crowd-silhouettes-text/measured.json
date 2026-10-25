@@ -1,0 +1,20 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f10 (00:00:00:10) +6 more: #l2 > span:nth-of-type(1) > span:nth-of-type(4) \"A\" off the frame, outside its box by 82 px",
+    "FIT f15 (00:00:00:15) +5 more: #l2 > span:nth-of-type(1) > span:nth-of-type(5) \"T\" off the frame, outside its box by 82 px",
+    "FIT f15 (00:00:00:15) +5 more: #l2 > span:nth-of-type(1) > span:nth-of-type(6) \"O\" off the frame, outside its box by 82 px",
+    "FIT f20 (00:00:00:20) +4 more: #l2 > span:nth-of-type(1) > span:nth-of-type(3) \"E\" off the frame, outside its box by 82 px",
+    "FIT f20 (00:00:00:20) +4 more: #l2 > span:nth-of-type(1) > span:nth-of-type(7) \"R\" off the frame, outside its box by 82 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

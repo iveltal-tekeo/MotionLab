@@ -1,0 +1,104 @@
+{
+ "name": "Curved path, numbered steps",
+ "kind": "text",
+ "category": "Text",
+ "what": "A dashed path curves across a dark ground and the camera flies along it in 3D, stopping at three lines of text that lie on the ground: each one types out letter by letter as the camera arrives, then it flies on to the next.",
+ "use_for": [
+  "three steps",
+  "how it works",
+  "roadmap",
+  "journey",
+  "tutorial steps",
+  "numbered list",
+  "process",
+  "timeline"
+ ],
+ "tags": [
+  "text",
+  "path",
+  "dashed line",
+  "camera",
+  "3d",
+  "perspective",
+  "steps",
+  "typing",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f40 line 1 types out, camera still; f49-f97 the camera flies up the path (accelerating to ~f66, cruising, a sudden stop at f97) and line 2 types as it arrives (f52-f90); f98-f132 hold with a slow drift; f132-f184 the camera sweeps over the big arc (building speed to f153, then a long decelerating finish) onto line 3, typed f155-f192; then it holds",
+ "tracks": [
+  {
+   "name": "line 1",
+   "what": "types out letter by letter (about 2 f a letter) with the camera still",
+   "start_f": 2,
+   "length_f": 38,
+   "easing": "none"
+  },
+  {
+   "name": "flight to line 2",
+   "what": "the camera flies along the path in 3D, the ground swings and tilts, the first line streaks past",
+   "start_f": 49,
+   "length_f": 49,
+   "easing": "accelerating, cruise, sudden stop"
+  },
+  {
+   "name": "line 2",
+   "what": "types out as the camera arrives",
+   "start_f": 52,
+   "length_f": 38,
+   "easing": "none"
+  },
+  {
+   "name": "pause",
+   "what": "the camera drifts a few px on line 2",
+   "start_f": 98,
+   "length_f": 34,
+   "easing": "S-curve"
+  },
+  {
+   "name": "flight to line 3",
+   "what": "the camera sweeps over the big arc of the path; line 2 leaves up and left",
+   "start_f": 132,
+   "length_f": 52,
+   "easing": "accelerating, then a long decelerating finish (power 2.4)"
+  },
+  {
+   "name": "line 3",
+   "what": "types out as it settles",
+   "start_f": 155,
+   "length_f": 37,
+   "easing": "none"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 192,
+   "length_f": 49,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "line1",
+  "line2",
+  "line3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 96,
+ "check_frames": [
+  0,
+  40,
+  60,
+  72,
+  96,
+  144,
+  156,
+  168,
+  200
+ ]
+}

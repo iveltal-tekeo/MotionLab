@@ -1,0 +1,17 @@
+{
+ "name": "newspaper-page-reveal",
+ "frames": 140,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((10 + 10 * i) * fps / 30)",
+   "kind": "whip",
+   "repeat": "13",
+   "dur": "0.25",
+   "db": -10,
+   "what": "the page cuts to the next layout"
+  }
+ ]
+}

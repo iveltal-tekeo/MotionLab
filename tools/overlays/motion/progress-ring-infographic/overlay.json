@@ -1,0 +1,21 @@
+{
+ "name": "progress-ring-infographic",
+ "frames": 303,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(17 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the marker bar appears behind the headline"
+  },
+  {
+   "f": "start + round(176 * fps / 30)",
+   "kind": "pop",
+   "db": -9,
+   "what": "the progress ring appears"
+  }
+ ]
+}

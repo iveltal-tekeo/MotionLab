@@ -1,0 +1,19 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f0 (00:00:00:00) +2 more: #tx1 \"\" wider than its box by 1231 px",
+    "draws 38 % of the ink it draws at its own size (f90) - something is missing or tiny"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f0 (00:00:00:00) +2 more: #tx1 \"\" wider than its box by 1231 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

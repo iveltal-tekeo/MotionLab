@@ -1,0 +1,133 @@
+{
+ "name": "Frosted glass title pill",
+ "kind": "text",
+ "category": "Social",
+ "what": "A frosted-glass pill over your picture or video: it starts low with its title blurred, shoots up to the middle with a small overshoot while the title comes into focus, holds as the glass catches a slow band of light, then rises a hair and drops back with a liquid wobble of its outline while the title blurs out again.",
+ "use_for": [
+  "title",
+  "lower title",
+  "brand name",
+  "caption",
+  "product name",
+  "ui",
+  "glass",
+  "opener",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "glass",
+  "frosted",
+  "liquid",
+  "wobble",
+  "blur",
+  "ui",
+  "needs media",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f10 the pill shoots up from low in the frame past its resting place (title blurred and dim, coming into focus f0-f18); f10-f34 it settles at the middle; it holds to f130 (a slow band of light crosses the glass); f130-f141 it rises a hair; f142-f149 it drops fast to where it started with a liquid wobble of its outline, the title blurring out (f142-f152); then it holds",
+ "tracks": [
+  {
+   "name": "pill rise",
+   "what": "the pill shoots up from low in the frame, overshooting a little",
+   "start_f": 2,
+   "length_f": 9,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "pill settle",
+   "what": "it eases down to the middle",
+   "start_f": 10,
+   "length_f": 24,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "title focus",
+   "what": "the title comes into focus and brightens",
+   "start_f": 0,
+   "length_f": 18,
+   "easing": "decelerating"
+  },
+  {
+   "name": "sheen",
+   "what": "a slow band of light crosses the glass",
+   "start_f": 24,
+   "length_f": 100,
+   "easing": "none"
+  },
+  {
+   "name": "anticipation",
+   "what": "the pill rises a hair",
+   "start_f": 130,
+   "length_f": 11,
+   "easing": "decelerating"
+  },
+  {
+   "name": "drop",
+   "what": "it drops fast back to where it started, the outline wobbling like liquid",
+   "start_f": 142,
+   "length_f": 9,
+   "easing": "steady, then a stop (measured)"
+  },
+  {
+   "name": "title blur",
+   "what": "the title blurs out and dims",
+   "start_f": 142,
+   "length_f": 11,
+   "easing": "accelerating"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 156,
+   "length_f": 24,
+   "easing": "none"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "title"
+ ],
+ "media_slots": [
+  {
+   "id": "bg_media",
+   "label": "Behind the glass",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 1080,
+   "max_s": 6.0,
+   "fit": "cover",
+   "focus_setting": "bg_focus",
+   "focus": "50% 50%",
+   "placeholder": "a dim gradient in the look with a few soft glows, labelled 'your picture'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  3,
+  5,
+  8,
+  12,
+  20,
+  34,
+  80,
+  125,
+  138,
+  144,
+  146,
+  148,
+  152,
+  179
+ ]
+}

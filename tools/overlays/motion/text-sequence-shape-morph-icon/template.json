@@ -1,0 +1,97 @@
+{
+ "name": "Typed sentence to eye icon",
+ "kind": "text",
+ "category": "Text",
+ "what": "On a plain ground a sentence is typed in word by word: each word fades up from light grey and rises into its line while the whole sentence slides in from the left. It then slides off to the right and a shape slides in under a new line of text and opens, like an eyelid lifting, into an eye icon.",
+ "use_for": [
+  "explainer",
+  "hook",
+  "two-part message",
+  "statement then reveal",
+  "icon reveal",
+  "vertical",
+  "tutorial intro",
+  "short"
+ ],
+ "tags": [
+  "text",
+  "sentence",
+  "word by word",
+  "shape",
+  "morph",
+  "icon",
+  "eye",
+  "vertical",
+  "light",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f13 the sentence slides in from the left (decelerating) while its words appear at f0, f3, f9, f16, each fading up from light grey and rising from below its line (about 40 frames to settle); f22-f57 it grows 5 % slowly; f57-f71 it slides off to the right (accelerating) and is cut at f72; f72 the second line appears at the top and a shape (an upper lid over a pointed oval) slides in from the left, slowing to rest at the centre by f83 while it widens (f74-f89); f80-f89 the lid lifts and the pale eye is shown, the iris sliding in from the left and settling in the middle",
+ "tracks": [
+  {
+   "name": "sentence slides in",
+   "what": "the block of words slides in from the left, the words appearing at f0, f3, f9 and f16 (fade up and rise from below)",
+   "start_f": 0,
+   "length_f": 40,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "slow growth",
+   "what": "the sentence grows about 5 % about its centre",
+   "start_f": 22,
+   "length_f": 35,
+   "easing": "S-curve"
+  },
+  {
+   "name": "sentence slides off",
+   "what": "the sentence is swept to the right, faster and faster, and cut at f72",
+   "start_f": 57,
+   "length_f": 15,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "shape slides in",
+   "what": "the lidded oval slides in from the left and comes to rest at the centre, widening a little",
+   "start_f": 72,
+   "length_f": 12,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "lid lifts",
+   "what": "the lid's lower edge rises (the oval grows to 605 px wide and 259 px high at the reference's 720 px width); the pale eye is shown",
+   "start_f": 80,
+   "length_f": 10,
+   "easing": "S-curve"
+  },
+  {
+   "name": "iris slides in",
+   "what": "the iris, pupil and highlight slide in from the left and settle in the middle",
+   "start_f": 79,
+   "length_f": 11,
+   "easing": "decelerating (slow end)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "sentence",
+  "line_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 89,
+ "check_frames": [
+  3,
+  8,
+  16,
+  30,
+  57,
+  66,
+  76,
+  83,
+  89
+ ]
+}

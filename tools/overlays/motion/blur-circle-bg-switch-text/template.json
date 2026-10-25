@@ -1,0 +1,98 @@
+{
+ "name": "Circle to bold line",
+ "kind": "text",
+ "category": "Text",
+ "what": "A dark screen with a thin glowing word that grows from a dot. A big soft circle of that dark colour shrinks away and washes out over a speckled light page, the word turns dark and fades, and a bold line rises in letter by letter, from blurred and faint to sharp.",
+ "use_for": [
+  "hook",
+  "opener",
+  "reveal",
+  "statement",
+  "title",
+  "text swap",
+  "before and after",
+  "mobile",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "reveal",
+  "circle",
+  "blur",
+  "letters",
+  "dark to light",
+  "vertical",
+  "dust",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f80 the thin word grows from a dot; f28-f43 the big circle sweeps in (its edge reaches the frame about f33, fast in the middle, settling at the end); f43-f50 the word turns dark and the circle washes out; f81-f90 the word fades; f86-f123 the bold line rises letter by letter (about 2.8 f apart), each from blurred and faint, 150 px low, to sharp; then a 25 f hold",
+ "tracks": [
+  {
+   "name": "word grows",
+   "what": "the thin word grows from a dot to full size, glowing on the dark screen",
+   "start_f": 0,
+   "length_f": 80,
+   "easing": "decelerating (cubic-bezier(0.33, 0.28, 0.5, 1))"
+  },
+  {
+   "name": "circle shrinks",
+   "what": "the big soft circle shrinks from beyond the frame to a little under 1.5 frame widths",
+   "start_f": 28,
+   "length_f": 15,
+   "easing": "power2.inOut (the circle edge sweeps in fast, then settles)"
+  },
+  {
+   "name": "page switch",
+   "what": "the circle washes out to a faint blur, the word goes from light to dark, the glow fades, speckles show on the page",
+   "start_f": 43,
+   "length_f": 19,
+   "easing": "power1.out"
+  },
+  {
+   "name": "word out",
+   "what": "the first word fades away",
+   "start_f": 81,
+   "length_f": 9,
+   "easing": "power1.in"
+  },
+  {
+   "name": "letters up",
+   "what": "each letter rises 150 px from blurred and faint to sharp, one every 2.8 f",
+   "start_f": 86,
+   "length_f": 37,
+   "easing": "power3.out"
+  },
+  {
+   "name": "hold",
+   "what": "the bold line stands still (the film grain moves)",
+   "start_f": 123,
+   "length_f": 28,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_a",
+  "text_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 150,
+ "check_frames": [
+  0,
+  20,
+  36,
+  43,
+  46,
+  52,
+  84,
+  95,
+  108,
+  150
+ ]
+}

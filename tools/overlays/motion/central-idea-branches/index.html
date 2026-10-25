@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Central label (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Big idea"},
+  {"id": "labels", "type": "string", "label": "Branch labels (| between, 1 to 8; they grow counter-clockwise from the bottom right)", "default": "Plan|Build|Launch|Learn|Grow|Share"},
+  {"id": "size", "type": "number", "label": "Central label size (px at a 1080-px short side)", "default": 120, "min": 30, "max": 300, "step": 1},
+  {"id": "label_size", "type": "number", "label": "Branch label size (px at a 1080-px short side)", "default": 40, "min": 16, "max": 100, "step": 1},
+  {"id": "diagram", "type": "number", "label": "Size of the whole diagram (% of the original)", "default": 100, "min": 40, "max": 130, "step": 1},
+  {"id": "col", "type": "enum", "label": "Neon colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "central-idea-branches" (2026-10-23): a neon central idea ringed by curved branches. The whole figure starts 2.3 times too big and blurred and
+     the camera pulls back to its real size (f2-f66: a plateau at x1.75 around f20-f30, then an S-curve to x1); the ring
+     draws itself clockwise from the top (f1-f9) while the title slides up out of a blur (f1-f10); six wavy tapered
+     branches then grow out of the ring one after another, counter-clockwise from the bottom right (starting f21, f26,
+     f35, f37, f40, f46, each ~28 f, a slow start then a soft landing), and each branch label fades in (10 f) as its
+     branch completes. The labels and their number (1 to 8) are settings; the branch shapes come from the six traced
+     in the clip, turned to fit. Numbers measured from the reference's frames (1280 x 720 units, ring radius 167).
+     Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #dia { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #cam { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+  #cam > svg { position: absolute; left: -520px; top: -520px; overflow: visible; }
+  #title { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.05; font-synthesis: none; letter-spacing: -0.005em; text-align: center; }
+  .bl { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0">
+    <defs>
+      <linearGradient id="gNeon" gradientUnits="userSpaceOnUse" x1="0" y1="-167" x2="0" y2="254"><stop id="gn0" offset="0" stop-color="#ff0"/><stop id="gn1" offset="1" stop-color="#f90"/></linearGradient>
+    </defs>
+  </svg>
+  <div id="hand" class="abs"><div id="dia"><div id="cam">
+    <svg id="ringsvg" width="1040" height="1040" viewBox="-520 -520 1040 1040"></svg>
+    <svg id="brsvg" width="1040" height="1040" viewBox="-520 -520 1040 1040"></svg>
+  </div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 180;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const seq = (f0, a, g) => { const x = g - f0; if (x <= 0) return a[0]; if (x >= a.length - 1) return a[a.length - 1]; const i = Math.floor(x), k = x - i; return a[i] + (a[i + 1] - a[i]) * k; };
+  const pick = { mustard: L.mustard, signal: L.signal, deep: L.deep, paper: glare };
+  const C = pick[V.col] || L.mustard, other = (V.col === "signal") ? L.mustard : L.signal;
+  const botC = mixC(C, other, 0.45), fillC = mixC(C, "#ffffff", 0.18);
+
+  // ---- the ground: dark with a soft light patch behind the figure
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 52% 62% at 50% 50%, ${rgba(glare, 0.06)} 0%, ${rgba(glare, 0.05)} 55%, ${rgba(glare, 0)} 100%), ${night}`;
+  q("gn0").setAttribute("stop-color", C); q("gn1").setAttribute("stop-color", botC);
+
+  // ---- the measured data (clip units; the ring's centre is the origin)
+  const CAMS = [2.4, 2.38, 2.36, 2.34, 2.31, 2.293, 2.272, 2.246, 2.215, 2.179, 2.138, 2.09, 2.036, 1.978, 1.92, 1.865, 1.821, 1.79, 1.776, 1.76, 1.757, 1.756, 1.755, 1.753, 1.75, 1.746, 1.741, 1.735, 1.727, 1.719, 1.71, 1.699, 1.687, 1.674, 1.66, 1.644, 1.627, 1.608, 1.587, 1.566, 1.542, 1.517, 1.491, 1.463, 1.433, 1.401, 1.369, 1.335, 1.3, 1.264, 1.229, 1.195, 1.163, 1.133, 1.107, 1.084, 1.064, 1.048, 1.035, 1.024, 1.016, 1.01, 1.005, 1.003, 1.001];                                 // the camera's zoom, f2 on
+  const CAMX = [-15.2, -15.2, -15.2, -15.2, -15.2, -15.2, -15.0, -14.6, -14.3, -13.8, -13.3, -12.7, -12.0, -11.3, -10.5, -9.8, -9.2, -8.7, -6.2, -8.3, -8.1, -8.0, -7.9, -7.7, -7.6, -7.4, -7.3, -7.1, -7.0, -6.8, -6.7, -6.5, -6.3, -6.2, -6.0, -5.8, -5.6, -5.4, -5.3, -5.1, -4.9, -4.7, -4.6, -4.5, -4.2, -3.9, -3.7, -3.3, -3.0, -2.7, -2.3, -2.0, -1.7, -1.4, -1.1, -0.8, -0.7, -0.5, -0.3, -0.2, -0.1, -0.1, -0.0, 0.0, 0.0];
+  const CAMY = [-78.2, -76.2, -74.2, -72.2, -70.1, -67.8, -65.2, -61.8, -57.9, -53.3, -48.1, -42.0, -35.2, -27.7, -20.3, -13.2, -7.5, -3.5, 0.6, 0.2, 0.5, 0.4, 0.2, 0.1, -0.1, -0.2, -0.4, -0.5, -0.7, -0.8, -0.9, -1.0, -1.1, -1.3, -1.3, -1.4, -1.4, -1.4, -1.4, -1.4, -1.4, -1.3, -1.3, -1.1, -1.0, -0.9, -0.9, -0.8, -0.6, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, -0.1, -0.0, -0.0, -0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1];
+  const SHAPES = [{"a":46.6,"p":[[106.1,131.9],[110.6,131.0],[115.1,130.1],[119.7,129.2],[124.1,128.0],[128.5,126.9],[133.1,126.4],[137.7,126.8],[142.2,127.7],[146.7,128.6],[151.2,129.8],[155.6,131.1],[159.8,132.9],[164.0,134.9],[167.8,137.4],[171.4,140.3],[174.8,143.4],[177.7,147.0],[180.2,150.9],[182.0,155.1],[182.9,159.6],[183.4,164.2],[183.7,168.8],[184.0,173.4],[184.4,177.9],[185.1,182.5],[186.4,186.9],[188.0,191.2],[189.9,195.4],[192.5,199.2],[195.3,202.8],[198.6,206.0],[202.4,208.7],[206.4,210.9],[210.6,212.7],[215.0,214.2],[219.4,215.5],[223.9,216.6],[228.4,217.5],[232.9,218.2],[237.5,218.6],[242.1,219.1],[246.7,219.4],[251.3,220.0],[255.8,220.8]],"l":[269.6,234.7,116.5]},{"a":-10.1,"p":[[160.2,-27.8],[164.8,-28.8],[169.4,-29.8],[174.0,-30.8],[178.6,-32.0],[183.2,-33.1],[187.9,-33.8],[192.6,-34.1],[197.3,-34.0],[202.0,-33.5],[206.6,-32.6],[211.2,-31.4],[215.7,-30.1],[220.2,-28.6],[224.7,-27.1],[229.1,-25.5],[233.5,-23.7],[237.9,-22.0],[242.2,-20.0],[246.5,-18.1],[250.9,-16.4],[255.3,-14.7],[259.8,-13.2],[264.4,-12.0],[269.0,-11.0],[273.7,-10.2],[278.3,-9.6],[283.1,-9.2],[287.8,-9.3],[292.5,-9.6],[297.2,-10.2],[301.8,-11.2]],"l":[336.7,-14.4,82.7]},{"a":-57.3,"p":[[99.9,-133.7],[98.7,-138.3],[97.5,-142.9],[96.3,-147.4],[94.5,-151.8],[93.2,-156.3],[92.6,-161.0],[92.8,-165.7],[93.2,-170.4],[93.5,-175.1],[94.0,-179.8],[94.4,-184.5],[94.7,-189.2],[94.8,-194.0],[94.8,-198.7],[94.8,-203.4],[94.8,-208.1],[94.8,-212.9],[94.8,-217.6],[95.1,-222.3],[96.0,-227.0],[97.8,-231.3],[100.5,-235.2],[103.7,-238.7],[107.5,-241.4],[111.7,-243.7],[116.1,-245.3],[120.7,-246.4],[125.4,-247.0],[130.1,-247.2],[134.8,-247.2],[139.5,-247.0],[144.2,-246.5],[148.8,-245.2]],"l":[167.6,-256.7,46.9]},{"a":-133.0,"p":[[-107.6,-128.8],[-112.2,-129.8],[-116.7,-130.8],[-121.3,-131.8],[-126.0,-132.2],[-130.6,-133.0],[-134.9,-134.7],[-139.0,-137.0],[-142.8,-139.7],[-146.4,-142.7],[-149.8,-146.0],[-152.7,-149.7],[-155.4,-153.5],[-157.6,-157.7],[-159.3,-162.0],[-160.8,-166.5],[-161.8,-171.1],[-162.5,-175.7],[-163.2,-180.4],[-163.6,-185.1],[-163.6,-189.7],[-163.4,-194.4],[-163.2,-199.1],[-163.2,-203.8],[-163.4,-208.5],[-164.0,-213.2],[-165.1,-217.7],[-166.6,-222.2],[-168.5,-226.5],[-170.7,-230.6],[-173.3,-234.5],[-176.2,-238.2],[-179.2,-241.8],[-182.5,-245.1],[-186.0,-248.3],[-189.8,-251.1],[-193.8,-253.6],[-197.8,-255.9],[-202.0,-258.1],[-206.2,-260.2]],"l":[-234.9,-277.4,-48.4]},{"a":169.1,"p":[[-160.1,45.2],[-163.1,41.6],[-166.0,38.0],[-168.9,34.4],[-171.9,30.7],[-174.7,27.0],[-177.7,23.4],[-181.1,20.3],[-185.0,17.8],[-189.4,16.1],[-193.9,14.8],[-198.4,13.8],[-203.0,12.9],[-207.6,12.3],[-212.3,12.0],[-216.9,12.2],[-221.6,12.6],[-226.2,13.4],[-230.7,14.4],[-235.1,16.0],[-239.4,17.8],[-243.6,19.7],[-247.7,21.9],[-251.7,24.4],[-255.6,27.0],[-259.4,29.7],[-263.0,32.6],[-266.9,35.2],[-270.6,38.0],[-274.4,40.7],[-278.3,43.4],[-282.1,46.0],[-286.0,48.6],[-289.8,51.2],[-293.7,53.8],[-297.6,56.4],[-301.5,59.0],[-305.5,61.4],[-309.6,63.7],[-313.7,65.8],[-317.9,67.8],[-322.2,69.6],[-326.6,71.3],[-331.0,72.7],[-335.5,73.9],[-340.1,75.0],[-344.6,75.8],[-349.2,76.8]],"l":[-384.7,77.7,-80.2]},{"a":127.9,"p":[[-101.6,130.0],[-104.5,133.8],[-107.3,137.6],[-110.1,141.4],[-113.2,145.0],[-116.1,148.7],[-118.7,152.6],[-120.8,156.9],[-122.5,161.3],[-123.6,165.9],[-124.1,170.6],[-124.2,175.3],[-123.7,180.1],[-122.8,184.7],[-121.6,189.3],[-120.0,193.7],[-118.3,198.1],[-116.3,202.5],[-114.6,206.9],[-113.2,211.4],[-112.2,216.0],[-111.6,220.7],[-111.8,225.4],[-113.1,230.0],[-115.6,234.0],[-118.7,237.5],[-122.5,240.4],[-126.5,243.0],[-130.6,245.2],[-135.0,247.0],[-139.5,248.5],[-144.1,249.6],[-148.8,250.3],[-153.4,251.2],[-158.1,251.9],[-162.8,252.5],[-167.5,253.0],[-172.2,253.8]],"l":[-188.2,270.8,-119.1]}];
+  // the draw-on of the ring (share of the circle), the focus (blur in units, opacity) and the title's slide-up (units, from f1)
+  const RING = [0, 0.11, 0.31, 0.55, 0.69, 0.79, 0.87, 0.96, 1.0, 1.0];                         // f1..f10 (f2 = 40 deg ... f9 = 360)
+  const BLUR = [10, 9.5, 8, 6, 5.2, 4, 3, 2.5, 2, 1.5, 1.5, 1.2, 1, 0.8, 0.5, 0];                // f1..
+  const FOP = [0, 0.15, 0.45, 0.85, 1];                                                          // the title's opacity, f1..
+  const ROP = [0, 0.45, 0.6, 0.7, 0.85, 1];                                                      // the ring's opacity, f1..
+  const DYT = [160, 115, 80, 52, 34, 22, 12, 6, 2, 0];                                           // the title's drop below its place, f1..
+  // each branch's growth, as a share of its length (measured; frames from the start row), in draw order
+  const GROW = [[15, [0.0, 0.02, 0.02, 0.03, 0.03, 0.03, 0.07, 0.1, 0.14, 0.17, 0.22, 0.27, 0.34, 0.41, 0.47, 0.54, 0.59, 0.64, 0.68, 0.71, 0.75, 0.78, 0.81, 0.83, 0.86, 0.88, 0.9, 0.92, 0.93, 0.95, 0.97, 0.97, 0.98, 0.98, 1]],
+                [25, [0.0, 0.02, 0.02, 0.05, 0.09, 0.14, 0.19, 0.26, 0.33, 0.4, 0.47, 0.53, 0.58, 0.63, 0.67, 0.72, 0.77, 0.79, 0.81, 0.84, 0.86, 0.88, 0.91, 0.93, 0.95, 0.95, 0.98, 0.98, 1]],
+                [34, [0.0, 0.02, 0.04, 0.09, 0.11, 0.15, 0.22, 0.28, 0.37, 0.43, 0.52, 0.59, 0.65, 0.67, 0.72, 0.76, 0.78, 0.83, 0.85, 0.87, 0.89, 0.91, 0.93, 0.93, 0.96, 0.98, 0.98, 1]],
+                [36, [0.0, 0.02, 0.02, 0.04, 0.06, 0.08, 0.12, 0.16, 0.2, 0.25, 0.31, 0.41, 0.49, 0.55, 0.63, 0.69, 0.73, 0.76, 0.78, 0.82, 0.84, 0.86, 0.88, 0.9, 0.92, 0.94, 0.94, 0.96, 0.98, 0.98, 1]],
+                [39, [0.0, 0.03, 0.03, 0.03, 0.04, 0.06, 0.06, 0.09, 0.13, 0.16, 0.22, 0.3, 0.36, 0.43, 0.49, 0.55, 0.6, 0.65, 0.68, 0.72, 0.76, 0.79, 0.82, 0.84, 0.85, 0.89, 0.9, 0.92, 0.94, 0.94, 0.95, 0.97, 0.98, 0.98, 0.98, 1]],
+                [45, [0.0, 0.02, 0.02, 0.04, 0.04, 0.06, 0.08, 0.12, 0.16, 0.2, 0.27, 0.35, 0.41, 0.49, 0.55, 0.61, 0.67, 0.69, 0.73, 0.76, 0.8, 0.82, 0.84, 0.88, 0.9, 0.92, 0.92, 0.94, 0.96, 0.96, 0.98, 0.98, 1]]];
+  const LFADE = [57, 51, 61, 67, 64, 69];                                                         // each label's fade-in: the frame it reaches 20 % (10 f long: -2.4 .. +8)
+
+  // ---- build: the ring, the branches (turned to the number of labels) and the labels
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, parent) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; };
+  const labs = String(V.labels || "").split("|").map(x => x.trim()).filter(x => x.length).slice(0, 8);
+  const N = Math.max(1, labs.length || 6);
+  const RR = 167.2, CIRC = 2 * Math.PI * RR;
+  const ringsvg = q("ringsvg"), brsvg = q("brsvg"), cam = q("cam");
+  const ring = el("circle", { cx: 0, cy: 0, r: RR, fill: "none", stroke: "url(#gNeon)", "stroke-width": 9, "stroke-linecap": "round", transform: "rotate(-90)", "stroke-dasharray": `0 ${CIRC}` }, ringsvg);
+  const rot = (x, y, d) => { const c = Math.cos(d * Math.PI / 180), s = Math.sin(d * Math.PI / 180); return [x * c - y * s, x * s + y * c]; };
+  const branches = [];
+  for (let k = 0; k < N; k++) {
+    const sh = SHAPES[k % 6];
+    const delta = N === 6 ? 0 : (46.6 - k * 360 / N) - sh.a;
+    const P = sh.p.map(([x, y]) => rot(x, y, delta));
+    const cum = [0]; for (let i = 1; i < P.length; i++) cum.push(cum[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    const path = el("path", { fill: "url(#gNeon)" }, brsvg), tip = el("circle", { r: 2.5, fill: "url(#gNeon)" }, brsvg);
+    const lp = rot(sh.l[0], sh.l[1], delta);
+    const lab = document.createElement("div"); lab.className = "bl ml-body"; cam.appendChild(lab);
+    if (window.MLLook) MLLook.rich(lab, labs[k] || "", { look: L, family: V.body_font, weight: 700 }); else lab.textContent = labs[k] || "";
+    Object.assign(lab.style, { color: glare, fontSize: `${V.label_size * U / K}px`, fontWeight: String(fw(V.body_font, 700)), opacity: 0 });
+    const g0 = GROW[k % 6], shift = k < 6 ? 0 : 6 * (k - 5);
+    branches.push({ P, cum, L: cum[cum.length - 1], path, tip, lab, lx: lp[0], ly: lp[1], la: sh.l[2] + delta, f0: g0[0] + shift, rows: g0[1], fade: LFADE[k % 6] + shift });
+  }
+  // the title
+  const title = document.createElement("div"); title.id = "title"; title.className = "ml-display"; cam.appendChild(title);
+  if (window.MLLook) MLLook.rich(title, V.title, { look: L, family: V.display_font, weight: 700 }); else title.textContent = V.title;
+  Object.assign(title.style, { color: fillC, fontSize: `${V.size * U / K}px`, fontWeight: String(fw(V.display_font, 700)),
+    textShadow: `0 0 5px ${rgba(other, 0.95)}, 0 0 14px ${rgba(other, 0.6)}` });
+  const glowF = `drop-shadow(0 0 5px ${rgba(C, 0.6)}) drop-shadow(0 0 13px ${rgba(C, 0.3)})`;
+  brsvg.style.filter = glowF;
+  q("dia").style.transform = `translate(${W / 2}px, ${H / 2}px) scale(${V.diagram / 100}) translate(${-W / 2}px, ${-H / 2}px)`;
+
+  // the title's size: its words must sit inside the ring (measured with the real font)
+  let ready = false;
+  function layout() {
+    const maxw = 2 * 0.86 * RR, w = title.offsetWidth;
+    if (w > maxw && w > 0) title.style.fontSize = `${V.size * U / K * maxw / w}px`;
+    ready = true;
+  }
+
+  // ---- one frame
+  function taper(t) { const u = clamp01((t - 0.7) / 0.3); return 13 - 8 * Math.pow(u, 2.2); }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 1;
+    q("dia").style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    // the camera: pulls back from x2.4 to x1 (f2-f66), then rests with the ring at the frame's centre
+    const s = g >= 66 ? 1 : seq(2, CAMS, g), cx = g >= 66 ? 0 : seq(2, CAMX, g), cy = g >= 66 ? 0 : seq(2, CAMY, g);
+    cam.style.transform = `translate(${((640 + cx) * K).toFixed(2)}px, ${((360 + cy) * K).toFixed(2)}px) scale(${(s * K).toFixed(4)})`;
+    // the ring and the title come into focus
+    const blur = g >= 16 ? 0 : seq(1, BLUR, g), fo = seq(1, FOP, g), ro = seq(1, ROP, g), rp = g >= 10 ? 1 : seq(1, RING, g);
+    ring.setAttribute("stroke-dasharray", `${(rp * CIRC).toFixed(2)} ${CIRC.toFixed(2)}`);
+    ringsvg.style.opacity = ro.toFixed(3);
+    ringsvg.style.filter = `${glowF}${blur > 0.2 ? ` blur(${blur.toFixed(2)}px)` : ""}`;
+    ringsvg.style.visibility = rp > 0.001 ? "visible" : "hidden";
+    title.style.opacity = fo.toFixed(3);
+    title.style.filter = blur > 0.2 ? `blur(${blur.toFixed(2)}px)` : "none";
+    title.style.transform = `translate(-50%, -50%) translate(0px, ${(4.8 + seq(1, DYT, g)).toFixed(2)}px)`;
+    // the branches and their labels
+    branches.forEach(b => {
+      const p = clamp01((seq(b.f0, b.rows, g) - 0.04) / 0.96);
+      const l = p * b.L;
+      if (l < 2.5) { b.path.setAttribute("d", ""); b.tip.setAttribute("r", 0); }
+      else {
+        const left = [], right = [], n = b.P.length;
+        let end = 0; while (end < n - 1 && b.cum[end + 1] <= l) end++;
+        const pts = b.P.slice(0, end + 1), cs = b.cum.slice(0, end + 1);
+        if (end < n - 1 && b.cum[end + 1] > cs[end]) {
+          const u = (l - cs[end]) / (b.cum[end + 1] - cs[end]);
+          pts.push([b.P[end][0] + (b.P[end + 1][0] - b.P[end][0]) * u, b.P[end][1] + (b.P[end + 1][1] - b.P[end][1]) * u]); cs.push(l);
+        }
+        for (let i = 0; i < pts.length; i++) {
+          const a = pts[Math.max(0, i - 1)], c = pts[Math.min(pts.length - 1, i + 1)];
+          let dx = c[0] - a[0], dy = c[1] - a[1]; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
+          const w = taper(cs[i] / l) / 2;
+          left.push(`${(pts[i][0] - dy * w).toFixed(2)},${(pts[i][1] + dx * w).toFixed(2)}`);
+          right.push(`${(pts[i][0] + dy * w).toFixed(2)},${(pts[i][1] - dx * w).toFixed(2)}`);
+        }
+        b.path.setAttribute("d", `M ${left.join(" L ")} L ${right.reverse().join(" L ")} Z`);
+        const e = pts[pts.length - 1];
+        b.tip.setAttribute("cx", e[0].toFixed(2)); b.tip.setAttribute("cy", e[1].toFixed(2)); b.tip.setAttribute("r", (taper(1) / 2).toFixed(2));
+      }
+      const o = clamp01((g - (b.fade - 2.4)) / 10.4);
+      b.lab.style.opacity = o.toFixed(3);
+      b.lab.style.visibility = o > 0 ? "visible" : "hidden";
+      b.lab.style.transform = `translate(${b.lx.toFixed(2)}px, ${b.ly.toFixed(2)}px) translate(-50%, -50%) rotate(${b.la.toFixed(2)}deg)`;
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 4, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the title is measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "v1_media", "type": "string", "label": "Card 1: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v2_media", "type": "string", "label": "Card 2: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v3_media", "type": "string", "label": "Card 3: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v4_media", "type": "string", "label": "Card 4: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v5_media", "type": "string", "label": "Card 5: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v6_media", "type": "string", "label": "Card 6: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v7_media", "type": "string", "label": "Card 7: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v8_media", "type": "string", "label": "Card 8: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v9_media", "type": "string", "label": "Card 9: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "v10_media", "type": "string", "label": "Card 10: your video or picture, upright 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "focus", "type": "string", "label": "What stays in view on the cards (x% y%)", "default": "50% 50%"},
+  {"id": "cards", "type": "number", "label": "How many cards (1 to 10)", "default": 10, "min": 1, "max": 10, "step": 1},
+  {"id": "counts", "type": "string", "label": "The number on every card, step by step (| between; the first shows first)", "default": "0.0|100|1K|100K|500K|900K|1M|2M"},
+  {"id": "unit", "type": "string", "label": "Word after the number (empty = none)", "default": "view"},
+  {"id": "roll", "type": "boolean", "label": "Roll the number up when it changes (not in the original)", "default": false},
+  {"id": "card_text", "type": "string", "label": "Text on a card that has no video yet (empty = none)", "default": "Your footage"},
+  {"id": "text_size", "type": "number", "label": "Card text size (px at a 1080-px short side)", "default": 45, "min": 16, "max": 120, "step": 1},
+  {"id": "count_size", "type": "number", "label": "Number size (px at a 1080-px short side)", "default": 36, "min": 14, "max": 100, "step": 1},
+  {"id": "accent", "type": "enum", "label": "Colour of the glow and of the empty cards", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "footage-cards-multiply-grid" (2026-10-22): on a dark page with a soft glow in the bottom left corner, an upright card with your video rises from
+     below the frame (f11-f58: it overshoots a little and settles); it shrinks (f60-f78) and ten cards fan out from
+     under it into a grid of five by two (f79-f101, a sharp S-curve, the first card on top); a play sign and a view
+     count sit on each card and the count steps up all together (f110, then about every 9 f: 100, 1K, 100K, 500K, 900K,
+     1M, 2M). Ten media slots, one for each card. Measured from the reference's frames (1280 x 720 units). Look-aware.
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #grp { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .card { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 50% 50%; visibility: hidden; }
+  .card .ph { position: absolute; left: 0; width: 100%; text-align: center; font-synthesis: none; }
+  .cnt { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .cnt span { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7.166667" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="grp"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 215;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 1280;                                       // the reference is 1280 x 720: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, mustard: L.mustard, deep: L.deep };
+  const accent = pick[V.accent] || L.signal;
+  const mix = (a, b, t) => { const rgb = h => { const s = String(h).replace("#", ""); const t3 = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t3.slice(i, i + 2), 16) || 0); };
+    const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
+
+  // ---- the ground: dark, with a soft glow in the bottom left corner
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(ellipse 42% 75% at 0% 100%, ${rgba(accent, 0.55)} 0%, ${rgba(accent, 0)} 100%), ${night}`;
+
+  // ---- the cards (clip units x K: 252 x 448 at full size, a 9:16 portrait)
+  const NC = Math.max(1, Math.min(10, Math.round(V.cards) || 10));
+  const COLS = NC <= 5 ? NC : Math.ceil(NC / 2), ROWS = NC <= 5 ? 1 : 2;
+  const SX = 236.8, SY = 353;                                // the spacing of the grid at the end
+  const CW = 252 * K, CH = 448 * K;
+  const grp = q("grp");
+  const rad = Math.min(window.MLLook ? L.radius : 0, 24 * K);
+  const counts = String(V.counts == null ? "" : V.counts).split("|").map(x => x.trim()).filter(x => x.length);
+  if (!counts.length) counts.push("0");
+  const unit = String(V.unit == null ? "" : V.unit).trim();
+  const txt = i => counts[Math.min(i, counts.length - 1)] + (unit ? " " + unit : "");
+  const cfs = V.count_size * U, tfs = V.text_size * U;
+  const cards = [];
+  for (let k = 0; k < NC; k++) {
+    const slot = `v${k + 1}_media`, src = V[slot];
+    const box = document.createElement("div"); box.className = "card";
+    Object.assign(box.style, { width: `${CW}px`, height: `${CH}px`, zIndex: String(100 - k), borderRadius: `${rad}px` });
+    grp.appendChild(box);
+    const vis = k === 0 ? 11 : 79;                            // the frame the card first shows: its video starts then
+    if (window.MLLook) {
+      const t = MLLook.media(box, src, { look: L, kind: "video", label: " ", fit: "cover", focus: V.focus, seed: 11 + k, r: rad,
+        start: (S + vis) / FPS, duration: Math.max(0.2, (FRAMES - S - vis) / FPS), id: `m${k + 1}`, slot });
+      if (t && t.tagName === "VIDEO") {
+        t.setAttribute("data-start", (Math.floor((S + vis) / FPS * 1e6) / 1e6).toFixed(6));       // rounded down: never a hair after the frame
+        t.setAttribute("data-duration", Math.max(0.2, (FRAMES - S - vis) / FPS).toFixed(4));
+      }
+    }
+    if (!src) {                                              // the empty card: a clean gradient and its text, no placeholder label
+      box.textContent = "";
+      box.style.background = `linear-gradient(180deg, ${mix(glare, accent, 0.10)} 0%, ${mix(glare, accent, 0.5)} 42%, ${mix(accent, glare, 0.12)} 100%)`;
+      if (V.card_text) {
+        const ph = document.createElement("div"); ph.className = "ph ml-display"; ph.textContent = V.card_text;
+        Object.assign(ph.style, { top: "49%", padding: "0 12%", transform: "translateY(-50%)", fontSize: `${tfs}px`, fontWeight: String(fw(V.display_font, 700)), lineHeight: "1.15", color: "#ffffff", textShadow: `0 ${2 * U}px ${8 * U}px ${rgba("#000000", 0.3)}` });
+        box.appendChild(ph);
+      }
+    } else {                                                 // a scrim so the white number reads on any picture
+      const sc = document.createElement("div");
+      Object.assign(sc.style, { position: "absolute", left: "0", right: "0", bottom: "0", height: "26%", background: "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.42))", pointerEvents: "none" });
+      box.appendChild(sc);
+    }
+    const ic = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    ic.setAttribute("viewBox", "0 0 24 28"); ic.style.position = "absolute"; ic.style.left = `${15 * K}px`; ic.style.top = `${CH * 0.935 - 13 * K}px`;
+    ic.style.width = `${22 * K}px`; ic.style.height = `${26 * K}px`;
+    ic.innerHTML = `<path d="M5 3.5 L20.5 14 L5 24.5 Z" fill="#ffffff" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>`;
+    box.appendChild(ic);
+    const cn = document.createElement("div"); cn.className = "cnt ml-accent";
+    Object.assign(cn.style, { left: `${58 * K}px`, top: `${CH * 0.935 - cfs / 2}px`, fontSize: `${cfs}px`, fontWeight: String(fw(V.accent_font, 400)), color: "#ffffff", textShadow: `0 ${1 * U}px ${5 * U}px ${rgba("#000000", 0.25)}` });
+    const sa = document.createElement("span"), sb = document.createElement("span"); sb.style.opacity = "0";
+    sa.textContent = txt(0); cn.appendChild(sa); cn.appendChild(sb); box.appendChild(cn);
+    cards.push({ box, sa, sb, k, shown: -1, col: k % COLS, row: Math.floor(k / COLS), vis });
+  }
+
+  // ---- the measured tables (g = the frame minus "Starts at frame"; clip units)
+  const RISE = [[11, 720], [12, 700], [14, 666], [16, 622], [18, 565], [20, 491], [22, 400], [24, 292], [26, 189], [28, 133], [30, 118], [32, 118], [34, 122], [36, 132], [38, 142], [40, 148],
+                [42, 151], [44, 151], [46, 150], [48, 149], [50, 148], [52, 147], [54, 147], [56, 147], [58, 148], [60, 149]];   // the top edge of the single card
+  const SHR = [[60, 1], [64, 0.98], [68, 0.94], [72, 0.833], [76, 0.718], [78, 0.706], [80, 0.69], [93, 0.651]];              // the card's scale
+  const SPR = [[79, 0], [80, 0.01], [82, 0.04], [84, 0.10], [86, 0.21], [88, 0.42], [90, 0.69], [93, 0.84], [95, 0.92], [97, 0.96], [99, 0.99], [101, 1]];   // how far the cards have fanned out
+  // the number steps: the first at f110, then about every 9 f (squeezed when there are many) - all cards together
+  const STEPS = counts.length - 1, GAPF = STEPS > 1 ? Math.min(8.9, 53.4 / (STEPS - 1)) : 0;
+  const stepF = i => 110 + GAPF * (i - 1);                    // i = 1 .. STEPS
+  const idxAt = g => { let n = 0; for (let i = 1; i <= STEPS; i++) if (g >= stepF(i) - 1e-6) n = i; return n; };
+
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const away = "translate(-6000px, -6000px)";               // a card that is not on yet is parked far off the page (HyperFrames shows a playing video even inside a hidden box)
+    if (g < 0) { cards.forEach(o => { o.box.style.visibility = "hidden"; o.box.style.transform = away; }); return; }
+    const top0 = tab(RISE, g)[0];
+    const s = g < 60 ? 1 : tab(SHR, g)[0];
+    const sk = clamp01((1 - s) / 0.294);
+    const cx0 = 603 + 11.5 * sk;
+    const p = g < 79 ? 0 : tab(SPR, g)[0];
+    const cy0 = g < 60 ? top0 + 223.5 : lerp(372.5, 367.5, clamp01((g - 60) / 18)) + (NC > 1 ? 5 * p : 0);
+    const idx = idxAt(g);
+    cards.forEach(o => {
+      const cx = cx0 + (o.col - (COLS - 1) / 2) * SX * p, cy = cy0 + (o.row - (ROWS - 1) / 2) * SY * p;
+      const vis = o.k === 0 ? (g >= 11 && top0 < 719.5) : (g >= 79 && NC > 1);
+      o.box.style.visibility = vis ? "visible" : "hidden";
+      if (!vis) { o.box.style.transform = away; return; }
+      o.box.style.transform = `translate(${(cx * K - CW / 2).toFixed(2)}px, ${(cy * K - CH / 2).toFixed(2)}px) scale(${s.toFixed(4)})`;
+      // the number: a step shows at once; with "roll" the old one slides up and the new one comes in from below over 3 f
+      const rp = V.roll && idx > 0 ? clamp01((g - stepF(idx)) / 3) : 1;
+      if (rp < 1) {
+        const hh = cfs * 1.1;
+        o.sa.textContent = txt(idx - 1); o.sb.textContent = txt(idx);
+        o.sa.style.transform = `translateY(${(-rp * hh).toFixed(2)}px)`; o.sa.style.opacity = (1 - rp).toFixed(3);
+        o.sb.style.transform = `translateY(${((1 - rp) * hh).toFixed(2)}px)`; o.sb.style.opacity = rp.toFixed(3);
+        o.shown = -2;
+      } else if (o.shown !== idx) {
+        o.sa.textContent = txt(idx); o.sa.style.transform = "none"; o.sa.style.opacity = "1"; o.sb.style.opacity = "0"; o.shown = idx;
+      }
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 29 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

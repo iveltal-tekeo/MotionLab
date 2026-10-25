@@ -1,0 +1,104 @@
+{
+ "name": "Typed lines, camera dive",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three lines type in on a dark ground while a camera moves through them: a small line types in close up, the camera whips out as a huge main word types in, dives into the main word until its letters fill the top of the frame while a small bottom line types in, then pulls back out to show all three.",
+ "use_for": [
+  "title",
+  "three lines",
+  "keyword",
+  "hook",
+  "reveal",
+  "intro",
+  "promo",
+  "typed text"
+ ],
+ "tags": [
+  "text",
+  "typed",
+  "typewriter",
+  "camera",
+  "zoom",
+  "dive",
+  "big type",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f48 (00:00:00:02-00:00:01:18) the top line types in at a close zoom (1.19 x); f50-f60 (00:00:01:20-00:00:02:00) the camera whips out and up to 0.88 x; f54-f88 (00:00:01:24-00:00:02:28) the main word types in, one letter every 4 frames; f88-f110 (00:00:02:28-00:00:03:20) the camera dives into the main word (0.92 x to 1.42 x), motion-blurred, accelerating then braking, while the bottom line types in (f92-f136); f110-f150 (00:00:03:20-00:00:05:00) it holds with a slight sway; f150-f182 (00:00:05:00-00:00:06:02) it pulls back out to 1 x and settles; f182-f210 a slow drift to the end. The reference only changes every second frame (15 fps content); the template moves on every frame",
+ "tracks": [
+  {
+   "name": "top line types",
+   "what": "the top line types in, one character every 2 frames, at a close zoom",
+   "start_f": 2,
+   "length_f": 46,
+   "easing": "steady typing"
+  },
+  {
+   "name": "camera whip",
+   "what": "the camera whips out and up (1.19 x to 0.88 x)",
+   "start_f": 50,
+   "length_f": 10,
+   "easing": "fast, braking (measured)"
+  },
+  {
+   "name": "main word types",
+   "what": "the main word types in, one letter every 4 frames, with a pause for the space",
+   "start_f": 54,
+   "length_f": 34,
+   "easing": "steady typing"
+  },
+  {
+   "name": "dive",
+   "what": "the camera dives into the main word until its letters fill the top of the frame (0.92 x to 1.42 x), with motion blur",
+   "start_f": 88,
+   "length_f": 22,
+   "easing": "accelerating, then braking (measured)"
+  },
+  {
+   "name": "bottom line types",
+   "what": "the small centred bottom line types in under the main word",
+   "start_f": 92,
+   "length_f": 44,
+   "easing": "steady typing"
+  },
+  {
+   "name": "hold",
+   "what": "the camera rests on the huge letters with a slight sway",
+   "start_f": 110,
+   "length_f": 40,
+   "easing": "none"
+  },
+  {
+   "name": "pull back",
+   "what": "the camera pulls back and up to show all three lines, then settles and drifts",
+   "start_f": 150,
+   "length_f": 32,
+   "easing": "accelerating, then decelerating (measured)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "top_text",
+  "main_text",
+  "bottom_text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 200,
+ "check_frames": [
+  20,
+  54,
+  60,
+  86,
+  94,
+  100,
+  110,
+  130,
+  160,
+  205
+ ]
+}

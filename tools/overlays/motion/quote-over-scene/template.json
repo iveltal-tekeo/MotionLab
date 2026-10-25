@@ -1,0 +1,112 @@
+{
+ "name": "Quote over a photo",
+ "kind": "text",
+ "category": "Text",
+ "what": "Your photo or video pulls back from a close-up and settles, then a big opening quote mark rises in, a closing mark slides in from the lower right, and the quote types itself in letter by letter between them.",
+ "use_for": [
+  "quote",
+  "testimonial",
+  "motivational quote",
+  "portrait quote",
+  "statement over a photo",
+  "interview line",
+  "dramatic quote",
+  "reel"
+ ],
+ "tags": [
+  "text",
+  "quote",
+  "quote marks",
+  "typing",
+  "photo",
+  "scene",
+  "pull back",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f12 the scene holds zoomed in on its left; f12-f40 it pulls back (fast at f24, slow end); f45-f70 it pans right into its final framing; f113-f140 the opening quote mark rises in from below (its two halves 2 f apart); f126-f148 the closing mark slides in from the lower right (decelerating); f142-f208 the quote types in letter by letter (slow start, quick in the middle, slow end); then the scene floats a few pixels to f385",
+ "tracks": [
+  {
+   "name": "scene pull-back",
+   "what": "the scene zooms out from about 1.4x to its final framing",
+   "start_f": 12,
+   "length_f": 28,
+   "easing": "fast at f24, slow end"
+  },
+  {
+   "name": "scene pan",
+   "what": "the scene pans right into its final framing",
+   "start_f": 45,
+   "length_f": 25,
+   "easing": "S-curve"
+  },
+  {
+   "name": "opening mark",
+   "what": "two halves rise in from below, sliding right (2 f apart)",
+   "start_f": 113,
+   "length_f": 27,
+   "easing": "power3.out (decelerating)"
+  },
+  {
+   "name": "closing mark",
+   "what": "slides in from the lower right",
+   "start_f": 126,
+   "length_f": 22,
+   "easing": "power2.out (decelerating)"
+  },
+  {
+   "name": "quote typing",
+   "what": "letters fade in one after another (49 letters in the reference)",
+   "start_f": 142,
+   "length_f": 66,
+   "easing": "slow start, quick middle, slow end"
+  },
+  {
+   "name": "float",
+   "what": "the scene drifts a few pixels",
+   "start_f": 80,
+   "length_f": 305,
+   "easing": "sine-like"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "quote"
+ ],
+ "media_slots": [
+  {
+   "id": "scene_media",
+   "label": "The scene behind the quote",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1920,
+   "max_s": 12.9,
+   "fit": "cover",
+   "focus_setting": "scene_focus",
+   "focus": "30% 40%",
+   "placeholder": "a dark soft gradient in the look, labelled 'your photo'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 230,
+ "check_frames": [
+  0,
+  20,
+  28,
+  55,
+  118,
+  132,
+  150,
+  172,
+  230,
+  385
+ ]
+}

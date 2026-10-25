@@ -1,0 +1,20 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f46 (00:00:01:16) +3 more: #scene > g:nth-of-type(3) > text:nth-of-type(1) > textpath:nth-of-type(1) > tspan:nth-of-type(1) \"PAYOFF\" off the frame, outside its box by 555 px",
+    "FIT f57 (00:00:01:27): #scene > g:nth-of-type(4) > text:nth-of-type(1) > tspan:nth-of-type(1) \"STORY TIME!\" off the frame, outside its box by 742 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f46 (00:00:01:16) +3 more: #scene > g:nth-of-type(3) > text:nth-of-type(1) > textpath:nth-of-type(1) > tspan:nth-of-type(1) \"PAYOFF\" off the frame by 229 px",
+    "FIT f57 (00:00:01:27): #scene > g:nth-of-type(4) > text:nth-of-type(1) > tspan:nth-of-type(1) \"STORY TIME!\" off the frame, outside its box by 334 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

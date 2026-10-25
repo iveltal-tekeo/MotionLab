@@ -1,0 +1,124 @@
+{
+ "name": "Footage slabs and text",
+ "kind": "text",
+ "category": "Social",
+ "what": "Two slanted slabs holding your footage fly up in 3D one after the other in an upright frame, a square one on top and a wide one under it, each overshooting a little before it settles; then a line of text types in under them, letter by letter, small at first, and swells to full size with a glow.",
+ "use_for": [
+  "two clips stacked",
+  "reaction",
+  "before and after",
+  "vertical short",
+  "intro",
+  "social post",
+  "title card",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "slabs",
+  "3d",
+  "perspective",
+  "typing",
+  "glow",
+  "vertical",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f32 the upper slab grows out of a point in perspective, overshoots at f24 and settles by f46; f20-f44 the lower slab swings in from the middle, overshoots at f37 and settles by f50; f66-f81 the text types in letter by letter (about 2 f apart, each letter dropping into place) at half size; f81-f88 it swells to full size (accelerating) while its glow comes up; then it holds",
+ "tracks": [
+  {
+   "name": "upper slab",
+   "what": "grows out of a point and flies up in perspective, a small overshoot, then settles",
+   "start_f": 6,
+   "length_f": 40,
+   "easing": "measured corners, overshoot and settle"
+  },
+  {
+   "name": "lower slab",
+   "what": "swings in from the middle, a larger overshoot, then settles",
+   "start_f": 20,
+   "length_f": 30,
+   "easing": "measured corners, overshoot and settle"
+  },
+  {
+   "name": "typing",
+   "what": "the letters of the text appear one by one at half size, each dropping into place",
+   "start_f": 66,
+   "length_f": 15,
+   "easing": "decelerating (each letter)"
+  },
+  {
+   "name": "swell",
+   "what": "the text grows to full size and its glow rises",
+   "start_f": 81,
+   "length_f": 8,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the footage keeps playing, the film grain moves)",
+   "start_f": 89,
+   "length_f": 91,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text",
+  "label"
+ ],
+ "media_slots": [
+  {
+   "id": "top_media",
+   "label": "The upper slab",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 720,
+   "max_s": 5.8,
+   "fit": "cover",
+   "focus_setting": "top_focus",
+   "focus": "50% 50%",
+   "placeholder": "a clean slab in the look's colour with the words 'your footage'"
+  },
+  {
+   "id": "bottom_media",
+   "label": "The lower slab",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1080,
+   "max_s": 5.2,
+   "fit": "cover",
+   "focus_setting": "bottom_focus",
+   "focus": "50% 50%",
+   "placeholder": "a clean slab in the look's colour with the words 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  8,
+  14,
+  22,
+  28,
+  36,
+  50,
+  68,
+  76,
+  84,
+  100
+ ]
+}

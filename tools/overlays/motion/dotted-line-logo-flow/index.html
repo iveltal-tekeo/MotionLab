@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "first_logo", "type": "string", "label": "Logo 1 (top left): a logo of the library (e.g. youtube) or your picture (empty = a placeholder)", "default": ""},
+  {"id": "second_logo", "type": "string", "label": "Logo 2 (top right): a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "third_logo", "type": "string", "label": "Logo 3 (second row): a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "fourth_logo", "type": "string", "label": "Logo 4 (third row): a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "fifth_logo", "type": "string", "label": "Logo 5 (the corner on the right): a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "sixth_logo", "type": "string", "label": "Logo 6 (bottom row): a logo of the library or your picture (empty = a placeholder)", "default": ""},
+  {"id": "lock_logo", "type": "string", "label": "Last stop: a logo of the library or your picture (empty = a padlock that unlocks)", "default": ""},
+  {"id": "start_logo", "type": "string", "label": "Extra logo at the start (not in the original): a logo of the library or your picture (empty = none)", "default": ""},
+  {"id": "flow", "type": "enum", "label": "Flow colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<script src="assets/logos/logos.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "dotted-line-logo-flow" (2026-10-23): a dark board with one long dotted (dashed) line snaking across it, four rows joined at the sides, and a
+     padlock at the bottom left. Six logos drop in from above the frame as pixel mosaics (f2-f34, staggered, a quick start
+     and a long soft landing) and stay pixelated; the line then lights up dash by dash in the flow colour, leg by leg
+     from the top left, and each time it reaches a logo the mosaic resolves into the sharp logo (f31-41, f98-123,
+     f173-183, f209-219, f242-251, f279-290); when the last dash lights the padlock opens (shackle f326-f333, the body
+     turns to an outline f333-f338). The six logos, an opt-in logo at the start and the last stop are settings (a logo of
+     the library or the user's picture; empty = a neutral mark). Numbers measured from the reference's frames (1256 x 720
+     units, scaled x1.5). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #board { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #board > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .lg { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; }
+  .lg > svg, .lg > img { display: block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="11.7" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0"><defs id="fdefs"></defs></svg>
+  <div id="hand" class="abs"><div id="board"><svg id="bsvg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 351;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  // a CSS-style cubic-bezier as a GSAP ease (the reference's measured curve)
+  const bz = (x1, y1, x2, y2) => t => { let s = t; for (let i = 0; i < 8; i++) { const x = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s - t;
+    const d = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2); if (Math.abs(d) < 1e-6) break; s = Math.min(1, Math.max(0, s - x / d)); }
+    return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s; };
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.3;
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const S = Math.round(V.start);
+  const K = 1.5, OX = (W - 1256 * K) / 2;                    // the reference is 1256 x 720: its numbers below are in those units
+  const X = x => OX + x * K, Y = y => y * K;
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const pickC = { mustard: L.mustard, signal: L.signal, deep: mixC(L.deep, glare, 0.4), paper: glare };
+  const YEL = pickC[V.flow] || L.mustard;
+
+  // ---- the board: dark, with a faint grid
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) {
+    ground.style.background = mixC(night, glare, L.dark ? 0.04 : 0.1);
+    if (window.MLLook) MLLook.grid(ground, tl, { kind: "flat", look: L, U, W, H, size: 124, alpha: 0.04, color: glare });
+  }
+
+  // ---- the dashed line: one path (clip units), a dash every 51.17 and 25 long; the dashes inside the logos' gaps are left out
+  const PTS = [[142, 140], [1143, 140], [1143, 268], [134, 268], [134, 429], [1127, 429], [1127, 605], [168, 605]];
+  const segs = []; let tot = 0;
+  for (let i = 0; i < PTS.length - 1; i++) { const a = PTS[i], b = PTS[i + 1], l = Math.hypot(b[0] - a[0], b[1] - a[1]); segs.push({ a, b, s0: tot, l }); tot += l; }
+  const posAt = s => { for (const g of segs) if (s <= g.s0 + g.l + 1e-6) { const t = (s - g.s0) / g.l; return [g.a[0] + (g.b[0] - g.a[0]) * t, g.a[1] + (g.b[1] - g.a[1]) * t]; } return PTS[PTS.length - 1]; };
+  const KO = [[218, 397, 130, 150], [783, 959, 130, 150], [533, 710, 258, 278], [317, 546, 419, 439], [1118, 1136, 437, 600], [551, 729, 595, 615]];
+  const inKO = p => KO.some(r => p[0] >= r[0] && p[0] <= r[1] && p[1] >= r[2] && p[1] <= r[3]);
+  // the first frame each dash turns to the flow colour (measured, dash by dash)
+  const LIT = {"0":26,"1":28,"5":67,"6":77,"7":80,"8":80,"9":88,"10":90,"11":95,"12":98,"16":155,"17":156,"18":156,"19":158,"20":159,"21":162,"22":164,"23":164,"24":165,"25":167,"26":167,"27":168,"28":170,"29":173,"30":173,"34":197,"35":198,"36":198,"37":199,"38":200,"39":200,"40":201,"41":201,"42":203,"43":205,"44":205,"45":207,"46":207,"47":208,"48":209,"53":231,"54":231,"55":232,"56":234,"57":235,"58":236,"59":236,"60":238,"61":239,"62":240,"63":241,"64":242,"68":267,"69":269,"70":271,"71":271,"72":273,"73":274,"74":276,"75":277,"79":314,"80":315,"81":317,"82":318,"83":319,"84":320,"85":322,"86":323};
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, parent) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; };
+  const bsvg = q("bsvg");
+  const gW = el("g", { style: `filter: drop-shadow(0 0 ${3 * K}px ${rgba(glare, 0.4)})` }, bsvg);
+  const gY = el("g", { style: `filter: drop-shadow(0 0 ${4 * K}px ${rgba(YEL, 0.75)}) drop-shadow(0 0 ${10 * K}px ${rgba(YEL, 0.3)})` }, bsvg);
+  const PER = 51.17, DL = 25, dashes = [];
+  for (let k = 0; PER * k < tot; k++) {
+    const sa = PER * k, sb = Math.min(sa + DL, tot);
+    if (inKO(posAt((sa + sb) / 2))) continue;
+    const pts = [posAt(sa)];
+    segs.forEach(g => { const c = g.s0 + g.l; if (c > sa + 1e-6 && c < sb - 1e-6) pts.push(g.b); });
+    pts.push(posAt(sb));
+    const d = "M " + pts.map(p => `${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join(" L ");
+    const at = { d, fill: "none", "stroke-width": 5 * K, "stroke-linejoin": "miter", "stroke-linecap": "butt" };
+    el("path", { ...at, stroke: glare, opacity: 0.92 }, gW);
+    const yp = el("path", { ...at, stroke: YEL, opacity: 0 }, gY);
+    dashes.push({ yp, lit: LIT[k] === undefined ? 1e9 : LIT[k] });
+  }
+
+  // ---- the pixel mosaic: a filter whose block size is set each frame (odd sizes, so the blocks tile exactly)
+  const fdefs = q("fdefs");
+  const mkPix = () => {
+    const f = el("filter", { x: "0", y: "0", width: "100%", height: "100%", "color-interpolation-filters": "sRGB" }, fdefs);
+    const fl = el("feFlood", { x: 0, y: 0, width: 1, height: 1 }, f);
+    const cp = el("feComposite", { width: 3, height: 3 }, f);
+    el("feTile", { result: "t" }, f);
+    el("feComposite", { in: "SourceGraphic", in2: "t", operator: "in" }, f);
+    const mo = el("feMorphology", { operator: "dilate", radius: 1 }, f);
+    return { f, fl, cp, mo };
+  };
+  let pixN = 0;
+
+  // ---- the logo slots (they drop in as mosaics)
+  const BIG = 118 * K;
+  const SL = [
+    { key: "first_logo", c: [308, 134.5], f0: 3.0, res: [31, 41], round: true, tone: "deep" },
+    { key: "second_logo", c: [870, 133], f0: 6.0, res: [98, 123], tone: "mustard" },
+    { key: "third_logo", c: [625, 273], f0: 8.0, res: [173, 183], tone: "paper" },
+    { key: "fourth_logo", c: [431, 418], f0: 4.0, res: [209, 219], tone: "deep" },
+    { key: "fifth_logo", c: [1122, 517], f0: 1.6, res: [242, 251], tone: "signal" },
+    { key: "sixth_logo", c: [648, 602], f0: 7.9, res: [279, 290], tone: "signal" }];
+  const TONES = { deep: mixC(L.deep, glare, 0.3), mustard: L.mustard, paper: glare, signal: L.signal };
+  const board = q("board");
+  const slots = SL.map(s => {
+    const box = document.createElement("div"); box.className = "lg"; board.appendChild(box);
+    Object.assign(box.style, { width: `${BIG}px`, height: `${BIG}px`, left: `${-BIG / 2}px`, top: `${-BIG / 2}px` });
+    const v = V[s.key];
+    let has = false;
+    if (v && window.MLLogo) {
+      has = MLLogo.fill(box, v, { scale: 0.96, dark: !L.dark });
+      if (has && !MLLogo.is(v)) box.querySelectorAll("img").forEach(m => Object.assign(m.style, { objectFit: "contain", width: "100%", height: "100%" }));
+    }
+    if (!has) {                                              // a neutral mark: a rounded square (a circle for the first), a ring and a dot
+      box.textContent = "";
+      const t = TONES[s.tone], ink = lum(t) > 0.55 ? L.ink : "#ffffff";
+      const sv = el("svg", { width: BIG, height: BIG, viewBox: "0 0 118 118" }, null);
+      el("rect", { x: 1, y: 1, width: 116, height: 116, rx: s.round ? 58 : 26, fill: t }, sv);
+      el("circle", { cx: 59, cy: 59, r: 26, fill: "none", stroke: ink, "stroke-width": 9 }, sv);
+      el("circle", { cx: 59, cy: 59, r: 7, fill: ink }, sv);
+      box.appendChild(sv);
+    }
+    const px = mkPix(); px.f.setAttribute("id", `px${pixN}`); px.id = `px${pixN++}`;
+    return { box, s, px, c: s.c, size: BIG };
+  });
+  // the opt-in start logo (a small mark at the start of the line, like the padlock at its end)
+  let startLogo = null;
+  if (V.start_logo && window.MLLogo) {
+    const sz = 70 * K, box = document.createElement("div"); box.className = "lg"; board.appendChild(box);
+    Object.assign(box.style, { width: `${sz}px`, height: `${sz}px`, left: `${-sz / 2}px`, top: `${-sz / 2}px` });
+    const ok = MLLogo.fill(box, V.start_logo, { scale: 0.96, dark: !L.dark });
+    if (ok && !MLLogo.is(V.start_logo)) box.querySelectorAll("img").forEach(m => Object.assign(m.style, { objectFit: "contain", width: "100%", height: "100%" }));
+    if (ok) { const px = mkPix(); px.id = `px${pixN++}`; px.f.setAttribute("id", px.id); startLogo = { box, px, c: [105, 140], f0: 3.0, res: [31, 41], size: sz }; }
+  }
+  // the block sizes of a resolving mosaic (clip units, per frame from the start), then sharp
+  const BS = [15, 14, 13, 11, 9.4, 7.9, 6.2, 5.4, 4.5, 3.6];
+  const blockAt = (g, r) => { if (g < r[0]) return 15; if (g >= r[1]) return 0; const k = Math.floor(g - r[0]); return k < BS.length ? BS[k] : BS[BS.length - 1]; };
+  const oddPx = b => { let n = Math.max(1, Math.round(b * K)); if (n % 2 === 0) n += 1; return n; };
+  const setPix = (sl, b) => {
+    if (b <= 0) { sl.box.style.filter = "none"; return; }
+    const n = oddPx(b), r = (n - 1) / 2;
+    sl.px.fl.setAttribute("x", r); sl.px.fl.setAttribute("y", r);
+    sl.px.cp.setAttribute("width", n); sl.px.cp.setAttribute("height", n);
+    sl.px.mo.setAttribute("radius", r);
+    sl.box.style.filter = `url(#${sl.px.id})`;
+  };
+
+  // ---- the padlock at the end of the line: yellow, it opens when the last dash lights
+  let lockG = null, lockParts = null;
+  let lockBox = null;
+  if (V.lock_logo && window.MLLogo) {
+    lockBox = document.createElement("div"); lockBox.className = "lg"; board.appendChild(lockBox);
+    const sz = 92 * K;
+    Object.assign(lockBox.style, { width: `${sz}px`, height: `${sz}px`, left: `${-sz / 2}px`, top: `${-sz / 2}px` });
+    const ok = MLLogo.fill(lockBox, V.lock_logo, { scale: 0.96, dark: !L.dark });
+    if (ok && !MLLogo.is(V.lock_logo)) lockBox.querySelectorAll("img").forEach(m => Object.assign(m.style, { objectFit: "contain", width: "100%", height: "100%" }));
+    if (!ok) { lockBox.remove(); lockBox = null; }
+  }
+  if (!lockBox) {
+    const lsvg = el("svg", { width: 1, height: 1, style: "overflow:visible; position:absolute; left:0; top:0" }, board);
+    lockG = el("g", { style: `filter: drop-shadow(0 0 ${5 * K}px ${rgba(YEL, 0.7)}) drop-shadow(0 0 ${12 * K}px ${rgba(YEL, 0.3)})` }, lsvg);
+    const bx = X(105.5), by = Y(598);
+    const sh = el("path", { fill: "none", stroke: YEL, "stroke-width": 9 * K, "stroke-linecap": "butt", "stroke-linejoin": "round" }, lockG);
+    const body = el("rect", { x: bx - 35.5 * K, y: by - 32 * K, width: 71 * K, height: 64 * K, rx: 9 * K, fill: YEL, stroke: YEL, "stroke-width": 7 * K, "stroke-linejoin": "round" }, lockG);
+    const holeD = el("g", {}, lockG);                        // the keyhole, dark on the solid body
+    el("circle", { cx: bx, cy: by - 5 * K, r: 7 * K, fill: night }, holeD); el("path", { d: `M ${bx - 4 * K} ${by - 2 * K} L ${bx + 4 * K} ${by - 2 * K} L ${bx + 6 * K} ${by + 16 * K} L ${bx - 6 * K} ${by + 16 * K} Z`, fill: night }, holeD);
+    const holeY = el("g", { opacity: 0 }, lockG);            // and yellow on the outlined one
+    el("circle", { cx: bx, cy: by - 5 * K, r: 7 * K, fill: YEL }, holeY); el("path", { d: `M ${bx - 4 * K} ${by - 2 * K} L ${bx + 4 * K} ${by - 2 * K} L ${bx + 6 * K} ${by + 16 * K} L ${bx - 6 * K} ${by + 16 * K} Z`, fill: YEL }, holeY);
+    lockParts = { sh, body, holeD, holeY, bx, by };
+  }
+
+  // ---- one frame
+  const dropE = bz(0.216, 0, 0.043, 0.881), DUR = 26.3, Y0 = -100;
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    board.style.visibility = on ? "visible" : "hidden";
+    if (!on) return;
+    slots.forEach(sl => {
+      const yc = Y0 + (sl.c[1] - Y0) * dropE(clamp01((g - sl.s.f0) / DUR));
+      sl.box.style.transform = `translate(${X(sl.c[0]).toFixed(2)}px, ${Y(yc).toFixed(2)}px)`;
+      setPix(sl, blockAt(g, sl.s.res));
+    });
+    if (startLogo) {
+      const yc = Y0 + (startLogo.c[1] - Y0) * dropE(clamp01((g - startLogo.f0) / DUR));
+      startLogo.box.style.transform = `translate(${X(startLogo.c[0]).toFixed(2)}px, ${Y(yc).toFixed(2)}px)`;
+      setPix(startLogo, blockAt(g, startLogo.res));
+    }
+    if (lockBox) lockBox.style.transform = `translate(${X(105.5).toFixed(2)}px, ${Y(585).toFixed(2)}px)`;
+    dashes.forEach(d => { d.yp.setAttribute("opacity", clamp01((g - d.lit + 0.5) / 1.5).toFixed(3)); });
+    if (lockParts) {
+      const { sh, body, holeD, holeY, bx, by } = lockParts;
+      const o = 1 - Math.pow(1 - clamp01((g - 326) / 7), 2.2);                 // the shackle opens f326-f333
+      const f = clamp01((g - 333) / 5);                                         // the body turns to an outline f333-f338
+      const ax = bx - 19 * K, bxr = bx + 19 * K, top = by - 32 * K;
+      const ac = top - 4 * K - 12 * K * o;                                      // the arch's centre height
+      const rightEnd = top + 2 * K - 16 * K * o;
+      sh.setAttribute("d", `M ${ax} ${top + 2 * K} L ${ax} ${ac} A ${19 * K} ${19 * K} 0 0 1 ${bxr} ${ac} L ${bxr} ${rightEnd}`);
+      body.setAttribute("fill-opacity", (1 - f).toFixed(3));
+      holeD.setAttribute("opacity", (1 - f).toFixed(3)); holeY.setAttribute("opacity", f.toFixed(3));
+    }
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 8, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 13 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

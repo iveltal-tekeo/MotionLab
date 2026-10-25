@@ -1,0 +1,83 @@
+{
+ "name": "Orbit ring steps",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A thin ring around a main text with a glowing dot that waits at one step, swings to the next and stops again; each step has its name outside the ring, shown while the dot is there. It loops without a seam.",
+ "use_for": [
+  "steps",
+  "cycle",
+  "loop",
+  "process",
+  "flywheel",
+  "workflow",
+  "framework",
+  "main idea",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "ring",
+  "orbit",
+  "dot",
+  "glow",
+  "loop",
+  "steps",
+  "cycle",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0 the dot waits at step 1 with its name shown; it swings to the next step every 80 f (f1-f81, f81-f161, f161-f241, f241-f321: a very steep S-curve, the fast part at f41 / f121 / f201 / f281, a long soft stop); the name it leaves fades out (f37-f46) and the next fades in (f41-f55); after the fourth swing it is back at step 1, so the 320 f loop without a seam",
+ "tracks": [
+  {
+   "name": "dot swing",
+   "what": "the glowing dot swings along the ring to the next step (repeats every 80 f)",
+   "start_f": 1,
+   "length_f": 80,
+   "easing": "cubic-bezier(0.778, 0.01, 0.207, 1) (measured): slow start, fast in the middle, long soft stop"
+  },
+  {
+   "name": "name leaves",
+   "what": "the name of the step the dot leaves fades out",
+   "start_f": 37,
+   "length_f": 9,
+   "easing": "linear"
+  },
+  {
+   "name": "name arrives",
+   "what": "the name of the next step fades in (with its little arrows)",
+   "start_f": 41,
+   "length_f": 14,
+   "easing": "decelerating (cubic out)"
+  },
+  {
+   "name": "loop",
+   "what": "the fourth swing brings the dot back to step 1 and its name",
+   "start_f": 241,
+   "length_f": 79,
+   "easing": "same as the swing"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "main",
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  30,
+  41,
+  48,
+  60,
+  121,
+  130,
+  201,
+  285
+ ]
+}

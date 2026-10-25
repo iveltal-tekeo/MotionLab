@@ -1,0 +1,22 @@
+{
+ "name": "search-query",
+ "frames": 74,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + i * round(4 * fps / 30)",
+   "kind": "key",
+   "repeat": "max(1, round(len(query) / 6))",
+   "what": "a key per word (about one per 6 letters)"
+  },
+  {
+   "f": "start + round(23 * fps / 30)",
+   "kind": "pop",
+   "if": "spinner",
+   "db": -10,
+   "what": "the loading ring appears"
+  }
+ ]
+}

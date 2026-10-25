@@ -1,0 +1,98 @@
+{
+ "name": "Story hill with words",
+ "kind": "text",
+ "category": "Charts & Data",
+ "what": "A thick glowing line in the shape of a hill draws itself while a camera flies along it: three words pop onto the line as the camera reaches them (the climb, the top, the way down), then it whips out to show the whole hill with a line of text popping in under it.",
+ "use_for": [
+  "story structure",
+  "storyline",
+  "three-part explainer",
+  "hook",
+  "timeline",
+  "chart-style intro",
+  "journey",
+  "outline"
+ ],
+ "tags": [
+  "text",
+  "path",
+  "hill",
+  "camera",
+  "line",
+  "glow",
+  "storyline",
+  "chart",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f4 the foot of the hill's line holds, f5-f20 it draws on faster and faster; the camera (about 1.7x) pans along it: f14-f23 up and over, hold on the top f24-f31, f32-f41 a fast whip (ghost copies) to the far side, hold f42-f52, f53-f66 whips out to the whole hill and holds to f78; the words pop onto the line at f5, f20 and f38 and the line under the hill at f55 (0.45x to full size in 4-5 frames, a sideways blur that clears)",
+ "tracks": [
+  {
+   "name": "line draws on",
+   "what": "the line is there up to a point (f0-f4), then draws on faster and faster off the frame",
+   "start_f": 5,
+   "length_f": 16,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "camera pan up and over",
+   "what": "from the climb to the top of the hill",
+   "start_f": 14,
+   "length_f": 10,
+   "easing": "S-curve"
+  },
+  {
+   "name": "camera whip to the far side",
+   "what": "a fast pan down the other side with ghost copies at its fastest (f37)",
+   "start_f": 32,
+   "length_f": 10,
+   "easing": "S-curve"
+  },
+  {
+   "name": "camera whip out",
+   "what": "it pulls back to the whole hill",
+   "start_f": 53,
+   "length_f": 14,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "word pops",
+   "what": "each word grows from 0.45x to full size with a blur that clears, on the line's edge (f5, f20, f38); the line under the hill the same at f55",
+   "start_f": 5,
+   "length_f": 55,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the whole hill, still",
+   "start_f": 67,
+   "length_f": 12,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "word_1",
+  "word_2",
+  "word_3",
+  "punch"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 75,
+ "check_frames": [
+  3,
+  8,
+  14,
+  24,
+  37,
+  46,
+  57,
+  62,
+  75
+ ]
+}

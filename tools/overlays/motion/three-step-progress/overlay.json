@@ -1,0 +1,40 @@
+{
+ "name": "three-step-progress",
+ "frames": 255,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "db": -10,
+   "what": "the camera eases right"
+  },
+  {
+   "f": "round((40 + 3 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "len(step2)",
+   "db": -10,
+   "what": "a letter of step 2 lands"
+  },
+  {
+   "f": "round(128 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 600,
+   "to": 2600,
+   "db": -6,
+   "what": "the camera pans to the end"
+  },
+  {
+   "f": "round((192 + 3 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "len(step3)",
+   "db": -10,
+   "if": "round((192 + 3 * len(step3)) * fps / 30) < frames",
+   "what": "a letter of step 3 lands"
+  }
+ ]
+}

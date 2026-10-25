@@ -1,0 +1,140 @@
+{
+ "name": "Point to point line",
+ "kind": "text",
+ "category": "Text",
+ "what": "A diamond point pops up from below with its label and a footage card blurs in under it; the group then slides left while a line is drawn across to a second point, whose label and footage card come in under it, and everything settles.",
+ "use_for": [
+  "two points",
+  "before and after",
+  "compare",
+  "step to step",
+  "transition",
+  "explainer",
+  "route",
+  "from and to"
+ ],
+ "tags": [
+  "text",
+  "points",
+  "line",
+  "diamond",
+  "cards",
+  "footage",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f10 the first diamond pops up from below the frame (back-out, 13 % overshoot, scale 0.25 to 1), its label appears at f6; f15-f20 it rises 111 px (sine-out) and the first card blurs in at f20; f30-f40 the group slides left 373 px and shrinks to 95 % (sine in-out, motion-blurred) while the line is drawn out (f31-f35) to the second diamond, which fades in and slides to the right (f33-f40) with its label; the second card blurs in at f50; then a slow drift to the end",
+ "tracks": [
+  {
+   "name": "first point",
+   "what": "the diamond pops up from below the frame and overshoots a little; its label appears at f6",
+   "start_f": 2,
+   "length_f": 8,
+   "easing": "back.out(1.75)"
+  },
+  {
+   "name": "rise",
+   "what": "the first point rises 111 px to make room",
+   "start_f": 15,
+   "length_f": 5,
+   "easing": "sine.out"
+  },
+  {
+   "name": "first card",
+   "what": "the footage card blurs in under the first point (2 frames)",
+   "start_f": 20,
+   "length_f": 2,
+   "easing": "linear"
+  },
+  {
+   "name": "slide",
+   "what": "the first group slides left 373 px and shrinks to 95 %, smeared sideways",
+   "start_f": 30,
+   "length_f": 10,
+   "easing": "sine.inOut"
+  },
+  {
+   "name": "line",
+   "what": "the line is drawn from the first point to the second",
+   "start_f": 31,
+   "length_f": 4,
+   "easing": "power1.out"
+  },
+  {
+   "name": "second point",
+   "what": "the second diamond fades in and slides right to its place, its label with it",
+   "start_f": 33,
+   "length_f": 7,
+   "easing": "power1.out"
+  },
+  {
+   "name": "second card",
+   "what": "the footage card blurs in under the second point (2 frames)",
+   "start_f": 50,
+   "length_f": 2,
+   "easing": "linear"
+  },
+  {
+   "name": "drift",
+   "what": "a slow settle drift of a few pixels",
+   "start_f": 40,
+   "length_f": 50,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "point1",
+  "point2"
+ ],
+ "media_slots": [
+  {
+   "id": "card1_media",
+   "label": "The card under the first point",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 2.4,
+   "fit": "cover",
+   "focus_setting": "card1_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your footage'"
+  },
+  {
+   "id": "card2_media",
+   "label": "The card under the second point",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 1.4,
+   "fit": "cover",
+   "focus_setting": "card2_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  4,
+  6,
+  10,
+  20,
+  36,
+  40,
+  52,
+  85
+ ]
+}

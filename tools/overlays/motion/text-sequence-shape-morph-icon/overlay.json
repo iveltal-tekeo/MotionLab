@@ -1,0 +1,34 @@
+{
+ "name": "text-sequence-shape-morph-icon",
+ "frames": 90,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 2000,
+   "db": -12,
+   "what": "the sentence slides in from the left"
+  },
+  {
+   "f": "start + round(64 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.25",
+   "db": -8,
+   "what": "the sentence is swept off to the right"
+  },
+  {
+   "f": "start + round(72 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 400,
+   "to": 2200,
+   "db": -9,
+   "what": "the shape slides in"
+  }
+ ]
+}

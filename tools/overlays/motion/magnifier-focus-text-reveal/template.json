@@ -1,0 +1,86 @@
+{
+ "name": "Magnifier focus reveal",
+ "kind": "text",
+ "category": "Text",
+ "what": "A statement sits pixelated on a dark red ground; a hand holding a round magnifier slides in from the right and sweeps along the text in short bobbing strokes, and inside the lens the words are sharp and clear while the rest stays a blur of pixels; at the end the hand drops out of the bottom of the frame.",
+ "use_for": [
+  "statement",
+  "reveal",
+  "hook",
+  "focus",
+  "highlight",
+  "quote",
+  "title",
+  "teaser"
+ ],
+ "tags": [
+  "text",
+  "magnifier",
+  "hand",
+  "pixelated",
+  "focus",
+  "reveal",
+  "statement",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f5-f21 the hand and lens slide in from the right edge, slowing; f21-f131 the lens sweeps left along the text in bobbing strokes (f21-f40 up, f40-f60 down, f60-f81 up, f81-f93 down, f93-f111 up, f111-f131 left to the far end) with the hand tilting a little each stroke; inside the lens the text is sharp, outside it is a mosaic; f131-f138 it lifts; f138-f146 it drops out of the bottom of the frame with a motion blur; the pixelated text is left to the end",
+ "tracks": [
+  {
+   "name": "lens in",
+   "what": "the hand and magnifier slide in from the right edge",
+   "start_f": 5,
+   "length_f": 16,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "sweep",
+   "what": "the lens sweeps left along the text in bobbing strokes, the hand swaying; the text is sharp inside the lens",
+   "start_f": 21,
+   "length_f": 110,
+   "easing": "S-curve (measured path)"
+  },
+  {
+   "name": "lift and drop",
+   "what": "the lens lifts at the far end, then drops out of the bottom of the frame, blurred",
+   "start_f": 131,
+   "length_f": 15,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "hold",
+   "what": "the pixelated statement, still (the film grain moves)",
+   "start_f": 146,
+   "length_f": 4,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 48,
+ "check_frames": [
+  0,
+  6,
+  14,
+  24,
+  40,
+  52,
+  68,
+  81,
+  94,
+  106,
+  120,
+  134,
+  140,
+  143,
+  148
+ ]
+}

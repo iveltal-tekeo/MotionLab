@@ -1,0 +1,36 @@
+{
+ "name": "flowchart-tree-branch",
+ "frames": 227,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(11 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 400,
+   "to": 1800,
+   "db": -11,
+   "what": "the camera dollies in on the main card"
+  },
+  {
+   "f": "start + round(46 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the line grows out of the main card and the camera swings to the first branch"
+  },
+  {
+   "f": "start + round(148 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 2200,
+   "to": 400,
+   "db": -11,
+   "what": "the camera pulls back to show the whole tree"
+  }
+ ]
+}

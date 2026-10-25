@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "Main text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "IDEA"},
+  {"id": "sub", "type": "string", "label": "Subtitle", "default": "Tell them why"},
+  {"id": "note", "type": "string", "label": "Note at the pen tail", "default": "this one!"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 120, "min": 40, "max": 300, "step": 1},
+  {"id": "sub_size", "type": "number", "label": "Subtitle size (px at a 1080-px short side)", "default": 48, "min": 16, "max": 140, "step": 1},
+  {"id": "mark", "type": "enum", "label": "Highlight colour", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "pen", "type": "enum", "label": "Pen colour", "default": "ink", "options": [{"value": "ink", "label": "Ink"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "pen_w", "type": "number", "label": "Pen thickness (px)", "default": 10, "min": 2, "max": 30, "step": 0.5},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "hand-drawn-circle-highlight" (2026-10-22): a word on a paper page (darker at the left and right edges) typed in small, letter by letter
+     (f2-f16), then growing to full size (f14-f20); a highlight bar appears at its right end (f24-f28) and wipes
+     leftwards behind it until the word sits on a box (f28-f56); a small subtitle grows in word by word under it
+     (f49-f64); then a hand-drawn pen loop is drawn around both (f60-f84: up the left, over the top, down the right,
+     back under), its tail runs on to the left (f84-f106) and a small slanted note pops in at its end (f108-f120).
+     The pen and the note move on twos, like the reference. Look-aware: paper, ink, highlight and pen colour come
+     from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; transform-origin: 50% 50%; }
+  .ch { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 210;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a paper page (the paper), darker toward its left and right edges; dark ink text, a pen line
+  const paper = L.dark ? L.ink : L.paper, ink = L.dark ? L.paper : L.ink;
+  const shade = L.dark ? "#000000" : mixh(ink, "#000000", 0.5);
+  const hl = V.mark === "signal" ? L.signal : V.mark === "paper" ? mixh(paper, ink, 0.1) : L.mustard;
+  const penC = mixh(V.pen === "signal" ? L.signal : V.pen === "deep" ? L.deep : ink, paper, V.pen === "ink" ? 0.22 : 0);
+  const textC = mixh(ink, "#000000", 0.2), subC = mixh(ink, paper, 0.32);
+  let boil = null;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) {
+    ground.style.background = paper;
+    const vig = document.createElement("div");
+    Object.assign(vig.style, { position: "absolute", left: "0", top: "0", width: `${W}px`, height: `${H}px`, backgroundImage:
+      `linear-gradient(90deg, ${rgba(shade, 0.36)} 0%, ${rgba(shade, 0.22)} 9%, ${rgba(shade, 0.08)} 19%, ${rgba(shade, 0)} 30%, ${rgba(shade, 0)} 70%, ${rgba(shade, 0.08)} 81%, ${rgba(shade, 0.22)} 91%, ${rgba(shade, 0.36)} 100%),` +
+      `linear-gradient(180deg, ${rgba(shade, 0.16)} 0%, ${rgba(shade, 0.05)} 14%, ${rgba(shade, 0)} 30%, ${rgba(shade, 0)} 70%, ${rgba(shade, 0.05)} 86%, ${rgba(shade, 0.16)} 100%)` });
+    ground.appendChild(vig);
+    // paper grain that boils on twos while the highlight wipes (the reference's page flickers f28-f56, then keeps its grain)
+    const nzc = document.createElement("canvas"); nzc.width = nzc.height = 160;
+    const nzx = nzc.getContext("2d"), nzi = nzx.createImageData(160, 160), nr = window.MLLook ? MLLook.rnd(31) : Math.random;
+    for (let i = 0; i < 160 * 160; i++) { const v = 128 + (nr() + nr() + nr() - 1.5) * 150; nzi.data.set([v, v, v, 255], i * 4); }
+    nzx.putImageData(nzi, 0, 0);
+    boil = document.createElement("div");
+    Object.assign(boil.style, { position: "absolute", left: "0", top: "0", width: `${W}px`, height: `${H}px`, opacity: "0",
+      backgroundImage: `url(${nzc.toDataURL()})`, backgroundSize: `${Math.round(160 * Math.max(1, U))}px` });
+    ground.appendChild(boil);
+  }
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const fam = V.body_font;
+
+  // ---- the highlight box, the main word, the subtitle, the pen canvas, the note (back to front)
+  const box = document.createElement("div");
+  Object.assign(box.style, { position: "absolute", left: "0", top: "0", background: hl, opacity: "0" });
+  hand.appendChild(box);
+  const FS = V.size * U, YT = 0.5055, XC = 0.498;
+  const main = document.createElement("div"); main.className = "ln ml-body";
+  Object.assign(main.style, { left: `${W * XC}px`, top: `${H * YT}px`, fontSize: `${FS}px`, fontWeight: String(fw(fam, 800)), color: textC, letterSpacing: "0.01em",
+    textShadow: `${-0.012 * FS}px ${-0.012 * FS}px 0 ${rgba(paper, 0.5)}, ${0.02 * FS}px ${0.03 * FS}px ${0.05 * FS}px ${rgba(ink, 0.35)}` });
+  const rr = window.MLLook ? MLLook.rich(main, V.text, { look: L, family: fam, weight: 800 }) : { words: [] };
+  if (!window.MLLook) main.textContent = V.text;
+  const lets = [];
+  rr.words.forEach(w => { const s = w.textContent; w.textContent = "";
+    [...s].forEach(ch => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; w.appendChild(sp); lets.push(sp); }); });
+  hand.appendChild(main);
+  const SF = V.sub_size * U;
+  const sub = document.createElement("div"); sub.className = "ln ml-body";
+  Object.assign(sub.style, { left: `${W * 0.4965}px`, top: "0px", fontSize: `${SF}px`, fontWeight: String(fw(fam, 500)), color: subC });
+  const rs = window.MLLook ? MLLook.rich(sub, V.sub, { look: L, family: fam, weight: 500 }) : { words: [] };
+  if (!window.MLLook) sub.textContent = V.sub;
+  hand.appendChild(sub);
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H; cv.className = "abs";
+  hand.appendChild(cv);
+  const cx = cv.getContext("2d");
+  const note = document.createElement("div"); note.className = "ln ml-body";
+  Object.assign(note.style, { left: "0px", top: "0px", fontSize: `${0.85 * SF}px`, fontWeight: String(fw(fam, 500)), fontStyle: "italic", fontSynthesis: "style", color: mixh(ink, paper, 0.12), visibility: "hidden" });
+  note.textContent = V.note;
+  hand.appendChild(note);
+
+  // ---- the pen path: where the pen is on every second frame (measured on the reference, frame fractions), the
+  // loop going up the left, over the top, down the right and back under the text, the tail running on to the left
+  const KEY = [[60, 0.4882, 0.8776], [61, 0.4798, 0.8663], [62, 0.475, 0.861], [63, 0.4627, 0.8426], [64, 0.4508, 0.8264], [65, 0.4278, 0.7899], [66, 0.4055, 0.7542],
+    [67, 0.3669, 0.6813], [68, 0.3312, 0.6056], [69, 0.3139, 0.4521], [70, 0.343, 0.3347], [71, 0.4364, 0.2942], [72, 0.5336, 0.2847], [73, 0.6097, 0.3165],
+    [74, 0.6844, 0.3667], [75, 0.7235, 0.4491], [76, 0.7336, 0.5389], [77, 0.6963, 0.5944], [78, 0.6562, 0.6347], [79, 0.6031, 0.6735], [80, 0.5852, 0.6819],
+    [81, 0.5544, 0.6965], [82, 0.5242, 0.7069], [83, 0.4979, 0.7144], [84, 0.4719, 0.7194], [85, 0.4494, 0.722], [86, 0.4273, 0.7208], [87, 0.4094, 0.723],
+    [88, 0.3906, 0.7181], [89, 0.368, 0.7197], [90, 0.357, 0.7139], [91, 0.3421, 0.7149], [92, 0.3289, 0.7083], [93, 0.3161, 0.7085], [94, 0.3047, 0.7028],
+    [96, 0.2836, 0.6972], [98, 0.2664, 0.6875], [100, 0.2508, 0.6819], [102, 0.2383, 0.675], [104, 0.2273, 0.6694], [106, 0.218, 0.6667]];
+  const DENSE = [];                                                // Catmull-Rom through the points, 7 samples a segment
+  for (let i = 0; i < KEY.length - 1; i++) {
+    const p0 = KEY[Math.max(0, i - 1)], p1 = KEY[i], p2 = KEY[i + 1], p3 = KEY[Math.min(KEY.length - 1, i + 2)];
+    for (let k = 0; k < 7; k++) {
+      const u = k / 7, u2 = u * u, u3 = u2 * u;
+      const c = j => 0.5 * ((2 * p1[j]) + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3);
+      DENSE.push([p1[0] + (p2[0] - p1[0]) * u, c(1) * W, c(2) * H]);
+    }
+  }
+  DENSE.push([KEY[KEY.length - 1][0], KEY[KEY.length - 1][1] * W, KEY[KEY.length - 1][2] * H]);
+  let acc = 0;
+  DENSE.forEach((d, i) => { if (i) acc += Math.hypot(d[1] - DENSE[i - 1][1], d[2] - DENSE[i - 1][2]); d.push(acc); });   // d[3] = arc length so far
+  function drawPen(g) {
+    cx.clearRect(0, 0, W, H);
+    if (g < 60) return;
+    const gq = Math.floor(g / 2) * 2, k = Math.min(gq, 120) / 2, A = 1.4 * U;
+    cx.lineWidth = V.pen_w * U; cx.lineCap = "round"; cx.lineJoin = "round"; cx.strokeStyle = penC;
+    cx.beginPath();
+    let n = 0, last = null;
+    for (let i = 0; i < DENSE.length; i++) {
+      const d = DENSE[i];
+      if (d[0] > Math.min(gq, 106) + 1e-6) break;
+      const s = d[3];
+      const x = d[1] + A * Math.sin(s * 0.021 + k * 1.9) + A * 0.6 * Math.sin(s * 0.057 + k * 3.1);
+      const y = d[2] + A * Math.sin(s * 0.025 + k * 2.3) + A * 0.6 * Math.sin(s * 0.049 + k * 0.7);
+      if (n === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
+      last = [x, y]; n++;
+    }
+    if (n === 1) cx.lineTo(last[0] + 0.01, last[1]);
+    cx.stroke();
+  }
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  const SCALE = [[0, 0.67], [14, 0.67], [15, 0.78], [16, 0.9], [17, 0.96], [18, 0.99], [20, 1]];           // the typed word grows to full size
+  const LEFT = [[24, 0], [26, 0.01], [28, 0.035], [30, 0.1], [32, 0.2], [34, 0.33], [36, 0.5], [38, 0.6], [40, 0.69], [42, 0.75], [44, 0.8], [46, 0.83], [48, 0.87], [50, 0.9], [52, 0.92], [54, 0.94], [56, 0.95], [66, 0.98], [84, 1]];   // how far the box has wiped left
+  const RT = [[26, 1.214], [36, 1.214], [44, 1.07], [50, 1], [56, 0.98]];                                      // right edge: a little out, then in
+  const HT = [[26, 1.08], [36, 1.08], [38, 1.06], [46, 1.03], [48, 1], [56, 0.99]];                           // box height
+  const SUBS = [[49, 0.3], [55, 0.45], [60, 0.7], [62, 0.9], [64, 1]];                                        // the subtitle grows in
+  const NOTE = [[108, 0.1655, 0.668, 0.69], [110, 0.164, 0.6565, 0.75], [112, 0.1715, 0.6495, 0.85], [114, 0.171, 0.648, 0.92], [116, 0.171, 0.647, 0.97], [120, 0.17, 0.6465, 1]];
+  const S = Math.round(V.start);
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    if (boil) { const k = Math.floor(Math.min(56, Math.max(28, g)) / 2); boil.style.opacity = String((0.04 * clamp01((g - 26) / 8)).toFixed(4));
+      boil.style.backgroundPosition = `${(k * 53) % 160}px ${(k * 97) % 160}px`; }
+    // the main word: letters typed in at f2, f6, f10, f14 (squeezed up if the word is longer), growing at f14-f20
+    const n = lets.length, step = n > 1 ? Math.min(4, 12 / (n - 1)) : 0;
+    lets.forEach((sp, k) => { sp.style.opacity = String(clamp01((g - (1.5 + step * k)) / 2.5)); });
+    const sc = tab(SCALE, g)[0], tw = Math.max(1, main.offsetWidth);
+    main.style.transform = `translate(-50%, -50%) skewX(-10deg) scale(${sc.toFixed(4)})`;
+    main.style.color = mixh(ink, paper, 0.34 * (1 - clamp01((g - 26) / 22)));
+    // the highlight box: a bar at the right end that wipes left behind the word
+    const pad = 0.45 * FS;
+    const bh = 1.35 * FS * tab(HT, g)[0], cxp = W * XC;
+    const right = cxp + tw / 2 + pad * tab(RT, g)[0], leftF = cxp - tw / 2 - pad;
+    const p = tab(LEFT, g >= 26 ? Math.floor(g / 2) * 2 : g)[0], left = Math.min(right - 0.006 * W, right - p * (right - leftF));
+    if (g >= 24) {
+      box.style.opacity = String(clamp01(0.3 + 0.35 * (g - 24)));
+      Object.assign(box.style, { left: `${left.toFixed(2)}px`, width: `${(right - left).toFixed(2)}px`, top: `${(H * YT - bh / 2).toFixed(2)}px`, height: `${bh.toFixed(2)}px` });
+    } else box.style.opacity = "0";
+    // the subtitle: three words grow in one after the other under the box
+    const ys = H * YT + 1.35 * FS / 2 + 0.28 * FS;
+    sub.style.top = `${ys}px`;
+    sub.style.transform = `translate(-50%, -50%) scale(${tab(SUBS, g)[0].toFixed(4)})`;
+    rs.words.forEach((w, k) => { w.style.opacity = String(clamp01((g - (49 + 3.5 * k)) / 4)); });
+    // the pen loop, on twos
+    drawPen(g);
+    // the note at the tail's end
+    if (g >= 108) {
+      const r = tab(NOTE, Math.floor(g / 2) * 2);
+      note.style.visibility = "visible";
+      note.style.left = `${r[0] * W}px`; note.style.top = `${r[1] * H}px`;
+      note.style.transform = `translate(-50%, -50%) rotate(-8deg) scale(${r[2].toFixed(4)})`;
+    } else note.style.visibility = "hidden";
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 8 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 25 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

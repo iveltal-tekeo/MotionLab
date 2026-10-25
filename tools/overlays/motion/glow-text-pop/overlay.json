@@ -1,0 +1,21 @@
+{
+ "name": "glow-text-pop",
+ "frames": 45,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the two lines fade up"
+  },
+  {
+   "f": "start + round(13 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the big word pops in"
+  }
+ ]
+}

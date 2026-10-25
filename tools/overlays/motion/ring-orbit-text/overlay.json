@@ -1,0 +1,34 @@
+{
+ "name": "ring-orbit-text",
+ "frames": 149,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 3000,
+   "to": 500,
+   "db": -8,
+   "what": "the huge ring rushes in and shrinks onto the title"
+  },
+  {
+   "f": "start + round((19 + 10 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "len(main_text) - parts(main_text, ' ') + 1",
+   "db": -10,
+   "what": "a letter of the centre text is typed"
+  },
+  {
+   "f": "start + round(41 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the arc draws round"
+  }
+ ]
+}

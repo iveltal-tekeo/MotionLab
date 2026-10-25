@@ -1,0 +1,101 @@
+{
+ "name": "Circular progress rings",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A title is typed in, then three ring outlines are drawn one after another on a dark page, a bright arc fills each one up to its percentage, the numbers fade in inside and the names appear underneath; the whole chart floats a few pixels to the end.",
+ "use_for": [
+  "percentages",
+  "progress",
+  "skills",
+  "stats",
+  "goals",
+  "loading",
+  "explainer",
+  "report",
+  "comparison"
+ ],
+ "tags": [
+  "chart",
+  "rings",
+  "progress",
+  "percentage",
+  "circle",
+  "numbers",
+  "labels",
+  "data",
+  "title",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f5-f40 the title is typed letter by letter (a letter every 3 f); f1-f54 the ring outlines are drawn clockwise from the top, one after another (each 25 f, slow start, quick middle, soft end); f57-f105 a bright arc fills each ring up to its number (about 28 f each, one after another); f64-f112 the numbers fade in inside the rings; f75-f104 the names appear letter by letter in a scattered order; the whole chart floats a few pixels to the end (f0-f299)",
+ "tracks": [
+  {
+   "name": "title",
+   "what": "typed letter by letter, each letter fading in from a blur",
+   "start_f": 5,
+   "length_f": 36,
+   "easing": "linear per letter (3 f each, 5 f fade)"
+  },
+  {
+   "name": "ring outlines",
+   "what": "each ring is drawn clockwise from the top, one after another (f1, f13, f29)",
+   "start_f": 1,
+   "length_f": 53,
+   "easing": "cubic-bezier(0.8, 0, 0.4, 0.8)"
+  },
+  {
+   "name": "arcs fill",
+   "what": "a bright arc fills each ring up to its number (f57, f66, f77)",
+   "start_f": 57,
+   "length_f": 48,
+   "easing": "cubic-bezier(0.7, 0, 0.35, 1)"
+  },
+  {
+   "name": "numbers",
+   "what": "the numbers fade in inside the rings (f64, f72, f79)",
+   "start_f": 64,
+   "length_f": 48,
+   "easing": "cubic-bezier(0.6, 0.1, 0.35, 0.9)"
+  },
+  {
+   "name": "names",
+   "what": "the names under the rings appear letter by letter in a scattered order (f75, f85, f95)",
+   "start_f": 75,
+   "length_f": 29,
+   "easing": "linear per letter (5 f fade)"
+  },
+  {
+   "name": "float",
+   "what": "title, rings and texts float together up to 14 px (at 1280 wide)",
+   "start_f": 0,
+   "length_f": 300,
+   "easing": "slow, uneven (measured)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "title",
+  "values",
+  "labels",
+  "unit"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 130,
+ "check_frames": [
+  4,
+  12,
+  24,
+  40,
+  60,
+  72,
+  84,
+  100,
+  130,
+  250
+ ]
+}

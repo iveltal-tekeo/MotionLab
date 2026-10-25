@@ -1,0 +1,31 @@
+{
+ "name": "footage-card-text-labels-cycle",
+ "frames": 146,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2400,
+   "to": 600,
+   "db": -10,
+   "what": "the card shrinks into place"
+  },
+  {
+   "f": "start + round(13 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the card pops bigger and sinks"
+  },
+  {
+   "f": "start + round((16 + 27 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "5",
+   "db": -12,
+   "what": "a new label comes up over the card"
+  }
+ ]
+}

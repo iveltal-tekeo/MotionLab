@@ -5,6 +5,12 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.3.1 - 2026-10-25 - 114 new Motion Graphics templates
+
+- **114 new Motion Graphics templates** - text reveals, charts, social posts, app screens, a logo reveal and a
+  transition, made by MotionLab in the Editorial warm look: 189 templates in all. Each takes your words, colours and
+  fonts, and they play in the live preview while you change them.
+
 ## 0.5.3 - 2026-10-24 - Faster videos, photos in your edits and a thumbnail preview
 
 Faster videos - Claude makes a video in fewer, shorter steps:

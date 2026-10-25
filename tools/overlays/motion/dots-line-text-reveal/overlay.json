@@ -1,0 +1,31 @@
+{
+ "name": "dots-line-text-reveal",
+ "frames": 120,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(24 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 600,
+   "to": 2000,
+   "db": -12,
+   "what": "the first line draws in from the left"
+  },
+  {
+   "f": "start + round((44 + 1.6 * i) * fps / 30)",
+   "kind": "key",
+   "repeat": "max(1, len(text))",
+   "db": -12,
+   "what": "a soft tick for each typed letter"
+  },
+  {
+   "f": "start + round(57 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the right-hand dots connect"
+  }
+ ]
+}

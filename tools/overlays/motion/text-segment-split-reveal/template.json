@@ -1,0 +1,89 @@
+{
+ "name": "Text break and slam",
+ "kind": "text",
+ "category": "Text",
+ "what": "A bold line sits in the middle; a second, glowing line falls in from the top edge smeared by motion and slams onto it; the first line flashes to an accent colour and breaks into segments, the last two words slanted, and both lines bounce into place.",
+ "use_for": [
+  "title",
+  "two lines",
+  "impact",
+  "hook",
+  "statement",
+  "slam",
+  "reveal",
+  "punchline"
+ ],
+ "tags": [
+  "text",
+  "slam",
+  "glow",
+  "break",
+  "segments",
+  "bounce",
+  "impact",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f10 (00:00:00:00-00:00:00:10) the first line is still; f5-f11 (00:00:00:05-00:00:00:11) the glowing line falls from above the frame in a straight 65 px-a-frame line, smeared vertically, and lands at f11 (00:00:00:11); f10-f12 (00:00:00:10-00:00:00:12) the first line turns peach then the accent colour and at f12 breaks into segments, a size smaller and lower, the last two words slanted; f12-f16 (00:00:00:12-00:00:00:16) the broken line lands high, drops below its place and bounces to rest; f12-f26 (00:00:00:12-00:00:00:26) the glowing line bounces up 51 px (f16) and back down to rest; hold to f56 (00:00:01:26)",
+ "tracks": [
+  {
+   "name": "glowing line falls",
+   "what": "falls from above the frame, smeared vertically, and lands on the first line",
+   "start_f": 5,
+   "length_f": 6,
+   "easing": "linear fall (65 px a frame, one repeated frame at f9)"
+  },
+  {
+   "name": "colour break",
+   "what": "the first line turns peach, then the accent colour, and breaks into segments",
+   "start_f": 10,
+   "length_f": 3,
+   "easing": "linear colour change"
+  },
+  {
+   "name": "broken line bounce",
+   "what": "lands high, drops a little below its place, bounces back and rests",
+   "start_f": 12,
+   "length_f": 5,
+   "easing": "damped bounce (measured positions)"
+  },
+  {
+   "name": "glowing line bounce",
+   "what": "bounces up about 50 px and back down to rest",
+   "start_f": 12,
+   "length_f": 15,
+   "easing": "ease out and in (measured positions)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 27,
+   "length_f": 30,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 40,
+ "check_frames": [
+  1,
+  6,
+  8,
+  10,
+  11,
+  12,
+  13,
+  16,
+  20,
+  40
+ ]
+}

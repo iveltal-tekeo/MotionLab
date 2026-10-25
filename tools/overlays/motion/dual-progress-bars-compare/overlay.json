@@ -1,0 +1,27 @@
+{
+ "name": "dual-progress-bars-compare",
+ "frames": 210,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.6",
+   "from": 300,
+   "to": 1600,
+   "db": -12,
+   "what": "the bars start to fill"
+  },
+  {
+   "f": "start + round(118 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "every bar rushes on to the end"
+  }
+ ]
+}

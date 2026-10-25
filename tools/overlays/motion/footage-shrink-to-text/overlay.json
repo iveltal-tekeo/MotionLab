@@ -1,0 +1,39 @@
+{
+ "name": "footage-shrink-to-text",
+ "frames": 91,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2400,
+   "to": 500,
+   "db": -9,
+   "what": "the footage shrinks to a card"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the top line's first word lands"
+  },
+  {
+   "f": "start + round(26 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the big word lands behind the card"
+  },
+  {
+   "f": "start + round(50 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 500,
+   "to": 2600,
+   "db": -9,
+   "what": "the card drops out"
+  }
+ ]
+}

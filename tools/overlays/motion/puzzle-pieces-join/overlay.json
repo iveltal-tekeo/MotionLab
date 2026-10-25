@@ -1,0 +1,33 @@
+{
+ "name": "puzzle-pieces-join",
+ "frames": 247,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 300,
+   "to": 1800,
+   "db": -11,
+   "what": "the first piece rises into place"
+  },
+  {
+   "f": "start + round(66 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.0",
+   "from": 400,
+   "to": 2200,
+   "db": -10,
+   "what": "the second piece slides in"
+  },
+  {
+   "f": "start + round(88 * fps / 30)",
+   "kind": "click",
+   "db": -2,
+   "what": "the second piece snaps into the first"
+  }
+ ]
+}

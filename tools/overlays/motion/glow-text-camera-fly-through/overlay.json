@@ -1,0 +1,40 @@
+{
+ "name": "glow-text-camera-fly-through",
+ "frames": 240,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(30 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 500,
+   "to": 2800,
+   "db": -6,
+   "what": "the camera whips round to the second word"
+  },
+  {
+   "f": "start + round(100 * fps / 30)",
+   "kind": "riser",
+   "dur": "0.6",
+   "db": -12,
+   "what": "the camera lines up on the first word"
+  },
+  {
+   "f": "start + round(116 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 700,
+   "to": 3600,
+   "db": -4,
+   "what": "the camera flies through the first word"
+  },
+  {
+   "f": "start + round(196 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the last word lands upright"
+  }
+ ]
+}

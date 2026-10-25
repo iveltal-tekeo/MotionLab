@@ -1,0 +1,124 @@
+{
+ "name": "Footage card, label cycle",
+ "kind": "text",
+ "category": "Social",
+ "what": "Your footage on a rounded card in the middle of a dark warm scene with a soft glow: the card shrinks into place, pops bigger and settles, and five bold gold labels take turns above it - each rises from behind the card, floats a little, and is pushed up and out as the next one comes.",
+ "use_for": [
+  "feature list",
+  "five steps",
+  "tips",
+  "app tour",
+  "product features",
+  "tutorial",
+  "reel",
+  "labels over footage",
+  "highlight"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "card",
+  "labels",
+  "carousel",
+  "glow",
+  "needs media",
+  "video",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f6 the card shrinks from x1.09 to x0.96 with a smear; f10-f18 it pops to x1.08, sinks 25 px (240-scale) and tilts ~1.8 deg; f18-f32 it settles to x1.0; then a gold label comes up over the card every 27 f (f16, f43, f70, f97, f124): rising from behind the card's top edge with an overshoot, floating down and up (~7 px swing) for 26 f, then pushed up out of the frame as the next one comes",
+ "tracks": [
+  {
+   "name": "card shrink",
+   "what": "the card shrinks into place, smeared",
+   "start_f": 0,
+   "length_f": 6,
+   "easing": "decelerating"
+  },
+  {
+   "name": "card pop",
+   "what": "the card pops bigger, sinks and tilts, then settles",
+   "start_f": 10,
+   "length_f": 22,
+   "easing": "overshoot, soft end"
+  },
+  {
+   "name": "label 1",
+   "what": "comes up over the card, floats, leaves upward",
+   "start_f": 16,
+   "length_f": 28,
+   "easing": "overshoot, sine float"
+  },
+  {
+   "name": "label 2",
+   "what": "comes up as label 1 leaves",
+   "start_f": 43,
+   "length_f": 27,
+   "easing": "overshoot, sine float"
+  },
+  {
+   "name": "label 3",
+   "what": "comes up as label 2 leaves",
+   "start_f": 70,
+   "length_f": 27,
+   "easing": "overshoot, sine float"
+  },
+  {
+   "name": "label 4",
+   "what": "comes up as label 3 leaves",
+   "start_f": 97,
+   "length_f": 27,
+   "easing": "overshoot, sine float"
+  },
+  {
+   "name": "label 5",
+   "what": "comes up as label 4 leaves and stays",
+   "start_f": 124,
+   "length_f": 22,
+   "easing": "overshoot, sine float"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "label1",
+  "label2",
+  "label3",
+  "label4",
+  "label5"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The card's footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1080,
+   "max_s": 4.9,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "diagonal stripes in the look (deep and paper) with the words 'Your footage here'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  1,
+  6,
+  12,
+  14,
+  20,
+  32,
+  44,
+  60
+ ]
+}

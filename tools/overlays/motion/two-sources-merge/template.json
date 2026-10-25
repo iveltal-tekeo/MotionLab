@@ -1,0 +1,110 @@
+{
+ "name": "Two sources merge",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Two grey boxes fade in side by side at the top, two thin glowing curves are drawn out of them and flow down into one point, where a conclusion box grows out of a dot, flares with light and has its text typed.",
+ "use_for": [
+  "merge",
+  "two sources",
+  "conclusion",
+  "combine",
+  "flow",
+  "result",
+  "summary",
+  "diagram",
+  "explainer"
+ ],
+ "tags": [
+  "chart",
+  "flow",
+  "merge",
+  "curves",
+  "boxes",
+  "glow",
+  "typed text",
+  "diagram",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f36 the two source boxes fade in, rise a few pixels and deblur (their names fade in f12-f29); f52-f108 the two curves are drawn out of them, slowly at first and faster and faster, to one point; f106-f118 the conclusion box grows out of a dot while all but the last word of its text is typed; f114-f144 a white rim, a glow and wide light streaks flare around it and settle; f130 the last word is typed; then it holds to the end",
+ "tracks": [
+  {
+   "name": "source boxes",
+   "what": "the two top boxes fade in, rise about 30 px and sharpen",
+   "start_f": 6,
+   "length_f": 30,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "source names",
+   "what": "the names inside the top boxes fade in",
+   "start_f": 12,
+   "length_f": 17,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "curves",
+   "what": "two tapered curves are drawn from the boxes down to one point",
+   "start_f": 52,
+   "length_f": 56,
+   "easing": "accelerating (slow start, fast end, measured)"
+  },
+  {
+   "name": "conclusion box",
+   "what": "the box grows from a dot at the end of the curves, its text typed",
+   "start_f": 106,
+   "length_f": 13,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "flare",
+   "what": "a white rim, a glow and wide light streaks flare around the box, then settle",
+   "start_f": 114,
+   "length_f": 31,
+   "easing": "peaks at f127 (measured)"
+  },
+  {
+   "name": "last word",
+   "what": "the rest of the conclusion is typed after a short pause",
+   "start_f": 130,
+   "length_f": 6,
+   "easing": "steps (typed)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 145,
+   "length_f": 36,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_a",
+  "text_b",
+  "text_c"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 160,
+ "check_frames": [
+  0,
+  10,
+  20,
+  60,
+  80,
+  96,
+  108,
+  112,
+  116,
+  120,
+  124,
+  132,
+  160
+ ]
+}

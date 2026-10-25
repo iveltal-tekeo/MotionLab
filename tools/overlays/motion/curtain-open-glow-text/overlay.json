@@ -1,0 +1,24 @@
+{
+ "name": "curtain-open-glow-text",
+ "frames": 90,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(2 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 300,
+   "to": 1800,
+   "db": -8,
+   "what": "the curtains are drawn apart"
+  },
+  {
+   "f": "start + round(28 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the title settles"
+  }
+ ]
+}

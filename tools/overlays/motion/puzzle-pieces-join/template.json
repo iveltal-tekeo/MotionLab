@@ -1,0 +1,109 @@
+{
+ "name": "Glass puzzle pieces",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Glass puzzle pieces on a pale page: the first rises from below and settles upright with a curly leader line and a label fading in; the next pieces slide in from the right and snap into the one before while the view pulls back, each with its own leader and label. The motion is stepped like the original. The number of pieces, the labels and the colour are yours.",
+ "use_for": [
+  "steps",
+  "parts of a whole",
+  "3 parts",
+  "concept breakdown",
+  "tech explainer",
+  "process",
+  "features",
+  "pillars",
+  "puzzle"
+ ],
+ "tags": [
+  "chart",
+  "puzzle",
+  "glass",
+  "pieces",
+  "labels",
+  "leader lines",
+  "snap",
+  "stepped",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "stepped (8 new pictures in every 15 frames); f10-f42 the first piece rises from below the frame tilted 21 degrees and settles upright (decelerating); f33-f57 its curly leader is drawn, f44-f58 its label fades in word by word; f57-f92 the second piece slides in from the right and snaps into the first while the camera pans left and pulls back about 7 % (f59-f90), its leader f84-f104 and label f104-f116; f112-f149 the third piece slides in the same way (the camera stays), its leader f137-f160 and label f160-f171; then everything holds to f246",
+ "tracks": [
+  {
+   "name": "first piece",
+   "what": "rises from below the frame tilted about 21 degrees and settles upright at the centre",
+   "start_f": 8,
+   "length_f": 34,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "first label",
+   "what": "a curly leader is drawn from the piece's edge and the label fades in word by word",
+   "start_f": 33,
+   "length_f": 25,
+   "easing": "steady, then soft (measured)"
+  },
+  {
+   "name": "second piece",
+   "what": "slides in from the right and snaps into the first piece's notch",
+   "start_f": 57,
+   "length_f": 36,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "camera",
+   "what": "the view pans left and pulls back about 7 % as the second piece joins",
+   "start_f": 59,
+   "length_f": 31,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "second label",
+   "what": "leader and label of the second piece",
+   "start_f": 84,
+   "length_f": 33,
+   "easing": "steady, then soft"
+  },
+  {
+   "name": "third piece",
+   "what": "slides in from the right and snaps into the second (the camera stays)",
+   "start_f": 112,
+   "length_f": 37,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "third label",
+   "what": "leader and label of the third piece",
+   "start_f": 137,
+   "length_f": 35,
+   "easing": "steady, then soft"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 200,
+ "check_frames": [
+  12,
+  22,
+  36,
+  44,
+  56,
+  62,
+  70,
+  78,
+  92,
+  106,
+  122,
+  134,
+  148,
+  170,
+  246
+ ]
+}

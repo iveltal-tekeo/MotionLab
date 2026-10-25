@@ -1,0 +1,124 @@
+{
+ "name": "Typed text, zoom to footage",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three lines are typed on a speckled page (the middle one in a highlight box that grows with the letters); the page zooms out and rushes away in a zoom blur, and a footage frame rushes in and settles with a line typed above it and a big word typed below.",
+ "use_for": [
+  "video intro",
+  "statement",
+  "hook",
+  "title",
+  "opener",
+  "reveal",
+  "short form",
+  "promo",
+  "typed text"
+ ],
+ "tags": [
+  "text",
+  "typed",
+  "typewriter",
+  "zoom blur",
+  "transition",
+  "footage",
+  "frame",
+  "highlight",
+  "speckled paper",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f58 three lines typed letter by letter (a highlight box grows with the middle and last lines); f59-f69 the page zooms out, accelerating, with a growing zoom blur and the page tiling around it; f70 a hard cut to the footage frame, small and tiled; f71 it rushes in to 1.74 x; f72-f100 it settles back to 1 x (decelerating, the blur fading) while the line above (f71-f92) and the big word below (f72-f92) are typed; then a hold to the end",
+ "tracks": [
+  {
+   "name": "typed lines",
+   "what": "three lines typed letter by letter, a highlight box growing with the letters of two of them",
+   "start_f": 2,
+   "length_f": 57,
+   "easing": "none (a letter every 1.3-2.3 f)"
+  },
+  {
+   "name": "zoom out",
+   "what": "the page shrinks to 0.62 x, the zoom blur grows and the page tiles around it",
+   "start_f": 59,
+   "length_f": 11,
+   "easing": "accelerating (measured)"
+  },
+  {
+   "name": "rush in",
+   "what": "the footage frame, small and tiled at f70, jumps to 1.74 x in one frame",
+   "start_f": 70,
+   "length_f": 2,
+   "easing": "one-frame jump (measured)"
+  },
+  {
+   "name": "settle",
+   "what": "the footage frame, the line above and the word below settle to 1 x, the blur fading",
+   "start_f": 71,
+   "length_f": 29,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "typed texts",
+   "what": "the line above the frame and the big word below are typed",
+   "start_f": 71,
+   "length_f": 22,
+   "easing": "none (a letter every 1.3 f, the big word every 4 f)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 100,
+   "length_f": 21,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "intro_1",
+  "intro_2",
+  "intro_2b",
+  "intro_3",
+  "top_text",
+  "word"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The footage frame",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1080,
+   "max_s": 1.7,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient frame in the look, labelled 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [
+  4,
+  14,
+  30,
+  50,
+  62,
+  66,
+  69,
+  70,
+  71,
+  72,
+  74,
+  80,
+  92,
+  110
+ ]
+}

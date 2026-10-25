@@ -1,0 +1,170 @@
+{
+ "name": "Text then follow card",
+ "kind": "text",
+ "category": "Text",
+ "what": "An upright promo in four beats: a first line types in word by word, three words stack up like a carousel and a sentence builds with its highlights; the picture then grows into a dark profile card with a Follow button that gets tapped, the camera zooms in, and the picture flies across a pill that ends as a full screen with the handle.",
+ "use_for": [
+  "follow",
+  "profile",
+  "social",
+  "promo",
+  "intro",
+  "call to action",
+  "channel",
+  "handle",
+  "short"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "profile card",
+  "follow button",
+  "blur",
+  "carousel",
+  "zoom",
+  "needs media",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f6-f39 a first line, one word every 6 f (each rising and sharpening in 6 f); f41-f86 three stacked words, focus word sharp, neighbours small and blurred, stepping up at f52-f61 and f67-f76; f89-f135 a sentence word by word then dissolving backwards; f137-f152 the picture grows from a dot and a dark profile card pops in; f157-f190 the Follow button opens from a hairline, then Message; f200-f227 the camera zooms into the button (the measured scale and pan), Follow turns to Followed at f217-f219; f223-f233 the ground goes dark; f224-f253 the picture flies in as a ball and swings onto the pill, swapping Followed for the handle; f289-f308 it flies out as the pill opens into a full screen; hold to f335",
+ "tracks": [
+  {
+   "name": "first line",
+   "what": "one word every 6 f, each rising and sharpening, then a quick fade",
+   "start_f": 6,
+   "length_f": 34,
+   "easing": "power2.inOut"
+  },
+  {
+   "name": "stacked words",
+   "what": "three words in a carousel: sharp focus word, blurred neighbours, two steps up",
+   "start_f": 41,
+   "length_f": 46,
+   "easing": "S-curve (cubic in-out)"
+  },
+  {
+   "name": "sentence",
+   "what": "a word every 1.8 f rising and sharpening, then dissolving backwards",
+   "start_f": 89,
+   "length_f": 47,
+   "easing": "power2.out"
+  },
+  {
+   "name": "picture grows",
+   "what": "the picture grows from a dot at the centre",
+   "start_f": 137,
+   "length_f": 10,
+   "easing": "power2.out"
+  },
+  {
+   "name": "card pops",
+   "what": "the dark profile card fades and scales in (0.9 to 1)",
+   "start_f": 147,
+   "length_f": 6,
+   "easing": "power2.out"
+  },
+  {
+   "name": "Follow opens",
+   "what": "the blue button opens from a hairline: slow, then fast, then a soft stop",
+   "start_f": 157,
+   "length_f": 24,
+   "easing": "measured"
+  },
+  {
+   "name": "Message opens",
+   "what": "the dark button opens from its centre",
+   "start_f": 171,
+   "length_f": 20,
+   "easing": "power3.out"
+  },
+  {
+   "name": "camera zoom",
+   "what": "the camera zooms into the Follow button, 1x to 2.5x, with a motion blur",
+   "start_f": 200,
+   "length_f": 28,
+   "easing": "measured (accelerating, then steady)"
+  },
+  {
+   "name": "Followed",
+   "what": "the button text turns from Follow to Followed",
+   "start_f": 217,
+   "length_f": 3,
+   "easing": "none"
+  },
+  {
+   "name": "dark ground",
+   "what": "the ground fades from the light to the dark colour",
+   "start_f": 223,
+   "length_f": 11,
+   "easing": "linear"
+  },
+  {
+   "name": "flying picture",
+   "what": "the picture flies in from the left, swings round the right and lands on the pill's left end, swapping the pill's word for the handle",
+   "start_f": 224,
+   "length_f": 30,
+   "easing": "measured"
+  },
+  {
+   "name": "pill opens",
+   "what": "the picture flies out right while the pill grows into a full screen of the accent colour",
+   "start_f": 289,
+   "length_f": 20,
+   "easing": "measured (slow, fast, soft stop)"
+  },
+  {
+   "name": "hold",
+   "what": "the handle on the full screen",
+   "start_f": 308,
+   "length_f": 28,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "intro",
+  "word_1",
+  "word_2",
+  "word_3",
+  "sentence",
+  "name",
+  "bio",
+  "handle",
+  "follow_label",
+  "followed_label",
+  "message_label"
+ ],
+ "media_slots": [
+  {
+   "id": "avatar_logo",
+   "label": "The profile picture",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 40%",
+   "placeholder": "a soft disc in the look's deep, paper and mustard",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 176,
+ "check_frames": [
+  10,
+  48,
+  76,
+  100,
+  145,
+  176,
+  212,
+  238,
+  335
+ ]
+}

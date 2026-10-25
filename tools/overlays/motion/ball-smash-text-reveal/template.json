@@ -1,0 +1,104 @@
+{
+ "name": "Ball smashes the square",
+ "kind": "text",
+ "category": "Text",
+ "what": "A ball swings round a square in a long loop and then smashes into it: the square shatters into four shards while the ball bounces off the bottom of the frame, and the shards open into blurred, tilted chunks of a title that swing flat and sharpen.",
+ "use_for": [
+  "title",
+  "reveal",
+  "smash",
+  "impact",
+  "statement",
+  "hook",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "ball",
+  "square",
+  "smash",
+  "shatter",
+  "shards",
+  "reveal",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0 a square at the centre; f4-f28 the ball swings in from the left edge and down round the bottom; f28-f58 it rises up the right side to a pause (f58-f64); f66-f76 it flicks up to the top right; f76-f92 it floats to the top; f94-f109 it dives down-left onto the square; f110 the smash: the square shatters into four shards and the ball bounces away off the bottom (f111-f127); f111-f145 the shards drift on curved paths; f146-f148 they open into three blurred, rotated chunks of the title; f148-f154 the chunks swing flat and sharpen; hold to f224",
+ "tracks": [
+  {
+   "name": "ball loop",
+   "what": "the ball swings in from the left, round the bottom, up the right side to a pause",
+   "start_f": 4,
+   "length_f": 58,
+   "easing": "S-curve (measured path)"
+  },
+  {
+   "name": "ball flick",
+   "what": "the ball flicks up to the top right and floats to the top",
+   "start_f": 64,
+   "length_f": 30,
+   "easing": "S-curve"
+  },
+  {
+   "name": "dive",
+   "what": "the ball dives down-left onto the square, accelerating",
+   "start_f": 94,
+   "length_f": 16,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "smash",
+   "what": "the square shatters into four shards and the ball bounces off the bottom",
+   "start_f": 110,
+   "length_f": 18,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "shards drift",
+   "what": "the four shards drift apart and curve round on measured paths",
+   "start_f": 111,
+   "length_f": 35,
+   "easing": "S-curve"
+  },
+  {
+   "name": "title opens",
+   "what": "the shards open into three blurred, tilted chunks of the title that swing flat and sharpen",
+   "start_f": 146,
+   "length_f": 9,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "hold",
+   "what": "the title, still",
+   "start_f": 155,
+   "length_f": 70,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 200,
+ "check_frames": [
+  10,
+  30,
+  62,
+  75,
+  100,
+  109,
+  112,
+  125,
+  140,
+  146,
+  148,
+  150,
+  200
+ ]
+}

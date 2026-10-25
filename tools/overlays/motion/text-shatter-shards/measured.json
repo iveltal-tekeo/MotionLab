@@ -1,0 +1,27 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(1) \"S\" off the frame, outside its box by 334 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(2) \"M\" off the frame, outside its box by 483 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(3) \"A\" off the frame, outside its box by 603 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(4) \"S\" off the frame, outside its box by 704 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(5) \"H\" off the frame, outside its box by 825 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(7) \"I\" off the frame by 920 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(8) \"T\" off the frame by 1020 px",
+    "draws 0 % of the ink it draws at its own size (f61) - something is missing or tiny"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(5) \"H\" off the frame by 79 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(7) \"I\" off the frame by 173 px",
+    "FIT f6 (00:00:00:06) +5 more: #tmain > tspan:nth-of-type(8) \"T\" off the frame by 274 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "name": "polygon-logo-nodes-flowchart",
+ "frames": 150,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 300,
+   "to": 1600,
+   "db": -11,
+   "what": "the dots turn and the dashed lines are drawn between them"
+  },
+  {
+   "f": "start + round(92 * fps / 30)",
+   "kind": "pop",
+   "db": -9,
+   "what": "the first name pops in"
+  },
+  {
+   "f": "start + round(98 * fps / 30)",
+   "kind": "pop",
+   "db": -11,
+   "what": "the dots change colour as the other names pop in"
+  }
+ ]
+}

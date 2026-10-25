@@ -1,0 +1,105 @@
+{
+ "name": "Mosaic words clear and hop",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three short words drop in one after another from the top edge as blocky mosaics, side by side in a row; then the mosaic clears word by word, each time with a hop of the whole row, the last hop big and blurred.",
+ "use_for": [
+  "three words",
+  "list",
+  "steps",
+  "hook",
+  "title",
+  "intro",
+  "statement",
+  "reveal"
+ ],
+ "tags": [
+  "text",
+  "mosaic",
+  "blur",
+  "bounce",
+  "drop",
+  "reveal",
+  "row",
+  "bold",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1 (00:00:00:01) word 1 drops in from the top edge in a straight fall to f10 (00:00:00:10), a small bounce to f17 (00:00:00:17); word 2 the same from f21 (00:00:00:21), word 3 from f41 (00:00:01:11); all three stay mosaic until f61 (00:00:02:01) when word 1 turns sharp and the row hops up 38 px and back (f61-f69); f91 (00:00:03:01) word 2 clears with an up-left then down-right hop (f91-f100); f121 (00:00:04:01) word 3 clears with a big blurred hop up and left (f121-f129); the row settles by f133 (00:00:04:13), hold to f139 (00:00:04:19)",
+ "tracks": [
+  {
+   "name": "word 1 drops",
+   "what": "a straight fall from above the frame, then a small bounce",
+   "start_f": 1,
+   "length_f": 16,
+   "easing": "linear fall, damped bounce"
+  },
+  {
+   "name": "word 2 drops",
+   "what": "the same, 20 frames later",
+   "start_f": 21,
+   "length_f": 16,
+   "easing": "linear fall, damped bounce"
+  },
+  {
+   "name": "word 3 drops",
+   "what": "the same, 20 frames later again",
+   "start_f": 41,
+   "length_f": 16,
+   "easing": "linear fall, damped bounce"
+  },
+  {
+   "name": "clear 1 + hop",
+   "what": "word 1 loses its mosaic; the whole row hops up about 38 px and back",
+   "start_f": 61,
+   "length_f": 9,
+   "easing": "ease out up, ease in down"
+  },
+  {
+   "name": "clear 2 + hop",
+   "what": "word 2 clears; the row hops up and left, then down and right, and settles",
+   "start_f": 91,
+   "length_f": 22,
+   "easing": "damped swing"
+  },
+  {
+   "name": "clear 3 + hop",
+   "what": "word 3 clears; the row hops high up and left with motion blur and drops back",
+   "start_f": 121,
+   "length_f": 12,
+   "easing": "ease out then fast drop"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 133,
+   "length_f": 7,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 136,
+ "check_frames": [
+  4,
+  10,
+  24,
+  44,
+  60,
+  64,
+  93,
+  96,
+  124,
+  136
+ ]
+}

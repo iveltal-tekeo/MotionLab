@@ -1,0 +1,145 @@
+{
+ "name": "Glow words to footage card",
+ "kind": "text",
+ "category": "Text",
+ "what": "Upright title sequence on a dark ground with a soft colour glow: a big word types on, slides off, and three small lines sharpen in one after another; then a round logo pops in, and a footage card of your video slams in and swings up into a tilted, frame-filling view.",
+ "use_for": [
+  "app launch",
+  "product intro",
+  "reveal",
+  "tech",
+  "slogan",
+  "landing page",
+  "vertical intro",
+  "footage reveal",
+  "logo reveal"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "glow",
+  "blur",
+  "gradient",
+  "logo",
+  "footage card",
+  "3d tilt",
+  "vertical",
+  "needs media",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f5-f38 the big word types on letter by letter; f34-f50 it slides out, speeding up, as line 2 pops up small and sharpens (f47-f62); f67-f85 line 2 slides out, line 3 blurs in (f82-f90); f100-f118 line 3 slides out, line 4 blurs in (f108-f118); f139-f147 line 4 shrinks away with the glow; f148-f158 the round logo pops in turning; f165-f173 it shrinks; f174-f185 the footage card slams in and settles; f187-f213 it swings up in perspective to fill the frame; then it holds to the end",
+ "tracks": [
+  {
+   "name": "glow",
+   "what": "the colour glow grows from the left edge, then shrinks away",
+   "start_f": 15,
+   "length_f": 33,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "big word",
+   "what": "the big word types on letter by letter, then slides left off the frame",
+   "start_f": 5,
+   "length_f": 45,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "line 2",
+   "what": "pops up from 0.45 to full size, sharpening word by word, then slides left out",
+   "start_f": 47,
+   "length_f": 38,
+   "easing": "decelerating (slow end), then accelerating"
+  },
+  {
+   "name": "line 3",
+   "what": "blurs in while drifting left, holds, then slides left out",
+   "start_f": 82,
+   "length_f": 36,
+   "easing": "decelerating (slow end), then accelerating"
+  },
+  {
+   "name": "line 4",
+   "what": "blurs in while drifting left, then shrinks to half and fades with the glow",
+   "start_f": 108,
+   "length_f": 40,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "round logo",
+   "what": "pops in 1.28 times too big and turned, settles, then shrinks away",
+   "start_f": 148,
+   "length_f": 26,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "footage card",
+   "what": "slams in 1.45 times big and settles, then swings up in perspective to fill the frame, tilted",
+   "start_f": 174,
+   "length_f": 40,
+   "easing": "S-curve"
+  },
+  {
+   "name": "hold",
+   "what": "the tilted card holds (the film grain moves)",
+   "start_f": 214,
+   "length_f": 86,
+   "easing": "none"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3",
+  "text_4"
+ ],
+ "media_slots": [
+  {
+   "id": "disc_logo",
+   "label": "The round logo",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a deep disc with a simple mark and the word LOGO",
+   "optional": true
+  },
+  {
+   "id": "video_media",
+   "label": "The footage card",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1080,
+   "max_s": 4.2,
+   "fit": "cover",
+   "focus_setting": "video_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your video'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 240,
+ "check_frames": [
+  12,
+  28,
+  42,
+  58,
+  90,
+  114,
+  150,
+  180,
+  240
+ ]
+}

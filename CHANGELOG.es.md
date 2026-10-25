@@ -7,6 +7,13 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.3.1 - 2026-10-25 - 114 plantillas nuevas de Motion Graphics
+
+- **114 plantillas nuevas de Motion Graphics**: textos que aparecen, gráficas, publicaciones de redes, pantallas de
+  apps, un logo que se revela y una transición, hechas por MotionLab con el look Editorial cálido: 189 plantillas en
+  total. Cada una usa tus palabras, colores y fuentes, y se reproducen en la vista previa en directo mientras las
+  cambias.
+
 ## 0.5.3 - 2026-10-24 - Vídeos más rápidos, fotos en tus montajes y una vista previa de tu miniatura
 
 Vídeos más rápidos: Claude hace un vídeo en menos pasos y más cortos:

@@ -1,0 +1,27 @@
+{
+ "name": "text-underline-stroke-draw",
+ "frames": 45,
+ "fps": 30,
+ "width": 1280,
+ "height": 720,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 300,
+   "to": 2200,
+   "db": -9,
+   "what": "the title and subtitle rise in from below"
+  },
+  {
+   "f": "start + round(13 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 700,
+   "to": 3200,
+   "db": -10,
+   "what": "the swoosh is drawn"
+  }
+ ]
+}

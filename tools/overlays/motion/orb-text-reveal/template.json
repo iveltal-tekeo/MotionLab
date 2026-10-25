@@ -1,0 +1,82 @@
+{
+ "name": "Orbiting light ball",
+ "kind": "text",
+ "category": "Text",
+ "what": "A word waits unseen in the dark; a glowing ball swings in from the left, circles it once on a wide oval and flies off over the top. Each letter lights up as the ball comes near and dims as it moves away, so the light travels around the word.",
+ "use_for": [
+  "title",
+  "reveal",
+  "intro",
+  "name",
+  "tagline",
+  "night",
+  "cinematic",
+  "spotlight",
+  "opener"
+ ],
+ "tags": [
+  "text",
+  "light",
+  "glow",
+  "orbit",
+  "ball",
+  "dark",
+  "reveal",
+  "cinematic",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f13-f24 the ball swings in from the left edge and climbs onto an oval around the word (f16 at the edge, top of the oval f24); f24-f113 it circles clockwise (right f59, bottom f72, left f113), fast through the lower right (f66-f71, about 100 px a frame, blurred) and slow along the lower left; f113-f126 it climbs over the top and flies off at the right edge with a long blur; each letter's light follows its distance to the ball (full within about 300 px, none beyond about 650 px of the 1280-px original)",
+ "tracks": [
+  {
+   "name": "ball in",
+   "what": "the ball swings in from the left edge and climbs onto the oval (blurred, accelerating)",
+   "start_f": 13,
+   "length_f": 11,
+   "easing": "accelerating (slow start), measured path"
+  },
+  {
+   "name": "ball loop",
+   "what": "the ball circles the word clockwise on a wide oval, 60 px far and 80 px near",
+   "start_f": 24,
+   "length_f": 89,
+   "easing": "S-curve (fast lower right, slow lower left), measured path"
+  },
+  {
+   "name": "ball out",
+   "what": "the ball climbs over the top and flies off at the right edge with a long blur",
+   "start_f": 113,
+   "length_f": 13,
+   "easing": "accelerating (slow start), measured path"
+  },
+  {
+   "name": "letter light",
+   "what": "each letter's light follows its distance to the ball (full near, none far)",
+   "start_f": 16,
+   "length_f": 110,
+   "easing": "distance falloff, power 1.5"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 40,
+ "check_frames": [
+  0,
+  16,
+  20,
+  36,
+  59,
+  70,
+  100,
+  121,
+  135
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "name": "footage-cards-multiply-grid",
+ "frames": 215,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 400,
+   "to": 2000,
+   "db": -10,
+   "what": "the card rises"
+  },
+  {
+   "f": "start + round(82 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the cards fan out"
+  },
+  {
+   "f": "start + round((110 + 8.9 * i) * fps / 30)",
+   "repeat": "7",
+   "kind": "tick",
+   "db": -3,
+   "what": "the number steps up"
+  }
+ ]
+}

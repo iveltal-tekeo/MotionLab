@@ -1,0 +1,18 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f69 (00:00:02:09) +1 more: #hand > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(4) \"Y\" outside its box by 16 px",
+    "FIT f69 (00:00:02:09) +1 more: #hand > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(6) \"S\" outside its box by 14 px",
+    "FIT f69 (00:00:02:09) +1 more: #hand > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(1) > span:nth-of-type(6) \"H\" outside its box by 12 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

@@ -1,0 +1,86 @@
+{
+ "name": "Two line charts compared",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Two small chart frames stacked on a dark page: a glowing line is drawn left to right in each - flat in the top one, rising exponentially in the bottom one - then a glowing name is typed over each chart.",
+ "use_for": [
+  "growth comparison",
+  "flat vs exponential",
+  "before and after",
+  "trend",
+  "compound effect",
+  "two charts",
+  "explainer",
+  "vertical short"
+ ],
+ "tags": [
+  "chart",
+  "line chart",
+  "two charts",
+  "axes",
+  "glow",
+  "typed text",
+  "comparison",
+  "vertical",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0 the two charts' axes are there; f4-f58 the top line is drawn left to right (slow start, quick middle, long soft finish) and f4-f46 the bottom one (a little faster), each with a bright thicker trail behind its tip that thins out; f46-f64 both names are typed at the same time, a character every 3.5 f, each letter glowing; then it holds to the end",
+ "tracks": [
+  {
+   "name": "top line",
+   "what": "the top line is drawn from left to right with a bright trail behind its tip",
+   "start_f": 4,
+   "length_f": 54,
+   "easing": "S-curve, slow start, long soft finish (measured)"
+  },
+  {
+   "name": "bottom line",
+   "what": "the bottom line is drawn from left to right, a little faster",
+   "start_f": 4,
+   "length_f": 42,
+   "easing": "S-curve, quick middle (measured)"
+  },
+  {
+   "name": "names",
+   "what": "both names are typed together, one character every 3.5 f, each letter glowing",
+   "start_f": 46,
+   "length_f": 18,
+   "easing": "steps (typed)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 65,
+   "length_f": 70,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "label_a",
+  "label_b",
+  "data_a",
+  "data_b"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  10,
+  18,
+  24,
+  28,
+  32,
+  40,
+  52,
+  56,
+  64,
+  110
+ ]
+}

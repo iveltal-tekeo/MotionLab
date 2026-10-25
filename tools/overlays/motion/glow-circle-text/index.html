@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_a", "type": "string", "label": "Text A (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Plan it"},
+  {"id": "text_b", "type": "string", "label": "Text B", "default": "Ship it"},
+  {"id": "size", "type": "number", "label": "Text size (px at a 1080-px short side)", "default": 112, "min": 30, "max": 260, "step": 1},
+  {"id": "caps", "type": "boolean", "label": "Capital letters", "default": true},
+  {"id": "colour", "type": "enum", "label": "Text colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "halo", "type": "enum", "label": "Circle colour", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "glow", "type": "number", "label": "Glow around the circles (0-100)", "default": 70, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "glow-circle-text" (2026-10-22): two glowing circles that open in turn, each with a word typed into it. A dot swells on a dark woven
+     board (f3-f8), turns into a ripple ring (f9-f12) and settles into three nested rings with a glowing core while
+     the first word types in letter by letter (f5-f20, "TEXT A" in the clip). The camera is zoomed in on it; at f41
+     it pans sideways to the second circle (f41-f66, slow start, fast middle at f49-f56, soft stop), which opens and
+     types its word on the way in (f51-f56); at f92 the camera pulls back and swings home (f93-f116) so both circles
+     sit side by side, and the pair then drifts gently up and down until the end. Look-aware: the dark ground, the
+     circle colour and the text colour come from the look tokens. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .grp { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .grp canvas { position: absolute; }
+  .tx { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; transform-origin: 50% 50%; }
+  .ch { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 300;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const toH = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const mixh = (a, b, t) => { const x = hex(a), y = hex(b); return toH(x.map((v, i) => v + (y[i] - v) * t)); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+
+  // ---- the look: a dark board (the ink), darker still beyond its edges; circles in one token colour, text in another
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const tc = V.colour === "mustard" ? L.mustard : V.colour === "paper" ? glare : L.signal;
+  const B0 = V.halo === "signal" ? L.signal : V.halo === "mustard" ? L.mustard : V.halo === "paper" ? glare : L.deep;
+  const seedC = mixh(B0, "#ffffff", 0.1), rim = mixh(B0, "#ffffff", 0.16), dk = mixh("#000000", B0, 0.09), dk2 = mixh("#000000", B0, 0.3);
+  const warm = mixh(B0, tc, 0.5), warm2 = mixh(B0, tc, 0.16);
+  const gl = V.glow / 100;
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = night;
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // the board: a woven dark cloth between the two circles' edges (it moves with the camera), black beyond it
+  const board = document.createElement("div");
+  const pitch = Math.max(2, Math.round(3 * U)), wv = rgba(glare, 0.045);
+  Object.assign(board.style, { position: "absolute", top: `${-0.2 * H}px`, height: `${1.4 * H}px`, background: night,
+    backgroundImage: `repeating-linear-gradient(0deg, ${wv} 0px, ${wv} 1px, transparent 1px, transparent ${pitch}px), repeating-linear-gradient(90deg, ${wv} 0px, ${wv} 1px, transparent 1px, transparent ${pitch}px)` });
+  if (V.background) hand.appendChild(board);
+
+  // ---- the two circles (a canvas each) with their word typed letter by letter
+  const FS = V.size * U, R1 = 2.27 * FS, CS = 1.3, SZ = Math.round(R1 * 2 * 1.9), fam = V.body_font;
+  const D1 = [[3,.05],[5,.12],[6,.17],[7,.27],[8,.36],[9,.5],[10,.68],[11,.88],[12,1.02],[14,1.06],[16,1.09],[18,1.1],[20,1.095],[22,1.06],[26,1.03],[30,1]];
+  const D2 = [[14,0],[16,.35],[18,.85],[20,.9],[22,.82],[26,.76],[30,.74]];
+  const D3 = [[9,.07],[10,.09],[11,.13],[12,.18],[14,.36],[16,.57],[18,.6],[22,.52],[30,.48]];
+  const mkGroup = (txt, off) => {
+    const grp = document.createElement("div"); grp.className = "grp";
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = Math.round(SZ * CS);
+    Object.assign(cv.style, { width: `${SZ}px`, height: `${SZ}px`, left: `${-SZ / 2}px`, top: `${-SZ / 2}px` });
+    const tx = document.createElement("div"); tx.className = "tx ml-body";
+    Object.assign(tx.style, { fontSize: `${FS}px`, fontWeight: String(fw(fam, 800)), color: tc, textTransform: V.caps ? "uppercase" : "none",
+      textShadow: `0 0 ${0.1 * FS}px ${rgba(tc, 0.5 * (0.4 + gl))}, 0 0 ${0.35 * FS}px ${rgba(tc, 0.38 * (0.4 + gl))}` });
+    const rr = window.MLLook ? MLLook.rich(tx, txt, { look: L, family: fam, weight: 800 }) : { words: [] };
+    if (!window.MLLook) tx.textContent = txt;
+    const lets = [];
+    rr.words.forEach(w => { const s = w.textContent; w.textContent = "";
+      [...s].forEach(ch => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; w.appendChild(sp); lets.push(sp); }); });
+    const n = lets.length;
+    const on = lets.map((_, k) => k === 0 ? 3.5 : n <= 2 ? 11 : 11 + (k - 1) * 6 / (n - 2));    // typed in f4-f17: the first letter slowly, the rest quicker
+    const du = lets.map((_, k) => k === 0 ? 5 : 3);
+    grp.appendChild(cv); grp.appendChild(tx); hand.appendChild(grp);
+    return { grp, cv, cx: cv.getContext("2d"), tx, lets, on, du, off };
+  };
+  const GA = mkGroup(V.text_a, 0), GB = mkGroup(V.text_b, 37);
+
+  function draw(o, g) {
+    const cx = o.cx;
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.clearRect(0, 0, o.cv.width, o.cv.height);
+    if (g < 3) return;
+    cx.setTransform(CS, 0, 0, CS, SZ / 2 * CS, SZ / 2 * CS);
+    const disc = (r, st) => { const gr = cx.createRadialGradient(0, 0, 0, 0, 0, r); st.forEach(([s, c]) => gr.addColorStop(s, c));
+      cx.fillStyle = gr; cx.beginPath(); cx.arc(0, 0, r, 0, Math.PI * 2); cx.fill(); };
+    const rad = tab(D1, g)[0] * R1, solid = clamp01(9 - g), ready = 1 - solid, a = 0.3 + 0.7 * gl;
+    // the halo around it
+    disc(rad * 1.62, [[0, rgba(B0, 0.3 * a)], [0.5, rgba(B0, 0.42 * a)], [0.617, rgba(B0, 0.5 * a)], [0.8, rgba(B0, 0.2 * a)], [1, rgba(B0, 0)]]);
+    // the seed dot, then the ripple ring it turns into
+    if (solid > 0) disc(rad, [[0, rgba(seedC, solid)], [0.88, rgba(seedC, solid)], [1, rgba(seedC, 0)]]);
+    if (ready > 0) disc(rad, [[0, rgba(dk, 0.88 * ready)], [0.62, rgba(dk2, 0.6 * ready)], [0.86, rgba(B0, 0.55 * ready)], [0.95, rgba(rim, 0.9 * ready * (0.5 + 0.5 * a))], [1, rgba(rim, 0)]]);
+    // the middle ring and the glowing core
+    const a2 = clamp01((g - 14) / 4) * ready;
+    if (a2 > 0) disc(tab(D2, g)[0] * R1, [[0, rgba(B0, 0)], [0.8, rgba(B0, 0.22 * a2)], [0.95, rgba(rim, 0.5 * a2)], [1, rgba(rim, 0)]]);
+    if (g >= 9) {
+      const r3 = tab(D3, g)[0] * R1, s2 = clamp01((16 - g) / 4);
+      if (s2 > 0) disc(r3, [[0, rgba(seedC, s2)], [0.85, rgba(seedC, s2)], [1, rgba(seedC, 0)]]);
+      if (s2 < 1) disc(r3, [[0, rgba(warm, 0.55 * (1 - s2))], [0.7, rgba(warm2, 0.4 * (1 - s2))], [0.93, rgba(rim, 0.5 * (1 - s2))], [1, rgba(rim, 0)]]);
+    }
+  }
+
+  // ---- the motion, frame by frame from one proxy (seek-safe). g = the frame, shifted by "Starts at frame".
+  // ROWS = [frame, A x, A y, B x, B y, zoom]: where the two circles sit in the frame (fractions of its width / height,
+  // measured on the reference) and how far the camera is zoomed in (1 = both circles side by side)
+  const ROWS = [[0,0.516,0.489,1.35,0.517,1.245],[1,0.516,0.489,1.35,0.517,1.245],[2,0.516,0.489,1.35,0.517,1.245],[3,0.516,0.489,1.35,0.517,1.245],[4,0.516,0.489,1.35,0.517,1.245],[5,0.516,0.489,1.35,0.517,1.245],[6,0.516,0.489,1.35,0.517,1.245],[7,0.516,0.489,1.35,0.517,1.245],[8,0.516,0.489,1.35,0.517,1.245],[9,0.516,0.489,1.35,0.517,1.245],[10,0.516,0.489,1.35,0.517,1.245],[11,0.516,0.489,1.35,0.517,1.245],[12,0.516,0.489,1.35,0.517,1.245],[13,0.516,0.489,1.35,0.517,1.245],[14,0.516,0.489,1.35,0.517,1.245],[15,0.516,0.489,1.35,0.517,1.245],[16,0.516,0.489,1.35,0.517,1.245],[17,0.516,0.489,1.35,0.517,1.245],[18,0.516,0.489,1.35,0.517,1.245],[19,0.516,0.489,1.35,0.517,1.245],[20,0.516,0.49,1.35,0.517,1.245],[21,0.516,0.49,1.35,0.517,1.245],[22,0.516,0.49,1.35,0.517,1.245],[23,0.516,0.49,1.35,0.517,1.245],[24,0.516,0.49,1.35,0.517,1.245],[25,0.516,0.49,1.35,0.517,1.245],[26,0.516,0.49,1.35,0.517,1.245],[27,0.516,0.489,1.35,0.517,1.245],[28,0.516,0.489,1.35,0.517,1.245],[29,0.516,0.488,1.35,0.517,1.245],[30,0.516,0.488,1.35,0.517,1.245],[31,0.516,0.488,1.35,0.517,1.245],[32,0.516,0.488,1.35,0.517,1.245],[33,0.516,0.488,1.35,0.517,1.245],[34,0.516,0.488,1.35,0.517,1.245],[35,0.516,0.488,1.35,0.517,1.245],[36,0.516,0.488,1.35,0.517,1.245],[37,0.516,0.489,1.35,0.517,1.245],[38,0.516,0.489,1.35,0.517,1.245],[39,0.516,0.489,1.35,0.517,1.245],[40,0.516,0.49,1.35,0.517,1.245],[41,0.515,0.49,1.349,0.517,1.245],[42,0.512,0.49,1.346,0.517,1.245],[43,0.508,0.49,1.342,0.517,1.245],[44,0.5,0.492,1.334,0.517,1.245],[45,0.49,0.492,1.324,0.517,1.245],[46,0.475,0.492,1.309,0.517,1.245],[47,0.455,0.492,1.289,0.517,1.245],[48,0.43,0.493,1.264,0.517,1.245],[49,0.394,0.494,1.228,0.517,1.245],[50,0.344,0.494,1.178,0.517,1.245],[51,0.271,0.495,1.105,0.517,1.245],[52,0.164,0.495,0.998,0.517,1.245],[53,0.0325,0.4972,0.8665,0.517,1.245],[54,-0.074,0.497,0.76,0.517,1.245],[55,-0.145,0.4968,0.689,0.519,1.245],[56,-0.197,0.4966,0.637,0.519,1.245],[57,-0.231,0.4964,0.603,0.519,1.245],[58,-0.257,0.4962,0.577,0.521,1.245],[59,-0.277,0.496,0.557,0.521,1.245],[60,-0.291,0.4958,0.543,0.522,1.245],[61,-0.302,0.4956,0.532,0.522,1.245],[62,-0.309,0.4954,0.525,0.522,1.245],[63,-0.314,0.4952,0.52,0.524,1.245],[64,-0.316,0.495,0.518,0.524,1.245],[65,-0.317,0.4948,0.517,0.524,1.245],[66,-0.317,0.4946,0.517,0.525,1.245],[67,-0.317,0.4944,0.517,0.525,1.245],[68,-0.316,0.4942,0.518,0.526,1.245],[69,-0.316,0.494,0.518,0.526,1.245],[70,-0.316,0.4938,0.518,0.526,1.245],[71,-0.316,0.4936,0.518,0.526,1.245],[72,-0.316,0.4934,0.518,0.526,1.245],[73,-0.315,0.4932,0.519,0.527,1.245],[74,-0.315,0.493,0.519,0.528,1.245],[75,-0.315,0.4928,0.519,0.528,1.245],[76,-0.315,0.4926,0.519,0.528,1.245],[77,-0.315,0.4924,0.519,0.528,1.245],[78,-0.314,0.4922,0.52,0.528,1.245],[79,-0.314,0.492,0.52,0.528,1.245],[80,-0.314,0.4918,0.52,0.528,1.245],[81,-0.314,0.4916,0.52,0.528,1.245],[82,-0.314,0.4914,0.52,0.528,1.245],[83,-0.314,0.4912,0.52,0.528,1.245],[84,-0.313,0.491,0.521,0.528,1.245],[85,-0.313,0.4908,0.521,0.528,1.245],[86,-0.313,0.4906,0.521,0.528,1.245],[87,-0.313,0.4904,0.521,0.528,1.245],[88,-0.312,0.4902,0.522,0.528,1.245],[89,-0.312,0.49,0.522,0.528,1.245],[90,-0.312,0.4898,0.522,0.528,1.245],[91,-0.312,0.4896,0.522,0.527,1.245],[92,-0.311,0.4894,0.523,0.527,1.245],[93,-0.31,0.4892,0.524,0.526,1.242],[94,-0.309,0.489,0.525,0.526,1.24],[95,-0.309,0.4888,0.528,0.526,1.236],[96,-0.302,0.4886,0.532,0.524,1.234],[97,-0.292,0.4884,0.538,0.524,1.231],[98,-0.278,0.4882,0.544,0.523,1.222],[99,-0.258,0.488,0.553,0.521,1.213],[100,-0.23,0.4878,0.565,0.519,1.199],[101,-0.19,0.4876,0.581,0.517,1.185],[102,-0.13,0.4874,0.604,0.515,1.162],[103,-0.033,0.4872,0.636,0.511,1.13],[104,0.056,0.487,0.671,0.507,1.088],[105,0.123,0.48,0.699,0.504,1.065],[106,0.166,0.478,0.717,0.502,1.046],[107,0.195,0.476,0.728,0.501,1.032],[108,0.215,0.475,0.736,0.499,1.019],[109,0.23,0.474,0.742,0.497,1.012],[110,0.24,0.474,0.746,0.496,1.009],[111,0.248,0.472,0.749,0.495,1.006],[112,0.2514,0.4712,0.7502,0.494,1.004],[113,0.2556,0.4702,0.7518,0.493,1.002],[114,0.2582,0.4692,0.7528,0.492,1.001],[115,0.2596,0.4684,0.7532,0.4912,1.0],[116,0.26,0.4676,0.7534,0.4906,1.0],[117,0.26,0.467,0.7534,0.4898,1.0],[118,0.2596,0.4662,0.753,0.4892,1.0],[119,0.2592,0.4658,0.7526,0.4886,1.0],[120,0.2588,0.4652,0.7524,0.488,1.0],[121,0.2586,0.4646,0.7522,0.4872,1.0],[122,0.2582,0.4638,0.7518,0.4866,1.0],[123,0.2578,0.4632,0.7516,0.486,1.0],[124,0.2574,0.4626,0.7514,0.4856,1.0],[125,0.2572,0.4622,0.751,0.485,1.0],[126,0.2568,0.462,0.7506,0.4844,1.0],[127,0.2566,0.4616,0.7504,0.484,1.0],[128,0.2564,0.4612,0.7502,0.4836,1.0],[129,0.256,0.4608,0.7498,0.4832,1.0],[130,0.2556,0.4604,0.7496,0.483,1.0],[131,0.2554,0.46,0.7494,0.483,1.0],[132,0.2552,0.46,0.749,0.483,1.0],[133,0.255,0.4602,0.7486,0.483,1.0],[134,0.2548,0.4606,0.7484,0.483,1.0],[135,0.2546,0.461,0.7482,0.483,1.0],[136,0.2544,0.4614,0.7478,0.483,1.0],[137,0.2542,0.462,0.7476,0.4832,1.0],[138,0.254,0.4624,0.7472,0.4834,1.0],[139,0.2538,0.4628,0.7468,0.4836,1.0],[140,0.2536,0.4632,0.7464,0.484,1.0],[141,0.2534,0.4638,0.7462,0.4844,1.0],[142,0.2532,0.4642,0.746,0.4846,1.0],[143,0.253,0.4648,0.746,0.4852,1.0],[144,0.253,0.4654,0.746,0.4858,1.0],[145,0.253,0.466,0.746,0.4864,1.0],[146,0.253,0.4666,0.7458,0.487,1.0],[147,0.253,0.4674,0.7456,0.4878,1.0],[148,0.253,0.468,0.7454,0.4884,1.0],[149,0.253,0.4686,0.7452,0.489,1.0],[150,0.253,0.4696,0.745,0.4896,1.0],[151,0.253,0.4704,0.745,0.4904,1.0],[152,0.253,0.471,0.745,0.491,1.0],[153,0.2532,0.4718,0.745,0.4914,1.0],[154,0.2534,0.4726,0.745,0.4922,1.0],[155,0.2536,0.4732,0.745,0.4928,1.0],[156,0.2538,0.474,0.7452,0.4934,1.0],[157,0.254,0.4748,0.7454,0.4942,1.0],[158,0.254,0.4756,0.7456,0.4952,1.0],[159,0.254,0.4764,0.7458,0.496,1.0],[160,0.254,0.4772,0.746,0.497,1.0],[161,0.254,0.478,0.746,0.4978,1.0],[162,0.254,0.479,0.746,0.4986,1.0],[163,0.254,0.48,0.746,0.4994,1.0],[164,0.254,0.481,0.7462,0.5002,1.0],[165,0.254,0.4818,0.7464,0.501,1.0],[166,0.254,0.4828,0.7466,0.5018,1.0],[167,0.254,0.4838,0.7468,0.5028,1.0],[168,0.254,0.4846,0.747,0.5038,1.0],[169,0.254,0.4856,0.7472,0.5046,1.0],[170,0.254,0.4866,0.7474,0.5054,1.0],[171,0.254,0.4874,0.7476,0.5064,1.0],[172,0.254,0.4882,0.7478,0.507,1.0],[173,0.2542,0.4892,0.748,0.5076,1.0],[174,0.2544,0.49,0.748,0.5084,1.0],[175,0.2546,0.4908,0.748,0.509,1.0],[176,0.2546,0.4916,0.748,0.5096,1.0],[177,0.2548,0.4922,0.748,0.5102,1.0],[178,0.2548,0.4928,0.748,0.5108,1.0],[179,0.2548,0.4932,0.748,0.5112,1.0],[180,0.2548,0.4938,0.748,0.5116,1.0],[181,0.2548,0.4944,0.748,0.5118,1.0],[182,0.2548,0.495,0.748,0.512,1.0],[183,0.2548,0.4956,0.748,0.5122,1.0],[184,0.2548,0.4962,0.748,0.5124,1.0],[185,0.2548,0.4966,0.748,0.5126,1.0],[186,0.255,0.4968,0.748,0.5128,1.0],[187,0.255,0.497,0.748,0.513,1.0],[188,0.255,0.497,0.748,0.5128,1.0],[189,0.255,0.497,0.748,0.5126,1.0],[190,0.255,0.497,0.748,0.5124,1.0],[191,0.255,0.497,0.748,0.5122,1.0],[192,0.255,0.497,0.748,0.5118,1.0],[193,0.255,0.497,0.748,0.5116,1.0],[194,0.255,0.497,0.748,0.5114,1.0],[195,0.255,0.497,0.748,0.511,1.0],[196,0.255,0.4968,0.748,0.5106,1.0],[197,0.255,0.4966,0.748,0.5102,1.0],[198,0.255,0.4962,0.748,0.5096,1.0],[199,0.255,0.4958,0.748,0.509,1.0],[200,0.2548,0.4952,0.748,0.5086,1.0],[201,0.2548,0.4948,0.748,0.5078,1.0],[202,0.2548,0.4944,0.7482,0.5072,1.0],[203,0.2548,0.4938,0.7484,0.5066,1.0],[204,0.2548,0.4932,0.7486,0.5056,1.0],[205,0.255,0.4928,0.7488,0.5046,1.0],[206,0.255,0.4922,0.749,0.5038,1.0],[207,0.255,0.4916,0.749,0.5028,1.0],[208,0.255,0.4912,0.749,0.502,1.0],[209,0.255,0.4906,0.7492,0.5014,1.0],[210,0.2552,0.4898,0.7494,0.5006,1.0],[211,0.2554,0.4892,0.7496,0.5,1.0],[212,0.2556,0.4886,0.7498,0.4994,1.0],[213,0.256,0.488,0.75,0.4988,1.0],[214,0.2564,0.4876,0.75,0.4982,1.0],[215,0.2566,0.4874,0.7502,0.4978,1.0],[216,0.2568,0.4868,0.7504,0.4972,1.0],[217,0.257,0.4862,0.7506,0.4966,1.0],[218,0.257,0.4858,0.7508,0.496,1.0],[219,0.257,0.4854,0.751,0.4954,1.0],[220,0.257,0.485,0.751,0.4948,1.0],[221,0.257,0.485,0.751,0.4944,1.0],[222,0.257,0.485,0.751,0.494,1.0],[223,0.257,0.4848,0.751,0.4936,1.0],[224,0.257,0.4846,0.751,0.4934,1.0],[225,0.257,0.4844,0.751,0.4932,1.0],[226,0.257,0.4842,0.751,0.4928,1.0],[227,0.2568,0.484,0.7508,0.4926,1.0],[228,0.2566,0.484,0.7506,0.4924,1.0],[229,0.2564,0.484,0.7504,0.4922,1.0],[230,0.256,0.484,0.7502,0.492,1.0],[231,0.2556,0.484,0.75,0.492,1.0],[232,0.2554,0.484,0.7498,0.492,1.0],[233,0.2552,0.484,0.7496,0.492,1.0],[234,0.255,0.484,0.7494,0.4918,1.0],[235,0.2548,0.484,0.749,0.4916,1.0],[236,0.2546,0.484,0.7486,0.4914,1.0],[237,0.2544,0.484,0.7484,0.4912,1.0],[238,0.2542,0.484,0.7482,0.4912,1.0],[239,0.254,0.484,0.748,0.4914,1.0],[240,0.2538,0.484,0.7478,0.4916,1.0],[241,0.2536,0.484,0.7476,0.4918,1.0],[242,0.2532,0.484,0.7474,0.4918,1.0],[243,0.2528,0.484,0.747,0.4916,1.0],[244,0.2524,0.4838,0.7466,0.4914,1.0],[245,0.2522,0.4836,0.7464,0.4912,1.0],[246,0.252,0.4834,0.7462,0.491,1.0],[247,0.252,0.4832,0.746,0.491,1.0],[248,0.2518,0.483,0.7458,0.4908,1.0],[249,0.2516,0.483,0.7456,0.4908,1.0],[250,0.2514,0.483,0.7454,0.4908,1.0],[251,0.2512,0.483,0.7452,0.4908,1.0],[252,0.251,0.483,0.745,0.4908,1.0],[253,0.251,0.483,0.745,0.491,1.0],[254,0.251,0.483,0.745,0.491,1.0],[255,0.2512,0.483,0.745,0.491,1.0],[256,0.2514,0.483,0.745,0.491,1.0],[257,0.2516,0.4828,0.745,0.491,1.0],[258,0.2518,0.4826,0.745,0.491,1.0],[259,0.252,0.4824,0.7452,0.491,1.0],[260,0.252,0.482,0.7454,0.491,1.0],[261,0.252,0.4816,0.7456,0.491,1.0],[262,0.2522,0.4814,0.7458,0.491,1.0],[263,0.2526,0.4812,0.7462,0.491,1.0],[264,0.253,0.4808,0.7464,0.491,1.0],[265,0.2534,0.4806,0.7468,0.4908,1.0],[266,0.2538,0.4804,0.7472,0.4906,1.0],[267,0.2542,0.4798,0.7476,0.4904,1.0],[268,0.2544,0.4792,0.748,0.4902,1.0],[269,0.2546,0.4788,0.7484,0.49,1.0],[270,0.2548,0.4782,0.7488,0.4896,1.0],[271,0.2552,0.4776,0.7492,0.4892,1.0],[272,0.2556,0.4772,0.7498,0.4888,1.0],[273,0.256,0.4768,0.7502,0.4882,1.0],[274,0.2564,0.476,0.7508,0.4876,1.0],[275,0.257,0.4754,0.7512,0.4874,1.0],[276,0.2576,0.4746,0.7518,0.4868,1.0],[277,0.258,0.4738,0.7522,0.4862,1.0],[278,0.2584,0.473,0.7528,0.4856,1.0],[279,0.2588,0.4724,0.7532,0.485,1.0],[280,0.2592,0.4716,0.7536,0.4842,1.0],[281,0.2594,0.4708,0.7538,0.4838,1.0],[282,0.2596,0.4702,0.7542,0.4834,1.0],[283,0.26,0.4694,0.7544,0.4828,1.0],[284,0.2604,0.4686,0.7546,0.4822,1.0],[285,0.2606,0.468,0.7548,0.4818,1.0],[286,0.261,0.4674,0.7552,0.4812,1.0],[287,0.2614,0.4666,0.7554,0.4806,1.0],[288,0.2616,0.466,0.7556,0.4802,1.0],[289,0.2618,0.4656,0.756,0.4796,1.0],[290,0.262,0.465,0.7564,0.479,1.0],[291,0.262,0.4646,0.7566,0.4786,1.0],[292,0.2622,0.4642,0.7568,0.4782,1.0],[293,0.2624,0.4636,0.757,0.478,1.0],[294,0.2626,0.463,0.757,0.4778,1.0],[295,0.2628,0.4626,0.757,0.4776,1.0],[296,0.263,0.4622,0.7572,0.4772,1.0],[297,0.2632,0.462,0.7574,0.4768,1.0],[298,0.2632,0.462,0.7575,0.4765,1.0],[299,0.2633,0.462,0.7577,0.4763,1.0]];
+  const S = Math.round(V.start);
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const r = tab(ROWS, g), z = r[4];
+    [[GA, r[0], r[1]], [GB, r[2], r[3]]].forEach(([o, x, y]) => {
+      const lg = g - o.off;
+      o.lets.forEach((sp, k) => { sp.style.opacity = String(clamp01((lg - o.on[k]) / o.du[k])); });
+      const w0 = Math.max(1, o.tx.offsetWidth), fit = Math.min(1, 1.9 * R1 / w0);
+      o.tx.style.transform = `translate(-50%, -50%) scale(${fit.toFixed(4)})`;
+      draw(o, lg);
+      o.grp.style.transform = `translate(${(x * W).toFixed(2)}px, ${(y * H).toFixed(2)}px) scale(${z.toFixed(4)})`;
+    });
+    // the board follows the two circles and overscans the frame
+    // the board follows the circles but always overscans the frame (room for the zoom, the pan and a shaky camera)
+    const OV = 0.22 * W;
+    const bl = Math.min((r[0] - 0.29 * z) * W, -OV), br = Math.max((r[2] + 0.227 * z) * W, W + OV);
+    board.style.left = `${bl.toFixed(2)}px`; board.style.width = `${Math.max(0, br - bl).toFixed(2)}px`;
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 17 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+ "name": "bar-chart-grow-labels",
+ "frames": 300,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(24 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 400,
+   "to": 1800,
+   "db": -12,
+   "what": "the second line is drawn along the axis"
+  },
+  {
+   "f": "start + round(72 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 500,
+   "to": 2200,
+   "db": -11,
+   "what": "the first line rises point by point"
+  },
+  {
+   "f": "start + round(128 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.1",
+   "from": 500,
+   "to": 2400,
+   "db": -10,
+   "what": "the second line rises point by point"
+  }
+ ]
+}

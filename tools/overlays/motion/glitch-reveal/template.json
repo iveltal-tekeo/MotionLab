@@ -1,0 +1,92 @@
+{
+ "name": "Glitch neon reveal",
+ "kind": "text",
+ "category": "Text",
+ "what": "A line of neon text flashes in as a squashed band, its letters shuffle into other letters for about half a second and then read right, the text keeps growing while a bright glint sweeps across it from right to left, and at the end one letter lights up.",
+ "use_for": [
+  "title",
+  "glitch",
+  "neon",
+  "night",
+  "music",
+  "tech",
+  "gaming",
+  "intro",
+  "statement"
+ ],
+ "tags": [
+  "text",
+  "glitch",
+  "neon",
+  "glow",
+  "scramble",
+  "decode",
+  "reveal",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1 the text flashes in as a squashed, dim band; f2-f19 every letter is swapped for another one each frame (more of them right as it goes; every letter one step on in the alphabet on f18-f19, a few lit lighter f9-f17); f20 it reads right; f20-f44 it grows slowly, f44-f66 faster, to full size fixed on its baseline; f48-f57 a white glint with a bloom sweeps across it from right to left; f112-f119 one letter lights up",
+ "tracks": [
+  {
+   "name": "flash",
+   "what": "the text flashes in squashed and dim",
+   "start_f": 1,
+   "length_f": 2,
+   "easing": "linear"
+  },
+  {
+   "name": "shuffle",
+   "what": "every letter changes each frame until the text reads right on f20",
+   "start_f": 2,
+   "length_f": 18,
+   "easing": "stepped per frame"
+  },
+  {
+   "name": "grow",
+   "what": "the text grows from 72 % to its full size, slowly then faster",
+   "start_f": 20,
+   "length_f": 46,
+   "easing": "slow, then accelerating, then decelerating (measured)"
+  },
+  {
+   "name": "glint",
+   "what": "a white glint with a bloom sweeps across the text from right to left",
+   "start_f": 48,
+   "length_f": 9,
+   "easing": "accelerating"
+  },
+  {
+   "name": "last light",
+   "what": "one letter lights up",
+   "start_f": 112,
+   "length_f": 8,
+   "easing": "linear"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.65,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  1,
+  2,
+  6,
+  12,
+  18,
+  20,
+  44,
+  50,
+  53,
+  56,
+  70,
+  115
+ ]
+}

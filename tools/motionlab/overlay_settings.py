@@ -32,7 +32,7 @@ LIBRARY = LAB / "library" / "graphics"
 EXAMPLES = LAB / "tools" / "overlays" / "examples"
 MOTION = LAB / "tools" / "overlays" / "motion"          # 0.5.0: the Motion Graphics library (motionlab\templates.py)
 LOCAL_MOTION = LAB / "library" / "motion_graphics" / "local"     # 2026-10-18: templates learned from the user's own
-#                                                     captured clips (<pack>\<id>\, e.g. autoae) - this PC only
+#                                                     captured clips (<pack>\<id>\) - this PC only
 SOURCES = ("index.html", "overlay.json", "gsap.min.js", "hyperframes.json",      # + assets\ (what new / save copy)
            "presets.json")
 TYPES = ("string", "color", "number", "boolean", "enum")

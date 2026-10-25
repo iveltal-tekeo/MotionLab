@@ -1,0 +1,56 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(1) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 147 px",
+    "FIT f80 (00:00:02:20) +10 more: #tw > div:nth-of-type(1) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 353 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(2) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 200 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(3) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 181 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(4) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 159 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(5) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 134 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(5) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 36 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(6) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 107 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(6) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(7) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 78 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(7) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f81 (00:00:02:21) +9 more: #tw > div:nth-of-type(2) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 353 px",
+    "FIT f81 (00:00:02:21) +2 more: #tw > div:nth-of-type(3) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 38 px",
+    "FIT f81 (00:00:02:21) +1 more: #tw > div:nth-of-type(4) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 38 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(8) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 165 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(8) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 36 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(9) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 122 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(9) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(10) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 71 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(10) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 27 px"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": false,
+   "flags": [
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(1) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 147 px",
+    "FIT f80 (00:00:02:20) +10 more: #tw > div:nth-of-type(1) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 353 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(2) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 200 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(3) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 181 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(4) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 159 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(5) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 134 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(5) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 36 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(6) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 107 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(6) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(7) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 78 px",
+    "FIT f80 (00:00:02:20) +2 more: #tw > div:nth-of-type(7) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f81 (00:00:02:21) +9 more: #tw > div:nth-of-type(2) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 353 px",
+    "FIT f81 (00:00:02:21) +2 more: #tw > div:nth-of-type(3) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 38 px",
+    "FIT f81 (00:00:02:21) +1 more: #tw > div:nth-of-type(4) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 38 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(8) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 165 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(8) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 36 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(9) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 122 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(9) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 34 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(10) > span:nth-of-type(1) \"Big\" off the frame, outside its box by 71 px",
+    "FIT f80 (00:00:02:20): #tw > div:nth-of-type(10) > span:nth-of-type(2) \"reveal\" off the frame, outside its box by 27 px"
+   ],
+   "date": "2026-10-23"
+  }
+ }
+}

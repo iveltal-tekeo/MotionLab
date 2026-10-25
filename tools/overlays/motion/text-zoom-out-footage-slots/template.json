@@ -1,0 +1,149 @@
+{
+ "name": "Title with three footage tiles",
+ "kind": "text",
+ "category": "Text",
+ "what": "A title is typed small out of a blur, grows with a soft glow and holds; then three tilted footage tiles slide in one after another (from the left, the bottom and the right) and cover most of it, and the scene floats a few pixels to the end.",
+ "use_for": [
+  "title",
+  "intro",
+  "opener",
+  "reveal",
+  "footage showcase",
+  "3 clips",
+  "montage",
+  "promo",
+  "tutorial intro"
+ ],
+ "tags": [
+  "text",
+  "title",
+  "typed",
+  "glow",
+  "footage",
+  "tiles",
+  "3d",
+  "perspective",
+  "needs media",
+  "3 media slots",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f12-f53 the title is typed letter by letter out of a blur, small; f45-f56 it grows about its bottom-left corner to 2.7 x with a glow (accelerating); f56-f92 it holds, drifting a hair; f93-f140 the left tile slides in from the left edge (decelerating); f112-f150 the middle tile rises from the bottom edge; f120-f160 the right tile slides in from the right edge; f140-f300 the scene floats a few pixels",
+ "tracks": [
+  {
+   "name": "typing",
+   "what": "the title typed small, each letter sharpening out of a blur",
+   "start_f": 12,
+   "length_f": 42,
+   "easing": "none (the clip's own rhythm)"
+  },
+  {
+   "name": "grow",
+   "what": "the title grows to 2.7 x about its bottom-left corner while the glow comes up",
+   "start_f": 45,
+   "length_f": 11,
+   "easing": "accelerating (measured)"
+  },
+  {
+   "name": "tile 1",
+   "what": "the left tile slides in from the left edge",
+   "start_f": 93,
+   "length_f": 47,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "tile 2",
+   "what": "the middle tile rises from the bottom edge",
+   "start_f": 112,
+   "length_f": 38,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "tile 3",
+   "what": "the right tile slides in from the right edge",
+   "start_f": 120,
+   "length_f": 45,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "float",
+   "what": "the whole scene drifts up to 18 px (at 1280 wide)",
+   "start_f": 140,
+   "length_f": 160,
+   "easing": "slow, uneven (measured)"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [
+  {
+   "id": "slot1_media",
+   "label": "Tile 1 (left)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 720,
+   "max_s": 7.0,
+   "fit": "cover",
+   "focus_setting": "slot1_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient tile in the look, labelled 'your video 1'"
+  },
+  {
+   "id": "slot2_media",
+   "label": "Tile 2 (middle)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 720,
+   "max_s": 6.2,
+   "fit": "cover",
+   "focus_setting": "slot2_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient tile in the look, labelled 'your video 2'"
+  },
+  {
+   "id": "slot3_media",
+   "label": "Tile 3 (right)",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 720,
+   "max_s": 6.0,
+   "fit": "cover",
+   "focus_setting": "slot3_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient tile in the look, labelled 'your video 3'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.55,
+ "thumb_f": 200,
+ "check_frames": [
+  10,
+  20,
+  36,
+  48,
+  52,
+  56,
+  90,
+  98,
+  108,
+  116,
+  124,
+  132,
+  150,
+  200
+ ]
+}

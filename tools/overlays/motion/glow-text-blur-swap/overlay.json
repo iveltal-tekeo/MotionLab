@@ -1,0 +1,33 @@
+{
+ "name": "glow-text-blur-swap",
+ "frames": 61,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 500,
+   "to": 2600,
+   "db": -8,
+   "what": "the first word whips in"
+  },
+  {
+   "f": "start + round(23 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 2600,
+   "db": -8,
+   "what": "the second word whips in from the other side"
+  },
+  {
+   "f": "start + round(28 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the second word lands"
+  }
+ ]
+}

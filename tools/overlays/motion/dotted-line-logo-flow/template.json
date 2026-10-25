@@ -1,0 +1,195 @@
+{
+ "name": "Dotted line logo flow",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A long dotted line snakes across a dark board in four rows. Logos drop in from above as pixel mosaics, then the line lights up dash by dash from the top left and each logo it reaches resolves from mosaic into the sharp logo, until the line ends at a padlock that opens. Put a logo from the library or your own picture in each of the six spots.",
+ "use_for": [
+  "step by step",
+  "workflow",
+  "tools",
+  "stack",
+  "pipeline",
+  "logos",
+  "integrations",
+  "process",
+  "roadmap",
+  "tech stack"
+ ],
+ "tags": [
+  "chart",
+  "flow",
+  "dotted line",
+  "logos",
+  "steps",
+  "mosaic",
+  "pixelate",
+  "needs media",
+  "padlock",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f2-f34 six logos drop in from above the frame as pixel mosaics, staggered, each on a quick-start, long-soft-landing curve; from f26 the dotted line lights up dash by dash in the flow colour, leg by leg from the top left (f26-28, f67-98, f155-173, f197-209, f231-242, f267-277, f314-323); as it reaches each logo the mosaic resolves into the sharp logo over ~10 f (f31-41, f98-123, f173-183, f209-219, f242-251, f279-290); at f326-f338 the padlock at the end opens (the shackle lifts, the body turns to an outline)",
+ "tracks": [
+  {
+   "name": "logos drop in",
+   "what": "six logo mosaics drop in from above the frame, one after another",
+   "start_f": 2,
+   "length_f": 34,
+   "easing": "cubic-bezier(0.22, 0, 0.04, 0.88) (measured fit, quick start, long soft landing)"
+  },
+  {
+   "name": "line lights up",
+   "what": "the dashes turn to the flow colour one by one along the line, leg by leg",
+   "start_f": 26,
+   "length_f": 298,
+   "easing": "dash by dash (measured frame of each dash)"
+  },
+  {
+   "name": "mosaics resolve",
+   "what": "each logo's mosaic gets finer in 10 steps and snaps sharp as the line reaches it (the second logo lingers on a fine mosaic first)",
+   "start_f": 31,
+   "length_f": 260,
+   "easing": "stepped (measured block sizes)"
+  },
+  {
+   "name": "padlock opens",
+   "what": "the shackle lifts and the solid body turns to an outline",
+   "start_f": 326,
+   "length_f": 12,
+   "easing": "decelerating (slow end)"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [],
+ "media_slots": [
+  {
+   "id": "first_logo",
+   "label": "Logo 1 (top left)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "second_logo",
+   "label": "Logo 2 (top right)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "third_logo",
+   "label": "Logo 3 (second row)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "fourth_logo",
+   "label": "Logo 4 (third row)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "fifth_logo",
+   "label": "Logo 5 (the corner on the right)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "sixth_logo",
+   "label": "Logo 6 (bottom row)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a ring mark",
+   "optional": true
+  },
+  {
+   "id": "lock_logo",
+   "label": "Last stop",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "a padlock that unlocks",
+   "optional": true
+  },
+  {
+   "id": "start_logo",
+   "label": "Extra logo at the start (not in the original)",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "contain",
+   "focus": "50% 50%",
+   "placeholder": "none",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 345,
+ "check_frames": [
+  6,
+  14,
+  30,
+  60,
+  100,
+  130,
+  180,
+  215,
+  345
+ ]
+}

@@ -1,0 +1,134 @@
+{
+ "name": "Neon frames and lines",
+ "kind": "text",
+ "category": "Text",
+ "what": "Five labels in neon on black: a glowing ring draws itself round the first label and shrinks away, a neon box rises with the next one, spins half a turn into the third, stutters and pops into the fourth in the accent colour, then drops out; finally neon lines slash across the frame round the last label's box and pull back out.",
+ "use_for": [
+  "sequence",
+  "steps",
+  "list",
+  "tech",
+  "title",
+  "countdown",
+  "feature list",
+  "neon",
+  "intro"
+ ],
+ "tags": [
+  "text",
+  "neon",
+  "glow",
+  "circle",
+  "box",
+  "lines",
+  "spin",
+  "pop",
+  "slash",
+  "5 labels",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f23 the ring draws from a dot, both ends racing to meet at the top, the first label scaling and sharpening in (f11-f26); f38-f68 the ring shrinks away as a neon box rises over it (f63-f78); f91-f108 the box spins half a turn swapping to the third label; f126-f139 it stutters with an echo; f140-f150 it pops to 1.8x as the accent-colour label and settles at 0.8x; f185-f189 it drops out of the bottom; f196-f215 seven neon lines slash across, each growing from an edge, while the last box fades in (f214-f224); f266-f294 the lines retract and the box fades out",
+ "tracks": [
+  {
+   "name": "ring draws",
+   "what": "a neon ring draws itself from a dot, both ends meeting at the top; the first label scales and sharpens in",
+   "start_f": 1,
+   "length_f": 25,
+   "easing": "S-curve"
+  },
+  {
+   "name": "ring shrinks",
+   "what": "the ring and its label wander a little, then shrink away",
+   "start_f": 38,
+   "length_f": 31,
+   "easing": "S-curve"
+  },
+  {
+   "name": "box rises",
+   "what": "a neon box rises from the bottom over the ring and settles, wandering slightly",
+   "start_f": 63,
+   "length_f": 15,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "half turn",
+   "what": "the box spins half a turn on its centre and the label swaps",
+   "start_f": 91,
+   "length_f": 17,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "stutter",
+   "what": "the box jumps about with an echo",
+   "start_f": 126,
+   "length_f": 14,
+   "easing": "none"
+  },
+  {
+   "name": "pop",
+   "what": "the box pops to 1.8x with the accent-colour label and settles at 0.8x",
+   "start_f": 140,
+   "length_f": 11,
+   "easing": "S-curve"
+  },
+  {
+   "name": "drop",
+   "what": "the box drops out of the bottom of the frame",
+   "start_f": 185,
+   "length_f": 5,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "lines slash",
+   "what": "seven neon lines grow across the frame, each from an edge, while the last box fades in",
+   "start_f": 196,
+   "length_f": 28,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "lines pull back",
+   "what": "the lines retract the way they came and the box fades out",
+   "start_f": 266,
+   "length_f": 28,
+   "easing": "none"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "text1",
+  "text2",
+  "text3",
+  "text4",
+  "text5"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 240,
+ "check_frames": [
+  0,
+  8,
+  14,
+  22,
+  36,
+  52,
+  66,
+  76,
+  94,
+  100,
+  130,
+  144,
+  160,
+  187,
+  202,
+  208,
+  220,
+  240,
+  276,
+  288
+ ]
+}

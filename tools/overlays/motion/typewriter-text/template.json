@@ -1,0 +1,72 @@
+{
+ "name": "Typewriter line",
+ "kind": "text",
+ "category": "Text",
+ "what": "A line of small text typed out letter by letter on a dark ground, centred and growing from the middle, with a blinking dash cursor that waits at the start, stays solid while it types and keeps blinking afterwards.",
+ "use_for": [
+  "title",
+  "typed text",
+  "caption",
+  "statement",
+  "tagline",
+  "minimal",
+  "intro",
+  "quote"
+ ],
+ "tags": [
+  "text",
+  "typewriter",
+  "typing",
+  "cursor",
+  "minimal",
+  "title",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f30 (00:00:00:00-00:00:01:00) only the cursor dash at the centre, blinking (4 frames on, about 6 off, a 9.7-frame beat); f31-f54 (00:00:01:01-00:00:01:24) 14 letters are typed at an uneven human pace (one every 1.8 frames), the centred line growing from the middle with the cursor solid; f54-f299 (00:00:01:24-00:00:09:29) the cursor blinks 5 frames on, 5 off while the text stays",
+ "tracks": [
+  {
+   "name": "cursor waits",
+   "what": "the cursor dash blinks alone at the centre",
+   "start_f": 0,
+   "length_f": 31,
+   "easing": "blink, 4 frames on in a 9.7-frame beat"
+  },
+  {
+   "name": "typing",
+   "what": "the letters are typed one by one, the line growing from the middle",
+   "start_f": 31,
+   "length_f": 23,
+   "easing": "uneven human pace (about 1.8 frames a letter)"
+  },
+  {
+   "name": "cursor blinks",
+   "what": "the text rests and the cursor keeps blinking",
+   "start_f": 54,
+   "length_f": 246,
+   "easing": "blink, 5 frames on / 5 off"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  5,
+  31,
+  36,
+  42,
+  48,
+  54,
+  59,
+  150
+ ]
+}

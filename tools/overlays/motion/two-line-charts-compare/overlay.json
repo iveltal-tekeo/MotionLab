@@ -1,0 +1,24 @@
+{
+ "name": "two-line-charts-compare",
+ "frames": 135,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 300,
+   "to": 1800,
+   "db": -11,
+   "what": "the two lines are drawn, the bottom one faster"
+  },
+  {
+   "f": "start + round(46 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the names start to be typed"
+  }
+ ]
+}

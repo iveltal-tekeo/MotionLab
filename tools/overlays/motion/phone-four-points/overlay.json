@@ -1,0 +1,40 @@
+{
+ "name": "phone-four-points",
+ "frames": 175,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.9",
+   "from": 2400,
+   "to": 400,
+   "db": -8,
+   "what": "the phones scroll down and settle"
+  },
+  {
+   "f": "round(44 * fps / 30)",
+   "kind": "riser",
+   "dur": "0.7",
+   "db": -12,
+   "if": "progress",
+   "what": "the progress bar fills"
+  },
+  {
+   "f": "round(80 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "db": -10,
+   "what": "the arrows draw out"
+  },
+  {
+   "f": "round((90 + 2 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "4",
+   "db": -12,
+   "what": "a point appears"
+  }
+ ]
+}

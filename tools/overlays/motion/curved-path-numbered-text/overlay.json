@@ -1,0 +1,27 @@
+{
+ "name": "curved-path-numbered-text",
+ "frames": 241,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(49 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.5",
+   "from": 500,
+   "to": 1900,
+   "db": -8,
+   "what": "the camera flies up the path to line 2"
+  },
+  {
+   "f": "start + round(134 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.7",
+   "from": 400,
+   "to": 2200,
+   "db": -8,
+   "what": "the camera sweeps over the big arc to line 3"
+  }
+ ]
+}

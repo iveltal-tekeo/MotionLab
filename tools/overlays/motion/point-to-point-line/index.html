@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "point1", "type": "string", "label": "First point (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Idea"},
+  {"id": "point2", "type": "string", "label": "Second point", "default": "Result"},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 130, "min": 30, "max": 300, "step": 1},
+  {"id": "point_colour", "type": "enum", "label": "Point colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "card1_media", "type": "string", "label": "Card under the first point: your video or picture, wide 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "card1_focus", "type": "string", "label": "What stays in view in the first card (x% y%)", "default": "50% 50%"},
+  {"id": "card2_media", "type": "string", "label": "Card under the second point: your video or picture, wide 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "card2_focus", "type": "string", "label": "What stays in view in the second card (x% y%)", "default": "50% 50%"},
+  {"id": "dust", "type": "boolean", "label": "Dust specks on the ground", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "point-to-point-line" (2026-10-22): a dark ground with a faint grid. A diamond point pops up from below the frame at the centre (back-out,
+     overshooting by 13 % and a bigger scale, f2-f10), its label appears above it (f6); the diamond rises 111 px (f15-f20,
+     sine-out) and a footage card blurs in under it (f20); then the whole group slides left and shrinks to 95 % (f30-f40,
+     sine in-out, motion-blurred) while a line is drawn out to a second diamond that fades in and slides to the right
+     (f33-f40) with its label; a second card blurs in under it (f50) and everything settles with a slow drift.
+     All timings and positions measured from the clip's frames (1280 x 720). The two cards are media slots (video or
+     picture); a video starts when its card appears. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .dia { position: absolute; left: 0; top: 0; }
+  .lab { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; transform: translate(-50%, -50%); color: #fff; }
+  .card { position: absolute; left: 0; top: 0; overflow: visible; }
+  .dust { position: absolute; border-radius: 50%; background: #ffffff; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3.033333" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="dustl" class="abs"></div>
+    <div id="line" class="abs"></div>
+    <div id="g1" class="abs"><div id="c1" class="card"><div id="m1"></div></div><div id="d1" class="dia"></div><div id="l1" class="lab ml-display"></div></div>
+    <div id="g2" class="abs"><div id="c2" class="card"><div id="m2"></div></div><div id="d2" class="dia"></div><div id="l2" class="lab ml-display"></div></div>
+  </div>
+  <svg width="0" height="0" style="position:absolute; left:0; top:0"><defs>
+    <filter id="bf1" filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="4000" height="3000"><feGaussianBlur id="bb1" stdDeviation="0 0"/></filter>
+    <filter id="bf2" filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="4000" height="3000"><feGaussianBlur id="bb2" stdDeviation="0 0"/></filter>
+  </defs></svg>
+</div>
+<script>
+  const FPS = 30, FRAMES = 91;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 14, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const S = Math.round(V.start);
+  const K = 1.5 * U;                                       // 1 px of the 1280 x 720 original = 1.5 px at 1920 wide
+  const px = n => `${n}px`;
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const sineInOut = t => -(Math.cos(Math.PI * t) - 1) / 2, sineOut = t => Math.sin(t * Math.PI / 2), p1Out = t => 1 - (1 - t) * (1 - t);
+  const backOut = (s, t) => 1 + (s + 1) * Math.pow(t - 1, 3) + s * (t - 1) * (t - 1);
+
+  // ---- the look: a dark ground (the ink; the paper when the look is dark) with a very faint grid; white = the paper
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { ink: L.ink, paper: L.paper, signal: L.signal, deep: L.deep, mustard: L.mustard };
+  const col = pick[V.point_colour] || L.signal, colDark = mix(col, night, 0.45);
+  const white = glare;
+  Object.assign(q("bgfill").style, { width: px(W), height: px(H), background: V.background ? mix(night, glare, 0.065) : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: px(W), height: px(H) });
+  if (V.background && window.MLLook) MLLook.grid(hand, tl, { kind: "flat", size: 180, alpha: 0.05, color: glare, look: L, U, W, H, vignette: false });
+
+  // ---- the parts (all sized in reference px x K)
+  const DIA = 147 * K;                                     // a diamond's side (its diagonal is 208 px of the original)
+  const mkDia = el => { Object.assign(el.style, { width: px(DIA), height: px(DIA), marginLeft: px(-DIA / 2), marginTop: px(-DIA / 2), borderRadius: px(26 * K), transform: "rotate(45deg)", background: col });
+    return el; };
+  const d1 = mkDia(q("d1")), d2 = mkDia(q("d2"));
+  [q("g1"), q("g2")].forEach(g => Object.assign(g.style, { width: px(W), height: px(H) }));
+  const dropOf = () => `drop-shadow(${-5 * K}px ${9 * K}px 0 ${colDark}) drop-shadow(0 0 ${14 * K}px ${rgba(col, 0.45)})`;
+  d1.style.filter = dropOf(); d2.style.filter = dropOf();
+  const l1 = q("l1"), l2 = q("l2"), line = q("line");
+  [l1, l2].forEach(l => { l.style.fontSize = px(V.size * U); l.style.textShadow = `0 ${4 * K}px ${8 * K}px rgba(0,0,0,0.35)`; l.style.color = white; });
+  if (window.MLLook) { MLLook.rich(l1, V.point1, { look: L, family: V.display_font }); MLLook.rich(l2, V.point2, { look: L, family: V.display_font }); }
+  else { l1.textContent = V.point1; l2.textContent = V.point2; }
+  const LH = 8 * K;
+  Object.assign(line.style, { height: px(LH), marginTop: px(-LH / 2), borderRadius: px(LH / 2), background: white, display: "none" });
+
+  // the two footage cards (16:9, a white rim, rounded, shadowed): media slots
+  const CW = 383 * K, CH = 215 * K, RIM = 7 * K, CR = Math.max(L.radius * 1.4, 8 * K);
+  const CARDF = [20, 50];                                  // the frame each card appears
+  const mkCard = (card, mbox, src, focus, slot, seed, f0) => {
+    Object.assign(card.style, { width: px(CW), height: px(CH), marginLeft: px(-CW / 2), marginTop: px(-CH / 2), background: white, borderRadius: px(CR), boxShadow: `0 ${8 * K}px ${20 * K}px rgba(0,0,0,0.5)` });
+    Object.assign(mbox.style, { position: "absolute", left: px(RIM), top: px(RIM), width: px(CW - 2 * RIM), height: px(CH - 2 * RIM) });
+    if (window.MLLook) {
+      const t = MLLook.media(mbox, src, { look: L, kind: "video", label: "your footage", fit: "cover", focus, seed, r: Math.max(2, CR - RIM), start: (S + f0) / FPS, duration: Math.max(0.2, (FRAMES - S - f0) / FPS), id: slot, slot });
+      if (t && t.tagName === "VIDEO") {
+        t.setAttribute("data-start", (Math.floor((S + f0) / FPS * 1e6) / 1e6).toFixed(6));           // rounded down: never a hair after the frame
+        t.setAttribute("data-duration", Math.max(0.2, (FRAMES - S - f0) / FPS).toFixed(4));
+      }
+    }
+  };
+  mkCard(q("c1"), q("m1"), V.card1_media, V.card1_focus, "card1_media", 21, CARDF[0]);
+  mkCard(q("c2"), q("m2"), V.card2_media, V.card2_focus, "card2_media", 22, CARDF[1]);
+  const c1 = q("c1"), c2 = q("c2");
+
+  // ---- dust: a few white specks that flicker (a new set every 2 frames, seeded)
+  const specks = [];
+  if (V.dust) { for (let i = 0; i < 12; i++) { const s = document.createElement("div"); s.className = "dust"; q("dustl").appendChild(s); specks.push(s); } }
+  const rnd = window.MLLook ? MLLook.rnd : (() => () => 0.5);
+
+  // ---- the motion (positions in reference px; f = frame - start). Measured: the diamond pops up from below (back-out 1.75,
+  // f2-f10, scale 0.25 -> 1), rises 111 px (f15-f20, sine-out), the group slides left and shrinks to 95 % (f30-f40, sine in-out),
+  // the second diamond fades in and slides right (f33-f40), the line is drawn to it (f31-f34.5), the cards blur in (f20, f50)
+  const pop = g => backOut(1.75, clamp01((g - 1.75) / 8.25));
+  const slide = g => sineInOut(clamp01((g - 29.75) / 10.25));
+  const X1 = g => { const sl = slide(g); return (639 - 4 * clamp01((g - 10) / 20)) * (1 - sl) + 262.5 * sl + 7 * clamp01((g - 40) / 50); };
+  const Y1 = g => { const rise = sineOut(clamp01((g - 15.25) / 5)), base = 385 + (274 - 385) * rise, sl = slide(g); return (760 + (base - 760) * pop(g)) + 11 * sl; };
+  const CAM = g => 1 - 0.05 * slide(g);
+  const S1 = g => (0.25 + 0.75 * pop(g)) * CAM(g);
+  const X2 = g => 700 + (1055 - 700) * p1Out(clamp01((g - 33) / 7)) + 2 * clamp01((g - 40) / 50);
+  const Y2 = g => 286;
+  const O2 = g => clamp01((g - 33.5) / 5);
+  const bb1 = q("bb1"), bb2 = q("bb2"), g1 = q("g1"), g2 = q("g2");
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    hand.style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const x1 = X1(g) * K, y1 = Y1(g) * K, s1 = S1(g), cam = CAM(g);
+    d1.style.transform = `translate(${x1}px, ${y1}px) rotate(45deg) scale(${s1.toFixed(4)})`;
+    d1.style.opacity = g >= 1.5 ? "1" : "0";
+    Object.assign(l1.style, { left: px(x1), top: px(y1 - 165 * K * s1), transform: `translate(-50%, -50%) scale(${s1 < 0.3 ? 0 : s1.toFixed(4)})`, opacity: g >= 5.5 ? "1" : "0" });
+    // card 1 (blurs in over 2 frames from f19.5), follows the diamond
+    const o1 = clamp01((g - 19.5) / 2);
+    Object.assign(c1.style, { transform: `translate(${(x1 - 11 * K * cam).toFixed(2)}px, ${(y1 + 257 * K * cam).toFixed(2)}px) scale(${cam.toFixed(4)})`, opacity: String(o1), filter: o1 < 1 ? `blur(${(10 * K * (1 - o1)).toFixed(2)}px)` : "none" });
+    // diamond 2 + label 2 + card 2
+    const x2 = X2(g) * K, y2 = Y2(g) * K, o2 = O2(g);
+    d2.style.transform = `translate(${x2}px, ${y2}px) rotate(45deg) scale(${cam.toFixed(4)})`; d2.style.opacity = String(o2);
+    Object.assign(l2.style, { left: px(x2), top: px(y2 - 165 * K * cam), transform: `translate(-50%, -50%) scale(${cam.toFixed(4)})`, opacity: String(o2) });
+    const oc2 = clamp01((g - 49.5) / 2);
+    Object.assign(c2.style, { transform: `translate(${(x2 - 9 * K * cam).toFixed(2)}px, ${(y2 + 243 * K * cam).toFixed(2)}px) scale(${cam.toFixed(4)})`, opacity: String(oc2), filter: oc2 < 1 ? `blur(${(10 * K * (1 - oc2)).toFixed(2)}px)` : "none" });
+    // the line: drawn from the first diamond to the second (f31-f34.5), then following both
+    const pr = p1Out(clamp01((g - 31) / 3.5));
+    if (g >= 31.5) {
+      const ex = x1 + (x2 - x1) * pr, yl = (y1 + y2) / 2;
+      Object.assign(line.style, { display: "block", left: px(x1), top: px(yl), width: px(Math.max(0, ex - x1)), opacity: "1" });
+    } else line.style.display = "none";
+    // motion blur sideways while a group slides (a smear that grows with its speed)
+    const sp1 = Math.abs(X1(g + 1) - X1(g - 1)) / 2, sp2 = Math.abs(X2(g + 1) - X2(g - 1)) / 2;
+    const sg1 = 0.1 * sp1 * K, sg2 = 0.1 * sp2 * K;
+    if (sg1 > 0.6) { bb1.setAttribute("stdDeviation", `${sg1.toFixed(2)} 0`); g1.style.filter = "url(#bf1)"; } else g1.style.filter = "none";
+    if (sg2 > 0.6) { bb2.setAttribute("stdDeviation", `${sg2.toFixed(2)} 0`); g2.style.filter = "url(#bf2)"; } else g2.style.filter = "none";
+    // dust
+    if (specks.length) {
+      const r = rnd(1000 + Math.floor(g / 2) * 7919);
+      specks.forEach(s => { const on = r() < 0.55, x = r() * W, y = r() * H, z = (2 + r() * 5) * K, a = 0.25 + r() * 0.6;
+        Object.assign(s.style, { display: on ? "block" : "none", left: px(x), top: px(y), width: px(z), height: px(z * (0.6 + r() * 0.5)), opacity: a.toFixed(2) }); });
+    }
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 12 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    // a label never wider than 3/4 of the gap between the points
+    [l1, l2].forEach(l => { const mx = 0.7 * 792 * K; if (l.offsetWidth > mx) l.style.fontSize = px(V.size * U * mx / l.offsetWidth); });
+    render(0);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

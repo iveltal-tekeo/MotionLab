@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "caption", "type": "string", "label": "Caption under the card (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Growth that *compounds*"},
+  {"id": "size", "type": "number", "label": "Caption size (px at a 1080-px short side)", "default": 112, "min": 30, "max": 300, "step": 1},
+  {"id": "values", "type": "string", "label": "Curve: one value for each point, as a % of the axis height (| between, 3 to 30; the default draws the original curve)", "default": "0|33.5|43|48.4|51.6|53.2|53.7|53.4|52.4|49.7|44.6|34.7|22.8|16.9|14.4|13.8|14.5|18.3|25.5|40.3|100"},
+  {"id": "glow", "type": "enum", "label": "Glow colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "end", "type": "enum", "label": "Colour of the curve end", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "line_w", "type": "number", "label": "Curve thickness (12 = like the original)", "default": 12, "min": 3, "max": 30, "step": 0.5},
+  {"id": "edge_light", "type": "number", "label": "Light running round the card edge (0 = off, 1 = like the original)", "default": 1, "min": 0, "max": 2, "step": 0.1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "growth-curve-draw" (2026-10-23): a dark card with a glowing top edge, two dashed axes and a growth curve that is drawn from the origin
+     (white, then red, then green in the original). The first 49 frames are a close-up: the camera sits right on the
+     card, gliding right along the curve as it is drawn (a 3D pose measured frame by frame: a fixed tilt, the card
+     slides past and the camera pulls back about 10 %); at f49 it CUTS to a wide shot of the whole card, tilted a few
+     degrees, with the curve already 56 % drawn, and the caption fades in over 9 frames (f49-f58); the curve finishes
+     (f49-f88, a long soft end) while the card drifts slowly (f49-f100) and then holds. A light runs round the card's
+     edge all the time (about 36 units a frame, a soft tail and a sharp front). The curve is a setting: one value for
+     each point, evenly spaced; the close-up follows the drawing head, so other curves stay in view. Numbers measured
+     from the reference's frames (720 x 1280 units; the card is 1450 x 1000 units). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #card { position: absolute; left: 0; top: 0; width: 1450px; height: 1000px; transform-origin: 0 0; overflow: hidden; }
+  #card > * { position: absolute; left: 0; top: 0; }
+  #glowl { width: 1450px; height: 1000px; }
+  #ring { width: 1450px; height: 1000px; pointer-events: none; }
+  #card svg { overflow: visible; }
+  #capw { position: absolute; left: 0; width: 1080px; height: 0; display: flex; align-items: center; justify-content: center; }
+  #cap { width: 90%; text-align: center; line-height: 1.05; font-synthesis: none; letter-spacing: -0.01em; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="stage"><div id="card"><div id="glowl"></div><svg id="csv" width="1450" height="1000" viewBox="0 0 1450 1000"></svg><div id="ring"></div><svg id="lsv" width="1450" height="1000" viewBox="0 0 1450 1000"></svg></div></div>
+    <div id="capw"><div id="cap" class="ml-display"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, mustard: L.mustard, deep: L.deep, paper: glare };
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const glowC = pick[V.glow] || L.signal, endC = pick[V.end] || L.mustard, lightC = mixC(glowC, glare, 0.4);
+
+  // ---- the ground: nearly black, a touch darker than the card
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixC(night, "#000000", 0.62);
+
+  // ---- the card (1450 x 1000 units): dark face, a glow at the top centre, dashed axes, the curve, a beige edge, the running light
+  const stage = q("stage"), card = q("card");
+  stage.style.transform = `scale(${K})`;
+  const CW = 1450, CH = 1000, RAD = 36;
+  Object.assign(card.style, { background: night, borderRadius: `${RAD}px` });
+  const gl = [[0, 1], [80, 0.88], [130, 0.74], [200, 0.56], [270, 0.42], [350, 0.28], [430, 0.17], [500, 0.1], [600, 0.045], [720, 0]];
+  q("glowl").style.background = `radial-gradient(circle 720px at 50% 0%, ${gl.map(([r, a]) => `${rgba(glowC, a)} ${r}px`).join(", ")})`;
+  const ring = q("ring");
+  Object.assign(ring.style, { border: `5px solid ${rgba(mixC(glare, L.mustard, 0.22), 0.72)}`, borderRadius: `${RAD}px` });
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (par) par.appendChild(e); return e; };
+  const csv = q("csv"), lsv = q("lsv");
+  // axes: dashes 22 long, 11 apart (round ends), the y axis at x = 188 from y = 104 down to 874, the x axis at y = 864.5 from x = 214 to 1325
+  const ax = { fill: "none", stroke: glare, "stroke-width": 7.5, "stroke-linecap": "round", "stroke-dasharray": "15 18" };
+  el("line", { x1: 188, y1: 107.5, x2: 188, y2: 870.5, ...ax }, csv);
+  el("line", { x1: 217.5, y1: 864.5, x2: 1321.5, y2: 864.5, ...ax }, csv);
+
+  // the curve: a Catmull-Rom spline through the values (evenly spaced from x = 219 to 1252; 0 % = the x axis at y = 865, 100 % = y 95)
+  const X0 = 219, X1 = 1252, Y0 = 865, Y1 = 95;
+  const DEFV = "0|33.5|43|48.4|51.6|53.2|53.7|53.4|52.4|49.7|44.6|34.7|22.8|16.9|14.4|13.8|14.5|18.3|25.5|40.3|100";
+  const nums = s => String(s == null ? "" : s).split("|").map(x => parseFloat(x)).filter(x => !isNaN(x));
+  function build(vals) {
+    const n = vals.length;
+    const pts = vals.map((v, i) => [X0 + (X1 - X0) * i / (n - 1), Y0 - (Y0 - Y1) * Math.max(-30, Math.min(130, v)) / 100]);
+    const ext = [[2 * pts[0][0] - pts[1][0], 2 * pts[0][1] - pts[1][1]]].concat(pts, [[2 * pts[n - 1][0] - pts[n - 2][0], 2 * pts[n - 1][1] - pts[n - 2][1]]]);
+    let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+    const dense = [pts[0]];
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = ext[i], p1 = ext[i + 1], p2 = ext[i + 2], p3 = ext[i + 3];
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ` C ${c1[0].toFixed(2)} ${c1[1].toFixed(2)} ${c2[0].toFixed(2)} ${c2[1].toFixed(2)} ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+      for (let k = 1; k <= 24; k++) { const t = k / 24, a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, c = 3 * (1 - t) * t * t, e = t ** 3;
+        dense.push([a * p1[0] + b * c1[0] + c * c2[0] + e * p2[0], a * p1[1] + b * c1[1] + c * c2[1] + e * p2[1]]); }
+    }
+    const cum = [0];
+    for (let i = 1; i < dense.length; i++) cum.push(cum[i - 1] + Math.hypot(dense[i][0] - dense[i - 1][0], dense[i][1] - dense[i - 1][1]));
+    return { d, dense, cum, len: cum[cum.length - 1] };
+  }
+  const headAt = (c, p) => { const s = clamp01(p) * c.len; let i = 1; while (i < c.cum.length - 1 && c.cum[i] < s) i++; const k = (s - c.cum[i - 1]) / Math.max(1e-6, c.cum[i] - c.cum[i - 1]);
+    return [c.dense[i - 1][0] + (c.dense[i][0] - c.dense[i - 1][0]) * k, c.dense[i - 1][1] + (c.dense[i][1] - c.dense[i - 1][1]) * k]; };
+  let vv = nums(V.values); if (vv.length < 3) vv = nums(DEFV); if (vv.length > 30) vv = vv.slice(0, 30);
+  const cur = build(vv), cur0 = build(nums(DEFV));
+  const defs = el("defs", {}, csv);
+  const gr = el("linearGradient", { id: "cg", gradientUnits: "userSpaceOnUse", x1: X0, y1: 0, x2: X1, y2: 0 }, defs);
+  [[0, glare], [0.107, mixC(glare, L.signal, 0.3)], [0.272, mixC(glare, L.signal, 0.62)], [0.466, L.signal], [0.62, L.signal], [0.708, mixC(L.signal, endC, 0.15)],
+   [0.795, mixC(L.signal, endC, 0.31)], [0.911, mixC(L.signal, endC, 0.57)], [0.96, mixC(L.signal, endC, 0.78)], [1, endC]].forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, gr));
+  const crv = el("path", { d: cur.d, fill: "none", stroke: "url(#cg)", "stroke-width": V.line_w, "stroke-linecap": "round", "stroke-linejoin": "round", pathLength: 1000 }, csv);
+
+  // the light running round the card edge: a comet (a sharp front, a plateau, a long soft tail) made of short dashes on a rounded-rect path
+  const PR = 34, PP = 2 * (CW - 4 - 2 * PR) + 2 * (CH - 4 - 2 * PR) + 2 * Math.PI * PR;
+  const rp = `M ${2 + PR} 2 H ${CW - 2 - PR} A ${PR} ${PR} 0 0 1 ${CW - 2} ${2 + PR} V ${CH - 2 - PR} A ${PR} ${PR} 0 0 1 ${CW - 2 - PR} ${CH - 2} H ${2 + PR} A ${PR} ${PR} 0 0 1 2 ${CH - 2 - PR} V ${2 + PR} A ${PR} ${PR} 0 0 1 ${2 + PR} 2 Z`;
+  const SEG = 14, NSEG = 50, segs = [];
+  const prof = u => u < -60 ? 0 : u < 0 ? 0.5 * (1 + Math.sin(Math.PI * ((u + 60) / 60 - 0.5))) * 0.5 : u < 60 ? 0.5 + 0.5 * (u / 60) : u < 250 ? 1 : u < 300 ? 1 - 0.7 * (u - 250) / 50 : u < 480 ? 0.3 - 0.2 * (u - 300) / 180 : u < 640 ? 0.1 * (1 - (u - 480) / 160) : 0;
+  for (let i = -5; i < NSEG; i++) {
+    const u = (i + 0.5) * SEG;
+    segs.push({ u, a: prof(u), p: el("path", { d: rp, fill: "none", stroke: lightC, "stroke-width": 6, "stroke-linecap": "butt", pathLength: PP }, lsv) });
+  }
+
+  // the caption (fades in at f49), under the card at 76 % of the height
+  const cap = q("cap"), capw = q("capw");
+  capw.style.top = `${H * 975 / 1280}px`;
+  if (window.MLLook) MLLook.rich(cap, V.caption, { look: L, family: V.display_font }); else cap.textContent = V.caption;
+  Object.assign(cap.style, { fontSize: `${V.size * U}px`, color: glare, fontWeight: String(fw(V.display_font, 800)) });
+
+  // ---- the measured motion (frames; g = the frame minus "Starts at frame")
+  // draw progress of the curve (fraction of its length): slow start, steady middle, a long soft end
+  const PT = [[0, 0], [4, 0], [8, 0.023], [12, 0.046], [16, 0.082], [20, 0.133], [25, 0.187], [30, 0.256], [36, 0.349], [42, 0.446], [48, 0.543], [49, 0.559], [54, 0.64],
+    [60, 0.735], [66, 0.823], [72, 0.892], [78, 0.946], [84, 0.985], [88, 1]];
+  // the close-up (f0-f48): a pinhole camera (focal 1000 px, a fixed tilt) and the card's centre sliding by; then the wide shot's four corners (f49-f100)
+  const FOC = 1000, ROT = [-0.2097, -0.2178, -0.2255];
+  const TA = [[0, 246.4, -157.8, 856], [3, 244.1, -158.4, 852], [6, 236.6, -157.5, 852.8], [9, 222.6, -156.8, 854.3], [12, 201.9, -155.6, 858.6], [15, 179.1, -153.2, 864.7],
+    [18, 153.5, -150.7, 870.5], [21, 124.8, -148.1, 876.5], [24, 93.9, -145.1, 883.3], [27, 61, -142, 890.5], [30, 26.8, -138.9, 897.8], [33, -8.3, -135.6, 905.3],
+    [36, -43.6, -132.3, 912.9], [39, -78.7, -129, 920.4], [42, -112.9, -125.8, 927.8], [45, -145.8, -122.8, 934.8], [48, -170.9, -120.4, 940.3]];
+  const CB = [[49, 27, 377, 659, 370, 674, 795, 43, 827], [60, 33, 381, 654, 374, 668, 793, 49, 823], [72, 39, 386, 649, 379, 663, 790, 54, 820],
+    [85, 45, 391, 643, 384, 657, 787, 61, 817], [100, 53, 397, 637, 389, 650, 784, 67, 812]];
+  const rotM = (() => { const [rx, ry, rz] = ROT, cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry), cz = Math.cos(rz), sz = Math.sin(rz);
+    const Rx = [[1, 0, 0], [0, cx, -sx], [0, sx, cx]], Ry = [[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]], Rz = [[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]];
+    const mm = (A, B) => A.map(r => [0, 1, 2].map(j => r[0] * B[0][j] + r[1] * B[1][j] + r[2] * B[2][j]));
+    return mm(Rz, mm(Rx, Ry)); })();
+  const m3 = h => `matrix3d(${h[0][0]},${h[1][0]},0,${h[2][0]},${h[0][1]},${h[1][1]},0,${h[2][1]},0,0,1,0,${h[0][2]},${h[1][2]},0,${h[2][2]})`;
+  function homA(T, dx, dy) {                                // card (x, y) -> screen, for the close-up pose
+    const R = rotM, Tx = T[0] - R[0][0] * dx - R[0][1] * dy, Ty = T[1] - R[1][0] * dx - R[1][1] * dy, Tz = T[2] - R[2][0] * dx - R[2][1] * dy;
+    const cxx = Tx - 725 * R[0][0] - 500 * R[0][1], cyy = Ty - 725 * R[1][0] - 500 * R[1][1], czz = Tz - 725 * R[2][0] - 500 * R[2][1];
+    return [[360 * R[2][0] + FOC * R[0][0], 360 * R[2][1] + FOC * R[0][1], 360 * czz + FOC * cxx],
+            [640 * R[2][0] + FOC * R[1][0], 640 * R[2][1] + FOC * R[1][1], 640 * czz + FOC * cyy],
+            [R[2][0], R[2][1], czz]];
+  }
+  function homQ(c) {                                         // card corners -> four screen points (8 numbers), solved exactly
+    const s = [[0, 0], [CW, 0], [CW, CH], [0, CH]], d = [[c[0], c[1]], [c[2], c[3]], [c[4], c[5]], [c[6], c[7]]];
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      A.push([s[i][0], s[i][1], 1, 0, 0, 0, -d[i][0] * s[i][0], -d[i][0] * s[i][1]]); b.push(d[i][0]);
+      A.push([0, 0, 0, s[i][0], s[i][1], 1, -d[i][1] * s[i][0], -d[i][1] * s[i][1]]); b.push(d[i][1]);
+    }
+    for (let i = 0; i < 8; i++) { let m = i; for (let r = i + 1; r < 8; r++) if (Math.abs(A[r][i]) > Math.abs(A[m][i])) m = r;
+      [A[i], A[m]] = [A[m], A[i]]; [b[i], b[m]] = [b[m], b[i]];
+      for (let r = i + 1; r < 8; r++) { const f = A[r][i] / A[i][i]; for (let k = i; k < 8; k++) A[r][k] -= f * A[i][k]; b[r] -= f * b[i]; } }
+    const x = new Array(8).fill(0);
+    for (let i = 7; i >= 0; i--) { let sm = b[i]; for (let k = i + 1; k < 8; k++) sm -= A[i][k] * x[k]; x[i] = sm / A[i][i]; }
+    return [[x[0], x[1], x[2]], [x[3], x[4], x[5]], [x[6], x[7], 1]];
+  }
+  // the edge light: its front runs clockwise from the top edge (x = 700 at f0) at about 35.7 units a frame
+  const lightFront = g => 700 - 36 + 35.7 * g;
+
+  let ready = false;
+  function layout() { ready = true; }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    stage.style.visibility = q("capw").style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const p = tab(PT, g)[0];
+    if (g < 48.5) {
+      // the close-up follows the drawing head: the card slides by the head's offset from the original curve's
+      const h1 = headAt(cur, p), h0 = headAt(cur0, p);
+      const dx = Math.max(-400, Math.min(400, 0.8 * (h1[0] - h0[0]))), dy = Math.max(-400, Math.min(400, 0.8 * (h1[1] - h0[1])));
+      card.style.transform = m3(homA(tab(TA, g), dx, dy));
+    } else {
+      card.style.transform = m3(homQ(tab(CB, g)));
+    }
+    // the curve
+    crv.style.visibility = p > 0.0008 ? "visible" : "hidden";
+    crv.setAttribute("stroke-dasharray", `${(p * 1000).toFixed(2)} 3000`);
+    // the light round the edge
+    const fr = lightFront(g), amt = V.edge_light;
+    segs.forEach(s => {
+      const a = s.a * amt;
+      if (a < 0.01) { s.p.style.visibility = "hidden"; return; }
+      s.p.style.visibility = "visible";
+      const start = ((fr - s.u - SEG / 2) % PP + PP) % PP;
+      s.p.setAttribute("stroke-dasharray", `${SEG + 1} ${(PP - SEG - 1).toFixed(2)}`);
+      s.p.setAttribute("stroke-dashoffset", (-start).toFixed(2));
+      s.p.setAttribute("stroke-opacity", Math.min(1, a).toFixed(3));
+    });
+    // the caption
+    cap.style.opacity = clamp01((g - 48.75) * 0.1095).toFixed(3);
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 800].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

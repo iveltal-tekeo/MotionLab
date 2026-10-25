@@ -1,0 +1,16 @@
+{
+ "sizes": {
+  "1080x1920": {
+   "ok": false,
+   "flags": [
+    "draws 30 % of the ink it draws at its own size (f226) - something is missing or tiny"
+   ],
+   "date": "2026-10-23"
+  },
+  "1080x1080": {
+   "ok": true,
+   "flags": [],
+   "date": "2026-10-23"
+  }
+ }
+}

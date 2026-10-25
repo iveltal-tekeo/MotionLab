@@ -1,0 +1,100 @@
+{
+ "name": "Strike-through and subtext",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three centred lines of text settle into place; a marker line then opens from the middle of the first line and strikes it out, and a short subtext types itself in above it; the third line is struck out the same way with its own subtext typed below it, while the middle line stays untouched.",
+ "use_for": [
+  "mistakes",
+  "myths vs facts",
+  "stop doing",
+  "before and after",
+  "replace this with that",
+  "tips",
+  "do and don't",
+  "correction"
+ ],
+ "tags": [
+  "text",
+  "strike-through",
+  "marker",
+  "typing",
+  "cursor",
+  "subtext",
+  "list",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f14 the three lines hold 20 % larger; f15-f25 they settle to their size (fast S-curve, cubic-bezier(0.7, 0.138, 0.17, 0.755)); f53-f66 a marker line opens from the middle of line 1 outwards (slow start, long tail, cubic-bezier(0.485, 0.048, 0.076, 0.971)); f66-f68 a cursor fades in above-right and subtext 1 types f69-f81 (the cursor blinks once, gone at f82); f114-f127 the same marker line on line 3; f123-f139 subtext 2 types below it; then it holds to f194",
+ "tracks": [
+  {
+   "name": "lines settle",
+   "what": "the block of three lines shrinks from 120 % to its real size",
+   "start_f": 15,
+   "length_f": 11,
+   "easing": "cubic-bezier(0.7, 0.138, 0.17, 0.755)"
+  },
+  {
+   "name": "strike line 1",
+   "what": "a marker line opens from the middle of line 1 outwards",
+   "start_f": 53,
+   "length_f": 13,
+   "easing": "cubic-bezier(0.485, 0.048, 0.076, 0.971)"
+  },
+  {
+   "name": "subtext 1 typed",
+   "what": "a cursor fades in and subtext 1 types in letter by letter",
+   "start_f": 66,
+   "length_f": 16,
+   "easing": "irregular typing, one blink"
+  },
+  {
+   "name": "strike line 3",
+   "what": "the same marker line on line 3",
+   "start_f": 114,
+   "length_f": 13,
+   "easing": "cubic-bezier(0.485, 0.048, 0.076, 0.971)"
+  },
+  {
+   "name": "subtext 2 typed",
+   "what": "a cursor fades in and subtext 2 types in below line 3",
+   "start_f": 123,
+   "length_f": 16,
+   "easing": "irregular typing, one blink"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 139,
+   "length_f": 56,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "main_1",
+  "main_2",
+  "main_3",
+  "sub_1",
+  "sub_2"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 160,
+ "check_frames": [
+  0,
+  20,
+  30,
+  56,
+  62,
+  72,
+  90,
+  118,
+  130,
+  160,
+  194
+ ]
+}

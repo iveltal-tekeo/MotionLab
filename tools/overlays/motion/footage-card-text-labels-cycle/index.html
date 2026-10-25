@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "footage_media", "type": "string", "label": "The card: your video or picture, 16:9 (empty = a placeholder)", "default": ""},
+  {"id": "footage_focus", "type": "string", "label": "What stays in view on the card (x% y%)", "default": "50% 50%"},
+  {"id": "label1", "type": "string", "label": "Label 1 (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Idea"},
+  {"id": "label2", "type": "string", "label": "Label 2", "default": "Shoot"},
+  {"id": "label3", "type": "string", "label": "Label 3", "default": "Edit"},
+  {"id": "label4", "type": "string", "label": "Label 4", "default": "Polish"},
+  {"id": "label5", "type": "string", "label": "Label 5", "default": "Post"},
+  {"id": "size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 120, "min": 30, "max": 240, "step": 1},
+  {"id": "glow", "type": "number", "label": "Warm glow behind (0 = none, 100 = strong)", "default": 70, "min": 0, "max": 100, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<!-- MotionLab motion template "footage-card-text-labels-cycle" (2026-10-22): the user's footage on a rounded card in the middle of a dark warm scene with a soft glow.
+     The card starts a little big and blurred, shrinks to its size (f0-f6), then pops bigger, sinks a little lower and
+     tilts (f10-f18, ~x1.13) and settles to x1.04 by f32 - making room above it for the labels. Five bold gold labels
+     then take turns above the card, one every 27 f (f16, f43, f70, f97, f124): each rises from behind the card's top
+     edge with an overshoot, floats down and up (a 27 f swing of about 7 px at 240 px scale), then is pushed out of the
+     frame upwards as the next one comes up. The card's size, place and tilt, the labels' swing and the hand-over were
+     measured from the clip's frames. Look-aware: the ground from the ink and the mustard, the placeholder stripes
+     from the deep and the paper, the labels from the mustard and the signal, the body font and the film grain from
+     the look tokens (tools\overlays\motion\_looks). MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; }
+  .lb { position: absolute; left: 640px; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; letter-spacing: -0.01em; text-transform: uppercase; transform: translate(-50%, -50%); }
+  .lb .w { white-space: nowrap; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  #card { position: absolute; overflow: hidden; }
+  #ph { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+  #pt { position: absolute; left: 50%; top: 50%; width: 56%; transform: translate(-50%, -50%); text-align: center; line-height: 1; text-transform: uppercase; white-space: normal; padding: 18px 12px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4.866667" data-width="1920"
+     data-height="1080">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="stage"><div id="lbls"></div><div id="card"><div id="ph"></div><div id="pt" class="ml-body"></div></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 146;
+  const W = 1920, H = 1080;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const R = Math.min(W, H) / 720;                       // the reference's 1280x720 px; the stage is that size, scaled and centred
+  const S = Math.round(V.start);
+
+  // ---- the look: a dark warm ground with a round glow behind the card (the reference's soft yellow, here the mustard)
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const g01 = clamp01(V.glow / 100);
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ?
+    `radial-gradient(circle ${0.5 * 720 * R}px at 50% 50%, ${rgba(L.mustard, 0.5 * g01)} 0%, ${rgba(L.mustard, 0.44 * g01)} 62%, ${rgba(L.mustard, 0)} 100%), ${mix(night, L.mustard, 0.07)}` : "transparent" });
+  const hand = q("hand"), stage = q("stage");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(stage.style, { left: `${(W - 1280 * R) / 2}px`, top: `${(H - 720 * R) / 2}px`, transform: `scale(${R})` });
+
+  // ---- the card (16:9, 747 x 417 at rest, centred at (640, 436)); the user's footage, else diagonal stripes + a label
+  const CW = 747, CH = 417, CX = 640, CY = 436.5;
+  const card = q("card");
+  const cr = Math.min(24, 1.3 * L.radius / R);
+  Object.assign(card.style, { left: `${CX - CW / 2}px`, top: `${CY - CH / 2}px`, width: `${CW}px`, height: `${CH}px`, borderRadius: `${cr}px`,
+    boxShadow: "0 5px 12px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.4)", transformOrigin: "50% 50%" });
+  const fam = V.body_font, wt = String(fw(fam, 900));
+  if (V.footage_media) {
+    q("ph").style.display = "none"; q("pt").style.display = "none";
+    if (window.MLLook) MLLook.media(card, V.footage_media, { look: L, kind: "video", fit: "cover", focus: V.footage_focus, seed: 23, r: cr,
+      start: S / FPS, duration: Math.max(0.2, (FRAMES - S) / FPS), id: "m1", slot: "footage_media" });
+  } else {
+    q("ph").style.background = `repeating-linear-gradient(118deg, ${L.deep} 0px, ${L.deep} 50px, ${glare} 50px, ${glare} 100px)`;
+    Object.assign(q("pt").style, { fontSize: "70px", fontWeight: wt, color: glare, background: rgba(night, 0.9), borderRadius: `${cr}px` });
+    q("pt").textContent = "Your footage here";
+  }
+
+  // ---- the five labels: gold letters (a gradient down each word), a hard shadow under them and a warm glow
+  const labels = [V.label1, V.label2, V.label3, V.label4, V.label5].map(txt => {
+    const el = document.createElement("div"); el.className = "lb ml-body";
+    el.style.fontWeight = wt;
+    q("lbls").appendChild(el);
+    const r = window.MLLook ? MLLook.rich(el, txt, { look: L, family: fam, weight: 800 }) : (el.textContent = String(txt || ""), { words: [], marks: [] });
+    const top = mix(L.mustard, "#ffffff", 0.12), bottom = mix(L.mustard, L.signal, 0.6);
+    r.words.forEach(w => {
+      if (w.classList.contains("ml-hl")) { w.style.webkitTextFillColor = L.ink; }
+      else if (w.style.color) { w.style.webkitTextFillColor = w.style.color; }
+      else w.style.backgroundImage = `linear-gradient(180deg, ${top}, ${bottom})`;
+    });
+    el.style.filter = `drop-shadow(0 3px 0 ${mix(L.signal, "#000000", 0.55)}) drop-shadow(0 0 10px ${rgba(L.mustard, 0.55 * Math.max(0.25, g01))})`;
+    return el;
+  });
+  const fitLabels = () => {
+    let fs = V.size * U / R;
+    labels.forEach(el => { el.style.fontSize = `${fs}px`; });
+    const maxW = 1280 * 0.7, wmax = Math.max(...labels.map(el => el.offsetWidth), 1);
+    if (wmax > maxW) { fs *= maxW / wmax; labels.forEach(el => { el.style.fontSize = `${fs}px`; }); }
+  };
+  fitLabels();
+
+  // ---- the measured moves (reference frames; y in the 240-px-high scale of the contact sheets, x3 for px)
+  const CYT = [[0, 119], [10, 120], [12, 127.5], [14, 137.5], [16, 144], [18, 146.5], [22, 146], [24, 145], [32, 145.5]];                        // the card's centre y
+  const CSC = [[0, 1.092], [2, 1.012], [4, 0.972], [6, 0.96], [10, 0.964], [12, 0.984], [14, 1.04], [16, 1.076], [18, 1.084], [22, 1.084], [24, 1.056], [26, 1.036], [28, 1.02], [30, 1.004], [32, 1.0]];
+  const CRT = [[0, 0], [10, 0], [11, 0.8], [12, 1.5], [13, 1.8], [14, 1.4], [15, 0.8], [16, 0.2], [17, 0]];                                   // the card's tilt (deg)
+  const CBL = [[0, 0], [1, 4], [2, 3], [3, 2], [4, 1], [6, 0], [11, 0], [12, 1.5], [14, 2], [16, 1], [18, 0]];                                // its smear (px)
+  const LIN = [[-3, 80], [-2, 70], [-1, 61], [0, 53], [1, 46], [2, 40.5], [3, 36.5], [4, 35], [6, 35.5], [8, 38], [10, 43.5], [12, 49.5], [14, 51.5], [16, 50], [18, 48], [20, 46], [22, 43.5], [24, 41.5], [26, 39]];   // a label by frames since it came up
+  const LOUT = [[-3, 40], [-2, 38], [-1, 32], [0, 22], [1, 12], [2, -3], [3, -18], [4, -34]];                                                 // the one before it, by frames since the next came up
+  const A = [16, 43, 70, 97, 124];
+  function render(tt) {
+    const g = tt * FPS - S;
+    const on = g >= 0;
+    stage.style.visibility = on ? "visible" : "hidden"; stage.style.opacity = on ? "1" : "0";      // (opacity too: a video tag keeps its own visibility)
+    if (!on) return;
+    const sc = tab(CSC, g)[0], cy = tab(CYT, g)[0] * 3, rot = tab(CRT, g)[0], bl = tab(CBL, g)[0];
+    card.style.transform = `translate(0px, ${(cy - CY).toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
+    card.style.filter = bl > 0.2 ? `blur(${bl.toFixed(2)}px)` : "none";
+    labels.forEach((el, i) => {
+      const u = g - A[i], un = i < 4 ? g - A[i + 1] : -99;
+      let y;
+      if (un >= -3) y = un > 4 ? null : tab(LOUT, un)[0];
+      else y = u < -3 ? null : tab(LIN, Math.min(u, 26))[0];
+      if (y === null) { el.style.visibility = "hidden"; return; }
+      el.style.visibility = "visible";
+      el.style.top = `${(y * 3).toFixed(2)}px`;
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 13, hits: V.shake > 0 ? [{ f: S + 14, amount: 2 }] : [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 37 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font); the labels are fitted again with the real font first
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 700, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { fitLabels(); render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

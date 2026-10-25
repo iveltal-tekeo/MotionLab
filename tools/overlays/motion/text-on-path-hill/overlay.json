@@ -1,0 +1,33 @@
+{
+ "name": "text-on-path-hill",
+ "frames": 79,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(5 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the first word pops onto the line"
+  },
+  {
+   "f": "start + round(33 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 500,
+   "to": 2400,
+   "db": -8,
+   "what": "the camera whips down to the far side"
+  },
+  {
+   "f": "start + round(53 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 400,
+   "to": 2200,
+   "db": -8,
+   "what": "the camera whips out to the whole hill"
+  }
+ ]
+}

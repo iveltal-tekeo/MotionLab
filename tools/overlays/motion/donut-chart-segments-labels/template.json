@@ -1,0 +1,98 @@
+{
+ "name": "Donut chart with labels",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A pale ring on a dark, colour-washed ground with a text in its hole: coloured segments sweep round the ring one after another, clockwise from the bottom, and as each one closes a thin leader line draws out of it to a label of the same colour that fades in. The whole chart floats gently. Any number of segments (1 to 8) with their own sizes, labels and colours.",
+ "use_for": [
+  "donut chart",
+  "pie chart",
+  "breakdown",
+  "share",
+  "split",
+  "percentages",
+  "budget",
+  "audience",
+  "categories",
+  "survey"
+ ],
+ "tags": [
+  "chart",
+  "donut",
+  "pie",
+  "segments",
+  "labels",
+  "leader lines",
+  "infographic",
+  "float",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f21 the centre text fades in on the pale ring; four segments sweep round the ring clockwise from the bottom, each on a slow-start, long-soft-end curve (f5-f30, f44-f66, f75-f95, f113-f137); as each closes its leader line draws out of the ring (8 f: a horizontal run then a diagonal) and its label fades in over 20 f (f31, f58, f96, f135); the chart floats a few pixels from f17 to the end",
+ "tracks": [
+  {
+   "name": "centre text",
+   "what": "the text in the ring's hole fades in",
+   "start_f": 0,
+   "length_f": 22,
+   "easing": "linear"
+  },
+  {
+   "name": "segment 1",
+   "what": "the first segment sweeps clockwise from the bottom of the ring",
+   "start_f": 5,
+   "length_f": 26,
+   "easing": "cubic-bezier(0.65, 0.1, 0.22, 1) (measured: slow start, long soft end)"
+  },
+  {
+   "name": "label 1",
+   "what": "its leader line draws out of the ring and its label fades in",
+   "start_f": 31,
+   "length_f": 20,
+   "easing": "decelerating (leader), linear (label)"
+  },
+  {
+   "name": "segment 2",
+   "what": "the second segment sweeps (the others follow the same way)",
+   "start_f": 44,
+   "length_f": 23,
+   "easing": "cubic-bezier(0.65, 0.1, 0.22, 1)"
+  },
+  {
+   "name": "segments 3-4",
+   "what": "the third and fourth segments sweep with their leaders and labels",
+   "start_f": 75,
+   "length_f": 80,
+   "easing": "cubic-bezier(0.65, 0.1, 0.22, 1)"
+  },
+  {
+   "name": "float",
+   "what": "the whole chart drifts a few pixels, slowly (measured wander)",
+   "start_f": 17,
+   "length_f": 343,
+   "easing": "smooth drift"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "centre",
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.65,
+ "thumb_f": 340,
+ "check_frames": [
+  3,
+  12,
+  20,
+  36,
+  60,
+  90,
+  130,
+  200,
+  340
+ ]
+}

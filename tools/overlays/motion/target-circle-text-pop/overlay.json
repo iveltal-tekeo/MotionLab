@@ -1,0 +1,30 @@
+{
+ "name": "target-circle-text-pop",
+ "frames": 150,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "pop",
+   "db": -12,
+   "what": "the dot appears"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the comet sweeps round the disc"
+  },
+  {
+   "f": "start + round(46 * fps / 30)",
+   "kind": "thump",
+   "db": -10,
+   "what": "the target pulses and grows to full size"
+  }
+ ]
+}

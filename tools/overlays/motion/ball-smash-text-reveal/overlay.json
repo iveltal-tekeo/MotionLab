@@ -1,0 +1,31 @@
+{
+ "name": "ball-smash-text-reveal",
+ "frames": 225,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.6",
+   "from": 500,
+   "to": 2200,
+   "db": -10,
+   "what": "the ball swings in from the left edge"
+  },
+  {
+   "f": "start + round(109 * fps / 30)",
+   "kind": "impact",
+   "db": -8,
+   "what": "the ball smashes the square"
+  },
+  {
+   "f": "start + round(145 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.25",
+   "db": -8,
+   "what": "the shards open into the title"
+  }
+ ]
+}

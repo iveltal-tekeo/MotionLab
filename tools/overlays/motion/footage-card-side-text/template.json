@@ -1,0 +1,104 @@
+{
+ "name": "Footage card, side text",
+ "kind": "text",
+ "category": "Social",
+ "what": "A dark scene dissolves into a warm light one while a tall card with your footage zooms down from big, dips and settles in the middle; then a bold orange text comes out on each side of it, letter by letter - the left one from behind the card, the right one from the edge of the frame.",
+ "use_for": [
+  "vertical clip in a landscape video",
+  "phone footage",
+  "two-word statement",
+  "versus",
+  "reaction",
+  "social post",
+  "feature highlight",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "card",
+  "side text",
+  "letters",
+  "needs media",
+  "2 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f17-f26 the dark scene dissolves into the light one while the card zooms down from x1.4, dips to x0.89 at f21 and settles at x1; f27-f40 the left text slides out letter by letter from behind the card (each letter 0.8 f after the one before, decelerating); f31-f47 the right text slides in letter by letter from the right edge; then it holds while the footage plays",
+ "tracks": [
+  {
+   "name": "dissolve",
+   "what": "the dark scene dissolves into the light one",
+   "start_f": 17,
+   "length_f": 9,
+   "easing": "linear"
+  },
+  {
+   "name": "card",
+   "what": "zooms down from x1.4, dips to x0.89 and settles; fades in",
+   "start_f": 17,
+   "length_f": 9,
+   "easing": "decelerating with a dip"
+  },
+  {
+   "name": "left text",
+   "what": "slides out from behind the card, letter by letter",
+   "start_f": 27,
+   "length_f": 22,
+   "easing": "decelerating"
+  },
+  {
+   "name": "right text",
+   "what": "slides in from the right edge, letter by letter",
+   "start_f": 31,
+   "length_f": 26,
+   "easing": "decelerating"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the footage keeps playing, the film grain moves)",
+   "start_f": 57,
+   "length_f": 34,
+   "easing": "none"
+  }
+ ],
+ "core_points": 2,
+ "text_slots": [
+  "text_1",
+  "text_2"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The card's footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "1:2",
+   "min_px": 1080,
+   "max_s": 3.0,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  18,
+  20,
+  22,
+  26,
+  30,
+  36,
+  44,
+  60
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "infinity-loop-gradient-draw",
+ "frames": 243,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(28 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.3",
+   "from": 400,
+   "to": 1800,
+   "db": -10,
+   "what": "the pen leaves the right dot and races round the loop"
+  },
+  {
+   "f": "start + round(70 * fps / 30)",
+   "kind": "pop",
+   "db": -8,
+   "what": "the left dot appears"
+  },
+  {
+   "f": "start + round(102 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.6",
+   "from": 500,
+   "to": 2000,
+   "db": -10,
+   "what": "the pen draws the rest of the loop and closes it"
+  }
+ ]
+}

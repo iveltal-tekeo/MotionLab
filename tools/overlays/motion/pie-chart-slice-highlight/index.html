@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "label", "type": "string", "label": "Callout text (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Biggest share"},
+  {"id": "size", "type": "number", "label": "Callout text size (px at a 1080-px short side)", "default": 34, "min": 14, "max": 120, "step": 1},
+  {"id": "percent", "type": "number", "label": "Size of the highlighted slice (% of the whole pie)", "default": 4.9, "min": 1, "max": 50, "step": 0.1},
+  {"id": "angle", "type": "number", "label": "Where the slice points (degrees from the top, clockwise; the callout follows)", "default": 6, "min": -80, "max": 80, "step": 1},
+  {"id": "slice", "type": "enum", "label": "Colour of the slice", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}, {"value": "ink", "label": "Ink"}]},
+  {"id": "push", "type": "number", "label": "Slow push-in on the pie (0 = none, 1 = like the original)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "fade", "type": "boolean", "label": "Slide down and fade out at the end (like the original)", "default": true},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "pie-chart-slice-highlight" (2026-10-23): a soft glossy pie (a round disc with two lilac blobs) sits at the centre of a light page and pushes in
+     slowly the whole time (x1.15 by f100). A slice is cut into it: it starts as a thin line pointing left (f2) and
+     sweeps clockwise round to the top while it widens (f2-f20, slow start, fast middle, soft end; the two edges move
+     on their own S-curves) and settles on a deep wedge. A dot appears above it (f24), a leader line is drawn up and to
+     the right (f25-f33) and then along (f32-f60) and the callout words rise one after another from under a mask,
+     fading in (f55 / f62 / f68, an exponential ease, 8.5 frames). At f100 everything slides down and fades out in 8
+     frames while the slice swings a few degrees. The text, the slice size and where it points are settings.
+     Numbers measured from the reference's frames (720 x 1280 units). Look-aware. MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #scene { position: absolute; left: 357.5px; top: 628.5px; width: 0; height: 0; }
+  #scene > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #disc { position: absolute; border-radius: 50%; overflow: hidden; }
+  #cw { position: absolute; overflow: hidden; display: flex; }
+  .lw { position: relative; white-space: nowrap; line-height: 1; font-synthesis: none; }
+  .lw .w { display: inline-block; will-change: auto; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3.6666" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="stage">
+      <div id="scene">
+        <div id="disc"></div>
+        <svg id="ssv" width="10" height="10" viewBox="0 0 10 10"></svg>
+        <div id="cw"><div id="lw" class="lw ml-body"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 110;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start);
+  const K = W / 720;                                        // the reference is 720 x 1280: its numbers below are in those units
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const pick = { signal: L.signal, deep: L.deep, mustard: L.mustard, ink: L.ink };
+  const accent = pick[V.slice] || L.signal;
+  const hex = h => { const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(h)); if (m) return [+m[1], +m[2], +m[3]]; const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mixC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(",")})`; };
+  const rg = (c, a) => { const [r, g, b] = hex(c); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+
+  // ---- the ground: a light grey page
+  const ground = q("bgfill");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = mixC(glare, night, 0.09);
+  const stage = q("stage");
+  stage.style.transform = `scale(${K})`;
+  const scene = q("scene");
+
+  // ---- the pie: a disc (radius 195 units) with two soft blobs of the accent
+  const R0 = 195;
+  const disc = q("disc");
+  const base = mixC(glare, accent, 0.07), blob = mixC(glare, accent, 0.4), blob2 = mixC(glare, accent, 0.36);
+  Object.assign(disc.style, { left: `${-R0}px`, top: `${-R0}px`, width: `${2 * R0}px`, height: `${2 * R0}px`,
+    background: `radial-gradient(circle 165px at 33% 35%, ${blob} 0%, ${rg(blob, 0.7)} 38%, ${rg(blob, 0)} 100%), radial-gradient(circle 150px at 74% 74%, ${blob2} 0%, ${rg(blob2, 0.7)} 38%, ${rg(blob2, 0)} 100%), ${base}` });
+
+  // ---- the slice: a wedge from an apex just below the centre out to the rim; its two edges move on their own curves
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, at, par) => { const e = document.createElementNS(NS, tag); Object.entries(at || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (par) par.appendChild(e); return e; };
+  const ssv = q("ssv");
+  const defs = el("defs", {}, ssv);
+  const gw = el("linearGradient", { id: "gw", gradientUnits: "userSpaceOnUse", x1: 0, y1: 0, x2: 0, y2: -R0 }, defs);
+  el("stop", { offset: 0, "stop-color": mixC(accent, "#000000", 0.5) }, gw);
+  el("stop", { offset: 1, "stop-color": mixC(accent, "#000000", 0.08) }, gw);
+  const wedge = el("path", { d: "", fill: "url(#gw)" }, ssv);
+  const AX = 6, AY = 9;                                           // the wedge's apex (units, from the centre)
+  const rayHit = deg => {                                         // the rim point of the ray from the apex at deg (clockwise from up)
+    const a = deg * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a);
+    const b = AX * dx + AY * dy, c = AX * AX + AY * AY - R0 * R0, t = -b + Math.sqrt(b * b - c);
+    return [AX + dx * t, AY + dy * t];
+  };
+  const TT = [[1.5, -77.9, -77.9], [2, -77.6, -76.9], [3, -75, -73.8], [4, -71.7, -69.8], [5, -67.8, -64.9], [6, -63.2, -59.3], [7, -58.1, -53.1], [8, -52.8, -46.5], [9, -47.1, -39.5],
+    [10, -41.4, -32.5], [11, -35.7, -25.5], [12, -30, -18.6], [13, -24.7, -12], [14, -19.6, -5.7], [15, -15, 0], [16, -10.9, 4.8], [17, -7.6, 8.9], [18, -5.1, 12], [19, -3.5, 13.9], [20, -2.9, 14.6], [21, -2.9, 14.65]];
+  const CF = 5.875, WF = 17.55;                                    // the original's final centre and width (degrees)
+  const wantC = Number(V.angle), wantW = Math.max(1, Math.min(180, Number(V.percent) * 3.6));
+  const sgn = wantC >= 20 ? -1 : 1;                                // the callout runs to the right, or to the left when the slice points far right
+  // the callout (units, from the centre at scale 1): dot above the slice's tip, a leader up and along, the words after it
+  const dotR = R0 + 31, ang0 = wantC * Math.PI / 180;
+  const DOT = [dotR * Math.sin(ang0), -dotR * Math.cos(ang0)];
+  const COR = [DOT[0] + 29 * sgn, -301.7], HEND = [COR[0] + 68 * sgn, COR[1]];
+  const dotEl = el("circle", { cx: DOT[0], cy: DOT[1], r: 0, fill: mixC(accent, "#000000", 0.1) }, ssv);
+  const lead = el("polyline", { points: "", fill: "none", stroke: rg(mixC(accent, "#000000", 0.05), 0.85), "stroke-width": 1.6, "stroke-linejoin": "round", "stroke-linecap": "butt" }, ssv);
+  // the callout words (they rise one after another from under a mask line)
+  const cw = q("cw"), lw = q("lw");
+  const fs = V.size * U / K;
+  const MASKB = -203, LINEY = COR[1];                              // the mask's lower edge and the line the words sit on (units)
+  Object.assign(cw.style, { top: `${LINEY - 45}px`, height: `${MASKB - (LINEY - 45)}px`, width: "420px", left: sgn > 0 ? `${HEND[0] + 3}px` : `${HEND[0] - 3 - 420}px`,
+    justifyContent: sgn > 0 ? "flex-start" : "flex-end" });
+  Object.assign(lw.style, { marginTop: "45px", transform: "translateY(-50%)", fontSize: `${fs}px`, color: night, fontWeight: "500" });
+  let words = [];
+  if (window.MLLook) words = MLLook.rich(lw, V.label, { look: L, family: V.body_font, weight: 500 }).words; else lw.textContent = V.label;
+  const NW = Math.max(1, words.length), STAG = NW > 1 ? Math.min(6.6, 13.25 / (NW - 1)) : 0;
+
+  // ---- the measured motion (frames; g = the frame minus "Starts at frame")
+  const DP = [[24, 0], [25, 0], [26, 0.12], [27, 0.22], [28, 0.41], [29, 0.6], [30, 0.77], [31, 0.89], [32, 0.99], [33, 1]];      // the leader's diagonal
+  const HP = [[32, 0], [33, 0.13], [34, 0.23], [36, 0.44], [38, 0.57], [40, 0.68], [43, 0.78], [47, 0.91], [52, 0.96], [60, 0.99], [66, 1]];   // the leader along
+  const EX = [[99, 0, 0, 1], [100, 0.2, 1.8, 1], [101, 0.8, 2.8, 1], [102, 2, 3.9, 0.98], [103, 8, 5.6, 0.93], [104, 13, 8, 0.8], [105, 20, 11.4, 0.6], [106, 29, 16, 0.38], [107, 40, 21, 0.17], [108, 52, 27, 0]];   // exit: slide down, slice swing, opacity
+
+  let ready = false;
+  function layout() {
+    // fit the callout in the room to the right (left, when it points left)
+    const w = lw.offsetWidth, room = (sgn > 0 ? 362 - HEND[0] - 18 : 362 + HEND[0] - 18) / 1.15;
+    if (w > room && w > 0) lw.style.fontSize = `${fs * Math.max(0.5, room / w)}px`;
+    ready = true;
+  }
+  function render(t) {
+    const g = Math.round(t * FPS * 1000) / 1000 - S;
+    const on = g >= 0;
+    stage.style.visibility = on ? "visible" : "hidden";
+    if (!on || !ready) return;
+    const ex = V.fade ? tab(EX, g) : [0, 0, 1];
+    const sc = 1 + 0.0014872 * V.push * Math.min(g, 100);
+    scene.style.transform = `translateY(${ex[0].toFixed(2)}px) scale(${sc.toFixed(5)})`;
+    scene.style.opacity = ex[2].toFixed(3);
+    // the slice
+    if (g >= 1.5) {
+      const r = tab(TT, g), cT = (r[0] + r[1]) / 2 - CF, wT = (r[1] - r[0]) / WF;
+      const c = wantC + cT + ex[1], w = wantW * wT;
+      const p1 = rayHit(c - w / 2), p2 = rayHit(c + w / 2);
+      wedge.setAttribute("d", `M ${AX} ${AY} L ${p1[0].toFixed(2)} ${p1[1].toFixed(2)} A ${R0} ${R0} 0 0 1 ${p2[0].toFixed(2)} ${p2[1].toFixed(2)} Z`);
+      wedge.style.visibility = "visible";
+      gw.setAttribute("x1", AX); gw.setAttribute("y1", AY);
+      gw.setAttribute("x2", (AX + Math.sin(c * Math.PI / 180) * R0).toFixed(2)); gw.setAttribute("y2", (AY - Math.cos(c * Math.PI / 180) * R0).toFixed(2));
+    } else wedge.style.visibility = "hidden";
+    // the dot and the leader
+    dotEl.setAttribute("r", (3.5 * clamp01((g - 23.5) / 3)).toFixed(2));
+    const dp = tab(DP, g)[0], hp = tab(HP, g)[0];
+    const pts = [DOT];
+    if (dp > 0) pts.push([DOT[0] + (COR[0] - DOT[0]) * dp, DOT[1] + (COR[1] - DOT[1]) * dp]);
+    if (hp > 0) pts.push([COR[0] + (HEND[0] - COR[0]) * hp, COR[1]]);
+    lead.setAttribute("points", dp > 0 ? pts.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(" ") : "");
+    // the words
+    words.forEach((wd, k) => {
+      const s0 = 54.75 + STAG * k, o = g < s0 ? 400 : 125 * Math.exp(-(g - s0) / 8.5);
+      wd.style.transform = `translateY(${o.toFixed(2)}px)`;
+      wd.style.opacity = (g < s0 ? 0 : 1 - 0.62 * Math.exp(-(g - 56 - STAG * k) / 6.5)).toFixed(3);
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits: [] });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 23 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the callout is measured here
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

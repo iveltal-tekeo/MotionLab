@@ -1,0 +1,31 @@
+{
+ "name": "two-sources-merge",
+ "frames": 181,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(60 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.6",
+   "from": 300,
+   "to": 2400,
+   "db": -11,
+   "what": "the two curves are drawn, faster and faster, and flow into one point"
+  },
+  {
+   "f": "start + round(106 * fps / 30)",
+   "kind": "pop",
+   "db": -9,
+   "what": "the conclusion box appears as a dot and starts to grow"
+  },
+  {
+   "f": "start + round(119 * fps / 30)",
+   "kind": "impact",
+   "dur": "0.45",
+   "db": -10,
+   "what": "the white rim and the light streaks flare around the box"
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+{
+ "name": "text-blur-to-clear-bounce",
+ "frames": 140,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((1 + 20 * i) * fps / 30)",
+   "kind": "whoosh",
+   "repeat": "3",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 500,
+   "db": -10,
+   "what": "a word drops in from the top"
+  },
+  {
+   "f": "start + round((10 + 20 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "3",
+   "db": -12,
+   "what": "the word lands and bounces"
+  },
+  {
+   "f": "start + round((61 + 30 * i) * fps / 30)",
+   "kind": "thump",
+   "repeat": "3",
+   "db": -10,
+   "what": "a word clears and the row hops"
+  }
+ ]
+}

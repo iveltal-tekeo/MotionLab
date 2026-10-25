@@ -1,0 +1,101 @@
+{
+ "name": "Stacked glowing lines",
+ "kind": "text",
+ "category": "Text",
+ "what": "Five bold, tilted, glowing lines pop in one after another on a dark ground, each landing with a small bounce where it stays, until the last and largest line closes the stack under the others.",
+ "use_for": [
+  "steps",
+  "list",
+  "key points",
+  "recap",
+  "hook",
+  "countdown",
+  "bold statement",
+  "outro",
+  "5 points"
+ ],
+ "tags": [
+  "text",
+  "stack",
+  "glow",
+  "tilted",
+  "pop",
+  "bounce",
+  "list",
+  "build",
+  "5 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1, f21, f41, f61 and f81 one line each pops in where it stays: it grows from a dot in 4 f, overshoots 6 %, dips 4 % and settles by 15 f later; line 5 (the largest) bounces about twice as hard; the glow haze builds up; then everything holds to f120",
+ "tracks": [
+  {
+   "name": "line 1 pops in",
+   "what": "top left, tilted up",
+   "start_f": 1,
+   "length_f": 15,
+   "easing": "grow in 4 f, 6 % overshoot, settle"
+  },
+  {
+   "name": "line 2 pops in",
+   "what": "top right, tilted down",
+   "start_f": 21,
+   "length_f": 15,
+   "easing": "grow in 4 f, 6 % overshoot, settle"
+  },
+  {
+   "name": "line 3 pops in",
+   "what": "middle left, tilted up",
+   "start_f": 41,
+   "length_f": 15,
+   "easing": "grow in 4 f, 6 % overshoot, settle"
+  },
+  {
+   "name": "line 4 pops in",
+   "what": "middle right, tilted down",
+   "start_f": 61,
+   "length_f": 15,
+   "easing": "grow in 4 f, 6 % overshoot, settle"
+  },
+  {
+   "name": "line 5 pops in",
+   "what": "bottom, flat and the largest, bouncing harder",
+   "start_f": 81,
+   "length_f": 19,
+   "easing": "grow in 4 f, 14 % overshoot, 12 % dip, settle"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 100,
+   "length_f": 21,
+   "easing": "none"
+  }
+ ],
+ "core_points": 5,
+ "text_slots": [
+  "line_1",
+  "line_2",
+  "line_3",
+  "line_4",
+  "line_5"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 110,
+ "check_frames": [
+  1,
+  3,
+  5,
+  24,
+  45,
+  64,
+  82,
+  85,
+  90,
+  110
+ ]
+}

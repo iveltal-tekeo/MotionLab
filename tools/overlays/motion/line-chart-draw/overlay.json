@@ -1,0 +1,24 @@
+{
+ "name": "line-chart-draw",
+ "frames": 300,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the line starts at the first point"
+  },
+  {
+   "f": "start + round(26 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "1.2",
+   "from": 400,
+   "to": 2200,
+   "db": -11,
+   "what": "the line climbs and falls from point to point"
+  }
+ ]
+}

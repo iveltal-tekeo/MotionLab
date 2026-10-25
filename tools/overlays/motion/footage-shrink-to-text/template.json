@@ -1,0 +1,125 @@
+{
+ "name": "Footage shrinks to big word",
+ "kind": "text",
+ "category": "Social",
+ "what": "Your footage fills the frame, then shrinks to a card in the middle; a line of words wiggles in above it, a huge gradient word rises behind it, and a second line wiggles up below; then the card drops out of the bottom and the three texts stay.",
+ "use_for": [
+  "video title",
+  "opener",
+  "intro",
+  "reveal",
+  "statement",
+  "social post",
+  "short form",
+  "promo"
+ ],
+ "tags": [
+  "text",
+  "social",
+  "footage",
+  "card",
+  "shrink",
+  "wiggle",
+  "big word",
+  "motion blur",
+  "needs media",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f14 the full-frame footage shrinks to half size in an S-curve (with a small undershoot, motion blur); f11-f22 the top line's words drop in and settle (f11, f15, f18); f25-f31 the big word rises behind the card out of a blur (decelerating); f32-f46 the bottom line's words rise and settle (f32, f35, f38); f47-f62 the card drops out of the bottom of the frame (accelerating, blurred); then the texts drift a hair to the end",
+ "tracks": [
+  {
+   "name": "card shrink",
+   "what": "the footage shrinks from full frame to half size, undershooting a little before it settles",
+   "start_f": 0,
+   "length_f": 14,
+   "easing": "S-curve (measured)"
+  },
+  {
+   "name": "top line",
+   "what": "three words drop in from above and settle, 3-4 f apart",
+   "start_f": 11,
+   "length_f": 11,
+   "easing": "expo out (a third of the distance left each frame)"
+  },
+  {
+   "name": "big word",
+   "what": "rises behind the card out of a blur and grows a hair",
+   "start_f": 25,
+   "length_f": 7,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "bottom line",
+   "what": "three words rise from below and settle, 3 f apart",
+   "start_f": 32,
+   "length_f": 14,
+   "easing": "expo out (a third of the distance left each frame)"
+  },
+  {
+   "name": "card hold",
+   "what": "the card sits still in the middle (the footage plays)",
+   "start_f": 14,
+   "length_f": 33,
+   "easing": "none"
+  },
+  {
+   "name": "card drop",
+   "what": "the card drops out of the bottom of the frame, blurred",
+   "start_f": 47,
+   "length_f": 15,
+   "easing": "accelerating (measured)"
+  },
+  {
+   "name": "drift",
+   "what": "the texts settle a hair smaller to the end",
+   "start_f": 62,
+   "length_f": 29,
+   "easing": "S-curve"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "top",
+  "middle",
+  "bottom"
+ ],
+ "media_slots": [
+  {
+   "id": "footage_media",
+   "label": "The card's footage",
+   "accept": [
+    "video",
+    "image"
+   ],
+   "aspect": "16:9",
+   "min_px": 1280,
+   "max_s": 3.0,
+   "fit": "cover",
+   "focus_setting": "footage_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your footage'"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  3,
+  6,
+  9,
+  12,
+  16,
+  20,
+  27,
+  34,
+  42,
+  52,
+  58,
+  70
+ ]
+}

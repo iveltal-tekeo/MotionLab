@@ -1,0 +1,102 @@
+{
+ "name": "Glow text with light streak",
+ "kind": "text",
+ "category": "Text",
+ "what": "One line of glowing gold text on a dark ground: the words light up one by one, then a small spark of light sweeps across the text with a soft streak behind it and rests at the end of the line, and later a few letters flicker like a failing neon tube.",
+ "use_for": [
+  "title",
+  "hook",
+  "statement",
+  "opener",
+  "intro",
+  "headline",
+  "neon",
+  "night"
+ ],
+ "tags": [
+  "text",
+  "glow",
+  "neon",
+  "light streak",
+  "spark",
+  "flicker",
+  "title",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f1-f8 (00:00:00:01-00:00:00:08) the first word fades up and its glow builds; f12 (00:00:00:12) and f24 (00:00:00:24) the next words do the same; f24-f34 a spark appears left of the text and brightens; f34-f56 (00:00:01:04-00:00:01:26) it sweeps across the text with a streak and a bloom and rests under the right end while the ground warms; f81-f89 and f180-f217 (00:00:06:00-00:00:07:07) single letters flicker; the rest holds",
+ "tracks": [
+  {
+   "name": "word 1",
+   "what": "the first word fades up, then its glow builds",
+   "start_f": 1,
+   "length_f": 7,
+   "easing": "accelerating"
+  },
+  {
+   "name": "word 2",
+   "what": "the second word fades up and lights up",
+   "start_f": 12,
+   "length_f": 5,
+   "easing": "fast"
+  },
+  {
+   "name": "word 3",
+   "what": "the third word fades up and lights up",
+   "start_f": 24,
+   "length_f": 5,
+   "easing": "fast"
+  },
+  {
+   "name": "spark appears",
+   "what": "a spark of light appears left of the text and brightens",
+   "start_f": 24,
+   "length_f": 10,
+   "easing": "linear"
+  },
+  {
+   "name": "spark sweep",
+   "what": "the spark sweeps across the text, a streak behind it and a warm bloom, then rests under the right end",
+   "start_f": 34,
+   "length_f": 27,
+   "easing": "S-curve"
+  },
+  {
+   "name": "ground warms",
+   "what": "the dark ground takes on a warm tint",
+   "start_f": 26,
+   "length_f": 34,
+   "easing": "linear"
+  },
+  {
+   "name": "letter flicker",
+   "what": "single letters dip and come back, like a failing tube",
+   "start_f": 81,
+   "length_f": 136,
+   "easing": "stepped"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 62,
+ "check_frames": [
+  2,
+  6,
+  14,
+  24,
+  40,
+  46,
+  62,
+  90,
+  188,
+  208
+ ]
+}

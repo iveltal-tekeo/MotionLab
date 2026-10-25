@@ -1,0 +1,143 @@
+{
+ "name": "Tilted card line chart",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A dark card with a logo and a short name at its top right, a faint grid and a line chart, seen almost edge-on in 3D at first while its dashed axes are drawn and the line starts to grow; a cut brings the card facing the camera, the line keeps growing and turns to your accent colour while a price counter counts up and a light runs round the card's edge; then the card slides away to the left with a motion blur and a closing line settles in its place.",
+ "use_for": [
+  "growth",
+  "price",
+  "stock",
+  "crypto",
+  "revenue",
+  "stats",
+  "chart",
+  "performance",
+  "results",
+  "finance"
+ ],
+ "tags": [
+  "chart",
+  "line chart",
+  "card",
+  "3D look",
+  "counter",
+  "logo",
+  "edge light",
+  "dark",
+  "needs media",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f49 the card is seen almost edge-on in strong 3D and turns very slowly; f12-f44 the vertical dashed axis is drawn downward, from f44 the horizontal one; f14 the line starts to grow; f50 a hard cut to the card facing the camera (it drifts a little to the end); the line grows steadily, over the spike f86-f94 (its tail fades) to f124 and turns from grey to the accent colour f80-f112; f55 the counter appears at $0 and counts up one step a frame f79-f119; a light runs round the card edge the whole time; f132-f152 the card slides away to the left (an S-curve, a horizontal blur) uncovering the closing line, which settles f132-f160; 24 frames a second",
+ "tracks": [
+  {
+   "name": "tilted card",
+   "what": "the card, seen almost edge-on in 3D, turns very slowly",
+   "start_f": 0,
+   "length_f": 50,
+   "easing": "linear, slightly accelerating (measured)"
+  },
+  {
+   "name": "axes",
+   "what": "the dashed vertical axis is drawn downward, then the horizontal one to the right",
+   "start_f": 12,
+   "length_f": 72,
+   "easing": "accelerating, then steady (measured)"
+  },
+  {
+   "name": "cut",
+   "what": "a hard cut to the card facing the camera",
+   "start_f": 50,
+   "length_f": 1,
+   "easing": "cut"
+  },
+  {
+   "name": "line",
+   "what": "the line grows from the left, over the spike, its tail fading",
+   "start_f": 14,
+   "length_f": 110,
+   "easing": "steady, then soft (measured)"
+  },
+  {
+   "name": "line colour",
+   "what": "the line turns from grey to the accent colour",
+   "start_f": 80,
+   "length_f": 32,
+   "easing": "linear"
+  },
+  {
+   "name": "counter",
+   "what": "the counter appears at 0 and counts up one step a frame",
+   "start_f": 79,
+   "length_f": 40,
+   "easing": "linear"
+  },
+  {
+   "name": "edge light",
+   "what": "a light runs round the card edge",
+   "start_f": 0,
+   "length_f": 132,
+   "easing": "steady (measured)"
+  },
+  {
+   "name": "slide away",
+   "what": "the card slides away to the left with a horizontal blur",
+   "start_f": 132,
+   "length_f": 20,
+   "easing": "S-curve (measured)"
+  },
+  {
+   "name": "closing line",
+   "what": "the closing line is uncovered and settles into place",
+   "start_f": 132,
+   "length_f": 28,
+   "easing": "S-curve"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "ticker",
+  "closing",
+  "values"
+ ],
+ "media_slots": [
+  {
+   "id": "coin_logo",
+   "label": "Logo at the top right of the card",
+   "accept": [
+    "image",
+    "logo"
+   ],
+   "aspect": "1:1",
+   "min_px": 512,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "a plain gold disc with a ring",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  20,
+  36,
+  48,
+  50,
+  60,
+  72,
+  84,
+  92,
+  100,
+  120,
+  132,
+  140,
+  144,
+  148,
+  160
+ ]
+}

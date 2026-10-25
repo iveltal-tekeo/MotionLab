@@ -4166,14 +4166,19 @@ function livePreview(box, o, getValues) {
   const fail = () => { stop(); box.innerHTML = gthumb(o) + `<div class="small muted">${t('No live preview for this graphic - render it to see a change.')}</div>`; };
   fr.onload = () => {
     const w = fr.contentWindow;
-    tl = w && w.__timelines && w.__timelines.main;
-    if (!tl) return fail();
-    if (f == null) {                              // start where something shows: the first caption, else a third in
-      const cue = w.CAPTIONS && w.CAPTIONS.cues && w.CAPTIONS.cues[0];
-      f = cue ? Math.min(N - 1, Math.round((cue.f0 + cue.f1) / 2)) : Math.floor(N * 0.3);
-    }
-    show();
-    if (w.document.fonts) w.document.fonts.ready.then(show);
+    let tries = 0;
+    const ready = () => {
+      tl = w && w.__timelines && w.__timelines.main;
+      // a look-aware template registers its timeline once its fonts are in (after load): wait up to 3 s for it
+      if (!tl) return ++tries < 30 ? setTimeout(ready, 100) : fail();
+      if (f == null) {                            // start where something shows: the first caption, else a third in
+        const cue = w.CAPTIONS && w.CAPTIONS.cues && w.CAPTIONS.cues[0];
+        f = cue ? Math.min(N - 1, Math.round((cue.f0 + cue.f1) / 2)) : Math.floor(N * 0.3);
+      }
+      show();
+      if (w.document.fonts) w.document.fonts.ready.then(show);
+    };
+    ready();
   };
   const load = async () => {
     try { html = html || await (await fetch(base + 'index.html', {cache: 'no-store'})).text(); } catch (e) { return fail(); }

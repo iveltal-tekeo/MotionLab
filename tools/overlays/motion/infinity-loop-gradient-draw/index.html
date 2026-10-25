@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text1", "type": "string", "label": "Right label, shown first (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Create"},
+  {"id": "text2", "type": "string", "label": "Left label, shown second (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Repeat"},
+  {"id": "label_size", "type": "number", "label": "Label size (px at a 1080-px short side)", "default": 25, "min": 12, "max": 80, "step": 1},
+  {"id": "colour_right", "type": "enum", "label": "Loop colour, right end (drawn first)", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "colour_left", "type": "enum", "label": "Loop colour, left end", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "line_w", "type": "number", "label": "Line width (px at a 1080-px short side)", "default": 25.5, "min": 4, "max": 80, "step": 0.5},
+  {"id": "dot_size", "type": "number", "label": "End dot size (px at a 1080-px short side)", "default": 74, "min": 0, "max": 200, "step": 1},
+  {"id": "band", "type": "number", "label": "Soft band behind the loop (0 = none)", "default": 8, "min": 0, "max": 30, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "infinity-loop-gradient-draw" (2026-10-22): a gradient line draws an infinity loop round two labels while a camera follows the pen.
+     The whole thing is one scene (a figure-eight line, a soft grey band under it, two end dots, a label in each
+     lobe) seen through a camera that zooms and pans along it. f1-f25 the right dot and its label fade in (ease out);
+     f28 the pen leaves the dot and draws down and round the right lobe, through the crossing and over the top of the
+     left lobe (f28-f71), the camera racing left with it and settling from 1.54x to 1.24x; at f55-f80 the left label
+     fades in and at f69-f81 the left dot; the pen waits at the left end (f71-f102) while the camera slides on and the
+     soft band fades in (f79-f122); then it draws the bottom of the left lobe and up through the crossing to close the
+     loop at the right dot (f102-f161) with the camera sliding back right; f168-f205 the camera zooms out to show the
+     whole loop; hold to f242. The line's colour runs left to right across the scene (one gradient). The pen's
+     progress and the camera are the clip's measured tables. Look-aware. MotionLab's own code. Size-independent (U). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #sv { position: absolute; left: 0; top: 0; }
+  .lab { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; font-weight: 500; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8.1" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <svg id="sv" width="1080" height="1920" viewBox="0 0 1080 1920">
+      <defs><linearGradient id="gr" gradientUnits="userSpaceOnUse" y1="0" y2="0"><stop id="g0" offset="0"/><stop id="g1" offset="1"/></linearGradient></defs>
+      <g id="cam">
+        <path id="band" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path id="ln" fill="none" stroke="url(#gr)" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle id="dR" cx="0" cy="0" r="1"/>
+        <circle id="dL" cx="0" cy="0" r="1"/>
+      </g>
+    </svg>
+    <div id="t1" class="lab ml-body"></div>
+    <div id="t2" class="lab ml-body"></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 243;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: 0, shadow: "none", rgba: (h, a) => h };
+
+  // reference geometry: the clip is 720 x 1280; KR = template px per reference px
+  const KR = 1.5 * U;
+  const S = Math.round(V.start);
+  const hx = h => { const t = String(h).replace("#", ""); const u = t.length === 3 ? t.split("").map(c => c + c).join("") : t; return [0, 2, 4].map(i => parseInt(u.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, k) => { const A = hx(a), B = hx(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, "0")).join(""); };
+  const GROUND = L.dark ? L.paper : L.ink, FG = L.dark ? L.ink : L.paper;
+  const tab = (rows, g) => {
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    for (let i = 0; i < rows.length - 1; i++) if (g < rows[i + 1][0]) { const a = rows[i], b = rows[i + 1], t = (g - a[0]) / (b[0] - a[0]); return a.slice(1).map((v, k) => v + (b[k + 1] - v) * t); }
+    return rows[rows.length - 1].slice(1);
+  };
+
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? mix(GROUND, FG, 0.07) : "transparent" });
+  Object.assign(q("hand").style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the figure-eight (reference px): x = cx + sum a_k cos((2k+1)t), y = cy + sum b_k sin((2k+2)t), fitted to the
+  // clip's final frame; t = 0 is the right end (the first dot), t = pi the left end
+  const FP = [350.9595, 640.5425, 225.4638, 29.6711, 13.8307, 4.2971, 0.8046, 2.8411, 117.9511, 15.0295, 12.7626, 4.8756, 1.2752, 2.1189];
+  const curve = t => {
+    let x = FP[0], y = FP[1];
+    for (let i = 0; i < 6; i++) { x += FP[2 + i] * Math.cos((2 * i + 1) * t); y += FP[8 + i] * Math.sin((2 * i + 2) * t); }
+    return [x, y];
+  };
+  const NS = 720, PTS = [], CUM = [0];
+  for (let i = 0; i <= NS; i++) PTS.push(curve(2 * Math.PI * i / NS));
+  for (let i = 1; i <= NS; i++) CUM.push(CUM[i - 1] + Math.hypot(PTS[i][0] - PTS[i - 1][0], PTS[i][1] - PTS[i - 1][1]));
+  const LT = CUM[NS];
+  const arcAt = t => { const u = Math.max(0, Math.min(1, t / (2 * Math.PI))) * NS, i = Math.min(NS - 1, Math.floor(u)); return CUM[i] + (CUM[i + 1] - CUM[i]) * (u - i); };
+  const D = "M " + PTS.map(p => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(" L ");
+  const R0 = curve(0), RPI = curve(Math.PI);
+
+  // ---- the measured tables
+  // camera: [frame, zoom, centre x, centre y] in reference px (the figure's own coordinates)
+  const CAM = [[18,1.544,621.7,640.9],[22,1.544,621.7,640.8],[23,1.544,621.1,640.7],[24,1.544,620.8,640.9],[25,1.544,619.8,640.8],[26,1.544,618.6,640.9],[27,1.544,617.2,640.8],[28,1.544,615.5,640.6],[29,1.544,613.5,640.7],[30,1.544,611.1,640.5],[31,1.544,608.1,640.3],[32,1.544,604.8,640.3],[33,1.544,601.0,640.2],[34,1.544,596.6,639.9],[35,1.544,591.6,639.9],[36,1.544,585.8,639.5],[37,1.544,579.5,639.2],[38,1.540,572.3,639.2],[39,1.536,563.2,638.9],[40,1.523,552.8,638.6],[41,1.510,540.7,637.9],[42,1.499,526.8,637.5],[43,1.494,510.5,637.0],[44,1.474,490.3,636.5],[45,1.457,466.3,635.7],[46,1.432,436.3,634.6],[47,1.408,394.8,631.6],[48,1.374,355.0,629.4],[49,1.350,315.9,628.5],[50,1.329,280.7,627.3],[51,1.316,251.7,626.7],[52,1.308,227.6,625.6],[53,1.304,207.8,624.5],[54,1.298,191.0,623.4],[55,1.284,176.8,623.4],[56,1.273,164.5,623.4],[57,1.269,154.1,622.8],[58,1.259,145.0,622.9],[59,1.250,137.1,623.3],[60,1.250,130.5,622.6],[62,1.245,119.6,622.4],[64,1.245,111.9,621.6],[66,1.244,106.3,621.3],[68,1.244,102.5,620.9],[70,1.244,100.5,620.7],[72,1.235,98.8,621.3],[74,1.236,99.2,621.2],[76,1.233,100.4,621.5],[78,1.234,102.1,621.4],[80,1.234,104.1,621.4],[82,1.235,106.4,621.3],[84,1.234,108.9,621.4],[86,1.235,111.9,621.4],[88,1.235,115.3,621.3],[90,1.234,118.9,621.5],[92,1.235,123.3,621.2],[94,1.234,128.2,621.3],[96,1.237,133.8,621.1],[98,1.236,140.0,621.1],[100,1.237,147.1,621.1],[102,1.236,155.2,621.1],[104,1.237,164.8,621.1],[106,1.239,175.6,620.9],[108,1.239,188.4,620.8],[110,1.236,203.5,621.1],[112,1.234,221.5,621.3],[114,1.234,243.1,621.4],[116,1.233,268.4,621.5],[118,1.233,296.9,621.5],[120,1.234,326.0,621.6],[122,1.235,352.9,621.7],[124,1.236,376.3,621.7],[126,1.240,396.5,622.2],[128,1.248,413.7,623.1],[130,1.250,427.4,623.1],[132,1.252,439.2,623.3],[134,1.250,449.4,623.2],[136,1.249,457.8,623.0],[138,1.249,465.4,623.1],[140,1.246,472.3,622.7],[142,1.248,477.8,622.9],[144,1.247,483.1,622.7],[146,1.250,487.5,622.9],[148,1.246,491.7,622.6],[150,1.246,495.3,622.6],[152,1.243,499.0,622.4],[154,1.241,502.1,622.5],[156,1.241,504.3,622.4],[158,1.239,506.7,622.4],[160,1.241,507.7,622.5],[162,1.237,508.8,622.5],[164,1.237,508.8,622.7],[166,1.235,508.6,622.9],[168,1.229,508.1,623.0],[170,1.223,506.1,623.3],[172,1.218,503.3,623.6],[174,1.209,499.3,624.0],[176,1.199,493.9,624.6],[178,1.184,486.0,625.4],[180,1.168,475.0,626.7],[182,1.142,459.2,628.6],[184,1.108,438.0,631.0],[186,1.072,415.9,633.3],[188,1.051,400.0,634.8],[190,1.037,389.1,635.9],[192,1.027,381.0,636.8],[194,1.019,375.4,637.6],[196,1.013,371.3,638.3],[198,1.010,367.6,638.5],[200,1.007,365.2,638.9],[202,1.004,363.3,639.1],[204,1.002,361.8,639.3],[206,1.001,360.7,639.4],[208,1.000,360.2,639.5],[210,1.000,359.7,639.5]];
+  // the pen's tip (arc parameter t, radians, from frame 28 on; the round cap is taken off in the code)
+  const TIP = [0.070,0.115,0.160,0.240,0.370,0.500,0.681,0.870,1.065,1.229,1.356,1.474,1.594,1.706,1.803,1.895,2.001,2.132,2.273,2.396,2.499,2.588,2.666,2.736,2.797,2.847,2.889,2.927,2.959,2.987,3.010,3.031,3.050,3.066,3.081,3.094,3.105,3.115,3.122,3.128,3.135,3.141,3.145,3.156,3.172,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.180,3.187,3.208,3.233,3.259,3.287,3.322,3.365,3.420,3.489,3.574,3.666,3.761,3.864,3.979,4.106,4.233,4.338,4.418,4.487,4.554,4.637,4.722,4.780,4.832,4.893,4.949,5.005,5.061,5.119,5.188,5.274,5.366,5.446,5.510,5.567,5.622,5.677,5.731,5.782,5.826,5.866,5.906,5.942,5.972,5.998,6.025,6.050,6.071,6.090,6.108,6.126,6.142,6.157,6.169,6.179,6.190,6.200,6.209,6.219];
+  const TIPROWS = TIP.map((v, i) => [28 + i, v]);
+  // fades (frame, opacity)
+  const A_R = [[0, 0], [2, 0.02], [4, 0.1], [6, 0.23], [8, 0.38], [10, 0.51], [12, 0.63], [14, 0.72], [16, 0.79], [18, 0.85], [20, 0.9], [22, 0.94], [24, 0.97], [25, 1]];          // right dot + its label
+  const A_L = [[69, 0], [70, 0.03], [71, 0.16], [72, 0.34], [73, 0.48], [74, 0.64], [75, 0.71], [76, 0.79], [77, 0.87], [78, 0.94], [79, 0.99], [81, 1]];                       // left dot
+  const A_T2 = [[55, 0], [56, 0.03], [58, 0.16], [60, 0.29], [62, 0.45], [64, 0.57], [66, 0.67], [68, 0.76], [70, 0.83], [72, 0.9], [74, 0.92], [76, 0.97], [80, 1]];            // left label
+  const A_B = [[78, 0], [80, 0.04], [84, 0.24], [88, 0.34], [92, 0.48], [96, 0.62], [100, 0.7], [104, 0.76], [108, 0.82], [116, 0.9], [122, 1]];                                // soft band
+
+  // ---- the scene
+  const cam = q("cam"), ln = q("ln"), band = q("band"), dR = q("dR"), dL = q("dL"), t1 = q("t1"), t2 = q("t2");
+  const lw = V.line_w * U / KR, dr = V.dot_size * U / KR / 2;                  // reference px
+  const cR = L[V.colour_right] || L.signal, cL = L[V.colour_left] || L.mustard;
+  q("gr").setAttribute("x1", RPI[0].toFixed(2)); q("gr").setAttribute("x2", R0[0].toFixed(2));
+  q("g0").setAttribute("stop-color", cL); q("g1").setAttribute("stop-color", cR);
+  band.setAttribute("d", D); band.setAttribute("stroke", FG); band.setAttribute("stroke-width", (lw * 3.3).toFixed(2));
+  ln.setAttribute("d", D); ln.setAttribute("stroke-width", lw.toFixed(2));
+  dR.setAttribute("cx", R0[0].toFixed(2)); dR.setAttribute("cy", R0[1].toFixed(2)); dR.setAttribute("r", dr.toFixed(2)); dR.setAttribute("fill", cR);
+  dL.setAttribute("cx", RPI[0].toFixed(2)); dL.setAttribute("cy", RPI[1].toFixed(2)); dL.setAttribute("r", dr.toFixed(2)); dL.setAttribute("fill", cL);
+  [t1, t2].forEach((el, i) => {
+    el.style.color = FG; el.style.fontSize = `${V.label_size * U}px`;
+    const txt = i === 0 ? V.text1 : V.text2;
+    if (window.MLLook) MLLook.rich(el, txt, { look: L, family: V.body_font, weight: 500 }); else el.textContent = txt;
+  });
+  // the labels sit in the lobes beside their dots: the right one ends 27 px short of its dot, the left one starts 22 px after its
+  // dot (reference px, at the centre line y = 638); a longer text grows toward the crossing and is fitted to the lobe
+  const LAB1 = [576, 638], LAB2 = [121, 638], MAXW = 195 * KR;
+
+  function render(f) {
+    const g = (f - S) * 30 / FPS;
+    document.getElementById("hand").style.opacity = g >= 0 ? "1" : "0";
+    if (g < 0) return;
+    const c = tab(CAM, g), s = c[0], cx = c[1], cy = c[2];
+    cam.setAttribute("transform", `matrix(${KR * s} 0 0 ${KR * s} ${KR * (360 - s * cx)} ${KR * (640 - s * cy)})`);
+    // the pen
+    if (g < 27.5) ln.setAttribute("display", "none");
+    else {
+      ln.removeAttribute("display");
+      const te = g >= 160.5 ? 2 * Math.PI + 0.05 : tab(TIPROWS, g)[0] - 0.02;
+      const Lv = Math.min(LT, arcAt(te)) + (g >= 160.5 ? 40 : 0);
+      ln.setAttribute("stroke-dasharray", `${Lv.toFixed(2)} ${(LT + 200).toFixed(2)}`);
+    }
+    const aR = tab(A_R, g)[0], aL = tab(A_L, g)[0], aT2 = tab(A_T2, g)[0], aB = tab(A_B, g)[0];
+    dR.setAttribute("opacity", aR.toFixed(3)); dL.setAttribute("opacity", aL.toFixed(3));
+    band.setAttribute("opacity", (aB * V.band / 100).toFixed(3));
+    // the labels: fixed in the scene, so they ride the camera
+    [[t1, LAB1, aR, -100], [t2, LAB2, aT2, 0]].forEach(([el, p, a, ox]) => {
+      const fit = Math.min(1, MAXW / Math.max(1, el.offsetWidth));
+      const X = KR * (s * (p[0] - cx) + 360), Y = KR * (s * (p[1] - cy) + 640);
+      el.style.opacity = a.toFixed(3);
+      el.style.transform = `translate(${X.toFixed(2)}px, ${Y.toFixed(2)}px) scale(${(s * fit).toFixed(4)}) translate(${ox}%, -50%)`;
+    });
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, t => render(t * FPS)); else render(0);
+
+  if (window.MLLook) MLLook.handheld(q("hand"), tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 17 });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 71 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in: HyperFrames captures f0 only then (else f0 shows a
+  // fallback font)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => { render(0); window.__timelines["main"] = tl; });
+</script>
+</body>
+</html>

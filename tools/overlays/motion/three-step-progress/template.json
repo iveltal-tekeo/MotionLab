@@ -1,0 +1,115 @@
+{
+ "name": "Three-step progress",
+ "kind": "charts",
+ "category": "Charts & Data",
+ "what": "A long progress bar seen through a moving camera with three steps along it: the camera eases in, holds while the fill grows past step 2 (its letters tumble in one by one), pans fast to the end, the fill finishes and step 3 tumbles in.",
+ "use_for": [
+  "steps",
+  "story structure",
+  "process",
+  "timeline",
+  "progress",
+  "milestones",
+  "three parts",
+  "roadmap"
+ ],
+ "tags": [
+  "chart",
+  "progress bar",
+  "steps",
+  "camera pan",
+  "letters",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f30 the camera eases right 0.15 W (expo out); the fill grows steadily to f128 while the camera pushes in slowly (8 %, sine); f40 step 2's letters tumble in (3 f apart, 9 f each, expo out); f126-f164 the camera pans 0.55 W (S-curve) and the fill finishes by f170 (with the pan); f176-f216 the camera lifts, tilts 1.5 deg and settles while step 3 tumbles in (f192); a hold to f254",
+ "tracks": [
+  {
+   "name": "camera in",
+   "what": "the camera eases right 0.15 W",
+   "start_f": 0,
+   "length_f": 30,
+   "easing": "expo.out"
+  },
+  {
+   "name": "fill",
+   "what": "the fill grows from 0.55 W to 0.97 W",
+   "start_f": 0,
+   "length_f": 128,
+   "easing": "power1.inOut"
+  },
+  {
+   "name": "step 2",
+   "what": "its letters tumble in one by one",
+   "start_f": 40,
+   "length_f": 30,
+   "easing": "expo.out"
+  },
+  {
+   "name": "camera drift",
+   "what": "a slow push-in (scale 1 -> 1.08) and rise",
+   "start_f": 16,
+   "length_f": 108,
+   "easing": "sine.inOut"
+  },
+  {
+   "name": "camera pan",
+   "what": "the camera pans 0.55 W to the end of the bar",
+   "start_f": 126,
+   "length_f": 38,
+   "easing": "power2.inOut (cubic-bezier(0.45, 0, 0.55, 1))"
+  },
+  {
+   "name": "camera settle",
+   "what": "the push-in eases back",
+   "start_f": 164,
+   "length_f": 91,
+   "easing": "sine.inOut"
+  },
+  {
+   "name": "camera lift",
+   "what": "lifts 6 % and tilts -1.5 deg, then settles",
+   "start_f": 176,
+   "length_f": 40,
+   "easing": "sine.inOut, then expo.out"
+  },
+  {
+   "name": "fill end",
+   "what": "the fill reaches the end of the bar",
+   "start_f": 128,
+   "length_f": 42,
+   "easing": "power1.inOut"
+  },
+  {
+   "name": "step 3",
+   "what": "its letters tumble in one by one",
+   "start_f": 192,
+   "length_f": 40,
+   "easing": "expo.out"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "step1",
+  "step2",
+  "step3"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.55,
+ "thumb_f": 110,
+ "check_frames": [
+  0,
+  16,
+  44,
+  60,
+  110,
+  140,
+  165,
+  200,
+  230
+ ]
+}

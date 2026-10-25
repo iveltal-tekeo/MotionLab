@@ -1,0 +1,104 @@
+{
+ "name": "Dots joined by dashes",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "Three dots of different sizes turn together on a dark page while dashed lines are drawn between them into a triangle; the figure grows a little, the dots change colour and a name pops in beside each dot.",
+ "use_for": [
+  "levels",
+  "steps",
+  "three points",
+  "process",
+  "flowchart",
+  "framework",
+  "relationship",
+  "explainer",
+  "key points"
+ ],
+ "tags": [
+  "chart",
+  "nodes",
+  "dots",
+  "dashed line",
+  "triangle",
+  "diagram",
+  "flowchart",
+  "labels",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f78 the dots turn together about the middle (about 160 degrees, slow start, long soft finish); f7-f18 and f19-f30 the first two dashed lines are drawn, f31-f75 the closing line slowly; f78-f93 the figure grows 21 %; f97-f110 the dots change from white to the highlight colour; f92, f96 and f100 the names pop in one by one (a quick growth that settles over about 20 f); then it holds to the end",
+ "tracks": [
+  {
+   "name": "turn",
+   "what": "the dots turn together about the middle of the figure",
+   "start_f": 0,
+   "length_f": 78,
+   "easing": "S-curve, slow start, long soft finish (measured)"
+  },
+  {
+   "name": "first lines",
+   "what": "the first two dashed lines are drawn from dot to dot",
+   "start_f": 7,
+   "length_f": 24,
+   "easing": "near linear, 11 f each"
+  },
+  {
+   "name": "closing line",
+   "what": "the last dashed line is drawn, slowly",
+   "start_f": 31,
+   "length_f": 44,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "grow",
+   "what": "dots, lines and dashes grow together by 21 %",
+   "start_f": 78,
+   "length_f": 15,
+   "easing": "S-curve, quick middle (measured)"
+  },
+  {
+   "name": "names",
+   "what": "each name grows from its middle, one every 4 f",
+   "start_f": 92,
+   "length_f": 34,
+   "easing": "decelerating (measured)"
+  },
+  {
+   "name": "dot colour",
+   "what": "the dots change from white to the highlight colour",
+   "start_f": 97,
+   "length_f": 13,
+   "easing": "quick start, then linear (measured)"
+  },
+  {
+   "name": "hold",
+   "what": "everything still (the film grain moves)",
+   "start_f": 126,
+   "length_f": 24,
+   "easing": "none"
+  }
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "labels"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": false,
+ "general": 0.6,
+ "thumb_f": 135,
+ "check_frames": [
+  0,
+  12,
+  24,
+  40,
+  60,
+  80,
+  90,
+  98,
+  104,
+  135
+ ]
+}

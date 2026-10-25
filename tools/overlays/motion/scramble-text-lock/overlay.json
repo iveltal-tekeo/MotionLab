@@ -1,0 +1,31 @@
+{
+ "name": "scramble-text-lock",
+ "frames": 151,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((28 + 2 * i) * fps / 30)",
+   "kind": "tick",
+   "repeat": "len(text)",
+   "db": -10,
+   "what": "a letter of the title locks in"
+  },
+  {
+   "f": "start + round(48 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.5",
+   "from": 500,
+   "to": 2400,
+   "db": -9,
+   "what": "the title shrinks and rises"
+  },
+  {
+   "f": "start + round(97 * fps / 30)",
+   "kind": "click",
+   "db": -4,
+   "what": "the padlock snaps shut"
+  }
+ ]
+}

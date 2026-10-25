@@ -35,6 +35,7 @@ from motionlab import fonts as FL
 from motionlab import i18n as I18N
 from motionlab import knowledge as KN
 from motionlab import logos as LGO
+from motionlab import looks as LK
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
 from motionlab import publish as PB
@@ -430,6 +431,16 @@ class Handler(BaseHTTPRequestHandler):
                 if p.is_file():
                     return self._file(p)
                 return self._send(200, LGO.js([]).encode("utf-8"), "text/javascript; charset=utf-8")
+            if urllib.parse.unquote(rp).endswith(("/assets/looks/look.css", "/assets/looks/looks.js")):  # 2026-10-25:
+                p = (LAB / urllib.parse.unquote(rp)).resolve()                      # a look-aware graphic's shared files:
+                if LAB not in p.parents or not (p.relative_to(LAB).parts[0] in FILE_ROOTS    # the file once a render
+                                                or OS.MOTION.resolve() in p.parents):          # wrote it, else the
+                    raise PermissionError(rp)                                                 # look system's own
+                if p.is_file():
+                    return self._file(p)
+                css = p.name == "look.css"
+                return self._send(200, (LK.css() if css else LK.js()).encode("utf-8"),
+                                  ("text/css" if css else "text/javascript") + "; charset=utf-8")
             if urllib.parse.unquote(rp).startswith("tools/overlays/examples/"):    # the examples' thumbnails only
                 p = lab_file(rp, {"tools"})
                 if OS.EXAMPLES.resolve() not in p.parents or p.suffix.lower() != ".png":

@@ -1,0 +1,109 @@
+{
+ "name": "Minimal text sequence",
+ "kind": "text",
+ "category": "Text",
+ "what": "Clean white type on a soft, slowly drifting dark ground: a word zooms out from huge, a second word types in beside it and the pair slides away, a phrase follows word by word, and a big closing line wipes in with a soft edge on a flat dark ground.",
+ "use_for": [
+  "title sequence",
+  "intro",
+  "launch",
+  "statement",
+  "tagline",
+  "minimal",
+  "saas",
+  "product reveal"
+ ],
+ "tags": [
+  "text",
+  "minimal",
+  "typography",
+  "zoom",
+  "typing",
+  "slide",
+  "wipe",
+  "sequence",
+  "4 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build in the Editorial warm look (2026-10)",
+ "motion": "f0-f21 (00:00:00:00-00:00:00:21) the opening word zooms out from huge to size (very fast, then slow); f22-f40 (00:00:00:22-00:00:01:10) the second word types in with wide tracking that closes up while the pair slides left; f46-f64 (00:00:01:16-00:00:02:04) the pair slides out through a soft left edge; f59-f95 (00:00:01:29-00:00:03:05) the phrase's words slide in from the right one by one and settle; f111 (00:00:03:21) a cut to the closing text, wiped in from the left to f121 while it shrinks to size and the ground turns flat dark; then it holds",
+ "tracks": [
+  {
+   "name": "opening zoom",
+   "what": "the opening word starts huge and zooms out to its size",
+   "start_f": 0,
+   "length_f": 22,
+   "easing": "decelerating (very fast start)"
+  },
+  {
+   "name": "slide left",
+   "what": "the word slides from the centre to its place on the left",
+   "start_f": 21,
+   "length_f": 26,
+   "easing": "decelerating"
+  },
+  {
+   "name": "typing",
+   "what": "the second word types in letter by letter, blurred, with wide tracking that closes up",
+   "start_f": 22,
+   "length_f": 22,
+   "easing": "linear"
+  },
+  {
+   "name": "pair exits",
+   "what": "both words slide left and out through a soft edge",
+   "start_f": 46,
+   "length_f": 20,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "phrase words",
+   "what": "each word of the phrase slides in from the right while fading up",
+   "start_f": 59,
+   "length_f": 36,
+   "easing": "decelerating"
+  },
+  {
+   "name": "closing wipe",
+   "what": "a cut to the closing text, wiped in from the left while it shrinks to size",
+   "start_f": 111,
+   "length_f": 11,
+   "easing": "decelerating"
+  },
+  {
+   "name": "ground",
+   "what": "blurred patches drift all the time; the ground turns flat dark under the closing text",
+   "start_f": 0,
+   "length_f": 135,
+   "easing": "slow drift"
+  }
+ ],
+ "core_points": 4,
+ "text_slots": [
+  "text_1",
+  "text_2",
+  "text_3",
+  "text_4"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 122,
+ "check_frames": [
+  0,
+  4,
+  8,
+  14,
+  26,
+  38,
+  56,
+  64,
+  80,
+  100,
+  111,
+  114,
+  122
+ ]
+}

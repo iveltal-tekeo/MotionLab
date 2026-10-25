@@ -1,0 +1,26 @@
+{
+ "name": "text-carousel-blur-swap",
+ "frames": 164,
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "cues": [
+  {
+   "f": "start + round((55 + 55 * i) * fps / 30)",
+   "kind": "whoosh",
+   "repeat": "2",
+   "dur": "0.6",
+   "from": 400,
+   "to": 2400,
+   "db": -9,
+   "what": "the word slides out and the next one flies in"
+  },
+  {
+   "f": "start + round((72 + 56 * i) * fps / 30)",
+   "kind": "pop",
+   "repeat": "2",
+   "db": -12,
+   "what": "the new word settles"
+  }
+ ]
+}

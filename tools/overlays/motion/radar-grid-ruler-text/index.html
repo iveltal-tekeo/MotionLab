@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text_1", "type": "string", "label": "Big text, its words drop in one by one (*bold* _italic_ ==highlight== ^signal^)", "default": "Find your next move"},
+  {"id": "text_2", "type": "string", "label": "Second text, in the middle of the ruler (*bold* _italic_ ==highlight== ^signal^)", "default": "Locked on target"},
+  {"id": "size_1", "type": "number", "label": "Big text size (px at a 1080-px short side)", "default": 84, "min": 30, "max": 200, "step": 1},
+  {"id": "size_2", "type": "number", "label": "Second text size (px at a 1080-px short side)", "default": 78, "min": 30, "max": 200, "step": 1},
+  {"id": "colour", "type": "enum", "label": "Grid, radar and ruler colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}]},
+  {"id": "grid", "type": "number", "label": "Grid lines (0 = none, 100 = strong)", "default": 60, "min": 0, "max": 100, "step": 1},
+  {"id": "ruler_top", "type": "number", "label": "Ruler: its top value", "default": 100, "min": 70, "max": 990, "step": 10},
+  {"id": "steps", "type": "number", "label": "Steps (1 = smooth, 2 = every second frame, like the original)", "default": 2, "min": 1, "max": 3, "step": 1},
+  {"id": "shake", "type": "number", "label": "Handheld camera (0 = steady, 10 = shaky)", "default": 0, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "radar-grid-ruler-text" (2026-10-22): an upright radar-screen opener on a dark ground, shot on twos (the picture changes every second frame, a
+     setting). A red grid stands from f0; at f4, f6, f8 and f10 the words of a big text drop in one by one (each from
+     133 px above, 1.33x big, settling in 10 f) while a radar disc fades in with a sweeping wedge (f6-f12) and a dashed
+     frame pops in (f10, shrinking from 1.1x); a second disc follows (f14-f18). From f18 the camera zooms in (about a
+     point low-left, accelerating) so the words, discs and frame fly past, the grid scrolls up and away (f24-f58,
+     accelerating) and a red isometric column rises from below (f28-f48, wide and decelerating) then zooms until it
+     fills the frame (f50-f66) and fades to black (f55-f78); a red ruler scrolls up (f68-f80, bell-shaped speed) and the
+     second text fades in at its middle (f72-f80); it holds to the end (f159). Numbers measured from the reference's
+     frames (720 x 1280 units). Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #ref { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #zoom { position: absolute; left: 0; top: 0; width: 720px; height: 1280px; transform-origin: 0 0; }
+  #t1, #t2 { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.05; font-synthesis: none; letter-spacing: -0.01em; }
+  #t2 { font-synthesis: style; }
+  .tk { position: absolute; background: currentColor; height: 3px; }
+  .lb { position: absolute; font-weight: 800; line-height: 1; transform: translateY(-50%); font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5.333333" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="ref">
+    <div id="grid" class="abs"></div>
+    <div id="zoom">
+      <svg id="frame" class="abs" width="720" height="1280" viewBox="0 0 720 1280" style="overflow:visible"></svg>
+      <div id="dA" class="abs"></div>
+      <div id="dB" class="abs"></div>
+      <div id="t1" class="ml-body"></div>
+    </div>
+    <svg id="bar" class="abs" width="720" height="1280" viewBox="0 0 720 1280" style="overflow:visible">
+      <polygon id="bl" points="0,0 0,0 0,0 0,0"/><polygon id="br" points="0,0 0,0 0,0 0,0"/><polygon id="bt" points="0,0 0,0 0,0 0,0"/>
+    </svg>
+    <div id="fade" class="abs"></div>
+    <div id="ruler" class="abs"></div>
+    <div id="t2" class="ml-body"></div>
+  </div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 160;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const shade = (h, k) => `rgb(${hex(h).map(v => Math.round(v * k)).join(",")})`;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const smooth = x => { const t = clamp01(x); return t * t * (3 - 2 * t); };
+  const tab = (rows, g) => {
+    const n = rows.length;
+    if (g <= rows[0][0]) return rows[0].slice(1);
+    if (g >= rows[n - 1][0]) return rows[n - 1].slice(1);
+    let i = 0; while (rows[i + 1][0] < g) i++;
+    const a = rows[i], b = rows[i + 1], k = (g - a[0]) / (b[0] - a[0]);
+    return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  };
+  const S = Math.round(V.start), STEP = Math.max(1, Math.round(V.steps));
+  const KR = W / 720;                                  // the reference is 720 x 1280: every number below is in those units
+  const NS = "http://www.w3.org/2000/svg";
+
+  // ---- the look: a dark ground (the ink), the chosen colour for grid / radar / ruler, light text
+  const night = L.dark ? L.paper : L.ink, glare = L.dark ? L.ink : L.paper;
+  const ACC = ({ signal: L.signal, mustard: L.mustard, paper: L.paper })[V.colour] || L.signal;
+  gsap.set("#bgfill", { width: W, height: H, background: V.background ? night : "transparent" });
+  const hand = q("hand"), ref = q("ref"), zoom = q("zoom");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  ref.style.transform = `scale(${KR})`;
+
+  // ---- the grid: 76-unit cells, lines at x = 56 + 76k and y = 32 + 76k, a panel whose bottom edge scrolls away
+  const GE = 1266;
+  const grid = q("grid");
+  const ga = 0.44 * V.grid / 60;
+  Object.assign(grid.style, { left: "-60px", width: "840px", height: `${GE}px`,
+    backgroundImage: `linear-gradient(${rgba(ACC, ga)} 2px, transparent 2px), linear-gradient(90deg, ${rgba(ACC, ga)} 2px, transparent 2px)`,
+    backgroundSize: "76px 76px", backgroundPosition: "40px 31px" });
+  if (!(V.grid > 0)) grid.style.display = "none";
+
+  // ---- the radar discs (SVG rings, ticks and degree labels + a conic-gradient sweep wedge)
+  const PX = 220, PY = 1090;                           // the point the camera zooms about
+  function mkDisc(host, r, cx, cy) {
+    const D = r * 2.7, c = D / 2;
+    const box = document.createElement("div");
+    Object.assign(box.style, { position: "absolute", left: "0px", top: "0px", width: `${D}px`, height: `${D}px`, transform: `translate(${(cx - c).toFixed(2)}px, ${(cy - c).toFixed(2)}px)` });
+    const wedge = document.createElement("div"), wr = r * 0.97;
+    Object.assign(wedge.style, { position: "absolute", left: `${c - wr}px`, top: `${c - wr}px`, width: `${2 * wr}px`, height: `${2 * wr}px`, borderRadius: "50%" });
+    box.appendChild(wedge);
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("width", D); svg.setAttribute("height", D); svg.setAttribute("viewBox", `${-c} ${-c} ${D} ${D}`);
+    svg.style.position = "absolute"; svg.style.left = "0px"; svg.style.top = "0px";
+    let s = `<circle r="${r * 0.97}" fill="${rgba(ACC, 0.10)}"/>`;
+    s += `<circle r="${r * 0.5}" fill="none" stroke="${rgba(ACC, 0.35)}" stroke-width="1.5"/><circle r="${r * 0.25}" fill="none" stroke="${rgba(ACC, 0.25)}" stroke-width="1.5"/>`;
+    s += `<path d="M ${-r} 0 H ${r} M 0 ${-r} V ${r}" stroke="${rgba(ACC, 0.28)}" stroke-width="1.5" fill="none"/>`;
+    let tk = "";
+    for (let a = 0; a < 360; a += 5) {
+      const lo = r * 0.88, hi = r * (a % 30 ? 0.935 : 0.985), sa = Math.sin(a * Math.PI / 180), ca = -Math.cos(a * Math.PI / 180);
+      tk += `M ${(sa * lo).toFixed(2)} ${(ca * lo).toFixed(2)} L ${(sa * hi).toFixed(2)} ${(ca * hi).toFixed(2)} `;
+    }
+    s += `<path d="${tk}" stroke="${rgba(ACC, 0.7)}" stroke-width="1.6" fill="none"/>`;
+    s += `<circle r="${r * 0.86}" fill="none" stroke="${rgba(ACC, 0.6)}" stroke-width="2"/>`;
+    s += `<circle r="${r}" fill="none" stroke="${rgba(ACC, 0.78)}" stroke-width="6"/>`;
+    for (let a = 0; a < 360; a += 30) s += `<text transform="rotate(${a}) translate(0 ${-r * 1.1})" text-anchor="middle" font-size="${r * 0.075}" fill="${rgba(ACC, 0.8)}" style="font-family: var(--font-accent)">${String(a).padStart(3, "0")}</text>`;
+    svg.innerHTML = s;
+    box.appendChild(svg);
+    host.appendChild(box);
+    return { box, wedge };
+  }
+  const DA = mkDisc(q("dA"), 198, 511, 697), DB = mkDisc(q("dB"), 186, 128, 1068);
+  const LEAD = [[0, 150], [6, 150], [8, 195], [10, 225], [12, 240], [16, 256], [20, 270], [24, 288], [28, 308], [30, 318], [60, 447]];
+  const setWedge = (wd, lead) => { wd.style.backgroundImage = `conic-gradient(from ${(lead - 90).toFixed(1)}deg, ${rgba(ACC, 0)} 0deg, ${rgba(ACC, 0.62)} 90deg, ${rgba(ACC, 0)} 90.4deg, ${rgba(ACC, 0)} 360deg)`; };
+
+  // ---- the dashed frame
+  const fr = q("frame");
+  fr.innerHTML = `<rect x="54" y="48" width="619" height="1189" fill="none" stroke="${glare}" stroke-width="11" stroke-dasharray="128 128" stroke-dashoffset="64"/>`;
+  fr.style.transformOrigin = "363px 642px";
+
+  // ---- the isometric column
+  const bar = q("bar"), bl = q("bl"), br = q("br"), bt = q("bt");
+  bl.setAttribute("fill", shade(ACC, 0.52)); br.setAttribute("fill", shade(ACC, 0.29)); bt.setAttribute("fill", shade(ACC, 0.42));
+  const fade = q("fade");
+  Object.assign(fade.style, { width: "720px", height: "1280px", background: "#000", opacity: "0" });
+
+  // ---- the ruler: a tick a unit (28.43 units apart), long ticks at 5s and 10s, labels at 10s
+  const ruler = q("ruler"), UNIT = 28.43;
+  ruler.style.width = "720px"; ruler.style.color = ACC;
+  for (let i = 0; i < 70; i++) {
+    const v = Math.round(V.ruler_top) - i, y = i * UNIT, tk = document.createElement("div");
+    tk.className = "tk"; Object.assign(tk.style, { left: "0px", top: `${(y - 1.5).toFixed(2)}px`, width: `${v % 5 === 0 ? 90 : 36}px` });
+    ruler.appendChild(tk);
+    if (v % 10 === 0) {
+      const lb = document.createElement("div"); lb.className = "lb ml-body"; lb.textContent = String(v);
+      Object.assign(lb.style, { left: "115px", top: `${y.toFixed(2)}px`, fontSize: "42px", fontWeight: String(fw(V.body_font, 800)), color: ACC });
+      ruler.appendChild(lb);
+    }
+  }
+
+  // ---- the texts
+  const fam = V.body_font;
+  const t1 = q("t1"), t2 = q("t2");
+  let fs1 = V.size_1 * U / KR;
+  Object.assign(t1.style, { fontSize: `${fs1}px`, fontWeight: String(fw(fam, 800)), color: glare, textShadow: `0 ${0.03 * fs1}px ${0.1 * fs1}px ${rgba("#000000", 0.35)}` });
+  Object.assign(t2.style, { fontSize: `${V.size_2 * U / KR}px`, fontWeight: String(fw(fam, 500)), fontStyle: "italic", color: glare, opacity: "0" });
+  const r1 = window.MLLook ? MLLook.rich(t1, V.text_1, { look: L, family: fam, weight: 800 }) : { words: [] };
+  const r2 = window.MLLook ? MLLook.rich(t2, V.text_2, { look: L, family: fam, weight: 500 }) : { words: [] };
+  if (!window.MLLook) { t1.textContent = V.text_1; t2.textContent = V.text_2; }
+  const probe = document.createElement("span");
+  probe.style.cssText = "display:inline-block;width:0;height:0;vertical-align:baseline";
+  t1.appendChild(probe);
+  const CX1 = 356, BASE1 = 539;
+  const wordOrigin = [];
+
+  // ---- the measured tables (g = the frame minus "Starts at frame", on twos)
+  const ZT = [[0, 1], [18, 1], [20, 1.03], [22, 1.09], [24, 1.16], [26, 1.37], [28, 1.56], [30, 1.8], [32, 2.03], [34, 2.3], [36, 2.6], [38, 2.9], [40, 3.3], [42, 3.7], [44, 4.2], [46, 4.8], [48, 5.4], [60, 12]];
+  const GS = [[0, 0], [22, 0], [24, 2], [26, 8], [28, 16], [30, 30], [32, 50], [34, 74], [36, 108], [38, 150], [40, 204], [42, 274], [44, 360], [46, 468], [48, 602], [50, 754], [52, 914], [54, 1054], [56, 1174], [58, 1290], [70, 1500]];
+  const SF = [[10, 1.107], [12, 1.03], [14, 0.986], [16, 0.982], [18, 0.997], [20, 1]];
+  const BA = [[26, 1300], [28, 1250], [30, 1235], [32, 1173], [34, 1090], [36, 957], [38, 804], [40, 654], [42, 568], [44, 524], [46, 498], [48, 480], [50, 464]];
+  const BW = [[28, 330], [30, 360], [32, 390], [34, 400], [36, 410], [38, 356], [40, 300], [42, 266], [44, 248], [46, 240], [48, 236], [50, 236]];
+  const BS = [[50, 1], [52, 1.03], [54, 1.077], [56, 1.136], [58, 1.246], [60, 1.424], [62, 1.72], [64, 2.13], [66, 2.6], [68, 3.2], [70, 3.9], [72, 4.8], [80, 10]];
+  const FD = [[55, 0], [70, 0.66], [78, 1]];
+  const RY = [[66, 1300], [68, 1252], [70, 1079], [72, 665], [74, 116], [76, -157], [78, -262], [80, -290]];
+
+  function render(t) {
+    const g0 = Math.round(t * FPS * 1000) / 1000 - S;
+    const g = g0 < 0 ? g0 : Math.floor(g0 / STEP + 1e-6) * STEP;
+    ref.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    // the grid scrolls up and away
+    const gs = tab(GS, g)[0];
+    grid.style.transform = `translateY(${(-gs).toFixed(2)}px)`;
+    grid.style.visibility = GE - gs > 0 ? "visible" : "hidden";
+    // the camera zoom: words, discs and frame fly past
+    const Z = tab(ZT, g)[0];
+    zoom.style.transform = `translate(${(PX * (1 - Z)).toFixed(2)}px, ${(PY * (1 - Z)).toFixed(2)}px) scale(${Z.toFixed(4)})`;
+    zoom.style.visibility = g < 52 ? "visible" : "hidden";
+    const lead = tab(LEAD, g)[0], out = 1 - clamp01((g - 46) / 12);
+    DA.box.style.opacity = String((clamp01((g - 6) / 6) * out).toFixed(3));
+    DB.box.style.opacity = String((clamp01((g - 14) / 3) * (1 - clamp01((g - 30) / 4))).toFixed(3));
+    setWedge(DA.wedge, lead); setWedge(DB.wedge, lead);
+    fr.style.visibility = g >= 10 ? "visible" : "hidden";
+    fr.style.transform = `scale(${tab(SF, g)[0].toFixed(4)})`;
+    // the words drop in one by one: 133 units above and 1.33x big, settling over 10 f (ease-out / smoothstep)
+    r1.words.forEach((w, i) => {
+      const k = g - (4 + 2 * i);
+      if (k < 0) { w.style.visibility = "hidden"; return; }
+      const u = clamp01(k / 10);
+      w.style.visibility = "visible";
+      w.style.transform = `translate(0px, ${(-133 * Math.pow(1 - u, 3)).toFixed(2)}px) scale(${(1 + 0.33 * (1 - smooth(u))).toFixed(4)})`;
+    });
+    // the column rises, then zooms about a point low in the frame until it fills the picture
+    let ya, bw;
+    if (g < 50) { ya = tab(BA, g)[0]; bw = tab(BW, g)[0]; }
+    else { const s = tab(BS, g)[0]; ya = 1012 + s * (460 - 1012); bw = 236 * s; }
+    const fa = tab(FD, g)[0];
+    const show = ya < 1290 && g >= 26;
+    bar.style.visibility = show ? "visible" : "hidden";
+    bar.style.opacity = V.background ? "1" : String((1 - fa).toFixed(3));
+    if (show) {
+      const hw = bw / 2, a = bw * 0.25, cx = 370, yb = 4200;
+      bt.setAttribute("points", `${cx},${ya} ${cx + hw},${ya + a} ${cx},${ya + 2 * a} ${cx - hw},${ya + a}`);
+      bl.setAttribute("points", `${cx - hw},${ya + a} ${cx},${ya + 2 * a} ${cx},${yb} ${cx - hw},${yb}`);
+      br.setAttribute("points", `${cx},${ya + 2 * a} ${cx + hw},${ya + a} ${cx + hw},${yb} ${cx},${yb}`);
+    }
+    fade.style.opacity = V.background ? String(fa.toFixed(3)) : "0";
+    // the ruler scrolls up, the second text fades in at its middle
+    const ry = tab(RY, g)[0];
+    ruler.style.visibility = g >= 68 ? "visible" : "hidden";
+    ruler.style.transform = `translateY(${ry.toFixed(2)}px)`;
+    t2.style.opacity = String(clamp01((g - 72) / 8).toFixed(3));
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  const hits = V.shake > 0 ? [{ f: S + 28, amount: 2 }] : [];
+  if (window.MLLook) MLLook.handheld(hand, tl, { amount: V.shake, fps: FPS, frames: FRAMES, U, W, H, seed: 5, hits });
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 17 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the look's fonts are in (HyperFrames captures f0 only then); the texts are
+  // measured here, with the real fonts, to fit the frame and to scale each word about the line's middle
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font", "accent_font"].flatMap(k =>
+    [400, 500, 700, 800, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`)).concat([document.fonts.load(`italic 500 100px "${V[k]}"`)])).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    let w1 = t1.offsetWidth;
+    if (w1 > 0.94 * 720) { fs1 *= 0.94 * 720 / w1; t1.style.fontSize = `${fs1}px`; w1 = t1.offsetWidth; }
+    const bo = probe.offsetTop;
+    t1.style.left = `${(CX1 - w1 / 2).toFixed(2)}px`; t1.style.top = `${(BASE1 - bo).toFixed(2)}px`;
+    r1.words.forEach(w => { w.style.transformOrigin = `${(CX1 - (CX1 - w1 / 2) - w.offsetLeft).toFixed(2)}px ${(bo - w.offsetTop).toFixed(2)}px`; });
+    let w2 = t2.offsetWidth;
+    if (w2 > 0.9 * 720) { t2.style.fontSize = `${parseFloat(t2.style.fontSize) * 0.9 * 720 / w2}px`; w2 = t2.offsetWidth; }
+    t2.style.left = `${(360 - w2 / 2).toFixed(2)}px`; t2.style.top = `${(655 - t2.offsetHeight / 2).toFixed(2)}px`;
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>
