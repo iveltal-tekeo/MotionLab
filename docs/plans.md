@@ -21,10 +21,14 @@ another.
 
 ## Where it stands (2026-10-25)
 
-Since 0.5.3, three small steps: **0.5.3.1** (114 Motion Graphics templates), **0.5.3.2** (Film it hands over to the
-Editor, Finish it with Claude) and **0.5.3.3** (2026-10-25: 0.5.4's steps 1, 2 and 6 - recorded sound effects from this
-PC's library, quick drafts with their own sound effects, every effect 2 dB lower). 0.5.4 stays open: music and
-ambience, voice-over, separating music from voice, and the rating on two real videos.
+Since 0.5.3, four small steps: **0.5.3.1** (114 Motion Graphics templates), **0.5.3.2** (Film it hands over to the
+Editor, Finish it with Claude), **0.5.3.3** (2026-10-25: 0.5.4's steps 1, 2 and 6 - recorded sound effects from this
+PC's library, quick drafts with their own sound effects, every effect 2 dB lower) and **0.5.3.4** (2026-10-25: step 3
+(a) - a song from a link, a copy without it to post). 0.5.4 stays open: a music library, ambience, voice-over,
+separating music from voice, and the rating on two real videos. **Right after 0.5.4** (the user, 2026-10-25: "after
+the 0.5.4 lets run the impeccable check on the app"): Impeccable's checker (pbakaus/impeccable, `detect`, no AI, its
+telemetry off, the skill and its hooks not installed) on the app's pages, then fix what it finds (ideas.md, *GitHub
+repos checked 2026-10-25*).
 
 Released last: **0.5.3** (2026-10-24, CHANGELOG.md + CHANGELOG.es.md) - Faster videos (one build, the brief, the edit list, quick drafts for Generate, the waits as jobs) + a friend's asks (photos in edits, folders, no Mac / iPhone junk, pages that update by themselves, the NEW badge, Improve my script keeping one card, changes that survive updates, MotionLab's own taskbar icon) + *Preview your thumbnail* + fewer zooms in edits. Its plan text: plans_history.md. Still open from it: the re-runs (ae_50_test, testing_entire_workflow, What's new 0.4.3) with `usage.py project <name> --steps` before / after - the halving was not measured before the release (the user's call, 2026-10-24) - and F3 (the effort per task) after them; the Resolve builder does not place photos.
 
@@ -50,13 +54,13 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.5.4 | Sound | planned - recorded sound effects instead of the synthesised ones, music and ambience from public libraries, voice-over (added 2026-10-22; the synthesised effects shipped in 0.4.1.1) | M |
-| 0.5.5 | Content agency: My Brand | planned - a My Brand page above the Analyser: goal, audience, identity, the catalogue with prices from the website; used by Prepare, New edit, Motion Graphics; product motion (added 2026-10-22) | L, ships in parts |
-| 0.5.6 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly, templates used as they are, the motion check, formats, a preview before the render | L, ships in parts |
-| 0.5.7 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0 | M |
+| 0.5.4 | Sound | in progress - recorded sound effects + quick drafts with sound shipped in 0.5.3.3; open: music from a link or a library, ambience, voice-over, stems, a reference's sound effects (added 2026-10-22; widened 2026-10-25) | M |
+| 0.5.5 | Content agency: My Brand | planned - a My Brand page above the Analyser: goal, audience, identity, the catalogue with prices from the website; used by Prepare, New edit, Motion Graphics; product motion (added 2026-10-22); the mini-editor for cuts and effects, mood boards from pictures; quality over quantity (2026-10-25) | L, ships in parts |
+| 0.5.6 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
+| 0.5.7 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0; + the edit as a timeline file for Premiere / Final Cut (2026-10-25) | M |
 | 0.5.8 | Content generation | planned - AI clips back into the lab, pictures from image tools (voice and music moved to 0.5.4, 2026-10-22) | M |
-| 0.5.9 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22) | L |
-| 0.6.0 | Take notes from videos + courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15 | L |
+| 0.5.9 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts, shorts from a long video (2026-10-25) | L |
+| 0.6.0 | Take notes from videos: competitors, videos, courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15; competitor analysis added 2026-10-25 | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
 | 0.7.5 | macOS | later | M |
 | 1.0.0 | Deployment | later - the end of Phase 2; what deployment means is the user's call (added 2026-10-19) | - |
@@ -119,15 +123,42 @@ cinematics with Higgsfield AI Seedance or other models and implement it with our
   and its Resolve timeline; the provider's terms apply.
 - **Needs first**: 0.5.8 (AI clips back into the lab); 0.3's colour pipeline (done).
 
-## 0.6.0 - planned - Take notes from videos: videos and courses as information
+## 0.6.0 - planned - Take notes from videos: competitors, videos and courses
 
 **Ships when**: a collection of ~10 analysed videos gives its topics with counts and quotes (frame + timecode), each
 video's content reviewed Correct / Partly / Wrong by the user like effects, and searchable from Claude; a course of
 ~10 lessons gives the steps each lesson teaches (frame + timecode, the screen shown) and a course summary Claude
-uses when it edits.
+uses when it edits; a niche of ~10 profiles the user picked is scanned, its ~20 outliers get the light pass overnight
+on a laptop setting, and its niche card - each reason with its videos and frame + timecode - is rated by the user.
 
 **Renamed 2026-10-22** (the user: "Rename 'describe videos' to 'take notes froms videos'"); older notes call it
-*describe video*.
+*describe video*. Competitors added 2026-10-25.
+
+**Competitor analysis** (the friend's points 3 and 5, 2026-10-25, pasted by the user: "un análisis de competencia
+estaría súper potente coger los 20 vídeos más virales de la competencia ... analiza los 20 perfiles más influyentes y
+más reconocidos en instagram, tik tok y YouTube y de esos perfiles analiza sus 20 vídeos más virales, extrae el guion,
+efectos de sonidos, música, planos ..., b roll y que te de una explicación de porque han funcionado ... y lo mismo
+para otros ámbitos"; "centrarte en pasarle cantidad, que pueda imitar los efectos, planos, recursos, sonidos,
+transiciones ... que entienda los guiones"). 20 profiles x 20 videos x 3 platforms = up to 1,200 videos: at today's
+depth (a lab pass + Claude's frame-accurate review each) that is days of a PC and far beyond a Claude plan - so three
+depths, wide and cheap first:
+1. **Scan** (no download, seconds per profile): the user lists the profiles (Claude can suggest some for a niche from
+   a web search; the user ticks them); yt-dlp lists each one's videos with views, likes and dates -> each video
+   against its own profile's usual views (the outperformer score; `content.py stats` does it for one video since
+   0.3.2) -> the top ~5 per profile. YouTube and TikTok work without a login; Instagram needs Settings > Downloads'
+   browser login.
+2. **A light pass on the outliers** (MotionLab, no Claude): download, the lab pass (cuts, pacing, beats, the first
+   3 s, camera moves), the words by speech to text, music and its tempo, sound effects (0.5.4 step 7), one sheet of a
+   key frame per shot. Measured on a laptop first: the time per minute of video decides how many fit in a night
+   (0.4.5's bulk runs them).
+3. **Why it worked** (Claude, per niche, in batches): the numbers, transcripts and sheets of ~20 outliers against ~10
+   of the same profiles' weakest videos - what differs, not what they all do: the hook, the script's structure (HEIT,
+   0.5.9), the format, music, sound effects, shots and B-roll, what keeps people watching; each reason with the videos
+   and frame + timecode it comes from -> a niche card in Claude's memory (text, shareable), read by Prepare
+   (*Research it*, the formats), New edit (the style of a niche) and the quick draft.
+The deep, frame-accurate analysis stays for the few videos the user wants to copy (the Analyser, as today). Rules:
+public posts only, the videos and transcripts stay on the PC, only numbers, short quotes and the niche card are
+shared.
 
 **Courses** (the user, 2026-10-15: "and maybe in the future maybe bulk analyze courses? of davinci resolve or courses
 on content creation? (i think this is a similar idea we have for the 'describe video' version. what do you think?
@@ -240,6 +271,15 @@ screen 2) environment: experiment different environments 3) delivery: authentic 
 - **Make (yapping mode)**:
   1. **Topic + script**: pick a validated topic (or yours); `/write-script` (built: Prepare) writes the hook and a
      HEIT script in the structure of the best videos of your format (the prompt library).
+     **Research it** (the friend's point 2, 2026-10-25: "añadiría la opción de investigación para que recopile toda la
+     información posible sobre lo que vas a decir ... contradecir las costumbres ... qué errores comete la mayoría de
+     personas ... que se base en unas estadísticas ... formatos virales tipo, 3 errores que todo el mundo comete"): a
+     *Research it* tick in Prepare's two scripts - Claude searches the web for the topic's common mistakes, myths and
+     numbers before writing, and offers formats that work for it (*3 mistakes everyone makes*, myth vs fact, *stop
+     doing X*, before / after). Every number and claim carries the link Claude opened and found it in (like the text
+     sets' quote check - an unchecked number is left out, never guessed); the sources sit in the script's Details.
+     Which formats work comes from videos that did well against their channel (0.6.0's competitor analysis), not from
+     Claude's taste. Small (the skill + one tick, no new tool) - it can ship early on its own, like Prepare did.
   2. **Record**: a one-page brief - format, length, the HEIT outline with seconds, delivery notes, the environment
      to try.
   3. **Edit your raw recording** (read-only, hard rule 1): your words with timings (local Whisper - own footage has
@@ -249,6 +289,18 @@ screen 2) environment: experiment different environments 3) delivery: authentic 
      slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
      (every removed part with frame + timecode) before anything renders.
   4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
+  5. **Shorts from a long video** (the user, 2026-10-25: "get shorts from a long video (analyze contenct and
+     transcript) and see which moments could make good shorts?"): a podcast, a talk or a long video of the user's ->
+     its words with timings (faster-whisper) -> candidate stretches of 20-60 s, which Claude scores the way the
+     clipping tools do (OpusClip's score: hook, flow, value, trend): a hook that works without what came before, no
+     "as I said", a payoff, energy (loudness, laughter), length; "trend" = what 0.6.0's competitor scan found - each
+     candidate with frame + timecode and why, the user picks. Then each pick as a vertical short: reframed 16:9 ->
+     9:16 by face detection sampled ~5 times a second (MediaPipe's BlazeFace, ~3 ms a frame on a phone CPU), a still
+     or a following frame chosen per scene (AutoFlip's design), the speaker kept when two talk; screen recordings as
+     screen + face, not a crop; captions and a hook title from yapping mode. Built in the lab - ClipsAI (torch,
+     pyannote with a Hugging Face token) and OpenShorts (Gemini by default) are read for ideas, not installed.
+     Measure first: the minutes per 60 s short on a laptop CPU; the reframe's misses (OpusClip's own benchmark: the
+     wrong speaker, charts cut off, half people, lower thirds cut).
 - **The clips a script needs** (added 2026-10-15, from the first talking video made from a Prepare script, *MotionLab
   vs other AI editors*; its v4 note: "the script's B-roll (the report with its contact sheet, a generic AI editor,
   your render beside the reference, the Prepare page) does not exist in the project, so those moments stay on you
@@ -375,6 +427,16 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
 - **Measure first** (light and tested first): transfer methods (Reinhard, histogram matching, MKL - all light numpy)
   on real shots of 4AM and test_4am: ΔE2000 to the reference and ms per frame on a laptop setting; CDL in the scratch
   project against the lab's numbers (within 1/255); whether 33 LUT points are enough (vs 65).
+- **Other editors** (the friend's point 4, 2026-10-25: "fusionar premier, after effects y da vinci para que Claude
+  edite en los tres aprovechando los puntos fuertes de cada uno"; was *Export to other editors* in ideas.md): the
+  plan as a timeline file Premiere Pro, Final Cut and the free Resolve open (FCP XML / OpenTimelineIO) - the cuts,
+  speed changes, the graphics as transparent clips, the sound effects on their own track, the grade as the .cube;
+  checked by opening it in each and comparing against the lab render (frame + timecode). Kdenlive too (free; through
+  the OTIO Kdenlive adapter, MIT, "might be unstable") - an editable project for friends without Resolve Studio,
+  since the free Resolve 21.1 can no longer be scripted. After Effects joins through
+  0.5.6 step 4 (a template rendered by `aerender` into a clip). Not planned: Claude driving all three at once - Resolve
+  already gives the edit and the colour, HyperFrames the motion graphics; Premiere's and After Effects' scripting
+  needs paid Adobe apps most friends lack (ideas.md *Later*).
 
 ## 0.5.6 - planned - Motion graphics: template packs, the motion check, formats
 
@@ -456,7 +518,12 @@ measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
    -r`, only on a PC that has it: likely - measure its start-up and that it runs without clicks); Lottie JSON (the
    keyframes and eases are in the file); preview videos only (the lab's own analysis, category motion_graphics -
    measured, less exact). *Can it work*: Resolve yes, After Effects likely; the preview render time per template is
-   measured first (Starter Pack alone is 228 templates).
+   measured first (Starter Pack alone is 228 templates). **After Effects without After Effects** (checked
+   2026-10-25, the user: "try ... free open source programs people have recently reverse engineered"): `py-aep`
+   (MIT, pure Python, 0.18.2 of 2026-10-17, pypi.org/project/py-aep) reads and writes .aep projects - compositions,
+   layers, keyframes, properties - with no After Effects installed; it cannot render or evaluate expressions (those
+   stay numbers to read, a preview needs `aerender`). So an AE pack's keyframes can be read exactly on any PC - a
+   small test first on one pack the user owns (its licence decides what may be converted).
 3. **Motion cards and motion rules** (Claude, in batches like 0.4.5's bulk; the templates the user stars first): per
    template a short card - what it is (a title, a transition, a lower third, a counter...), frames in / hold / out,
    the eases, what keeps it alive during a hold, layering and depth, texture (grain, glow, a chromatic split), the type,
@@ -492,6 +559,13 @@ measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
    new code only for what no block does (fewer tokens, fewer bugs: the badge missing at f38 (00:00:01:08) was
    hand-written). *Can it work*: the moves and eases yes (the conversion is math); heavy effects (particles,
    displacement, 3D) only partly - those stay template clips (step 4).
+   **3D blocks** (the user, 2026-10-25: "add 3d motion graphics that work well"): the HyperFrames runtime the lab pins
+   already has a `three` adapter (checked in `node_modules\hyperframes` 2026-10-25: each frame's time reaches the
+   scene through `hf-seek` / `window.__hfThreeTime`, and it waits for THREE's loading manager) - so Three.js scenes
+   (3D type, a phone or laptop turning, logo extrusions, depth of field, bloom; CC0 HDRIs from Poly Haven) render like
+   any block. Measure first on a laptop: seconds per second of 1080p with hardware WebGL vs the software fallback
+   (SwiftShader, reported ~4-10x slower - unmeasured); the three to five that look premium, not many. Blender Eevee
+   (minutes per second on a laptop, a 383 MB program) only later, for short hero shots.
 6. **Formats - a made video as a template** (was item 13 of *Check before you render*): a generated video the user
    approved is saved as a format - "top 3 tracks", a lyric video, a list / explainer, an app promo, a quote or number
    reel... = its scenes as settings (texts, pictures, colours, song, length). The next video in that format is new
@@ -531,6 +605,14 @@ measuring -> 0.4.4 (shipped). The old step numbers: plans_history.md.
     shorter than its reading time, parts outside the platform's safe area. Claude also checks the snapshot sheet
     against the rules before the first render. *Can it work*: yes for what can be measured (movement per frame is
     already measured for the motion-blur check); "does it look designed" stays the user's rating.
+    **Checks taken from open-source skills** (reviewed 2026-10-25, the user: "analize open soruce skills taht we could
+    use for those specific sections"; github.com/alesha-pro/tools, MIT at its root, its motion-reel "adapted from" a
+    course - so ideas, never its text, and nothing installed): frames rendered out of order compared with in order
+    (a graphic that depends on the previous frame shows up); the text read at a 360 px phone width; a sheet of the
+    frames around every fast move, not only the key frames; Claude's critique capped at 3 rounds of 3 fixes. From its
+    lyric-video skill, for lyric edits: a pilot section approved before the whole video, words timed by syllable,
+    checks at the seams between sections. HyperFrames' own skills (Apache-2.0, `hyperframes`, `media-use`) are read
+    for the blocks.
 11. **The made video's page**: a video made from zero opens on its project's page (Editor); it gets Generate's steps
     there - the scene table (frame + timecode), the animatic and *Play*, the settings, the sound, *Render*, *How did
     it turn out?* with notes on moments (0.4.2) - in plain words.
@@ -554,8 +636,9 @@ from the user: which packs first, ~20 templates starred, the verdict on the rema
 **Ships when**: a *My Brand* page above the Analyser holds the user's goal on social media, their audience, identity
 (colours, fonts, logo, voice) and catalogue with prices - read from their website and checked by them; Prepare, New
 edit and Motion Graphics use it (a script in the brand's voice, the brand's colours as a palette, its logo); one video
-places a product - in passing or as a call to action at the end - and the user rates it OK or better; a cut and a
-caption fixed in the mini-editor render again without Claude.
+places a product - in passing or as a call to action at the end - and the user rates it OK or better; a cut, an
+effect and a caption fixed in the mini-editor render again without Claude; a mood board's style card is used by a
+video the user rates good.
 
 **The user's words (2026-10-22)**: "0.5.5 Content Agency - implement a new section above Analyze which would be called
 'My Brand'". Their mock-up deck (`new_edit_section.html`, slides 10-11, in Spanish): *Mi marca* - "a page where Claude
@@ -586,8 +669,29 @@ mixed with your clips in the same edit".
    style, re-timing to the music) stay Claude's: *Ask Claude* writes the change as a request. What the user fixed by
    hand goes into `outcome.json` so Claude reads it next time (the cuts it got wrong are lessons too). Measure first:
    a one-shot trim's build time on a laptop. Never touches the clips (hard rule 1).
+   **The effects too** (the user, 2026-10-25, later: "so if we do the mini editor on the version we can maybe choose
+   some effects, edit them?"): each effect of the plan as a chip on the strip at its frames (a zoom, a whip, a flash,
+   a speed ramp, a graphic) - swap it for another kind or a library effect, change its length, strength and ease
+   (the easing words: decelerating, S-curve...), nudge it a frame, remove it, add one at the playhead; before *Save*,
+   a preview of the second around it (`render_video.py` renders any range alike), so a change is seen, not guessed.
+7. **Mood boards: references beyond videos** (the user, 2026-10-25: "what if our references go beyond just videos?
+   add instagram or pinterest directly?"): pictures the user likes - a Pinterest board, Instagram posts, screenshots -
+   as references for the brand's look. First from pictures on the PC (saved or screenshotted, dropped into the
+   Analyser): per board a style card - the palette (Lab clusters, saturation, contrast), text on the picture (OCR:
+   how much, where, how big), faces (count, size, place), composition (thirds, empty space, clutter), and Claude's
+   words for the type and the mood - used as My Brand's identity, New edit's palette, Motion Graphics and thumbnails.
+   Fetching a board by its link (gallery-dl - GPL, reads Pinterest boards without a login) only later and started by
+   the user: Pinterest's and Instagram's terms forbid automated collection, and Instagram needs the account's cookies
+   (a risk to the account) - so never by default, never Instagram cookies. The pictures stay on the PC.
 
-**Order** (the user decides): 1-3 first, then 4 and 5; 6 needs nothing from My Brand. **Size**: large, ships in parts.
+**Quality over quantity** (the user, 2026-10-25: "for the content agency version section id like to focus on quality
+of videos instead of quantity ... we have to really dig in those things if we want to make motionlab great and
+actually usable and not just make AI slop while editing"): this version is judged by how good one video gets, not by
+how many - the mini-editor (6), the brand's own look (3, 7) and the user's ratings decide; 0.6.0's wide scan is for
+learning only, never for making more videos.
+
+**Order** (the user decides): 1-3 first, then 4 and 5; 6 and 7 need nothing from My Brand's page. **Size**: large,
+ships in parts.
 **Rules**: the brand stays on the PC; only the user's own site is read; prices shown as the user confirmed them.
 **Needs first**: nothing; from the user: their website and their goal.
 
@@ -623,7 +727,23 @@ strong GPU, and their licences often forbid commercial use.
 3. **Music and ambience from public libraries**: picked by mood, tempo and length (`beats.py` measures them), only
    with clear licences (CC0 / free for commercial use; CC BY = its credit line goes into the publish package's
    description); room tone and ambience beds (city, nature, a café) under talking videos. New edit's *Music* gets
-   *From the library*.
+   *From the library*. Widened by the friend's notes (2026-10-25, below):
+   - (a) **A song from a link, in the Sound step** (small - the Analyser's downloader, its MP3 preset, into
+     `refs\audio\`): paste a TikTok / YouTube / SoundCloud link, the edit cuts on that song's beats. A viral song is
+     someone's copyright: the render comes twice - with the song (to watch) and without it (to post; the same sound
+     picked in TikTok / Instagram, with where it starts, e.g. "the sound from 0:12.40") - so a post is never muted.
+     **Built 2026-10-25, released in 0.5.3.4** (the user's pick): New edit's Sound step *From a link…* (the `download` job,
+     preset mp3, the song picked when it ends); `publish.post_copy` after every render of a quick draft or a build
+     whose song lies in `refs\` -> `build\publish\<render>_post.mp4` (the same video stream, copied; the sound effects
+     stem or no sound) + `post_copy.json` (the song, where it starts, its link); *Ready to post* shows it. Measured on
+     a 15 s draft on a downloaded song: the copy's video packets identical to the render's, its sound = the effects
+     stem (correlation 1.00; 0.10 with the render's mix), 0.17 s to make; the app tested in headless Edge on a copy of
+     the lab (the download picked the song, the summary named it, Ready to post showed "from 0:11.63").
+   - (b) **A music library on the PC** (like `library\sounds\`): Pixabay Music and YouTube's Audio Library have no
+     API for music - the user downloads tracks there (YouTube's only for YouTube videos) and MotionLab indexes them
+     (tempo, mood, length, licence); sites with an API and commercial-use licences (Jamendo, Freesound, Free Music
+     Archive - each checked live) searched from the app. Never automatic downloads from YouTube: covers, sped-up
+     versions and unknown licences are why *Trending sounds* was scrapped (plans_history.md, 2026-10-15).
 4. **Voice-over** (was content generation's step 1, measure first): ElevenLabs (the user's own account) or a local
    text-to-speech measured on a laptop first (time per minute of speech, size, how natural); its words timed like
    speech to text, so captions and scenes follow the voice. A voice only with the speaker's consent.
@@ -638,11 +758,21 @@ strong GPU, and their licences often forbid commercial use.
    synthetic test clips: a 30 s music draft = 3 effects (2 hits, 1 tick, all recorded), a talking draft = 3 whips,
    each peaking inside its cut frame; ~1.5 s added. Still open: plain cuts get no sound (a beat montage's 31 cuts ->
    3 effects at *some*) - the user's listen decides.
+7. **A reference's sound effects, measured** (the friend's point 5, after step 5 - measure first): the whooshes and
+   hits of an analysed video found apart from its music (the stems), placed against its cuts and effects with frame +
+   timecode -> *like the reference* in New edit's Sound step uses its amount and kinds. A self-test with known cues
+   first.
 
-**Not here**: viral / trending sounds are copyrighted - they are added in TikTok or Instagram when posting, never built
-into a render (the *Trending sounds* plan was scrapped 2026-10-15). Music made by a model stays out until a light one
-with clear commercial terms exists.
-**Order** (the user decides): 1 + 2 first (the AI look), then 3, 6, 4, 5. **Size**: medium.
+**The friend's notes (2026-10-25, in Spanish, pasted by the user)**: "en sonidos ... tener un descargador como el del
+analizador pero que solo se quede el audio ... si hay una canción viral en tik tok, coger descargarla justo en el
+apartado de sonidos y que trabaje con esa música, o tener conectado a pixabay, YouTube y algunas otras apps de música
+libre de derecho de autor" (a downloader in the Sound step that keeps the audio; a viral TikTok song or free music
+from Pixabay, YouTube and other royalty-free sites) -> step 3 (a) and (b).
+
+**Not here**: viral / trending sounds are copyrighted - the lab never fetches them by itself, and the render you post
+leaves them out (step 3 (a): you add the same sound in TikTok or Instagram); the *Trending sounds* plan was scrapped
+2026-10-15. Music made by a model stays out until a light one with clear commercial terms exists.
+**Order** (the user decides): 1, 2 and 6 shipped in 0.5.3.3; then 3 (a first - small), 4, 5, 7. **Size**: medium.
 **Rules**: light and tested first; every file's licence recorded; music and voices only with clear licences and
 consent; generated voices labelled as generated.
 **Needs first**: nothing - New edit's sound step (0.5.2) already asks for it.

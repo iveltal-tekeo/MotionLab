@@ -5,6 +5,14 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.3.4 - 2026-10-25 - A song from a link
+
+- **A song from a link** - New edit's *Sound* step has *From a link…*: paste a TikTok, YouTube or SoundCloud link and
+  the song downloads as an MP3 and is picked, so the edit cuts on its beats. A song you downloaded is someone else's,
+  so every render on it also gets a copy without the song: *Ready to post* shows it with where the song starts (e.g.
+  "from 0:11.63") - you add the same sound in TikTok or Instagram, and your post is not muted. Your sound effects stay
+  in the copy.
+
 ## 0.5.3.3 - 2026-10-25 - Recorded sound effects, and quick drafts with sound
 
 - **Sound effects from real recordings** - the whooshes, risers, hits, clicks, pops and camera sounds in your edits

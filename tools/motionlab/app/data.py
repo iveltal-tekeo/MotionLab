@@ -822,7 +822,7 @@ def thumb_folder(name: str, tid: str) -> Path:
 def publish_info(name: str) -> dict:
     """The Publish tab: package.json as the tools wrote it (each thumbnail + its settings for the form), the title
     records linked to this video (prompt library kind title, "project"), the edit's rate / length for the chapters,
-    the designs, the pictures the user brought."""
+    the designs, the pictures the user brought; "post" = the newest render's copy without its downloaded song."""
     from motionlab import publish as PB
     pub = publish_dir(name)
     d = pub.parent.parent
@@ -849,7 +849,11 @@ def publish_info(name: str) -> dict:
     imgs = pub / "images"
     renders = sorted((p for p in (d / "build").glob("*.mp4") if re.search(r"_v\d+\.mp4$", p.name)),
                      key=lambda p: p.stat().st_mtime) if (d / "build").exists() else []
+    post = read_json(pub / PB.POST_FILE, {}) or {}     # 0.5.4: the newest render without its downloaded song
+    post = {**post, "rel": rel(pub / post["video"])} if renders and post.get("from") == renders[-1].name and (
+        pub / str(post.get("video"))).is_file() else None
     return {"name": d.name, "folder": rel(pub), "exists": (pub / "package.json").exists(), "package": {**pkg, "thumbnails": thumbs},
+            "post": post,
             "records": recs, "fps": pl.get("fps"), "frames": pl.get("frames"), "plan": plan.name if plan else None,
             "templates": templates, "face_detector": face, "render": renders[-1].name if renders else None,
             "styles": _thumb_styles(),                       # 0.4.5: thumbnail sets whose patterns Claude found

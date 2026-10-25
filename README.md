@@ -283,11 +283,11 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 - [docs/plans.md](docs/plans.md) - the planned versions (0.5.3 faster videos: a minute of video in ~10 minutes of Claude, 0.5.4 sound: recorded sound effects,
   music and ambience from public libraries, voice-over, 0.5.5 content agency: a My Brand page - your goal, audience,
-  identity and catalogue, and a mini-editor for small cuts without Claude, 0.5.6 motion graphics from template packs - Resolve / After Effects packs read exactly, a
+  identity and catalogue, a mini-editor for small cuts and effects without Claude, mood boards from pictures, 0.5.6 motion graphics from template packs - Resolve / After Effects packs read exactly, a
   motion check, formats, a preview before the render, 0.5.7 colour: correct your own clips, adjustable grades in
   Resolve, 0.5.8 content generation: AI clips back into the lab, pictures from image tools, 0.5.9 yapping mode for
-  talking-to-camera videos and the clips a script needs, 0.6 take notes from videos: what videos and courses say and
-  show, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end of Phase 2, which 0.5.1 opened), also
+  talking-to-camera videos and the clips a script needs, 0.6 take notes from videos: why a niche's most viral videos
+  work, what videos and courses say and show, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end of Phase 2, which 0.5.1 opened), also
   shown in the app's *What's new*.
 - [docs/ideas.md](docs/ideas.md) - tools and features to consider later, each tested on a normal PC first.
 

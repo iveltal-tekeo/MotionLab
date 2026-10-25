@@ -7,6 +7,14 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.3.4 - 2026-10-25 - Una canción desde un enlace
+
+- **Una canción desde un enlace**: el paso *Sonido* de Nueva edición tiene *Desde un enlace…*: pega un enlace de
+  TikTok, YouTube o SoundCloud y la canción se descarga como MP3 y queda elegida, así el montaje corta en sus beats.
+  Una canción descargada es de otra persona, así que cada render con ella trae también una copia sin la canción:
+  *Listo para publicar* la muestra con el punto donde empieza la canción (p. ej. «desde 0:11.63»); añades el mismo
+  sonido en TikTok o Instagram y no te silencian la publicación. Tus efectos de sonido siguen en la copia.
+
 ## 0.5.3.3 - 2026-10-25 - Efectos de sonido grabados, y borradores rápidos con sonido
 
 - **Efectos de sonido grabados de verdad**: los whoosh, subidas, golpes, clics, pops y sonidos de cámara de tus

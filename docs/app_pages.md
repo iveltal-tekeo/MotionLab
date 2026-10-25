@@ -310,7 +310,9 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   (`styles.CATEGORIES`), the rhythm, the mood (up to 3), captions, the feel in their words -, then the **colour
   palette** for titles / captions / graphics as big cards (`nePalette`: Auto + the ready-made palettes, a strip of
   their colours each; the colours themselves, up to 6, as swatches beside its title; none = Auto). **5 Sound**: the music as four cards (Auto, *A song* - the folder's or the downloaded ones in `refs\audio`,
-  picked in a select under them, *Add a song…* -, the clips' own sound, Talking), sound effects - a card per amount (Auto / none / a few / some / many, a strip = how often
+  picked in a select under them, *Add a song…*, *From a link…* (0.5.4: an inline row - a dialog over this one would
+  lose it - that starts the `download` job with preset mp3 and picks the saved song; *A song* with none yet shows
+  that row instead of the file picker) -, the clips' own sound, Talking), sound effects - a card per amount (Auto / none / a few / some / many, a strip = how often
   one plays) and which kinds (groups of `motionlab\sfx.py`'s cue kinds) -, notes. **6 Final**: length (pills or
   seconds), format cards with the platforms (their shape drawn), the summary (one table, a row per step - a click =
   back to it), the estimate as a chip ("About 30 min of Claude"; the rule in its tooltip: about 1 min of Claude per
@@ -564,7 +566,10 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   post** (`projPublish`; 0.4.3's Publish tab, since 2026-10-15 at the end of the Overview under the render, "Happy with
   it? Ready to post"; the Title, the Thumbnails and *Make a thumbnail yourself* (folded once thumbnails exist) are one
   glowing box `.pbpack` of `.pbpart`s (the user: "all in one so the person isn't thrown around"); no *Open the folder*;
-  then Description `#pb-desc`, `packagingBox` *After posting* `#pb-after` last; returns the publish info for the index):
+  then Description `#pb-desc`, `packagingBox` *After posting* `#pb-after` last; 0.5.4: first, in both states,
+  `postBox` *To post on TikTok or Instagram* when `publish_info` `post` = the newest render's copy without its
+  downloaded song (`publish.post_copy`: the song, where it starts, *Open the song*, *Show in folder*); returns the
+  publish info for the index):
   GET `/api/project/<p>/publish` = `data.publish_info` (package.json as the
   tools wrote it + each thumbnail's settings `OS.status(thumbs\<id>)`, the title records linked to the video, the
   edit's fps / frames, the designs `thumbnail.templates()` - imported only here (numpy) - the face finder, the newest

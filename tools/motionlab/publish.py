@@ -18,6 +18,9 @@ package.json, this module's part:
                  reads ("1:05": the whole second the frame falls in)
   "hashtags":    {"items": ["#a", ...], "shown": [the first 3], "line": "#a #b"}
 
+Besides package.json (0.5.4): `post_copy.json` + `<render>_post.mp4` = a render whose song was downloaded, without
+the song, to post (`post_copy`; build.py and the quick draft make it after each render).
+
 Platform rules (checked on the web on 2026-10-15; they change - check again when they look wrong):
 - YouTube chapters (support.google.com/youtube/answer/9884579): the first timestamp is 0:00, at least three in
   ascending order, each chapter at least 10 s long. Timestamps in the description override automatic chapters.
@@ -85,6 +88,69 @@ def latest_plan(project: str | Path) -> Path | None:
     b = project_dir(project) / "build"
     plans = [(int(m[1]), p) for p in b.glob("plan_v*.json") if (m := re.fullmatch(r"plan_v(\d+)\.json", p.name))]
     return max(plans)[1] if plans else None
+
+
+# ------------------------------------------------------------------------------------------------ the copy to post
+POST_FILE = "post_copy.json"                            # build\publish\: the newest copy without the song
+
+
+def song_source(plan: dict) -> tuple[Path | None, float]:
+    """The song a plan plays and where in it the video starts (s): a quick draft's made_by, else the song of its mix
+    (sfx.py's sound report), else its audio file."""
+    mb = plan.get("made_by") or {}
+    if mb.get("music"):
+        return Path(mb["music"]), float(mb.get("music_start_s") or 0)
+    a = (plan.get("audio") or {}).get("path")
+    if not a:
+        return None, 0.0
+    p = Path(a)
+    if p.name.endswith("_mix.wav"):
+        try:
+            s = read_json(p.with_name(p.name[:-len("_mix.wav")] + "_sfx.json")).get("song") or {}
+        except (OSError, ValueError):
+            s = {}
+        if s.get("path"):
+            return Path(s["path"]), float(s.get("start_s") or 0)
+    return p, 0.0
+
+
+def post_copy(plan_path: Path, video: Path) -> dict | None:
+    """0.5.4 (a friend's notes, 2026-10-25): a render whose song lies in refs\\ (downloaded - someone else's song) gets
+    a copy without it to post, build\\publish\\<name>_post.mp4: the same picture (not encoded again) with the sound
+    effects alone (the plan's sfx stem) or no sound. The same song is then added in TikTok / Instagram, which know it -
+    a song built into the video can get a post muted. Returns the record (also build\\publish\\post_copy.json); None =
+    the song is not a download (or there is none)."""
+    import subprocess
+    from .util import tool
+    plan_path, video = Path(plan_path), Path(video)
+    plan = read_json(plan_path)
+    song, start = song_source(plan)
+    try:
+        song.resolve().relative_to((LAB / "refs").resolve())
+    except (AttributeError, ValueError, OSError):
+        return None
+    dl = LAB / "refs" / "downloads.json"
+    src = (read_json(dl) if dl.exists() else {}).get(song.name) or {}
+    pub = plan_path.parent / "publish"
+    pub.mkdir(parents=True, exist_ok=True)
+    out = pub / f"{video.stem}_post.mp4"
+    a = Path((plan.get("audio") or {}).get("path") or "")
+    stem = a.with_name(a.name[:-len("_mix.wav")] + "_sfx.wav") if a.name.endswith("_mix.wav") else None
+    stem = stem if stem and stem.exists() else None
+    cmd = [tool("ffmpeg"), "-y", "-v", "error", "-i", str(video)] + (["-i", str(stem)] if stem else []) + [
+        "-map", "0:v:0", "-c:v", "copy"] + (["-map", "1:a:0", "-c:a", "aac", "-b:a", "192k", "-shortest"] if stem
+                                              else ["-an"]) + ["-movflags", "+faststart", str(out)]
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode or not out.exists():
+        raise RuntimeError(f"the copy to post was not made: {r.stderr.strip()[-400:]}")
+    rec = {"video": out.name, "from": video.name, "plan": plan_path.name, "song": src.get("title") or song.stem,
+           "file": song.name, "start_s": round(start, 2), "at": f"{int(start // 60)}:{start % 60:05.2f}",
+           "link": src.get("url"), "platform": src.get("platform"), "sound": "sound effects" if stem else "none",
+           "made": time.strftime("%Y-%m-%d %H:%M")}
+    tmp = pub / f"{POST_FILE}.{os.getpid()}.tmp"
+    tmp.write_text(json.dumps(rec, indent=1, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, pub / POST_FILE)
+    return rec
 
 
 # ------------------------------------------------------------------------------------------------ time on YouTube
@@ -667,4 +733,17 @@ def selfcheck() -> dict:
         case("package.json merge: thumbnail.py's keys kept, ours set, theirs refused",
              again == pkg and again["candidates"] == {"sheet": "candidates.png"} and again["thumbnails"]["A"]
              and again["title"] == "new" and refused and not list(d.glob("*.tmp")))
+        # 0.5.4: the copy to post - which song a plan plays, and only a song from refs\ gets a copy
+        song = LAB / "refs" / "audio" / "zz_song.mp3"
+        (d / "e_sfx.json").write_text(json.dumps({"song": {"path": str(song), "start_s": 12.5}}), encoding="utf-8")
+        mine = d / "my_song.wav"
+        case("song_source: a draft's music + start, a mix's song (its sound report), a plain file, none",
+             song_source({"made_by": {"music": str(song), "music_start_s": 11.63}}) == (song, 11.63)
+             and song_source({"audio": {"path": str(d / "e_mix.wav")}}) == (song, 12.5)
+             and song_source({"audio": {"path": str(mine)}}) == (mine, 0.0) and song_source({}) == (None, 0.0))
+        (d / "build").mkdir()
+        (d / "build" / "plan_v1.json").write_text(json.dumps({"made_by": {"music": str(mine)}}), encoding="utf-8")
+        case("a song of the user's own (not in refs\\): no copy to post, nothing written",
+             post_copy(d / "build" / "plan_v1.json", d / "build" / "x_v1.mp4") is None
+             and not (d / "build" / "publish").exists())
     return {"passed": ok, "seconds": round(time.time() - t0, 3), "lines": lines}

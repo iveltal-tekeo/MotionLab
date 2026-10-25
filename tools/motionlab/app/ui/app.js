@@ -3266,7 +3266,10 @@ function neSound(box, ne) {
   box.innerHTML = `<div class="neq"><label>${neIcon('i-music', '--violet')}${t('Music')}</label>
       <div class="nemus">${MUSIC.map(([v, ic, l, s]) => `<button class="necard nemc" data-m="${v}" ${v === 'auto' ? `title="${ta('Automatic - the song in the folder if there is one')}"` : ''}><svg class="ic"><use href="#${ic}"/></svg><b>${l}</b><span data-ms="${v}">${s}</span></button>`).join('')}</div>
       <div class="nesongrow" id="nesongrow" hidden><select id="nesnd"></select>
-        <label class="btn sm" id="nesong" title="${ta('Copies a song into this video - the original stays where it is')}"><svg class="i"><use href="#i-upload"/></svg>${t('Add a song…')}<input type="file" hidden accept="audio/*,.mp3,.m4a,.wav,.aac,.flac,.ogg"></label></div>
+        <label class="btn sm" id="nesong" title="${ta('Copies a song into this video - the original stays where it is')}"><svg class="i"><use href="#i-upload"/></svg>${t('Add a song…')}<input type="file" hidden accept="audio/*,.mp3,.m4a,.wav,.aac,.flac,.ogg"></label>
+        <button class="btn sm" id="neslink" title="${ta('Downloads the song of a TikTok, YouTube or SoundCloud link as an MP3 - your edit cuts on its beats. To post, MotionLab also makes a copy without it: you add the same sound in TikTok or Instagram.')}"><svg class="i"><use href="#i-download"/></svg>${t('From a link…')}</button></div>
+      <div class="nesongrow" id="nelinkrow" hidden><input type="text" id="nelinku" placeholder="${ta('Paste a link - TikTok, YouTube, SoundCloud…')}">
+        <button class="btn sm pri" id="nelinkgo"><svg class="i"><use href="#i-download"/></svg>${t('Download')}</button><span class="small muted" id="nelinkst"></span><pre id="nelinklog" hidden></pre></div>
       <div id="nesongf"></div></div>
     <div class="neq"><label>${neIcon('i-volume', '--amber')}${t('Sound effects')}</label>
       <div class="nesfx">${amounts.map(a => `<button class="necard nesfxc" data-a="${esc(a.id)}"><b>${esc(a.label)}</b><span>${esc(a.help)}</span>${strip(a.id)}</button>`).join('')}</div></div>
@@ -3274,6 +3277,7 @@ function neSound(box, ne) {
     <div class="nef"><label for="nesnotes">${neIcon('i-pen', '--cyan')}${t('Notes on sound')}</label>
       <textarea id="nesnotes" rows="2" placeholder="${ta('e.g. a big hit when the logo appears, keep my voice clear over the music')}">${esc(st.snotes)}</textarea></div>`;
   const sel = $('#nesnd', box), songIn = $('#nesong input', box);
+  let wantSong = false;                                     // "A song" clicked with no song yet: show where to get one
   const fill = () => {
     const songs = (ne.P() || {}).songs || [];
     sel.innerHTML = `${songs.length ? `<optgroup label="${ta("In this video's folder")}">${songs.map(s => `<option value="music:${esc(s)}">${esc(s)}</option>`).join('')}</optgroup>` : ''}
@@ -3281,21 +3285,43 @@ function neSound(box, ne) {
     if (st.sound.startsWith('music:') && ![...sel.options].some(o => o.value === st.sound)) st.sound = sel.options.length ? sel.options[0].value : 'auto';
     const mode = st.sound.startsWith('music:') ? 'music' : st.sound;
     if (mode === 'music') sel.value = st.sound;
-    $$('.nemc', box).forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+    $$('.nemc', box).forEach(b => b.classList.toggle('on', b.dataset.m === mode || (wantSong && b.dataset.m === 'music')));
     $('[data-ms=music]', box).textContent = mode === 'music' ? st.sound.slice(6).split('/').pop() : sel.options.length ? t('Pick a song') : t('Add a song…');
-    $('#nesongrow', box).hidden = mode !== 'music';
+    $('#nesongrow', box).hidden = mode !== 'music' && !wantSong;
+    sel.hidden = !sel.options.length;
+    if ($('#nesongrow', box).hidden) $('#nelinkrow', box).hidden = true;
     $$('.nesfxc', box).forEach(b => b.classList.toggle('on', b.dataset.a === st.sfx));
     $('#nekinds', box).hidden = st.sfx === 'none';
   };
   $$('.nemc', box).forEach(b => b.onclick = () => { const m = b.dataset.m;
+    wantSong = m === 'music' && !sel.options.length;
     if (m !== 'music') st.sound = m;
-    else if (!st.sound.startsWith('music:')) { if (!sel.options.length) { songIn.click(); return; } st.sound = sel.options[0].value; }
+    else if (!st.sound.startsWith('music:') && sel.options.length) st.sound = sel.options[0].value;
     ne.changed(); });
+  // a song from a link: the Analyser's downloader (yt-dlp, the MP3 preset -> refs\audio) as a job, then picked here
+  $('#neslink', box).onclick = () => { const r = $('#nelinkrow', box); r.hidden = !r.hidden; if (!r.hidden) $('#nelinku', box).focus(); };
+  $('#nelinku', box).onkeydown = e => { if (e.key === 'Enter') $('#nelinkgo', box).click(); };
+  $('#nelinkgo', box).onclick = async () => {
+    const url = $('#nelinku', box).value.trim(), go = $('#nelinkgo', box), msg = $('#nelinkst', box), pre = $('#nelinklog', box);
+    if (!/^https?:\/\//i.test(url)) { toast(t('Paste a full link starting with https://'), 'err'); return; }
+    const j = await startJob('download', {url, preset: 'mp3'}, false);
+    if (!j) return;
+    go.disabled = true; msg.textContent = t('downloading…'); pre.textContent = '';
+    followJob(j.id, pre, done => {
+      go.disabled = false;
+      const file = pre.textContent.split('\n').map(l => l.trim()).reverse().find(l => FILE_RX.test(l));
+      if (done.status !== 'done' || !file) { msg.innerHTML = esc(t(done.status)) + (done.status === 'failed' ? ' ' + reportBtn(done.id, 'sm ghost') : ''); return; }
+      const name = file.split('\\').pop(), rel = 'refs/audio/' + name;
+      if (!OPT.songs.some(s => s.rel === rel)) OPT.songs.push({name, rel});
+      msg.textContent = t('done ✓'); $('#nelinku', box).value = ''; $('#nelinkrow', box).hidden = true;
+      wantSong = false; st.sound = 'music:' + rel; ne.changed();
+    });
+  };
   sel.onchange = () => { st.sound = sel.value; ne.changed(); };
   songIn.onchange = async () => { const f = [...songIn.files]; songIn.value = '';
     await ne.addFiles(f, $('#nesongf', box));
     const songs = (ne.P() || {}).songs || [], s = f[0] && (songs.includes(f[0].name) ? f[0].name : songs[songs.length - 1]);
-    if (s) { st.sound = 'music:' + s; ne.changed(); } };
+    if (s) { wantSong = false; st.sound = 'music:' + s; ne.changed(); } };
   $$('.nesfxc', box).forEach(b => b.onclick = () => { st.sfx = b.dataset.a; ne.changed(); });
   neChips($('[data-q=kinds]', box), OPT.sfx_kinds, st, 'kinds', {help: $('[data-h=kinds]', box), onChange: ne.changed});
   $('#nesnotes', box).oninput = e => { st.snotes = e.target.value; ne.changed(); };
@@ -3774,7 +3800,18 @@ function packagingBox(P) {
     ${got.length > 1 ? `<div class="small" style="margin-top:6px">${t('<b class="ok">{id}</b> got the most clicks ({ctr} %) - Claude makes the next thumbnails more like it.', {id: esc(got[0][0]), ctr: numStr(got[0][1])})}</div>` : ''}
     ${pg.link ? `<div class="small" style="margin-top:4px"><a href="${esc(pg.link)}" target="_blank" rel="noopener">${t('Open the posted video')}</a>${pg.updated ? ` <span class="dim">· ${t('saved {date}', {date: esc(pg.updated)})}</span>` : ''}</div>` : ''}</div>`;
 }
+// 0.5.4 (a friend's notes, 2026-10-25): an edit on a downloaded song gets a copy without it to post - the same sound is
+// added in TikTok / Instagram, so the post is not muted (publish.post_copy)
+function postBox(I) {
+  const p = I.post;
+  if (!p) return '';
+  return `<div class="panel pbsec pbpost"><div class="row sp"><div class="row" style="gap:10px"><svg class="i"><use href="#i-music"/></svg><div><b>${t('To post on TikTok or Instagram')}</b>
+      <div class="small muted">${t('This copy leaves out the song "{song}". Add the same sound in the app, from {at}, so your post is not muted.', {song: esc(p.song), at: esc(p.at)})}${p.sound === 'none' ? '' : ' ' + t('Your sound effects stay in it.')}</div></div></div>
+    <span class="row" style="gap:6px">${p.link ? `<a class="btn sm" href="${esc(p.link)}" target="_blank" rel="noopener">${t('Open the song')}</a>` : ''}
+      <button class="btn sm" data-postdir="${esc(p.rel)}"><svg class="i"><use href="#i-folder"/></svg>${t('Show in folder')}</button></span></div></div>`;
+}
 function wirePackaging(el, P) {
+  $$('[data-postdir]', el).forEach(b => b.onclick = () => openPath(b.dataset.postdir, true));
   const ops = $('#opsave', el);
   if (ops) ops.onclick = async () => {
     const ctr = Object.fromEntries($$('.octr', el).map(i => [i.dataset.id, i.value.trim()]));
@@ -3860,7 +3897,7 @@ async function projPublish(el, P) {
   const head = `<div class="pvsech"><svg class="i"><use href="#i-thumb"/></svg><div><h2>${t('Happy with it? Ready to post')}</h2>
     <div class="small muted">${t('The title, thumbnails for YouTube and the vertical cover, the description with chapters and hashtags - checked before you post.')}</div></div></div>`;
   if (empty) {
-    el.innerHTML = `${head}<div class="panel pbsec pbempty">${claudeBtn(`/write-title package ${P.name}`, t('Make the package with Claude'), 'title', P.name, 'pri big')}
+    el.innerHTML = `${head}${postBox(I)}<div class="panel pbsec pbempty">${claudeBtn(`/write-title package ${P.name}`, t('Make the package with Claude'), 'title', P.name, 'pri big')}
       <span class="small muted">${t('Claude picks the moments, makes and checks three thumbnails and writes the words.')}</span><a href="#" class="small" id="pbself">${t('or do it yourself')}</a></div>
       ${packagingBox(P)}`;
     $('#pbself', el).onclick = e => { e.preventDefault(); S.self = true; projPublish(el, P); };
@@ -3881,7 +3918,7 @@ async function projPublish(el, P) {
   const concept = I.records.flatMap(r => r.concepts || []);
   // the title, the thumbnails and making one yourself = one glowing box (the user, 2026-10-15: "all in one so the person
   // isn't thrown around on where everything is")
-  el.innerHTML = `${head}<div class="toprow">${claude()}
+  el.innerHTML = `${head}${postBox(I)}<div class="toprow">${claude()}
       <span class="small muted">${t('Claude picks the moments, makes and checks the thumbnails and writes the words. Or do any part yourself below.')}</span></div>
     <div class="panel pbsec pbpack"><div class="pbpart" id="pb-title"><div class="row sp"><h2>${t('Title')}</h2>${title ?`<span class="row" style="gap:6px">${tchars(title.length)}<button class="btn sm" data-cp="title"><svg class="i"><use href="#i-clipboard"/></svg>${t('Copy')}</button></span>` : ''}</div>
       ${title ? `<div class="pbtitle">${esc(title)}</div>` : `<div class="small muted">${t('No title yet - pick one below or type your own.')}</div>`}

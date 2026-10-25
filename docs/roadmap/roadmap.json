@@ -15,7 +15,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-25",
-  "here": "0.5.3.3",
+  "here": "0.5.3.4",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -43,13 +43,14 @@
     {"v": "0.5.3.1", "label": "114 templates", "title": "114 new Motion Graphics templates"},
     {"v": "0.5.3.2", "label": "Film it to the Editor", "title": "Film it hands over to the Editor, and Finish it with Claude"},
     {"v": "0.5.3.3", "label": "Recorded sounds", "title": "Recorded sound effects, and quick drafts with sound"},
+    {"v": "0.5.3.4", "label": "A song from a link", "title": "A song from a link"},
     {"v": "0.5.4", "label": "Sound", "title": "Sound: real sound effects, music and voice"},
     {"v": "0.5.5", "label": "Content agency", "title": "Content agency: My Brand"},
     {"v": "0.5.6", "label": "Template packs", "title": "Motion graphics: template packs, the motion check, formats"},
     {"v": "0.5.7", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
     {"v": "0.5.8", "label": "Content generation", "title": "Content generation: AI clips and pictures"},
     {"v": "0.5.9", "label": "Yapping mode", "title": "Yapping mode: the yap-maxing framework"},
-    {"v": "0.6.0", "label": "Take notes from videos", "icon": "memory", "line": "What videos and courses say and show: topics, the steps taught, notes, collections.", "title": "Take notes from videos: videos and courses as information"},
+    {"v": "0.6.0", "label": "Take notes from videos", "icon": "memory", "line": "What videos and courses say and show: topics, the steps taught, notes, collections.", "title": "Take notes from videos: competitors, videos and courses"},
     {"v": "0.7.0", "label": "AI B-roll", "icon": "videos", "line": "Missing shots or whole sequences made by video models, used like your own clips.", "title": "AI B-roll and cinematics"},
     {"v": "0.7.5", "label": "macOS", "title": "macOS"},
     {"v": "1.0.0", "label": "Deployment", "icon": "update", "line": "The end of Phase 2. What it holds is still to be decided.", "title": "Deployment"}

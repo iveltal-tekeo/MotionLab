@@ -31,7 +31,9 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
   --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
                       also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
-  --render            render <project>_vN.mp4 too; the frame caches (prep_footage.py) are made first when missing
+  --render            render <project>_vN.mp4 too; the frame caches (prep_footage.py) are made first when missing;
+                      a song from refs\\ (a download) -> also build\\publish\\<project>_vN_post.mp4 without it, to post
+                      (the same sound added in TikTok / Instagram; motionlab\\publish.py post_copy)
 Writes only into projects\\<project>\\build\\: plan_vN.json (a normal plan: render_video.py renders it, Claude refines
 it, resolve_build builds it), draft_vN.md (the style aimed for; every shot with frame + timecode, its clip and where
 in it, why that moment; the effects; what the draft cannot draw), draft\\ (the music's beats, the edit's sound). The
@@ -56,6 +58,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motionlab import audio as AU  # noqa: E402
 from motionlab import draft as DR  # noqa: E402
 from motionlab import footage as FC  # noqa: E402
+from motionlab import publish as PB  # noqa: E402
 from motionlab import sfx as SFX  # noqa: E402
 from motionlab import style as ST  # noqa: E402
 from motionlab import taxonomy  # noqa: E402
@@ -1051,6 +1054,14 @@ def main() -> int:
     if r.returncode:
         raise SystemExit("render_video.py failed (see above)")
     out = prj.build / plan["output"]
+    try:
+        pc = PB.post_copy(plan_p, out)              # 0.5.4: a downloaded song -> a copy without it, to post
+    except RuntimeError as e:                       # the draft itself is fine
+        log(str(e))
+        pc = None
+    if pc:
+        log(f"to post: build\\publish\\{pc['video']} - without the song (\"{pc['song']}\": add it in TikTok / "
+            f"Instagram from {pc['at']})")
     bad = prj.verify_sources() if (prj.build / "sources.json").exists() else []
     log("sources unchanged: " + ("yes" if not bad else f"NO - {bad}"))
     print(out)

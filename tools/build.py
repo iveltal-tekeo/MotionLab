@@ -10,7 +10,8 @@
              that hardly moves keeps its plain render, captions are always rendered plain - nothing in them travels)
           2. the sound: with --sfx, a plan "sfx": true, or when the plan's audio is already a mix sfx.py made:
              sfx.py plan -> build\\sfx\\<name>_mix.wav becomes the plan's "audio" (made from the same song)
-          3. the composite (render_video.py; skipped when nothing it reads changed and the video exists)
+          3. the composite (render_video.py; skipped when nothing it reads changed and the video exists); a song from
+             refs\\ (a download) -> also publish\\<name>_post.mp4 without it, to post (publish.post_copy)
           4. precheck.py on it (+ the sound report): vanishing parts, fast moves without blur, buried / loud cues;
              and the plan's camera moves (2026-10-24, precheck.plan_moves): too many, or one between two shots of
              the same take
@@ -247,6 +248,16 @@ def main() -> int:
             return 1
         lines.append(f"video: {out} ({N} frames, {N / fps:.1f} s) in {mins(time.time() - t3)}")
     report["composite_key"], report["video"] = key, str(out)
+    from motionlab import publish as PB          # 0.5.4: a downloaded song -> a copy without it, to post
+    try:
+        pc = PB.post_copy(plan_path, out)
+    except RuntimeError as e:                    # the video itself is fine
+        lines.append(str(e))
+        pc = None
+    if pc:
+        lines.append(f"to post: publish\\{pc['video']} - without the song (\"{pc['song']}\": the user adds it in "
+                     f"TikTok / Instagram from {pc['at']})")
+        report["post_copy"] = pc["video"]
     # 4. the precheck
     from motionlab import precheck as PC
     res = PC.run(out, sfx=str(rep) if rep else None, verbose=False)
