@@ -18,16 +18,16 @@ the table below.
 | Fonts and customizations (0.4.6) | none (added 2026-10-15 night; released 2026-10-16) |
 | Phase 2 begins - Spanish, speed, the one-file install, the Analyser's three ways, Shared knowledge, one way to review (0.5.1) | none (built 2026-10-19; the user first said "a 0.5.5 version", the planned colour number - it took the next free one) |
 | New edit, step by step (0.5.2) | none (built 2026-10-22) |
-| Yapping mode (0.5.9) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16), 0.5.1 (2026-10-16 to 2026-10-19), 0.5.2 (2026-10-19 to 2026-10-22) |
+| Yapping mode (0.6.4) | 0.4.0 (until 2026-10-13), 0.4.4 (2026-10-13 to 2026-10-14), 0.4.5 (2026-10-14 to 2026-10-15), 0.4.7 (2026-10-15 to 2026-10-16), 0.5.1 (2026-10-16 to 2026-10-19), 0.5.2 (2026-10-19 to 2026-10-22), 0.5.9 (2026-10-22 to 2026-10-25) |
 | Faster videos (0.5.3) | 0.4.8 (2026-10-15 night to 2026-10-16; earlier on 2026-10-15 0.4.8 was colour's number), 0.5.2 (2026-10-16 to 2026-10-19); released 2026-10-24 |
-| Sound (0.5.4) | none (added 2026-10-22: content generation's voice and music, ideas.md's Demucs, the sound effects tool's open `--sfx`, the user's sound library) |
-| Content agency: My Brand (0.5.5) | none (added 2026-10-22) |
+| Sound (0.5.4) | none (added 2026-10-22: content generation's voice and music, ideas.md's Demucs, the sound effects tool's open `--sfx`, the user's sound library); released 2026-10-25 as it stood - its open steps went into 0.6.0 |
+| Content agency: My Brand (0.6.0) | 0.5.5 (2026-10-22 to 2026-10-25) |
 | Prompt generator (removed 2026-10-22; open items in ideas.md) | 0.4.1 (until 2026-10-13), 0.4.5 (2026-10-13), 0.4.3 (2026-10-14), 0.4.4 (2026-10-14 to 2026-10-15), 0.4.6 (2026-10-15), 0.4.9 (2026-10-15 to 2026-10-16), 0.5.3 (2026-10-16 to 2026-10-19), 0.5.4 (2026-10-19 to 2026-10-22) |
 | Motion graphics - the library (0.5.0) | none (added 2026-10-15 night; it took 0.5.0's number and content generation's graphics steps; released 2026-10-16) |
-| Motion graphics - template packs, the motion check, formats (0.5.6) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N; 0.5.4 (2026-10-16 to 2026-10-19), 0.5.5 (2026-10-19 to 2026-10-22) |
-| Colour (0.5.7) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16), 0.5.5 (2026-10-16 to 2026-10-19), 0.5.6 (2026-10-19 to 2026-10-22) |
-| Content generation (0.5.8) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16), 0.5.6 (2026-10-16 to 2026-10-19), 0.5.7 (2026-10-19 to 2026-10-22); "0.5" before that meant templates by feel + macOS |
-| Take notes from videos + courses (0.6.0; *Describe video* until 2026-10-22) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15) |
+| Motion graphics - template packs, the motion check, formats (0.6.1) | the rest of 0.5.0's plan (2026-10-15 to 2026-10-16) - "0.5.0's step N" in older notes = this plan's step N; 0.5.4 (2026-10-16 to 2026-10-19), 0.5.5 (2026-10-19 to 2026-10-22), 0.5.6 (2026-10-22 to 2026-10-25) |
+| Colour (0.6.2) | 0.3.7 (2026-10-12), 0.4.3 (2026-10-13), 0.4.5 (2026-10-14), 0.4.6 (2026-10-14 to 2026-10-15), 0.4.8 (2026-10-15), 0.5.1 (2026-10-15 to 2026-10-16), 0.5.5 (2026-10-16 to 2026-10-19), 0.5.6 (2026-10-19 to 2026-10-22), 0.5.7 (2026-10-22 to 2026-10-25) |
+| Content generation (0.6.3) | 0.5.0 (2026-10-14 to 2026-10-15), 0.5.2 (2026-10-15 to 2026-10-16), 0.5.6 (2026-10-16 to 2026-10-19), 0.5.7 (2026-10-19 to 2026-10-22), 0.5.8 (2026-10-22 to 2026-10-25); "0.5" before that meant templates by feel + macOS |
+| Take notes from videos + courses (0.6.5; *Describe video* until 2026-10-22) | 0.4 (2026-10-09), 0.6 (2026-10-11), 0.3.5 (2026-10-12), 0.4.2 (2026-10-13), 0.4.7 (2026-10-14), 0.8.0 (2026-10-14 to 2026-10-15), 0.6.0 (2026-10-15 to 2026-10-25) |
 | Templates by feel (removed 2026-10-22) | 0.5 (with macOS, 2026-10-07 to 2026-10-14), 0.6.5 (2026-10-14 to 2026-10-22) |
 | AI B-roll and cinematics (0.7.0) | 0.7 |
 | macOS (0.7.5) | 0.5 (with templates by feel, 2026-10-07 to 2026-10-14) |
@@ -137,6 +137,7 @@ yapping mode, in one of 2026-10-19 or later it is the release that opened Phase 
   shipped in 0.4.0 (New edit's style of up to three videos, the quick draft, the colour match); what it still had open
   - the story's HEIT structure, captions and graphics placed by the draft itself - is yapping mode's (0.5.9) and the
   motion-graphics plan's (0.5.6).
+- **2026-10-25** (the user: "idk lets just upload the 0.5.4 version and start working on the 0.5.5 (which u will move to 0.6.0 since it will be a big rrelease) and the otehr stuff just put it on version above"): **0.5.4 released as it stood** (recorded sound effects, quick drafts with sound, a song from a link, three listening rounds); its open steps - sounds on friends' PCs, the user picking the sounds, a music library and ambience, what round 3 left, the rating on two real videos - went into 0.6.0 (*Sound, continued*); voice-over had gone to content generation and the music / voice stems + a reference's sound effects to take notes from videos earlier that day. **Content agency 0.5.5 -> 0.6.0** ("a big release" - the start of the 0.6 line, its roadmap badge); so the updater keeps installing in number order, the plans after it moved up one each: template packs 0.5.6 -> **0.6.1**, colour 0.5.7 -> **0.6.2**, content generation 0.5.8 -> **0.6.3**, yapping mode 0.5.9 -> **0.6.4**, take notes from videos 0.6.0 -> **0.6.5**; 0.7.0, 0.7.5 and 1.0.0 unchanged. plans.md, ideas.md and README follow; the user's quoted words and code comments keep the old numbers.
 
 ## Where some plans came from
 
@@ -194,6 +195,119 @@ to the lab's texture.
   winget's full build: unchecked).
 
 ## Released plans (their text when they shipped)
+
+### 0.5.4 - released 2026-10-25 - Sound: real sound effects
+
+Released 2026-10-25 as it stood, at the user's word ("idk lets just upload the 0.5.4 version and start working on the 0.5.5 (which u will move to 0.6.0 since it will be a big rrelease) and the otehr stuff just put it on version above"): steps 1, 2 and 6 had shipped in 0.5.3.3, step 3 (a) in 0.5.3.4, step 9 (round 3) with the release; the open steps - 3 (b), 8, 10, round 3's crackle / flutter / plain cuts, the rating on two real videos and a laptop's numbers - moved into 0.6.0 (*Sound, continued*); steps 4, 5 and 7 had moved to 0.6.3 and 0.6.5 the same day. The plan as it was:
+
+**Ships when**: an edit's sound effects come from recorded samples (every file's licence recorded) - on friends' PCs
+too, not only this one - and the user rates them good - not "AI created" - on two videos (a talking video and a music
+edit); `precheck.py --sfx` passes on both; a
+laptop measures the library's size and the time it adds per minute of video.
+
+**The user's words (2026-10-22)**: "the Claude sounds we are getting are very dull, AI created and very plain (i want
+you to expand on this and see if its possible to improve the way u generate sound effects or ambiance music) if not we
+could search in the future to get some sounds from free libraries or pages or viral sounds"; then: "lets try to review
+the current roadmap and see if we can move all sound related ideas to 0.5.4 instead so we can remove that AI-look for
+SFX or maybe even create ambience music or random stuff from public libraries".
+
+**Where it stands**: `motionlab\sfx.py` synthesises 22 kinds from noise and tones (shipped in 0.4.1.1), each levelled
+against the music; New edit's step 5 asks how many effects and which kinds (0.5.2). Claude's assessment (2026-10-22):
+synthesis has a ceiling - more tuning helps a little but never sounds recorded; music models that run locally need a
+strong GPU, and their licences often forbid commercial use.
+
+1. **A sound library** (like `fonts\` and `logos\`): recorded effects sorted by the cue kinds (`sounds\<kind>\` +
+   `sounds.json`: source, author, licence, link per file). In the repo only CC0 and small (a few MB): Kenney's packs,
+   Freesound filtered to CC0. Free libraries whose terms forbid passing the files on (Sonniss' GDC bundles, Pixabay,
+   Mixkit - each licence checked live) stay on the PC: the user downloads them and `sfx.py` indexes them.
+2. **`sfx.py` prefers a sample**: per cue the closest kind and length, a different one each time (no repeats in a
+   row), a little pitch and level variation; the levelling against the music stays; synthesis is the fallback when
+   no sample fits. Measured before / after on the test videos - the user's listen decides.
+   **Built 2026-10-25, released in 0.5.3.3** (with step 1: `library\sounds\`, 108 recorded, on this PC only). The user's listen
+   of the A/B demo (28 cues on EsDeeKid - Century): **B, the library, sounds better** ("b sounds better i guess") -
+   not yet the *Ships when* rating on two real videos. Then "the sounds are a kind too high but other than that good
+   enough" -> `sfx.TRIM_DB` -3 -> -5 (every level 2 dB lower; the -24 dB song floor holds, so the quiet ones - clicks,
+   keys, air - move less). The demo page's third player = B at the new level.
+3. **Music and ambience from public libraries**: picked by mood, tempo and length (`beats.py` measures them), only
+   with clear licences (CC0 / free for commercial use; CC BY = its credit line goes into the publish package's
+   description); room tone and ambience beds (city, nature, a café) under talking videos. New edit's *Music* gets
+   *From the library*. Widened by the friend's notes (2026-10-25, below):
+   - (a) **A song from a link, in the Sound step** (small - the Analyser's downloader, its MP3 preset, into
+     `refs\audio\`): paste a TikTok / YouTube / SoundCloud link, the edit cuts on that song's beats. A viral song is
+     someone's copyright: the render comes twice - with the song (to watch) and without it (to post; the same sound
+     picked in TikTok / Instagram, with where it starts, e.g. "the sound from 0:12.40") - so a post is never muted.
+     **Built 2026-10-25, released in 0.5.3.4** (the user's pick): New edit's Sound step *From a link…* (the `download` job,
+     preset mp3, the song picked when it ends); `publish.post_copy` after every render of a quick draft or a build
+     whose song lies in `refs\` -> `build\publish\<render>_post.mp4` (the same video stream, copied; the sound effects
+     stem or no sound) + `post_copy.json` (the song, where it starts, its link); *Ready to post* shows it. Measured on
+     a 15 s draft on a downloaded song: the copy's video packets identical to the render's, its sound = the effects
+     stem (correlation 1.00; 0.10 with the render's mix), 0.17 s to make; the app tested in headless Edge on a copy of
+     the lab (the download picked the song, the summary named it, Ready to post showed "from 0:11.63").
+   - (b) **A music library on the PC** (like `library\sounds\`): Pixabay Music and YouTube's Audio Library have no
+     API for music - the user downloads tracks there (YouTube's only for YouTube videos) and MotionLab indexes them
+     (tempo, mood, length, licence); sites with an API and commercial-use licences (Jamendo, Freesound, Free Music
+     Archive - each checked live) searched from the app. Never automatic downloads from YouTube: covers, sped-up
+     versions and unknown licences are why *Trending sounds* was scrapped (plans_history.md, 2026-10-15).
+4. **Voice-over** -> moved to 0.6.3 *Content generation* (2026-10-25, the user: "lets just move to a later version").
+5. **Separate music from voice** -> moved to 0.6.5 (2026-10-25, the same).
+6. **The quick draft's `--sfx`** (open since 0.4.1.1): the draft places its effects as cues, `sfx.py plan` makes them.
+   **Built 2026-10-25, released in 0.5.3.3**: `draft_edit.py --sfx few | some | many | auto [--sfx-kinds]` (New edit's step 5
+   passes it; Auto = few for a talking video, else some) -> the plan's `"sfx"` {amount, kinds, first = the drops} thins
+   the effects' cues (`sfx.choose`: the drops first, then hits > risers > whips > whooshes, 5 / 2 / 0 s apart), the
+   mix becomes its audio; punch-ins on one take = a whip peaking on the cut (a talking draft had no effect with a
+   sound before); *Finish it with Claude* lists them under *Stays*. Self-test `check_draft`. Measured on the
+   synthetic test clips: a 30 s music draft = 3 effects (2 hits, 1 tick, all recorded), a talking draft = 3 whips,
+   each peaking inside its cut frame; ~1.5 s added. Still open: plain cuts get no sound (a beat montage's 31 cuts ->
+   3 effects at *some*) - the user's listen decides.
+7. **A reference's sound effects, measured** -> moved to 0.6.5 with step 5 (it needs the stems).
+8. **Sound effects on friends' PCs** (2026-10-25: today the 108 recorded sounds are on this PC only - 98 from the
+   user's pack, which states no licence, and 10 Sonniss picks, which may not be passed on - so friends still get the
+   made-up ones). The user: "why cant i upload my pack? its free lol" - free to download is not free to pass on: with
+   no licence the sounds stay their maker's, two of them look lifted from Apple and a film, and a takedown would hit
+   the whole repo. So the repo carries **an import list, never the sounds**: for the user's pack (its download page
+   from the user - if that page allows sharing, the files may go in after all) and for the Sonniss picks (fetched from
+   Sonniss' official mirror by each PC, read in pieces like trial 2) - which file is which kind, its trim and anchor,
+   its licence; a friend gets the pack from its page, drops it in, `sfx.py import` sorts it by the list.
+9. **Round 3 of sounds** (one A/B listen): recorded sounds for the 7 kinds still made-up only (zap, ching, chip,
+   crackle, shimmer, buzz, ghost) and more than one for the 7 with a single sound (air, key, chip_hit, lighter, tick,
+   cork, flutter - the same one every time); the same listen decides step 6's open point (plain cuts).
+   **Started 2026-10-25** (the user: "start round 3 of sounds, can we diversify on the origin of the sounds? maybe
+   pixabay or other sites as well?"): `.app\dev\sounds_round3_2026-10-25\listen.html` - 66 new candidates for 13
+   kinds (19 from Kenney's CC0 packs - shareable; Sonniss files round 2 had not tried) against today's made-up and
+   library sounds, blind, every good one ticked. Other origins: Pixabay's terms forbid automated downloads and passing
+   the files on - only sounds the user downloads there by hand, on this PC (`sfx.py import --from Pixabay`);
+   Freesound has a free API with a CC0 filter - CC0 sounds may go in the repo (friends' sounds, step 8) - once the
+   user makes a free account and API key.
+   **The user's picks (same night), imported**: zap = Kenney's glitch_002 (CC0); shimmer = two Sonniss glissandos
+   (xylophone, harp); buzz = a Sonniss phone vibrating; air + an Organic Whooshes glove (the made-up one kept); tick =
+   three Kenney ticks (CC0) + the made-up one; chip_hit and pop keep the made-up one (pop: only it); ghost = the
+   made-up one is good; key, cork, lighter = today's library; **crackle: none good** (another origin needed - Freesound
+   or Pixabay by hand); flutter not rated. Today's library sounds left unticked (the clock tick, both pops) are set
+   **off** - a new `"off": true` row (`sfx.py library --off / --on`): never used, the file stays (step 10's *hide*
+   too). The library: 116 recorded, 4 of them CC0 (shareable). Still open from this step: step 6's plain cuts (this
+   page had no plain-cut row - a short A/B on the beat montage).
+10. **The user picks the sounds** (the user, 2026-10-25: "could it be possible for the user itself to choose them while
+    editing or before running the edit"): (a) a *Sounds* page (beside Motion Graphics' Logos): every sound with ▶, its
+    kind, origin and licence; ★ a favourite (used first) / hide one (never used); *Add sounds* = a pack, a zip or a
+    few files with where they came from and their licence -> `sfx.py import` as a job; (b) New edit's *Sound* step:
+    *Choose the sounds* - per kind ticked, the sounds to use in this edit (the request -> the plan's `"sfx"`
+    `"sounds"`, kept on every build); (c) later, the mini-editor (0.6.0 step 6) swaps one cue's sound.
+
+**The friend's notes (2026-10-25, in Spanish, pasted by the user)**: "en sonidos ... tener un descargador como el del
+analizador pero que solo se quede el audio ... si hay una canción viral en tik tok, coger descargarla justo en el
+apartado de sonidos y que trabaje con esa música, o tener conectado a pixabay, YouTube y algunas otras apps de música
+libre de derecho de autor" (a downloader in the Sound step that keeps the audio; a viral TikTok song or free music
+from Pixabay, YouTube and other royalty-free sites) -> step 3 (a) and (b).
+
+**Not here**: viral / trending sounds are copyrighted - the lab never fetches them by itself, and the render you post
+leaves them out (step 3 (a): you add the same sound in TikTok or Instagram); the *Trending sounds* plan was scrapped
+2026-10-15. Music made by a model stays out until a light one with clear commercial terms exists.
+**Order** (the user decides): 1, 2 and 6 shipped in 0.5.3.3, 3 (a) in 0.5.3.4; then 8 (needs the pack's download
+page), 9 + 6's plain cuts (one listen), 10 (the user picks the sounds), 3 (b) and the ambience; then the rating on
+two real videos and a laptop's numbers. 4, 5 and 7 moved out 2026-10-25. **Size**: medium.
+**Rules**: light and tested first; every file's licence recorded; music only with clear licences; no sound file in the
+repo unless its licence allows passing it on.
+**Needs first**: nothing - New edit's sound step (0.5.2) already asks for it.
 
 ### 0.5.3 - released 2026-10-24 - Faster videos: half of Claude's time, the same result, the loop untouched
 

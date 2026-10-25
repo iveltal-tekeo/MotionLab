@@ -771,14 +771,15 @@ def anchor_of(x: np.ndarray, kind: str) -> int:
 class Library:
     """The recorded sounds of a library folder (sounds.json + <kind>\\*.wav). pick() = the sound for a cue: one of
     its kind's files (or the made-up sound for a kind listed in "synth_too"), seeded by the cue, never the one the
-    previous cue of that kind used; place() = that file put so its anchor lands on the cue's key moment."""
+    previous cue of that kind used; place() = that file put so its anchor lands on the cue's key moment. A row with
+    "off": true (0.5.4: the user did not pick it in a listen; `sfx.py library --off`) is never used - its file stays."""
     SYNTH = {"synth": True, "file": "made-up"}
 
     def __init__(self, root: Path, data: dict):
         self.root, self.data = Path(root), data
         self.by_kind: dict[str, list[dict]] = {}
         for e in data.get("sounds", []):
-            if (self.root / e["file"]).exists():
+            if (self.root / e["file"]).exists() and not e.get("off"):
                 self.by_kind.setdefault(e["kind"], []).append(e)
         self.synth_too = set(data.get("synth_too") or [])
         self._cache: dict[str, np.ndarray] = {}
@@ -1244,7 +1245,7 @@ def selfcheck(verbose: bool = True) -> dict:
             t = np.arange(int(0.08 * SR)) / SR
             return np.concatenate([np.zeros(int(pre_s * SR)), np.sin(2 * np.pi * f0 * t) * np.exp(-t / 0.01)])
         tw, tr = np.arange(int(0.6 * SR)) / SR, np.arange(int(1.0 * SR)) / SR
-        files = {"click/a.wav": tone(1500, 0.03), "click/b.wav": tone(2200, 0.02),
+        files = {"click/a.wav": tone(1500, 0.03), "click/b.wav": tone(2200, 0.02), "click/c.wav": tone(900, 0.03),
                  "whoosh/w.wav": _noise(0.6, 5) * np.exp(-((tw - 0.3) / 0.06) ** 2),     # loudest at 0.30 s
                  "riser/r.wav": _noise(1.0, 6) * tr ** 3}                                  # loudest at its end
         rows_ = []
@@ -1252,7 +1253,8 @@ def selfcheck(verbose: bool = True) -> dict:
             (tmp / f).parent.mkdir(parents=True, exist_ok=True)
             _sf.write(str(tmp / f), np.stack([x, x], 1), SR, subtype="PCM_24")
             k = f.split("/")[0]
-            rows_.append({"file": f, "kind": k, "anchor_s": anchor_of(np.stack([x, x], 1), k) / SR})
+            rows_.append({"file": f, "kind": k, "anchor_s": anchor_of(np.stack([x, x], 1), k) / SR,
+                          **({"off": True} if f == "click/c.wav" else {})})          # a sound the user did not pick
         data = {"synth_too": [], "sounds": rows_}
         rq = resolve([{"f": 15, "kind": "click"}, {"f": 45, "kind": "click"}, {"f": 75, "kind": "click"},
                       {"f": 120, "kind": "whoosh", "dur": 0.4, "peak": 0.5}, {"f": 180, "kind": "riser", "dur": 0.5},
@@ -1271,11 +1273,12 @@ def selfcheck(verbose: bool = True) -> dict:
     off = [lands(15, 0, False), lands(45, 0, False), lands(75, 0, False), lands(120, 0.2, True), lands(180, 0.5, True)]
     check(all(abs(o) <= 4 for o in off[:3]) and all(abs(o) <= 12 for o in off[3:])
           and all(u.startswith("click/") for u in used[:3]) and used[0] != used[1] != used[2]
+          and "click/c.wav" not in used
           and used[3] == "whoosh/w.wav" and used[4] == "riser/r.wav" and used[5] == "made-up"
           and np.array_equal(r1["stem"], r2["stem"]),
           "recorded sounds: clicks on their frame " + ", ".join(f"{o:+.1f}" for o in off[:3]) + " ms, a whoosh's "
           f"loudest moment {off[3]:+.1f} ms and a riser's {off[4]:+.1f} ms from where they land; " + " > ".join(used[:3])
-          + f" (no repeat); pop = {used[5]}; two runs the same")
+          + f" (no repeat, the one set off never); pop = {used[5]}; two runs the same")
     secs = time.time() - t0
     lines.append(f"{'PASS' if ok else 'FAIL'}: onsets within {worst_ms:.2f} ms (1 frame = {1000 / fps:.1f} ms), levels "
                  f"within {worst_db:.2f} dB, {len(cues)} cues on {frames / fps:g} s, {secs:.1f} s")

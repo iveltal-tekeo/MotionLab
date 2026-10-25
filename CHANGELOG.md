@@ -5,6 +5,17 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.5.4 - 2026-10-25 - Sound: real sound effects, picked by ear
+
+- **Sound, the version** - this closes the sound version that 0.5.3.3 and 0.5.3.4 began: sound effects from real
+  recordings in your own sound library instead of made-up ones, quick drafts that come with their sound effects, a
+  song from a link with a copy without it to post. The next steps - sounds shared with friends, choosing the sounds
+  yourself, a music library - come with 0.6.0.
+- **More recorded sound effects, picked by ear** - on the PC where the sound library lives, a third listening round
+  added recorded sounds for glitches, glows (two glissandos), a phone buzzing and ticks, and more variety for soft air
+  moves; where the made-up sound was the one liked (ghosts, pops, game hits) it stays. A sound not picked is set aside,
+  never deleted.
+
 ## 0.5.3.4 - 2026-10-25 - A song from a link
 
 - **A song from a link** - New edit's *Sound* step has *From a link…*: paste a TikTok, YouTube or SoundCloud link and

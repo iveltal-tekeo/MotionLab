@@ -23,8 +23,9 @@ under it - measured, since Claude cannot hear (motionlab\\sfx.py).
           the song it was made from)
           make / plan --synth = made-up sounds only (the report's "sound" per cue: a library file or made-up)
     .venv\\Scripts\\python tools\\sfx.py kinds        the sounds and their level classes (+ the library's counts)
-    .venv\\Scripts\\python tools\\sfx.py library [--synth-too whoosh,whip]   the recorded library per kind, sources,
-          licences; --synth-too = kinds that keep the made-up sound among their recorded ones
+    .venv\\Scripts\\python tools\\sfx.py library [--synth-too whoosh,whip] [--off tick/a.wav,...] [--on ...]   the
+          recorded library per kind, sources, licences; --synth-too = kinds that keep the made-up sound among their
+          recorded ones; --off = sounds never used (the user did not pick them; the file stays), --on = used again
     .venv\\Scripts\\python tools\\sfx.py import <folder | file> --from "<pack / site>" --licence "<what it allows>"
           [--kind K] [--skip "apple*,*demo*"] [--dry-run]   recorded sounds into library\\sounds (never shared): the
           kind from each folder + file name (or --kind), cut to the sound, its anchor measured, a 24-bit copy + its
@@ -280,13 +281,23 @@ def cmd_kinds(a) -> int:
 def cmd_library(a) -> int:
     jp = SFX.SOUNDS / "sounds.json"
     data = json.loads(jp.read_text(encoding="utf-8")) if jp.exists() else None
+    if (a.synth_too is not None or a.off or a.on) and data is None:
+        raise SystemExit(f"no library yet ({SFX.rel(jp)}): sfx.py import first")
     if a.synth_too is not None:
-        if data is None:
-            raise SystemExit(f"no library yet ({SFX.rel(jp)}): sfx.py import first")
         bad = [k for k in a.synth_too.split(",") if k.strip() and k.strip() not in SFX.KINDS]
         if bad:
             raise SystemExit(f"unknown kind(s) {', '.join(bad)}")
         data["synth_too"] = sorted({k.strip() for k in a.synth_too.split(",") if k.strip()})
+    for names, off in ((a.off, True), (a.on, False)):          # 0.5.4: set a sound off (never used) / on again
+        for n in [x.strip().replace("\\", "/") for x in (names or "").split(",") if x.strip()]:
+            e = next((e for e in data["sounds"] if e["file"] == n), None)
+            if e is None:
+                raise SystemExit(f"no sound {n} in {SFX.rel(jp)} (its \"file\", e.g. tick/tick__sonniss_2.wav)")
+            if off:
+                e["off"] = True
+            else:
+                e.pop("off", None)
+    if a.synth_too is not None or a.off or a.on:
         jp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     if data is None:
         print(f"no recorded sounds yet ({SFX.rel(jp)}) - every effect is made up; add some: sfx.py import <folder>")
@@ -295,10 +306,11 @@ def cmd_library(a) -> int:
     rows = data.get("sounds", [])
     missing = [e["file"] for e in rows if not (SFX.SOUNDS / e["file"]).exists()]
     print(f"{SFX.rel(SFX.SOUNDS)}: {len(rows)} recorded sounds" + (f", {len(missing)} files missing" if missing else ""))
-    by = Counter(e["kind"] for e in rows)
+    by, offs = Counter(e["kind"] for e in rows if not e.get("off")), Counter(e["kind"] for e in rows if e.get("off"))
     for k in SFX.KINDS:
-        extra = " + the made-up one" if k in data.get("synth_too", []) and by.get(k) else ""
-        print(f"  {k:9s} {by.get(k, 0):3d}{extra}" if by.get(k) else f"  {k:9s}   - made-up")
+        extra = (" + the made-up one" if k in data.get("synth_too", []) and by.get(k) else "") + (
+            f"  ({offs[k]} off)" if offs.get(k) else "")
+        print(f"  {k:9s} {by.get(k, 0):3d}{extra}" if by.get(k) else f"  {k:9s}   - made-up{extra}")
     for src, n in Counter(e["source"].split(": ")[0] for e in rows).most_common():
         lic = next(e["licence"] for e in rows if e["source"].split(": ")[0] == src)
         print(f"  from {src}: {n}  (licence: {lic})")
@@ -347,6 +359,8 @@ def main() -> int:
     sub.add_parser("kinds")
     s = sub.add_parser("library")
     s.add_argument("--synth-too", metavar="KINDS", help="kinds that keep the made-up sound among the recorded ones")
+    s.add_argument("--off", metavar="FILES", help="sounds never to use (their \"file\", comma-separated) - kept on disk")
+    s.add_argument("--on", metavar="FILES", help="sounds set off before, used again")
     s = sub.add_parser("import")
     s.add_argument("source", help="a sound file or a folder of them (only read)")
     s.add_argument("--from", dest="from_", required=True, help="where they came from (pack / site / author)")

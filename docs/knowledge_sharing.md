@@ -98,7 +98,7 @@ cards; rules only apply to other categories when they are general.
 
 | Version | What |
 |---|---|
-| 0.6.0 if friends' verdicts are in (`docs\plans.md`; was v0.3) | **Category profiles**: threshold overrides per category (`config.json`) once a category has reviewed feedback on 3+ references; detectors for things music videos lack (captions / burned-in subtitles, jump-cut talking heads, picture-in-picture). |
+| 0.6.5 if friends' verdicts are in (`docs\plans.md`; was v0.3, then 0.6.0) | **Category profiles**: threshold overrides per category (`config.json`) once a category has reviewed feedback on 3+ references; detectors for things music videos lack (captions / burned-in subtitles, jump-cut talking heads, picture-in-picture). |
 | not planned yet (was v0.4+) | Local search across all cards (SQLite full-text; local embeddings only if keyword search falls short) - still offline. |
 | beyond friends | A hosted service with accounts, moderation and opt-in upload of text summaries (never videos) - only if needed. |
 

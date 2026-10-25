@@ -7,6 +7,17 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.5.4 - 2026-10-25 - Sonido: efectos de sonido reales, elegidos de oído
+
+- **Sonido, la versión**: cierra la versión de sonido que empezaron la 0.5.3.3 y la 0.5.3.4: efectos de sonido de
+  grabaciones reales de tu propia biblioteca de sonidos en lugar de inventados, borradores rápidos que traen sus
+  efectos de sonido, una canción desde un enlace con una copia sin ella para publicar. Los siguientes pasos (sonidos
+  compartidos con tus amigos, elegir tú los sonidos, una biblioteca de música) llegan con la 0.6.0.
+- **Más efectos de sonido grabados, elegidos de oído**: en el PC donde está la biblioteca de sonidos, una tercera
+  ronda de escucha añadió sonidos grabados para glitches, brillos (dos glissandos), un móvil vibrando y ticks, y más
+  variedad para los movimientos de aire suaves; donde el sonido inventado era el que gustaba (fantasmas, pops, golpes
+  de videojuego) se queda. Un sonido no elegido queda apartado, nunca se borra.
+
 ## 0.5.3.4 - 2026-10-25 - Una canción desde un enlace
 
 - **Una canción desde un enlace**: el paso *Sonido* de Nueva edición tiene *Desde un enlace…*: pega un enlace de
