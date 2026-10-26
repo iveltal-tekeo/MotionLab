@@ -38,6 +38,16 @@ problem** from the app -> 0.4.2.1 (2026-10-14).
 - **Separate music from voice** (Demucs stems) - cleaner beats / drops and cleaner speech for transcripts. Heavy on CPU.
   -> moved into 0.5.4 *Sound* (step 5, measure first; 2026-10-22), then into 0.6.5 (*Sound*, 2026-10-25).
 - **A small classifier trained on the verdicts** - once friends have given ~300+ verdicts.
+- **Subject masking: you cut out of your own footage** (the user, 2026-10-26: "maybe implement corridorkey2.0 to
+  mask subjects? ... if u specify u want the user masked it can improve edits and have motion graphics from
+  behind") - text and graphics behind the speaker, a background swapped, a glow round them. Checked the same day:
+  CorridorKey (Corridor Digital, March 2026, github.com/nikopueringer/CorridorKey; no "2.0" found) is a neural
+  *green-screen* keyer (clean alpha + the colour behind the edges, EXR, a Resolve plugin by the community) and wants
+  about 24 GB of graphics memory - too heavy for ordinary PCs (*light and tested first*), and the user's talking
+  takes have no green screen. For footage without one: a person-matting model - Robust Video Matting, MediaPipe's
+  selfie segmentation (CPU, light), SAM 2 (heavier) - measured on a laptop first (seconds per minute of video, edge
+  quality on hair); the mask as a clip layer the plan can put a graphic under (compose: a layer's alpha from a mask
+  source). CorridorKey stays an option for a friend who films on green and has the GPU (or Beeble's hosted one).
 - **Auto-reframe 16:9 -> 9:16** following the subject (MediaPipe / YOLO) - for shorts. -> moved into 0.6.4 (*Shorts
   from a long video*, 2026-10-25).
 - **Checked 2026-10-25** (the user: "try the new after effects or free open source programs people have recently

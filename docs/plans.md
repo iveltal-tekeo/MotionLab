@@ -74,7 +74,7 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.6.1 | Motion graphics: template packs | next - *Left from 0.6.0* first (what waits on the user); the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
+| 0.6.1 | Quality over quantity: many clips edited well, template packs | next - the user's focus (2026-10-26): edits done well, ten more minutes of Claude are fine; first many B-roll clips edited well (a clip catalogue made once, a shot list with pictures before any render, Claude's own review); *Left from 0.6.0* (what waits on the user); then the template packs - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
 | 0.6.2 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0; + the edit as a timeline file for Premiere / Final Cut (2026-10-25) | M |
 | 0.6.3 | Content generation | planned - AI clips back into the lab, pictures from image tools, voice-over (voice and music moved to 0.5.4 2026-10-22; voice back 2026-10-25) | M |
 | 0.6.4 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts, shorts from a long video (2026-10-25) | L |
@@ -485,7 +485,71 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
   already gives the edit and the colour, HyperFrames the motion graphics; Premiere's and After Effects' scripting
   needs paid Adobe apps most friends lack (ideas.md *Later*).
 
-## 0.6.1 - planned - Motion graphics: template packs, the motion check, formats
+## 0.6.1 - planned - Quality over quantity: many clips edited well, motion graphics from template packs
+
+**The focus: quality over quantity** (the user, 2026-10-26: "for future plans i want to focus 0.6.1 on a "quality over
+quantity" version, idc if you spend 10 more minutes in editing a video or sum but i want it well done, as feedback igot
+that u are having a bad time editing videos when i give u lots of b-rolls, how could we improve that?"). The measure of
+an edit is the result, not Claude's minutes (0.5.3 halved them; ten more are fine). Two halves of one aim: **many clips
+edited well** (below, first) and the graphics from **template packs** (the rest of this plan, the 2026-10-15 text).
+
+**Many clips edited well - why it goes badly today** (read in the code 2026-10-26; no many-clip project on this PC -
+the biggest has 3 clips - so the friend's case is the test):
+- *Claude edits blind*: `brief.md`'s *The clips* is one line of numbers per clip (length, size, sound, transcribed or
+  not), nothing about what it shows. To know, Claude reads `storyboard.py`'s boards - a tile every 25 frames, 36 per
+  sheet: 40 clips of 15 s = ~720 tiles on ~20 sheets - and has to remember "clip Q = the coffee pour" by itself
+  through a long chat; an *Improve* or *Finish it* window starts again from nothing.
+- *The quick draft picks by numbers only*: each shot = the sharpest, best exposed, right-motion moment not used yet
+  (`draft.py pick_windows`), in no story order; B-roll over talking = a random clip nobody talks in, every few
+  seconds for 1.5-2.5 s (`broll_layers`) - never the clip that shows what is being said. It avoids the same clip twice
+  in a row, not two clips of the same scene.
+- *Every clip is decoded whole first* (`prep_footage.py`): by its own formula ~5.6 GB per minute of footage in a
+  1080x1920 edit at 30 fps, ~18 GB per minute for a 4K horizontal clip in a vertical edit - 10 minutes of B-roll =
+  56-180 GB and the time to write it, before the first shot is picked; under 2 GB free it stops.
+- *Clips that do not match*: phone clips are often HDR (iPhones record it by default) and come out flat beside the rest
+  (no tone mapping - the cache warns); a horizontal clip in a vertical edit is cut in the middle or shown whole over a
+  blur - its subject is not looked for.
+
+**Steps** (each measured on one many-clip project before / after: Claude's minutes and tokens, the disk, the user's
+rating):
+1. **A clip catalogue, made once** - `build\clips.json`. The lab's part (no Claude): every clip split into its moments
+   (a new scene or camera move inside a clip, a steady hold), the usable windows (sharp, exposed, steady or one clean
+   move) and the bad ones (a shaky start, the floor, out of focus), moments that look alike grouped, the date each was
+   filmed (the file's creation time, like photos' date taken), one key frame per moment. Claude's part: those key
+   frames ~20 per sheet with frame + timecode, one line per moment - what it shows, shot size (wide / medium / close /
+   detail), where, light, motion, a few tags (person, place, product, screen, food, text). Every later window
+   (*Improve*, *Finish it*) reads it instead of looking again; the Editor shows the line under each clip and the user
+   can correct it (a correction wins).
+2. **The brief holds it**: *The clips* = the catalogue grouped by scene and by date, the bad windows named to leave
+   out.
+3. **A shot list with pictures before any render**: Claude builds the story from the catalogue - the strongest moments
+   for the hook, an order (by date for a vlog, a build for a promo or a music edit), shot sizes that vary (wide ->
+   close), no two moments of one scene back to back unless that is the point; a talking video's B-roll on the words it
+   shows (the transcript matched to the catalogue's lines). The user sees it as one sheet - a key frame per shot, frame
+   + timecode, the words under it - and swaps or approves before anything renders (*cheapest check first* 1-2, with
+   pictures).
+4. **The quick draft reads the catalogue**: the lab's part always (bad windows never used, look-alike moments not back
+   to back, date order when there is one), Claude's lines when they exist (B-roll matched to the words) - so *Quick
+   draft now* with many clips is a fair start. A small local picture-and-words model for that match without Claude
+   only if it earns its install (measured first against Claude's lines, on a laptop).
+5. **Cache only what the edit uses**: the numbers (sharpness, motion, light) and the key frames from a small proxy of
+   every clip; full-size frames only for the picked moments with handles (re-cached when a pick changes). Disk and
+   prep time measured before / after on the many-clip project.
+6. **Clips that match each other**: HDR clips tone-mapped (this ffmpeg has `zscale` + `tonemap` - checked 2026-10-26;
+   tried on a real iPhone clip first); a horizontal clip in a vertical edit framed on its subject (a face, else the
+   most salient part - 0.6.4's reframe) instead of the middle; exposure and white balance brought close to one hero
+   clip (a shot match - the grade stays 0.6.2's).
+7. **Claude's own review before the user sees it** (the ten minutes the user offered): after the plain build, a sheet
+   of every shot checked against one list - the best moment of its clip, no repeat, nothing blurry / shaky / dark, the
+   subject in the frame, each B-roll on its words, colours that match, moves only where the picture changes (M rules)
+   - fixed, then shown with what was fixed (frame + timecode). What it teaches goes to `lessons_making.md`.
+
+**Ships when (this half)**: one project with many B-roll clips (at least 30 clips / 5 minutes of footage, phones and
+orientations mixed - the friend's clips if they share them, else the user's) edited by Claude is rated **good** by the
+user on the shot picks and on the B-roll fitting the words / story, with no shot they call bad (blurry, shaky,
+repeated, wrong subject); a second window (*Improve*) reads the catalogue without looking at the clips again; the
+prep's disk and time measured before / after. **Needs first**: that project (only read, as always); nothing to
+install (OpenCV + ffmpeg split, tone-map and pick the key frames; Claude writes the lines).
 
 **Left from 0.6.0** (released 2026-10-26; each waits on the user or was not needed yet - 0.6.0's text: plans_history.md):
 - *Cut the stumbles* (0.6.0 step 20) stays opt-in (`--stumbles on`) until a take with mistakes in it (an "um", a
@@ -501,7 +565,25 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
   card without Claude. **Held** (the user): 3b's line suggestions from transcripts - only from takes said freely, if
   ever.
 
-**Ships when**: (1) the user's template packs are read with no Claude - every template's moves, eases, timing and
+**The Editor and My Brand - the user's asks for 0.6.x** (2026-10-26, "as future plans for 0.6.x"; not tied to the
+template packs - any 0.6.x can take them; the keyframes, transitions and a clip's opacity are being built now):
+1. *Sounds, graphics, effects (and now transitions) with more presence* - "put them in a more respective place
+   instead of an overcrowded tab bar": e.g. CapCut's row of big icons (Media / Audio / Text / Effects / Transitions
+   ...) as a rail of their own, each opening its panel - not four small tabs over one list.
+2. *A layout you change* - "make the preview bigger, move from left to right... like a normal video editor": panels
+   resized by dragging their borders (preview / timeline / side panels), the side panels swapped left - right, kept
+   per PC.
+3. *Blend modes* - "an option to modify opacity for the clip, as well as to add a mode, like screen mode, add colour,
+   difference": the clip's opacity comes with the keyframes; modes for clips and graphics (normal, screen, add,
+   multiply, overlay, colour, difference ...) need compose's blend() to learn them and the preview's
+   mix-blend-mode the same.
+4. *Subject masking* (an idea, docs\ideas.md *Later / not now*): "implement corridorkey2.0 to mask subjects ... if u
+   specify u want the user masked it can improve edits and have motion graphics from behind".
+5. *The mood board, its own tab in My Brand* - and pictures / videos added from a link ("so i don have to download
+   anything directly"): a post's link (Instagram, TikTok, Pinterest, YouTube) through the download tool, a picture's
+   link straight in; the files stay on this PC like the rest of the board.
+
+**Ships when (the template packs half)**: (1) the user's template packs are read with no Claude - every template's moves, eases, timing and
 controls, plus a preview with a frame + timecode sheet - for at least two Resolve packs (Free Starter Pack 2.0 and
 Swift Pack 2 are on this PC; a pack of preview clips: done in 0.5.0); (2) the motion rules (0.5.0: from 500 moves
 measured on clips) are checked against the packs' exact keyframes and kept in Claude's memory; (3) the "top 3
