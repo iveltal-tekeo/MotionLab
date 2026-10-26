@@ -434,7 +434,9 @@
    "tools/motionlab/brand.py",
    "tools/motionlab/agency.py",
    "tools/motionlab/miniedit.py",
-   "tools/motionlab/edfx.py"
+   "tools/motionlab/edfx.py",
+   "tools/motionlab/edkeys.py",
+   "tools/motionlab/edtrans.py"
   ],
   "server-labels": [
    "tools/motionlab/knowledge.py",

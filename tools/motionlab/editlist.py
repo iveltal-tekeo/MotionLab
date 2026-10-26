@@ -81,9 +81,9 @@ def shots(plan: dict) -> list[dict]:
     """The talking / main shots in timeline order (the quick draft's sNN_<clip> layers; else every clip layer that
     is not B-roll or an effect)."""
     L = [x for x in plan["layers"] if x.get("type") == "clip" and re.match(r"s\d+_", str(x.get("id", "")))]
-    if not L:
+    if not L:                                       # (tr_: a transition's copies of two shots, motionlab\edtrans)
         L = [x for x in plan["layers"] if x.get("type") == "clip" and not str(x.get("id", "")).startswith(
-            ("broll", "rgb_"))]
+            ("broll", "rgb_", "tr_"))]
     return sorted(L, key=lambda x: x["start"])
 
 
@@ -157,14 +157,28 @@ def _trim_front(L: dict, f: int) -> dict:
     return L
 
 
+CURVES = ("zoom", "dx", "dy", "opacity", "gain", "rotation")    # a layer's animated values on the timeline's frames
+
+
+def move_curves(L: dict, fn) -> None:
+    """Every animated value of L (its keys, a curve of frames' first frame, the zoom point's two) through fn(frame)."""
+    def one(v):
+        if isinstance(v, dict) and v.get("keys"):
+            v["keys"] = [[fn(int(x[0])), *x[1:]] for x in v["keys"]]
+        elif isinstance(v, dict) and "values" in v and "start" in v:
+            v["start"] = fn(int(v["start"]))
+    for k in CURVES:
+        one(L.get(k))
+    if isinstance(L.get("anchor"), list):           # (2026-10-26: a shake's frames stayed behind a moved shot)
+        for a in L["anchor"]:
+            one(a)
+
+
 def _shift(L: dict, d: int) -> dict:
     L["start"] = int(L.get("start", 0)) + d
     if "end" in L:
         L["end"] = int(L["end"]) + d
-    for k in ("zoom", "dx", "dy", "opacity", "gain"):
-        v = L.get(k)
-        if isinstance(v, dict) and v.get("keys"):
-            v["keys"] = [[int(x[0]) + d, *x[1:]] for x in v["keys"]]
+    move_curves(L, lambda f: f + d)
     if L.get("jumps"):
         L["jumps"] = [[int(x[0]) + d, x[1]] for x in L["jumps"]]
     for key in ("flash_white", "black"):
@@ -195,7 +209,8 @@ def _zoom_keys(L: dict, curves: dict) -> list:
 def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
     """The list on a copy of the plan: (the new plan, a line per change with frame numbers, the tool steps still to
     run - captions / graphics - for draft_edit.py). Cuts last, from the end, so every frame refers to the plan given."""
-    P = copy.deepcopy(plan)
+    from . import edtrans as TR                     # (an Editor's transitions: made again from the shots after the list)
+    P = TR.strip(copy.deepcopy(plan))
     P.setdefault("cues", [])
     done, steps, punches = [], [], []
     for o in ops:
@@ -246,6 +261,7 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
     for o in sorted((o for o in ops if o["op"] == "cut"), key=lambda o: -o["a"]):
         cut(P, o["a"], o["b"])
         done.append(f"cut f{o['a']}-f{o['b']} ({o['b'] - o['a'] + 1} frames)")
+    TR.build(P)
     return P, done, steps
 
 

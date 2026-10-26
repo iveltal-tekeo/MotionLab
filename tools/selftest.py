@@ -561,14 +561,17 @@ def check_brand() -> dict:
 
 def check_miniedit() -> dict:
     """The Editor (0.6.0 step 6, motionlab.miniedit), no video: trims, deletes, a moved cut, moves, splits, speed, graphics, sound effect edits and
-    words on a made-up plan - what moves with a shot, what is refused, a sound it cannot cut again locking the shots."""
+    words on a made-up plan - what moves with a shot, what is refused, a sound it cannot cut again locking the shots;
+    its effects (edfx), keyframes (edkeys) and transitions (edtrans)."""
     from motionlab import edfx as FX
+    from motionlab import edkeys as KF
+    from motionlab import edtrans as TR
     from motionlab import miniedit as ME
     print("\n=== the Editor: a made video changed by hand ===")
-    r, fx = ME.selfcheck(), FX.selfcheck()                  # (+ its effects: motionlab.edfx)
-    for line in r["lines"] + fx["lines"]:
+    R = [ME.selfcheck(), FX.selfcheck(), KF.selfcheck(), TR.selfcheck()]    # (+ its effects, keyframes, transitions)
+    for line in [x for r in R for x in r["lines"]]:
         print(line)
-    return {"passed": r["passed"] and fx["passed"]}
+    return {"passed": all(r["passed"] for r in R)}
 
 
 def check_facefit() -> dict:

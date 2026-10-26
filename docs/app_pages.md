@@ -493,6 +493,31 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   full-frame graphics back to back, `miniedit.scenes`) as the main track: the *Scenes* lane shows each one's
   picture, they move / trim / split / speed like shots, and a scene's panel has its graphic's words and colours. The
   clips no shot uses get their light copies quietly after (`need_more`, no wait on the preview).
+- **Keyframes, transitions and the add rail** (2026-10-26, the user: "lets continue with the keyframe thing for the
+  minieditor, improve the effect side, maybe add the posiblity of transitions between two clips? ... i kinda want to
+  have that good video editing look so can we look for comparisons in capcut, opencut, premiere pro, davinci"; a
+  research pass over those four + Kdenlive / Shotcut picked the patterns). A shot's panel has tabs **Video** (the
+  keyframe rows, `keyRows` / `bindKeys`: Scale, Position X / Y, Rotation, Opacity, Zoom point X / Y - its value at the
+  playhead, ◆ = a key here / remove it, ◀ ▶ = the keys before / after, ↺ = as it was, the name dragged left / right =
+  the value live in the preview (`liveKey`), kept on release; auto-key: once a value has keys, a change at another
+  moment is a key - `motionlab\edkeys`), **Speed** (speed, clip, part of its clip) and **Sound**. A click on a shot
+  puts the playhead there when it is elsewhere (its keys need it). The selected shot's keys are diamonds on it
+  (`.edkf`, merged by frame - on the clip, never only in a drawer: Resolve 20's backlash): drag = `kmove`, click = the
+  keyframe's panel (what is keyed there, *The move after it*: Linear / Ease in / Ease out / Ease in and out / Hold /
+  Pop - compose's `pop` overshoot, Remove). Transitions (`motionlab\edtrans`, the helper layers rebuilt on every
+  change): a white block on the cut (`.edtr`; its edges = its length on both sides, hatched where frames hold still -
+  Premiere's frozen frames, never Kdenlive's refusal), a + on every plain cut without one (`.edcutb`, on hover = Mix),
+  the add rail's *Transitions* (+ = the cut nearest the playhead, or dropped on a cut), its panel = the 11 kinds,
+  length, direction (Slide / Whip), *Apply to all cuts*, Remove. The add panel's tabs became a rail of big icons in
+  their lanes' colours (`.edrail`; the user: "more presence ... instead of an overcrowded tab bar"); the side panels
+  are 320 / 300 px. The preview: a clip's box moves and turns (`translate` + `rotate` on its wrap), the picture scales
+  inside round the zoom point (under 100 % = smaller than its box, as compose draws it); up to four copies of a clip.
+  *Why not here* (0.6.0.2, the user: "show why some effects or transitions cant be used in tha specific [moment] of the
+  video so people know"): the state's `fx_can` = `edfx.availability` (every kind tried on a copy of each shot / each
+  cut's two shots, ~5 ms - the engine's own reasons); the Effects list starts with where the playhead is (`.edat`:
+  shot n · frame + timecode, following the playhead) and puts the reason under a kind that cannot go there (`.edwhy`,
+  its + off, not draggable), redrawn when the shot / cut under the playhead changes (`ctxKey`); Transitions says the cut
+  it goes on and what it replaces; a keyframe row a shake draws frame by frame is greyed with why.
 
 ## Generator vs Editor
 

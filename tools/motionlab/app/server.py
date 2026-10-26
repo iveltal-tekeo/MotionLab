@@ -47,7 +47,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 46                                  # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 47                                  # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"

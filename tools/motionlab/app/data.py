@@ -1390,7 +1390,7 @@ def save_generate_request(body: dict) -> dict:
 ME_MAX_OPS, ME_MAX_WORDS = 300, 300
 ME_KEYS = {"op", "shot", "side", "by", "f", "kind", "to", "graphic", "key", "value", "cue", "text", "at", "speed",
            "layer", "all", "id", "template", "len", "values", "db", "sound", "look", "strength", "ease", "start", "src",
-           "in"}
+           "in", "prop", "props", "dir"}                    # (prop / props: keyframes; dir: a transition's direction)
 EDITOR_SOUNDS = LAB / ".app" / "editor" / "sounds"          # the made-up sound effects as the Editor plays them
 
 

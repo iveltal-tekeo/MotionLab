@@ -105,7 +105,8 @@ not say, or a rule.
   graphics moved / added from a template / set, sound effects added / moved / louder / swapped, captions) -> the next
   plan, the clips' sound cut again (a sped-up shot's stretched, the pitch kept), the graphics' copies and new ones,
   outcome.json "hand_fixes", one build; `media` = the preview's light copies, loudness and filmstrip in
-  `build\editor\`; the engine is `motionlab\miniedit.py`), `draft_edit.py` (the quick
+  `build\editor\`; the engine is `motionlab\miniedit.py` + its effects `edfx.py`, keyframes `edkeys.py` and
+  transitions `edtrans.py`), `draft_edit.py` (the quick
   draft by rules; `--feel-test`; talk mode cuts the stumbles too - `--keep-stumbles`), `style.py` (the style of up to
   3 analysed videos; `closest "<words>"`), `overlay.py`
   (graphics as HTML via HyperFrames, pinned in `tools\overlays\`; `snap` = stills straight from the HTML, the cheapest

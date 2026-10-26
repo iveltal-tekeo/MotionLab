@@ -383,7 +383,9 @@ POST `/api/music/set` (`library\music\music.json`: fav / off), `/api/music/uploa
 a new file in `library\music\` or `ambience\<kind>\`), `/api/music/index` (the job `music_index`), `/api/music/beds`
 (the job `music_beds`, ElevenLabs), GET / POST `/api/brand/sound_logo` (My Brand's sound logo: to hear / a file,
 raw body -> `knowledge\local\brand\sound_logo.<ext>`), POST `/api/brand/sound_logo/make` (the job `brand_sound_logo`),
-GET `/api/brand` `_sound_words`, New edit's `ambience`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+GET `/api/brand` `_sound_words`, New edit's `ambience`; 47 (2026-10-26, the Editor's keyframes and transitions): the
+`.../miniedit/preview` and `.../miniedit` changes take `prop` / `props` / `dir` (data.ME_KEYS - an older server refused
+them as "a change the Editor does not know"). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

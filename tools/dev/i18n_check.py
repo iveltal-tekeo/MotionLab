@@ -53,7 +53,8 @@ PY_FILES = (["tools/motionlab/app/" + f for f in ("server.py", "data.py", "syste
             + ["tools/motionlab/" + f + ".py" for f in ("thumbsets", "usage", "speech", "upstream", "style", "publish",
                                                        "prompts", "knowledge", "styles", "thumbnail", "taxonomy",
                                                        "script", "profile", "logos", "fonts", "colour", "textsets",
-                                                       "editreq", "brand", "agency", "miniedit", "edfx")]
+                                                       "editreq", "brand", "agency", "miniedit", "edfx", "edkeys",
+                                                       "edtrans")]
             + ["tools/download.py"])
 # the user's other Claude window works on these (2026-10-19): their words wait (never edited from here)
 WAITS = ["tools/motionlab/templates.py", "tools/motionlab/overlay_settings.py", "tools/motionlab/looks.py",

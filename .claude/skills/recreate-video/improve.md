@@ -9,7 +9,11 @@ part and pressed *Send it to Claude*.
   add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
 - **Fixed by hand** (0.6.0, the Editor tab): `outcome.json` `"hand_fixes"` (and that version's `edit_vN.list`) =
   what the user trimmed, moved, split, sped up / slowed, deleted, added (sounds, templates) or reworded themselves - build on that version, never undo those changes, and
-  treat them as lessons (a cut Claude placed 5 frames late, a sound on a word, a caption mis-heard).
+  treat them as lessons (a cut Claude placed 5 frames late, a sound on a word, a caption mis-heard). Since 2026-10-26
+  the Editor also keys a shot's zoom / dx / dy / rotation / opacity / anchor (plain curve keys - keep them) and puts
+  transitions on cuts: `"trans": {"kind", "len", "dir"}` on the shot after the cut, drawn by `tr_<shot>_*` layers
+  (`"tr"`) that `motionlab\edtrans.build` makes again after every change (draft_edit.py does it too) - change the
+  `"trans"`, never the `tr_` layers.
 - **Notes on moments** (0.4.2): `"moments": [{"f": 113, "version": "v2", "aspect": "graphics", "note": "...",
   "date": "..."}]` = notes the user put on single frames of a render (frame of that version; the app stopped taking
   new ones on 2026-10-15 - the per-part ratings sit beside the render now - but saved ones still count). Fix exactly

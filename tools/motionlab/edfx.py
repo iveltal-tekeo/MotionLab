@@ -68,6 +68,8 @@ def effects(P: dict) -> list[dict]:
     for L in P.get("layers", []):
         t, lid = L.get("type"), str(L.get("id"))
         s, e = int(L.get("start", 0)), int(L.get("end", 0))
+        if L.get("tr"):                                     # a transition's own layers (motionlab\edtrans)
+            continue
         if t == "clip" and lid.startswith("rgb_"):
             rgb.setdefault(lid.rsplit("_", 1)[0], []).append(L)
             continue
@@ -838,6 +840,35 @@ def _free_id(P: dict, prefix: str, rgb: bool = False) -> str:
     while (f"{prefix}e{k:02d}" in ids if not rgb else any(i.startswith(f"rgb_e{k:02d}_") for i in ids)):
         k += 1
     return f"{prefix}e{k:02d}"
+
+
+def availability(P: dict, talk: bool = False) -> dict:
+    """Why a kind cannot go where the playhead is - before the click, never an error after it (the user, 2026-10-26:
+    "show why some effects or transitions cant be used in that specific [moment] of the video so people know"): each
+    kind tried on a copy of the shot (or the two shots of a cut) -> {"shots": {shot id: {kind: why}}, "cuts": {id of the
+    shot after a plain cut: {kind: why}}, "none": {kind: why} (no clip under the playhead)}; "" = it can."""
+    def tried(kind: str, f: int, touch: list) -> str:
+        Q = {**P, "layers": [copy.deepcopy(L) if any(L is t for t in touch) else L for L in P["layers"]]}
+        try:
+            add(Q, kind, f, talk=talk)
+            return ""
+        except FxError as e:
+            return str(e)
+    S = _shots(P)
+    clip_kinds = [k for k in ADD if k not in CUT_KINDS and k not in ("colour_flash", "light_leak")]
+    out = {"shots": {}, "cuts": {}, "none": {}}
+    for sh in S:
+        mid = (int(sh["start"]) + int(sh["end"])) // 2
+        out["shots"][str(sh["id"])] = {k: tried(k, mid, [sh]) for k in clip_kinds}
+    from . import miniedit as M                         # (a video made from zero: its scenes' cuts)
+    C = S or M.scenes(P)
+    for A, B in zip(C, C[1:]):
+        if int(B["start"]) == int(A["end"]) + 1:
+            out["cuts"][str(B["id"])] = {k: tried(k, int(B["start"]), [A, B]) for k in CUT_KINDS}
+    for k in clip_kinds:
+        out["none"][k] = "" if k in ("flash", "black_frame") else I18N.t(
+            "no clip under the playhead - this effect changes a clip's picture")
+    return out
 
 
 def apply_op(P: dict, o: dict, talk: bool = False) -> str:

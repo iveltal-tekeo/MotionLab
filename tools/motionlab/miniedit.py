@@ -60,6 +60,12 @@ Operations ({"op": ...}):
                                                              (captions are numbered as the state before the op has
                                                              them; the whole list is written on save: step "capfile")
     look    {"graphic": layer id, "look": id}                a ready-made look (presets.json): all its values
+  effects (motionlab\\edfx): fxadd / fxmove / fxset / fxremove
+  keyframes on a shot (motionlab\\edkeys - zoom, x, y, rotation, opacity, the zoom point):
+    kset / kadd / kdel / kmove / kease / kreset {"shot": id, "prop": p | "props": [..], "f": f, ...}
+  transitions on a plain cut (motionlab\\edtrans; stored on the shot after the cut, its helper layers stripped first
+  and made again last, so no shot op ever breaks one):
+    trans    {"shot": id, "kind": k | null, "len": n, "dir": d}    transall {"kind": k | null, "len": n, "dir": d}
   sound effects:
     sfx     {"f": f, "kind": k, "to": f2 | null, "db": d, "sound": file}   moved to f2 / dropped (null) / louder or
                                                              softer (-12..12 dB) / another recorded sound - the plan's
@@ -84,7 +90,9 @@ import re
 from pathlib import Path
 
 from . import edfx as FX
+from . import edkeys as KF
 from . import editlist as EL
+from . import edtrans as TR
 from . import i18n as I18N
 from .timecode import frame_to_tc
 
@@ -95,6 +103,7 @@ SHOT_OPS = ("trim", "delete", "roll", "move", "split", "speed", "volume", "slip"
 VOL_MIN, VOL_MAX = -60.0, 12.0                  # a shot's own sound (dB; VOL_MIN = muted)
 SONG_DB = (-24.0, 12.0)                         # the song's volume (dB)
 FX_OPS = ("fxadd", "fxmove", "fxset", "fxremove")      # the effects (motionlab\edfx): a transition removed moves a cut
+TR_OPS = ("trans", "transall")                          # transitions on cuts (motionlab\edtrans)
 VALUES_KEY, CAPTIONS_KEY, NEW_KEY = "_me_values", "_me_captions", "_me_new"     # the engine's own, never saved
 PROXY_SHORT, PROXY_GOP = 540, 12                # the preview copies' short side and key-frame distance (fast seeks)
 MIN_CAP = 3                                     # a caption's shortest length (its graphic's frames) when trimmed
@@ -361,7 +370,7 @@ def state(plan: dict) -> dict:
     """What the Editor draws and plays (see the module's docstring). Frames are the plan's."""
     from . import overlay_settings as OS
     from . import sfx as SFX
-    P = unique_ids(copy.deepcopy(plan))
+    P = TR.strip(unique_ids(copy.deepcopy(plan)))
     attach_captions(P)
     fps, N = float(P["fps"]), int(P["frames"])
     S = shots(P)
@@ -375,6 +384,7 @@ def state(plan: dict) -> dict:
                           "special": bool(L.get("hold") or L.get("jumps")),
                           "scene": str(_graphic_folder(L)) if L.get("type") == "overlay" else None,
                           "attached": list(dict.fromkeys(_graphic_folder(x).name for x in _attached(P, L)))})
+    TR.build(P)                                             # (drawn and heard like the save makes them)
     edits_v = P.get(VALUES_KEY) or {}
     edits_c = P.get(CAPTIONS_KEY) or {}
     folders: dict[str, dict] = {}                            # a graphic's folder -> its settings, size, length
@@ -492,6 +502,7 @@ def state(plan: dict) -> dict:
                          "in": int(L.get("in", 0)), "speed": _speed(L), "hold": bool(L.get("hold")),
                          "jumps": L.get("jumps"), "rect": L.get("rect"), "zoom": _curve_keys(L.get("zoom")),
                          "anchor": L.get("anchor"), "dx": _curve_keys(L.get("dx")), "dy": _curve_keys(L.get("dy")),
+                         "rotation": _curve_keys(L.get("rotation")), "tr": L.get("tr"),
                          "opacity": _curve_keys(L.get("opacity")), "mirror": bool(L.get("mirror")),
                          "fit": L.get("fit", "cover"), "flash_over": L.get("flash_over"),
                          "flash_white": L.get("flash_white"), "black": L.get("black"), "tint": L.get("tint"),
@@ -501,12 +512,14 @@ def state(plan: dict) -> dict:
         elif t == "solid":
             draw.append({"t": "solid", "id": L["id"], "start": int(L["start"]), "end": int(L["end"]),
                          "color": L.get("color"), "rect": L.get("rect"), "opacity": _curve_keys(L.get("opacity")),
-                         "blend": L.get("blend", "normal")})
+                         "blend": L.get("blend", "normal"), "tr": L.get("tr"), "cover": bool(L.get("cover"))})
     cut, song = (P.get("audio") or {}).get("cut") or {}, song_source(P)
     return {"fps": fps, "frames": N, "width": int(P.get("width", 1920)), "height": int(P.get("height", 1080)),
             "sound": mode, "timing_locked": mode == "fixed", "shots": out_shots, "graphics": graphics,
             "folders": folders, "captions": sorted(captions, key=lambda c: (bool(c.get("tail")), c["f"])), "capedits": capedits,
-            "effects": FX.effects(P), "fx_kinds": list(FX.ADD),
+            "effects": FX.effects(P), "fx_kinds": list(FX.ADD), "transitions": TR.transitions(P),
+            "fx_can": FX.availability(P, talk=mode == "follows"),     # (why a kind cannot go where the playhead is)
+            "trans_kinds": [[k, v[0], round(v[1] * fps)] for k, v in TR.KINDS.items()],
             "sfx": cues, "draw": draw,
             "curves": P.get("curves") or {}, "song": str(song) if song and mode == "song" else None,
             "song_cut": {"start_s": float(cut.get("start_s") or 0), "db": float(cut.get("db") or 0)},
@@ -615,12 +628,9 @@ def _fit(P: dict) -> None:
 
 
 def _keys_through(L: dict, fn) -> None:
-    """A layer's animated values' keys (zoom, dx, dy, opacity, gain) through fn - a sped-up shot's punch-in comes
-    sooner."""
-    for k in ("zoom", "dx", "dy", "opacity", "gain"):
-        v = L.get(k)
-        if isinstance(v, dict) and v.get("keys"):
-            v["keys"] = [[fn(int(x[0])), *x[1:]] for x in v["keys"]]
+    """A layer's animated values (zoom, dx, dy, opacity, gain, rotation, the zoom point) through fn - a sped-up shot's
+    punch-in comes sooner."""
+    EL.move_curves(L, fn)
 
 
 def _span(L: dict, fps: float) -> str:
@@ -769,6 +779,7 @@ def _split(P: dict, S: dict, at: int, done: list[str], fps: float) -> None:
     for L in [S, *_attached(P, S)]:
         second = EL._trim_front(copy.deepcopy(L), at)
         second["id"] = new_id(str(L["id"]))
+        second.pop("trans", None)                           # (its transition stays on the cut before the first part)
         L["end"] = at - 1
         P["layers"].insert(P["layers"].index(L) + 1, second)
     done.append(f"{S['id']} split at {_tcf(at, fps)}: {_span(S, fps)} + {_span({'start': at, 'end': e}, fps)}")
@@ -1042,7 +1053,7 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
     their folders and new ones show their template, nothing is made. build = the video's build folder (where a new
     graphic goes on save). EditError names the operation it cannot do."""
     from . import overlay_settings as OS
-    P = unique_ids(copy.deepcopy(plan))
+    P = TR.strip(unique_ids(copy.deepcopy(plan)))          # (a transition's copies: made again after the changes)
     P.setdefault("cues", [])
     fps = float(P["fps"])
     done: list[str] = []
@@ -1179,6 +1190,21 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 except FX.FxError as e:
                     raise EditError(str(e)) from None
                 done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
+            elif op in TR_OPS:
+                try:
+                    line = TR.apply_op(P, o)
+                except TR.TransError as e:
+                    raise EditError(str(e)) from None
+                done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
+            elif op in KF.KEY_OPS:
+                S = _find(P, str(o["shot"]))
+                if S.get("type") != "clip":
+                    raise EditError(I18N.t("keyframes move a clip's picture - this scene is a graphic"))
+                try:
+                    line = KF.apply_op(P, S, o)
+                except KF.KeyError_ as e:
+                    raise EditError(str(e)) from None
+                done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
             elif op in ("words", "set", "caption", "capmove", "captrim", "capsplit", "capadd", "look"):
                 L = next((x for x in P["layers"] if x.get("id") == o.get("graphic") and x.get("file")), None)
                 if L is None:
@@ -1286,6 +1312,7 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
             L["file"] = str(folder / f"{folder.name}.mov")
             steps.append({"op": "new", "template": new["template"], "to": str(folder), "frames": _len(L),
                           "values": new["values"]})
+    TR.build(P)                                             # the transitions' copies, from the shots as they are now
     return P, done, steps
 
 

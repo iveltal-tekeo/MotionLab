@@ -601,7 +601,7 @@ setInterval(liveTick, 5000);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 46;         // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 47;         // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
 function overlay(text) {
@@ -3975,9 +3975,33 @@ const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer fr
 // what needs a clip's picture (motionlab\edfx CLIP_ONLY): greyed out on a video made of graphics, the stutter on a
 // talking video (the picture would leave the voice) - the reason on hover, never an error after the click
 const ED_FX_CLIP = new Set(['punch_in', 'push_in', 'pull_out', 'zoom_through', 'shake', 'rgb_split', 'stutter']);
+const ED_FX_CUT = new Set(['zoom_through', 'white_flash', 'dip_black', 'dip_white']);      // (on the cut nearest the playhead)
+const edCap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const ED_FX_RANGE = {zoom: [1.01, 2, 0.01, '×'], punch: [1.01, 2, 0.01, '×'], framing: [1.01, 1.6, 0.01, '×'], shake: [0.004, 0.08, 0.002, ''],
   flash: [0.05, 1, 0.05, '']};
 const ED_EASES = () => [['linear', t('Linear')], ['smooth', t('S-curve')], ['in', t('Slow start')], ['out', t('Slow end')]];
+// keyframes (motionlab\edkeys; 2026-10-26, CapCut / Premiere / Resolve / OpenCut's way): a selected shot's properties as
+// its panel shows them - [prop, label, unit, shown = value x k, a drag's step per pixel (shown units), the plan's
+// default] - and the eases of the move after a key
+const ED_KEY_PROPS = () => [['zoom', t('Scale'), '%', 100, 0.5, 1], ['x', t('Position X'), 'px', 1, 2, 0], ['y', t('Position Y'), 'px', 1, 2, 0],
+  ['rotation', t('Rotation'), '°', 1, 0.5, 0], ['opacity', t('Opacity'), '%', 100, 0.5, 1], ['ax', t('Zoom point X'), '%', 100, 0.25, 0.5],
+  ['ay', t('Zoom point Y'), '%', 100, 0.25, 0.5]];
+const ED_KEY_EASES = () => [['linear', t('Linear')], ['in', t('Ease in')], ['out', t('Ease out')], ['smooth', t('Ease in and out')],
+  ['hold', t('Hold')], ['pop', t('Pop')]];
+const ED_KEY_MAP = {zoom: 'zoom', x: 'dx', y: 'dy', rotation: 'rotation', opacity: 'opacity'};
+const edKSpec = (d, p) => (p === 'ax' || p === 'ay' ? (d.anchor || [])[p === 'ax' ? 0 : 1] : d[ED_KEY_MAP[p]]);
+const edKKeys = (d, p) => { const v = edKSpec(d, p); return v && typeof v === 'object' && Array.isArray(v.keys) && v.keys.length ? v.keys : null; };
+function edKSet(d, p, v) { if (p === 'ax' || p === 'ay') { const a = [...(d.anchor || [0.5, 0.5])]; a[p === 'ax' ? 0 : 1] = v; d.anchor = a; } else d[ED_KEY_MAP[p]] = v; }
+// transitions (motionlab\edtrans): a sign per kind, its name as the engine sends it (English) in the page's language, a
+// line on each, the directions of a slide / whip
+const ED_TR_ICON = {mix: '◐', black: '●', white: '○', flash: '✦', zoom_in: '⊕', zoom_out: '⊖', slide: '⇆', whip: '≫', spin: '↻', glitch: '▚', leak: '☀'};
+const ED_TR_LABEL = {'Mix': t('Mix'), 'Dip to black': t('Dip to black'), 'Dip to white': t('Dip to white'), 'White flash': t('White flash'),
+  'Zoom in': t('Zoom in'), 'Zoom out': t('Zoom out'), 'Slide': t('Slide'), 'Whip': t('Whip'), 'Spin': t('Spin'), 'Glitch': t('Glitch'), 'Light leak': t('Light leak')};
+const edTrLabel = l => ED_TR_LABEL[l] || l;
+const ED_TR_HOW = () => ({mix: t('one shot fades into the next'), black: t('through black'), white: t('through white'), flash: t('a bright flash on the cut'),
+  zoom_in: t('punch in to the cut and out of it'), zoom_out: t('the shot shrinks away, the next one settles'), slide: t('the next shot pushes this one out'),
+  whip: t('a fast whip pan'), spin: t('a spin out and back in'), glitch: t('a glitchy jump with a colour split'), leak: t('a mix with a warm light leak')});
+const ED_DIRS = () => [['left', '←', t('Left')], ['right', '→', t('Right')], ['up', '↑', t('Up')], ['down', '↓', t('Down')]];
 const ED_SNAP_PX = 8;
 const ED_KIND = {whoosh: t('Whoosh'), whip: t('Whip'), riser: t('Riser'), air: t('Air'), click: t('Click'), key: t('Keys'),
   pop: t('Pop'), chime: t('Chime'), impact: t('Impact'), thump: t('Thump'), zap: t('Zap'), ching: t('Ching'), chip: t('Chip'),
@@ -3989,7 +4013,7 @@ const edKind = k => ED_KIND[k] || k;
 const edSoundUrl = file => `/api/editor/sound?file=${encodeURIComponent(file)}`;
 const meHue = k => [...String(k)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);     // a sound kind's colour
 const ED_EASE = {hold: () => 0, linear: x => x, smooth: x => x * x * (3 - 2 * x), in: x => x * x, out: x => 1 - (1 - x) * (1 - x),
-  in3: x => x * x * x, out3: x => 1 - (1 - x) ** 3};
+  in3: x => x * x * x, out3: x => 1 - (1 - x) ** 3, pop: x => 1 + 2.70158 * (x - 1) ** 3 + 1.70158 * (x - 1) ** 2};
 // a plan's animated value (motionlab\compose Curve): a number, {keys: [[f, v, ease]]}, {start, values}, "@name"
 function edCurve(spec, named, dflt) {
   if (typeof spec === 'string' && spec[0] === '@') spec = (named || {})[spec.slice(1)];
@@ -4066,7 +4090,7 @@ class EdPreview {
     let e = P.find(x => x.layer === L.id);
     if (e) return e;
     e = P.find(x => !x.layer || (!this.activeIds.has(x.layer) && x.layer !== this.preId));
-    if (!e && P.length < 3) { e = this.makeEl(L.src); P.push(e); }
+    if (!e && P.length < 4) { e = this.makeEl(L.src); P.push(e); }     // (a transition shows a clip up to three times)
     if (e) { e.layer = L.id; e.at = null; }
     return e;
   }
@@ -4087,9 +4111,13 @@ class EdPreview {
     st.opacity = clamp(edCurve(d.opacity, C, 1)(f), 0, 1);
     const zm = edCurve(d.zoom, C, 1)(f), an = d.anchor || [0.5, 0.5];
     const ax = edCurve(an[0], C, 0.5)(f), ay = edCurve(an[1], C, 0.5)(f), dx = edCurve(d.dx, C, 0)(f) * s, dy = edCurve(d.dy, C, 0)(f) * s;
+    const rot = edCurve(d.rotation, C, 0)(f);
     e.v.style.objectFit = d.fit === 'contain' ? 'contain' : 'cover';
     e.v.style.transformOrigin = `${ax * 100}% ${ay * 100}%`;
-    e.v.style.transform = `translate(${dx}px, ${dy}px) scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
+    // (compose: x / y move the clip's box, a rotation turns the box round its centre; the picture scales inside it round
+    // the zoom point - under 1 it is smaller than its box)
+    st.transform = dx || dy || rot ? `translate(${dx}px, ${dy}px)${rot ? ` rotate(${rot}deg)` : ''}` : '';
+    e.v.style.transform = `scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
     st.mixBlendMode = d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : '';
     e.v.style.filter = d.tint ? `url(#${this.tintFilter(d.tint)})` : '';
     let fl = 0, flc = '#fff';                                // a flash (over-exposed), a white or a black frame
@@ -4317,7 +4345,7 @@ function projEditor(el, P) {
       <div class="edtlbody"><div class="edheads" id="edheads"></div><div class="edscroll" id="edscroll"><div class="edcanvas" id="edcanvas"></div></div></div></div>
   </div>`;
   let plan = '', base = null, cur = null, ops = [], labels = [], redo = [], sel = null, busy = false, pv = null, saving = false;
-  let pxf = 1, zoom = 0, snap = true, lib = [], mediaJob = null, prevF = 0, capFocus = false;
+  let pxf = 1, zoom = 0, snap = true, lib = [], mediaJob = null, prevF = 0, capFocus = false, shotTab = 'video';
   const fps = () => (cur || base).fps;
   const tcf = f => `f${f} (${tc(f, fps())})`;
   const store = () => `ml.editor.${P.name}.${plan}`;
@@ -4413,6 +4441,27 @@ function projEditor(el, P) {
     y.wave = Y; Y += ED_ROW.wave;
     return {R, Q, F, y, H: Y + 6};
   }
+  // ---------------------------------------------------------------- keyframes and transitions on the main track
+  const drawOf = id => (cur.draw || []).find(d => d.id === id && d.t === 'clip');
+  function keyFramesOf(s) {                                  // a shot's diamonds: every key on it, merged by frame
+    const d = drawOf(s.id), fs = new Set();
+    if (d) ED_KEY_PROPS().forEach(([p]) => (edKKeys(d, p) || []).forEach(k => { if (k[0] >= s.start && k[0] <= s.end) fs.add(k[0]); }));
+    return [...fs].sort((a, b) => a - b);
+  }
+  const keyShot = () => sel && (sel.k === 'shot' || sel.k === 'key') ? cur.shots.find(s => s.id === sel.id && !s.scene) : null;
+  const plainCuts = () => { const S = cur || base; return S.shots.slice(1).filter((s, i) => !s.scene && !S.shots[i].scene && s.start === S.shots[i].end + 1); };
+  const nearCut = f => { const C = plainCuts(); return C.length ? C.reduce((a, b) => (Math.abs(b.start - f) < Math.abs(a.start - f) ? b : a)) : null; };
+  function trackExtras(y) {
+    const S = cur, on = test => (test ? ' on' : ''), has = new Set((S.transitions || []).map(x => x.shot));
+    const tr = (S.transitions || []).map(x => `<div class="edit edtr${on(sel && sel.k === 'tr' && sel.id === x.shot)}${x.frozen ? ' frozen' : ''}" data-k="tr" data-id="${esc(x.shot)}"
+        style="left:${(x.f * pxf).toFixed(1)}px;width:${Math.max(16, x.len * pxf).toFixed(1)}px;top:${y.shot + 9}px;height:${ED_ROW.shot - 24}px"
+        title="${esc(edTrLabel(x.label))} · ${esc(tcf(x.f))} - ${esc(tcf(x.f + x.len - 1))}${x.frozen ? ' · ' + ta('{n} frames hold still', {n: x.frozen}) : ''}"><span>${ED_TR_ICON[x.kind] || '◐'}</span><i class="edh l"></i><i class="edh r"></i></div>`).join('');
+    const cuts = saving ? '' : plainCuts().filter(s => !has.has(s.id)).map(s => `<button class="edcutb" data-cut="${esc(s.id)}" style="left:${(s.start * pxf).toFixed(1)}px;top:${y.shot + ED_ROW.shot / 2 - 12}px" title="${ta('Add a transition on this cut')}">+</button>`).join('');
+    const ks = keyShot();
+    const kf = ks ? keyFramesOf(ks).map(f => `<div class="edit edkf${on(sel.k === 'key' && sel.f === f)}" data-k="key" data-s="${esc(ks.id)}" data-f="${f}"
+        style="left:${(f * pxf).toFixed(1)}px;top:${y.shot + ED_ROW.shot - 18}px" title="${ta('A keyframe - drag it to another moment, click it for its ease')} · ${esc(tcf(f))}"></div>`).join('') : '';
+    return tr + cuts + kf;
+  }
   const rulerStep = () => [1, 2, 5, 10, 15, 30, 60, 120].find(s => s * fps() * pxf >= 64) || 300;
   const sLabel = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   function thumbRel(src) { const m = base.media[src] || {}; return m.proxy || m.source || m.photo || ''; }
@@ -4450,7 +4499,7 @@ function projEditor(el, P) {
           style="left:${(c.f * pxf).toFixed(1)}px;width:${Math.max(6, c.len * pxf).toFixed(1)}px;top:${y.cap}px;height:${ED_ROW.cap - 5}px" title="${esc(tcf(c.f))} - ${esc(tcf(c.f + c.len - 1))}${c.tail ? ' · ' + ta('the end of a caption said over the cut - drag it where it starts') : ''}"><span>${esc(c.text)}</span>${c.tail ? '' : '<i class="edh l"></i><i class="edh r"></i>'}</div>`).join('')}
       ${R.G.map(g => `<div class="edit edgi${on('gfx', sel && sel.id === g.id)}${g.new ? ' new' : ''}" data-k="gfx" data-id="${esc(g.id)}" style="left:${(g.start * pxf).toFixed(1)}px;width:${Math.max(8, (g.end - g.start + 1) * pxf).toFixed(1)}px;top:${y.gfx + R.row.get(g.id) * ED_ROW.gfx}px;height:${ED_ROW.gfx - 5}px"
           title="${esc(tcf(g.start))} - ${esc(tcf(g.end))}"><span>${esc(edGfxName(g, S, lib))}</span><i class="edh l"></i><i class="edh r"></i></div>`).join('')}
-      ${S.shots.map(shotHtml).join('')}
+      ${S.shots.map(shotHtml).join('')}${y.shot != null ? trackExtras(y) : ''}
       ${y.fx != null ? (S.effects || []).map(x => `<div class="edit edfx${on('fx', sel && sel.id === x.id)}" data-k="fx" data-id="${esc(x.id)}" style="left:${(x.f * pxf).toFixed(1)}px;width:${Math.max(10, x.len * pxf).toFixed(1)}px;top:${y.fx + Math.min(F.n - 1, F.row.get(x.id) || 0) * ED_ROW.fx}px;height:${ED_ROW.fx - 6}px"
           title="${esc(edFxLabel(x.label))} · ${esc(tcf(x.f))} - ${esc(tcf(x.f + x.len - 1))}"><span>${esc(edFxLabel(x.label))}</span>${x.can.includes('len') ? '<i class="edh r"></i>' : ''}</div>`).join('') : ''}
       ${S.sfx.map((q, i) => `<div class="edit edsfx${on('sfx', sel && sel.key === sfxOf(q))}" data-k="sfx" data-i="${i}" style="left:${(q.f * pxf).toFixed(1)}px;width:${Math.max(18, (q.len_s || 0.3) * S.fps * pxf).toFixed(1)}px;top:${y.sfx + Math.min(Q.n - 1, Q.row[i]) * ED_ROW.sfx}px;height:${ED_ROW.sfx - 6}px;--h:${meHue(q.kind)}"
@@ -4498,6 +4547,9 @@ function projEditor(el, P) {
     if (sp) sp.disabled = !s || s.start === prevF || cur.timing_locked || saving;
     const ca = $('#edcapadd', el);
     if (ca && cur) { ca.hidden = !capPieces().length; ca.disabled = !capPieceAt(prevF) || !!capAt(prevF) || saving; }
+    if (cur && (addTab === 'fx' || addTab === 'tr') && ctxKey() !== lastCtx) drawAdd();    // (another shot / cut: its reasons)
+    const at = $('#edadd .edat .mono', el);
+    if (at && cur) at.textContent = tcf(prevF);
     const cs = $('#edcsplit', el), sc0 = sel && sel.k === 'cap' && cur && cur.captions.find(x => x.graphic === sel.graphic && x.cue === sel.cue);
     if (cs) cs.disabled = !sc0 || prevF <= sc0.f || prevF > sc0.f + sc0.len - 1 || saving;
     // keep the playhead in view while playing
@@ -4525,6 +4577,7 @@ function projEditor(el, P) {
   let drag = null;
   function onDown(e) {
     if (e.button || !cur || saving) return;
+    if (e.target.closest('.edcutb')) return;                // (the + on a cut: its click adds a transition)
     const it = e.target.closest('.edit');
     if (!it && e.target.classList.contains('song') && cur.song) {   // the song: a click selects it, a drag slides it
       drag = {k: 'song', it: e.target, x0: e.clientX, moved: false, d: 0, s0: cur.song_cut.start_s};
@@ -4537,18 +4590,20 @@ function projEditor(el, P) {
     }
     const k = it.dataset.k, r = it.getBoundingClientRect(), x = e.clientX - r.left;
     const fxc = k === 'fx' ? (cur.effects || []).find(q => q.id === it.dataset.id) : null;
-    const edge = (k === 'shot' && !cur.timing_locked) || k === 'gfx' || (k === 'cap' && !it.dataset.tail) ? (x < 8 ? 'start' : x > r.width - 8 ? 'end' : '')
+    const edge = (k === 'shot' && !cur.timing_locked) || k === 'gfx' || k === 'tr' || (k === 'cap' && !it.dataset.tail) ? (x < 8 ? 'start' : x > r.width - 8 ? 'end' : '')
       : fxc && fxc.can.includes('len') && x > r.width - 8 ? 'end' : '';
-    drag = {k, it, edge, x0: e.clientX, moved: false, d: 0, fx: fxc, tail: !!it.dataset.tail, slip: k === 'shot' && !edge && e.altKey && !cur.timing_locked};
+    drag = {k, it, edge, x0: e.clientX, moved: false, d: 0, fx: fxc, tail: !!it.dataset.tail, slip: k === 'shot' && !edge && e.altKey && !cur.timing_locked, fd: fAt(e)};
     if (k === 'shot') drag.s = cur.shots.find(s => s.id === it.dataset.id);
     if (k === 'gfx') drag.g = cur.graphics.find(g => g.id === it.dataset.id);
     if (k === 'sfx') drag.q = cur.sfx[+it.dataset.i];
     if (k === 'cap') drag.c = cur.captions.find(c => c.graphic === it.dataset.g && c.cue === +it.dataset.cue);
+    if (k === 'tr') drag.tr = (cur.transitions || []).find(x => x.shot === it.dataset.id);
+    if (k === 'key') { drag.kf = +it.dataset.f; drag.ks = it.dataset.s; }
     canvas().setPointerCapture(e.pointerId);
   }
   function onMove(e) {
     if (!drag) { const it = e.target.closest && e.target.closest('.edit'); canvas().style.cursor = '';
-      if (it && (it.dataset.k === 'gfx' || (it.dataset.k === 'cap' && !it.dataset.tail) || (it.dataset.k === 'shot' && !cur.timing_locked))) { const r = it.getBoundingClientRect(), x = e.clientX - r.left; if (x < 8 || x > r.width - 8) canvas().style.cursor = 'ew-resize'; }
+      if (it && (it.dataset.k === 'gfx' || it.dataset.k === 'tr' || (it.dataset.k === 'cap' && !it.dataset.tail) || (it.dataset.k === 'shot' && !cur.timing_locked))) { const r = it.getBoundingClientRect(), x = e.clientX - r.left; if (x < 8 || x > r.width - 8) canvas().style.cursor = 'ew-resize'; }
       else if (it && it.dataset.k === 'fx' && $('.edh.r', it)) { const r = it.getBoundingClientRect(); if (e.clientX > r.right - 8) canvas().style.cursor = 'ew-resize'; }
       return; }
     if (drag.k === 'scrub') { pv.seek(fAt(e)); return; }
@@ -4562,6 +4617,7 @@ function projEditor(el, P) {
       tip(e, t('The video starts at {at} of the song', {at: songTime(s)})); return;
     }
     if (drag.k === 'fx' && !drag.edge && !drag.fx.can.includes('move')) return;    // (a click selects it)
+    if (drag.k === 'tr' && !drag.edge) return;
     drag.moved = true;
     let d = Math.round(dx / pxf);
     const it = drag.it, N = cur.frames;
@@ -4594,6 +4650,13 @@ function projEditor(el, P) {
       const x = drag.fx, last = x.f + x.len - 1;
       if (drag.edge === 'end') { d = clamp(snapD(d, [last + 1], ''), 2 - x.len, N - 1 - last); it.style.width = `${(x.len + d) * pxf}px`; tip(e, `${tn(x.len + d, '{n} frame', '{n} frames')} · ${dec((x.len + d) / cur.fps)} s`); }
       else { d = clamp(snapD(d, [x.f, last + 1], ''), -x.f, N - 1 - last); it.style.left = `${(x.f + d) * pxf}px`; tip(e, `${tcf(x.f + d)} · ${dLabel(d)}`); }
+    } else if (drag.k === 'tr') {                            // its length, the same on both sides of the cut
+      const x = drag.tr, n = clamp(x.len + 2 * (drag.edge === 'end' ? d : -d), 2, x.max), f0 = Math.round(x.f + (x.len - n) / 2);
+      it.style.left = `${f0 * pxf}px`; it.style.width = `${Math.max(16, n * pxf)}px`; d = n;
+      tip(e, `${tn(n, '{n} frame', '{n} frames')} · ${dec(n / cur.fps)} s`);
+    } else if (drag.k === 'key') {                           // a diamond: every key on its frame, inside its shot
+      const s = cur.shots.find(x => x.id === drag.ks), f = drag.kf;
+      d = clamp(snapD(d, [f], ''), s.start - f, s.end - f); it.style.left = `${(f + d) * pxf}px`; tip(e, `${tcf(f + d)} · ${dLabel(d)}`);
     } else if (drag.k === 'cap') {                           // inside its shot, never over the captions beside it
       const c = drag.c, len = c.len, mn = Math.min(len, c.min || 1), last = c.f + len - 1;
       const lim = (raw, lo, hi) => { d = clamp(raw, lo, hi); return d !== raw ? `<br><span class="muted">${t('as far as it goes: the edge of its shot, or the caption beside it')}</span>` : ''; };
@@ -4619,7 +4682,10 @@ function projEditor(el, P) {
     }
     if (!D.moved) {                                          // a click: it is selected
       sel = D.k === 'shot' ? {k: 'shot', id: D.s.id} : D.k === 'gfx' ? {k: 'gfx', id: D.g.id} : D.k === 'sfx' ? {k: 'sfx', key: sfxOf(D.q)}
-        : D.k === 'fx' ? {k: 'fx', id: D.fx.id} : {k: 'cap', graphic: D.c.graphic, cue: D.c.cue};
+        : D.k === 'fx' ? {k: 'fx', id: D.fx.id} : D.k === 'tr' ? {k: 'tr', id: D.tr.shot} : D.k === 'key' ? {k: 'key', id: D.ks, f: D.kf}
+        : {k: 'cap', graphic: D.c.graphic, cue: D.c.cue};
+      if (D.k === 'key' && pv) pv.seek(D.kf);
+      else if (D.k === 'shot' && pv && (prevF < D.s.start || prevF > D.s.end)) pv.seek(D.fd);   // (its keys need the playhead on it)
       draw(); return;
     }
     const d = D.d;
@@ -4653,6 +4719,15 @@ function projEditor(el, P) {
       if (!d) return drawTL();
       if (D.edge) { push({op: 'fxset', id: x.id, len: x.len + d}, t('{effect} at {at}: {n} frames long', {effect: nm, at: tcf(x.f), n: x.len + d})); sel = {k: 'fx', id: x.id}; }
       else { push({op: 'fxmove', id: x.id, by: d}, t('{effect}: moved to {at}', {effect: nm, at: tcf(x.f + d)})); sel = {k: 'fx', id: x.id.replace(/:\d+$/, ':' + (x.f + d))}; }
+    } else if (D.k === 'tr') {
+      const x = D.tr;
+      if (d === x.len) return drawTL();
+      push({op: 'trans', shot: x.shot, len: d}, t('{transition} at {at}: {n} frames long', {transition: edTrLabel(x.label), at: tcf(x.cut), n: d}));
+      sel = {k: 'tr', id: x.shot};
+    } else if (D.k === 'key') {
+      if (!d) return drawTL();
+      push({op: 'kmove', shot: D.ks, f: D.kf, to: D.kf + d}, t('Keyframe at {from}: moved to {to}', {from: tcf(D.kf), to: tcf(D.kf + d)}));
+      sel = {k: 'key', id: D.ks, f: D.kf + d};
     } else if (D.k === 'cap') {
       const c = D.c;
       if (!d) return drawTL();
@@ -4701,8 +4776,14 @@ function projEditor(el, P) {
       if (!s) { sel = null; return drawInsp(); }
       const lock = S.timing_locked, under = shotAt(prevF) === s && prevF > s.start;
       if (s.scene) return sceneInsp(box, s, under);
+      const tabs = [['video', t('Video')], ['speed', t('Speed')], ...(S.sound === 'follows' ? [['sound', t('Sound')]] : [])];
+      if (!tabs.some(x => x[0] === shotTab)) shotTab = 'video';
+      const tab = k => (shotTab === k ? '' : ' hidden');
       box.innerHTML = `<div class="edih"><span class="eddot shot"></span><b>${t('Shot {n}', {n: s.n})}</b><span class="small muted">${dec((s.end - s.start + 1) / S.fps)} s</span></div>
         <div class="small muted">${frange(s.start, s.end, S.fps)}</div>
+        <div class="edstabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-stab="${k}" class="${shotTab === k ? 'on' : ''}" aria-selected="${shotTab === k}">${esc(l)}</button>`).join('')}</div>
+        <div${tab('video')}>${keyRows(s)}</div>
+        <div${tab('speed')}>
         <div class="edlbl">${t('Speed')}</div>
         <div class="edchips">${ED_SPEEDS.map(x => `<button class="${Math.abs(x - s.speed) < 1e-6 ? 'on' : ''}" data-speed="${x}"${lock || s.special ? ' disabled' : ''}>${numLoc(x)}×</button>`).join('')}</div>
         <div class="small muted">${t('Slower = longer, faster = shorter; its sound keeps its pitch.')}</div>
@@ -4712,15 +4793,17 @@ function projEditor(el, P) {
         <div class="row"><input type="range" id="edslip" min="${-s.room_start}" max="${s.room_end}" step="1" value="0"${lock || s.special || !(s.room_start || s.room_end) ? ' disabled' : ''}>
           <span class="mono small" id="edslipv">${t('as it is')}</span></div>
         <div class="small muted">${t('An earlier or later moment of its clip in the same frames - or Alt + drag the shot.')}</div>
-        ${S.sound === 'follows' ? `<div class="edlbl">${t('Its sound')}</div>
+        <div class="small muted">${t('Its clip has {before} before and {after} after it - drag its edges to use them.', {before: `${dec(s.room_start / S.fps)} s`, after: `${dec(s.room_end / S.fps)} s`})}</div></div>
+        ${S.sound === 'follows' ? `<div${tab('sound')}><div class="edlbl">${t('Its sound')}</div>
           <div class="row"><input type="range" id="edvol" min="-30" max="${S.vol[1]}" step="1" value="${s.db <= S.vol[0] ? -30 : Math.round(s.db)}"${s.db <= S.vol[0] || lock ? ' disabled' : ''}>
             <span class="mono small" id="edvolv">${s.db <= S.vol[0] ? t('muted') : `${s.db > 0 ? '+' : ''}${Math.round(s.db)} dB`}</span>
-            <button class="btn sm ghost${s.db <= S.vol[0] ? ' on' : ''}" id="edmute" aria-pressed="${s.db <= S.vol[0]}"${lock ? ' disabled' : ''}>${s.db <= S.vol[0] ? '🔇' : '🔊'} ${t('Mute')}</button></div>` : ''}
+            <button class="btn sm ghost${s.db <= S.vol[0] ? ' on' : ''}" id="edmute" aria-pressed="${s.db <= S.vol[0]}"${lock ? ' disabled' : ''}>${s.db <= S.vol[0] ? '🔇' : '🔊'} ${t('Mute')}</button></div></div>` : ''}
         <div class="row edbtns"><button class="btn sm" id="edsplit2"${!under || lock ? ' disabled' : ''} title="${ta('Move the playhead inside the shot first')}">✂ ${t('Split at the playhead')}</button>
           <button class="btn sm eddanger" id="edshotdel"${lock || S.shots.length < 2 ? ' disabled' : ''}><svg class="i"><use href="#i-trash"/></svg>${t('Delete')}</button></div>
-        <div class="small muted">${t('Its clip has {before} before and {after} after it - drag its edges to use them.', {before: `${dec(s.room_start / S.fps)} s`, after: `${dec(s.room_end / S.fps)} s`})}</div>
         ${s.attached.length ? `<div class="small muted">${t('Moves with it: {what}', {what: esc(s.attached.map(f => /^captions/.test(f) ? t('the captions') : f.replace(/^(v\d+_|n\d+_)?(g|d)?\d+_/, '').replace(/_m\d+$/, '').replace(/[-_]/g, ' ')).join(', '))})}</div>` : ''}
         ${lock ? `<div class="small bad">${t('This video\'s sound was made in a way the Editor cannot cut again, so its shots keep their timing - ask Claude for those changes.')}</div>` : s.special ? `<div class="small muted">${t('A held frame or a stutter: it keeps its speed.')}</div>` : ''}`;
+      $$('[data-stab]', box).forEach(b => b.onclick = () => { shotTab = b.dataset.stab; drawInsp(); });
+      bindKeys(box, s);
       $$('[data-speed]', box).forEach(b => b.onclick = () => { const x = +b.dataset.speed; if (Math.abs(x - s.speed) < 1e-6) return;
         push({op: 'speed', shot: s.id, speed: x}, t('Shot {n}: {x}× speed', {n: s.n, x: numLoc(x)})); });
       $('#edsplit2', box).onclick = () => splitHere();
@@ -4729,8 +4812,8 @@ function projEditor(el, P) {
       if (tk) tk.onchange = () => { const c = S.clips.find(x => x.id === tk.value);
         push({op: 'take', shot: s.id, src: tk.value, in: s.src === tk.value ? s.in : 0}, t('Shot {n}: now {clip}', {n: s.n, clip: c ? c.name : tk.value})); };
       const sl = $('#edslip', box);
-      sl.oninput = () => { $('#edslipv', box).textContent = slipWords(+sl.value); slipShow(s, +sl.value); };
-      sl.onchange = () => { if (+sl.value) slipIt(s, +sl.value); else slipShow(s, 0); };
+      if (sl) { sl.oninput = () => { $('#edslipv', box).textContent = slipWords(+sl.value); slipShow(s, +sl.value); };
+        sl.onchange = () => { if (+sl.value) slipIt(s, +sl.value); else slipShow(s, 0); }; }
       const vol = $('#edvol', box);
       if (vol) {
         vol.oninput = () => { $('#edvolv', box).textContent = `${+vol.value > 0 ? '+' : ''}${vol.value} dB`; };
@@ -4738,6 +4821,52 @@ function projEditor(el, P) {
         $('#edmute', box).onclick = () => push({op: 'volume', shot: s.id, db: s.db <= S.vol[0] ? 0 : S.vol[0]},
           s.db <= S.vol[0] ? t('Shot {n}: its sound back on', {n: s.n}) : t('Shot {n}: muted', {n: s.n}));
       }
+      return;
+    }
+    if (sel.k === 'key') {
+      const s = S.shots.find(x => x.id === sel.id), d = s && drawOf(s.id), fs = s && d ? keyFramesOf(s) : [];
+      if (!fs.length) { sel = s ? {k: 'shot', id: s.id} : null; return drawInsp(); }
+      if (!fs.includes(sel.f)) sel.f = fs.reduce((a, b) => (Math.abs(b - sel.f) < Math.abs(a - sel.f) ? b : a));    // (a drag that stopped short)
+      const f = sel.f, here = ED_KEY_PROPS().filter(([p]) => (edKKeys(d, p) || []).some(k => k[0] === f));
+      const k0 = (edKKeys(d, here[0][0]) || []).find(k => k[0] === f), ease = (k0 && k0[2]) || 'linear';
+      box.innerHTML = `<div class="edih"><span class="eddot key"></span><b>${t('Keyframe')}</b><span class="small muted">${t('Shot {n}', {n: s.n})}</span></div>
+        <div class="small muted mono">${esc(tcf(f))}</div>
+        <div class="edkhere">${here.map(([p, lab, unit, k, , dflt]) => `<span class="edkchip">${esc(lab)} <b>${numLoc(+(edCurve(edKSpec(d, p), S.curves, dflt)(f) * k).toFixed(unit === 'px' ? 0 : 1))}${unit}</b></span>`).join('')}</div>
+        <div class="edlbl">${t('The move after it')}</div>
+        <div class="edchips">${ED_KEY_EASES().map(([e, l]) => `<button data-kease="${e}" class="${ease === e ? 'on' : ''}">${esc(l)}</button>`).join('')}</div>
+        <div class="row edbtns"><button class="btn sm eddanger" id="edkdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button>
+          <button class="btn sm ghost" id="edkback">${t('The whole shot')}</button></div>
+        <div class="small muted">${t('Drag the diamond on the timeline to move it.')}</div>`;
+      $$('[data-kease]', box).forEach(b => b.onclick = () => { if (b.dataset.kease === ease) return;
+        push({op: 'kease', shot: s.id, f, ease: b.dataset.kease}, t('Keyframe at {at}: {ease}', {at: tcf(f), ease: b.textContent})); });
+      $('#edkdel', box).onclick = () => delSel();
+      $('#edkback', box).onclick = () => { sel = {k: 'shot', id: s.id}; draw(); };
+      return;
+    }
+    if (sel.k === 'tr') {
+      const x = (S.transitions || []).find(q => q.shot === sel.id);
+      if (!x) { sel = null; return drawInsp(); }
+      const s = S.shots.find(q => q.id === x.shot), how = ED_TR_HOW(), nm = edTrLabel(x.label);
+      box.innerHTML = `<div class="edih"><span class="eddot tr"></span><b>${t('Transition')}</b><span class="small muted">${t('into shot {n}', {n: s ? s.n : '?'})}</span></div>
+        <div class="small muted">${frange(x.f, x.f + x.len - 1, S.fps)}</div>
+        <div class="edtrgrid">${(S.trans_kinds || []).map(([k, l]) => `<button data-trk="${k}" class="${k === x.kind ? 'on' : ''}" title="${esc(how[k] || '')}"><span>${ED_TR_ICON[k] || '◐'}</span>${esc(edTrLabel(l))}</button>`).join('')}</div>
+        <div class="edlbl">${t('Length')}</div>
+        <div class="row"><input type="range" id="edtrl" min="2" max="${x.max}" step="1" value="${x.len}"><span class="mono small" id="edtrlv">${x.len} f · ${dec(x.len / S.fps)} s</span></div>
+        ${x.dir ? `<div class="edlbl">${t('Direction')}</div><div class="edchips">${ED_DIRS().map(([d, a, l]) => `<button data-trd="${d}" class="${x.dir === d ? 'on' : ''}" title="${esc(l)}">${a} ${esc(l)}</button>`).join('')}</div>` : ''}
+        ${x.frozen ? `<div class="small amber">${t('{n} frames hold still: a clip has no more picture there. Make it shorter, or drag the shots\' edges for more of them.', {n: x.frozen})}</div>` : ''}
+        <div class="row edbtns"><button class="btn sm" id="edtrall">${t('Apply to all cuts')}</button>
+          <button class="btn sm eddanger" id="edtrdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button></div>`;
+      $$('[data-trk]', box).forEach(b => b.onclick = () => { const k = b.dataset.trk; if (k === x.kind) return;
+        const K = (S.trans_kinds || []).find(q => q[0] === k);
+        push({op: 'trans', shot: x.shot, kind: k}, t('Transition at {at}: {transition}', {at: tcf(x.cut), transition: edTrLabel(K ? K[1] : k)})); });
+      const rl = $('#edtrl', box);
+      rl.oninput = () => { $('#edtrlv', box).textContent = `${rl.value} f · ${dec(+rl.value / S.fps)} s`; };
+      rl.onchange = () => { const n = +rl.value; if (n !== x.len) push({op: 'trans', shot: x.shot, len: n}, t('{transition} at {at}: {n} frames long', {transition: nm, at: tcf(x.cut), n})); };
+      $$('[data-trd]', box).forEach(b => b.onclick = () => { if (b.dataset.trd === x.dir) return;
+        push({op: 'trans', shot: x.shot, dir: b.dataset.trd}, t('{transition} at {at}: {dir}', {transition: nm, at: tcf(x.cut), dir: b.title})); });
+      $('#edtrall', box).onclick = () => push({op: 'transall', kind: x.kind, len: x.len, ...(x.dir ? {dir: x.dir} : {})},
+        t('{transition} on all {n} cuts', {transition: nm, n: plainCuts().length}));
+      $('#edtrdel', box).onclick = () => delSel();
       return;
     }
     if (sel.k === 'song') {
@@ -4856,6 +4985,71 @@ function projEditor(el, P) {
   }
   // a scene of a video made from zero (its full-frame graphic on the main track): its speed, split, delete - its
   // edges and place dragged on the timeline like a shot's - then its graphic's own words, colours and settings
+  // a shot's Video tab: a row per property - its value at the playhead, ◆ = a keyframe here, ◀ ▶ = the keys before /
+  // after, ↺ = as it was; once a value has keys every change at the playhead is a key (auto-key)
+  function keyRows(s) {
+    const S = cur, d = drawOf(s.id) || {}, inShot = prevF >= s.start && prevF <= s.end, f = clamp(prevF, s.start, s.end), byFrame = [];
+    return `<div class="edkeys">${ED_KEY_PROPS().map(([p, label, unit, k, , dflt]) => {
+      const sp = edKSpec(d, p), fbf = typeof sp === 'string' || (!!sp && typeof sp === 'object' && !Array.isArray(sp.keys));
+      if (fbf) { byFrame.push(label);                      // (a shake draws it frame by frame: no keys over it)
+        return `<div class="edkrow off" data-p="${p}" title="${ta('An effect moves it frame by frame here (a shake) - remove that effect in Effects to key it')}"><span class="edkl">${esc(label)}</span>
+          <span></span><span class="edkd" aria-hidden="true">◆</span><span></span><span class="edkv mono small">~</span><span></span><span></span></div>`; }
+      const ks = edKKeys(d, p), v = edCurve(sp, S.curves, dflt)(f), here = !!ks && ks.some(x => x[0] === prevF);
+      const prev = ks && ks.filter(x => x[0] < prevF && x[0] >= s.start).pop(), next = ks && ks.find(x => x[0] > prevF && x[0] <= s.end);
+      const changed = !!ks || Math.abs(v - dflt) > 1e-6;
+      return `<div class="edkrow${ks ? ' keyed' : ''}" data-p="${p}"><span class="edkl" title="${ta('Drag left or right to change it')}">${esc(label)}</span>
+        <button class="edkn" data-kn="-1"${prev ? '' : ' disabled'} title="${ta('The keyframe before')}">◀</button>
+        <button class="edkd${here ? ' on' : ks ? ' has' : ''}" data-kd${inShot ? '' : ' disabled'} title="${here ? ta('Remove this keyframe') : ta('Add a keyframe here')}">◆</button>
+        <button class="edkn" data-kn="1"${next ? '' : ' disabled'} title="${ta('The keyframe after')}">▶</button>
+        <input type="number" class="edkv" step="any" value="${+(v * k).toFixed(unit === 'px' ? 0 : 1)}"${ks && !inShot ? ' disabled' : ''} aria-label="${esc(label)}">
+        <span class="edku">${unit}</span><button class="edkr" data-kr${changed ? '' : ' hidden'} title="${ta('Back to how it was (no keyframes)')}">↺</button></div>`; }).join('')}</div>
+      ${byFrame.length ? `<div class="small amber">${esc(t('{props}: an effect moves them frame by frame (a shake) - remove it in Effects to key them.', {props: byFrame.join(', ')}))}</div>` : ''}
+      <div class="small muted">${inShot ? t('◆ adds a keyframe at the playhead; after that, a change at another moment adds the next.') : t('Move the playhead onto the shot to add keyframes.')}</div>`;
+  }
+  function bindKeys(box, s) {
+    const d = drawOf(s.id);
+    if (!d) return;
+    const fNow = () => clamp(prevF, s.start, s.end);
+    $$('.edkrow:not(.off)', box).forEach(r => {
+      const p = r.dataset.p, [, lab, unit, k, step] = ED_KEY_PROPS().find(x => x[0] === p), inp = $('.edkv', r);
+      const shown = v => `${numLoc(+(v * k).toFixed(unit === 'px' ? 0 : 1))}${unit}`;
+      const commit = v => push({op: 'kset', shot: s.id, prop: p, f: fNow(), value: v}, t('Shot {n}: {prop} {v}', {n: s.n, prop: lab, v: shown(v)}));
+      inp.onchange = () => { const v = +inp.value / k; if (Number.isFinite(v)) commit(v); else drawInsp(); };
+      $('[data-kd]', r).onclick = () => { const ks = edKKeys(d, p), here = !!ks && ks.some(x => x[0] === prevF);
+        push(here ? {op: 'kdel', shot: s.id, prop: p, f: prevF} : {op: 'kadd', shot: s.id, prop: p, f: prevF},
+          here ? t('Shot {n}: the {prop} keyframe at {at} removed', {n: s.n, prop: lab, at: tcf(prevF)}) : t('Shot {n}: a {prop} keyframe at {at}', {n: s.n, prop: lab, at: tcf(prevF)})); };
+      $$('[data-kn]', r).forEach(b => b.onclick = () => { const ks = edKKeys(d, p) || [];
+        const g = +b.dataset.kn < 0 ? ks.filter(x => x[0] < prevF && x[0] >= s.start).pop() : ks.find(x => x[0] > prevF && x[0] <= s.end);
+        if (g && pv) pv.seek(g[0]); });
+      $('[data-kr]', r).onclick = () => push({op: 'kreset', shot: s.id, prop: p}, t('Shot {n}: {prop} back to how it was', {n: s.n, prop: lab}));
+      const lb = $('.edkl', r);                              // drag the name: the value follows live in the preview
+      lb.onpointerdown = e => {
+        if (inp.disabled || e.button) return;
+        e.preventDefault(); lb.setPointerCapture(e.pointerId);
+        const spec0 = edKSpec(d, p), v0 = +inp.value, x0 = e.clientX, f = fNow();
+        let v = v0;
+        lb.onpointermove = ev => { v = +(v0 + (ev.clientX - x0) * step).toFixed(2); inp.value = +v.toFixed(unit === 'px' ? 0 : 1); liveKey(d, p, f, v / k, spec0); };
+        lb.onpointerup = lb.onpointercancel = () => { lb.onpointermove = lb.onpointerup = lb.onpointercancel = null;
+          const back = () => { edKSet(d, p, spec0); if (pv) pv.render(prevF, true); };
+          if (Math.abs(v - v0) < 1e-9) back(); else commit(v / k).then(ok => { if (!ok) back(); }); };
+      };
+    });
+  }
+  function liveKey(d, p, f, v, spec0) {                       // the preview only, while a value is dragged
+    const ks = spec0 && typeof spec0 === 'object' && Array.isArray(spec0.keys) ? spec0.keys : null;
+    if (ks) { const nk = ks.map(x => [...x]), i = nk.findIndex(x => x[0] === f);
+      if (i >= 0) nk[i][1] = v; else { nk.push([f, v, 'smooth']); nk.sort((a, b) => a[0] - b[0]); }
+      edKSet(d, p, {keys: nk}); }
+    else edKSet(d, p, v);
+    if (pv) pv.render(prevF, true);
+  }
+  function addTrans(shot, kind) {
+    if (!cur || saving) return;
+    const s = cur.shots.find(x => x.id === shot), K = (cur.trans_kinds || []).find(x => x[0] === kind);
+    push({op: 'trans', shot, kind}, t('{transition} on the cut at {at}', {transition: edTrLabel(K ? K[1] : kind), at: tcf(s ? s.start : 0)}),
+      () => { sel = {k: 'tr', id: shot}; });
+  }
+  function addTransNear(kind, f) { const c = nearCut(f); if (c) addTrans(c.id, kind); else toast(t('The video has no plain cut for a transition'), 'err'); }
   function sceneInsp(box, s, under) {
     const S = cur, g = S.graphics.find(x => x.id === s.id);
     if (!g) { box.innerHTML = ''; return; }
@@ -4923,6 +5117,11 @@ function projEditor(el, P) {
       push({op: 'sfx', f: q.f, kind: q.kind, to: null}, t('{sound} at {from}: removed', {sound: edKind(q.kind), from: tcf(q.f)}), () => { sel = null; }); }
     else if (sel.k === 'fx') { const x = (cur.effects || []).find(q => q.id === sel.id); if (!x || !x.can.includes('remove')) return;
       push({op: 'fxremove', id: x.id}, t('{effect} at {at}: removed', {effect: edFxLabel(x.label), at: tcf(x.f)}), () => { sel = null; }); }
+    else if (sel.k === 'tr') { const x = (cur.transitions || []).find(q => q.shot === sel.id); if (!x) return;
+      push({op: 'trans', shot: x.shot, kind: null}, t('Transition at {at}: removed', {at: tcf(x.cut)}), () => { sel = null; }); }
+    else if (sel.k === 'key') { const s = cur.shots.find(x => x.id === sel.id), d = s && drawOf(s.id); if (!d) return;
+      const props = ED_KEY_PROPS().map(x => x[0]).filter(p => (edKKeys(d, p) || []).some(k => k[0] === sel.f));
+      if (props.length) push({op: 'kdel', shot: s.id, f: sel.f, props}, t('Shot {n}: the keyframe at {at} removed', {n: s.n, at: tcf(sel.f)}), () => { sel = {k: 'shot', id: s.id}; }); }
     else if (sel.k === 'cap') { const c = cur.captions.find(x => x.graphic === sel.graphic && x.cue === sel.cue); if (!c) return;
       push({op: 'caption', graphic: c.graphic, cue: c.cue, text: ''}, t('Caption at {at}: removed', {at: tcf(c.f)}), () => { sel = null; }); }
   }
@@ -4962,7 +5161,13 @@ function projEditor(el, P) {
     push({op: 'gadd', id, template: tid, f, len, values}, t('{graphic} added at {at}', {graphic: t(T.name), at: tcf(f)}), () => { sel = {k: 'gfx', id}; });
   }
   // ---------------------------------------------------------------- the panel on the left: add sounds and templates
-  let addTab = 'clips', addQ = '', addKind = '';
+  let addTab = 'clips', addQ = '', addKind = '', lastCtx = '';
+  // where the playhead is, for the Add panel's "why not here" (motionlab\edfx availability: the engine's own reasons,
+  // per shot and per cut - the user, 2026-10-26: "show why some effects or transitions cant be used ... so people know")
+  const ctxShot = () => (cur || base).shots.find(s => !s.scene && s.start <= prevF && prevF <= s.end) || null;
+  const ctxCut = () => { const S = cur || base, C = S.shots.slice(1).filter((s, i) => s.start === S.shots[i].end + 1);
+    return C.length ? C.reduce((a, b) => (Math.abs(b.start - prevF) < Math.abs(a.start - prevF) ? b : a)) : null; };
+  const ctxKey = () => `${addTab}|${(ctxShot() || {}).id}|${(ctxCut() || {}).id}|${(nearCut(prevF) || {}).id}`;
   function drawAdd() {
     const box = $('#edadd', el);
     if (!base) { box.innerHTML = ''; return; }
@@ -4996,18 +5201,33 @@ function projEditor(el, P) {
           <button class="btn sm" data-add${(cur || base).timing_locked ? ' disabled' : ''}>+</button></div>`; }).join('')}
         ${!C.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
     }
+    if (addTab === 'tr') {
+      const how = ED_TR_HOW(), K = ((cur || base).trans_kinds || []).filter(([k, l]) => !q || `${edTrLabel(l)} ${how[k] || ''} ${k}`.toLowerCase().includes(q));
+      const S0 = cur || base, c = nearCut(prevF), has = c && (S0.transitions || []).find(x => x.shot === c.id);
+      const none = c ? '' : !S0.shots.some(s => !s.scene) ? t('Transitions go between two clips - this video is made of graphics') : t('The video has no plain cut for a transition');
+      list = `<div class="edat small${none ? ' bad' : ''}">${none ? esc(none) : esc(t('On the cut at {at}', {at: tcf(c.start)})) + (has ? ` · ${esc(t('replaces {transition}', {transition: edTrLabel(has.label)}))}` : '')}</div>
+        <div class="edlist">${K.map(([k, l]) => `<div class="edrow${none ? ' off' : ''}" draggable="${none ? 'false' : 'true'}" data-trk="${k}"${none ? ' data-off="1"' : ''} title="${none ? esc(none) : ta('Drag it onto a cut, or + = the cut nearest the playhead')}">
+          <span class="edtric">${ED_TR_ICON[k] || '◐'}</span><span class="grow edrn"><b>${esc(edTrLabel(l))}</b> <span class="small muted">${esc(how[k] || '')}</span></span><button class="btn sm" data-add${none ? ' disabled' : ''}>+</button></div>`).join('')}
+        ${!K.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
+    }
     if (addTab === 'fx') {
       const A = ED_FX_ADD().filter(([k, l, how]) => !q || `${l} ${how} ${k}`.toLowerCase().includes(q));
-      const S0 = cur || base, noClip = !S0.shots.some(s => !s.scene);
-      const why = k => (noClip && ED_FX_CLIP.has(k) ? ta('Works on a clip - this video is made of graphics')
-        : k === 'stutter' && S0.sound === 'follows' ? ta('Not on a talking video: the picture would pull away from the voice') : '');
-      list = `<div class="edlist">${A.map(([k, l, how]) => { const no = why(k);
-          return `<div class="edrow${no ? ' off' : ''}" draggable="${no ? 'false' : 'true'}" data-fxk="${k}"${no ? ' data-off="1"' : ''} title="${no || ta('Drag it onto the timeline, or + = at the playhead')}">
-          <span class="eddot fx"></span><span class="grow edrn"><b>${esc(l)}</b> <span class="small muted">${esc(how)}</span></span><button class="btn sm" data-add${no ? ' disabled' : ''}>+</button></div>`; }).join('')}
+      const S0 = cur || base, noClip = !S0.shots.some(s => !s.scene), can = S0.fx_can || {}, sh = ctxShot(), ct = ctxCut();
+      const why = k => edCap(noClip && ED_FX_CLIP.has(k) ? t('Works on a clip - this video is made of graphics')
+        : ED_FX_CUT.has(k) ? (ct ? ((can.cuts || {})[ct.id] || {})[k] || '' : t('The video has no plain cut for this effect'))
+        : k === 'colour_flash' || k === 'light_leak' ? '' : sh ? ((can.shots || {})[sh.id] || {})[k] || '' : (can.none || {})[k] || '');
+      list = `<div class="edat small">${esc(sh ? t('At the playhead: shot {n}', {n: sh.n}) : t('At the playhead: no clip'))} · <span class="mono">${esc(tcf(prevF))}</span></div>
+        <div class="edlist">${A.map(([k, l, how]) => { const no = why(k);
+          return `<div class="edrow${no ? ' off' : ''}" draggable="${no ? 'false' : 'true'}" data-fxk="${k}"${no ? ' data-off="1"' : ''} title="${no ? esc(no) : ta('Drag it onto the timeline, or + = at the playhead')}">
+          <span class="eddot fx"></span><span class="grow edrn"><b>${esc(l)}</b> <span class="small muted">${esc(how)}</span>${no ? `<span class="edwhy">${esc(no)}</span>` : ''}</span><button class="btn sm" data-add${no ? ' disabled' : ''}>+</button></div>`; }).join('')}
         ${!A.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
     }
-    box.innerHTML = `<div class="edtabs">${hasClips ? `<button data-tab="clips" class="${addTab === 'clips' ? 'on' : ''}">${t('Clips')}</button>` : ''}<button data-tab="sfx" class="${addTab === 'sfx' ? 'on' : ''}">${t('Sounds')}</button><button data-tab="gfx" class="${addTab === 'gfx' ? 'on' : ''}">${t('Graphics')}</button><button data-tab="fx" class="${addTab === 'fx' ? 'on' : ''}">${t('Effects')}</button></div>
-      <div class="edfind"><input type="search" id="edq" placeholder="${ta('Search…')}" value="${esc(addQ)}">${addTab === 'sfx' ? `<select id="edkind" title="${ta('Kind of sound')}"><option value="">${t('All kinds')}</option>${kinds.map(k => `<option value="${esc(k)}"${addKind === k ? ' selected' : ''}>${esc(edKind(k))}</option>`).join('')}</select>` : ''}</div>${list}`;
+    // a rail of big icons, each its own colour (the user, 2026-10-26: "more presence ... instead of an overcrowded tab bar")
+    const rail = [...(hasClips ? [['clips', 'i-film', t('Clips')]] : []), ['sfx', 'i-volume', t('Sounds')], ['gfx', 'i-motion', t('Graphics')],
+      ['fx', 'i-zap', t('Effects')], ['tr', 'i-trans', t('Transitions')]];
+    box.innerHTML = `<div class="edaddw"><nav class="edrail" aria-label="${ta('What to add')}">${rail.map(([k, ic, l]) => `<button data-tab="${k}" class="${addTab === k ? 'on' : ''}" title="${esc(l)}" aria-pressed="${addTab === k}"><svg class="i"><use href="#${ic}"/></svg><span>${esc(l)}</span></button>`).join('')}</nav>
+      <div class="edaddb"><div class="edfind"><input type="search" id="edq" placeholder="${ta('Search…')}" value="${esc(addQ)}">${addTab === 'sfx' ? `<select id="edkind" title="${ta('Kind of sound')}"><option value="">${t('All kinds')}</option>${kinds.map(k => `<option value="${esc(k)}"${addKind === k ? ' selected' : ''}>${esc(edKind(k))}</option>`).join('')}</select>` : ''}</div>${list}</div></div>`;
+    lastCtx = ctxKey();
     $$('[data-tab]', box).forEach(b => b.onclick = () => { addTab = b.dataset.tab; addQ = ''; drawAdd(); if (addTab === 'gfx' && !lib.length) loadLib(); });
     const qi = $('#edq', box);
     qi.oninput = debounce(() => { addQ = qi.value; const pos = qi.selectionStart; drawAdd(); const n = $('#edq', box); n.focus(); n.setSelectionRange(pos, pos); }, 200);
@@ -5018,6 +5238,12 @@ function projEditor(el, P) {
       if (r.dataset.clip) {                                  // a clip: a new shot at the cut by the playhead / where dropped
         $('[data-add]', r).onclick = () => addClip(r.dataset.clip, prevF);
         r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-clip', r.dataset.clip); e.dataTransfer.effectAllowed = 'copy'; };
+        return;
+      }
+      if (r.dataset.trk) {                                   // a transition: on the cut nearest the playhead / the drop
+        if (r.dataset.off) return;
+        $('[data-add]', r).onclick = () => addTransNear(r.dataset.trk, prevF);
+        r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-tr', r.dataset.trk); e.dataTransfer.effectAllowed = 'copy'; };
         return;
       }
       if (r.dataset.fxk) {                                   // an effect: at the playhead, or where it is dropped
@@ -5109,13 +5335,18 @@ function projEditor(el, P) {
   cv.addEventListener('dblclick', e => { const it = e.target.closest('.edit'); if (it && it.dataset.k === 'cap') { const i = $('#edcapt', el); if (i) { i.focus(); i.select(); } } });
   cv.addEventListener('dragover', e => { if ([...e.dataTransfer.types].some(x => x.startsWith('text/x-ml-'))) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
     const ph = $('.edins', el); ph.hidden = false; ph.style.top = '0px'; ph.style.height = '100%';
-    if ([...e.dataTransfer.types].includes('text/x-ml-clip') && cur.shots.length) {     // a clip goes into a cut
+    const tc0 = [...e.dataTransfer.types].includes('text/x-ml-tr') && nearCut(fAt(e));
+    if (tc0) ph.style.left = `${tc0.start * pxf - 2}px`;                          // a transition: the cut it lands on
+    else if ([...e.dataTransfer.types].includes('text/x-ml-clip') && cur.shots.length) {     // a clip goes into a cut
       const k = placeAt(fAt(e)), x = k < cur.shots.length ? cur.shots[k].start : cur.shots[cur.shots.length - 1].end + 1;
       ph.style.left = `${x * pxf - 2}px`; } else ph.style.left = `${fAt(e) * pxf - 1}px`; } });
   cv.addEventListener('dragleave', () => { const ph = $('.edins', el); if (ph) ph.hidden = true; });
   cv.addEventListener('drop', e => { e.preventDefault(); const ph = $('.edins', el); if (ph) ph.hidden = true;
     const f = fAt(e), s = e.dataTransfer.getData('text/x-ml-sfx'), tp = e.dataTransfer.getData('text/x-ml-tpl'), fk = e.dataTransfer.getData('text/x-ml-fx'), ck = e.dataTransfer.getData('text/x-ml-clip');
-    if (s) { const o = JSON.parse(s); addSound(o.file, o.kind, f); } else if (tp) addTemplate(tp, f); else if (fk) addFx(fk, f); else if (ck) addClip(ck, f); });
+    const tk = e.dataTransfer.getData('text/x-ml-tr');
+    if (s) { const o = JSON.parse(s); addSound(o.file, o.kind, f); } else if (tp) addTemplate(tp, f); else if (fk) addFx(fk, f); else if (ck) addClip(ck, f);
+    else if (tk) addTransNear(tk, f); });
+  cv.addEventListener('click', e => { const b = e.target.closest('.edcutb'); if (b && !saving) addTrans(b.dataset.cut, 'mix'); });
   // keys while the Editor is on screen (never while typing; the dialogs keep theirs)
   const onKey = e => {
     if (!cur || !el.isConnected || (e.target.matches && e.target.matches('input, textarea, select')) || !$('#modal').hidden) return;

@@ -5,7 +5,9 @@ Layer types: clip, solid, text, clock, mosaic, firework, streaks, strip, overlay
 tools/overlay.py with HyperFrames - the way to make new graphics since 0.3.0).
 Animated values ("curves") are a number, {"keys": [[f, v, ease], ...]}, {"start": f0, "values": [...]} or
 "@name" for a curve defined once in plan["curves"]. Eases (for the segment after a key): hold, linear,
-smooth (S-curve), in (accelerating / slow start), out (decelerating / slow end).
+smooth (S-curve), in (accelerating / slow start), out (decelerating / slow end), in3 / out3 (stronger), pop (a slow
+end that overshoots a little). A clip's "rotation" (degrees, clockwise) turns its box round its centre; a "zoom"
+under 1 shrinks the box round its zoom point (the anchor) - what is under it shows round it.
 Clip sources are the frame caches written by tools/prep_footage.py (full range, cover-fit at 1x): colour (plan
 source "format": "i420", the default since 0.3.0) or grey ("gray"; test_4am) - see motionlab/footage.py. Grades
 (plan["grades"]) are levels / gamma / output range per channel (grade_lut) plus "saturation" (1 = as shot, 0 = grey;
@@ -34,6 +36,9 @@ EASES = {
     "out": lambda t: 1 - (1 - t) * (1 - t),
     "in3": lambda t: t * t * t,
     "out3": lambda t: 1 - (1 - t) ** 3,
+    # 2026-10-26, the Editor's keyframes: "pop" = a slow end that overshoots a little and settles (CSS / CapCut's
+    # "back out")
+    "pop": lambda t: 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2,
 }
 
 
@@ -246,6 +251,7 @@ class ClipLayer(Layer):
         self.ax = Curve(an[0], R.curves, 0.5)
         self.ay = Curve(an[1], R.curves, 0.5)
         self.gain = Curve(spec.get("gain"), R.curves, 1.0)
+        self.rot = Curve(spec.get("rotation"), R.curves, 0.0)      # degrees, clockwise, round the rect's centre
         g = {**R.grades.get(spec.get("grade", "default"), {}), **spec.get("grade_override", {})}
         self.lut, self.sat = grade_parts(g)
         self.lut3d = R.lut3d(g["lut3d"]) if g.get("lut3d") else None
@@ -277,6 +283,12 @@ class ClipLayer(Layer):
         x, y, w, h = self.rect
         x += self.dx(f)
         y += self.dy(f)
+        z, rot = self.zoom(f), self.rot(f)
+        cx0, cy0 = x + w / 2, y + h / 2                         # (what a rotation turns round)
+        if z < 1.0:                                             # smaller than its box: the box shrinks round the
+            ax, ay = self.ax(f), self.ay(f)                     # zoom point (the Editor's preview does the same)
+            x, y, w, h, z = x + ax * w * (1 - z), y + ay * h * (1 - z), w * z, h * z, 1.0
+            cx0, cy0 = x + w / 2, y + h / 2
         if f in self.black:
             out = sample_box(x, y, w, h, R.W, R.H)
             if out:
@@ -296,12 +308,14 @@ class ClipLayer(Layer):
             parts.append((sample_patch(self._bg[1], self.lut, x, y, w, h, 1.0, 0.5, 0.5, R.W, R.H, self.mirror), 0.55))
             ar = sw / sh                                         # the whole picture in the rect; the zoom (and its
             cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)   # anchor) works inside that box
-            parts.append((sample_patch(src, self.lut, x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, self.zoom(f),
+            parts.append((sample_patch(src, self.lut, x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z,
                                        self.ax(f), self.ay(f), R.W, R.H, self.mirror), 1.0))
         else:
-            parts.append((sample_patch(src, self.lut, x, y, w, h, self.zoom(f), self.ax(f), self.ay(f), R.W, R.H,
+            parts.append((sample_patch(src, self.lut, x, y, w, h, z, self.ax(f), self.ay(f), R.W, R.H,
                                        self.mirror), 1.0))
         for res, k_dim in parts:
+            if res is not None and abs(rot) > 1e-3:
+                res = rotate_patch(*res, cx0, cy0, rot, R.W, R.H)
             if res is None:
                 continue
             patch, cov, X0, Y0 = res
@@ -315,6 +329,32 @@ class ClipLayer(Layer):
             if f in self.flash_white:                           # flat white frame (a trace of the image left)
                 patch = 0.86 + 0.06 * patch
             blend(canvas, patch * k_dim if k_dim != 1.0 else patch, cov * op, X0, Y0, self.mode, self.tint)
+
+
+def rotate_patch(patch, cov, X0, Y0, cx, cy, deg, W, H):
+    """A drawn patch (and its coverage) turned `deg` degrees clockwise round the frame point (cx, cy) -> the same kind
+    of tuple over the frame pixels it now covers, or None."""
+    h, w = cov.shape
+    th = math.radians(deg)
+    co, si = math.cos(th), math.sin(th)
+    cxi, cyi = cx - 0.5, cy - 0.5                          # (pixel-index space: centres at integers)
+    xs, ys = [], []
+    for px, py in ((X0 - 0.5, Y0 - 0.5), (X0 + w - 0.5, Y0 - 0.5), (X0 - 0.5, Y0 + h - 0.5), (X0 + w - 0.5, Y0 + h - 0.5)):
+        xs.append(cxi + co * (px - cxi) - si * (py - cyi))
+        ys.append(cyi + si * (px - cxi) + co * (py - cyi))
+    Xa, Xb = max(0, int(math.floor(min(xs)))), min(W, int(math.ceil(max(xs))) + 1)
+    Ya, Yb = max(0, int(math.floor(min(ys)))), min(H, int(math.ceil(max(ys))) + 1)
+    if Xb <= Xa or Yb <= Ya:
+        return None
+    # output (i, j) = frame (Xa + i, Ya + j) <- patch (u, v): the inverse turn
+    M = np.array([[co, si, co * (Xa - cxi) + si * (Ya - cyi) + cxi - X0],
+                  [-si, co, -si * (Xa - cxi) + co * (Ya - cyi) + cyi - Y0]], np.float32)
+    pm = patch * (cov[..., None] if patch.ndim == 3 else cov)
+    flags = cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP
+    a = cv2.warpAffine(cov, M, (Xb - Xa, Yb - Ya), flags=flags, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    col = cv2.warpAffine(pm, M, (Xb - Xa, Yb - Ya), flags=flags, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    col = col / (np.maximum(a, 1e-6)[..., None] if col.ndim == 3 else np.maximum(a, 1e-6))
+    return col.astype(np.float32), np.clip(a, 0, 1).astype(np.float32), Xa, Ya
 
 
 def sample_box(x, y, w, h, W, H):
