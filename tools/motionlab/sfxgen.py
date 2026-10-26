@@ -240,6 +240,7 @@ def unpack(zpath: Path, dest: Path) -> dict:
     -> the zip's listing."""
     from . import sfx as SFX
     dest.mkdir(parents=True, exist_ok=True)
+    root = dest.resolve()
     listing = None
     with zipfile.ZipFile(zpath) as zf:
         for info in zf.infolist():
@@ -251,7 +252,9 @@ def unpack(zpath: Path, dest: Path) -> dict:
                 continue
             if Path(name).suffix.lower() not in SFX.AUDIO_EXT or info.file_size > 50_000_000:
                 continue
-            p = dest / name
+            p = (dest / name).resolve()                    # (2026-10-26 review: "C:/Users/x.wav" escaped dest - a
+            if not p.is_relative_to(root) or p == root:   # drive letter, a drive-relative "C:x.wav", a link: refused)
+                continue
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_bytes(zf.read(info))
     if not listing or not isinstance(listing.get("sounds"), list):
@@ -363,6 +366,15 @@ def selfcheck() -> dict:
         case("a paid-plan sound zipped for friends and imported back by its list: the same kind and licence, nothing "
              "else", z["count"] == 1 and len(got["added"]) == 1 and rows2[0]["kind"] == "whoosh"
              and rows2[0]["licence"] == LICENCE["paid"] and public()["key_end"] == "ghij" and "key" not in public())
+        bad = td / "bad.zip"                                # (2026-10-26 review: names that point out of the folder)
+        outside = (td / "outside.wav").resolve()
+        with zipfile.ZipFile(bad, "w") as zf:
+            zf.writestr("list.json", json.dumps({"sounds": []}))
+            for nm in (outside.as_posix(), f"{outside.drive}outside2.wav", "../outside3.wav", "ok/inside.wav"):
+                zf.writestr(nm, b"RIFF0000WAVE")
+        unpack(bad, td / "in2")
+        case("a zip's names with a drive letter, a drive-relative or a .. path never write outside its folder",
+             not outside.exists() and not (td / "outside3.wav").exists() and (td / "in2" / "ok" / "inside.wav").exists())
         case("a Drive share link -> its direct download", drive_url(
             "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/view?usp=sharing")
              == "https://drive.usercontent.google.com/download?id=1AbCdEfGhIjKlMnOpQrStUvWxYz012345&export=download"

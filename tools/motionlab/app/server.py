@@ -266,7 +266,7 @@ def photo_thumb(photo: Path) -> Path:
 
 def lab_file(relpath: str, roots=FILE_ROOTS) -> Path:
     p = (LAB / urllib.parse.unquote(relpath)).resolve()
-    if LAB not in p.parents or p.relative_to(LAB).parts[0] not in roots:
+    if LAB not in p.parents or p.relative_to(LAB).parts[0] not in roots or data.private(p):    # (the ElevenLabs key)
         raise PermissionError(relpath)
     if not p.exists():
         raise FileNotFoundError(relpath)

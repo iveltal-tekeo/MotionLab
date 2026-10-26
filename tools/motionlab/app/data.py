@@ -2243,9 +2243,23 @@ def skills() -> list[dict]:
                                       s["name"]))
 
 
+TEXT_ROOTS = {"analysis", "projects", "refs", "docs", "library", "knowledge", "fonts", "logos"}    # (server.FILE_ROOTS)
+PRIVATE_FILES = {"knowledge/local/elevenlabs.json"}       # never served, never shown (its API key)
+
+
+def private(p: Path) -> bool:
+    return p.relative_to(LAB).as_posix().lower() in PRIVATE_FILES
+
+
 def text_file(relpath: str, limit: int = 400_000) -> str:
+    """A text the page shows (What's new, the plans, tips, a report): the top-level changelogs and README, or a file in
+    the folders /files/ serves - never another part of the lab, never a private file (2026-10-26 review)."""
     p = (LAB / relpath).resolve()
     if LAB not in p.parents or p.suffix.lower() not in (".md", ".txt", ".json", ".comp", ".py", ".csv", ".setting"):
+        raise PermissionError(relpath)
+    rel = p.relative_to(LAB)
+    top = len(rel.parts) == 1 and re.fullmatch(r"(CHANGELOG(\.[a-z]{2})?|README)\.md", rel.name, re.I)
+    if not (top or rel.parts[0] in TEXT_ROOTS) or private(p):
         raise PermissionError(relpath)
     return p.read_text(encoding="utf-8", errors="replace")[:limit]
 
