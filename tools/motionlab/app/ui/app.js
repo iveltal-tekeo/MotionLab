@@ -3960,7 +3960,7 @@ const ED_CAP_STYLE = ['font', 'weight', 'font_size', 'uppercase', 'first_capital
 const ED_ROW = {ruler: 24, cap: 26, gfx: 28, shot: 64, fx: 26, sfx: 30, wave: 40};
 // the effects (motionlab\edfx): a chip's name as the engine sends it (English) shown in the page's language; what can
 // be added at the playhead, with a line on each; a strength slider's range per kind; the eases in the lab's words
-const ED_FX_LABEL = {'Zoom in': t('Zoom in'), 'Zoom out': t('Zoom out'), 'Punch-in': t('Punch-in'), 'Tight framing': t('Tight framing'),
+const ED_FX_LABEL = {'Zoom in': t('Zoom in'), 'Zoom out': t('Zoom out'), 'Zoom pulse': t('Zoom pulse'), 'Punch-in': t('Punch-in'), 'Punch-out': t('Punch-out'), 'Tight framing': t('Tight framing'),
   'Shake': t('Shake'), 'Flash': t('Flash'), 'White frame': t('White frame'), 'Black frame': t('Black frame'), 'Stutter': t('Stutter'),
   'Mirror': t('Mirror'), 'Whip': t('Whip'), 'Push': t('Push'), 'Crossfade': t('Crossfade'), 'Overlap': t('Overlap'),
   'RGB split': t('RGB split'), 'Colour flash': t('Colour flash'), 'Light leak': t('Light leak'), 'Dip to black': t('Dip to black'),
@@ -3972,6 +3972,9 @@ const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer fr
   ['black_frame', t('Black frame'), t('one black frame')], ['colour_flash', t('Colour flash'), t('a colour flash')], ['light_leak', t('Light leak'), t('a warm light leak')],
   ['rgb_split', t('RGB split'), t('the red channel splits off for a few frames')], ['dip_black', t('Dip to black'), t('a dip through black at the nearest cut')],
   ['dip_white', t('Dip to white'), t('a dip through white at the nearest cut')], ['stutter', t('Stutter'), t('a few frames repeat')]];
+// what needs a clip's picture (motionlab\edfx CLIP_ONLY): greyed out on a video made of graphics, the stutter on a
+// talking video (the picture would leave the voice) - the reason on hover, never an error after the click
+const ED_FX_CLIP = new Set(['punch_in', 'push_in', 'pull_out', 'zoom_through', 'shake', 'rgb_split', 'stutter']);
 const ED_FX_RANGE = {zoom: [1.01, 2, 0.01, '×'], punch: [1.01, 2, 0.01, '×'], framing: [1.01, 1.6, 0.01, '×'], shake: [0.004, 0.08, 0.002, ''],
   flash: [0.05, 1, 0.05, '']};
 const ED_EASES = () => [['linear', t('Linear')], ['smooth', t('S-curve')], ['in', t('Slow start')], ['out', t('Slow end')]];
@@ -4776,8 +4779,12 @@ function projEditor(el, P) {
       return;
     }
     if (sel.k === 'fx') {
-      const x = (S.effects || []).find(q => q.id === sel.id);
+      // (a drag stops at an edge: the effect may have moved less than the pointer - the nearest of its kind there)
+      const pre = sel.id.replace(/:-?\d+$/, ':'), at = +sel.id.slice(pre.length);
+      const x = (S.effects || []).find(q => q.id === sel.id)
+        || (S.effects || []).filter(q => q.id.startsWith(pre)).sort((a, b) => Math.abs(a.f - at) - Math.abs(b.f - at))[0];
       if (!x) { sel = null; return drawInsp(); }
+      sel.id = x.id;
       const rg = ED_FX_RANGE[x.kind] || [0.05, 1, 0.05, ''], nm = edFxLabel(x.label);
       box.innerHTML = `<div class="edih"><span class="eddot fx"></span><b>${esc(nm)}</b></div><div class="small muted">${frange(x.f, x.f + x.len - 1, S.fps)}</div>
         ${x.can.includes('strength') && x.strength != null ? `<div class="edlbl">${t('Strength')}</div><div class="row"><input type="range" id="edfxs" min="${rg[0]}" max="${rg[1]}" step="${rg[2]}" value="${x.strength}"><span class="mono small" id="edfxsv">${numLoc(x.strength)}${rg[3]}</span></div>` : ''}
@@ -4991,8 +4998,12 @@ function projEditor(el, P) {
     }
     if (addTab === 'fx') {
       const A = ED_FX_ADD().filter(([k, l, how]) => !q || `${l} ${how} ${k}`.toLowerCase().includes(q));
-      list = `<div class="edlist">${A.map(([k, l, how]) => `<div class="edrow" draggable="true" data-fxk="${k}" title="${ta('Drag it onto the timeline, or + = at the playhead')}">
-          <span class="eddot fx"></span><span class="grow edrn"><b>${esc(l)}</b> <span class="small muted">${esc(how)}</span></span><button class="btn sm" data-add>+</button></div>`).join('')}
+      const S0 = cur || base, noClip = !S0.shots.some(s => !s.scene);
+      const why = k => (noClip && ED_FX_CLIP.has(k) ? ta('Works on a clip - this video is made of graphics')
+        : k === 'stutter' && S0.sound === 'follows' ? ta('Not on a talking video: the picture would pull away from the voice') : '');
+      list = `<div class="edlist">${A.map(([k, l, how]) => { const no = why(k);
+          return `<div class="edrow${no ? ' off' : ''}" draggable="${no ? 'false' : 'true'}" data-fxk="${k}"${no ? ' data-off="1"' : ''} title="${no || ta('Drag it onto the timeline, or + = at the playhead')}">
+          <span class="eddot fx"></span><span class="grow edrn"><b>${esc(l)}</b> <span class="small muted">${esc(how)}</span></span><button class="btn sm" data-add${no ? ' disabled' : ''}>+</button></div>`; }).join('')}
         ${!A.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
     }
     box.innerHTML = `<div class="edtabs">${hasClips ? `<button data-tab="clips" class="${addTab === 'clips' ? 'on' : ''}">${t('Clips')}</button>` : ''}<button data-tab="sfx" class="${addTab === 'sfx' ? 'on' : ''}">${t('Sounds')}</button><button data-tab="gfx" class="${addTab === 'gfx' ? 'on' : ''}">${t('Graphics')}</button><button data-tab="fx" class="${addTab === 'fx' ? 'on' : ''}">${t('Effects')}</button></div>
@@ -5010,6 +5021,7 @@ function projEditor(el, P) {
         return;
       }
       if (r.dataset.fxk) {                                   // an effect: at the playhead, or where it is dropped
+        if (r.dataset.off) return;
         $('[data-add]', r).onclick = () => addFx(r.dataset.fxk, prevF);
         r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-fx', r.dataset.fxk); e.dataTransfer.effectAllowed = 'copy'; };
         return;

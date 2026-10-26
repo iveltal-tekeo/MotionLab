@@ -30,6 +30,8 @@ ADD = ("punch_in", "push_in", "pull_out", "zoom_through", "shake", "flash", "whi
        "colour_flash", "light_leak", "rgb_split", "dip_black", "dip_white", "stutter")
 CUT_KINDS = {"zoom_through", "white_flash", "dip_black", "dip_white"}       # placed on the cut nearest the frame
 MOVES_PICTURE = {"stutter"}                         # shifts the picture against its sound: not on a talking video
+CLIP_ONLY = {"punch_in", "push_in", "pull_out", "zoom_through", "shake", "rgb_split", "stutter"}   # a clip's picture
+SOLID_FX = ("colorflash_", "leak_", "dip_", "fade_in", "fade_out", "flash_", "black_")     # solids that are effects
 
 
 class FxError(ValueError):
@@ -70,25 +72,18 @@ def effects(P: dict) -> list[dict]:
             rgb.setdefault(lid.rsplit("_", 1)[0], []).append(L)
             continue
         if t == "solid":
-            out.append(_solid_fx(L))
+            if lid.startswith(SOLID_FX):                    # (a corner camera's frame, an end card's background:
+                out.append(_solid_fx(L))                    # the layout, not an effect)
             continue
         if t != "clip":
             continue
         an = L.get("anchor")
         shaky = isinstance(an, list) and any(isinstance(a, dict) and "values" in a for a in an)
         zk = _keys(L.get("zoom"))
-        if zk and len({round(float(k[1]), 4) for k in zk}) > 1:
-            vals = [float(k[1]) for k in zk]
-            step = any((k[2] if len(k) > 2 else "linear") == "hold" for k in zk[:-1])
-            f0, f1 = int(zk[0][0]), int(zk[-1][0])
-            if step:                                        # a punch-in: the value jumps at the key after "hold"
-                at = next(int(zk[i + 1][0]) for i, k in enumerate(zk[:-1]) if (k[2] if len(k) > 2 else "") == "hold")
-                out.append(_fx("punch", "Punch-in", lid, max(s, at), e - max(s, at) + 1, ["move", "strength", "remove"],
-                               round(max(vals) / max(min(vals), 1e-6), 3)))
-            else:
-                out.append(_fx("zoom", "Zoom in" if vals[-1] >= vals[0] else "Zoom out", lid, f0, f1 - f0 + 1,
-                               ["move", "len", "strength", "ease", "remove"], round(max(vals) / max(min(vals), 1e-6), 3),
-                               zk[0][2] if len(zk[0]) > 2 else "linear"))
+        if zk and not any(k in L["zoom"] for k in ("scale", "offset")):
+            for m in _zoom_moves(sorted(zk, key=lambda k: k[0]), s, e):     # every move of the shot its own chip
+                can = ["move", "len", "strength", "ease", "remove"] if m["kind"] == "zoom" else ["move", "strength", "remove"]
+                out.append(_fx(m["kind"], m["label"], lid, m["f"], m["len"], can, m["strength"], m["ease"]))
         elif isinstance(L.get("zoom"), (int, float)) and abs(float(L["zoom"]) - 1) > 1e-3 and not shaky and lid in shot_ids:
             out.append(_fx("framing", "Tight framing", lid, s, e - s + 1, ["strength", "remove"], round(float(L["zoom"]), 3)))
         if shaky:
@@ -141,6 +136,10 @@ def _solid_fx(L: dict) -> dict:
         kind, label = "fade", "Fade in"
     elif lid == "fade_out":
         kind, label = "fade", "Fade out"
+    elif lid.startswith("flash_"):                          # a flash / black frame where no clip is under it
+        kind, label = "solid_flash", "Flash"
+    elif lid.startswith("black_"):
+        kind, label = "solid_black", "Black frame"
     else:
         kind, label = "solid", "Colour layer"
     op = L.get("opacity")
@@ -173,27 +172,351 @@ def _inside(L: dict, a: int, b: int) -> bool:
     return int(L["start"]) <= a and b <= int(L["end"])
 
 
-# ------------------------------------------------------------------------------------------------ changing one
-def move(P: dict, fx: dict, by: int) -> None:
+def _clamp(by: int, lo: int, hi: int) -> int:
+    """A move as far as it can go that way (the Editor drags to the edge, never an error for going too far)."""
+    by = max(lo, min(hi, int(by)))
     if by == 0:
+        raise FxError(I18N.t("the effect cannot go further that way"))
+    return by
+
+
+# ------------------------------------------------------------------------------------------------ a shot's zoom
+# A shot's "zoom" keys may hold several moves (a zoom in, a punch-in later, a shake's bump - 2026-10-26: one zoom per
+# shot left most shots refusing every zoom effect): each move is its own chip = a run of keys whose value changes; a
+# "hold" key before a change = a step at the next key (a punch). A shake's own keys carry the tag "shake" (a 4th
+# element: shifts, speed and splits keep it) and are never a zoom chip. A zoom added later scales what comes after it
+# (a push-in stays in), so moves stack like layers.
+SHAKE = "shake"
+_EASE = {"hold": lambda t: 0.0, "linear": lambda t: t, "smooth": lambda t: t * t * (3 - 2 * t), "in": lambda t: t * t,
+         "out": lambda t: 1 - (1 - t) * (1 - t), "in3": lambda t: t ** 3, "out3": lambda t: 1 - (1 - t) ** 3}
+
+
+def _ez(k) -> str:
+    return k[2] if len(k) > 2 else "linear"
+
+
+def _tag(k):
+    return k[3] if len(k) > 3 else None
+
+
+def _val(ks: list, f: float) -> float:
+    """compose.Curve on sorted keys."""
+    if f <= ks[0][0]:
+        return float(ks[0][1])
+    if f >= ks[-1][0]:
+        return float(ks[-1][1])
+    i = max(j for j in range(len(ks)) if ks[j][0] <= f)
+    t = (f - ks[i][0]) / max(1e-9, ks[i + 1][0] - ks[i][0])
+    return float(ks[i][1]) + (float(ks[i + 1][1]) - float(ks[i][1])) * _EASE.get(_ez(ks[i]), _EASE["linear"])(t)
+
+
+def _changes(ks: list, i: int) -> bool:
+    return abs(float(ks[i][1]) - float(ks[i + 1][1])) > 1e-6
+
+
+def _zoom_runs(ks: list) -> list[tuple[int, int, str]]:
+    """(i0, i1, kind) per move of sorted keys: "zoom" = keys i0..i1 change (a hold step at its front belongs to it - a
+    pull-out jumps in, then glides out), "punch" = a lone step at key i1 (i0 = the hold key before it)."""
+    out, i, n = [], 0, len(ks)
+
+    def free(j):
+        return _tag(ks[j]) != SHAKE and _tag(ks[j + 1]) != SHAKE
+
+    def glide(j):
+        return j < n - 1 and _changes(ks, j) and _ez(ks[j]) != "hold" and free(j)
+
+    while i < n - 1:
+        if not (_changes(ks, i) and free(i)):
+            i += 1
+            continue
+        if _ez(ks[i]) == "hold" and not glide(i + 1):
+            out.append((i, i + 1, "punch"))
+            i += 1
+            continue
+        j = i + 1 if _ez(ks[i]) == "hold" else i
+        while glide(j):
+            j += 1
+        out.append((i, j, "zoom"))
+        i = j
+    return out
+
+
+def _zoom_moves(ks: list, s: int, e: int) -> list[dict]:
+    """The moves a shot over frames s..e shows of its sorted zoom keys: kind, label, f, len, strength, ease + the keys
+    (i0, i1, lead = a step at its front)."""
+    out = []
+    for i0, i1, kind in _zoom_runs(ks):
+        if kind == "punch":
+            a = int(ks[i1][0])
+            if not s <= a <= e:
+                continue
+            b = min(e, int(ks[i1 + 1][0]) - 1) if i1 + 1 < len(ks) else e
+            v0, v1 = float(ks[i0][1]), float(ks[i1][1])
+            out.append({"kind": "punch", "label": "Punch-in" if v1 > v0 else "Punch-out", "f": a, "len": b - a + 1,
+                        "strength": round(max(v0, v1) / max(min(v0, v1), 1e-6), 3), "ease": None,
+                        "i0": i0, "i1": i1, "lead": False})
+            continue
+        lead = _ez(ks[i0]) == "hold"
+        j0 = i0 + 1 if lead else i0
+        a0, a1 = int(ks[j0][0]), int(ks[i1][0])
+        if a1 < s or a0 > e:
+            continue
+        vals = [float(ks[k][1]) for k in range(i0, i1 + 1)]
+        v0, v1, span = float(ks[j0][1]), vals[-1], max(vals) - min(vals)
+        f = max(s, a0)
+        out.append({"kind": "zoom", "label": "Zoom pulse" if abs(v1 - v0) < 0.25 * span else
+                    "Zoom in" if v1 > v0 else "Zoom out", "f": f, "len": min(e, a1) - f + 1,
+                    "strength": round(max(vals) / max(min(vals), 1e-6), 3), "ease": _ez(ks[j0]),
+                    "i0": i0, "i1": i1, "lead": lead})
+    return out
+
+
+def _tidy(ks: list) -> None:
+    """Keys that change no frame go. In place."""
+    i = 0
+    while len(ks) > 1 and i < len(ks):
+        if i in (0, len(ks) - 1):
+            drop = abs(float(ks[i][1]) - float(ks[1 if i == 0 else i - 1][1])) <= 1e-6
+        else:
+            trial = ks[:i] + ks[i + 1:]
+            drop = all(abs(_val(trial, f) - _val(ks, f)) <= 1e-6 for f in range(int(ks[i - 1][0]), int(ks[i + 1][0]) + 1))
+        if drop:
+            del ks[i]
+            i = max(0, i - 1)
+        else:
+            i += 1
+
+
+def _keys_of(L: dict) -> list:
+    """L's zoom as keys to change, in place (a number = one key at its start; a hold step's hold key right before the
+    step - the same picture; keys that change nothing gone)."""
+    z = L.get("zoom", 1.0)
+    if isinstance(z, dict) and (not _keys(z) or "scale" in z or "offset" in z):
+        raise FxError(I18N.t("this shot already has a zoom - change that one"))
+    if not _keys(z):
+        z = L["zoom"] = {"keys": [[int(L["start"]), float(z) if isinstance(z, (int, float)) else 1.0, "linear"]]}
+    ks = sorted(([int(k[0]), float(k[1]), *k[2:]] for k in z["keys"]), key=lambda k: k[0])
+    i = 0
+    while i < len(ks) - 1:
+        if _ez(ks[i]) == "hold" and _changes(ks, i) and ks[i + 1][0] - ks[i][0] > 1:
+            ks.insert(i + 1, [ks[i + 1][0] - 1, ks[i][1], "hold", *ks[i][3:]])
+            ks[i] = [ks[i][0], ks[i][1], "linear", *ks[i][3:]]
+            i += 1
+        i += 1
+    _tidy(ks)
+    z["keys"] = ks
+    return ks
+
+
+def _done(L: dict) -> None:
+    """After a change: keys that change nothing go; a zoom that no longer moves is a number again (1 = none)."""
+    ks = L["zoom"]["keys"]
+    _tidy(ks)
+    if len({round(float(k[1]), 6) for k in ks}) == 1:
+        v = round(float(ks[0][1]), 4)
+        if abs(v - 1) < 1e-6:
+            L.pop("zoom")
+        else:
+            L["zoom"] = v
         return
-    k, a, b = fx["kind"], fx["f"] + by, fx["f"] + fx["len"] - 1 + by
+    for k in ks:
+        k[1] = round(float(k[1]), 4)
+
+
+def _busy(ks: list) -> list[tuple[int, int]]:
+    """Where the zoom already changes (a move's frames, a step's two)."""
+    return [(int(ks[i][0]), int(ks[i + 1][0])) for i in range(len(ks) - 1) if _changes(ks, i)]
+
+
+def _room(ks: list, s: int, e: int, f: int, n: int, nmin: int) -> tuple[int, int]:
+    """(a, m): the free frames nearest f for a change over a..a+m (m from n down to nmin when the shot is short or busy):
+    on the shot, a-1..a+m clear of the other moves - an effect near a shot's end starts earlier instead of failing."""
+    busy = _busy(ks)
+    for m in range(min(n, e - s), nmin - 1, -1):
+        for d in range(0, e - s + 1):
+            for a in ((f + d, f - d) if d else (f,)):
+                if s <= a and a + m <= e and not any(x <= a + m and a - 1 <= y for x, y in busy):
+                    return a, m
+    raise FxError(I18N.t("no room left on this shot for another zoom - remove or shorten one"))
+
+
+def _put(ks: list, f: int, v: float, ease: str, tag=None) -> None:
+    k = [int(f), float(v), ease] + ([tag] if tag else [])
+    for i, x in enumerate(ks):
+        if x[0] == f:
+            ks[i] = k
+            return
+        if x[0] > f:
+            ks.insert(i, k)
+            return
+    ks.append(k)
+
+
+def _ease_at(ks: list, f: int) -> str:
+    k = [x for x in ks if x[0] <= f]
+    return _ez(k[-1]) if k else "linear"
+
+
+def _clear(ks: list, a: int, b: int) -> None:
+    ks[:] = [k for k in ks if not a <= k[0] <= b]          # (a free window: only keys that change nothing)
+
+
+def _scale_after(ks: list, f: int, x: float) -> None:
+    for k in ks:
+        if k[0] > f:
+            k[1] = float(k[1]) * x
+
+
+def _find_move(L: dict, fx: dict) -> tuple[list, dict]:
+    ks = _keys_of(L)
+    mv = next((m for m in _zoom_moves(ks, int(L["start"]), int(L["end"])) if m["kind"] == fx["kind"]
+               and m["f"] == fx["f"]), None)
+    if mv is None:
+        raise FxError(I18N.t("no effect {effect}", effect=fx["id"]))
+    return ks, mv
+
+
+def _zoom_move(L: dict, fx: dict, by: int) -> int:
+    ks, mv = _find_move(L, fx)
+    s, e, i0, i1 = int(L["start"]), int(L["end"]), mv["i0"], mv["i1"]
+    lo = ks[i0 - 1][0] + 1 - ks[i0][0] if i0 > 0 else -10 ** 9          # never over the moves beside it
+    hi = ks[i1 + 1][0] - 1 - ks[i1][0] if i1 + 1 < len(ks) else 10 ** 9
+    by = _clamp(by, max(lo, min(0, s - mv["f"])), min(hi, max(0, e - ks[i1][0])))
+    for j in range(i0, i1 + 1):
+        ks[j][0] += by
+    _done(L)
+    return by
+
+
+def _zoom_len(L: dict, fx: dict, n: int) -> None:
+    ks, mv = _find_move(L, fx)
+    if mv["kind"] != "zoom":
+        raise FxError(I18N.t("this effect's length stays"))
+    j0, i1 = mv["i0"] + (1 if mv["lead"] else 0), mv["i1"]
+    a0, a1 = ks[j0][0], ks[i1][0]
+    cap = min(ks[i1 + 1][0] - 1 if i1 + 1 < len(ks) else 10 ** 9, max(int(L["end"]), a1)) - a0
+    want = min(cap, max(i1 - j0, (a1 - a0) + (int(n) - fx["len"])))
+    sc, prev = want / max(1, a1 - a0), None
+    for j in range(j0, i1 + 1):
+        fr = a0 + int(round((ks[j][0] - a0) * sc))
+        fr = prev + 1 if prev is not None and fr <= prev else fr
+        ks[j][0] = prev = fr
+    _done(L)
+
+
+def _zoom_strength(L: dict, fx: dict, x: float) -> None:
+    ks, mv = _find_move(L, fx)
+    i0, i1 = mv["i0"], mv["i1"]
+    x = min(3.0, max(1.01, float(x)))
+    if mv["kind"] == "punch":                       # the step and everything after it
+        v0, v1 = ks[i0][1], ks[i1][1]
+        r = (v0 * x if v1 > v0 else v0 / x) / v1
+        for k in ks[i1:]:
+            k[1] *= r
+    else:
+        vals = [ks[j][1] for j in range(i0, i1 + 1)]
+        lo, r = min(vals), max(vals) / max(min(vals), 1e-6)
+        if r <= 1.0001:
+            return
+        first, last = ks[i0][1], ks[i1][1]
+        for j in range(i0, i1 + 1):
+            ks[j][1] = lo + (ks[j][1] - lo) * (x - 1) / (r - 1)
+        _follow(ks, i0, i1, first, last)
+    _done(L)
+
+
+def _follow(ks: list, i0: int, i1: int, first: float, last: float) -> None:
+    """After a move's values changed: what comes after it keeps its size relative to the move's end; the still keys
+    before it that held its old start take the new one."""
+    r = ks[i1][1] / max(last, 1e-6)
+    for k in ks[i1 + 1:]:
+        k[1] *= r
+    j = i0 - 1
+    while j >= 0 and abs(ks[j][1] - first) <= 1e-6:
+        ks[j][1] = ks[i0][1]
+        j -= 1
+
+
+def _zoom_ease(L: dict, fx: dict, ease: str) -> None:
+    ks, mv = _find_move(L, fx)
+    if mv["kind"] != "zoom":
+        raise FxError(I18N.t("this effect has no ease to change"))
+    for j in range(mv["i0"] + (1 if mv["lead"] else 0), mv["i1"]):
+        ks[j] = [ks[j][0], ks[j][1], ease, *ks[j][3:]]
+    _done(L)
+
+
+def _zoom_remove(L: dict, fx: dict) -> None:
+    """The shot keeps its resting size (the move's smaller one); what came after keeps its size relative to it."""
+    ks, mv = _find_move(L, fx)
+    i0, i1 = mv["i0"], mv["i1"]
+    if mv["kind"] == "punch":
+        r = ks[i0][1] / ks[i1][1]
+        for k in ks[i1:]:
+            k[1] *= r
+    else:
+        first, last = ks[i0][1], ks[i1][1]
+        lo = min(ks[j][1] for j in range(i0, i1 + 1))
+        for j in range(i0, i1 + 1):
+            ks[j][1] = lo
+        _follow(ks, i0, i1, first, last)
+    _done(L)
+
+
+def _shake_keys(L: dict) -> list:
+    return [k for k in (_keys(L.get("zoom")) or []) if _tag(k) == SHAKE]
+
+
+def _shake_bump(L: dict, a: int, n: int) -> None:
+    """A shake's own zoom: 6 % closer on its first frame, back over its n frames (room for the picture to move)."""
+    ks = _keys_of(L)
+    v, tail = _val(ks, a), _ease_at(ks, a + n)
+    _clear(ks, a - 1, a + n)
+    _put(ks, a - 1, v, "hold", SHAKE)
+    _put(ks, a, v * 1.06, "out", SHAKE)
+    _put(ks, a + n, v, tail, SHAKE)
+    _done(L)
+
+
+def _unshake(L: dict) -> None:
+    if _shake_keys(L):
+        L["zoom"]["keys"] = [k for k in L["zoom"]["keys"] if _tag(k) != SHAKE]
+        _done(L)
+
+
+# ------------------------------------------------------------------------------------------------ changing one
+def move(P: dict, fx: dict, by: int) -> int:
+    """fx `by` frames later (< 0 = earlier) - as far as it can go that way (the video's ends, its shot's edges, the
+    zoom moves beside it); the frames it moved."""
+    by = int(by)
+    if by == 0:
+        return 0
+    k, f0, f1 = fx["kind"], fx["f"], fx["f"] + fx["len"] - 1
     N = int(P["frames"])
-    if not (0 <= a and b < N):
-        raise FxError(I18N.t("{frame} is outside the video", frame=f"f{a if a < 0 else b}"))
     if k in ("rgb",):
+        by = _clamp(by, -f0, N - 1 - f1)
         for L in _group(P, fx["layer"]):
             EL._shift(L, by)
-        return
+        return by
     L = _layer(P, fx["layer"])
     if L.get("type") == "solid":
+        by = _clamp(by, -int(L["start"]), N - 1 - int(L["end"]))
         EL._shift(L, by)
-        return
-    if not _inside(L, a, b) and k not in ("zoom",):
-        raise FxError(I18N.t("the effect stays on its shot ({range})", range=f"f{L['start']}-f{L['end']}"))
+        return by
     if k in ("zoom", "punch"):
-        L["zoom"]["keys"] = [[int(x[0]) + by, *x[1:]] for x in L["zoom"]["keys"]]
-    elif k == "shake":
+        return _zoom_move(L, fx, by)
+    s, e = int(L["start"]), int(L["end"])
+    by = _clamp(by, (s + 1 if k == "stutter" else s) - f0, e - f1)
+    if k == "shake":
+        bump = _shake_keys(L)
+        if bump:                                        # its own zoom goes with it, where the shot's zoom is still
+            n = int(bump[-1][0]) - int(bump[1][0])
+            _unshake(L)
+            try:
+                _room(_keys_of(L), f0 + by, f0 + by + n, f0 + by, n, n)
+            except FxError:
+                raise FxError(I18N.t("the shot zooms there - move that zoom first")) from None
+            _shake_bump(L, f0 + by, n)
         for d in L["anchor"]:
             if isinstance(d, dict) and "start" in d:
                 d["start"] = int(d["start"]) + by
@@ -210,6 +533,7 @@ def move(P: dict, fx: dict, by: int) -> None:
         L["jumps"] = [L["jumps"][0]] + [[int(j[0]) + by, j[1]] for j in L["jumps"][1:]]
     else:
         raise FxError(I18N.t("this effect cannot move"))
+    return by
 
 
 def set_len(P: dict, fx: dict, n: int) -> None:
@@ -221,8 +545,7 @@ def set_len(P: dict, fx: dict, n: int) -> None:
         return
     L = _layer(P, fx["layer"])
     if k == "zoom":
-        sc = (n - 1) / max(1, old - 1)
-        L["zoom"]["keys"] = [[f0 + int(round((int(x[0]) - f0) * sc)), *x[1:]] for x in L["zoom"]["keys"]]
+        _zoom_len(L, fx, n)
     elif L.get("type") == "solid":
         s = int(L["start"])
         sc = (n - 1) / max(1, old - 1)
@@ -241,14 +564,7 @@ def set_strength(P: dict, fx: dict, x: float) -> None:
     k = fx["kind"]
     L = _layer(P, fx["layer"])
     if k in ("zoom", "punch"):
-        x = min(3.0, max(1.01, float(x)))
-        ks = L["zoom"]["keys"]
-        vals = [float(v[1]) for v in ks]
-        lo, r = min(vals), max(vals) / max(min(vals), 1e-6)
-        if r <= 1.0001:
-            return
-        for v in ks:
-            v[1] = round(lo + (float(v[1]) - lo) * (x - 1) / (r - 1), 4)
+        _zoom_strength(L, fx, x)
     elif k == "framing":
         L["zoom"] = round(min(3.0, max(1.01, float(x))), 4)
     elif k == "shake":
@@ -282,10 +598,13 @@ def set_ease(P: dict, fx: dict, ease: str) -> None:
     if ease not in EASES:
         raise FxError(I18N.t("an ease: linear, smooth, in, out or hold"))
     L = _layer(P, fx["layer"])
-    curve = L.get("zoom") if fx["kind"] == "zoom" else L.get("opacity") if L.get("type") == "solid" else None
+    if fx["kind"] == "zoom":
+        _zoom_ease(L, fx, ease)
+        return
+    curve = L.get("opacity") if L.get("type") == "solid" else None
     if not _keys(curve):
         raise FxError(I18N.t("this effect has no ease to change"))
-    curve["keys"] = [[v[0], v[1], ease] for v in curve["keys"][:-1]] + [curve["keys"][-1]]
+    curve["keys"] = [[v[0], v[1], ease, *v[3:]] for v in curve["keys"][:-1]] + [curve["keys"][-1]]
 
 
 def remove(P: dict, fx: dict) -> None:
@@ -298,17 +617,14 @@ def remove(P: dict, fx: dict) -> None:
     if L.get("type") == "solid":
         P["layers"] = [x for x in P["layers"] if x is not L]
     elif k in ("zoom", "punch"):
-        lo = min(float(v[1]) for v in L["zoom"]["keys"])
-        if abs(lo - 1.0) < 1e-4:
-            L.pop("zoom")
-        else:
-            L["zoom"] = round(lo, 4)
+        _zoom_remove(L, fx)
     elif k == "framing":
         L.pop("zoom", None)
     elif k == "shake":
         L["anchor"] = [float(a["values"][-1]) if isinstance(a, dict) and "values" in a else a for a in L["anchor"]]
         if L["anchor"] == [0.5, 0.5]:
             L.pop("anchor")
+        _unshake(L)
     elif k == "flash":
         for f in range(fx["f"], fx["f"] + fx["len"]):
             L["flash_over"].pop(str(f), None)
@@ -349,15 +665,14 @@ def _hard_cut(P: dict, B: dict, fx: dict) -> None:
 
 
 # ------------------------------------------------------------------------------------------------ new ones
-def _shot_at(P: dict, f: int) -> dict:
-    S = next((x for x in _shots(P) if int(x["start"]) <= f <= int(x["end"])), None)
-    if S is None:
-        raise FxError(I18N.t("no shot under {frame}", frame=f"f{f}"))
-    return S
+def _shot_at(P: dict, f: int) -> dict | None:
+    return next((x for x in _shots(P) if int(x["start"]) <= f <= int(x["end"])), None)
 
 
 def _cut_near(P: dict, f: int) -> tuple[dict, dict, int]:
-    S = _shots(P)
+    """The plain cut nearest f between two shots - or two scenes of a video made from zero."""
+    from . import miniedit as M                         # (M imports this module)
+    S = _shots(P) or M.scenes(P)
     pairs = [(A, B) for A, B in zip(S, S[1:]) if int(B["start"]) == int(A["end"]) + 1]
     if not pairs:
         raise FxError(I18N.t("this effect goes on a cut - the video has no plain cut"))
@@ -370,29 +685,54 @@ def _zoom_now(L: dict) -> float | None:
     return float(z) if isinstance(z, (int, float)) else None
 
 
+def _solid(P: dict, prefix: str, f: int, n: int, color: list, blend: str, opacity) -> str:
+    W, H, N = int(P.get("width", 1920)), int(P.get("height", 1080)), int(P["frames"])
+    lid = _free_id(P, prefix)
+    P["layers"].append({"type": "solid", "id": lid, "start": f, "end": min(N - 1, f + n - 1), "rect": [0, 0, W, H],
+                        "color": color, "blend": blend, "opacity": opacity})
+    return lid
+
+
 def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
-    """A new effect of `kind` (ADD) at frame f (on the shot under it, or the cut nearest it); its id."""
+    """A new effect of `kind` (ADD) at frame f (on the shot under it, or the cut nearest it); its id. A zoom on a shot
+    that already zooms goes in beside its other moves, near a shot's end it starts earlier; a flash / black frame where
+    no clip is under f (an end card, a video made from zero) is a colour layer over everything."""
     import random
     if kind not in ADD:
         raise FxError(I18N.t("no such effect: {effect}", effect=kind))
     if talk and kind in MOVES_PICTURE:
         raise FxError(I18N.t("a stutter would pull the picture away from the voice - not on a talking video"))
     W, H, fps, N = int(P.get("width", 1920)), int(P.get("height", 1080)), float(P["fps"]), int(P["frames"])
+    f = max(0, min(N - 1, int(f)))
     rng = random.Random(seed * 7919 + f)
     sec = lambda s: max(1, int(round(s * fps)))           # noqa: E731
     if kind in CUT_KINDS:
         A, B, c = _cut_near(P, f)
+        clips = A.get("type") == "clip" and B.get("type") == "clip"
         if kind == "zoom_through":
-            za, zb = _zoom_now(A), _zoom_now(B)
-            if za is None or zb is None:
-                raise FxError(I18N.t("one of the two shots already has a zoom - change that one"))
+            if not clips:
+                raise FxError(I18N.t("this effect works on a clip - there is no clip under {frame}", frame=f"f{c}"))
             k = min(8, max(4, sec(0.24)), int(A["end"]) - int(A["start"]), int(B["end"]) - int(B["start"]))
-            A["zoom"] = {"keys": [[c - k, round(za, 4), "in"], [c - 1, round(za * 1.7, 4)]]}
-            B["zoom"] = {"keys": [[c, round(zb * 1.7, 4), "out"], [c + k - 1, zb]]}
+            ka, kb = _keys_of(A), _keys_of(B)
+            if any(x <= c - 1 and c - k - 1 <= y for x, y in _busy(ka)) or any(x <= c + k - 1 and c - 1 <= y
+                                                                               for x, y in _busy(kb)):
+                raise FxError(I18N.t("one of the two shots already has a zoom - change that one"))
+            va, ta_ = _val(ka, c - k), _ease_at(ka, c - 1)
+            _clear(ka, c - k, c - 1)
+            _put(ka, c - k, va, "in")
+            _put(ka, c - 1, va * 1.7, ta_)
+            vb, tb = _val(kb, c + k - 1), _ease_at(kb, c + k - 1)
+            _clear(kb, c, c + k - 1)
+            _put(kb, c, vb * 1.7, "out")
+            _put(kb, c + k - 1, vb, tb)
+            _done(A)
+            _done(B)
             return f"zoom:{A['id']}:{c - k}"
         if kind == "white_flash":
-            B.setdefault("flash_over", {}).update({str(c): 0.9, str(c + 1): 0.55, str(c + 2): 0.25})
-            return f"flash:{B['id']}:{c}"
+            if B.get("type") == "clip":
+                B.setdefault("flash_over", {}).update({str(c): 0.9, str(c + 1): 0.55, str(c + 2): 0.25})
+                return f"flash:{B['id']}:{c}"
+            return f"solid_flash:{_solid(P, 'flash_', c, 3, [1, 1, 1], 'screen', {'start': c, 'values': [0.9, 0.55, 0.25]})}:{c}"
         h = min(8, max(4, sec(0.25)))
         lid = _free_id(P, "dip_")
         P["layers"].append({"type": "solid", "id": lid, "start": max(0, c - h), "end": min(N - 1, c + h),
@@ -406,6 +746,7 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
             P["layers"].append({"type": "solid", "id": lid, "start": f, "end": min(N - 1, f + 2), "rect": [0, 0, W, H],
                                 "color": col, "blend": "screen", "opacity": {"start": f, "values": [0.65, 0.35, 0.12]}})
             return f"colour_flash:{lid}:{f}"
+        f = max(0, min(f, N - sec(0.6)))
         n = min(N - f, sec(0.6))
         lid = _free_id(P, "leak_")
         P["layers"].append({"type": "solid", "id": lid, "start": f, "end": f + n - 1,
@@ -414,11 +755,18 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
                                                                     [f + n - 1, 0]]}})
         return f"light_leak:{lid}:{f}"
     S = _shot_at(P, f)
+    if S is None:
+        if kind == "flash":
+            return f"solid_flash:{_solid(P, 'flash_', f, 2, [1, 1, 1], 'screen', {'start': f, 'values': [0.6, 0.3]})}:{f}"
+        if kind == "black_frame":
+            return f"solid_black:{_solid(P, 'black_', f, 1, [0, 0, 0], 'normal', 1.0)}:{f}"
+        raise FxError(I18N.t("this effect works on a clip - there is no clip under {frame}", frame=f"f{f}"))
     s, e = int(S["start"]), int(S["end"])
     if kind == "rgb_split":
         f = min(f, max(s, e - 2))
         base = _free_id(P, "rgb_", rgb=True)
-        z = _zoom_now(S) or 1.0
+        zk = _keys(S.get("zoom"))
+        z = _val(sorted(zk, key=lambda k: k[0]), f) if zk else (_zoom_now(S) or 1.0)
         for k, (tint, blend, dx) in enumerate((([0, 1, 1], "normal", 0), ([1, 0, 0], "add", round(0.012 * W)))):
             P["layers"].append({"type": "clip", "id": f"{base}_{k}", "src": S["src"], "start": f, "end": min(e, f + 2),
                                 "rect": S.get("rect") or [0, 0, W, H], "in": EL._src_at(S, f), "tint": tint,
@@ -433,41 +781,55 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
     if kind == "stutter":
         if S.get("jumps") or S.get("hold"):
             raise FxError(I18N.t("this shot already has a stutter or a held frame"))
-        if e - f < 6:
-            raise FxError(I18N.t("too close to the shot's end for a stutter"))
+        if e - s < 7:
+            raise FxError(I18N.t("this shot is too short for that effect"))
+        f = max(s + 1, min(f, e - 6))                      # (near the end: it starts earlier)
         i0, k = EL._src_at(S, f), 3 if e - s + 1 >= sec(0.8) else 2
         S["jumps"] = [[s, int(S.get("in", 0))], [f, i0], [f + k, i0], [f + 2 * k, i0], [f + 3 * k, i0 + k]]
         S.pop("in", None)
         S["in"] = S["jumps"][0][1]
         return f"stutter:{S['id']}:{f}"
-    z0 = _zoom_now(S)
-    if z0 is None:
-        raise FxError(I18N.t("this shot already has a zoom - change that one"))
     if kind == "shake":
         if any(isinstance(a, dict) for a in (S.get("anchor") or [])):
             raise FxError(I18N.t("this shot already shakes"))
-        n = min(10, e - f)
-        if n < 3:
-            raise FxError(I18N.t("too close to the shot's end for a shake"))
-        amp = 0.025 / max(z0 * 1.06, 1.0)
+        if e - s < 4:
+            raise FxError(I18N.t("this shot is too short for that effect"))
+        a, n = _room(_keys_of(S), s, e, f, 10, 3)
+        z = _val(S["zoom"]["keys"], a)
+        _shake_bump(S, a, n)
+        amp = 0.025 / max(z * 1.06, 1.0)
         jit = [(1 - i / n) * amp for i in range(n)]
-        S["zoom"] = round(z0 * 1.06, 4)
-        ax0, ay0 = [float(a) for a in (S.get("anchor") or [0.5, 0.5])]
-        S["anchor"] = [{"start": f, "values": [round(ax0 + j * rng.uniform(-1, 1), 4) for j in jit] + [ax0]},
-                       {"start": f, "values": [round(ay0 + j * rng.uniform(-1, 1), 4) for j in jit] + [ay0]}]
-        return f"shake:{S['id']}:{f}"
-    if kind == "punch_in":
-        if f <= s:
-            S["zoom"] = round(z0 * 1.15, 4)
-            return f"framing:{S['id']}:{s}"
-        S["zoom"] = {"keys": [[s, z0, "hold"], [f, round(z0 * 1.15, 4)]]}
-        return f"punch:{S['id']}:{f}"
-    n = min(e - f, sec(1.5))
-    if n < 3:
-        raise FxError(I18N.t("too close to the shot's end for a zoom"))
-    z1 = round(z0 * 1.08, 4)
-    S["zoom"] = {"keys": [[f, z0, "linear"], [f + n, z1]] if kind == "push_in" else [[f, z1, "linear"], [f + n, z0]]}
-    return f"zoom:{S['id']}:{f}"
+        ax0, ay0 = [float(v) for v in (S.get("anchor") or [0.5, 0.5])]
+        S["anchor"] = [{"start": a, "values": [round(ax0 + j * rng.uniform(-1, 1), 4) for j in jit] + [ax0]},
+                       {"start": a, "values": [round(ay0 + j * rng.uniform(-1, 1), 4) for j in jit] + [ay0]}]
+        return f"shake:{S['id']}:{a}"
+    if kind == "punch_in" and f <= s and not _keys(S.get("zoom")):
+        S["zoom"] = round((_zoom_now(S) or 1.0) * 1.15, 4)
+        return f"framing:{S['id']}:{s}"
+    if e - s < 4:
+        raise FxError(I18N.t("this shot is too short for that effect"))
+    ks = _keys_of(S)
+    if kind == "punch_in":                               # a step closer from here on (what comes after: 15 % closer)
+        a, _ = _room(ks, s, e, f, 0, 0)
+        v, tail = _val(ks, a), _ease_at(ks, a)
+        _scale_after(ks, a, 1.15)
+        _put(ks, a - 1, v, "hold")
+        _put(ks, a, v * 1.15, tail)
+        _done(S)
+        return f"punch:{S['id']}:{a}"
+    a, n = _room(ks, s, e, f, sec(1.5), 3)
+    v, tail = _val(ks, a), _ease_at(ks, a + n)
+    _clear(ks, a - 1, a + n)
+    if kind == "push_in":                                # in, and it stays in (what comes after: 8 % closer)
+        _scale_after(ks, a + n, 1.08)
+        _put(ks, a, v, "linear")
+        _put(ks, a + n, v * 1.08, tail)
+    else:                                                # out from 8 % closer to the size it had
+        _put(ks, a - 1, v, "hold")
+        _put(ks, a, v * 1.08, "linear")
+        _put(ks, a + n, v, tail)
+    _done(S)
+    return f"zoom:{S['id']}:{a}"
 
 
 def _free_id(P: dict, prefix: str, rgb: bool = False) -> str:
@@ -486,8 +848,8 @@ def apply_op(P: dict, o: dict, talk: bool = False) -> str:
         return f"effect {o.get('kind')} added at f{int(o['f'])} ({fid})"
     fx = find(P, str(o.get("id")))
     if op == "fxmove":
-        move(P, fx, int(o["by"]))
-        return f"{fx['label']} at f{fx['f']} moved {int(o['by']):+d} frames"
+        by = move(P, fx, int(o["by"]))
+        return f"{fx['label']} at f{fx['f']} moved {by:+d} frames"
     if op == "fxremove":
         remove(P, fx)
         return f"{fx['label']} at f{fx['f']} removed"
@@ -555,14 +917,18 @@ def selfcheck() -> dict:
     apply_op(P, {"op": "fxremove", "id": "zoom:s02_A:100"})
     case("a zoom removed: the shot keeps its resting size", "zoom" not in P["layers"][1])
     bad = []
-    for o in ({"op": "fxmove", "id": "black:s02_A:150", "by": 80}, {"op": "fxadd", "kind": "stutter", "f": 120},
-              {"op": "fxset", "id": "black:s02_A:150", "strength": 2}, {"op": "fxadd", "kind": "nope", "f": 1}):
+    for o in ({"op": "fxadd", "kind": "stutter", "f": 120}, {"op": "fxset", "id": "black:s02_A:150", "strength": 2},
+              {"op": "fxadd", "kind": "nope", "f": 1}):
         try:
             apply_op(copy.deepcopy(P), o, talk=True)
             bad.append(o)
         except FxError:
             pass
-    case("what cannot be done is refused (off its shot, a stutter on a talking video, no strength, no such kind)", not bad)
+    case("what cannot be done is refused (a stutter on a talking video, no strength, no such kind)", not bad)
+    Q = copy.deepcopy(P)
+    line = apply_op(Q, {"op": "fxmove", "id": "black:s02_A:150", "by": 80})
+    case("dragged past its shot's end, an effect stops at the edge (no error)", Q["layers"][1]["black"] == [194]
+         and "+44" in line)
     Q = plan()
     for kind, f in (("shake", 260), ("rgb_split", 40), ("colour_flash", 60), ("dip_black", 98), ("white_flash", 150),
                     ("punch_in", 250)):
@@ -578,4 +944,49 @@ def selfcheck() -> dict:
     except FxError:
         refused = True
     case("a zoom-through on a cut whose shots already zoom is refused (change those)", refused)
+    # 2026-10-26 (the user: "most of the time i cant even use them due to an error"): the quick draft's first shot
+    # zooms in slowly (a hold key from a trim in front), shots that zoom took no other zoom, a punch-in never moved
+    R = {"fps": 25.0, "frames": 400, "width": 1920, "height": 1080, "sources": {"A": {"frames": 2000}},
+         "layers": [{"type": "clip", "id": "s01_A", "src": "A", "start": 0, "end": 199, "in": 0,
+                     "zoom": {"keys": [[-440, 1.0, "hold"], [2, 1.0, "smooth"], [10, 1.08, "hold"]]}},
+                    {"type": "clip", "id": "s02_A", "src": "A", "start": 200, "end": 299, "in": 500, "zoom": 1.15},
+                    {"type": "solid", "id": "box03", "start": 300, "end": 349, "rect": [1372, 732, 496, 286]},
+                    {"type": "clip", "id": "s03_A", "src": "A", "start": 300, "end": 349, "in": 800, "zoom": 1.3,
+                     "rect": [1380, 740, 480, 270]},
+                    {"type": "solid", "id": "end_bg", "start": 350, "end": 399}]}
+    E = effects(R)
+    case("a slow zoom after a trimmed hold is a Zoom in (not a Punch-in); layout boxes are no effects",
+         [(x["kind"], x["label"], x["f"], x["len"]) for x in E if x["kind"] in ("zoom", "punch")] == [("zoom", "Zoom in", 2, 9)]
+         and not any(x["layer"] in ("box03", "end_bg") for x in E))
+    apply_op(R, {"op": "fxmove", "id": "zoom:s01_A:2", "by": 5})
+    for kind, f in (("push_in", 60), ("punch_in", 150), ("shake", 120), ("pull_out", 196)):
+        apply_op(R, {"op": "fxadd", "kind": kind, "f": f})
+    E = {x["id"]: x for x in effects(R)}
+    zs = sorted((x["kind"], x["label"], x["f"]) for x in E.values() if x["layer"] == "s01_A" and x["kind"] != "shake")
+    case("one shot, many zooms: its zoom in moved, a push-in, a punch-in, a pull-out near its end that starts earlier "
+         "to fit, and a shake - each its own chip", zs == [("punch", "Punch-in", 150), ("zoom", "Zoom in", 7),
+                                                         ("zoom", "Zoom in", 60), ("zoom", "Zoom out", 161)]
+         and "shake:s01_A:120" in E)
+    ks = R["layers"][0]["zoom"]["keys"]
+    z = lambda f: _val(sorted(ks, key=lambda k: k[0]), f)          # noqa: E731
+    case("the zooms stack: before the pull-out the shot is as close as the push-in and punch-in left it",
+         abs(z(30) - 1.08) < 1e-3 and abs(z(100) - 1.08 * 1.08) < 1e-3 and abs(z(155) - 1.08 * 1.08 * 1.15) < 1e-3
+         and abs(z(160) - z(199)) < 1e-3)
+    apply_op(R, {"op": "fxmove", "id": "punch:s01_A:150", "by": -6})
+    apply_op(R, {"op": "fxmove", "id": "punch:s01_A:144", "by": 9})
+    case("a punch-in moves both ways", "punch:s01_A:153" in {x["id"] for x in effects(R)})
+    apply_op(R, {"op": "fxmove", "id": "zoom:s01_A:60", "by": -200})
+    case("a zoom dragged into the one before it stops beside it", "zoom:s01_A:16" in {x["id"] for x in effects(R)})
+    apply_op(R, {"op": "fxremove", "id": "shake:s01_A:120"})
+    apply_op(R, {"op": "fxremove", "id": "zoom:s01_A:16"})
+    case("removing the shake and the push-in leaves the rest as it was (the punch-in 15 % over the zoom in)",
+         "anchor" not in R["layers"][0] and abs(_val(R["layers"][0]["zoom"]["keys"], 100) - 1.08) < 1e-3
+         and abs(_val(R["layers"][0]["zoom"]["keys"], 156) - 1.08 * 1.15) < 1e-3)
+    T = copy.deepcopy(R)
+    apply_op(T, {"op": "fxadd", "kind": "pull_out", "f": 230})
+    case("a pull-out mid-shot: the shot keeps its size before it", T["layers"][1]["zoom"]["keys"][0][:2] == [229, 1.15])
+    apply_op(R, {"op": "fxadd", "kind": "flash", "f": 380})
+    apply_op(R, {"op": "fxadd", "kind": "black_frame", "f": 390})
+    E = {x["kind"] for x in effects(R)}
+    case("a flash and a black frame on an end card (no clip under them) are colour layers", {"solid_flash", "solid_black"} <= E)
     return {"passed": ok, "seconds": round(time.time() - t0, 3), "lines": lines}

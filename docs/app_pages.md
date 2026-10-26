@@ -473,7 +473,14 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   The extras (2026-10-26, the user's pick before releasing 0.6.0 - "finish everything we have"): an **Effects** lane
   (`.edfx` chips from `motionlab\edfx.py`'s reading of the plan: zooms, punch-ins, shakes, flashes, stutters, the
   transitions; drag = `fxmove`, the right edge = length, the panel = strength / ease / remove; the Add panel's
-  *Effects* tab = `fxadd`); *See it rendered* (`#edrange`: the two seconds around the playhead with the changes so
+  *Effects* tab = `fxadd`; 0.6.0.1, the user: "most of the time i cant even use them due to an error": a shot's zoom
+  keys hold several moves, each its own chip (`edfx._zoom_runs`; a hold key in front from a trim is no Punch-in), a
+  new zoom goes in beside the others (`_room` = the free frames nearest the playhead, earlier near a shot's end; what
+  comes after is scaled, so moves stack; a shake's own zoom keys carry the tag `shake`), a drag stops at its edge
+  (`_clamp`, never an error), `CLIP_ONLY` kinds are greyed out on a video of graphics and the stutter on a talking
+  video (`ED_FX_CLIP`, the reason in the tooltip), a flash / black frame with no clip under it = a `flash_` /
+  `black_` solid, and only effect solids are chips (`SOLID_FX` - a corner camera's box, an end card's `end_bg` are
+  the layout); *See it rendered* (`#edrange`: the two seconds around the playhead with the changes so
   far, picture only, `render_video.py --range` as the job `editor_range`, played over the preview); the Add panel's
   **Clips** tab (first when the video has clips: the plan's `sources`, + = at the cut by the playhead, dragged = into
   the cut it is dropped on - `clipadd`); a shot's panel has *Clip* (`take`: another clip of the video in its place, its

@@ -2718,6 +2718,8 @@ a.brvid:hover { text-decoration: none; }
 .edlist { display: flex; flex-direction: column; gap: 3px; }
 .edrow { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 6px; cursor: grab; font-size: 12.5px; }
 .edrow:hover { background: #ffffff0d; }
+.edrow.off { opacity: .45; cursor: not-allowed; }
+.edrow.off:hover { background: none; }
 .edrn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .eddot { width: 9px; height: 9px; border-radius: 50%; background: hsl(var(--h, 188) 80% 62%); flex: none; display: inline-block; }
 .eddot.shot { background: var(--ed1); } .eddot.gfx { background: var(--ed2); } .eddot.cap { background: #ff8ac4; }

@@ -15,7 +15,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-26",
-  "here": "0.6.0",
+  "here": "0.6.0.1",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -46,6 +46,7 @@
     {"v": "0.5.3.4", "label": "A song from a link", "title": "A song from a link"},
     {"v": "0.5.4", "label": "Sound", "title": "Sound: real sound effects, picked by ear"},
     {"v": "0.6.0", "label": "Content agency", "icon": "prepare", "line": "My Brand in every video, a content calendar, and an editor of your own: cuts, speed, sounds, graphics.", "items": ["My Brand", "Content calendar", "The Editor", "Stumbles cut", "Sound mastered"], "title": "Content agency: My Brand, the Editor and your content calendar"},
+    {"v": "0.6.0.1", "label": "Editor effects", "title": "Effects that work in the Editor"},
     {"v": "0.6.1", "label": "Template packs", "title": "Motion graphics: template packs, the motion check, formats"},
     {"v": "0.6.2", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
     {"v": "0.6.3", "label": "Content generation", "title": "Content generation: AI clips, pictures and voice"},

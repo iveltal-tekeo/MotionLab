@@ -5,6 +5,22 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0.1 - 2026-10-26 - Effects that work in the Editor
+
+- **Effects you can actually add** - in the Editor, most effects stopped with an error: a shot that already zoomed
+  (the quick draft's slow zoom on your first shot, a zoom into a cut) took no push-in, pull-out, punch-in or shake,
+  and an effect near a shot's end said it was too close. Now a shot holds as many zooms as you like - each one its own
+  chip on the Effects lane that you drag, lengthen, make stronger or remove on its own - and an effect near a shot's
+  end starts a little earlier so it fits.
+- **Dragging an effect** - a chip dragged past its shot's edge (or into the zoom beside it) now stops at the edge
+  instead of giving an error, and a Punch-in can finally be moved. A slow zoom is shown as *Zoom in* again, not as a
+  Punch-in.
+- **No more effects you cannot use** - effects that need a clip are greyed out on a video made of graphics, and the
+  stutter on a talking video, with the reason when you point at them. A flash or a black frame where no clip is under
+  the playhead (an end card) still works, as a colour layer over the picture.
+- **The layout is not an effect** - a corner camera's frame and an end card's background no longer show on the
+  Effects lane, where moving them broke the layout.
+
 ## 0.6.0 - 2026-10-26 - Content agency: My Brand, the Editor and your content calendar
 
 - **Content agency, the version** - MotionLab now knows your brand and plans your posts. My Brand (your goal,

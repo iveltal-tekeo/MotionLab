@@ -7,6 +7,24 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0.1 - 2026-10-26 - Efectos que funcionan en el Editor
+
+- **Efectos que de verdad puedes añadir**: en el Editor, la mayoría de los efectos se paraban con un error: un plano
+  que ya tenía zoom (el zoom lento del borrador rápido en tu primer plano, un zoom hacia un corte) no aceptaba ningún
+  acercamiento, alejamiento, punch-in ni sacudida, y un efecto cerca del final de un plano decía que estaba demasiado
+  cerca. Ahora un plano admite todos los zooms que quieras, cada uno con su propia pieza en la pista de Efectos que
+  arrastras, alargas, haces más fuerte o quitas por separado, y un efecto cerca del final de un plano empieza un poco
+  antes para que quepa.
+- **Arrastrar un efecto**: una pieza que arrastras más allá del borde de su plano (o contra el zoom de al lado) ahora
+  se para en el borde en vez de dar un error, y por fin puedes mover un Punch-in. Un zoom lento vuelve a mostrarse como
+  *Zoom de acercamiento*, no como Punch-in.
+- **Se acabaron los efectos que no puedes usar**: los efectos que necesitan un clip salen en gris en un vídeo hecho de
+  gráficos, y el tartamudeo en un vídeo hablado, con el motivo al pasar el ratón por encima. Un destello o un
+  fotograma negro donde no hay ningún clip bajo el cabezal (una tarjeta final) sigue funcionando, como una capa de
+  color sobre la imagen.
+- **La composición no es un efecto**: el marco de una cámara en la esquina y el fondo de una tarjeta final ya no salen
+  en la pista de Efectos, donde moverlos rompía la composición.
+
 ## 0.6.0 - 2026-10-26 - Agencia de contenido: Mi marca, el Editor y tu calendario de contenido
 
 - **Agencia de contenido, la versión**: MotionLab ahora conoce tu marca y planifica tus publicaciones. Mi marca (tu
