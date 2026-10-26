@@ -34,7 +34,10 @@ picked and what to do with it), the clips the lab measured, the script word for 
 references' style (`style.py`), the user's ratings as rules and the lessons for this kind of edit - with *Left out*
 at its end naming what is not in it. **Read `build\brief.md` first** (run `tools\brief.py <project>` when it is missing
 or older than `edit_request.json`) and do not read again what it already holds. What the user left on automatic is
-your call - say what you chose. The JSON beside it is the same data (`"v": 2`, `motionlab\editreq.py`): `like` +
+your call - say what you chose. **For my brand** (0.6.0): when the brief opens with that section (`"brand"` in the
+JSON = My Brand as it was when they asked), it shapes every step - its colours as the palette, its logo (copied into
+`build\`, never changed) on the end card, its website in the call to action, its voice for every word on screen, the
+ending its goal asks for, a product only from its list at the price written. The JSON beside it is the same data (`"v": 2`, `motionlab\editreq.py`): `like` +
 `exact`, `prompt` (a script / hook / brief of the library - possibly beside `like`), `about` and `on_screen` (the words
 on screen, used exactly as written), `presets` / `want` (the user's words as typed), `style` {where, type, rhythm,
 moods, captions, palette = the colours of every title / caption / graphic, not a grade}, `sfx` {amount none / few /

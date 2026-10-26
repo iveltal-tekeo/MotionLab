@@ -32,7 +32,7 @@ JOBTOOLS = Path(__file__).resolve().parent / "jobtools.py"       # the app's own
 _PY = Path(sys.executable)
 PY = str(_PY.with_name("python.exe")) if _PY.name.lower() == "pythonw.exe" else str(_PY)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-OK_RC = {"build": (0, 2)}      # 0.5.3: build.py 2 = built, with precheck flags to look at - not a failure
+OK_RC = {"build": (0, 2), "miniedit": (0, 2)}   # build.py 2 = built, with precheck flags to look at - not a failure
 
 
 class JobError(ValueError):
@@ -84,6 +84,14 @@ TITLES = {
     "draft": "Quick draft of {video}",
     "build": "Claude's build of {video}",
     "build_final": "Claude's final render of {video}",
+    "miniedit": "Your changes to {video}",
+    "editor_media": "Getting {video} ready for the Editor",
+    "editor_range": "A moment of {video}, rendered",
+    "sound_import": "Sounds added to your library",
+    "sound_generate": "Sound effects made with ElevenLabs",
+    "music_index": "Measure your music",
+    "music_beds": "Ambience made with ElevenLabs",
+    "brand_sound_logo": "Your sound logo, made with ElevenLabs",
     "verify_timing": "Timing check {render}",
     "thumb_feed": "The newest videos of big channels (thumbnail preview)",
     "ytdlp_update": "Update yt-dlp",
@@ -93,6 +101,8 @@ TITLES = {
     "thumb_render": "Thumbnail {id} again ({video})",
     "thumb_check": "Check the thumbnails ({video})",
     "thumb_make": "Thumbnail {id}: {words} ({video})",
+    "brand_import": "Import from your website ({site})",
+    "agency_check": "Check my pages",
 }
 
 
@@ -210,6 +220,8 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if dst.exists() and not (OS.conf(dst).get("captions")):
             raise JobError(I18N.t("{video} already has a graphic called {name} that is not captions: pick another name",
                                   video=p, name=name))
+        if a.get("brand"):                                           # 0.6.0: My Brand's caption style
+            extra.append("--brand")
         return (_title("overlay_captions_speech" if speech else kind, video=p, file=src.name),
                 [PY, str(TOOLS / "overlay.py"), "captions", str(dst), "--from", str(src), "--render", *extra], "cpu")
     if kind == "speech_install":                               # Settings > Programs > Speech to text > Install
@@ -297,6 +309,60 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if str(a.get("sfx", "")).lower() in ("1", "true", "yes"):
             cmd.append("--sfx")
         return _title("build_final" if final else "build", video=p), cmd, "cpu"
+    if kind == "miniedit":          # 0.6.0: the Editor's Save - the changes -> the next plan + one plain build
+        p = data.safe_name(str(a.get("project", "")))
+        b = data.PROJECTS / p / "build"
+        plan, ch = str(a.get("plan") or ""), str(a.get("changes") or "")
+        if not re.fullmatch(r"plan_v\d+\.json", plan) or not re.fullmatch(r"changes_[\d-]+\.json", ch) \
+                or not (b / plan).exists() or not (b / "miniedit" / ch).exists():
+            raise JobError(I18N.t("no project {video}", video=p))
+        return (_title(kind, video=p), [PY, str(TOOLS / "miniedit.py"), "apply", p, str(b / "miniedit" / ch), "--plan", plan,
+                                        "--build"], "cpu")
+    if kind == "editor_range":      # the Editor's *See it rendered*: a moment of the changes so far, exact frames
+        p = data.safe_name(str(a.get("project", "")))
+        f = data.PROJECTS / p / "build" / "editor" / str(a.get("file") or "")
+        if not re.fullmatch(r"range_[0-9a-f]{10}\.json", f.name) or not f.is_file():
+            raise JobError(I18N.t("no project {video}", video=p))
+        r0, r1 = int(a.get("a", 0)), int(a.get("b", 0))
+        return (_title(kind, video=p), [PY, str(TOOLS / "render_video.py"), str(f), "--range", str(r0), str(r1),
+                                        "--no-master", "--workers", "2"], "cpu")
+    if kind == "editor_media":      # 2026-10-26: the Editor's live preview - light copies of the clips + their sound's
+        p = data.safe_name(str(a.get("project", "")))                   # loudness (seconds; never waits for a render)
+        plan = str(a.get("plan") or "")
+        if not re.fullmatch(r"plan_v\d+\.json", plan) or not (data.PROJECTS / p / "build" / plan).exists():
+            raise JobError(I18N.t("no project {video}", video=p))
+        return _title(kind, video=p), [PY, str(TOOLS / "miniedit.py"), "media", p, "--plan", plan], "light"
+    if kind == "sound_generate":    # 0.6.0 Sounds > Make sounds: ElevenLabs (the key stays in its own file, not here)
+        want = {str(k): int(v) for k, v in (a.get("want") or {}).items() if re.fullmatch(r"[a-z_]{2,20}", str(k))
+                and 0 < int(v) <= 20}
+        if not want:
+            raise JobError(I18N.t("pick at least one kind of sound"))
+        return (_title(kind), [PY, str(TOOLS / "sfx.py"), "generate", "--want",
+                               ",".join(f"{k}:{v}" for k, v in want.items())], "net")
+    if kind == "music_index":       # 0.6.0 step 10 Motion Graphics > Music: what is new measured (tempo, energy...)
+        return _title(kind), [PY, str(TOOLS / "music.py"), "index"], "cpu"
+    if kind == "music_beds":        # Music > Make ambience: ElevenLabs beds (the key stays in its own file)
+        from motionlab import music as MU
+        want = {str(k): int(v) for k, v in (a.get("want") or {}).items() if str(k) in MU.BEDS and 0 < int(v) <= 6}
+        if not want:
+            raise JobError(I18N.t("pick at least one kind of ambience"))
+        return (_title(kind), [PY, str(TOOLS / "music.py"), "beds", "--want",
+                               ",".join(f"{k}:{v}" for k, v in want.items())], "net")
+    if kind == "brand_sound_logo":  # My Brand > Your end card: the sound logo from the user's description
+        text = " ".join(str(a.get("text") or "").split())[:400]
+        if len(text) < 8:
+            raise JobError(I18N.t("describe the sound logo in a few words"))
+        return _title(kind), [PY, str(TOOLS / "brand.py"), "sound-logo", text], "net"
+    if kind == "sound_import" and a.get("link"):     # a friend's shared sounds: a Google Drive / https link to a zip
+        link = str(a["link"]).strip()
+        if not re.match(r"https://\S{8,500}$", link):
+            raise JobError(I18N.t("a link starting with https:// (a Google Drive share link)"))
+        return _title(kind), [PY, str(TOOLS / "sfx.py"), "import", link], "net"
+    if kind == "sound_import":      # 0.6.0 Motion Graphics > Sounds > Add sounds: the shared list's sounds as listed,
+        src = data.sound_import_src(str(a.get("batch") or ""), str(a.get("folder") or ""))    # the rest (with where
+        frm, lic = str(a.get("from") or "").strip()[:200], str(a.get("licence") or "").strip()[:300]   # they came
+        return (_title(kind), [PY, str(TOOLS / "sfx.py"), "import", str(src), "--listed"]          # from) by kind
+                + (["--from", frm, "--licence", lic] if frm and lic else []), "cpu")
     if kind == "verify_timing":
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"
@@ -323,6 +389,20 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         return _title(kind, file=src.name), [PY, str(JOBTOOLS), "player-copy", str(src)], "cpu"
     if kind.startswith("thumb_"):           # Edit > a video > Publish (0.4.3): tools\\thumbnail.py, build\\publish\\ only
         return _thumb_job(kind, a)
+    if kind == "agency_check":          # Content agency > Your videos > Check my pages (0.6.0): My Brand's own pages
+        from motionlab import brand as BR
+        if not any(p.get("url") for p in BR.load().get("pages") or []):
+            raise JobError(I18N.t("add your pages in My Brand first (Overview > Your pages)"))
+        if not system.find("yt-dlp"):
+            raise JobError(I18N.t("yt-dlp not found - {how}", how=I18N.t(system.HOW["yt-dlp"])))
+        return _title(kind), [PY, str(TOOLS / "agency.py"), "check"], "net"
+    if kind == "brand_import":          # My Brand > Import from your website (0.6.0): the saved website only
+        from motionlab import brand as BR
+        url = (BR.load().get("site") or {}).get("url", "")
+        if not url:
+            raise JobError(I18N.t("type your website in My Brand first"))
+        return _title(kind, site=re.sub(r"^https?://(www\.)?", "", url).rstrip("/")), \
+            [PY, str(TOOLS / "brand.py"), "import", url], "net"
     raise JobError(I18N.t("unknown job kind {kind}", kind=repr(kind)))
 
 

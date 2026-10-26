@@ -19,6 +19,9 @@ PIN = "faster-whisper==1.2.1"
 MODELS = {"small": "464 MB, the most accurate (with names)", "base": "141 MB, light - for slow laptops"}
 MODELS_DIR = LAB / ".app" / "models"
 RATES = (23.976, 24.0, 25.0, 29.97, 30.0, 48.0, 50.0, 59.94, 60.0)
+# a verbatim transcript's prompt: fillers and a restart written out, so Whisper keeps them (0.6.0 step 20)
+VERBATIM_PROMPT = {"en": "Um, so, uh... we're going to, we're going to look at, um, how we do it. Hmm, no, sorry.",
+                   "es": "Eh... bueno, mmm, este... vamos a, vamos a ver, eh, cómo lo hacemos. Em, no, perdón."}
 
 
 def available() -> bool:
@@ -59,9 +62,11 @@ def probe(media: str | Path) -> dict:
 
 
 def transcribe(media: str | Path, model: str = "small", names: str = "", language: str | None = None,
-               threads: int = 0, log=print) -> dict:
+               threads: int = 0, log=print, verbatim: bool = False) -> dict:
     """The words of a video or audio file: {lines: [{t0, t1, text, words: [{t, t1, w}]}], language, ...} - the same
-    lines / words shape as tools\\content.py's transcript.json, so captions and the Content tab read both."""
+    lines / words shape as tools\\content.py's transcript.json, so captions and the Content tab read both.
+    verbatim (0.6.0 step 20): the prompt starts with a few fillers in the take's language, so Whisper writes the
+    "um"s and restarts it otherwise tidies away - for finding stumbles (motionlab\\stumbles.py), not for captions."""
     import numpy as np                                   # noqa: PLC0415 - heavy, only here
     from faster_whisper import WhisperModel             # noqa: PLC0415
 
@@ -74,6 +79,10 @@ def transcribe(media: str | Path, model: str = "small", names: str = "", languag
     m = WhisperModel(model, device="cpu", compute_type="int8", cpu_threads=threads, download_root=str(MODELS_DIR))
     # the names prompt helps small (MotionLab, 4AM, Nemzzz right); base with a prompt skipped a whole paragraph
     prompt = names.strip() if names.strip() and model != "base" else None
+    if verbatim:
+        if not language:
+            language = m.detect_language(audio[:16000 * 30])[0]
+        prompt = (VERBATIM_PROMPT.get(language, VERBATIM_PROMPT["en"]) + (" " + names.strip() if names.strip() else ""))
     segs, info = m.transcribe(audio, word_timestamps=True, vad_filter=True, beam_size=5, language=language or None,
                               initial_prompt=prompt)
     lines = []

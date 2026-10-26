@@ -183,13 +183,15 @@ def _tok(w: str) -> str:
     return re.sub(r"[^\w]+", "", w.lower())
 
 
-def align_script(words: list[dict], lines: list[str], hold: float = 0.5, max_chars: int = 32) -> tuple[list, list]:
+def align_script(words: list[dict], lines: list[str], hold: float = 0.5, max_chars: int = 32,
+                 max_words: int | None = None) -> tuple[list, list]:
     """0.5.3 (A8): captions that keep the SCRIPT's lines and wording, at the transcript's times - instead of group()'s
     own regrouping ("One:" joined its sentence, a 3-s cap split "take half the" / "time.", local-make-17) and speech to
     text's mis-heard names ("rebuilds" -> "repels", local-make-2). Each line's words are matched to the transcript's
     in order (difflib over the whole text); a line's cue runs from its first matched word to its last, held until the
-    next one (+hold s at most); unmatched words get times spread inside the line; a line over 2 x max_chars is split
-    into even parts. Returns (cues as group() makes them, the lines not found in what was said)."""
+    next one (+hold s at most); unmatched words get times spread inside the line; a line over 2 x max_chars (or, with
+    max_words - My Brand's words per line, 2026-10-26 - over that many words) is split into even parts. Returns (cues
+    as group() makes them, the lines not found in what was said)."""
     import difflib
     toks = [_tok(w["w"]) for w in words]
     script = [(i, w) for i, ln in enumerate(lines) for w in ln.split() if _tok(w)]
@@ -219,7 +221,7 @@ def align_script(words: list[dict], lines: list[str], hold: float = 0.5, max_cha
             ws.append({"w": script[k][1], "t0": round(a, 3), "t1": round(max(b, a + 0.04), 3)})
         for j in range(1, len(ws)):                         # never back in time inside a line
             ws[j]["t0"] = max(ws[j]["t0"], ws[j - 1]["t0"])
-        parts = max(1, math.ceil(len(ln) / (max_chars * 2)))
+        parts = max(1, math.ceil(len(ln) / (max_chars * 2)), math.ceil(len(ws) / max_words) if max_words else 1)
         size = math.ceil(len(ws) / parts)
         for p in range(0, len(ws), size):
             chunk = ws[p:p + size]

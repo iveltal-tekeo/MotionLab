@@ -227,5 +227,15 @@
   "extract": {
     "width_px": 640,
     "jpeg_quality": 92
+  },
+
+  "master": {
+    "_comment": "0.6.0 step 22 (motionlab\\loudness.py): every render's sound brought to target_lufs (EBU R128 integrated) with its true peak at or under true_peak_db measured AFTER the AAC encode. YouTube turns anything louder than about -14 LUFS down; shorts are often mastered louder - a PC's own target goes in config.local.json",
+    "on": true,
+    "target_lufs": -14.0,
+    "true_peak_db": -1.0,
+    "aac_kbps": 256,
+    "rounds": 4,
+    "tolerance_lu": 0.5
   }
 }

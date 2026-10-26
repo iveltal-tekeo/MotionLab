@@ -80,10 +80,12 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
   pick, check, tracks, sizes, land, finish)
 - Making (0.5.3 first): `brief.py <project>` (the brief), `build.py <project> [plan]` (one build: graphics, sound,
   video, precheck, cut-sheet), `job.py start | wait` (a long step as the app's job - never poll); `overlay.py`,
-  `sfx.py` (never guess a volume), `render_video.py`, `precheck.py`, `draft_edit.py`, `prep_footage.py`,
-  `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`
+  `sfx.py` (never guess a volume), `music.py` (0.6.0: the songs and ambience beds, measured), `render_video.py`, `precheck.py`, `draft_edit.py`, `prep_footage.py`,
+  `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`, `miniedit.py`
+  (0.6.0: the app's Editor tab - the user's own timeline changes as the next version)
 - Prepare and posting: `script.py`, `prompts.py`, `thumbnail.py`, `publish.py` (YouTube's rules first, nothing written
-  on a FAIL)
+  on a FAIL); `brand.py` (My Brand: `import` = read the user's own website, `show` = the *For my brand* brief), `agency.py` (Content
+  agency: `check` = the user's own pages' videos and views, only when they press it)
 - The lab: `knowledge.py` (`memory [--rules | --styles]`, `lessons --kind <talking|generate|templates|all>`,
   `next-lesson-id [--kind making]`, `pending`), `usage.py` (the app shows time only - the user's call),
   `whatsnext.py`, `roadmap.py`, `storage.py` (`--prune` deletes only what the lab can rebuild), `mcp_server.py`
@@ -95,12 +97,15 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
   `tools\dev\install_test.py`, `tools\dev\i18n_check.py check` (must PASS) | `merge` | `todo <area>`
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`; its pages: `docs\app_pages.md`)
-`MotionLab.bat` = a local server + an Edge app window. The sidebar = the user's ways in: Home, **Analyser** (#/analyze:
+`MotionLab.bat` = a local server + an Edge app window. The sidebar = the user's ways in: Home, **My Brand** (#/brand,
+0.6.0: the user's goal, audience, logo, colours, voice and catalogue - `knowledge\local\brand.json`, never shared; *For
+my brand* in New edit, the Generator and Prepare puts it in the request's brief), **Content agency** (#/agency, 0.6.0:
+the content calendar - `knowledge\local\calendar.json`, `motionlab\agency.py`), **Analyser** (#/analyze:
 Videos, Thumbnails, Scripts & prompts), **Prepare** (#/prepare: the script, the title and the thumbnail before filming),
 **Editor** (#/edit: the user's clips - new edits, renders, graphics, Review, Ready to post), **Generator** (#/generate:
-a video from zero; the prompt library #/prompts), **Claude's memory** (#/memory: the user's ratings as rules, the
-lessons, and Shared knowledge - what the user shares, ticked or kept on this PC, and what came from each friend), then
-at the bottom **Motion Graphics** (#/motion), Jobs and Settings. The app runs the lab's own tools as jobs; Claude's parts run in Claude Code windows
+a video from zero; the prompt library #/prompts), **Motion Graphics** (#/motion), **Claude's memory** (#/memory: the
+user's ratings as rules, the lessons, and Shared knowledge - what the user shares, ticked or kept on this PC, and what
+came from each friend), then at the bottom *More* (Jobs and Settings). The app runs the lab's own tools as jobs; Claude's parts run in Claude Code windows
 the app opens with a fixed first message, a model (Opus by default, Fable for the long tasks when the user picks it)
 and an effort level per task. A video or an analysis may carry the user's own name (`build\project.json` /
 `meta.json` "label"): the folder keeps its name, so commands use the folder name.

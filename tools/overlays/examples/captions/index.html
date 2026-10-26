@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-composition-variables='[
   {"id": "style", "type": "enum", "label": "Style", "default": "highlight",
-   "options": [{"value": "highlight", "label": "Line, the spoken word highlighted"}, {"value": "pop", "label": "Words pop in as they are said"}, {"value": "line", "label": "Whole line, no animation"}]},
+   "options": [{"value": "highlight", "label": "Line, the spoken word highlighted"}, {"value": "pop", "label": "Words pop in as they are said"}, {"value": "line", "label": "Whole line, no animation"}, {"value": "keyword", "label": "Small context words, one big keyword under them"}]},
   {"id": "entrance", "type": "enum", "label": "How each line comes in", "default": "none",
    "options": [{"value": "none", "label": "All at once"}, {"value": "fade", "label": "Fades in and rises a little"}]},
   {"id": "entrance_frames", "type": "number", "label": "Fade-in length (frames)", "default": 4, "min": 1, "max": 15, "step": 1},
@@ -26,7 +26,11 @@
   {"id": "y", "type": "number", "label": "Height on wide and square videos (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
   {"id": "y_upright", "type": "number", "label": "Height on upright videos (% from the top)", "default": 78, "min": 0, "max": 100, "step": 1},
   {"id": "max_width", "type": "number", "label": "Line width (% of the frame)", "default": 80, "min": 20, "max": 100, "step": 1},
-  {"id": "pop_frames", "type": "number", "label": "Pop-in length (frames)", "default": 3, "min": 0, "max": 15, "step": 1}
+  {"id": "pop_frames", "type": "number", "label": "Pop-in length (frames)", "default": 3, "min": 0, "max": 15, "step": 1},
+  {"id": "keyword_font", "type": "enum", "label": "Keyword font (the Keyword style)", "default": "Instrument Serif",
+   "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "keyword_italic", "type": "boolean", "label": "Keyword in italics", "default": true},
+  {"id": "keyword_scale", "type": "number", "label": "Keyword size (times the text size)", "default": 2.4, "min": 1.2, "max": 4, "step": 0.1}
 ]'>
 <head>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
@@ -37,7 +41,9 @@
      the size, rate and length below and writes <name>.srt for DaVinci Resolve's subtitle track). Render:
      .venv\Scripts\python tools\overlay.py render <this folder>
      Ready-made looks (0.4.6): presets.json next to this file (classic = these defaults, clean_box = sentence case on
-     a rounded dark box that fits its longest line, the word being said in cyan, a fade);
+     a rounded dark box that fits its longest line, the word being said in cyan, a fade; 0.6.0 keyword = the style
+     "keyword": a line of small context words with ONE big keyword under them in the spoken-word colour - the longest
+     word that is not a little word -, in a serif italic, each word as it is said);
      .venv\Scripts\python tools\overlay.py preset <this folder> [classic | clean_box]. Upright frames (taller than
      wide: 9:16, 4:5) use y_upright, the others y.
      Rules: transparent background (never paint html / body / #root); animate only on the paused GSAP timeline below
@@ -52,6 +58,7 @@
          transform: translate(-50%, -50%); }
   .cue .in { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   .w { display: inline-block; white-space: pre; paint-order: stroke fill; }
+  .cue .ctx, .cue .kw { display: block; }
 </style>
 </head>
 <body>
@@ -70,6 +77,15 @@
   const TALL = H > W;                     // an upright frame (9:16, 4:5) has its own height: the apps' buttons sit low
   const WEIGHT = V.font === "Arial Black" || V.font === "Impact" ? "400" : String(V.weight);   // one-face Windows fonts: no fake bold
   const boxes = [];                       // [cue, its words] - each box is fitted to its longest line below
+  // the Keyword style's big word: the longest that is not a little word (English, Spanish), the last one on a tie
+  const STOP = new Set(("a an the and or but so to of in on at for with from by is are was were be been it its this that " +
+    "these those i you he she we they me my your our their not no do does did have has had will would can could just " +
+    "very really then than as if what when how why who which there here el la los las un una unos unas y o pero de del " +
+    "en con por para que es son era fue lo le les se su sus mi tu si muy ya al").split(" "));
+  const KEY = ws => { let k = ws.length - 1, best = -1;
+    ws.forEach((w, i) => { const l = w.replace(/[^\p{L}\p{N}]/gu, "").length;
+      if (!STOP.has(w.toLowerCase().replace(/[^\p{L}]/gu, "")) && l >= best) { best = l; k = i; } });
+    return k; };
   for (const cue of C.cues) {
     const el = document.createElement("div");
     el.className = "cue";
@@ -78,6 +94,31 @@
                               fontSize: V.font_size + "px", lineHeight: String(V.line_height), color: V.color,
                               textTransform: V.uppercase ? "uppercase" : "none" });
     if (V.balance) el.style.setProperty("text-wrap", "balance");
+    if (V.style === "keyword") {          // 0.6.0: small context words, ONE big keyword under them, each word as said
+      const ws = cue.words, k = KEY(ws.map(w => w[0]));
+      const ctx = document.createElement("div"), kw = document.createElement("div");
+      ctx.className = "ctx"; kw.className = "kw";
+      Object.assign(kw.style, { fontFamily: `"${V.keyword_font}", Georgia, serif`, fontWeight: "400",
+                                fontStyle: V.keyword_italic ? "italic" : "normal", textTransform: "none",
+                                fontSize: V.font_size * V.keyword_scale + "px", lineHeight: "1.04", color: V.highlight_color });
+      ws.forEach(([text, f0], i) => {
+        const s = document.createElement("span");
+        s.className = "w";
+        s.textContent = text;
+        if (V.outline > 0) s.style.webkitTextStroke = `${2 * V.outline}px ${V.outline_color}`;
+        if (i === k) kw.appendChild(s);
+        else { if (ctx.childNodes.length) ctx.appendChild(document.createTextNode(" ")); ctx.appendChild(s); }
+        s.style.opacity = "0";
+        tl.set(s, { opacity: 1 }, AT(f0));
+        if (i === k && V.pop_frames > 0) tl.fromTo(s, { scale: 0.7 }, { scale: 1, duration: F(V.pop_frames), ease: "back.out(2)" }, F(f0));
+      });
+      if (ctx.childNodes.length) el.appendChild(ctx);
+      el.appendChild(kw);
+      root.appendChild(el);
+      tl.set(el, { opacity: 1 }, AT(cue.f0));
+      if (cue.f1 + 1 < FRAMES) tl.set(el, { opacity: 0 }, AT(cue.f1 + 1));
+      continue;
+    }
     const inner = document.createElement("span");
     inner.className = "in";
     if (V.box || V.entrance === "fade") inner.style.display = "block";    // one box around the lines; a block can rise

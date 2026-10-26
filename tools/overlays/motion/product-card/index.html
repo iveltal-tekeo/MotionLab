@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "product_media", "type": "string", "label": "The product: its picture or a short clip (empty = a placeholder)", "default": ""},
+  {"id": "product_focus", "type": "string", "label": "What stays in view on the picture (x% y%)", "default": "50% 50%"},
+  {"id": "name", "type": "string", "label": "The product (*bold* _italic_ ==highlight== ^signal colour^)", "default": "Music video"},
+  {"id": "what", "type": "string", "label": "What it is, in a line", "default": "One day of filming, colour graded, ready to post"},
+  {"id": "price", "type": "string", "label": "Price (empty = none)", "default": "200 €"},
+  {"id": "cta", "type": "string", "label": "The button (your website, a handle, BOOK NOW...)", "default": "riftshoots.com"},
+  {"id": "logo_media", "type": "string", "label": "Your logo, a picture (empty = none)", "default": ""},
+  {"id": "size", "type": "number", "label": "Name size (px at a 1080-px short side)", "default": 104, "min": 40, "max": 180, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video: the text on a card)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Button font", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent: the price, the button)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 22, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 6, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "product-card" (0.6.0, My Brand's product motion, 2026-10-25): a product from the user's
+     catalogue - its picture on a card rises and settles (f0-f12), its name comes up word by word (f8-f22), what it is
+     fades in (f14-f24), the price pops in with a little overshoot (f18-f28), the button slides in (f24-f34) and
+     pulses once (f64-f74), the logo fades in (f30-f40); then it holds. Upright: the picture on top, the words under it;
+     wide: the picture left, the words right. Background off = see-through over a video, the words on a card of their
+     own. Look-aware (the brand's colours / fonts go in ink, paper, signal and the fonts). MotionLab's own code.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #card, #logo { overflow: hidden; }
+  .line { position: absolute; white-space: nowrap; line-height: 1.05; font-synthesis: none; }
+  #name { white-space: normal; }
+  #what { white-space: normal; line-height: 1.3; }
+  #cta { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="ground" class="abs"></div>
+  <div id="panel" class="abs"></div>
+  <div id="card" class="abs"></div>
+  <div id="name" class="line ml-body"></div>
+  <div id="what" class="line ml-body"></div>
+  <div id="price" class="line ml-body"></div>
+  <div id="cta" class="line ml-body"></div>
+  <div id="logo" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const dec = t => 1 - Math.pow(1 - clamp01(t), 3);                        // decelerating (slow end)
+  const back = t => { t = clamp01(t); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+  const rich = (el, text, o) => {
+    if (window.MLLook) return MLLook.rich(el, text, o);
+    el.textContent = String(text || ""); return { words: [el], marks: [] };
+  };
+
+  // ---- the ground: the paper (a soft light from the top), or nothing over a video
+  const ground = q("ground");
+  Object.assign(ground.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) ground.style.background = `radial-gradient(120% 80% at 50% 0%, ${mix(L.paper, L.mustard, 0.12)}, ${L.paper} 70%)`;
+
+  // ---- the layout: upright = the picture on top, the words under it; wide = the picture left, the words right
+  const up = H >= W;
+  const cw = up ? W * 0.72 : H * 0.62, ch = up ? cw : cw * 1.2;
+  const cx = up ? (W - cw) / 2 : W * 0.1, cy = up ? H * 0.12 : (H - ch) / 2;
+  const tx = up ? W * 0.1 : cx + cw + W * 0.05, tw = up ? W * 0.8 : W * 0.9 - tx;
+  const ty = up ? cy + ch + H * 0.045 : cy + ch * 0.12;
+  const align = up ? "center" : "left";
+  const cr = Math.min(L.radius, 40 * U);
+  const card = q("card");
+  Object.assign(card.style, { left: `${cx}px`, top: `${cy}px`, width: `${cw}px`, height: `${ch}px`, opacity: "0" });
+  if (window.MLLook) {
+    MLLook.card(card, L, { r: cr });
+    MLLook.media(card, V.product_media, { look: L, kind: "image", label: "your product", fit: "cover", focus: V.product_focus,
+      seed: 31, r: cr, start: 0, duration: FRAMES / FPS, id: "m1", slot: "product_media" });
+  }
+  card.style.backgroundColor = L.deep;
+
+  // ---- the words
+  const fs = V.size * U, ink = L.ink;
+  const put = (id, text, o) => {
+    const el = q(id);
+    Object.assign(el.style, { left: `${tx}px`, width: `${tw}px`, textAlign: align, fontSize: `${o.size}px`, color: o.color,
+      fontWeight: String(fw(o.family, o.weight)), opacity: "0" });
+    el.style.fontFamily = `"${o.family}", sans-serif`;
+    const r = rich(el, text, { look: L, family: o.family, weight: o.weight });
+    return { el, words: r.words && r.words.length ? r.words : [el] };
+  };
+  const nm = put("name", V.name, { size: fs, color: ink, family: V.display_font, weight: 800 });
+  const wh = put("what", V.what, { size: fs * 0.4, color: mix(ink, L.paper, 0.28), family: V.body_font, weight: 450 });
+  const pr = put("price", V.price, { size: fs * 0.9, color: L.signal, family: V.display_font, weight: 800 });
+  // stack them from ty: the name, what it is, the price, the button
+  let y = ty;
+  const place = (o, gap) => { o.el.style.top = `${y}px`; y += o.el.offsetHeight + gap; };
+  place(nm, fs * 0.22);
+  if (String(V.what || "").trim()) place(wh, fs * 0.42); else wh.el.style.display = "none";
+  if (String(V.price || "").trim()) place(pr, fs * 0.36); else pr.el.style.display = "none";
+  const cta = q("cta");
+  const hasCta = String(V.cta || "").trim();
+  const bh = fs * 0.86, bfs = fs * 0.34;
+  if (hasCta) {
+    cta.textContent = V.cta;
+    Object.assign(cta.style, { top: `${y}px`, height: `${bh}px`, padding: `0 ${bh * 0.55}px`, borderRadius: `${bh / 2}px`,
+      background: L.signal, color: L.paper, fontSize: `${bfs}px`, fontFamily: `"${V.accent_font}", monospace`,
+      fontWeight: String(fw(V.accent_font, 700)), letterSpacing: "0.04em", opacity: "0" });
+    const bw = cta.offsetWidth;
+    cta.style.left = `${up ? (W - bw) / 2 : tx}px`;
+    y += bh;
+  } else cta.style.display = "none";
+  // over a video: the words on a card of their own, so they read
+  const panel = q("panel");
+  if (!V.background) {
+    const pad = fs * 0.4;
+    Object.assign(panel.style, { left: `${tx - pad}px`, top: `${ty - pad}px`, width: `${tw + 2 * pad}px`, height: `${y - ty + 2 * pad}px`,
+      background: mix(L.paper, L.paper, 0), borderRadius: `${cr}px`, opacity: "0" });
+    if (window.MLLook) MLLook.card(panel, L, { r: cr });
+  } else panel.style.display = "none";
+  // the logo, small, in the corner of the card
+  const logo = q("logo"), hasLogo = String(V.logo_media || "").trim();
+  const ls = Math.min(cw, ch) * 0.2;
+  if (hasLogo && window.MLLook) {
+    Object.assign(logo.style, { left: `${cx + cw - ls - ls * 0.18}px`, top: `${cy + ls * 0.18}px`, width: `${ls}px`, height: `${ls}px`, opacity: "0" });
+    MLLook.media(logo, V.logo_media, { look: L, kind: "image", label: "logo", fit: "contain", focus: "50% 50%", seed: 7, r: 0,
+      start: 0, duration: FRAMES / FPS, id: "m2", slot: "logo_media" });
+  } else logo.style.display = "none";
+  // centre it: upright = the whole group in the frame's height; wide = the words beside the middle of the picture
+  const moved = up ? [card, logo, panel, nm.el, wh.el, pr.el, cta] : [panel, nm.el, wh.el, pr.el, cta];
+  const dy = up ? (H - (y - cy)) / 2 - cy : (cy + ch / 2) - (ty + (y - ty) / 2);
+  moved.forEach(e => { if (e.style.top) e.style.top = `${parseFloat(e.style.top) + dy}px`; });
+
+  // ---- the motion, frame by frame (seek-safe)
+  const S = Math.round(V.start);
+  const words = nm.words;
+  function render(t) {
+    const g = t * FPS - S;
+    const kc = dec((g - 0) / 12);                                           // the card rises and settles
+    card.style.opacity = String(clamp01(g / 6));
+    card.style.transform = `translateY(${(1 - kc) * 70 * U}px) scale(${(0.9 + 0.1 * kc).toFixed(4)})`;
+    if (!V.background) { const kp = dec((g - 6) / 10); panel.style.opacity = String(kp); panel.style.transform = `translateY(${(1 - kp) * 30 * U}px)`; }
+    nm.el.style.opacity = g < 7 ? "0" : "1";
+    words.forEach((w, i) => { const k = dec((g - 8 - i * 2) / 10);
+      w.style.display = w === nm.el ? "" : "inline-block";
+      w.style.opacity = String(k); w.style.transform = `translateY(${(1 - k) * 0.5 * fs}px)`; });
+    const kw = dec((g - 14) / 10);
+    wh.el.style.opacity = String(kw); wh.el.style.transform = `translateY(${(1 - kw) * 20 * U}px)`;
+    const kpz = back((g - 18) / 10);
+    pr.el.style.opacity = String(clamp01((g - 18) / 4));
+    pr.el.style.transform = `scale(${(1.35 - 0.35 * kpz).toFixed(4)})`;
+    pr.el.style.transformOrigin = up ? "50% 60%" : "0% 60%";
+    if (hasCta) {
+      const kb = dec((g - 24) / 10), pulse = g >= 64 && g <= 74 ? Math.sin((g - 64) / 10 * Math.PI) * 0.06 : 0;
+      cta.style.opacity = String(kb);
+      cta.style.transform = `translateX(${(1 - kb) * -40 * U}px) scale(${(1 + pulse).toFixed(4)})`;
+    }
+    if (hasLogo) logo.style.opacity = String(dec((g - 30) / 10));
+  }
+  if (window.MLLook) MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render); else render(0);
+  if (window.MLLook) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 41 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

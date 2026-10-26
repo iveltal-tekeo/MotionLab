@@ -16,11 +16,14 @@ missing -> the app's Settings > Programs > Install, or `tools\overlay.py install
   `templates` first) with their moves (`tracks`: frame + length), the sizes they are checked at (`ok at` / `NOT at` -
   a template NOT ok at the video's size draws wrong there: pick another or snap it at that size first) and their
   text settings; all of them: `templates.py library --brief`; more by words: `templates.py pick "<words>" --n 8`.
-  Match each scene to a template by what it shows (a hook word -> kinetic-stack / scatter-text, a number ->
+  Match each scene to a template by what it shows - the brief gives each line of the words options of its own
+  (2026-10-26); these names are examples, not defaults: a hook word -> kinetic-stack / scatter-text, a number ->
   big-counter, a list -> checklist / wheel-list / rank-number, a story -> story-lines, a chat -> chat-thread, the song
   -> now-playing / audio-bars, a name -> lower-third, pointing at something -> callout-line, a scene change ->
-  shape-wipe / pixel-wipe, the end -> end-screen / subscribe-cta / logo-reveal...); write new code only for what no
-  template does. Only when there is no reference, the library has nothing close and the words are vague: the hook
+  shape-wipe / pixel-wipe, the end -> end-screen / subscribe-cta / logo-reveal... **Variety** (the user, 2026-10-26:
+  the same templates video after video): each template once a video unless a repeat is the point; the ones the brief
+  says the last videos used only when clearly the best fit; with 191 templates, look past the first match (`pick
+  "<a line>" --n 8 --fresh`, `library --brief`). Write new code only for what no template does. Only when there is no reference, the library has nothing close and the words are vague: the hook
   (the first 3 s) as `overlay.py snap` stills in 2-3 looks (e.g. clean and slick / raw and glitchy / slow and
   cinematic: one small composition per look, the same words, snap 4-6 frames each, one sheet labelled A / B / C) -
   this costs Claude tokens, so keep it to the hook. The user picks or mixes ("B's pacing with A's colours") - that is
@@ -37,7 +40,8 @@ not the whole skill): HTML / CSS / SVG / GSAP on a paused timeline, times in fra
 change in `data-composition-variables`. Real logos of apps, platforms and AI tools come from the logo library, never
 drawn by hand: `tools\logos.py find "<the user's words>"` names them (`show <id>` = its versions); a logo setting takes
 `youtube` / `youtube/mono` / `a|b|c`, a text `:youtube:` - the templates logo-wall, logo-reveal, icon-pop, connect-hub,
-notification-stack, phone-list and lower-third draw them, renders bundle them by themselves.
+notification-stack, phone-list and lower-third draw them, renders bundle them by themselves. The user's own logo
+(My Brand) is the logo `brand` (2026-10-26): the version that reads on the background is drawn by itself.
 **Cheapest check first** (the first video's ~29 min of renders mostly went on bugs a 1-second snapshot shows). The
 user approves each step in plain words; no polish before step 3 is approved: (1) the plan in words and numbers - the
 scene table with frame + timecode and the feel as numbers ("a cut every 0.5 s, moves over 4-6 frames, a whoosh on
@@ -89,7 +93,8 @@ with the polish (motion blur, the sound mix, Resolve) - once, as a job (SKILL.md
    the song under it and never more than 24 dB under it (so the precheck passes first time); its mix becomes the
    plan's `"audio"`, `build\sfx\<name>_sfx.wav` goes on its own track in Resolve at 01:00:00:00. Read the summary (the
    cues the precheck would flag; `sfx.py plan <plan> --all` = every cue); to change one set the cue's `"db"` or
-   `"level"` - never guess a volume.
+   `"level"` - never guess a volume. My Brand's sound logo (the brief says when the end card plays it): the plan's
+   `"sfx": {"logo": "<path>"}` - it replaces the end card's own cues (the layer `end_card`, or `"end_card": true`).
 5. **The plan**: `build\plan_vN.json` = `{"name": "<p>_vN", "width": W, "height": H, "fps": fps, "frames": N,
    "sources": {}, "grades": {}, "layers": [{"type": "overlay", "id": "<name>", "file": "<the .mov>", "start": 0, "end":
    N - 1}], "audio": {"path": "<the song>"}, "output": "<p>_vN.mp4"}` (several compositions = several overlay layers

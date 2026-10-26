@@ -45,7 +45,9 @@ The app opens this with effort high. Work from `C:\MotionLab` with `.venv\Script
   make, tell the user it came from <name>.
 
 ## 1. What you read
-`.venv\Scripts\python tools\script.py show <id>` prints the script (or the request = the user's answers), what the
+`.venv\Scripts\python tools\script.py show <id>` prints the script (or the request = the user's answers; a request
+ending with **For my brand** = the user ticked it: write in that voice, for that audience, toward that goal, a product
+only from its list at the price written - 0.6.0), what the
 user wants from the rewrite (length, where it goes, their words, the videos whose style they picked), the scripts
 already made from it, and **the check**. The check is measured and needs no Claude: the hook, the length at the
 speaking rate measured on the picked videos, sentences, fillers, the longest flat stretch, you / I, numbers, the CTA,

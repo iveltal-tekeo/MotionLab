@@ -19,9 +19,21 @@ four-part `0.x.y.z` is a small step between them (fixes, upkeep, polish).
 steps in order, *Needs first*. At most two versions are "next" at a time: finish and release one before starting
 another.
 
-## Where it stands (2026-10-25)
+## Where it stands (2026-10-26)
 
-Released last: **0.5.4** (2026-10-25) - Sound: recorded sound effects instead of made-up ones (this PC's library,
+Released last: **0.6.0** (2026-10-26) - Content agency, a big release (CHANGELOG.md + CHANGELOG.es.md): **My Brand** (the
+page in three tabs - goal, audience, colours by role, fonts, logo versions, voice, pillars, products with facts and
+media, captions, the editing look, the mood board, the end card with its sound logo - read from the user's website,
+used *For my brand* by New edit, the Generator and Prepare), the **Content agency** (the calendar, When to post, the
+post's checklist and A/B, Your videos and the stats exports, How it did), the **Editor** (a timeline: shots, speed,
+graphics from the templates, captions and their style, sounds, effects), **Sound** (the library on every PC, the
+sounds picked by ear, ElevenLabs sounds - 20 kept ship with MotionLab -, the music library and ambience beds, every
+render mastered), cleaner talking edits (stumbles opt-in, captions off the face, the voice clean-up off until its A/B).
+At the user's word ("i want to finish eveyrthing we have and only have released the 0.6.0", then "Build them first"
+for the music library and the sound logo) it shipped once every step Claude could build was built; what waits on the
+user is listed at the top of 0.6.1 (*Left from 0.6.0*). Its plan text: plans_history.md.
+
+Before it **0.5.4** (2026-10-25) - Sound: recorded sound effects instead of made-up ones (this PC's library,
 levelled against the song, picked by ear in three listening rounds - a sound not picked is set off, never deleted),
 quick drafts with their own sound effects, a song from a link with a copy without it to post. It shipped in steps -
 **0.5.3.3** and **0.5.3.4** - and its plan text is in plans_history.md. Released as it stood (the user, 2026-10-25:
@@ -62,8 +74,7 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.6.0 | Content agency (a big release) | next - per app section: **My Brand** (a new page: goal, audience, identity, the catalogue with prices from the website, used by Prepare, New edit, Motion Graphics; product motion - added 2026-10-22 as 0.5.5), the **Editor** (the mini-editor for cuts and effects), the **Analyser** (mood boards from pictures), **Sound** (0.5.4's open steps); quality over quantity (2026-10-25) | L, ships in parts |
-| 0.6.1 | Motion graphics: template packs | planned - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
+| 0.6.1 | Motion graphics: template packs | next - *Left from 0.6.0* first (what waits on the user); the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
 | 0.6.2 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0; + the edit as a timeline file for Premiere / Final Cut (2026-10-25) | M |
 | 0.6.3 | Content generation | planned - AI clips back into the lab, pictures from image tools, voice-over (voice and music moved to 0.5.4 2026-10-22; voice back 2026-10-25) | M |
 | 0.6.4 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts, shorts from a long video (2026-10-25) | L |
@@ -166,6 +177,21 @@ depths, wide and cheap first:
 The deep, frame-accurate analysis stays for the few videos the user wants to copy (the Analyser, as today). Rules:
 public posts only, the videos and transcripts stay on the PC, only numbers, short quotes and the niche card are
 shared.
+
+**Your stats and the competitors' through YouTube's own APIs** (0.6.0's steps 17-19, moved here 2026-10-26 - the
+user: "youtube analytics stuff for later 0.6.x versions"; the scan above runs through step 17's API once it is built):
+- 17. **The YouTube competitor and outlier scan through the Data API** (S-M): a free API key (no login; 10,000 units a
+    day, a video or channel = 1 unit). **Fixes a terms problem**: reading YouTube stats with yt-dlp (`content.py
+    stats`, 0.6.5's planned scan) is against YouTube's terms (no automated access); the API does the same within
+    them (other channels' stats kept 30 days at most unless refreshed). TikTok / Instagram competitors stay single
+    lookups the user starts. YouTube is testing the same idea in Studio (a *Research* tab with outlier multipliers).
+- 18. **What worked this month** (M, once there is data): top videos by retention and views, which pillar, hook and
+    format worked, the A/B winners - into Claude's lessons.
+- 19. **YouTube Analytics connection** (M, later): retention curves, traffic sources, impressions + CTR (the bulk
+    Reporting API, since 2026-01) - OAuth with the user's own Google project (a desktop client, 127.0.0.1; in
+    *Testing* the login lapses every 7 days, so the client is published unverified - a warning screen, 100 users at
+    most). Instagram after it (a Creator account - not Business, which loses music - and a token pasted from Meta's
+    dashboard, 60 days, refreshable); TikTok's API last, if ever (counts only, an app review with a demo video).
 
 **Sound** (moved from 0.5.4's steps 5 and 7, 2026-10-25 - the user: "lets just move to a later version"):
 - **Separate music from voice** (measure first - heavy on CPU): Demucs stems for cleaner beats / drops and cleaner
@@ -461,6 +487,20 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
 
 ## 0.6.1 - planned - Motion graphics: template packs, the motion check, formats
 
+**Left from 0.6.0** (released 2026-10-26; each waits on the user or was not needed yet - 0.6.0's text: plans_history.md):
+- *Cut the stumbles* (0.6.0 step 20) stays opt-in (`--stumbles on`) until a take with mistakes in it (an "um", a
+  restart, a "cut, again") shows what it catches - on by default if it handles it well, removed if not.
+- *A finished sound* (22): the user's loudness target (-14 LUFS for every platform, or louder for shorts) and the
+  song-under-voice level.
+- *The voice cleaned up* (23): the user's A/B listen - `.app\dev\voice_ab\A_as_recorded.m4a` vs `B_cleaned.m4a`;
+  B wins = on by default for talking drafts and Claude's talking edits.
+- Sound: crackle (Freesound with the user's free key, or sparks from Pixabay), flutter (not rated), a soft sound on
+  some of a quick draft's plain cuts (an A/B); the VideoEditingSFX pack's page (the user has no link); music searched
+  from the app (Jamendo / Free Music Archive) - the music library reads the user's own downloads for now.
+- My Brand: services whose prices are plain text on the website (a Claude read); the quick draft placing a product
+  card without Claude. **Held** (the user): 3b's line suggestions from transcripts - only from takes said freely, if
+  ever.
+
 **Ships when**: (1) the user's template packs are read with no Claude - every template's moves, eases, timing and
 controls, plus a preview with a frame + timecode sheet - for at least two Resolve packs (Free Starter Pack 2.0 and
 Swift Pack 2 are on this PC; a pack of preview clips: done in 0.5.0); (2) the motion rules (0.5.0: from 500 moves
@@ -651,113 +691,3 @@ in the repo, a pack for friends or a shared graphic; motion cards, rules and Mot
 copy a style, never someone's content (their words, logos, characters, pictures).
 **Needs first**: 0.5.3's brief and build command (steps 5-7 run through them); 0.4.6's fonts (shipped 2026-10-16);
 from the user: which packs first, ~20 templates starred, the verdict on the remade "top 3" reel.
-
-## 0.6.0 - planned - Content agency: My Brand, the mini-editor, mood boards and sound
-
-**Ships when**, per section:
-- *My Brand*: the page holds the user's goal on social media, their audience, identity (colours, fonts, logo, voice)
-  and catalogue with prices - read from their website and checked by them; Prepare, New edit and Motion Graphics use
-  it (a script in the brand's voice, the brand's colours as a palette, its logo); one video places a product - in
-  passing or as a call to action at the end - and the user rates it OK or better.
-- *Editor*: a cut, an effect and a caption fixed in the mini-editor render again without Claude.
-- *Analyser*: a mood board's style card is used by a video the user rates good.
-- *Sound* (from 0.5.4): recorded sound effects on a friend's PC too, rated good - not "AI created" - on two real
-  videos (a talking video and a music edit) with `precheck.py --sfx` passing on both; a laptop's numbers (the
-  library's size, the time it adds per minute of video).
-
-**What it is** (the user, 2026-10-25: "okay my brand is different from content agency right? separate each sections
-and stuff into each respective one"): *Content agency* is the version - videos with an agency's quality, for a brand;
-*My Brand* is one of its sections, the new page. Each part sits in the app section it belongs to: **My Brand** (the
-page, the website, the brand kit, product motion - steps 1-5), the **Editor** (the mini-editor - 6), the **Analyser**
-(mood boards - 7) and **Sound** (0.5.4's open steps - 8-11).
-
-**The user's words (2026-10-22)**: "0.5.5 Content Agency - implement a new section above Analyze which would be called
-'My Brand'". Their mock-up deck (`new_edit_section.html`, slides 10-11, in Spanish): *Mi marca* - "a page where Claude
-learns your goal on social media, your audience, your identity and the whole catalogue with prices, reading your web;
-used in Prepare, the Editor and Motion Graphics" ("that it knows the whole catalogue, prices included"); *Motion de
-producto* - "with My Brand's catalogue Claude puts a product in the video: indirectly or with a call to buy at the end,
-mixed with your clips in the same edit".
-
-**Renumbered 2026-10-25** from 0.5.5 to 0.6.0 (the user: "start working on the 0.5.5 (which u will move to 0.6.0 since
-it will be a big rrelease)") - the start of the 0.6 line; the plans after it moved up one each (plans_history.md).
-
-**My Brand** - a new page in the sidebar (steps 1-5; the look = the mock-up's slide 10: a rose band, *Goal on social*
-as pills + the user's words, *Audience* as chips, *Brand identity* = colour swatches + the tone of voice, *Your
-website* with *Read it again*, the *Catalogue* - each product with its price and a *Use in videos* switch):
-1. **The page** (the sidebar below Claude's memory, as the mock-up shows - the user's words of 2026-10-22 said "above
-   Analyze"): goal, audience, identity, voice, catalogue - each a card the user fills or corrects; stored on this PC
-   (`knowledge\local\brand.json`), never in shared knowledge unless the user shares it.
-2. **Read the website**: the user gives a link; MotionLab fetches that site's pages only, Claude takes the products /
-   services with their prices, the tone and the colours; the user ticks what is right before it is saved.
-3. **The brand kit in the app**: the brand's colours as the first palette in New edit's *Colour palette*, its fonts
-   (`fonts\` or added) and logo (`logos\` or the user's file) offered first in Motion Graphics and captions.
-4. **The skills read it**: `/write-script` and `/write-title` (voice, audience, goal), `/recreate-video` and
-   `/generate-video` (identity, products), `/write-prompt` (product shots).
-5. **Product motion**: a product from the catalogue in the video - in passing (a lower third, a card over B-roll) or a
-   call to action at the end (price, link) - built from the Motion Graphics library's templates (the mock-up's slide
-   11, *Motion de producto*: opened from New edit; the timeline shows where Claude puts it - the product's name at the
-   start, the price and the website at the end - and each can be moved).
-
-**Editor** - the mini-editor (step 6):
-6. **The mini-editor** (the user, 2026-10-25: "for the 0.5.5 agency brand section i need you to add also a
-   "mini-editor" so we can handle small cuts or edits withotu having to re-run the entire program under claude"): on
-   a video's page, the newest render's plan as a strip of shots under the player (each shot's picture, its first frame
-   + timecode, its length). Small changes by hand, no Claude window: trim a shot's start / end frame by frame, delete
-   a shot (what comes after closes up - graphics, captions and sound effects move with it), move a cut, swap a shot
-   for another take from the same clips, fix a caption's or a graphic's words, drop or nudge a sound effect, the
-   song's start and volume. *Save* = the next plan (`plan_v(N+1).json`, the old one stays) + a `build.py` job (only
-   what changed renders again: a trim = the video and the sound, no graphic). Bigger wishes (a new effect, another
-   style, re-timing to the music) stay Claude's: *Ask Claude* writes the change as a request. What the user fixed by
-   hand goes into `outcome.json` so Claude reads it next time (the cuts it got wrong are lessons too). Measure first:
-   a one-shot trim's build time on a laptop. Never touches the clips (hard rule 1).
-   **The effects too** (the user, 2026-10-25, later: "so if we do the mini editor on the version we can maybe choose
-   some effects, edit them?"): each effect of the plan as a chip on the strip at its frames (a zoom, a whip, a flash,
-   a speed ramp, a graphic) - swap it for another kind or a library effect, change its length, strength and ease
-   (the easing words: decelerating, S-curve...), nudge it a frame, remove it, add one at the playhead; before *Save*,
-   a preview of the second around it (`render_video.py` renders any range alike), so a change is seen, not guessed.
-   Swapping one effect's sound is here too (step 9 (c)).
-
-**Analyser** - mood boards (step 7; a fourth way in next to videos, thumbnails and scripts & prompts):
-7. **Mood boards: references beyond videos** (the user, 2026-10-25: "what if our references go beyond just videos?
-   add instagram or pinterest directly?"): pictures the user likes - a Pinterest board, Instagram posts, screenshots -
-   as references for the brand's look. First from pictures on the PC (saved or screenshotted, dropped into the
-   Analyser): per board a style card - the palette (Lab clusters, saturation, contrast), text on the picture (OCR:
-   how much, where, how big), faces (count, size, place), composition (thirds, empty space, clutter), and Claude's
-   words for the type and the mood - used as My Brand's identity, New edit's palette, Motion Graphics and thumbnails.
-   Fetching a board by its link (gallery-dl - GPL, reads Pinterest boards without a login) only later and started by
-   the user: Pinterest's and Instagram's terms forbid automated collection, and Instagram needs the account's cookies
-   (a risk to the account) - so never by default, never Instagram cookies. The pictures stay on the PC.
-
-**Sound** - continued from 0.5.4 (steps 8-11; moved here 2026-10-25 when 0.5.4 shipped as it stood - the user: "the
-otehr stuff just put it on version above"; 0.5.4's full plan and its three listening rounds: plans_history.md):
-8. **Sounds on friends' PCs** (was 0.5.4's step 8): today the 116 recorded sounds live on this PC only, so friends
-   still hear the made-up ones. The 4 Kenney picks are CC0 - they may go in the repo as they are; for the user's pack
-   (no licence stated) and the Sonniss picks (not to be passed on) the repo carries **an import list, never the
-   sounds** - which file is which kind, its trim and anchor, its licence; a friend gets the pack from its page (the
-   user's pack: its download page, from the user) or Sonniss' official mirror, and `sfx.py import` sorts it by the list.
-9. **The user picks the sounds** (was 0.5.4's step 10, the user: "could it be possible for the user itself to choose
-   them while editing or before running the edit"): (a) a *Sounds* page (beside Motion Graphics' Logos): every sound
-   with ▶, its kind, origin and licence; ★ a favourite (used first) / hide one (never used - the library's `"off"`, built
-   2026-10-25); *Add sounds* = a pack, a zip or a few files with where they came from and their licence -> `sfx.py
-   import` as a job; (b) New edit's *Sound* step: *Choose the sounds* - per kind ticked, the ones for this edit (the
-   request -> the plan's `"sfx"` `"sounds"`, kept on every build); (c) the mini-editor (step 6) swaps one cue's sound.
-10. **A music library and ambience** (was 0.5.4's step 3 (b)): tracks the user downloads (Pixabay Music, YouTube's
-    Audio Library - no API for music, and YouTube's only for YouTube videos) indexed by tempo, mood, length and licence;
-    Jamendo / Freesound / Free Music Archive searched from the app where an API and commercial-use licences exist;
-    room tone and ambience beds (city, nature, a café) under talking videos; New edit's *Music* gets *From the library*.
-11. **What round 3 left**: crackle (nothing good in two rounds - Freesound once the user has a free API key, or sparks
-    the user downloads from Pixabay), flutter (not rated), and quick drafts' plain cuts - a soft sound on some of them
-    or not (a short A/B on the beat montage: 31 cuts got 3 effects at *some*).
-
-**Quality over quantity** (the user, 2026-10-25: "for the content agency version section id like to focus on quality
-of videos instead of quantity ... we have to really dig in those things if we want to make motionlab great and
-actually usable and not just make AI slop while editing"): this version is judged by how good one video gets, not by
-how many - the mini-editor (6), the brand's own look (3, 7) and the user's ratings decide; 0.6.5's wide scan is for
-learning only, never for making more videos.
-
-**Order** (the user decides): My Brand's 1-3 first, then 4 and 5; the Editor (6), the Analyser (7) and Sound (8-11)
-need nothing from My Brand's page, so each can go in between (Sound's 8 first - friends still hear the made-up
-sounds). **Size**: large, ships in parts (a big release - the user, 2026-10-25).
-**Rules**: the brand stays on the PC; only the user's own site is read; prices shown as the user confirmed them; no
-sound file in the repo unless its licence allows passing it on; music only with clear licences.
-**Needs first**: nothing; from the user: their website and their goal.

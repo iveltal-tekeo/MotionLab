@@ -24,7 +24,10 @@ its docstring (run it without arguments).
   `motionlab\colour.py`), `feedback\` (`verdicts.json` = the user's verdicts, their ONE home; `app_<date>.txt` =
   exports from the app; `feedback_<date>.txt/.json` = archived by `feedback.py` when Claude applied them)
 - `knowledge\` what installs share: `references\` = SHARED reference cards `<video id>--<author>.json`, `incoming\` =
-  SHARED lessons waiting for review; private: `local\` (this PC's cards, `lessons.md` = new lessons `local-N`,
+  SHARED lessons waiting for review; private: `local\` (this PC's cards, `brand.json` = My Brand (0.6.0) + `brand\`
+  (its logo, `products\` pictures, `import\` = what Import from your website last found) + `brand_backups\` (Start from
+  zero's copies), `calendar.json` = the Content agency's content calendar (0.6.0), `social.json` + `social\thumbs\` = your
+  posted videos (Check my pages), `lessons.md` = new lessons `local-N`,
   `lessons_making.md` = lessons on making videos `local-make-N`, `shared.json` = what was shared + what the user keeps
   on this PC (private / include) + imports, `summary.md` + `summary\<category>.md` - Claude reads both before a
   review, `memory.md` = Claude's memory (0.4: every video's style in one line, the effects seen and how they were
@@ -95,15 +98,39 @@ not say, or a rule.
   annotate` / a JSON `import`), `templates.py` (captured template clips + the Motion Graphics library: 189 templates in
   `tools\overlays\motion\`, 57 rebuilt from the Swishy clips, 18 MotionLab originals and 114 MotionLab builds in the
   Editorial warm look)
-- Making: `prep_footage.py`, `storyboard.py`, `render_video.py`, `compare_renders.py`, `draft_edit.py` (the quick
-  draft by rules; `--feel-test`), `style.py` (the style of up to 3 analysed videos; `closest "<words>"`), `overlay.py`
+- Making: `prep_footage.py`, `storyboard.py`, `render_video.py` (0.6.0: masters every render's sound -
+  `motionlab\loudness.py`, config "master": -14 LUFS, true peak <= -1 dBTP after AAC; `--no-master`),
+  `compare_renders.py`, `miniedit.py` (0.6.0: the app's Editor tab - `state` = the shots, graphics, captions,
+  sound effects of a plan; `apply <changes.json> --build` = the user's changes in order (trims, moves, splits, speed,
+  graphics moved / added from a template / set, sound effects added / moved / louder / swapped, captions) -> the next
+  plan, the clips' sound cut again (a sped-up shot's stretched, the pitch kept), the graphics' copies and new ones,
+  outcome.json "hand_fixes", one build; `media` = the preview's light copies, loudness and filmstrip in
+  `build\editor\`; the engine is `motionlab\miniedit.py`), `draft_edit.py` (the quick
+  draft by rules; `--feel-test`; talk mode cuts the stumbles too - `--keep-stumbles`), `style.py` (the style of up to
+  3 analysed videos; `closest "<words>"`), `overlay.py`
   (graphics as HTML via HyperFrames, pinned in `tools\overlays\`; `snap` = stills straight from the HTML, the cheapest
   check; `fit <folder> --like <video>`), `fonts.py` (`sync` after adding a family), `logos.py` (92 logos), `sfx.py`
-  (sound effects - never guess a volume), `beats.py`, `precheck.py` (checks before the final render; exit 1 = look),
-  `speech.py` (speech to text, optional install)
+  (sound effects - never guess a volume; `--voice` / a plan's `"sfx": {"voice": true}` = a talking video: very subtle
+  over words, levelled to the voice in pauses; 0.6.0: `library --export-list` writes `tools\sounds\import_list.json`
+  - the shared list of which pack sound is which kind, never the sounds - and `tools\sounds\cc0\` + `made\` (the CC0
+  ones and the ElevenLabs ones the user kept) every PC gets; `import <pack> --listed` sorts a friend's download by it; `--fav`, a plan's `"sfx": {"sounds"}`;
+  `generate` = sounds made with ElevenLabs from `tools\sounds\generate.json`, `share` = the paid-plan ones as a zip,
+  `import <link | zip>` = a friend's; 0.6.0: a plan's `"sfx"` `"bed"` = an ambience bed looped under the voice,
+  `"logo"` = My Brand's sound logo on the end card), `music.py` (0.6.0 step 10, `motionlab\music.py`: the music
+  library - refs\audio's downloads read in place, songs and ambience beds added in `library\music\` (+ `ambience\<kind>\`),
+  each measured once into `library\music\music.json` - tempo, energy, tone, drops; `beds` = ElevenLabs loops; the
+  app's Motion Graphics > Music, New edit's song cards and *Ambience under your voice*), `beats.py`, `precheck.py`
+  (checks before the final render; exit 1 =
+  look; a video's loudness and true peak too; build.py adds `precheck.face_cover`: a caption / graphic over the
+  face, upright safe zones; `precheck.talk_checks`: a talking video's tail after its last word, whooshes per 30 s;
+  and, for a plan with `"captions_fit": "chin"`, `motionlab\facefit.py` places each shot's captions off the face),
+  `speech.py` (speech to text, optional install; `--verbatim` keeps the fillers; `stumbles <take>` =
+  `motionlab\stumbles.py`: fillers, repeats, retakes, "cut / again")
 - Prepare and posting: `script.py` (the script check; the app's requests - kinds new / improve / title / prompt,
   `show <req-NNN>`), `prompts.py` (the prompt library; MCP
-  `prompts`), `thumbnail.py`, `publish.py` (YouTube's rules checked first, nothing written on a FAIL)
+  `prompts`), `thumbnail.py`, `publish.py` (YouTube's rules checked first, nothing written on a FAIL), `brand.py`
+  (My Brand, 0.6.0: `import [url]` = read the user's own website - `motionlab\siteread.py`, the app's job
+  `brand_import`; `show` = the *For my brand* brief; `selfcheck`)
 - The lab: `knowledge.py` (`memory` = Claude's memory, also MCP `knowledge(category="memory")`; `memory --styles` /
   `knowledge(category="memory:styles")` = without the effects - for scripts and titles; `next-lesson-id [--kind
   making]`; `pending` also lists what stays on this PC), `usage.py` (What it took; the app shows time only -

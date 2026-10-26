@@ -19,7 +19,9 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    Windows-only font for something new. Logos (2026-10-16): a real app / platform logo comes from the logo library
    (`tools\logos.py find "<words>"`), never redrawn - a logo setting (`logo` / `*_logo` / `logos`: `youtube`,
    `youtube/mono`, `a|b`), `:youtube:` in a text, or overlay.json `"logos": [...]` for code-only uses; in the page
-   `MLLogo.el(id, {dark, tint, mono})` after `<script src="assets/logos/logos.js">`; renders bundle them.
+   `MLLogo.el(id, {dark, tint, mono})` after `<script src="assets/logos/logos.js">`; renders bundle them. The
+   user's own logo (My Brand) is the logo `brand` (2026-10-26; `brand/icon` = its icon): the version that reads on
+   the background is drawn by itself.
    Geometry of the lab's own looks: `graphics.text_layout` (pixel font) and `graphics.seg_layout` (seven segment)
    give SVG-ready points; worked examples: `tools\overlays\examples\` (4AM's title and clock, drawn from their
    settings in JS - the same pixels as the hard-coded 0.3.0 versions).

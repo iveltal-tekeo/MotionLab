@@ -27,7 +27,10 @@
    "y": 78,
    "y_upright": 78,
    "max_width": 80,
-   "pop_frames": 3
+   "pop_frames": 3,
+   "keyword_font": "Instrument Serif",
+   "keyword_italic": true,
+   "keyword_scale": 2.4
   }
  },
  "clean_box": {
@@ -57,7 +60,43 @@
    "y": 86,
    "y_upright": 70,
    "max_width": 74,
-   "pop_frames": 3
+   "pop_frames": 3,
+   "keyword_font": "Instrument Serif",
+   "keyword_italic": true,
+   "keyword_scale": 2.4
+  }
+ },
+ "keyword": {
+  "label": "Keyword",
+  "what": "One or two small context words with ONE big keyword under them in the accent colour, in a serif italic - each word as it is said. Made for talking shorts: 2-3 words a caption.",
+  "values": {
+   "style": "keyword",
+   "entrance": "none",
+   "entrance_frames": 4,
+   "font": "Inter",
+   "weight": 700,
+   "font_size": 44,
+   "uppercase": true,
+   "first_capital": false,
+   "color": "#ffffff",
+   "highlight_color": "#ffd400",
+   "outline": 3,
+   "outline_color": "#000000",
+   "box": false,
+   "box_color": "#000000",
+   "box_opacity": 0.6,
+   "box_radius": 13,
+   "box_pad_y": 4,
+   "box_pad_x": 18,
+   "line_height": 1.1,
+   "balance": false,
+   "y": 74,
+   "y_upright": 64,
+   "max_width": 84,
+   "pop_frames": 4,
+   "keyword_font": "Instrument Serif",
+   "keyword_italic": true,
+   "keyword_scale": 2.6
   }
  }
 }

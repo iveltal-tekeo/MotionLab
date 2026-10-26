@@ -1,0 +1,1003 @@
+{
+ "_comment": "MotionLab's sound list (0.6.0, motionlab\\sfx.py export_list): which sound of which pack this lab's library uses and as what kind - never the sounds (but the CC0 ones in cc0\\ and the ElevenLabs ones kept in made\\, each with its licence). Import a pack with Motion Graphics > Sounds > Add sounds and it is sorted the same way.",
+ "packs": {
+  "videoeditingsfx": {
+   "name": "VideoEditingSFX - Free Pack",
+   "page": "",
+   "licence": "none stated in the pack - your own call to use it",
+   "how": "download the free pack from its page, then Motion Graphics > Sounds > Add sounds and pick its folder"
+  },
+  "sonniss-gdc": {
+   "name": "Sonniss GDC Game Audio Bundle",
+   "page": "https://sonniss.com/gameaudiogdc",
+   "licence": "Sonniss GDC Game Audio Bundle licence: royalty-free, commercial use, no attribution; never redistributed as sound effects; no AI/ML training",
+   "how": "download the bundle (several GB, free) from Sonniss' page, then Motion Graphics > Sounds > Add sounds and pick its folder - only the listed sounds are taken"
+  },
+  "kenney-cc0": {
+   "name": "Kenney (CC0)",
+   "page": "https://kenney.nl/assets",
+   "licence": "CC0 1.0 (Kenney, kenney.nl) - public domain",
+   "how": "comes with MotionLab"
+  },
+  "elevenlabs": {
+   "name": "Made with ElevenLabs",
+   "page": "",
+   "licence": "each sound's own (the plan it was made on)",
+   "how": "comes with MotionLab"
+  }
+ },
+ "synth_too": [
+  "air",
+  "ching",
+  "chip",
+  "chip_hit",
+  "pop",
+  "thump",
+  "tick",
+  "whip",
+  "whoosh"
+ ],
+ "sounds": [
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_-_sliced.wav",
+   "path": "Buildups/Dramatic Buildup - Sliced.MP3",
+   "sha256": "ad1e785dd582c4ec0676e09475cef6762034670518837ee7fda13707e5f1fa2f"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_1.wav",
+   "path": "Buildups/Dramatic Buildup 1.MP3",
+   "sha256": "5abd9fd99f5dcbcee0cf0eb3f124c5286e334ce8eada46b9d7dd95ff854d8d9c"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_2.wav",
+   "path": "Buildups/Dramatic Buildup 2.MP3",
+   "sha256": "eeda14f2b1880ea44adb486764d8e258ba1f987e128b9c0d8c0094b06f0d422a"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_3.wav",
+   "path": "Buildups/Dramatic Buildup 3.MP3",
+   "sha256": "325ae9af33fd1a6c14b06ae9f17fa9f33ba1511a31af58fe618bc7e6017d5153"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_4.wav",
+   "path": "Buildups/Dramatic Buildup 4.MP3",
+   "sha256": "800755e980d9d0789cd22cde9d8b08cee3960c6b745009dbe20e11912248b4e0"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_reveal.wav",
+   "path": "Buildups/Dramatic Buildup Reveal.MP3",
+   "sha256": "b7b197ce96caf5c9da53cdb5b1409c49cb0abe9033c823ea2873a8d48a4a0152"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_whip_-_1.wav",
+   "path": "Buildups/Dramatic Buildup Whip - 1.MP3",
+   "sha256": "0f03c57a9ff4f01c93d7e9e2ecab11aacb691f48e9425990ff2b351299ec8b7f"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_whip_-_2.wav",
+   "path": "Buildups/Dramatic Buildup Whip - 2.MP3",
+   "sha256": "1bcd51cda1156f0b8473500d830306a3f51d52b58a3adb4bcb69d201bac12c35"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/dramatic_buildup_whip_-_3.wav",
+   "path": "Buildups/Dramatic Buildup Whip - 3.MP3",
+   "sha256": "e0d6c139855ecf2a0ea57c4b68e485db2c35935240bafaf59d4ef822dab23278"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/analog_shutter.wav",
+   "path": "Camera FX/Analog Shutter.wav",
+   "sha256": "595f4f1010f0b1ee09fbfc93634a45623bdd0306722586c34e14ce7bdc4fba3e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_1.wav",
+   "path": "Camera FX/Camera 1.MP3",
+   "sha256": "8a77b985922003f3edef4e20786ba5e5afac7ac6aa9a236ec684e927a76af91e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_2.wav",
+   "path": "Camera FX/Camera 2.MP3",
+   "sha256": "8a32900a69658956479975141f23f8f64ea25c622412c1a1ac3bfdfdb8d4506e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_3.wav",
+   "path": "Camera FX/Camera 3.MP3",
+   "sha256": "e2ece05c16c7cc52f70fb6779d5ce1bc878e0202e9757c3d4769e9a082e1b67c"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_4.wav",
+   "path": "Camera FX/Camera 4.MP3",
+   "sha256": "7a71cef8292652fbb4766a9861188377a3393bfeb5c7a3c123ae7e4f7a8b4451"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_5.wav",
+   "path": "Camera FX/Camera 5.MP3",
+   "sha256": "a89b8b499980ae61537582d4063150b4b5e325a1ac2b28d3b0c1b04ffdd06155"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_6.wav",
+   "path": "Camera FX/Camera 6.MP3",
+   "sha256": "954e2277c34efa1788a9899a8dc57fd4cc2b6d920a694d9de69f1e54317506ca"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/camera_focus_shutter.wav",
+   "path": "Camera FX/Camera Focus & Shutter.wav",
+   "sha256": "43283ed35a51f7efa359133ef4ab5bdd8d195ad1ffe5393ee6888c3f6ae0daa4"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/shutter_5dm4.wav",
+   "path": "Camera FX/Shutter 5Dm4.mp3",
+   "sha256": "3522b67fc3ad8e08002d4420b4e4f60cffdf841fe3b41f05d524866ede80c553"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/shutter_zenit.wav",
+   "path": "Camera FX/Shutter Zenit.mp3",
+   "sha256": "786f59a36acc8ecc2b59ad9790dce1a005b6e40ba8d3042f96814aa1b8ff7977"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/vintage_flash_long.wav",
+   "path": "Camera FX/Vintage Flash Long.wav",
+   "sha256": "20cf21996076bc2670ae86047060e01936f82adc4d2687fbca197c9976e2374e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "shutter",
+   "file": "shutter/vintage_flash.wav",
+   "path": "Camera FX/Vintage Flash.wav",
+   "sha256": "42ad0d460a090601e2785e1b02b4c969c04c17250c0ad2782b9393055b0cb9ca"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/cinematic_-_bang.wav",
+   "path": "Cinematic/Cinematic - Bang.mp3",
+   "sha256": "d22af363104610a379cb3aa3403b94006cadca24c2a5945e8917b023460bca4e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/cinematic_-_boom.wav",
+   "path": "Cinematic/Cinematic - Boom.mp3",
+   "sha256": "d7fdc54fbccff6596436763df282603ac565506b847785487e3ac9c2dfb6ab29"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/cinematic_-_glass_hit.wav",
+   "path": "Cinematic/Cinematic - Glass Hit.mp3",
+   "sha256": "b18b274911191359b927316f29efdbaeb6f5fa7dd42d374b5991c3cdc2694017"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/cinematic_-_heavy_hit.wav",
+   "path": "Cinematic/Cinematic - Heavy Hit.mp3",
+   "sha256": "d1dbbc5e2b2bcb9e9915c4038dfa5957898a403f0b4477ead4e5e11f79f39123"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_-_riser_wildfire.wav",
+   "path": "Cinematic/Cinematic - Riser Wildfire.mp3",
+   "sha256": "123bea708db4b1ee5c4261d567592395fb6ef1adb874fcb11a313794124c0f78"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_-_whoosh_reverse.wav",
+   "path": "Cinematic/Cinematic - Whoosh Reverse.mp3",
+   "sha256": "84418a9090f80dd6ef50fa4bb8e63698b4ce867d915288fab1df6ae892d0c299"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "thump",
+   "file": "thump/deep_hit_2.wav",
+   "path": "Impacts/Deep Hit 2.wav",
+   "sha256": "a005bba5b855d988b68683549255bd2cb53afcc821235ef3bfb54462ef122cdb"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "thump",
+   "file": "thump/deep_hit_3.wav",
+   "path": "Impacts/Deep Hit 3.wav",
+   "sha256": "71c87e89d5e181c2299dc270132fb89b75d65f78c0b09cc94b516d8b0813071b"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "thump",
+   "file": "thump/deep_hit.wav",
+   "path": "Impacts/Deep Hit.wav",
+   "sha256": "5c87fc648ab8c543e726bbbef83af997348361733fb20711035a9c2ba6685415"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/dramatic_impact.wav",
+   "path": "Impacts/Dramatic Impact.mp3",
+   "sha256": "0590d3a2dc3c360a71811db2eb6924b4535428cb535ae6db2954a9eee5608421"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_subdrop.wav",
+   "path": "Impacts/Impact & Subdrop.wav",
+   "sha256": "eb88a3ebf3b78969a2201ebcd0c9ded4ef4829df83b623479564875c48adb724"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit_-_launch.wav",
+   "path": "Impacts/Impact Hit - Launch.MP3",
+   "sha256": "4e5c6acbc7fea4a7c84ee86883b17abb7457f6faec78c8955e30cf9828844d7d"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit_1.wav",
+   "path": "Impacts/Impact Hit 1.MP3",
+   "sha256": "8440e2fdcd3169955a04c5894dc200b4d86eeed865458a471c3f265e82a77624"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit_2.wav",
+   "path": "Impacts/Impact Hit 2.MP3",
+   "sha256": "bd871e0affd6d5595764d9b7a61825fc41db026205efa814b51bd011b3cd8d3f"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit_3.wav",
+   "path": "Impacts/Impact Hit 3.MP3",
+   "sha256": "4fa9b37384b3a71f8107e128051ae91ca93ba35b4c97f55cb16938b937303c24"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit_4.wav",
+   "path": "Impacts/Impact Hit 4.MP3",
+   "sha256": "97edab2e39405301dffeb92fc97df30b2982a96e0245aff0df42bc30029e5421"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "impact",
+   "file": "impact/impact_hit.wav",
+   "path": "Impacts/Impact Hit.MP3",
+   "sha256": "e51445c5c90d79d5fc91d8d34b2c4a6341241b545108f1cb7b9f6e4caf3dc960"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_1.wav",
+   "path": "Reverse FX/Cinematic Reverse 1.wav",
+   "sha256": "272783c9762d4a5347d4df23d3451d0e4949c0b565ad5ca0004f354a37eee6db"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_10.wav",
+   "path": "Reverse FX/Cinematic Reverse 10.wav",
+   "sha256": "72804eaf3a8b1ecd19942fd7e8fdd1e552e577d982998a48a8e49348cd4c497e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_11.wav",
+   "path": "Reverse FX/Cinematic Reverse 11.wav",
+   "sha256": "57a2ab285340738ccc33b16dde60e875c09c71570d5a14516bb5f070b0649b4f"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_2.wav",
+   "path": "Reverse FX/Cinematic Reverse 2.wav",
+   "sha256": "2236a53bc4869a8d8be2b886fe865685cb86b89a0a5116e15b0ee772aa3d4f1d"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_3.wav",
+   "path": "Reverse FX/Cinematic Reverse 3.wav",
+   "sha256": "0102e2b58f60d9a3551bab157a26f3a7a4558bfe40d1e500e1768ad3da3ab2bf"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_4.wav",
+   "path": "Reverse FX/Cinematic Reverse 4.wav",
+   "sha256": "abc70568d83eb7589e18ba00036f99d0aa87daf639226cca7390edab72162271"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_5.wav",
+   "path": "Reverse FX/Cinematic Reverse 5.wav",
+   "sha256": "fd2fe6d96cbd83aa9c8b46af4acc81f623dae78589ecfdc83c7ad7fe008a4cc7"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_6.wav",
+   "path": "Reverse FX/Cinematic Reverse 6.wav",
+   "sha256": "15d546a39f263588d9334eb180aa55db891a19d99de2152e7a298235976b4ee5"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_7.wav",
+   "path": "Reverse FX/Cinematic Reverse 7.wav",
+   "sha256": "4991f3ea859271187642e60b39ce1a4197c90e36d15268fc02d90e128f28e716"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_8.wav",
+   "path": "Reverse FX/Cinematic Reverse 8.wav",
+   "sha256": "0d021e0a05884608ad2b72823631a0ee880f16dd8a7eb89d617ab714e229f901"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_reverse_9.wav",
+   "path": "Reverse FX/Cinematic Reverse 9.wav",
+   "sha256": "119ab33dda824c2cdbc4a6897bed1e23a4322a56bbdfad6b7074f6ea4755ac33"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_riser_fast_stuttery_cyberpunk_futuristic.wav",
+   "path": "Risers/Cinematic, Riser, Fast, Stuttery, Cyberpunk, Futuristic.mp3",
+   "sha256": "1c0876f53f0f1e0871cdd2b556ed883e04c3eea87b936b831e0b5d42f7ec72a8"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/cinematic_riser_fast_tremolo_big_hit.wav",
+   "path": "Risers/Cinematic, Riser, Fast, Tremolo, Big Hit.mp3",
+   "sha256": "448026ba30e15035dea916200bb2805eb66537c46d87c93dc55695b24d236c0e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/riser_1.wav",
+   "path": "Risers/Riser 1.mp3",
+   "sha256": "829aaf246e5bb2cfbf56c23ad2771943ef50e9ececffb579b59d07662afb12e1"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/riser_2.wav",
+   "path": "Risers/Riser 2.mp3",
+   "sha256": "73cc66d197626ec094382ca8a14a2c18679b8290202e143a04ea5d5c11e35e34"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "riser",
+   "file": "riser/riser_3.wav",
+   "path": "Risers/Riser 3.mp3",
+   "sha256": "9c817e31bebd1948768449cc2ab5717fb2e379d9a57bc1fd1299cd97fea9baf9"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/button_pressed.wav",
+   "path": "UI/button pressed.mp3",
+   "sha256": "e0165c5cad560e01150c2c8d3b87a859dd2686c6360361c493df693f9e41fc13"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "chime",
+   "file": "chime/chime.wav",
+   "path": "UI/chime.mp3",
+   "sha256": "d29733437db004a3d6e3f7a7a1ebcf6c75466da16959069b40477ca730814885"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/click_button.wav",
+   "path": "UI/click button.mp3",
+   "sha256": "30be29d4f736cb82e7c6ac68f4b08dad55a8670d33e43b5601b6c220d95457dc"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "chime",
+   "file": "chime/game_start.wav",
+   "path": "UI/game start.mp3",
+   "sha256": "ec4f0a70f696060679f7ae228473020b3f59771d0bebfb5fa5d7eae06bc25c23"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/game_ui.wav",
+   "path": "UI/game ui.mp3",
+   "sha256": "0c368b17a0a6eafa0b8d40962fbfa09893c521827731f7f63f3800748618c173"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/hover.wav",
+   "path": "UI/hover.mp3",
+   "sha256": "5d2bdffdef520d19dc39796aa8ceed332ddfbec318a8bc9e28dccfdefb9c69e0"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "chime",
+   "file": "chime/notification_1.wav",
+   "path": "UI/notification 1.mp3",
+   "sha256": "1f00f6568532a3e94a73a806a5383ef61e63cc27cf692580cb28bdfa203c6d8d"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "pop",
+   "file": "pop/pop_sound.wav",
+   "path": "UI/pop sound.mp3",
+   "sha256": "a0b8dd00d4f3d0f06c223aa4762f756427fca3bc6a78e801f153de2ba788cda3",
+   "off": true
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "chime",
+   "file": "chime/success.wav",
+   "path": "UI/success.mp3",
+   "sha256": "c8d16b12c673f984918a19a0667b6fb5357d1652f61a45b58ad414977a85c4d0"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swipe.wav",
+   "path": "UI/swipe.mp3",
+   "sha256": "c56ae6777ffa4a3febed9b092cca343f568fc4b71f37d58cabcd90efe2b80f97"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_back_sound.wav",
+   "path": "UI/ui back sound.mp3",
+   "sha256": "1cf833697152af982fa630f774018978f6c487607ba1adcd452645d2c56fa52e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_3.wav",
+   "path": "UI/ui sound 3.mp3",
+   "sha256": "1824d92993cc2133d5ea2081b2b3a2b4549264f7b9331a59e44359139c1c2842"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_4.wav",
+   "path": "UI/ui sound 4.mp3",
+   "sha256": "7c9e791ae9b82f0d0a591d4444408374639d9ea75677ca143fa48bd06829857e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_6.wav",
+   "path": "UI/ui sound 6.mp3",
+   "sha256": "3ab06b76690800dee2c80b15f58583458d2973606dea0bdcbdae3806e99cb326"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_7.wav",
+   "path": "UI/ui sound 7.mp3",
+   "sha256": "42400220c7d9dd5caedf61723410e7a7d2183f7c770c47347798869b44f654ff"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_8.wav",
+   "path": "UI/ui sound 8.mp3",
+   "sha256": "c66c5ac5eb4a849b3e2b7e5866c5a476575469e16aa1f1bc579bbe16f088d406"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound_off.wav",
+   "path": "UI/ui sound off.mp3",
+   "sha256": "005623da7669c802441c5450d612f3310b93dbb853b1fa0bba76e5cb1a356a13"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "click",
+   "file": "click/ui_sound.wav",
+   "path": "UI/ui sound.mp3",
+   "sha256": "4032c1aeaf41f12f2d93e4de4e6592cb2fd8191898b77ec792661c21496d05bb"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/deep_whoosh_1.wav",
+   "path": "Whoosh & Transitions/Deep Whoosh 1.wav",
+   "sha256": "8fa531f259e5ba11132f7861ff9038525ac41aa00656d697f9ea789ec5149609"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/deep_whoosh_2.wav",
+   "path": "Whoosh & Transitions/Deep Whoosh 2.wav",
+   "sha256": "93553de842be400d0a9942555bdb79c8a0c812d4684fcbd5504ed583090b3c13"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/deep_whoosh_3.wav",
+   "path": "Whoosh & Transitions/Deep Whoosh 3.wav",
+   "sha256": "6a5924f3b9aea7020284a757f2a2a00ec46a05dd72375c0489bde684cc6a1707"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/deep_whoosh_4.wav",
+   "path": "Whoosh & Transitions/Deep Whoosh 4.wav",
+   "sha256": "fea7ad5854a0b9ae71040669e0084f19c008f959f885fd3dabe1c83fe869ec06"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/fast_whoosh.wav",
+   "path": "Whoosh & Transitions/Fast Whoosh.wav",
+   "sha256": "c270adbaca3985d0c0fd5349f63f39440e4f8681219868ba7066fcfe8d6e61b0"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/short_whoosh_metal.wav",
+   "path": "Whoosh & Transitions/Short Whoosh Metal.mp3",
+   "sha256": "f47d3e280a5367c5205eec628d1d9d7e071b0c18d155e84d63e7b1591427cbe1"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/simple_whoosh_1.wav",
+   "path": "Whoosh & Transitions/Simple Whoosh 1.wav",
+   "sha256": "dc26a7bac807cd4d06d446bf58cd53200bcec1d015a0352b87f48c2c9003642e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/simple_whoosh_2.wav",
+   "path": "Whoosh & Transitions/Simple Whoosh 2.wav",
+   "sha256": "90f529058b0128c24cdf95cb6053eb243f72774cfe4940e2a43d7f17a6e20710"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swish_-_slicing.wav",
+   "path": "Whoosh & Transitions/Swish - Slicing.MP3",
+   "sha256": "f31c4a8572557e88c74204519d08ddd0dd2fa3d353ce606672735c734d7c6718"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swish_1.wav",
+   "path": "Whoosh & Transitions/Swish 1.mp3",
+   "sha256": "1465efda6864d29726804f5e8a97a59bfdae75116d743ba58fa400a80decc243"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swish_2.wav",
+   "path": "Whoosh & Transitions/Swish 2.mp3",
+   "sha256": "105912f57d40c48ce4c649d1fa796c820fd65b2631394c21b41235f371dfcc7a"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swish_3.wav",
+   "path": "Whoosh & Transitions/Swish 3.mp3",
+   "sha256": "a95731d28c2fb7baf121e203094454700cc6cca56c5ebfda60812b2d246f4506"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh_-_crash.wav",
+   "path": "Whoosh & Transitions/Swoosh - Crash.MP3",
+   "sha256": "a5f8a902fe8b17e20f8d7ff21fd8cc4b3bc5e5a6dab1e50f26ed10294e216841"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swoosh_-_fast_-_with_thud.wav",
+   "path": "Whoosh & Transitions/Swoosh - Fast - With Thud.MP3",
+   "sha256": "e6a843562f3faa18a3e0f124ae4525c20996443dabd33a0a9dc03d931452bb25"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swoosh_-_fast_1.wav",
+   "path": "Whoosh & Transitions/Swoosh - Fast 1.MP3",
+   "sha256": "ba7e15d2fbcdabde3507b4e8a7e1c67e5cb3bd3fa276b5d3f36821519f6f9d46"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swoosh_-_quick_-_low.wav",
+   "path": "Whoosh & Transitions/Swoosh - Quick - Low.MP3",
+   "sha256": "164c5d562007cc4d91905a13fce942eb6790f05900507958659b070dabcef0cf"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swoosh_-_sharp_-_hit.wav",
+   "path": "Whoosh & Transitions/Swoosh - Sharp - Hit.MP3",
+   "sha256": "d625cd672278d468f3a0dbe854fdba275969bdc33873c9bca895c2e207f7e4af"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/swoosh_-_sharp_-_hit.mp3.wav",
+   "path": "Whoosh & Transitions/Swoosh - Sharp - Hit.MP3.mp3",
+   "sha256": "db05599310e33b551f8f432d9fbba932b27b15c76f1e3f2f4cc7bb4dec062709"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh_1.wav",
+   "path": "Whoosh & Transitions/swoosh 1.mp3",
+   "sha256": "794859862cbeb29ec1cdb0323b519f7e5ef8eb6c16e920206689547e6bbc933e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh_3.wav",
+   "path": "Whoosh & Transitions/swoosh 3.mp3",
+   "sha256": "85dfe870458b1fe4f0b7041e4c1ba5310424e4f56ab2bb1b5a589b32b570480e"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh_4.wav",
+   "path": "Whoosh & Transitions/swoosh 4.mp3",
+   "sha256": "8b3c1a9dfec9b288d7b672b3fe92fd1f8756c14451291d246c1eb29955e7a442"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh_5.wav",
+   "path": "Whoosh & Transitions/swoosh 5.mp3",
+   "sha256": "845ea7a1b00afb2d214cce13e5bb10c70161f0739322ec9f5c776ee22b5ad069"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh.wav",
+   "path": "Whoosh & Transitions/Swoosh.MP3",
+   "sha256": "4105ab40d7273a1c4ff24ff663ad6fd4e5967bdc7da31c28f12732ef5b2cde2d"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/swoosh2.wav",
+   "path": "Whoosh & Transitions/swoosh2.mp3",
+   "sha256": "ef1a5a702a45a7e71cd0e5d70173150d210ea651ad381f06fd1a2d2132e0605a"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_-_achievement.wav",
+   "path": "Whoosh & Transitions/Whoosh - Achievement.MP3",
+   "sha256": "d3100cdb6965d4836a42dfda7bdc2c0837c7a10f50f96f4046d87fcb657eb3bb"
+  },
+  {
+   "pack": "videoeditingsfx",
+   "kind": "whip",
+   "file": "whip/whoosh_-_coarse_-_harsh.wav",
+   "path": "Whoosh & Transitions/Whoosh - Coarse - Harsh.MP3",
+   "sha256": "52e530a18844d3aaa7fe46f6ca95cac9ab4745f126a0d31f7aefc78670328e77"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "click",
+   "file": "click/click__sonniss_2.wav",
+   "path": "SoundFxwizard - Textrobot/Mouse_press and release.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "key",
+   "file": "key/key__sonniss_0.wav",
+   "path": "SoundBits - Electric Typewriters/R300_Keyboard_Space-Bar_07.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "pop",
+   "file": "pop/pop__sonniss_0.wav",
+   "path": "Sounds Visual - 50 Flat Design Sound Effects/10 FX3352 Mouth Pop 2.wav",
+   "off": true
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "chime",
+   "file": "chime/chime__sonniss_1.wav",
+   "path": "Chris Logsdon - Ambient Puzzle SFX Pack/Success 2a.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "chip_hit",
+   "file": "chip_hit/chip_hit__sonniss_1.wav",
+   "path": "Glitchedtones - Retro Video Game FX/Retro Video Game FX (10).wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "tick",
+   "file": "tick/tick__sonniss_2.wav",
+   "path": "Federico Soler Fern�ndez - Effective Trailer Clocks/Clock 070.wav",
+   "off": true
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "air",
+   "file": "air/air__sonniss_3.wav",
+   "path": "Airborne Sound - Organic Whooshes/Whoosh,Organic,Styrofoam,Plank,Airy,Smooth,Texture,1.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "lighter",
+   "file": "lighter/lighter__sonniss_0.wav",
+   "path": "Lighter.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "cork",
+   "file": "cork/cork__sonniss_0.wav",
+   "path": "Airborne Sound - Variety 2 Sound Effects/Cork,Pop,Strong,Classic.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "flutter",
+   "file": "flutter/flutter__sonniss_0.wav",
+   "path": "L.A. Sounds – Transitions 001/Quick Modulating Flutter.wav"
+  },
+  {
+   "pack": "kenney-cc0",
+   "kind": "zap",
+   "file": "zap/zap__kenney_7.wav",
+   "shipped": "cc0/zap/zap__kenney_7.wav",
+   "what": "Kenney interface-sounds: glitch_002 (picked by the user, round 3)"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "shimmer",
+   "file": "shimmer/shimmer__sonniss_3.wav",
+   "path": "The Chris Alan - Gliss Bliss/Xylophone Gliss Up Down Flourish Slow 01.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "shimmer",
+   "file": "shimmer/shimmer__sonniss_5.wav",
+   "path": "Sounds Visual - 50 Flat Design Sound Effects/33 FX3184 Ascending Harp Glissando.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "buzz",
+   "file": "buzz/buzz__sonniss_0.wav",
+   "path": "2496SoundEffects - Tech Toys Electronics Pack 1/Cell Phone Vibrate Alert Normal.wav"
+  },
+  {
+   "pack": "sonniss-gdc",
+   "kind": "air",
+   "file": "air/air__sonniss_0.wav",
+   "path": "Airborne Sound - Organic Whooshes/Whoosh,Organic,Fabric,Glove,Airy,Breathy,Punchy.wav"
+  },
+  {
+   "pack": "kenney-cc0",
+   "kind": "tick",
+   "file": "tick/tick__kenney_5.wav",
+   "shipped": "cc0/tick/tick__kenney_5.wav",
+   "what": "Kenney interface-sounds: tick_002 (picked by the user, round 3)"
+  },
+  {
+   "pack": "kenney-cc0",
+   "kind": "tick",
+   "file": "tick/tick__kenney_7.wav",
+   "shipped": "cc0/tick/tick__kenney_7.wav",
+   "what": "Kenney ui-audio: rollover2 (picked by the user, round 3)"
+  },
+  {
+   "pack": "kenney-cc0",
+   "kind": "tick",
+   "file": "tick/tick__kenney_4.wav",
+   "shipped": "cc0/tick/tick__kenney_4.wav",
+   "what": "Kenney interface-sounds: tick_001 (picked by the user, round 3)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "pop",
+   "file": "pop/pop_el_175430_01.wav",
+   "shipped": "made/pop/pop_el_175430_01.wav",
+   "what": "ElevenLabs sound effects: premium UI pop for an icon appearing in a motion graphics video: soft round bubble transient with a tiny glassy top, polished and modern, one-shot, dry, no background noise, not cartoonish",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "pop",
+   "file": "pop/pop_el_175430_02.wav",
+   "shipped": "made/pop/pop_el_175430_02.wav",
+   "what": "ElevenLabs sound effects: clean tactile pop like a muted synth pluck, short and satisfying, high-end app interface sound, one-shot, dry, no reverb",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "pop",
+   "file": "pop/pop_el_175430_03.wav",
+   "shipped": "made/pop/pop_el_175430_03.wav",
+   "what": "ElevenLabs sound effects: gentle glassy pop with a very short airy sparkle tail, sleek tech product video, one-shot, no music",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "pop",
+   "file": "pop/pop_el_175430_04.wav",
+   "shipped": "made/pop/pop_el_175430_04.wav",
+   "what": "ElevenLabs sound effects: soft subtle pop for a small badge or number appearing, rounded low-mid body, crisp but gentle, one-shot, dry",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "pop",
+   "file": "pop/pop_el_175430_05.wav",
+   "shipped": "made/pop/pop_el_175430_05.wav",
+   "what": "ElevenLabs sound effects: premium UI pop for an icon appearing in a motion graphics video: soft round bubble transient with a tiny glassy top, polished and modern, one-shot, dry, no background noise, not cartoonish",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_01.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_01.wav",
+   "what": "ElevenLabs sound effects: smooth airy whoosh for text sliding into frame, filtered noise sweep left to right, clean and modern, short, motion graphics, one-shot, no low rumble, no music",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_02.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_02.wav",
+   "what": "ElevenLabs sound effects: premium transition whoosh: soft fast swish with a subtle low-end swell at the end, cinematic but restrained, polished, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_03.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_03.wav",
+   "what": "ElevenLabs sound effects: sleek digital whoosh with a faint tonal shimmer, high-end tech product video, quick, one-shot, no background noise",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_04.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_04.wav",
+   "what": "ElevenLabs sound effects: deep smooth swoosh for a big card flying across the screen, airy and wide, clean, one-shot, no reverb tail",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_05.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_05.wav",
+   "what": "ElevenLabs sound effects: smooth airy whoosh for text sliding into frame, filtered noise sweep left to right, clean and modern, short, motion graphics, one-shot, no low rumble, no music",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whoosh",
+   "file": "whoosh/whoosh_el_175430_06.wav",
+   "shipped": "made/whoosh/whoosh_el_175430_06.wav",
+   "what": "ElevenLabs sound effects: premium transition whoosh: soft fast swish with a subtle low-end swell at the end, cinematic but restrained, polished, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whip",
+   "file": "whip/whip_el_175430_01.wav",
+   "shipped": "made/whip/whip_el_175430_01.wav",
+   "what": "ElevenLabs sound effects: very short sharp swish of an element flying past, crisp and airy, clean motion graphics, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whip",
+   "file": "whip/whip_el_175430_02.wav",
+   "shipped": "made/whip/whip_el_175430_02.wav",
+   "what": "ElevenLabs sound effects: quick whip pan swish, thin and fast, polished, one-shot, no background noise",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whip",
+   "file": "whip/whip_el_175430_03.wav",
+   "shipped": "made/whip/whip_el_175430_03.wav",
+   "what": "ElevenLabs sound effects: very short sharp swish of an element flying past, crisp and airy, clean motion graphics, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "whip",
+   "file": "whip/whip_el_175430_04.wav",
+   "shipped": "made/whip/whip_el_175430_04.wav",
+   "what": "ElevenLabs sound effects: quick whip pan swish, thin and fast, polished, one-shot, no background noise",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "click",
+   "file": "click/click_el_175430_01.wav",
+   "shipped": "made/click/click_el_175430_01.wav",
+   "what": "ElevenLabs sound effects: crisp modern UI click of a premium app button, tight and minimal, dry, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "click",
+   "file": "click/click_el_175430_02.wav",
+   "shipped": "made/click/click_el_175430_02.wav",
+   "what": "ElevenLabs sound effects: soft tactile toggle click with a tiny tonal tick, sleek interface, one-shot, dry",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "click",
+   "file": "click/click_el_175430_03.wav",
+   "shipped": "made/click/click_el_175430_03.wav",
+   "what": "ElevenLabs sound effects: crisp modern UI click of a premium app button, tight and minimal, dry, one-shot",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "key",
+   "file": "key/key_el_175430_01.wav",
+   "shipped": "made/key/key_el_175430_01.wav",
+   "what": "ElevenLabs sound effects: single soft keystroke of a premium laptop keyboard, close and clean, one-shot, dry",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  },
+  {
+   "pack": "elevenlabs",
+   "kind": "key",
+   "file": "key/key_el_175430_02.wav",
+   "shipped": "made/key/key_el_175430_02.wav",
+   "what": "ElevenLabs sound effects: single soft keystroke of a premium laptop keyboard, close and clean, one-shot, dry",
+   "licence": "ElevenLabs free plan: non-commercial use only, and a video you post credits elevenlabs.io (a paid plan: commercial use, no credit)"
+  }
+ ]
+}

@@ -58,13 +58,55 @@ def last_format(skip: str) -> tuple[str, str] | None:
     return max(rows)[1:] if rows else None
 
 
-def template_lines(ids: list[str], want: str, n: int = 10) -> tuple[list[str], int]:
+def recent_line(recent: dict[str, int], lib: dict) -> list[str]:
+    shown = sorted(((k, c) for k, c in recent.items() if k in lib), key=lambda x: (-x[1], x[0]))
+    return [f"Used in the newest videos (up to {TM.RECENT_PROJECTS}; how many used it) - pushed down in the options "
+            "here, another unless one is clearly the best fit: " + ", ".join(f"{k} ({c})" for k, c in shown)] \
+        if shown else []
+
+
+def edit_template_lines(skip: str, words: str, n: int = 8) -> list[str]:
+    """The Editor's templates (2026-10-26, variety): what the newest videos used, and n options that fit the request's
+    and the script's words (templates.py pick: those pushed down, this video's own order)."""
     lib = {t["id"]: t for t in TM.library()}
+    recent = TM.recent(skip=skip)
+    L = ["", "## Motion Graphics templates (for the `graphic` lines; templates.py pick --fresh)"] + recent_line(recent, lib)
+    L.append("Options that fit the words - each template once a video unless a repeat is the point; more for one "
+             "graphic: `templates.py pick \"<what it shows>\" --n 8 --fresh`; settings: `overlay.py settings <id>`:")
+    for t in TM.pick(words, n, used=recent, seed=skip):
+        L.append(f"- **{t['id']}** ({t.get('kind', '')}" + (f"; NOT at {', '.join(t['sizes_bad'])}" if t.get("sizes_bad")
+                 else "") + f") - {(t.get('what') or '')[:110]}")
+    return L
+
+
+def template_lines(ids: list[str], want: str, lines: list[str], skip: str, size: str | None,
+                   n: int = 10) -> tuple[list[str], int]:
+    """The templates for the brief: the user's picks, then (2026-10-26, variety) 2-3 options for each line of the
+    words - each line others, the scene templates a video without footage can use - or, with no lines, the n that fit
+    the request; the ones the last videos used pushed down (templates.recent) and named."""
+    lib = {t["id"]: t for t in TM.library()}
+    recent = TM.recent(skip=skip)
     picked = [lib[i] for i in ids if i in lib]
-    for t in TM.pick(want, n + len(picked)):
-        if t["id"] not in {p["id"] for p in picked} and len(picked) < n + len(ids):
-            picked.append(lib.get(t["id"], t))
     L = []
+    if lines:
+        k = max(2, min(3, 16 // len(lines)))
+        for ln in lines[:12]:
+            have = {q["id"] for q in picked}
+            opts = [t["id"] for t in TM.pick(ln, 60, also=want, used=recent, seed=skip)
+                    if t["id"] not in have and t.get("kind") not in ("transitions", "background", "lower_thirds")
+                    and not t.get("needs_media") and not t.get("media_slots")
+                    and not (size and size in (t.get("sizes_bad") or []))][:k]
+            picked += [lib[i] for i in opts]
+            L.append(f"- \"{ln}\" -> " + ", ".join(f"**{i}**" for i in opts))
+        L.append("Each line has options of its own - choose by what the line shows, each template once unless the "
+                 "video needs a repeat; a scene change: shape-wipe / pixel-wipe and the other transitions.")
+    else:
+        for t in TM.pick(want, n + len(picked), used=recent, seed=skip):
+            if t["id"] not in {p["id"] for p in picked} and len(picked) < n + len(ids):
+                picked.append(lib.get(t["id"], t))
+    L += recent_line(recent, lib)
+    if L:
+        L.append("")
     for t in picked:
         c = OS.conf(LAB / t["folder"])
         fps = float(c["fps"])
@@ -129,6 +171,9 @@ def generate_brief(p: Path, req: dict) -> list[str]:
         L.append(f"- templates the user picked (use every one): {', '.join(req['templates'])}")
     if req.get("kind") == "ai":
         L.append(f"- tool: {req.get('tool') or 'not named - ask'}")
+    if req.get("brand"):                                     # 0.6.0: For my brand - the brand shapes the whole video
+        from motionlab import brand as BR
+        L += ["", "## For my brand", *BR.brief_lines(req["brand"], "video")]
     if song and req.get("kind") == "graphics":
         secs = req.get("length_s") or 60
         L += ["", f"## The beats ({'the song asked' if req.get('music') else 'the guessed song'}, frame 0 = {start:g} s "
@@ -136,7 +181,9 @@ def generate_brief(p: Path, req: dict) -> list[str]:
                                                                 f"{start}", "--length", f"{secs}"), "```"]
     left = []
     if req.get("kind") == "graphics":
-        tl, rest = template_lines(req.get("templates") or [], f"{want} {words}")
+        from motionlab.style import SIZES
+        tl, rest = template_lines(req.get("templates") or [], want, [w.strip() for w in words.splitlines() if w.strip()],
+                                  p.name, "x".join(map(str, SIZES[fmt])) if fmt in SIZES else None)
         L += ["", "## Templates that fit the words (the user's picks first; templates.py pick)",
               "Land a move on a beat: `overlay.py new <folder> --from <id> --land \"<track>@<plan frame>\" [--start "
               "<cut>]`. Their settings: `overlay.py settings <id>`."] + tl
@@ -229,16 +276,24 @@ def edit_brief(p: Path, req: dict) -> list[str]:
         + photo_lines(p, req)
     pid = str(req.get("prompt") or "")
     rec = next(iter((KN.LOCAL / "prompts").glob(f"*/{pid}.json")), None) if pid else None
+    said = ""
     if rec:
         r = json.loads(rec.read_text(encoding="utf-8"))
+        said = str(r.get("text") or "")
         L += ["", f"## The {r.get('kind', 'text')} {pid}: {r.get('title', '')} (the prompt library, word for word)",
-              "```", str(r.get("text") or "").strip(), "```"]
+              "```", said.strip(), "```"]
     like = req.get("like") or []
     if like:
         L += ["", "## The references' style (tools\\style.py)", "```", tool("style.py", *like), "```"]
+    if not req.get("exact"):                                 # a 1:1 copy takes the reference's graphics
+        st = req.get("style") or {}
+        L += edit_template_lines(p.name, " ".join([str(req.get("want") or ""), str(req.get("about") or ""), *(
+            x if isinstance(x, str) else json.dumps(x, ensure_ascii=False) for x in req.get("on_screen") or []),
+            str(st.get("type") or ""), " ".join(st.get("moods") or []), said]))
     L += ["", KN.memory_rules(), "", KN.lessons_for("talking" if talking else "all")]
     left = ["Claude's memory beyond the ratings: `knowledge.py memory` (a 1:1 copy of a reference reads it whole)",
-            "the request as JSON: build\\edit_request.json"]
+            "the request as JSON: build\\edit_request.json",
+            "every Motion Graphics template, one line each: `templates.py library --brief`"]
     return L + ["", "## Left out (nothing silently)"] + [f"- {x}" for x in left]
 
 

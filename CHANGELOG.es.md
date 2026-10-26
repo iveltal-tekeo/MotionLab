@@ -7,6 +7,184 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0 - 2026-10-26 - Agencia de contenido: Mi marca, el Editor y tu calendario de contenido
+
+- **Agencia de contenido, la versión**: MotionLab ahora conoce tu marca y planifica tus publicaciones. Mi marca (tu
+  objetivo, tu público, tus colores, fuentes, logo, tono, productos, subtítulos y cierre, leídos de tu web y luego
+  ajustados por ti) entra en cada vídeo, guion y título hecho *Para mi marca*; la Agencia de contenido planifica tus
+  publicaciones en un calendario y te enseña cómo les fue; el Editor te deja cambiar cualquier vídeo tú mismo en una
+  línea de tiempo; y el sonido ha crecido: efectos de sonido reales y creados con ElevenLabs que eliges de oído, tu
+  música y tus ambientes, y cada render al mismo volumen. Todo lo de abajo llegó en esta versión.
+- **Mi marca**: una página nueva arriba en la barra lateral, en tres pestañas para no tener que desplazarte: *Resumen*
+  (tu web, objetivo, público y perfiles), *Estilo* (identidad de marca, tono, subtítulos y tu estilo de edición como
+  tarjetas de vídeo) y *Catálogo* (tus productos). Guarda tu objetivo en redes, para quién son tus vídeos, tu logo,
+  los colores y el tono de tu marca, tu web y tu catálogo, cada producto con su precio y un interruptor para decidir
+  si Claude puede usarlo en los vídeos. Todo se guarda mientras escribes y se queda en tu PC. Los colores se
+  pueden escribir como código hexadecimal (#2eaa5c), el tono tiene su propia tarjeta con palabras rápidas para marcar
+  y, cuando añades tu logo, aparece grande y tenue en la franja de color de la página. El nombre de tu marca y lo que
+  hace, sus fuentes (títulos y texto) y tus perfiles (YouTube, TikTok, Instagram..., cada uno con su llamada a la
+  acción) también tienen su sitio. *Empezar de cero* lo borra todo para volver a probar (se guarda una copia:
+  *Recuperarlo* justo después). El catálogo enseña tus productos como tarjetas con su foto (haz clic para poner la
+  tuya), su precio y un interruptor *En vídeos*, con *Añadir un producto* arriba.
+- **Motion de producto**: el paso Texto de Nueva edición tiene *Mostrar un producto*: elige hasta 2 productos de Mi
+  marca y cuándo salen (de pasada, al final o ambos). Claude los crea con una plantilla nueva de Motion Graphics,
+  *Tarjeta de producto*: la foto del producto en una tarjeta, su nombre, el precio apareciendo, un botón con tu web y
+  tu logo, con los colores y las fuentes de tu marca, en vertical u horizontal, sobre tu vídeo o como tarjeta final.
+- **Agencia de contenido: el calendario de contenido**: una fila nueva bajo Mi marca. Planifica tus publicaciones en
+  un calendario mensual: cada una con su día y hora, dónde sale (TikTok, Instagram, YouTube...), su fase de idea a
+  publicada (un color cada una), el vídeo de MotionLab, el sonido en tendencia para añadir en la app al publicar,
+  notas y los enlaces cuando ya está publicada. Arrastra publicaciones entre días o guárdalas como ideas; marca los
+  días en que publicas y los vacíos salen como huecos, con "esta semana 2 de 3". *Añadir al Calendario de Windows* te
+  avisa una hora antes de cada publicación. **Tus vídeos**: *Revisar mis perfiles* lee tu YouTube y tu TikTok (los
+  perfiles de Mi marca: números públicos, sin iniciar sesión, solo cuando lo pulsas) y enseña tus vídeos publicados con
+  cuándo salieron, sus visualizaciones, me gusta y comentarios, cuáles fueron mejor de lo habitual y cuánto creció cada
+  uno desde la última revisión; el calendario enseña lo que salió cada día. **Importar tus estadísticas**: el archivo
+  que descargas de YouTube Studio, TikTok Studio o Meta Business Suite (en inglés o en español) añade a tus vídeos el
+  tiempo de visualización, el % visto y los clics, y trae Instagram, que no se puede leer de otra forma. Una
+  publicación enseña **cómo le fue** (visualizaciones ahora y a las 48 horas, 7 días y 28 días de salir, según tus
+  revisiones), la ganadora de **Probar y comparar**, una lista de **antes de publicar** por plataforma (capítulos, el
+  sonido añadido en la app, hashtags, la etiqueta de colaboración pagada...) y qué formato quiere cada plataforma
+  frente al de tu vídeo. **Cuándo publicar**: escribe las mejores horas de tu público desde las estadísticas de cada
+  plataforma y salen como accesos rápidos en cada publicación (sin ellas, horas genéricas marcadas como tal).
+- **Una barra lateral más limpia**: Motion Graphics va encima de Memoria de Claude, y Tareas y Ajustes (ahora con
+  un engranaje) se abren desde *Más*, abajo; el número de tareas en marcha sale en *Más*.
+- **Más de tu marca**: tu forma de hablar con tus propias palabras (cuatro deslizadores: de formal a cercano, de serio
+  a divertido, de respetuoso a descarado, de tranquilo a con energía; las palabras que usas y las que nunca usas;
+  frases que suenan a ti), tus pilares de contenido (cada publicación del calendario lleva uno y el calendario enseña el
+  reparto del mes), el código promocional de un producto y un interruptor *Colaboración pagada* (Claude lo marca como
+  publicidad), y lo que dice tu web: la importación guarda su texto legible para que Claude compruebe los datos.
+- **Tu marca de un vistazo**: el Resumen de Mi marca empieza con una tarjeta de lo que *Para mi marca* le da a Claude
+  (logo, nombre en tu fuente de títulos, colores, fuentes, tono, perfiles, productos) y tus últimos vídeos hechos con
+  *Para mi marca*. En Estilo, *Nombres y palabras* mantiene los nombres escritos exactamente (RIFT en
+  mayúsculas...) en subtítulos, guiones y títulos, y la transcripción los reconoce bien.
+- **Tus subtítulos**: Mi marca tiene un estilo de subtítulos: el look, la fuente, mayúsculas o no, los colores del
+  texto y de la palabra dicha, cómo se mueven las palabras, dónde van y una caja detrás, con vista previa en directo.
+  Los subtítulos de Claude lo usan, y el botón Subtítulos de la pestaña Gráficos de un vídeo te lo ofrece.
+- **Tu estilo de edición**: elige hasta 3 vídeos que analizaste como la forma de montar los vídeos de tu marca. Nueva
+  edición te los ofrece primero como *El estilo de mi marca* y, con *Para mi marca* marcado y sin referencias
+  elegidas, Claude y el borrador rápido siguen tu estilo.
+- **Tu moodboard**: Mi marca > Estilo tiene un moodboard: suelta imágenes cuyo estilo te encante (guardadas de
+  Pinterest o Instagram, capturas, fotos). MotionLab las lee (luz, color, contraste, cuánto aire tienen) y te enseña
+  sus colores principales, a un clic de los colores de tu marca. Los vídeos hechos *Para mi marca* siguen la sensación
+  del moodboard en sus gráficos y miniaturas; Claude mira las propias imágenes. Se quedan en tu PC.
+- **Tu logo en todas sus versiones**: Mi marca > Estilo guarda tu logo para fondos oscuros, para fondos claros y el
+  icono solo, y dónde va en tus vídeos (el cierre, también pequeño en una esquina, o en ningún sitio); Claude pone la
+  versión que se lee en cada fondo. Bajo tus colores, *¿Se lee bien?* muestra tus colores de texto y de acento sobre
+  tu fondo con su contraste, y Claude nunca pone palabras en un color que no se lee.
+- **Tu marca en Nueva edición y en los gráficos**: la paleta de colores de Nueva edición ofrece *Mi marca* (tus
+  colores, el de acento primero), cada lista de fuentes enseña primero las de tu marca y, con *Para mi marca*
+  marcado, el borrador rápido del Generador pinta sus gráficos con tus colores y tus fuentes.
+- **Tu cierre**: Mi marca > Estilo te deja elegir cómo terminan tus vídeos: una tarjeta con tu logo, un título con tu
+  web o una tarjeta de canal, más tu frase de despedida, con una vista previa en vivo hecha con tu marca. Claude crea
+  ese mismo cierre como última escena de un vídeo hecho *Para mi marca* (nunca antes del gancho), y el borrador
+  rápido del Generador también. También puede llevar tu propio logo sonoro: un sonido corto que ElevenLabs crea a
+  partir de tus palabras (o tu propio archivo), y que suena en el cierre en lugar de los sonidos de la plantilla.
+- **Lo que te funcionó**: el tono de Mi marca enseña los ganchos, finales y títulos de los guiones, títulos y vídeos
+  que puntuaste como buenos (cada uno abre su guion), y Claude sigue su forma (nunca las mismas palabras) cuando
+  escribe para tu marca.
+- **Tamaño de los subtítulos y palabras por línea**: el estilo de subtítulos de Mi marca también fija cuántas palabras
+  salen a la vez (de 1 a 6) y el tamaño (de pequeño a enorme), y la vista previa enseña ambos; los subtítulos con tu
+  estilo los siguen, también cuando siguen tu guion.
+- **Datos y archivos de tus productos**: cada producto del catálogo de Mi marca tiene *Datos y archivos*: su
+  beneficio principal, lo que Claude puede afirmar (cada cosa con su prueba), lo que nunca debe afirmar y capturas o
+  grabaciones de pantalla cortas. Claude solo dice de él lo que dicen.
+- **Tu logo en Motion Graphics**: el selector de logos enseña primero tu propio logo (y en *Mi marca*), junto a los de
+  la biblioteca; cualquier gráfico con logo puede usarlo, y dibuja solo la versión que se lee en su fondo (la clara
+  sobre oscuro, la principal sobre claro). Se queda en tu PC.
+- **Tu biblioteca de sonidos**: Motion Graphics tiene una pestaña *Sonidos*: cada sonido grabado de tu PC por tipo, ▶
+  para escucharlo, de dónde viene y su licencia; ★ lo hace favorito (su tipo usa primero tus favoritos) y *Ocultar* lo
+  deja fuera de tus vídeos. *Añadir sonidos* acepta un pack, una carpeta o unos cuantos archivos: un pack que
+  MotionLab conoce se ordena como su propia biblioteca, y el resto por sus nombres. Tus amigos tienen los mismos
+  sonidos: MotionLab trae ahora cuatro sonidos libres (CC0) y una lista de qué sonido de qué pack gratuito usa, así
+  que al importar ese pack tienen la misma biblioteca. El paso Sonido de *Nueva edición* tiene *Elige los sonidos*:
+  escucha y marca los que puede usar un vídeo. **Crear sonidos** con tu propia clave de ElevenLabs: elige cuántos de
+  cada tipo (primero los tipos de los que tienes pocos), te dice los créditos que gasta, y los sonidos nuevos esperan
+  en *Nuevos* para que marques con estrella los buenos y ocultes el resto. MotionLab ya trae 20: whooshes, látigos,
+  pops, clics y teclas creados a partir de descripciones de motion design premium. El plan gratis solo permite un uso
+  no comercial, y un vídeo que publiques menciona elevenlabs.io, así que sus sonidos salen como *uso no comercial*;
+  los creados con un plan de pago se pueden compartir: *Compartir
+  con amigos* crea un archivo para Google Drive, y un amigo lo añade con *Añadir sonidos* > el enlace.
+- **Tu música**: Motion Graphics tiene una pestaña *Música*: las canciones que descargas en el Analizador y las que
+  añades, cada una medida una vez (su tempo, cuánta energía tiene, su tono y su duración), con ▶ para oírla, ★ y
+  Ocultar. Nueva edición enseña tus canciones como tarjetas con los mismos datos, así eliges de oído y por sensación
+  en lugar de por el nombre de un archivo.
+- **Ambiente bajo tu voz**: una habitación tranquila, un café, una calle o lluvia bajo un vídeo hablado llenan el
+  silencio entre tus cortes. Créalo con ElevenLabs (se repite sin que se note el corte) o añade el tuyo; el paso
+  Sonido de Nueva edición tiene *Ambiente bajo tu voz*, y se mezcla muy por debajo de tus palabras.
+- **El Editor**: una pestaña nueva *Editor* en cada vídeo: una línea de tiempo como la de CapCut, sin ventana de
+  Claude. Tus planos en una pista principal que se junta sola, los gráficos y los subtítulos encima, los efectos, los
+  efectos de sonido y tu voz (o tu canción) debajo, y una vista previa en directo que reproduce tus cambios antes de
+  guardar. Planos: arrastra uno para moverlo, sus bordes para recortarlo (más de su propio clip, o menos), córtalo en el
+  cabezal (S), ponlo más lento o más rápido (de ¼× a 4×: su voz mantiene el tono), enseña otro momento de su clip en el
+  mismo sitio (Alt + arrastrar), cámbialo por otro clip del vídeo, baja su sonido o siléncialo, bórralo, y añade un
+  clip desde la pestaña *Clips*. Un vídeo hecho desde cero tiene sus escenas en esa pista, y se mueven y recortan
+  igual. Los efectos (zooms, sacudidas, destellos, transiciones...) son fichas que arrastras, haces más intensas, más
+  largas o suavizadas, quitas o añades desde la pestaña *Efectos*. Arrastra gráficos y sonidos a otro momento o
+  recórtalos; añade efectos de sonido de tu biblioteca y plantillas de Motion Graphics (arrástralos a la línea de
+  tiempo), cambia sus palabras y colores (los colores de tu marca a un clic), sube o baja un sonido o dale otro. Una
+  canción: arrástrala para que el vídeo empiece en otro momento de ella, o cambia su volumen. Subtítulos: arrastra uno
+  para moverlo o sus bordes para recortarlo (sus palabras siguen al ritmo de la voz; el subtítulo con el que choca le
+  deja sitio), divide uno en el cabezal, añade uno, corrige o quita uno y cambia cómo se ven todos: Clásico o Caja
+  limpia, fuente, tamaño, posición y colores. *Verlo renderizado* enseña los dos segundos alrededor del cabezal tal
+  cual los hará Guardar. Deshacer / rehacer, imán y zoom. *Guardar* crea una versión nueva (la de la que partiste se
+  queda), vuelve a cortar tu voz para que encaje y solo rehace lo que cambió. Claude lee lo que cambiaste a mano la
+  próxima vez.
+- **Las pestañas de un vídeo, cada una con su color**: Resumen, Revisión y Editor llevan su propio icono y color:
+  Revisión es violeta (le pasa el vídeo a Claude), el Editor cian (tú, a mano). Bajo el reproductor del Resumen, dos
+  caminos en esos colores, *Cámbialo tú* (el Editor) y *Mejóralo con Claude* (Revisión), con *Empezar de nuevo* como
+  enlace debajo, y el Editor en la lista lateral del Resumen. Los renders de un vídeo se eligen en una sola lista,
+  *Versión seleccionada*; los cambios del Editor, en una lista bajo su botón. El aspecto del Editor, revisado con dos
+  comprobadores de diseño (Impeccable y Hallmark): sin degradados ni brillos, el texto pequeño más grande y un marco de
+  foco en cada control.
+- **Importar desde tu web**: un botón junto a tu web la lee y trae lo que encuentra: el catálogo entero de una tienda
+  (Shopify, WooCommerce o los datos de producto marcados en las páginas) con precios, descripciones, fotos y enlaces,
+  además de tu logo, colores, fuentes, nombre, descripción y perfiles. Antes, una ventana te enseña todo y adónde
+  va cada cosa. Tú marcas lo que entra, y lo que Mi marca ya tiene sale marcado para que nada se añada dos veces. Las
+  fuentes de tu web que son gratuitas de Google entran en tus fuentes de este PC, con su licencia, listas para
+  títulos y texto. El botón es grande, una barra de progreso enseña cuánto lleva leído y puedes salir de la página:
+  si termina mientras estás en otra, MotionLab te avisa, aparece un punto en Mi marca y lo encontrado te espera allí
+  hasta que lo importes. Los colores salen de una captura de tu página (lo que ve un visitante), cada uno con su papel
+  (fondo, texto, acento) y cuánto ocupa de la página, también los de tu logo y los valores exactos que usa el código
+  de tu web.
+- **Para mi marca**: Nueva edición, el Generador y los guiones y títulos de Preparar tienen un interruptor *Para mi
+  marca*: marcado, Claude lo hace tuyo: tus colores, tu logo en el cierre, tu web en la llamada a la acción, tu tono,
+  un final que encaja con tu objetivo y solo los productos que permites, con tus precios. En Nueva edición está
+  arriba, con una pequeña vista previa de lo que recibe Claude (tu logo, colores, web, objetivo, productos y tono).
+- **Crear en DaVinci**: el último paso de Nueva edición tiene una tarjeta sencilla con el logo de DaVinci Resolve en
+  lugar de la casilla de abajo.
+- **Más fácil de leer**: el texto gris claro es más claro (ahora se lee bien sobre el fondo oscuro), ningún texto mide
+  menos de 11 px, las líneas largas se cortan antes y un párrafo ya no termina con una palabra sola.
+- **Un aspecto más limpio**: las tarjetas pierden la franja de color de un lado (ahora un borde fino del mismo color)
+  y los botones y tarjetas pierden su brillo de color; el color translúcido de cada sección se queda.
+- **Motion graphics más variados**: un vídeo generado ya no tira de las mismas pocas plantillas: cada escena tiene
+  la suya (se acabó la plantilla que vuelve una escena sí y otra no), las que usaron tus últimos vídeos se apartan
+  salvo que una sea claramente la mejor, y Claude recibe varias opciones para cada línea de tu texto en lugar de una
+  lista corta para todo el vídeo. Las ediciones de tus clips en el Editor también: opciones de plantillas nuevas que
+  encajan con tu texto o tu guion, y las que usaron tus últimos vídeos se apartan. También menos elecciones raras:
+  palabras pequeñas como "up" o "short" ya no traen un gráfico o una plantilla cualquiera, "stream" ya no cuenta como
+  "streak", y una línea a la que no le encaja nada recibe texto animado en lugar de un cierre a mitad del vídeo.
+- **Un sonido terminado** - cada vídeo que MotionLab renderiza sale ahora con un volumen constante (-14 LUFS, el
+  nivel al que lo reproduce YouTube) y con sus picos más altos por debajo de -1 dB después de comprimir el vídeo: se
+  acabaron los vídeos hablados que suenan bajos y los chasquidos cuando una plataforma los vuelve a codificar. Un vídeo
+  hecho antes lo recibe en su siguiente montaje, sin volver a renderizar la imagen.
+- **Sonido en los vídeos hechos desde cero** - un vídeo con efectos de sonido pero sin canción salía mudo; ahora los
+  efectos son su sonido.
+- **Los efectos de sonido no pisan tus palabras** - en un vídeo hablado, un whoosh, un pop o un golpe que cae sobre
+  una palabra suena ahora muy bajo (al menos 22 dB por debajo de tu voz), y uno que cae en una pausa queda al nivel
+  justo junto a tu voz; antes salía demasiado fuerte en las pausas.
+- **Nada sobre tu cara** - cada montaje de tu vídeo comprueba ahora que ningún subtítulo ni gráfico te tapa la cara
+  (medido en los fotogramas, también cuando sales en una ventanita en la esquina) y, en un vídeo vertical, que ninguno
+  queda debajo de los botones y textos de la propia app arriba, abajo o en el borde derecho. Claude mueve lo que
+  encuentra antes de que veas el vídeo; un gráfico que tiene que ir sobre tu cara (un antes / después) puede quedarse.
+  Los subtítulos de lo que dices se colocan ahora solos, plano a plano: bajo tu barbilla si hay sitio y, en un primer
+  plano, justo bajo tu boca; nunca sobre tus ojos o tu boca, nunca subidos a tu frente, y fuera de la franja inferior
+  de las plataformas.
+- **Los vídeos hablados terminan en la palabra** - la construcción avisa cuando un vídeo hablado sigue después de su
+  última palabra (una tarjeta final ahí está bien) y cuando tiene más de 4 whooshes en 30 segundos.
+- **Subtítulos con palabra clave** - un tercer aspecto junto a Clásico y Caja limpia: una o dos palabras pequeñas con
+  UNA palabra clave grande debajo, en tu color de acento y en cursiva con serifa, cada palabra al decirla. Elígelo en
+  el estilo de subtítulos de Mi marca o para los subtítulos de un vídeo.
+
 ## 0.5.4 - 2026-10-25 - Sonido: efectos de sonido reales, elegidos de oído
 
 - **Sonido, la versión**: cierra la versión de sonido que empezaron la 0.5.3.3 y la 0.5.3.4: efectos de sonido de

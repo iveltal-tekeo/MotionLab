@@ -5,6 +5,175 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0 - 2026-10-26 - Content agency: My Brand, the Editor and your content calendar
+
+- **Content agency, the version** - MotionLab now knows your brand and plans your posts. My Brand (your goal,
+  audience, colours, fonts, logo, voice, products, captions and end card - read from your website, then yours to
+  fix) goes into every video, script and title made *For my brand*; the Content agency plans your posts on a
+  calendar and shows how they did; the Editor lets you change any video yourself on a timeline; and the sound grew
+  up - real and ElevenLabs-made sound effects you pick by ear, your music and ambience, every render at the same
+  loudness. Everything below came in this version.
+- **My Brand** - a new page at the top of the sidebar, in three tabs so there is little to scroll: *Overview* (your
+  website, goal, audience and pages), *Style* (brand identity, tone of voice, captions and your editing look as video
+  cards) and *Catalogue* (your products). It holds your goal on social media, who your videos are for, your logo,
+  your brand's colours and tone of voice, your website and your catalogue - each product with its price and a switch
+  for whether Claude may use it in videos. Everything saves as you type and stays on your PC. Colours can be typed as
+  hex codes (#2eaa5c), the tone of voice has its own card with quick words to tick, and once you add your logo it
+  shows large and faint in the page's coloured band. Your brand's name and what it does, its fonts (titles and body
+  text) and your pages (YouTube, TikTok, Instagram... each with its own call to action) have their place too.
+  *Start from zero* clears it all to try again (a copy is kept: *Bring it back* right after). The catalogue shows
+  your products as cards with their picture (click it to add your own), price and an *In videos* switch, with *Add a
+  product* on top.
+- **Product motion** - New edit's Text step has *Show a product*: pick up to 2 products from My Brand and when they
+  appear (in passing, at the end, or both). Claude builds them with a new Motion Graphics template, *Product card*:
+  the product's picture on a card, its name, the price popping in, a button with your website and your logo - in your
+  brand's colours and fonts, upright or wide, over your footage or as the closing card.
+- **Content agency: the content calendar** - a new row under My Brand. Plan your posts on a month calendar: each
+  with its day and time, where it goes (TikTok, Instagram, YouTube...), its stage from idea to posted (a colour each),
+  the MotionLab video, the trending sound to add in the app when posting, notes and the links once it is up. Drag
+  posts between days or keep them as ideas; set the days you post and the empty ones show as slots, with "this week 2
+  of 3". *Add to Windows Calendar* gives you a reminder an hour before each post. **Your videos**: *Check my pages*
+  reads your YouTube and TikTok (the pages in My Brand - public numbers, no login, only when you press it) and shows
+  your posted videos with when they went up, their views, likes and comments, which did better than usual and how
+  much each grew since the last check; the calendar shows what went up each day. **Import your stats**: the file you
+  download from YouTube Studio, TikTok Studio or Meta Business Suite (English or Spanish) adds watch time, % viewed and
+  click-through to your videos - and brings in Instagram, which cannot be read otherwise. A post shows **how it did**
+  (views now and at 48 hours, 7 days and 28 days after it went up, from your checks), the **Test & compare** winner, a
+  **before you post** checklist per platform (chapters, the sound added in the app, hashtags, the paid-partnership
+  label...) and which format each platform wants against your video's. **When to post**: type your audience's best
+  hours from each platform's stats and they show as quick picks on every post (without them, generic times marked
+  as such).
+- **A tidier sidebar** - Motion Graphics sits above Claude's memory, and Jobs and Settings (now with a cog) open from
+  *More* at the bottom; a running job's count shows on *More*.
+- **More of your brand** - your voice in your own words (four sliders - formal to casual, serious to funny,
+  respectful to cheeky, calm to excited -, the words you use and never use, lines that sound like you), your content
+  pillars (each post on the calendar gets one, and the calendar shows the month's balance), a product's promo code and
+  a *Paid partnership* switch (Claude then marks it as an ad), and what your website says - the import keeps its
+  readable text for Claude to check facts against.
+- **Your brand at a glance** - My Brand's Overview opens with a card of what *For my brand* gives Claude (logo, name
+  in your title font, colours, fonts, tone, pages, products) and your latest videos made with *For my brand*. On Style, *Names and words* keeps names spelled exactly (RIFT in capitals...) in captions, scripts and
+  titles, and speech to text gets them right.
+- **Your captions** - My Brand has a caption style: the look, font, capitals or not, the text and spoken-word colours,
+  how the words move, where they sit and a box behind - with a live preview. Claude's captions use it, and the
+  Captions button on a video's Graphics tab offers it.
+- **Your editing look** - pick up to 3 videos you analysed as how your brand's videos are cut. New edit offers them
+  first as *My brand's look*, and with *For my brand* ticked and no reference picked, Claude and the quick draft
+  follow your look.
+- **Your mood board** - My Brand > Style has a mood board: drop in pictures you love the look of (saved from
+  Pinterest or Instagram, screenshots, photos). MotionLab reads them - light, colour, contrast, how much room - and
+  shows their main colours, one click from your brand colours. Videos made *For my brand* follow the board's feel in
+  their graphics and thumbnails; Claude looks at the pictures themselves. They stay on your PC.
+- **Your logo in every version** - My Brand > Style takes your logo for dark backgrounds, for light ones and the icon
+  alone, and where it goes in your videos (the end card, also small in a corner, or nowhere); Claude puts in the
+  version that reads on each background. Under your colours, *Does it read?* shows your text and accent colours on
+  your background with their contrast, and Claude never puts words in a colour that doesn't read.
+- **Your brand in New edit and the graphics** - New edit's colour palette offers *My Brand* (your colours, the accent
+  first), every font list shows your brand fonts first, and with *For my brand* ticked the Generator's quick draft
+  paints its graphics in your colours and fonts.
+- **Your end card** - My Brand > Style lets you pick how your videos end: a logo card, a title card with your website,
+  or a channel card, plus your sign-off line, with a live preview filled from your brand. Claude builds that exact
+  card as the last scene of a video made *For my brand* (never before the hook), and so does the Generator's quick
+  draft. It can also have your own sound logo: a short sound ElevenLabs makes from your words (or your own file),
+  played on the end card instead of the template's sounds.
+- **What worked for you** - My Brand's tone of voice shows the hooks, endings and titles of the scripts, titles and
+  videos you rated good (each opens its script), and Claude follows their shape - never the same words - when it
+  writes for your brand.
+- **Caption size and words per line** - My Brand's caption style also sets how many words show at once (1 to 6) and
+  the size (small to huge), and the preview shows both; captions made in your style follow them, also when they
+  follow your script.
+- **Product facts and media** - each product in My Brand's catalogue has *Facts & media*: its key benefit, the claims
+  Claude may make (each with its proof), the ones it must never make, and screenshots or short screen recordings.
+  Claude says only what they say about it.
+- **Your logo in Motion Graphics** - the logo picker shows your own logo first (and under *My Brand*), next to the
+  library's; any graphic with a logo can use it, and it draws the version that reads on its background by itself
+  (the light one on dark, your main one on light). It stays on your PC.
+- **Your sound library** - Motion Graphics has a *Sounds* tab: every recorded sound on your PC by kind, ▶ to hear it,
+  where it came from and its licence; ★ makes one a favourite (its kind uses your favourites first) and *Hide* keeps
+  one out of your videos. *Add sounds* takes a pack, a folder or a few files: a pack MotionLab knows is sorted the way
+  MotionLab's own library is, the rest by their names. Friends get the same sounds: MotionLab now comes with four free
+  (CC0) sounds and a list of which sound of which free pack it uses, so importing that pack gives them the same
+  library. New edit's Sound step has *Choose the sounds*: listen and tick the ones a video may use. **Make sounds**
+  with your own ElevenLabs key: pick how many of each kind (the kinds you have few of come first), it shows the
+  credits it takes, and the new sounds wait under *New* for you to star the good ones and hide the rest. MotionLab
+  comes with 20 of them already: whooshes, whips, pops, clicks and keystrokes made from premium motion-design
+  descriptions. The free plan allows non-commercial use only, and a video you post credits elevenlabs.io, so its
+  sounds are marked *non-commercial*; sounds made on a paid plan can be shared:
+  *Share with friends* makes one file for Google Drive, and a friend adds it with *Add sounds* > the link.
+- **Your music** - Motion Graphics has a *Music* tab: the songs you download in the Analyser and the ones you add,
+  each measured once - its tempo, how energetic it is, its tone and its length - with ▶ to hear it, ★ and Hide. New
+  edit shows your songs as cards with the same facts, so you pick by ear and by feel instead of a file name.
+- **Ambience under your voice** - a quiet room, a café, a street or rain under a talking video fills the silence
+  between your cuts. Make it with ElevenLabs (it loops with no seam) or add your own; New edit's Sound step has
+  *Ambience under your voice*, and it is mixed far under your words.
+- **The Editor** - a video's new *Editor* tab: a timeline like CapCut's, no Claude window. Your shots on a main track
+  that closes up by itself, graphics and captions above, effects, sound effects and your voice (or song) below, and a
+  live preview that plays your changes before you save. Shots: drag one to move it, its edges to trim it (more of its
+  own clip, or less), split it at the playhead (S), play it slower or faster (¼× to 4× - its voice keeps its pitch),
+  show another moment of its clip in the same place (Alt + drag), swap in another clip of the video, turn its sound
+  down or mute it, delete it - and add a clip from the *Clips* tab. A video made from zero gets its scenes on that
+  track, moved and trimmed the same way. Effects (zooms, shakes, flashes, transitions...) are chips you drag, make
+  stronger, longer or eased, remove, or add from the *Effects* tab. Drag graphics and sounds to another moment or trim
+  them; add sound effects from your library and templates from Motion Graphics (drag them onto the timeline), change
+  their words and colours (your brand's colours one click away), turn a sound up or down or give it another sound. A
+  song: drag it to start the video at another moment of it, or change its volume. Captions: drag one to move it or its
+  edges to trim it (its words stay in step with the voice; a caption it runs into gives way), split one at the
+  playhead, add one, fix or remove one, and change how they all look - Classic or Clean box, font, size, position,
+  colours. *See it rendered* shows the two seconds around the playhead exactly as Save will. Undo / redo, snapping,
+  zoom. *Save* makes a new version (the one you started from stays), cuts your voice again to fit, and makes again
+  only what changed. Claude reads what you changed by hand next time.
+- **A video's tabs, each its own colour** - Overview, Review and Editor carry an icon and a colour of their own:
+  Review is violet (it hands the video to Claude), the Editor cyan (you, by hand). Under the Overview's player two
+  ways on, in those colours - *Change it yourself* (the Editor) and *Improve it with Claude* (Review) - with *Start
+  over* as a link under them, and the Editor in the Overview's side list. A video's renders are one *Selected version*
+  list; the Editor's changes are a list under their button. The Editor's look checked against two design checkers
+  (Impeccable and Hallmark): no gradients or glows, larger small text, a focus ring on every control.
+- **Import from your website** - one button beside your website reads it and brings in what it finds: a shop's whole
+  catalogue (Shopify, WooCommerce, or product details marked up on the pages) with prices, descriptions, pictures and
+  links, plus your logo, colours, fonts, name, description and pages. A pop-up first shows everything and where each
+  thing goes. You tick what comes in, and what My Brand already has is marked, so nothing is added twice. Fonts your
+  site uses that are free Google fonts come into your fonts on this PC, with their licence, ready for titles and text.
+  The colours come from a screenshot of your page - what a visitor sees - each with its job (background, text,
+  accent) and how much of the page it covers, your logo's colours too, and the exact values your site's code uses.
+  The button is big, a progress bar shows how far the reading is, and you can leave the page: when it finishes
+  elsewhere, MotionLab tells you, a dot appears on My Brand, and what was found waits there until you import it.
+- **For my brand** - New edit, the Generator and Prepare's scripts and titles have a *For my brand* switch: ticked,
+  Claude makes it yours - your colours, your logo on the end card, your website in the call to action, your tone of
+  voice, an ending that fits your goal, and only the products you allow, at your prices. In New edit it sits at the
+  top, with a small preview of what Claude gets (your logo, colours, website, goal, products, tone of voice).
+- **Build in DaVinci** - New edit's last step has one simple card with the DaVinci Resolve logo instead of the
+  checkbox at the bottom.
+- **Easier to read** - pale grey text is lighter (it now reads clearly on the dark background), no text is smaller
+  than 11 px, long lines wrap shorter, and a paragraph no longer ends on one lonely word.
+- **A cleaner look** - cards lose the coloured stripe down one side (a thin border in the same colour instead), and
+  buttons and cards lose their coloured glow; the glassy colour of each section stays.
+- **More varied motion graphics** - a generated video no longer leans on the same few templates: each scene gets
+  its own (no more one template coming back every other scene), the templates your last videos used step aside unless
+  one is clearly the best fit, and Claude gets a few options for every line of your words instead of one short list
+  for the whole video. Edits of your clips in the Editor get the same: fresh template options that fit your words or
+  script, and the ones your last videos used step aside. Fewer odd matches too: little words like "up" or "short" no
+  longer pull in a chart or a random template, "stream" no longer counts as "streak", and a line nothing fits gets
+  kinetic text instead of an end card in the middle of the video.
+- **Finished sound** - every video MotionLab renders now comes out at one steady loudness (-14 LUFS, the level
+  YouTube plays at) with its loudest peaks under -1 dB after the video is compressed: no more quiet talking videos,
+  and no crackle when a platform encodes them again. A video made before gets it on its next build, without
+  rendering the picture again.
+- **Sound in videos made from zero** - a video with sound effects but no song came out silent; the effects are now
+  its sound.
+- **Sound effects stay off your words** - in a talking video a whoosh, pop or hit that lands on a word is now very
+  quiet (at least 22 dB under your voice), and one in a pause sits at the right level next to your voice - it used to
+  come out too loud in the pauses.
+- **Nothing over your face** - every build of your video now checks that no caption or graphic covers your face
+  (measured on the frames, also when you are in a corner picture), and in an upright video that none sits under the
+  app's own buttons and captions at the top, bottom or right edge. Claude moves what it finds before you see the
+  video; a graphic that is meant to be on your face (a before / after) can stay. Captions of what you say now place
+  themselves shot by shot: under your chin when there is room, in a close-up just under your mouth - never over your
+  eyes or mouth, never up on your forehead, and out of the platforms' bottom band.
+- **Talking videos end on the word** - the build says when a talking video goes on after its last word (an end card
+  there is fine) and when it has more than 4 whooshes in 30 seconds.
+- **Keyword captions** - a third caption look beside Classic and Clean box: one or two small words with ONE big
+  keyword under them in your accent colour, in a serif italic, each word as you say it. Pick it in My Brand's caption
+  style or for a video's captions.
+
 ## 0.5.4 - 2026-10-25 - Sound: real sound effects, picked by ear
 
 - **Sound, the version** - this closes the sound version that 0.5.3.3 and 0.5.3.4 began: sound effects from real

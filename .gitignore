@@ -17,6 +17,8 @@
 
 # --- personal hand-off notes (not useful to others)
 /docs/option2_prompt.md
+# a talking-head editing kit kept for reference while 0.6.0's steps 20-23 are built (no licence: never in the repo)
+/kit_editor_claude/
 
 # --- Python
 /.venv/

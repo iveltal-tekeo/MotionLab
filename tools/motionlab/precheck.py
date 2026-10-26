@@ -24,7 +24,9 @@ with "sources") moves with its camera: its fast moves are noted, not flagged.
 
 **Sound** - the report tools\\sfx.py make writes (<name>_sfx.json, per cue: song_db, fx_db, target_db, vs_song_db,
 rule, limiter_db): an effect more than LOUD_DB over the song under it, one more than BURIED_DB under it (masked) or
-SHORT_DB under its own level (the peak cap stopped it), and the limiter taking LIMIT_DB or more.
+SHORT_DB under its own level (the peak cap stopped it), and the limiter taking LIMIT_DB or more. A video's finished
+sound (0.6.0, motionlab\\loudness.py): its loudness off config "master" target_lufs (past its tolerance + 0.5 LU) or
+its true peak over true_peak_db.
 
 Frames are 0-based; every frame in the output has its number + timecode at the input's rate.
 """
@@ -57,6 +59,7 @@ FB_PX = 0.5             # forward-backward tracking error allowed (working px)
 COPIES_PEAK, COPIES_RISE = 0.25, 0.4   # copies score: a correlation peak near the sub-frame spacing
 SCENE_MAD = 12.0        # a part vanishing between two different pictures (32 px thumbnails differ this much, 0-255)
 LOUD_DB, BURIED_DB, SHORT_DB, LIMIT_DB = 6.0, -26.0, 4.0, 3.0
+LOUDNESS_SLACK_LU = 0.5              # a render's loudness may sit this much past the master's own tolerance
 SHEET_ROWS = 12
 THREADS = 4
 
@@ -545,6 +548,200 @@ def move_flags(m: dict, motion_blur: int = 0, footage: bool = False) -> tuple[li
     return out, notes
 
 
+GRAPHIC_LAYERS = ("overlay", "text")  # what face_cover takes away to see the footage: graphics and captions
+DRAWN_DIFF = 60                      # a pixel the graphics changed by more than this (0-255, any channel) is theirs -
+                                     # solid drawing, not a soft tint (measured on the corner-camera v5 edit: 24 also
+                                     # counted the templates' faint glows)
+FACE_COVER = 0.08                    # a face is covered when the graphics drew over more than this of its box ...
+FACE_PAD = 0.15                      # ... widened by this on each side (hair, chin)
+FULL_CARD = 0.85                     # graphics over more of the frame than this = a full-screen card: the face is
+                                     # meant to be gone, not flagged
+# 0.6.0 step 21: the platforms' buttons and captions on an upright 1080x1920 video (scaled to the plan's size): the
+# top band, the bottom band and the right rail - a graphic's pixels there are hidden under the app's own
+SAFE_BANDS = {"top": (0, 0, 1080, 220), "bottom": (0, 1500, 1080, 1920), "right rail": (930, 900, 1080, 1600)}
+SAFE_COVER = 0.02                    # a band is used when the graphics drew over more than this of it
+
+
+def cover_frame(bare: np.ndarray, drawn: np.ndarray, faces: list, upright: bool,
+                frames_of: list | None = None) -> dict:
+    """One frame: the footage alone (bare) and with its graphics (drawn), the faces found in bare ([x, y, w, h,
+    score]) -> {"full": a full-screen card, "faces": [covered fraction per face], "bands": {band: fraction}}.
+    frames_of = per face the picture it is in ([x0, y0, x1, y1], a corner camera's box): its widened box stops there -
+    a card around a picture-in-picture is not over the face."""
+    H, W = bare.shape[:2]
+    m = np.abs(drawn.astype(np.int16) - bare.astype(np.int16)).max(axis=2) > DRAWN_DIFF
+    full = float(m.mean()) > FULL_CARD
+    out = {"full": full, "faces": [], "bands": {}}
+    if full:
+        return out
+    for k, (x, y, w, h, *_) in enumerate(faces):
+        bx0, by0, bx1, by1 = (frames_of[k] if frames_of and frames_of[k] else (0, 0, W, H))
+        x0, y0 = int(max(bx0, x - w * FACE_PAD)), int(max(by0, y - h * FACE_PAD))
+        x1, y1 = int(min(bx1, x + w * (1 + FACE_PAD))), int(min(by1, y + h * (1 + FACE_PAD)))
+        out["faces"].append(round(float(m[y0:y1, x0:x1].mean()), 3) if x1 > x0 and y1 > y0 else 0.0)
+    if upright:
+        sx, sy = W / 1080, H / 1920
+        for name, (a, b, c, d) in SAFE_BANDS.items():
+            band = m[int(b * sy):int(d * sy), int(a * sx):int(c * sx)]
+            out["bands"][name] = round(float(band.mean()), 3) if band.size else 0.0
+    return out
+
+
+def face_cover(plan_path: Path, every_s: float = 1.0) -> dict:
+    """0.6.0 step 21 (docs\\plans.md; the user's lessons local-make-1, -23..25 fixed graphics over the face by hand): a
+    caption or graphic over the speaker's face, and (an upright video) in the platforms' button bands - measured.
+    Every `every_s` s where a graphic shows, and the middle of every graphic, the frame is rendered without the
+    GRAPHIC_LAYERS (the footage: its faces from motionlab\\thumbnail.faces, YuNet) and with them; what they changed is
+    theirs. A layer with "over_face": true is meant to be over the face (a before / after on it) and is left out.
+    -> {"flags", "samples", "faces_seen", "seconds", "why" (when it could not look)}."""
+    from .compose import Renderer, resolve_paths
+    from .thumbnail import face_model, faces as find_faces
+    t0 = time.time()
+    plan_path = Path(plan_path)
+    plan = resolve_paths(json.loads(plan_path.read_text(encoding="utf-8")), plan_path.parent)
+    fps, N, W, H = float(plan["fps"]), int(plan["frames"]), int(plan["width"]), int(plan["height"])
+    gl = [L for L in plan["layers"] if L.get("type") in GRAPHIC_LAYERS and not L.get("over_face")]
+    res = {"flags": [], "samples": 0, "faces_seen": 0, "seconds": 0.0}
+    if not gl:
+        return {**res, "why": "no graphics in the plan"}
+    if face_model() is None:
+        return {**res, "why": "no face detector (tools\\models\\face_detection_yunet_2023mar.onnx)"}
+    step = max(1, int(round(every_s * fps)))
+    want = sorted({f for f in range(0, N, step) if any(int(L["start"]) <= f <= int(L["end"]) for L in gl)}
+                  | {(int(L["start"]) + int(L["end"])) // 2 for L in gl if 0 <= int(L["start"]) < N})
+    bare_r = Renderer({**plan, "layers": [L for L in plan["layers"] if L.get("type") not in GRAPHIC_LAYERS]})
+    full_r = Renderer({**plan, "layers": [L for L in plan["layers"]
+                                          if L.get("type") not in GRAPHIC_LAYERS or not L.get("over_face")]})
+    upright = H > W
+    hits: list[tuple[int, str, str]] = []                      # (frame, what, the graphics there)
+    for f in want:
+        bare = bare_r.render(f)
+        fs = [x for x in (find_faces(bare) or []) if x[2] * x[3] >= 0.002 * W * H]   # not a face in a far corner
+        if not fs and not upright:
+            continue
+        res["samples"] += 1
+        res["faces_seen"] += len(fs)
+        boxes = []                                              # the picture each face is in: the top clip there
+        for x, y, w, h, *_ in fs:
+            cx, cy, box = x + w / 2, y + h / 2, None
+            for L in reversed(bare_r.layers):
+                if getattr(L, "rect", None) is not None and L.active(f) and hasattr(L, "dx"):
+                    rx = L.rect[0] + L.dx(f)
+                    if rx <= cx <= rx + L.rect[2] and L.rect[1] <= cy <= L.rect[1] + L.rect[3]:
+                        box = (rx, L.rect[1], rx + L.rect[2], L.rect[1] + L.rect[3])
+                        break
+            boxes.append(box)
+        c = cover_frame(bare, full_r.render(f), fs, upright, boxes)
+        if c["full"]:
+            continue
+        on = ", ".join(str(L.get("id", L["type"])) for L in gl if int(L["start"]) <= f <= int(L["end"]))
+        for fr, (x, y, w, h, *_) in zip(c["faces"], fs):
+            if fr > FACE_COVER:
+                hits.append((f, f"face at x {int(x)}-{int(x + w)}, y {int(y)}-{int(y + h)} {fr * 100:.0f} % covered", on))
+                break
+        for band, fr in c["bands"].items():
+            if fr > SAFE_COVER:
+                hits.append((f, f"the {band} band ({fr * 100:.0f} % drawn over - the app's own buttons / captions sit "
+                                "there)", on))
+    for kind in ("face", "band"):                # samples in a row of one kind under the same graphics = one flag
+        rows = [h for h in hits if h[1].startswith("face") == (kind == "face")]
+        i = 0
+        while i < len(rows):
+            j = i
+            while j + 1 < len(rows) and rows[j + 1][0] - rows[j][0] <= step and rows[j + 1][2] == rows[i][2] \
+                    and (kind == "face" or rows[j + 1][1] == rows[i][1]):
+                j += 1
+            a, b = rows[i][0], rows[j][0]
+            worst = max(rows[i:j + 1], key=lambda r: float(re.search(r"(\d+) %", r[1]).group(1)))
+            res["flags"].append({"check": "face" if kind == "face" else "safe zone", "frames": [a, b],
+                                 "label": range_label(a, b, fps),
+                                 "reason": f"{rows[i][2]}: {worst[1]}" + (f" at f{worst[0]}" if j > i else "")
+                                 + ("" if kind == "face" else " (upright: keep it out of there)")})
+            i = j + 1
+    res["flags"].sort(key=lambda x: x["frames"][0])
+    res["seconds"] = round(time.time() - t0, 1)
+    return res
+
+
+END_TAIL_S = 0.2                     # 0.6.0 step 21: a talking video ends on its last word, this much after it at most
+WHOOSH_MAX, WHOOSH_WINDOW_S = 4, 30  # ... and has at most this many whooshes / whips in any 30 s
+
+
+def talk_checks(plan_path: Path, sfx_report: Path | None = None) -> dict:
+    """0.6.0 step 21, a talking video (the plan's sound is the voice - "made_by" "sound": "talk", or "sfx" "voice"):
+    it ends on the last word (END_TAIL_S after it at most - an end card after it is the user's choice and passes),
+    and has at most WHOOSH_MAX whooshes / whips in any WHOOSH_WINDOW_S (the sound report). The last word = the last
+    frame the voice is within 30 dB of its loudest (the voice file under the effects, not the mix). -> {"flags",
+    "last_word", "why" (when it did not look)}."""
+    from . import miniedit as ME
+    from .compose import resolve_paths
+    plan_path = Path(plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    fps, N = float(plan["fps"]), int(plan["frames"])
+    sx = plan.get("sfx") if isinstance(plan.get("sfx"), dict) else {}
+    if (plan.get("made_by") or {}).get("sound") != "talk" and not sx.get("voice"):
+        return {"flags": [], "why": "not a talking video"}
+    out = {"flags": [], "last_word": None}
+    voice = ME.song_of(resolve_paths(json.loads(json.dumps(plan)), plan_path.parent))
+    if voice is not None and voice.is_file():
+        from . import sfx as SFX
+        try:
+            y = SFX.load_audio(voice, 0.0, N / fps + 0.5).mean(axis=1)
+        except ValueError:
+            y = None
+        if y is not None and len(y):
+            per = SFX.SR / fps
+            rms = np.array([float(np.sqrt(np.mean(y[int(i * per):int((i + 1) * per)] ** 2) + 1e-12))
+                            for i in range(min(N, int(len(y) / per)))])
+            on = np.flatnonzero(20 * np.log10(rms + 1e-9) > 20 * np.log10(rms.max() + 1e-9) - 30)
+            if on.size:
+                last = int(on[-1])
+                out["last_word"] = last
+                card = [L for L in plan.get("layers", []) if L.get("type") == "overlay"
+                        and int(L.get("start", 0)) >= last - int(0.5 * fps) and int(L.get("end", 0)) >= N - 2]
+                tail = N - 1 - last
+                if tail > END_TAIL_S * fps + 2 and not card:
+                    out["flags"].append({"check": "talk", "frames": [last, N - 1], "label": range_label(last, N - 1, fps),
+                                         "reason": f"it goes on {tail / fps:.1f} s after the last word - end it on the "
+                                                   f"word (+{END_TAIL_S:g} s at most), or an end card there"})
+    if sfx_report and Path(sfx_report).exists():
+        rep = json.loads(Path(sfx_report).read_text(encoding="utf-8"))
+        wf = sorted(int(r["f"]) for r in rep.get("cues") or [] if r.get("kind") in ("whoosh", "whip")
+                    and not r.get("skipped"))
+        win = int(WHOOSH_WINDOW_S * fps)
+        best = max(((i, sum(1 for g in wf if f <= g < f + win)) for i, f in enumerate(wf)), key=lambda q: q[1],
+                   default=(0, 0))
+        if best[1] > WHOOSH_MAX:
+            a = wf[best[0]]
+            b = max(g for g in wf if g < a + win)
+            out["flags"].append({"check": "talk", "frames": [a, b], "label": range_label(a, b, fps),
+                                 "reason": f"{best[1]} whooshes / whips within {WHOOSH_WINDOW_S} s - {WHOOSH_MAX} at most "
+                                           "in a talking video"})
+    return out
+
+
+def loudness_check(path: Path, n_frames: int, flags: list) -> dict | None:
+    """0.6.0 step 22: a render's finished sound (motionlab\\loudness.py) - its loudness off the target by more than
+    the tolerance + LOUDNESS_SLACK_LU, or its true peak over the ceiling (after the AAC encode, as a platform hears
+    it), is appended to `flags`. None = no sound."""
+    from . import loudness as LD
+    m = LD.measure(path)
+    if m.get("lufs") is None or m["lufs"] < LD.SILENT_LUFS:
+        return None
+    cfg = LD.settings()
+    m.update(target_lufs=cfg["target_lufs"], ceiling_db=cfg["true_peak_db"])
+    whole = [0, max(0, n_frames - 1)]
+    if m["true_peak_db"] is not None and m["true_peak_db"] > cfg["true_peak_db"] + 0.1:
+        flags.append({"check": "sound", "kind": "peak", "frames": whole, "db": m["true_peak_db"],
+                      "reason": f"true peak {m['true_peak_db']:+.1f} dBTP, over the {cfg['true_peak_db']:g} ceiling "
+                                "(it can distort when a platform encodes it again) - render_video.py masters it"})
+    if abs(m["lufs"] - cfg["target_lufs"]) > cfg["tolerance_lu"] + LOUDNESS_SLACK_LU:
+        flags.append({"check": "sound", "kind": "loudness", "frames": whole, "db": m["lufs"],
+                      "reason": f"{m['lufs']:.1f} LUFS, the target is {cfg['target_lufs']:g} (config \"master\") - "
+                                "render_video.py masters it (unless --no-master)"})
+    return m
+
+
 def sound_flags(rep: dict) -> list[dict]:
     """An sfx.py report (<name>_sfx.json): effects too loud / buried against the song, the limiter working hard."""
     fps = float(rep.get("fps") or 30.0)
@@ -854,6 +1051,7 @@ def run(path, sfx: str | None = None, motion_blur: int | None = None, fps: float
         sflags = sound_flags(rep)
         sfx_info = {"report": str(Path(sfx).resolve()), "cues": len(rep.get("cues") or []),
                     "limiter_max_db": rep.get("limiter_max_db")}
+    loud = loudness_check(path, n_frames, sflags) if kind == "video" else None
     flags = vflags + mflags + sflags
     for f in flags:
         f.setdefault("label", range_label(f["frames"][0], f["frames"][1], fps))
@@ -885,7 +1083,8 @@ def run(path, sfx: str | None = None, motion_blur: int | None = None, fps: float
            "fastest_move": None if top is None else {
                "frame": int(m["frames"][top]), "label": tc_label(int(m["frames"][top]), fps),
                "px": round(float(mv[top, 0]), 1), "at": [int(mv[top, 1]), int(mv[top, 2])]},
-           "sfx": sfx_info, "status": "PASS" if not flags else "WARN", "flags": flags, "notes": notes,
+           "sfx": sfx_info, "loudness": loud, "status": "PASS" if not flags else "WARN", "flags": flags,
+           "notes": notes,
            "counts": {c: sum(1 for f in flags if f["check"] == c) for c in ("vanish", "move", "sound")},
            "seconds": None, "seconds_per_minute": None}
     # the sheet: a second decode keeps only the frames it shows
@@ -926,6 +1125,9 @@ def run(path, sfx: str | None = None, motion_blur: int | None = None, fps: float
         if res["fastest_move"]:
             fm = res["fastest_move"]
             log(f"  fastest move: {fm['px']:.0f} px a frame at {fm['label']} (x {fm['at'][0]}, y {fm['at'][1]})")
+        if loud:
+            log(f"  sound: {loud['lufs']:.1f} LUFS (target {loud['target_lufs']:g}), true peak "
+                f"{loud['true_peak_db']} dBTP (ceiling {loud['ceiling_db']:g}), range {loud['lra']} LU")
         for f in flags:
             at = f" at x {f['at'][0]}, y {f['at'][1]}" if f.get("at") else (
                 f" in x {f['box'][0]}-{f['box'][2]}, y {f['box'][1]}-{f['box'][3]}" if f.get("box") else "")
@@ -1078,8 +1280,57 @@ def selfcheck(verbose: bool = True) -> dict:
     sf = sound_flags({"fps": fps, "cues": rows, "limiter_max_db": -4.0})
     check([(f["frames"][0], f["kind"]) for f in sf] == [(30, "loud"), (50, "buried"), (60, "limiter")],
           "sound: the limiter taking 4 dB at f60 (00:00:02:00) flagged")
+    # 0.6.0 step 21: graphics over a face (known boxes, no detector): a title over a third of the face, a pill beside
+    # it (clear), a soft tint over it (not drawing), a full-screen card (meant), a corner picture's face with a card
+    # around it (its box stops at the picture), an upright pill in the bottom band
+    W2, H2 = 1080, 1920
+    bare = np.full((H2, W2, 3), 120, np.uint8)
+    face = [400, 500, 300, 380, 0.9]
+    drawn = bare.copy()
+    drawn[500:627, 380:720] = 255                              # a title across the top third of the face
+    c1 = cover_frame(bare, drawn, [face], True)
+    drawn = bare.copy()
+    drawn[1000:1080, 750:1000] = 255                           # a pill beside the face, below its pad
+    c2 = cover_frame(bare, drawn, [face], True)
+    drawn = bare.copy()
+    drawn[400:1000, 300:800] = 150                             # a soft tint (+30)
+    c3 = cover_frame(bare, drawn, [face], True)
+    drawn = np.full_like(bare, 20)                             # a full-screen card
+    c4 = cover_frame(bare, drawn, [face], True)
+    small, pip = [1546, 826, 175, 221, 0.9], (1380, 740, 1860, 1010)
+    bare_w = np.full((1080, 1920, 3), 120, np.uint8)
+    drawn = bare_w.copy()
+    drawn[:, 960:] = 20                                        # a half-frame card around the corner picture
+    drawn[740:1010, 1380:1860] = 120
+    c5a = cover_frame(bare_w, drawn, [small], False)
+    c5b = cover_frame(bare_w, drawn, [small], False, [pip])
+    drawn = bare.copy()
+    drawn[1560:1640, 300:780] = 255                            # an upright pill in the platform's caption band
+    c6 = cover_frame(bare, drawn, [face], True)
+    check(c1["faces"][0] > FACE_COVER >= c2["faces"][0] and c3["faces"][0] == 0 and c4["full"]
+          and c5a["faces"][0] > FACE_COVER >= c5b["faces"][0] and c6["bands"]["bottom"] > SAFE_COVER
+          and c6["bands"]["top"] == 0,
+          f"face cover: a title over the face {c1['faces'][0]:.0%}, a pill beside it {c2['faces'][0]:.0%}, a soft tint "
+          f"{c3['faces'][0]:.0%}, a full card skipped ({c4['full']}), a corner picture's face {c5a['faces'][0]:.0%} "
+          f"-> {c5b['faces'][0]:.0%} in its own box, an upright pill in the bottom band {c6['bands']['bottom']:.1%}")
+    # 0.6.0 step 21: a talking video's whooshes - 6 within 20 s flagged, 4 spread over a minute not; not talking = none
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="ml_pc_") as td:
+        pp, rp = Path(td) / "plan_v1.json", Path(td) / "r.json"
+        pp.write_text(json.dumps({"fps": 25, "frames": 2000, "made_by": {"sound": "talk"}, "layers": []}), encoding="utf-8")
+        rp.write_text(json.dumps({"cues": [{"f": f, "kind": k} for f, k in ((10, "whoosh"), (100, "whip"), (200, "whoosh"),
+                      (300, "whoosh"), (400, "whip"), (480, "whoosh"), (490, "pop"), (1200, "whoosh"))]}), encoding="utf-8")
+        t1 = talk_checks(pp, rp)
+        rp.write_text(json.dumps({"cues": [{"f": f, "kind": "whoosh"} for f in (10, 500, 1000, 1500)]}), encoding="utf-8")
+        t2 = talk_checks(pp, rp)
+        pp.write_text(json.dumps({"fps": 25, "frames": 2000, "layers": []}), encoding="utf-8")
+        t3 = talk_checks(pp, rp)
+    check(len(t1["flags"]) == 1 and t1["flags"][0]["frames"] == [10, 480] and not t2["flags"] and t3.get("why"),
+          "talking video: 6 whooshes / whips within 30 s flagged (f10-f480), 4 a minute apart not, a non-talking plan "
+          "not looked at")
     secs = time.time() - t0
-    lines.insert(0, f"{'PASS' if ok else 'FAIL'}: precheck selfcheck (vanish, speed, clean, sound) in {secs:.1f} s")
+    lines.insert(0, f"{'PASS' if ok else 'FAIL'}: precheck selfcheck (vanish, speed, clean, sound, face cover) in "
+                    f"{secs:.1f} s")
     if verbose:
         print("\n".join(lines))
     return {"ok": ok, "passed": ok, "lines": lines, "seconds": round(secs, 2)}

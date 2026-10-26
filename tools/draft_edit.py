@@ -23,11 +23,20 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
   --sound auto        music | clips (the clips' own sound, shot by shot) | talk (the clips' own sound in order, the
                       pauses cut out; 0.5.3: the voice levelled to -26 dBFS RMS, one gain per take, peaks under
                       -1 dBFS - `--per-shot` = per shot); auto = talk for a talking style, else music when there is a
-                      song, else clips
+                      song, else clips. Talk + --stumbles on (0.6.0, opt-in - for a loose, off-script take; the
+                      user's script reads had none, 2026-10-26): the stumbles go too - fillers, a phrase said twice,
+                      retakes, "cut" / "again" said to the edit (motionlab\\stumbles.py on each clip's verbatim
+                      transcript, speech to text, ~8 s a take) - listed in draft_vN.md with numbers: --keep-stumbles
+                      2,5 puts those back; --voice-clean = the voice through a noise / EQ /
+                      de-esser / compressor chain first (motionlab\\loudness.py clean_voice; off until the user's A/B)
   --sfx none          0.5.4: few | some | many | auto (few for a talking video, else some) - a sound on the draft's
                       effects (zooms, whips, flashes, speed-ups...), recorded from library\\sounds where a kind has
                       them, each levelled against the sound under it (tools\\sfx.py plan); the plan's "audio" = the
-                      mix, its "sfx" = the choice (build.py keeps it). --sfx-kinds whoosh,impact = only these kinds
+                      mix, its "sfx" = the choice (build.py keeps it). --sfx-kinds whoosh,impact = only these kinds;
+                      --sfx-sounds whoosh/a.wav,... (0.6.0, New edit's *Choose the sounds*) = a kind with sounds on
+                      the list uses only those (the plan's "sfx" "sounds")
+  --ambience <file>   0.6.0: an ambience bed from the music library (library\\music\\ambience\\...) looped under the
+                      voice, 26 dB under its words (the plan's "sfx" "bed"; motionlab\\music.py)
   --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
                       also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
@@ -43,6 +52,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import math
 import re
 import subprocess
 import sys
@@ -261,7 +271,7 @@ def level_voice(out: list, segs: list, per_shot: bool = False) -> list[str]:
     effect against the voice under it). One gain per take (clip) - the user's rule, 2026-10-16 - or per shot: its
     RMS brought to VOICE_DB, never a peak over VOICE_PEAK_DB. In place; returns a line per take / shot."""
     groups: dict = {}
-    for k, (sid, a, b) in enumerate(segs):
+    for k, (sid, *_) in enumerate(segs):
         groups.setdefault(k if per_shot else sid, []).append(k)
     lines = []
     for key, ks in groups.items():
@@ -273,20 +283,44 @@ def level_voice(out: list, segs: list, per_shot: bool = False) -> list[str]:
         g = min(VOICE_DB - rms, VOICE_PEAK_DB - peak)
         for k in ks:
             out[k] *= np.float32(10 ** (g / 20))
-        sid, a, b = segs[ks[0]]
+        sid = segs[ks[0]][0]
         lines.append(f"{'shot ' + str(key) + ' (' + sid + ')' if per_shot else 'take ' + sid}: {rms:.1f} dBFS -> "
                      f"{rms + g:.1f} ({g:+.1f} dB{', held by its peak' if g < VOICE_DB - rms - 0.05 else ''})")
     return lines
 
 
+def stretch(seg: np.ndarray, speed: float, n_out: int) -> np.ndarray:
+    """Stereo sound played `speed` times as fast (0.5 = slow motion), the pitch kept: ffmpeg's atempo (stages of
+    0.5..2), piped - then exactly n_out samples (a shot's timeline frames)."""
+    k, chain = float(speed), []
+    while k > 2.0:
+        chain.append(2.0)
+        k /= 2.0
+    while k < 0.5:
+        chain.append(0.5)
+        k /= 0.5
+    chain.append(k)
+    r = subprocess.run([tool("ffmpeg"), "-v", "error", "-nostdin", "-f", "f32le", "-ar", str(SR), "-ac", "2", "-i",
+                        "pipe:0", "-af", ",".join(f"atempo={x:.6f}" for x in chain), "-f", "f32le", "-ar", str(SR),
+                        "-ac", "2", "pipe:1"], input=np.ascontiguousarray(seg, np.float32).tobytes(),
+                       capture_output=True)
+    if r.returncode:
+        raise SystemExit(f"could not change the sound's speed: {r.stderr.decode('utf-8', 'replace')[-400:]}")
+    y = np.frombuffer(r.stdout, np.float32).reshape(-1, 2)
+    return y[:n_out].copy() if len(y) >= n_out else np.concatenate([y, np.zeros((n_out - len(y), 2), np.float32)])
+
+
 def cut_sound(segs: list, clips: dict, fps: float, d: Path, level: str | None = None) -> np.ndarray:
     """The clips' own sound for the shots, frame-exact, 8 ms fades at each cut (silence where a clip has none).
-    level "take" / "shot" = a talking video's voice levelled (level_voice) - the levels are printed."""
+    A segment is (clip, first source frame, last) or, from the Editor (0.6.0), (clip, first, last, speed, timeline
+    frames[, its own volume in dB]): its sound stretched to those frames, the pitch kept (ffmpeg's atempo), then
+    louder / softer by the user's own dB (-60 = muted) after the levelling. level "take" / "shot" = a talking video's
+    voice levelled (level_voice) - the levels are printed."""
     import soundfile as sf
     out, fade = [], int(0.008 * SR)
     ramp = np.linspace(0, 1, fade, dtype=np.float32)[:, None]
     cache: dict = {}
-    for sid, a, b in segs:
+    for sid, a, b, *more in segs:
         c = clips[sid]
         n = int(round((b - a + 1) / fps * SR))
         seg = np.zeros((n, 2), np.float32)
@@ -298,6 +332,9 @@ def cut_sound(segs: list, clips: dict, fps: float, d: Path, level: str | None = 
             lo, hi = max(0, s0), min(len(y), s0 + n)
             if hi > lo:
                 seg[lo - s0:hi - s0] = y[lo:hi, :2] if y.shape[1] >= 2 else np.repeat(y[lo:hi], 2, axis=1)
+        if more and abs(float(more[0]) - 1.0) > 1e-6:
+            seg = stretch(seg, float(more[0]), int(round(int(more[1]) / fps * SR)))
+            n = len(seg)
         if n > 2 * fade:
             seg[:fade] *= ramp
             seg[-fade:] *= ramp[::-1]
@@ -305,6 +342,11 @@ def cut_sound(segs: list, clips: dict, fps: float, d: Path, level: str | None = 
     if level and out:
         for ln in level_voice(out, segs, per_shot=level == "shot"):
             log(f"voice levelled: {ln}")
+    for k, s in enumerate(segs):                            # the user's own volume per shot (the Editor), last
+        db = float(s[5]) if len(s) > 5 and s[5] else 0.0
+        if db:
+            out[k] *= np.float32(0.0 if db <= -60 else 10 ** (db / 20))
+            log(f"shot {k + 1} ({s[0]}): its sound {'muted' if db <= -60 else f'{db:+g} dB'} (the Editor)")
     return np.concatenate(out) if out else np.zeros((0, 2), np.float32)
 
 
@@ -321,14 +363,17 @@ def write_sound(prj: Project, d: Path, v, y: np.ndarray, stem: str | None = None
     return m4a
 
 
-def add_sfx(plan_p: Path, plan: dict, amount: str, kinds: list[str], talk: bool, drops: list[float]) -> str:
+def add_sfx(plan_p: Path, plan: dict, amount: str, kinds: list[str], talk: bool, drops: list[float],
+            sounds: list[str] | None = None, bed: str = "") -> str:
     """0.5.4 (step 6): the draft's own effects get their sounds - the plan's "sfx" {amount, kinds, first = the drops'
     frames, kept first} picks which (motionlab\\sfx.py choose), tools\\sfx.py plan levels each against the sound under
     it (a voice is not lowered) and its mix becomes the plan's "audio"; build.py makes them again on every build of
     this plan and its copies."""
     plan["sfx"] = {"amount": amount, **({"kinds": kinds} if kinds else {}),
-                   **({"first": [int(round(x)) for x in drops]} if drops else {}), **({"song_db": 0.0} if talk else {})}
-    if not SFX.plan_cues(plan):
+                   **({"first": [int(round(x)) for x in drops]} if drops else {}),
+                   **({"song_db": 0.0, "voice": True} if talk else {}), **({"sounds": sounds} if sounds else {}),
+                   **({"bed": {"file": bed}} if bed else {})}
+    if not SFX.plan_cues(plan) and not bed:
         del plan["sfx"]
         return "no sound effects: none of the draft's effects " + (f"is a {' / '.join(kinds)}" if kinds else "has one")
     write_json(plan_p, plan)
@@ -343,9 +388,13 @@ def add_sfx(plan_p: Path, plan: dict, amount: str, kinds: list[str], talk: bool,
     write_json(plan_p, plan)
     rec = sum(1 for q in rows if q.get("sound", "made-up") != "made-up")
     kinds_n = Counter(q["kind"] for q in rows)
+    bd = read_json(rep).get("bed")
+    if not rows and bd:
+        return f"no sound effects; the ambience bed {Path(bd['file']).name} under the voice, {bd['db_vs_voice']:+g} dB under its words"
     return (f"{len(rows)} sound effects ({amount}: {', '.join(f'{n} {k}' for k, n in kinds_n.most_common())}; "
             f"{rec} recorded, {len(rows) - rec} made up), each levelled against the sound under it - every cue with "
-            f"frame + timecode: build\\sfx\\{rep.name}")
+            f"frame + timecode: build\\sfx\\{rep.name}" + (f"; the ambience bed {Path(bd['file']).name} under the "
+                                                          f"voice, {bd['db_vs_voice']:+g} dB under its words" if bd else ""))
 
 
 def match_colour(prj: Project, v: int, clips: list[dict], style: dict, strength: float) -> tuple[dict, str]:
@@ -450,6 +499,91 @@ def footage(prj: Project, W: int, H: int) -> tuple[dict, list[dict], bool, float
     if odd:
         log(f"left out (cached at another frame rate): {', '.join(c['id'] for c in odd)}")
     return srcs, [c for c in clips if c["fps"] == fps], color, fps
+
+
+def _minus(runs: list, cuts: list, shortest: int) -> list[tuple[int, int]]:
+    """Frame runs (inclusive) with the cut runs taken out; a piece shorter than `shortest` frames is dropped."""
+    out = []
+    for a, b in runs:
+        pieces = [(a, b)]
+        for c0, c1 in cuts:
+            nxt = []
+            for p0, p1 in pieces:
+                if c1 < p0 or c0 > p1:
+                    nxt.append((p0, p1))
+                    continue
+                if c0 > p0:
+                    nxt.append((p0, c0 - 1))
+                if c1 < p1:
+                    nxt.append((c1 + 1, p1))
+            pieces = nxt
+        out += [p for p in pieces if p[1] - p[0] + 1 >= shortest]
+    return out
+
+
+def cut_stumbles(clips: list[dict], fps: float, keep: set[int]) -> tuple[str, list[dict]]:
+    """0.6.0 step 20: each talking clip's stumbles (motionlab\\stumbles.py on its verbatim transcript, tools\\speech.py
+    - made once per clip) taken out of its spoken parts, so the draft loses them with the pauses: fillers, a phrase
+    said twice, stumbles, retakes, "cut" / "again" said to the edit. Numbered across the clips in the order the draft
+    takes them; keep = the numbers put back (--keep-stumbles). Returns (the line for the notes, every stumble)."""
+    from motionlab import speech as SPM
+    from motionlab import stumbles as STM
+    if not SPM.available():
+        return "stumbles not looked for (speech to text is not installed: Settings > Programs)", []
+    import speech as SPT                                        # tools\speech.py (cached per clip)
+    try:
+        from motionlab import brand as BR
+        names = ", ".join(BR.glossary_words())[:300]
+    except Exception:                                           # noqa: BLE001 - no brand = no names
+        names = ""
+    found, n = [], 0
+    for c in sorted((c for c in clips if c.get("speech")), key=lambda c: (len(c["id"]), c["id"])):
+        _, tr = SPT.transcript(Path(c["source"]), names=names, verbatim=True)
+        words = SPT.take_words(tr)
+        groups = STM.find(words, tr.get("lang"))
+        cut = []
+        for g, sp in zip(groups, STM.spans(words, groups)):
+            n += 1
+            if sp is None:
+                continue
+            f0 = max(0, int(math.floor((sp[0] - c["offset_s"]) * fps)))
+            f1 = min(c["frames"] - 1, int(math.ceil((sp[1] - c["offset_s"]) * fps)) - 1)
+            found.append({**{k: g[k] for k in ("kind", "text", "why")}, "n": n, "clip": c["id"], "f0": f0, "f1": f1,
+                          "kept": n in keep})
+            if n not in keep and f1 >= f0:
+                cut.append((f0, f1))
+        if cut:
+            c["speech"] = _minus(c["speech"], cut, max(1, int(round(0.25 * fps))))
+    gone = [s for s in found if not s["kept"]]
+    secs = sum(s["f1"] - s["f0"] + 1 for s in gone) / fps
+    line = (f"{len(gone)} stumble(s) cut ({secs:.1f} s: " + ", ".join(
+        f"{k} {v}" for k, v in Counter(s["kind"] for s in gone).most_common()) + ")" if gone
+            else "no stumbles cut" if found else "no stumbles found")
+    if len(found) > len(gone):
+        line += f", {len(found) - len(gone)} put back"
+    return line, found
+
+
+def clean_takes(prj: Project, clips: list[dict], d: Path) -> str:
+    """0.6.0 step 23 (--voice-clean): each talking clip's sound through the voice chain (motionlab\\loudness.py
+    clean_voice: noise, a speaker's EQ, de-esser, two compressors - filters only, the timing kept) before the cuts;
+    the cleaned copy is made once per clip in the draft folder."""
+    from motionlab import loudness as LD
+    done, bad = 0, []
+    for c in clips:
+        if not (c.get("wav") and c.get("speech")):
+            continue
+        src = Path(c["wav"])
+        dst = prj.check(d / f"{src.stem}_voice.wav")
+        if not dst.exists() or dst.stat().st_mtime < src.stat().st_mtime:
+            r = LD.clean_voice(src, dst)
+            if r.get("error"):
+                bad.append(f"{c['id']}: {r['error']}")
+                continue
+        c["wav"] = str(dst)
+        done += 1
+    return (f"the voice cleaned in {done} take(s) (noise, EQ, de-esser, compression)"
+            + (f" - not in {', '.join(bad)}" if bad else ""))
 
 
 def clip_sound(prj: Project, clips: list[dict], d: Path, fps: float, mode: str, only: set | None = None,
@@ -759,6 +893,7 @@ def apply_list(a, prj: Project) -> int:
                        str(P["frames"])] + (["--script", o["script"]] if o.get("script") else []))
             P["layers"].append({"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"),
                                 "start": 0, "end": int(P["frames"]) - 1, "blend": "normal"})
+            P.setdefault("captions_fit", "chin")       # 0.6.0: spoken captions sit off the speaker's face (build.py)
             missing = [ln for ln in out.splitlines() if ln.startswith("NOT SAID")]
             done.append(f"captions ({o['preset']}" + (f", script {o['script']}" if o.get("script") else "")
                         + f") over f0-f{int(P['frames']) - 1}" + (f"; {len(missing)} script line(s) not said" if missing
@@ -767,7 +902,7 @@ def apply_list(a, prj: Project) -> int:
     made = base.get("made_by") or {}
     talk = made.get("sound") in ("talk", "clips") and any(o["op"] == "cut" for o in ops)
     base_audio = Path(str((base.get("audio") or {}).get("path") or ""))
-    if base_audio.parent.name == "sfx" and base_audio.stem.endswith("_mix"):
+    if base_audio.parent.name == "sfx" and base_audio.stem.endswith(("_mix", "_sfx")):
         P["sfx"] = P.get("sfx") or True                 # the base had sound effects: build.py makes them again
     if talk:                                            # the clips' own sound follows the shots again
         _, clips, _, cfps = footage(prj, int(P["width"]), int(P["height"]))
@@ -924,11 +1059,21 @@ def main() -> int:
     ap.add_argument("--apply", metavar="LIST", help="0.5.3: an edit list (motionlab\\editlist.py) on the newest plan "
                     "-> plan_v<N+1>.json")
     ap.add_argument("--per-shot", action="store_true", help="talk: level the voice per shot (default: one gain per take)")
+    ap.add_argument("--stumbles", choices=["on", "off"], default="off",
+                    help="talk: cut fillers, repeats, retakes and 'cut / again' too (0.6.0, opt-in: a loose, "
+                         "off-script take; needs speech to text, ~8 s a take)")
+    ap.add_argument("--keep-stumbles", help="talk: the stumbles' numbers (draft_vN.md) to put back, e.g. 2,5")
+    ap.add_argument("--voice-clean", action="store_true",
+                    help="talk: the voice through a noise / EQ / de-esser / compressor chain first (0.6.0, off until "
+                         "the user's A/B)")
     ap.add_argument("--colour", choices=["match", "grade", "none"], default="match")
     ap.add_argument("--colour-strength", type=float, default=0.8, help="how far toward the references' colour (0-1)")
     ap.add_argument("--sfx", choices=["none", "auto", *SFX.AMOUNT_GAP_S], default="none",
                     help="0.5.4: sound effects on the draft's effects (auto = few for a talking video, else some)")
     ap.add_argument("--sfx-kinds", help="sound effects: only these kinds, comma-separated (tools\\sfx.py kinds)")
+    ap.add_argument("--sfx-sounds", help="0.6.0: the library sounds to use (their \"file\", comma-separated): a kind "
+                                         "with sounds here uses only those")
+    ap.add_argument("--ambience", help="0.6.0: an ambience bed (library\\music\\ambience\\...) under the voice")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--render", action="store_true")
     ap.add_argument("--presets", action="store_true", help="list the presets")
@@ -978,6 +1123,15 @@ def main() -> int:
         raise SystemExit("no song: put an audio file (.mp3, .m4a, .wav) into the project folder or give --music")
     if mode in ("talk", "clips"):
         clip_sound(prj, clips, d, fps, mode)
+    stumble_line, stumbles = None, []
+    if mode == "talk" and a.stumbles == "on":
+        keep = {int(x) for x in re.findall(r"\d+", a.keep_stumbles or "")}
+        stumble_line, stumbles = cut_stumbles(clips, fps, keep)
+        log(f"stumbles: {stumble_line}")
+    if mode == "talk" and a.voice_clean:
+        vc = clean_takes(prj, clips, d)
+        log(f"voice: {vc}")
+        stumble_line = f"{stumble_line}; {vc}" if stumble_line else vc
     beats, downbeats, drops, start, info = [], set(), [], 0.0, None
     length = a.length or (style.get("length_s") or {}).get("typical") or 30.0
     if mode == "music":
@@ -1014,6 +1168,8 @@ def main() -> int:
         sound_line = ((f"the clips' own sound in order, pauses cut out, the voice levelled to {VOICE_DB:g} dBFS "
                        f"(one gain per {lvl})") if mode == "talk"
                       else "the clips' own sound, shot by shot (no song in the project folder)")
+        if stumble_line:
+            sound_line += f"; {stumble_line}"
     grade, colour_line = (D["grade"] if a.colour != "none" else dict(DR.NEUTRAL)), None
     if a.colour == "match" and style.get("lab") and color:
         try:
@@ -1034,16 +1190,23 @@ def main() -> int:
                         "style": ST.summary(style)}}
     plan_p = prj.check(prj.build / f"plan_v{v}.json")
     write_json(plan_p, plan)
-    if a.sfx != "none":
+    if a.sfx != "none" or a.ambience:
         sfx_line = add_sfx(plan_p, plan, ("few" if mode == "talk" else "some") if a.sfx == "auto" else a.sfx,
-                           sfx_kinds, mode == "talk", drops)
+                           sfx_kinds, mode == "talk", drops,
+                           [x.strip() for x in (a.sfx_sounds or "").split(",") if x.strip()], a.ambience or "")
         log(f"sound: {sfx_line}")
         sound_line += f"; {sfx_line}"
     args_line = " ".join(sys.argv[1:])
     md = notes(prj, v, style, D, by_id, fps, W, H, orient, sound_line, music_note, args_line, colour_line)
+    if stumbles:                                    # 0.6.0 step 20: what went besides the pauses, each to put back
+        md += ("\n## Stumbles cut (in each clip's own frames)\n\n" + "\n".join(
+            f"- {s['n']}. {s['kind']} - clip {s['clip']} f{s['f0']}-f{s['f1']} ({frame_to_tc(s['f0'], fps)}-"
+            f"{frame_to_tc(s['f1'], fps)}): {s['why']}" + (" - PUT BACK" if s["kept"] else "") for s in stumbles)
+               + "\n\nPut one back: the same command with `--keep-stumbles 2,5` (their numbers); none cut: "
+               "`--stumbles off`.\n")
     prj.check(prj.build / f"draft_v{v}.md").write_text(md, encoding="utf-8")
     write_json(prj.check(d / f"draft_v{v}.json"), {k: D[k] for k in ("frames", "shots", "effects", "skipped", "broll")}
-               | {"style": style, "sound": sound_line, "mode": mode})
+               | {"style": style, "sound": sound_line, "mode": mode, "stumbles": stumbles})
     log(f"draft v{v}: {D['frames']} frames ({D['frames'] / fps:.1f} s), {len(D['shots'])} shots, "
         f"{len(D['effects'])} effects, {len(D['skipped'])} kinds left for Claude - {time.time() - t0:.1f} s")
     log(f"notes: {prj.build / f'draft_v{v}.md'}")

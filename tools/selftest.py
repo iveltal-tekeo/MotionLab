@@ -13,7 +13,8 @@ Scoring (automatic detector output only - blind to the ground truth):
   false pos.  detected events that match no ground-truth effect
 PASS = every effect found with correct type and frames, every cut exact, BPM/beat checks pass, 0 false positives.
 First, without video: odd titles (emoji, "...") make folder names the app opens and downloads it finds (check_titles),
-the quick draft's rules (check_draft), feel tests (check_feels), sound effects on known frames and levels (check_sfx),
+the quick draft's rules (check_draft), feel tests (check_feels), sound effects on known frames and levels and the
+finished sound's loudness (check_sfx), stumbles in a talking take (check_stumbles),
 the checks before the final render (check_precheck), ratings as rules and the two kinds of lessons
 (check_lessons_ratings), carousels kept as one post and the scrubbed problem report (check_downloads_report), the
 thumbnail check's rules (check_thumbnail), YouTube's chapter / hashtag rules and package.json (check_publish);
@@ -427,11 +428,28 @@ def check_colour(analysed: bool) -> dict:
 
 def check_sfx() -> dict:
     """Sound effects (0.5.0, tools\\sfx.py), no video: a synthetic song and cues at known frames - onsets, levels
-    against the song, the ceiling, the same output twice, cues that follow a setting, a plan's effects as cues."""
+    against the song, the ceiling, the same output twice, cues that follow a setting, a plan's effects as cues; over
+    a voice (0.6.0) very subtle on a word, levelled to the voice in a pause. The finished sound (0.6.0,
+    motionlab\\loudness.py): EBU R128's test tone measured, a quiet talk with clicks mastered to the target with its
+    true peak under the ceiling after AAC."""
+    from motionlab import loudness as LD
     from motionlab import sfx as SFX
     print("\n=== sound effects ===")
     r = SFX.selfcheck()
-    return {"passed": r["passed"], "seconds": r["seconds"]}
+    print("\n=== the finished sound: loudness and true peak ===")
+    ld = LD.selfcheck()
+    from motionlab import sfxgen as GEN                     # 0.6.0: sounds made with ElevenLabs (a test server)
+    print("\n=== sounds made with ElevenLabs (a test server, no key) ===")
+    g = GEN.selfcheck()
+    for line in g["lines"]:
+        print(line)
+    from motionlab import music as MU                       # 0.6.0 step 10: the music library, a bed under a voice
+    print("\n=== the music library (a scratch library) ===")
+    import time
+    t0 = time.time()
+    mu = MU.selfcheck()
+    return {"passed": r["passed"] and ld["passed"] and g["passed"] and mu["passed"],
+            "seconds": round(r["seconds"] + ld["seconds"] + g["seconds"] + time.time() - t0, 2)}
 
 
 def check_usage() -> dict:
@@ -525,6 +543,45 @@ def check_publish() -> dict:
     return {"passed": r["passed"]}
 
 
+def check_brand() -> dict:
+    """My Brand (0.6.0, motionlab.brand), no app: what a save keeps and refuses, save + load in a temp folder; Import
+    from your website (motionlab.siteread) on made-up pages, no network."""
+    from motionlab import agency as AG
+    from motionlab import brand as BR
+    from motionlab import siteread as SR
+    from motionlab import social as SO
+    print("\n=== my brand: brand.json checked on every save, Import from your website; the content calendar, your videos ===")
+    from motionlab import moodboard as MB                  # (0.6.0 step 7: the mood board; 13: your stats files)
+    from motionlab import stats as STS
+    r, s, a, o, m, x = BR.selfcheck(), SR.selfcheck(), AG.selfcheck(), SO.selfcheck(), MB.selfcheck(), STS.selfcheck()
+    for line in r["lines"] + s["lines"] + a["lines"] + o["lines"] + m["lines"] + x["lines"]:
+        print(line)
+    return {"passed": r["passed"] and s["passed"] and a["passed"] and o["passed"] and m["passed"] and x["passed"]}
+
+
+def check_miniedit() -> dict:
+    """The Editor (0.6.0 step 6, motionlab.miniedit), no video: trims, deletes, a moved cut, moves, splits, speed, graphics, sound effect edits and
+    words on a made-up plan - what moves with a shot, what is refused, a sound it cannot cut again locking the shots."""
+    from motionlab import edfx as FX
+    from motionlab import miniedit as ME
+    print("\n=== the Editor: a made video changed by hand ===")
+    r, fx = ME.selfcheck(), FX.selfcheck()                  # (+ its effects: motionlab.edfx)
+    for line in r["lines"] + fx["lines"]:
+        print(line)
+    return {"passed": r["passed"] and fx["passed"]}
+
+
+def check_facefit() -> dict:
+    """Captions off the speaker's face (0.6.0 step 21, motionlab.facefit): where a shot's captions go - under the
+    chin, under the mouth in a close-up, never up on the forehead, a face beside them ignored - no video."""
+    from motionlab import facefit as FF
+    print("\n=== captions off the face ===")
+    r = FF.selfcheck()
+    for line in r["lines"]:
+        print(line)
+    return {"passed": r["passed"]}
+
+
 def check_feels() -> dict:
     """Feel tests when starting blind (0.4.2, motionlab.style): the default three feels, the words that pick one, and
     a raw hook that really is busy - no video."""
@@ -536,6 +593,15 @@ def check_feels() -> dict:
     print(("PASS  " if ok else "FAIL  ") + "feels: slick / raw / cinematic by default, 'slow moody' -> cinematic, "
           "'fast glitchy' -> raw, a raw hook has >= 20 effects a minute")
     return {"passed": ok}
+
+
+def check_stumbles() -> dict:
+    """Stumbles in a talking take (0.6.0, motionlab.stumbles), no video: made-up takes with times - fillers, a phrase
+    twice, half a word, retakes, "cut / again" said to the edit, English and Spanish; emphasis, rhetoric and a question
+    kept; a cut never reaches into a kept word."""
+    from motionlab import stumbles as STM
+    print("\n=== stumbles in a talking take ===")
+    return {"passed": STM.selfcheck()["passed"]}
 
 
 def check_precheck() -> dict:
@@ -651,8 +717,11 @@ def main() -> int:
     args = ap.parse_args()
     st = HERE / "selftest"
     results = {"titles": check_titles(), "draft": check_draft(), "feels": check_feels(), "sfx": check_sfx(),
+               "stumbles": check_stumbles(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
-               "thumbnail": check_thumbnail(), "publish": check_publish(), "usage": check_usage(),
+               "thumbnail": check_thumbnail(), "publish": check_publish(), "brand": check_brand(), "miniedit": check_miniedit(),
+               "facefit": check_facefit(),
+               "usage": check_usage(),
                "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:

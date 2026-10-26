@@ -196,6 +196,518 @@ to the lab's texture.
 
 ## Released plans (their text when they shipped)
 
+### 0.6.0 - released 2026-10-26 - Content agency: My Brand, the Editor, mood boards and sound
+
+Released 2026-10-26, a big release (the user: "wrap everything up, run the long tests and lets prepare to release the
+0.6.0", then "i want to finish eveyrthing we have and only have released the 0.6.0", and for the music library and the
+sound logo "Build them first"): every step Claude could build was built; what waits on the user moved to the top of
+0.6.1 (*Left from 0.6.0*); 17-19 (YouTube analytics) had moved to 0.6.5 the same day. The 20 ElevenLabs sounds the
+user kept ship in `tools\sounds\made\` at the user's word ("i will not use them comercially so just add them to
+motionlab") with the free plan's licence on each - against this plan's own rule below (a sound in the repo only when
+its licence allows passing it on), the user's call. The plan as it was:
+
+**Ships when**, per section:
+- *My Brand*: the page holds the user's goal on social media, their audience, identity (colours, fonts, logo, voice)
+  and catalogue with prices - read from their website and checked by them; Prepare, New edit and Motion Graphics use
+  it (a script in the brand's voice, the brand's colours as a palette, its logo); one video places a product - in
+  passing or as a call to action at the end - and the user rates it OK or better.
+- *Editor*: a cut, an effect and a caption fixed in the mini-editor render again without Claude; a real talking take
+  with its stumbles cut (20) and its captions under the chin (21), rated OK or better by the user.
+- *Analyser*: a mood board's style card is used by a video the user rates good.
+- *Sound* (from 0.5.4): recorded sound effects on a friend's PC too, rated good - not "AI created" - on two real
+  videos (a talking video and a music edit) with `precheck.py --sfx` passing on both; a laptop's numbers (the
+  library's size, the time it adds per minute of video); every render's sound at its loudness target with the true
+  peak at or under -1 dBTP measured after the AAC encode (22).
+- *Content agency* (the plan, steps 12-16; 17-19 moved to 0.6.5): a month of the user's posts planned on the
+  calendar from their videos and their own stats imported for at least one platform.
+
+**What it is** (the user, 2026-10-25: "okay my brand is different from content agency right? separate each sections
+and stuff into each respective one"): *Content agency* is the version - videos with an agency's quality, for a brand;
+*My Brand* is one of its sections, the new page. Each part sits in the app section it belongs to: **My Brand** (the
+page, the website, the brand kit, product motion - steps 1-5), the **Editor** (the mini-editor - 6; cleaner talking
+edits - 20-21), the **Analyser** (mood boards - 7), **Sound** (0.5.4's open steps - 8-11; the finished sound - 22-23)
+and **Content agency** itself (the plan around the videos: calendar, stats, trends - 12-19).
+
+**The user's words (2026-10-22)**: "0.5.5 Content Agency - implement a new section above Analyze which would be called
+'My Brand'". Their mock-up deck (`new_edit_section.html`, slides 10-11, in Spanish): *Mi marca* - "a page where Claude
+learns your goal on social media, your audience, your identity and the whole catalogue with prices, reading your web;
+used in Prepare, the Editor and Motion Graphics" ("that it knows the whole catalogue, prices included"); *Motion de
+producto* - "with My Brand's catalogue Claude puts a product in the video: indirectly or with a call to buy at the end,
+mixed with your clips in the same edit".
+
+**Renumbered 2026-10-25** from 0.5.5 to 0.6.0 (the user: "start working on the 0.5.5 (which u will move to 0.6.0 since
+it will be a big rrelease)") - the start of the 0.6 line; the plans after it moved up one each (plans_history.md).
+
+**My Brand** - a new page in the sidebar (steps 1-5; the look = the mock-up's slide 10: a rose band, *Goal on social*
+as pills + the user's words, *Audience* as chips, *Brand identity* = colour swatches + the tone of voice, *Your
+website* with *Read it again*, the *Catalogue* - each product with its price and a *Use in videos* switch):
+1. **The page** (the sidebar below Claude's memory, as the mock-up shows - the user's words of 2026-10-22 said "above
+   Analyze"): goal, audience, identity, voice, catalogue - each a card the user fills or corrects; stored on this PC
+   (`knowledge\local\brand.json`), never in shared knowledge unless the user shares it.
+   **Built 2026-10-25** (uncommitted): `#/brand` (`pageBrand`) in the mock-up's look - the rose band, *Goal on social
+   media* (four pills + the user's words), *Target audience* (chips), *Brand identity* (up to 6 colour swatches + the
+   tone of voice), *Your website*, *Catalogue* (name, what it is, price, a *Use in videos* switch); every change saved
+   by itself (GET / POST `/api/brand`, API level 33) through `motionlab\brand.py` (checked on every save, self-test
+   *my brand*); the sidebar row under Claude's memory with NEW until the first visit. Tested in headless Edge on a
+   copy of the lab (fill every card, saved, reloaded, a bad web address refused). Docs: app_pages.md *My Brand*.
+   Same day, rounds 2-3 (the user's asks): the row moved right under Home between two lines; the identity top to
+   bottom (the logo, then colours typed as hex), *Tone of voice* a card of its own with 8 quick words; the user's logo
+   large and faint in the band's glass (the shop icon stays).
+2. **Read the website**: the user gives a link; MotionLab fetches that site's pages only, Claude takes the products /
+   services with their prices, the tone and the colours; the user ticks what is right before it is saved. From the
+   research (2026-10-25, how Canva's Brand Kit Builder, HeyGen, Sked and Pomelli do it): a different source per kind
+   of field - colours, logo, Google-hosted fonts, the tagline and the footer's handles from the site's code (a
+   commercial web font flagged: it may need a licence); products and prices from its pages, each marked *from your
+   website - check* until the user confirms it (crawled prices go stale or lose their conditions); the voice NOT from
+   the website (marketing copy is not how the person talks on camera) but from step 3b.
+   **Built 2026-10-25** (uncommitted; the user: "an option besides the 'your website' with a download icon that
+   'imports data from your website' ... a good foundation regarding your brand instead of filling up everything by
+   hand", then "before importing make a pop up with all the info gotten and how it would be imported"): *Import from
+   your website* = the job `brand_import` (`tools\brand.py import`, `motionlab\siteread.py`, no Claude) -> a pop-up of
+   what it found, each section saying where it goes, what My Brand has marked *already in My Brand* -> the ticked ones
+   in (`brand.take_import`). My Brand also holds the name + what it does, fonts and *Your pages* now. Tested: the
+   reader's selfcheck (12) + brand's (16), a made-up Shopify shop of 10 products in the browser, and the user's own site
+   live (RIFT, the description, the logo, 8 colours, Instrument Sans + IBM Plex Mono - not in the font library -, no
+   shop yet: "coming soon"). Then (the user's pick, the same night) **the site's fonts**: one the library lacks that is a
+   free Google font (its TTFs 400-700 from Google Fonts' CSS API + its OFL / Apache licence from google/fonts on
+   GitHub, downloaded by the job) is offered for Titles / Body text and, picked, copied into the user's own fonts
+   (`library\fonts\<dir>`, this PC only) - tested live: Instrument Sans + IBM Plex Mono, OFL 1.1. Open: services with
+   prices written as plain text (no shop format) - a Claude read, later.
+3. **The brand kit in the app**: the brand's colours as the first palette in New edit's *Colour palette*, its fonts
+   (`fonts\` or added) and logo (`logos\` or the user's file) offered first in Motion Graphics and captions.
+   **First part built 2026-10-25** (uncommitted; the user: "add an option when u generate or edit a video or create in
+   general that is called 'its for my brand' and then gets the knowdledge and tailors the video to your brand, using
+   icons colors url ... like a real my brand"): the logo on My Brand (`brand.save_logo`); **For my brand** - one switch
+   in New edit, the Generator and Prepare's three dialogs: the request carries My Brand as it is (`brand.snapshot`, only
+   the products switched on) and its brief a *For my brand* section (`brand.brief_lines`: colours as the palette, the
+   logo on the end card, the website in the call to action, the voice, the goal's ending, products only from the
+   list) - which step 4's skills now follow (one line each in /recreate-video, /generate-video, /write-script,
+   /write-title). Still open here: the brand's colours as a palette card in New edit, its font, the logo offered
+   first in Motion Graphics, the quick draft (no Claude) using the colours.
+4. **The skills read it**: `/write-script` and `/write-title` (voice, audience, goal), `/recreate-video` and
+   `/generate-video` (identity, products), `/write-prompt` (product shots).
+5. **Product motion**: a product from the catalogue in the video - in passing (a lower third, a card over B-roll) or a
+   call to action at the end (price, link) - built from the Motion Graphics library's templates (the mock-up's slide
+   11, *Motion de producto*: opened from New edit; the timeline shows where Claude puts it - the product's name at the
+   start, the price and the website at the end - and each can be moved).
+   **First part built 2026-10-25** (the user: "lets start ... product motion"): a new template **Product card**
+   (`tools\overlays\motion\product-card`: the product's picture or clip on a card, its name word by word, what it is,
+   the price popping in, a button with the website, the logo in the card's corner; upright = picture on top, wide =
+   picture left; background off = see-through with the words on a card of their own; look-aware; checked upright and
+   wide, `pick` ranks it first for product words); New edit's Text step **Show a product** (up to 2 of My Brand's
+   products for videos, each *in passing* / *at the end* / *both*) -> the request's `products` -> the brief: build
+   each from `product-card` with `brand.product_card_values` (its words, the website or a page's handle as the button,
+   the brand colours by role, the fonts) + its picture and the logo copied into the graphic. Still open: the timeline
+   view of where it lands (moved by hand - with the mini-editor, step 6), the quick draft placing it without Claude.
+
+**What else My Brand should hold** (the user, 2026-10-25: "do an analysis in the web deep research on what a my brand
+section could have regarding content creation"; what Canva, Adobe Express, Descript, Kapwing, VEED, Opus, Submagic,
+Jasper, HubSpot, Sked, HeyGen and others keep in a brand kit, ranked for MotionLab - S = under a session, M = a
+session; the user picks which go in this version):
+- 3b. **The voice from the user's own words** (S): the tone as 4 sliders (formal-casual, serious-funny,
+  respectful-irreverent, matter-of-fact-enthusiastic - the NN/g tone dimensions), words to use and words to avoid,
+  and 3-5 example lines Claude suggests from the user's own transcripts (`speech.py`) and past scripts. Adjectives
+  alone are slop bait (Claude echoes "seamless, innovative"); examples + words to avoid give it something to imitate
+  and to check a draft against. For Prepare, titles, the words on screen, the package.
+- 3c. **A caption style** (S-M): font, size, case, words per line, the main and highlight colours, position, the
+  animation - what Submagic / Opus / Kapwing save; captions are on every short and the most visible signature. For New
+  edit, quick drafts, the Generator. **Built 2026-10-25** (the user's pick): My Brand's *Captions* card with a live
+  9:16 preview (look, font, letters, colours, motion, position, box); `overlay.py captions --brand`; Claude's brief
+  names it; Graphics > Captions offers it. Open: words per line and size (the graphic's max_words / font_size).
+- 3d. **Fonts with roles** (M, already in step 3): heading, body, captions - from `fonts\` or added.
+- 3e. **A glossary** (S): product and brand names with their spelling and pronunciation, never translated -
+  captions spell them right (faster-whisper takes them as `initial_prompt` / hotwords - check the installed version),
+  scripts and Spanish versions keep them. **Built 2026-10-25** (the user's pick, with *the Overview at a glance + your
+  latest videos*): Style's *Names and words*; the briefs; `overlay.py captions --brand` -> speech to text's names.
+- 3f. **Colour roles and logo versions** (S): each colour gets a job (background / text / accent / highlight) and
+  only readable text-on-background pairs are used; a light, a dark and an icon-only logo, and where the logo goes.
+- 5b. **Product facts and media** (M): per product one key benefit, the claims allowed (with their proof), the link or
+  promo code, screen recordings / screenshots of the app, claims never to make, a *sponsored / affiliate* switch - so
+  Claude never invents a feature or a price.
+- 3g. **Handles and a call to action per platform** (S): the end card and Ready to post name the right handle.
+- 3h. **Content pillars and named series** (S-M): 3-5 pillars, each series with its recurring opener and format -
+  hooks, titles and thumbnails repeat in a series (joins the content calendar, 0.6.0's *Content agency* section).
+- 3i. **My editing look** (S, only MotionLab can do it): 1-3 of the user's analysed references as the brand's pacing,
+  transitions and grade - New edit and the Generator start from them. **Built 2026-10-25** (the user's pick, with
+  3c and the site's fonts): My Brand's *Your editing look* card; New edit's *My brand's look* card; For my brand + no
+  reference = the look (quick draft and brief).
+- 5c. **A signature end card** (M): a Motion Graphics template filled from the brand (+ an optional short sound logo) -
+  at the end, never an intro before the hook.
+- 5d. **Disclosures** (S): "ad" / "paid partnership" on screen and said when a product is sponsored; a reminder for
+  YouTube's altered or synthetic content box (`publish.py` already checks YouTube's rules).
+- 3j. **Hooks and calls to action that worked** (S): from the user's own ratings (outcome.json, the prompt library),
+  never a generic hook list.
+**Built 2026-10-26** (the user: "what other stuff is missing? try to add it to my brand"): 3b the voice in their own
+words (sliders, words to use / never use, lines - the suggestion from their transcripts is still open), 3h content
+pillars + series (and a pillar on calendar posts), 5b in part (a promo code; claims and product media still open), 5d
+(paid partnership -> the brief marks it as an ad), and the website's text kept for Claude (the "suggest from my
+website" Claude button is still open). **Built 2026-10-26** (the user picked "Finish My Brand" in /whats-next): 3f -
+the logo's versions (on dark / on light / the icon alone, `brand.save_logo` kind, `logo_for` picks the one that reads
+on a background - the product card's logo too) and where it goes (`logo_where`: end card / + a corner / nowhere / Auto),
+*Does it read?* under the colours (WCAG contrast; `brand.readable`, `ink_on`: the brief names the pairs that do not
+read and the colour to use, the product card's ink always reads); step 3's open parts: New edit's palette has a *My
+Brand* card (the accent first), every font list starts with the brand fonts, the Generator's quick draft with For my
+brand paints its templates in the brand's colours and fonts (`brand.look_values` + the other templates' accent /
+text_color / bg); 5c the signature end card - Style's *Your end card* (Auto / Logo = logo-reveal / Title = title-card
+/ Channel = end-screen as picture tiles, the sign-off line, a live preview from GET / POST `/api/brand` "_end"),
+`brand.end_card` (the template's settings from the brand, checked against its own settings - a brand font it does not
+offer stays its own; the logo version that reads, copied into `assets\media\`), the brief's line for Claude, the
+Generator's quick draft ends on it (the video's last line as its sign-off); its sound is the template's own cues (no
+separate sound logo yet); 3j - *What worked for you* in the Tone of voice card (`brand.worked`: a script rated good
+or one a video rated good overall was made from -> its HOOK / CTA lines, a title rated good -> the title chosen;
+GET `/api/brand` "_worked", For my brand's snapshot "worked" -> the brief's line, "match the shape, never reuse the
+words"); 3c's rest - the caption style's words per line (1-6, `brand.caption_words` -> `overlay.py captions
+--brand` groups by it, `captions.align_script` too) and size (small / medium / large / huge x the look's own
+font_size), both in the Captions card's live preview; 5b - a product's *Facts & media* dialog (key benefit, claims
+with their proof, never-claims, screenshots / short screen recordings: POST `/api/brand/product_media` =
+`brand.save_product_media`, PNG / JPG / WebP or MP4 / MOV / WebM <= 30 MB, 6 a product; `brand.product_facts` in
+both briefs: "say only what its facts say"). API_LEVEL 38. Tested by clicking through My Brand on a test server
+(the user allowed it; brand.json put back after). Then the brand logo in Motion Graphics' logo picker: the logo
+`brand` (`logos.brand_entry` - My Brand's logo and versions as the variants color / color-dark / dark / icon, pictures
+wrapped in an <svg> inside logos.js, read from brand.json on its time, never written into logos\); first in GET
+`/api/logos` with its pictures as `src`, a *My Brand* chip in the picker; MLLogo draws the version for the background
+(tested on a scratch copy of the lab - the user had just pressed Start from zero). The separate sound logo for the
+end card: **built 2026-10-26** - My Brand > *Your end card* > *Its sound*: the template's own sounds or the brand's
+sound logo (`knowledge\local\brand\sound_logo.<ext>`, <= 8 s; made by ElevenLabs from the user's words - the job
+`brand_sound_logo` = `brand.py sound-logo` - or a file); `brand.save` never takes it from the page (the job writes it
+while the page is open); `end_card()["sound"]` -> the brief's `"sfx": {"logo"}` and the Generator's quick draft; in
+`sfx.plan_cues` it replaces the end card's own cues, on the first one's frame. **Held** (the user,
+2026-10-26): 3b's line suggestions from their transcripts - "should only rly come from videos where i was not handed
+a script right? cuz if not then id just circle around ai prompts? idk how i feel about that maybe lets just hold onto
+that idea": if it is ever built, only from takes the user talked freely in (no script, no prompt behind them).
+Not for MotionLab: locks and approval (team features), AI brand avatars, a "brand score", an auto-written mission
+statement, a watermark on by default (optional only), mood boards from stock pictures (step 7 uses the user's own).
+
+**Editor** - the Editor (step 6; the mini-editor until 2026-10-26):
+6. **The mini-editor** (the user, 2026-10-25: "for the 0.5.5 agency brand section i need you to add also a
+   "mini-editor" so we can handle small cuts or edits withotu having to re-run the entire program under claude"): on
+   a video's page, the newest render's plan as a strip of shots under the player (each shot's picture, its first frame
+   + timecode, its length). Small changes by hand, no Claude window: trim a shot's start / end frame by frame, delete
+   a shot (what comes after closes up - graphics, captions and sound effects move with it), move a cut, swap a shot
+   for another take from the same clips, fix a caption's or a graphic's words, drop or nudge a sound effect, the
+   song's start and volume. *Save* = the next plan (`plan_v(N+1).json`, the old one stays) + a `build.py` job (only
+   what changed renders again: a trim = the video and the sound, no graphic). Bigger wishes (a new effect, another
+   style, re-timing to the music) stay Claude's: *Ask Claude* writes the change as a request. What the user fixed by
+   hand goes into `outcome.json` so Claude reads it next time (the cuts it got wrong are lessons too). Measure first:
+   a one-shot trim's build time on a laptop. Never touches the clips (hard rule 1).
+   **The effects too** (the user, 2026-10-25, later: "so if we do the mini editor on the version we can maybe choose
+   some effects, edit them?"): each effect of the plan as a chip on the strip at its frames (a zoom, a whip, a flash,
+   a speed ramp, a graphic) - swap it for another kind or a library effect, change its length, strength and ease
+   (the easing words: decelerating, S-curve...), nudge it a frame, remove it, add one at the playhead; before *Save*,
+   a preview of the second around it (`render_video.py` renders any range alike), so a change is seen, not guessed.
+   Swapping one effect's sound is here too (step 9 (c)).
+   **First part built 2026-10-26** (uncommitted; the user: "do the mini-editor on the best of your capabilities,
+   slowly no rush test accordingly so we have a good final product"): a video's *Mini-editor* tab (`projMini`) - the
+   render's plan as a strip (the shots as pictures from their clips at their frames, then lanes: sound effects,
+   graphics - a row each where they overlap -, captions; the player's frame as a line), a panel for what is picked
+   and the changes in order (Undo the last, Start again, *Save as a new version*). The engine `motionlab\miniedit.py`
+   (pure plan changes, in order, shots by layer id): trim a shot's start / end (shorter = `editlist.cut`; longer =
+   more of its clip, the timeline moves on), delete a shot, move the cut between two touching shots (the length
+   stays), move / drop a sound effect (`"sfx"` `"edits"`, applied last by `sfx.hand_edits`), a graphic's words and a
+   caption's words (in a copy `<folder>_m<N>`, never the older version's graphic). What moves with a shot: the
+   layers over exactly its frames with an "in" (caption pieces, a corner graphic); graphics pinned to its start keep
+   their intro, to its end their exit. The sound: the clips' own (talk / clips) is cut again on save (draft_edit's
+   helpers); a song stays; a sound made some other way locks the shots' timing (the panel says so). Save = POST
+   `/api/project/<p>/miniedit` -> `build\miniedit\changes_<time>.json` + the job `miniedit` (`tools\miniedit.py apply
+   --build`): plan_v<N+1>, edit_v<N+1>.list (a record for Claude), outcome.json `"hand_fixes"`, one plain build. GET
+   `.../miniedit?plan=` and POST `.../miniedit/preview` (nothing saved). Measured on this PC: a one-frame trim of a
+   10 s video, saved to rendered = 24 s (sound cut again, the mix, the video; a words change adds its graphic's
+   render, ~10 s). Tested: the engine's self-check (13 cases, in selftest.py), a scratch video saved four times
+   through the app, the user's real talking edit previewed (never saved). **Still open**: the effects as chips
+   (swap, length, strength, ease, nudge, add), the preview of the second around a change before Save, swapping a
+   shot for another take, the song's start and volume, the Generator's scenes trimmed like shots.
+   **The Editor, built the same day** (uncommitted; the user, after trying the first part: "instead of mini-editor call
+   it just editor, change the color of the player and editor ... an actual editor where i can select clips, move them
+   around, trim at my own liking, not just click buttons ... add sfx to my liking, maybe remove a design and add a
+   template from our motion graphics template with the color of my liking, maybe add slow/speed to some clips ...
+   look at open source alternative of capcut or premiere or sum and try to implement those in a minimilastic but
+   efficient way"): the tab is *Editor* (`projEditor`), a timeline in OpenCut / CapCut's way (a magnetic main track,
+   lanes above and below, split at the playhead, snapping, an Add panel) with Shotcut / Kdenlive's proxies for a live
+   preview (`EdPreview`: the clips' light copies, the graphics' own pages, Web Audio for the sound effects - no render
+   until Save), its own cyan / violet colours. New in the engine: `move` (a shot and what starts on it to another
+   place), `split`, `speed` (¼×-4×, the same part of its clip; its caption pieces and keys follow, its voice is
+   stretched with the pitch kept - `draft_edit.stretch`, ffmpeg's atempo; `compose` overlays got a `speed` too),
+   `gmove` / `gtrim` / `gdelete`, `gadd` (a template as a new graphic, `overlays\n<N>_<k>_<template>`), `set` (any
+   setting, colours too), `sfxadd` and `sfx` `db` / `sound` (the plan's cues / edits carry `"sound"` = a library file,
+   `sfx.Library.entry`), a caption removed; captions timed to the edit in one layer are cut per shot first
+   (`attach_captions`) so their words travel with their speech; layer ids made unique (`unique_ids`). The preview's
+   media = the job `editor_media` (`tools\miniedit.py media`: a 540p H.264 copy per clip with a key frame every 12
+   frames, its loudness per frame, a 1-per-second filmstrip picture; ~1 s for a 26 s clip). Tested on scratch videos
+   (`zz_editor_talk`: every change by real drags in headless Edge, then saved through the app to v4 in 119 s and its
+   frames checked against the preview; `zz_miniedit_gen`: a Generator video, graphics only). Then (the same day) the
+   captions moved / trimmed (`capmove` / `captrim`, a touching one gives way) and their style (`look`, font, size...).
+   **Done - the extras, 2026-10-26** (the user: "i want to finish everything we have and only have released the
+   0.6.0", then picked these first): the effects as chips (`motionlab\edfx.py`: `fxadd` / `fxmove` / `fxset` /
+   `fxremove`), *See it rendered* (the job `editor_range`), captions split / added (`capsplit` / `capadd` - the engine
+   keeps the whole caption list and writes it on save, step `capfile`; a caption said over a cut shows its end on the
+   next shot), a shot's own volume (`volume`, after the voice is levelled), the song's start and volume (`song` ->
+   `build\song_from_editor_vN.m4a`, the plan's audio `cut` keeps where it came from), another take / a clip added /
+   a slip (`take`, `clipadd`, `slip`; every clip of the plan's `sources` gets a light copy), and a Generator video's
+   scenes as the main track (`miniedit.scenes`). Each saved through the app on a scratch video and its render
+   checked (zz_editor_talk v7-v8, zz_editor_test v5, zz_editor_song v2 - a song from refs\audio, zz_miniedit_gen v3).
+   Found on the way: a video with sound effects but no song rendered silent (build.py now uses the effects alone).
+
+**Cleaner talking edits** (steps 20-23, two here and two under Sound; the user, 2026-10-26: "add all the relevant
+ideas for 0.6.0" - from a talking-head editing kit for Claude the user found and had reviewed: its ideas rebuilt in the
+lab's own code, none of its code or pictures taken - it has no licence and is one creator's style):
+20. **Cut the stumbles, not only the pauses** (S-M): today talk mode (`draft_edit.py --sound talk`) cuts the pauses
+    between spoken parts only. From the words faster-whisper already times (`speech.py`), also cut: fillers ("um",
+    "uh", "eh", "mmm" - an English and a Spanish list), a word or phrase said twice in a row ("we're going to, we're
+    going to"), a stumble with half a word between the copies, a false start ("Today... Today I'll show you"), a
+    sentence retaken right after (its unfinished first try, and a "sorry" / "wait" between them), and a spoken signal
+    ("cut", "again", "otra vez", "me equivoqué") with the take before it. Kept: emphasis ("no no no", "very very"), a
+    finished sentence whose ending the next one repeats on purpose, a filler that is a question ("eh, Marco?"). Every
+    cut listed with its frame + timecode and its reason in `build\checks\`; one is put back by its number (the user in
+    the mini-editor, step 6, or Claude). Quick drafts and `/recreate-video` both use it. Speech to text tidies fillers
+    away unless its `initial_prompt` holds a few of them (check with the installed version). Measure first on the
+    user's own takes: how many stumbles it catches, how many good words it would cut.
+    **Built 2026-10-26** (uncommitted; the user: "can u start working on it now"): `motionlab\stumbles.py` (fillers,
+    repeats, half-word stumbles, retakes, signals - English and Spanish; emphasis, rhetoric and short questions kept;
+    selfcheck 13 known answers), `tools\speech.py stumbles <take>` + `transcribe --verbatim` (a filler prompt in the
+    take's language, cached apart from the captions' transcript: `<video>.<model>.verbatim.json`), the quick draft's
+    talk mode cuts them out of the spoken parts (`--keep-stumbles 2,5`, `--stumbles off`; listed in draft_vN.md with
+    frame + timecode), `/recreate-video` by_feel.md runs `speech.py stumbles` on a filmed script. Measured: the user's
+    two takes (2026-10-24 12-15-59, 85 words; 2026-10-25 23-10-13, 95 words) = 0 found, 0 good words cut - both clean
+    reads; a copy of one with "your song needs" spliced in twice = found at its place (f100-f166 at 60 fps). How many
+    real stumbles it catches still waits on a take with mistakes in it (an "um", a restart, a "cut, again").
+    **Made opt-in the same day** (the user asked whether this was "slop"; the honest answer: the user reads scripts
+    cleanly, so it found nothing and cost ~8 s of speech to text per take on every talking draft): `--stumbles on`.
+    A messy take that it handles well = on by default (and a switch in New edit); one it misses = removed.
+21. **Captions and graphics clear of the face** (S-M): the lab's face finder (`motionlab\thumbnail.py` `faces()`,
+    YuNet - nothing to install) on the speaker's shots, every few frames -> captions at least ~40 px under the chin
+    (a punch-in moves the chin up: measured per shot), graphics over the speaker at least ~90 px off the face, never
+    over it. The precheck flags a caption or graphic over the face and outside the safe zone - upright 1080x1920:
+    nothing that matters above y 220 or below y 1500, nor at x > 930 between y 900 and 1600 (the platforms' buttons),
+    texts centred within +-12 px; wide: 96 px at the sides, 80 px at the top and bottom (scaled for other sizes). Two
+    more checks for a talking video: the video ends on the last word (+0.2 s at most, no outro after it - an end card
+    is a choice the user makes, 5c) and at most 3-4 whooshes per 30 s. A third caption look beside Classic and Clean
+    box: one or two small context words with ONE big keyword under them in the accent colour (an emotional word in a
+    serif italic), word by word with the voice, the second pair only after the first has left - My Brand's caption
+    style (3c) can pick it.
+    **First part built 2026-10-26** (uncommitted; the user: "do what u'd do" - the check first, since the user's lessons
+    fixed graphics over the face by hand): `precheck.face_cover(plan)` in every build - each second where a graphic
+    shows (and each graphic's middle) the frame rendered without the overlay / text layers gives the faces (YuNet),
+    with them what they drew (a change over 60 levels = solid drawing, not a tint); a face whose box (+15 %, stopped
+    at the corner picture it is in) is over 8 % drawn on is flagged, a full-screen card is not; upright videos: the
+    top / bottom bands and right rail; `"over_face": true` on a layer = meant to be there. Measured: *Your song needs
+    a real video* v4 = 0 flags (46 samples, 17 s); the corner-camera v5 = 4 - "keep" over the cheek (f50-75), "#5"
+    over the forehead (f125-144), "comment LAB" touching the face (f800) and the before / after on the face (f450-525,
+    meant: "over_face") - its corner-picture false flag (a card around the picture) fixed by stopping the box at the
+    picture. **The rest built 2026-10-26** (uncommitted): `motionlab\facefit.py` - a plan with `"captions_fit": "chin"`
+    (draft_edit's `caption` line sets it) gets each shot's captions placed by build.py: the faces its lines cross
+    (YuNet, 3 frames a shot), under the chin when it fits the safe height, else (a close-up) just under the mouth,
+    never over the eyes-to-mouth band, never moved up onto the forehead; a "rect" offset per caption piece
+    (`rect_fit`, worked out again each build; a hand-set rect stays). Measured on the user's two wide webcam edits:
+    the face fills the frame (mouth at y 890-1060 of 1080), so nearly every shot has no room and stays - the build
+    says so; upright shorts are where it moves them. `precheck.talk_checks` (build.py): a talking video's tail after
+    its last word (> 0.2 s with no end card there) and > 4 whooshes / whips in any 30 s - the user's two edits pass (an
+    end card after the last word). The **Keyword** caption look (the captions graphic's style "keyword" + 3
+    settings, presets.json "keyword", My Brand's caption looks): small context words, ONE big keyword under them
+    (the longest that is not a little word) in the spoken-word colour, a serif italic, each word as it is said.
+
+**My Brand** - mood boards (step 7; planned as the Analyser's fourth way in, moved to My Brand > Style 2026-10-26 -
+the user: "u can go ahead with the mood board for the my brand? or where should we put it?": a mood board is the
+brand's own look, the Analyser studies other people's videos):
+7. **Mood boards: references beyond videos** (the user, 2026-10-25: "what if our references go beyond just videos?
+   add instagram or pinterest directly?"): pictures the user likes - a Pinterest board, Instagram posts, screenshots -
+   as references for the brand's look. First from pictures on the PC (saved or screenshotted, dropped into the
+   Analyser): per board a style card - the palette (Lab clusters, saturation, contrast), text on the picture (OCR:
+   how much, where, how big), faces (count, size, place), composition (thirds, empty space, clutter), and Claude's
+   words for the type and the mood - used as My Brand's identity, New edit's palette, Motion Graphics and thumbnails.
+   Fetching a board by its link (gallery-dl - GPL, reads Pinterest boards without a login) only later and started by
+   the user: Pinterest's and Instagram's terms forbid automated collection, and Instagram needs the account's cookies
+   (a risk to the account) - so never by default, never Instagram cookies. The pictures stay on the PC.
+   **Built 2026-10-26** (uncommitted) in My Brand > Style: `motionlab\moodboard.py` (pictures copied into
+   knowledge\local\brand\mood\, measured like a thumbnail set's + composition: busy / empty room; the style card in
+   words and its main colours; selfcheck), the card on Style (add / drop / remove, a colour one click into the brand's
+   colours), *For my brand*'s brief carries the card and the folder (Claude opens the pictures). OCR of the words on
+   the pictures and Claude's own words for the type and mood stay for later (the measured card + the pictures
+   themselves cover it for Claude); a board by its link - not done (the platforms' terms).
+
+**Sound** - continued from 0.5.4 (steps 8-11; moved here 2026-10-25 when 0.5.4 shipped as it stood - the user: "the
+otehr stuff just put it on version above"; 0.5.4's full plan and its three listening rounds: plans_history.md):
+8. **Sounds on friends' PCs** (was 0.5.4's step 8): today the 116 recorded sounds live on this PC only, so friends
+   still hear the made-up ones. The 4 Kenney picks are CC0 - they may go in the repo as they are; for the user's pack
+   (no licence stated) and the Sonniss picks (not to be passed on) the repo carries **an import list, never the
+   sounds** - which file is which kind, its trim and anchor, its licence; a friend gets the pack from its page (the
+   user's pack: its download page, from the user) or Sonniss' official mirror, and `sfx.py import` sorts it by the list.
+9. **The user picks the sounds** (was 0.5.4's step 10, the user: "could it be possible for the user itself to choose
+   them while editing or before running the edit"): (a) a *Sounds* page (beside Motion Graphics' Logos): every sound
+   with ▶, its kind, origin and licence; ★ a favourite (used first) / hide one (never used - the library's `"off"`, built
+   2026-10-25); *Add sounds* = a pack, a zip or a few files with where they came from and their licence -> `sfx.py
+   import` as a job; (b) New edit's *Sound* step: *Choose the sounds* - per kind ticked, the ones for this edit (the
+   request -> the plan's `"sfx"` `"sounds"`, kept on every build); (c) the mini-editor (step 6) swaps one cue's sound.
+   **Steps 8 and 9 built 2026-10-26** (uncommitted): `tools\sounds\` = what the repo shares - the 4 Kenney CC0 sounds
+   (`cc0\`, every PC gets them by itself: `sfx.ensure_shipped`) and `import_list.json` (`sfx.py library
+   --export-list`: each library sound's pack, path in the pack, SHA-256, kind, off / favourite; each pack's page and
+   licence - never the sounds); `sfx.py import <pack> --listed` (`sfx.import_listed`) sorts a downloaded pack as the
+   list says (measured: the user's VideoEditingSFX folder into a scratch library = the same 98 sounds, file / kind /
+   off / anchor identical, + the 4 CC0; the 2 the user never picked left out). Motion Graphics > **Sounds** (#/motion/
+   sounds): every sound by kind, ▶, origin and licence, ★ favourite (`Library.pool`: a kind with favourites uses only
+   them), Hide (`"off"`), the packs with "n of m here" and their page; *Add sounds* (a folder / files copied to
+   `.app\sound_import\<batch>\`, or a typed folder path read where it is) = the job `sound_import`. New edit's Sound
+   step: *Choose the sounds* (the request's `sfx.sounds` -> `draft_edit.py --sfx-sounds` / the brief -> the plan's
+   `"sfx": {"sounds"}` -> `Library.only`; the Editor's preview hears the same). API_LEVEL 42. **Waits on the user**:
+   the VideoEditingSFX pack's download page (`packs.videoeditingsfx.page` in the list - empty until they give it).
+10. **A music library and ambience** (was 0.5.4's step 3 (b)): tracks the user downloads (Pixabay Music, YouTube's
+    Audio Library - no API for music, and YouTube's only for YouTube videos) indexed by tempo, mood, length and licence;
+    Jamendo / Freesound / Free Music Archive searched from the app where an API and commercial-use licences exist;
+    room tone and ambience beds (city, nature, a café) under talking videos; New edit's *Music* gets *From the library*.
+    **Built 2026-10-26** (uncommitted; the user picked "Build them first" over releasing without it):
+    `motionlab\music.py` + `tools\music.py` - the songs of refs\audio read where they are, songs and beds added in
+    `library\music\` (+ `ambience\<kind>\`: room, cafe, city, nature, rain, office), each measured once
+    (music.json, by size + time): length, tempo, energy = the onset strength's mean x onsets a second (calm < 1.5,
+    energetic >= 4; onsets alone called a steady hum "energetic"), tone = the spectral centroid (dark < 1600 Hz,
+    bright >= 2600), drops - the user's 6 downloads in 1-3 s each (93-160 BPM, 2 steady, 4 energetic, all warm);
+    beds made with ElevenLabs' `loop` (no seam; generate.json "beds", 15 s = about 100-150 credits - the first room
+    tone measured steady within 5 dB, no jump at the loop); `bed_layer` = a bed looped with crossfades, 26 dB under
+    the voice's words, faded in / out - a plan's `"sfx": {"bed"}` in `sfx.py plan` (tested on zz_editor_talk:
+    -52 dBFS under a -26 dBFS voice) and the quick draft's `--ambience`. The app: Motion Graphics > **Music**
+    (Songs / Ambience, ▶, BPM / energy / tone / length chips, ★ / Hide, Add songs, A song from a link, Make ambience,
+    Measure n new; the jobs `music_index`, `music_beds`), New edit's songs as cards with the same chips + *Ambience
+    under your voice* (the request's `ambience` -> the brief's line + `--ambience`); API_LEVEL 46. Jamendo / FMA
+    search not built (no music API with clear commercial licences was needed for the user's own downloads).
+    Fixed on the way: `sfx.speech_steps` gave NaN levels over digital silence (a cut pause) - an effect in such a
+    pause would have been levelled against NaN.
+11. **What round 3 left**: crackle (nothing good in two rounds - Freesound once the user has a free API key, or sparks
+    the user downloads from Pixabay), flutter (not rated), and quick drafts' plain cuts - a soft sound on some of them
+    or not (a short A/B on the beat montage: 31 cuts got 3 effects at *some*).
+    **Sounds made with ElevenLabs** (the user, 2026-10-26: "the sound effects ... seem very repetitive and AI-made
+    ... maybe connect elevenlabs free key and start generating and we just upload to google drive for everyone to
+    download"; picked over Freesound): measured first - in the user's last 6 videos 2-5 sounds each were made up
+    (every pop: both recorded pops are hidden) and 11 of 18 kinds have 3 recorded sounds or fewer, so files repeat
+    (`pop_sound.wav` 3 times in one video). The fix: ElevenLabs' text-to-sound (`POST /v1/sound-generation`, about 10
+    credits a second asked - measured 41 for 4.1 s; 0.5 s at least; the free key = 10,000 credits a month, NO commercial licence - the Starter plan adds
+    it) from a list of described sounds per kind (`tools\sounds\generate.json`), into this PC's library with the plan's
+    licence; the user listens in Motion Graphics > Sounds and keeps the best (★ / Hide); the ones made on a paid plan
+    zipped for Google Drive, friends add them with *Add sounds* > a link. The made-up sounds stay in the mix for now
+    (the user's call - their Oct 25 picks) until the new ones are in. **Built 2026-10-26** (uncommitted):
+    `motionlab\sfxgen.py` (generate, share_zip, fetch_link / unpack; the key in knowledge\local\elevenlabs.json -
+    never sent to the page; selfcheck against a test server), `sfx.py generate | share | import <link or zip>`,
+    Sounds > *Make sounds* (the job `sound_generate`, capped at the free month's credits left), *New*, *Share with
+    friends*, *Add sounds* > a link; API_LEVEL 43. Tested end to end against a stand-in server with a scratch library
+    (`MOTIONLAB_SOUNDS`, `MOTIONLAB_ELEVENLABS_KEYS`, `ELEVENLABS_BASE`). The user's key (free plan): batch 1 (6, plain
+    descriptions) hidden as "generic and low quality"; batch 2 (47 from premium motion-design descriptions - the v3
+    model, WAV 48 kHz, 0.5 s at least; 300 of the month's 10,000 credits used): the user kept the whooshes, whips,
+    pops, keys and clicks - "the rest of the sounds are very cheap, i will not use them comercially so just add them
+    to motionlab" - so those 20 ship in `tools\sounds\made\` (`export_list` / `ensure_shipped`, the free plan's
+    licence on each: non-commercial, credit elevenlabs.io), the other 27 hidden and their kinds at 0 in
+    generate.json.
+22. **A finished sound: loudness and true peak** (S; *Cleaner talking edits*, above): the lab has no loudness step
+    today - the voice is levelled to -26 dBFS RMS (0.5.3), the effects against it, and the render's sound goes out as
+    mixed. The last step of every render: measure the mix (EBU R128, ffmpeg's `ebur128` / `loudnorm`), bring it to a
+    target, limit it with 4x oversampling (it catches the peaks between samples that the AAC encode brings out), then
+    measure the true peak again AFTER the AAC encode and lower the limiter's ceiling while it passes -1 dBTP (a few
+    rounds). The target per platform in `config.json` (YouTube turns anything louder than about -14 LUFS down; shorts
+    are often mastered louder - the kit used -11), the precheck and the build summary report LUFS and the true peak.
+    ffmpeg only, nothing to install. The song under a voice is checked here too (the kit kept it ~15 dB under the
+    voice; the lab lowers it 2.5 dB under its sound effects today - measured, not guessed).
+    **Built 2026-10-26** (uncommitted): `motionlab\loudness.py` (measure = ffmpeg's ebur128; master = the gain and the
+    limiter's ceiling settled on the WHOLE sound alone, then into the render - a `--range` part gets the whole's gain;
+    selfcheck: EBU's 1 kHz tone, a quiet talk with clicks, a part, silence), `render_video.py` masters every render
+    (`--no-master`), config `"master"` (-14 LUFS, -1 dBTP, AAC 256k; a PC's own target in config.local.json), the
+    precheck measures a video's loudness (flags off-target / over the peak), build.py's summary prints it and masters
+    an unchanged older render in place. Measured on *Your song needs a real video* v4 (a copy): -26.4 LUFS as rendered
+    -> -14.2 LUFS, -1.1 dBTP after AAC, in 4 s; the limiter took 0 dB on the median 50 ms window, 1.8 dB at p90, over
+    6 dB on 2 % of them. Open: the song-under-voice level, the user's target (-14 for every platform, or louder for
+    shorts).
+23. **The voice cleaned up** (S-M, measure first): an ffmpeg-only chain on a talking take before the cuts - a 70 Hz
+    high pass, a speaker's EQ (+1.5 dB at 120 Hz body, -3 dB at 250 Hz mud, -1.5 dB at 600 Hz box, +3.5 dB at 3.5 kHz
+    presence, +3 dB shelf from 9 kHz air), a de-esser, two compressors (slow to level the sentences, fast for density),
+    a light noise reduction (`afftdn`); cut after the processing, each part exactly its frames long, so the voice stays
+    on the lips. The kit's AI noise removal (DeepFilterNet) needs Python 3.11, torch 2.1.2 and numpy < 2 - the lab runs
+    3.12 and numpy 2.5, so not now (light and tested first). An A/B on the user's own recording decides whether it is on
+    by default.
+    **Built 2026-10-26** (uncommitted, OFF by default): `motionlab\loudness.py` `clean_voice` (the take brought to -23
+    LUFS first so the compressors' thresholds mean the same on every take, then the chain) and the quick draft's
+    `--voice-clean`. Found while testing: ffmpeg's afftdn delays the sound 25 ms (1200 samples at 48 kHz) and keeps
+    its length - padded and trimmed back, now 0 samples moved at 48 and 44.1 kHz (selfcheck by cross-correlation).
+    **Waiting on the user's ears**: `.app\dev\voice_ab\A_as_recorded.m4a` vs `B_cleaned.m4a` (*Your song needs a real
+    video*'s take, both at -16 LUFS) - B wins = on by default for talking drafts and Claude's talking edits.
+**From the same kit, not taken**: its renderer (cards drawn frame by frame in Python - the Motion Graphics library
+does more), its 30 fps-only, seconds-only timing (hard rule 2), Whisper large (1.6 GB; the lab measured `small` as
+enough) and its learning loop (MotionLab's lessons and verdicts already do it).
+**Taken right away** (the user, 2026-10-26: "i like the 'sound effects never over a word' stuff or very subtle"):
+sound effects never over a word in a talking video, or very subtle - **built 2026-10-26** (uncommitted): `sfx.py plan
+--voice` / a plan's `"sfx": {"voice": true}` (a talking quick draft sets it) finds the words in the voice; an effect
+over a word sits at least 22 dB under it, one in a pause is levelled against the voice around it (no longer against
+the silence: up to +17 dB over the voice before, "+200 dB" on an end card after the last word). Lesson local-make-4
+(the whoosh ON the shot's first word) removed, local-make-26 in its place. Checked: sfx.py's selfcheck (a test voice)
+and the *Your song needs a real video* v4 talking edit made again in a scratch folder (10 cues on words at -22 dB,
+the end card's 3 at -16 to -24 dB against the voice).
+
+**Content agency** - the plan around the videos (steps 12-19; the user, 2026-10-25: "lets start working on the content
+agency section as well, research what could be usefule to us, maybe pull stats from our youtube/instagram/tiktok...
+maybe have a schedueld placed on which days to upload? vibes or current trends?"). The research of the same night
+(official APIs, the platforms' terms, Buffer / Sprout / Hootsuite / Metricool, 2025-2026 studies), in short: most of
+the value needs no platform API; YouTube is the one own-stats API worth connecting; trends have no legal, reliable
+feed - the user looks, Claude turns what they find into ideas. Ranked (S = under a session, M = a session):
+12. **The content calendar** (S-M): each post = a MotionLab video (its render, its `publish\` package), the platform
+    and format, day + time + time zone, a status (idea > scripted > filmed > edited > ready > posted), its pillar
+    (3h), a note for a sound to add in the app when posting (never in the render), the posted links, the A/B winner,
+    views at 48 h / 7 days / 28 days; a weekly rhythm the user sets (consistency moves more than the hour: Buffer's
+    consistent posters got ~5x engagement per post - a correlation); an `.ics` export so Windows Calendar reminds.
+    No auto-posting: uploads from unaudited API apps stay private on YouTube and TikTok, and posting in the app keeps
+    trending sounds out of renders. **Built 2026-10-25** (the first part): the *Content agency* row, #/agency - a month
+    grid of posts (stage colours, platforms, time; drag between days and to / from Ideas), the weekly rhythm as dashed
+    slots + "this week n / m", a post's pop-up (day, time, where, stage, the MotionLab video, the sound to add in the
+    app, notes, the links once posted), *Add to Windows Calendar* (.ics, reminder 1 h before) - `motionlab\agency.py`.
+    Still open here: pillars on a post (14), views at 48 h / 7 d / 28 d (13, with the stats), the A/B winner.
+13. **Your videos - built first through the pages themselves, 2026-10-26** (the user: "make so that videos form social
+    media form the brand show up on teh content agency and you could actually see them when they were posted,
+    views"): Content agency's *Your videos* tab + *Check my pages* (`motionlab\social.py`, yt-dlp, YouTube + TikTok,
+    public numbers, no login, only when pressed; each check kept as the video's view history); the calendar shows
+    what went up each day. Still open: Instagram (its export, below), the YouTube Data API key (17) to read within the
+    terms. **Stats from the user's own exports** (S-M, no terms risk): the CSVs YouTube Studio (Advanced mode > Export),
+    TikTok Studio (desktop, ~60 days) and Meta Business Suite (Insights > Export) give, dropped into the app and matched
+    to MotionLab's videos - views, watch time, retention where the platform gives it.
+14. **Pillars** (S): My Brand's 3-5 pillars (3h) tag every video; the calendar shows the balance.
+15. **A posting checklist and a repurpose plan** per platform (S-M): package, thumbnail, the sound added in the app,
+    product link / pinned comment, disclosures (5d); one master as 9:16, 16:9 and 1:1 with each platform's words.
+16. **When to post** (S): the user's own active hours, typed from YouTube Studio's *When your viewers are on YouTube*
+    and Instagram's *Most active times* (neither has a reliable API for this); without them the studies' times,
+    marked *generic* (they disagree - TikTok: Buffer says Sunday 9:00, Sprout Tue-Wed 11-18; YouTube's own team says
+    the upload hour does not matter to the algorithm). Timing is a small lever; the page says so.
+    **12 (the rest), 13 (exports), 15 and 16 built 2026-10-26** (uncommitted; the user: "the Content agency leftovers"):
+    `motionlab\stats.py` (an export's .csv / .xlsx - read with the standard library - / YouTube Studio's .zip, headers
+    in English or Spanish, the platform guessed -> knowledge\local\stats.json; selfcheck on made-up exports), *Import
+    your stats* on Your videos (POST `/api/agency/stats`, API_LEVEL 45; Instagram's rows as cards of their own, the
+    others' numbers on the cards read from the pages); a post's *How it did* (the views the checks saw near 48 h / 7 d
+    / 28 d after it went up - a check between half and twice that age counts), *Test & compare winner* (`ab`),
+    *Before you post* (`checks`, per platform) and *Formats* (each platform's shape against the video's); *When to
+    post* (calendar.json `when`, the best times as quick picks on every post, generic ones marked so).
+17-19. **Moved to 0.6.5** (the user, 2026-10-26: "youtube analytics stuff for later 0.6.x versions"): the YouTube
+    Data API scan, *What worked this month* and the YouTube Analytics connection - 0.6.5 *Your stats and the
+    competitors' through YouTube's own APIs*.
+**Trends** (no step of its own): TikTok's Creative Center needs a login and has no public API (scrapers break its
+terms); YouTube's Trending page is gone since 2025-07-21 (only music, podcast and trailer charts); pytrends was
+archived in 2025-04 (Google's own Trends API is an alpha you apply for); Exploding Topics costs $39+/month without an
+API. So: *trend notes* in the calendar (12) - the user pastes a link + one line, Claude maps it to a pillar and writes
+a format, a hook and an angle; a trending sound becomes the post's "add in the app" note. For a SaaS creator the
+useful trend is format outliers in their niche - step 17.
+
+**Quality over quantity** (the user, 2026-10-25: "for the content agency version section id like to focus on quality
+of videos instead of quantity ... we have to really dig in those things if we want to make motionlab great and
+actually usable and not just make AI slop while editing"): this version is judged by how good one video gets, not by
+how many - the mini-editor (6), the brand's own look (3, 7) and the user's ratings decide; 0.6.5's wide scan is for
+learning only, never for making more videos.
+
+**Order** (the user decides): My Brand's 1-3 first, then 4 and 5; the Editor (6), the Analyser (7) and Sound (8-11)
+need nothing from My Brand's page, so each can go in between (Sound's 8 first - friends still hear the made-up
+sounds); the Content agency's 12-16 need no account or API and can start any time (17-19 moved to 0.6.5). *Cleaner
+talking edits* (20-23, added 2026-10-26) need nothing from the other steps: 22 is the smallest and every video gains,
+20 and 21 are the biggest gain on talking shorts, 23 waits on its A/B.
+**The user's order (2026-10-25)**: "lets finish the my brand but have the ideas of the content agency in place, i kinda
+want the content calendar first and then move on the ability to scan and have teh stats pulling from the urls of our
+pages automatically" = My Brand to the end first (2, 3, 3b-3j, 5), then the calendar (12), then the scan + stats
+pulled by themselves from the user's own pages (My Brand's *Your pages* links): YouTube through the Data API key
+(within its terms); TikTok's and Instagram's public pages only through yt-dlp, which their terms forbid - so there a
+pull the user starts, never on a timer, or their own exports (13). The Content agency is **its own sidebar row named
+*Content agency*** (the user's pick), beside My Brand. **Size**: large, ships in parts (a big release - the user, 2026-10-25).
+**Rules**: the brand stays on the PC; only the user's own site is read; prices shown as the user confirmed them; no
+sound file in the repo unless its licence allows passing it on; music only with clear licences.
+**Needs first**: nothing; from the user: their website and their goal.
+
 ### 0.5.4 - released 2026-10-25 - Sound: real sound effects
 
 Released 2026-10-25 as it stood, at the user's word ("idk lets just upload the 0.5.4 version and start working on the 0.5.5 (which u will move to 0.6.0 since it will be a big rrelease) and the otehr stuff just put it on version above"): steps 1, 2 and 6 had shipped in 0.5.3.3, step 3 (a) in 0.5.3.4, step 9 (round 3) with the release; the open steps - 3 (b), 8, 10, round 3's crackle / flutter / plain cuts, the rating on two real videos and a laptop's numbers - moved into 0.6.0 (*Sound, continued*); steps 4, 5 and 7 had moved to 0.6.3 and 0.6.5 the same day. The plan as it was:

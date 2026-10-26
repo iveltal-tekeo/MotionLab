@@ -22,7 +22,8 @@ Generate starts from. The logic is tools\\motionlab\\templates.py (its docstring
           bulk) each template at other sizes, no render: the text-fit check against its own size and the ink it draws
           -> measured.json "sizes" (ok / NOT ok + why), shown by library --brief and the brief
     .venv\\Scripts\\python tools\\templates.py pick "<the user's words>" [--n 6] [--kinds text,overlays]
-          the library templates that fit the words best (Generate starting blind) - one line each, best first
+          the library templates that fit the words best (Generate starting blind) - one line each, best first;
+          --fresh = the ones the last 5 videos used pushed down (2026-10-26, as Generate and the brief do)
     .venv\\Scripts\\python tools\\templates.py todo <pack>              the clips not rebuilt yet, by Claude's rebuild
           priority (cards.json "rebuild" 1 first), with their sheet
     .venv\\Scripts\\python tools\\templates.py selfcheck                a synthetic clip with known moves (temp folder)
@@ -84,6 +85,7 @@ def main() -> int:
     s.add_argument("want")
     s.add_argument("--n", type=int, default=6)
     s.add_argument("--kinds")
+    s.add_argument("--fresh", action="store_true", help="the ones the last videos used pushed down (as Generate does)")
     s = sub.add_parser("todo")
     s.add_argument("pack")
     s = sub.add_parser("land")
@@ -184,9 +186,10 @@ def main() -> int:
     if a.cmd == "sizes":
         return sizes(a.ids, a.sizes.split(","), a.force)
     if a.cmd == "pick":
-        for t in T.pick(a.want, a.n, a.kinds.split(",") if a.kinds else None):
+        for t in T.pick(a.want, a.n, a.kinds.split(",") if a.kinds else None, used=T.recent() if a.fresh else None):
             print(f"  {t['score']:5.1f}  {t['id']:24s} {t.get('kind', ''):10s} {t.get('what', '')[:90]}"
-                  + (f"  [{', '.join(t['matched'])}]" if t["matched"] else ""))
+                  + (f"  [{', '.join(t['matched'])}]" if t["matched"] else "")
+                  + (f"  (in {t['recent']} of the last videos)" if t.get("recent") else ""))
         return 0
     if a.cmd == "todo":
         d = T.load_pack(a.pack) or {"items": [], "pack": a.pack}

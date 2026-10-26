@@ -150,8 +150,8 @@ def _trim_front(L: dict, f: int) -> dict:
             L["jumps"] = [[f, src]] + later
         else:
             L.pop("jumps", None)
-    elif L.get("type") == "overlay":
-        L["in"] = int(L.get("in", 0)) + (f - int(L["start"]))
+    elif L.get("type") == "overlay":                # (at its speed: captions on a sped-up shot, 0.6.0 the Editor)
+        L["in"] = int(L.get("in", 0)) + int((f - int(L["start"])) * float(L.get("speed", 1.0)) + 1e-6)
         L.pop("land", None)                         # its move no longer lands where it was landed: never re-landed
     L["start"] = f
     return L

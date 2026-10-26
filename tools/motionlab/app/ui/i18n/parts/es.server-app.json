@@ -71,6 +71,7 @@
   "Quick draft of {video}",
   "Claude's build of {video}",
   "Claude's final render of {video}",
+  "Your changes to {video}",
   "Ready to post · title, thumbnails, description",
   "Rebuild report {name}",
   "Red LED card",
@@ -95,6 +96,8 @@
   "Thumbnail rendered",
   "Thumbnail {id} again ({video})",
   "Thumbnail {id}: {words} ({video})",
+  "Import from your website ({site})",
+  "Check my pages",
   "Thumbnails checked",
   "Thumbnails for {set}",
   "Thumbnails of {set}",
@@ -162,7 +165,14 @@
   "selftest.py regenerates the synthetic videos and their analyses",
   "Python rebuilds it",
   "the app's thumbnails and job logs (made again when needed)",
-  "the app makes a video's player copy again when this PC cannot play its format (HEVC, AV1)"
+  "the app makes a video's player copy again when this PC cannot play its format (HEVC, AV1)",
+  "Getting {video} ready for the Editor",
+  "A moment of {video}, rendered",
+  "Sounds added to your library",
+  "Sound effects made with ElevenLabs",
+  "Measure your music",
+  "Ambience made with ElevenLabs",
+  "Your sound logo, made with ElevenLabs"
  ],
 
  "Analyse {file}": "Analizar {file}",
@@ -195,6 +205,8 @@
  "Measure the thumbnails of {set}": "Medir las miniaturas de {set}",
  "Colour of {name}": "Color de {name}",
  "Quick draft of {video}": "Borrador rápido de {video}",
+ "Your changes to {video}": "Tus cambios en {video}",
+ "no changes to save": "no hay cambios que guardar",
  "Claude's build of {video}": "Montaje de Claude de {video}",
  "Claude's final render of {video}": "Render final de Claude de {video}",
  "Timing check {render}": "Comprobación de tiempos {render}",
@@ -205,6 +217,7 @@
  "Thumbnail {id} again ({video})": "Miniatura {id} de nuevo ({video})",
  "Check the thumbnails ({video})": "Comprobar las miniaturas ({video})",
  "Thumbnail {id}: {words} ({video})": "Miniatura {id}: {words} ({video})",
+ "Import from your website ({site})": "Importar desde tu web ({site})",
  "Download ({what}) from {site}": "Descarga ({what}) de {site}",
 
  "Quick draft": "Borrador rápido",
@@ -565,5 +578,13 @@
  "{file}: not a video, a photo or a song ({types})": "{file}: no es un vídeo, una foto ni una canción ({types})",
  "no kept changes called {name}": "no hay cambios guardados llamados {name}",
  "not a YouTube channel: {line}": "no es un canal de YouTube: {line}",
- "The newest videos of big channels (thumbnail preview)": "Los vídeos más nuevos de grandes canales (previsualizar miniatura)"
+ "The newest videos of big channels (thumbnail preview)": "Los vídeos más nuevos de grandes canales (previsualizar miniatura)",
+ "a change the Editor does not know": "un cambio que el Editor no conoce",
+ "Getting {video} ready for the Editor": "Preparando {video} para el Editor",
+ "A moment of {video}, rendered": "Un momento de {video}, renderizado",
+ "Sounds added to your library": "Sonidos añadidos a tu biblioteca",
+ "Sound effects made with ElevenLabs": "Efectos de sonido creados con ElevenLabs",
+ "Measure your music": "Medir tu música",
+ "Ambience made with ElevenLabs": "Ambiente creado con ElevenLabs",
+ "Your sound logo, made with ElevenLabs": "Tu logo sonoro, creado con ElevenLabs"
 }

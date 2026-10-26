@@ -28,10 +28,11 @@ particles) are written this way since 0.3.0.
           files it uses, so it always gets a numbered copy <folder>\\resolve\\<name>_<id>.mov (resolve-clip <folder>
           makes one to drag in by hand); <name>.mov stays free to render again
     .venv\\Scripts\\python tools\\overlay.py captions <folder> --from <file.srt | .vtt | transcript.json | a video>
-          [--names "MotionLab, 4AM"] [--model small|base] [--preset clean_box] [--render]   (a video = its words by
-          speech to text) captions timed to the words (styles + settings like any graphic) + <name>.srt for
-          Resolve's subtitle track; rate / size / length from the project's newest edit plan (or --fps --width
-          --height --frames); --preset = start with that ready-made look
+          [--names "MotionLab, 4AM"] [--model small|base] [--preset clean_box] [--brand] [--render]   (a video =
+          its words by speech to text) captions timed to the words (styles + settings like any graphic) + <name>.srt
+          for Resolve's subtitle track; rate / size / length from the project's newest edit plan (or --fps --width
+          --height --frames); --preset = start with that ready-made look; --brand = My Brand's caption style
+          (its words per line too, unless --max-words)
     .venv\\Scripts\\python tools\\overlay.py preset <folder> [<id>]    a graphic's ready-made looks (presets.json next to
           its index.html; the captions: classic = the look before 0.4.6, clean_box = sentence case on a rounded dark
           box fitted to its longest line, the word being said in cyan, a fade): no id = list them, an id = set its
@@ -914,6 +915,16 @@ def cmd_captions(a) -> int:
             raise SystemExit(f"no caption look '{a.preset}' - pick one of: "
                              + (", ".join(f"{k} ({v['label']})" for k, v in have.items())
                                 or "(none: these captions were made before 0.4.6 - make them in a new folder)"))
+    brand = None
+    if getattr(a, "brand", False):                  # 0.6.0: My Brand's caption style (checked before speech to text too)
+        from motionlab import brand as BR
+        brand = BR.caption_look()
+        if not brand:
+            raise SystemExit("My Brand has no caption style yet - set it on the app's My Brand page (Captions)")
+        if not a.names and BR.glossary_words():          # the brand's names and words: speech to text gets them right
+            a.names = ", ".join(BR.glossary_words())[:300]
+        if a.max_words is None:                          # its words per line (3c), unless --max-words says otherwise
+            a.max_words = BR.caption_words()
     plan = _plan_of(folder)
     src = Path(a.from_)
     vid = {}
@@ -941,10 +952,10 @@ def cmd_captions(a) -> int:
     missing = []
     if a.script:                                    # 0.5.3 (A8): the script's lines and words at the transcript's times
         lines = script_lines(a.script)
-        grouped, missing = CAP.align_script(words, lines, max_chars=a.max_chars)
+        grouped, missing = CAP.align_script(words, lines, max_chars=a.max_chars, max_words=a.max_words)
         what += f", lined up with the script ({len(lines)} lines)"
     else:
-        grouped = CAP.group(words, max_chars=a.max_chars, max_words=a.max_words)
+        grouped = CAP.group(words, max_chars=a.max_chars, max_words=a.max_words or 6)
     cues = CAP.in_frames(grouped, fps, a.offset)
     if not cues:
         raise SystemExit("no words to show")
@@ -973,6 +984,14 @@ def cmd_captions(a) -> int:
         except ValueError as e:
             raise SystemExit(str(e))
         log(f"{folder.name}: the look '{OS.presets(folder)[a.preset]['label']}'")
+    if brand:                                       # the brand's look (unless --preset gave one), its choices on top
+        try:
+            if not a.preset:
+                OS.apply_preset(folder, brand[0])
+            OS.set_values(folder, brand[1])
+        except ValueError as e:
+            raise SystemExit(f"My Brand's caption style: {e}")
+        log(f"{folder.name}: My Brand's caption style ({a.preset or brand[0]} + {', '.join(brand[1]) or 'its look as it is'})")
     log(f"{folder.name}: {len(cues)} captions, {c['captions']['words']} words from the {what}"
         + (" (word times ESTIMATED: the file has one time per line)" if est else "")
         + f"; {frames} frames at {fps:g} fps, {W}x{H}")
@@ -1432,10 +1451,13 @@ def main() -> int:
     s.add_argument("--frames", type=int, help="the clip's length (default: the edit plan's, else the last caption)")
     s.add_argument("--offset", type=int, default=0, help="frames to move every caption by")
     s.add_argument("--max-chars", type=int, default=32)
-    s.add_argument("--max-words", type=int, default=6)
+    s.add_argument("--max-words", type=int, default=None, help="words a caption line at most (default 6; --brand: "
+                   "My Brand's words per line)")
     s.add_argument("--script", metavar="FILE|PROMPT", help="one caption per line of this script (a text file or a "
                    "prompt id like script-005), in its own words, at the times the words were said")
     s.add_argument("--preset", metavar="ID", help="start with a ready-made look: classic, clean_box (overlay.py preset)")
+    s.add_argument("--brand", action="store_true", help="My Brand's caption style (knowledge\\local\\brand.json): its "
+                   "look, then its font, case, colours, motion, position and box on top")
     s.add_argument("--render", action="store_true")
     s = sub.add_parser("preset", help="a graphic's ready-made looks: list them, or give it one (then render)")
     s.add_argument("folder")

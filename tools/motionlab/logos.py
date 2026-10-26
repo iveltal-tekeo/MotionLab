@@ -12,6 +12,7 @@ Variants: color (the brand's own colours), mono (one colour, takes any colour), 
 color-dark / wordmark-dark (the light version for a dark background). Not every logo has every variant (index).
 
 A graphic names a logo by its id, a variant after a slash: "youtube", "youtube/mono", "openai/wordmark".
+"brand" (2026-10-26) = My Brand's own logo (brand_entry: its versions as variants, this PC only, never in logos\\).
   - a logo setting = a string setting whose id is "logo" / "logos" or ends in "_logo" / "_logos" (several: "a|b|c");
     its value may also be a picture file in the graphic's assets folder (the user's own logo, "mylogo.png")
   - any text setting may carry ":youtube:" where a letter or an emoji goes (a node, a notification's icon, a badge)
@@ -36,14 +37,18 @@ to suggest an endorsement (logos\\README.md).
 """
 from __future__ import annotations
 
+import base64
 import json
 import re
 import shutil
+import struct
 from pathlib import Path
 
 from .util import LAB
 
 ROOT = LAB / "logos"
+BRAND_ID = "brand"            # 2026-10-26: My Brand's own logo as a logo of the library - this PC only (brand_entry)
+_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml"}
 SOURCE = LAB / "refs" / "logos"                     # the user's folder (read only)
 INDEX = "logos.json"
 SCRIPT = '<script src="assets/logos/logos.js"></script>'
@@ -345,7 +350,88 @@ def catalog(root: Path | None = None) -> dict:
 
 
 def by_id(lid: str, root: Path | None = None) -> dict | None:
+    if lid == BRAND_ID:
+        return brand_entry()
     return next((lg for lg in catalog(root)["logos"] if lg["id"] == lid), None)
+
+
+def _pic_size(raw: bytes, ext: str) -> tuple[float, float]:
+    """A picture's width and height from its first bytes (PNG, JPEG, WebP, an SVG's viewBox); (1, 1) when unknown."""
+    try:
+        if raw[:8] == b"\x89PNG\r\n\x1a\n":
+            return struct.unpack(">II", raw[16:24])
+        if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+            k = raw[12:16]
+            if k == b"VP8X":
+                return 1 + int.from_bytes(raw[24:27], "little"), 1 + int.from_bytes(raw[27:30], "little")
+            if k == b"VP8 ":
+                w, h = struct.unpack("<HH", raw[26:30])
+                return w & 0x3FFF, h & 0x3FFF
+            if k == b"VP8L":
+                bits = int.from_bytes(raw[21:25], "little")
+                return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+        if raw[:2] == b"\xff\xd8":
+            i = 2
+            while i < len(raw) - 9:
+                if raw[i] != 0xFF:
+                    i += 1
+                    continue
+                if raw[i + 1] in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                    h, w = struct.unpack(">HH", raw[i + 5:i + 9])
+                    return w, h
+                i += 2 + int.from_bytes(raw[i + 2:i + 4], "big")
+        if ext == ".svg":
+            m = re.search(rb'viewBox\s*=\s*"\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)', raw)
+            if m:
+                return float(m[1]), float(m[2])
+    except (struct.error, ValueError, IndexError):
+        pass
+    return 1, 1
+
+
+_BCACHE: dict = {}
+
+
+def brand_entry() -> dict | None:
+    """My Brand's logo as a logo of the library (2026-10-26), id BRAND_ID: "brand" in a logo setting, ":brand:" in a
+    text. Its versions are the variants - color = the main logo (else the dark version), color-dark = the light one
+    (MLLogo takes it on a dark background by itself), dark, icon ("brand/icon") - pictures, never tinted. Read from
+    knowledge\\local\\brand.json each time (cached on the files' times); None when My Brand has no logo. This PC only:
+    it never goes into logos\\ (the shared library); a graphic's logos.js carries it like any logo."""
+    try:
+        b = json.loads((LAB / "knowledge" / "local" / "brand.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    idt, name = b.get("identity") or {}, str(b.get("name") or "")
+    lv = idt.get("logos") or {}
+    files = {"color": idt.get("logo") or lv.get("dark") or lv.get("light") or lv.get("icon"), "color-dark": lv.get("light"),
+             "dark": lv.get("dark"), "icon": lv.get("icon")}
+    files = {k: str(f) for k, f in files.items()
+             if f and re.fullmatch(r"knowledge/local/brand/logo(_\w+)?\.(png|jpe?g|webp|svg)", str(f)) and (LAB / f).is_file()}
+    if "color" not in files:
+        return None
+    key = (name, tuple(sorted((k, f, (LAB / f).stat().st_mtime_ns) for k, f in files.items())))
+    if _BCACHE.get("key") == key:
+        return _BCACHE["entry"]
+    variants = {}
+    for k, f in files.items():
+        raw = (LAB / f).read_bytes()
+        w, h = _pic_size(raw, Path(f).suffix.lower())
+        variants[k] = {"w": w, "h": h, "aspect": round(w / h, 3) if h else 1.0, "tint": False, "one": None,
+                       "on": {"color-dark": "dark", "dark": "light"}.get(k, "light" if k == "color" and "color-dark" in files
+                                                                        else "any"), "file": f}
+    entry = {"id": BRAND_ID, "name": name or "My brand", "group": "brand", "default": "color", "variants": variants,
+             "words": ["brand", "my", "logo", "mine"] + [w for w in re.findall(r"[a-z0-9]+", name.lower()) if len(w) > 1]}
+    _BCACHE.update(key=key, entry=entry)
+    return entry
+
+
+def _brand_svg(v: dict) -> str:
+    """A brand logo picture as an <svg> MLLogo draws like any logo: the picture inside as a data: address."""
+    f = LAB / v["file"]
+    data = base64.b64encode(f.read_bytes()).decode("ascii")
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {v["w"]:g} {v["h"]:g}"><image href="data:'
+            f'{_MIME.get(f.suffix.lower(), "image/png")};base64,{data}" width="{v["w"]:g}" height="{v["h"]:g}"/></svg>')
 
 
 def parse(value: str, root: Path | None = None) -> tuple[dict, str | None] | None:
@@ -512,6 +598,9 @@ def js(ids: list[str], root: Path | None = None) -> str:
             continue
         vs = {}
         for var, info in lg["variants"].items():
+            if lid == BRAND_ID:                          # My Brand's pictures, inside an <svg> each
+                vs[var] = {"a": info["aspect"], "on": info["on"], "t": 0, "one": None, "svg": _brand_svg(info)}
+                continue
             f = root / lid / f"{var}.svg"
             if f.exists():
                 vs[var] = {"a": info["aspect"], "on": info["on"], "t": 1 if info["tint"] else 0, "one": info["one"],
@@ -649,6 +738,30 @@ def selfcheck(verbose: bool = True) -> dict:
         (plain / "index.html").write_text("<html><head></head></html>", encoding="utf-8")
         ensure(plain, {}, [{"id": "text", "type": "string", "default": "hi"}], [], lib)
         ok(not (plain / "assets").exists(), "a graphic with no logo gets nothing")
+        # My Brand's logo as "brand" (2026-10-26), on a made-up lab: a 4x2 PNG main logo + a light version
+        global LAB
+        real, LAB = LAB, Path(tmp) / "lab"
+        try:
+            png = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + struct.pack(">II", 4, 2) + b"\x08\x06\x00\x00\x00"
+            bd = LAB / "knowledge" / "local" / "brand"
+            bd.mkdir(parents=True)
+            (bd / "logo.png").write_bytes(png)
+            (bd / "logo_light.png").write_bytes(png)
+            bj = LAB / "knowledge" / "local" / "brand.json"
+            bj.write_text(json.dumps({"name": "RIFT", "identity": {"logo": "knowledge/local/brand/logo.png",
+                                                                   "logos": {"light": "knowledge/local/brand/logo_light.png"}}}))
+            e = brand_entry()
+            ok(e and e["name"] == "RIFT" and set(e["variants"]) == {"color", "color-dark"}
+               and e["variants"]["color"]["aspect"] == 2.0 and e["variants"]["color"]["on"] == "light"
+               and parse("brand")[0]["id"] == BRAND_ID and named({"logo": "brand"}, [{"id": "logo", "type": "string"}])[0] == ["brand"]
+               and "data:image/png;base64" in js(["brand"]),
+               "My Brand's logo = the logo 'brand': its versions as variants (the light one for dark backgrounds), its "
+               "size from the picture, inside logos.js")
+            bj.write_text(json.dumps({"identity": {"logo": "C:/elsewhere/logo.png"}}))
+            ok(brand_entry() is None and _pic_size(b"nothing", ".png") == (1, 1),
+               "no logo of My Brand's own folder = no 'brand'; an unknown picture = 1 x 1")
+        finally:
+            LAB = real
 
     cat = catalog()
     files = [ROOT / lg["id"] / f"{v}.svg" for lg in cat["logos"] for v in lg["variants"]]

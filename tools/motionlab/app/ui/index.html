@@ -9,7 +9,7 @@
 <link rel="icon" href="/ui/favicon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/ui/icon-192.png">
 <link rel="apple-touch-icon" href="/ui/icon-192.png">
-<link rel="stylesheet" href="/ui/app.css?v={{VERSION}}">
+<link rel="stylesheet" href="/ui/app.css?v={{UIV}}">
 <link rel="stylesheet" href="/fonts.css?v={{VERSION}}">
 </head>
 <body>
@@ -24,7 +24,8 @@
   <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></symbol>
   <symbol id="i-storage" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="m5 13 3-8h8l3 8"/><path d="M16.5 16.5h.01"/></symbol>
-  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6.5h9M17 6.5h3M4 12h3M11 12h9M4 17.5h11M19 17.5h1"/><circle cx="15" cy="6.5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17.5" r="2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10.08 5.06 L10.42 2.53 L13.58 2.53 L13.92 5.06 L15.55 5.73 L17.57 4.18 L19.82 6.43 L18.27 8.45 L18.94 10.08 L21.47 10.42 L21.47 13.58 L18.94 13.92 L18.27 15.55 L19.82 17.57 L17.57 19.82 L15.55 18.27 L13.92 18.94 L13.58 21.47 L10.42 21.47 L10.08 18.94 L8.45 18.27 L6.43 19.82 L4.18 17.57 L5.73 15.55 L5.06 13.92 L2.53 13.58 L2.53 10.42 L5.06 10.08 L5.73 8.45 L4.18 6.43 L6.43 4.18 L8.45 5.73Z"/><circle cx="12" cy="12" r="3.2"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-claude" viewBox="0 0 24 24"><path d="m11 3 1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="m18.5 14.5.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></symbol>
   <symbol id="i-knowledge" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.9 7.6-3.8M8.2 13.1l7.6 3.8"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
@@ -55,28 +56,50 @@
   <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
   <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M12 14h2M8 17h2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
   <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4.2L19.4 8.8a2 2 0 0 0 0-2.8l-1.4-1.4a2 2 0 0 0-2.8 0L4 15.8z"/><path d="m13.8 6 4.2 4.2"/></symbol>
   <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.2 3.8v3.6h3.6"/></symbol>
+  <!-- 0.6.0 My Brand: a shop, a target, people, a globe, a bag, a product box -->
+  <symbol id="i-brand" viewBox="0 0 24 24"><path d="M4 9.5 5.5 4h13L20 9.5"/><path d="M4 9.5a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/><path d="M5.5 11.5V20h13v-8.5"/><path d="M10 20v-4.5h4V20"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.6a3.2 3.2 0 0 1 0 6"/><path d="M17.2 14.2a5.5 5.5 0 0 1 3.3 5.3"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.4 2.5 3.6 5.3 3.6 8.5s-1.2 6-3.6 8.5c-2.4-2.5-3.6-5.3-3.6-8.5s1.2-6 3.6-8.5z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5.5 8h13l-1 12h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="m12 3.5 7.5 4.2v8.6L12 20.5l-7.5-4.2V7.7z"/><path d="m4.5 7.7 7.5 4.3 7.5-4.3M12 12v8.5"/></symbol>
 </svg>
 <nav id="side">
   <a class="logo" href="#/"><img src="/ui/logo.png" alt="MotionLab"></a>
   <button class="upd-open" id="side-update" hidden title="{{t:See what changed and update}}"><svg class="ic"><use href="#i-update"/></svg><span><b>{{t:Update available}}</b><small></small></span></button>
   <a href="#/" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>{{t:Home}}</a>
-  <div class="navgrp">{{t:Make a video}}</div>
+  <!-- 0.6.0: My Brand, its own section between two lines (the user, 2026-10-25: "put the my brand above the make a
+       video text, kinda like its own section ... i think its very important", then "remove the 'make a video' text and
+       just add a line and a line above the my brand as well so have it separate from home") -->
+  <div class="navsep"></div>
+  <a href="#/brand" data-nav="brand" title="{{t:What Claude knows about your brand: your goal, audience, look and catalogue - used in Prepare, the Editor and Motion Graphics}}"><svg class="ic"><use href="#i-brand"/></svg>{{t:My Brand}}<b class="navnew" id="brandnew" hidden>{{t:NEW}}</b><b class="navdot" id="brandimp" hidden title="{{t:Your website was read - see what was found}}"></b></a>
+  <!-- 0.6.0 (the user, 2026-10-25: "own row named 'Content agency'", beside My Brand): the plan around the videos -->
+  <a href="#/agency" data-nav="agency" title="{{t:When and where your videos go out: the content calendar}}"><svg class="ic"><use href="#i-calendar"/></svg>{{t:Content agency}}</a>
+  <div class="navsep"></div>
   <a href="#/analyze" data-nav="analyze" title="{{t:Learn from what works: videos (every cut, effect, caption and colour), a channel's thumbnails, scripts and prompts - Claude remembers it}}"><svg class="ic"><use href="#i-analyze"/></svg>{{t:Analyser}}</a>
   <a href="#/prepare" data-nav="prepare" title="{{t:What you say on camera: improve a script you have, or let Claude write one from a few questions - written to hold attention}}"><svg class="ic"><use href="#i-prepare"/></svg>{{t:Prepare}}</a>
   <a href="#/edit" data-nav="edit" title="{{t:Your clips, edited in the style of videos you analysed - or from a prompt}}"><svg class="ic"><use href="#i-edit"/></svg>{{t:Editor}}</a>
   <a href="#/generate" data-nav="generate" title="{{t:A video from zero: prompts for AI video tools, or a motion-graphics video}}"><svg class="ic"><use href="#i-generate"/></svg>{{t:Generator}}</a>
   <div class="navsep"></div>
+  <!-- 2026-10-25 (the user: "put motion graphics in the sidebar above claude memory"; before, since 2026-10-22, at the
+       bottom above Jobs) -->
+  <a href="#/motion" data-nav="motion" title="{{t:Designed motion to reuse: templates learned from pro clips - titles, counters, lists, buttons, chats - for your videos and the Generator}}"><svg class="ic"><use href="#i-motion"/></svg>{{t:Motion Graphics}}</a>
   <a href="#/memory" data-nav="memory" title="{{t:What Claude learned from your videos and your ratings - it reads this before it edits or generates}}"><svg class="ic"><use href="#i-memory"/></svg>{{t:Claude's memory}}</a>
   <div class="grow"></div>
-  <!-- 2026-10-22 (the user: "move the motion graphics side bar section to down below above the jobs section") -->
-  <a href="#/motion" data-nav="motion" title="{{t:Designed motion to reuse: templates learned from pro clips - titles, counters, lists, buttons, chats - for your videos and the Generator}}"><svg class="ic"><use href="#i-motion"/></svg>{{t:Motion Graphics}}</a>
-  <a href="#/jobs" data-nav="jobs" title="{{t:What MotionLab is working on right now}}"><svg class="ic"><use href="#i-jobs"/></svg>{{t:Jobs}} <b id="jobcount"></b></a>
-  <a href="#/settings" data-nav="settings" title="{{t:Programs, downloads, Claude Code, updates, storage, Claude skills}}"><svg class="ic"><use href="#i-settings"/></svg>{{t:Settings}}</a>
+  <!-- 2026-10-25 (the user: "there is too much stuff already on the sidebar at the bottom so lets add a menu thingy or
+       three dots that expands and appears 'jobs and settings'"): More opens them in place; a running job's count rides on More -->
+  <button class="navmorebtn" id="side-more" aria-expanded="false" title="{{t:Jobs and Settings}}"><svg class="ic"><use href="#i-dots"/></svg>{{t:More}}<b id="jobdot"></b></button>
+  <div class="navmenu" id="side-menu" hidden>
+    <a href="#/jobs" data-nav="jobs" title="{{t:What MotionLab is working on right now}}"><svg class="ic"><use href="#i-jobs"/></svg>{{t:Jobs}} <b id="jobcount"></b></a>
+    <a href="#/settings" data-nav="settings" title="{{t:Programs, downloads, Claude Code, updates, storage, Claude skills}}"><svg class="ic"><use href="#i-settings"/></svg>{{t:Settings}}</a>
+  </div>
   <button class="chk-open" id="side-check" title="{{t:Ask GitHub for a newer MotionLab (or new knowledge from your friends) and install it}}"><svg class="ic"><use href="#i-update"/></svg><span><b>{{t:Check for updates}}</b><small></small></span></button>
   <button class="news-open" id="side-news" title="{{t:Every MotionLab version and what it changed (CHANGELOG.md)}}"><svg class="ic"><use href="#i-news"/></svg>{{t:What's new}}</button>
   <button class="claude-open" id="side-claude" title="{{t:Open Claude Code in the MotionLab folder}}"><svg class="ic"><use href="#i-claude"/></svg>{{t:Open Claude Code}}</button>
@@ -90,6 +113,6 @@
 <div id="lightbox" hidden><img alt=""><div class="lbcap"></div></div>
 <div id="tip" hidden></div>
 {{I18N}}
-<script src="/ui/app.js?v={{VERSION}}"></script>
+<script src="/ui/app.js?v={{UIV}}"></script>
 </body>
 </html>

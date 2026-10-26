@@ -83,14 +83,17 @@ function toast(msg, kind = '') {
 let MODAL_BACK = null;                 // where Back / Esc / x / a click outside return to (a dialog opened from another)
 function modal(html, init, cls = '') {
   const m = $('#modal'); MODAL_BACK = null; $('.mbox', m).className = 'mbox' + (cls ? ' ' + cls : '');
-  $('.mbody', m).innerHTML = html; m.hidden = false; $('.mbox', m).scrollTop = 0; if (init) init($('.mbody', m));
+  $('.mbody', m).innerHTML = html; m.hidden = false; $('.mbox', m).scrollTop = 0;
+  $$('.brandrow', m).forEach(brandToggle);          // 0.6.0: a dialog's "For my brand" switch (drawn before init reads it)
+  if (init) init($('.mbody', m));
 }
 function modalBack(fn) {               // call right after modal(): a "Back" to the dialog this one came from
   MODAL_BACK = fn;
   const b = document.createElement('button'); b.className = 'btn sm ghost mback'; b.textContent = t('← Back'); b.onclick = dismissModal;
   $('#modal .mbody').prepend(b);
 }
-function closeModal() { MODAL_BACK = null; $('#modal').hidden = true; $('#modal .mbody').innerHTML = ''; }
+let MU_AUDIO = null, MU_PLAYING = '';              // Music's player (closeModal stops it)
+function closeModal() { MODAL_BACK = null; muStop(); $('#modal').hidden = true; $('#modal .mbody').innerHTML = ''; }
 function dismissModal() { const back = MODAL_BACK; closeModal(); if (back) back(); }
 $('#modal').addEventListener('mousedown', e => { if (e.target.id === 'modal' || e.target.closest('.mclose')) dismissModal(); });
 let LB = {list: [], i: 0};
@@ -168,6 +171,16 @@ $('#side-claude').onclick = () => openClaude('');
 $('#side-update').onclick = () => updateModal();
 $('#side-check').onclick = () => checkUpdates();
 $('#side-news').onclick = () => newsModal();
+// More (2026-10-25, the user: "a menu thingy or three dots that expands and appears 'jobs and settings'"): opens
+// Jobs and Settings in place; remembered; open by itself on those two pages
+function sideMore(open) {
+  $('#side-menu').hidden = !open; $('#side-more').setAttribute('aria-expanded', String(open));
+  $('#side-more').classList.toggle('on', open);
+  try { localStorage.setItem('ml.navMore', open ? '1' : ''); } catch (e) { /* storage blocked */ }
+}
+$('#side-more').onclick = () => sideMore($('#side-menu').hidden);
+try { if (localStorage.getItem('ml.navMore')) sideMore(true); } catch (e) { /* storage blocked */ }
+try { $('#brandnew').hidden = !!localStorage.getItem('ml.brandSeen'); } catch (e) { /* storage blocked: no chip */ }   // 0.6.0
 function md(src) {                                     // small Markdown subset for the lab's reports
   const out = []; let para = [], list = null, table = false, pre = null, li = null;
   const inl = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
@@ -514,6 +527,7 @@ const PAGES = [
   [/^#\/project\/([^/]+)(?:\/(\w+))?$/, pageProject, 'edit'], [/^#\/prepare$/, pagePrepare, 'prepare'],
   [/^#\/generate$/, pageGenerate, 'generate'], [/^#\/motion(?:\/(\w+))?(?:\/([\w-]+))?$/, pageMotion, 'motion'],
   [/^#\/prompts(?:\/([\w-]+))?$/, pagePrompts, 'generate'], [/^#\/memory(?:\/(\w+))?$/, pageMemory, 'memory'],
+  [/^#\/brand(?:\/(style|catalogue))?$/, pageBrand, 'brand'], [/^#\/agency(?:\/(videos))?$/, pageAgency, 'agency'],
   [/^#\/jobs(?:\/(\d+))?$/, pageJobs, 'jobs'], [/^#\/storage$/, pageStorage, 'settings'],
   [/^#\/settings$/, pageSettings, 'settings'], [/^#\/skills$/, pageSkills, 'settings']];
 // soft = the same page drawn again with what changed (liveTick): no "Loading…", the scroll and typed search words kept
@@ -531,6 +545,7 @@ async function route(soft) {
     if (!soft && prev && prev !== nav && NEW_SECTIONS.includes(prev))           // left a section: its NEW badges go
       SEEN_P = api('/api/seen', {section: prev, leave: true}).then(r => { SEEN = r; }).catch(() => {});
     $$('#side a[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
+    if (nav === 'jobs' || nav === 'settings') sideMore(true);   // the open page's row stays in sight
     document.body.dataset.page = nav;                         // the section's accent colour (app.css)
     if (!soft) { main.scrollTop = 0; main.innerHTML = `<div class="loading">${t('Loading…')}</div>`; liveBase(h); }
     try { await loadSeen(); await fn(main, ...m.slice(1).map(x => x && decodeURIComponent(x))); }
@@ -586,7 +601,7 @@ setInterval(liveTick, 5000);
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
-const API_LEVEL = 32;            // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 46;         // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
 function overlay(text) {
@@ -630,6 +645,7 @@ async function ping() {
     sideUpdate(p);
     liveLine(p.claude || []);
     $('#jobcount').textContent = p.running || '';
+    $('#jobdot').textContent = p.running || '';                // the same count on More while it is closed
     const st = (p.resolve || {}).state || '…';
     const d = $('#resolve-state .dot');
     d.className = 'dot ' + (st === 'running' ? 'running' : st === 'not responding' ? 'bad' : '');
@@ -2875,17 +2891,17 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
   const st = {src: pre.project && ps.some(x => x.name === pre.project) ? 'old' : ps.length ? '' : 'new', project: pre.project || '', newp: '',
               about: '', onscreen: '', prompt: pick, like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false,
               where: '', type: '', rhythm: '', moods: [], captions: '', presets: [], want: '', palette: [],
-              sound: neTalk(pick) ? 'talk' : 'auto', sfx: '', kinds: [], snotes: '', length: '', format: '', resolve: false,
-              photos: {}};
+              sound: neTalk(pick) ? 'talk' : 'auto', ambience: '', sfx: '', kinds: [], sounds: [], snotes: '', length: '', format: '', resolve: false,
+              photos: {}, products: []};
   const ne = {S, PRM, ps, OPT, st, cur: 0};
   ne.proj = () => st.src === 'old' ? st.project : st.src === 'new' ? st.newp : '';
   ne.P = () => ps.find(x => x.name === ne.proj());
   const N = NE_STEPS.length;
-  modal(`<div class="nemw"><div class="nehd"><h2>${t('New edit')}</h2><p>${t('Your clips, edited the way you want. They are only read, never changed.')}</p></div>
+  modal(`<div class="nemw"><div class="nehd"><div class="nehdt"><h2>${t('New edit')}</h2><p>${t('Your clips, edited the way you want. They are only read, never changed.')}</p></div>
+      <div class="brandrow nebrandtop" id="nebrand"></div></div>
     <nav class="nenav">${NE_STEPS.map(([id, name], i) => `<button data-go="${id}"${id === 'clips' ? '' : ' class="opt"'}><b>${i + 1}</b><span>${name}<small></small></span></button>`).join('')}</nav>
     <div class="nepanes">${NE_STEPS.map(([id, , title]) => `<section class="nesec" id="ne-${id}" hidden><h2 class="nest">${title}${id === 'clips' ? '' : optTag()}<span class="nestx"></span></h2><div class="nesecb"></div></section>`).join('')}</div>
     <div class="nefoot"><span class="small muted" id="nepos"></span>
-      <label class="neres" id="neresl" hidden><input type="checkbox" id="neres"><span><b>${t('Also build it as a DaVinci Resolve project')}</b><span>${t('the same edit as a timeline you can keep editing by hand')}</span></span></label>
       <button class="btn" id="neback">${t('← Back')}</button><button class="btn pri" id="nenext"></button>
       <button class="btn" id="cvdraft" disabled><svg class="i"><use href="#i-generate"/></svg>${t('Quick draft now')}</button>
       <button class="btn pri" id="cvgo" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Make it with Claude')}</button></div></div>`, el => {
@@ -2895,6 +2911,7 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
     ne.changed = () => refresh.forEach(f => f());
     NE_STEPS.forEach(([id]) => { const f = draw[id]($(`#ne-${id} .nesecb`, el), ne); if (f) refresh.push(f); });
     refresh.push(() => neNav(el, ne));
+    el.addEventListener('change', e => { if (e.target.closest('#nebrand')) ne.changed(); });    // For my brand: the look counts
     const go = id => {
       const i = NE_STEPS.findIndex(s => s[0] === id); if (i < 0) return;
       const last = i === N - 1;
@@ -2902,7 +2919,7 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
       NE_STEPS.forEach(([sid], j) => { $(`#ne-${sid}`, el).hidden = j !== i; });
       $('.nepanes', el).scrollTop = 0;
       $('#nepos', el).textContent = t('Step {n} of {total}', {n: i + 1, total: N});
-      $('#nepos', el).hidden = last; $('#neresl', el).hidden = !last;
+      $('#nepos', el).hidden = last;
       $('#neback', el).hidden = !i;
       $('#nenext', el).hidden = last; if (!last) $('#nenext', el).textContent = `${t('Next: {step}', {step: NE_STEPS[i + 1][1]})} →`;
       $('#cvgo', el).hidden = $('#cvdraft', el).hidden = !last;
@@ -2911,8 +2928,7 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
     $$('.nenav button', el).forEach(b => b.onclick = () => go(b.dataset.go));
     $('#neback', el).onclick = () => go(NE_STEPS[ne.cur - 1][0]);
     $('#nenext', el).onclick = () => go(NE_STEPS[ne.cur + 1][0]);
-    $('#neres', el).onchange = e => { st.resolve = e.target.checked; ne.changed(); };
-    const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, neBody(st));
+    const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, {...neBody(st), brand: brandOn(el, '#nebrand')});
     $('#cvgo', el).onclick = async () => {
       try { const pj = ne.proj(), r = await save();
         openClaude(r.command, 'recreate', `${r.request.how} → ${pj}`); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
@@ -3103,7 +3119,30 @@ function neText(box, ne) {
         <textarea id="neons" rows="4" placeholder="${ta('One per line - e.g. DAY 1 OF 30')}">${esc(st.onscreen)}</textarea></div></div>
     <div class="nef"><label>${neIcon('i-scriptok', '--green')}${t('A script or brief from Prepare')}</label>
       <div class="nepick"><div class="nelist"><div class="nelq"><input type="search" id="cvq" placeholder="${ta('Search your scripts and briefs…')}"></div><div class="cvlist" id="cvpl"></div></div>
-        <div class="neprev" id="neprev"></div></div></div>`;
+        <div class="neprev" id="neprev"></div></div></div>
+    <div class="nef" id="neprod" hidden><label>${neIcon('i-bag', '--amber')}${t('Show a product')}
+      <span title="${ta('From My Brand\'s catalogue - Claude puts it in a product card with its picture, price and your website')}">${t('up to {n}', {n: 2})}</span></label>
+      <div class="neprods" id="neprods"></div></div>`;
+  // product motion (0.6.0, My Brand step 5): My Brand's products for videos as picture cards; a picked one = when it
+  // shows (in passing / at the end / both); Claude builds it from the template product-card
+  brandData().then(b => {
+    const cat = ((b || {}).catalogue || []).filter(p => p.use !== false && (p.name || '').trim()), hold = $('#neprods', box);
+    if (!cat.length || !hold) return;
+    $('#neprod', box).hidden = false;
+    const HOW = [['passing', t('In passing')], ['end', t('At the end')], ['both', t('Both')]];
+    const draw = () => {
+      hold.innerHTML = cat.map(p => { const on = st.products.find(x => x.id === p.id), full = !on && st.products.length >= 2;
+        return `<div class="neprod${on ? ' on' : ''}"><button class="neprb" data-p="${esc(p.id)}" ${full ? 'disabled' : ''}>
+          <span class="neprp">${p.image ? `<img src="${fileUrl(p.image)}" alt="">` : neIcon('i-box', '--green')}</span>
+          <span class="neprt"><b>${esc(p.name)}</b>${p.price ? `<span>${esc(p.price)}</span>` : ''}</span></button>
+          ${on ? `<span class="neprh">${HOW.map(([h, l]) => `<button class="nech${on.how === h ? ' on' : ''}" data-h="${h}" data-p="${esc(p.id)}">${l}</button>`).join('')}</span>` : ''}</div>`; }).join('');
+      $$('.neprb', hold).forEach(b2 => b2.onclick = () => { const id = b2.dataset.p;
+        st.products = st.products.some(x => x.id === id) ? st.products.filter(x => x.id !== id) : [...st.products, {id, how: 'end'}].slice(0, 2);
+        draw(); ne.changed(); });
+      $$('.neprh .nech', hold).forEach(b2 => b2.onclick = () => { const x = st.products.find(y => y.id === b2.dataset.p); if (x) x.how = b2.dataset.h; draw(); ne.changed(); });
+    };
+    draw();
+  });
   $('#neabout', box).oninput = e => { st.about = e.target.value; ne.changed(); };
   $('#neons', box).oninput = e => { st.onscreen = e.target.value; ne.changed(); };
   const prev = () => { const x = items.find(i => i.id === st.prompt);
@@ -3129,9 +3168,21 @@ function neText(box, ne) {
 // or an exact copy of one (two cards under them)
 function neRefs(box, ne) {
   const {st, OPT} = ne, max = OPT.max_refs, vids = ownVideos(ne.S);
-  let q = '';
-  box.innerHTML = `${vids.length > 8 ? `<input type="search" class="nerq" placeholder="${ta('Search…')}">` : ''}<div class="nerefs"></div><div id="neexact"></div>`;
+  let q = '', paintLook = () => {};
+  box.innerHTML = `<div id="nebl"></div>${vids.length > 8 ? `<input type="search" class="nerq" placeholder="${ta('Search…')}">` : ''}<div class="nerefs"></div><div id="neexact"></div>`;
   const count = $('.nestx', box.closest('.nesec'));
+  // My Brand's editing look (0.6.0, 2026-10-25): one card that picks the brand's videos at once
+  brandData().then(b => {
+    const look = (((b || {}).look || {}).like || []).filter(k => vids.some(v => v.key === k)), hold = $('#nebl', box);
+    if (!look.length || !hold) return;
+    const same = () => look.length === st.like.length && look.every(k => st.like.includes(k)), lg = ((b.identity || {}).logo);
+    paintLook = () => {
+      hold.innerHTML = `<button class="necard nebl${same() ? ' on' : ''}">${lg ? `<img src="${brandLogoSrc(lg, b.updated)}" alt="">` : neIcon('i-brand', '--pink')}
+        <span><b>${t("My brand's look")}</b><span>${esc(look.map(k => (vids.find(v => v.key === k) || {}).label || k).join(' · '))}</span></span></button>`;
+      $('button', hold).onclick = () => { st.like = same() ? [] : look.slice(0, max); st.exact = false; draw(); exact(); ne.changed(); };
+    };
+    paintLook();
+  });
   const exact = () => {               // an exact copy needs one video analysed on this PC (every picked one is)
     const one = st.like.length === 1 && vids.some(v => v.key === st.like[0]);
     if (!one) st.exact = false;
@@ -3154,6 +3205,7 @@ function neRefs(box, ne) {
         || `<div class="small muted">${t('No video matches.')}</div>`
       : `<div class="empty">${t('No video analysed on this PC yet - add one in the <a href="#/analyze" onclick="closeModal()">Analyser</a>.')}</div>`;
     count.innerHTML = `<b>${st.like.length}</b> / ${max}`;
+    paintLook();
     $$('.neref', box).forEach(b => b.onclick = () => { const k = b.dataset.k;
       st.like = st.like.includes(k) ? st.like.filter(x => x !== k) : [...st.like, k].slice(0, max); draw(); exact(); ne.changed(); });
   };
@@ -3233,8 +3285,11 @@ function neStyle(box, ne) {
 function nePalette(box, ne, mine) {
   const {st, OPT} = ne;
   const same = cs => cs.length === st.palette.length && cs.every((c, i) => c.toUpperCase() === st.palette[i]);
+  let mineB = [];                                        // My Brand's colours (step 3, 2026-10-26): the first card after Auto
+  brandData().then(b => { mineB = brandPalette(b, OPT.max_colours); if (mineB.length) draw(); });
   const draw = () => {
     box.innerHTML = `<div class="nepals"><button class="nepl${st.palette.length ? '' : ' on'}" data-clear title="${ta('Auto - Claude picks')}"><span class="nestrip auto">${neIcon('i-sparkle')}</span><span>${t('Auto')}</span></button>
+        ${mineB.length ? `<button class="nepl${same(mineB) ? ' on' : ''}" data-brandpal title="${ta('Your brand\'s colours, from My Brand')}"><span class="nestrip">${mineB.map(c => `<i style="background:${esc(c)}"></i>`).join('')}</span><span>${t('My Brand')}</span></button>` : ''}
         ${OPT.palettes.map(p => `<button class="nepl${same(p.colours) ? ' on' : ''}" data-p="${esc(p.id)}"><span class="nestrip">${p.colours.map(c => `<i style="background:${esc(c)}"></i>`).join('')}</span><span>${esc(t(p.label))}</span></button>`).join('')}</div>`;
     mine.innerHTML = `${st.palette.map((c, i) => `<span class="nesw"><input type="color" value="${esc(c.toLowerCase())}" data-i="${i}" title="${esc(c)}"><button class="nesx" data-x="${i}" title="${ta('Remove')}">✕</button></span>`).join('')}
         ${st.palette.length < OPT.max_colours ? `<button class="btn sm" data-add>${t('+ Add a colour')}</button>` : ''}`;
@@ -3247,6 +3302,8 @@ function nePalette(box, ne, mine) {
     const clear = $('[data-clear]', box);
     if (clear) clear.onclick = () => { st.palette = []; draw(); ne.changed(); };
     $$('[data-p]', box).forEach(b => b.onclick = () => { st.palette = OPT.palettes.find(p => p.id === b.dataset.p).colours.map(c => c.toUpperCase()); draw(); ne.changed(); });
+    const bp = $('[data-brandpal]', box);
+    if (bp) bp.onclick = () => { st.palette = [...mineB]; draw(); ne.changed(); };
   };
   draw();
 }
@@ -3270,10 +3327,16 @@ function neSound(box, ne) {
         <button class="btn sm" id="neslink" title="${ta('Downloads the song of a TikTok, YouTube or SoundCloud link as an MP3 - your edit cuts on its beats. To post, MotionLab also makes a copy without it: you add the same sound in TikTok or Instagram.')}"><svg class="i"><use href="#i-download"/></svg>${t('From a link…')}</button></div>
       <div class="nesongrow" id="nelinkrow" hidden><input type="text" id="nelinku" placeholder="${ta('Paste a link - TikTok, YouTube, SoundCloud…')}">
         <button class="btn sm pri" id="nelinkgo"><svg class="i"><use href="#i-download"/></svg>${t('Download')}</button><span class="small muted" id="nelinkst"></span><pre id="nelinklog" hidden></pre></div>
+      <div class="nesongs" id="nesongs" hidden></div>
       <div id="nesongf"></div></div>
+    <div class="neq" id="neambq"><label>${neIcon('i-volume', '--cyan')}${t('Ambience under your voice')} ${optTag(t('a quiet room, a café, a street - far under your words, it fills the silence between cuts'))}</label>
+      <div class="neamb" id="neamb"></div></div>
     <div class="neq"><label>${neIcon('i-volume', '--amber')}${t('Sound effects')}</label>
       <div class="nesfx">${amounts.map(a => `<button class="necard nesfxc" data-a="${esc(a.id)}"><b>${esc(a.label)}</b><span>${esc(a.help)}</span>${strip(a.id)}</button>`).join('')}</div></div>
     <div class="neq" id="nekinds"><label>${neIcon('i-zap', '--pink')}${t('Which kinds')}</label><div class="nechips" data-q="kinds"></div><div class="nechelp" data-h="kinds"></div></div>
+    <div class="neq" id="nepick"><label>${neIcon('i-volume', '--green')}${t('Choose the sounds')} ${optTag(t('a kind with sounds ticked uses only those'))}</label>
+      <div class="row"><button class="btn sm" id="nepickb" aria-expanded="false"></button><span class="small muted">${t('Listen and tick the ones this video may use - your favourites from Motion Graphics > Sounds otherwise.')}</span></div>
+      <div class="nepicks" id="nepicks" hidden></div></div>
     <div class="nef"><label for="nesnotes">${neIcon('i-pen', '--cyan')}${t('Notes on sound')}</label>
       <textarea id="nesnotes" rows="2" placeholder="${ta('e.g. a big hit when the logo appears, keep my voice clear over the music')}">${esc(st.snotes)}</textarea></div>`;
   const sel = $('#nesnd', box), songIn = $('#nesong input', box);
@@ -3288,11 +3351,44 @@ function neSound(box, ne) {
     $$('.nemc', box).forEach(b => b.classList.toggle('on', b.dataset.m === mode || (wantSong && b.dataset.m === 'music')));
     $('[data-ms=music]', box).textContent = mode === 'music' ? st.sound.slice(6).split('/').pop() : sel.options.length ? t('Pick a song') : t('Add a song…');
     $('#nesongrow', box).hidden = mode !== 'music' && !wantSong;
-    sel.hidden = !sel.options.length;
+    sel.hidden = true;                                      // 0.6.0 step 10: the songs as cards (the select keeps the value)
+    const cur = st.sound.startsWith('music:') ? st.sound.slice(6) : '', SG = $('#nesongs', box);
+    SG.hidden = mode !== 'music' || !sel.options.length;
+    SG.innerHTML = [...songs.map(x => ({v: x, title: x, folder: true})), ...OPT.songs.map(x => ({v: x.rel, ...x}))].map(x =>
+      `<button type="button" class="btn necard nesong${cur === x.v ? ' on' : ''}" data-song="${esc(x.v)}">${x.folder ? `<svg class="i"><use href="#i-folder"/></svg>`
+        : `<span class="btn sm ghost" data-mhear="${esc(x.v)}" role="button" title="${ta('Listen')}">${MU_PLAYING === x.v ? '❚❚' : '▶'}</span>`}
+        <span class="grow"><b>${x.fav ? '★ ' : ''}${esc(x.title || x.name)}${x.artist ? ` <span class="muted small">${esc(x.artist)}</span>` : ''}</b>
+        <span class="row">${x.folder ? `<span class="small dim">${t("In this video's folder")}</span>` : muChips(x)}</span></span></button>`).join('');
+    $$('[data-song]', SG).forEach(b => b.onclick = e => { if (e.target.closest('[data-mhear]')) return; st.sound = 'music:' + b.dataset.song; ne.changed(); });
+    const beds = OPT.beds || [], nk = {};
+    $('#neambq', box).hidden = mode === 'music';
+    if (st.ambience && !beds.some(x => x.rel === st.ambience)) st.ambience = '';
+    $('#neamb', box).innerHTML = !beds.length ? `<span class="small muted">${t('No ambience yet - make some in Motion Graphics > Music.')}</span>`
+      : [`<button type="button" class="fchip${!st.ambience ? ' on' : ''}" data-amb="">${t('None')}</button>`, ...beds.map(x => {
+        nk[x.kind] = (nk[x.kind] || 0) + 1;
+        const many = beds.filter(y => y.kind === x.kind).length > 1;
+        return `<button type="button" class="fchip${st.ambience === x.rel ? ' on' : ''}" data-amb="${esc(x.rel)}" title="${esc(x.title)}"><span data-mhear="${esc(x.rel)}" role="button" title="${ta('Listen')}">${MU_PLAYING === x.rel ? '❚❚' : '▶'}</span>${esc(muBed(x.kind))}${many ? ' ' + nk[x.kind] : ''}${x.fav ? ' ★' : ''}</button>`; })].join('');
+    $$('[data-amb]', box).forEach(b => b.onclick = e => { if (e.target.closest('[data-mhear]')) return; st.ambience = b.dataset.amb; ne.changed(); });
+    $$('#nesongs [data-mhear], #neamb [data-mhear]', box).forEach(b => b.onclick = e => { e.stopPropagation(); muHear(b.dataset.mhear, b); });
     if ($('#nesongrow', box).hidden) $('#nelinkrow', box).hidden = true;
     $$('.nesfxc', box).forEach(b => b.classList.toggle('on', b.dataset.a === st.sfx));
     $('#nekinds', box).hidden = st.sfx === 'none';
+    $('#nepick', box).hidden = st.sfx === 'none';
+    $('#nepickb', box).textContent = (st.sounds || []).length ? tn(st.sounds.length, '{n} sound ticked', '{n} sounds ticked') : t('Pick the sounds…');
   };
+  // 0.6.0 (step 9 b): the library's sounds in use, by kind - ▶ and a tick each (st.sounds = their files)
+  let SDL = null, player = null;
+  const picks = async () => {
+    const P2 = $('#nepicks', box);
+    if (!SDL) { P2.innerHTML = `<span class="small muted">${t('Loading…')}</span>`; try { SDL = (await api('/api/sounds')).sounds.filter(s => !s.off); } catch (e) { SDL = []; } }
+    const kinds = [...new Set(SDL.map(s => s.kind))].sort((a, b) => edKind(a).localeCompare(edKind(b)));
+    P2.innerHTML = !SDL.length ? `<span class="small muted">${t('No recorded sounds on this PC yet - add some in Motion Graphics > Sounds.')}</span>`
+      : kinds.map(k => `<div class="nepk"><b class="small"><span class="eddot" style="--h:${meHue(k)}"></span>${esc(edKind(k))}</b>${SDL.filter(s => s.kind === k).map(s =>
+        `<label class="nepks"><input type="checkbox" value="${esc(s.file)}"${(st.sounds || []).includes(s.file) ? ' checked' : ''}><button type="button" class="btn sm ghost" data-hear="${esc(s.file)}" title="${ta('Listen')}">▶</button><span>${esc(s.name)}${s.fav ? ' ★' : ''}</span></label>`).join('')}</div>`).join('');
+    $$('[data-hear]', P2).forEach(b => b.onclick = e => { e.preventDefault(); try { if (player) player.pause(); player = new Audio(edSoundUrl(b.dataset.hear)); player.play().catch(() => {}); } catch (x) { /* no sound */ } });
+    $$('input[type=checkbox]', P2).forEach(c => c.onchange = () => { st.sounds = $$('input[type=checkbox]:checked', P2).map(x => x.value); ne.changed(); });
+  };
+  $('#nepickb', box).onclick = () => { const P2 = $('#nepicks', box), b = $('#nepickb', box); P2.hidden = !P2.hidden; b.setAttribute('aria-expanded', String(!P2.hidden)); if (!P2.hidden) picks(); };
   $$('.nemc', box).forEach(b => b.onclick = () => { const m = b.dataset.m;
     wantSong = m === 'music' && !sel.options.length;
     if (m !== 'music') st.sound = m;
@@ -3340,6 +3436,7 @@ function neFinal(box, ne) {
       <input type="number" id="nelenx" min="3" max="900" step="1" placeholder="${ta('or seconds')}"></div></div>
     <div class="neq"><label>${neIcon('i-videos', '--violet')}${t('Format')}</label>
       <div class="nefmts">${fmts.map(([v, l, s]) => `<button class="necard nefmt" data-f="${v}"><i class="neshape ${v || 'auto'}"></i><span><b>${l}</b><span>${s}</span></span></button>`).join('')}</div></div>
+    <div class="neq"><button class="necard nedvr" id="nedvr" title="${ta('the same edit as a timeline you can keep editing by hand')}"><span class="nedvlogo"><img src="/files/logos/davinci-resolve/color.svg" alt=""></span><b>${t('Build in DaVinci')}</b></button></div>
     <div class="neq"><label>${neIcon('i-clipboard', '--green')}${t('Summary')}</label><div class="nesum" id="nesumc"></div></div>
     <div class="nefinb"><span class="neest" id="neest"></span><span class="small amber" id="neneed"></span></div>`;
   const seg = $('#nelen', box), other = $('#nelenx', box);
@@ -3347,7 +3444,11 @@ function neFinal(box, ne) {
     $$('[data-v]', seg).forEach(b => b.classList.toggle('on', b.dataset.v === st.length));
     if (lens.some(([v]) => v === st.length)) other.value = '';
     $$('[data-f]', box).forEach(b => b.classList.toggle('on', b.dataset.f === st.format));
+    $('#nedvr', box).classList.toggle('on', !!st.resolve);
   };
+  // DaVinci Resolve (2026-10-25, the user: "move ... build it as a davinci project in the actual form in the final
+  // section and make it more simple ... add the davinci logo, and just say 'build in davinci'"): one card, on / off
+  $('#nedvr', box).onclick = () => { st.resolve = !st.resolve; paint(); ne.changed(); };
   $$('[data-v]', seg).forEach(b => b.onclick = () => { st.length = b.dataset.v; paint(); ne.changed(); });
   other.oninput = () => { const v = Math.round(+other.value); st.length = v >= 3 && v <= 900 ? String(v) : ''; paint(); ne.changed(); };
   $$('[data-f]', box).forEach(b => b.onclick = () => { st.format = b.dataset.f; paint(); ne.changed(); });
@@ -3363,7 +3464,8 @@ function neFinal(box, ne) {
       : t('Pick a length to see how long Claude may take')}</span>`;
     est.title = t('We count about {n} min of Claude per second of video.', {n: numStr(OPT.min_per_s)});
     const exactOk = !st.exact || st.like.length === 1;
-    const style = st.like.length || st.presets.length || st.want.trim() || st.rhythm || neTalk(st.prompt);
+    const look = brandOn(ne.el, '#nebrand') ? (((BRAND_DATA || {}).look || {}).like || []) : [];   // For my brand: its look
+    const style = st.like.length || st.presets.length || st.want.trim() || st.rhythm || neTalk(st.prompt) || look.length;
     const go = $('#cvgo', ne.el), dr = $('#cvdraft', ne.el);
     go.disabled = !(clips && exactOk); dr.disabled = !(clips && !st.exact && style);
     go.title = clips ? t('Claude plans it with you, step by step') : t('First your clips (1)');
@@ -3389,7 +3491,9 @@ function neRows(ne) {
     clips: P ? [row(t('Video'), esc(pname(P)), pname(P)), row(t('Clips'), P.clips ? plural(P.clips, 'clip') : `<span class="amber">${t('no clips yet')}</span>`)] : [],
     text: [st.about.trim() && row(t('What it is about'), esc(st.about.trim().slice(0, 140)) + (st.about.trim().length > 140 ? '…' : ''), t('notes')),
       lines.length && row(t('Text on screen'), lines.map(esc).join(' · '), plural(lines.length, 'line')),
-      pr && row(t('Script or brief'), esc(pr.title || pr.title_auto || pr.id), t('a script'))].filter(Boolean),
+      pr && row(t('Script or brief'), esc(pr.title || pr.title_auto || pr.id), t('a script')),
+      (st.products || []).length && row(t('Products'), st.products.map(x => esc((((BRAND_DATA || {}).catalogue || []).find(p => p.id === x.id) || {}).name || x.id)
+        + ` <span class="muted">(${{passing: t('In passing'), end: t('At the end'), both: t('Both')}[x.how]})</span>`).join(', '), tn(st.products.length, '{n} product', '{n} products'))].filter(Boolean),
     refs: [st.like.length && row(st.exact ? t('An exact copy of') : t('In the style of'), names.map(esc).join(', '), plural(st.like.length, 'video'))].filter(Boolean),
     style: [st.where && row(t('Filmed'), lab(OPT.where, st.where)), st.type && row(t('Type of video'), lab(OPT.types, st.type)),
       st.rhythm && row(t('Rhythm'), lab(OPT.rhythm, st.rhythm)), st.moods.length && row(t('Mood'), st.moods.map(m => lab(OPT.moods, m)).join(', ')),
@@ -3398,7 +3502,9 @@ function neRows(ne) {
       st.want.trim() && row(t('In your words'), esc(st.want.trim().slice(0, 140)), t('your words')),
       st.palette.length && row(t('Palette'), st.palette.map(c => `<i class="nedot" style="background:${esc(c)}"></i>`).join(''), plural(st.palette.length, 'colour'))].filter(Boolean),
     sound: [row(t('Music'), esc(snd), '', st.sound === 'auto'), row(t('Sound effects'), st.sfx ? lab(OPT.sfx_amount, st.sfx) : t('Auto'), '', !st.sfx),
+      st.ambience && !st.sound.startsWith('music:') && row(t('Ambience'), esc(muBed(((OPT.beds || []).find(x => x.rel === st.ambience) || {}).kind || ''))),
       st.kinds.length && st.sfx !== 'none' && row(t('Kinds'), st.kinds.map(k => lab(OPT.sfx_kinds, k)).join(', ')),
+      (st.sounds || []).length && st.sfx !== 'none' && row(t('Sounds'), tn(st.sounds.length, '{n} picked', '{n} picked')),
       st.snotes.trim() && row(t('Notes'), esc(st.snotes.trim().slice(0, 140)), t('notes'))].filter(Boolean),
     final: [row(t('Length'), st.length ? `${st.length} s` : t('Auto'), '', !st.length),
       row(t('Format'), st.format ? {vertical: t('Vertical 9:16'), horizontal: t('Horizontal 16:9'), square: t('Square 1:1')}[st.format] : t('Auto'), '', !st.format),
@@ -3419,9 +3525,9 @@ function neNav(el, ne) {
 
 const neBody = st => ({like: st.like, exact: st.exact, prompt: st.prompt, about: st.about, on_screen: st.onscreen, presets: st.presets, want: st.want,
   style: {where: st.where, type: st.type, rhythm: st.rhythm, moods: st.moods, captions: st.captions, palette: st.palette},
-  sfx: {amount: st.sfx, kinds: st.kinds, notes: st.snotes}, length_s: st.length || null, format: st.format || null,
+  sfx: {amount: st.sfx, kinds: st.kinds, notes: st.snotes, sounds: st.sounds || []}, length_s: st.length || null, format: st.format || null,
   music: st.sound.startsWith('music:') ? st.sound.slice(6) : '', sound: st.sound.startsWith('music:') ? 'music' : st.sound, resolve: st.resolve,
-  photos: st.photos || {}});
+  ambience: st.sound.startsWith('music:') ? '' : st.ambience || '', photos: st.photos || {}, products: st.products || []});
 
 // ---- Edit > a video (the user, 2026-10-15: "when I first click I want to see a thumbnail or the last render so I know
 // in which video I am, instead of How did it turn out? or random information shot in my face; then the two buttons -
@@ -3430,13 +3536,19 @@ const neBody = st => ({like: st.like, exact: st.exact, prompt: st.prompt, about:
 // render + an index of the page, the two buttons, Ready to post) | Review (a player + How did it turn out?) | Versions
 // (edit versions + renders) | Footage | Graphics | Timing check and Resolve & library only when the video has them.
 // The 0.4.3 addresses #/project/<p>/renders and /publish still work.
+// the three ways into a video, each its own colour (2026-10-26, the user: "add some colors to accentuate the review page
+// since its identical to the overview tab so we have some distinctions between the three"): Overview = the section's,
+// Review = violet (Claude's colour: it hands the video to Claude), Editor = cyan (by hand) - app.css `.ptabs`, `#tab[data-t]`
+const PTAB_ICON = {overview: 'i-videos', review: 'i-scriptok', editor: 'i-edit'};
 async function pageProject(main, name, tab = 'overview') {
   const P = await api('/api/project/' + encodeURIComponent(name));
   if (tab === 'renders') tab = 'versions';
+  if (tab === 'mini') tab = 'editor';                         // the Mini-editor's address (0.6.0 first part)
   const toPub = tab === 'publish';
   if (toPub) tab = 'overview';
   const nClips = P.sources.length, foot = P.sources.reduce((a, s) => a + (s.size || 0), 0);
-  const tabs = [['overview', t('Overview')], ...(P.renders.length || (P.outcome || {}).aspects || tab === 'review' ? [['review', t('Review')]] : []), ['versions', `${t('Versions')}${P.plans.length ? ` (${P.plans.length})` : ''}`],
+  const tabs = [['overview', t('Overview')], ...(P.renders.length || (P.outcome || {}).aspects || tab === 'review' ? [['review', t('Review')]] : []),
+                ...(P.renders.length && P.plans.length || tab === 'editor' ? [['editor', t('Editor')]] : []), ['versions', `${t('Versions')}${P.plans.length ? ` (${P.plans.length})` : ''}`],
                 ...(nClips ? [['footage', `${t('Footage')} (${nClips})`]] : []),
                 ['graphics', `${t('Graphics')}${P.overlays && P.overlays.length ? ` (${P.overlays.length})` : ''}`],
                 ...(P.verifies.length || tab === 'timing' ? [['timing', t('Timing check|tab')]] : []),
@@ -3455,8 +3567,8 @@ async function pageProject(main, name, tab = 'overview') {
         : `<button class="btn pri" id="pjnew"><svg class="i"><use href="#i-edit"/></svg>${t('New edit…')}</button>`}
       <button class="btn" id="pjren"><svg class="i"><use href="#i-pen"/></svg>${t('Rename')}</button>${delBtn('project', P.name, home[0], ' ' + t('Delete'))}</div></div>
     <div id="pjprog"></div>
-    <div class="tabs">${tabs.map(([k, l]) => `<a href="#/project/${encodeURIComponent(name)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>
-    <div id="tab"></div>`;
+    <div class="tabs ptabs">${tabs.map(([k, l]) => `<a href="#/project/${encodeURIComponent(name)}/${k}" data-t="${k}" class="${k === tab ? 'on' : ''}">${PTAB_ICON[k] ? `<svg class="i"><use href="#${PTAB_ICON[k]}"/></svg>` : ''}${l}</a>`).join('')}</div>
+    <div id="tab" data-t="${esc(tab)}"></div>`;
   const move = async editor => {
     try { await api(`/api/project/${encodeURIComponent(P.name)}/move`, {editor}); toast(editor ? t('Moved to the Editor') : t('Back in the Generator'), 'ok'); route(); }
     catch (e) { toast(e.message, 'err'); }
@@ -3465,11 +3577,12 @@ async function pageProject(main, name, tab = 'overview') {
   const bk = $('#pjback'); if (bk) bk.onclick = () => move(false);
   $('#pjren').onclick = () => renameModal(P);
   const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
-                                 ['draft', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
+                                 ['draft', 'miniedit', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
   onCleanup(stopProg);
   const el = $('#tab');
   if (tab === 'review') return projReview(el, P);
   if (tab === 'versions') return projVersions(el, P);
+  if (tab === 'editor') return projEditor(el, P);
   if (tab === 'footage') return projFootage(el, P);
   if (tab === 'graphics') return projGraphics(el, P);
   if (tab === 'timing') return projTiming(el, P);
@@ -3487,13 +3600,15 @@ const renderFrames = (P, r) => r.frames || planOfRender(P, r).frames || null;
 const posterUrl = (P, r) => { const fps = renderFps(P, r), n = renderFrames(P, r);       // a third in: frame 0 is often black
   return `/api/thumb?video=${encodeURIComponent(r.rel)}&f=${n ? Math.floor(n * 0.3) : Math.round(fps)}&fps=${fps}`; };
 const stopPlayer = pl => { if (pl) { pl.gone = true; pl.v.pause(); pl.v.removeAttribute('src'); pl.v.load(); } };
-// one render at a time; more than one = a row of buttons to switch (v2 · v1 · v1 · Resolve)
+// one render at a time; more than one = a dropdown *Selected version* (newest first: v4 · newest · today 12:13 -
+// 2026-10-26, the user: "it would help to have a dropdown of 'Selected version' instead of just a switch")
 function renderPicker(box, P, onPick) {
   const R = newestFirst(P);
-  box.innerHTML = R.length > 1 ? `<div class="seg rpick">${R.map((r, i) => `<button data-i="${i}" title="${ta('rendered {when}', {when: r.modified})}">${renderLabel(r)}</button>`).join('')}</div>` : '';
-  const seg = $('.rpick', box);
-  const pick = i => { if (seg) $$('button', seg).forEach((b, j) => b.classList.toggle('on', j === i)); onPick(R[i]); };
-  if (seg) $$('button', seg).forEach(b => b.onclick = () => pick(+b.dataset.i));
+  box.innerHTML = R.length > 1 ? `<label class="rpick"><span>${t('Selected version')}</span><select>${R.map((r, i) =>
+    `<option value="${i}">${renderLabel(r)}${i ? '' : ' · ' + t('newest')} · ${esc(whenWords(r.mtime))}</option>`).join('')}</select></label>` : '';
+  const sel = $('.rpick select', box);
+  const pick = i => { if (sel) sel.value = String(i); onPick(R[i]); };
+  if (sel) sel.onchange = () => pick(+sel.value);
   if (R.length) pick(0);
   return R;
 }
@@ -3579,10 +3694,11 @@ function projOverview(el, P, toPub = false) {
     ${R.length ? `<div class="pvnext">
         ${draft ? `<button class="onx fin${nx === 'finish' ? ' on' : ''}" data-go="finish"><span class="oic"><svg class="i"><use href="#i-sparkle"/></svg></span>
           <span class="otx"><b>${t('Happy with the cuts? Finish it with Claude')}</b><span>${t('the cuts and transitions stay - Claude adds motion graphics, captions, sound effects')}</span></span><span class="oar">→</span></button>` : ''}
-        <button class="onx fix${nx === 'fix' ? ' on' : ''}" data-go="fix"><span class="oic"><svg class="i"><use href="#i-scriptok"/></svg></span>
-          <span class="otx"><b>${t('Something not right? Review it and improve it')}</b><span>${t('rate each part beside the video - Claude makes the next version from your ratings')}</span></span><span class="oar">→</span></button>
-        <button class="onx over${nx === 'start_over' ? ' on' : ''}" data-go="start_over"><span class="oic"><svg class="i"><use href="#i-restart"/></svg></span>
-          <span class="otx"><b>${t('Start over')}</b><span>${t('a different feel - a new edit with these clips, not a new version of this one')}</span></span><span class="oar">→</span></button></div>
+        ${P.plans.length ? `<button class="onx ed" data-go="editor"><span class="oic"><svg class="i"><use href="#i-edit"/></svg></span>
+          <span class="otx"><b>${t('Change it yourself')}</b><span>${t('in the Editor: trim, move, speed, sounds and graphics - no Claude')}</span></span><span class="oar">→</span></button>` : ''}
+        <button class="onx fix${nx === 'fix' ? ' on' : ''}" data-go="fix"><span class="oic"><svg class="i"><use href="#i-claude"/></svg></span>
+          <span class="otx"><b>${t('Improve it with Claude')}</b><span>${t('rate each part on the Review tab - Claude makes the next version from your ratings')}</span></span><span class="oar">→</span></button></div>
+      ${nx === 'start_over' ? '' : `<div class="pvover small"><a href="#" data-go="start_over">${t('Not the right feel at all? Start over with these clips')}</a></div>`}
       ${reviewSummary(P)}${nx ? `<div class="small muted" style="margin-top:4px">${t('You chose: {what} · <a href="#" id="pvclr">undo</a>', {what: nx === 'fix' ? t('improve this version') : nx === 'finish' ? t('finish it with Claude') : t('start over with a different feel')})}</div>` : ''}` : ''}
     <div id="pubsec"></div>
     <div id="tooksec"></div>`;
@@ -3604,7 +3720,9 @@ function projOverview(el, P, toPub = false) {
     $('#pvkv', el).innerHTML = meta(r);
   });
   const op = $('#pvopen', el); if (op) op.onclick = () => openPath(cur.rel);
-  $$('[data-go]', el).forEach(b => b.onclick = async () => {
+  $$('[data-go]', el).forEach(b => b.onclick = async e => {
+    e.preventDefault();
+    if (b.dataset.go === 'editor') { location.hash = `#/project/${enc}/editor`; return; }
     if (b.dataset.go === 'start_over') return startOver(P);
     if (b.dataset.go === 'finish') return finishModal(P, R[0].version || '', () => projOverview(el, P));
     try { if (nx !== 'fix') await setNext(P, 'fix'); } catch (e) { toast(e.message, 'err'); return; }
@@ -3625,7 +3743,7 @@ function drawIndex(box, P, pub, I) {
   const ctr = Object.keys(((P.outcome || {}).packaging || {}).ctr || {}).length, R0 = newestFirst(P)[0];
   const st = (ok, yes, no) => I ? `<span class="pvs ${ok ? 'ok' : 'dim'}">${ok ? '✓ ' + yes : no}</span>` : '';
   const n = (v, w) => `<span class="pvs dim">${v ? plural(v, w) : t('none|count')}</span>`;
-  const item = (to, ic, label, s, tab = '') => `<a class="pvi" href="${tab ? `#/project/${enc}/${tab}` : '#'}"${tab ? '' : ` data-to="${to}"`}>
+  const item = (to, ic, label, s, tab = '') => `<a class="pvi${tab ? ' t-' + tab : ''}" href="${tab ? `#/project/${enc}/${tab}` : '#'}"${tab ? '' : ` data-to="${to}"`}>
     <svg class="i"><use href="#${ic}"/></svg><span class="grow">${label}</span>${s}</a>`;
   const A = (P.outcome || {}).aspects || {}, ov = (A.overall || {}).rating, TK = TOOK[P.name];
   Object.assign(box, {_P: P, _pub: pub, _I: I});       // What it took redraws it when its numbers arrive
@@ -3637,6 +3755,7 @@ function drawIndex(box, P, pub, I) {
     ${item('pb-took', 'i-clock', t('What it took'), TK ? `<span class="pvs dim">${TK.rows.length ? t('{time} of Claude', {time: minWords(TK.total.claude_minutes)}) : t('nothing yet')}</span>` : '')}
     <div class="pvih">${t('This video')}</div>
     ${R0 ? item('', 'i-scriptok', t('Review'), P.reviewed ? `<span class="pvs">${rateChip(ov) || `<span class="ok">${t('✓ reviewed')}</span>`}</span>` : `<span class="pvs"><span class="prate todo">${t('not reviewed yet')}</span></span>`, 'review') : ''}
+    ${R0 && P.plans.length ? item('', 'i-edit', t('Editor'), `<span class="pvs dim">${(((P.outcome || {}).hand_fixes) || []).length ? tn(P.outcome.hand_fixes.length, '{n} version by hand', '{n} versions by hand') : t('change it yourself')}</span>`, 'editor') : ''}
     ${item('', 'i-library', t('Graphics'), n((P.overlays || []).length, 'graphic'), 'graphics')}
     ${item('', 'i-videos', t('Versions'), n(P.plans.length || P.renders.length, P.plans.length ? 'version' : 'render'), 'versions')}
     ${P.sources.length ? item('', 'i-edit', t('Footage'), n(P.sources.length, 'clip'), 'footage') : ''}
@@ -3824,6 +3943,1196 @@ function wirePackaging(el, P) {
 }
 
 // ---- Versions: every edit version (how each was made) and its renders, the side-by-sides with the reference
+// ---- the Editor (0.6.0 step 6; the Mini-editor's buttons until 2026-10-26, the user: "call it just editor ... i mean
+// like an actual editor where i can select clips, move them around, trim at my own liking, not just click buttons and
+// do it all theoretically ... i want to be able to add sfx to my liking, maybe remove a design and add a template from
+// our motion graphics template with the color of my liking, maybe add slow/speed to some clips ... look at open
+// source alternative of capcut or premiere or sum and try to implement those in a minimilastic but efficient way"):
+// a timeline the way the open-source editors do it - OpenCut / CapCut: the shots on a magnetic main track that always
+// closes up, graphics on lanes above it, captions on top, sound effects and the sound below, split at the playhead,
+// snapping, a panel to add sounds and templates; Shotcut / Kdenlive: light proxy copies for a smooth preview. Every
+// change is a step on the plan (motionlab\miniedit: POST .../miniedit/preview = the timeline as it would be, nothing
+// saved); the live preview plays it (`EdPreview`: the clips' light copies, the graphics' own pages, the sounds) - the
+// render comes on *Save* = the next version as a job (tools\miniedit.py apply --build). Its own colours (cyan / violet,
+// `.ed`), apart from Review's player. Unsaved changes stay in this browser (localStorage) until saved or dropped.
+const ED_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+const ED_CAP_STYLE = ['font', 'weight', 'font_size', 'uppercase', 'first_capital', 'y', 'y_upright'];   // the captions' style first
+const ED_ROW = {ruler: 24, cap: 26, gfx: 28, shot: 64, fx: 26, sfx: 30, wave: 40};
+// the effects (motionlab\edfx): a chip's name as the engine sends it (English) shown in the page's language; what can
+// be added at the playhead, with a line on each; a strength slider's range per kind; the eases in the lab's words
+const ED_FX_LABEL = {'Zoom in': t('Zoom in'), 'Zoom out': t('Zoom out'), 'Punch-in': t('Punch-in'), 'Tight framing': t('Tight framing'),
+  'Shake': t('Shake'), 'Flash': t('Flash'), 'White frame': t('White frame'), 'Black frame': t('Black frame'), 'Stutter': t('Stutter'),
+  'Mirror': t('Mirror'), 'Whip': t('Whip'), 'Push': t('Push'), 'Crossfade': t('Crossfade'), 'Overlap': t('Overlap'),
+  'RGB split': t('RGB split'), 'Colour flash': t('Colour flash'), 'Light leak': t('Light leak'), 'Dip to black': t('Dip to black'),
+  'Dip to white': t('Dip to white'), 'Fade in': t('Fade in'), 'Fade out': t('Fade out'), 'Colour layer': t('Colour layer')};
+const edFxLabel = l => ED_FX_LABEL[l] || l;
+const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer from here')], ['push_in', t('Push-in'), t('a slow zoom in')],
+  ['pull_out', t('Pull-out'), t('a slow zoom out')], ['zoom_through', t('Zoom-through'), t('punch in to the nearest cut and out of it')],
+  ['shake', t('Shake'), t('a short camera shake')], ['flash', t('Flash'), t('a bright flash')], ['white_flash', t('White flash'), t('an over-exposed flash into the next shot')],
+  ['black_frame', t('Black frame'), t('one black frame')], ['colour_flash', t('Colour flash'), t('a colour flash')], ['light_leak', t('Light leak'), t('a warm light leak')],
+  ['rgb_split', t('RGB split'), t('the red channel splits off for a few frames')], ['dip_black', t('Dip to black'), t('a dip through black at the nearest cut')],
+  ['dip_white', t('Dip to white'), t('a dip through white at the nearest cut')], ['stutter', t('Stutter'), t('a few frames repeat')]];
+const ED_FX_RANGE = {zoom: [1.01, 2, 0.01, '×'], punch: [1.01, 2, 0.01, '×'], framing: [1.01, 1.6, 0.01, '×'], shake: [0.004, 0.08, 0.002, ''],
+  flash: [0.05, 1, 0.05, '']};
+const ED_EASES = () => [['linear', t('Linear')], ['smooth', t('S-curve')], ['in', t('Slow start')], ['out', t('Slow end')]];
+const ED_SNAP_PX = 8;
+const ED_KIND = {whoosh: t('Whoosh'), whip: t('Whip'), riser: t('Riser'), air: t('Air'), click: t('Click'), key: t('Keys'),
+  pop: t('Pop'), chime: t('Chime'), impact: t('Impact'), thump: t('Thump'), zap: t('Zap'), ching: t('Ching'), chip: t('Chip'),
+  chip_hit: t('Chip hit'), crackle: t('Crackle'), lighter: t('Lighter'), tick: t('Tick'), shimmer: t('Shimmer'), buzz: t('Buzz'),
+  cork: t('Cork'), flutter: t('Flutter'), ghost: t('Ghost'), shutter: t('Shutter')};
+const edKind = k => ED_KIND[k] || k;
+// a recorded sound effect for the preview: through the Editor's route - Edge never answered a script's fetch of an
+// address ending in .wav (2026-10-26; an <audio> plays it), and the route serves this PC's library sounds only
+const edSoundUrl = file => `/api/editor/sound?file=${encodeURIComponent(file)}`;
+const meHue = k => [...String(k)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);     // a sound kind's colour
+const ED_EASE = {hold: () => 0, linear: x => x, smooth: x => x * x * (3 - 2 * x), in: x => x * x, out: x => 1 - (1 - x) * (1 - x),
+  in3: x => x * x * x, out3: x => 1 - (1 - x) ** 3};
+// a plan's animated value (motionlab\compose Curve): a number, {keys: [[f, v, ease]]}, {start, values}, "@name"
+function edCurve(spec, named, dflt) {
+  if (typeof spec === 'string' && spec[0] === '@') spec = (named || {})[spec.slice(1)];
+  if (spec == null) return () => dflt;
+  if (typeof spec === 'number') return () => spec;
+  const sc = spec.scale ?? 1, of = spec.offset ?? 0;
+  if (spec.keys && spec.keys.length) {
+    const ks = [...spec.keys].sort((a, b) => a[0] - b[0]);
+    return f => {
+      let v;
+      if (f <= ks[0][0]) v = ks[0][1];
+      else if (f >= ks[ks.length - 1][0]) v = ks[ks.length - 1][1];
+      else { let i = 0; while (ks[i + 1][0] <= f) i++; const x = (f - ks[i][0]) / Math.max(1e-9, ks[i + 1][0] - ks[i][0]);
+        v = ks[i][1] + (ks[i + 1][1] - ks[i][1]) * (ED_EASE[ks[i][2] || 'linear'] || ED_EASE.linear)(x); }
+      return v * sc + of;
+    };
+  }
+  if (spec.values) return f => spec.values[clamp(Math.round(f) - spec.start, 0, spec.values.length - 1)] * sc + of;
+  return () => dflt;
+}
+// the clip frame a clip layer shows at timeline frame f (its jumps, speed, a held frame - compose ClipLayer.src_index)
+function edSrcAt(L, f) {
+  const J = (L.jumps && L.jumps.length ? L.jumps : [[L.start, L.in]]).map(j => [+j[0], +j[1]]).sort((a, b) => a[0] - b[0]);
+  let j = J[0];
+  for (const x of J) if (x[0] <= f) j = x;
+  return L.hold ? j[1] : j[1] + Math.floor((f - j[0]) * (L.speed || 1) + 1e-6);
+}
+// the captions as this edit has them, in the graphic's own page before it is saved (E = the state's capedits for its
+// folder: {cues: the whole list the engine made - new words, other frames, split, added, removed})
+const edCapPatch = E => `(function(){var C=window.CAPTIONS;if(!C)return;C.cues=${JSON.stringify((E.cues || []).map(c => ({f0: c.f0, f1: c.f1, words: c.words}))).replace(/</g, '\\u003c')};})();`;
+
+// ---- the live preview: the edit played from its parts, no render
+class EdPreview {
+  constructor(box, o) {
+    this.box = box; this.fps = o.fps; this.W = o.W; this.H = o.H; this.media = o.media || {}; this.onFrame = o.onFrame || (() => {});
+    this.onPlay = o.onPlay || (() => {});
+    box.innerHTML = `<div class="edstage"><div class="edlayers"></div><div class="edwait" hidden></div></div>`;
+    this.stage = $('.edstage', box); this.layers = $('.edlayers', box); this.waitEl = $('.edwait', box);
+    this.pool = {}; this.frames = new Map(); this.solids = new Map(); this.html = new Map(); this.buf = new Map();
+    this.f = 0; this.playing = false; this.raf = 0; this.sched = []; this.capEdits = {}; this.activeIds = new Set(); this.muted = false;
+    this.stage.addEventListener('click', () => (this.playing ? this.pause() : this.play()));
+    this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(box);
+    this.fit();
+  }
+  wait(html) { this.waitEl.hidden = !html; this.waitEl.innerHTML = html || ''; }
+  fit() {
+    const bw = Math.max(200, this.box.clientWidth || 400), maxH = clamp(window.innerHeight - 650, 240, 640);   // the timeline in sight
+    this.sc = Math.min(bw / this.W, maxH / this.H);
+    this.stage.style.width = `${Math.round(this.W * this.sc)}px`; this.stage.style.height = `${Math.round(this.H * this.sc)}px`;
+    if (this.S) this.render(this.f, true);
+  }
+  setState(S, capEdits) {
+    this.S = S; this.N = S.frames; this.capEdits = capEdits || {};
+    this.g = Object.fromEntries(S.graphics.map(g => [g.id, g]));
+    this.shotIds = new Set(S.shots.map(s => s.id));
+    this.clips = S.draw.filter(d => d.t === 'clip');
+    this.voice = S.sound === 'follows';
+    const want = S.song || S.audio_file;                       // the song (or a sound made some other way) under it
+    if (want && (!this.songEl || this.songEl.dataset.src !== want)) {
+      if (!this.songEl) { this.songEl = document.createElement('audio'); this.songEl.preload = 'auto'; this.box.appendChild(this.songEl); }
+      this.songEl.dataset.src = want; this.songEl.src = fileUrl(want);
+    }
+    this.songAt = S.song ? (S.song_cut || {}).start_s || 0 : 0;      // (seconds into the song where the video starts)
+    if (this.songEl) { this.songEl.volume = Math.min(1, Math.pow(10, ((S.song && S.song_cut) || {db: 0}).db / 20));
+      if (this.playing && !this.muted) this.songEl.currentTime = this.f / this.fps + this.songAt; }
+    if (!S.audio_file) S.sfx.forEach(q => this.buffer(this.sfxUrl(q)));       // (a fixed sound has its effects in it)
+    if (this.f > this.N - 1) this.f = Math.max(0, this.N - 1);
+    if (this.playing) { this.unschedule(); this.schedule(this.f); }
+    this.render(this.f, true);
+  }
+  // clips: two light copies per clip (the one showing, the next one waiting on its first frame), never moved in the page
+  elFor(L) {
+    const P = this.pool[L.src] || (this.pool[L.src] = []);
+    let e = P.find(x => x.layer === L.id);
+    if (e) return e;
+    e = P.find(x => !x.layer || (!this.activeIds.has(x.layer) && x.layer !== this.preId));
+    if (!e && P.length < 3) { e = this.makeEl(L.src); P.push(e); }
+    if (e) { e.layer = L.id; e.at = null; }
+    return e;
+  }
+  makeEl(src) {
+    const m = this.media[src] || {}, wrap = document.createElement('div');
+    wrap.className = 'edclip'; wrap.hidden = true;
+    let v;
+    if (m.photo) { v = document.createElement('img'); v.src = `/api/thumb?video=${encodeURIComponent(m.photo)}&f=0&fps=${this.fps}`; v.alt = ''; }
+    else { v = document.createElement('video'); v.preload = 'auto'; v.playsInline = true; v.muted = true; v.src = fileUrl(m.proxy || m.source || ''); }
+    wrap.appendChild(v); this.layers.appendChild(wrap);
+    return {wrap, v, layer: null, photo: !!m.photo};
+  }
+  box4(rect) { const r = rect || [0, 0, this.W, this.H], s = this.sc; return [r[0] * s, r[1] * s, r[2] * s, r[3] * s]; }
+  placeClip(e, d, z, f) {
+    const [x, y, w, h] = this.box4(d.rect), C = this.S.curves, s = this.sc;
+    const st = e.wrap.style;
+    st.left = `${x}px`; st.top = `${y}px`; st.width = `${w}px`; st.height = `${h}px`; st.zIndex = z;
+    st.opacity = clamp(edCurve(d.opacity, C, 1)(f), 0, 1);
+    const zm = edCurve(d.zoom, C, 1)(f), an = d.anchor || [0.5, 0.5];
+    const ax = edCurve(an[0], C, 0.5)(f), ay = edCurve(an[1], C, 0.5)(f), dx = edCurve(d.dx, C, 0)(f) * s, dy = edCurve(d.dy, C, 0)(f) * s;
+    e.v.style.objectFit = d.fit === 'contain' ? 'contain' : 'cover';
+    e.v.style.transformOrigin = `${ax * 100}% ${ay * 100}%`;
+    e.v.style.transform = `translate(${dx}px, ${dy}px) scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
+    st.mixBlendMode = d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : '';
+    e.v.style.filter = d.tint ? `url(#${this.tintFilter(d.tint)})` : '';
+    let fl = 0, flc = '#fff';                                // a flash (over-exposed), a white or a black frame
+    if ((d.black || []).includes(f)) { fl = 1; flc = '#000'; }
+    else if ((d.flash_white || []).includes(f)) fl = 0.9;
+    else if (d.flash_over && d.flash_over[String(f)] != null) fl = +d.flash_over[String(f)];
+    if (fl && !e.fl) { e.fl = document.createElement('i'); e.fl.className = 'edfl'; e.wrap.appendChild(e.fl); }
+    if (e.fl) { e.fl.style.background = flc; e.fl.style.opacity = fl; }
+  }
+  tintFilter(tint) {                                         // a layer's colour multipliers (an RGB split) as an SVG filter
+    const id = 'edt' + tint.map(v => Math.round(v * 100)).join('_');
+    if (!this.svg) { this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); this.svg.setAttribute('width', '0'); this.svg.setAttribute('height', '0');
+      this.svg.style.position = 'absolute'; this.stage.appendChild(this.svg); }
+    if (!this.svg.querySelector('#' + id)) this.svg.insertAdjacentHTML('beforeend', `<filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${tint[0]} 0 0 0 0 0 ${tint[1]} 0 0 0 0 0 ${tint[2]} 0 0 0 0 0 1 0"/></filter>`);
+    return id;
+  }
+  render(f, seek = false) {
+    this.f = f;
+    const S = this.S;
+    if (!S) return;
+    const fps = this.fps, act = [];
+    S.draw.forEach((d, i) => {
+      const L = d.t === 'overlay' ? this.g[d.id] : d;
+      if (L && L.start <= f && f <= L.end) act.push([d, i]);
+    });
+    this.activeIds = new Set(act.map(([d]) => d.id));
+    const shown = new Set();
+    let main = null, mainDb = 0;
+    for (const [d, i] of act) {
+      if (d.t !== 'clip') continue;
+      const e = this.elFor(d);
+      if (!e) continue;
+      shown.add(e); this.placeClip(e, d, i + 1, f);
+      if (this.shotIds.has(d.id)) { main = e; mainDb = (S.shots.find(s => s.id === d.id) || {}).db || 0; }
+      if (!e.photo) {
+        const want = (edSrcAt(d, f) + 0.5) / fps, v = e.v, rate = d.hold ? 1 : (d.speed || 1);
+        if (this.playing && !d.hold && !(d.jumps && d.jumps.length > 1)) {    // (a stutter: shown frame by frame)
+          if (v.playbackRate !== rate) v.playbackRate = rate;
+          if (v.paused) { if (Math.abs(v.currentTime - want) > 0.5 / fps) v.currentTime = want; v.play().catch(() => {}); }
+          else if (Math.abs(v.currentTime - want) > 0.2 * Math.max(1, rate)) v.currentTime = want;
+        } else {
+          if (!v.paused) v.pause();
+          if (seek || Math.abs(v.currentTime - want) > 0.5 / fps) v.currentTime = want;
+        }
+      }
+      e.wrap.hidden = false;
+    }
+    for (const P of Object.values(this.pool)) for (const e of P) {
+      if (!shown.has(e)) { e.wrap.hidden = true; if (!e.photo && !e.v.paused) e.v.pause(); }
+      if (!e.photo) { e.v.muted = this.muted || !this.voice || e !== main || (e === main && mainDb <= -60);
+        if (e === main) e.v.volume = Math.min(1, Math.pow(10, mainDb / 20)); }       // (louder than its own: on save)
+    }
+    // graphics: each folder's own page in a frame, at its frame
+    const onDirs = new Set();
+    for (const [d, i] of act) {
+      if (d.t !== 'overlay') continue;
+      const g = this.g[d.id], F = this.frameFor(g);
+      onDirs.add(g.dir);
+      if (!F.ready) continue;
+      const fo = S.folders[g.dir] || {}, gw = g.new ? this.W : (fo.w || this.W), gh = g.new ? this.H : (fo.h || this.H);
+      const r = g.rect || [0, 0, gw, gh], [x, y, w, h] = this.box4(r);
+      Object.assign(F.wrap.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, zIndex: i + 1,
+        opacity: clamp(edCurve(g.opacity, S.curves, 1)(f), 0, 1)});
+      F.fr.style.width = `${gw}px`; F.fr.style.height = `${gh}px`; F.fr.style.transform = `scale(${w / gw})`;
+      const n = Math.max(1, fo.frames || 1), k = clamp(g.in + Math.floor((f - g.start) * (g.speed || 1) + 1e-6), 0, n - 1);
+      try { F.tl.seek(k / (fo.fps || fps), false); } catch (err) { /* the graphic's own error */ }
+      F.wrap.hidden = false;
+    }
+    for (const [dir, F] of this.frames) if (!onDirs.has(dir)) F.wrap.hidden = true;
+    // solids (an end card's ground ...)
+    const onSol = new Set();
+    for (const [d, i] of act) {
+      if (d.t !== 'solid') continue;
+      let el = this.solids.get(d.id);
+      if (!el) { el = document.createElement('div'); el.className = 'edsolid'; this.layers.appendChild(el); this.solids.set(d.id, el); }
+      const [x, y, w, h] = this.box4(d.rect), c = d.color || [0, 0, 0];
+      Object.assign(el.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, zIndex: i + 1,
+        background: `rgb(${c.map(v => Math.round(clamp(v, 0, 1) * 255)).join(',')})`, opacity: clamp(edCurve(d.opacity, S.curves, 1)(f), 0, 1),
+        mixBlendMode: d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : ''});
+      el.hidden = false; onSol.add(d.id);
+    }
+    for (const [id, el] of this.solids) if (!onSol.has(id)) el.hidden = true;
+  }
+  frameFor(g) {
+    const fo = this.S.folders[g.dir] || {}, key = JSON.stringify([g.values, this.capEdits[g.dir] || null, g.new]);
+    let F = this.frames.get(g.dir);
+    if (!F) {
+      F = {wrap: document.createElement('div'), fr: document.createElement('iframe'), ready: false, tl: null, key: null};
+      F.wrap.className = 'edgfx'; F.wrap.hidden = true; F.fr.title = ta('live preview'); F.fr.setAttribute('tabindex', '-1');
+      F.wrap.appendChild(F.fr); this.layers.appendChild(F.wrap); this.frames.set(g.dir, F);
+    }
+    if (F.key !== key) this.loadFrame(F, g, fo, key);
+    return F;
+  }
+  async loadFrame(F, g, fo, key) {
+    F.key = key; F.ready = false; F.tl = null;
+    const base = '/files/' + String(g.dir).split('/').map(encodeURIComponent).join('/') + '/';
+    let html = this.html.get(g.dir);
+    if (!html) { try { html = await (await fetch(base + 'index.html', {cache: 'no-store'})).text(); this.html.set(g.dir, html); } catch (e) { return; } }
+    if (F.key !== key) return;
+    const vals = JSON.stringify(g.values || {}).replace(/</g, '\\u003c'), lgs = encodeURIComponent(logoIds(g.values).join(','));
+    let doc = html.replace(/<head[^>]*>/i, m => `${m}<base href="${base}"><link rel="stylesheet" href="/fonts.css"><script src="/logos.js?b=${lgs}"><\/script><script>window.__hyperframes = {getVariables: () => (${vals})};<\/script>`);
+    if (g.new) doc = doc.replace(/data-width="\d+"/, `data-width="${this.W}"`).replace(/data-height="\d+"/, `data-height="${this.H}"`);
+    const ce = this.capEdits[g.dir];
+    if (ce) doc = doc.replace(/(<script[^>]*captions\.js[^>]*><\/script>)/i, `$1<script>${edCapPatch(ce)}<\/script>`);
+    F.fr.onload = () => {
+      const w = F.fr.contentWindow;
+      let n = 0;
+      const ready = () => {
+        if (F.key !== key) return;
+        const tl = w && w.__timelines && w.__timelines.main;
+        if (!tl) { if (++n < 40) setTimeout(ready, 100); return; }
+        F.tl = tl; F.ready = true; this.render(this.f);
+        if (w.document.fonts) w.document.fonts.ready.then(() => { if (F.key === key) this.render(this.f); });
+      };
+      ready();
+    };
+    F.fr.srcdoc = doc;
+  }
+  // sound effects: each one's sound (the recorded file the build will use, else the made-up one), on the timeline
+  sfxUrl(q) { return q.sound ? edSoundUrl(q.sound) : `/api/editor/sound?kind=${encodeURIComponent(q.kind)}`; }
+  ac() { if (!this.actx) this.actx = new (window.AudioContext || window.webkitAudioContext)(); return this.actx; }
+  buffer(url) {
+    if (!this.buf.has(url)) this.buf.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => b && this.ac().decodeAudioData(b)).catch(() => null));
+    return this.buf.get(url);
+  }
+  schedule(f0) {
+    if (!this.S || this.S.audio_file || this.muted) return;
+    const ac = this.ac(), t0 = ac.currentTime + 0.04, run = this.run = {};
+    for (const q of this.S.sfx) {
+      const at = (q.f - f0) / this.fps + (q.offset_s || 0);
+      if (q.f < f0 - 1) continue;
+      this.buffer(this.sfxUrl(q)).then(b => {
+        if (!b || this.run !== run || !this.playing) return;
+        const s = ac.createBufferSource(), gn = ac.createGain();
+        s.buffer = b; gn.gain.value = 0.55 * Math.pow(10, (q.db || 0) / 20);
+        s.connect(gn).connect(ac.destination);
+        const when = t0 + at, now = ac.currentTime;
+        if (when >= now) s.start(when); else if (now - when < b.duration) s.start(now, now - when); else return;
+        this.sched.push(s);
+      });
+    }
+  }
+  unschedule() { this.run = null; this.sched.forEach(s => { try { s.stop(); } catch (e) { /* done */ } }); this.sched = []; }
+  hear(url) { this.buffer(url).then(b => { if (!b) return; const ac = this.ac(), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(); }); }
+  preroll(f) {                                                 // the next shot waits on its first frame
+    const soon = f + Math.round(this.fps * 0.7);
+    const nx = this.clips.find(d => d.start > f && d.start <= soon && !this.activeIds.has(d.id));
+    this.preId = nx ? nx.id : null;
+    if (!nx) return;
+    const e = this.elFor(nx);
+    if (e && !e.photo && e.at !== nx.start) { e.at = nx.start; e.v.pause(); e.v.currentTime = (edSrcAt(nx, nx.start) + 0.5) / this.fps; }
+  }
+  play() {
+    if (this.playing || !this.S) return;
+    if (this.f >= this.N - 1) this.f = 0;
+    this.ac().resume().catch(() => {});
+    this.playing = true; this.t0 = performance.now(); this.f0 = this.f; this.last = -1;
+    this.schedule(this.f);
+    if (this.songEl && !this.muted) { this.songEl.currentTime = this.f / this.fps + (this.songAt || 0); this.songEl.play().catch(() => {}); }
+    const step = now => {
+      if (!this.playing) return;
+      const f = Math.min(this.N - 1, this.f0 + Math.floor((now - this.t0) / 1000 * this.fps));
+      if (f !== this.last) { this.last = f; this.render(f); this.preroll(f); this.onFrame(f); }
+      if (f >= this.N - 1) { this.pause(); return; }
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+    this.onPlay(true);
+  }
+  pause() {
+    if (!this.playing) return;
+    this.playing = false; cancelAnimationFrame(this.raf); this.unschedule();
+    if (this.songEl) this.songEl.pause();
+    this.render(this.f, true); this.onPlay(false);
+  }
+  toggle() { if (this.playing) this.pause(); else this.play(); }
+  seek(f) {
+    f = clamp(Math.round(f), 0, Math.max(0, (this.N || 1) - 1));
+    if (this.playing) { this.pause(); this.f = f; this.play(); return; }
+    this.render(f, true); this.onFrame(f);
+  }
+  mute(on) { this.muted = on; if (this.songEl) this.songEl.muted = on; if (on) this.unschedule(); this.render(this.f); }
+  destroy() {
+    this.pause(); this.ro.disconnect();
+    for (const P of Object.values(this.pool)) for (const e of P) if (!e.photo) { e.v.removeAttribute('src'); e.v.load(); }
+    if (this.songEl) { this.songEl.pause(); this.songEl.removeAttribute('src'); }
+    if (this.actx) this.actx.close().catch(() => {});
+  }
+}
+
+// a graphic's name on the timeline: its first words, else its template's name, else its folder without the prefixes
+function edGfxName(g, S, lib) {
+  if (g.captions) return t('Captions');
+  const w = (g.words || []).find(x => x.value && String(x.value).trim());
+  if (w) return String(w.value).replace(/\*/g, '').slice(0, 40);
+  const fo = (S.folders || {})[g.dir] || {}, T = fo.from && (lib || []).find(x => x.id === fo.from);
+  return T ? t(T.name) : String(g.folder || g.id).replace(/^(v\d+_|n\d+_)?(g|d)?\d+_/, '').replace(/_m\d+$/, '').replace(/[-_]/g, ' ');
+}
+
+function projEditor(el, P) {
+  const enc = encodeURIComponent(P.name);
+  el.innerHTML = `<div class="ed">
+    <div class="edtop"><div id="edpick"></div><div class="edtitle" id="edtitle"></div><div class="grow"></div>
+      <button class="btn sm ghost" id="edundo" title="${ta('Undo (Ctrl+Z)')}" disabled>↶ ${t('Undo')}</button>
+      <button class="btn sm ghost" id="edredo" title="${ta('Redo (Ctrl+Shift+Z)')}" disabled>↷ ${t('Redo')}</button>
+      <span class="edhw"><button class="btn sm ghost" id="edhist" disabled aria-haspopup="true" aria-expanded="false" title="${ta('What you changed, in order')}"></button><div class="edpop" id="edpop" hidden></div></span>
+      <button class="btn pri edsave" id="edsave" disabled><svg class="i"><use href="#i-edit"/></svg>${t('Save as a new version')}</button></div>
+    <div class="edmain">
+      <aside class="edpanel"><div class="edpin edadd" id="edadd"></div></aside>
+      <div class="edview"><div id="edprev"></div><div class="edrng" id="edrng" hidden></div>
+        <div class="edtrans"><button class="btn sm" data-tr="start" title="${ta('First frame (Home)')}">⏮</button><button class="btn sm" data-tr="-1" title="${ta('1 frame back (←)')}">◀</button>
+          <button class="btn edplay" data-tr="play" title="${ta('Play / pause (Space)')}">▶</button><button class="btn sm" data-tr="1" title="${ta('1 frame on (→)')}">▶</button><button class="btn sm" data-tr="end" title="${ta('Last frame (End)')}">⏭</button>
+          <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button></div></div>
+      <aside class="edpanel"><div class="edpin edinsp" id="edinsp"></div></aside></div>
+    <div class="edtl" id="edtl"><div class="edtools">
+        <button class="btn sm" id="edsplit" title="${ta('Split the shot under the playhead (S)')}">✂ ${t('Split')}</button>
+        <button class="btn sm" id="eddel" title="${ta('Delete what is selected (Delete)')}" disabled><svg class="i"><use href="#i-trash"/></svg>${t('Delete')}</button>
+        <button class="btn sm" id="edcapadd" hidden title="${ta('A new caption at the playhead - then type its words')}">＋ ${t('Caption')}</button>
+        <span class="edsep"></span>
+        <button class="btn sm ghost on" id="edsnap" title="${ta('Snap to cuts, the playhead and the other items')}">🧲 ${t('Snap')}</button>
+        <button class="btn sm ghost" id="edrange" title="${ta('The two seconds around the playhead with your changes, rendered exactly as Save will (picture only)')}"><svg class="i"><use href="#i-film"/></svg>${t('See it rendered')}</button>
+        <span class="grow"></span><span class="small muted" id="edhint"></span>
+        <button class="btn sm ghost" id="edzo" title="${ta('Zoom out (-)')}">−</button><input type="range" id="edzoom" min="0" max="100" value="0" title="${ta('Zoom (Ctrl + wheel)')}"><button class="btn sm ghost" id="edzi" title="${ta('Zoom in (+)')}">+</button></div>
+      <div class="edtlbody"><div class="edheads" id="edheads"></div><div class="edscroll" id="edscroll"><div class="edcanvas" id="edcanvas"></div></div></div></div>
+  </div>`;
+  let plan = '', base = null, cur = null, ops = [], labels = [], redo = [], sel = null, busy = false, pv = null, saving = false;
+  let pxf = 1, zoom = 0, snap = true, lib = [], mediaJob = null, prevF = 0, capFocus = false;
+  const fps = () => (cur || base).fps;
+  const tcf = f => `f${f} (${tc(f, fps())})`;
+  const store = () => `ml.editor.${P.name}.${plan}`;
+  const keep = () => { try { if (ops.length) localStorage.setItem(store(), JSON.stringify({ops, labels})); else localStorage.removeItem(store()); } catch (e) { /* private window */ } };
+  const capEdits = () => (cur || base).capedits || {};     // the captions' new words / frames per folder (the engine's)
+  // ---------------------------------------------------------------- loading a version
+  const load = async r => {
+    if (pv) { pv.destroy(); pv = null; }
+    const pf = planOfRender(P, r).file;
+    if (!pf) { $('#edprev', el).innerHTML = `<div class="empty">${t('This render has no plan - the Editor changes a version MotionLab made.')}</div>`; return; }
+    try { base = await api(`/api/project/${enc}/miniedit?plan=${encodeURIComponent(pf)}`); }
+    catch (e) { $('#edprev', el).innerHTML = `<div class="empty bad">${esc(e.message)}</div>`; return; }
+    plan = pf; cur = base; ops = []; labels = []; redo = []; sel = null;
+    $('#edtitle', el).innerHTML = `<span class="small muted">${t('{w}×{h} · {fps} fps', {w: base.width, h: base.height, fps: base.fps})}</span>`;
+    pv = new EdPreview($('#edprev', el), {fps: base.fps, W: base.width, H: base.height, media: base.media,
+      onFrame: f => { prevF = f; paintHead(); }, onPlay: on => { const b = $('[data-tr=play]', el); if (b) b.textContent = on ? '❚❚' : '▶'; }});
+    let back = null;
+    try { back = JSON.parse(localStorage.getItem(store()) || 'null'); } catch (e) { back = null; }
+    if (back && back.ops && back.ops.length) {
+      try { cur = await api(`/api/project/${enc}/miniedit/preview`, {plan, ops: back.ops}); ops = back.ops; labels = back.labels || back.ops.map(o => o.op);
+        toast(t('Your unsaved changes are back.'), 'ok'); }
+      catch (e) { cur = base; try { localStorage.removeItem(store()); } catch (x) { /* */ } }
+    }
+    pv.setState(cur, capEdits());
+    draw();
+    media();
+  };
+  // the preview's light copies of the clips: made once (a job of seconds), the preview uses the clips meanwhile
+  const media = async () => {                               // (the other clips of the video: made quietly after)
+    if (!(base.need_media || base.need_more) || mediaJob) return;
+    const quiet = !base.need_media;
+    if (!quiet) pv.wait(`<span>${t('Getting your clips ready for the preview…')}</span>`);
+    try { mediaJob = (await api(`/api/project/${enc}/editor/media`, {plan})).id; } catch (e) { pv.wait(''); return; }
+    const tick = async () => {
+      let j; try { j = await api(`/api/jobs/${mediaJob}?since=999999`); } catch (e) { setTimeout(tick, 1500); return; }
+      if (['running', 'queued', 'cancelling'].includes(j.status)) { setTimeout(tick, 800); return; }
+      mediaJob = null;
+      if (!pv) return;
+      if (j.status !== 'done') { if (quiet) return; pv.wait(`<span>${t('The preview copies could not be made - the preview plays your clips as they are.')}</span>`); setTimeout(() => pv && pv.wait(''), 6000); return; }
+      try { const fresh = await api(`/api/project/${enc}/miniedit?plan=${encodeURIComponent(plan)}`); base.media = fresh.media; base.need_media = base.need_more = false; } catch (e) { /* keep */ }
+      if (quiet && pv.playing) return;                       // (never in the middle of playing: the next load has them)
+      const f = pv.f, D = pv.box; pv.destroy();
+      pv = new EdPreview(D, {fps: base.fps, W: base.width, H: base.height, media: base.media,
+        onFrame: g => { prevF = g; paintHead(); }, onPlay: on => { const b = $('[data-tr=play]', el); if (b) b.textContent = on ? '❚❚' : '▶'; }});
+      pv.setState(cur, capEdits()); pv.seek(f); drawTL();
+    };
+    tick();
+  };
+  // ---------------------------------------------------------------- a change = a step, the timeline as it would be
+  const preview = async (nops, nlabels, keepRedo = false) => {
+    if (busy) return false;
+    busy = true; el.classList.add('edbusy');
+    try {
+      const S = nops.length ? await api(`/api/project/${enc}/miniedit/preview`, {plan, ops: nops}) : base;
+      cur = S; ops = nops; labels = nlabels; if (!keepRedo) redo = [];
+      keep(); return true;
+    } catch (e) { toast(e.message, 'err'); return false; }
+    finally { busy = false; el.classList.remove('edbusy'); if (pv && cur) pv.setState(cur, capEdits()); draw(); }
+  };
+  const push = (op, label, after) => preview([...ops, op], [...labels, label]).then(ok => { if (ok && after) { after(); draw(); } return ok; });
+  const undo = () => { if (!ops.length || busy) return; const o = ops[ops.length - 1], l = labels[labels.length - 1];
+    preview(ops.slice(0, -1), labels.slice(0, -1), true).then(ok => { if (ok) { redo.push([o, l]); sel = null; draw(); } }); };
+  const redoIt = () => { if (!redo.length || busy) return; const [o, l] = redo[redo.length - 1];
+    preview([...ops, o], [...labels, l], true).then(ok => { if (ok) { redo.pop(); draw(); } }); };
+  // ---------------------------------------------------------------- the timeline
+  const shotAt = f => cur.shots.find(s => s.start <= f && f <= s.end);
+  const sfxOf = q => `${q.f}|${q.kind}`;
+  function rows() {                                          // graphics on lanes: one row each where they overlap in time
+    const G = cur.graphics.filter(g => !g.captions && !g.scene).sort((a, b) => a.start - b.start), end = [], row = new Map();
+    G.forEach(g => { let r = end.findIndex(e => e < g.start); if (r < 0) r = end.length; end[r] = g.end; row.set(g.id, r); });
+    return {G, row, n: Math.max(1, end.length)};
+  }
+  function sfxRows() {                                       // sound effects on rows where they would overlap
+    const end = [], row = [], px = Math.max(1e-6, pxf);
+    cur.sfx.forEach((q, i) => { const a = q.f, b = q.f + Math.max(18 / px, (q.len_s || 0.3) * cur.fps);
+      let r = end.findIndex(e => e <= a); if (r < 0) r = end.length; end[r] = b; row[i] = r; });
+    return {row, n: Math.max(1, Math.min(3, end.length))};
+  }
+  function fxRows() {                                        // effect chips on rows where they overlap
+    const end = [], row = new Map();
+    (cur.effects || []).forEach(x => { const a = x.f, b = x.f + Math.max(x.len, 84 / Math.max(1e-6, pxf));   // (its name beside it)
+      let r = end.findIndex(e => e <= a); if (r < 0) r = end.length; end[r] = b; row.set(x.id, r); });
+    return {row, n: Math.max(1, Math.min(3, end.length))};
+  }
+  function lanes() {
+    const R = rows(), Q = sfxRows(), F = fxRows(), y = {};
+    let Y = ED_ROW.ruler;
+    if (cur.captions.length || capPieces().length) { y.cap = Y; Y += ED_ROW.cap; }
+    y.gfx = Y; Y += R.n * ED_ROW.gfx;
+    if (cur.shots.length) { y.shot = Y; Y += ED_ROW.shot; }
+    if (cur.shots.length || (cur.effects || []).length) { y.fx = Y; Y += F.n * ED_ROW.fx; }
+    y.sfx = Y; Y += Q.n * ED_ROW.sfx;
+    y.wave = Y; Y += ED_ROW.wave;
+    return {R, Q, F, y, H: Y + 6};
+  }
+  const rulerStep = () => [1, 2, 5, 10, 15, 30, 60, 120].find(s => s * fps() * pxf >= 64) || 300;
+  const sLabel = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  function thumbRel(src) { const m = base.media[src] || {}; return m.proxy || m.source || m.photo || ''; }
+  function drawTL() {
+    if (!cur) return;
+    const S = cur, N = S.frames, sc = $('#edscroll', el), cw = Math.max(300, sc.clientWidth - 32);   // (fit: no scrollbar)
+    const fit = cw / N;
+    pxf = fit * Math.pow(Math.max(1, 14 / fit), zoom / 100);
+    const W = Math.ceil(N * pxf) + 24, {R, Q, F, y, H} = lanes(), on = (k, test) => sel && sel.k === k && test ? ' on' : '';
+    const step = rulerStep(), ticks = [];
+    for (let s = 0; s * fps() < N; s += step) ticks.push(`<span class="edtick" style="left:${(s * fps() * pxf).toFixed(1)}px">${sLabel(s)}</span>`);
+    const lock = S.timing_locked;
+    const shotHtml = s => {
+      const w = (s.end - s.start + 1) * pxf, m = base.media[s.src] || {}, st = m.strip, flat = {...s, jumps: null, hold: false};
+      let pics;
+      const sth = s.scene && (S.folders[s.scene] || {}).thumb;
+      if (s.scene) pics = `<div class="edpics scene"${sth ? ` style="--th:url('${fileUrl(sth)}')"` : ''}></div>`;   // a scene: its graphic
+      else if (st && st.url) {                               // the clip's filmstrip (one picture, its cells by CSS)
+        const th = ED_ROW.shot - 8, tw = th * st.tw / st.th, n = Math.min(400, Math.ceil(w / tw));
+        pics = `<div class="edpics strip" style="--strip:url('${fileUrl(st.url)}');--bs:${(st.cols * tw).toFixed(1)}px ${(st.rows * th).toFixed(1)}px">${Array.from({length: n}, (_, i) => {
+          const k = clamp(Math.floor(edSrcAt(flat, Math.min(s.end, s.start + (i + 0.5) * tw / pxf)) / S.fps / st.every), 0, st.n - 1);
+          return `<i style="width:${tw.toFixed(1)}px;background-position:${(-(k % st.cols) * tw).toFixed(1)}px ${(-Math.floor(k / st.cols) * th).toFixed(1)}px"></i>`; }).join('')}</div>`;
+      } else {                                               // until it is made: one picture of the shot
+        const tr = thumbRel(s.src), mid = edSrcAt(flat, Math.floor((s.start + s.end) / 2));
+        pics = `<div class="edpics">${tr ? `<img src="/api/thumb?video=${encodeURIComponent(tr)}&f=${Math.round(mid / S.fps) * S.fps}&fps=${S.fps}" loading="lazy" alt="" draggable="false">` : ''}</div>`;
+      }
+      return `<div class="edit edshot${on('shot', sel && sel.id === s.id)}${lock ? ' locked' : ''}${s.scene ? ' scene' : ''}" data-k="shot" data-id="${esc(s.id)}" style="left:${(s.start * pxf).toFixed(1)}px;width:${w.toFixed(1)}px;top:${y.shot}px;height:${ED_ROW.shot - 6}px"
+        title="${esc(s.scene ? `${t('Scene {n}', {n: s.n})} · ${edGfxName(S.graphics.find(g => g.id === s.id) || {id: s.id}, S, lib)}` : t('Shot {n}', {n: s.n}))} · ${esc(tcf(s.start))} - ${esc(tcf(s.end))}">${pics}
+        <span class="edlab">${s.n} · ${dec((s.end - s.start + 1) / S.fps)} s</span>${s.speed !== 1 ? `<span class="edspd">${numLoc(s.speed)}×</span>` : ''}
+        ${lock ? '' : '<i class="edh l"></i><i class="edh r"></i>'}</div>`;
+    };
+    $('#edcanvas', el).style.width = `${W}px`; $('#edcanvas', el).style.height = `${H}px`;
+    $('#edcanvas', el).innerHTML = `<div class="edruler" style="height:${ED_ROW.ruler}px">${ticks.join('')}</div>
+      ${S.captions.map(c => `<div class="edit edcap${on('cap', sel && sel.graphic === c.graphic && sel.cue === c.cue)}${c.edited ? ' edited' : ''}${c.tail ? ' tail' : ''}" data-k="cap" data-g="${esc(c.graphic)}" data-cue="${c.cue}"${c.tail ? ' data-tail="1"' : ''}
+          style="left:${(c.f * pxf).toFixed(1)}px;width:${Math.max(6, c.len * pxf).toFixed(1)}px;top:${y.cap}px;height:${ED_ROW.cap - 5}px" title="${esc(tcf(c.f))} - ${esc(tcf(c.f + c.len - 1))}${c.tail ? ' · ' + ta('the end of a caption said over the cut - drag it where it starts') : ''}"><span>${esc(c.text)}</span>${c.tail ? '' : '<i class="edh l"></i><i class="edh r"></i>'}</div>`).join('')}
+      ${R.G.map(g => `<div class="edit edgi${on('gfx', sel && sel.id === g.id)}${g.new ? ' new' : ''}" data-k="gfx" data-id="${esc(g.id)}" style="left:${(g.start * pxf).toFixed(1)}px;width:${Math.max(8, (g.end - g.start + 1) * pxf).toFixed(1)}px;top:${y.gfx + R.row.get(g.id) * ED_ROW.gfx}px;height:${ED_ROW.gfx - 5}px"
+          title="${esc(tcf(g.start))} - ${esc(tcf(g.end))}"><span>${esc(edGfxName(g, S, lib))}</span><i class="edh l"></i><i class="edh r"></i></div>`).join('')}
+      ${S.shots.map(shotHtml).join('')}
+      ${y.fx != null ? (S.effects || []).map(x => `<div class="edit edfx${on('fx', sel && sel.id === x.id)}" data-k="fx" data-id="${esc(x.id)}" style="left:${(x.f * pxf).toFixed(1)}px;width:${Math.max(10, x.len * pxf).toFixed(1)}px;top:${y.fx + Math.min(F.n - 1, F.row.get(x.id) || 0) * ED_ROW.fx}px;height:${ED_ROW.fx - 6}px"
+          title="${esc(edFxLabel(x.label))} · ${esc(tcf(x.f))} - ${esc(tcf(x.f + x.len - 1))}"><span>${esc(edFxLabel(x.label))}</span>${x.can.includes('len') ? '<i class="edh r"></i>' : ''}</div>`).join('') : ''}
+      ${S.sfx.map((q, i) => `<div class="edit edsfx${on('sfx', sel && sel.key === sfxOf(q))}" data-k="sfx" data-i="${i}" style="left:${(q.f * pxf).toFixed(1)}px;width:${Math.max(18, (q.len_s || 0.3) * S.fps * pxf).toFixed(1)}px;top:${y.sfx + Math.min(Q.n - 1, Q.row[i]) * ED_ROW.sfx}px;height:${ED_ROW.sfx - 6}px;--h:${meHue(q.kind)}"
+          title="${esc(edKind(q.kind))} · ${esc(tcf(q.f))}${q.what ? ' · ' + esc(q.what) : ''}"><b>${esc(edKind(q.kind))}</b></div>`).join('')}
+      <canvas class="edwave${S.sound === 'song' ? ' song' : ''}${sel && sel.k === 'song' ? ' on' : ''}" width="${Math.min(16000, W)}" height="${ED_ROW.wave - 8}" style="top:${y.wave + 2}px;width:${W}px"${S.sound === 'song' ? ` title="${ta('The song - drag it to start the video at another moment of it; click for its volume')}"` : ''}></canvas>
+      <div class="edins" hidden></div><div class="edph" style="height:${H}px"><i></i></div><div class="edtip" hidden></div>`;
+    $('#edheads', el).style.height = `${H}px`;
+    $('#edheads', el).innerHTML = `<div style="height:${ED_ROW.ruler}px"></div>
+      ${y.cap != null ? `<div class="edhd cap" style="top:${y.cap}px;height:${ED_ROW.cap}px">${t('Captions')}</div>` : ''}
+      <div class="edhd gfx" style="top:${y.gfx}px;height:${R.n * ED_ROW.gfx}px">${t('Graphics')}</div>
+      ${S.shots.length ? `<div class="edhd shot" style="top:${y.shot}px;height:${ED_ROW.shot}px">${S.shots[0].scene ? t('Scenes') : t('Video')}</div>` : ''}
+      ${y.fx != null ? `<div class="edhd fx" style="top:${y.fx}px;height:${F.n * ED_ROW.fx}px">${t('Effects')}</div>` : ''}
+      <div class="edhd sfx" style="top:${y.sfx}px;height:${Q.n * ED_ROW.sfx}px">${t('Sounds')}</div>
+      <div class="edhd wave" style="top:${y.wave}px;height:${ED_ROW.wave}px">${S.sound === 'song' ? t('Song') : S.sound === 'follows' ? t('Voice') : t('Sound')}</div>`;
+    paintWave(); paintHead();
+  }
+  const waves = {};
+  async function paintWave() {
+    const cv = $('.edwave', el);
+    if (!cv) return;
+    const S = cur, M = base.media || {}, need = S.sound === 'song' ? ['_song'] : S.sound === 'follows' ? [...new Set(S.shots.map(s => s.src))] : [];
+    for (const k of need) {
+      const w = (M[k] || {}).wave;
+      if (w && !waves[k]) waves[k] = await fetch(fileUrl(w)).then(r => r.json()).catch(() => ({peaks: []}));
+    }
+    if (cv !== $('.edwave', el)) return;
+    const g = cv.getContext('2d'), Wc = cv.width, Hc = cv.height, k = Wc / (S.frames * pxf || 1);
+    g.clearRect(0, 0, Wc, Hc); g.fillStyle = 'rgba(62,207,142,.55)';
+    const bar = (f, v) => { const x = f * pxf * k, h = Math.max(1, v / 100 * (Hc - 2)); g.fillRect(x, (Hc - h) / 2, Math.max(1, pxf * k), h); };
+    const every = Math.max(1, Math.floor(1 / Math.max(pxf * k, 1e-6)));
+    if (S.sound === 'song') {                                // (a mastered song is loud all through: drawn on its own
+      const w = waves._song || {}, p = w.peaks || [], o = Math.round((S.song_cut || {}).start_s * S.fps || 0);   // range,
+      if (w.lo == null && p.length) { const q = [...p].sort((a, b) => a - b); w.lo = q[Math.floor(q.length * 0.05)]; w.hi = q[q.length - 1]; }   // its quiet
+      const span = Math.max(1, (w.hi || 100) - (w.lo || 0));                                                     // parts show)
+      for (let f = 0; f < S.frames; f += every) bar(f, clamp(((p[f + o] || 0) - (w.lo || 0)) / span * 100, 2, 100)); }
+    else if (S.sound === 'follows') S.shots.forEach(s => { const p = (waves[s.src] || {}).peaks || [];
+      for (let f = s.start; f <= s.end; f += every) bar(f, p[edSrcAt({...s, jumps: null}, f)] || 0); });
+  }
+  function paintHead() {
+    const h = $('.edph', el);
+    if (h) h.style.left = `${prevF * pxf}px`;
+    const tm = $('#edtime', el);
+    if (tm && cur) tm.innerHTML = `f${prevF} <span class="tc">${tc(prevF, cur.fps)}</span> <span class="muted">/ ${tc(Math.max(0, cur.frames - 1), cur.fps)}</span>`;
+    const sp = $('#edsplit', el), s = cur && shotAt(prevF);
+    if (sp) sp.disabled = !s || s.start === prevF || cur.timing_locked || saving;
+    const ca = $('#edcapadd', el);
+    if (ca && cur) { ca.hidden = !capPieces().length; ca.disabled = !capPieceAt(prevF) || !!capAt(prevF) || saving; }
+    const cs = $('#edcsplit', el), sc0 = sel && sel.k === 'cap' && cur && cur.captions.find(x => x.graphic === sel.graphic && x.cue === sel.cue);
+    if (cs) cs.disabled = !sc0 || prevF <= sc0.f || prevF > sc0.f + sc0.len - 1 || saving;
+    // keep the playhead in view while playing
+    const sc = $('#edscroll', el);
+    if (pv && pv.playing && sc) { const x = prevF * pxf; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 40) sc.scrollLeft = Math.max(0, x - 60); }
+  }
+  // ---------------------------------------------------------------- dragging on the timeline
+  const canvas = () => $('#edcanvas', el);
+  const fAt = e => { const r = canvas().getBoundingClientRect(); return clamp(Math.round((e.clientX - r.left) / pxf), 0, cur.frames - 1); };
+  function snapPts(skip) {
+    const S = cur, pts = [0, S.frames, prevF];
+    S.shots.forEach(s => { if (s.id !== skip) pts.push(s.start, s.end + 1); });
+    S.graphics.forEach(g => { if (g.id !== skip && !g.captions) pts.push(g.start, g.end + 1); });
+    S.sfx.forEach(q => pts.push(q.f));
+    return pts;
+  }
+  function snapD(d, edges, skip) {                            // d frames, the item's edges at +d snapped to the nearest point
+    if (!snap) return d;
+    let best = null;
+    for (const p of snapPts(skip)) for (const e of edges) { const dd = p - e; if (Math.abs(dd - d) * pxf <= ED_SNAP_PX && (best === null || Math.abs(dd - d) < Math.abs(best - d))) best = dd; }
+    return best === null ? d : best;
+  }
+  const tip = (e, html) => { const tp = $('.edtip', el), r = canvas().getBoundingClientRect(); tp.hidden = !html; tp.innerHTML = html || ''; tp.style.left = `${e.clientX - r.left + 12}px`; tp.style.top = `${e.clientY - r.top - 30}px`; };
+  const dLabel = d => `${d > 0 ? '+' : ''}${d} f · ${d > 0 ? '+' : d < 0 ? '−' : ''}${dec(Math.abs(d) / fps())} s`;
+  let drag = null;
+  function onDown(e) {
+    if (e.button || !cur || saving) return;
+    const it = e.target.closest('.edit');
+    if (!it && e.target.classList.contains('song') && cur.song) {   // the song: a click selects it, a drag slides it
+      drag = {k: 'song', it: e.target, x0: e.clientX, moved: false, d: 0, s0: cur.song_cut.start_s};
+      canvas().setPointerCapture(e.pointerId); return;
+    }
+    if (!it) {                                               // the ruler / an empty place: the playhead goes there
+      drag = {k: 'scrub'}; canvas().setPointerCapture(e.pointerId); pv.seek(fAt(e));
+      if (sel && !e.target.closest('.edruler')) { sel = null; drawTop(); drawInsp(); $$('.edit.on', el).forEach(x => x.classList.remove('on')); }
+      return;
+    }
+    const k = it.dataset.k, r = it.getBoundingClientRect(), x = e.clientX - r.left;
+    const fxc = k === 'fx' ? (cur.effects || []).find(q => q.id === it.dataset.id) : null;
+    const edge = (k === 'shot' && !cur.timing_locked) || k === 'gfx' || (k === 'cap' && !it.dataset.tail) ? (x < 8 ? 'start' : x > r.width - 8 ? 'end' : '')
+      : fxc && fxc.can.includes('len') && x > r.width - 8 ? 'end' : '';
+    drag = {k, it, edge, x0: e.clientX, moved: false, d: 0, fx: fxc, tail: !!it.dataset.tail, slip: k === 'shot' && !edge && e.altKey && !cur.timing_locked};
+    if (k === 'shot') drag.s = cur.shots.find(s => s.id === it.dataset.id);
+    if (k === 'gfx') drag.g = cur.graphics.find(g => g.id === it.dataset.id);
+    if (k === 'sfx') drag.q = cur.sfx[+it.dataset.i];
+    if (k === 'cap') drag.c = cur.captions.find(c => c.graphic === it.dataset.g && c.cue === +it.dataset.cue);
+    canvas().setPointerCapture(e.pointerId);
+  }
+  function onMove(e) {
+    if (!drag) { const it = e.target.closest && e.target.closest('.edit'); canvas().style.cursor = '';
+      if (it && (it.dataset.k === 'gfx' || (it.dataset.k === 'cap' && !it.dataset.tail) || (it.dataset.k === 'shot' && !cur.timing_locked))) { const r = it.getBoundingClientRect(), x = e.clientX - r.left; if (x < 8 || x > r.width - 8) canvas().style.cursor = 'ew-resize'; }
+      else if (it && it.dataset.k === 'fx' && $('.edh.r', it)) { const r = it.getBoundingClientRect(); if (e.clientX > r.right - 8) canvas().style.cursor = 'ew-resize'; }
+      return; }
+    if (drag.k === 'scrub') { pv.seek(fAt(e)); return; }
+    if (drag.tail) return;                                   // (a caption's end on the next shot: a click only)
+    const dx = e.clientX - drag.x0;
+    if (!drag.moved && Math.abs(dx) < 4) return;
+    if (drag.k === 'song') {                                 // dragged left = later in the song (CapCut's audio track)
+      drag.moved = true;
+      const s = clamp(drag.s0 - dx / pxf / cur.fps, 0, Math.max(0, songMax()));
+      drag.s = s; drag.it.style.transform = `translateX(${((drag.s0 - s) * cur.fps * pxf).toFixed(1)}px)`;
+      tip(e, t('The video starts at {at} of the song', {at: songTime(s)})); return;
+    }
+    if (drag.k === 'fx' && !drag.edge && !drag.fx.can.includes('move')) return;    // (a click selects it)
+    drag.moved = true;
+    let d = Math.round(dx / pxf);
+    const it = drag.it, N = cur.frames;
+    if (drag.k === 'shot' && drag.edge) {
+      const s = drag.s, len = s.end - s.start + 1;
+      if (drag.edge === 'end') { d = clamp(snapD(d, [s.end + 1], s.id), -(len - 1), s.room_end); it.style.width = `${(len + d) * pxf}px`;
+        tip(e, `${dLabel(d)}<br><span class="muted">${d < 0 ? t('shorter') : d > 0 ? t('more of its clip') : ''}</span>`); }
+      else { d = clamp(snapD(d, [s.start], s.id), -s.room_start, len - 1); it.style.left = `${(s.start + d) * pxf}px`; it.style.width = `${(len - d) * pxf}px`;
+        tip(e, `${dLabel(-d)}<br><span class="muted">${d > 0 ? t('shorter') : d < 0 ? t('more of its clip') : ''}</span>`); }
+    } else if (drag.k === 'shot' && drag.slip) {              // Alt: slip - the frames stay, the clip moves under them
+      const s = drag.s;
+      d = s.special ? 0 : clamp(-d, -s.room_start, s.room_end); slipShow(s, d); tip(e, slipWords(d));
+    } else if (drag.k === 'shot') {                           // reorder: where it would go
+      it.classList.add('dragging'); it.style.transform = `translateX(${dx}px)`;
+      const fp = fAt(e), others = cur.shots.filter(s => s.id !== drag.s.id);
+      const k = others.filter(s => (s.start + s.end) / 2 < fp).length, ins = $('.edins', el);
+      drag.to = k;
+      const xIns = k < others.length ? others[k].start : others.length ? others[others.length - 1].end + 1 : 0;
+      ins.hidden = false; ins.style.left = `${xIns * pxf - 2}px`; ins.style.top = `${lanes().y.shot - 4}px`; ins.style.height = `${ED_ROW.shot + 2}px`;
+      tip(e, t('Put it at place {k}', {k: k + 1}));
+    } else if (drag.k === 'gfx') {
+      const g = drag.g, len = g.end - g.start + 1;
+      if (drag.edge === 'start') { d = clamp(snapD(d, [g.start], g.id), -g.start, len - 1); it.style.left = `${(g.start + d) * pxf}px`; it.style.width = `${(len - d) * pxf}px`; tip(e, `${t('Starts')} ${tcf(g.start + d)}`); }
+      else if (drag.edge === 'end') { d = clamp(snapD(d, [g.end + 1], g.id), -(len - 1), N - 1 - g.end); it.style.width = `${(len + d) * pxf}px`; tip(e, `${t('Ends')} ${tcf(g.end + d)}`); }
+      else { d = clamp(snapD(d, [g.start, g.end + 1], g.id), -g.start, N - 1 - g.end); it.style.left = `${(g.start + d) * pxf}px`; tip(e, `${tcf(g.start + d)} · ${dLabel(d)}`); }
+    } else if (drag.k === 'sfx') {
+      const q = drag.q;
+      d = clamp(snapD(d, [q.f], ''), -q.f, N - 1 - q.f); it.style.left = `${(q.f + d) * pxf}px`; tip(e, `${tcf(q.f + d)} · ${dLabel(d)}`);
+    } else if (drag.k === 'fx') {
+      const x = drag.fx, last = x.f + x.len - 1;
+      if (drag.edge === 'end') { d = clamp(snapD(d, [last + 1], ''), 2 - x.len, N - 1 - last); it.style.width = `${(x.len + d) * pxf}px`; tip(e, `${tn(x.len + d, '{n} frame', '{n} frames')} · ${dec((x.len + d) / cur.fps)} s`); }
+      else { d = clamp(snapD(d, [x.f, last + 1], ''), -x.f, N - 1 - last); it.style.left = `${(x.f + d) * pxf}px`; tip(e, `${tcf(x.f + d)} · ${dLabel(d)}`); }
+    } else if (drag.k === 'cap') {                           // inside its shot, never over the captions beside it
+      const c = drag.c, len = c.len, mn = Math.min(len, c.min || 1), last = c.f + len - 1;
+      const lim = (raw, lo, hi) => { d = clamp(raw, lo, hi); return d !== raw ? `<br><span class="muted">${t('as far as it goes: the edge of its shot, or the caption beside it')}</span>` : ''; };
+      if (drag.edge === 'start') { const why = lim(snapD(d, [c.f], ''), c.lo - c.f, len - mn); it.style.left = `${(c.f + d) * pxf}px`; it.style.width = `${(len - d) * pxf}px`; tip(e, `${t('Starts')} ${tcf(c.f + d)}${why}`); }
+      else if (drag.edge === 'end') { const why = lim(snapD(d, [last + 1], ''), mn - len, c.hi - last); it.style.width = `${(len + d) * pxf}px`; tip(e, `${t('Ends')} ${tcf(last + d)}${why}`); }
+      else { const why = lim(snapD(d, [c.f, last + 1], ''), c.lo - c.f, c.hi - last); it.style.left = `${(c.f + d) * pxf}px`; tip(e, `${tcf(c.f + d)} · ${dLabel(d)}${why}`); }
+    }
+    drag.d = d;
+  }
+  function onUp() {
+    const D = drag;
+    drag = null;
+    if (!D) return;
+    const tp = $('.edtip', el), ins = $('.edins', el);
+    if (tp) tp.hidden = true;
+    if (ins) ins.hidden = true;
+    if (D.k === 'scrub') return;
+    if (D.k === 'song') {
+      if (!D.moved) { sel = {k: 'song'}; draw(); return; }
+      D.it.style.transform = '';
+      if (Math.abs(D.s - D.s0) < 0.05) return drawTL();
+      return setSong(D.s, null);
+    }
+    if (!D.moved) {                                          // a click: it is selected
+      sel = D.k === 'shot' ? {k: 'shot', id: D.s.id} : D.k === 'gfx' ? {k: 'gfx', id: D.g.id} : D.k === 'sfx' ? {k: 'sfx', key: sfxOf(D.q)}
+        : D.k === 'fx' ? {k: 'fx', id: D.fx.id} : {k: 'cap', graphic: D.c.graphic, cue: D.c.cue};
+      draw(); return;
+    }
+    const d = D.d;
+    if (D.k === 'shot' && D.edge) {
+      const s = D.s, v = {shot: s.n};
+      if (!d) return drawTL();
+      if (D.edge === 'end') push({op: 'trim', shot: s.id, side: 'end', by: d}, d < 0 ? tn(-d, 'Shot {shot}: {n} frame off its end', 'Shot {shot}: {n} frames off its end', v) : tn(d, 'Shot {shot}: {n} frame more at its end', 'Shot {shot}: {n} frames more at its end', v));
+      else push({op: 'trim', shot: s.id, side: 'start', by: -d}, d > 0 ? tn(d, 'Shot {shot}: {n} frame off its start', 'Shot {shot}: {n} frames off its start', v) : tn(-d, 'Shot {shot}: {n} frame more at its start', 'Shot {shot}: {n} frames more at its start', v));
+      sel = {k: 'shot', id: s.id};
+    } else if (D.k === 'shot' && D.slip) {
+      if (!d) { slipShow(D.s, 0); return drawTL(); }
+      slipIt(D.s, d);
+    } else if (D.k === 'shot') {
+      const i = cur.shots.findIndex(s => s.id === D.s.id);
+      if (D.to == null || D.to === i) return drawTL();
+      push({op: 'move', shot: D.s.id, to: D.to}, t('Shot {n} moved to place {k}', {n: D.s.n, k: D.to + 1}));
+      sel = {k: 'shot', id: D.s.id};
+    } else if (D.k === 'gfx') {
+      const g = D.g, nm = edGfxName(g, cur, lib);
+      if (!d) return drawTL();
+      if (D.edge) push({op: 'gtrim', layer: g.id, side: D.edge, by: d}, D.edge === 'start' ? t('{graphic}: starts at {at}', {graphic: nm, at: tcf(g.start + d)}) : t('{graphic}: ends at {at}', {graphic: nm, at: tcf(g.end + d)}));
+      else push({op: 'gmove', layer: g.id, by: d}, t('{graphic}: moved to {at}', {graphic: nm, at: tcf(g.start + d)}));
+      sel = {k: 'gfx', id: g.id};
+    } else if (D.k === 'sfx') {
+      const q = D.q;
+      if (!d) return drawTL();
+      push({op: 'sfx', f: q.f, kind: q.kind, to: q.f + d}, t('{sound} at {from}: moved to {to}', {sound: edKind(q.kind), from: tcf(q.f), to: tcf(q.f + d)}));
+      sel = {k: 'sfx', key: `${q.f + d}|${q.kind}`};
+    } else if (D.k === 'fx') {
+      const x = D.fx, nm = edFxLabel(x.label);
+      if (!d) return drawTL();
+      if (D.edge) { push({op: 'fxset', id: x.id, len: x.len + d}, t('{effect} at {at}: {n} frames long', {effect: nm, at: tcf(x.f), n: x.len + d})); sel = {k: 'fx', id: x.id}; }
+      else { push({op: 'fxmove', id: x.id, by: d}, t('{effect}: moved to {at}', {effect: nm, at: tcf(x.f + d)})); sel = {k: 'fx', id: x.id.replace(/:\d+$/, ':' + (x.f + d))}; }
+    } else if (D.k === 'cap') {
+      const c = D.c;
+      if (!d) return drawTL();
+      if (D.edge) push({op: 'captrim', graphic: c.graphic, cue: c.cue, side: D.edge, to: D.edge === 'start' ? c.f + d : c.f + c.len - 1 + d}, D.edge === 'start'
+        ? t('Caption at {at}: starts at {to}', {at: tcf(c.f), to: tcf(c.f + d)}) : t('Caption at {at}: ends at {to}', {at: tcf(c.f), to: tcf(c.f + c.len - 1 + d)}));
+      else push({op: 'capmove', graphic: c.graphic, cue: c.cue, by: d}, t('Caption at {from}: moved to {to}', {from: tcf(c.f), to: tcf(c.f + d)}));
+      sel = {k: 'cap', graphic: c.graphic, cue: c.cue};
+    }
+  }
+  // ---------------------------------------------------------------- the panel on the right: what is selected
+  const sound = q => q.sound ? (base.library.recorded.find(x => x.file === q.sound) || {name: q.sound}).name : t('made-up');
+  function brandSwatches() {
+    const b = BRAND_DATA, cols = b ? brandPalette(b, 6) : [];
+    return cols.length ? `<span class="edsw">${cols.map(c => `<button type="button" class="edswc" data-col="${esc(c)}" style="background:${esc(c)}" title="${ta('Your brand: {colour}', {colour: c})}"></button>`).join('')}</span>` : '';
+  }
+  function setRows(g, list) {
+    return list.map(s => { const v = g.values[s.id], s2 = {...s, value: v};
+      return `<label class="edset" title="${esc(s.id)}"><span>${esc(t(s.label || s.id || ''))}</span><span class="edin">${gsetInput(s2)}${s.type === 'color' ? brandSwatches() : ''}</span></label>`; }).join('');
+  }
+  function bindSets(box, g) {
+    const nm = edGfxName(g, cur, lib);
+    const commit = i => { const key = i.dataset.set, v = gsetValue(i);
+      if (String(v) === String(g.values[key])) return;
+      push({op: 'set', graphic: g.id, key, value: v}, t('{graphic}: {setting} changed', {graphic: nm, setting: t(((cur.folders[g.dir] || {}).settings || []).find(s => s.id === key)?.label || key)})); };
+    $$('[data-set]', box).forEach(i => {
+      if (i.type === 'text' || i.tagName === 'TEXTAREA') { i.onchange = () => commit(i); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }; }
+      else i.onchange = () => commit(i);
+    });
+    $$('[data-col]', box).forEach(b => b.onclick = () => { const i = $('input[type=color]', b.closest('.edin')); if (i) { i.value = b.dataset.col.toLowerCase(); commit(i); } });
+  }
+  function drawInsp() {
+    const box = $('#edinsp', el), S = cur;
+    if (!S) return;
+    if (saving) { box.innerHTML = `<div class="edempty">${neIcon('i-restart', '--ed1')}<b>${t('Saving your changes')}</b><span class="small muted">${t('The new version shows here when it is ready - change it after that.')}</span></div>`; return; }
+    if (!sel) {
+      box.innerHTML = `<div class="edempty">${neIcon('i-edit', '--ed1')}<b>${t('Click something on the timeline')}</b>
+        <span class="small muted">${t('A clip, a graphic, a caption or a sound: its settings show here.')}</span>
+        <ul class="edkeys small"><li>${t('<b>Drag</b> a clip to move it, its <b>edges</b> to trim it')}</li><li>${t('<b>Drag</b> a graphic or a sound to another moment')}</li>
+          <li>${t('<b>S</b> splits at the playhead · <b>Delete</b> removes')}</li><li>${t('<b>Space</b> plays · <b>Ctrl+Z</b> undoes')}</li>
+          <li>${t('Add sounds and templates from the panel on the left - drag them onto the timeline')}</li></ul>
+        ${S.timing_locked ? `<div class="small bad">${t('This video\'s sound was made in a way the Editor cannot cut again, so its shots keep their timing - ask Claude for those changes.')}</div>` : ''}</div>`;
+      return;
+    }
+    if (sel.k === 'shot') {
+      const s = S.shots.find(x => x.id === sel.id);
+      if (!s) { sel = null; return drawInsp(); }
+      const lock = S.timing_locked, under = shotAt(prevF) === s && prevF > s.start;
+      if (s.scene) return sceneInsp(box, s, under);
+      box.innerHTML = `<div class="edih"><span class="eddot shot"></span><b>${t('Shot {n}', {n: s.n})}</b><span class="small muted">${dec((s.end - s.start + 1) / S.fps)} s</span></div>
+        <div class="small muted">${frange(s.start, s.end, S.fps)}</div>
+        <div class="edlbl">${t('Speed')}</div>
+        <div class="edchips">${ED_SPEEDS.map(x => `<button class="${Math.abs(x - s.speed) < 1e-6 ? 'on' : ''}" data-speed="${x}"${lock || s.special ? ' disabled' : ''}>${numLoc(x)}×</button>`).join('')}</div>
+        <div class="small muted">${t('Slower = longer, faster = shorter; its sound keeps its pitch.')}</div>
+        ${S.clips.length > 1 ? `<div class="edlbl">${t('Clip')}</div>
+          <select id="edtake"${lock ? ' disabled' : ''}>${S.clips.map(c => `<option value="${esc(c.id)}"${c.id === s.src ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>` : ''}
+        <div class="edlbl">${t('Part of its clip')}</div>
+        <div class="row"><input type="range" id="edslip" min="${-s.room_start}" max="${s.room_end}" step="1" value="0"${lock || s.special || !(s.room_start || s.room_end) ? ' disabled' : ''}>
+          <span class="mono small" id="edslipv">${t('as it is')}</span></div>
+        <div class="small muted">${t('An earlier or later moment of its clip in the same frames - or Alt + drag the shot.')}</div>
+        ${S.sound === 'follows' ? `<div class="edlbl">${t('Its sound')}</div>
+          <div class="row"><input type="range" id="edvol" min="-30" max="${S.vol[1]}" step="1" value="${s.db <= S.vol[0] ? -30 : Math.round(s.db)}"${s.db <= S.vol[0] || lock ? ' disabled' : ''}>
+            <span class="mono small" id="edvolv">${s.db <= S.vol[0] ? t('muted') : `${s.db > 0 ? '+' : ''}${Math.round(s.db)} dB`}</span>
+            <button class="btn sm ghost${s.db <= S.vol[0] ? ' on' : ''}" id="edmute" aria-pressed="${s.db <= S.vol[0]}"${lock ? ' disabled' : ''}>${s.db <= S.vol[0] ? '🔇' : '🔊'} ${t('Mute')}</button></div>` : ''}
+        <div class="row edbtns"><button class="btn sm" id="edsplit2"${!under || lock ? ' disabled' : ''} title="${ta('Move the playhead inside the shot first')}">✂ ${t('Split at the playhead')}</button>
+          <button class="btn sm eddanger" id="edshotdel"${lock || S.shots.length < 2 ? ' disabled' : ''}><svg class="i"><use href="#i-trash"/></svg>${t('Delete')}</button></div>
+        <div class="small muted">${t('Its clip has {before} before and {after} after it - drag its edges to use them.', {before: `${dec(s.room_start / S.fps)} s`, after: `${dec(s.room_end / S.fps)} s`})}</div>
+        ${s.attached.length ? `<div class="small muted">${t('Moves with it: {what}', {what: esc(s.attached.map(f => /^captions/.test(f) ? t('the captions') : f.replace(/^(v\d+_|n\d+_)?(g|d)?\d+_/, '').replace(/_m\d+$/, '').replace(/[-_]/g, ' ')).join(', '))})}</div>` : ''}
+        ${lock ? `<div class="small bad">${t('This video\'s sound was made in a way the Editor cannot cut again, so its shots keep their timing - ask Claude for those changes.')}</div>` : s.special ? `<div class="small muted">${t('A held frame or a stutter: it keeps its speed.')}</div>` : ''}`;
+      $$('[data-speed]', box).forEach(b => b.onclick = () => { const x = +b.dataset.speed; if (Math.abs(x - s.speed) < 1e-6) return;
+        push({op: 'speed', shot: s.id, speed: x}, t('Shot {n}: {x}× speed', {n: s.n, x: numLoc(x)})); });
+      $('#edsplit2', box).onclick = () => splitHere();
+      $('#edshotdel', box).onclick = () => delSel();
+      const tk = $('#edtake', box);
+      if (tk) tk.onchange = () => { const c = S.clips.find(x => x.id === tk.value);
+        push({op: 'take', shot: s.id, src: tk.value, in: s.src === tk.value ? s.in : 0}, t('Shot {n}: now {clip}', {n: s.n, clip: c ? c.name : tk.value})); };
+      const sl = $('#edslip', box);
+      sl.oninput = () => { $('#edslipv', box).textContent = slipWords(+sl.value); slipShow(s, +sl.value); };
+      sl.onchange = () => { if (+sl.value) slipIt(s, +sl.value); else slipShow(s, 0); };
+      const vol = $('#edvol', box);
+      if (vol) {
+        vol.oninput = () => { $('#edvolv', box).textContent = `${+vol.value > 0 ? '+' : ''}${vol.value} dB`; };
+        vol.onchange = () => push({op: 'volume', shot: s.id, db: +vol.value}, t('Shot {n}: its sound {db} dB', {n: s.n, db: `${+vol.value > 0 ? '+' : ''}${vol.value}`}));
+        $('#edmute', box).onclick = () => push({op: 'volume', shot: s.id, db: s.db <= S.vol[0] ? 0 : S.vol[0]},
+          s.db <= S.vol[0] ? t('Shot {n}: its sound back on', {n: s.n}) : t('Shot {n}: muted', {n: s.n}));
+      }
+      return;
+    }
+    if (sel.k === 'song') {
+      if (!S.song) { sel = null; return drawInsp(); }
+      const C = S.song_cut, mx = songMax();
+      box.innerHTML = `<div class="edih"><span class="eddot song"></span><b>${t('Song')}</b></div>
+        <div class="small muted edrn">${esc(S.song.split(/[\\/]/).pop())}</div>
+        <div class="edlbl">${t('The video starts at')}</div>
+        <div class="row"><input type="range" id="edsgs" min="0" max="${Math.max(0, mx).toFixed(1)}" step="0.1" value="${C.start_s}"${mx <= 0 ? ' disabled' : ''}><span class="mono small" id="edsgsv">${songTime(C.start_s)}</span></div>
+        <div class="small muted">${t('of the song - or drag the song on the timeline. The cuts stay where they are.')}</div>
+        <div class="edlbl">${t('Volume')}</div>
+        <div class="row"><input type="range" id="edsgdb" min="${S.song_db[0]}" max="${S.song_db[1]}" step="1" value="${Math.round(C.db)}"><span class="mono small" id="edsgdbv">${C.db > 0 ? '+' : ''}${Math.round(C.db)} dB</span></div>
+        <div class="small muted">${t('Against the sound effects - the finished video is brought to the loudness the platforms use.')}</div>`;
+      const st = $('#edsgs', box), db = $('#edsgdb', box);
+      st.oninput = () => { $('#edsgsv', box).textContent = songTime(+st.value); };
+      st.onchange = () => setSong(+st.value, null);
+      db.oninput = () => { $('#edsgdbv', box).textContent = `${+db.value > 0 ? '+' : ''}${db.value} dB`; };
+      db.onchange = () => setSong(null, +db.value);
+      return;
+    }
+    if (sel.k === 'gfx') {
+      const g = S.graphics.find(x => x.id === sel.id);
+      if (!g) { sel = null; return drawInsp(); }
+      const fo = S.folders[g.dir] || {}, all = fo.settings || [], words = new Set((g.words || []).map(w => w.key));
+      const cols = all.filter(s => s.type === 'color'), wl = all.filter(s => words.has(s.id)), rest = all.filter(s => !words.has(s.id) && s.type !== 'color');
+      const T = fo.from && lib.find(x => x.id === fo.from);
+      box.innerHTML = `<div class="edih"><span class="eddot gfx"></span><b>${esc(edGfxName(g, S, lib))}</b>${g.new ? `<span class="chip">${t('new')}</span>` : ''}</div>
+        <div class="small muted">${T ? `${esc(t(T.name))} · ` : ''}${frange(g.start, g.end, S.fps)}</div>
+        ${wl.length ? `<div class="edlbl">${t('Words')}</div>${setRows(g, wl)}` : ''}
+        ${cols.length ? `<div class="edlbl">${t('Colours')}</div>${setRows(g, cols)}` : ''}
+        ${rest.length ? `<details class="edmore"><summary>${t('More settings')}</summary>${setRows(g, rest)}</details>` : ''}
+        ${fo.problem ? `<div class="small bad">${esc(fo.problem)}</div>` : ''}
+        <div class="row edbtns"><button class="btn sm eddanger" id="edgdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button>
+          ${g.pieces > 1 ? `<button class="btn sm ghost" id="edgdelall">${t('Remove all {n} pieces', {n: g.pieces})}</button>` : ''}</div>`;
+      bindSets(box, g);
+      $('#edgdel', box).onclick = () => delSel();
+      const da = $('#edgdelall', box);
+      if (da) da.onclick = () => push({op: 'gdelete', layer: g.id, all: true}, t('{graphic}: removed everywhere', {graphic: edGfxName(g, S, lib)}), () => { sel = null; });
+      return;
+    }
+    if (sel.k === 'fx') {
+      const x = (S.effects || []).find(q => q.id === sel.id);
+      if (!x) { sel = null; return drawInsp(); }
+      const rg = ED_FX_RANGE[x.kind] || [0.05, 1, 0.05, ''], nm = edFxLabel(x.label);
+      box.innerHTML = `<div class="edih"><span class="eddot fx"></span><b>${esc(nm)}</b></div><div class="small muted">${frange(x.f, x.f + x.len - 1, S.fps)}</div>
+        ${x.can.includes('strength') && x.strength != null ? `<div class="edlbl">${t('Strength')}</div><div class="row"><input type="range" id="edfxs" min="${rg[0]}" max="${rg[1]}" step="${rg[2]}" value="${x.strength}"><span class="mono small" id="edfxsv">${numLoc(x.strength)}${rg[3]}</span></div>` : ''}
+        ${x.can.includes('len') ? `<div class="edlbl">${t('Length')}</div><div class="row"><input type="number" id="edfxl" min="2" max="${S.frames}" value="${x.len}" style="width:90px"><span class="small muted">${t('frames')} · ${dec(x.len / S.fps)} s</span></div>` : ''}
+        ${x.can.includes('ease') ? `<div class="edlbl">${t('Ease')}</div><div class="edchips">${ED_EASES().map(([k, l]) => `<button data-ease="${k}" class="${x.ease === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : ''}
+        <div class="small muted" style="margin-top:8px">${x.can.includes('move') ? t('Drag it on the timeline to move it. ') : ''}${t('Its sound effect follows it by itself.')}</div>
+        ${x.can.includes('remove') ? `<div class="row edbtns"><button class="btn sm eddanger" id="edfxdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button></div>` : ''}`;
+      const sl = $('#edfxs', box);
+      if (sl) { sl.oninput = () => { $('#edfxsv', box).textContent = numLoc(+sl.value) + rg[3]; };
+        sl.onchange = () => push({op: 'fxset', id: x.id, strength: +sl.value}, t('{effect} at {at}: strength {x}', {effect: nm, at: tcf(x.f), x: numLoc(+sl.value) + rg[3]})); }
+      const ln = $('#edfxl', box);
+      if (ln) ln.onchange = () => { const n = Math.round(+ln.value); if (n >= 2 && n !== x.len) push({op: 'fxset', id: x.id, len: n}, t('{effect} at {at}: {n} frames long', {effect: nm, at: tcf(x.f), n})); };
+      $$('[data-ease]', box).forEach(b => b.onclick = () => { if (b.dataset.ease !== x.ease) push({op: 'fxset', id: x.id, ease: b.dataset.ease}, t('{effect} at {at}: {ease}', {effect: nm, at: tcf(x.f), ease: b.textContent})); });
+      const del = $('#edfxdel', box);
+      if (del) del.onclick = () => delSel();
+      return;
+    }
+    if (sel.k === 'sfx') {
+      const q = S.sfx.find(x => sfxOf(x) === sel.key);
+      if (!q) { sel = null; return drawInsp(); }
+      const same = base.library.recorded.filter(x => x.kind === q.kind);
+      box.innerHTML = `<div class="edih"><span class="eddot" style="--h:${meHue(q.kind)}"></span><b>${esc(edKind(q.kind))}</b><span class="small muted">${ftc(q.f, S.fps)}</span></div>
+        ${q.what ? `<div class="small muted">${esc(q.what)}</div>` : ''}
+        <div class="row" style="margin:8px 0"><button class="btn sm" id="edhear">▶ ${t('Listen')}</button><span class="small">${esc(sound(q))}</span></div>
+        <div class="edlbl">${t('Volume')}</div>
+        <div class="row"><input type="range" id="eddb" min="-12" max="12" step="1" value="${Math.round(q.db || 0)}"><span class="mono small" id="eddbv">${q.db > 0 ? '+' : ''}${Math.round(q.db || 0)} dB</span></div>
+        <div class="edlbl">${t('Its sound')}</div>
+        <div class="edsounds">${[{file: 'made-up', name: t('made-up'), kind: q.kind}, ...same].map(x => `<div class="edsrow${(x.file === 'made-up' ? !q.sound : x.file === q.sound) ? ' on' : ''}">
+            <button class="btn sm ghost" data-hear="${esc(x.file)}">▶</button><span class="grow">${esc(x.name)}</span><button class="btn sm" data-use="${esc(x.file)}">${t('Use')}</button></div>`).join('')}</div>
+        <div class="row edbtns"><button class="btn sm eddanger" id="edsdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button></div>`;
+      $('#edhear', box).onclick = () => pv.hear(pv.sfxUrl(q));
+      const db = $('#eddb', box);
+      db.oninput = () => { $('#eddbv', box).textContent = `${+db.value > 0 ? '+' : ''}${db.value} dB`; };
+      db.onchange = () => push({op: 'sfx', f: q.f, kind: q.kind, db: +db.value}, t('{sound} at {at}: {db} dB', {sound: edKind(q.kind), at: tcf(q.f), db: `${+db.value > 0 ? '+' : ''}${db.value}`}));
+      $$('[data-hear]', box).forEach(b => b.onclick = () => pv.hear(b.dataset.hear === 'made-up' ? `/api/editor/sound?kind=${encodeURIComponent(q.kind)}` : edSoundUrl(b.dataset.hear)));
+      $$('[data-use]', box).forEach(b => b.onclick = () => push({op: 'sfx', f: q.f, kind: q.kind, sound: b.dataset.use},
+        t('{sound} at {at}: another sound', {sound: edKind(q.kind), at: tcf(q.f)})));
+      $('#edsdel', box).onclick = () => delSel();
+      return;
+    }
+    const c = S.captions.find(x => x.graphic === sel.graphic && x.cue === sel.cue);
+    if (!c) { sel = null; return drawInsp(); }
+    const g = S.graphics.find(x => x.id === c.graphic), fo = g ? S.folders[g.dir] || {} : {}, all = fo.settings || [];
+    const sty = ED_CAP_STYLE.map(id => all.find(s => s.id === id)).filter(Boolean), cols = all.filter(s => s.type === 'color');
+    const rest = all.filter(s => !ED_CAP_STYLE.includes(s.id) && s.type !== 'color'), LK = fo.looks || {};
+    const lookOn = id => g && Object.entries(LK[id].values || {}).every(([k, v]) => !(k in g.values) || String(g.values[k]) === String(v));
+    box.innerHTML = `<div class="edih"><span class="eddot cap"></span><b>${t('Caption')}</b><span class="small muted">${frange(c.f, c.f + c.len - 1, S.fps)}</span></div>
+      <label class="meword"><span>${t('Its words')}</span><input type="text" maxlength="300" id="edcapt" value="${esc(c.text)}"></label>
+      <div class="small muted">${t('Drag it on the timeline to move it, its edges to make it start later or end sooner - its words stay in step with the voice.')}</div>
+      <div class="row edbtns"><button class="btn sm" id="edcsplit" title="${ta('Move the playhead between two of its words first')}">✂ ${t('Split at the playhead')}</button>
+        <button class="btn sm eddanger" id="edcdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove this caption')}</button></div>
+      ${g ? `<div class="edlbl">${t('Style of all the captions')}</div>
+        ${Object.keys(LK).length ? `<div class="edchips edlooks">${Object.keys(LK).map(id => `<button data-look="${esc(id)}" class="${lookOn(id) ? 'on' : ''}" title="${esc(t(LK[id].what || ''))}">${esc(t(LK[id].label || id))}</button>`).join('')}</div>` : ''}
+        ${setRows(g, sty)}
+        ${cols.length ? `<div class="edlbl">${t('Colours')}</div>${setRows(g, cols)}` : ''}
+        ${rest.length ? `<details class="edmore"><summary>${t('More settings')}</summary>${setRows(g, rest)}</details>` : ''}` : ''}`;
+    $$('[data-look]', box).forEach(b => b.onclick = () => { if (b.classList.contains('on')) return;
+      push({op: 'look', graphic: g.id, look: b.dataset.look}, t('Captions: the look “{look}”', {look: t(LK[b.dataset.look].label || b.dataset.look)})); });
+    const inp = $('#edcapt', box);
+    inp.onchange = () => { const v = inp.value.trim(); if (!v || v === c.text) return;
+      push({op: 'caption', graphic: c.graphic, cue: c.cue, text: v}, t('Caption at {at}: “{words}”', {at: tcf(c.f), words: v})); };
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } };
+    if (g) bindSets(box, g);
+    $('#edcdel', box).onclick = () => delSel();
+    $('#edcsplit', box).onclick = () => push({op: 'capsplit', graphic: c.graphic, cue: c.cue, at: prevF},
+      t('Caption at {at}: split at {to}', {at: tcf(c.f), to: tcf(prevF)}), () => { sel = null; });
+    paintHead();
+    if (capFocus) { capFocus = false; inp.focus(); inp.select(); }
+  }
+  // a scene of a video made from zero (its full-frame graphic on the main track): its speed, split, delete - its
+  // edges and place dragged on the timeline like a shot's - then its graphic's own words, colours and settings
+  function sceneInsp(box, s, under) {
+    const S = cur, g = S.graphics.find(x => x.id === s.id);
+    if (!g) { box.innerHTML = ''; return; }
+    const fo = S.folders[g.dir] || {}, all = fo.settings || [], words = new Set((g.words || []).map(w => w.key));
+    const cols = all.filter(x => x.type === 'color'), wl = all.filter(x => words.has(x.id)), rest = all.filter(x => !words.has(x.id) && x.type !== 'color');
+    box.innerHTML = `<div class="edih"><span class="eddot gfx"></span><b>${t('Scene {n}', {n: s.n})}</b><span class="small muted">${dec((s.end - s.start + 1) / S.fps)} s</span></div>
+      <div class="small muted">${esc(edGfxName(g, S, lib))} · ${frange(s.start, s.end, S.fps)}</div>
+      <div class="edlbl">${t('Speed')}</div>
+      <div class="edchips">${ED_SPEEDS.map(x => `<button class="${Math.abs(x - s.speed) < 1e-6 ? 'on' : ''}" data-speed="${x}">${numLoc(x)}×</button>`).join('')}</div>
+      <div class="row edbtns"><button class="btn sm" id="edsplit2"${!under ? ' disabled' : ''} title="${ta('Move the playhead inside the scene first')}">✂ ${t('Split at the playhead')}</button>
+        <button class="btn sm eddanger" id="edshotdel"${S.shots.length < 2 ? ' disabled' : ''}><svg class="i"><use href="#i-trash"/></svg>${t('Delete')}</button></div>
+      <div class="small muted">${t('Drag it to another place, its edges to make it shorter or longer - past its end it holds its last frame. What comes after moves with it.')}</div>
+      ${wl.length ? `<div class="edlbl">${t('Its words')}</div>${setRows(g, wl)}` : ''}
+      ${cols.length ? `<div class="edlbl">${t('Colours')}</div>${setRows(g, cols)}` : ''}
+      ${rest.length ? `<details class="edmore"><summary>${t('More settings')}</summary>${setRows(g, rest)}</details>` : ''}`;
+    $$('[data-speed]', box).forEach(b => b.onclick = () => { const x = +b.dataset.speed; if (Math.abs(x - s.speed) < 1e-6) return;
+      push({op: 'speed', shot: s.id, speed: x}, t('Scene {n}: {x}× speed', {n: s.n, x: numLoc(x)})); });
+    $('#edsplit2', box).onclick = () => splitHere();
+    $('#edshotdel', box).onclick = () => delSel();
+    bindSets(box, g);
+  }
+  // a shot's part of its clip (slip): shown live while the slider / Alt+drag moves, one change when let go
+  const slipWords = d => !d ? t('as it is') : d > 0 ? tn(d, '{n} frame later', '{n} frames later') : tn(-d, '{n} frame earlier', '{n} frames earlier');
+  function slipShow(s, d) {
+    const x = pv && pv.S && pv.S.draw.find(q => q.t === 'clip' && q.id === s.id);
+    if (!x) return;
+    if (x._in0 == null) x._in0 = x.in;
+    x.in = x._in0 + Math.round(d * (s.speed || 1));
+    pv.render(clamp(pv.f, s.start, s.end), true);
+  }
+  const slipIt = (s, d) => push({op: 'slip', shot: s.id, by: d}, t('Shot {n}: {what} in its clip', {n: s.n, what: slipWords(d)}), () => { sel = {k: 'shot', id: s.id}; });
+  // a clip of the video as a new shot: at the cut nearest the frame (3 s of it, or all of a shorter one)
+  const placeAt = f => cur.shots.filter(s => (s.start + s.end) / 2 < f).length;
+  function addClip(src, f) {
+    if (!cur || saving || cur.timing_locked) return;
+    const c = cur.clips.find(x => x.id === src);
+    if (!c) return;
+    const to = placeAt(f), len = Math.max(1, c.photo ? Math.round(3 * cur.fps) : Math.min(c.frames, Math.round(3 * cur.fps)));
+    push({op: 'clipadd', src, in: 0, len, to}, t('{clip} added at place {k}', {clip: c.name, k: to + 1}), () => { const s = cur.shots[to]; if (s) sel = {k: 'shot', id: s.id}; });
+  }
+  // the song under the video: where it starts (seconds into it), its volume - one op on save (the song cut again)
+  const songMax = () => { const p = (waves._song || {}).peaks || []; return p.length ? (p.length - cur.frames) / cur.fps : 0; };
+  const songTime = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+  function setSong(start, db) {
+    if (!cur || !cur.song || saving) return;
+    const o = {op: 'song'};
+    if (start != null) o.start = Math.round(clamp(start, 0, Math.max(0, songMax())) * 10) / 10;
+    if (db != null) o.db = db;
+    push(o, start != null ? t('The song: the video starts at {at} of it', {at: songTime(o.start)}) : t('The song: {db} dB', {db: `${db > 0 ? '+' : ''}${db}`}),
+      () => { sel = {k: 'song'}; });
+  }
+  // ---------------------------------------------------------------- split, delete, add
+  function splitHere() {
+    const s = shotAt(prevF);
+    if (!s || s.start === prevF || cur.timing_locked) return;
+    push({op: 'split', shot: s.id, at: prevF}, t('Shot {n} split at {at}', {n: s.n, at: tcf(prevF)}), () => { sel = null; });
+  }
+  function delSel() {
+    if (!sel || !cur) return;
+    if (sel.k === 'shot') { const s = cur.shots.find(x => x.id === sel.id); if (!s || cur.timing_locked || cur.shots.length < 2) return;
+      push({op: 'delete', shot: s.id}, t('Shot {n} deleted ({range})', {n: s.n, range: `${tcf(s.start)} - ${tcf(s.end)}`}), () => { sel = null; }); }
+    else if (sel.k === 'gfx') { const g = cur.graphics.find(x => x.id === sel.id); if (!g) return;
+      push({op: 'gdelete', layer: g.id}, t('{graphic}: removed', {graphic: edGfxName(g, cur, lib)}), () => { sel = null; }); }
+    else if (sel.k === 'sfx') { const q = cur.sfx.find(x => sfxOf(x) === sel.key); if (!q) return;
+      push({op: 'sfx', f: q.f, kind: q.kind, to: null}, t('{sound} at {from}: removed', {sound: edKind(q.kind), from: tcf(q.f)}), () => { sel = null; }); }
+    else if (sel.k === 'fx') { const x = (cur.effects || []).find(q => q.id === sel.id); if (!x || !x.can.includes('remove')) return;
+      push({op: 'fxremove', id: x.id}, t('{effect} at {at}: removed', {effect: edFxLabel(x.label), at: tcf(x.f)}), () => { sel = null; }); }
+    else if (sel.k === 'cap') { const c = cur.captions.find(x => x.graphic === sel.graphic && x.cue === sel.cue); if (!c) return;
+      push({op: 'caption', graphic: c.graphic, cue: c.cue, text: ''}, t('Caption at {at}: removed', {at: tcf(c.f)}), () => { sel = null; }); }
+  }
+  // a caption can be added where a captions graphic shows (a piece of it: the shot it is said in), not over another
+  const capPieces = () => cur ? cur.graphics.filter(g => g.captions && !g.new) : [];
+  const capPieceAt = f => capPieces().find(g => g.start <= f && f <= g.end);
+  const capAt = f => cur.captions.find(c => c.f <= f && f <= c.f + c.len - 1);
+  function addCaption() {
+    const g = capPieceAt(prevF);
+    if (!cur || saving || !g || capAt(prevF)) return;
+    push({op: 'capadd', graphic: g.id, at: prevF, text: t('New caption')}, t('Caption added at {at}', {at: tcf(prevF)}), () => {
+      const c = cur.captions.find(x => x.f === prevF);
+      if (c) { sel = {k: 'cap', graphic: c.graphic, cue: c.cue}; capFocus = true; } });
+  }
+  const newId = () => { let k = 1; while (cur.graphics.some(g => g.id === `add${k}`) || ops.some(o => o.id === `add${k}`)) k++; return `add${k}`; };
+  function addSound(file, kind, f) {
+    if (!cur || saving) return;
+    f = clamp(f, 0, cur.frames - 1);
+    push({op: 'sfxadd', f, kind, ...(file && file !== 'made-up' ? {sound: file} : {})}, t('{sound} added at {at}', {sound: edKind(kind), at: tcf(f)}),
+      () => { sel = {k: 'sfx', key: `${f}|${kind}`}; });
+  }
+  function addFx(kind, f) {
+    if (!cur || saving) return;
+    f = clamp(f, 0, cur.frames - 1);
+    const A = ED_FX_ADD().find(x => x[0] === kind);
+    push({op: 'fxadd', kind, f}, t('{effect} added at {at}', {effect: A ? A[1] : kind, at: tcf(f)}), () => { sel = null; });
+  }
+  function addTemplate(tid, f) {
+    if (!cur || saving) return;
+    const T = lib.find(x => x.id === tid);
+    if (!T) return;
+    f = clamp(f, 0, cur.frames - 1);
+    const len = clamp(T.frames && T.fps ? Math.round(T.frames / T.fps * cur.fps) : Math.round(3 * cur.fps), 1, cur.frames - f);
+    const values = {};
+    if (cur.shots.length && (T.settings || []).some(s => s.id === 'background' && s.type === 'boolean')) values.background = false;   // over the video
+    const id = newId();
+    push({op: 'gadd', id, template: tid, f, len, values}, t('{graphic} added at {at}', {graphic: t(T.name), at: tcf(f)}), () => { sel = {k: 'gfx', id}; });
+  }
+  // ---------------------------------------------------------------- the panel on the left: add sounds and templates
+  let addTab = 'clips', addQ = '', addKind = '';
+  function drawAdd() {
+    const box = $('#edadd', el);
+    if (!base) { box.innerHTML = ''; return; }
+    const q = addQ.toLowerCase(), L = base.library, hasClips = !!(cur || base).clips.length;
+    if (addTab === 'clips' && !hasClips) addTab = 'sfx';                  // (a video made from zero has no clips)
+    let list = '';
+    if (addTab === 'sfx') {
+      const rec = L.recorded.filter(x => (!addKind || x.kind === addKind) && (!q || `${x.name} ${x.kind} ${edKind(x.kind)}`.toLowerCase().includes(q)));
+      const made = L.kinds.filter(k => (!addKind || k === addKind) && (!q || `${k} ${edKind(k)}`.toLowerCase().includes(q)));
+      list = `<div class="edlist">${rec.map(x => `<div class="edrow" draggable="true" data-sfile="${esc(x.file)}" data-kind="${esc(x.kind)}" title="${ta('Drag it onto the timeline, or + = at the playhead')}">
+            <button class="btn sm ghost" data-hear="${esc(edSoundUrl(x.file))}">▶</button><span class="eddot" style="--h:${meHue(x.kind)}"></span><span class="grow edrn">${esc(x.name)}</span><span class="small muted">${x.len_s ? dec(x.len_s) + ' s' : ''}</span><button class="btn sm" data-add>+</button></div>`).join('')}
+          ${made.length ? `<div class="edlbl">${t('Made-up sounds')}</div>${made.map(k => `<div class="edrow" draggable="true" data-sfile="made-up" data-kind="${esc(k)}">
+            <button class="btn sm ghost" data-hear="/api/editor/sound?kind=${encodeURIComponent(k)}">▶</button><span class="eddot" style="--h:${meHue(k)}"></span><span class="grow edrn">${esc(edKind(k))}</span><button class="btn sm" data-add>+</button></div>`).join('')}` : ''}
+          ${!rec.length && !made.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
+    } else {
+      const over = !!(cur && cur.shots.length);
+      const T = lib.filter(x => !q || `${t(x.name)} ${x.name} ${x.kind} ${mkind(x.kind)} ${(x.tags || []).join(' ')}`.toLowerCase().includes(q));
+      const card = x => `<div class="edtpl" draggable="true" data-tpl="${esc(x.id)}" title="${esc(t(x.what || ''))}"><img src="${fileUrl(x.folder + '/thumb.png')}" alt="" loading="lazy" draggable="false"><span>${esc(t(x.name))}</span><button class="btn sm" data-add>+</button></div>`;
+      const a = T.filter(x => !x.scene), b = T.filter(x => x.scene);
+      list = `<div class="edlist">${over ? `<div class="edlbl">${t('Over your video')}</div>` : ''}<div class="edtpls">${(over ? a : [...a, ...b]).map(card).join('')}</div>
+        ${over && b.length ? `<div class="edlbl">${t('Full-screen moments')}</div><div class="edtpls">${b.map(card).join('')}</div>` : ''}
+        ${!T.length ? `<div class="small muted">${lib.length ? t('Nothing matches.') : t('Loading the templates…')}</div>` : ''}</div>`;
+    }
+    const kinds = addTab === 'sfx' ? [...new Set([...L.recorded.map(x => x.kind), ...L.kinds])].sort((a, b) => edKind(a).localeCompare(edKind(b))) : [];
+    if (addTab === 'clips') {
+      const C = (cur || base).clips.filter(c => !q || c.name.toLowerCase().includes(q)), used = new Set((cur || base).shots.map(s => s.src));
+      list = `<div class="edlist">${C.map(c => { const tr = thumbRel(c.id), mid = c.photo ? 0 : Math.round(c.frames / 2 / (cur || base).fps) * (cur || base).fps;
+          return `<div class="edrow edclip" draggable="true" data-clip="${esc(c.id)}" title="${ta('Drag it onto the video, or + = at the cut by the playhead')}">
+          ${tr ? `<img src="/api/thumb?video=${encodeURIComponent(tr)}&f=${mid}&fps=${(cur || base).fps}" alt="" loading="lazy" draggable="false">` : '<span class="edclipi"></span>'}
+          <span class="grow edrn">${esc(c.name)}<span class="small muted">${c.photo ? t('photo') : `${dec(c.frames / (cur || base).fps)} s`}${used.has(c.id) ? ` · ${t('in the video')}` : ''}</span></span>
+          <button class="btn sm" data-add${(cur || base).timing_locked ? ' disabled' : ''}>+</button></div>`; }).join('')}
+        ${!C.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
+    }
+    if (addTab === 'fx') {
+      const A = ED_FX_ADD().filter(([k, l, how]) => !q || `${l} ${how} ${k}`.toLowerCase().includes(q));
+      list = `<div class="edlist">${A.map(([k, l, how]) => `<div class="edrow" draggable="true" data-fxk="${k}" title="${ta('Drag it onto the timeline, or + = at the playhead')}">
+          <span class="eddot fx"></span><span class="grow edrn"><b>${esc(l)}</b> <span class="small muted">${esc(how)}</span></span><button class="btn sm" data-add>+</button></div>`).join('')}
+        ${!A.length ? `<div class="small muted">${t('Nothing matches.')}</div>` : ''}</div>`;
+    }
+    box.innerHTML = `<div class="edtabs">${hasClips ? `<button data-tab="clips" class="${addTab === 'clips' ? 'on' : ''}">${t('Clips')}</button>` : ''}<button data-tab="sfx" class="${addTab === 'sfx' ? 'on' : ''}">${t('Sounds')}</button><button data-tab="gfx" class="${addTab === 'gfx' ? 'on' : ''}">${t('Graphics')}</button><button data-tab="fx" class="${addTab === 'fx' ? 'on' : ''}">${t('Effects')}</button></div>
+      <div class="edfind"><input type="search" id="edq" placeholder="${ta('Search…')}" value="${esc(addQ)}">${addTab === 'sfx' ? `<select id="edkind" title="${ta('Kind of sound')}"><option value="">${t('All kinds')}</option>${kinds.map(k => `<option value="${esc(k)}"${addKind === k ? ' selected' : ''}>${esc(edKind(k))}</option>`).join('')}</select>` : ''}</div>${list}`;
+    $$('[data-tab]', box).forEach(b => b.onclick = () => { addTab = b.dataset.tab; addQ = ''; drawAdd(); if (addTab === 'gfx' && !lib.length) loadLib(); });
+    const qi = $('#edq', box);
+    qi.oninput = debounce(() => { addQ = qi.value; const pos = qi.selectionStart; drawAdd(); const n = $('#edq', box); n.focus(); n.setSelectionRange(pos, pos); }, 200);
+    const ks = $('#edkind', box);
+    if (ks) ks.onchange = () => { addKind = ks.value; drawAdd(); };
+    $$('[data-hear]', box).forEach(b => b.onclick = e => { e.stopPropagation(); if (pv) pv.hear(b.dataset.hear); });
+    $$('.edrow', box).forEach(r => {
+      if (r.dataset.clip) {                                  // a clip: a new shot at the cut by the playhead / where dropped
+        $('[data-add]', r).onclick = () => addClip(r.dataset.clip, prevF);
+        r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-clip', r.dataset.clip); e.dataTransfer.effectAllowed = 'copy'; };
+        return;
+      }
+      if (r.dataset.fxk) {                                   // an effect: at the playhead, or where it is dropped
+        $('[data-add]', r).onclick = () => addFx(r.dataset.fxk, prevF);
+        r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-fx', r.dataset.fxk); e.dataTransfer.effectAllowed = 'copy'; };
+        return;
+      }
+      $('[data-add]', r).onclick = () => addSound(r.dataset.sfile, r.dataset.kind, prevF);
+      r.ondragstart = e => { e.dataTransfer.setData('text/x-ml-sfx', JSON.stringify({file: r.dataset.sfile, kind: r.dataset.kind})); e.dataTransfer.effectAllowed = 'copy'; };
+    });
+    $$('.edtpl', box).forEach(c => {
+      $('[data-add]', c).onclick = () => addTemplate(c.dataset.tpl, prevF);
+      c.ondragstart = e => { e.dataTransfer.setData('text/x-ml-tpl', c.dataset.tpl); e.dataTransfer.effectAllowed = 'copy'; };
+    });
+  }
+  async function loadLib() {
+    try { lib = ((await api('/api/motion')).library || []).filter(x => !x.problem); } catch (e) { lib = []; }
+    if (addTab === 'gfx') drawAdd();
+    drawTL(); drawInsp();
+  }
+  // ---------------------------------------------------------------- the top: undo / redo, the changes, save
+  function drawTop() {
+    $('#edundo', el).disabled = !ops.length || saving; $('#edredo', el).disabled = !redo.length || saving;
+    const h = $('#edhist', el);
+    h.disabled = !ops.length;
+    h.innerHTML = `<svg class="i"><use href="#i-clock"/></svg>${ops.length ? tn(ops.length, '{n} change', '{n} changes') + ' ▾' : t('No changes yet')}`;
+    if (!ops.length) histPop(false); else if (!$('#edpop', el).hidden) histPop(true);
+    $('#edsave', el).disabled = !ops.length || saving;
+    $('#eddel', el).disabled = !sel || saving || (sel.k === 'shot' && (cur.timing_locked || cur.shots.length < 2));
+    $('#edhint', el).textContent = base && base.frames !== cur.frames ? t('Length: {was} → {now}', {was: `${dec(base.frames / cur.fps)} s`, now: `${dec(cur.frames / cur.fps)} s`}) : '';
+  }
+  function draw() { if (!cur) return; drawTop(); drawTL(); drawInsp(); }
+  $('#edundo', el).onclick = undo; $('#edredo', el).onclick = redoIt;
+  // the changes so far: a list under the button (no dialog), the newest last; Start again drops them all
+  function histPop(open) {
+    const pop = $('#edpop', el), h = $('#edhist', el);
+    pop.hidden = !open; h.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!open) return;
+    pop.innerHTML = `<b>${t('Your changes')}</b><ol class="melist">${labels.map(l => `<li>${esc(l)}</li>`).join('')}</ol>
+      <div class="small muted">${t('The version you started from stays. Only what changed is made again.')}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm ghost" id="edundo2">↶ ${t('Undo')}</button><button class="btn sm ghost eddanger" id="edclear">${t('Start again')}</button></div>`;
+    $('#edundo2', pop).onclick = () => undo();
+    $('#edclear', pop).onclick = () => { histPop(false); preview([], []).then(() => { sel = null; draw(); }); };
+  }
+  $('#edhist', el).onclick = e => { e.stopPropagation(); histPop($('#edpop', el).hidden); };
+  const popAway = e => { const pop = $('#edpop', el); if (pop && !pop.hidden && !pop.contains(e.target)) histPop(false); };
+  document.addEventListener('click', popAway);
+  onCleanup(() => document.removeEventListener('click', popAway));
+  $('#edsave', el).onclick = async () => {
+    const b = $('#edsave', el);
+    b.disabled = true;
+    try { await api(`/api/project/${enc}/miniedit`, {plan, ops}); ops = []; labels = []; keep(); saving = true; if (pv) pv.pause();
+      toast(t('Saving your changes as a new version - it shows here when it is ready.'), 'ok'); route(); }
+    catch (e) { toast(e.message, 'err'); b.disabled = false; }    // (route: the page's progress panel follows the job)
+  };
+  $('#edsplit', el).onclick = splitHere; $('#eddel', el).onclick = delSel; $('#edcapadd', el).onclick = addCaption;
+  // *See it rendered* (the plan: "before Save, a preview of the second around it"): the moment around the playhead with
+  // the changes so far, rendered by the lab's own renderer (a job, picture only) and played over the preview
+  $('#edrange', el).onclick = async () => {
+    const box = $('#edrng', el), f = prevF, half = Math.round(cur.fps), a = Math.max(0, f - half), b = Math.min(cur.frames - 1, f + half);
+    const show = (html) => { box.hidden = false; box.innerHTML = `<div class="row sp"><b class="small">${t('Rendered exactly')} · ${frange(a, b, cur.fps)}</b><button class="btn sm ghost" id="edrngx" title="${ta('Close')}">✕</button></div>${html}`;
+      $('#edrngx', box).onclick = () => { box.hidden = true; box.innerHTML = ''; }; };
+    let r;
+    try { r = await api(`/api/project/${enc}/editor/range`, {plan, ops, a, b}); } catch (e) { toast(e.message, 'err'); return; }
+    const play = () => show(`<video src="${fileUrl(r.out)}?v=${Date.now()}" autoplay loop muted playsinline></video><div class="small muted">${t('Picture only - the sound is made when you save.')}</div>`);
+    if (r.ready) return play();
+    show(`<div class="small muted edrngw">${t('Rendering the moment…')}</div>`);
+    const tick = async () => {
+      let j; try { j = await api(`/api/jobs/${r.job}?since=999999`); } catch (e) { setTimeout(tick, 1000); return; }
+      if (['running', 'queued', 'cancelling'].includes(j.status)) { setTimeout(tick, 700); return; }
+      if (j.status === 'done') play(); else show(`<div class="small bad">${t('The moment could not be rendered.')} ${reportBtn(j.id)}</div>`);
+    };
+    tick();
+  };
+  $('#edsnap', el).onclick = () => { snap = !snap; $('#edsnap', el).classList.toggle('on', snap); };
+  const zoomTo = (z, keepF = prevF) => { const sc = $('#edscroll', el), x0 = keepF * pxf - sc.scrollLeft; zoom = clamp(z, 0, 100); $('#edzoom', el).value = zoom; drawTL(); sc.scrollLeft = Math.max(0, keepF * pxf - x0); };
+  $('#edzoom', el).oninput = e => zoomTo(+e.target.value);
+  $('#edzi', el).onclick = () => zoomTo(zoom + 12); $('#edzo', el).onclick = () => zoomTo(zoom - 12);
+  $('#edscroll', el).addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); const r = canvas().getBoundingClientRect();
+    zoomTo(zoom + (e.deltaY < 0 ? 6 : -6), clamp(Math.round((e.clientX - r.left) / pxf), 0, cur.frames - 1)); }, {passive: false});
+  $$('[data-tr]', el).forEach(b => b.onclick = () => { if (!pv) return; const a = b.dataset.tr;
+    if (a === 'play') pv.toggle(); else if (a === 'start') pv.seek(0); else if (a === 'end') pv.seek(cur.frames - 1);
+    else if (a === 'mute') { pv.mute(!pv.muted); b.textContent = pv.muted ? '🔇' : '🔊'; } else pv.seek(prevF + +a); });
+  el.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the keys stay with the Editor
+  const cv = $('#edcanvas', el);
+  cv.addEventListener('pointerdown', onDown); cv.addEventListener('pointermove', onMove);
+  cv.addEventListener('pointerup', onUp); cv.addEventListener('pointercancel', onUp);
+  cv.addEventListener('dblclick', e => { const it = e.target.closest('.edit'); if (it && it.dataset.k === 'cap') { const i = $('#edcapt', el); if (i) { i.focus(); i.select(); } } });
+  cv.addEventListener('dragover', e => { if ([...e.dataTransfer.types].some(x => x.startsWith('text/x-ml-'))) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+    const ph = $('.edins', el); ph.hidden = false; ph.style.top = '0px'; ph.style.height = '100%';
+    if ([...e.dataTransfer.types].includes('text/x-ml-clip') && cur.shots.length) {     // a clip goes into a cut
+      const k = placeAt(fAt(e)), x = k < cur.shots.length ? cur.shots[k].start : cur.shots[cur.shots.length - 1].end + 1;
+      ph.style.left = `${x * pxf - 2}px`; } else ph.style.left = `${fAt(e) * pxf - 1}px`; } });
+  cv.addEventListener('dragleave', () => { const ph = $('.edins', el); if (ph) ph.hidden = true; });
+  cv.addEventListener('drop', e => { e.preventDefault(); const ph = $('.edins', el); if (ph) ph.hidden = true;
+    const f = fAt(e), s = e.dataTransfer.getData('text/x-ml-sfx'), tp = e.dataTransfer.getData('text/x-ml-tpl'), fk = e.dataTransfer.getData('text/x-ml-fx'), ck = e.dataTransfer.getData('text/x-ml-clip');
+    if (s) { const o = JSON.parse(s); addSound(o.file, o.kind, f); } else if (tp) addTemplate(tp, f); else if (fk) addFx(fk, f); else if (ck) addClip(ck, f); });
+  // keys while the Editor is on screen (never while typing; the dialogs keep theirs)
+  const onKey = e => {
+    if (!cur || !el.isConnected || (e.target.matches && e.target.matches('input, textarea, select')) || !$('#modal').hidden) return;
+    const k = e.key, ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && (k === 'z' || k === 'Z')) { if (e.shiftKey) redoIt(); else undo(); }
+    else if (ctrl && (k === 'y' || k === 'Y')) redoIt();
+    else if (ctrl) return;
+    else if (k === ' ') { if (pv) pv.toggle(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowRight') { if (pv) pv.seek(prevF + (k === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)); }
+    else if (k === 'Home') { if (pv) pv.seek(0); } else if (k === 'End') { if (pv) pv.seek(cur.frames - 1); }
+    else if (k === 's' || k === 'S') splitHere();
+    else if (k === 'Delete' || k === 'Backspace') delSel();
+    else if (k === 'Escape') { if (!$('#edpop', el).hidden) histPop(false); else { sel = null; draw(); } }
+    else if (k === '+' || k === '=') zoomTo(zoom + 12); else if (k === '-') zoomTo(zoom - 12);
+    else if (k === 'm' || k === 'M') { const b = $('[data-tr=mute]', el); if (b) b.click(); }
+    else return;
+    e.preventDefault();
+  };
+  document.addEventListener('keydown', onKey);
+  const onResize = debounce(() => { if (cur) drawTL(); }, 150);
+  window.addEventListener('resize', onResize);
+  onCleanup(() => { document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) pv.destroy(); });
+  brandData().then(() => { if (sel) drawInsp(); });
+  api('/api/jobs').then(J => { saving = J.some(j => j.kind === 'miniedit' && (j.args || {}).project === P.name && ['running', 'queued'].includes(j.status)); if (cur) draw(); }).catch(() => {});
+  const R = renderPicker($('#edpick', el), P, r => { load(r).then(() => drawAdd()); });
+  if (!R.length) $('#edprev', el).innerHTML = `<div class="empty">${t('No render yet - the Editor changes a made version.')}</div>`;
+  loadLib();
+}
+
 function projVersions(el, P) {
   const R = newestFirst(P), enc = encodeURIComponent(P.name);
   el.innerHTML = `<div class="hint" style="margin-bottom:12px">${t('Every version of this edit and its renders. A new version never replaces an old one. Rate the newest on the <a href="{link}">Review</a> tab.', {link: `#/project/${enc}/review`})}</div>
@@ -4107,7 +5416,13 @@ function fontOptions(s) {
   FONTS.families.forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
   const known = new Set([...FONTS.families.map(f => f.family), ...FONTS.windows]);
   const extra = declared.filter(x => !known.has(x));
-  return Object.entries(groups).map(([g, L]) => `<optgroup label="${esc(FONT_GROUPS[g] || g)}">${L.map(f => opt(f.family, f.family, f.own ? t('your own font - on this PC only') : t('free font ({licence}), comes with MotionLab', {licence: f.licence}))).join('')}</optgroup>`).join('')
+  // My Brand's fonts first (step 3, 2026-10-26): its titles and body text fonts, when they are in the library
+  if (BRAND_DATA === null) brandData();
+  const bf = (((BRAND_DATA || {}).identity || {}).fonts) || {};
+  const mineF = [[bf.heading, t('your brand font for titles')], [bf.body, t('your brand font for body text')]]
+    .filter(([f], i, a) => f && known.has(f) && a.findIndex(([g]) => g === f) === i);
+  return (mineF.length ? `<optgroup label="${ta('My Brand')}">${mineF.map(([f, tip]) => opt(f, f, tip)).join('')}</optgroup>` : '')
+    + Object.entries(groups).map(([g, L]) => `<optgroup label="${esc(FONT_GROUPS[g] || g)}">${L.map(f => opt(f.family, f.family, f.own ? t('your own font - on this PC only') : t('free font ({licence}), comes with MotionLab', {licence: f.licence}))).join('')}</optgroup>`).join('')
     + `<optgroup label="${ta('Windows only (another PC may draw them differently)')}">${FONTS.windows.map(w => opt(w, w)).join('')}</optgroup>`
     + (extra.length ? `<optgroup label="${ta('In this graphic')}">${extra.map(x => opt(x, x)).join('')}</optgroup>` : '');
 }
@@ -4116,7 +5431,7 @@ document.addEventListener('change', e => {
   const tg = e.target;
   if (tg.matches && tg.matches('select[data-font]') && tg.nextElementSibling && tg.nextElementSibling.classList.contains('fprev')) tg.nextElementSibling.style.cssText = fontCss(tg.value);
 });
-api('/api/fonts').then(f => {
+Promise.all([api('/api/fonts'), Promise.resolve().then(brandData)]).then(([f]) => {   // brandData after the script ran (BRAND_DATA)
   FONTS = f;
   $$('select[data-font]').forEach(sel => { const v = sel.value; sel.innerHTML = fontOptions({id: sel.dataset.set, type: 'enum', value: v, options: [...sel.options].map(o => ({value: o.value, label: o.textContent}))}); });
 }).catch(() => {});
@@ -4125,12 +5440,13 @@ api('/api/fonts').then(f => {
 // logo…*, a text setting whose label shows ":name:" gets *+ Logo* (it writes ":youtube:"); both open the picker under the
 // field (not a dialog: the template's own dialog keeps its values). The live previews load the logos the values name.
 let LOGOS = null;
-const LOGO_GROUPS = {social: t('Social & video'), ai: t('AI tools'), creative: t('Creative apps'), dev: t('Code'), work: t('Work & money'), web: t('Browsers & systems'), other: t('Other|logo group')};
+const LOGO_GROUPS = {brand: t('My Brand'), social: t('Social & video'), ai: t('AI tools'), creative: t('Creative apps'), dev: t('Code'), work: t('Work & money'), web: t('Browsers & systems'), other: t('Other|logo group')};
 const LOGO_STYLES = [['', t('Auto - fits the background')], ['color', t('In its colours')], ['mono', t('One colour')], ['wordmark', t('The name written out')]];
 const LOGO_VARIANT = {color: t('its colours'), mono: t('one colour - takes any colour'), wordmark: t('the name written out'), 'color-dark': t('its colours, for a dark background'), 'wordmark-dark': t('the name, for a dark background')};
 const isLogoSet = s => s.type === 'string' && (/^logos?$/.test(s.id) || /_logos?$/.test(s.id));
 const logoText = s => s.type === 'string' && !isLogoSet(s) && /:[a-z][a-z0-9-]*:/.test(s.label || '');
-const logoSrc = (lg, v) => fileUrl(`logos/${lg.id}/${v && lg.variants[v] ? v : lg.default}.svg`);
+const logoSrc = (lg, v) => { const k = v && lg.variants[v] ? v : lg.default;       // My Brand's logo: its own picture (src)
+  return fileUrl(lg.variants[k].src || `logos/${lg.id}/${k}.svg`); };
 const logoLoad = () => LOGOS ? Promise.resolve(LOGOS) : api('/api/logos').then(d => (LOGOS = d));
 const logoFind = (L, q) => { const w = q.toLowerCase().split(/\s+/).filter(Boolean);
   return L.filter(lg => w.every(x => `${lg.id} ${lg.name.toLowerCase()} ${lg.words.join(' ')} ${lg.group}`.includes(x))); };
@@ -4386,13 +5702,18 @@ function captionsBtn(el, P) {
       <label class="chk"><input type="radio" name="gcsrc" value="file" ${SPc.available && media.length ? '' : 'checked'} ${P.plans.length ? '' : 'disabled'}> ${P.plans.length ? t("<b>From a subtitle file</b> (.srt / .vtt from YouTube, CapCut, Resolve's “Create Subtitles from Audio”)")
         : t("<b>From a subtitle file</b> (.srt / .vtt from YouTube, CapCut, Resolve's “Create Subtitles from Audio”) - needs an edit version (its size, rate and length)")}</label>
       <div style="margin-left:24px"><input id="gcf" placeholder="${ta('C:\\...\\my video.srt')}"></div>
-      <label>${t('Name')} <input id="gcn" value="captions" style="width:200px"></label></div>
+      <label>${t('Name')} <input id="gcn" value="captions" style="width:200px"></label>
+      <label class="chk" id="gcbrand" hidden><input type="checkbox" checked> ${t('In my brand\'s caption style')}</label></div>
     <div class="hint" style="margin-top:6px">${t('The same name again replaces the words of those captions and keeps their style.')}</div>
     <div class="row" style="margin-top:12px"><button class="btn pri" id="gcgo">${t('Make the captions')}</button><span id="gcmsg" class="small"></span></div><pre class="log" hidden></pre>`, m => {
+    brandData().then(b => {                       // 0.6.0: My Brand has a caption style - offered, ticked
+      if (Object.values(((b.identity || {}).captions) || {}).some(v => v !== '' && v != null)) $('#gcbrand', m).hidden = false;
+      const gn = $('#gcnames', m), words = (b.glossary || []).map(g => g.word);     // its names and words: speech to text
+      if (gn && words.length && !gn.value.trim()) gn.value = words.join(', '); });
     $('#gcgo', m).onclick = async () => {
       const go = $('#gcgo', m), src = ($('input[name=gcsrc]:checked', m) || {}).value;
       if (!src) { toast(t('Pick where the words come from'), 'err'); return; }
-      const args = {project: P.name, name: $('#gcn', m).value.trim()};
+      const args = {project: P.name, name: $('#gcn', m).value.trim(), brand: !$('#gcbrand', m).hidden && $('#gcbrand input', m).checked};
       if (src === 'video') Object.assign(args, {file: $('#gcm', m).value, names: $('#gcnames', m).value.trim(), model: $('#gcmod', m).value});
       else args.file = $('#gcf', m).value.trim();
       const j = await startJob('overlay_captions', args, false);
@@ -5001,6 +6322,7 @@ async function scriptImproveModal(ctx, pre = {}) {
       <div class="nestep opt"><b>3</b>${t('In the style of')} ${optTag(t('talking videos you analysed or scripts of yours: their pace and structure'))}</div>
       <div id="sstp"></div>
     </div><div class="spcheck"><div class="row sp"><h3 style="margin:0">${t('The check')}</h3><span class="small muted">${t('instant · no Claude')}</span></div><div id="schk"></div></div></div>
+    <div class="brandrow" id="sbrand"></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="sgo"><svg class="i"><use href="#i-claude"/></svg>${t('Improve it with Claude')}</button>
       <span class="small muted">${t('Claude Code opens in a new window: it checks every part, then writes the new version - you find it here under Prepare.')}</span></div>`, el => {
     const txt = $('#stext', el);
@@ -5024,7 +6346,8 @@ async function scriptImproveModal(ctx, pre = {}) {
     $('#sgo', el).onclick = async () => {
       try {
         const r = await api('/api/script/improve', {text: txt.value, file: st.file, where: st.where, length_s: st.length || null,
-                                                    want: $('#swant', el).value, like: st.like, like_prompts: st.likePrompts});
+                                                    want: $('#swant', el).value, like: st.like, like_prompts: st.likePrompts,
+                                                    brand: brandOn(el, '#sbrand')});
         openClaude(r.command, 'script', r.script.id);
         closeModal();
         if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
@@ -5055,6 +6378,7 @@ async function scriptNewModal(ctx, pre = {}) {
     <div class="nestep opt"><b>4</b>${t('In the style of')} ${optTag(t('talking videos you analysed or scripts of yours'))}</div>
     <div id="qstp"></div>
     <div class="nedet spf" style="margin-top:10px"><label>${t('Anything else')}</label><input type="text" id="qextra" placeholder="${ta('optional - e.g. no swearing, mention my course at the end')}" style="max-width:460px"></div>
+    <div class="brandrow" id="qbrand"></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="qgo"><svg class="i"><use href="#i-claude"/></svg>${t('Write it with Claude')}</button>
       <span class="small muted">${t('Claude Code opens in a new window with your answers: three hooks, then the script - you find it here under Prepare.')}</span></div>`, el => {
     for (const [id, key] of [['#qwhere', 'where'], ['#qlen', 'length'], ['#qtone', 'tone'], ['#qcta', 'cta'], ['#qlang', 'lang']]) spSeg(el, id, st, key);
@@ -5067,7 +6391,7 @@ async function scriptNewModal(ctx, pre = {}) {
         const r = await api('/api/script/request', {topic, audience: $('#qaud', el).value, takeaway: $('#qtake', el).value,
           angle: $('#qangle', el).value, points: $('#qpoints', el).value, length_s: st.length || null, where: st.where,
           tone: st.tone, cta: st.cta, cta_text: $('#qctat', el).value, lang: st.lang, like: st.like, like_prompts: st.likePrompts,
-          extra: $('#qextra', el).value});
+          extra: $('#qextra', el).value, brand: brandOn(el, '#qbrand')});
         openClaude(r.command, 'script', r.request.id);
         closeModal();
         if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
@@ -5115,6 +6439,7 @@ async function titleFirstModal(ctx, pre = {}) {
     <div class="nestep opt"><b>3</b>${t('In the style of')} ${optTag(t('videos you analysed - how their titles and thumbnails look - or scripts of yours'))}</div>
     <div id="tstp"></div>
     <div class="nedet spf" style="margin-top:10px"><label>${t('Anything else')}</label><input type="text" id="tnotes" placeholder="${ta('optional - e.g. no clickbait, keep my channel\'s red')}" style="max-width:460px"></div>
+    <div class="brandrow" id="tbrand"></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="tgo"><svg class="i"><use href="#i-claude"/></svg>${t('Write them with Claude')}</button>
       <span class="small muted">${t('Claude Code opens in a new window with your answers: titles, thumbnail ideas and the hook - you find them here under Prepare.')}</span></div>`, el => {
     const ob = $('#torient', el);
@@ -5137,7 +6462,8 @@ async function titleFirstModal(ctx, pre = {}) {
       if (!topic) { toast(t('Say what the video is about first'), 'err'); $('#ttopic', el).focus(); return; }
       try {
         const r = await api('/api/title/request', {topic, viewer: $('#tview', el).value, angle: $('#tangle', el).value, platforms: st.plats,
-          orientation: st.orient, language: st.lang, style_refs: st.like, like_prompts: st.likePrompts, notes: $('#tnotes', el).value});
+          orientation: st.orient, language: st.lang, style_refs: st.like, like_prompts: st.likePrompts, notes: $('#tnotes', el).value,
+          brand: brandOn(el, '#tbrand')});
         openClaude(r.command, 'title', r.request.id);
         closeModal();
         if (location.hash === '#/prepare' && ctx && ctx.reload) await ctx.reload(); else location.hash = '#/prepare';
@@ -5211,6 +6537,7 @@ async function generateModal(kind, pre = {}) {
       <label>${t('Colours')}</label><input type="text" id="gcol" placeholder="${ta('optional - e.g. black, white and my orange #ff6a00; font: Inter')}" style="max-width:420px">` : ''}</div>
     <div class="nestep"><b>${gfx && MG.library.length ? 5 : 4}</b>${t('Its name')}</div>
     <div class="row"><input type="text" id="gname" value="${esc(pre.name || n0)}" style="max-width:320px"><span class="small muted">${t('a folder in projects - a logo or a song you put there, Claude can use')}</span></div>
+    <div class="brandrow" id="gbrand"></div>
     <div class="row" style="margin-top:16px"><button class="btn pri big" id="ggo"><svg class="i"><use href="#i-claude"/></svg>${gfx ? t('Make it with Claude') : t('Plan it with Claude')}</button>
       <span class="small muted">${gfx ? t('Claude shows you the scenes first, then renders it. It can take an hour or more.') : t('Claude shows you the shot list first, then writes the prompts.')}</span></div>`, el => {
     const seg = (id, key) => { const b = $(id, el); const paint = () => $$('button', b).forEach(x => x.classList.toggle('on', x.dataset.v === st[key]));
@@ -5256,7 +6583,8 @@ async function generateModal(kind, pre = {}) {
       try {
         const r = await api('/api/generate/request', {kind, name: $('#gname', el).value, want, text: $('#gtext', el) ? $('#gtext', el).value : '',
           like: st.like, length_s: st.length || null, format: st.format || null, music: $('#gsong', el) ? $('#gsong', el).value : '',
-          tool, colours: $('#gcol', el) ? $('#gcol', el).value : '', templates: gfx ? st.tpl : [], look: gfx ? st.look : ''});
+          tool, colours: $('#gcol', el) ? $('#gcol', el).value : '', templates: gfx ? st.tpl : [], look: gfx ? st.look : '',
+          brand: brandOn(el, '#gbrand')});
         openClaude(r.command, 'generate', r.project);
         closeModal(); location.hash = '#/project/' + encodeURIComponent(r.project);
       } catch (e) { toast(e.message, 'err'); }
@@ -5279,19 +6607,25 @@ const mclipStatus = it => it.built.length ? 'built' : it.still ? 'still' : 'p' +
 const MSTATUS_WORD = {built: t('rebuilt'), still: t('a still capture'), p1: t('next to rebuild'), p2: t('later'), p3: t('style only')};
 const mdefaults = t => { const v = {}; (t.settings || []).forEach(s => { v[s.id] = s.default; }); return v; };
 async function pageMotion(main, tab, open) {
-  const [M, LGD] = await Promise.all([api('/api/motion'), logoLoad().catch(() => ({logos: [], groups: {}}))]);
-  tab = ['learned', 'logos'].includes(tab) ? tab : 'templates';
+  const [M, LGD, SD, MUS] = await Promise.all([api('/api/motion'), logoLoad().catch(() => ({logos: [], groups: {}})),
+    api('/api/sounds').catch(() => ({sounds: [], packs: [], kinds: []})),
+    api('/api/music').catch(() => ({tracks: [], unmeasured: 0, beds: [], make: {}, elevenlabs: {}}))]);
+  tab = ['learned', 'logos', 'sounds', 'music'].includes(tab) ? tab : 'templates';
   const L = M.library, clips = M.packs.flatMap(p => p.items.map(it => ({...it, pack: p.pack})));
   const todo = clips.filter(it => mclipStatus(it) === 'p1' || mclipStatus(it) === 'p2');   // the skill does 1s first
   main.innerHTML = `<div class="head"><div><h1>${t('Motion Graphics')}</h1><div class="sub">${t('Designed motion to reuse - learned from pro template clips, or made for what creators use most, as MotionLab\'s own graphics. Change the words and colours, put one in a video, or let the Generator build a video from them.')}</div></div>
       ${todo.length && M.packs.length ? `<div class="row">${claudeBtn(`/generate-video templates ${M.packs[0].pack}`, tn(Math.min(todo.length, 8), 'Rebuild the next {n} with Claude', 'Rebuild the next {n} with Claude'), 'generate', 'templates', 'cl')}</div>` : ''}</div>
     <div class="tabs"><a href="#/motion" class="${tab === 'templates' ? 'on' : ''}">${t('Templates')} <span class="dim">${L.length}</span></a>
       <a href="#/motion/learned" class="${tab === 'learned' ? 'on' : ''}">${t('Learned from')} <span class="dim">${clips.length}</span></a>
-      <a href="#/motion/logos" class="${tab === 'logos' ? 'on' : ''}">${t('Logos')} <span class="dim">${LGD.logos.length}</span></a></div>
+      <a href="#/motion/logos" class="${tab === 'logos' ? 'on' : ''}">${t('Logos')} <span class="dim">${LGD.logos.length}</span></a>
+      <a href="#/motion/sounds" class="${tab === 'sounds' ? 'on' : ''}">${t('Sounds')} <span class="dim">${SD.sounds.length}</span></a>
+      <a href="#/motion/music" class="${tab === 'music' ? 'on' : ''}">${t('Music')} <span class="dim">${MUS.tracks.filter(x => !x.off).length}</span></a></div>
     <div id="mgbody"></div>`;
   const body = $('#mgbody', main);
   if (tab === 'templates') motionTemplates(body, M, L, clips);
   else if (tab === 'logos') motionLogos(body, M, LGD);
+  else if (tab === 'sounds') motionSounds(body, SD);
+  else if (tab === 'music') motionMusic(body, MUS);
   else motionClips(body, M, clips);
   if (open) { const tp = L.find(x => x.id === open); if (tp) motionModal(tp, M); }
 }
@@ -5316,6 +6650,302 @@ function motionTemplates(body, M, L, clips) {
     $$('.mgc', body).forEach(c => c.onclick = c.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; motionModal(L.find(tp => tp.id === c.dataset.id), M); });
   };
   draw();
+}
+// Motion Graphics > Sounds (0.6.0 step 9; the user: "could it be possible for the user itself to choose them"): every
+// recorded sound of this PC's library - ▶, its kind, where it came from and its licence; ★ = a favourite (a kind with
+// any uses only them), the eye = hidden (never used, the file stays); *Add sounds* = a pack, a folder or a few files
+// (the shared list sorts the packs MotionLab knows; the rest get their kind from their name, with where they came from)
+let SD_FILTER = 'all', SD_KIND = '', SD_Q = '';
+function motionSounds(body, SD) {
+  let player = null;
+  const hear = file => { try { if (player) player.pause(); player = new Audio(edSoundUrl(file)); player.play().catch(() => {}); } catch (e) { /* no sound */ } };
+  const draw = () => {
+    const q = SD_Q.toLowerCase();
+    const wk = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10), isNew = s => (s.added || '') >= wk;
+    const L = SD.sounds.filter(s => (SD_FILTER === 'all' ? !s.off : SD_FILTER === 'fav' ? s.fav && !s.off : SD_FILTER === 'new' ? isNew(s) : s.off)
+      && (!SD_KIND || s.kind === SD_KIND) && (!q || `${s.name} ${s.kind} ${edKind(s.kind)} ${s.source}`.toLowerCase().includes(q)));
+    const kinds = [...new Set(SD.sounds.map(s => s.kind))].sort((a, b) => edKind(a).localeCompare(edKind(b)));
+    const groups = kinds.filter(k => L.some(s => s.kind === k));
+    const n = f => SD.sounds.filter(f).length;
+    const shareable = SD.sounds.some(s => s.made && /paid plan/.test(s.licence));
+    body.innerHTML = `<div class="row sdtop"><button class="btn pri" id="sdmake"><svg class="i"><use href="#i-sparkle"/></svg>${t('Make sounds')}</button>
+        <button class="btn" id="sdadd"><svg class="i"><use href="#i-upload"/></svg>${t('Add sounds')}</button>
+        ${shareable ? `<button class="btn" id="sdshare" title="${ta('The sounds you made on a paid ElevenLabs plan as one file to put on Google Drive')}"><svg class="i"><use href="#i-shared"/></svg>${t('Share with friends')}</button>` : ''}
+        <input type="search" id="sdq" placeholder="${ta('Search…')}" value="${esc(SD_Q)}">
+        <select id="sdkind"><option value="">${t('All kinds')}</option>${kinds.map(k => `<option value="${esc(k)}"${k === SD_KIND ? ' selected' : ''}>${esc(edKind(k))}</option>`).join('')}</select>
+        <span class="row pfilters">${[['all', t('In use'), n(s => !s.off)], ['new', t('New'), n(isNew)], ['fav', `★ ${t('Favourites')}`, n(s => s.fav && !s.off)], ['off', t('Hidden'), n(s => s.off)]].filter(([k, , c]) => k !== 'new' || c).map(([k, l, c]) =>
+          `<button class="fchip${SD_FILTER === k ? ' on' : ''}" data-f="${k}">${l} <span class="dim">${c}</span></button>`).join('')}</span></div>
+      ${SD.packs.length ? `<div class="sdpacks">${SD.packs.map(p => `<div class="sdpack"><div class="row sp"><b>${esc(p.name)}</b><span class="chip${p.here >= p.listed ? ' ok' : ''}">${t('{here} of {n} here', {here: p.here, n: p.listed})}</span></div>
+          <div class="small muted">${esc(t(p.how || ''))}</div>
+          <div class="row sp"><span class="small dim sdlic" title="${esc(p.licence || '')}">${esc(p.licence || '')}</span>${p.page ? `<a class="btn sm" href="${esc(p.page)}" target="_blank" rel="noopener">${t('Get it')}</a>` : p.here < p.listed ? `<span class="small dim">${t('Ask whoever shared MotionLab with you for its link')}</span>` : ''}</div></div>`).join('')}</div>` : ''}
+      ${!SD.sounds.length ? emptyHero('music', t('No recorded sounds yet'), t('Videos get made-up sound effects until you add some. Add a pack you downloaded - MotionLab sorts the ones it knows.'), '')
+        : !L.length ? `<div class="small muted">${t('Nothing matches.')}</div>`
+        : groups.map(k => `<div class="sdgroup"><h3 class="row"><span class="eddot" style="--h:${meHue(k)}"></span>${esc(edKind(k))} <span class="dim">${L.filter(s => s.kind === k).length}</span></h3>
+          ${L.filter(s => s.kind === k).map(s => `<div class="sdrow${s.off ? ' off' : ''}" data-file="${esc(s.file)}">
+            <button class="btn sm ghost" data-hear title="${ta('Listen')}">▶</button><span class="grow sdname">${esc(s.name)}</span>
+            ${s.made ? `<span class="chip sdel${/free plan/.test(s.licence) ? ' test' : ''}" title="${esc(s.licence)}">${/free plan/.test(s.licence) ? t('ElevenLabs · non-commercial') : 'ElevenLabs'}</span>` : ''}
+            <span class="small dim">${s.len_s ? dec(s.len_s) + ' s' : ''}</span>${s.made ? '' : `<span class="small muted sdsrc" title="${esc(s.licence)}">${esc(s.source)}</span>`}
+            <button class="btn sm ghost sdstar${s.fav ? ' on' : ''}" data-fav aria-pressed="${s.fav}" title="${ta('Favourite: its kind uses your favourites first')}">${s.fav ? '★' : '☆'}</button>
+            <button class="btn sm ghost" data-off aria-pressed="${s.off}" title="${s.off ? ta('Use it again') : ta('Hide it: never used (the file stays)')}">${s.off ? t('Show') : t('Hide')}</button></div>`).join('')}</div>`).join('')}`;
+    $('#sdadd', body).onclick = () => soundsAddModal(() => route(true));
+    $('#sdmake', body).onclick = () => soundsMakeModal(SD, () => { SD_FILTER = 'new'; route(true); });
+    if ($('#sdshare', body)) $('#sdshare', body).onclick = async () => { try { const r = await api('/api/sounds/share', {});
+      toast(t('{n} sounds in {file} - put it on Google Drive (anyone with the link) and send your friends the link', {n: r.count, file: r.name}), 'ok'); } catch (e) { toast(e.message, 'err'); } };
+    const qi = $('#sdq', body);
+    qi.oninput = debounce(() => { SD_Q = qi.value; const pos = qi.selectionStart; draw(); const x = $('#sdq', body); x.focus(); x.setSelectionRange(pos, pos); }, 200);
+    $('#sdkind', body).onchange = e => { SD_KIND = e.target.value; draw(); };
+    $$('[data-f]', body).forEach(b => b.onclick = () => { SD_FILTER = b.dataset.f; draw(); });
+    $$('.sdrow', body).forEach(r => {
+      const s = SD.sounds.find(x => x.file === r.dataset.file);
+      $('[data-hear]', r).onclick = () => hear(s.file);
+      const set = async (k, v) => { try { await api('/api/sounds/set', {file: s.file, [k]: v}); s[k] = v; draw(); } catch (e) { toast(e.message, 'err'); } };
+      $('[data-fav]', r).onclick = () => set('fav', !s.fav);
+      $('[data-off]', r).onclick = () => set('off', !s.off);
+    });
+  };
+  draw();
+  onCleanup(() => { if (player) player.pause(); });
+}
+// Motion Graphics > Music (0.6.0 step 10; the user: a music library from the songs I download): the songs downloaded in
+// the Analyser and the ones added, each measured once (tempo, energy, tone, length - New edit shows the same), and
+// ambience beds for under a talking video. ▶ plays it here (one at a time, stopped when the page or a dialog closes);
+// ★ = offered first; Hide = never offered (the file stays)
+const MU_ENERGY = {calm: 190, steady: 42, energetic: 330}, MU_TONE = {dark: 255, warm: 25, bright: 55};
+const muBed = k => ({room: t('Room tone'), cafe: t('Café'), city: t('City'), nature: t('Nature'), rain: t('Rain'), office: t('Office')})[k] || k;
+let MU_TAB = 'song', MU_FILTER = 'all';
+function muTime(s) { s = Math.round(s || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+function muStop() { if (MU_AUDIO) MU_AUDIO.pause(); MU_AUDIO = null; MU_PLAYING = ''; $$('[data-mhear]').forEach(b => { b.textContent = '▶'; }); }
+function muHear(rel, btn, url) {                           // ▶ / ❚❚ on a song or a bed (url: another sound)
+  if (MU_PLAYING === rel) { muStop(); return; }
+  muStop();
+  try { MU_AUDIO = new Audio(url || '/api/music/hear?rel=' + encodeURIComponent(rel)); MU_AUDIO.onended = muStop;
+    MU_AUDIO.play().catch(() => {}); MU_PLAYING = rel; if (btn) btn.textContent = '❚❚'; } catch (e) { /* no sound */ }
+}
+function muChips(x) {                                       // a song's measures (or a bed's kind) as chips
+  if (x.type === 'bed' || x.kind) return `<span class="chip">${esc(muBed(x.kind))}</span>${x.len_s ? `<span class="small dim">${dec(x.len_s, 0)} s</span>` : ''}`;
+  return x.bpm ? `<span class="chip mono">${Math.round(x.bpm)} BPM</span><span class="chip mue" style="--h:${MU_ENERGY[x.energy] || 0}" title="${ta('How busy it is: calm, steady or energetic')}">${esc(t(x.energy))}</span>
+      <span class="chip mue" style="--h:${MU_TONE[x.tone] || 0}" title="${ta('Its sound: dark, warm or bright')}">${esc(t(x.tone))}</span><span class="small dim mono">${muTime(x.len_s)}</span>`
+    : `<span class="small dim">${t('not measured yet')}</span>`;
+}
+function muUpload(f, type, kind) {                          // a song / bed the user picked -> library\music (a raw body)
+  return new Promise((ok, bad) => { const x = new XMLHttpRequest();
+    x.open('POST', `/api/music/upload?name=${encodeURIComponent(f.name)}&type=${type}&kind=${encodeURIComponent(kind || '')}`);
+    x.setRequestHeader('X-ML-Token', TOKEN); x.setRequestHeader('Content-Type', 'application/octet-stream');
+    x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (e) { /* not JSON */ }
+      if (x.status < 300) ok(j); else bad(new Error((j && j.error) || `${x.status}`)); };
+    x.onerror = () => bad(new Error(t('{name}: the copy stopped - try again', {name: f.name}))); x.send(f); });
+}
+function motionMusic(body, MU) {
+  const measure = async () => { const pre = $('#mulog', body); pre.hidden = false;
+    $('#muprog', body).textContent = t('Measuring…');
+    try { const j = await api('/api/music/index', {});
+      followJob(j.id, pre, () => route(true)); } catch (e) { toast(e.message, 'err'); } };
+  const draw = () => {
+    const song = MU_TAB === 'song', T = MU.tracks.filter(x => x.type === MU_TAB);
+    const L = T.filter(x => MU_FILTER === 'all' ? !x.off : MU_FILTER === 'fav' ? x.fav && !x.off : x.off);
+    const n = (typ, f) => MU.tracks.filter(x => x.type === typ && f(x)).length;
+    const row = x => `<div class="sdrow murow${x.off ? ' off' : ''}" data-rel="${esc(x.rel)}">
+        <button class="btn sm ghost" data-mhear title="${ta('Listen')}">${MU_PLAYING === x.rel ? '❚❚' : '▶'}</button>
+        <span class="grow sdname"><b>${esc(x.title)}</b>${x.artist ? ` <span class="muted">${esc(x.artist)}</span>` : ''}</span>
+        ${muChips(x)}
+        <span class="chip${x.made && /free plan/.test(x.licence) ? ' sdel test' : ''}" title="${esc(x.licence)}">${x.made ? (/free plan/.test(x.licence) ? t('ElevenLabs · non-commercial') : 'ElevenLabs') : esc(t(x.from))}</span>
+        <button class="btn sm ghost sdstar${x.fav ? ' on' : ''}" data-fav aria-pressed="${x.fav}" title="${ta('Favourite: offered first in New edit')}">${x.fav ? '★' : '☆'}</button>
+        <button class="btn sm ghost" data-off aria-pressed="${x.off}" title="${x.off ? ta('Offer it again') : ta('Hide it: never offered (the file stays)')}">${x.off ? t('Show') : t('Hide')}</button></div>`;
+    body.innerHTML = `<div class="row sdtop">
+        <span class="row pfilters">${[['song', t('Songs')], ['bed', t('Ambience')]].map(([k, l]) => `<button class="fchip${MU_TAB === k ? ' on' : ''}" data-tab="${k}">${l} <span class="dim">${n(k, x => !x.off)}</span></button>`).join('')}</span>
+        <span class="grow"></span>
+        ${song ? `<label class="btn pri"><svg class="i"><use href="#i-upload"/></svg>${t('Add songs')}<input type="file" id="mufiles" hidden multiple accept="audio/*,.mp3,.m4a,.wav,.flac,.ogg"></label>
+            <button class="btn" id="mulink"><svg class="i"><use href="#i-link"/></svg>${t('A song from a link')}</button>`
+          : `<button class="btn pri" id="mumake"><svg class="i"><use href="#i-sparkle"/></svg>${t('Make ambience')}</button>
+            <select id="mukind" title="${ta('What kind of ambience the files are')}">${MU.beds.map(k => `<option value="${k}">${esc(muBed(k))}</option>`).join('')}</select>
+            <label class="btn"><svg class="i"><use href="#i-upload"/></svg>${t('Add ambience')}<input type="file" id="mufiles" hidden multiple accept="audio/*,.mp3,.m4a,.wav,.flac,.ogg"></label>`}
+        ${MU.unmeasured ? `<button class="btn" id="muindex"><svg class="i"><use href="#i-music"/></svg>${tn(MU.unmeasured, 'Measure {n} new', 'Measure {n} new')}</button>` : ''}</div>
+      <div class="row sdtop" id="mulinkrow" hidden><input type="text" id="mulinku" placeholder="https://…" style="max-width:460px">
+        <button class="btn" id="mulinkgo">${t('Download')}</button><span class="small muted">${t('YouTube, SoundCloud… saved as an MP3 with your downloads')}</span></div>
+      <div id="muprog" class="small"></div><pre class="log" id="mulog" hidden></pre>
+      ${T.length ? `<div class="row pfilters" style="margin-bottom:8px">${[['all', t('In use'), n(MU_TAB, x => !x.off)], ['fav', `★ ${t('Favourites')}`, n(MU_TAB, x => x.fav && !x.off)], ['off', t('Hidden'), n(MU_TAB, x => x.off)]].map(([k, l, c]) =>
+          `<button class="fchip${MU_FILTER === k ? ' on' : ''}" data-f="${k}">${l} <span class="dim">${c}</span></button>`).join('')}</div>` : ''}
+      ${!T.length ? emptyHero(song ? 'music' : 'volume', song ? t('No songs yet') : t('No ambience yet'), song
+          ? t('Songs you download in the Analyser (as an MP3) show up here by themselves - or add your own files.')
+          : t('A quiet room, a café or a street under your voice - it fills the silence between your cuts. Make one with ElevenLabs or add a file.'), '')
+        : !L.length ? `<div class="small muted">${t('Nothing here.')}</div>` : `<div class="mulist">${L.map(row).join('')}</div>`}`;
+    $$('[data-tab]', body).forEach(b => b.onclick = () => { MU_TAB = b.dataset.tab; muStop(); draw(); });
+    $$('[data-f]', body).forEach(b => b.onclick = () => { MU_FILTER = b.dataset.f; draw(); });
+    if ($('#muindex', body)) $('#muindex', body).onclick = measure;
+    if ($('#mumake', body)) $('#mumake', body).onclick = () => musicMakeModal(MU, () => route(true));
+    if ($('#mulink', body)) $('#mulink', body).onclick = () => { const r = $('#mulinkrow', body); r.hidden = !r.hidden; if (!r.hidden) $('#mulinku', body).focus(); };
+    if ($('#mulinku', body)) $('#mulinku', body).onkeydown = e => { if (e.key === 'Enter') $('#mulinkgo', body).click(); };
+    if ($('#mulinkgo', body)) $('#mulinkgo', body).onclick = async () => {
+      const url = $('#mulinku', body).value.trim(), pre = $('#mulog', body);
+      if (!/^https?:\/\//i.test(url)) { toast(t('Paste a full link starting with https://'), 'err'); return; }
+      const j = await startJob('download', {url, preset: 'mp3'}, false);
+      if (!j) return;
+      $('#mulinkgo', body).disabled = true; pre.hidden = false; $('#muprog', body).textContent = t('downloading…');
+      followJob(j.id, pre, r => { if (r.status === 'done') measure(); else { $('#muprog', body).textContent = t(r.status); $('#mulinkgo', body).disabled = false; } });
+    };
+    $('#mufiles', body).onchange = async e => {
+      const files = [...e.target.files].filter(f => !/^\._/.test(f.name)), kind = $('#mukind', body) ? $('#mukind', body).value : '';
+      e.target.value = '';
+      try {
+        for (let i = 0; i < files.length; i++) {
+          $('#muprog', body).textContent = t('Copying {n} of {total}…', {n: i + 1, total: files.length});
+          await muUpload(files[i], song ? 'song' : 'bed', kind);
+        }
+        if (files.length) measure();
+      } catch (x) { toast(x.message, 'err'); $('#muprog', body).textContent = ''; }
+    };
+    $$('.murow', body).forEach(r => {
+      const x = MU.tracks.find(y => y.rel === r.dataset.rel);
+      $('[data-mhear]', r).onclick = e => muHear(x.rel, e.currentTarget);
+      const set = async (k, v) => { try { await api('/api/music/set', {rel: x.rel, [k]: v}); x[k] = v; draw(); } catch (e) { toast(e.message, 'err'); } };
+      $('[data-fav]', r).onclick = () => set('fav', !x.fav);
+      $('[data-off]', r).onclick = () => set('off', !x.off);
+    });
+  };
+  draw();
+  onCleanup(muStop);
+}
+// Music > Make ambience: ElevenLabs beds (15 s that loop with no seam) - the key of Sounds > Make sounds; the credits
+// each kind takes, what the month has left; a job, then the Ambience tab
+function musicMakeModal(MU, done) {
+  const EL = MU.elevenlabs || {}, G = MU.make || {}, want = {};
+  Object.keys(G).forEach(k => { want[k] = 0; });
+  const left = () => (EL.balance && EL.balance.limit ? EL.balance.limit - (EL.balance.used || 0) : EL.free_credits);
+  const credits = () => Object.entries(want).reduce((a, [k, n]) => a + n * ((G[k] || {}).credits || 0), 0);
+  modal(`<h2>${t('Make ambience with ElevenLabs')}</h2>
+    <p class="hint">${t('15 seconds of a quiet room, a café or a street that loops with no seam. Under your voice it fills the silence between cuts - mixed far under your words.')}</p>
+    ${EL.key_set ? '' : `<p class="small bad">${t('Add your ElevenLabs key first: Motion Graphics > Sounds > Make sounds.')}</p>`}
+    ${EL.balance && EL.balance.limit ? `<div class="small muted">${t('This month: {used} of {limit} credits used (as of {when})', {used: numLoc(EL.balance.used || 0), limit: numLoc(EL.balance.limit), when: whenStr(EL.balance.when)})}</div>` : ''}
+    <div class="sdwant" id="muwant" style="margin-top:10px"></div>
+    <div class="row sp" style="margin-top:10px"><span class="small" id="mucost"></span><button class="btn pri" id="mugo">${t('Make them')}</button></div>
+    <div class="small" id="muprog2"></div><pre class="log" id="mulog2" hidden></pre>`);
+  const draw = () => {
+    $('#muwant').innerHTML = Object.entries(G).map(([k, v]) => `<div class="sdw" title="${esc(v.what)}"><span class="grow">${esc(muBed(k))}</span>
+      <button class="btn sm ghost" data-dn="${k}" aria-label="${ta('Fewer')}">−</button><b class="mono">${want[k]}</b><button class="btn sm ghost" data-up="${k}" aria-label="${ta('More')}">+</button></div>`).join('');
+    const tot = Object.values(want).reduce((a, b) => a + b, 0), cr = credits(), over = EL.plan !== 'paid' && cr > left();
+    $('#mucost').innerHTML = `${tn(tot, '{n} bed', '{n} beds')} = ${t('about {n} credits', {n: numLoc(cr)})}${EL.plan !== 'paid' ? ` <span class="${over ? 'bad' : 'muted'}">${t('of {n} left this month', {n: numLoc(left())})}</span>` : ''}`;
+    $('#mugo').disabled = !tot || over || !EL.key_set;
+    $$('[data-dn]').forEach(b => b.onclick = () => { want[b.dataset.dn] = Math.max(0, want[b.dataset.dn] - 1); draw(); });
+    $$('[data-up]').forEach(b => b.onclick = () => { want[b.dataset.up] = Math.min(3, want[b.dataset.up] + 1); draw(); });
+  };
+  draw();
+  $('#mugo').onclick = async () => {
+    const go = $('#mugo');
+    go.disabled = true;
+    try {
+      const j = await api('/api/music/beds', {want: Object.fromEntries(Object.entries(want).filter(([, n]) => n > 0))}), pre = $('#mulog2');
+      pre.hidden = false; $('#muprog2').textContent = t('Making them - a few seconds each…');
+      followJob(j.id, pre, r => { if (r.status === 'done') { toast(t('Your new ambience is under Ambience - listen and keep the best'), 'ok'); MU_TAB = 'bed'; closeModal(); done(); }
+        else { $('#muprog2').textContent = t('It did not finish - see the lines above.'); go.disabled = false; } });
+    } catch (e) { toast(e.message, 'err'); go.disabled = false; }
+  };
+}
+// Sounds > Make sounds (0.6.0; the user: "the sound effects ... seem very repetitive and AI-made ... connect elevenlabs"):
+// the key (kept on this PC, never shown again), the plan (free = no commercial licence), how many of each kind - the
+// kinds with few sounds first -, the credits it takes; a job, then the New filter to listen and keep the best
+function soundsMakeModal(SD, done) {
+  const EL = SD.elevenlabs || {}, G = SD.generate || {}, have = k => SD.sounds.filter(s => s.kind === k && !s.off).length;
+  const want = {};
+  Object.entries(G).forEach(([k, v]) => { want[k] = have(k) < 6 ? v.n : 0; });
+  let plan = EL.plan || 'free';
+  const left = () => (EL.balance && EL.balance.limit ? EL.balance.limit - (EL.balance.used || 0) : EL.free_credits);
+  const credits = () => Object.entries(want).reduce((a, [k, n]) => a + n * ((G[k] || {}).credits || EL.credits), 0);
+  const fit = () => { if (plan !== 'free') return;                         // the free month: what is left of it
+    for (const k of Object.keys(want).reverse()) while (credits() > left() && want[k] > 0) want[k]--; };
+  fit();
+  modal(`<h2>${t('Make sounds with ElevenLabs')}</h2>
+    <p class="hint">${t('ElevenLabs makes each sound from a description - every one is different. They go into your library: listen to them under New, star the good ones and hide the rest.')}</p>
+    ${EL.balance && EL.balance.limit ? `<div class="small muted">${t('This month: {used} of {limit} credits used (as of {when})', {used: numLoc(EL.balance.used || 0), limit: numLoc(EL.balance.limit), when: whenStr(EL.balance.when)})}</div>` : ''}
+    <div class="sdkey" id="sdkey"></div>
+    <div class="sdplans">${[['free', t('Free'), t('10,000 credits a month - a short sound takes about 5. Non-commercial use only, and a video you post credits elevenlabs.io.')],
+      ['paid', t('Paid'), t('A commercial licence for the videos you post - and you may share the sounds with friends.')]].map(([v, l, d]) =>
+      `<button class="necard sdplan" data-plan="${v}"><b>${l}</b><span>${d}</span></button>`).join('')}</div>
+    <div class="edlbl">${t('How many of each')}</div>
+    <div class="sdwant" id="sdwant"></div>
+    <div class="row sp" style="margin-top:10px"><span class="small" id="sdcost"></span><button class="btn pri" id="sdgo">${t('Make them')}</button></div>
+    <div class="small" id="sdprog2"></div><pre class="log" id="sdlog2" hidden></pre>`);
+  const drawKey = () => { $('#sdkey').innerHTML = EL.key_set && !EL.change
+      ? `<span class="small">${t('Your key')} <span class="mono">····${esc(EL.key_end)}</span></span><button class="btn sm ghost" id="sdkeyc">${t('Change')}</button>`
+      : `<label class="sdlab">${t('Your ElevenLabs API key (kept on this PC only)')}<input type="password" id="sdkeyi" autocomplete="off" placeholder="sk_…"></label>
+         <a class="small" href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">${t('Get a free key')}</a>`;
+    if ($('#sdkeyc')) $('#sdkeyc').onclick = () => { EL.change = true; drawKey(); }; };
+  const draw = () => {
+    $$('.sdplan').forEach(b => b.classList.toggle('on', b.dataset.plan === plan));
+    $('#sdwant').innerHTML = Object.entries(G).map(([k, v]) => `<div class="sdw" title="${esc(v.what)}"><span class="eddot" style="--h:${meHue(k)}"></span>
+      <span class="grow">${esc(edKind(k))} <span class="small dim">${t('{n} now', {n: have(k)})}</span></span>
+      <button class="btn sm ghost" data-dn="${k}" aria-label="${ta('Fewer')}">−</button><b class="mono">${want[k]}</b><button class="btn sm ghost" data-up="${k}" aria-label="${ta('More')}">+</button></div>`).join('');
+    const tot = Object.values(want).reduce((a, b) => a + b, 0), cr = credits(), over = plan === 'free' && cr > left();
+    $('#sdcost').innerHTML = `${tn(tot, '{n} sound', '{n} sounds')} = ${t('about {n} credits', {n: numLoc(cr)})}${plan === 'free' ? ` <span class="${over ? 'bad' : 'muted'}">${t('of {n} left this month', {n: numLoc(left())})}</span>` : ''}`;
+    $('#sdgo').disabled = !tot || over;
+    $$('[data-dn]').forEach(b => b.onclick = () => { want[b.dataset.dn] = Math.max(0, want[b.dataset.dn] - 1); draw(); });
+    $$('[data-up]').forEach(b => b.onclick = () => { want[b.dataset.up] = Math.min(10, want[b.dataset.up] + 1); draw(); });
+  };
+  $$('.sdplan').forEach(b => b.onclick = () => { plan = b.dataset.plan; fit(); draw(); });
+  drawKey(); draw();
+  $('#sdgo').onclick = async () => {
+    const go = $('#sdgo'), key = $('#sdkeyi') ? $('#sdkeyi').value.trim() : '';
+    if (!EL.key_set && !key) { toast(t('Add your ElevenLabs key first'), 'err'); return; }
+    go.disabled = true;
+    try {
+      await api('/api/sounds/elevenlabs', key ? {key, plan} : {plan});
+      const j = await api('/api/sounds/generate', {want: Object.fromEntries(Object.entries(want).filter(([, n]) => n > 0))}), pre = $('#sdlog2');
+      pre.hidden = false; $('#sdprog2').textContent = t('Making them - a few seconds each…');
+      followJob(j.id, pre, r => { if (r.status === 'done') { toast(t('Your new sounds are under New - listen and keep the best'), 'ok'); closeModal(); done(); }
+        else { $('#sdprog2').textContent = t('It did not finish - see the lines above.'); go.disabled = false; } });
+    } catch (e) { toast(e.message, 'err'); go.disabled = false; }
+  };
+}
+// Sounds > Add sounds: a folder or files (copied to the lab for the import), or a folder's path (read where it is)
+function soundsAddModal(done) {
+  modal(`<h2>${t('Add sounds')}</h2>
+    <p class="hint">${t('Sounds from a pack MotionLab knows are sorted as its list (only the ones it uses). For other sounds, say where they are from and what their licence allows - each gets its kind from its name.')}</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn"><svg class="i"><use href="#i-folder"/></svg>${t('Pick a folder…')}<input type="file" id="sddir" hidden webkitdirectory multiple></label>
+      <label class="btn"><svg class="i"><use href="#i-upload"/></svg>${t('Pick files…')}<input type="file" id="sdfiles" hidden multiple accept="audio/*,.wav,.mp3,.flac,.ogg,.aif,.aiff,.m4a"></label>
+      <span class="small muted" id="sdpicked"></span></div>
+    <label class="sdlab">${t('Or the folder\'s path - read where it is, nothing copied (for a big pack)')}<input type="text" id="sdpath" placeholder="C:\\Users\\…\\Downloads\\pack"></label>
+    <label class="sdlab">${t('Or a link a friend sent you (Google Drive) - their sounds, sorted as theirs')}<input type="text" id="sdlink" placeholder="https://drive.google.com/…"></label>
+    <label class="sdlab">${t('Where they are from')}<input type="text" id="sdfrom" maxlength="200" placeholder="${ta('a pack, a site or an author')}"></label>
+    <label class="sdlab">${t('What their licence allows')}<input type="text" id="sdlic" maxlength="300" placeholder="${ta('e.g. royalty-free, commercial use, no attribution')}"></label>
+    <div class="small muted">${t('Left empty, only the sounds on MotionLab\'s list are added.')}</div>
+    <div id="sdprog" class="small"></div><pre class="log" id="sdlog" hidden></pre>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn pri" id="sdgo" disabled>${t('Add them')}</button></div>`);
+  const EXT = /\.(wav|mp3|flac|ogg|aif|aiff|m4a)$/i;
+  let files = [];
+  const ready = () => { $('#sdgo').disabled = !files.length && !$('#sdpath').value.trim() && !$('#sdlink').value.trim(); };
+  const pick = list => { files = [...list].filter(f => EXT.test(f.name) && !/^\._/.test(f.name));
+    $('#sdpicked').textContent = files.length ? tn(files.length, '{n} sound', '{n} sounds') : t('no sounds in what you picked'); ready(); };
+  $('#sddir').onchange = e => pick(e.target.files);
+  $('#sdfiles').onchange = e => pick(e.target.files);
+  $('#sdpath').oninput = ready;
+  $('#sdlink').oninput = ready;
+  $('#sdgo').onclick = async () => {
+    const go = $('#sdgo'), prog = $('#sdprog'), frm = $('#sdfrom').value.trim(), lic = $('#sdlic').value.trim();
+    if (!!frm !== !!lic) { toast(t('Fill in both - where they are from and their licence - or neither'), 'err'); return; }
+    go.disabled = true;
+    const body = {from: frm, licence: lic};
+    try {
+      if (files.length) {
+        const d = new Date(), p2 = x => String(x).padStart(2, '0');
+        body.batch = `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}-${Math.random().toString(36).slice(2, 6).padEnd(4, '0')}`;
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          prog.textContent = t('Copying {n} of {total}…', {n: i + 1, total: files.length});
+          await new Promise((ok, bad) => { const x = new XMLHttpRequest();
+            x.open('POST', `/api/sounds/upload?batch=${body.batch}&path=${encodeURIComponent(f.webkitRelativePath || f.name)}`);
+            x.setRequestHeader('X-ML-Token', TOKEN); x.setRequestHeader('Content-Type', 'application/octet-stream');
+            x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (e) { /* not JSON */ }
+              if (x.status < 300) ok(j); else bad(new Error((j && j.error) || `${x.status}`)); };
+            x.onerror = () => bad(new Error(t('{name}: the copy stopped - try again', {name: f.name}))); x.send(f); });
+        }
+      } else if ($('#sdlink').value.trim()) body.link = $('#sdlink').value.trim();
+      else body.folder = $('#sdpath').value.trim();
+      prog.textContent = t('Adding them to your library…');
+      const j = await api('/api/sounds/import', body), pre = $('#sdlog');
+      pre.hidden = false;
+      followJob(j.id, pre, r => { prog.textContent = r.status === 'done' ? t('Done.') : t('It did not finish - see the lines above.');
+        if (r.status === 'done') { toast(t('Sounds added')); closeModal(); done(); } else go.disabled = false; });
+    } catch (e) { toast(e.message, 'err'); prog.textContent = ''; go.disabled = false; }
+  };
 }
 // Motion Graphics > Logos (the logo library, 2026-10-16): every logo with its versions; + picks several for a logo wall
 let LG_PICKED = [];
@@ -6467,6 +8097,1420 @@ async function downloadModal() {
   });
 }
 
+// ---- "For my brand" (0.6.0; the user, 2026-10-25: "add an option when u generate or edit a video or create in
+// general that is called 'its for my brand' and then gets the knowdledge and tailors the video to your brand, using
+// icons colors url"): a switch (`<div class="brandrow">` in a dialog - modal() draws it) in New edit, the Generator
+// and Prepare's three dialogs. Ticked, the request carries My Brand as it is now (the server copies it in, only the
+// products switched on) and the brief tells Claude to use its colours, logo, website, voice and goal. Greyed out
+// while My Brand is empty; the last choice is remembered on this PC.
+let BRAND_DATA = null;                                  // My Brand as last read (null = read it again)
+async function brandData() {
+  if (BRAND_DATA === null) { try { BRAND_DATA = await api('/api/brand'); } catch (e) { BRAND_DATA = {}; } }
+  return BRAND_DATA;
+}
+// the user's logo large and faint in My Brand's band, the shop icon stays (2026-10-25, the user: "what if u put the
+// logo in teh transparent background in the My brand page instead of replacing the shop icon itself?")
+function brandLogoSrc(lg, v) { return lg ? `/files/${lg.split('/').map(encodeURIComponent).join('/')}?v=${encodeURIComponent(v || '')}` : ''; }
+// My Brand's colours as a palette (New edit, step 3): the accent first (a palette's first colour = its main accent),
+// then neutral, text, background, then the ones without a job - upper case, n at most
+function brandPalette(b, n = 6) {
+  const cols = ((b || {}).identity || {}).colours || [], rank = {accent: 0, neutral: 1, text: 2, background: 3};
+  return [...cols].sort((p, q) => (rank[p.role] ?? 4) - (rank[q.role] ?? 4)).map(c => String(c.hex).toUpperCase()).slice(0, n);
+}
+function brandBand(main, b) {
+  const head = $('.head', main), src = brandLogoSrc(((b || {}).identity || {}).logo, (b || {}).updated);
+  let bg = $('.brbg', head);
+  if (!src) { if (bg) bg.remove(); return; }
+  if (!bg) { bg = document.createElement('span'); bg.className = 'brbg'; bg.setAttribute('aria-hidden', 'true'); head.append(bg); }   // last: the title stays div:first-child
+  bg.style.backgroundImage = `url("${src}")`;
+}
+const brandFilled = b => { const g = b.goal || {}, i = b.identity || {};     // = brand.filled
+  return !!(b.name || b.about || (g.picks || []).length || g.words || (b.audience || []).length || (i.colours || []).length
+            || i.voice || i.logo || Object.values(i.fonts || {}).some(Boolean) || (b.site || {}).url || (b.pages || []).length
+            || (b.catalogue || []).length); };
+// the switch + a small preview of what it gives Claude (2026-10-25, the user: "a small preview of what data its feeding?
+// like url, logos what colors"): the logo, the colours, the website, the goal, the products switched on, the voice
+function brandToggle(box) {
+  box.innerHTML = `<label class="neres brandtg"><input type="checkbox" disabled><svg class="i"><use href="#i-brand"/></svg>
+    <span><b>${t('For my brand')}</b><span class="brprev">${t('your colours, logo, website and voice - from My Brand')}</span></span></label>`;
+  const cb = $('input', box), pv = $('.brprev', box);
+  brandData().then(b => {
+    const ok = brandFilled(b);
+    let last = false;
+    try { last = localStorage.getItem('ml.forBrand') === '1'; } catch (e) { /* storage blocked */ }
+    cb.disabled = !ok; cb.checked = ok && last;
+    if (!ok) { $('label', box).title = t('Fill in My Brand first (the sidebar, at the top)'); pv.textContent = t('My Brand is empty - fill it in first'); return; }
+    const i = b.identity || {}, prods = (b.catalogue || []).filter(p => p.use !== false);
+    const host = ((b.site || {}).url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const goal = ((b.goal || {}).picks || []).map(g => t((BRAND_GOALS.find(x => x[0] === g) || [g, g])[1]));
+    pv.innerHTML = [i.logo ? `<img class="brpl" src="/files/${i.logo.split('/').map(encodeURIComponent).join('/')}" alt="">` : '',
+      (i.colours || []).length ? `<span class="brpds">${i.colours.map(c => `<i style="background: ${esc(c.hex)}" title="${esc(c.name || c.hex)}"></i>`).join('')}</span>` : '',
+      host ? `<span>${esc(host)}</span>` : '', goal.length ? `<span>${esc(goal.join(', '))}</span>` : '',
+      prods.length ? `<span>${tn(prods.length, '{n} product', '{n} products')}</span>` : '',
+      i.voice ? `<span>“${esc(i.voice)}”</span>` : ''].filter(Boolean).join('');
+    $('label', box).title = t('Ticked, Claude gets this from My Brand and makes the video yours');
+  });
+  cb.onchange = () => { try { localStorage.setItem('ml.forBrand', cb.checked ? '1' : '0'); } catch (e) { /* storage blocked */ } };
+}
+const brandOn = (el, sel) => { const c = $(`${sel} input`, el); return !!(c && c.checked && !c.disabled); };
+
+// ============================================================================================ my brand
+// 0.6.0 (Content agency; the look = the user's mock-up, slide 10): what Claude knows about the brand -
+// knowledge\local\brand.json through GET / POST /api/brand (motionlab\brand.py checks every save). Two columns of
+// cards: the goal on social media (pills + the user's words), the audience (chips), the identity (the name and what
+// the brand does, the logo, colours, fonts), the tone of voice | the website (+ Import from your website), your pages,
+// the catalogue (a row a product: picture, name, what it is, its link, price, a "use in videos" switch). Each change
+// saves itself 0.5 s after the last key ("saved ✓" in the band); the website on Enter / leaving the field (a
+// half-typed address would be refused), a page's link only once it is that platform's page.
+const BRAND_GOALS = [['sell', 'Sell'], ['personal_brand', 'Personal brand'], ['community', 'Build a community'], ['inform', 'Inform']];
+const BRAND_TONES = ['Close|tone', 'Direct', 'Funny', 'Expert', 'Calm', 'Bold', 'Inspiring', 'Premium'];
+const BRAND_TABS = [['overview', t('Overview'), 'i-home'], ['style', t('Style'), 'i-palette'], ['catalogue', t('Catalogue'), 'i-bag']];
+// a colour's job (= brand.COLOUR_ROLES; the import's screenshot palette gives them)
+const BRAND_ROLES = [['background', t('Background')], ['text', t('Text')], ['accent', t('Accent')], ['neutral', t('Neutral')]];
+// logo versions (2026-10-26, 3f = brand.LOGO_KINDS): light = the one for dark backgrounds, dark = for light ones; where
+// videos put the logo (brand.LOGO_WHERE; '' = Claude's call)
+const BRAND_LOGOS = [['light', t('On dark'), t('Your logo for dark backgrounds - usually white or light')],
+  ['dark', t('On light'), t('Your logo for light backgrounds - usually dark')],
+  ['icon', t('Icon only'), t('The mark alone, without the name - for a corner of the video')]];
+const BRAND_LOGO_WHERE = [['', t('Auto')], ['end', t('End card')], ['corner', t('End card + corner')], ['none', t('Nowhere')]];
+// the signature end card (2026-10-26, 5c = brand.END_STYLES): '' = Claude's call, else a Motion Graphics template
+const BRAND_ENDS = [['', t('Auto'), ''], ['logo', t('Logo'), 'logo-reveal'], ['title', t('Title'), 'title-card'], ['channel', t('Channel|end card'), 'end-screen']];
+// does it read (3f, = brand.contrast / READ_TEXT 4.5 / READ_BIG 3): the WCAG contrast of two #rrggbb colours
+const brandLum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const brandContrast = (a, b) => { const [hi, lo] = [brandLum(a), brandLum(b)].sort((p, q) => q - p); return Math.round((hi + 0.05) / (lo + 0.05) * 10) / 10; };
+// My Brand as the page and the import's pop-up use it: every part there, also in a brand.json older than a part
+function brandNorm(B) {
+  B.goal = B.goal || {picks: [], words: ''}; B.audience = B.audience || [];
+  B.identity = B.identity || {colours: [], voice: ''}; B.identity.colours = B.identity.colours || [];
+  B.site = B.site || {url: '', read: null}; B.catalogue = B.catalogue || [];
+  B.identity.fonts = B.identity.fonts || {heading: '', body: ''}; B.pages = B.pages || []; B.name = B.name || ''; B.about = B.about || '';
+  B.look = B.look || {like: []}; B.glossary = B.glossary || []; B.pillars = B.pillars || [];
+  const tn0 = B.identity.tone || {};
+  B.identity.tone = {dims: {casual: null, funny: null, cheeky: null, excited: null, ...(tn0.dims || {})}, use: tn0.use || [], avoid: tn0.avoid || [], lines: tn0.lines || []};
+  B.identity.captions = {look: '', font: '', case: '', color: '', highlight: '', motion: '', position: '', box: null, words: 0, size: '', ...(B.identity.captions || {})};
+  B.identity.logos = {light: '', dark: '', icon: '', ...(B.identity.logos || {})}; B.identity.logo_where = B.identity.logo_where || '';
+  B.end_card = {style: '', line: '', sound: '', ...(B.end_card || {})}; B.identity.sound_logo = B.identity.sound_logo || '';
+  return B;
+}
+// Import from your website runs as a job (2026-10-25): BRAND_IMP follows it from any page - the bar and its stage
+// under the big button (when My Brand is open), a toast when it ends elsewhere; what it found waits (brandPendPaint)
+const BRAND_IMP_STAGE = {home: t('Reading your home page'), pages: t('Reading your pages'), styles: t('Reading your colours and fonts'),
+  shop: t('Looking for your shop'), fonts: t('Getting your fonts'), logos: t('Getting your logo'), screen: t('Looking at your page'),
+  pictures: t('Getting the products\' pictures'),
+  done: t('Almost done')};
+let BRAND_IMP = null;                                    // {id, pct, stage} while an import job runs
+let BRAND_UNDO = false;                                  // My Brand was just reset: "Bring it back" until the next change
+function brandImpPaint() {
+  const b = $('#brimp'), bar = $('#brprog'), st = $('#brimpst');
+  if (!b) return;
+  const on = !!BRAND_IMP;
+  b.disabled = on; b.classList.toggle('busy', on); bar.hidden = !on;
+  if (on) { $('i', bar).style.width = Math.max(3, BRAND_IMP.pct) + '%';
+    st.textContent = `${BRAND_IMP_STAGE[BRAND_IMP.stage] || t('Reading your website…')} · ${Math.round(BRAND_IMP.pct)} %`; }
+  else st.textContent = st.dataset.idle || '';
+}
+async function brandImpWatch(id) {
+  if (BRAND_IMP && BRAND_IMP.id === id) return;
+  BRAND_IMP = {id, pct: 2, stage: 'home'}; brandImpPaint();
+  let since = 0, last = '';
+  for (;;) {
+    await new Promise(r => setTimeout(r, 900));
+    let s; try { s = await api(`/api/jobs/${id}?since=${since}`); } catch (e) { continue; }
+    const lines = (s.log || []).map(l => String(l).trim()).filter(Boolean);
+    since += (s.log || []).length;
+    const pr = lines.map(l => /^progress (\d+(?:\.\d+)?) (\w+)/.exec(l)).filter(Boolean).pop();
+    if (pr) Object.assign(BRAND_IMP, {pct: +pr[1], stage: pr[2]});
+    last = lines.filter(l => !l.startsWith('progress ')).pop() || last;
+    if (['running', 'queued', 'cancelling'].includes(s.status)) { brandImpPaint(); continue; }
+    BRAND_IMP = null; brandImpPaint();
+    if (s.status !== 'done') { toast(t('Could not read your website: {why}', {why: (last || s.status).replace(/^ERROR: /, '')}), 'err'); return; }
+    BRAND_DATA = null;
+    if (/^#\/brand/.test(location.hash)) {
+      try { const [F, B] = await Promise.all([api('/api/brand/import'), api('/api/brand')]); brImportModal(F, brandNorm(B)); }
+      catch (e) { toast(e.message, 'err'); }
+    } else toast(t('Your website is read - open My Brand to see what was found'), 'ok');
+    brandPendPaint();
+    return;
+  }
+}
+// what the last import found and nobody imported or put aside yet: a banner on My Brand + a dot on its sidebar row
+async function brandPendPaint() {
+  let F, B;
+  try { [F, B] = await Promise.all([api('/api/brand/import'), api('/api/brand')]); } catch (e) { return; }
+  let aside = '';
+  try { aside = localStorage.getItem('ml.brandImpAside') || ''; } catch (e) { /* storage blocked */ }
+  const pend = !!(F && F.at && F.at !== (B.site || {}).read && F.at !== aside);
+  const dot = $('#brandimp'); if (dot) dot.hidden = !pend;
+  const ban = $('#brpend');
+  if (!ban) return;
+  ban.hidden = !pend;
+  if (!pend) return;
+  const n = (F.products || []).length;
+  ban.innerHTML = `<svg class="i"><use href="#i-download"/></svg><span><b>${t('Your website was read {when}', {when: whenStr(F.at)})}</b>
+      <span class="small muted">${[F.name ? esc(F.name) : '', n ? tn(n, '{n} product', '{n} products') : '', (F.logos || []).length ? t('a logo') : '',
+        (F.colours || []).length ? tn(F.colours.length, '{n} colour', '{n} colours') : ''].filter(Boolean).join(' · ')}</span></span>
+    <button class="btn pri sm" id="brpgo">${t('See what was found')}</button><button class="brx" id="brpx" title="${ta('Put it aside')}">×</button>`;
+  $('#brpgo', ban).onclick = () => brImportModal(F, brandNorm(B));
+  $('#brpx', ban).onclick = () => { try { localStorage.setItem('ml.brandImpAside', F.at); } catch (e) { /* storage blocked */ } brandPendPaint(); };
+}
+const BRAND_PAGES = {youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram', x: 'X', linkedin: 'LinkedIn',
+                     facebook: 'Facebook', threads: 'Threads', twitch: 'Twitch'};      // = brand.PLATFORMS
+const BRAND_PAGE_RX = Object.fromEntries(Object.entries({                          // = siteread.SOCIAL
+  youtube: String.raw`(?:www\.|m\.)?youtube\.com/(?:@[\w.-]+|c/[\w.-]+|channel/[\w-]+|user/[\w.-]+)`,
+  tiktok: String.raw`(?:www\.)?tiktok\.com/@[\w.-]+`, instagram: String.raw`(?:www\.)?instagram\.com/[\w.]+`,
+  x: String.raw`(?:www\.)?(?:x|twitter)\.com/\w+`, linkedin: String.raw`(?:[a-z]{2,3}\.)?linkedin\.com/(?:company|in)/[\w.-]+`,
+  facebook: String.raw`(?:www\.|m\.)?facebook\.com/[\w.-]+`, threads: String.raw`(?:www\.)?threads\.(?:net|com)/@[\w.]+`,
+  twitch: String.raw`(?:www\.)?twitch\.tv/\w+`}).map(([k, v]) => [k, new RegExp(String.raw`^(https?://)?` + v, 'i')]));
+const brandPgLogo = p => `<img class="brpgl" src="/files/logos/${p}/color.svg" alt="${esc(BRAND_PAGES[p] || p)}">`;
+// the captions graphic's two ready looks (= tools\overlays\examples\captions\presets.json, the numbers the preview
+// needs; y = y_upright, the height on a 9:16 video) and brand.CAPTION_Y
+const CAPTION_LOOK = {
+  classic: {font: 'Archivo Black', weight: 800, size: 72, upper: true, color: '#ffffff', hl: '#ffd400', outline: 6, box: false,
+            boxc: 'rgba(0,0,0,.6)', motion: 'highlight', y: 78},
+  clean_box: {font: 'Poppins', weight: 600, size: 56, upper: false, color: '#ffffff', hl: '#5ce1e6', outline: 0, box: true,
+              boxc: 'rgba(12,14,20,.62)', motion: 'highlight', y: 70},
+  keyword: {font: 'Inter', weight: 700, size: 44, upper: true, color: '#ffffff', hl: '#ffd400', outline: 3, box: false,
+            boxc: 'rgba(0,0,0,.6)', motion: 'keyword', y: 64, kfont: 'Instrument Serif', kscale: 2.6}};
+const CAPTION_POS = {bottom: 72, middle: 50, top: 20};
+const CAP_SIZE = {s: 0.8, m: 1, l: 1.25, xl: 1.5};       // = brand.CAPTION_SIZE (the look's own size x this)
+
+// Import from your website, before anything comes in (2026-10-25, the user: "before importing make a pop up with all
+// the info gotten and how it would be imported like if it got 10 products from the website it would show you it will
+// import those 10 products into the products category with the respective price and you can check if u want that or
+// not and other info as well (while finally checking if that info is already in the my brand section to not add
+// duplicates)"): a section per kind, each saying where it goes; what My Brand already holds is marked and cannot be
+// ticked; what would replace something the user set (their logo, name, fonts, a page's link) starts unticked
+function brImportModal(F, B) {
+  if (!F || !F.url) { toast(t('Nothing was found - try the import again'), 'err'); return; }
+  const low = s => String(s || '').trim().toLowerCase(), bare = u => low(u).replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  const P = F.products || [], C = F.colours || [], L = F.logos || [], FO = F.fonts || [], PG = F.pages || [];
+  const cols = new Set(B.identity.colours.map(c => c.hex.toLowerCase())), prods = new Set(B.catalogue.map(p => low(p.name)));
+  const pageOf = p => B.pages.find(x => x.platform === p.platform && x.url);
+  const dup = {name: !!F.name && low(B.name) === low(F.name), about: !!F.about && low(B.about) === low(F.about),
+               col: c => cols.has(c.hex), prod: p => prods.has(low(p.name)), page: p => !!pageOf(p) && bare(pageOf(p).url) === bare(p.url)};
+  const room = Math.max(0, 6 - B.identity.colours.length);
+  // a font = the library's, or a free Google font the import downloaded (it comes into the user's fonts when picked)
+  const fname = f => f.library || (f.google ? f.family : '');
+  const libs = [...new Set(FO.map(fname).filter(Boolean))];
+  const gface = (f, i) => f.google ? f.google.weights.map(w => `@font-face { font-family: 'bimg${i}'; font-weight: ${w};
+    src: url('${fileUrl(`${f.google.dir}/${f.family.replace(/ /g, '')}-${w}.ttf`)}'); }`).join('\n') : '';
+  const pk = {name: !!F.name && !B.name, about: !!F.about && !B.about, text: !!F.text_blocks,
+    logo: B.identity.logo ? '' : ((L.find(l => l.kind !== 'share') || L[0] || {}).file || ''),
+    // colours: none ticked when My Brand has some; else the background, the text and the accents (the screenshot's
+    // palette), or the first four (the CSS' most used, no roles)
+    colours: B.identity.colours.length ? [] : C.filter(c => !dup.col(c) && (c.role ? c.role !== 'neutral' : true))
+      .slice(0, Math.min(C.some(c => c.role) ? 6 : 4, room)).map(c => c.hex),
+    fonts: {heading: B.identity.fonts.heading ? '' : libs[0] || '', body: B.identity.fonts.body ? '' : libs[1] || libs[0] || ''},
+    pages: PG.filter(p => !pageOf(p)).map(p => p.platform),
+    products: P.map((p, i) => dup.prod(p) ? -1 : i).filter(i => i >= 0)};
+  const fresh = (F.name && !dup.name) || (F.about && !dup.about) || L.length || C.some(c => !dup.col(c)) || libs.length
+    || PG.some(p => !dup.page(p)) || P.some(p => !dup.prod(p)) || F.text_blocks;
+  const already = `<span class="bimdup">${t('already in My Brand')}</span>`;
+  const sec = (key, icon, col, title, to, body, extra = '') => `<div class="bimsec" data-sec="${key}"><div class="bimh">${`<svg class="ic" style="color: var(${col})"><use href="#${icon}"/></svg>`}<b>${title}</b>
+      <span class="bimto">→ ${to}</span><span class="bimn" data-n="${key}"></span>${extra}</div>${body}</div>`;
+  const ck = (attr, on, off = false) => `<input type="checkbox" ${attr}${on ? ' checked' : ''}${off ? ' disabled' : ''}>`;
+  const fileSrc = f => fileUrl(f);
+  const html = `<h2>${t('From your website')} <span class="muted">${esc(F.site || '')}</span></h2>
+    <div class="small muted">${fresh ? t('Tick what goes into My Brand - nothing comes in until you press Add.') : t('Everything found is already in My Brand.')}
+      ${tn((F.pages_read || []).length, 'Read {n} page.', 'Read {n} pages.')}</div>
+    ${F.name || F.about ? sec('words', 'i-palette', '--pink', t('Name and description'), t('Brand identity'),
+      `<div class="bimrows">${F.name ? `<label class="bimrow${dup.name ? ' dup' : ''}">${ck('data-k="name"', pk.name, dup.name)}<b>${esc(F.name)}</b>${dup.name ? already : B.name ? `<span class="bimrep">${t('replaces “{old}”', {old: esc(B.name)})}</span>` : ''}</label>` : ''}
+        ${F.about ? `<label class="bimrow${dup.about ? ' dup' : ''}">${ck('data-k="about"', pk.about, dup.about)}<span>${esc(F.about)}</span>${dup.about ? already : B.about ? `<span class="bimrep">${t('replaces what you wrote')}</span>` : ''}</label>` : ''}</div>`) : ''}
+    ${F.text_blocks ? sec('text', 'i-texts', '--cyan', t('What your website says'), t('Claude reads it for facts'),
+      `<label class="bimrow">${ck('data-k="text"', pk.text)}<span>${tn(F.text_blocks, 'Keep its {n} part for Claude', 'Keep its {n} parts for Claude')}
+        <span class="small muted">${t('services, prices, who you are - never your voice')}</span></span></label>
+       <pre class="bimtext">${esc(F.text.slice(0, 1500))}${F.text.length > 1500 ? '\n…' : ''}</pre>`) : ''}
+    ${L.length ? sec('logo', 'i-brand', '--pink', t('Logo'), t('Brand identity'),
+      `<div class="bimlogos">${L.map(l => `<label class="bimlogo">${`<input type="radio" name="bimlogo" value="${esc(l.file)}"${pk.logo === l.file ? ' checked' : ''}>`}<span class="bimli"><img src="${fileSrc(l.file)}" alt=""></span>
+          <small>${l.kind === 'share' ? t('share picture') : l.kind === 'icon' ? t('site icon') : t('logo')}</small></label>`).join('')}
+        <label class="bimlogo"><input type="radio" name="bimlogo" value=""${pk.logo ? '' : ' checked'}><span class="bimli none">${t('None')}</span><small>${B.identity.logo ? t('keep mine') : '&nbsp;'}</small></label></div>`) : ''}
+    ${C.length ? sec('colours', 'i-palette', '--pink', t('Colours'), t('Brand identity'),
+      `<div class="bimcolw">${F.screenshot ? `<img class="bimshot" src="${fileUrl(F.screenshot)}" alt="" title="${ta('Your page as a visitor sees it - the colours are taken from it')}">` : ''}
+       <div class="bimcols">${C.map(c => `<label class="bimcol${dup.col(c) ? ' dup' : ''}">${ck(`data-col="${esc(c.hex)}"`, pk.colours.includes(c.hex), dup.col(c))}<span class="bimsw" style="background: ${esc(c.hex)}"></span>
+          <span class="bimct"><span class="mono small">${esc(c.hex)}</span><span class="bimcr">${[c.role ? (BRAND_ROLES.find(r => r[0] === c.role) || [, c.role])[1] : '',
+            c.share != null ? t('{pct} % of the page', {pct: numStr(c.share)}) : c.from === 'logo' ? t('in your logo') : c.theme ? t('the site\'s colour') : ''].filter(Boolean).join(' · ')}</span></span>
+          ${dup.col(c) ? already : ''}</label>`).join('')}</div></div>
+        ${room < C.filter(c => !dup.col(c)).length ? `<div class="small muted">${t('My Brand holds 6 colours - {n} more fit.', {n: room})}</div>` : ''}`) : ''}
+    ${FO.length ? sec('fonts', 'i-type', '--violet', t('Fonts'), t('Brand identity'),
+      `<style>${FO.map(gface).join('\n')}</style><div class="bimfonts">${FO.map((f, i) => fname(f) ? `<div class="bimfont"><span class="bimfn" style="font-family: '${esc(f.library || 'bimg' + i)}'">${esc(f.family)}</span>
+          ${['heading', 'body'].map(k => `<label class="bimrole${B.identity.fonts[k] === fname(f) ? ' dup' : ''}"><input type="radio" name="bimf-${k}" value="${esc(fname(f))}"${pk.fonts[k] === fname(f) ? ' checked' : ''}>${k === 'heading' ? t('Titles') : t('Body text')}</label>`).join('')}
+          ${f.library ? '' : `<span class="bimtag" title="${ta('Free to use ({licence}): picked for titles or body text, it is added to your fonts on this PC', {licence: f.google.licence})}">${t('a free Google font - comes into your fonts')}</span>`}</div>`
+        : `<div class="bimfont off"><span class="bimfn">${esc(f.family)}</span><span class="small muted">${t('not a free Google font - it may need a licence')}</span></div>`).join('')}</div>`) : ''}
+    ${PG.length ? sec('pages', 'i-link', '--cyan', t('Your pages'), t('Your pages'),
+      `<div class="bimrows">${PG.map(p => `<label class="bimrow${dup.page(p) ? ' dup' : ''}">${ck(`data-page="${esc(p.platform)}"`, pk.pages.includes(p.platform), dup.page(p))}<span class="brpgt">${brandPgLogo(p.platform)}</span>
+          <span>${esc(BRAND_PAGES[p.platform] || p.platform)} <b>${esc(p.handle || '')}</b></span>${dup.page(p) ? already : pageOf(p) ? `<span class="bimrep">${t('replaces {old}', {old: esc(bare(pageOf(p).url))})}</span>` : ''}</label>`).join('')}</div>`) : ''}
+    ${sec('products', 'i-bag', '--amber', t('Products'), t('Catalogue'), P.length
+      ? `<div class="bimprods">${P.map((p, i) => `<label class="bimp${dup.prod(p) ? ' dup' : ''}">${ck(`data-prod="${i}"`, pk.products.includes(i), dup.prod(p))}
+          <span class="bimpi">${p.image ? `<img src="${fileSrc(p.image)}" alt="">` : '<svg class="i"><use href="#i-box"/></svg>'}</span>
+          <span class="bimpt"><b>${esc(p.name)}</b>${p.price ? `<span class="bimpp">${esc(p.price)}</span>` : `<span class="small muted">${t('no price found')}</span>`}
+            ${p.what ? `<span class="bimpw">${esc(p.what)}</span>` : ''}${dup.prod(p) ? already : ''}</span></label>`).join('')}</div>`
+      : `<div class="small muted">${t('No shop found on this site - add your products in the Catalogue by hand.')}</div>`,
+      P.some(p => !dup.prod(p)) ? `<button class="btn sm ghost" id="bimall">${t('All / none')}</button>` : '')}
+    <div class="row bimfoot"><button class="btn pri" id="bimgo"></button><button class="btn ghost" id="bimno">${t('Cancel')}</button></div>`;
+  modal(html, box => {
+    const read = () => {
+      pk.name = !!$('[data-k=name]:checked', box); pk.about = !!$('[data-k=about]:checked', box); pk.text = !!$('[data-k=text]:checked', box);
+      pk.logo = ($('input[name=bimlogo]:checked', box) || {}).value || '';
+      pk.colours = $$('[data-col]:checked', box).map(c => c.dataset.col);
+      pk.fonts = {heading: ($('input[name=bimf-heading]:checked', box) || {}).value || '', body: ($('input[name=bimf-body]:checked', box) || {}).value || ''};
+      pk.pages = $$('[data-page]:checked', box).map(c => c.dataset.page);
+      pk.products = $$('[data-prod]:checked', box).map(c => +c.dataset.prod);
+    };
+    const count = () => {
+      read();
+      const fonts = ['heading', 'body'].filter(k => pk.fonts[k] && pk.fonts[k] !== B.identity.fonts[k]).length;
+      const n = {words: +pk.name + +pk.about + +pk.text, logo: +!!pk.logo, colours: pk.colours.length, fonts, pages: pk.pages.length, products: pk.products.length};
+      $$('[data-n]', box).forEach(s => { const k = s.dataset.n; s.textContent = k === 'products' && P.length ? t('{n} of {m} ticked', {n: n.products, m: P.length}) : ''; });
+      const all = Object.values(n).reduce((a, b) => a + b, 0), go = $('#bimgo', box);
+      go.textContent = all ? tn(all, 'Add {n} thing to My Brand', 'Add {n} things to My Brand') : t('Nothing ticked');
+      go.disabled = !all;
+      // colours: no more than fit
+      const left = room - pk.colours.length;
+      $$('[data-col]', box).forEach(c => { if (!c.checked && !c.closest('.dup')) c.disabled = left <= 0; });
+    };
+    box.addEventListener('change', count);
+    // a font's role: a second click on the ticked one lets it go (a radio cannot be unticked by itself)
+    $$('.bimrole input', box).forEach(r => {
+      r.dataset.was = r.checked ? '1' : '';
+      r.onclick = () => {
+        if (r.dataset.was) r.checked = false;
+        $$(`input[name=${r.name}]`, box).forEach(o => { o.dataset.was = o.checked ? '1' : ''; });
+        count();
+      };
+    });
+    const all = $('#bimall', box);
+    if (all) all.onclick = () => { const cs = $$('[data-prod]:not(:disabled)', box), on = cs.some(c => !c.checked); cs.forEach(c => { c.checked = on; }); count(); };
+    $('#bimno', box).onclick = closeModal;
+    $('#bimgo', box).onclick = async () => {
+      read();
+      const go = $('#bimgo', box); go.disabled = true;
+      try {
+        await api('/api/brand/import', {picks: pk});
+        if (FO.some(f => !f.library && f.google && Object.values(pk.fonts).includes(f.family))) {   // a font came into the library
+          const l = $('link[href^="/fonts.css"]'); if (l) l.href = '/fonts.css?v=' + Date.now();
+        }
+        BRAND_DATA = null; closeModal(); toast(t('Added to My Brand'), 'ok'); route();
+      } catch (e) { toast(e.message, 'err'); go.disabled = false; }
+    };
+    count();
+  }, 'wide bimmodal');
+}
+async function pageBrand(main, tabArg) {
+  try { localStorage.setItem('ml.brandSeen', '1'); } catch (e) { /* private window */ }
+  $('#brandnew').hidden = true;
+  const [B, FONTS] = await Promise.all([api('/api/brand').then(brandNorm), api('/api/fonts').then(r => r.families.map(f => f.family), () => [])]);
+  let timer = null, queue = Promise.resolve(), endPending = false;   // endPending: the end card waits for the Style tab
+  const say = (txt, cls) => { const s = $('#brsaved', main); if (s) { s.className = 'small ' + cls; s.textContent = txt; } };
+  const save = (now = false) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const body = JSON.parse(JSON.stringify(B));
+      if (BRAND_UNDO) { BRAND_UNDO = false; const u = $('#brundo', main); if (u) u.hidden = true; }   // a change: no undo of the reset
+      paintGlance();
+      queue = queue.then(() => api('/api/brand', body).then(r => { BRAND_DATA = LOGOS = null; say(t('saved ✓'), 'ok'); endSaved(r); },
+                                                             e => { say(t('NOT saved'), 'bad'); toast(e.message, 'err'); }));
+    }, now ? 0 : 500);
+  };
+  const icon = (id, col) => `<svg class="ic" style="color: var(${col})"><use href="#${id}"/></svg>`;
+  const x = title => `<button class="brx" title="${ta(title)}">×</button>`;
+  // three tabs (2026-10-25, the user: "create some tabs for the my brand page ... i dont want to be scrolling", "a tab
+  // called Style that can have the brand identity, tone of voice and captions stuff", "in the overview ... the website,
+  // goal, target, pages... (with some videos previewing maybe)"): all drawn once, a tab shows its pane - no reload, so a
+  // change typed a moment ago is never lost; the address follows (replaceState: no hashchange, no redraw)
+  const tab0 = BRAND_TABS.some(([k]) => k === tabArg) ? tabArg : 'overview';
+  main.innerHTML = `<div class="head"><div><h1>${t('My Brand')}</h1><div class="sub">${t('What Claude knows about your brand. It uses it in Prepare, the Editor and Motion Graphics.')}</div></div>
+      <span id="brsaved" class="small muted"></span>
+      <button class="btn sm ghost brreset" id="brundo"${BRAND_UNDO ? '' : ' hidden'}><svg class="i"><use href="#i-restart"/></svg>${t('Bring it back')}</button>
+      <button class="btn sm ghost brreset" id="brreset" title="${ta('Clears everything on this page to try from zero - a copy is kept')}"><svg class="i"><use href="#i-trash"/></svg>${t('Start from zero')}</button></div>
+    <div class="tabs brtabs">${BRAND_TABS.map(([k, l, ic]) => `<a href="#/brand${k === 'overview' ? '' : '/' + k}" data-tab="${k}"><svg class="i"><use href="#${ic}"/></svg>${l}${k === 'catalogue' ? ` <span class="dim" id="brcatn"></span>` : ''}</a>`).join('')}</div>
+    <div class="brpend" id="brpend" hidden></div>
+    <div class="brpane" data-pane="overview"><div class="panel brglance" id="brglance"></div><div class="brgrid"><div class="brcol">
+      <div class="panel brcard brweb"><h2>${icon('i-globe', '--green')}${t('Your website')}</h2>
+        <input type="url" id="brurl" maxlength="300" placeholder="${ta('yourbrand.com')}">
+        <button class="btn pri brimpbig" id="brimp" title="${ta('Reads your website: a shop\'s catalogue with prices and descriptions, your logo, colours, fonts and pages. You tick what goes in.')}"><svg class="i"><use href="#i-download"/></svg><span>${t('Import from your website')}</span></button>
+        <div class="brprog" id="brprog" hidden><i></i></div>
+        <div class="small muted brnote" id="brimpst"></div></div>
+      <div class="panel brcard"><h2>${icon('i-target', '--pink')}${t('Goal on social media')}</h2>
+        <div class="brpills" id="brgoals">${BRAND_GOALS.map(([id, l]) => `<button class="brpill" data-g="${id}">${t(l)}</button>`).join('')}</div>
+        <input type="text" id="brwords" maxlength="400" placeholder="${ta('In your words, e.g. full transparency: show how it is made and who is behind it')}"></div>
+    </div><div class="brcol">
+      <div class="panel brcard"><h2>${icon('i-users', '--cyan')}${t('Target audience')}</h2><div class="brpills" id="braud"></div></div>
+      <div class="panel brcard"><h2>${icon('i-link', '--cyan')}${t('Your pages')}</h2>
+        <div id="brpages"></div><div class="brpgadd" id="brpgadd"></div></div>
+      <div class="panel brcard"><h2>${icon('i-target', '--amber')}${t('Content pillars')}</h2>
+        <div class="small muted brnote">${t('The 3 to 6 themes you post about - each post on the Content agency calendar gets one.')}</div>
+        <div id="brpils"></div><button class="btn sm" id="brpiladd"><svg class="i"><use href="#i-plus"/></svg>${t('Add a pillar')}</button></div>
+    </div></div>
+      <div class="panel brcard"><h2>${icon('i-film', '--amber')}${t('Your latest videos on MotionLab')}<a class="brside small" href="#/edit">${t('All in the Editor')} →</a></h2>
+        <div class="brvids" id="brmine"></div></div></div>
+    <div class="brpane" data-pane="style" hidden><div class="brgrid"><div class="brcol">
+      <div class="panel brcard"><h2>${icon('i-palette', '--pink')}${t('Brand identity')}</h2>
+        <div class="brsub">${t('Name')}</div>
+        <input type="text" id="brname" maxlength="80" placeholder="${ta('Your brand\'s name')}">
+        <textarea id="brabout" rows="2" maxlength="300" placeholder="${ta('What your brand does, in a line')}"></textarea>
+        <div class="brsub">${t('Logo')}</div>
+        <div class="brlogos"><label class="brlogo" title="${ta('Your logo - a PNG, JPG, WebP or SVG picture. Click to pick it.')}"><input type="file" accept=".png,.jpg,.jpeg,.webp,.svg" hidden>
+          <span class="brlogoi" id="brlogoi"></span><span class="small muted">${t('Click to pick your logo - a PNG, JPG, WebP or SVG picture')}</span></label>
+          <div class="brlvs">${BRAND_LOGOS.map(([k, l, tip]) => `<div class="brlv" data-k="${k}"><label class="brlogo" title="${esc(tip)}"><input type="file" accept=".png,.jpg,.jpeg,.webp,.svg" hidden>
+            <span class="brlogoi brlvi ${k}"></span><span class="small muted">${l}</span></label>${x('Remove')}</div>`).join('')}</div></div>
+        <div class="brsub">${t('Where your logo goes in videos')}</div>
+        <div class="brpills" id="brlwhere">${BRAND_LOGO_WHERE.map(([k, l]) => `<button class="brpill" data-k="${k}">${l}</button>`).join('')}</div>
+        <div class="brsub">${t('Colours')}</div>
+        <div class="brcolours" id="brcols"></div>
+        <div class="brread" id="brread"></div>
+        <div class="brsub">${t('Fonts')}</div>
+        <div class="brfonts" id="brfonts"></div></div>
+      <div class="panel brcard"><h2>${icon('i-type', '--cyan')}${t('Names and words')}</h2>
+        <div class="small muted brnote">${t('Spelled exactly like this in captions, scripts and titles - never translated.')}</div>
+        <div class="brpills" id="brgloss"></div></div>
+      <div class="panel brcard"><h2>${icon('i-film', '--pink')}${t('Your end card')}</h2>
+        <div class="small muted brnote">${t('How your videos end - your logo, colours, fonts and website. Always last, never before the hook.')}</div>
+        <div class="brends" id="brends">${BRAND_ENDS.map(([k, l, tid]) => `<button class="brend1" data-k="${k}">${tid
+          ? `<img src="/files/tools/overlays/motion/${tid}/thumb.png" alt="" loading="lazy">` : `<span class="brendauto">${neIcon('i-sparkle')}</span>`}<span>${l}</span></button>`).join('')}</div>
+        <div class="brendrow"><input type="text" id="brendline" maxlength="60" placeholder="${ta('Your sign-off, e.g. Book your shoot')}"><div class="brendprev" id="brendprev"></div></div>
+        <div class="brsub">${t('Its sound')}</div><div class="brsnd" id="brsnd"></div></div>
+    </div><div class="brcol">
+      <div class="panel brcard"><h2>${icon('i-mic', '--violet')}${t('Tone of voice')}</h2>
+        <div class="brpills" id="brtones">${BRAND_TONES.map(w => `<button class="brpill" data-w="${esc(t(w))}">${t(w)}</button>`).join('')}</div>
+        <textarea id="brvoice" rows="2" maxlength="300" placeholder="${ta('In your words, e.g. close and direct, a bit of humour, never formal')}"></textarea>
+        <div class="small muted brnote">${t('How Claude writes your scripts, your titles and every word on screen.')}</div>
+        <div class="brsub">${t('How you sound')}</div><div class="brdims" id="brdims"></div>
+        <div class="brsub">${t('Words you use')}</div><div class="brpills" id="bruse"></div>
+        <div class="brsub">${t('Words you never use')}</div><div class="brpills" id="bravoid"></div>
+        <div class="brsub">${t('Lines that sound like you')}</div>
+        <textarea id="brlines" rows="3" maxlength="900" placeholder="${ta('One per line, up to 5 - a hook or a sentence you would really say on camera')}"></textarea>
+        <div class="brsub">${t('What worked for you')}</div><div class="brworked" id="brworked"></div></div>
+      <div class="panel brcard"><h2>${icon('i-cc', '--green')}${t('Captions')}<button class="btn sm ghost brside" id="brcapclr">${t('Back to the look\'s own')}</button></h2>
+        <div class="brcap"><div class="brcapc" id="brcapc"></div><div class="brcapv"><div class="brphone" id="brphone"><div class="brcapl" id="brcapl"></div></div></div></div></div>
+    </div></div>
+      <div class="panel brcard brmood" id="brmood"><h2>${icon('i-thumb', '--pink')}${t('Your mood board')}<span class="brside" id="brmoodn"></span></h2>
+        <div class="small muted brnote">${t('Pictures you love the look of - saved from Pinterest or Instagram, screenshots, photos. Claude matches their light, colours and feel in your graphics and thumbnails.')}</div>
+        <div class="brmoodw"><div class="brmoodg" id="brmoodg"></div><div class="brmoodc" id="brmoodc"></div></div></div>
+      <div class="panel brcard brlookc"><h2>${icon('i-film', '--amber')}${t('Your editing look')}<span class="brside" id="brlookn"></span></h2>
+        <div class="small muted brnote">${t('Up to 3 videos you analysed: how your videos are cut - pacing, transitions, grade. New edit offers them first.')}</div>
+        <input type="search" id="brlookq" placeholder="${ta('Search…')}" hidden><div class="brvids" id="brlook"></div></div></div>
+    <div class="brpane" data-pane="catalogue" hidden>
+      <div class="brcatbar"><button class="btn pri" id="bradd"><svg class="i"><use href="#i-plus"/></svg>${t('Add a product')}</button>
+        <span class="small muted" id="brcatsum"></span><input type="search" id="brcatq" placeholder="${ta('Search…')}" hidden>
+        <span class="brcathint">${icon('i-sparkle', '--violet')}${t('Claude can put the product, its price and the website in a motion graphic.')}</span></div>
+      <div class="brprods" id="brprods"></div></div>`;
+  // the mood board (0.6.0 step 7): pictures copied into the brand's folder and measured - the style card beside them;
+  // its colours one click from the brand's colours (the page's own copy, saved as any change here)
+  const moodCard = MD => {
+    const g = $('#brmoodg', main), c = $('#brmoodc', main), C = MD.card;
+    $('#brmoodn', main).textContent = MD.items.length ? `${MD.items.length} / ${MD.max}` : '';
+    g.innerHTML = MD.items.map(it => `<div class="brmood1"><img src="${fileUrl(it.src)}" alt="" loading="lazy"><button class="brx" data-mx="${it.n}" title="${ta('Take it off the board')}">✕</button></div>`).join('')
+      + (MD.items.length < MD.max ? `<label class="brmoodadd" title="${ta('Or drop pictures on the board')}">${neIcon('i-plus', '--pink')}<span>${t('Add pictures')}</span><input type="file" id="brmoodin" hidden multiple accept=".jpg,.jpeg,.png,.webp"></label>` : '');
+    const have = new Set(B.identity.colours.map(x => x.hex.toLowerCase()));
+    c.innerHTML = !C ? `<div class="small muted">${t('Add a few pictures: MotionLab reads their light, colours, contrast and room, and Claude follows them.')}</div>`
+      : `<div class="brsub">${t('What MotionLab sees')}</div><div class="brpills">${C.words.map(w => `<span class="chip">${esc(t(w))}</span>`).join('')}</div>
+        <div class="brsub">${t('Its colours')}</div><div class="brmoodcols">${C.colours.map(x => `<button class="brmoodcol${have.has(x.hex.toLowerCase()) ? ' on' : ''}" data-mc="${esc(x.hex)}" title="${ta('Add it to your brand colours')}"><i style="background:${esc(x.hex)}"></i><span>${esc(x.hex)}</span></button>`).join('')}</div>
+        <div class="small muted">${[C.faces ? t('people in {n} of {of}', {n: C.faces.with, of: C.faces.of}) : '', C.text ? t('words on {n} of {of}', {n: C.text.with, of: C.text.of}) : ''].filter(Boolean).join(' · ')}</div>`;
+    $$('[data-mx]', g).forEach(b => b.onclick = async () => { try { moodCard(await api('/api/brand/mood/remove', {n: +b.dataset.mx})); } catch (e) { toast(e.message, 'err'); } });
+    $$('[data-mc]', c).forEach(b => b.onclick = () => { const h = b.dataset.mc;
+      if (B.identity.colours.some(x => x.hex.toLowerCase() === h.toLowerCase())) return;
+      if (B.identity.colours.length >= 6) { toast(t('Your brand has 6 colours - remove one first'), 'err'); return; }
+      B.identity.colours.push({hex: h, name: ''}); paintCols(); save(); moodCard(MD); });
+    const up = async files => { let st = MD;
+      for (const f of [...files].filter(f => /\.(jpe?g|png|webp)$/i.test(f.name))) {
+        try { st = await new Promise((ok, bad) => { const x = new XMLHttpRequest();
+          x.open('POST', `/api/brand/mood/upload?name=${encodeURIComponent(f.name)}`); x.setRequestHeader('X-ML-Token', TOKEN);
+          x.setRequestHeader('Content-Type', 'application/octet-stream');
+          x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (e) { /* not JSON */ } if (x.status < 300) ok(j); else bad(new Error((j && j.error) || x.status)); };
+          x.onerror = () => bad(new Error(t('{name}: the copy stopped - try again', {name: f.name}))); x.send(f); });
+          moodCard(st); } catch (e) { toast(e.message, 'err'); } } };
+    const inp = $('#brmoodin', g);
+    if (inp) inp.onchange = () => { const f = [...inp.files]; inp.value = ''; up(f); };
+    const box = $('#brmood', main);
+    box.ondragover = e => { e.preventDefault(); box.classList.add('drop'); };
+    box.ondragleave = () => box.classList.remove('drop');
+    box.ondrop = e => { e.preventDefault(); box.classList.remove('drop'); up(e.dataTransfer.files); };
+  };
+  api('/api/brand/mood').then(moodCard).catch(() => {});
+  // Start from zero (2026-10-25, the user: "a button to reset all data for my brand (when u want to reset to try from
+  // zero)"): asked first; brand.reset keeps a copy -> *Bring it back* until the next change; the last import's finds
+  // are put aside too (a clean slate - Import from your website reads it again)
+  $('#brreset', main).onclick = () => modal(`<h2>${t('Start My Brand from zero?')}</h2>
+      <p>${t('Everything on My Brand is cleared: the name, goal, audience, logo, colours, fonts, tone of voice, captions, editing look, pages and catalogue. A copy is kept, so you can bring it back right after.')}</p>
+      <div class="row" style="margin-top:14px"><button class="btn danger" id="brrgo">${t('Clear everything')}</button><button class="btn ghost" id="brrno">${t('Cancel')}</button></div>`, m => {
+    $('#brrno', m).onclick = closeModal;
+    $('#brrgo', m).onclick = async () => {
+      try {
+        clearTimeout(timer); await queue;
+        await api('/api/brand/reset', {});
+        const F = await api('/api/brand/import').catch(() => ({}));
+        if (F && F.at) { try { localStorage.setItem('ml.brandImpAside', F.at); } catch (e) { /* storage blocked */ } }
+        BRAND_DATA = null; BRAND_UNDO = true; closeModal(); toast(t('My Brand is empty again - a copy was kept'), 'ok'); route();
+      } catch (e) { toast(e.message, 'err'); }
+    };
+  });
+  $('#brundo', main).onclick = async () => {
+    try { clearTimeout(timer); await queue; await api('/api/brand/reset', {undo: true});
+      BRAND_DATA = null; BRAND_UNDO = false; toast(t('My Brand is back as it was'), 'ok'); route(); }
+    catch (e) { toast(e.message, 'err'); }
+  };
+  const showTab = k => {
+    $$('.brtabs a', main).forEach(a => a.classList.toggle('on', a.dataset.tab === k));
+    $$('.brpane', main).forEach(p => { p.hidden = p.dataset.pane !== k; });
+    if (k === 'overview') paintGlance();
+    if (k === 'style' && endPending) paintEnd();
+  };
+  // the Overview's brand at a glance (2026-10-25, the user's pick "Overview at a glance + videos"): what For my brand
+  // gives Claude - the logo, the name in its title font, what it does in its body font, colours, fonts, tone, pages,
+  // products; drawn when the Overview shows and after a save
+  function paintGlance() {
+    const g = $('#brglance', main); if (!g) return;
+    const I = B.identity, logo = I.logo ? brandLogoSrc(I.logo, B.updated) : '', head = I.fonts.heading, body = I.fonts.body;
+    const prods = B.catalogue.filter(p => p.name.trim()), inv = prods.filter(p => p.use !== false).length;
+    const tones = (I.voice || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 4), pages = B.pages.filter(p => p.url);
+    g.innerHTML = !brandFilled(B) ? `<div class="brglempty">${icon('i-brand', '--pink')}<span><b>${t('Your brand at a glance')}</b>
+        <span class="small muted">${t('Fill it in on Style and Catalogue - or import it from your website, just below.')}</span></span></div>`
+      : `<div class="brgl"><span class="brgllogo">${logo ? `<img src="${logo}" alt="">` : `<b>${esc((B.name || '?')[0].toUpperCase())}</b>`}</span>
+        <div class="brglt"><b class="brgln"${head ? ` style="font-family: '${esc(head)}'"` : ''}>${esc(B.name || t('Your brand'))}</b>
+          ${B.about ? `<span class="brgla"${body ? ` style="font-family: '${esc(body)}'"` : ''}>${esc(B.about)}</span>` : ''}
+          <span class="brglrow">${I.colours.length ? `<span class="brgldots">${I.colours.map(c => `<i style="background: ${esc(c.hex)}" title="${esc(c.name || c.hex)}"></i>`).join('')}</span>` : ''}
+            ${head || body ? `<span class="brglf">${icon('i-type', '--cyan')}${esc([head, body].filter(Boolean).join(' · '))}</span>` : ''}
+            ${tones.length ? `<span class="brglf">${icon('i-mic', '--violet')}${esc(tones.join(', '))}</span>` : ''}
+            ${pages.length ? `<span class="brglpg">${pages.map(p => brandPgLogo(p.platform)).join('')}</span>` : ''}
+            ${prods.length ? `<span class="brglf">${icon('i-bag', '--amber')}${tn(prods.length, '{n} product', '{n} products')} · ${t('{n} in videos', {n: inv})}</span>` : ''}</span></div>
+        <div class="brglside"><span class="small muted">${t('What For my brand gives Claude')}</span>
+          <button class="btn sm" id="brgledit">${icon('i-palette', '--pink')}${t('Edit the style')}</button></div></div>`;
+    const ed = $('#brgledit', g);
+    if (ed) ed.onclick = () => { showTab('style'); history.replaceState(null, '', '#/brand/style'); };
+  }
+  $$('.brtabs a', main).forEach(a => a.onclick = e => {
+    e.preventDefault(); showTab(a.dataset.tab); history.replaceState(null, '', a.getAttribute('href'));
+  });
+  showTab(tab0);
+  // the goal: pills (any number) + the user's words
+  const paintGoals = () => $$('#brgoals .brpill', main).forEach(b => b.classList.toggle('on', B.goal.picks.includes(b.dataset.g)));
+  $$('#brgoals .brpill', main).forEach(b => b.onclick = () => {
+    const g = b.dataset.g;
+    B.goal.picks = B.goal.picks.includes(g) ? B.goal.picks.filter(v => v !== g) : [...B.goal.picks, g];
+    paintGoals(); save();
+  });
+  paintGoals();
+  const words = $('#brwords', main);
+  words.value = B.goal.words || '';
+  words.oninput = () => { B.goal.words = words.value; save(); };
+  // the audience: chips, + one more typed in (Enter or leaving the field adds it)
+  const paintAud = (focus = false) => {
+    const box = $('#braud', main);
+    box.innerHTML = B.audience.map(a => `<span class="brpill on brchip">${esc(a)}${x('Remove')}</span>`).join('')
+      + (B.audience.length < 12 ? `<span class="braddin"><svg class="i"><use href="#i-plus"/></svg><input type="text" maxlength="80" placeholder="${ta('Add: who is it for?')}"></span>` : '');
+    $$('.brx', box).forEach((b, i) => b.onclick = () => { B.audience.splice(i, 1); paintAud(); save(); });
+    const inp = $('.braddin input', box);
+    if (!inp) return;
+    const add = () => { const v = inp.value.trim(); if (!v) return; inp.value = ''; B.audience.push(v); paintAud(true); save(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') add(); };
+    inp.onblur = add;
+    if (focus) inp.focus();
+  };
+  paintAud();
+  // the identity, top to bottom (2026-10-25, the user: "expand on the brand identity section from up to down instead
+  // of table with columns? i want to also be able to put colors as hexadecimal"): the logo, then up to 6 colours - a
+  // row each: the swatch (= the colour picker), its hex code typed (#2eaa5c or #2a5), its name
+  const paintCols = () => {
+    const box = $('#brcols', main);
+    box.innerHTML = B.identity.colours.map(c => `<div class="brcol1"><label class="brswatch" style="background: ${esc(c.hex)}"><input type="color" value="${esc(c.hex)}"></label>
+        <input type="text" class="brhex mono" maxlength="7" spellcheck="false" value="${esc(c.hex)}" title="${ta('The colour as a hex code, e.g. #2eaa5c')}">
+        <input type="text" class="brghost brcn" maxlength="40" value="${esc(c.name)}" placeholder="${ta('Colour name')}">
+        <select class="brrole" title="${ta('What this colour is for in your videos')}"><option value="">${t('Any use')}</option>${BRAND_ROLES.map(([r, l]) => `<option value="${r}"${c.role === r ? ' selected' : ''}>${l}</option>`).join('')}</select>${x('Remove')}</div>`).join('')
+      + (B.identity.colours.length < 6 ? `<button class="btn sm ghost" id="brcoladd"><svg class="i"><use href="#i-plus"/></svg>${t('Add a colour')}</button>` : '');
+    $$('.brcol1', box).forEach((row, i) => {
+      const c = B.identity.colours[i], hex = $('.brhex', row), pick = $('input[type=color]', row);
+      const set = h => { c.hex = h; $('.brswatch', row).style.background = h; pick.value = h; paintRead(); save(); };
+      pick.oninput = e => { hex.value = e.target.value; hex.classList.remove('bad'); set(e.target.value); };
+      hex.oninput = () => {
+        const m = hex.value.trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        hex.classList.toggle('bad', !m);
+        if (m) set('#' + (m[1].length === 3 ? [...m[1]].map(ch => ch + ch).join('') : m[1]).toLowerCase());
+      };
+      hex.onblur = () => { if (!hex.classList.contains('bad')) hex.value = c.hex; };
+      $('.brcn', row).oninput = e => { c.name = e.target.value; save(); };
+      $('.brrole', row).onchange = e => { c.role = e.target.value; paintRead(); save(); };
+      $('.brx', row).onclick = () => { B.identity.colours.splice(i, 1); paintCols(); save(); };
+    });
+    const add = $('#brcoladd', box);
+    if (add) add.onclick = () => { B.identity.colours.push({hex: '#ff6fae', name: ''}); paintCols(); save(); };
+    paintRead();
+  };
+  // does it read (3f): each text / accent colour on each background colour - a tile in those colours, its contrast
+  const paintRead = () => {
+    const cols = B.identity.colours, bgs = cols.filter(c => c.role === 'background');
+    const pairs = cols.filter(c => c.role === 'text' || c.role === 'accent').flatMap(c => bgs.map(bg => ({c, bg, r: brandContrast(c.hex, bg.hex)})));
+    $('#brread', main).innerHTML = pairs.length ? `<div class="brsub">${t('Does it read?')}</div><div class="brreadl">${pairs.map(({c, bg, r}) => {
+      const ok = r >= (c.role === 'text' ? 4.5 : 3);
+      return `<span class="brrd${ok ? '' : ' bad'}" title="${esc(ok ? t('Reads well') : t('Hard to read - on this background Claude uses white or black instead'))}">
+        <span class="brrds" style="background: ${esc(bg.hex)}; color: ${esc(c.hex)}">Aa</span><span><b>${dec(r)}:1 ${ok ? '✓' : '⚠'}</b><small>${c.role === 'text' ? t('Text') : t('Accent')}</small></span></span>`;
+    }).join('')}</div>` : '';
+  };
+  paintCols();
+  // the name and what the brand does (2026-10-25: Import from your website fills them too)
+  const nm = $('#brname', main), ab = $('#brabout', main);
+  nm.value = B.name; ab.value = B.about;
+  nm.oninput = () => { B.name = nm.value; save(); };
+  ab.oninput = () => { B.about = ab.value; save(); };
+  // the fonts: titles and body text from the lab's font library (/fonts.css loads them), a line written in each
+  const paintFonts = () => {
+    const box = $('#brfonts', main);
+    box.innerHTML = [['heading', t('Titles')], ['body', t('Body text')]].map(([k, l]) => `<div class="brfont"><span class="brfl">${l}</span>
+        <select data-k="${k}"><option value="">${t('Auto - Claude picks')}</option>${FONTS.map(f => `<option${B.identity.fonts[k] === f ? ' selected' : ''}>${esc(f)}</option>`).join('')}</select>
+        <span class="brfs" style="font-family: '${esc(B.identity.fonts[k] || 'inherit')}'">${esc(B.name || 'Aa Bb')} 123</span></div>`).join('');
+    $$('select', box).forEach(s => s.onchange = () => { B.identity.fonts[s.dataset.k] = s.value; paintFonts(); save(); });
+  };
+  paintFonts();
+  // the logo: a picture the user picks, copied to knowledge\local\brand\ (brand.save_logo checks it)
+  const paintLogo = () => {
+    const lg = B.identity.logo;
+    $('#brlogoi', main).innerHTML = lg ? `<img src="${brandLogoSrc(lg, Date.now())}" alt="">` : '<svg class="i"><use href="#i-plus"/></svg>';
+  };
+  paintLogo();
+  brandBand(main, B);
+  $('.brlogo input', main).onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (f.size > 5e6) { toast(t('a logo up to 5 MB'), 'err'); return; }
+    try {
+      const r = await api('/api/brand/logo', {name: f.name, data: b64(await f.arrayBuffer())});
+      B.identity.logo = (r.identity || {}).logo || ''; BRAND_DATA = LOGOS = null;
+      paintLogo(); brandBand(main, {...r, updated: Date.now()}); say(t('saved ✓'), 'ok'); endSaved(r);
+    } catch (err) { toast(err.message, 'err'); }
+  };
+  // the logo's versions (3f): on dark, on light, the icon alone - each its own tile (brand.save_logo kind), × = not used
+  // (the file stays); where videos put the logo = one of four pills
+  const paintLogos = () => {
+    BRAND_LOGOS.forEach(([k]) => {
+      const f = B.identity.logos[k], el = $(`.brlv[data-k="${k}"]`, main);
+      $('.brlogoi', el).innerHTML = f ? `<img src="${brandLogoSrc(f, Date.now())}" alt="">` : '<svg class="i"><use href="#i-plus"/></svg>';
+      $('.brx', el).hidden = !f;
+    });
+    $$('#brlwhere .brpill', main).forEach(b => b.classList.toggle('on', b.dataset.k === B.identity.logo_where));
+  };
+  paintLogos();
+  $$('.brlv', main).forEach(el => {
+    const k = el.dataset.k;
+    $('input', el).onchange = async e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      if (f.size > 5e6) { toast(t('a logo up to 5 MB'), 'err'); return; }
+      try {
+        const r = await api('/api/brand/logo', {name: f.name, data: b64(await f.arrayBuffer()), kind: k});
+        B.identity.logos = {...B.identity.logos, ...((r.identity || {}).logos || {})}; BRAND_DATA = LOGOS = null;
+        paintLogos(); say(t('saved ✓'), 'ok'); endSaved(r);
+      } catch (err) { toast(err.message, 'err'); }
+    };
+    $('.brx', el).onclick = () => { B.identity.logos[k] = ''; paintLogos(); save(); };
+  });
+  $$('#brlwhere .brpill', main).forEach(b => b.onclick = () => { B.identity.logo_where = b.dataset.k; paintLogos(); save(); });
+  // the signature end card (5c): Auto or a template, the sign-off line, and a live preview of the card as the server
+  // fills it from My Brand (GET / POST /api/brand "_end" = brand.end_card(preview=True)); drawn once the Style tab shows
+  let endLib = null, endTpl = null, endLive = null;
+  async function paintEnd() {
+    $$('#brends .brend1', main).forEach(b => b.classList.toggle('on', b.dataset.k === B.end_card.style));
+    const box = $('#brendprev', main), E = B._end;
+    if (!$('#brends', main).offsetParent) { endPending = true; return; }   // the Style tab hidden (the box hides when empty)
+    endPending = false;
+    if (!E) { if (endLive) endLive.stop(); endLive = null; endTpl = null; box.innerHTML = ''; return; }
+    if (!endTpl || endTpl.id !== E.template) {
+      endLib = endLib || await api('/api/motion').then(M => M.library || [], () => []);
+      if (endLive) endLive.stop();
+      endLive = null; endTpl = endLib.find(x => x.id === E.template) || null;
+    }
+    if (!endTpl) { box.innerHTML = ''; return; }
+    if (endLive) endLive.refresh();
+    else endLive = livePreview(box, endTpl, () => ({...mdefaults(endTpl), ...((B._end || {}).values || {})}));
+  }
+  function endSaved(r) {                                 // a save's answer: the card again when it changed
+    if (!r || !('_end' in r) || JSON.stringify(r._end) === JSON.stringify(B._end)) return;
+    B._end = r._end; paintEnd();
+  }
+  // what worked (3j): the hooks, endings and titles of what the user rated good (brand.worked, GET /api/brand
+  // "_worked") - read only, each opens its prompt; none yet = where to rate
+  const W = B._worked || {}, wk = [['hooks', t('Hook')], ['ctas', t('Ending')], ['titles', t('Title')]]
+    .flatMap(([k, l]) => (W[k] || []).map(x => ({l, ...x})));
+  $('#brworked', main).innerHTML = wk.length
+    ? wk.map(x => `<a class="brwk" href="#/prompts/${encodeURIComponent(x.from)}"><small>${x.l}</small><span>${esc(x.text)}</span></a>`).join('')
+    : `<div class="small muted">${t('Rate your scripts, titles and videos - the hooks and endings of the good ones show here, and Claude follows them.')}</div>`;
+  // its sound (0.6.0 step 10): the template's own sound effects, or the brand's sound logo - made by ElevenLabs from
+  // the user's words (a job: brand.py sound-logo) or a file they pick; the server owns the file (brand.save)
+  let sndV = Date.now();
+  const paintSound = () => {
+    const has = !!B.identity.sound_logo, on = has && B.end_card.sound === 'logo', box = $('#brsnd', main);
+    box.innerHTML = `<div class="brpills"><button class="brpill${on ? '' : ' on'}" data-snd="">${t("The template's own sounds")}</button>
+        ${has ? `<button class="brpill${on ? ' on' : ''}" data-snd="logo"><span data-mhear="brand-sound" role="button" title="${ta('Listen')}">${MU_PLAYING === 'brand-sound' ? '❚❚' : '▶'}</span> ${t('Your sound logo')}</button>` : ''}</div>
+      <div class="row brsndmk"><input type="text" id="brsndtxt" maxlength="400" value="${esc(B._sound_words || '')}" title="${ta('What it should sound like - ElevenLabs makes it from these words')}">
+        <button class="btn sm" id="brsndgo"><svg class="i"><use href="#i-sparkle"/></svg>${has ? t('Make another') : t('Make one')}</button>
+        <label class="btn sm"><svg class="i"><use href="#i-upload"/></svg>${t('Use a file…')}<input type="file" id="brsndf" hidden accept="audio/*,.wav,.mp3,.m4a,.ogg,.flac"></label></div>
+      <div class="small muted" id="brsndst">${t('A short sound under your logo, the same at the end of every video. ElevenLabs makes it from your words (about 20 credits - your key from Motion Graphics > Sounds), or use your own file.')}</div>
+      <pre class="log" id="brsndlog" hidden></pre>`;
+    $$('[data-snd]', box).forEach(b => b.onclick = e => { if (e.target.closest('[data-mhear]')) return; B.end_card.sound = b.dataset.snd; paintSound(); save(true); });
+    const hb = $('[data-mhear]', box);
+    if (hb) hb.onclick = e => { e.stopPropagation(); muHear('brand-sound', hb, '/api/brand/sound_logo?v=' + sndV); };
+    const fresh = r => { B.identity.sound_logo = (r.identity || {}).sound_logo || ''; B.end_card.sound = (r.end_card || {}).sound || '';
+      sndV = Date.now(); paintSound(); endSaved(r); };
+    $('#brsndgo', box).onclick = async () => {
+      const text = $('#brsndtxt', box).value.trim(), pre = $('#brsndlog', box);
+      if (text.length < 8) { toast(t('describe the sound logo in a few words'), 'err'); return; }
+      $('#brsndgo', box).disabled = true; pre.hidden = false; $('#brsndst', box).textContent = t('Making it…');
+      try { const j = await api('/api/brand/sound_logo/make', {text});
+        followJob(j.id, pre, async r => { if (r.status === 'done') { fresh(await api('/api/brand')); toast(t('Your sound logo is ready - press ▶ to hear it'), 'ok'); }
+          else { $('#brsndst', box).textContent = t('It did not finish - see the lines above.'); $('#brsndgo', box).disabled = false; } });
+      } catch (e) { toast(e.message, 'err'); $('#brsndgo', box).disabled = false; }
+    };
+    $('#brsndf', box).onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      try { const r = await new Promise((ok, bad) => { const x = new XMLHttpRequest();
+          x.open('POST', `/api/brand/sound_logo?name=${encodeURIComponent(f.name)}`);
+          x.setRequestHeader('X-ML-Token', TOKEN); x.setRequestHeader('Content-Type', 'application/octet-stream');
+          x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (er) { /* not JSON */ }
+            if (x.status < 300) ok(j); else bad(new Error((j && j.error) || `${x.status}`)); };
+          x.onerror = () => bad(new Error(t('{name}: the copy stopped - try again', {name: f.name}))); x.send(f); });
+        fresh(r); say(t('saved ✓'), 'ok');
+      } catch (er) { toast(er.message, 'err'); } };
+  };
+  paintSound();
+  $$('#brends .brend1', main).forEach(b => b.onclick = () => { B.end_card.style = b.dataset.k; paintEnd(); save(true); });
+  const endLine = $('#brendline', main);
+  endLine.value = B.end_card.line || '';
+  endLine.oninput = () => { B.end_card.line = endLine.value; save(); };
+  paintEnd();
+  // the tone of voice, a card of its own (2026-10-25, the user: "the tone of voice section needs to have more presence
+  // as well because i didnt even realize its there"): quick words that add / take themselves out of the text, + the text
+  const voice = $('#brvoice', main);
+  voice.value = B.identity.voice || '';
+  const toneWords = v => v.split(',').map(s => s.trim()).filter(Boolean);
+  const paintTones = () => { const have = toneWords(voice.value).map(s => s.toLowerCase());
+    $$('#brtones .brpill', main).forEach(b => b.classList.toggle('on', have.includes(b.dataset.w.toLowerCase()))); };
+  $$('#brtones .brpill', main).forEach(b => b.onclick = () => {
+    const w = b.dataset.w, list = toneWords(voice.value), i = list.findIndex(s => s.toLowerCase() === w.toLowerCase());
+    if (i >= 0) list.splice(i, 1); else list.push(w);
+    voice.value = list.join(', '); B.identity.voice = voice.value; paintTones(); save();
+  });
+  voice.oninput = () => { B.identity.voice = voice.value; paintTones(); save(); };
+  // the voice in your own words (2026-10-26, the research's 3b): four sliders as five dots each (a second click = not
+  // set), words you use / never use as chips, lines that sound like you - Claude imitates and checks against them
+  const TN = B.identity.tone;
+  const DIMS = [['casual', t('formal'), t('casual')], ['funny', t('serious'), t('funny')], ['cheeky', t('respectful'), t('cheeky')], ['excited', t('calm'), t('excited')]];
+  const paintDims = () => {
+    $('#brdims', main).innerHTML = DIMS.map(([k, lo, hi]) => `<div class="brdim"><span>${lo}</span><span class="brdimd">${[0, 1, 2, 3, 4].map(i =>
+      `<button class="${TN.dims[k] === i ? 'on' : ''}${TN.dims[k] != null && i < TN.dims[k] ? ' trail' : ''}" data-k="${k}" data-v="${i}" title="${esc(lo)} ↔ ${esc(hi)}"></button>`).join('')}</span><span>${hi}</span></div>`).join('');
+    $$('#brdims button', main).forEach(b => b.onclick = () => { const k = b.dataset.k, v = +b.dataset.v;
+      TN.dims[k] = TN.dims[k] === v ? null : v; paintDims(); save(); });
+  };
+  paintDims();
+  const chipList = (sel, arr, ph) => {
+    const draw = (focus = false) => {
+      const box = $(sel, main);
+      box.innerHTML = arr.map(w => `<span class="brpill on brchip">${esc(w)}${x('Remove')}</span>`).join('')
+        + (arr.length < 20 ? `<span class="braddin"><svg class="i"><use href="#i-plus"/></svg><input type="text" maxlength="40" placeholder="${esc(ph)}"></span>` : '');
+      $$('.brx', box).forEach((b, i) => b.onclick = () => { arr.splice(i, 1); draw(); save(); });
+      const inp = $('.braddin input', box);
+      if (!inp) return;
+      const add = () => { const v = inp.value.trim(); if (!v) return; inp.value = '';
+        if (!arr.some(w => w.toLowerCase() === v.toLowerCase())) arr.push(v); draw(true); save(); };
+      inp.onkeydown = e => { if (e.key === 'Enter') add(); };
+      inp.onblur = add;
+      if (focus) inp.focus();
+    };
+    draw();
+  };
+  chipList('#bruse', TN.use, t('Add a word you say'));
+  chipList('#bravoid', TN.avoid, t('Add a word you never say'));
+  const lines = $('#brlines', main);
+  lines.value = TN.lines.join('\n');
+  lines.oninput = () => { TN.lines = lines.value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 5); save(); };
+  paintTones();
+  // the website: saved when the address is finished
+  const url = $('#brurl', main);
+  url.value = (B.site.url || '').replace(/^https:\/\//, '');
+  url.onchange = () => { B.site.url = url.value.trim(); save(true); };
+  // Import from your website (2026-10-25, the user: "an option besides the 'your website' with a download icon that
+  // 'imports data from your website' so if its a shop website it will pull the catalog data, descriptions, logos"):
+  // the job brand_import (tools\brand.py import) reads the site, then brImportModal shows what it found and where each
+  // thing would go - the user ticks what comes in
+  // (2026-10-25, the user: "make the import from your website button a littel bit bigger ... add a progress bar and
+  // make it so that if the job finishes while u are in another page u can still come back and import the info"): a
+  // big button; the job is followed by brandImpWatch from anywhere (the bar + the stage under it); what it found waits
+  // in the banner above the tabs (brandPendPaint) until it is imported or put aside
+  const imp = $('#brimp', main), ist = $('#brimpst', main);
+  ist.dataset.idle = B.site.read ? t('Imported {when} - import again to bring in what changed', {when: whenStr(B.site.read)})
+    : t('Brings in your catalogue with prices and descriptions, your logo, colours, fonts and pages - you tick what goes in.');
+  imp.onclick = async () => {
+    const u = url.value.trim();
+    if (!u) { toast(t('Type your website first'), 'err'); url.focus(); return; }
+    B.site.url = u;
+    try { await api('/api/brand', JSON.parse(JSON.stringify(B))); BRAND_DATA = null; } catch (e) { toast(e.message, 'err'); return; }
+    let j;
+    try { j = await api('/api/jobs', {kind: 'brand_import', args: {}, queue: true}); } catch (e) { toast(e.message, 'err'); return; }
+    brandImpWatch(j.id);
+  };
+  brandImpPaint();
+  if (!BRAND_IMP) api('/api/jobs').then(list => {                // an import started before (the app reloaded): follow it
+    const j = (list || []).find(x => x.kind === 'brand_import' && ['running', 'queued', 'cancelling'].includes(x.status));
+    if (j) brandImpWatch(j.id);
+  }).catch(() => {});
+  brandPendPaint();
+  // your pages (2026-10-25): a row a platform - its logo, the link, a call to action; the link is checked as typed
+  // (BRAND_PAGE_RX = siteread.SOCIAL) and saved only when it is that platform's page
+  const paintPages = () => {
+    const box = $('#brpages', main), add = $('#brpgadd', main);
+    box.innerHTML = B.pages.map(pg => `<div class="brpage"><span class="brpgt">${brandPgLogo(pg.platform)}</span>
+        <span class="brpt"><input type="url" class="brghost brpgu" maxlength="300" value="${esc(pg.url)}" placeholder="${ta('Link to your {platform} page', {platform: BRAND_PAGES[pg.platform]})}">
+          <input type="text" class="brghost brpgc" maxlength="120" value="${esc(pg.cta || '')}" placeholder="${ta('Call to action, e.g. follow for a new video every week')}"></span>${x('Remove')}</div>`).join('');
+    const free = Object.keys(BRAND_PAGES).filter(p => !B.pages.some(x => x.platform === p));
+    add.innerHTML = free.length ? `<span class="small muted">${B.pages.length ? t('Add a page') : t('Add your pages: where you post')}</span>
+      ${free.map(p => `<button class="brpgb" data-p="${p}" title="${esc(BRAND_PAGES[p])}">${brandPgLogo(p)}</button>`).join('')}` : '';
+    $$('.brpage', box).forEach((row, i) => {
+      const pg = B.pages[i], u = $('.brpgu', row);
+      u.oninput = () => {
+        const v = u.value.trim(), okv = !v || BRAND_PAGE_RX[pg.platform].test(v);
+        u.classList.toggle('bad', !okv);
+        if (okv) { pg.url = v; save(); }
+      };
+      $('.brpgc', row).oninput = e => { pg.cta = e.target.value; save(); };
+      $('.brx', row).onclick = () => { B.pages.splice(i, 1); paintPages(); save(); };
+    });
+    $$('.brpgb', add).forEach(b => b.onclick = () => {
+      B.pages.push({platform: b.dataset.p, url: '', cta: ''}); paintPages();
+      const us = $$('.brpgu', box); if (us.length) us[us.length - 1].focus();
+    });
+  };
+  paintPages();
+  // content pillars (2026-10-26, the research's 3h): a row each - the theme, what it is, a recurring series (optional)
+  const paintPils = (focus = false) => {
+    const box = $('#brpils', main);
+    box.innerHTML = B.pillars.map(p => `<div class="brpil"><span class="brpt"><input type="text" class="brghost brpln" maxlength="60" value="${esc(p.name)}" placeholder="${ta('e.g. Behind the scenes')}">
+        <input type="text" class="brghost brplw" maxlength="160" value="${esc(p.what || '')}" placeholder="${ta('What it is about')}">
+        <input type="text" class="brghost brpls" maxlength="80" value="${esc(p.series || '')}" placeholder="${ta('A series, if any - e.g. Day N on set')}"></span>${x('Remove')}</div>`).join('');
+    $$('.brpil', box).forEach((row, i) => { const p = B.pillars[i];
+      $('.brpln', row).oninput = e => { p.name = e.target.value; save(); };
+      $('.brplw', row).oninput = e => { p.what = e.target.value; save(); };
+      $('.brpls', row).oninput = e => { p.series = e.target.value; save(); };
+      $('.brx', row).onclick = () => { B.pillars.splice(i, 1); paintPils(); save(); }; });
+    $('#brpiladd', main).hidden = B.pillars.length >= 6;
+    if (focus) { const n = $$('.brpln', box); if (n.length) n[n.length - 1].focus(); }
+  };
+  paintPils();
+  $('#brpiladd', main).onclick = () => { B.pillars.push({name: '', what: '', series: ''}); paintPils(true); };
+  // names and words (2026-10-25, the user's pick "Glossary"): spelled exactly in captions, scripts and titles; a word
+  // + how it is said (optional); Enter adds it
+  const paintGloss = (focus = false) => {
+    const box = $('#brgloss', main);
+    box.innerHTML = B.glossary.map(g => `<span class="brpill on brchip"><b>${esc(g.word)}</b>${g.say ? `<small>${t('said “{say}”', {say: esc(g.say)})}</small>` : ''}${x('Remove')}</span>`).join('')
+      + (B.glossary.length < 60 ? `<span class="braddin brgladd"><svg class="i"><use href="#i-plus"/></svg><input type="text" class="brgw" maxlength="40" placeholder="${ta('Add a name or word')}">
+          <input type="text" class="brgs" maxlength="60" placeholder="${ta('said like (optional)')}"></span>` : '');
+    $$('.brx', box).forEach((b, i) => b.onclick = () => { B.glossary.splice(i, 1); paintGloss(); save(); });
+    const w = $('.brgw', box), s = $('.brgs', box);
+    if (!w) return;
+    const add = () => { const v = w.value.trim(); if (!v) return;
+      if (!B.glossary.some(g => g.word.toLowerCase() === v.toLowerCase())) B.glossary.push({word: v, say: s.value.trim()});
+      paintGloss(true); save(); };
+    [w, s].forEach(inp => inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
+    if (focus) w.focus();
+  };
+  paintGloss();
+  // your latest videos (the Overview; the user, 2026-10-25: "should only appear videos u marked as 'for my brand' when
+  // creating them"): this PC's videos made For my brand, with a render, the newest first - a click opens it
+  api('/api/projects').then(ps => {
+    const box = $('#brmine', main); if (!box) return;
+    const vids = (ps || []).filter(p => p.latest && p.for_brand).sort((a, b) => b.sort_t - a.sort_t).slice(0, 10);
+    box.innerHTML = vids.length ? vids.map(p => `<a class="brvid" href="#/project/${encodeURIComponent(p.name)}">
+        <span class="nerefp">${p.picture ? `<img src="${picUrl(p.picture)}" loading="lazy" alt="">` : ''}<i>${esc(lenWords(p.latest.frames, p.latest.fps) || '')}</i></span>
+        <b>${esc(pname(p))}</b><span class="small muted">${esc(whenWords(p.latest.mtime))}</span></a>`).join('')
+      : `<div class="small muted">${t('No videos made For my brand yet - tick For my brand when you make one (New edit, the Generator).')}</div>`;
+  }).catch(() => {});
+  // the caption style (2026-10-25, the user's pick from the research: "captions are on every short"): a ready look +
+  // the brand's choices on top, a live 9:16 preview (the look's numbers = the captions graphic's presets.json);
+  // `overlay.py captions --brand` makes them so (Claude's briefs, Graphics > Captions)
+  const CP = B.identity.captions;
+  const eff = () => { const L = CAPTION_LOOK[CP.look || 'classic'];
+    return {font: CP.font || L.font, weight: L.weight, upper: CP.case ? CP.case === 'upper' : L.upper, color: CP.color || L.color,
+            hl: CP.highlight || L.hl, motion: L.motion === 'keyword' ? 'keyword' : CP.motion || L.motion, kfont: L.kfont, kscale: L.kscale,
+            y: CP.position ? CAPTION_POS[CP.position] : L.y,
+            box: CP.box != null ? CP.box : L.box, outline: L.outline, size: L.size * (CAP_SIZE[CP.size] || 1), boxc: L.boxc,
+            words: +CP.words || 0}; };
+  const pills = (key, opts) => `<div class="brpills">${opts.map(([v, l]) => `<button class="brpill" data-ck="${key}" data-cv="${v}">${l}</button>`).join('')}</div>`;
+  const swatch = key => `<span class="brcapsw"><label class="brswatch" data-csw="${key}"><input type="color" data-cc="${key}"></label>
+      <span class="brcapdots">${B.identity.colours.map(c => `<i data-cdot="${key}" data-hex="${esc(c.hex)}" style="background:${esc(c.hex)}" title="${esc(c.name || c.hex)}"></i>`).join('')}</span></span>`;
+  $('#brcapc', main).innerHTML = `
+    <div class="brcrow"><span class="brfl">${t('Look')}</span>${pills('look', [['classic', t('Classic')], ['clean_box', t('Clean box')], ['keyword', t('Keyword')]])}</div>
+    <div class="brcrow"><span class="brfl">${t('Font')}</span><select id="brcapf"><option value="">${t('The look\'s own')}</option>${FONTS.map(f => `<option>${esc(f)}</option>`).join('')}</select></div>
+    <div class="brcrow"><span class="brfl">${t('Letters')}</span>${pills('case', [['upper', t('CAPITALS')], ['sentence', t('Sentence case')]])}</div>
+    <div class="brcrow"><span class="brfl">${t('Colours')}</span><span class="brcapcols"><span><span class="small muted">${t('Text')}</span>${swatch('color')}</span>
+      <span><span class="small muted">${t('Spoken word')}</span>${swatch('highlight')}</span></span></div>
+    <div class="brcrow"><span class="brfl">${t('Motion')}</span>${pills('motion', [['highlight', t('Word lights up')], ['pop', t('Words pop in')], ['line', t('Whole line')]])}</div>
+    <div class="brcrow"><span class="brfl">${t('Position')}</span>${pills('position', [['top', t('Top')], ['middle', t('Middle')], ['bottom', t('Bottom')]])}</div>
+    <div class="brcrow"><span class="brfl">${t('Words per line')}</span>${pills('words', [1, 2, 3, 4, 6].map(n => [String(n), String(n)]))}</div>
+    <div class="brcrow"><span class="brfl">${t('Size')}</span>${pills('size', [['s', t('Small')], ['m', t('Medium')], ['l', t('Large')], ['xl', t('Huge')]])}</div>
+    <div class="brcrow"><span class="brfl">${t('Box behind')}</span><label class="brsw"><input type="checkbox" id="brcapbox"><i></i></label></div>`;
+  const capWords = (B.name ? `${B.name} - ${t('This is how your captions look')}` : t('This is how your captions look')).split(/\s+/);
+  let capI = 0;
+  const paintCap = () => {
+    const e = eff(), box = $('#brcapc', main), sc = 240 / 1080, l = $('#brcapl', main);
+    $$('[data-ck]', box).forEach(b => b.classList.toggle('on', String(CP[b.dataset.ck] || '') === b.dataset.cv));
+    $('#brcapf', box).value = CP.font || '';
+    $('#brcapbox', box).checked = e.box;
+    ['color', 'highlight'].forEach(k => { const h = k === 'color' ? e.color : e.hl;
+      $(`[data-csw=${k}]`, box).style.background = h; $(`[data-cc=${k}]`, box).value = h;
+      $$(`[data-cdot=${k}]`, box).forEach(d => d.classList.toggle('on', d.dataset.hex === (CP[k] || ''))); });
+    $('#brcapclr', main).hidden = !Object.values(CP).some(v => v !== '' && v != null && v !== 0);
+    Object.assign(l.style, {top: e.y + '%', fontFamily: `'${e.font}'`, fontWeight: e.weight, fontSize: (e.size * sc).toFixed(1) + 'px',
+      textTransform: e.upper ? 'uppercase' : 'none', color: e.color, WebkitTextStroke: e.outline ? `${(e.outline * sc * 2).toFixed(1)}px #000` : '0',
+      background: e.box ? e.boxc : 'transparent', padding: e.box ? '4px 8px' : '0'});
+    const n = e.words || capWords.length, at = capI % capWords.length, from = Math.floor(at / n) * n;   // words a line (3c)
+    if (e.motion === 'keyword') {                          // the Keyword look: small words, the longest one big under them
+      const ws = capWords.slice(from, from + Math.max(2, Math.min(n, 3))), k = ws.reduce((b, w, i) => w.length >= ws[b].length ? i : b, 0);
+      l.innerHTML = `<span>${ws.filter((_, i) => i !== k).map(esc).join(' ')}</span><br><span style="font-family:'${esc(e.kfont)}',Georgia,serif;font-style:italic;font-weight:400;text-transform:none;color:${esc(e.hl)};font-size:${(e.size * e.kscale * sc).toFixed(1)}px;line-height:1">${esc(ws[k])}</span>`;
+      return;
+    }
+    l.innerHTML = capWords.map((w, i) => i < from || i >= from + n ? '' : `<span class="${e.motion === 'highlight' && i === capI % capWords.length ? 'hl' : ''}${e.motion === 'pop' && i > capI % capWords.length ? ' gone' : ''}"
+      style="${e.motion === 'highlight' && i === capI % capWords.length ? `color:${e.hl}` : ''}">${esc(!e.upper && !i ? w[0].toUpperCase() + w.slice(1) : w)}</span>`).filter(Boolean).join(' ');
+  };
+  const setCap = (k, v) => { CP[k] = v; paintCap(); save(); };
+  $$('#brcapc [data-ck]', main).forEach(b => b.onclick = () => setCap(b.dataset.ck, String(CP[b.dataset.ck] || '') === b.dataset.cv ? '' : b.dataset.cv));
+  $('#brcapf', main).onchange = e => setCap('font', e.target.value);
+  $('#brcapbox', main).onchange = e => setCap('box', e.target.checked);
+  $$('#brcapc [data-cc]', main).forEach(c => c.oninput = () => setCap(c.dataset.cc, c.value.toLowerCase()));
+  $$('#brcapc [data-cdot]', main).forEach(d => d.onclick = () => setCap(d.dataset.cdot, CP[d.dataset.cdot] === d.dataset.hex ? '' : d.dataset.hex));
+  $('#brcapclr', main).onclick = () => { Object.assign(CP, {look: '', font: '', case: '', color: '', highlight: '', motion: '', position: '', box: null, words: 0, size: ''}); paintCap(); save(); };
+  paintCap();
+  const capTimer = setInterval(() => { if (!$('#brcapl', main)) { clearInterval(capTimer); return; } capI++; paintCap(); }, 520);
+  onCleanup(() => clearInterval(capTimer));
+  // your editing look (2026-10-25, the user's pick from the research; on the Overview "with some videos previewing"):
+  // this PC's analysed videos as a strip of picture cards, the picked ones first, up to 3
+  loadStyles().then(S => {
+    const vids = ownVideos(S), box = $('#brlook', main), qi = $('#brlookq', main);
+    vids.sort((a, b) => B.look.like.includes(b.key) - B.look.like.includes(a.key));
+    let q = '';
+    qi.hidden = vids.length <= 8;
+    const draw = () => {
+      $('#brlookn', main).textContent = `${B.look.like.length} / 3`;
+      const list = vids.filter(v => !q || [v.label, v.title, v.key, v.by, v.platform].join(' ').toLowerCase().includes(q));
+      box.innerHTML = vids.length ? list.map(v => { const on = B.look.like.includes(v.key), full = !on && B.look.like.length >= 3,
+        dur = (String(v.format || '').split(' · ')[1] || '').trim();
+        return `<button class="brvid${on ? ' on' : ''}" data-k="${esc(v.key)}" ${full ? 'disabled' : ''} title="${esc(v.line || v.summary || v.label || v.key)}">
+          <span class="nerefp">${v.picture ? `<img src="${fileUrl(v.picture)}" loading="lazy" alt="">` : ''}${dur ? `<i>${esc(dur)}</i>` : ''}${on ? '<em>✓</em>' : ''}</span>
+          <b>${esc(v.label || v.title || v.key)}</b></button>`; }).join('') || `<div class="small muted">${t('No video matches.')}</div>`
+        : `<div class="small muted">${t('No video analysed on this PC yet - add one in the <a href="#/analyze" onclick="closeModal()">Analyser</a>.')}</div>`;
+      $$('.brvid', box).forEach(b => b.onclick = () => { const k = b.dataset.k;
+        B.look.like = B.look.like.includes(k) ? B.look.like.filter(x => x !== k) : [...B.look.like, k].slice(0, 3); draw(); save(); });
+    };
+    qi.oninput = debounce(() => { q = qi.value.trim().toLowerCase(); draw(); }, 150);
+    draw();
+  }).catch(() => { /* the card stays empty */ });
+  // the catalogue (2026-10-25, the user: "the 'add a product' in the catalogue should be at the top for convinience and
+  // make the catalogeu section more cool, like why does it say 'cataloge' if im already on a tab called 'catalogue'"):
+  // the tab is the title; on top Add a product (the new one comes first), the count and a search; the products as
+  // cards - the picture (a click picks one), name, what it is, price, the link, "In videos"; a product needs a name
+  // (one without is not kept)
+  const nextId = () => 'p' + (Math.max(0, ...B.catalogue.map(p => +String(p.id || '').slice(1) || 0)) + 1);
+  // a product's facts and media (5b, 2026-10-26: "so Claude never invents a feature or a price"): its key benefit, the
+  // claims it may make (each with its proof), the ones never to make, screenshots / short screen recordings (POST
+  // /api/brand/product_media = brand.save_product_media; × = not used, the file stays) - a dialog; Back = the catalogue
+  const prodCount = p => { const n = (p.benefit ? 1 : 0) + (p.claims || []).length + (p.never || []).length, m = (p.media || []).length;
+    return n || m ? ` <span class="brpcn">${[n && plural(n, 'fact'), m && plural(m, 'file')].filter(Boolean).join(' · ')}</span>` : ''; };
+  const prodFacts = p => {
+    p.claims = p.claims || []; p.never = p.never || []; p.media = p.media || [];
+    modal(`<div class="brfacts"><h2>${esc(p.name)}</h2>
+      <div class="brsub">${t('Key benefit')}</div>
+      <input type="text" id="pfben" maxlength="120" value="${esc(p.benefit || '')}" placeholder="${ta('The one thing it does for the viewer, e.g. A music video shot like a film in one day')}">
+      <div class="brsub">${t('Claims Claude may make')}</div><div id="pfclaims"></div>
+      <div class="brsub">${t('Never claim')}</div><div class="brpills" id="pfnever"></div>
+      <div class="brsub">${t('Screenshots and recordings')}</div><div class="pfmedia" id="pfmedia"></div></div>`, el => {
+      $('#pfben', el).oninput = e => { p.benefit = e.target.value; save(); };
+      const paintClaims = (focus = false) => {
+        const box = $('#pfclaims', el);
+        box.innerHTML = p.claims.map((c, i) => `<div class="pfclaim" data-i="${i}"><input type="text" class="pfct" maxlength="120" value="${esc(c.text)}" placeholder="${ta('A claim, e.g. Delivered in 7 days')}">
+            <input type="text" class="pfcp" maxlength="160" value="${esc(c.proof || '')}" placeholder="${ta('Its proof, e.g. every 2026 order shipped in 7 days')}">${x('Remove')}</div>`).join('')
+          + (p.claims.length < 5 ? `<button class="btn sm ghost" id="pfcadd"><svg class="i"><use href="#i-plus"/></svg>${t('Add a claim')}</button>` : '');
+        $$('.pfclaim', box).forEach(row => { const c = p.claims[+row.dataset.i];
+          $('.pfct', row).oninput = e => { c.text = e.target.value; save(); };
+          $('.pfcp', row).oninput = e => { c.proof = e.target.value; save(); };
+          $('.brx', row).onclick = () => { p.claims.splice(+row.dataset.i, 1); paintClaims(); save(); }; });
+        const add = $('#pfcadd', box);
+        if (add) add.onclick = () => { p.claims.push({text: '', proof: ''}); paintClaims(true); };
+        if (focus) { const all = $$('.pfct', box); if (all.length) all[all.length - 1].focus(); }
+      };
+      paintClaims();
+      const paintNever = (focus = false) => {
+        const box = $('#pfnever', el);
+        box.innerHTML = p.never.map(w => `<span class="brpill on brchip">${esc(w)}${x('Remove')}</span>`).join('')
+          + (p.never.length < 6 ? `<input type="text" class="brghost brpillin" maxlength="80" placeholder="${ta('e.g. the best in Spain')}">` : '');
+        $$('.brchip', box).forEach((c, i) => { $('.brx', c).onclick = () => { p.never.splice(i, 1); paintNever(); save(); }; });
+        const inp = $('.brpillin', box);
+        if (inp) {
+          const add = () => { const v = inp.value.trim(); if (v && !p.never.includes(v)) { p.never.push(v); save(); } paintNever(true); };
+          inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+          inp.onblur = () => { if (inp.value.trim()) add(); };
+          if (focus) inp.focus();
+        }
+      };
+      paintNever();
+      const paintMedia = () => {
+        const box = $('#pfmedia', el);
+        box.innerHTML = p.media.map((m, i) => `<span class="pfm" data-i="${i}">${/\.(mp4|mov|webm)$/i.test(m)
+            ? `<video src="${fileUrl(m)}" muted loop playsinline preload="metadata"></video>` : `<img src="${fileUrl(m)}" alt="">`}${x('Remove')}</span>`).join('')
+          + (p.media.length < 6 ? `<label class="pfm add" title="${ta('A screenshot (PNG, JPG, WebP) or a short screen recording (MP4, MOV, WebM, up to 30 MB)')}"><input type="file" accept=".png,.jpg,.jpeg,.webp,.mp4,.mov,.webm" hidden><svg class="i"><use href="#i-plus"/></svg></label>` : '');
+        $$('.pfm[data-i]', box).forEach(s => { $('.brx', s).onclick = () => { p.media.splice(+s.dataset.i, 1); paintMedia(); save(); };
+          const v = $('video', s); if (v) { s.onmouseenter = () => v.play().catch(() => {}); s.onmouseleave = () => v.pause(); } });
+        const inp = $('.pfm.add input', box);
+        if (inp) inp.onchange = async e => {
+          const f = e.target.files[0]; e.target.value = '';
+          if (!f) return;
+          if (f.size > 30e6) { toast(t('a recording up to {n} MB', {n: 30}), 'err'); return; }
+          try {
+            clearTimeout(timer); await queue;
+            await api('/api/brand', JSON.parse(JSON.stringify(B)));          // the product's facts on disk first
+            const r = await api('/api/brand/product_media', {id: p.id, name: f.name, data: b64(await f.arrayBuffer())});
+            p.media = ((r.catalogue || []).find(q => q.id === p.id) || {}).media || p.media; BRAND_DATA = null;
+            paintMedia(); say(t('saved ✓'), 'ok');
+          } catch (err) { toast(err.message, 'err'); }
+        };
+      };
+      paintMedia();
+    });
+    modalBack(() => paintProds());
+  };
+  let cq = '';
+  const catN = () => {
+    const n = B.catalogue.length, on = B.catalogue.filter(p => p.use !== false && p.name.trim()).length;
+    $('#brcatn', main).textContent = n || '';
+    $('#brcatsum', main).textContent = n ? `${tn(n, '{n} product', '{n} products')} · ${t('{n} in videos', {n: on})}` : '';
+    $('#brcatq', main).hidden = n <= 8;
+  };
+  const paintProds = (focus = null) => {
+    const box = $('#brprods', main);
+    const shown = B.catalogue.map((p, i) => [p, i]).filter(([p]) => !cq || `${p.name} ${p.what || ''} ${p.price || ''}`.toLowerCase().includes(cq));
+    box.innerHTML = B.catalogue.length ? shown.map(([p, i]) => `<div class="brpc${p.use === false ? ' off' : ''}" data-i="${i}">
+        <label class="brpcimg" title="${ta('Click to pick its picture - a PNG, JPG, WebP or SVG picture')}"><input type="file" accept=".png,.jpg,.jpeg,.webp,.svg" hidden>
+          ${p.image ? `<img src="${fileUrl(p.image)}?v=${esc(B.updated || '')}" alt="">` : `<span class="brpcph"><svg class="i"><use href="#i-box"/></svg><small>${t('Add a picture')}</small></span>`}</label>
+        ${x('Remove')}
+        <div class="brpcb"><input type="text" class="brghost brpn" maxlength="80" value="${esc(p.name)}" placeholder="${ta('Product name')}">
+          <input type="text" class="brghost brpw" maxlength="160" value="${esc(p.what || '')}" placeholder="${ta('What it is')}">
+          ${p.url ? `<a class="brplink" href="${esc(p.url)}" target="_blank" rel="noopener" title="${esc(p.url)}">${esc(p.url.replace(/^https?:\/\/(www\.)?/, ''))}</a>` : ''}
+          <div class="brpcf"><input type="text" class="brghost brpp" maxlength="24" value="${esc(p.price || '')}" placeholder="${ta('Price')}">
+            <label class="brpcuse" title="${ta('Claude may use it in your videos')}"><span>${t('In videos')}</span><span class="brsw"><input type="checkbox"${p.use !== false ? ' checked' : ''}><i></i></span></label></div>
+          <div class="brpcx"><input type="text" class="brghost brpromo" maxlength="40" value="${esc(p.promo || '')}" placeholder="${ta('Promo code')}">
+            <label class="brpcad" title="${ta('A paid partnership - Claude says it is an ad, on screen and in words')}"><input type="checkbox"${p.sponsored ? ' checked' : ''}>${t('Paid partnership')}</label></div>
+          <button class="btn sm ghost brpcmore" title="${ta('What Claude may say about it, what it must never claim, and your screenshots or recordings of it')}"><svg class="i"><use href="#i-clipboard"/></svg>${t('Facts & media')}${prodCount(p)}</button></div></div>`).join('')
+        || `<div class="small muted brnone">${t('No product matches.')}</div>`
+      : `<div class="brcatempty"><svg class="i"><use href="#i-bag"/></svg><b>${t('No products yet')}</b>
+          <span class="small muted">${t('Add the ones Claude may show in your videos - or import them from your website (Overview).')}</span></div>`;
+    $$('.brpc', box).forEach(card => {
+      const i = +card.dataset.i, p = B.catalogue[i];
+      $('.brpn', card).oninput = e => { p.name = e.target.value; catN(); save(); };
+      $('.brpw', card).oninput = e => { p.what = e.target.value; save(); };
+      $('.brpp', card).oninput = e => { p.price = e.target.value; save(); };
+      $('.brpcuse input', card).onchange = e => { p.use = e.target.checked; card.classList.toggle('off', !p.use); catN(); save(); };
+      $('.brpromo', card).oninput = e => { p.promo = e.target.value; save(); };
+      $('.brpcad input', card).onchange = e => { p.sponsored = e.target.checked; save(); };
+      $('.brx', card).onclick = () => { B.catalogue.splice(i, 1); paintProds(); catN(); save(); };
+      $('.brpcmore', card).onclick = () => {
+        if (!p.name.trim()) { toast(t('Give the product a name first'), 'err'); return; }
+        prodFacts(p);
+      };
+      $('.brpcimg input', card).onchange = async e => {        // its picture: saved as its own file, checked like the logo
+        const f = e.target.files[0]; e.target.value = '';
+        if (!f) return;
+        if (f.size > 5e6) { toast(t('a picture up to 5 MB'), 'err'); return; }
+        try {
+          clearTimeout(timer); await queue;
+          if (!p.name.trim()) { toast(t('Give the product a name first'), 'err'); return; }
+          await api('/api/brand', JSON.parse(JSON.stringify(B)));            // the product exists on disk first
+          const r = await api('/api/brand/product_image', {id: p.id, name: f.name, data: b64(await f.arrayBuffer())});
+          p.image = ((r.catalogue || []).find(x => x.id === p.id) || {}).image || ''; B.updated = r.updated; BRAND_DATA = null;
+          paintProds(); say(t('saved ✓'), 'ok');
+        } catch (err) { toast(err.message, 'err'); }
+      };
+    });
+    if (focus != null) { const n = $(`.brpc[data-i="${focus}"] .brpn`, box); if (n) n.focus(); }
+  };
+  paintProds();
+  catN();
+  $('#brcatq', main).oninput = debounce(e => { cq = e.target.value.trim().toLowerCase(); paintProds(); }, 150);
+  $('#bradd', main).onclick = () => {
+    if (B.catalogue.length >= 200) return;
+    B.catalogue.unshift({id: nextId(), name: '', what: '', price: '', use: true});   // the new one first
+    cq = ''; $('#brcatq', main).value = '';
+    paintProds(0); catN();
+  };
+}
+
+// ============================================================================================ content agency
+// 0.6.0 (docs\plans.md steps 12-19; the user, 2026-10-25: "own row named 'Content agency'", "i kinda want the content
+// calendar first"): the plan around the videos. Step 12 = the content calendar - knowledge\local\calendar.json through
+// GET / POST /api/agency (motionlab\agency.py checks every save): a month of posts as chips (status colour, platforms,
+// time), dragged from day to day or to the Ideas column (a post without a date); the weekly rhythm (the days the user
+// aims to post) as dashed slots + "this week n of m"; a post's pop-up (title, date, time, platforms, status, the
+// MotionLab video, the sound to add in the app, notes, the links once posted); *Add to Windows Calendar* = the .ics
+const AG_STATUS = [['idea', t('Idea'), '--dim'], ['scripted', t('Scripted'), '--violet'], ['filmed', t('Filmed'), '--cyan'],
+                   ['edited', t('Edited'), '--amber'], ['ready', t('Ready'), '--green'], ['posted', t('Posted'), '--agency']];
+const AG_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const agIso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const agDay = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const agWeekday = i => new Intl.DateTimeFormat(LANG, {weekday: 'short'}).format(new Date(2026, 9, 26 + i)).replace(/\.$/, '');  // 2026-10-26 = a Monday
+const AG_TABS = [['calendar', t('Calendar'), 'i-calendar'], ['videos', t('Your videos'), 'i-film']];
+const agNum = n => n == null ? '–' : new Intl.NumberFormat(LANG, {notation: 'compact', maximumFractionDigits: 1}).format(n);
+// 0.6.0 step 15: before you post, per platform ([key, words]; "all" on every platform) - ticked on the post
+const AG_CHECKS = () => ({all: [['package', t('Title and description written')], ['cover', t('Cover or thumbnail picked')],
+    ['captions', t('Captions on')], ['link', t('Link or pinned comment')], ['ad', t('If it is an ad: the paid-partnership label')]],
+  youtube: [['chapters', t('Chapters in the description')], ['abtest', t('Thumbnails in Test & compare')], ['endscreen', t('End screen and cards')]],
+  tiktok: [['sound', t('The sound added in the app')], ['hashtags', t('3 to 5 hashtags')], ['pin', t('A comment pinned')]],
+  instagram: [['sound', t('The sound added in the app')], ['hashtags', t('Hashtags')], ['grid', t('Cover cropped for the grid')], ['story', t('Shared to your story')]],
+  x: [['hook', t('The first line hooks')]], linkedin: [['hook', t('The first line hooks')]], threads: [['hook', t('The first line hooks')]],
+  facebook: [['sound', t('The sound added in the app')]]});
+// the shape each platform plays best (the repurpose line: what the video is vs what each platform wants)
+const AG_SHAPE = {youtube: ['16:9', t('16:9 - or 9:16 as a Short')], tiktok: ['9:16', '9:16'], instagram: ['9:16', t('9:16 - 4:5 in the feed')],
+  facebook: ['9:16', t('9:16 or 1:1')], x: ['16:9', t('16:9 or 1:1')], linkedin: ['1:1', t('1:1 or 16:9')], threads: ['9:16', t('9:16 or 1:1')], twitch: ['16:9', '16:9']};
+// 0.6.0 step 16: where each platform shows your own audience's hours, and a generic time when you have not typed yours
+const AG_WHEN_WHERE = () => ({youtube: t('YouTube Studio > Analytics > Audience > When your viewers are on YouTube'),
+  instagram: t('Instagram > Professional dashboard > Total followers > Most active times'), tiktok: t('TikTok Studio > Analytics > Followers > Follower activity'),
+  facebook: t('Meta Business Suite > Insights > Audience')});
+const AG_GENERIC = () => ({youtube: t('The hour matters little to YouTube - post when you can answer comments in the first hour.'),
+  tiktok: t('Generic: weekday evenings, 18:00 to 21:00 - the studies disagree.'), instagram: t('Generic: weekday lunchtime or evening - the studies disagree.')});
+const agWhenLabel = b => { const [d, tm] = String(b).split(' '); const i = AG_DAYS.indexOf(d); return `${i < 0 ? t('any day') : agWeekday(i)} ${tm || ''}`; };
+// a post's video on a platform (its link) -> the views your page checks saw near 48 h, 7 days and 28 days after it went
+// up (a check between half and twice that age counts; else -), its views now and the stats file's numbers (step 12)
+const agVidId = (plat, url) => { const u = String(url || ''); let m;
+  if (plat === 'youtube' && (m = u.match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/))) return m[1];
+  if (plat === 'tiktok' && (m = u.match(/video\/(\d{8,})/))) return m[1];
+  if ((m = u.match(/\/(?:reel|reels|p)\/([\w-]+)/))) return m[1];
+  return null; };
+function agHowItDid(plat, url, SOC, pageVids) {
+  const id = agVidId(plat, url);
+  if (!id) return '';
+  const v = pageVids.find(x => x.platform === plat && String(x.id) === id);
+  const S = (((SOC.stats || {}).videos || {})[plat]) || {};
+  const nu = u => String(u || '').replace(/[?#].*$/, '').replace(/\/+$/, '').toLowerCase();
+  const imp = S[id] || Object.values(S).find(r => (r.url && nu(r.url) === nu(url)) || String(r.id || '') === id);
+  if (!v && !imp) return '';
+  const h = (SOC.history || {})[`${plat}:${id}`] || [], t0 = v && v.date ? Date.parse(`${v.date}T${v.time || '12:00'}`) / 1000 : null;
+  const near = hrs => { if (!t0) return null; let best = null;
+    for (const [ts, n] of h) { const age = (ts - t0) / 3600; if (age >= hrs * 0.5 && age <= hrs * 2 && (!best || Math.abs(ts - t0 - hrs * 3600) < Math.abs(best[0] - t0 - hrs * 3600))) best = [ts, n]; }
+    return best; };
+  const cells = [['48 h', 48], [t('7 days'), 168], [t('28 days'), 672]].map(([l, hrs]) => { const b = near(hrs);
+    return `<span title="${b ? ta('checked {when}', {when: whenStr(new Date(b[0] * 1000).toISOString().slice(0, 16).replace('T', ' '))}) : ta('no check near that age')}">${l}: <b>${b ? agNum(b[1]) : '–'}</b></span>`; });
+  const now = v && v.views != null ? v.views : imp && imp.views;
+  return `<div class="agdid1">${brandPgLogo(plat)}<span>${t('now')}: <b>${agNum(now)}</b> ${t('views')}</span>${cells.join('')}${agImpLine(imp)}</div>`;
+}
+const agImpLine = r => !r ? '' : `<span class="agimp" title="${ta('From the stats file you imported ({file})', {file: r.file || ''})}">${[
+  r.watch_h != null ? t('{n} h watched', {n: numLoc(Math.round(r.watch_h * 10) / 10)}) : '',
+  r.avg_pct != null ? t('{n} % viewed', {n: numLoc(Math.round(r.avg_pct))}) : r.avg_view_s != null ? t('{n} s average view', {n: Math.round(r.avg_view_s)}) : '',
+  r.ctr != null ? `CTR ${numLoc(r.ctr)} %` : '', r.shares != null ? `↗ ${agNum(r.shares)}` : ''].filter(Boolean).join(' · ')}</span>`;
+// Check my pages (agency_check) followed from any page, like the website import: the bar + the stage on Your videos,
+// a toast when it ends elsewhere; the page redraws with what it found
+const AG_STAGE = {youtube: t('Reading YouTube'), tiktok: t('Reading TikTok'), details: t('Reading the newest videos'), done: t('Almost done')};
+let AG_CHECK = null;
+function agCheckPaint() {
+  const b = $('#agchk'), bar = $('#agprog'), st = $('#agchkst');
+  if (!b) return;
+  const on = !!AG_CHECK;
+  b.disabled = on; b.classList.toggle('busy', on); bar.hidden = !on;
+  if (on) { $('i', bar).style.width = Math.max(3, AG_CHECK.pct) + '%'; st.textContent = `${AG_STAGE[AG_CHECK.stage] || t('Reading your pages…')} · ${Math.round(AG_CHECK.pct)} %`; }
+  else st.textContent = st.dataset.idle || '';
+}
+async function agCheckWatch(id) {
+  if (AG_CHECK && AG_CHECK.id === id) return;
+  AG_CHECK = {id, pct: 2, stage: ''}; agCheckPaint();
+  let since = 0, last = '';
+  for (;;) {
+    await new Promise(r => setTimeout(r, 900));
+    let s; try { s = await api(`/api/jobs/${id}?since=${since}`); } catch (e) { continue; }
+    const lines = (s.log || []).map(l => String(l).trim()).filter(Boolean);
+    since += (s.log || []).length;
+    const pr = lines.map(l => /^progress (\d+(?:\.\d+)?) (\w+)/.exec(l)).filter(Boolean).pop();
+    if (pr) Object.assign(AG_CHECK, {pct: +pr[1], stage: pr[2]});
+    last = lines.filter(l => !l.startsWith('progress ')).pop() || last;
+    if (['running', 'queued', 'cancelling'].includes(s.status)) { agCheckPaint(); continue; }
+    AG_CHECK = null; agCheckPaint();
+    if (s.status !== 'done') { toast(t('Could not read your pages: {why}', {why: (last || s.status).replace(/^ERROR: /, '')}), 'err'); return; }
+    if (/^#\/agency/.test(location.hash)) route(); else toast(t('Your pages are read - open Content agency to see your videos'), 'ok');
+    return;
+  }
+}
+async function pageAgency(main, tabArg) {
+  const [CAL, PS, SOC, BRD] = await Promise.all([api('/api/agency'), api('/api/projects').catch(() => []),
+    api('/api/agency/social').catch(() => ({pages: {}})), brandData()]);
+  CAL.rhythm = CAL.rhythm || {days: [], time: ''}; CAL.posts = CAL.posts || [];
+  const PIL = ((BRD || {}).pillars || []).map(x => x.name).filter(Boolean);       // My Brand's content pillars
+  const vids = (PS || []).slice().sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let month = new Date(today.getFullYear(), today.getMonth(), 1), queue = Promise.resolve();
+  const say = (txt, cls) => { const s = $('#agsaved', main); if (s) { s.className = 'small ' + cls; s.textContent = txt; } };
+  const save = () => {
+    const body = JSON.parse(JSON.stringify(CAL));
+    queue = queue.then(() => api('/api/agency', body).then(r => { CAL.posts = r.posts; say(t('saved ✓'), 'ok'); },
+                                                          e => { say(t('NOT saved'), 'bad'); toast(e.message, 'err'); }));
+    return queue;
+  };
+  const nextId = () => 'c' + (Math.max(0, ...CAL.posts.map(p => +String(p.id || '').slice(1) || 0)) + 1);
+  const tab0 = AG_TABS.some(([k]) => k === tabArg) ? tabArg : 'calendar';
+  main.innerHTML = `<div class="head"><div><h1>${t('Content agency')}</h1><div class="sub">${t('When and where your videos go out - planned in one place.')}</div></div>
+      <span id="agsaved" class="small muted"></span></div>
+    <div class="tabs brtabs">${AG_TABS.map(([k, l, ic]) => `<a href="#/agency${k === 'calendar' ? '' : '/' + k}" data-tab="${k}"><svg class="i"><use href="#${ic}"/></svg>${l}</a>`).join('')}</div>
+    <div class="agpane" data-pane="videos" hidden id="agvids"></div>
+    <div class="agpane" data-pane="calendar">
+    <div class="agbar"><button class="btn sm ghost icon" id="agprev" title="${ta('The month before')}">‹</button><b class="agmonth" id="agmonth"></b>
+      <button class="btn sm ghost icon" id="agnext" title="${ta('The month after')}">›</button><button class="btn sm ghost" id="agtoday">${t('Today')}</button>
+      <span class="agweek" id="agweek"></span><span class="grow"></span>
+      <button class="btn pri" id="agnew"><svg class="i"><use href="#i-plus"/></svg>${t('New post')}</button>
+      <a class="btn" id="agics" href="/api/agency/calendar.ics" download title="${ta('Your dated posts as a calendar file - open it and Windows Calendar, Outlook or Google Calendar reminds you 1 hour before each')}"><svg class="i"><use href="#i-calendar"/></svg>${t('Add to Windows Calendar')}</a></div>
+    <div class="agrhythm"><span class="small muted">${t('I post on')}</span><span class="agdays" id="agdays">${AG_DAYS.map((d, i) => `<button class="brpill" data-d="${d}">${esc(agWeekday(i))}</button>`).join('')}</span>
+      <span class="small muted">${t('at')}</span><input type="time" id="agtime">
+      <span class="small muted agrh">${t('Your rhythm - the empty days show as dashed slots. Posting regularly matters more than the hour.')}</span>
+      <button class="btn sm ghost" id="agwhen" title="${ta('Your own best hours per platform, from your stats')}"><svg class="i"><use href="#i-clock"/></svg>${t('When to post')}</button></div>
+    <div class="aggrid"><div class="agcal"><div class="agwd">${AG_DAYS.map((d, i) => `<span>${esc(agWeekday(i))}</span>`).join('')}</div><div class="agcells" id="agcells"></div>
+        <div class="aglegend">${AG_STATUS.map(([, l, c]) => `<span><i style="background: var(${c})"></i>${l}</span>`).join('')}</div>
+        <div class="agbal" id="agbal"></div></div>
+      <div class="panel agideas" data-drop=""><h2>${t('Ideas')} <span class="dim" id="agidn"></span></h2>
+        <div class="small muted">${t('Posts without a day yet - drag one onto the calendar.')}</div><div id="agidl"></div>
+        <button class="btn sm" id="agidea"><svg class="i"><use href="#i-plus"/></svg>${t('Add an idea')}</button></div></div></div>`;
+  const showTab = k => {
+    $$('.brtabs a', main).forEach(a => a.classList.toggle('on', a.dataset.tab === k));
+    $$('.agpane', main).forEach(p => { p.hidden = p.dataset.pane !== k; });
+  };
+  $$('.brtabs a', main).forEach(a => a.onclick = e => { e.preventDefault(); showTab(a.dataset.tab); history.replaceState(null, '', a.getAttribute('href')); });
+  showTab(tab0);
+  // your posted videos (2026-10-26): every video the last Check my pages found, with the page's median views (to say
+  // which did better than usual) and its views at earlier checks (how it grew)
+  const pageVids = Object.entries(SOC.pages || {}).flatMap(([plat, pg]) => (pg.videos || []).map(v => ({...v, platform: plat})));
+  // 0.6.0 step 13: the stats files you imported - their numbers on the videos read from your pages (by id), the rest
+  // (Instagram, and videos older than a check reaches) as cards of their own
+  const impRows = Object.entries((SOC.stats || {}).videos || {}).flatMap(([plat, rows]) => Object.values(rows).map(r => ({...r, platform: plat, imported: true})));
+  pageVids.forEach(v => { v.imp = impRows.find(r => r.platform === v.platform && r.id && String(r.id) === String(v.id)); });
+  const impOnly = impRows.filter(r => !pageVids.some(v => v.imp === r));
+  const medians = Object.fromEntries(Object.entries(SOC.pages || {}).map(([plat, pg]) => {
+    const vs = (pg.videos || []).map(v => v.views).filter(v => v != null).sort((a, b) => a - b);
+    return [plat, vs.length >= 3 ? vs[Math.floor(vs.length / 2)] : null]; }));
+  const liveByDay = {};
+  pageVids.filter(v => v.date).forEach(v => (liveByDay[v.date] = liveByDay[v.date] || []).push(v));
+  const chip = p => { const st = AG_STATUS.find(s => s[0] === p.status) || AG_STATUS[0];
+    return `<div class="agchip st-${p.status}" draggable="true" data-id="${esc(p.id)}" style="--sc: var(${st[2]})" title="${esc(p.title)} · ${esc(st[1])}">
+      <i class="agst"></i>${(p.platforms || []).slice(0, 3).map(x => `<img src="/files/logos/${x}/color.svg" alt="">`).join('')}
+      <span class="agct">${esc(p.title)}</span>${p.time ? `<span class="agtm">${esc(p.time)}</span>` : ''}</div>`; };
+  const paintRhythm = () => {
+    $$('#agdays .brpill', main).forEach(b => b.classList.toggle('on', CAL.rhythm.days.includes(b.dataset.d)));
+    $('#agtime', main).value = CAL.rhythm.time || '';
+  };
+  const paint = () => {
+    $('#agmonth', main).textContent = new Intl.DateTimeFormat(LANG, {month: 'long', year: 'numeric'}).format(month);
+    const first = new Date(month), lead = (first.getDay() + 6) % 7;                 // Monday first
+    const start = new Date(first); start.setDate(1 - lead);
+    const byDay = {};
+    CAL.posts.filter(p => p.date).forEach(p => (byDay[p.date] = byDay[p.date] || []).push(p));
+    Object.values(byDay).forEach(l => l.sort((a, b) => (a.time || '99').localeCompare(b.time || '99')));
+    const cells = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      if (i >= 35 && d.getMonth() !== month.getMonth()) break;                       // no sixth row of next month
+      const iso = agIso(d), posts = byDay[iso] || [], wd = AG_DAYS[(d.getDay() + 6) % 7];
+      const slot = !posts.length && CAL.rhythm.days.includes(wd) && d >= today;
+      const live = liveByDay[iso] || [];                  // what went up that day on your pages (Check my pages)
+      cells.push(`<div class="agcell${d.getMonth() !== month.getMonth() ? ' out' : ''}${+d === +today ? ' today' : ''}${slot && !live.length ? ' slot' : ''}${d < today ? ' past' : ''}" data-drop="${iso}">
+        <span class="agdn">${d.getDate()}</span>${posts.map(chip).join('')}
+        ${live.map(v => `<a class="aglive" href="${esc(v.url)}" target="_blank" rel="noopener" title="${esc(v.title)} · ${ta('{n} views', {n: agNum(v.views)})}">
+          <img src="/files/logos/${v.platform}/color.svg" alt=""><span class="agct">${esc(v.title)}</span><b>${esc(agNum(v.views))}</b></a>`).join('')}
+        ${slot && !live.length ? `<span class="agslot">${t('a post here')}</span>` : ''}</div>`);
+    }
+    $('#agcells', main).innerHTML = cells.join('');
+    const ideas = CAL.posts.filter(p => !p.date);
+    $('#agidn', main).textContent = ideas.length || '';
+    $('#agidl', main).innerHTML = ideas.map(chip).join('') || '';
+    // this week: posts planned against the rhythm (Monday to Sunday)
+    const ws = new Date(today); ws.setDate(today.getDate() - (today.getDay() + 6) % 7);
+    const we = new Date(ws); we.setDate(ws.getDate() + 6);
+    // the days of this week with something planned or posted (a video your pages show counts too), against the rhythm
+    const inWeek = new Set([...CAL.posts.filter(p => p.date).map(p => p.date), ...Object.keys(liveByDay)]
+      .filter(d => agDay(d) >= ws && agDay(d) <= we)).size;
+    $('#agweek', main).innerHTML = CAL.rhythm.days.length ? `${t('This week')}: <b>${inWeek}</b> / ${CAL.rhythm.days.length}` : '';
+    // the month's balance between your pillars (My Brand's content pillars)
+    const ym = `${month.getFullYear()}-${pad(month.getMonth() + 1)}`, inMonth = CAL.posts.filter(p => (p.date || '').startsWith(ym));
+    $('#agbal', main).innerHTML = PIL.length && inMonth.length ? `${t('This month by pillar')}: ${[...PIL, ''].map(n => {
+      const k = inMonth.filter(p => (p.pillar || '') === n).length;
+      return k || n ? `<span class="${k ? '' : 'zero'}">${n ? `<b>${esc(n)}</b>` : t('no pillar')} ${k}</span>` : ''; }).filter(Boolean).join(' · ')}` : '';
+    $$('.agchip', main).forEach(c => {
+      c.onclick = e => { e.stopPropagation(); const p = CAL.posts.find(x => x.id === c.dataset.id); if (p) agPostModal(p); };
+      c.ondragstart = e => { e.dataTransfer.setData('text/plain', c.dataset.id); c.classList.add('drag'); };
+      c.ondragend = () => c.classList.remove('drag');
+    });
+    $$('[data-drop]', main).forEach(z => {
+      z.ondragover = e => { e.preventDefault(); z.classList.add('over'); };
+      z.ondragleave = () => z.classList.remove('over');
+      z.ondrop = e => { e.preventDefault(); z.classList.remove('over');
+        const p = CAL.posts.find(x => x.id === e.dataTransfer.getData('text/plain'));
+        if (p && p.date !== z.dataset.drop) { p.date = z.dataset.drop; if (!p.date) p.time = ''; else if (!p.time && CAL.rhythm.time) p.time = CAL.rhythm.time;
+          paint(); save(); } };
+    });
+    $$('.agcell', main).forEach(c => c.onclick = e => { if (e.target.closest('.aglive')) return;
+      agPostModal({id: '', title: '', date: c.dataset.drop, time: CAL.rhythm.time || '', platforms: [], status: 'idea', project: '', notes: '', sound: '', links: {}}); });
+  };
+  // a post's pop-up: new (id '') or one of the calendar's
+  const agPostModal = p0 => {
+    const p = JSON.parse(JSON.stringify(p0)), isNew = !p.id;
+    const vidOpt = v => `<option value="${esc(v.name)}"${p.project === v.name ? ' selected' : ''}>${esc(pname(v))}</option>`;
+    modal(`<h2>${isNew ? t('New post') : t('Post')}</h2>
+      <div class="agform">
+        <label class="agf wide"><span>${t('What it is')}</span><input type="text" id="agt" maxlength="120" value="${esc(p.title)}" placeholder="${ta('e.g. Behind the scenes of the 4AM video')}"></label>
+        <label class="agf"><span>${t('Day')}</span><input type="date" id="agd" value="${esc(p.date)}"></label>
+        <label class="agf"><span>${t('Time')}</span><input type="time" id="agh" value="${esc(p.time)}"><span class="agbest" id="agbest"></span></label>
+        <div class="agf wide"><span>${t('Where')}</span><div class="agplats">${Object.keys(BRAND_PAGES).map(x => `<button class="brpgb${p.platforms.includes(x) ? ' on' : ''}" data-p="${x}" title="${esc(BRAND_PAGES[x])}">${brandPgLogo(x)}</button>`).join('')}</div></div>
+        <div class="agf wide"><span>${t('Stage')}</span><div class="brpills agsts">${AG_STATUS.map(([s, l, c]) => `<button class="brpill${p.status === s ? ' on' : ''}" data-s="${s}" style="--sc: var(${c})"><i class="agst"></i>${l}</button>`).join('')}</div></div>
+        ${PIL.length ? `<div class="agf wide"><span>${t('Pillar')}</span><div class="brpills agpil">${PIL.map(n => `<button class="brpill${p.pillar === n ? ' on' : ''}" data-pl="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>` : ''}
+        <label class="agf wide"><span>${t('The video')}</span><span class="agvid"><span class="agvp" id="agvp"></span>
+          <select id="agv"><option value="">${t('None yet')}</option>${vids.map(vidOpt).join('')}</select></span></label>
+        <label class="agf wide"><span>${t('Sound to add in the app')}</span><input type="text" id="ags" maxlength="200" value="${esc(p.sound)}" placeholder="${ta('a trending sound - added in TikTok / Instagram when you post, never in the video')}"></label>
+        <label class="agf wide"><span>${t('Notes')}</span><textarea id="agn" rows="2" maxlength="1000">${esc(p.notes)}</textarea></label>
+        <div class="agf wide" id="aglinks"></div>
+        <div class="agf wide" id="agdid"></div>
+        <label class="agf wide" id="agabw"><span>${t('Test & compare winner (YouTube)')}</span><input type="text" id="agab" maxlength="120" value="${esc(p.ab || '')}" placeholder="${ta('e.g. B - the red thumbnail, 54 %')}"></label>
+        <div class="agf wide" id="agcl"></div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="agok">${t('Save')}</button><button class="btn ghost" id="agno">${t('Cancel')}</button>
+        <span class="grow"></span>${isNew ? '' : `<button class="btn danger" id="agdel">${t('Delete')}</button>`}</div>`, m => {
+      const links = () => {
+        $('#aglinks', m).innerHTML = p.platforms.length ? `<span>${t('Where it went up')}</span>${p.platforms.map(x => `<label class="aglink">${brandPgLogo(x)}<input type="url" data-l="${x}" value="${esc((p.links || {})[x] || '')}" placeholder="${ta('Link to the post on {platform}', {platform: BRAND_PAGES[x]})}"></label>`).join('')}` : '';
+      };
+      const vprev = () => { const v = vids.find(x => x.name === $('#agv', m).value);
+        $('#agvp', m).innerHTML = v && v.picture ? `<img src="${picUrl(v.picture)}" alt="">` : '<svg class="i"><use href="#i-film"/></svg>'; };
+      p.checks = p.checks || {};
+      const vidOf = () => vids.find(x => x.name === $('#agv', m).value);
+      const extras = () => {                                // the best times, how it did, the checklist and the shapes
+        const best = [...new Set(p.platforms.flatMap(x => (CAL.when || {})[x] || []))];
+        $('#agbest', m).innerHTML = best.map(b => `<button class="brpill" data-bt="${esc(b)}" title="${ta('Your best time')}">${esc(agWhenLabel(b))}</button>`).join('');
+        $$('[data-bt]', m).forEach(b => b.onclick = e => { e.preventDefault(); $('#agh', m).value = b.dataset.bt.split(' ')[1]; });
+        $('#agabw', m).hidden = !p.platforms.includes('youtube');
+        const did = p.platforms.map(x => agHowItDid(x, ((p.links || {})[x]) || ($(`[data-l=${x}]`, m) || {}).value, SOC, pageVids)).filter(Boolean);
+        $('#agdid', m).innerHTML = did.length ? `<span>${t('How it did')}</span><div class="agdid">${did.join('')}</div>` : '';
+        const C = AG_CHECKS(), items = p.platforms.length ? [...C.all.map(([k, l]) => ['all', k, l]), ...p.platforms.flatMap(x => (C[x] || []).map(([k, l]) => [x, k, l]))]
+          .filter(([pl, k]) => k !== 'sound' || p.sound || $('#ags', m).value.trim()) : [];
+        const done = items.filter(([pl, k]) => p.checks[`${pl}:${k}`]).length, v = vidOf(), L = v && v.latest;
+        const shape = L && L.width ? (L.width > L.height * 1.15 ? '16:9' : L.height > L.width * 1.15 ? '9:16' : '1:1') : '';
+        const off = shape ? p.platforms.filter(x => AG_SHAPE[x] && AG_SHAPE[x][0] !== shape && !(x === 'youtube' && shape === '9:16')) : [];
+        $('#agcl', m).innerHTML = items.length ? `<span>${t('Before you post')} <b class="agdone">${done} / ${items.length}</b></span>
+          <div class="agchks">${items.map(([pl, k, l]) => `<label class="agck"><input type="checkbox" data-ck="${pl}:${k}"${p.checks[`${pl}:${k}`] ? ' checked' : ''}>${pl === 'all' ? '' : brandPgLogo(pl)}<span>${esc(l)}</span></label>`).join('')}</div>
+          ${p.platforms.length ? `<div class="small muted agshape">${t('Formats')}: ${p.platforms.map(x => `${esc(BRAND_PAGES[x] || x)} ${esc((AG_SHAPE[x] || ['', '?'])[1])}`).join(' · ')}${shape
+            ? ` - ${t('your video is {shape}', {shape})}${off.length ? `: ${t('make a {shape} version for {where} (New edit with the same clips, its Format step)', {shape: AG_SHAPE[off[0]][0], where: off.map(x => BRAND_PAGES[x] || x).join(', ')})}` : ' ✓'}` : ''}</div>` : ''}` : '';
+        $$('[data-ck]', m).forEach(c => c.onchange = () => { if (c.checked) p.checks[c.dataset.ck] = true; else delete p.checks[c.dataset.ck];
+          $('.agdone', m).textContent = `${Object.keys(p.checks).filter(k => items.some(([pl, kk]) => `${pl}:${kk}` === k)).length} / ${items.length}`; });
+      };
+      links(); vprev(); extras();
+      $('#ags', m).addEventListener('input', debounce(extras, 300));
+      $('#aglinks', m).addEventListener('change', extras);
+      $$('.agplats .brpgb', m).forEach(b => b.onclick = () => { const x = b.dataset.p;
+        p.platforms = p.platforms.includes(x) ? p.platforms.filter(y => y !== x) : [...p.platforms, x]; b.classList.toggle('on'); links(); extras(); });
+      $$('.agsts .brpill', m).forEach(b => b.onclick = () => { p.status = b.dataset.s; $$('.agsts .brpill', m).forEach(x => x.classList.toggle('on', x === b)); });
+      $$('.agpil .brpill', m).forEach(b => b.onclick = () => { p.pillar = p.pillar === b.dataset.pl ? '' : b.dataset.pl;
+        $$('.agpil .brpill', m).forEach(x => x.classList.toggle('on', x.dataset.pl === p.pillar)); });
+      $('#agv', m).onchange = () => { vprev(); extras(); };
+      $('#agno', m).onclick = closeModal;
+      if (!isNew) $('#agdel', m).onclick = async () => { CAL.posts = CAL.posts.filter(x => x.id !== p.id); closeModal(); paint(); await save(); };
+      $('#agok', m).onclick = async () => {
+        p.title = $('#agt', m).value.trim();
+        if (!p.title) { toast(t('Say what the post is first'), 'err'); $('#agt', m).focus(); return; }
+        Object.assign(p, {date: $('#agd', m).value, time: $('#agh', m).value, project: $('#agv', m).value, sound: $('#ags', m).value.trim(), ab: $('#agab', m).value.trim(),
+                          notes: $('#agn', m).value.trim(), links: Object.fromEntries($$('[data-l]', m).map(i => [i.dataset.l, i.value.trim()]).filter(([, v]) => v))});
+        if (isNew) { p.id = nextId(); CAL.posts.push(p); } else Object.assign(CAL.posts.find(x => x.id === p.id), p);
+        const ok = await save().then(() => true, () => false);
+        if (ok) { closeModal(); paint(); }
+      };
+      if (isNew) $('#agt', m).focus();
+    }, 'agmodal');
+  };
+  $('#agprev', main).onclick = () => { month = new Date(month.getFullYear(), month.getMonth() - 1, 1); paint(); };
+  $('#agnext', main).onclick = () => { month = new Date(month.getFullYear(), month.getMonth() + 1, 1); paint(); };
+  $('#agtoday', main).onclick = () => { month = new Date(today.getFullYear(), today.getMonth(), 1); paint(); };
+  $$('#agdays .brpill', main).forEach(b => b.onclick = () => { const d = b.dataset.d;
+    CAL.rhythm.days = CAL.rhythm.days.includes(d) ? CAL.rhythm.days.filter(x => x !== d) : AG_DAYS.filter(x => x === d || CAL.rhythm.days.includes(x));
+    paintRhythm(); paint(); save(); });
+  $('#agtime', main).onchange = e => { CAL.rhythm.time = e.target.value; save(); };
+  $('#agwhen', main).onclick = () => {                     // 0.6.0 step 16: your best times, typed from your stats
+    const plats = [...new Set([...((BRD || {}).pages || []).filter(p => p.url).map(p => p.platform), ...Object.keys(CAL.when || {})])];
+    const list = plats.length ? plats : ['youtube', 'tiktok', 'instagram'];
+    CAL.when = CAL.when || {};
+    const W = JSON.parse(JSON.stringify(CAL.when)), GW = AG_WHEN_WHERE(), GG = AG_GENERIC();
+    modal(`<h2>${t('When to post')}</h2><p class="hint">${t('Your own audience\'s best hours beat any study - type them from each platform\'s stats. They show as quick picks on every post. Posting regularly still matters more than the hour.')}</p>
+      <div class="agwhen" id="agwl"></div><div class="row" style="margin-top:12px"><button class="btn pri" id="agwok">${t('Save')}</button><button class="btn ghost" id="agwno">${t('Cancel')}</button></div>`, mm => {
+      const draw = () => { $('#agwl', mm).innerHTML = list.map(x => `<div class="agwrow">${brandPgLogo(x)}<b>${esc(BRAND_PAGES[x] || x)}</b>
+          <span class="brpills">${(W[x] || []).map((b, i) => `<span class="brpill on">${esc(agWhenLabel(b))}<button class="brx" data-wx="${x}:${i}" title="${ta('Remove')}">✕</button></span>`).join('')}</span>
+          <span class="agwadd"><select data-wd="${x}"><option value="any">${t('Any day')}</option>${AG_DAYS.map((d, i) => `<option value="${d}">${esc(agWeekday(i))}</option>`).join('')}</select>
+            <input type="time" data-wt="${x}" value="18:00"><button class="btn sm" data-wa="${x}">${t('Add')}</button></span>
+          <span class="small muted agwhere">${(W[x] || []).length ? '' : esc(GG[x] || t('Generic: when your audience is free - the studies disagree.')) + ' '}${GW[x] ? esc(t('Yours: {where}', {where: GW[x]})) : ''}</span></div>`).join('');
+        $$('[data-wa]', mm).forEach(b => b.onclick = () => { const x = b.dataset.wa, v = `${$(`[data-wd=${x}]`, mm).value} ${$(`[data-wt=${x}]`, mm).value}`;
+          if (!/^\w{3} \d{2}:\d{2}$/.test(v)) return; W[x] = [...new Set([...(W[x] || []), v])].slice(0, 8); draw(); });
+        $$('[data-wx]', mm).forEach(b => b.onclick = () => { const [x, i] = b.dataset.wx.split(':'); W[x].splice(+i, 1); if (!W[x].length) delete W[x]; draw(); }); };
+      draw();
+      $('#agwno', mm).onclick = closeModal;
+      $('#agwok', mm).onclick = async () => { CAL.when = W; const ok = await save().then(() => true, () => false); if (ok) closeModal(); };
+    });
+  };
+  const blank = date => ({id: '', title: '', date, time: date ? CAL.rhythm.time || '' : '', platforms: [], status: 'idea', project: '', notes: '', sound: '', pillar: '', links: {}});
+  $('#agnew', main).onclick = () => agPostModal(blank(agIso(today)));
+  $('#agidea', main).onclick = () => agPostModal(blank(''));
+  paintRhythm(); paint();
+  // ---- Your videos: the pages My Brand names, Check my pages, the videos as cards
+  const pages = ((BRD || {}).pages || []).filter(p => p.url), vbox = $('#agvids', main);
+  let sort = 'new', only = '';
+  const handle = u => '@' + String(u).replace(/\/+$/, '').split('/').pop().replace(/^@/, '');
+  const grew = v => { const h = ((SOC.history || {})[`${v.platform}:${v.id}`] || []); return h.length >= 2 ? {d: h[h.length - 1][1] - h[h.length - 2][1], at: h[h.length - 2][0]} : null; };
+  const vcard = v => { const m = medians[v.platform], x = m && v.views != null && m > 0 ? v.views / m : null, g = grew(v);
+    return `<a class="agvc" href="${esc(v.url)}" target="_blank" rel="noopener" title="${esc(v.title)}">
+      <span class="agvt${v.short ? ' short' : ''}">${v.thumb ? `<img src="${fileUrl(v.thumb)}" loading="lazy" alt="">` : ''}<img class="agvpl" src="/files/logos/${v.platform}/color.svg" alt="">
+        ${x != null && x >= 1.5 ? `<em title="${ta('Views against your usual (the median of your page)')}">×${numStr(Math.round(x * 10) / 10)}</em>` : ''}</span>
+      <b class="agvn">${esc(v.title || '–')}</b>
+      <span class="agvs"><span class="agvv">${esc(agNum(v.views))} <small>${t('views')}</small></span>${v.likes != null ? `<span>♥ ${esc(agNum(v.likes))}</span>` : ''}${v.comments != null ? `<span>💬 ${esc(agNum(v.comments))}</span>` : ''}</span>
+      <span class="small muted">${v.date ? esc(whenStr(v.date + (v.time ? ' ' + v.time : ''))) : t('date unknown')}${g && g.d > 0 ? ` · <span class="agup">+${esc(agNum(g.d))} ${t('since {when}', {when: esc(whenWords(g.at))})}</span>` : ''}</span>
+      ${agImpLine(v.imported ? v : v.imp)}</a>`; };
+  const drawVids = () => {
+    const readable = pages.filter(p => ['youtube', 'tiktok'].includes(p.platform)), other = pages.filter(p => !['youtube', 'tiktok'].includes(p.platform));
+    const list = [...pageVids, ...impOnly.map(r => ({...r, url: r.url || '#'}))].filter(v => !only || v.platform === only)
+      .sort((a, b) => sort === 'views' ? (b.views ?? -1) - (a.views ?? -1) : `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
+    vbox.innerHTML = !pages.length ? `<div class="agvempty"><svg class="i"><use href="#i-link"/></svg><b>${t('Add your pages first')}</b>
+        <span class="small muted">${t('My Brand > Overview > Your pages - your YouTube and TikTok; then Check my pages brings in your videos with their views.')}</span>
+        <a class="btn pri" href="#/brand">${t('Open My Brand')}</a></div>`
+      : `<div class="agvtop"><div class="agpgs">${pages.map(p => { const pg = (SOC.pages || {})[p.platform] || {};
+          return `<div class="agpg${only === p.platform ? ' on' : ''}" data-p="${p.platform}">${brandPgLogo(p.platform)}<span><b>${esc(handle(p.url))}</b>
+            <small>${!['youtube', 'tiktok'].includes(p.platform) ? t('not read here yet') : pg.error ? esc(pg.error) : (pg.videos || []).length
+              ? `${pg.followers != null ? `${esc(agNum(pg.followers))} ${t('followers')} · ` : ''}${tn(pg.videos.length, '{n} video', '{n} videos')}` : t('not checked yet')}</small></span></div>`; }).join('')}</div>
+        <div class="agchkw">${readable.length ? `<button class="btn pri brimpbig" id="agchk" title="${ta('Reads your own public pages now - only when you press it, no login')}"><svg class="i"><use href="#i-update"/></svg><span>${t('Check my pages')}</span></button>
+          <div class="brprog" id="agprog" hidden><i></i></div><div class="small muted" id="agchkst"></div>` : ''}
+          <label class="btn" title="${ta('The file you downloaded from YouTube Studio (Advanced mode > Export), TikTok Studio or Meta Business Suite (Insights > Export) - views, watch time, retention')}"><svg class="i"><use href="#i-upload"/></svg>${t('Import your stats')}<input type="file" id="agimp" hidden accept=".csv,.xlsx,.zip,.tsv"></label></div></div>
+        ${other.length ? `<div class="small muted agvnote">${t('Instagram and the other pages need a login to be read - import the file you download from them (Import your stats).')}</div>` : ''}
+        ${(SOC.stats || {}).imports && SOC.stats.imports.length ? `<div class="small muted agvnote">${t('Imported: {files}', {files: SOC.stats.imports.slice(-3).map(x => `${BRAND_PAGES[x.platform] || x.platform} (${x.rows}, ${whenStr(x.date)})`).join(' · ')})}</div>` : ''}
+        ${pageVids.length || impOnly.length ? `<div class="agvbar"><span class="brpills">${[['new', t('Newest')], ['views', t('Most viewed')]].map(([k, l]) => `<button class="brpill${sort === k ? ' on' : ''}" data-s="${k}">${l}</button>`).join('')}</span></div>
+          <div class="agvgrid">${list.map(vcard).join('')}</div>` : readable.length ? `<div class="agvempty"><svg class="i"><use href="#i-film"/></svg><b>${t('No videos read yet')}</b>
+          <span class="small muted">${t('Press Check my pages - your newest videos come in with when they were posted, their views, likes and comments.')}</span></div>` : ''}`;
+    const st = $('#agchkst', vbox);
+    if (st) st.dataset.idle = SOC.checked ? t('Checked {when}', {when: whenStr(SOC.checked)}) : t('Never checked yet');
+    agCheckPaint();
+    const chk = $('#agchk', vbox);
+    if (chk) chk.onclick = async () => {
+      let j; try { j = await api('/api/jobs', {kind: 'agency_check', args: {}, queue: true}); } catch (e) { toast(e.message, 'err'); return; }
+      agCheckWatch(j.id);
+    };
+    $$('.agpg', vbox).forEach(p => p.onclick = () => { only = only === p.dataset.p ? '' : p.dataset.p; drawVids(); });
+    const imp = $('#agimp', vbox);
+    if (imp) imp.onchange = async () => { const f = imp.files[0]; imp.value = ''; if (f) agImport(f, ''); };
+    $$('.agvbar [data-s]', vbox).forEach(b => b.onclick = () => { sort = b.dataset.s; drawVids(); });
+  };
+  // a stats file in: its platform guessed (else asked), then the page again with its numbers
+  const agImport = (f, platform) => new Promise(done => { const x = new XMLHttpRequest();
+    x.open('POST', `/api/agency/stats?name=${encodeURIComponent(f.name)}&platform=${platform}`); x.setRequestHeader('X-ML-Token', TOKEN);
+    x.setRequestHeader('Content-Type', 'application/octet-stream');
+    x.onload = () => { let j = null; try { j = JSON.parse(x.responseText); } catch (e) { /* not JSON */ }
+      if (x.status < 300) { toast(tn(j.rows, '{n} video from your {platform} file ({new} new)', '{n} videos from your {platform} file ({new} new)', {platform: BRAND_PAGES[j.platform] || j.platform, new: j.new}), 'ok'); route(true); }
+      else if (!platform && j && /platform|plataforma/i.test(j.error || '')) {
+        modal(`<h2>${t('Which platform is it from?')}</h2><div class="agplats">${Object.keys(BRAND_PAGES).map(p2 => `<button class="brpgb" data-ip="${p2}">${brandPgLogo(p2)}</button>`).join('')}</div>`, mm => {
+          $$('[data-ip]', mm).forEach(b => b.onclick = () => { closeModal(); agImport(f, b.dataset.ip); }); });
+      } else toast((j && j.error) || x.status, 'err');
+      done(); };
+    x.onerror = () => { toast(t('{name}: the copy stopped - try again', {name: f.name}), 'err'); done(); };
+    x.send(f); });
+  drawVids();
+  if (!AG_CHECK) api('/api/jobs').then(list => { const j = (list || []).find(x => x.kind === 'agency_check' && ['running', 'queued'].includes(x.status));
+    if (j) agCheckWatch(j.id); }).catch(() => {});
+}
+
 // ============================================================================================ settings
 // Settings > General > Language (2026-10-18, the user: "we need a spanish version of the entire app"; Spain, tú): each
 // language in its own words; a click saves it and reloads the page in it. Claude's replies follow it; what Claude
@@ -6778,5 +9822,9 @@ async function cardModal(c) {
 }
 
 route();
+// My Brand's website import (0.6.0): one still running is followed from any page; one not imported yet = the dot
+api('/api/jobs').then(list => { const j = (list || []).find(x => x.kind === 'brand_import' && ['running', 'queued'].includes(x.status));
+  if (j) brandImpWatch(j.id); }).catch(() => {});
+brandPendPaint();
 // after an update the restarted window shows once what came in (the CHANGELOG sections between the two versions)
 api('/api/update').then(u => { const r = u && u.result; if (r && r.updated && !r.seen) whatsNewModal(r); }).catch(() => {});

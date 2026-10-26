@@ -53,7 +53,7 @@ PY_FILES = (["tools/motionlab/app/" + f for f in ("server.py", "data.py", "syste
             + ["tools/motionlab/" + f + ".py" for f in ("thumbsets", "usage", "speech", "upstream", "style", "publish",
                                                        "prompts", "knowledge", "styles", "thumbnail", "taxonomy",
                                                        "script", "profile", "logos", "fonts", "colour", "textsets",
-                                                       "editreq")]
+                                                       "editreq", "brand", "agency", "miniedit", "edfx")]
             + ["tools/download.py"])
 # the user's other Claude window works on these (2026-10-19): their words wait (never edited from here)
 WAITS = ["tools/motionlab/templates.py", "tools/motionlab/overlay_settings.py", "tools/motionlab/looks.py",
@@ -1160,7 +1160,8 @@ PY_AREAS = {"server-app": ["tools/motionlab/app/server.py", "tools/motionlab/app
                            "tools/motionlab/app/updater.py", "tools/motionlab/app/report.py",
                            "tools/motionlab/app/trash.py", "tools/motionlab/app/player.py", "tools/download.py"],
             "server-scripts": ["tools/motionlab/script.py", "tools/motionlab/prompts.py", "tools/motionlab/publish.py",
-                               "tools/motionlab/thumbnail.py", "tools/motionlab/textsets.py"],
+                               "tools/motionlab/thumbnail.py", "tools/motionlab/textsets.py", "tools/motionlab/brand.py",
+                               "tools/motionlab/agency.py"],
             "server-labels": ["tools/motionlab/knowledge.py", "tools/motionlab/style.py", "tools/motionlab/thumbsets.py",
                               "tools/motionlab/taxonomy.py", "tools/motionlab/styles.py", "tools/motionlab/logos.py",
                               "tools/motionlab/fonts.py", "tools/motionlab/colour.py", "tools/motionlab/profile.py",

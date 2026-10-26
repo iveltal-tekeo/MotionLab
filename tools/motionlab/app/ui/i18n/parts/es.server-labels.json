@@ -51,7 +51,11 @@
   "games, money, fun", "glitches, inverted frames", "glows, light leaks", "long shots, 4 s or more",
   "many places, a journey", "mixed window and lamp light", "most cuts and graphics", "no sound effects",
   "on every move", "only the big moments", "street, shops, traffic", "text, buttons, pop-ins",
-  "the words that matter, big", "transitions, fast moves", "word by word, as it is said"
+  "the words that matter, big", "transitions, fast moves", "word by word, as it is said",
+  "download the free pack from its page, then Motion Graphics > Sounds > Add sounds and pick its folder",
+  "download the bundle (several GB, free) from Sonniss' page, then Motion Graphics > Sounds > Add sounds and pick its folder - only the listed sounds are taken",
+  "comes with MotionLab",
+  "from its page, then Motion Graphics > Sounds > Add sounds"
  ],
 
  "reading your message": "leyendo tu mensaje",
@@ -321,5 +325,9 @@
  "Sparkle": "Destellos",
  "glows, light leaks": "brillos, fugas de luz",
  "Claude's choice": "Lo que elija Claude",
- "a photo shows for 0.5 to 60 seconds": "una foto se ve de 0,5 a 60 segundos"
+ "a photo shows for 0.5 to 60 seconds": "una foto se ve de 0,5 a 60 segundos",
+ "download the free pack from its page, then Motion Graphics > Sounds > Add sounds and pick its folder": "descarga el pack gratis desde su página y luego Motion Graphics > Sonidos > Añadir sonidos y elige su carpeta",
+ "download the bundle (several GB, free) from Sonniss' page, then Motion Graphics > Sounds > Add sounds and pick its folder - only the listed sounds are taken": "descarga el paquete (varios GB, gratis) desde la página de Sonniss y luego Motion Graphics > Sonidos > Añadir sonidos y elige su carpeta: solo se toman los sonidos de la lista",
+ "comes with MotionLab": "viene con MotionLab",
+ "from its page, then Motion Graphics > Sounds > Add sounds": "desde su página y luego Motion Graphics > Sonidos > Añadir sonidos"
 }

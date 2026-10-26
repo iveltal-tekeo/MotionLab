@@ -31,7 +31,9 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    beats with the style's shot lengths and hook, picks each shot's best unused moment (sharp, exposed, moving as much
    as the style), draws the effects it can (crossfade, dip, flash, zoom-through, push / whip, push-in, shake, freeze,
    stutter, speed ramp, RGB split, light leak) at the style's rate; talking mode keeps what is said in order, cuts
-   the pauses, punches in on every other cut, lays B-roll (clips nobody talks in) over the talking.
+   the pauses (with `--stumbles on`, 0.6.0, for a loose off-script take: also fillers, a phrase said twice, retakes,
+   "cut / again" said to the edit, listed with numbers in `draft_vN.md`, `--keep-stumbles 2,5` puts some back),
+   punches in on every other cut, lays B-roll (clips nobody talks in) over the talking.
 3. **Make it good** (what rules cannot): look at the draft's cut-sheet (`render_video.py build\plan_vN.json --cuts`;
    `--sheet 0:<last>:12` for every 12th frame); then **the edit as a list** (0.5.3, the usual way): a few lines in
    `build\edit_v<N+1>.list` - `cut f120-f188`, `punch-in 1.2 at f300`, `shot 4 tight`, `hold f380-f404`, `caption
@@ -46,7 +48,10 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    sentence: "it makes too many whip pans or zooms ... it's very weird". `build.py` flags both (`camera moves:`).
    Write `build\edit_v<N+1>.py` (loads the draft's plan and changes it in code) only for what a list cannot say.
    Graphics come from the Motion Graphics templates (`graphic` lines; a column or a pill beside the head on a
-   talking video) - a custom HTML design (`overlay.py new` from zero) only when the user asks for one: the
+   talking video), varied (the user, 2026-10-26: the same templates video after video): the brief's *Motion
+   Graphics templates* names options and what the newest videos used - each template once a video unless a repeat
+   is the point, a recent one only when clearly the best fit, and look past the first match (`templates.py pick
+   "<what it shows>" --n 8 --fresh`) - a custom HTML design (`overlay.py new` from zero) only when the user asks for one: the
    What's new 0.5.3 edit (2026-10-23) spent 20 minutes designing eight cards and 11 more rendering them. Aim
    for: a story - the strongest moment first (the hook), then build to the end; better moments where a pick is weak;
    the effects the style is known for, rebuilt as its examples say (their "how it was made"); captions in the
@@ -72,7 +77,9 @@ A video from a prompt of the library (`prompts(id=...)`; its `tags` say what it 
   2026-10-15: it is copied into the project and linked in `made_from.json`; `build\edit_request.json` has the format /
   length they picked, "length_s" null = all they said), then speech to text (`tools\speech.py`) and **follow the
   script**: line it up with what was said (the script's lines from `script.cue_cards(text)`), keep the best take of
-  every line (a repeated sentence = a retake: the later, cleaner one, unless it is worse), tell the user which script
+  every line (a repeated sentence = a retake: the later, cleaner one, unless it is worse; when the take wanders off
+  the script, `tools\speech.py stumbles <take>` lists its fillers, repeats, retakes and "cut / again" with frame +
+  timecode), tell the user which script
   lines are missing or changed (frame + timecode), and put the script's `[TEXT]` / `[B-ROLL]` / `[ZOOM]` / `[SFX]`
   notes on the words they belong to; captions (`overlay.py captions`) and graphics from the words (the
   `talking-head-pack` example: beats from the transcript, `overlay.py fit`), an edit plan.

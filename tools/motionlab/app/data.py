@@ -703,6 +703,8 @@ def list_projects() -> list[dict]:
             "next": outcome.get("next"), "title": pkg.get("title") or None,
             # the NEW badge (2026-10-24): a finished render (whole file) - never a video only made or given clips
             "done_t": (lambda r: r[-1].stat().st_mtime if r else None)(LV.renders_done(b)),
+            # 0.6.0: made For my brand (its edit / generate request carried My Brand) - My Brand's Overview shows them first
+            "for_brand": any((read_json(b / n, {}) or {}).get("brand") for n in ("edit_request.json", "generate_request.json")),
         })
     return out
 
@@ -1372,14 +1374,448 @@ def save_generate_request(body: dict) -> dict:
     song = _song(d, str(body.get("music") or ""))         # checked before a new folder is made
     if not d.exists():
         new_project(name)
+    from motionlab import brand as BR
     req = {"kind": kind, "want": want, "text": text if kind == "graphics" else "", "like": like, "length_s": length,
            "format": fmt, "music": song, "tool": tool if kind == "ai" else "", **(extra if kind == "graphics" else {}),
+           "brand": BR.snapshot() if body.get("brand") else None,      # 0.6.0: For my brand - My Brand as it is now
            "date": stamp()}
     write_json_atomic(d / "build" / "generate_request.json", req)
     start_brief(d)
     made = add_made_from(d.name, "generated", "a motion-graphics video" if kind == "graphics"
                          else f"AI video tools{': ' + tool if tool else ''}")
     return {"request": req, "project": d.name, "made_from": made, "command": f"/generate-video request {d.name}"}
+
+
+# ------------------------------------------------------------------ the Editor (0.6.0 step 6, motionlab\miniedit)
+ME_MAX_OPS, ME_MAX_WORDS = 300, 300
+ME_KEYS = {"op", "shot", "side", "by", "f", "kind", "to", "graphic", "key", "value", "cue", "text", "at", "speed",
+           "layer", "all", "id", "template", "len", "values", "db", "sound", "look", "strength", "ease", "start", "src",
+           "in"}
+EDITOR_SOUNDS = LAB / ".app" / "editor" / "sounds"          # the made-up sound effects as the Editor plays them
+
+
+def _me_plan(name: str, plan: str) -> tuple[Path, dict]:
+    b = PROJECTS / safe_name(name) / "build"
+    if not re.fullmatch(r"plan_v\d+\.json", str(plan or "")) or not (b / plan).is_file():
+        raise ValueError(I18N.t("not a plan: {name}", name=repr(str(plan)[:40])))
+    return b, json.loads((b / plan).read_text(encoding="utf-8"))
+
+
+def _me_ops(ops) -> list[dict]:
+    """The page's changes, checked for shape (what each does is motionlab\\miniedit's to check)."""
+    if not isinstance(ops, list) or not ops or len(ops) > ME_MAX_OPS:
+        raise ValueError(I18N.t("no changes to save"))
+    out = []
+    for o in ops:
+        if not isinstance(o, dict) or set(o) - ME_KEYS or any(isinstance(v, str) and len(v) > ME_MAX_WORDS
+                                                              for v in o.values()):
+            raise ValueError(I18N.t("a change the Editor does not know"))
+        vals = o.get("values")
+        if vals is not None and (not isinstance(vals, dict) or len(vals) > 60
+                                 or any(not isinstance(k, str) or (isinstance(v, str) and len(v) > 500)
+                                        or isinstance(v, (dict, list)) for k, v in vals.items())):
+            raise ValueError(I18N.t("a change the Editor does not know"))
+        out.append(o)
+    return out
+
+
+def _me_paths(st: dict) -> dict:
+    """The engine's state with lab-relative paths (what /files/ serves) for the page."""
+    for g in st.get("graphics", []):
+        g["dir"] = rel(g["dir"])
+    for s in st.get("shots", []):                           # (a video made from zero: its scenes' graphics)
+        if s.get("scene"):
+            s["scene"] = rel(s["scene"])
+    st["folders"] = {rel(k): v for k, v in (st.get("folders") or {}).items()}
+    st["capedits"] = {rel(k): v for k, v in (st.get("capedits") or {}).items()}
+    for k in ("song", "audio_file"):
+        if st.get(k):
+            st[k] = rel(st[k])
+    return st
+
+
+def editor_media(b: Path, P: dict) -> tuple[dict, bool, bool]:
+    """The live preview's media for a plan (tools\\miniedit.py media): per clip its light copy and its sound's
+    loudness per frame, a photo itself; the song's loudness. (media, True when a shot's copy or the song's loudness is
+    missing or out of date - the preview waits for it -, True when a clip no shot uses has none yet - made quietly)."""
+    from motionlab import miniedit as ME
+    d = b / "editor"
+    idx = read_json(d / "media.json", {}) or {}
+    fps = float(P.get("fps") or 25)
+    used = {L.get("src") for L in P.get("layers", []) if L.get("type") == "clip"}
+    out, need, more = {}, False, False
+    for sid, s in (P.get("sources") or {}).items():         # (every clip: the ones no shot uses can be added; the
+        src = Path(str(s.get("source") or ""))              # page waits only for the shots' own)
+        if not src.is_file():
+            out[sid] = {"missing": True}
+            continue
+        if src.suffix.lower() in PHOTO_EXT:
+            out[sid] = {"photo": rel(src)}
+            continue
+        e = idx.get(sid) or {}
+        ok = e.get("key") == ME.media_key(src, fps) and (d / str(e.get("proxy"))).is_file() \
+            and (d / str(e.get("strip_file"))).is_file()
+        out[sid] = {"proxy": rel(d / e["proxy"]), "wave": rel(d / e["wave"]) if (d / str(e.get("wave"))).is_file()
+                    else None, "strip": {**(e.get("strip") or {}), "url": rel(d / e["strip_file"])}} if ok \
+            else {"source": rel(src)}
+        need = need or (not ok and sid in used)
+        more = more or not ok
+    song = ME.song_source(P)
+    if ME.sound_mode(P) == "song" and song and song.is_file():
+        e = idx.get("_song") or {}
+        ok = e.get("key") == ME.media_key(song, fps) and str(e.get("wave")).endswith(".all.wave.json") \
+            and (d / str(e.get("wave"))).is_file()                  # (the whole song: its start moves in the Editor)
+        out["_song"] = {"wave": rel(d / e["wave"]) if ok else None}
+        need = need or not ok
+    return out, need, more
+
+
+def editor_sounds() -> dict:
+    """The sound effects the Editor offers: this PC's recorded sounds by kind (library\\sounds, never the ones set
+    off) and every kind's made-up sound."""
+    from motionlab import sfx as SFX
+    try:
+        lib = SFX.Library.load()
+    except (OSError, ValueError):
+        lib = None
+    rec = []
+    for kind, es in sorted((lib.by_kind if lib else {}).items()):
+        for e in es:
+            rec.append({"file": e["file"], "kind": kind, "len_s": e.get("len_s"),
+                        "name": Path(str(e.get("original") or e["file"])).stem.replace("_", " ")})
+    return {"recorded": rec, "kinds": list(SFX.KINDS)}
+
+
+SOUND_IN = LAB / ".app" / "sound_import"                  # sounds the user adds: copied here, then imported (a job)
+
+
+def agency_stats_upload(name: str, platform: str, stream, size: int) -> dict:
+    """Content agency > Your videos > Import your stats (0.6.0 step 13): a file the user exported from YouTube Studio,
+    TikTok Studio or Meta Business Suite (a raw body, <= 50 MB) -> read (motionlab\\stats) into
+    knowledge\\local\\stats.json; the file itself is not kept."""
+    import tempfile
+    import zipfile
+    from motionlab import stats as STS
+    suf = Path(str(name)).suffix.lower()
+    if suf not in (".csv", ".xlsx", ".zip", ".tsv", ".txt") or not 0 < size <= 50_000_000:
+        _drain(stream, size)
+        raise ValueError(I18N.t("a .csv, .xlsx or .zip file from YouTube Studio, TikTok Studio or Meta Business Suite"))
+    with tempfile.TemporaryDirectory(prefix="ml_stats_") as td:
+        f = Path(td) / f"export{suf}"
+        f.write_bytes(stream.read(size))
+        try:
+            return STS.import_file(f, platform or None, Path(str(name)).name[:120])
+        except (ValueError, zipfile.BadZipFile) as e:
+            raise ValueError(I18N.t(str(e)) if str(e) else I18N.t("the file could not be read"))
+
+
+def brand_mood_upload(name: str, stream, size: int) -> dict:
+    """My Brand > Style > Your mood board (0.6.0 step 7): a picture the user picked (a raw body, <= 25 MB) -> copied
+    into knowledge\\local\\brand\\mood\\ and measured (motionlab\\moodboard); -> the board."""
+    from motionlab import moodboard as MB
+    if not 0 < size <= MB.MAX_BYTES:
+        _drain(stream, size)
+        raise ValueError(I18N.t("the picture is empty or bigger than 25 MB"))
+    data = stream.read(size)
+    try:
+        return _mood_paths(MB.add(str(name), data))
+    except ValueError as e:
+        raise ValueError(I18N.t(str(e)) if "not a picture" not in str(e) else
+                         I18N.t("{file}: not a picture ({types})", file=str(name)[-80:], types=", ".join(MB.EXT)))
+
+
+def _mood_paths(st: dict) -> dict:
+    from motionlab import moodboard as MB
+    for it in st["items"]:
+        it["src"] = rel(MB.DIR / it["file"])
+    return st
+
+
+def brand_mood(n: int | None = None) -> dict:
+    """The mood board (n = a picture taken off it first)."""
+    from motionlab import moodboard as MB
+    return _mood_paths(MB.remove(int(n)) if n is not None else MB.state())
+
+
+def music_state() -> dict:
+    """Motion Graphics > Music (0.6.0 step 10): the music library (motionlab\\music.py) - every song and bed with its
+    measures and flags - + the ElevenLabs settings and the beds it can make (the credits each takes)."""
+    from motionlab import music as MU
+    from motionlab import sfxgen as GEN
+    st = MU.state()
+    try:
+        beds = {k: {"n": int(v.get("n", 0)), "what": v["prompts"][0], "credits": GEN.cost(v.get("seconds", 15))}
+                for k, v in MU.bed_prompts().items() if k in MU.BEDS}
+    except (OSError, ValueError, KeyError):
+        beds = {}
+    return {**st, "elevenlabs": GEN.public(), "make": beds}
+
+
+def music_set(r: str, off=None, fav=None) -> dict:
+    """A song / bed hidden (never offered) or shown, a favourite (offered first) or not - library\\music\\music.json."""
+    from motionlab import music as MU
+    try:
+        return MU.set_flags(str(r), off=off, fav=fav)
+    except ValueError:
+        raise ValueError(I18N.t("no file {file} in the music library", file=str(r)[-80:])) from None
+
+
+def music_upload(name: str, typ: str, kind: str, stream, size: int) -> dict:
+    """Motion Graphics > Music > Add: a song or an ambience bed the user picked (a raw body; the original is only
+    read by the browser) -> a new file in library\\music\\ (a bed: ambience\\<kind>\\), never over one; then the page
+    starts the job that measures it."""
+    from motionlab import music as MU
+    if Path(str(name)).suffix.lower() not in MU.AUDIO_EXT or is_junk(Path(str(name))):
+        _drain(stream, size)
+        raise ValueError(I18N.t("{file}: not a sound ({types})", file=str(name)[-80:], types=", ".join(MU.AUDIO_EXT)))
+    if not 0 < size <= 300_000_000:
+        _drain(stream, size)
+        raise ValueError(I18N.t("the file is empty or bigger than 300 MB"))
+    try:
+        folder = MU.target("bed" if typ == "bed" else "song", kind)
+    except ValueError:
+        _drain(stream, size)
+        raise ValueError(I18N.t("pick what kind of ambience it is")) from None
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = MU.free_name(folder, str(name))
+    part, left = dest.with_name(dest.name + ".part"), size
+    with open(part, "wb") as f:
+        while left > 0:
+            chunk = stream.read(min(1 << 20, left))
+            if not chunk:
+                break
+            f.write(chunk)
+            left -= len(chunk)
+    if left:
+        part.unlink(missing_ok=True)
+        raise ValueError(I18N.t("the upload stopped half way - try again"))
+    part.replace(dest)
+    return {"rel": MU.rel(dest)}
+
+
+def music_file(r: str) -> Path:
+    """A song or bed of the music library to hear - only a file the library holds."""
+    from motionlab import music as MU
+    hit = next((it["path"] for it in MU.scan() if MU.rel(it["path"]) == str(r)), None)
+    if hit is None:
+        raise FileNotFoundError(str(r)[-80:])
+    return hit
+
+
+def brand_sound_logo_upload(name: str, stream, size: int) -> dict:
+    """My Brand > Your end card > Sound: a sound file the user picked (a raw body, <= 10 MB, a few seconds) as the
+    brand's sound logo (motionlab\\brand.py save_sound_logo) -> My Brand."""
+    if not 0 < size <= 10_000_000:
+        _drain(stream, size)
+        raise ValueError(I18N.t("the file is empty or bigger than 10 MB"))
+    from motionlab import brand as BR
+    raw = stream.read(size)
+    b = BR.save_sound_logo(str(name), raw)          # (its errors are already in the app's language)
+    return {**b, "_end": BR.end_card(b, preview=True)}
+
+
+def brand_sound_logo_file() -> Path:
+    from motionlab import brand as BR
+    snd = (BR.load().get("identity") or {}).get("sound_logo") or ""
+    if not snd or not (LAB / snd).is_file():
+        raise FileNotFoundError("sound logo")
+    return LAB / snd
+
+
+def sounds_state() -> dict:
+    """Motion Graphics > Sounds (0.6.0 step 9): this PC's recorded sounds (library\\sounds - the ones set off too),
+    the packs MotionLab's shared list knows (tools\\sounds\\import_list.json: how many of each are on this PC, where
+    to get them) and the kinds."""
+    from motionlab import sfx as SFX
+    from motionlab import sfxgen as GEN
+    SFX.ensure_shipped()
+    jp = SFX.SOUNDS / "sounds.json"
+    rows = (read_json(jp, {}) or {}).get("sounds", []) if jp.exists() else []
+    L = SFX.read_list()
+    have = {e["file"] for e in rows}
+    packs = [{"id": k, **{x: p.get(x, "") for x in ("name", "page", "how", "licence")},
+              "listed": sum(1 for r in L["sounds"] if r["pack"] == k),
+              "here": sum(1 for r in L["sounds"] if r["pack"] == k and r.get("file") in have)}
+             for k, p in (L.get("packs") or {}).items()]
+    def name(e: dict) -> str:                               # the pack's own name for it (a pick made from a trial
+        src = str(e.get("source") or "")                    # copy names the pack's file in its "source")
+        inner = re.sub(r" \((picked|trial)[^)]*\)$", "", src.split(": ", 1)[1]) if ": " in src else ""
+        if src.startswith(GEN.SOURCE):                      # a sound made from a description: its first words
+            words = inner.split()
+            return " ".join(words[:6]) + ("…" if len(words) > 6 else "")
+        return Path(inner.replace("\\", "/").split("/")[-1] or str(e.get("original") or e["file"])).stem.replace("_", " ")
+    out = [{"file": e["file"], "kind": e["kind"], "len_s": e.get("len_s"), "name": name(e),
+            "source": str(e.get("source", "")).split(":")[0].split(" (")[0], "licence": e.get("licence", ""),
+            "off": bool(e.get("off")), "fav": bool(e.get("fav")), "added": e.get("added", ""),
+            "made": str(e.get("source", "")).startswith(GEN.SOURCE)} for e in rows if (SFX.SOUNDS / e["file"]).exists()]
+    try:
+        gk = {k: {"n": int(v.get("n", 1)), "what": v["prompts"][0], "credits": GEN.cost(v.get("seconds", 1.0))}
+              for k, v in GEN.prompts()["kinds"].items()}
+    except (OSError, ValueError, KeyError):
+        gk = {}
+    return {"sounds": out, "packs": packs, "kinds": list(SFX.KINDS), "elevenlabs": GEN.public(), "generate": gk}
+
+
+def sound_set(file: str, off=None, fav=None) -> dict:
+    """A sound hidden (never used) / shown, a favourite (used first) or not - library\\sounds\\sounds.json."""
+    from motionlab import sfx as SFX
+    jp = SFX.SOUNDS / "sounds.json"
+    if not jp.exists() or not any(e["file"] == file for e in (read_json(jp, {}) or {}).get("sounds", [])):
+        raise ValueError(I18N.t("no sound {sound} in the library", sound=str(file)[:80]))
+    flags = {k: bool(v) for k, v in (("off", off), ("fav", fav)) if v is not None}
+    SFX.set_flags(SFX.SOUNDS, file, **flags)
+    return {"file": file, **flags}
+
+
+def sound_upload(batch: str, path: str, stream, size: int) -> dict:
+    """A sound file the user picked (a raw body; the original is only read by the browser): into
+    .app\\sound_import\\<batch>\\<its path in what was picked>, for the import job. Sound files only."""
+    from motionlab import sfx as SFX
+    if not re.fullmatch(r"\d{8}-\d{6}-[a-z0-9]{4}", str(batch)):
+        raise ValueError(I18N.t("not an upload: {id}", id=repr(str(batch)[:40])))
+    parts = [re.sub(r"[^\w.\- ()&'+,\[\]]", "_", x).strip(" .")[:120] for x in str(path).replace("\\", "/").split("/")]
+    parts = [x for x in parts if x and x not in (".", "..")][-6:]
+    if not parts or Path(parts[-1]).suffix.lower() not in SFX.AUDIO_EXT or is_junk(Path(parts[-1])):
+        _drain(stream, size)
+        raise ValueError(I18N.t("{file}: not a sound ({types})", file=str(path)[-80:], types=", ".join(SFX.AUDIO_EXT)))
+    if not 0 < size <= 200_000_000:
+        _drain(stream, size)
+        raise ValueError(I18N.t("the file is empty or bigger than 200 MB"))
+    dest = SOUND_IN / batch / Path(*parts)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    part, left = dest.with_name(dest.name + ".part"), size
+    with open(part, "wb") as f:
+        while left > 0:
+            chunk = stream.read(min(1 << 20, left))
+            if not chunk:
+                break
+            f.write(chunk)
+            left -= len(chunk)
+    if left:
+        part.unlink(missing_ok=True)
+        raise ValueError(I18N.t("the upload stopped half way - try again"))
+    part.replace(dest)
+    return {"batch": batch, "file": "/".join(parts)}
+
+
+def sounds_share() -> dict:
+    """Sounds > Share with friends: the sounds made on a paid ElevenLabs plan as one zip (.app\\share\\), shown in
+    Explorer for the user to put on Google Drive."""
+    import subprocess
+    from motionlab import sfxgen as GEN
+    try:
+        r = GEN.share_zip()
+    except GEN.GenError as e:
+        raise ValueError(I18N.t(str(e)))
+    subprocess.Popen(["explorer", "/select,", r["zip"]])
+    return {"count": r["count"], "name": Path(r["zip"]).name}
+
+
+def sound_import_src(batch: str = "", folder: str = "") -> Path:
+    """Where an import reads from: the sounds the user added (a batch) or a folder of theirs typed in (only read)."""
+    if batch:
+        if not re.fullmatch(r"\d{8}-\d{6}-[a-z0-9]{4}", str(batch)) or not (SOUND_IN / batch).is_dir():
+            raise ValueError(I18N.t("not an upload: {id}", id=repr(str(batch)[:40])))
+        return SOUND_IN / batch
+    f = Path(str(folder).strip().strip('"'))
+    if not str(folder).strip() or not f.is_absolute() or not f.is_dir():
+        raise ValueError(I18N.t("no folder {folder}", folder=str(folder)[:200]))
+    return f
+
+
+def editor_sound(kind: str, file: str = "") -> Path:
+    """A sound effect the Editor's preview plays: a recorded one of the library by its file (sounds.json's name - an
+    address that does not end in .wav: Edge never answered a script's fetch of a .wav, 2026-10-26), else a kind's
+    made-up sound as a WAV (made once in .app\\editor\\sounds)."""
+    from motionlab import sfx as SFX
+    if file:
+        lib = SFX.Library.load()
+        e = lib.entry(file) if lib else None
+        if not e or e.get("synth"):
+            raise FileNotFoundError(file)
+        return SFX.SOUNDS / e["file"]
+    if kind not in SFX.KINDS:
+        raise ValueError(I18N.t("no sound effect kind {kind}", kind=kind))
+    p = EDITOR_SOUNDS / f"{kind}.wav"
+    if not p.exists():
+        import soundfile as sf
+        EDITOR_SOUNDS.mkdir(parents=True, exist_ok=True)
+        x = SFX.synth(kind, {}, 1)
+        sf.write(str(p), x, SFX.SR, subtype="PCM_16")
+    return p
+
+
+def miniedit_state(name: str, plan: str) -> dict:
+    """What the Editor tab draws and plays for a plan: motionlab\\miniedit.state + the render it made (if any), the
+    preview's media and the sound effects it offers."""
+    from motionlab import miniedit as ME
+    b, P = _me_plan(name, plan)
+    out = b / str(P.get("output") or "-")
+    media, need, more = editor_media(b, P)
+    return {"plan": plan, "render": rel(out) if out.is_file() else None, "media": media, "need_media": need,
+            "need_more": more,
+            "library": editor_sounds(), **_me_paths(ME.state(P))}
+
+
+def miniedit_preview(name: str, plan: str, ops) -> dict:
+    """The changes so far on the plan, nothing saved: the state they make + a line each (frame + timecode)."""
+    from motionlab import miniedit as ME
+    _, P = _me_plan(name, plan)
+    try:
+        N, done, _ = ME.apply(P, _me_ops(ops), copies=False)
+    except ME.EditError as e:
+        raise ValueError(str(e))
+    return {"done": done, **_me_paths(ME.state(N))}
+
+
+ME_RANGE_MAX = 150                                         # the longest moment rendered exactly (frames)
+
+
+def miniedit_range(name: str, plan: str, ops, a: int, b: int) -> dict:
+    """A moment of the edit as it would be (the changes so far), for an exact render before Save: its plan -
+    picture only (the sound is made on Save), graphics added in the Editor left out (they are made on Save) - as
+    build\\editor\\range_<hash>.json -> {file, a, b, out, ready}; the job editor_range renders it (render_video.py
+    --range); the same moment of the same changes is rendered once."""
+    import copy
+    import hashlib
+    from motionlab import miniedit as ME
+    bd, P = _me_plan(name, plan)
+    try:
+        N = ME.apply(P, _me_ops(ops), copies=False)[0] if ops else ME.unique_ids(copy.deepcopy(P))
+    except ME.EditError as e:
+        raise ValueError(str(e))
+    N["layers"] = [L for L in N["layers"] if not L.get(ME.NEW_KEY)]
+    N = ME.saved(N)
+    N.pop("audio", None)
+    a, b = max(0, min(int(a), int(b))), min(int(N["frames"]) - 1, max(int(a), int(b)))
+    if b - a + 1 > ME_RANGE_MAX:
+        a = max(0, b - ME_RANGE_MAX + 1)
+    h = hashlib.sha1(json.dumps(N, sort_keys=True).encode("utf-8")).hexdigest()[:10]
+    d = bd / "editor"
+    d.mkdir(exist_ok=True)
+    N["name"], N["output"] = f"range_{h}", f"range_{h}.mp4"
+    f = d / f"range_{h}.json"
+    if not f.exists():
+        f.write_text(json.dumps(N, ensure_ascii=False), encoding="utf-8")
+    out = d / f"range_{h}_{a}-{b}.mp4"
+    return {"file": f.name, "a": a, "b": b, "out": rel(out), "ready": out.is_file()}
+
+
+def miniedit_save(name: str, plan: str, ops) -> str:
+    """The changes checked once more, then kept as build\\miniedit\\changes_<time>.json for the job (tools\\miniedit.py
+    apply ... --build) -> that file's name."""
+    from motionlab import miniedit as ME
+    b, P = _me_plan(name, plan)
+    ops = _me_ops(ops)
+    try:
+        ME.apply(P, ops, copies=False)
+    except ME.EditError as e:
+        raise ValueError(str(e))
+    d = b / "miniedit"
+    d.mkdir(exist_ok=True)
+    f = d / f"changes_{time.strftime('%Y%m%d-%H%M%S')}.json"
+    f.write_text(json.dumps(ops, ensure_ascii=False, indent=1), encoding="utf-8")
+    return f.name
 
 
 def save_outcome(name: str, body: dict) -> dict:

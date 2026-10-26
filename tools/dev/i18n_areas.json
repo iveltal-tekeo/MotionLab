@@ -430,7 +430,11 @@
    "tools/motionlab/prompts.py",
    "tools/motionlab/publish.py",
    "tools/motionlab/thumbnail.py",
-   "tools/motionlab/textsets.py"
+   "tools/motionlab/textsets.py",
+   "tools/motionlab/brand.py",
+   "tools/motionlab/agency.py",
+   "tools/motionlab/miniedit.py",
+   "tools/motionlab/edfx.py"
   ],
   "server-labels": [
    "tools/motionlab/knowledge.py",

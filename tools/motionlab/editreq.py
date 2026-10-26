@@ -20,6 +20,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from motionlab import brand as BR
 from motionlab import i18n as I18N
 from motionlab import style as ST
 from motionlab.styles import CATEGORIES
@@ -94,6 +95,18 @@ SFX_KINDS = {
     "playful": {"label": "Playful & 8-bit", "help": "games, money, fun", "kinds": ["chip", "chip_hit", "ching", "cork"]},
     "sparkle": {"label": "Sparkle", "help": "glows, light leaks", "kinds": ["shimmer", "flutter", "ghost"]},
 }
+# 2. Text - product motion (0.6.0, My Brand step 5): a product of My Brand's catalogue shown with the Motion Graphics
+# template "product-card" - in passing, as the call to action at the end, or both
+PRODUCT_HOW = {
+    "passing": "in passing: 2-3 s, background off (see-through, its words on a card of their own), over a shot where "
+               "the product fits - in the lower part of the frame, never over a face",
+    "end": "as the call to action at the end: background on, the last 3-4 s, after the last shot (the price and the "
+           "button with the website stay on screen to the end)",
+    "both": "both: once in passing (2-3 s, background off, over a shot where it fits) and again as the call to action "
+            "at the end (background on, the last 3-4 s)",
+}
+MAX_PRODUCTS = 2
+MAX_SOUNDS = 40                                     # 0.6.0: the library sounds one edit may be given
 FORMAT_WORDS = {"vertical": "vertical 9:16 (1080x1920) - TikTok, Reels, Shorts",
                 "horizontal": "horizontal 16:9 (1920x1080) - YouTube", "square": "square 1:1 (1080x1080) - a feed"}
 
@@ -108,9 +121,18 @@ def options() -> dict:
             "rhythm": _rows(RHYTHM), "moods": _rows(MOODS), "max_moods": MAX_MOODS, "captions": _rows(CAPTIONS),
             "palettes": _rows(PALETTES, "colours"), "max_colours": MAX_COLOURS, "sfx_amount": _rows(SFX_AMOUNT),
             "sfx_kinds": _rows(SFX_KINDS), "presets": ST.presets_info(), "max_refs": ST.MAX_REFS,
-            "formats": sorted(ST.SIZES), "min_per_s": MIN_PER_S,
-            "songs": [{"name": p.name, "rel": p.relative_to(LAB).as_posix()} for p in sorted(SONGS.glob("*"))
-                      if p.is_file() and p.suffix.lower() in AUDIO_EXT] if SONGS.is_dir() else []}
+            "formats": sorted(ST.SIZES), "min_per_s": MIN_PER_S, **_music_options()}
+
+
+def _music_options() -> dict:
+    """0.6.0 step 10: the music library's songs (downloaded + added, the hidden ones left out, ★ first) with their
+    measures, and its ambience beds."""
+    from . import music as MU
+    keep = ("rel", "title", "artist", "from", "fav", "len_s", "bpm", "energy", "tone", "kind")
+    rows = [x for x in MU.state()["tracks"] if not x["off"]]
+    return {"songs": [{"name": Path(x["rel"]).name, **{k: x[k] for k in keep if k in x}} for x in rows
+                      if x["type"] == "song"],
+            "beds": [{k: x[k] for k in keep if k in x} for x in rows if x["type"] == "bed"]}
 
 
 # ------------------------------------------------------------------ the check
@@ -145,10 +167,24 @@ def _music(v, folder: Path) -> str | None:
     if "/" not in v:
         ok = (folder / v).is_file() and Path(v).suffix.lower() in AUDIO_EXT
     else:
+        from . import music as MU                   # a downloaded song, or one added to the music library (0.6.0)
         p = (LAB / v).resolve()
-        ok = p.parent == SONGS.resolve() and p.is_file() and p.suffix.lower() in AUDIO_EXT
+        ok = p.is_file() and p.suffix.lower() in AUDIO_EXT and (
+            p.parent == SONGS.resolve() or (MU.ROOT.resolve() in p.parents and "ambience" not in
+                                            [x.lower() for x in p.relative_to(MU.ROOT.resolve()).parts]))
     if not ok:
         raise ValueError(I18N.t("{file}: not a song in the video's folder or in refs\\audio", file=v))
+    return v
+
+
+def _bed(v) -> str | None:
+    """0.6.0 step 10: an ambience bed of the music library (its lab-relative path), or None."""
+    from . import music as MU
+    v = str(v or "").replace("\\", "/")
+    if not v:
+        return None
+    if not any(x["rel"] == v and x["type"] == "bed" for x in MU.state()["tracks"]):
+        raise ValueError(I18N.t("{file}: not an ambience bed of the music library", file=v[-80:]))
     return v
 
 
@@ -226,7 +262,20 @@ def clean(body: dict, folder: Path) -> dict:
                                  ("fit", "contain" if o.get("fit") == "contain" else None)) if v is not None}
         if x:
             photos[str(name)] = x
-    req = {"v": 2, "like": like, "exact": exact, "prompt": prompt or None,
+    products = []                                   # 0.6.0 product motion: My Brand's products, switched on for videos
+    if isinstance(body.get("products"), list) and body["products"]:
+        cat = {p["id"]: p for p in BR.load().get("catalogue") or [] if p.get("use") is not False}
+        for x in list(body.get("products"))[:MAX_PRODUCTS]:
+            pid = str((x or {}).get("id") or "")
+            if pid not in cat:
+                raise ValueError(I18N.t("a product that is not in My Brand's catalogue for videos: {id}", id=pid[:20]))
+            if pid not in [p["id"] for p in products]:
+                p = cat[pid]
+                products.append({"id": pid, "how": x.get("how") if x.get("how") in PRODUCT_HOW else "end", "name": p["name"],
+                                 "what": p.get("what", ""), "price": p.get("price", ""), "url": p.get("url", ""),
+                                 "image": p.get("image", ""),
+                                 **{k: p[k] for k in ("benefit", "claims", "never", "media") if p.get(k)}})   # 5b
+    req = {"v": 2, "like": like, "exact": exact, "prompt": prompt or None, "products": products,
            "about": _text(body.get("about"), 2000, lines=True),
            "on_screen": [x[:120] for x in _text(ons, 2000, lines=True).splitlines()[:12]],
            "presets": presets, "want": _text(body.get("want"), 1500),
@@ -235,11 +284,25 @@ def clean(body: dict, folder: Path) -> dict:
                      "moods": _some(MOODS, sty.get("moods"), "moods", MAX_MOODS),
                      "captions": _one(CAPTIONS, sty.get("captions"), "captions"), "palette": palette},
            "sfx": {"amount": _one(SFX_AMOUNT, sfx.get("amount"), "sfx"), "kinds": _some(SFX_KINDS, sfx.get("kinds"), "kinds"),
-                   "notes": _text(sfx.get("notes"), 600)},
+                   "notes": _text(sfx.get("notes"), 600), "sounds": _sounds(sfx.get("sounds"))},
            "length_s": length, "format": fmt, "music": _music(body.get("music"), folder), "sound": sound,
-           "resolve": bool(body.get("resolve")), "photos": photos}
+           "ambience": _bed(body.get("ambience")),
+           "resolve": bool(body.get("resolve")), "photos": photos,
+           "brand": BR.snapshot() if body.get("brand") else None}      # 0.6.0: For my brand - My Brand as it is now
     req["how"] = how_of(req)
     return req
+
+
+def _sounds(files) -> list[str]:
+    """0.6.0 New edit's *Choose the sounds*: this PC's library sounds the user ticked (in use, by their file)."""
+    if not files:
+        return []
+    from . import sfx as SFX
+    lib = SFX.Library.load()
+    ok = [str(f) for f in list(files)[:MAX_SOUNDS] if lib is not None and lib.entry(str(f)) not in (None, SFX.Library.SYNTH)]
+    if len(ok) != len(list(files)[:MAX_SOUNDS]):
+        raise ValueError(I18N.t("a sound that is not in this PC's library"))
+    return ok
 
 
 # ------------------------------------------------------------------ the brief Claude follows
@@ -263,9 +326,11 @@ def brief(req: dict, f: dict) -> str:
          f"Saved by the app (Editor > New edit) on {req.get('date', '')} for `projects\\{p}`; the same data is "
          "`build\\edit_request.json`. Follow it step by step with /recreate-video - *cheapest check first*, the user "
          "approves each step. Anything the user left on automatic is your call: decide it from the references, "
-         "Claude's memory and their ratings, and say what you chose.", "",
-         "## 1. Clips",
-         f"- {f.get('clips', 0)} clip(s) in `projects\\{p}` - read-only; everything you make goes into `build\\`."]
+         "Claude's memory and their ratings, and say what you chose.", ""]
+    if req.get("brand"):                             # 0.6.0: For my brand, first - it shapes every step below
+        L += ["## For my brand", *BR.brief_lines(req["brand"], "video"), ""]
+    L += ["## 1. Clips",
+          f"- {f.get('clips', 0)} clip(s) in `projects\\{p}` - read-only; everything you make goes into `build\\`."]
     if f.get("photos"):
         from motionlab import photos as PH
         own = req.get("photos") or {}
@@ -295,6 +360,22 @@ def brief(req: dict, f: dict) -> str:
                      if talk else "Follow it part by part; ask what it leaves open in one message before building."))
     if not (req.get("about") or req.get("on_screen") or req.get("prompt")):
         L.append("- Nothing written: start from the clips' storyboards.")
+    if req.get("products"):                          # 0.6.0 product motion
+        import json as _json
+        b = req.get("brand") or BR.load()
+        logo = BR.logo_for(b, BR.product_card_values(b, {}).get("paper"))   # the version that reads on the card
+        L.append("- **Products to show** (product motion - My Brand's catalogue; each price exactly as written). Build each "
+                 "from the Motion Graphics template `product-card`: `tools\\overlay.py new build\\overlays\\product_<id> "
+                 "--from product-card --values <the JSON below>` (pass it as one argument from Python, not through a "
+                 "shell), then `overlay.py fit` to the edit's size; copy the product's picture into the graphic's "
+                 "`assets\\media\\` and set `product_media` to `assets/media/<its file>`" + (
+                     f", the logo (`{logo}`) the same way into `logo_media`" if logo else "") + ":")
+        for p in req["products"]:
+            L.append(f"  - **{p['name']}**" + (f" - {p['price']}" if p.get("price") else "") + f" - {PRODUCT_HOW[p['how']]}"
+                     + (f"; its picture `{p['image']}`" if p.get("image") else "; no picture: the card's placeholder, or a "
+                                                                                 "frame of the clips that shows it")
+                     + f"; settings {_json.dumps(BR.product_card_values(b, p), ensure_ascii=False)}"
+                     + BR.product_facts(p).replace(" - ", "; ", 1))      # 5b: say only what its facts say
     L += ["", "## 3. References"]
     if req.get("like"):
         refs = f.get("refs") or {}
@@ -304,6 +385,10 @@ def brief(req: dict, f: dict) -> str:
                                            "of 4) - their rhythm, effects and captions, never their content "
                                            "(the skill's by_feel.md):"))
         L += [f"  - `{k}`" + (f" - {refs[k]}" if refs.get(k) and refs[k] != k else "") for k in req["like"]]
+    elif ((req.get("brand") or {}).get("look") or {}).get("like"):
+        L.append("- None picked here, but **For my brand** is ticked: the brand's editing look is the reference - "
+                 + ", ".join(f"`{x}`" for x in req["brand"]["look"]["like"]) + " - their style, mixed (`tools\\style.py` "
+                 "with them + 4. Style; the skill's by_feel.md).")
     else:
         L.append("- None: the style comes from 4. Style (nothing there either = `tools\\style.py closest \"<their "
                  "words>\"` first, the skill's by_feel.md step 0).")
@@ -340,6 +425,10 @@ def brief(req: dict, f: dict) -> str:
                             "the clips' own sound, shot by shot" if snd == "clips" or music == "none" else
                             "talking - keep what is said in order, cut the pauses" if snd == "talk" else
                             "automatic - the song in the folder if there is one, else the clips' own sound") + ".")
+    if req.get("ambience"):
+        L.append(f"- **Ambience under the voice** (the user's pick, the music library): `{req['ambience']}` - put "
+                 f"`\"bed\": {{\"file\": \"{req['ambience']}\"}}` in the plan's `\"sfx\"`; `sfx.py plan` / build.py loop "
+                 "it under the voice, 26 dB under the words (`\"db\"` changes that), faded in and out.")
     L.append("- Sound effects: " + (SFX_AMOUNT[sx["amount"]]["rule"] if sx.get("amount") else
                                     "automatic - as the references' sound answer says (`verdicts(...)` \"sound\"), else "
                                     "Claude's memory ratings (rated bad once = add them)."))
@@ -347,6 +436,10 @@ def brief(req: dict, f: dict) -> str:
         kinds = [k for g in sx["kinds"] for k in SFX_KINDS[g]["kinds"]]
         L.append(f"- Kinds the user wants ({', '.join(SFX_KINDS[g]['label'] for g in sx['kinds'])}): the cue kinds "
                  f"{', '.join(kinds)} - set them as the plan's own `cues`; other kinds only where none of these fits.")
+    if sx.get("sounds") and sx.get("amount") != "none":
+        L.append("- **The sounds the user picked** (this PC's library): a kind with sounds here uses only those - put "
+                 "them in the plan's `\"sfx\": {\"sounds\": [...]}` (sfx.py plan and build.py keep it): "
+                 + ", ".join(f"`{f}`" for f in sx["sounds"]) + ".")
     if sx.get("notes"):
         L += ["- **Notes on sound**:", *_quote(sx["notes"])]
     if sx.get("amount") != "none":
@@ -376,11 +469,14 @@ def draft_args(req: dict) -> list[str]:
     rhythm = (req.get("style") or {}).get("rhythm")
     if not presets and rhythm in RHYTHM and not talk:
         presets = [RHYTHM[rhythm]["preset"]]
-    if req.get("exact") or req.get("how") == "copy" or not (req.get("like") or presets or req.get("want") or talk):
+    # For my brand and no references picked: the brand's editing look (0.6.0, My Brand)
+    like = req.get("like") or [x for x in ((req.get("brand") or {}).get("look") or {}).get("like") or []
+                                if ST.find(x) is not None]
+    if req.get("exact") or req.get("how") == "copy" or not (like or presets or req.get("want") or talk):
         raise ValueError(I18N.t("a quick draft is made from videos' style, your words or a talking script "
                                 "(an exact copy or another prompt: Claude)"))
     out: list[str] = ["--preset", "talking"] if talk else []
-    for x in req.get("like") or []:
+    for x in like:
         out += ["--like", x]
     for x in presets:
         out += ["--preset", x]
@@ -404,4 +500,8 @@ def draft_args(req: dict) -> list[str]:
         kinds = [k for g in sx.get("kinds") or [] if g in SFX_KINDS for k in SFX_KINDS[g]["kinds"]]
         if kinds:
             out += ["--sfx-kinds", ",".join(kinds)]
+        if sx.get("sounds"):
+            out += ["--sfx-sounds", ",".join(sx["sounds"])]
+    if req.get("ambience"):
+        out += ["--ambience", str(LAB / req["ambience"])]
     return out

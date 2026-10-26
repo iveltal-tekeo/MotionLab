@@ -97,6 +97,9 @@ POST_FILE = "post_copy.json"                            # build\publish\: the ne
 def song_source(plan: dict) -> tuple[Path | None, float]:
     """The song a plan plays and where in it the video starts (s): a quick draft's made_by, else the song of its mix
     (sfx.py's sound report), else its audio file."""
+    cut = (plan.get("audio") or {}).get("cut") or {}         # 0.6.0: the Editor cut the song again (its own copy)
+    if cut.get("from"):
+        return Path(cut["from"]), float(cut.get("start_s") or 0)
     mb = plan.get("made_by") or {}
     if mb.get("music"):
         return Path(mb["music"]), float(mb.get("music_start_s") or 0)

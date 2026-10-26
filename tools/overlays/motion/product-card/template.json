@@ -1,0 +1,88 @@
+{
+ "name": "Product card",
+ "kind": "promo",
+ "category": "UI Elements",
+ "what": "A product from your catalogue: its picture on a card rises and settles, its name comes up word by word, what it is fades in, the price pops in, a button with your website slides in and pulses once, your logo fades into the card's corner. Upright the picture sits on top; wide, left of the words. Over a video, the words sit on a card of their own.",
+ "use_for": [
+  "product",
+  "service",
+  "price",
+  "shop",
+  "call to action",
+  "end card",
+  "my brand",
+  "promo",
+  "catalogue"
+ ],
+ "tags": [
+  "product",
+  "price",
+  "card",
+  "button",
+  "logo",
+  "promo",
+  "needs media"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build for My Brand's product motion (0.6.0, 2026-10-25), in the Editorial warm look",
+ "motion": "f0-f12 the card rises 70 px and scales 0.9 -> 1 (decelerating); f8-f22 the name word by word, each 2 f after the one before, rising half its size; f14-f24 what it is fades up; f18-f28 the price pops 1.35 -> 1 with an overshoot; f24-f34 the button slides 40 px in; f30-f40 the logo fades in; f64-f74 the button pulses once; then it holds",
+ "tracks": [
+  {"name": "card", "what": "the product's picture rises and settles", "start_f": 0, "length_f": 12, "easing": "decelerating"},
+  {"name": "name", "what": "the product's name, word by word", "start_f": 8, "length_f": 14, "easing": "decelerating"},
+  {"name": "price", "what": "the price pops in", "start_f": 18, "length_f": 10, "easing": "overshoot (back out)"},
+  {"name": "button", "what": "the button slides in", "start_f": 24, "length_f": 10, "easing": "decelerating"},
+  {"name": "pulse", "what": "the button pulses once", "start_f": 64, "length_f": 10, "easing": "S-curve"},
+  {"name": "hold", "what": "everything still", "start_f": 74, "length_f": 46, "easing": "none"}
+ ],
+ "core_points": 3,
+ "text_slots": [
+  "name",
+  "what",
+  "price",
+  "cta"
+ ],
+ "media_slots": [
+  {
+   "id": "product_media",
+   "label": "The product's picture",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "1:1",
+   "min_px": 800,
+   "max_s": 4.0,
+   "fit": "cover",
+   "focus_setting": "product_focus",
+   "focus": "50% 50%",
+   "placeholder": "a soft gradient card in the look, labelled 'your product'"
+  },
+  {
+   "id": "logo_media",
+   "label": "Your logo",
+   "accept": [
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 200,
+   "fit": "contain",
+   "placeholder": "none - the corner stays empty"
+  }
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  6,
+  12,
+  18,
+  24,
+  30,
+  40,
+  70,
+  110
+ ]
+}

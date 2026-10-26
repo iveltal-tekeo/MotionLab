@@ -1,0 +1,191 @@
+{
+ "_comment": "Sound effects to make with ElevenLabs (0.6.0, motionlab\\sfxgen.py). Round 2 (the user, 2026-10-26: \"clean premium motion graphics sfx, the sounds it created sound very generic and low quality\"): each description says what the sound is FOR in a motion-graphics video, its material and attack, one-shot / dry / no music / no background, and what it must NOT be (cartoon, game, retro) - ElevenLabs' own guide: clear descriptions, sound terms (impact, whoosh, one-shot, glitch). WAV 48 kHz from the v3 model (the free key gets both); prompt_influence 0.6 = closer to the words; a length set = about 10 credits a second (measured: 41 credits for 4.1 s). Per kind: the descriptions used in turn, the length asked (seconds, 0.5 at least - the API's floor; the library cuts each to its sound), how many to make by default. The user, 2026-10-26, after listening to round 2: whooshes, whips, pops, keys and clicks kept, the rest \"very cheap\" -> those kinds make 0 by default (better descriptions first). \"beds\" (0.6.0 step 10, motionlab\\music.py make_beds): ambience for under a talking video, made with ElevenLabs' loop (no seam) into library\\music\\ambience\\<kind>\\ - 15 s = about 150 credits each.",
+ "model": "eleven_text_to_sound_v3",
+ "format": "wav_48000",
+ "prompt_influence": 0.6,
+ "kinds": {
+  "pop": {
+   "n": 5,
+   "seconds": 0.5,
+   "prompts": [
+    "premium UI pop for an icon appearing in a motion graphics video: soft round bubble transient with a tiny glassy top, polished and modern, one-shot, dry, no background noise, not cartoonish",
+    "clean tactile pop like a muted synth pluck, short and satisfying, high-end app interface sound, one-shot, dry, no reverb",
+    "gentle glassy pop with a very short airy sparkle tail, sleek tech product video, one-shot, no music",
+    "soft subtle pop for a small badge or number appearing, rounded low-mid body, crisp but gentle, one-shot, dry"
+   ]
+  },
+  "whoosh": {
+   "n": 6,
+   "seconds": 0.8,
+   "prompts": [
+    "smooth airy whoosh for text sliding into frame, filtered noise sweep left to right, clean and modern, short, motion graphics, one-shot, no low rumble, no music",
+    "premium transition whoosh: soft fast swish with a subtle low-end swell at the end, cinematic but restrained, polished, one-shot",
+    "sleek digital whoosh with a faint tonal shimmer, high-end tech product video, quick, one-shot, no background noise",
+    "deep smooth swoosh for a big card flying across the screen, airy and wide, clean, one-shot, no reverb tail"
+   ]
+  },
+  "whip": {
+   "n": 4,
+   "seconds": 0.5,
+   "prompts": [
+    "very short sharp swish of an element flying past, crisp and airy, clean motion graphics, one-shot",
+    "quick whip pan swish, thin and fast, polished, one-shot, no background noise"
+   ]
+  },
+  "click": {
+   "n": 3,
+   "seconds": 0.5,
+   "prompts": [
+    "crisp modern UI click of a premium app button, tight and minimal, dry, one-shot",
+    "soft tactile toggle click with a tiny tonal tick, sleek interface, one-shot, dry"
+   ]
+  },
+  "tick": {
+   "n": 0,
+   "seconds": 0.5,
+   "prompts": [
+    "tiny precise digital tick for a counter or a timeline step, clean and minimal, one-shot, dry",
+    "soft high woody tick, like a premium UI scroll detent, very short, one-shot"
+   ]
+  },
+  "impact": {
+   "n": 0,
+   "seconds": 1.5,
+   "prompts": [
+    "polished cinematic impact for a title reveal: tight punchy hit, short deep sub boom and a clean tail, modern trailer style, not distorted, one-shot",
+    "clean modern logo slam: a deep thud layered with a short airy whoosh into the hit, premium brand video, one-shot, no music"
+   ]
+  },
+  "thump": {
+   "n": 0,
+   "seconds": 0.5,
+   "prompts": [
+    "soft deep thump of a card landing, round muffled low hit, clean and minimal, one-shot, dry",
+    "subtle low body hit for a panel settling into place, warm and tight, motion graphics, one-shot"
+   ]
+  },
+  "riser": {
+   "n": 0,
+   "seconds": 2.0,
+   "prompts": [
+    "clean modern riser building into a reveal: filtered noise and a rising synth tone, ends abruptly at the peak, no drums, no music"
+   ]
+  },
+  "shimmer": {
+   "n": 0,
+   "seconds": 1.0,
+   "prompts": [
+    "delicate magical shimmer for a glow appearing: soft bright sparkles and airy chimes, premium and subtle, one-shot",
+    "light glittery sweep for a light leak passing over the frame, airy and elegant, one-shot, no music"
+   ]
+  },
+  "chime": {
+   "n": 0,
+   "seconds": 1.0,
+   "prompts": [
+    "premium notification chime: two soft bell-like synth notes, warm, clean and modern, one-shot",
+    "bright success chime of a high-end app, short ascending notes, polished, one-shot"
+   ]
+  },
+  "ching": {
+   "n": 0,
+   "seconds": 0.8,
+   "prompts": [
+    "crisp coin ching for a price appearing, bright metallic ring, short and clean, one-shot, not cartoonish"
+   ]
+  },
+  "zap": {
+   "n": 0,
+   "seconds": 0.5,
+   "prompts": [
+    "short clean digital glitch for a text distortion effect: crisp data stutter, modern, not harsh, one-shot"
+   ]
+  },
+  "crackle": {
+   "n": 0,
+   "seconds": 0.8,
+   "prompts": [
+    "short burst of fine sparkling crackles, a delicate electric spark trail, clean and close, one-shot"
+   ]
+  },
+  "air": {
+   "n": 0,
+   "seconds": 0.6,
+   "prompts": [
+    "very soft subtle air swish, barely there, for a gentle fade or a cursor moving, one-shot, no hiss"
+   ]
+  },
+  "key": {
+   "n": 2,
+   "seconds": 0.5,
+   "prompts": [
+    "single soft keystroke of a premium laptop keyboard, close and clean, one-shot, dry"
+   ]
+  },
+  "chip": {
+   "n": 0,
+   "seconds": 0.5,
+   "prompts": [
+    "short polished retro blip: three quick rising notes, clean modern take on an 8-bit sound, one-shot"
+   ]
+  },
+  "chip_hit": {
+   "n": 0,
+   "seconds": 0.5,
+   "prompts": [
+    "clean modern take on an 8-bit hit, short and punchy, one-shot"
+   ]
+  },
+  "buzz": {
+   "n": 0,
+   "seconds": 0.8,
+   "prompts": [
+    "a phone vibrating twice on a wooden table, close and clean, one-shot"
+   ]
+  }
+ },
+ "beds": {
+  "room": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "quiet room tone of a small modern home studio: soft even air and a very faint distant hum, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  },
+  "cafe": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "cozy coffee shop ambience far in the background: a soft murmur of distant conversations and an occasional cup on a saucer, warm and calm, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  },
+  "city": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "calm city street ambience heard through a closed window: distant traffic and soft wind, no horns, no sirens, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  },
+  "nature": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "gentle outdoor ambience: a soft breeze in the leaves and a few distant birds, calm and airy, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  },
+  "rain": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "soft steady rain on a window, calm and even, no thunder, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  },
+  "office": {
+   "n": 0,
+   "seconds": 15,
+   "prompts": [
+    "quiet modern office ambience: soft air conditioning and faint distant keyboard typing, no voices you can understand, no music, no clicks, steady and even all the way through, seamless loop"
+   ]
+  }
+ }
+}

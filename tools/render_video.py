@@ -3,6 +3,9 @@
     .venv\\Scripts\\python tools\\render_video.py <plan.json>                       full render -> plan["output"]
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --range 300 420       part of the timeline
     ... --workers N   parallel processes for a render (default: half the CPUs, at most 8; 1 = one process)
+    ... --no-master   0.6.0: a render's sound is mastered by default (motionlab\\loudness.py, config "master": the
+                      target LUFS, the true peak at or under -1 dBTP measured after the AAC encode; a --range part
+                      gets the whole's gain); this leaves it as mixed
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --sheet 0:3895:25     contact sheet of rendered frames
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --stills 480,1633     PNG stills
     .venv\\Scripts\\python tools\\render_video.py <plan.json> --cuts   the cut-sheet (0.5.3): one page with a still at
@@ -277,6 +280,7 @@ def main() -> int:
     ap.add_argument("--crf", type=int, default=16)
     ap.add_argument("--preset", default="medium")
     ap.add_argument("--workers", type=int, default=default_workers(), help="parallel render processes")
+    ap.add_argument("--no-master", action="store_true", help="leave the sound as mixed (no loudness master)")
     a = ap.parse_args()
     plan_path = Path(a.plan).resolve()
     plan = resolve_paths(json.loads(plan_path.read_text(encoding="utf-8")), plan_path.parent)
@@ -351,6 +355,12 @@ def main() -> int:
         render_parallel(plan_path, plan, out, s0, s1, a.crf, a.preset, a.workers)
     else:
         render_range(R, plan, out, s0, s1, a.crf, a.preset)
+    if plan.get("audio", {}).get("path") and not a.no_master:     # 0.6.0 step 22: the finished sound
+        from motionlab import loudness as LD
+        res = LD.master(out, plan["audio"], s0 / float(plan["fps"]), int(plan["frames"]), float(plan["fps"]), log=log,
+                        part=bool(a.range))
+        if not res.get("done"):
+            log(f"sound not mastered: {res.get('why')}")
     return 0
 
 

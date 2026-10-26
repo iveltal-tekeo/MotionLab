@@ -672,15 +672,17 @@ class MosaicLayer(Layer):
 
 class OverlayLayer(Layer):
     """A clip made by tools/overlay.py (HyperFrames: HTML / CSS / GSAP -> ProRes 4444 + alpha; motionlab/overlays.py):
-    plan frame f shows clip frame in + (f - start) (its last frame holds). "rect" [x, y, w, h] places and scales the
-    clip (default: at 0, 0 at the size it was authored). blend "normal" composites with its alpha; "add" / "screen"
-    add its light (colour x alpha) like the lab's glows and fireworks."""
+    plan frame f shows clip frame in + (f - start) (its last frame holds; "speed" x, 0.6.0 the Editor: in +
+    floor((f - start) * x) - captions on a sped-up shot). "rect" [x, y, w, h] places and scales the clip (default: at
+    0, 0 at the size it was authored). blend "normal" composites with its alpha; "add" / "screen" add its light
+    (colour x alpha) like the lab's glows and fireworks."""
 
     def __init__(self, spec, R):
         super().__init__(spec, R)
         from . import overlays as OV
         self.meta, self.arr = OV.load(spec["file"])
         self.inn = int(spec.get("in", 0))
+        self.speed = float(spec.get("speed", 1.0))
         W0, H0 = self.meta["width"], self.meta["height"]
         x, y, w, h = [float(v) for v in spec.get("rect", [0, 0, W0, H0])]
         self.sx, self.sy = w / W0, h / H0
@@ -694,7 +696,8 @@ class OverlayLayer(Layer):
         op = self.opacity(f)
         if op <= 0.002:
             return
-        i = min(max(self.inn + f - self.start, 0), self.arr.shape[0] - 1)
+        d = f - self.start if self.speed == 1.0 else int(math.floor((f - self.start) * self.speed + 1e-6))
+        i = min(max(self.inn + d, 0), self.arr.shape[0] - 1)
         fr = np.asarray(self.arr[i], np.float32) * (1.0 / 255.0)
         rgb, a = fr[..., :3], fr[..., 3]
         light = self.mode in ("add", "screen")

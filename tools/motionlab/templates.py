@@ -36,6 +36,7 @@ What counts (per clip, measured on a half-size grey copy, frame t compared with 
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -58,6 +59,10 @@ GAP_FRAMES = 2           # still frames inside one move
 HOLD_FRAMES = 6          # a hold = at least this many still frames
 ALIVE_SHARE = 0.0002     # a "still" frame with this much change is a drift / pulse, not frozen
 PAGE = 8                 # clips per overview page
+RECENT_PROJECTS = 5      # pick(): the newest videos whose templates the next one steers away from (2026-10-26)
+RECENT_COST = 2.0        # score a template loses per recent video that used it: a weak match rotates out, a strong
+#                          one (review-stars for a review) stays on top
+NEAR = 0.9               # pick() with a seed: matches less than this apart swap places from video to video
 
 
 def root() -> Path:
@@ -364,41 +369,111 @@ def write_index() -> Path:
 
 _WORD = re.compile(r"[a-z0-9]+")
 _STOP = set("a an the and or of to in on for with my your our it its is be that this from by at as like want video "
-            "videos make made about some".split())
+            "videos make made about some "
+            # 2026-10-26, words that matched by accident ("Wake up early" -> a bar chart that grows up, "a short about
+            # discipline" -> every "short line"): fillers and formats, no picture of their own
+            "up do does every everything one two three then than out into onto over while each another them they you "
+            "we us me so very all just get can will now new first last short shorts reel reels what when who which "
+            "where why how thing things".split())
+_KEEP = {"news", "this", "plus", "bus", "status", "focus", "bonus", "canvas", "series"}
+COMMON = 0.10            # pick(): a word in more than this share of the templates counts less (down to a quarter)
 
 
 def _words(s: str) -> list[str]:
     return [w for w in _WORD.findall((s or "").lower()) if w not in _STOP and len(w) > 1]
 
 
-def pick(want: str, n: int = 6, kinds: list[str] | None = None) -> list[dict]:
+def _stem(w: str) -> str:
+    """A word without its ending (2026-10-26, in place of a 5-letter prefix that matched stream with streak): tips ->
+    tip, counting / counts -> count, stories -> story, typed / typing / type -> typ, dropped -> drop."""
+    if len(w) <= 3 or w in _KEEP or w.endswith(("ss", "us", "is")):
+        return w
+    for suf in ("ies", "ing", "ed", "es", "s"):
+        b = w[:-len(suf)]
+        if not w.endswith(suf) or len(b) < 3 or (suf == "es" and not b.endswith(("ch", "sh", "x", "z"))):
+            continue
+        if suf in ("ing", "ed") and (not re.search(r"[aeiouy]", b) or b.endswith("e")):
+            continue                                   # string, spring, speed keep theirs
+        w = b + "y" if suf == "ies" else b[:-1] if suf in ("ing", "ed") and len(b) >= 4 and b[-1] == b[-2] \
+            and b[-1] in "bdgmnpt" else b
+        break
+    return w[:-1] if w.endswith("e") and len(w) > 3 else w
+
+
+def jitter(seed: str, tid: str) -> float:
+    """0-1, the same for the same seed and template: a video's own order among near-equal choices (no Math.random)."""
+    return int(hashlib.md5(f"{seed}|{tid}".encode("utf-8")).hexdigest()[:8], 16) / 16 ** 8
+
+
+def recent(projects: int = RECENT_PROJECTS, skip: str | None = None) -> dict[str, int]:
+    """The templates the newest videos used (2026-10-26, so one video's picks are not the next one's): every
+    project's build\\overlays\\*\\overlay.json "from" - of the newest `projects` projects (by their newest graphic), how
+    many used each template. skip = the project being made (its own versions do not count)."""
+    rows = []
+    for ov in (LAB / "projects").glob("*/build/overlays"):
+        if ov.parents[1].name == skip:
+            continue
+        used, newest = set(), 0.0
+        for o in ov.glob("*/overlay.json"):
+            try:
+                c = json.loads(o.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if isinstance(c.get("from"), str):
+                used.add(c["from"])
+                newest = max(newest, o.stat().st_mtime)
+        if used:
+            rows.append((newest, used))
+    out: dict[str, int] = {}
+    for _, used in sorted(rows, key=lambda r: -r[0])[:projects]:
+        for tid in used:
+            out[tid] = out.get(tid, 0) + 1
+    return out
+
+
+def pick(want: str, n: int = 6, kinds: list[str] | None = None, also: str = "", used: dict[str, int] | None = None,
+         seed: str | None = None) -> list[dict]:
     """The rebuilt templates that fit the user's words best (Generate starting blind): each template's name, kind,
     what, use_for and tags against the words; the score is the matched words' weight. Always returns up to n - the
     best matches first, then the most general ones (use_for "any") so a blind start never has nothing. Words that name
-    logos of the logo library ("Claude, Midjourney and Suno") lift the templates that can draw them (logos.py)."""
+    logos of the logo library ("Claude, Midjourney and Suno") lift the templates that can draw them (logos.py).
+    2026-10-26, variety: `also` = words around these (the request around a scene's line) that count half; `used` =
+    recent() - each recent video that used a template costs it RECENT_COST; `seed` (a video's name) = matches under
+    NEAR apart and equally general fallbacks in that video's own order. Without them, the order is as before."""
     from . import logos as LG
     lib = [t for t in library() if not kinds or t.get("kind") in kinds]
-    W = set(_words(want))
-    brands = [lg["name"] for lg in LG.find(want, 12) if lg["score"] >= 6]          # a logo named by its name or id
-    stems = {w[:5] for w in W if len(w) >= 5}
-    scored = []
+    W = {_stem(w) for w in _words(want)}
+    A = {_stem(w) for w in _words(also)} - W
+    brands = [lg["name"] for lg in LG.find(f"{want} {also}", 12) if lg["score"] >= 6]   # a logo named by name or id
+    hays, df = [], {}
     for t in lib:
         hay = {"name": _words(t.get("name", "")), "kind": _words(t.get("kind", "")),
                "use": _words(" ".join(t.get("use_for", []))), "tags": _words(" ".join(t.get("tags", []))),
                "what": _words(t.get("what", ""))}
+        hays.append(hay)
+        for st in {_stem(w) for ws in hay.values() for w in ws}:
+            df[st] = df.get(st, 0) + 1
+    many = max(1.0, COMMON * len(lib))                  # "title" is in 78 templates: it says little about which one
+    scored = []
+    for t, hay in zip(lib, hays):
         wt = {"name": 3, "kind": 2, "use": 3, "tags": 2, "what": 1}
         s, hits = 0.0, set()
         for k, ws in hay.items():
             for w in ws:
-                if w in W or (len(w) >= 5 and w[:5] in stems):
-                    s += wt[k]
+                st = _stem(w)
+                if st in W or st in A:
+                    s += wt[k] * (1 if st in W else 0.5) * max(0.25, min(1.0, many / df[st]))
                     hits.add(w)
         if brands and t.get("logos"):
             s += 3 + 2 * (t.get("kind") == "logo")
             hits.add("logos: " + ", ".join(brands[:4]))
-        scored.append((s, t.get("general", 0), t, sorted(hits)))
+        u = (used or {}).get(t["id"], 0)
+        j = jitter(seed, t["id"]) if seed else 0.0
+        scored.append((s - RECENT_COST * u + (NEAR * j if s > 0 else 0), t.get("general", 0) + 0.3 * j, t,
+                       sorted(hits), s, u))
     scored.sort(key=lambda x: (-x[0], -x[1], x[2]["id"]))
-    return [{**t, "score": round(s, 1), "matched": hits} for s, _, t, hits in scored[:n]]
+    return [{**t, "score": round(s, 1), "matched": hits, **({"recent": u} if u else {})}
+            for _, _, t, hits, s, u in scored[:n]]
 
 
 def catalog() -> dict:

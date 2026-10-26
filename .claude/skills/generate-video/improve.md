@@ -2,7 +2,8 @@
 
 Read after SKILL.md; the build is `from_zero.md`'s. The user watched the newest render on its Review tab, rated it per
 part and pressed *Send it to Claude*.
-1. Read `projects\<project>\build\outcome.json`: `"aspects"` = good / ok / bad + a note per part (sound, sfx, colour,
+1. Read `projects\<project>\build\outcome.json` (its `"hand_fixes"` = what the user changed themselves in the
+   Editor tab, 0.6.0: build on that version and keep those changes): `"aspects"` = good / ok / bad + a note per part (sound, sfx, colour,
    captions, graphics, effects, pacing, packaging, overall); `"moments"` (older notes on single frames: fix exactly
    those, each named with frame + timecode); `"next"`: `"fix"` = a new version with the notes (the feel is right),
    `"start_over"` = the feel is wrong - back to `from_zero.md`'s step (1), the plan in words, in a different feel (or

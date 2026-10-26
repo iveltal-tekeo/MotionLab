@@ -43,7 +43,8 @@ Work from `C:\MotionLab` with `.venv\Scripts\python`. Don't explore the lab.
 
 ## 1. What you read
 - `tools\script.py show <req-NNN>`: topic, viewer, angle, platforms (youtube / shorts / tiktok / instagram),
-  orientation (horizontal / vertical / both), language, style references (analysed videos), notes.
+  orientation (horizontal / vertical / both), language, style references (analysed videos), notes; ending with **For
+  my brand** (0.6.0) = titles in its voice, for its audience; thumbnails in its colours with its logo where it fits.
 - Picked style references: `.venv\Scripts\python tools\style.py <name> [<name>]` (format, hook, text on screen) and
   how their thumbnails look: `.venv\Scripts\python tools\thumbnail.py refs [--niche <category|tag>]` (the niche's
   outperformers first).

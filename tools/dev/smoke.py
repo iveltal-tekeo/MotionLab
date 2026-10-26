@@ -34,10 +34,12 @@ FAILED: list[str] = []
 PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory",
          "#/memory/lessons", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
          "#/analyze/thumbs", "#/analyze/texts", "#/memory/shared",      # 2026-10-18: Analyser tabs, Shared knowledge
+         "#/brand", "#/brand/style", "#/brand/catalogue", "#/agency", "#/agency/videos",   # 0.6.0: My Brand, Content agency
+         "#/motion/sounds", "#/motion/music",                           # 0.6.0: the sound and music libraries
          "#/refs", "#/projects", "#/library", "#/knowledge"]              # 0.3 addresses: still work (rewritten)
 ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "/api/projects", "/api/library",
           "/api/storage", "/api/jobs", "/api/skills", "/api/settings", "/api/downloads", "/api/update", "/api/knowledge",
-          "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts", "/api/memory",
+          "/api/text?path=CHANGELOG.md", "/api/text?path=docs/plans.md", "/api/prompts", "/api/memory", "/api/brand", "/api/brand/import", "/api/agency", "/api/agency/social", "/api/sounds", "/api/music",
           "/api/edit/options", "/api/generate/options", "/api/script/requests",
           "/api/thumbs", "/api/estimate", "/api/batches", "/api/batches?kind=review",           # 0.4.5
           "/api/motion", "/api/motion/pick?want=a%20bold%20title",                              # 0.5.0

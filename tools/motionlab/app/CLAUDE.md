@@ -17,14 +17,21 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags / label),
   a thumbnail set's or a text set's folder (`analysis\thumbs\<set>\`, `analysis\texts\<set>\`, through `thumbsets` /
   `textsets`),
-  `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate), a graphic's settings
+  `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate; since 0.6.0 My Brand's
+  `local\brand.json` + its logo `local\brand\logo.<ext>` through `motionlab\brand.py`, checked on every save; Import from
+  your website's `local\brand\import\` (the job) and the ticked products' pictures `local\brand\products\`; 0.6.0 step 10
+  the sound logo `local\brand\sound_logo.<ext>`, and the music library `library\music\` - files the user adds, new
+  names only, + music.json's ★ / hidden), a
+  graphic's settings
   (`projects\<p>\build\overlays\<o>\overlay.json` "values", validated against its index.html), since 0.3.3 an empty
   `projects\<name>\` (*Create video*), since 2026-10-15 a recording / clip the user picks or drops (*Film it*, New
   edit's *Add clips…*: POST `/api/project/<p>/upload?name=&prompt=` = a raw body streamed by `data.save_upload` into
   `build\upload\<file>.part`, then moved to `projects\<p>\<file>` - a new file only: the same name + size = kept,
   else " (2)"; video / audio / photo extensions (photos since 2026-10-24, `project.PHOTO_EXT`), never a Mac's / iPhone's
   "._" file (`project.is_junk`: a dot name, Thumbs.db, the AppleDouble header 00 05 16 07); `prompt` adds the script
-  to made_from), `projects\<p>\build\made_from.json` + `outcome.json`, since 0.4.3 a thumbnail's settings
+  to made_from), `projects\<p>\build\made_from.json` + `outcome.json` (+ since 0.6.0 the Editor's
+  `build\miniedit\changes_<time>.json`, its job writing the next plan, and its preview's `build\editor\` - the job
+  `editor_media`), since 0.4.3 a thumbnail's settings
   (`build\publish\thumbs\<id>\overlay.json` "values") + a picture the user brings (`build\publish\images\`) - never
   `package.json` itself (the tools own it; the words go through `publish.write`) - and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
@@ -60,6 +67,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   | titles & thumbnails, Ready to post | `titleFirstModal`, `titleModal`, `projPublish` | Title & thumbnail, Ready to post |
   | the prompt library | #/prompts (/<id>) · `pagePrompts`, `promptModal`, `addPromptsModal` | Prompts |
   | Claude's memory | #/memory/<tab> · `pageMemory` | Claude's memory |
+  | My Brand (0.6.0) | #/brand (/style, /catalogue) · `pageBrand` | My Brand |
+  | Content agency (0.6.0) | #/agency · `pageAgency` | Content agency |
   | Shared knowledge, the style picker, the badge | #/memory/shared · `memShared`, `stylePicker`, `sharedChip` | Shared knowledge |
   | What it took, the live line | `tookPanel`, `liveLine` | What it took |
   | fonts, the live preview, looks | `gsetInput`, `livePreview`, `lookRow` | Fonts, the live preview, looks |
@@ -133,7 +142,12 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     Finish it with Claude* above the two cards (`finishModal`, outcome `next: "finish"` + `finish`,
     `/recreate-video finish <p>`) - the draft's cuts stay, Claude adds the layers ticked. The
     notes on moments (0.4.2, `momentNotes`) left the page on 2026-10-15 ("for now u can remove") - saved ones stay in
-    outcome.json `"moments"`, the route still takes them, Claude still reads them.
+    outcome.json `"moments"`, the route still takes them, Claude still reads them. A video's tabs (2026-10-26, the user: "add some colors to
+    accentuate the review page since its identical to the overview tab so we have some distinctions between the
+    three"): Overview = the section's colour, Review = violet (Claude's), Editor = cyan, each with its icon; under the
+    Overview's player *Change it yourself* (the Editor) and *Improve it with Claude* (Review), *Start over* a link
+    (the user found the old *Something not right?* / *Start over* cards unused); the renders = one *Selected
+    version* dropdown (`renderPicker`, "a dropdown ... instead of just a switch").
   - **Generator vs Editor** (round 2 of 0.4.3.5, the user: "why are videos generated in the Generator shown in the
     Editor? ... do not duplicate info like that").
   - **Generator** (0.4, the user: "a video from zero - mostly external tools like Higgsfield, InVideo... or a whole
@@ -180,6 +194,14 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     memory.md's last block, *Scripts & prompts you analysed* (2026-10-19), is never shared; a broken set never breaks
     the memory (that block is left out); the short memory without the effects (`memory_index(styles=True)`) is never
     written - memory.md stays the whole memory.
+  - **My Brand** (0.6.0, the user, 2026-10-22: "implement a new section ... which would be called 'My Brand'"; the look
+    = their mock-up deck's slide 10; its sidebar place right under Home, between two lines - "kinda like its own
+    section ... i think its very important", then "remove the 'make a video' text and just add a line" (the group
+    label is gone), 2026-10-25; *For my brand* in New edit, the Generator and Prepare's
+    dialogs - "tailors the video to your brand, using icons colors url"): the brand stays on this PC
+    (`knowledge\local\brand.json`), never in shared knowledge unless the user shares it; only the user's own website is
+    read (step 2); prices shown as the user confirmed them; a product's *Use in videos* off = Claude never puts it in
+    a video.
   - **Shared knowledge** (2026-10-18, the user: "change the way we use share knowledge? sometimes it appears e.g in
     improve my script step 3 "in style of..." In the style of Optional up to 3 talking videos you analysed: their pace
     and structure "Video by yp.motionstudio Video by sultanmotions Video by divyansh.fx_ Video by afrozarchives Video by
@@ -331,7 +353,37 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   POST `/api/player/copy`, GET / POST `/api/report`, `/api/settings` `ytdlp` / `deno` / `browsers`; 19 since 0.4.3: POST `/api/title/request`, `/api/prompts/title`,
   GET / POST `/api/project/<p>/publish`, GET `.../chapters`, POST `.../thumb` + `.../publish/image`, outcome `packaging`; 21: Film it -
   GET `/api/script/cards`, POST `/api/project/<p>/upload`; 22 since 0.4.3.5 round 2: POST `/api/project/<p>/move`; 23: POST `/api/prompts/rename`; 24 since 0.4.4: GET `/api/took/<project|analysis|prompt>/<name>`, the ping's `claude`, GET `/api/prompts` `took`; 25 since 0.4.5: GET `/api/estimate`, `/api/batches`, POST `/api/edit/batch`, `/api/batches/forget`, the thumbnail sets' routes; 26 since 0.4.6: GET `/api/fonts`, `/fonts.css`; 27 since 0.5.0: GET `/api/motion`, `/api/motion/pick`, the motion templates' files; 28 since 2026-10-16: GET `/api/logos`, `/logos.js`; 29 since 2026-10-18: GET `/api/texts`, `/api/texts/<set>`, POST `/api/texts/split`, `/api/texts/new`, `/api/texts/<set>/add` | `/verdicts` | `/remove` | `/kind`, GET `/api/delete?kind=texts`, `/api/status` `thumbs` / `texts` / `friends` (Scripts & prompts, the Analyser's three ways); GET `/api/styles`, POST `/api/knowledge/private`, GET `/api/knowledge`'s sharing keys (`mine`, `next_share`, `kept`, `friends`, `imports`), POST `/api/reference/<name>/meta` `label`, POST `/api/knowledge/share` `names` / `lesson_ids` / `by_file`, POST `/api/script/improve` | `/api/script/request` | `/api/title/request` `like_prompts` (Shared knowledge, the one picker); POST `/api/prompts/wishes` `verdicts` (the one review pattern); GET `/api/settings` `home_repo` + `update.git` / `update.repo` measured on every call (the first install); GET `/api/references` + `/api/reference/<name>` `label` / `by`, `/api/status` without `references_list` (readable names, 2026-10-19); POST `/api/prompts/request` (a prompt wish as a request file), GET `/api/settings` `languages` + POST `/api/settings` `language` (Languages, 2026-10-19); 30 since 2026-10-22: GET `/api/edit/options` = `editreq.options()` and POST `.../edit_request` "v": 2 (the New edit page); 31 since 2026-10-24: GET `/api/changes?s=` (the list pages update by themselves: `liveTick` every 5 s, `route(true)` = a soft redraw), GET / POST `/api/seen` (the NEW badge: `newTag`, sections left in `route`), POST `/api/update/restore`, GET `/api/settings` `update.kept`, GET `/api/thumbtest` + `/api/thumbfeed/<id>.jpg` + POST `/api/thumbfeed/channels` + POST `/api/script/tidy` + the job `thumb_feed` (*Preview your thumbnail*), `/api/thumb` for photos, edit_request `photos`; 32 since 2026-10-24: POST `.../outcome` `next: "finish"` + `finish`
-  {add, words, from}, GET `/api/project/<p>` `asked` (Finish it with Claude). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+  {add, words, from}, GET `/api/project/<p>` `asked` (Finish it with Claude); 33 since 0.6.0: GET / POST `/api/brand`, POST `/api/brand/logo`
+  (My Brand), `brand` in the edit / generate / script / title requests (*For my brand*); 34 (the same night - a page
+  calling a route its server lacks gave the user "not found: /api/brand/reset" instead of *Restart now*: raise it with
+  every new route, released or not): GET / POST `/api/brand/import` + the job `brand_import` (Import from your website),
+  POST `/api/brand/reset` (Start from zero / undo), `/api/brand/product_image`, `/api/projects` `for_brand`; 35 (0.6.0,
+  Content agency): GET / POST `/api/agency` (the content calendar, `motionlab\agency.py`), GET
+  `/api/agency/calendar.ics`; 36: GET `/api/agency/social` + the job `agency_check` (Your videos, `motionlab\social.py`); 37 (2026-10-26, 3f): POST
+`/api/brand/logo` `kind` (the logo's versions - an older server would put one over the main logo); 38: POST
+`/api/brand/product_media` (a product's screenshots / recordings, 5b); 39 (2026-10-26, the Mini-editor): GET
+`/api/project/<p>/miniedit?plan=`, POST `.../miniedit/preview` + `.../miniedit` (= `build\miniedit\changes_<time>.json`
++ the job `miniedit`: `tools\miniedit.py apply --build`); 40 (the same day, the Editor - a timeline): POST
+`/api/project/<p>/editor/media` (the job `editor_media`: `tools\miniedit.py media`, the preview's light copies),
+GET `/api/editor/sound?kind=|file=` (a sound effect to hear: a made-up one, or this PC's library file - never a .wav
+address, Edge's fetch of one never came back), the state's `media` / `need_media` / `library` / `draw` / `folders`; 41
+(the Editor's *See it rendered*): POST `/api/project/<p>/editor/range` (the job `editor_range`); 42 (0.6.0 steps 8-9,
+the sound library): GET `/api/sounds`, POST `/api/sounds/set` (`off` / `fav` in `library\sounds\sounds.json` - the
+app's one write there), `/api/sounds/upload?batch=&path=` (a raw body into `.app\sound_import\<batch>\`),
+`/api/sounds/import` (the job `sound_import` = `tools\sfx.py import <src> --listed [--from --licence]`; a typed
+folder is only read; `link` = a friend's zip); 43 (ElevenLabs): POST `/api/sounds/elevenlabs` (the key into
+`knowledge\local\elevenlabs.json` - never sent back, only its last 4 characters), `/api/sounds/generate` (the job
+`sound_generate`, answers kept in `.app\sound_gen\`), `/api/sounds/share` (`.app\share\motionlab_sounds_<date>.zip`,
+shown in Explorer; paid-plan sounds only); 44 (0.6.0 step 7, My Brand's mood board): GET `/api/brand/mood`, POST
+`/api/brand/mood/upload?name=` (a raw body -> `knowledge\local\brand\mood\`), `/api/brand/mood/remove`; 45 (0.6.0
+steps 12-16): POST `/api/agency/stats?name=&platform=` (an exported stats file read into `knowledge\local\stats.json`,
+the file not kept), GET `/api/agency/social` + `stats`, calendar.json `when` / a post's `ab` / `checks`; 46 (0.6.0 step 10,
+the music library): GET `/api/music`, `/api/music/hear?rel=` (a song / bed to hear - only a file the library holds),
+POST `/api/music/set` (`library\music\music.json`: fav / off), `/api/music/upload?name=&type=&kind=` (a raw body ->
+a new file in `library\music\` or `ambience\<kind>\`), `/api/music/index` (the job `music_index`), `/api/music/beds`
+(the job `music_beds`, ElevenLabs), GET / POST `/api/brand/sound_logo` (My Brand's sound logo: to hear / a file,
+raw body -> `knowledge\local\brand\sound_logo.<ext>`), POST `/api/brand/sound_logo/make` (the job `brand_sound_logo`),
+GET `/api/brand` `_sound_words`, New edit's `ambience`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

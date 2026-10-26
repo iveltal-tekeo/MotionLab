@@ -58,7 +58,7 @@ import zlib
 from pathlib import Path
 
 import numpy as np
-from scipy.ndimage import minimum_filter1d, uniform_filter1d
+from scipy.ndimage import maximum_filter1d, minimum_filter1d, uniform_filter1d
 from scipy.signal import butter, sosfilt
 
 from .timecode import frame_to_tc
@@ -86,6 +86,21 @@ SPARSE_DB = 20.0                     # a sound's level never reads more than thi
 FLOOR_VS_SONG_DB = -24.0             # 0.5.3 (A4): no effect is placed further under the song than this - the
                                      # precheck's "buried" line (-26) + 2 dB, so a cue's own "db" offset (templates'
                                      # -9..-13, set on a quiet reference) never lands it masked under a loud song
+# 0.6.0 (the user, 2026-10-26: "sound effects never over a word, or very subtle"): when the sound under the effects
+# is a voice (a talking video - build(voice=True)), the words are found in it (speech_steps) and an effect is levelled
+# by where its loud part falls: over a word at least ON_WORD_DB under that word; in a pause against the voice within
+# NEAR_VOICE_S around it (not the silence: an effect in a pause levelled to the silence came out up to 13 dB over the
+# voice, the old rule's reason for putting every whoosh on a word).
+SPEECH_HOP_S = 0.01                  # the voice's envelope: a 20 ms RMS every 10 ms
+SPEECH_BELOW_DB = 22.0               # a step is speech within this of the voice's loud level (its 90th percentile)
+SPEECH_FLOOR_DBFS = -60.0            # ... and over this (room tone is never speech)
+SPEECH_GAP_S = 0.12                  # a quieter stretch shorter than this inside speech is still the word (a stop
+                                     # consonant, the break between syllables)
+SPEECH_BLIP_S = 0.05                 # speech shorter than this is a click or a breath, not a word
+SPEECH_PAD_S = 0.03                  # every word widened by this on each side (its quiet start and tail)
+ON_WORD_DB = -22.0                   # an effect over a word sits at least this far under it: very subtle (the
+                                     # precheck's "buried" line is -26, the song floor -24)
+NEAR_VOICE_S = 1.5                   # an effect in a pause is levelled against the voice this far on each side
 
 
 # ------------------------------------------------------------------------------------------------ the sounds
@@ -361,7 +376,7 @@ KINDS = {
 ALIASES = {"hit": "impact", "swish": "whip", "type": "key", "keystroke": "key", "slam": "impact", "sparks": "crackle",
            "camera": "shutter"}
 SEEDED = {"whoosh", "whip", "riser", "air", "key", "zap", "chip_hit", "crackle", "shimmer", "flutter", "ghost"}
-CUE_KEYS = {"f", "kind", "what", "repeat", "if", "level", "db", "pan", "seed"}
+CUE_KEYS = {"f", "kind", "what", "repeat", "if", "level", "db", "pan", "seed", "sound"}    # sound: the Editor's pick
 HITS = ("impact", "thump", "click")             # a plan's flashes, strongest first
 # 0.5.4 (step 6): how many of a plan's effects get a sound - the plan's "sfx": {"amount", "kinds"} (New edit's step 5;
 # the quick draft writes it). At least this many seconds apart (editreq.SFX_AMOUNT's words: few = one every 5-8 s,
@@ -495,7 +510,9 @@ def resolve(raw: list, values: dict, fps: float, frames: int, source: str = "") 
                 what = str(c.get("what", kind)) + (f" {i + 1}" if n > 1 else "")
                 out.append({"f": f, "kind": kind, "level": level, "db": more, "pan": pan, "seed": seed,
                             "params": params, "what": what, "source": source,
-                            "uses": sorted(_names({k: v for k, v in c.items() if k != "what"}) & set(values))})
+                            "uses": sorted(_names({k: v for k, v in c.items() if k not in ("what", "sound")})
+                                           & set(values)),
+                            **({"sound": str(c["sound"])} if c.get("sound") else {})})
         except (ValueError, TypeError, ZeroDivisionError, KeyError) as e:
             raise ValueError(f"{where}: {e}") from None
     return out
@@ -563,6 +580,8 @@ def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
     raw: list[dict] = []
     moves: list[dict] = []
     shown: list[dict] = []                                 # the graphics' cues (already resolved)
+    psx = plan.get("sfx") if isinstance(plan.get("sfx"), dict) else {}
+    logo = str(psx.get("logo") or "")                      # 0.6.0: the brand's sound logo plays on the end card
 
     def add(f, kind, what, **kw):
         if 0 <= f < N:
@@ -581,11 +600,18 @@ def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
                     notes.append(f"{lid}: its own cues skipped - {ex} (fix its overlay.json \"cues\", or [] and "
                                  "plan-level cues)")
                     continue
-                inn = int(L.get("in", 0))
+                inn, sp = int(L.get("in", 0)), float(L.get("speed", 1.0))      # (a piece at a shot's speed)
+                mine = []
                 for q in gc:
-                    f = s + math.floor((q["f"] - inn) * fps / gfps + 0.5)
+                    f = s + math.floor((q["f"] - inn) * fps / gfps / sp + 0.5)
                     if s <= f <= e:
-                        shown.append({**q, "f": f, "what": f"{lid}: {q['what']}"})
+                        mine.append({**q, "f": f, "what": f"{lid}: {q['what']}"})
+                if logo and (L.get("end_card") or "end_card" in (lid, folder.name)):   # its own sounds -> the
+                    #                                                     sound logo, on the first one's frame
+                    q0 = min(mine, key=lambda q: q["f"]) if mine else (
+                        resolve([{"f": s, "kind": "chime", "what": "end card"}], {}, fps, N, "end card") or [None])[0]
+                    mine = [{**q0, "sound_file": logo, "what": f"{lid}: your sound logo"}] if q0 else []
+                shown += mine
             continue
         fo = {int(k): float(v) for k, v in (L.get("flash_over") or {}).items()}
         for run in _runs(list(fo)):
@@ -693,7 +719,31 @@ def plan_cues(plan: dict, notes: list | None = None) -> list[dict]:
                                     and any(abs(q["f"] - o["f"]) <= 2 for o in own))]
     sx = plan.get("sfx") if isinstance(plan.get("sfx"), dict) else {}
     kept = choose(kept, fps, sx.get("amount"), sx.get("kinds"), sx.get("first"))
-    return sorted(kept + shown + own, key=lambda q: q["f"])
+    return hand_edits(sorted(kept + shown + own, key=lambda q: q["f"]), sx.get("edits") or [], N)
+
+
+def hand_edits(cues: list[dict], edits: list[dict], N: int) -> list[dict]:
+    """The Editor's changes (0.6.0; a plan's "sfx" "edits": [{"f", "kind", "to": a frame | null, "db", "sound"}]):
+    the cue of that kind nearest f (within a frame) moved to "to", or dropped (null); "db" = its own more / less
+    (-12..12), "sound" = the recorded sound it uses (a library file, or "made-up") - applied last, in order."""
+    out = [dict(q) for q in cues]
+    for e in edits:
+        near = [q for q in out if q["kind"] == e.get("kind") and abs(int(q["f"]) - int(e["f"])) <= 1]
+        if not near:
+            continue
+        q = min(near, key=lambda q: abs(int(q["f"]) - int(e["f"])))
+        if e.get("to") is None:
+            out.remove(q)
+            continue
+        to = min(max(int(e["to"]), 0), N - 1)
+        if to != int(q["f"]):
+            q["f"] = to
+            q["what"] = str(q.get("what", "")) + " (moved by hand)"
+        if e.get("db") is not None:
+            q["db"] = max(-12.0, min(12.0, float(e["db"])))
+        if e.get("sound"):
+            q["sound"] = str(e["sound"])
+    return sorted(out, key=lambda q: q["f"])
 
 
 def choose(cues: list[dict], fps: float, amount: str | None = None, kinds: list[str] | None = None,
@@ -719,8 +769,11 @@ def choose(cues: list[dict], fps: float, amount: str | None = None, kinds: list[
 
 
 # ------------------------------------------------------------------------------------------------ recorded sounds (0.5.4)
-SOUNDS = LAB / "library" / "sounds"                   # this PC's library (library\ is never shared): <kind>\*.wav +
-                                                      # sounds.json - the source, licence and anchor of every file
+SOUNDS = Path(__import__("os").environ.get("MOTIONLAB_SOUNDS")    # this PC's library (library\ is never shared):
+               or LAB / "library" / "sounds")         # <kind>\*.wav + sounds.json - the source, licence and anchor of
+                                                      # every file (MOTIONLAB_SOUNDS: a test server's scratch library)
+SHIPPED = LAB / "tools" / "sounds"                    # 0.6.0: what MotionLab shares - the CC0 sounds themselves
+SOUND_LIST = SHIPPED / "import_list.json"             # (cc0\) and the list of the packs' sounds the library uses
 PEAK_KINDS = ("whoosh", "whip", "riser", "air")       # placed by their loudest moment, the rest by their onset
 VARY_PITCH, VARY_DB = 0.03, 1.0                       # every use a little different: +-3 % speed, +-1 dB
 AUDIO_EXT = (".wav", ".mp3", ".flac", ".ogg", ".aif", ".aiff", ".m4a")
@@ -786,14 +839,48 @@ class Library:
 
     @classmethod
     def load(cls, root: Path = SOUNDS) -> "Library | None":
+        if Path(root) == SOUNDS:
+            ensure_shipped()
         p = Path(root) / "sounds.json"
         if not p.exists():
             return None
         lib = cls(root, json.loads(p.read_text(encoding="utf-8")))
         return lib if lib.by_kind else None
 
+    def only(self, files) -> "Library":
+        """The library for one edit (0.6.0: New edit's *Choose the sounds* - the plan's "sfx" "sounds"): a kind with
+        sounds on the list uses only those; the other kinds as before."""
+        keep = set(files or [])
+        lib = Library(self.root, self.data)
+        for k, es in lib.by_kind.items():
+            mine = [e for e in es if e["file"] in keep]
+            if mine:
+                lib.by_kind[k] = mine
+        return lib
+
+    def external(self, path: str) -> dict | None:
+        """A sound file outside the library (0.6.0: the brand's sound logo) as an entry: read once (any format,
+        through ffmpeg), its onset as its anchor; None = no such file."""
+        p = Path(path)
+        if not p.is_file():
+            return None
+        key = str(p.resolve())
+        if key not in self._cache:
+            x = load_audio(p)
+            self._cache[key] = x / (np.abs(x).max() + 1e-9)
+        return {"file": key, "kind": "logo", "anchor_s": anchor_of(self._cache[key], "chime") / SR}
+
+    def entry(self, file: str) -> dict | None:
+        """A sound by its file as sounds.json names it ("made-up" = the made-up sound); None = not in the library."""
+        if file == "made-up":
+            return self.SYNTH
+        return next((e for es in self.by_kind.values() for e in es if e["file"] == file), None)
+
     def pool(self, kind: str) -> list[dict]:
         rec = self.by_kind.get(kind, [])
+        fav = [e for e in rec if e.get("fav")]              # (0.6.0: the user's favourites - ★ on the Sounds tab -
+        if fav:                                             # are used first: the kind's only ones while it has any)
+            return fav
         return rec + [self.SYNTH] if rec and kind in self.synth_too else list(rec)
 
     def pick(self, q: dict, last: dict | None) -> dict | None:
@@ -936,6 +1023,168 @@ def import_sounds(src: Path, source: str, licence: str, kind: str | None = None,
     return out
 
 
+# ------------------------------------------------------------------------------------------- the shared list (0.6.0)
+# The library stays on each PC; what MotionLab shares (tools\sounds\) is the CC0 sounds themselves (cc0\<kind>\), the
+# ElevenLabs sounds the user kept (made\<kind>\, 2026-10-26: "keep the whooshes, the whips and the pops, keys and
+# click ... just add them to motionlab") and a list of the packs' sounds this lab's library uses - which file of which
+# pack is which kind, set off or a favourite, its licence; never the packs' sounds. A friend downloads the pack from
+# its page and imports it: `import_listed` sorts it the same way (the rest of the pack left out); the shipped ones are
+# added by themselves (`ensure_shipped`).
+PACKS = {   # the packs MotionLab's list knows: how a library row's "source" names them, where to get them
+    "videoeditingsfx": {"name": "VideoEditingSFX - Free Pack", "starts": "VideoEditingSFX", "page": "",
+                        "licence": "none stated in the pack - your own call to use it",
+                        "how": "download the free pack from its page, then Motion Graphics > Sounds > Add sounds and "
+                               "pick its folder"},
+    "sonniss-gdc": {"name": "Sonniss GDC Game Audio Bundle", "starts": "Sonniss GDC bundle: ",
+                    "page": "https://sonniss.com/gameaudiogdc",
+                    "licence": "Sonniss GDC Game Audio Bundle licence: royalty-free, commercial use, no attribution; "
+                               "never redistributed as sound effects; no AI/ML training",
+                    "how": "download the bundle (several GB, free) from Sonniss' page, then Motion Graphics > Sounds > "
+                           "Add sounds and pick its folder - only the listed sounds are taken"},
+    "kenney-cc0": {"name": "Kenney (CC0)", "starts": "Kenney ", "page": "https://kenney.nl/assets",
+                   "licence": "CC0 1.0 (Kenney, kenney.nl) - public domain", "how": "comes with MotionLab"},
+    "elevenlabs": {"name": "Made with ElevenLabs", "starts": "ElevenLabs sound effects", "page": "",
+                   "licence": "each sound's own (the plan it was made on)", "how": "comes with MotionLab"},
+}
+_SHIP_LOCK = __import__("threading").Lock()
+
+
+def _norm_path(p: str) -> str:
+    return re.sub(r"[^a-z0-9/]+", "", str(p).replace("\\", "/").lower())
+
+
+def read_list() -> dict:
+    try:
+        return json.loads(SOUND_LIST.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"packs": {}, "sounds": []}
+
+
+def export_list(root: Path = SOUNDS) -> dict:
+    """This PC's library as the shared list (`sfx.py library --export-list`): each recorded sound's pack, its path in
+    the pack, the SHA-256 of the file imported (when that was the pack's own file), its kind, off / favourite; a
+    Kenney (CC0) sound is copied into tools\\sounds\\cc0\\ as it is. A pack's page typed in the list before is kept."""
+    import shutil
+    data = json.loads((Path(root) / "sounds.json").read_text(encoding="utf-8"))
+    old = read_list()
+    packs, rows = {}, []
+    for e in data.get("sounds", []):
+        src = str(e.get("source") or "")
+        pid = next((k for k, p in PACKS.items() if src.startswith(p["starts"])), None)
+        if pid == "elevenlabs" and e.get("off"):          # a made sound the user hid: nobody else can get it
+            continue
+        if pid is None:                                    # a pack MotionLab does not know: by its own name
+            name = src.split(":")[0].split(" (")[0].strip() or "other"
+            pid = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "other"
+            packs.setdefault(pid, {"name": name, "page": "", "how": "from its page, then Motion Graphics > Sounds > "
+                                                                    "Add sounds"})
+        else:
+            packs.setdefault(pid, {k: v for k, v in PACKS[pid].items() if k != "starts"})
+        packs[pid].setdefault("licence", e.get("licence", ""))
+        if (old.get("packs") or {}).get(pid, {}).get("page"):
+            packs[pid]["page"] = old["packs"][pid]["page"]
+        row = {"pack": pid, "kind": e["kind"], "file": e["file"]}
+        if pid == "kenney-cc0":                            # shared as it is
+            dst = SHIPPED / "cc0" / e["file"]
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if not dst.exists():
+                shutil.copy2(Path(root) / e["file"], dst)
+            row.update(shipped="cc0/" + e["file"], what=src)
+        elif pid == "elevenlabs":                          # made for this lab and kept: shared as it is, its licence
+            dst = SHIPPED / "made" / e["file"]
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if not dst.exists():
+                shutil.copy2(Path(root) / e["file"], dst)
+            row.update(shipped="made/" + e["file"], what=src, licence=e.get("licence", ""))
+        elif pid == "sonniss-gdc":                         # picked from trial copies: the bundle's path, no SHA
+            row["path"] = re.sub(r" \((picked|trial)[^)]*\)$", "", src[len(PACKS[pid]["starts"]):]).strip()
+        else:
+            row.update(path=e.get("original") or e["file"], sha256=e.get("sha256"))
+        for k in ("off", "fav"):
+            if e.get(k):
+                row[k] = True
+        rows.append(row)
+    out = {"_comment": "MotionLab's sound list (0.6.0, motionlab\\sfx.py export_list): which sound of which pack this "
+                       "lab's library uses and as what kind - never the sounds (but the CC0 ones in cc0\\ and the "
+                       "ElevenLabs ones kept in made\\, each with its licence). Import a pack with Motion Graphics > "
+                       "Sounds > Add sounds and it is sorted the same way.",
+           "packs": packs, "synth_too": data.get("synth_too") or [], "sounds": rows}
+    SOUND_LIST.parent.mkdir(parents=True, exist_ok=True)
+    SOUND_LIST.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return out
+
+
+def set_flags(root: Path, file: str, **flags) -> None:
+    """A library sound off (never used) / a favourite (used first), or back (flag False) - sounds.json only."""
+    _set_flags(root, file, **flags)
+
+
+def _set_flags(root: Path, file: str, **flags) -> None:
+    jp = Path(root) / "sounds.json"
+    data = json.loads(jp.read_text(encoding="utf-8"))
+    for e in data.get("sounds", []):
+        if e["file"] == file:
+            for k, v in flags.items():
+                if v:
+                    e[k] = True
+                else:
+                    e.pop(k, None)
+    jp.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def import_listed(src: Path, root: Path = SOUNDS, dry: bool = False, listing: dict | None = None) -> dict:
+    """The list's sounds found in a downloaded pack (a folder or one file; only read): each matched by its SHA-256,
+    else by its path in the pack (the folder above it may differ), imported as the list's kind with the pack's
+    licence, and set off / favourite as the list has it; files the list does not name are left out ("unknown")."""
+    L = listing or read_list()
+    by_sha = {r["sha256"]: r for r in L["sounds"] if r.get("sha256")}
+    by_path = [(_norm_path(r["path"]), r) for r in L["sounds"] if r.get("path")]
+    src = Path(src)
+    files = [src] if src.is_file() else sorted(p for p in src.rglob("*") if p.suffix.lower() in AUDIO_EXT)
+    out = {"added": [], "skipped": [], "unknown": [], "same": [], "packs": []}
+    for p in files:
+        name = p.name if src.is_file() else p.relative_to(src).as_posix()
+        sha = hashlib.sha256(p.read_bytes()).hexdigest()
+        n = _norm_path(name)
+        r = by_sha.get(sha) or next((x for k, x in by_path if n == k or n.endswith("/" + k)), None)
+        if r is None:
+            out["unknown"].append(name)
+            continue
+        pk = (L.get("packs") or {}).get(r["pack"]) or {}
+        got = import_sounds(p, f"{pk.get('name', r['pack'])}: {r.get('path') or name}", pk.get("licence", ""),
+                            kind=r["kind"], root=root, dry=dry)
+        for k in ("added", "skipped", "unknown", "same"):
+            out[k] += got[k]
+        if got["added"] and not dry and (r.get("off") or r.get("fav")):
+            _set_flags(root, got["added"][-1]["file"], off=r.get("off"), fav=r.get("fav"))
+        if pk.get("name") and pk["name"] not in out["packs"]:
+            out["packs"].append(pk["name"])
+    return out
+
+
+def ensure_shipped(root: Path = SOUNDS, listing: dict | None = None, shipped: Path = SHIPPED) -> int:
+    """The sounds MotionLab ships (tools\\sounds\\cc0\\ + made\\) in this PC's library, once (a sound whose file the
+    library already has is not added again), each with its row's licence, else its pack's. Returns how many were
+    added."""
+    L = listing or read_list()
+    rows = [r for r in L.get("sounds", []) if r.get("shipped")]
+    if not rows:
+        return 0
+    jp = Path(root) / "sounds.json"
+    with _SHIP_LOCK:
+        have = {e["file"] for e in (json.loads(jp.read_text(encoding="utf-8")).get("sounds", []) if jp.exists() else [])}
+        n = 0
+        for r in rows:
+            f = Path(shipped) / r["shipped"]
+            if r["file"] in have or not f.exists():
+                continue
+            pk = (L.get("packs") or {}).get(r["pack"]) or {}
+            got = import_sounds(f, r.get("what") or pk.get("name", "MotionLab"),
+                                r.get("licence") or pk.get("licence", "CC0 1.0"), kind=r["kind"], root=root)
+            n += len(got["added"])
+        return n
+
+
 # ------------------------------------------------------------------------------------------------ song, levels, mix
 def load_audio(path: Path, start_s: float = 0.0, length_s: float | None = None) -> np.ndarray:
     """Any audio (or a video's sound) -> stereo float64 at 48 kHz, decoded by ffmpeg; the file is only read."""
@@ -998,6 +1247,44 @@ def song_level(sg: np.ndarray, start: int, a: int, b: int) -> tuple[float, tuple
     return (lw, w) if lw <= ln else (ln, n)
 
 
+def _true_runs(mask: np.ndarray) -> list[tuple[int, int]]:
+    d = np.diff(np.concatenate(([0], mask.astype(np.int8), [0])))
+    return list(zip(np.flatnonzero(d == 1).tolist(), np.flatnonzero(d == -1).tolist()))
+
+
+def speech_steps(voice: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """The words in a voice track: (speech, level) per SPEECH_HOP_S step - speech = someone talks there, level = the
+    step's 20 ms RMS in dBFS. A step is speech within SPEECH_BELOW_DB of the voice's loud level (the 90th percentile
+    of the steps over SPEECH_FLOOR_DBFS) and over that floor; a quieter stretch under SPEECH_GAP_S inside speech
+    stays speech, speech under SPEECH_BLIP_S is dropped, every word is widened by SPEECH_PAD_S."""
+    hop = int(SPEECH_HOP_S * SR)
+    x = voice if voice.ndim == 1 else voice.mean(1)
+    n = len(x) // hop
+    if n == 0:
+        return np.zeros(0, bool), np.zeros(0)
+    ms = uniform_filter1d(np.square(x.astype(np.float64)), 2 * hop, mode="constant")[hop // 2::hop][:n]
+    lvl = 10 * np.log10(np.maximum(ms, 0) + 1e-24)      # (the running mean dips under 0 in digital silence: NaN)
+    loud = lvl[lvl > SPEECH_FLOOR_DBFS]
+    if not loud.size:
+        return np.zeros(n, bool), lvl
+    sp = lvl > max(float(np.percentile(loud, 90)) - SPEECH_BELOW_DB, SPEECH_FLOOR_DBFS)
+    for a, b in _true_runs(~sp):
+        if a > 0 and b < n and b - a < SPEECH_GAP_S / SPEECH_HOP_S:
+            sp[a:b] = True
+    for a, b in _true_runs(sp):
+        if b - a < SPEECH_BLIP_S / SPEECH_HOP_S:
+            sp[a:b] = False
+    pad = int(round(SPEECH_PAD_S / SPEECH_HOP_S))
+    return maximum_filter1d(sp.astype(np.uint8), 2 * pad + 1) > 0, lvl
+
+
+def voice_level(sp: np.ndarray, lvl: np.ndarray, i0: int, i1: int) -> float | None:
+    """The voice's level (dBFS, power mean) over the speech steps i0..i1; None = no speech there."""
+    i0, i1 = max(0, i0), min(len(sp), i1)
+    m = sp[i0:i1]
+    return 10 * math.log10(float(np.mean(10 ** (lvl[i0:i1][m] / 10)))) if i1 > i0 and m.any() else None
+
+
 def limit(x: np.ndarray, ceiling_db: float = CEILING_DB, hold_s: float = 0.02) -> tuple[np.ndarray, np.ndarray]:
     """A look-ahead peak limiter: the gain is the minimum of what each sample needs over +-hold_s, smoothed by an
     average over the same span - so it is never above what any sample needs (no peak gets through) and moves over
@@ -1014,17 +1301,24 @@ def limit(x: np.ndarray, ceiling_db: float = CEILING_DB, hold_s: float = 0.02) -
 
 def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = None, song_db: float = SONG_DB,
           ceiling_db: float = CEILING_DB, fade_s: float = FADE_S, peak_db: float = PEAK_DB,
-          floor_vs_song: float | None = FLOOR_VS_SONG_DB, sounds: Library | None = None) -> dict:
+          floor_vs_song: float | None = FLOOR_VS_SONG_DB, sounds: Library | None = None, voice: bool = False) -> dict:
     """The effects stem, the mix and a row per cue with its measured levels. song = stereo at SR from frame 0.
     floor_vs_song: an effect never sits further under the song where it sounds (rule "song floor"; None = off).
     sounds = a Library: a cue whose kind has recorded sounds gets one of them (Library.pick / place), the rest the
-    made-up sound; None = made-up sounds only (the same samples every run either way)."""
+    made-up sound; None = made-up sounds only (the same samples every run either way).
+    voice = the "song" is a voice (a talking video): over a word an effect sits at least ON_WORD_DB under it (rule
+    "on a word"), in a pause it is levelled against the voice around it (rule "pause"); a row's song_db / vs_song_db
+    are then against that voice, "on_word" says which."""
     N = int(round(frames / fps * SR))
     has_song = song is not None and len(song) > 0
     sg = np.zeros((N, 2))
     if has_song:
         k = min(N, len(song))
         sg[:k] = song[:k, :2] * 10 ** (song_db / 20)
+    sp, lvl = speech_steps(sg) if voice and has_song else (None, None)
+    if sp is not None and not sp.any():
+        sp = None                                           # no words found: levelled as against a song
+    hop, near = int(SPEECH_HOP_S * SR), int(NEAR_VOICE_S / SPEECH_HOP_S)
     stem = np.zeros((N, 2))
     rows, cap = [], 10 ** (peak_db / 20)
     last: dict[str, dict] = {}                              # kind -> the recorded sound its previous cue used
@@ -1033,7 +1327,12 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
         if not 0 <= s < N:
             rows.append({**_row_base(q, fps), "skipped": "outside the video"})
             continue
-        e = sounds.pick(q, last.get(q["kind"])) if sounds is not None else None
+        e = sounds.entry(q["sound"]) if sounds is not None and q.get("sound") else None    # the Editor's pick
+        if q.get("sound_file"):                             # 0.6.0: a file the plan names (the brand's sound logo)
+            sounds = sounds if sounds is not None else Library(SOUNDS, {"sounds": []})
+            e = sounds.external(q["sound_file"]) or e
+        if e is None:
+            e = sounds.pick(q, last.get(q["kind"])) if sounds is not None else None
         vary, used = 0.0, "made-up"
         if e is None or e.get("synth"):
             x = synth(q["kind"], q["params"], q["seed"])[:N - s]
@@ -1049,9 +1348,23 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
         fx_db = fx_level(x, a, b) - 10 * math.log10(2)     # placed with an equal-power pan: each channel 3 dB under
         rel, floor = (v + TRIM_DB for v in LEVELS[q["level"]])
         s_db, (w0, w1) = song_level(sg, s, a, b) if has_song else (None, song_window(s, a, b, N))
-        want = max(s_db + rel, floor) if has_song else floor
-        want += q["db"] + vary
-        rule = "floor" if (not has_song or s_db + rel < floor) else "song"
+        on_word = None
+        if sp is not None:
+            i0, i1 = (s + a) // hop, -(-(s + b) // hop)
+            on_word = voice_level(sp, lvl, i0, i1) is not None
+            s_db = voice_level(sp, lvl, i0, i1) if on_word else (
+                voice_level(sp, lvl, i0 - near, i1 + near) or voice_level(sp, lvl, 0, len(sp)))
+            w0, w1 = (s + a, s + b) if on_word else (max(0, (i0 - near) * hop), min(N, (i1 + near) * hop))
+            want = s_db + rel + q["db"] + vary
+            rule = "pause"
+            if on_word and want > s_db + ON_WORD_DB:
+                want, rule = s_db + ON_WORD_DB, "on a word"
+            elif on_word:
+                rule = "on a word"
+        else:
+            want = max(s_db + rel, floor) if has_song else floor
+            want += q["db"] + vary
+            rule = "floor" if (not has_song or s_db + rel < floor) else "song"
         if has_song and floor_vs_song is not None and want < s_db + floor_vs_song:
             want, rule = s_db + floor_vs_song, "song floor"
         gain = 10 ** ((want - fx_db) / 20)
@@ -1070,7 +1383,8 @@ def build(cues: list[dict], fps: float, frames: int, song: np.ndarray | None = N
                      "peak_dbfs": round(db(max(float(np.abs(left * np.cos(ang)).max()),
                                                float(np.abs(right * np.sin(ang)).max()))), 2),
                      "loud": [s + a, s + b], "window": [w0, w1], "sound": used,
-                     **({"vary_db": round(vary, 2)} if vary else {})})
+                     **({"vary_db": round(vary, 2)} if vary else {}),
+                     **({"on_word": on_word} if on_word is not None else {})})
     mix = sg + stem
     if fade_s > 0:
         k = min(N, int(fade_s * SR))
@@ -1279,6 +1593,69 @@ def selfcheck(verbose: bool = True) -> dict:
           "recorded sounds: clicks on their frame " + ", ".join(f"{o:+.1f}" for o in off[:3]) + " ms, a whoosh's "
           f"loudest moment {off[3]:+.1f} ms and a riser's {off[4]:+.1f} ms from where they land; " + " > ".join(used[:3])
           + f" (no repeat, the one set off never); pop = {used[5]}; two runs the same")
+    # 0.6.0 the shared list: a pack a friend downloads sorted by MotionLab's list (by SHA-256, else its path in the
+    # pack; the rest left out), a favourite used first, one edit's own sounds (Library.only), the CC0 ones shipped once
+    with tempfile.TemporaryDirectory(prefix="ml_sfx_") as td:
+        tmp = Path(td)
+        pack, lib_root = tmp / "dl" / "Test pack" / "UI", tmp / "lib"
+        pack.mkdir(parents=True)
+        tb = np.arange(int(0.08 * SR)) / SR
+        for nm, f0 in (("Button 1.wav", 1500), ("Button 2.wav", 2200), ("Other.wav", 900)):
+            x = np.concatenate([np.zeros(int(0.02 * SR)), np.sin(2 * np.pi * f0 * tb) * np.exp(-tb / 0.01)])
+            _sf.write(str(pack / nm), np.stack([x, x], 1), SR, subtype="PCM_24")
+        (tmp / "ship" / "cc0" / "tick").mkdir(parents=True)
+        _sf.write(str(tmp / "ship" / "cc0" / "tick" / "t1.wav"), np.stack([x, x], 1), SR, subtype="PCM_24")
+        listing = {"packs": {"p": {"name": "Test pack", "licence": "test only"}, "c": {"name": "CC0", "licence": "CC0"}},
+                   "sounds": [{"pack": "p", "kind": "click", "path": "Test pack/UI/Button 1.wav", "fav": True,
+                               "sha256": hashlib.sha256((pack / "Button 1.wav").read_bytes()).hexdigest()},
+                              {"pack": "p", "kind": "pop", "path": "UI/button 2.wav"},
+                              {"pack": "c", "kind": "tick", "file": "tick/t1.wav", "shipped": "cc0/tick/t1.wav"}]}
+        got = import_listed(tmp / "dl", root=lib_root, listing=listing)
+        n1 = ensure_shipped(lib_root, listing, tmp / "ship")
+        n2 = ensure_shipped(lib_root, listing, tmp / "ship")
+        L2 = Library.load(lib_root)
+        rows2 = json.loads((lib_root / "sounds.json").read_text(encoding="utf-8"))["sounds"]
+        pop_f = next(e["file"] for e in rows2 if e["kind"] == "pop")
+        only = L2.only([pop_f])                            # (made while its files are there)
+    check(len(got["added"]) == 2 and got["unknown"] == ["Test pack/UI/Other.wav"] and (n1, n2) == (1, 0)
+          and sorted((e["kind"], bool(e.get("fav")), e["licence"]) for e in rows2)
+          == [("click", True, "test only"), ("pop", False, "test only"), ("tick", False, "CC0")]
+          and len(L2.pool("click")) == 1 and [e["file"] for e in only.pool("pop")] == [pop_f]
+          and len(only.pool("click")) == 1,
+          "a downloaded pack sorted by the shared list: 2 of its 3 files (one by SHA-256, one by its path in the pack), "
+          "the third left out; the shipped CC0 sound added once; a favourite used first; one edit's own sounds")
+    # 0.6.0 a voice under the effects: words (band-passed noise, -26 dBFS RMS, 4 syllables a second) 1.0 s on, 0.5 s
+    # off over room tone at -65 dBFS - the words found where they are; an effect on a word very subtle (ON_WORD_DB
+    # under it), one in a pause levelled against the voice around it (the old way: levelled to the room tone, so
+    # far over the voice the precheck called it loud)
+    N = int(round(frames / fps * SR))
+    t = np.arange(N) / SR
+    rv = np.random.default_rng(11)
+    vo = _lp(_hp(rv.standard_normal(N), 300), 3000)
+    on = (t % 1.5) < 1.0
+    vo = vo / np.sqrt(np.mean(vo ** 2)) * 10 ** (-26 / 20) * (0.6 + 0.4 * np.sin(2 * np.pi * 4 * t)) * on
+    vo = vo + rv.standard_normal(N) * 10 ** (-65 / 20)
+    voice2 = np.stack([vo, vo], 1)
+    sp, _lv = speech_steps(voice2)
+    st = np.arange(len(sp)) * SPEECH_HOP_S
+    words_ok = sp[(st % 1.5 > 0.05) & (st % 1.5 < 0.95)].mean() > 0.99 and not sp[(st % 1.5 > 1.1) & (st % 1.5 < 1.4)].any()
+    vq = resolve([{"f": 15, "kind": "impact"}, {"f": 60, "kind": "whoosh"}, {"f": 37, "kind": "click"},
+                  {"f": 82, "kind": "pop"}], {}, fps, frames, "voice")
+    rv1 = {r["f"]: r for r in build(vq, fps, frames, voice2, 0.0, voice=True)["rows"]}
+    rv0 = {r["f"]: r for r in build(vq, fps, frames, voice2, 0.0)["rows"]}
+    sub = all(rv1[f]["on_word"] and rv1[f]["rule"] in ("on a word", "song floor", "peak cap")
+              and FLOOR_VS_SONG_DB - 0.01 <= rv1[f]["vs_song_db"] <= ON_WORD_DB + 0.01 for f in (15, 60))
+    pau = all(not rv1[f]["on_word"] and rv1[f]["rule"] in ("pause", "song floor") and rv1[f]["vs_song_db"] < 0
+              for f in (37, 82))
+    check(words_ok and sub and pau and rv0[37]["vs_song_db"] > 6,
+          "a voice under the effects: words found ("
+          + ("1.0 s on / 0.5 s off" if words_ok else "MISSED") + "); on a word "
+          + ", ".join(f"{rv1[f]['kind']} f{f} ({frame_to_tc(f, fps)}) {rv1[f]['vs_song_db']:+.1f} dB ({rv1[f]['rule']})"
+                      for f in (15, 60))
+          + f" (at most {ON_WORD_DB:+g}); in a pause "
+          + ", ".join(f"{rv1[f]['kind']} f{f} ({frame_to_tc(f, fps)}) {rv1[f]['vs_song_db']:+.1f} dB vs the voice around"
+                      for f in (37, 82))
+          + f" (levelled to the room tone instead: {rv0[37]['vs_song_db']:+.1f} dB)")
     secs = time.time() - t0
     lines.append(f"{'PASS' if ok else 'FAIL'}: onsets within {worst_ms:.2f} ms (1 frame = {1000 / fps:.1f} ms), levels "
                  f"within {worst_db:.2f} dB, {len(cues)} cues on {frames / fps:g} s, {secs:.1f} s")

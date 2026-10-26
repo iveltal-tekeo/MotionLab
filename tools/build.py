@@ -10,11 +10,13 @@
              that hardly moves keeps its plain render, captions are always rendered plain - nothing in them travels)
           2. the sound: with --sfx, a plan "sfx": true, or when the plan's audio is already a mix sfx.py made:
              sfx.py plan -> build\\sfx\\<name>_mix.wav becomes the plan's "audio" (made from the same song)
-          3. the composite (render_video.py; skipped when nothing it reads changed and the video exists); a song from
+          3. the composite (render_video.py - 0.6.0: its sound mastered to config "master"'s LUFS and true peak;
+             skipped when nothing it reads changed and the video exists); a song from
              refs\\ (a download) -> also publish\\<name>_post.mp4 without it, to post (publish.post_copy)
           4. precheck.py on it (+ the sound report): vanishing parts, fast moves without blur, buried / loud cues;
              and the plan's camera moves (2026-10-24, precheck.plan_moves): too many, or one between two shots of
-             the same take
+             the same take; 0.6.0: a caption / graphic over the speaker's face or (upright) in the platforms'
+             button bands (precheck.face_cover - a layer "over_face": true is meant to be there)
           5. plain builds: the cut-sheet (render_video.py --cuts): every cut and cue on one page - the one look
           -> the summary + build\\checks\\<name>_build.json. Exit 0 = built, nothing flagged; 2 = built, the
           precheck flags something to look at; 1 = a step failed (STOPPED); 3 = too long for Claude's shell (a job)
@@ -208,9 +210,16 @@ def main() -> int:
         plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
         lines.append(f"landed again (its settings moved the move; plan layers set): {'; '.join(moved)}")
     lines += [f"NOT landed again (left where it is): {b}" for b in bad]
+    if plan.get("captions_fit") == "chin":              # 0.6.0 step 21: each shot's captions off the speaker's face
+        from motionlab import facefit as FF
+        before = json.dumps(plan, sort_keys=True)
+        fit = FF.fit_captions(plan, build)
+        if json.dumps(plan, sort_keys=True) != before:
+            plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+        lines += [f"captions fit: {x}" for x in fit] or ["captions fit: every shot's captions already clear of the face"]
     # 2. the sound
     audio = (plan.get("audio") or {}).get("path") or ""
-    made_mix = Path(audio).parent.name == "sfx" and Path(audio).stem.endswith("_mix")
+    made_mix = Path(audio).parent.name == "sfx" and Path(audio).stem.endswith(("_mix", "_sfx"))
     if a.sfx or plan.get("sfx") or made_mix:
         r = subprocess.run([PY, str(TOOLS / "sfx.py"), "plan", str(plan_path)], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", cwd=str(LAB))
@@ -219,6 +228,9 @@ def main() -> int:
             return 1
         stem = SFX.stem_name(plan.get("name") or plan_path.stem)
         mix, rep = build / "sfx" / f"{stem}_mix.wav", build / "sfx" / f"{stem}_sfx.json"
+        if rep.exists() and not json.loads(rep.read_text(encoding="utf-8")).get("mix"):
+            mix = build / "sfx" / f"{stem}_sfx.wav"    # no song: the effects alone are its sound (2026-10-26: a
+            #                                            video made from zero with effects but no song was silent)
         cues = next((ln for ln in r.stdout.splitlines() if ln.startswith("cues:")), "")
         new_audio = mix.exists() and str(mix.resolve()) != str(Path(audio).resolve() if audio else "")
         if new_audio or not plan.get("sfx"):          # "sfx": true = kept on every build of this plan and its copies
@@ -240,6 +252,16 @@ def main() -> int:
     prev = json.loads(prev_p.read_text(encoding="utf-8")) if prev_p.exists() else {}
     if out.exists() and prev.get("composite_key") == key and not a.force:
         lines.append(f"video: {out.name} unchanged (nothing it reads changed)")
+        from motionlab import loudness as LD     # 0.6.0: a render made before the master (or another target) - its
+        cfg, m = LD.settings(), LD.measure(out)  # sound mastered in place, the picture untouched
+        if (plan.get("audio") or {}).get("path") and cfg.get("on") and m.get("lufs") is not None \
+                and m["lufs"] > LD.SILENT_LUFS and (abs(m["lufs"] - cfg["target_lufs"]) > cfg["tolerance_lu"]
+                                                    or (m["true_peak_db"] or 0) > cfg["true_peak_db"] + 0.05):
+            snd = Path(plan["audio"]["path"])
+            r = LD.master(out, {**plan["audio"], "path": str(snd if snd.is_absolute() else plan_path.parent / snd)},
+                          0.0, N, fps, log=lambda *_: None)
+            lines.append(f"  its sound mastered: {m['lufs']:.1f} -> {r.get('lufs')} LUFS" if r.get("done")
+                         else f"  its sound not mastered: {r.get('why')}")
     else:
         r = subprocess.run([PY, str(TOOLS / "render_video.py"), str(plan_path)], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", cwd=str(LAB))
@@ -268,12 +290,31 @@ def main() -> int:
     if len(fl) > 5:
         lines.append(f"  +{len(fl) - 5} more in {Path(res['json']).name}")
     report["precheck"] = {"status": res["status"], "flags": len(fl), "json": res["json"]}
+    ld = res.get("loudness")                    # 0.6.0 step 22: the finished sound, as a platform hears it
+    if ld:
+        lines.append(f"sound: {ld['lufs']:.1f} LUFS (target {ld['target_lufs']:g}), true peak {ld['true_peak_db']} "
+                     f"dBTP after AAC")
+        report["loudness"] = {k: ld.get(k) for k in ("lufs", "true_peak_db", "lra", "target_lufs")}
     mv = PC.plan_moves(plan)                    # 2026-10-24: too many camera moves / one inside a take (the plan)
     if mv["flags"]:
         lines.append(f"camera moves: {len(mv['flags'])} to look at ({len(mv['moves'])} moves in the plan)")
         lines += [f"  {f['label']}: {f['reason']}"[:220] for f in mv["flags"][:6]]
         fl = fl + mv["flags"]
     report["moves"] = {"count": len(mv["moves"]), "flags": len(mv["flags"])}
+    fc = PC.face_cover(plan_path)               # 0.6.0 step 21: a caption / graphic over the face, the safe zones
+    if fc["flags"]:
+        lines.append(f"over the face / outside the safe zone: {len(fc['flags'])} to look at (move it off the face, "
+                     "or \"over_face\": true on a layer meant to be there)")
+        lines += [f"  {f['label']}: {f['reason']}"[:220] for f in fc["flags"][:6]]
+        fl = fl + fc["flags"]
+    report["face_cover"] = {"flags": fc["flags"], "samples": fc["samples"], "seconds": fc["seconds"],
+                            **({"why": fc["why"]} if fc.get("why") else {})}
+    tk = PC.talk_checks(plan_path, rep)         # 0.6.0 step 21: a talking video ends on its last word, few whooshes
+    if tk["flags"]:
+        lines.append(f"talking video: {len(tk['flags'])} to look at")
+        lines += [f"  {f['label']}: {f['reason']}"[:220] for f in tk["flags"]]
+        fl = fl + tk["flags"]
+    report["talk"] = {"flags": tk["flags"], "last_word": tk.get("last_word")}
     # 5. the cut-sheet (plain builds: the one look before the final)
     if not a.final:
         r = subprocess.run([PY, str(TOOLS / "render_video.py"), str(plan_path), "--cuts"], capture_output=True,

@@ -47,7 +47,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 32                                     # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 46                                  # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -58,7 +58,7 @@ OPENABLE = {".html", ".md", ".txt", ".png", ".jpg", ".jpeg", ".mp4", ".mov", ".j
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 for ext, typ in ((".js", "text/javascript"), (".css", "text/css"), (".md", "text/plain"), (".comp", "text/plain"),
                  (".mp4", "video/mp4"), (".json", "application/json"), (".csv", "text/plain"), (".py", "text/plain"),
-                 (".ttf", "font/ttf"), (".otf", "font/otf")):
+                 (".ttf", "font/ttf"), (".otf", "font/otf"), (".webp", "image/webp")):   # webp: unknown to Windows' Python
     mimetypes.add_type(typ, ext)
 
 
@@ -372,8 +372,11 @@ class Handler(BaseHTTPRequestHandler):
         # Settings > Language (2026-10-18): <html lang>, index.html's {{t:...}} texts and the page's words, inlined
         # before app.js so its label tables are translated as they load (English: {} - the page as before)
         lg = I18N.lang()
+        # app.css / app.js addressed by the version + when they last changed: a change between versions reaches the
+        # window on its next load, never a stale copy from the browser's cache (2026-10-25: black icons on My Brand)
+        uiv = f"{VERSION}-{int(max((UI / f).stat().st_mtime for f in ('app.css', 'app.js')))}"
         html = (UI / "index.html").read_text(encoding="utf-8").replace("{{TOKEN}}", S.token) \
-            .replace("{{VERSION}}", VERSION).replace("{{LANG}}", lg)
+            .replace("{{UIV}}", uiv).replace("{{VERSION}}", VERSION).replace("{{LANG}}", lg)
         html = I18N.fill_html(html, lg).replace("{{I18N}}", I18N.page_script(lg))
         self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
 
@@ -478,11 +481,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, css.replace("font-display:block", "font-display:swap").encode("utf-8"),
                               "text/css; charset=utf-8")
         if path == "/api/logos":                         # the logo library (logos.py): the pickers + Motion > Logos
-            cat = LGO.catalog()
-            return self._json({"groups": cat.get("groups", {}), "logos": [
+            cat, mine = LGO.catalog(), LGO.brand_entry()   # + My Brand's logo first (2026-10-26; its pictures' src)
+            return self._json({"groups": {**({"brand": "My Brand"} if mine else {}), **cat.get("groups", {})}, "logos": [
                 {k: lg[k] for k in ("id", "name", "group", "words", "default")}
-                | {"variants": {v: {k: i[k] for k in ("aspect", "on", "tint")} for v, i in lg["variants"].items()}}
-                for lg in cat["logos"]]})
+                | {"variants": {v: {k: i[k] for k in ("aspect", "on", "tint")} | ({"src": i["file"]} if i.get("file") else {})
+                                for v, i in lg["variants"].items()}}
+                for lg in ([mine] if mine else []) + cat["logos"]]})
         if path == "/logos.js":                          # a live preview's logos: ?b=youtube,figma -> MLLogo + those
             return self._send(200, LGO.js([x for x in (arg("b", "") or "").split(",")[:200] if x]).encode("utf-8"),
                               "text/javascript; charset=utf-8")
@@ -543,6 +547,25 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.skills())
         if path == "/api/memory":                         # Claude's memory (0.4): videos, effects, lessons, saved
             return self._json(data.memory())
+        if path == "/api/brand":                          # 0.6.0: My Brand (knowledge\local\brand.json)
+            from motionlab import brand as BR
+            b = BR.load()                                 # + the signature end card's settings (its live preview)
+            return self._json({**b, "_end": BR.end_card(b, preview=True), "_worked": BR.worked(),    # + 3j
+                               "_sound_words": BR.sound_logo_words(b)})        # + a sound logo's first description
+        if path == "/api/brand/import":                   # 0.6.0: what the last Import from your website found
+            from motionlab import siteread as SR
+            return self._json(SR.load() or {})
+        if path == "/api/agency":                         # 0.6.0: Content agency - the content calendar
+            from motionlab import agency as AG
+            return self._json(AG.load())
+        if path == "/api/agency/social":                  # 0.6.0: your posted videos (the last Check my pages)
+            from motionlab import social as SO
+            from motionlab import stats as STS
+            return self._json({**SO.load(), "stats": STS.load()})      # + the stats files imported (step 13)
+        if path == "/api/agency/calendar.ics":            # the dated posts for Windows Calendar / Outlook / Google
+            from motionlab import agency as AG
+            return self._send(200, AG.ics().encode("utf-8"), "text/calendar; charset=utf-8",
+                              {"Content-Disposition": 'attachment; filename="motionlab-calendar.ics"'})
         if path == "/api/changes":                       # 2026-10-24: a list page redraws itself when this changes
             return self._json(live.changes(arg("s", "")))
         if path == "/api/seen":                          # 2026-10-24: the NEW badge - what each section has seen
@@ -596,6 +619,21 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)", path)
         if m:
             return self._json(data.project(urllib.parse.unquote(m[1])))
+        m = re.fullmatch(r"/api/project/([^/]+)/miniedit", path)       # 0.6.0: the Editor tab (a plan's state)
+        if m:
+            return self._json(data.miniedit_state(urllib.parse.unquote(m[1]), arg("plan", "")))
+        if path == "/api/brand/mood":                                   # 0.6.0 My Brand > Style: the mood board
+            return self._json(data.brand_mood())
+        if path == "/api/sounds":                                       # 0.6.0 Motion Graphics > Sounds
+            return self._json(data.sounds_state())
+        if path == "/api/music":                                        # 0.6.0 step 10: Motion Graphics > Music
+            return self._json(data.music_state())
+        if path == "/api/music/hear":                                   # a song / bed to hear (never a .wav address)
+            return self._file(data.music_file(arg("rel", "")))
+        if path == "/api/brand/sound_logo":                             # My Brand's sound logo, to hear
+            return self._file(data.brand_sound_logo_file())
+        if path == "/api/editor/sound":                                 # the Editor: a made-up sound effect to hear
+            return self._file(data.editor_sound(arg("kind", ""), arg("file", "")))
         m = re.fullmatch(r"/api/project/([^/]+)/publish", path)        # Edit > a video > Publish (0.4.3)
         if m:
             return self._json(data.publish_info(urllib.parse.unquote(m[1])))
@@ -654,6 +692,37 @@ class Handler(BaseHTTPRequestHandler):
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             return self._json(data.thumb_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
                                                 int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/agency/stats":           # 0.6.0 step 13: a stats file the user exported - a raw body
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.agency_stats_upload((q.get("name") or [""])[0], (q.get("platform") or [""])[0],
+                                                       self.rfile, int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/brand/mood/upload":      # 0.6.0 My Brand > Style: a mood board picture - a raw body
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.brand_mood_upload((q.get("name") or [""])[0], self.rfile,
+                                                     int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/music/upload":           # 0.6.0 step 10: Music > Add - a song or a bed, a raw body
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.music_upload((q.get("name") or [""])[0], (q.get("type") or [""])[0],
+                                                (q.get("kind") or [""])[0], self.rfile,
+                                                int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/brand/sound_logo":       # 0.6.0 step 10: My Brand's sound logo from a file - a raw body
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.brand_sound_logo_upload((q.get("name") or [""])[0], self.rfile,
+                                                           int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/sounds/upload":          # 0.6.0 Sounds > Add sounds: a sound file - a raw body, streamed
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.sound_upload((q.get("batch") or [""])[0], (q.get("path") or [""])[0], self.rfile,
+                                                int(self.headers.get("Content-Length") or 0)))
         m = re.fullmatch(r"/api/project/([^/]+)/upload", path)
         if m:                                     # Film it (2026-10-15): a recording copied in - a raw body, streamed
             if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
@@ -664,7 +733,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError(I18N.t("not a script: {id}", id=repr(prompt)))
             return self._json(data.save_upload(urllib.parse.unquote(m[1]), (q.get("name") or [""])[0], self.rfile,
                                                int(self.headers.get("Content-Length") or 0), prompt))
-        body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example")
+        body = self._body(45_000_000 if path in ("/api/prompts/file", "/api/prompts/example", "/api/brand/logo",
+                                                 "/api/brand/product_image", "/api/brand/product_media")
                           or path.endswith("/publish/image") else 5_000_000)   # a file = base64 (+1/3)
         tok = self.headers.get("X-ML-Token") or body.get("token") or ""
         if not secrets.compare_digest(str(tok), S.token):
@@ -693,6 +763,31 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"channels": TF.set_channels([str(x) for x in body.get("channels") or []])})
             except ValueError as e:
                 raise ValueError(I18N.t("not a YouTube channel: {line}", line=str(e).split(": ", 1)[-1])) from None
+        if path == "/api/brand":                         # 0.6.0: My Brand saved as the page has it (checked first)
+            from motionlab import brand as BR
+            b = BR.save(body)
+            return self._json({**b, "_end": BR.end_card(b, preview=True)})
+        if path == "/api/brand/logo":                    # 0.6.0: the brand's logo - a picture, base64 (checked)
+            from motionlab import brand as BR
+            b = BR.save_logo(str(body.get("name", "")), str(body.get("data", "")), kind=str(body.get("kind") or ""))
+            return self._json({**b, "_end": BR.end_card(b, preview=True)})    # kind: a version; _end: the end card
+        if path == "/api/agency":                        # 0.6.0: the content calendar saved as the page has it (checked)
+            from motionlab import agency as AG
+            return self._json(AG.save(body))
+        if path == "/api/brand/product_image":           # 0.6.0: a product's own picture (Catalogue), base64 (checked)
+            from motionlab import brand as BR
+            return self._json(BR.save_product_image(str(body.get("id", "")), str(body.get("name", "")),
+                                                    str(body.get("data", ""))))
+        if path == "/api/brand/product_media":           # 5b: a product's screenshot / screen recording, base64 (checked)
+            from motionlab import brand as BR
+            return self._json(BR.save_product_media(str(body.get("id", "")), str(body.get("name", "")),
+                                                    str(body.get("data", ""))))
+        if path == "/api/brand/reset":                   # 0.6.0: Start from zero (a copy kept) / undo = that copy back
+            from motionlab import brand as BR
+            return self._json(BR.undo_reset() if body.get("undo") else BR.reset())
+        if path == "/api/brand/import":                  # 0.6.0: the found items the user ticked go into My Brand
+            from motionlab import brand as BR
+            return self._json(BR.take_import(body.get("picks") or {}))
         if path == "/api/seen":                          # the NEW badge: a section left, or a card clicked
             return self._json(live.mark(str(body.get("section", "")), bool(body.get("leave")),
                                         str(body.get("key", ""))))
@@ -768,6 +863,55 @@ class Handler(BaseHTTPRequestHandler):
             if m[2] == "outcome":
                 return self._json(data.save_outcome(name, body))
             return self._json({"made_from": data.add_made_from(name, str(body.get("kind", "")), str(body.get("id", "")))})
+        m = re.fullmatch(r"/api/project/([^/]+)/miniedit/preview", path)   # 0.6.0: the changes so far, nothing saved
+        if m:
+            return self._json(data.miniedit_preview(urllib.parse.unquote(m[1]), str(body.get("plan", "")), body.get("ops")))
+        m = re.fullmatch(r"/api/project/([^/]+)/miniedit", path)            # 0.6.0: save = the next version as a job
+        if m:
+            p = urllib.parse.unquote(m[1])
+            ch = data.miniedit_save(p, str(body.get("plan", "")), body.get("ops"))
+            return self._json(S.runner.start("miniedit", {"project": p, "plan": str(body.get("plan", "")), "changes": ch},
+                                             queue=True).info(0))
+        m = re.fullmatch(r"/api/project/([^/]+)/editor/range", path)        # the Editor's *See it rendered* (a job)
+        if m:
+            p = urllib.parse.unquote(m[1])
+            info = data.miniedit_range(p, str(body.get("plan", "")), body.get("ops") or [], int(body.get("a", 0)),
+                                       int(body.get("b", 0)))
+            if info["ready"]:
+                return self._json(info)
+            job = S.runner.start("editor_range", {"project": p, "file": info["file"], "a": info["a"], "b": info["b"]},
+                                 queue=True)
+            return self._json({**info, "job": job.id})
+        if path == "/api/brand/mood/remove":             # 0.6.0 My Brand > Style: a picture off the mood board
+            return self._json(data.brand_mood(int(body.get("n", 0))))
+        if path == "/api/sounds/set":                    # 0.6.0 Sounds: hide / show, a favourite or not
+            return self._json(data.sound_set(str(body.get("file", "")), body.get("off"), body.get("fav")))
+        if path == "/api/sounds/import":                 # 0.6.0 Sounds > Add sounds (a job)
+            return self._json(S.runner.start("sound_import", {k: body.get(k) for k in ("batch", "folder", "from",
+                                                                                          "licence", "link")},
+                                             queue=True).info(0))
+        if path == "/api/sounds/elevenlabs":             # 0.6.0 Sounds > Make sounds: the key (never sent back), the plan
+            from motionlab import sfxgen as GEN
+            try:
+                return self._json(GEN.save_settings(body.get("key"), body.get("plan")))
+            except ValueError as e:
+                raise ValueError(I18N.t(str(e)))
+        if path == "/api/sounds/generate":               # 0.6.0 Sounds > Make sounds (a job)
+            return self._json(S.runner.start("sound_generate", {"want": body.get("want") or {}}, queue=True).info(0))
+        if path == "/api/music/set":                     # 0.6.0 step 10: Music - hide / show, a favourite or not
+            return self._json(data.music_set(str(body.get("rel", "")), body.get("off"), body.get("fav")))
+        if path == "/api/music/index":                   # Music: measure what is new (a job)
+            return self._json(S.runner.start("music_index", {}, queue=True).info(0))
+        if path == "/api/music/beds":                    # Music > Make ambience (a job, ElevenLabs)
+            return self._json(S.runner.start("music_beds", {"want": body.get("want") or {}}, queue=True).info(0))
+        if path == "/api/brand/sound_logo/make":         # My Brand > Your end card: a sound logo by ElevenLabs (a job)
+            return self._json(S.runner.start("brand_sound_logo", {"text": body.get("text") or ""}, queue=True).info(0))
+        if path == "/api/sounds/share":                  # 0.6.0 Sounds > Share with friends (a zip, shown in Explorer)
+            return self._json(data.sounds_share())
+        m = re.fullmatch(r"/api/project/([^/]+)/editor/media", path)        # the Editor's preview copies (a job)
+        if m:
+            return self._json(S.runner.start("editor_media", {"project": urllib.parse.unquote(m[1]),
+                                                              "plan": str(body.get("plan", ""))}, queue=True).info(0))
         m = re.fullmatch(r"/api/project/([^/]+)/overlay", path)            # Videos > Graphics: Save settings
         if m:
             return self._json(data.save_overlay_values(urllib.parse.unquote(m[1]), str(body.get("overlay", "")),

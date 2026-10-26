@@ -25,7 +25,9 @@ The request (`generate_request.json`): `kind`, `want` (the user's words, as type
 whose style to follow), `length_s`, `format` (vertical / horizontal / square), `music` (a song: a path in the project
 folder or `refs\audio\`), `tool` (ai), `text` (graphics: the words to show, one item per line), `colours` / `font`
 (graphics, optional), `templates` (graphics, 0.5.0: Motion Graphics templates the user picked - use every one of
-them).
+them), `brand` (0.6.0, *For my brand*: My Brand as it was when they asked - `brief.md` has it as a section with what
+to do: its colours as the palette, its logo copied into `build\` for the end card, its website in the call to
+action, its voice, the ending its goal asks for, a product only from its list at the price written).
 
 ## Always first
 - Hard rules (CLAUDE.md): never change a file the user gave (songs, logos, footage) - read only; everything you make

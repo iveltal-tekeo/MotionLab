@@ -282,7 +282,7 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 ## What comes next
 
 - [docs/plans.md](docs/plans.md) - the planned versions (0.6.0 content agency: a My Brand page - your goal, audience,
-  identity and catalogue, a mini-editor for small cuts and effects without Claude, mood boards from pictures, sounds
+  identity and catalogue, an editor of your own - a timeline for cuts, speed, sounds and graphics without Claude, mood boards from pictures, sounds
   for friends, a music library and picking your own sounds, 0.6.1 motion graphics from template packs - Resolve / After Effects packs read exactly, a
   motion check, formats, a preview before the render, 0.6.2 colour: correct your own clips, adjustable grades in
   Resolve, 0.6.3 content generation: AI clips back into the lab, pictures from image tools, voice-over, 0.6.4 yapping mode for

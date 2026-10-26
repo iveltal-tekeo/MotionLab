@@ -549,8 +549,15 @@ def save_new(body: dict) -> dict:
            "angle": _lines(body.get("angle"), 3000), "points": _lines(body.get("points")), "length_s": _length(body.get("length_s")),
            "where": where, "tone": tone, "cta": cta, "cta_text": _clean(body.get("cta_text"), 300), "lang": lang,
            "like": _like(body.get("like")), "like_prompts": _like_prompts(body.get("like_prompts")),
-           "extra": _lines(body.get("extra"))}
+           "extra": _lines(body.get("extra")), **_brand(body)}
     return _save(req)
+
+
+def _brand(body: dict) -> dict:
+    """0.6.0 For my brand: {"brand": My Brand as it is now} when the user ticked it (and My Brand holds anything)."""
+    from . import brand as BR
+    snap = BR.snapshot() if body.get("brand") else None
+    return {"brand": snap} if snap else {}
 
 
 def save_improve(body: dict) -> dict:
@@ -573,7 +580,7 @@ def save_improve(body: dict) -> dict:
     # replace (2026-10-24, a friend's ask: "only the improved script stays"): once Claude saved the new version, the
     # app moves this pasted copy to the Recycle Bin (motionlab.app.data.tidy_improved) - never one filmed / used
     req = _save({"kind": "improve", "script": rec["id"], "want": _lines(body.get("want")), "length_s": length,
-                 "where": where, "like": like, "like_prompts": like_prompts, "replace": True})
+                 "where": where, "like": like, "like_prompts": like_prompts, "replace": True, **_brand(body)})
     return {"script": rec, "request": req}
 
 
@@ -614,7 +621,7 @@ def save_title(body: dict) -> dict:
     req = {"kind": "title", "topic": topic, "viewer": _lines(body.get("viewer")), "angle": _lines(body.get("angle"), 3000),
            "platforms": plats, "orientation": orient, "language": _clean(body.get("language"), 30),
            "style_refs": _like(body.get("style_refs")), "like_prompts": _like_prompts(body.get("like_prompts")),
-           "notes": _lines(body.get("notes"))}
+           "notes": _lines(body.get("notes")), **_brand(body)}
     return _save(req)
 
 
@@ -752,4 +759,8 @@ def describe_request(r: dict) -> str:
             else f"{r.get('id')} - improve {r.get('script')}" + (
                 " - save ONLY your improved script (\"request\": this id, \"made_from\": the script); the app then "
                 "replaces the pasted one with it" if r.get("replace") else "")) + f" ({str(r.get('date', ''))[:16]})"
-    return "\n".join([head] + [f"  {k}: {v}" for k, v in rows if v])
+    out = [head] + [f"  {k}: {v}" for k, v in rows if v]
+    if r.get("brand"):                                   # 0.6.0: For my brand - My Brand as it was when asked
+        from . import brand as BR
+        out += ["", "For my brand:", *[f"  {x}" for x in BR.brief_lines(r["brand"], "words")]]
+    return "\n".join(out)

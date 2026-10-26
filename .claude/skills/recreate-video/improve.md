@@ -7,6 +7,9 @@ part and pressed *Send it to Claude*.
   captions, graphics, effects, pacing, overall) and `made_from.json`; keep what was rated good, change what was rated
   OK / bad as the notes say (a new edit version, never overwrite the last one); when the video came from a prompt,
   add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
+- **Fixed by hand** (0.6.0, the Editor tab): `outcome.json` `"hand_fixes"` (and that version's `edit_vN.list`) =
+  what the user trimmed, moved, split, sped up / slowed, deleted, added (sounds, templates) or reworded themselves - build on that version, never undo those changes, and
+  treat them as lessons (a cut Claude placed 5 frames late, a sound on a word, a caption mis-heard).
 - **Notes on moments** (0.4.2): `"moments": [{"f": 113, "version": "v2", "aspect": "graphics", "note": "...",
   "date": "..."}]` = notes the user put on single frames of a render (frame of that version; the app stopped taking
   new ones on 2026-10-15 - the per-part ratings sit beside the render now - but saved ones still count). Fix exactly

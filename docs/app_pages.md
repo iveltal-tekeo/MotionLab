@@ -18,9 +18,13 @@ and any never / always rule go into that file's **Pages** list; how the page doe
   the prompt library #/prompts belongs to it) - no numbers (the user, 2026-10-14: they are not steps in an order),
   each row in its section's colour (`--rc`) - then **Claude's memory** (below; #/memory/shared = Shared knowledge,
   `memShared` - #/memory/learned (0.3's Knowledge, then Share with friends) and #/knowledge are aliases of it; #/library
-  leads to #/memory since 2026-10-22), at the bottom **Motion Graphics** (0.5.0, #/motion, `pageMotion`, coral; below;
-  moved down to just above Jobs on 2026-10-22, the user: "move the motion graphics side bar section to down below above
-  the jobs section"), Jobs and Settings (tabs `setTabs`: General, Storage, Claude
+  leads to #/memory since 2026-10-22), with **Motion Graphics** (0.5.0, #/motion, `pageMotion`, coral; below) right above
+  it since 2026-10-25 (the user: "put motion graphics in the sidebar above claude memory"; at the bottom above Jobs
+  from 2026-10-22). At the bottom **More** (2026-10-25, the user: "there is too much stuff already on the sidebar at the
+  bottom so lets add a menu thingy or three dots that expands and appears 'jobs and settings' also change the settings
+  icons for a cog"): `#side-more` (three dots) opens `#side-menu` in place = Jobs and Settings (`sideMore(open)`,
+  remembered in localStorage `ml.navMore`, opened by itself on those pages; a running job's count rides on More as
+  `#jobdot` while it is closed; Settings' icon is a cog), Settings (tabs `setTabs`: General, Storage, Claude
   skills = #/skills, `data.skills()` reads `.claude\skills\*\SKILL.md`; the plain words + how to type it =
   `SKILL_INFO`; /whats-next is marked "for developers"). `ALIASES` rewrites the 0.3 addresses (#/refs, #/projects,
   #/knowledge, #/library). Home = the hero animation, **What do you want to do?** (`WAYS`: four cards with their
@@ -314,11 +318,16 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   lose it - that starts the `download` job with preset mp3 and picks the saved song; *A song* with none yet shows
   that row instead of the file picker) -, the clips' own sound, Talking), sound effects - a card per amount (Auto / none / a few / some / many, a strip = how often
   one plays) and which kinds (groups of `motionlab\sfx.py`'s cue kinds) -, notes. **6 Final**: length (pills or
-  seconds), format cards with the platforms (their shape drawn), the summary (one table, a row per step - a click =
-  back to it), the estimate as a chip ("About 30 min of Claude"; the rule in its tooltip: about 1 min of Claude per
-  second of video, `editreq.MIN_PER_S` -> options `min_per_s`; with no length it asks for one); what the two buttons
-  do = their tooltips; *Also build it as a DaVinci Resolve project* (`.neres`,
-  in the footer), *Make it with Claude* and *Quick draft now* (job `draft` = `draft_edit.py <p> ... --render`; needs a
+  seconds), format cards with the platforms (their shape drawn), **Build in DaVinci** (2026-10-25, the user: "move ...
+  build it as a davinci project in the actual form in the final section and make it more simple ... add the davinci
+  logo, and just say 'build in davinci'": one card `#nedvr` with the logo `logos\davinci-resolve\color.svg` on a white
+  tile, a click = on / off = `st.resolve`; the footer's checkbox is gone), the summary (one table, a row per step - a
+  click = back to it), the estimate as a chip ("About 30 min of Claude"; the rule in its tooltip: about 1 min of
+  Claude per second of video, `editreq.MIN_PER_S` -> options `min_per_s`; with no length it asks for one); what the
+  two buttons do = their tooltips; **For my brand** at the top, in the dialog's header on every step (the user: "add
+  it like maybe on top? somewhere where it can be seen and also a small preview of what data its feeding": the
+  switch + the logo, the colours, the website, the goal, the products switched on, the voice - *My Brand* below);
+  in the footer *Make it with Claude* and *Quick draft now* (job `draft` = `draft_edit.py <p> ... --render`; needs a
   style: a reference, a rhythm, a ready-made style, their words or a talking script) -> POST
   `/api/project/<p>/edit_request` (`data.save_edit_request` -> `motionlab\editreq.py`: `clean` checks it - a request
   of the old dialog still passes -, `build\edit_request.json` ("v": 2) + `build\edit_brief.md` = `brief()`, the same
@@ -345,15 +354,23 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   folder's name again; a name another video shows is refused). The FOLDER is never renamed: the clips stay where
   they are (hard rule 1), plans / renders / Resolve find them by path, Claude's commands use the folder name. A
   video (#/project/<p>/<tab>): tabs **Overview** (`projOverview`: the newest render in a Player with a poster frame
-  (`posterUrl`); under it one line (`pvmeta`): a picker when there are several (`renderPicker`, newest first, "v1 ·
-  Resolve", a name without `_vN` humanised: "graphics preview"), version · by Claude / quick draft · length · fps ·
+  (`posterUrl`); under it one line (`pvmeta`): a picker when there are several (`renderPicker` = a dropdown *Selected
+  version* since 2026-10-26 - the user: "it would help to have a dropdown of 'Selected version' instead of just a
+  switch" - newest first, "v4 · newest · today 12:13", "v1 · Resolve", a name without `_vN` humanised: "graphics
+  preview"; the same on Review and the Editor), version · by Claude / quick draft · length · fps ·
   format · rendered when, *Open in player*, *Made from …*; beside it **the index** (`drawIndex`, `.pvindex`, sticky:
   Ready to post's Title / Thumbnails / Description & chapters / After posting with their state, scrolling to
   `#pb-title` / `#pb-thumbs` / `#pb-desc` / `#pb-after`; then Review (rating or *not reviewed yet*), Graphics,
-  Versions, Footage, Timing check, Resolve & library = their tabs; redrawn by `reIndex` whenever Ready to post
-  draws); then two big cards (`.pvnext .onx`, an icon circle, the section colour / violet, lift on hover)
-  *Something not right? Review it and improve it* (saves `next: "fix"`, goes to Review) and *Start over*
-  (`startOver`: `next: "start_over"` + New edit with these clips - never a v2 of a feel the user did not want);
+  Editor (*N versions by hand* = outcome.json `hand_fixes`, else *change it yourself*; 2026-10-26, the user: "add the
+  'editor' tab in the sidebar of the overview as well"), Versions, Footage, Timing check, Resolve & library = their
+  tabs - Review's icon violet, the Editor's cyan; redrawn by `reIndex` whenever Ready to post draws); then two big
+  cards (`.pvnext .onx`, an icon circle, lift on hover - a neutral shadow) in their tabs' colours: *Change it
+  yourself* (`.onx.ed`, cyan: opens the Editor tab; only with a plan) and *Improve it with Claude* (`.onx.fix`,
+  violet: saves `next: "fix"`, goes to Review); under them a quiet link *Not the right feel at all? Start over with
+  these clips* (`startOver`: `next: "start_over"` + New edit with these clips - never a v2 of a feel the user did not
+  want). Until 2026-10-26 the cards were *Something not right? Review it and improve it* and *Start over* (the user:
+  "I think the buttons ... are not really used? idk what to do with them" - the first only opened Review, the second is
+  rare: the two ways to change a video took their place, Start over became the link);
   when the newest render is a **quick draft** (its plan `made_by` draft_edit.py) a third card on the whole row above
   them, glowing: *Happy with the cuts? Finish it with Claude* (`.onx.fin`, 2026-10-24, the user: "when i go to quick
   draft now, and the draft is done like what should i use next? improve with claude? ... it worked good and actually
@@ -369,8 +386,11 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   draft kept, only these layers added). Never fake ratings to ask for a layer (the ratings are rules for every video);
   `reviewSummary` = one line of the parts rated; *undo* clears `next`; then **Ready to post** = `projPublish` inside
   `#pubsec`, below) | **Review** (`projReview`, only with a render or ratings; since 2026-10-18 the one review pattern,
-  **Reviews** in `tools\motionlab\app\CLAUDE.md` - `outcomePanel` / `wireOutcome` are gone: left = `renderPicker` +
-  the Player, right = the review panel **How did it turn out?** = `ASPECTS` (sound & music, SFX, colour, captions,
+  **Reviews** in `tools\motionlab\app\CLAUDE.md` - `outcomePanel` / `wireOutcome` are gone; its colour = violet,
+  Claude's (2026-10-26, the user: "add some colors to accentuate the review page since its identical to the overview
+  tab so we have some distinctions between the three": `#tab[data-t=review]` sets `--acc` - the player, the panel's
+  edge, Send, its links; the tabs `.ptabs` carry an icon each, Overview the section's colour, Review violet, the
+  Editor cyan `--edc`): left = `renderPicker` + the Player, right = the review panel **How did it turn out?** = `ASPECTS` (sound & music, SFX, colour, captions,
   motion graphics, effects & transitions, pacing & cuts, title & thumbnail: optional; Overall first, the one required
   row; Good / OK / Bad + a note, saved per part = POST `.../outcome` {aspects: {k: {rating, note}}}); "These ratings
   were for an older render - rate this one." when `reviewed` is false; Send = `setNext('fix')` + `/recreate-video
@@ -401,6 +421,71 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   kept, else " (2)"). The new video's name (`#cvname`) stays editable after its folder exists: Enter / leaving it =
   POST `.../rename` (the label; the folder keeps its name), "Name saved: …". *Film it* has the same folder button.
   Footage tab: a photo shows PHOTO + its size.
+- **Editor** tab (0.6.0 step 6; the first part was the *Mini-editor*'s buttons, 2026-10-26 the same day the user:
+  "instead of mini-editor call it just editor, change the color of the player and editor to maybe one with more accent
+  colors so that we know its different from the player in review ... i mean like an actual editor where i can select
+  clips, move them around, trim at my own liking, not just click buttons and do it all theoretically ... add sfx to
+  my liking, maybe remove a design and add a template from our motion graphics template with the color of my liking,
+  maybe add slow/speed to some clips ... look at open source alternative of capcut or premiere or sum and try to
+  implement those in a minimilastic but efficient way"; `projEditor` + `EdPreview`, after Review, shown when the
+  video has a render and a plan; `#/project/<p>/mini` = the old address). The open-source editors' way: OpenCut /
+  CapCut's magnetic main track (the shots always close up), lanes above (captions, graphics - a row each where they
+  overlap) and below (sound effects - up to 3 rows -, the voice / song's loudness), split at the playhead, snapping
+  (🧲, to cuts, the playhead, the items), an Add panel; Shotcut / Kdenlive's light proxy copies. Its own colours
+  (`.ed`: cyan `--ed1` = `--edc` for the main action, the selection and state; violet `--ed2` only as the graphics
+  lane's colour; a pink playhead `--ed3`) - never Review's player. Re-checked 2026-10-26 (the user: "re evaluate the
+  editor interface with the impecable or hicup github repos" - Impeccable's checker, offline from npx's cache with
+  telemetry off, 53 findings -> the sidebar's 2 kept stripes; Hallmark's Floor + app-screen rules read, nothing
+  installed): no gradient on Save, no coloured glows, no tracked capitals, text 11 px and up (captions 12), a focus
+  ring on every control, the changes as a disclosure instead of a dialog; results in `.app\dev\impeccable_2026-10-26\`. Top: the render
+  picker (*Selected version*), the format, Undo / Redo, *🕓 N changes ▾* (a list under the button - `histPop`, no
+  dialog: the changes in order, Undo, *Start again*; an outside click or Esc closes it), *Save as a new version*.
+  Middle: **Add** (`#edadd`: Sounds = this PC's recorded sounds + every kind's made-up one, ▶ to hear, + = at the
+  playhead, or drag onto the timeline; Graphics = the Motion Graphics templates, "Over your video" first and the
+  full-screen ones after on a video with shots - added over a video with its `background` off), the **live preview**
+  (`EdPreview`: the clips from their light copies - two `<video>` per clip, the next shot waiting on its first frame,
+  at their speed and zoom / anchor / opacity curves -, each graphic's own page in an iframe seeked to its frame (a
+  new one from its template at the video's size; captions' unsaved words patched in after captions.js), solids, the
+  sound effects through Web Audio at the build's offsets (the same recorded file the build picks), the song under it
+  or the clips' own voice; a click on it = play / pause), the **selected item** (`#edinsp`: a shot = speed chips ¼×-4×,
+  split at the playhead, delete, its clip's room, what moves with it; a graphic = its words, its colours with My
+  Brand's swatches, *More settings* (the other settings, `gsetInput`), remove / remove all its pieces; a sound = listen,
+  volume -12..+12 dB, its sound (the kind's recorded ones + made-up), remove; a caption = its words, the captions'
+  colours, remove - since 2026-10-26 (the user: "why cant i modify captions? like move stuff or trim them?" and "what if i
+  wanted to change the font or style of the caption?") the captions' whole style: their looks (presets.json - the op
+  `look`), font / weight / size / capitals / position (`ED_CAP_STYLE`), colours, *More settings*). Bottom: the timeline (`#edcanvas`; `pxf` from fit to 14 px a frame, Ctrl + wheel / − + / the
+  slider; the ruler and empty lanes move the playhead; shots show their clip's filmstrip). Pointer: drag a shot =
+  reorder (an insertion bar), its edges = trim (clamped by its clip's room), a graphic = move / its edges = trim, a
+  caption = move (`capmove`) / its edges = trim (`captrim` to a frame) - inside the shot its words are said in, a
+  touching caption gives way down to `MIN_CAP` frames (the tooltip says when it can go no further), the words rescaled
+  (`caption_retime`; the preview patches captions.js with the state's `capedits`), a sound = move; a click selects, an empty place deselects. Keys (never while typing): Space, ← → (Shift 10), Home /
+  End, S split, Delete, Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y, + / −, M, Esc. Every change = POST `.../miniedit/preview` with
+  all of them (nothing saved; the timeline and the preview are drawn from the answer) and a label in the page's
+  language; the changes are kept in this browser (localStorage `ml.editor.<p>.<plan>`) until saved or dropped - *Your
+  unsaved changes are back*. The preview's media (GET state `media` / `need_media`): missing or out of date = the
+  job `editor_media` starts by itself (`tools\miniedit.py media`: a light H.264 copy per clip, its sound's loudness
+  per frame, a filmstrip picture - `build\editor\`; seconds), the preview plays the clips themselves meanwhile.
+  Recorded sounds play through GET `/api/editor/sound?file=` (Edge never answered a script's fetch of an address
+  ending in .wav, 2026-10-26 - six such fetches held all of the page's connections), made-up ones `?kind=`. *Save as
+  a new version* = POST `.../miniedit` (the job `miniedit`), then `route()` so the page's progress panel follows it;
+  while it runs the tab says *Saving your changes*; when it ends the new version is the newest render. A sound the
+  Editor cannot cut again (`timing_locked`) locks the shots (no edges, speed or split) with one line why.
+  The extras (2026-10-26, the user's pick before releasing 0.6.0 - "finish everything we have"): an **Effects** lane
+  (`.edfx` chips from `motionlab\edfx.py`'s reading of the plan: zooms, punch-ins, shakes, flashes, stutters, the
+  transitions; drag = `fxmove`, the right edge = length, the panel = strength / ease / remove; the Add panel's
+  *Effects* tab = `fxadd`); *See it rendered* (`#edrange`: the two seconds around the playhead with the changes so
+  far, picture only, `render_video.py --range` as the job `editor_range`, played over the preview); the Add panel's
+  **Clips** tab (first when the video has clips: the plan's `sources`, + = at the cut by the playhead, dragged = into
+  the cut it is dropped on - `clipadd`); a shot's panel has *Clip* (`take`: another clip of the video in its place, its
+  caption piece's words dropped), *Part of its clip* (`slip`, live in the preview; Alt + drag a shot does the same) and
+  *Its sound* (`volume`, -30..+12 dB + *Mute* - a talking / clips' sound only); on a song video the song's wave is
+  draggable (`song` start, dragged left = later in the song) and a click opens its panel (start, volume - against the
+  sound effects, the master brings the whole back to -14 LUFS); captions can be split at the playhead (`capsplit`) and
+  added (*+ Caption* in the toolbar, `capadd`, its words selected to type over), and a caption said over a cut shows
+  its end on the next shot too (a dashed piece that selects it). A video made from zero has its **scenes** (the
+  full-frame graphics back to back, `miniedit.scenes`) as the main track: the *Scenes* lane shows each one's
+  picture, they move / trim / split / speed like shots, and a scene's panel has its graphic's words and colours. The
+  clips no shot uses get their light copies quietly after (`need_more`, no wait on the preview).
 
 ## Generator vs Editor
 
@@ -431,6 +516,39 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
 
 ## Motion Graphics and Logos
 
+- **Sounds** tab (0.6.0 steps 8-9; the user: "could it be possible for the user itself to choose them while editing or
+  before running the edit"): #/motion/sounds, `motionSounds` = GET `/api/sounds` (`data.sounds_state`: this PC's
+  library\sounds rows - the hidden ones too -, the shared list's packs with "n of m here", the kinds; a pack sound
+  picked from a trial copy shows the pack's own file name). A row per sound by kind: ▶ (`/api/editor/sound?file=`),
+  its length, origin (its licence in the tooltip), ☆ / ★ favourite and Hide / Show (POST `/api/sounds/set`); filters
+  *In use* / *★ Favourites* / *Hidden*, a kind select, search (`SD_FILTER` / `SD_KIND` / `SD_Q`). The packs' cards:
+  how to get each (`how`, translated by key), *Get it* = its page (empty for the user's own pack until they give its
+  link: "Ask whoever shared MotionLab with you"). *Add sounds* (`soundsAddModal`): a folder (webkitdirectory) or
+  files -> POST `/api/sounds/upload` one by one into `.app\sound_import\<batch>\`, or a typed folder path (read where
+  it is - a GB bundle is never copied); where they are from + their licence (both or neither: empty = only the list's
+  sounds); the job `sound_import` (followed in the dialog) -> the tab again. New edit's Sound step: *Choose the
+  sounds* (`#nepick`, hidden at *None*): the sounds in use by kind with ▶ and a tick -> `st.sounds` -> the request's
+  `sfx.sounds` (`editreq._sounds`: this PC's library only, at most 40); the summary says "n picked". **Make
+  sounds** (`soundsMakeModal`, API 43; the user: "connect elevenlabs ... upload to google drive for everyone"): the
+  key (a password field the first time, then "····abcd" + Change), Free / Paid (the licence), a stepper per kind of
+  generate.json (the kinds with under 6 sounds start at their number, the rest 0; the free month capped at what is left of it -
+  the balance ElevenLabs reports), the credits (about 10 a second asked); the job, then the *New* filter (added in the last 7 days). A made sound shows *ElevenLabs* (*non-commercial*
+  on the free plan) and its description's first words as its name. *Share with friends* (paid-plan sounds only).
+  Tests: a server started with `MOTIONLAB_SOUNDS` / `MOTIONLAB_ELEVENLABS_KEYS` / `ELEVENLABS_BASE` (a stand-in) -
+  never the real library or key.
+- **Music** (#/motion/music, `motionMusic`, 0.6.0 step 10, API 46; `motionlab\music.py`): two filter chips, *Songs*
+  (refs\audio's downloads read in place + `library\music\`) and *Ambience* (`library\music\ambience\<kind>\`); a row
+  each: ▶ / ❚❚ (`muHear` - one at a time; `muStop` on leaving the page and in `closeModal`; GET `/api/music/hear?rel=`
+  - never a .wav address), title + artist (from the file name, yt-dlp's [id] off), chips BPM / energy / tone /
+  length (`muChips`, also on New edit's cards; energy and tone words translated by key), where from (YouTube,
+  ElevenLabs · non-commercial...), ★ (offered first) / Hide (never offered) = POST `/api/music/set` ->
+  music.json. *Add songs* / *Add ambience* (+ its kind) = POST `/api/music/upload?name=&type=&kind=` (a raw body, a
+  new name - never over a file), then the job `music_index` (`tools\music.py index`); *A song from a link* = the
+  download job (MP3 preset) then the same; *Measure n new* when files are not measured yet; *Make ambience*
+  (`musicMakeModal`: a stepper per bed kind, the credits, the month left; the job `music_beds`). New edit's Sound
+  step: *A song* shows the songs as cards (`.nesong`: ▶ + the chips; the video's folder songs first; the select stays
+  hidden as the value) and, unless a song is picked, *Ambience under your voice* (None + each bed with ▶) -> the
+  request's `ambience` (`editreq._bed`).
 - **Motion Graphics** (0.5.0, the user, 2026-10-16: "turn the Swishy reference clips (in the refs folder) I captured
   into a reusable Motion Graphics library, add a Motion Graphics section to the sidebar, and make Generate use those
   templates as well when generating blindly"): sidebar row after Generator (`data-nav="motion"`, icon `#i-motion`, coral
@@ -477,6 +595,9 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   the value and fires input + change (the live preview follows). `livePreview` adds `<script src="/logos.js?b=<ids>">`
   (`logoIds(values)`; GET `/logos.js` = `logos.js(ids)` = MLLogo + those logos); `/files/.../assets/logos/logos.js`
   not written yet (a template folder, a graphic never rendered) = the helper alone; `/files/logos/` = the SVGs.
+  My Brand's logo (2026-10-26) = the logo `brand`, first in GET `/api/logos` (group `brand` = the *My Brand* chip; its
+  versions' pictures as `src`, `logoSrc` shows them) - `logos.brand_entry`; `LOGOS` (the page's cache) is reset when
+  My Brand saves or takes a logo.
 
 ## Prepare and Film it
 
@@ -691,6 +812,232 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   patterns the user marked correct / partly with their note; never shared); `memory_index(styles=True)` = the same
   without the effects block, never written (`knowledge.py memory --styles`, MCP `knowledge("memory:styles")` -
   /write-script, /write-title).
+
+## My Brand
+
+- **0.6.0, step 1** (built 2026-10-25; the user, 2026-10-22: "implement a new section ... which would be called 'My
+  Brand'"; 2026-10-25: "my brand is different from content agency right?" - My Brand is one section of 0.6.0, the
+  content agency): `#/brand`, `pageBrand`, the sidebar row right under Home, between two lines (`.navsep`) - its own
+  place (the user, the same evening: "put the my brand above the make a video text, kinda like its own section ... i
+  think its very important", then "remove the 'make a video' text and just add a line and a line above the my brand
+  as well so have it separate from home" - the *Make a video* group label is gone; under Claude's memory before, as
+  the mock-up, slide 10 of `new_edit_section.html`) with a NEW chip
+  until the first visit (`ml.brandSeen` in localStorage, `#brandnew`). The section colour is rose (`--pink`), its icon
+  a shop, its texture price tags. With a logo, the logo shows large and faint in the band's glass, on its right, behind
+  the words (`brandBand(main, b)` adds `.brbg`, last in `.head`; 16 %, fading to the left) - the shop icon stays
+  (2026-10-25: first the logo replaced the icon on the sidebar row and the band tile, then the user: "what if u put
+  the logo in teh transparent background in the My brand page instead of replacing the shop icon itself?").
+- **For my brand** (the user: "add an option when u generate or edit a video or create in general that is called
+  'its for my brand' and then gets the knowdledge and tailors the video to your brand, using icons colors url"): one
+  switch, `brandToggle` (a `<div class="brandrow">` in a dialog - `modal()` draws it; under its name a small preview
+  of what it gives Claude - the logo, colour dots, the website, the goal, "N products", the voice - from
+  `brandData()`, My Brand read once and again after a save), in New edit's header on every step (`#nebrand`), the
+  Generator (`#gbrand`) and Prepare's *Improve my script*, *Write
+  one from zero* and *Title & thumbnail first* (`#sbrand`, `#qbrand`, `#tbrand`); `brandOn(el, sel)` = ticked. Greyed
+  out while My Brand is empty (`brandFilled(b)`); the last choice remembered
+  (`ml.forBrand`). Ticked, the request gets `"brand"` = `brand.snapshot()` (My Brand now, only the products switched
+  on) and the brief a *For my brand* section (`brand.brief_lines`: the facts, then what to do) - edit_brief.md first,
+  the Generator's brief.md (`tools\brief.py`), `script.py show` for Prepare's requests; the skills follow it.
+- **Three tabs** (2026-10-25, the user: "create some tabs for the my brand page ... i dont want to be scrolling", then
+  "a tab called Style that can have the brand identity, tone of voice and captions stuff" and "in the overview ... the
+  website, goal, target, pages... (with some videos previewing maybe)"): `BRAND_TABS` - **Overview** (`#/brand`: *Your
+  website* with the big *Import from your website* button, *Goal*, *Target audience*, *Your pages*), **Style**
+  (`#/brand/style`: *Brand identity*, *Tone of voice*, *Captions*, and *Your editing look* as a strip of video cards
+  across the page - moved from the Overview the same night, the user: "move your editing look to style as well"),
+  **Catalogue** (`#/brand/catalogue`, its count on the tab; the user, the same night: "the 'add a product' in the
+  catalogue should be at the top for convinience and make the catalogeu section more cool, like why does it say
+  'cataloge' if im already on a tab called 'catalogue'" - no title of its own: a bar on top (*Add a product*, the new one
+  first and focused; "n products · m in videos"; a search past 8), the products as cards `.brpc` - the picture (a click
+  picks one: POST `/api/brand/product_image` = `brand.save_product_image`, checked like the logo, `products\<id>.<ext>`),
+  name, what it is, its link, the price, an *In videos* switch (off = greyed); empty = one centred line that points to
+  the import). Every pane is drawn once and a tab only shows
+  its own (`showTab`) - the address follows by `history.replaceState` (no hashchange, no redraw), so a change typed a
+  moment before switching is never lost. A banner above the panes (`#brpend`) holds an import nobody took yet. The
+  cards below are described by what they hold; where each sits = the tabs above.
+- **The page** (the mock-up's look): the band, then two columns of `.brcard` panels - *Goal on social media* (four
+  pills, `BRAND_GOALS` = `brand.GOALS`, any number, + the user's words), *Target audience* (chips, + one typed in -
+  Enter or leaving the field adds it, up to 12), *Brand identity* top to bottom (2026-10-25, the user: "expand on the
+  brand identity section from up to down instead of table with columns? i want to also be able to put colors as
+  hexadecimal"): *Logo* - a tile, a click picks a PNG / JPG / WebP / SVG, POST `/api/brand/logo` = `brand.save_logo`:
+  checked by its first bytes, an SVG without scripts, <= 5 MB, copied to `knowledge\local\brand\logo.<ext>`; beside
+  it (2026-10-26, 3f) three smaller tiles - *On dark*, *On light*, *Icon only* (`BRAND_LOGOS`; the same route with
+  `kind` -> `logo_<kind>.<ext>`, × = not used, the file stays) - and *Where your logo goes in videos* (four pills,
+  `BRAND_LOGO_WHERE`: Auto / End card / End card + corner / Nowhere); under the colours *Does it read?*
+  (`paintRead`: a tile per text / accent colour on each background colour, its contrast, ⚠ under 4.5 for text, 3 for
+  an accent - `brandContrast` = `brand.contrast`). The brand also shows as New edit's *My Brand* palette card
+  (`brandPalette`, the accent first) and as the first group of every font list (`fontOptions`). *Your end card*
+  (5c, under *Names and words*): Auto + the three templates as picture tiles (`BRAND_ENDS`, their thumb.png), the
+  sign-off line, and once one is picked a `livePreview` of it with the server's `_end` values (GET / POST
+  `/api/brand` and `/api/brand/logo` add `_end` = `brand.end_card(b, preview=True)`; `endSaved` repaints after a
+  save; drawn when the Style tab shows - `endPending`); *Its sound* (0.6.0 step 10, `paintSound`): the template's
+  own sounds or *Your sound logo* (▶ = GET `/api/brand/sound_logo`), the description (GET `/api/brand`
+  `_sound_words` = `brand.sound_logo_words`) + *Make one* (POST `/api/brand/sound_logo/make` -> the job
+  `brand_sound_logo`, then GET `/api/brand` again) or *Use a file…* (POST `/api/brand/sound_logo?name=`, a raw body).
+  *What worked for you* (3j, at the bottom of *Tone of voice*):
+  the hooks, endings and titles of what the user rated good (GET `/api/brand` `_worked` = `brand.worked()`), read
+  only, each a link to its prompt; none yet = one line on where to rate. The Captions card also has *Words per line*
+  (1 2 3 4 6 - the preview shows that many at a time) and *Size* (Small / Medium / Large / Huge = `CAP_SIZE` x the
+  look's own); a product card's *Facts & media* (5b, `prodFacts`, a dialog with *← Back* to the catalogue): key
+  benefit, claims + their proof (5), never claim (chips, 6), screenshots / recordings (6 tiles, a video plays on
+  hover; POST `/api/brand/product_media`); the card's button counts them; *Colours*
+  - up to 6 rows (`.brcol1`): the swatch (a click = the colour picker), the hex typed (`.brhex`: #2eaa5c or #2a5 ->
+  #22aa55; not a hex = red `.bad`, nothing saved), the name), *Tone of voice* - its own card (the user: "needs to have
+  more presence as well because i didnt even realize its there"): quick words (`BRAND_TONES`, a click adds / takes the
+  word out of the text) + the text (`#brvoice`, 300 characters). The identity also holds the brand's *Name* and what it
+  does (`#brname`, `#brabout`) at its top and *Fonts* at its bottom (titles / body text = selects of GET `/api/fonts`,
+  a line in each font beside it). | *Your website* (the address + **Import from your website**, below), *Your pages*
+  (a row a platform: its logo on a white tile, the link - checked as typed by `BRAND_PAGE_RX` = `siteread.SOCIAL`, saved
+  only once it is that platform's page -, a call to action; *Add a page* = the platforms' logos not used yet) and
+  *Catalogue* (a row a
+  product: a box tile, its name and what it is as borderless fields, the price, a gold *Use in videos* switch, × that
+  shows on hover; *Add a product*; the line "Claude can put the product, its price and the website in a motion
+  graphic").
+- **Import from your website** (step 2, 2026-10-25, the user: "an option besides the 'your website' with a download
+  icon that 'imports data from your website' so if its a shop website it will pull the catalog data, descriptions,
+  logos"; then "before importing make a pop up with all the info gotten and how it would be imported ... checking if
+  that info is already in the my brand section to not add duplicates"): `#brimp` saves the address, starts the job
+  `brand_import` (group net, `tools\brand.py import` = `motionlab\siteread.py`: the site's own pages only, robots.txt
+  obeyed, at most 8 pages; Shopify `/products.json`, WooCommerce's Store API, JSON-LD / og product prices; colours,
+  fonts, logos, pages, name, description) and follows it (the status line under the address); when it ends
+  `brImportModal(found, B)` (GET `/api/brand/import` = `found.json`) shows a section per kind with where it goes
+  (→ Brand identity / Your pages / Catalogue): name + description, the logo pictures (one radio, *None*), colours
+  (up to the 6 that fit; since the same night, the user: "how are colours taken from the website import? cuz i think
+  they are missing the good ones ... maybe take a screenshot and analize the major colors" - the job screenshots the
+  home page with headless Edge (`siteread.screenshot`), groups its colours (k-means in Lab, `groups`) and picks a
+  palette with roles (`pick_palette`: the background = the biggest, the text = the most contrast - else the CSS' most
+  used neutral that reads on it -, up to 3 accents where colour beats size, neutrals >= 1 % of the page, the logo's
+  own; a page colour takes the CSS' exact value when near); the pop-up shows the screenshot beside them, each with its
+  role and share of the page, the background / text / accents ticked; brand.json keeps the role, Style's colour rows
+  show it as a select, the briefs say what each is for; no Edge = the CSS' most used colours as before), fonts (the
+  library's and the free Google fonts the job downloaded - shown in their own type
+  through an @font-face of the import folder, tagged "comes into your fonts" - as Titles / Body text radios, a second
+  click lets one go; a Google font picked = copied to `library\fonts\<dir>` by `brand._add_font`, `/fonts.css`
+  reloaded; any other font "not a free Google font - it may need a licence"), pages, products as cards (picture, name, price, description; *All / none*, "n of m
+  ticked"). What My Brand already holds (same name / colour / product name / page) is marked *already in My Brand* and
+  cannot be ticked; what would replace the user's own (their logo, name, fonts, a page's link) starts unticked. *Add n
+  things to My Brand* = POST `/api/brand/import` {picks} = `brand.take_import` (copies the ticked logo to `logo.<ext>`,
+  a product's picture to `knowledge\local\brand\products\<id>.<ext>`, sets `site.read`). Tested on a made-up shop of
+  10 products (one already there) and live on the user's site (2026-10-25).
+  **In the background** (the same night, the user: "make the import from your website button a littel bit bigger ...
+  add a progress bar and make it so that if the job finishes while u are in another page u can still come back and
+  import the info"): the button is a full-width primary one (`.brimpbig`); the reader prints `progress <0-100>
+  <stage>` lines (`siteread.Reader.progress`: home, pages, styles, shop, fonts, logos, pictures, done) and
+  `brandImpWatch(id)` follows the job from ANY page (`BRAND_IMP`; the bar `#brprog` + the stage in words under it when
+  My Brand is open); the app's start picks up an import still running. When it ends: on My Brand the pop-up opens;
+  elsewhere a toast + a pink dot on My Brand's sidebar row (`#brandimp`). What was found and not taken yet (found.json's
+  `at` != brand.json's `site.read`) waits in `#brpend` - *See what was found* opens the pop-up, Cancel leaves it there,
+  × puts it aside (localStorage `ml.brandImpAside` = that `at`) - `brandPendPaint()`, also at the app's start (the dot).
+- **Captions** (2026-10-25, the user's pick from the research): a card under *Tone of voice* - on the left the
+  choices as pills (`data-ck`): the look (*Classic* / *Clean box* = the captions graphic's presets.json), the font (the
+  library), letters (CAPITALS / sentence case), the text and spoken-word colours (a swatch + the brand's colour dots),
+  the motion (word lights up / words pop in / whole line), the position (top / middle / bottom), a box behind; a second
+  click on a pill lets it go (= the look's own); *Back to the look's own* clears all. On the right a 9:16 preview
+  (`#brphone`) drawn from `CAPTION_LOOK` (the two looks' numbers) + the choices, its words lighting up / popping in
+  every 0.52 s. Saved as `identity.captions`; `brand.caption_look()` = (the look, the graphic's values on top) and
+  `overlay.py captions ... --brand` applies it (Claude's brief names that command); Graphics > *Captions* shows *In my
+  brand's caption style* (ticked) when the brand has one -> the job adds `--brand`.
+- **Your mood board** (0.6.0 step 7; moved from the Analyser to here 2026-10-26 - the user: "the mood board for the my
+  brand? or where should we put it?"): a full-width card on Style above *Your editing look* (`moodCard`): the pictures
+  in columns (each with ✕ = off the board - its copy stays in the folder), *Add pictures* / drop on the card -> POST
+  `/api/brand/mood/upload?name=` one by one (a raw body: `motionlab\moodboard.add` copies it into
+  `knowledge\local\brand\mood\`, measures it - thumbsets.measure_picture + `composition` - and makes the card again);
+  the card = *What MotionLab sees* (words from the medians: light, colour, contrast, room, detail - translated by key,
+  es.brand.json `_by_key`) and *Its colours* (a click adds one to the brand's colours on the page's own copy, then
+  its save); people / words counts. GET `/api/brand/mood`, POST `/api/brand/mood/remove` {n} (API_LEVEL 44). The brief:
+  `brand.brief_lines` adds `moodboard.card_lines()` (the words, the colours, the folder for Claude to open). Tests: a
+  server with `MOTIONLAB_MOOD` (a scratch folder - its pictures then do not show: /files/ serves knowledge, not .app).
+- **Your editing look** (2026-10-25, the user's pick from the research): a card under the catalogue = the one picker
+  (`stylePicker`, purpose edit, up to 3) of this PC's analysed videos -> brand.json `look.like` (analysis folders;
+  `brand.clean` keeps only ones with an events.json - a cheap check, it runs on every save). New edit's *References*
+  shows a *My brand's look* card first (`#nebl`: the logo + the videos' names; a click picks them all, a second lets them
+  go). With *For my brand* ticked and no reference picked: the quick draft is possible (the summary counts the look,
+  `editreq.draft_args` takes it as `--like`) and the brief's *3. References* says the brand's look is the reference;
+  `brand.brief_lines` names it for every video request.
+- **At a glance + your latest videos** (2026-10-25, the user's pick "Overview at a glance + videos"): the Overview opens
+  with `#brglance` (`paintGlance`, drawn when the tab shows and after each save) - the logo, the name in the title font,
+  what it does in the body font, the colour dots, the fonts, the tone's first words, the pages' logos, "n products · m in
+  videos" = what *For my brand* gives Claude; *Edit the style* = the Style tab; empty = one line pointing to Style /
+  Catalogue / the import. Under the cards *Your latest videos* (`#brmine`; the user: "should only appear videos u marked
+  as 'for my brand' when creating them"): GET `/api/projects` - only the ones made For my brand (`for_brand` = their
+  edit / generate request carried My Brand, `data.projects`) with a render, the newest first; a click opens the video.
+- **Names and words** (the glossary, the user's pick): a card on Style under the identity - a chip a word (+ "said
+  ..."), two boxes to add one (Enter); brand.json `glossary`; the briefs say "spell them exactly like this" (scripts and
+  titles too), `overlay.py captions --brand` gives them to speech to text as `--names`, Graphics > *Captions* pre-fills
+  its names box with them.
+- **Product motion** (step 5, first part, 2026-10-25): New edit's Text step shows *Show a product* (`#neprod`, only
+  when My Brand has products for videos): picture cards (`.neprb`, up to 2), a picked one gets *In passing / At the
+  end / Both* (`st.products` [{id, how}], default at the end; the summary's Text row names them) -> `editreq.clean`
+  (a product not in the catalogue for videos is refused) -> the brief's *Products to show*: build each from the Motion
+  Graphics template `product-card` with `brand.product_card_values` + the picture / logo copied into the graphic.
+- **What My Brand still lacked** (2026-10-26, the user: "what other stuff is missing? try to add it to my brand" - the
+  research's 3b, 3h, 5b, 5d and the website's text): **the voice in your own words** on Style's *Tone of voice* card -
+  *How you sound* (four sliders as five dots each: formal-casual, serious-funny, respectful-cheeky, calm-excited; a
+  second click = not set; `brand.TONE_DIMS`, `tone_words`), *Words you use* / *Words you never use* (chips), *Lines
+  that sound like you* (up to 5) -> `identity.tone`; **Content pillars** on the Overview (`pillars`: up to 6, a name,
+  what it is, a series) - a calendar post gets one (`agency` post `pillar`) and the calendar shows "This month by
+  pillar"; a product's **promo code** and **Paid partnership** (`promo`, `sponsored` - the brief then says to mark it
+  as an ad, on screen and in words); **what your website says** - the import keeps the pages' readable text
+  (`siteread.site_text`: headings, paragraphs, list items by page; menus, footers, cookie notes, what every page
+  repeats left out; a page built of <div>s = its longer text runs) and the pop-up offers it ticked -> `knowledge\
+  local\brand\site_text.md`, `site.text`; the briefs point Claude to it for facts, never for the voice.
+- **Start from zero** (2026-10-25, the user: "a button to reset all data for my brand (when u want to reset to try from
+  zero)"): `#brreset` in the band asks first, then POST `/api/brand/reset` = `brand.reset` (brand.json copied to
+  `knowledge\local\brand_backups\brand-<date>.json`, then saved empty - the logo, product pictures and fonts stay on
+  disk, nothing is deleted); the last import's finds are put aside; *Bring it back* (`#brundo`, `BRAND_UNDO`, {undo:
+  true} = `brand.undo_reset`, the newest copy) until the next change.
+- **Saving**: every change saves itself 0.5 s after the last key (POST `/api/brand` with the whole brand, one at a
+  time), "saved ✓" / "NOT saved" in the band; the website only when it is finished (Enter / leaving the field), since
+  `brand.clean` refuses what is not a web address. A product with no name is not kept.
+- **The data**: `knowledge\local\brand.json` through `motionlab\brand.py` (`load`, `clean`, `save`, `selfcheck` - in
+  the self-test as *my brand*); never shared. Next (plans.md 0.6.0): step 2 reads the website (*Read it again*),
+  step 3 the brand kit in New edit / Motion Graphics, step 4 the skills read it, step 5 product motion.
+
+## Content agency
+
+- **0.6.0 steps 12-16, the rest** (2026-10-26, API_LEVEL 45): *When to post* on the rhythm row (a pop-up per brand page:
+  your best times as chips, Add = a weekday or *Any day* + a time, where each platform shows them, a generic line
+  until you type yours -> calendar.json `when`); a post's pop-up adds the best times as quick picks under Time, *How it
+  did* per link (`agHowItDid`: SOC's history samples near 48 h / 7 d / 28 d, the views now, the stats file's extras),
+  *Test & compare winner (YouTube)* (`ab`), *Before you post* (`AG_CHECKS`: every platform's + each picked one's, the
+  sound only when the post has one; `checks` "<platform>:<key>") and *Formats* (`AG_SHAPE` against the video's newest
+  render). Your videos: *Import your stats* (a raw body -> `data.agency_stats_upload` -> `motionlab\stats.import_file`;
+  the platform asked when it cannot be told), GET `/api/agency/social` carries `stats`; imported rows with no card
+  read from a page show as cards (`impOnly`), the others' extra numbers under their card (`agImpLine`).
+
+- **0.6.0** (docs\plans.md steps 12-19; the user, 2026-10-25: "own row named 'Content agency'", "i kinda want the
+  content calendar first and then move on the ability to scan and have teh stats pulling from the urls of our pages
+  automatically"): `#/agency`, `pageAgency`, the sidebar row right under My Brand (inside its two lines), royal blue
+  (`--agency` #5b8cff), a calendar icon (`#i-calendar`), calendar squares as its texture.
+- **The content calendar** (step 12, built 2026-10-25): `knowledge\local\calendar.json` through GET / POST
+  `/api/agency` = `motionlab\agency.py` (`clean` on every save: dates, HH:MM times, My Brand's platforms, a stage of
+  `STATUSES`, a video = a folder of projects\, a post's link on its platform - `POST_HOSTS`, short links too); never
+  shared. The bar: ‹ the month › *Today*, "This week: n / m" (posts this Monday-Sunday against the rhythm's days), *New
+  post*, *Add to Windows Calendar* (GET `/api/agency/calendar.ics` = `agency.ics()`: a timed post = a 30-min event with
+  a reminder 1 h before, an all-day one without a time). The rhythm: *I post on* Mon...Sun pills + *at* a time - the
+  free days of it from today on are dashed slots ("a post here"); the line says posting regularly matters more than
+  the hour (the research). The month grid (Monday first; no sixth row of the next month): a day = its posts as chips
+  (`AG_STATUS` colour - idea, scripted, filmed, edited, ready, posted -, up to 3 platform logos, the title, the time);
+  a click on a day = a new post there at the rhythm's hour; a chip = its pop-up; chips drag between days and to / from
+  *Ideas* (the column of posts without a day; a dropped one gets the rhythm's hour). A post's pop-up (`agPostModal`):
+  what it is, day, time, where (platform logos), stage, the video (MotionLab's, newest first, its picture), the sound to
+  add in the app (never in the render), notes, and per platform the link where it went up; Delete. Every change is
+  saved at once ("saved ✓" in the band).
+- **Your videos** (the second tab, #/agency/videos, 2026-10-26, the user: "make so that videos form social media form
+  the brand show up on teh content agency and you could actually see them when they were posted, views... etc"): the
+  pages My Brand names as cards (`.agpg`: logo, handle, followers, videos read; a click = only its videos) and **Check
+  my pages** (the job `agency_check` = `tools\agency.py check` = `motionlab\social.py`; followed from any page by
+  `agCheckWatch` like the website import: bar + stage, a toast when it ends elsewhere): YouTube (its Videos and Shorts
+  tabs listed by yt-dlp, the 10 newest read one by one for their exact date, views, likes, comments; followers from the
+  channel) and TikTok (the profile's listing: views, likes, comments, date) - public numbers, no login, only when the
+  user presses it (their terms do not allow automated reading: the button is the user's own reading of their own
+  pages); Instagram and the rest are listed as "not read here yet" (a login - their exports, later). What it found =
+  `knowledge\local\social.json` + the pictures in `social\thumbs\` (TikTok's addresses expire); each check adds a
+  video's views to its `history` (how it grew). The videos as cards (`.agvc`, newest / most viewed): picture, views,
+  likes, comments, when it went up, "+n since <when>" when it grew, ×n against the page's median when >= 1.5. On the
+  Calendar each day shows what went up as a blue chip with its views (`.aglive`, a click opens it); "This week" counts
+  the days with something planned or posted.
+- Next (plans.md): stats from the user's exports (13 - Instagram), pillars (14), checklist + repurpose (15), when to
+  post (16), the YouTube Data API key (17 - within the terms), what worked this month (18), YouTube Analytics (19).
 
 ## Shared knowledge
 

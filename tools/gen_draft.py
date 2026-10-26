@@ -7,9 +7,12 @@ scene table instead of writing a build. Always shown as a draft; the user's rati
              changes on a downbeat, the first drop gets a cut (the biggest change); no song = a cut every ~2.5 s
           2. the scenes: one per line of the request's words (its "text"; none = ~one per 2.5 s with the templates'
              own words), the first is the hook, the last (3 scenes or more) the end card
-          3. a template per scene (templates.py pick on the scene's words + the request; the user's picks first;
-             never the same one twice in a row; one NOT ok at the size is left out; a number -> a counter, the end ->
-             an end card), its main words set to the line, the request's look (a look-aware template) and size
+          3. a template per scene (templates.py pick on the scene's words, the request's counting half; the user's
+             picks first; 2026-10-26: each template once a video while others fit, the ones the last videos used
+             pushed down (templates.recent), near-equal matches in this video's own order; one NOT ok at the size is
+             left out; a number -> a counter, the end -> an end card, both rotating), its main words set to the
+             line, the request's look (a look-aware template) and size; For my brand (the request's "brand"):
+             its colours by role and fonts over the look
           4. build\\plan_vN.json (overlay layers back to back, the song from --start cut into build\\ as a copy) +
              build\\gen_draft_vN.md (the scene table: frames + timecodes, template, words, why); --build = one plain
              build (tools\\build.py --sfx: the graphics, the sound, the video, the precheck, the cut-sheet)
@@ -20,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -27,6 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from motionlab import brand as BR  # noqa: E402
 from motionlab import looks as LK  # noqa: E402
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import templates as TM  # noqa: E402
@@ -40,6 +45,7 @@ SCENE_S = 2.5                                   # a scene without words to time 
 END_IDS = ("end-screen", "subscribe-cta", "logo-reveal", "title-card")
 NOT_SCENES = {"transitions", "background", "lower_thirds"}     # over a scene, never one by itself
 TEXT_IDS = ("text", "title", "words", "headline", "line", "caption", "label", "quote")
+BRAND_ALIASES = {"accent": "signal", "text_color": "ink", "bg": "paper"}   # For my brand on the other templates' colours
 
 
 def run(*args: str) -> str:
@@ -77,28 +83,38 @@ def main_text(decl: list[dict], t: dict) -> str | None:
     return None
 
 
-def choose(words: str, want: str, role: str, used_last: str | None, user: list[str], i: int, size: str,
-           lib: dict) -> tuple[dict, str]:
+def choose(words: str, want: str, role: str, used: list[str], user: list[str], i: int, size: str,
+           lib: dict, recent: dict[str, int], seed: str) -> tuple[dict, str]:
+    """A scene's template: the user's picks in turn; else a counter / an end card, else the best fit for the
+    scene's words - one this video has not used yet while any fits (then any but the last scene's)."""
     if user:
         tid = user[i % len(user)]
         return lib[tid], "your pick"
+    last = used[-1] if used else None
     num = re.search(r"\d", words or "")
     pref = END_IDS if role == "end" else (("big-counter", "stat-cards") if num else ())
-    for tid in pref:
-        if tid in lib and tid != used_last and size not in (lib[tid].get("sizes_bad") or []):
+    for tid in sorted(pref, key=lambda x: (x in used, recent.get(x, 0), TM.jitter(seed, x))):
+        if tid in lib and tid != last and size not in (lib[tid].get("sizes_bad") or []):
             return lib[tid], "the end card" if role == "end" else "a number in the words"
-    for t in TM.pick(f"{words} {want}".strip() or want, 16):
-        T = lib.get(t["id"])
-        if not T or T["id"] == used_last or T.get("kind") in NOT_SCENES or T.get("needs_media") or T.get("media_slots"):
-            continue
-        if size in (T.get("sizes_bad") or []):
-            continue
-        if T.get("local") and size not in (T.get("sizes_ok") or []):
-            c = OS.conf(LAB / T["folder"])
-            if f"{c['width']}x{c['height']}" != size:      # this PC's templates: only at a size checked ok
+    cands = TM.pick(words or want, 60, also=want if words else "", used=recent, seed=seed)
+    for fresh in (True, False):
+        for t in cands:
+            T = lib.get(t["id"])
+            if not T or T["id"] == last or (fresh and T["id"] in used) or T.get("kind") in NOT_SCENES \
+                    or T.get("needs_media") or T.get("media_slots"):
                 continue
-        why = f"fits the words ({', '.join(t['matched'][:3])})" if t.get("matched") else "a general one"
-        return T, ("the hook: " if role == "hook" else "") + why
+            if not t.get("matched") and ((role != "end" and T["id"] in END_IDS[:2])
+                                         or (words and T.get("kind") != "text")):
+                continue                                # words nothing fits = kinetic text; an end card only at the end
+            if size in (T.get("sizes_bad") or []):
+                continue
+            if T.get("local") and size not in (T.get("sizes_ok") or []):
+                c = OS.conf(LAB / T["folder"])
+                if f"{c['width']}x{c['height']}" != size:      # this PC's templates: only at a size checked ok
+                    continue
+            why = f"fits the words ({', '.join(t['matched'][:3])})" if t.get("matched") \
+                else "kinetic text" if words else "a general one"
+            return T, ("the hook: " if role == "hook" else "") + why + ("" if fresh else " (used earlier in this video)")
     T = lib.get("kinetic-stack") or next(iter(lib.values()))
     return T, "the fallback"
 
@@ -148,19 +164,33 @@ def main() -> int:
     user = [x for x in req.get("templates") or [] if x in lib]
     look = req.get("look") if req.get("look") and req.get("look") != "surprise" else None
     look_vals = LK.values(LK.all_looks()[look]) if look and look in LK.all_looks() else {}
+    ecd = None
+    if req.get("brand"):                               # For my brand (0.6.0): its colours by role and fonts over the look
+        look_vals = {**look_vals, **BR.look_values(req["brand"])}
+        ecd = None if user else BR.end_card(req["brand"])          # + its signature end card as the last scene (5c)
+        ecd = ecd if ecd and ecd["template"] in lib else None
     v = 1 + max([int(re.sub(r"\D", "", q.stem) or 0) for q in b.glob("plan_v*.json")] or [0])
-    rows, layers, last = [], [], None
+    recent = TM.recent(skip=p.name)                    # the last videos' templates: this one steers away from them
+    rows, layers, used = [], [], []
     for i, (s, e) in enumerate(zip(bounds, bounds[1:])):
         words = lines[i] if i < len(lines) else ""
         role = "hook" if i == 0 else "end" if i == len(bounds) - 2 and len(bounds) > 3 else "scene"
-        T, why = choose(words, req.get("want", ""), role, last, user, i, size, lib)
-        last = T["id"]
+        end = role == "end" and ecd is not None
+        T, why = (lib[ecd["template"]], "your brand's end card") if end else \
+            choose(words, req.get("want", ""), role, used, user, i, size, lib, recent, f"{p.name}|v{v}")
+        used.append(T["id"])
         decl = OS.declared(LAB / T["folder"])
         ids = {d["id"] for d in decl}
         vals = {kk: vv for kk, vv in look_vals.items() if kk in ids}
+        if req.get("brand"):                            # a template that is not look-aware: its own colour settings
+            vals.update({kk: look_vals[src] for kk, src in BRAND_ALIASES.items() if kk in ids and src in look_vals})
         txt = main_text(decl, T)
         num = re.search(r"(\d+(?:\.\d+)?)", words)
-        if num and "to" in ids:                         # a counter: the number counts, the rest is its caption
+        if end:                                         # the brand's card; this video's last line as its sign-off
+            vals.update(ecd["values"])
+            if words:
+                vals[{"logo-reveal": "tagline", "title-card": "main", "end-screen": "title"}[ecd["template"]]] = words
+        elif num and "to" in ids:                       # a counter: the number counts, the rest is its caption
             vals["to"] = float(num[1]) if "." in num[1] else int(num[1])
             rest = " ".join(words.replace(num[1], " ").replace("%", " ").replace("$", " ").split())
             vals.update({k: v for k, v in (("suffix", "%" if "%" in words else ""), ("prefix", "$" if "$" in words
@@ -169,15 +199,19 @@ def main() -> int:
             vals[txt] = words
         if "background" in ids:
             vals["background"] = True
+        vals, _ = OS.check(decl, vals)                  # a brand font a template does not offer: its own
         folder = b / "overlays" / f"d{v}_{i + 1:02d}_{T['id']}"
         args = ["overlay.py", "new", str(folder), "--from", T["id"], "--frames", str(e - s), "--fps", str(FPS),
                 "--width", str(W), "--height", str(H), "--force"]
         if vals:
             args += ["--values", json.dumps(vals, ensure_ascii=False)]
         got = run(*args)
+        if end and ecd["logo"]:                         # the brand's logo picture into the card (only read)
+            (folder / "assets" / "media").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(LAB / ecd["logo"], folder / "assets" / "media" / Path(ecd["logo"]).name)
         short = next((ln for ln in got.splitlines() if ln.startswith("TOO SHORT")), "")
         layers.append({"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"),
-                       "start": s, "end": e - 1, "blend": "normal"})
+                       "start": s, "end": e - 1, "blend": "normal", **({"end_card": True} if end else {})})
         rows.append((s, e - 1, T["id"], words or f"(the template's own words{' - set ' + txt if txt else ''})",
                      why + ("; " + short.split(" - ")[0] if short else "")))
     audio = None
@@ -189,7 +223,8 @@ def main() -> int:
                             str(src), str(cut)], check=True)
         audio = {"path": str(cut or src)}
     plan = {"name": f"{p.name}_v{v}", "width": W, "height": H, "fps": FPS, "frames": N, "sources": {}, "grades": {},
-            "layers": layers, **({"audio": audio} if audio else {}), "output": f"{p.name}_v{v}.mp4", "sfx": True,
+            "layers": layers, **({"audio": audio} if audio else {}), "output": f"{p.name}_v{v}.mp4",
+            "sfx": {"logo": (LAB / ecd["sound"]).as_posix()} if ecd and ecd.get("sound") else True,  # its sound logo
             "made_by": {"tool": "gen_draft.py", "song": song, "start_s": a.start, "format": fmt, "look": look,
                         "date": time.strftime("%Y-%m-%d %H:%M")}}
     (b / f"plan_v{v}.json").write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
@@ -200,6 +235,10 @@ def main() -> int:
           "| scene | frames | timecode | template | words | why |", "|---|---|---|---|---|---|"]
     md += [f"| {i} | f{s}-f{e} | {frame_to_tc(s, FPS)}-{frame_to_tc(e, FPS)} | {tid} | {w} | {why} |"
            for i, (s, e, tid, w, why) in enumerate(rows, 1)]
+    shown = sorted(((k, n) for k, n in recent.items() if k in lib), key=lambda x: (-x[1], x[0]))
+    if shown and not user:
+        md += ["", f"Steered away from what the newest videos used (up to {TM.RECENT_PROJECTS}; how many used it): "
+               + ", ".join(f"{k} ({n})" for k, n in shown)]
     md += ["", "Claude: change this table (the words, which template says what, the rhythm against the song), not a "
                "build - the settings of each scene: `overlay.py settings <folder>` / `set`; a move on a beat: "
                "`overlay.py new <folder> --from <id> --land \"<track>@<frame>\"`; then `tools\\build.py <project>`."]
