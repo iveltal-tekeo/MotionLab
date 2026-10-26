@@ -7,10 +7,11 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.5.2 - New edit, step by step** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md)) - Phase 2,
-> the path from 0.5.0 to 1.0.0: New edit as six simple steps (clips, text, references, style with a colour palette,
-> sound, final), the app in English or Spanish, analyses in about half the time, a one-file install, one way to
-> review everything. **Analyse** videos you like (several at once, by focus: content creation, cinematic or both -
+> **Status: v0.6.0.2 - Keyframes and transitions in the Editor** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md))
+> - Phase 2, the path from 0.5.0 to 1.0.0. Since 0.6.0: My Brand in every video, a content calendar, and an Editor of
+> your own - cut, trim, speed up, move graphics and sounds, effects, keyframes and transitions on a timeline, no Claude
+> needed. Before it: New edit as six simple steps, the app in English or Spanish, analyses in about half the time, a
+> one-file install, one way to review everything. **Analyse** videos you like (several at once, by focus: content creation, cinematic or both -
 > colour grading included), a channel's thumbnails and scripts & prompts, **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
 > makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools),
@@ -283,8 +284,9 @@ An update never touches your videos, analyses, verdicts, settings or knowledge. 
 
 - [docs/plans.md](docs/plans.md) - the planned versions (0.6.0 content agency: a My Brand page - your goal, audience,
   identity and catalogue, an editor of your own - a timeline for cuts, speed, sounds and graphics without Claude, mood boards from pictures, sounds
-  for friends, a music library and picking your own sounds, 0.6.1 motion graphics from template packs - Resolve / After Effects packs read exactly, a
-  motion check, formats, a preview before the render, 0.6.2 colour: correct your own clips, adjustable grades in
+  for friends, a music library and picking your own sounds, 0.6.1 quality over quantity: many B-roll clips edited well (a clip catalogue, a shot list
+  with pictures before any render, Claude's own review) and motion graphics from template packs - Resolve / After
+  Effects packs read exactly, a motion check, formats, a preview before the render, 0.6.2 colour: correct your own clips, adjustable grades in
   Resolve, 0.6.3 content generation: AI clips back into the lab, pictures from image tools, voice-over, 0.6.4 yapping mode for
   talking-to-camera videos and the clips a script needs, 0.6.5 take notes from videos: why a niche's most viral videos
   work, what videos and courses say and show, 0.7 AI B-roll and cinematics, 0.7.5 macOS, then 1.0 deployment - the end of Phase 2, which 0.5.1 opened), also

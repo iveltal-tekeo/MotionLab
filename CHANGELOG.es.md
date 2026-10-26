@@ -7,6 +7,30 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0.2 - 2026-10-26 - Fotogramas clave y transiciones en el Editor
+
+- **Fotogramas clave en el Editor**: haz clic en un plano y su nueva pestaña *Vídeo* tiene Escala, Posición, Rotación,
+  Opacidad y el punto de zoom, cada uno con un ◆. Pon el cabezal en un sitio, pulsa ◆, mueve el cabezal y cambia el
+  valor: el plano se mueve entre los dos, como en CapCut y Premiere. Los fotogramas clave salen como rombos sobre el
+  plano: arrastra uno a otro momento o haz clic para elegir cómo va el movimiento (Lineal, Entrada suave, Salida suave,
+  Entrada y salida suaves, Mantener o Pop, que se pasa un poco y vuelve). Arrastra el nombre de un valor a izquierda o
+  derecha y la vista previa lo sigue mientras arrastras.
+- **Transiciones entre dos clips**: un + en cada corte, o el nuevo panel *Transiciones*: Fundido, Fundido a negro,
+  Fundido a blanco, Destello blanco, Zoom de acercamiento, Zoom de alejamiento, Deslizar, Látigo, Giro, Glitch y Fuga
+  de luz. Arrastra los bordes del bloque para su duración, elige una dirección para Deslizar o Látigo, o *Aplicar a
+  todos los cortes*. Un clip sin fotogramas de sobra nunca la impide: esos pocos fotogramas quedan congelados y el
+  bloque lo marca con rayas.
+- **Por qué aquí no**: un efecto o una transición que no puede ir donde está el cabezal dice por qué, justo debajo (un
+  tartamudeo en un vídeo hablado, un corte que ya tiene zoom, ningún clip bajo el cabezal...), en gris antes de que
+  hagas clic; y la línea de encima de la lista dice dónde está el cabezal. Cambia a medida que mueves el cabezal.
+- **Qué añadir, en una barra**: Clips, Sonidos, Gráficos, Efectos y Transiciones son ahora iconos grandes en el lateral
+  del panel Añadir, cada uno del color de su pista en la línea de tiempo, en vez de pestañas pequeñas.
+- **Arreglos**: la lista de Clips del Editor apilaba los clips unos encima de otros (y su + no hacía nada); un plano
+  movido en el Editor dejaba atrás su sacudida; en el Analizador, el panel de una tarea en marcha queda un poco más
+  abajo de las tres opciones. Compartir con más seguridad: el zip de efectos de sonido de un amigo ya no puede
+  escribir un archivo fuera de su carpeta, y la app ya no muestra archivos fuera de las carpetas que comparte (nunca el
+  archivo de tu clave de ElevenLabs).
+
 ## 0.6.0.1 - 2026-10-26 - Efectos que funcionan en el Editor
 
 - **Efectos que de verdad puedes añadir**: en el Editor, la mayoría de los efectos se paraban con un error: un plano

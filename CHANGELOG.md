@@ -5,6 +5,27 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0.2 - 2026-10-26 - Keyframes and transitions in the Editor
+
+- **Keyframes in the Editor** - click a shot: its new *Video* tab has Scale, Position, Rotation, Opacity and the zoom
+  point, each with a ◆. Put the playhead somewhere, press ◆, move the playhead, change the value - the shot moves
+  between the two, the way CapCut and Premiere do it. The keys show as diamonds on the shot: drag one to another
+  moment, click it to choose how the move goes (Linear, Ease in, Ease out, Ease in and out, Hold, or Pop - a little
+  overshoot). Drag a value's name left or right and the preview follows as you drag.
+- **Transitions between two clips** - a + on every cut, or the new *Transitions* panel: Mix, Dip to black, Dip to
+  white, White flash, Zoom in, Zoom out, Slide, Whip, Spin, Glitch and Light leak. Drag the block's edges for its
+  length, pick a direction for a slide or a whip, or *Apply to all cuts*. A clip with no frames to spare never stops
+  one: those few frames hold still, and the block shows it with stripes.
+- **Why not here** - an effect or a transition that cannot go where the playhead is says why, right under it (a
+  stutter on a talking video, a cut that already zooms, no clip under the playhead...), greyed out before you click -
+  and the line above the list says where the playhead is. It changes as you move the playhead.
+- **What to add, on a rail** - Clips, Sounds, Graphics, Effects and Transitions are now big icons down the side of the
+  Add panel, each in the colour of its lane on the timeline, instead of small tabs.
+- **Fixes** - the Editor's Clips list piled its clips on top of each other (and its + did nothing); a shot moved in the
+  Editor left its shake behind; on the Analyser, the panel of a running job sits a little lower under the three ways. Safer sharing: a
+  friend's sound-effects zip can no longer write a file outside its own folder, and the app no longer shows files
+  outside the folders it shares (your ElevenLabs key file never).
+
 ## 0.6.0.1 - 2026-10-26 - Effects that work in the Editor
 
 - **Effects you can actually add** - in the Editor, most effects stopped with an error: a shot that already zoomed
