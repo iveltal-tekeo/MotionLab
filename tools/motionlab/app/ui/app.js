@@ -3969,7 +3969,7 @@ async function pageProject(main, name, tab = 'overview') {
   if (toPub) tab = 'overview';
   const nClips = P.sources.length, foot = P.sources.reduce((a, s) => a + (s.size || 0), 0);
   const tabs = [['overview', t('Overview')], ...(P.renders.length || (P.outcome || {}).aspects || tab === 'review' ? [['review', t('Review')]] : []),
-                ...(P.renders.length && P.plans.length || tab === 'editor' ? [['editor', t('Editor')]] : []), ['versions', `${t('Versions')}${P.plans.length ? ` (${P.plans.length})` : ''}`],
+                ...(P.plans.length || tab === 'editor' ? [['editor', t('Editor')]] : []), ['versions', `${t('Versions')}${P.plans.length ? ` (${P.plans.length})` : ''}`],
                 ...(nClips ? [['footage', `${t('Footage')} (${nClips})`]] : []),
                 ['graphics', `${t('Graphics')}${P.overlays && P.overlays.length ? ` (${P.overlays.length})` : ''}`],
                 ...(P.verifies.length || tab === 'timing' ? [['timing', t('Timing check|tab')]] : []),
@@ -4544,6 +4544,8 @@ class EdPreview {
   setState(S, capEdits) {
     this.S = S; this.N = S.frames; this.capEdits = capEdits || {};
     this.g = Object.fromEntries(S.graphics.map(g => [g.id, g]));
+    const live = new Set(S.graphics.map(g => this.gkey(g)));
+    for (const [k, F] of this.frames) if (!live.has(k)) { F.wrap.remove(); this.frames.delete(k); }
     this.shotIds = new Set(S.shots.map(s => s.id));
     this.clips = S.draw.filter(d => d.t === 'clip');
     this.voice = S.sound === 'follows';
@@ -4651,7 +4653,7 @@ class EdPreview {
     for (const [d, i] of act) {
       if (d.t !== 'overlay') continue;
       const g = this.g[d.id], F = this.frameFor(g);
-      onDirs.add(g.dir);
+      onDirs.add(F.key);
       if (!F.ready) continue;
       const fo = S.folders[g.dir] || {}, gw = g.new ? this.W : (fo.w || this.W), gh = g.new ? this.H : (fo.h || this.H);
       const r = g.rect || [0, 0, gw, gh], [x, y, w, h] = this.box4(r);
@@ -4662,14 +4664,15 @@ class EdPreview {
       try { F.tl.seek(k / (fo.fps || fps), false); } catch (err) { /* the graphic's own error */ }
       F.wrap.hidden = false;
     }
-    for (const [dir, F] of this.frames) if (!onDirs.has(dir)) F.wrap.hidden = true;
+    for (const [k, F] of this.frames) if (!onDirs.has(k)) F.wrap.hidden = true;
     // solids (an end card's ground ...)
     const onSol = new Set();
     for (const [d, i] of act) {
       if (d.t !== 'solid') continue;
       let el = this.solids.get(d.id);
       if (!el) { el = document.createElement('div'); el.className = 'edsolid'; this.layers.appendChild(el); this.solids.set(d.id, el); }
-      const [x, y, w, h] = this.box4(d.rect), c = d.color || [0, 0, 0];
+      const [x, y, w, h] = this.box4(d.rect), c0 = d.color == null ? [1, 1, 1] : d.color;
+      const c = Array.isArray(c0) ? (c0.length >= 3 ? c0 : [c0[0] ?? 1, c0[0] ?? 1, c0[0] ?? 1]) : [+c0, +c0, +c0];
       Object.assign(el.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, zIndex: i + 1,
         background: `rgb(${c.map(v => Math.round(clamp(v, 0, 1) * 255)).join(',')})`, opacity: clamp(edCurve(d.opacity, S.curves, 1)(f), 0, 1),
         mixBlendMode: d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : ''});
@@ -4677,13 +4680,14 @@ class EdPreview {
     }
     for (const [id, el] of this.solids) if (!onSol.has(id)) el.hidden = true;
   }
+  gkey(g) { return g.dir + '\u0001' + JSON.stringify([g.values, this.capEdits[g.dir] || null, g.new]); }
   frameFor(g) {
-    const fo = this.S.folders[g.dir] || {}, key = JSON.stringify([g.values, this.capEdits[g.dir] || null, g.new]);
-    let F = this.frames.get(g.dir);
+    const fo = this.S.folders[g.dir] || {}, key = this.gkey(g);
+    let F = this.frames.get(key);
     if (!F) {
       F = {wrap: document.createElement('div'), fr: document.createElement('iframe'), ready: false, tl: null, key: null};
       F.wrap.className = 'edgfx'; F.wrap.hidden = true; F.fr.title = ta('live preview'); F.fr.setAttribute('tabindex', '-1');
-      F.wrap.appendChild(F.fr); this.layers.appendChild(F.wrap); this.frames.set(g.dir, F);
+      F.wrap.appendChild(F.fr); this.layers.appendChild(F.wrap); this.frames.set(key, F);
     }
     if (F.key !== key) this.loadFrame(F, g, fo, key);
     return F;
@@ -4716,6 +4720,7 @@ class EdPreview {
   // sound effects: each one's sound (the recorded file the build will use, else the made-up one), on the timeline
   sfxUrl(q) { return q.sound ? edSoundUrl(q.sound) : `/api/editor/sound?kind=${encodeURIComponent(q.kind)}`; }
   ac() { if (!this.actx) this.actx = new (window.AudioContext || window.webkitAudioContext)(); return this.actx; }
+  // (destroy() closes it; nothing makes a new one after that)
   out() {                                                      // every sound effect goes through the master level
     if (!this.master) { this.master = this.ac().createGain(); this.master.gain.value = this.vol; this.master.connect(this.ac().destination); }
     return this.master;
@@ -4727,7 +4732,8 @@ class EdPreview {
     this.render(this.f);
   }
   buffer(url) {
-    if (!this.buf.has(url)) this.buf.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => b && this.ac().decodeAudioData(b)).catch(() => null));
+    if (this.dead) return Promise.resolve(null);
+    if (!this.buf.has(url)) this.buf.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => b && !this.dead && this.ac().decodeAudioData(b)).catch(() => null));
     return this.buf.get(url);
   }
   schedule(f0) {
@@ -4748,7 +4754,7 @@ class EdPreview {
     }
   }
   unschedule() { this.run = null; this.sched.forEach(s => { try { s.stop(); } catch (e) { /* done */ } }); this.sched = []; }
-  hear(url) { this.buffer(url).then(b => { if (!b) return; const ac = this.ac(), s = ac.createBufferSource(); s.buffer = b; s.connect(this.out()); s.start(); }); }
+  hear(url) { this.buffer(url).then(b => { if (!b || this.dead) return; const ac = this.ac(), s = ac.createBufferSource(); s.buffer = b; s.connect(this.out()); s.start(); }); }
   preroll(f) {                                                 // the next shot waits on its first frame
     const soon = f + Math.round(this.fps * 0.7);
     const nx = this.clips.find(d => d.start > f && d.start <= soon && !this.activeIds.has(d.id));
@@ -4796,7 +4802,7 @@ class EdPreview {
     this.render(this.f);
   }
   destroy() {
-    this.pause(); this.ro.disconnect();
+    this.pause(); this.ro.disconnect(); this.dead = true;
     for (const P of Object.values(this.pool)) for (const e of P) if (!e.photo) { e.v.removeAttribute('src'); e.v.load(); }
     if (this.songEl) { this.songEl.pause(); this.songEl.removeAttribute('src'); }
     if (this.actx) this.actx.close().catch(() => {});
@@ -4826,7 +4832,7 @@ function projEditor(el, P) {
         <div class="edtrans"><button class="btn sm" data-tr="start" title="${ta('First frame (Home)')}">⏮</button><button class="btn sm" data-tr="-1" title="${ta('1 frame back (←)')}">◀</button>
           <button class="btn edplay" data-tr="play" title="${ta('Play / pause (Space)')}">▶</button><button class="btn sm" data-tr="1" title="${ta('1 frame on (→)')}">▶</button><button class="btn sm" data-tr="end" title="${ta('Last frame (End)')}">⏭</button>
           <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button>
-          <input type="range" class="edvol" id="edvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}"></div></div>
+          <input type="range" class="edvol" id="edpvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}"></div></div>
       <aside class="edpanel"><div class="edpin edinsp" id="edinsp"></div></aside></div>
     <div class="edtl" id="edtl"><div class="edtools">
         <button class="btn sm" id="edsplit" title="${ta('Split the shot under the playhead (S)')}">✂ ${t('Split')}</button>
@@ -4844,23 +4850,41 @@ function projEditor(el, P) {
   const fps = () => (cur || base).fps;
   const tcf = f => `f${f} (${tc(f, fps())})`;
   const store = () => `ml.editor.${P.name}.${plan}`;
-  const keep = () => { try { if (ops.length) localStorage.setItem(store(), JSON.stringify({ops, labels})); else localStorage.removeItem(store()); } catch (e) { /* private window */ } };
+  const planSig = B => `${B.frames}:${B.shots.map(x => `${x.id}@${x.start}-${x.end}`).join(',')}:${B.graphics.length}:${B.sfx.length}`;
+  const keep = () => { try { if (ops.length) localStorage.setItem(store(), JSON.stringify({ops, labels, sig: planSig(base)})); else localStorage.removeItem(store()); } catch (e) { /* private window */ } };
   const capEdits = () => (cur || base).capedits || {};     // the captions' new words / frames per folder (the engine's)
   // ---------------------------------------------------------------- loading a version
-  const load = async r => {
+  let loadNo = 0, gone = false;
+  const load = r => loadPlan(planOfRender(P, r).file);
+  const loadPlan = async pf => {
+    const my = ++loadNo;
     if (pv) { pv.destroy(); pv = null; }
-    const pf = planOfRender(P, r).file;
     if (!pf) { $('#edprev', el).innerHTML = `<div class="empty">${t('This render has no plan - the Editor changes a version MotionLab made.')}</div>`; return; }
-    try { base = await api(`/api/project/${enc}/miniedit?plan=${encodeURIComponent(pf)}`); }
-    catch (e) { $('#edprev', el).innerHTML = `<div class="empty bad">${esc(e.message)}</div>`; return; }
-    plan = pf; cur = base; ops = []; labels = []; redo = []; sel = null;
+    $('#edprev', el).innerHTML = `<div class="empty">${t('Loading…')}</div>`;
+    let st;
+    try { st = await api(`/api/project/${enc}/miniedit?plan=${encodeURIComponent(pf)}`); }
+    catch (e) { if (my === loadNo && !gone) $('#edprev', el).innerHTML = `<div class="empty bad">${t('The Editor could not open this version: {err}', {err: esc(e.message)})}</div>`; return; }
+    if (my !== loadNo || gone) return;                       // another version was picked meanwhile, or the tab left
+    try { await opened(pf, st, my); }
+    catch (e) {
+      if (pv) { pv.destroy(); pv = null; }
+      $('#edprev', el).innerHTML = `<div class="empty bad">${t('The Editor could not open this version: {err}', {err: esc(e.message)})}</div>`;
+      try { localStorage.removeItem(`ml.editor.${P.name}.${pf}`); } catch (x) { /* private window */ }
+      console.error(e);
+    }
+  };
+  const opened = async (pf, st, my) => {
+    base = st; plan = pf; cur = base; ops = []; labels = []; redo = []; sel = null;
     $('#edtitle', el).innerHTML = `<span class="small muted">${t('{w}×{h} · {fps} fps', {w: base.width, h: base.height, fps: base.fps})}</span>`;
     pv = new EdPreview($('#edprev', el), {fps: base.fps, W: base.width, H: base.height, media: base.media,
       onFrame: f => { prevF = f; paintHead(); }, onPlay: on => { const b = $('[data-tr=play]', el); if (b) b.textContent = on ? '❚❚' : '▶'; }});
     let back = null;
     try { back = JSON.parse(localStorage.getItem(store()) || 'null'); } catch (e) { back = null; }
+    if (back && back.ops && back.ops.length && back.sig && back.sig !== planSig(base)) back = null;   // the plan changed since
     if (back && back.ops && back.ops.length) {
-      try { cur = await api(`/api/project/${enc}/miniedit/preview`, {plan, ops: back.ops}); ops = back.ops; labels = back.labels || back.ops.map(o => o.op);
+      try { const S2 = await api(`/api/project/${enc}/miniedit/preview`, {plan, ops: back.ops});
+        if (my !== loadNo || gone) return;
+        cur = S2; ops = back.ops; labels = back.labels || back.ops.map(o => o.op);
         toast(t('Your unsaved changes are back.'), 'ok'); }
       catch (e) { cur = base; try { localStorage.removeItem(store()); } catch (x) { /* */ } }
     }
@@ -4875,10 +4899,11 @@ function projEditor(el, P) {
     if (!quiet) pv.wait(`<span>${t('Getting your clips ready for the preview…')}</span>`);
     try { mediaJob = (await api(`/api/project/${enc}/editor/media`, {plan})).id; } catch (e) { pv.wait(''); return; }
     const tick = async () => {
+      if (gone) return;
       let j; try { j = await api(`/api/jobs/${mediaJob}?since=999999`); } catch (e) { setTimeout(tick, 1500); return; }
       if (['running', 'queued', 'cancelling'].includes(j.status)) { setTimeout(tick, 800); return; }
       mediaJob = null;
-      if (!pv) return;
+      if (!pv || gone) return;
       if (j.status !== 'done') { if (quiet) return; pv.wait(`<span>${t('The preview copies could not be made - the preview plays your clips as they are.')}</span>`); setTimeout(() => pv && pv.wait(''), 6000); return; }
       try { const fresh = await api(`/api/project/${enc}/miniedit?plan=${encodeURIComponent(plan)}`); base.media = fresh.media; base.need_media = base.need_more = false; } catch (e) { /* keep */ }
       if (quiet && pv.playing) return;                       // (never in the middle of playing: the next load has them)
@@ -4901,9 +4926,14 @@ function projEditor(el, P) {
     finally { busy = false; el.classList.remove('edbusy'); if (pv && cur) pv.setState(cur, capEdits()); draw(); }
   };
   const push = (op, label, after) => preview([...ops, op], [...labels, label]).then(ok => { if (ok && after) { after(); draw(); } return ok; });
-  const undo = () => { if (!ops.length || busy) return; const o = ops[ops.length - 1], l = labels[labels.length - 1];
+  const settle = async () => {                               // the field being typed in gives its change first
+    const a = document.activeElement;
+    if (a && el.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { a.blur(); await new Promise(r => setTimeout(r, 0)); }
+    for (let i = 0; busy && i < 200; i++) await new Promise(r => setTimeout(r, 50));
+  };
+  const undo = async () => { await settle(); if (!ops.length || busy) return; const o = ops[ops.length - 1], l = labels[labels.length - 1];
     preview(ops.slice(0, -1), labels.slice(0, -1), true).then(ok => { if (ok) { redo.push([o, l]); sel = null; draw(); } }); };
-  const redoIt = () => { if (!redo.length || busy) return; const [o, l] = redo[redo.length - 1];
+  const redoIt = async () => { await settle(); if (!redo.length || busy) return; const [o, l] = redo[redo.length - 1];
     preview([...ops, o], [...labels, l], true).then(ok => { if (ok) { redo.pop(); draw(); } }); };
   // ---------------------------------------------------------------- the timeline
   const shotAt = f => cur.shots.find(s => s.start <= f && f <= s.end);
@@ -5033,7 +5063,18 @@ function projEditor(el, P) {
     else if (S.sound === 'follows') S.shots.forEach(s => { const p = (waves[s.src] || {}).peaks || [];
       for (let f = s.start; f <= s.end; f += every) bar(f, p[edSrcAt({...s, jumps: null}, f)] || 0); });
   }
+  let keyF = -1, keyT = 0;
+  function keysFollow() {                                    // the keyframe rows at the playhead (a few times a second while playing)
+    const kb = $('#edkeysbox', el);
+    if (!kb || kb.hidden || keyF === prevF || !sel || sel.k !== 'shot' || kb.contains(document.activeElement) || kb.querySelector('.edkl.drag')) return;
+    const now = performance.now();
+    if (pv && pv.playing && now - keyT < 150) return;
+    const s = cur.shots.find(x => x.id === sel.id);
+    if (!s) return;
+    keyF = prevF; keyT = now; kb.innerHTML = keyRows(s); bindKeys(kb, s);
+  }
   function paintHead() {
+    if (cur) keysFollow();
     const h = $('.edph', el);
     if (h) h.style.left = `${prevF * pxf}px`;
     const tm = $('#edtime', el);
@@ -5053,7 +5094,7 @@ function projEditor(el, P) {
   }
   // ---------------------------------------------------------------- dragging on the timeline
   const canvas = () => $('#edcanvas', el);
-  const fAt = e => { const r = canvas().getBoundingClientRect(); return clamp(Math.round((e.clientX - r.left) / pxf), 0, cur.frames - 1); };
+  const fAt = e => { const r = canvas().getBoundingClientRect(); return clamp(Math.floor((e.clientX - r.left) / pxf), 0, cur.frames - 1); };
   function snapPts(skip) {
     const S = cur, pts = [0, S.frames, prevF];
     S.shots.forEach(s => { if (s.id !== skip) pts.push(s.start, s.end + 1); });
@@ -5079,6 +5120,7 @@ function projEditor(el, P) {
       canvas().setPointerCapture(e.pointerId); return;
     }
     if (!it) {                                               // the ruler / an empty place: the playhead goes there
+      if (!pv) return;
       drag = {k: 'scrub'}; canvas().setPointerCapture(e.pointerId); pv.seek(fAt(e));
       if (sel && !e.target.closest('.edruler')) { sel = null; drawTop(); drawInsp(); $$('.edit.on', el).forEach(x => x.classList.remove('on')); }
       return;
@@ -5101,7 +5143,7 @@ function projEditor(el, P) {
       if (it && (it.dataset.k === 'gfx' || it.dataset.k === 'tr' || (it.dataset.k === 'cap' && !it.dataset.tail) || (it.dataset.k === 'shot' && !cur.timing_locked))) { const r = it.getBoundingClientRect(), x = e.clientX - r.left; if (x < 8 || x > r.width - 8) canvas().style.cursor = 'ew-resize'; }
       else if (it && it.dataset.k === 'fx' && $('.edh.r', it)) { const r = it.getBoundingClientRect(); if (e.clientX > r.right - 8) canvas().style.cursor = 'ew-resize'; }
       return; }
-    if (drag.k === 'scrub') { pv.seek(fAt(e)); return; }
+    if (drag.k === 'scrub') { if (pv) pv.seek(fAt(e)); return; }
     if (drag.tail) return;                                   // (a caption's end on the next shot: a click only)
     const dx = e.clientX - drag.x0;
     if (!drag.moved && Math.abs(dx) < 4) return;
@@ -5277,7 +5319,7 @@ function projEditor(el, P) {
       box.innerHTML = `<div class="edih"><span class="eddot shot"></span><b>${t('Shot {n}', {n: s.n})}</b><span class="small muted">${dec((s.end - s.start + 1) / S.fps)} s</span></div>
         <div class="small muted">${frange(s.start, s.end, S.fps)}</div>
         <div class="edstabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-stab="${k}" class="${shotTab === k ? 'on' : ''}" aria-selected="${shotTab === k}">${esc(l)}</button>`).join('')}</div>
-        <div${tab('video')}>${keyRows(s)}</div>
+        <div${tab('video')} id="edkeysbox">${keyRows(s)}</div>
         <div${tab('speed')}>
         <div class="edlbl">${t('Speed')}</div>
         <div class="edchips">${ED_SPEEDS.map(x => `<button class="${Math.abs(x - s.speed) < 1e-6 ? 'on' : ''}" data-speed="${x}"${lock || s.special ? ' disabled' : ''}>${numLoc(x)}×</button>`).join('')}</div>
@@ -5356,12 +5398,13 @@ function projEditor(el, P) {
           ev.preventDefault();
           const h = ev.currentTarget, m = svg.getScreenCTM().inverse();
           h.setPointerCapture(ev.pointerId);
-          const move = e2 => { const pt = new DOMPoint(e2.clientX, e2.clientY).matrixTransform(m);
+          let moved = false;
+          const move = e2 => { moved = true; const pt = new DOMPoint(e2.clientX, e2.clientY).matrixTransform(m);
             b[k] = +clamp(pt.x / S_, 0, 1).toFixed(2); b[k + 1] = +clamp(1 - pt.y / S_, -0.5, 1.5).toFixed(2); drawChart();
             $('#edcname', box).textContent = t('Your curve'); };
           const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up);
             const e = `cubic(${b.join(',')})`;
-            if (e !== ease) push({op: 'kease', shot: s.id, f, ease: e}, t('Keyframe at {at}: {ease}', {at: tcf(f), ease: t('Your curve')})); };
+            if (moved && e !== ease) push({op: 'kease', shot: s.id, f, ease: e}, t('Keyframe at {at}: {ease}', {at: tcf(f), ease: t('Your curve')})); };
           h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
         }));
       }
@@ -5826,7 +5869,8 @@ function projEditor(el, P) {
   onCleanup(() => document.removeEventListener('click', popAway));
   $('#edsave', el).onclick = async () => {
     const b = $('#edsave', el);
-    b.disabled = true;
+    b.disabled = true; await settle();
+    if (!ops.length) { b.disabled = false; return; }
     try { await api(`/api/project/${enc}/miniedit`, {plan, ops}); ops = []; labels = []; keep(); saving = true; if (pv) pv.pause();
       toast(t('Saving your changes as a new version - it shows here when it is ready.'), 'ok'); route(); }
     catch (e) { toast(e.message, 'err'); b.disabled = false; }    // (route: the page's progress panel follows the job)
@@ -5859,7 +5903,7 @@ function projEditor(el, P) {
   $$('[data-tr]', el).forEach(b => b.onclick = () => { if (!pv) return; const a = b.dataset.tr;
     if (a === 'play') pv.toggle(); else if (a === 'start') pv.seek(0); else if (a === 'end') pv.seek(cur.frames - 1);
     else if (a === 'mute') { pv.mute(!pv.muted); b.textContent = pv.muted ? '🔇' : '🔊'; } else pv.seek(prevF + +a); });
-  $('#edvol', el).oninput = e => {
+  $('#edpvol', el).oninput = e => {
     const v = Math.pow(+e.target.value / 100, 2); edVolume(v); if (!pv) return;
     pv.setVolume(v);
     if (pv.muted && v > 0) { pv.mute(false); const b = $('[data-tr=mute]', el); if (b) b.textContent = '🔊'; }
@@ -5885,7 +5929,7 @@ function projEditor(el, P) {
   cv.addEventListener('click', e => { const b = e.target.closest('.edcutb'); if (b && !saving) addTrans(b.dataset.cut, 'mix'); });
   // keys while the Editor is on screen (never while typing; the dialogs keep theirs)
   const onKey = e => {
-    if (!cur || !el.isConnected || (e.target.matches && e.target.matches('input, textarea, select')) || !$('#modal').hidden) return;
+    if (!cur || !pv || !el.isConnected || (e.target.matches && e.target.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]), textarea, select')) || !$('#modal').hidden) return;
     const k = e.key, ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && (k === 'z' || k === 'Z')) { if (e.shiftKey) redoIt(); else undo(); }
     else if (ctrl && (k === 'y' || k === 'Y')) redoIt();
@@ -5904,11 +5948,12 @@ function projEditor(el, P) {
   document.addEventListener('keydown', onKey);
   const onResize = debounce(() => { if (cur) drawTL(); }, 150);
   window.addEventListener('resize', onResize);
-  onCleanup(() => { document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) pv.destroy(); });
+  onCleanup(() => { gone = true; document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) { pv.destroy(); pv = null; } });
   brandData().then(() => { if (sel) drawInsp(); });
   api('/api/jobs').then(J => { saving = J.some(j => j.kind === 'miniedit' && (j.args || {}).project === P.name && ['running', 'queued'].includes(j.status)); if (cur) draw(); }).catch(() => {});
-  const R = renderPicker($('#edpick', el), P, r => { load(r).then(() => drawAdd()); });
-  if (!R.length) $('#edprev', el).innerHTML = `<div class="empty">${t('No render yet - the Editor changes a made version.')}</div>`;
+  const R = renderPicker($('#edpick', el), P, r => { load(r).then(() => { if (!gone && cur) drawAdd(); }); });
+  if (!R.length && P.plans.length) loadPlan(P.plans[P.plans.length - 1].file).then(() => { if (!gone && cur) drawAdd(); });
+  else if (!R.length) $('#edprev', el).innerHTML = `<div class="empty">${t('No render yet - the Editor changes a made version.')}</div>`;
   loadLib();
 }
 
