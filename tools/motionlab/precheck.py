@@ -562,14 +562,24 @@ SAFE_BANDS = {"top": (0, 0, 1080, 220), "bottom": (0, 1500, 1080, 1920), "right 
 SAFE_COVER = 0.02                    # a band is used when the graphics drew over more than this of it
 
 
+def only_dimmed(bare: np.ndarray, dimmed: np.ndarray) -> np.ndarray:
+    """Pixels another render only darkened: every channel by about the same share, not to near black (a room whose
+    lights drop behind the person - 0.6.1's graphics "behind" the person - not a thing drawn there)."""
+    r = (dimmed.astype(np.float32) + 1.0) / (bare.astype(np.float32) + 1.0)
+    hi, lo = r.max(axis=2), r.min(axis=2)
+    return (hi < 0.97) & (lo > 0.3) & (hi - lo < 0.12)
+
+
 def cover_frame(bare: np.ndarray, drawn: np.ndarray, faces: list, upright: bool,
-                frames_of: list | None = None) -> dict:
+                frames_of: list | None = None, ignore: np.ndarray | None = None) -> dict:
     """One frame: the footage alone (bare) and with its graphics (drawn), the faces found in bare ([x, y, w, h,
     score]) -> {"full": a full-screen card, "faces": [covered fraction per face], "bands": {band: fraction}}.
     frames_of = per face the picture it is in ([x0, y0, x1, y1], a corner camera's box): its widened box stops there -
-    a card around a picture-in-picture is not over the face."""
+    a card around a picture-in-picture is not over the face. ignore = pixels not counted as drawn (only_dimmed)."""
     H, W = bare.shape[:2]
     m = np.abs(drawn.astype(np.int16) - bare.astype(np.int16)).max(axis=2) > DRAWN_DIFF
+    if ignore is not None:
+        m &= ~ignore
     full = float(m.mean()) > FULL_CARD
     out = {"full": full, "faces": [], "bands": {}}
     if full:
@@ -612,6 +622,9 @@ def face_cover(plan_path: Path, every_s: float = 1.0) -> dict:
     bare_r = Renderer({**plan, "layers": [L for L in plan["layers"] if L.get("type") not in GRAPHIC_LAYERS]})
     full_r = Renderer({**plan, "layers": [L for L in plan["layers"]
                                           if L.get("type") not in GRAPHIC_LAYERS or not L.get("over_face")]})
+    bh = [L for L in gl if L.get("behind")]             # 0.6.1: graphics behind the person may dim the room
+    behind_r = Renderer({**plan, "layers": [L for L in plan["layers"] if L.get("type") not in GRAPHIC_LAYERS
+                                            or (L.get("behind") and not L.get("over_face"))]}) if bh else None
     upright = H > W
     hits: list[tuple[int, str, str]] = []                      # (frame, what, the graphics there)
     for f in want:
@@ -631,7 +644,9 @@ def face_cover(plan_path: Path, every_s: float = 1.0) -> dict:
                         box = (rx, L.rect[1], rx + L.rect[2], L.rect[1] + L.rect[3])
                         break
             boxes.append(box)
-        c = cover_frame(bare, full_r.render(f), fs, upright, boxes)
+        ign = (only_dimmed(bare, behind_r.render(f))
+               if behind_r is not None and any(int(L["start"]) <= f <= int(L["end"]) for L in bh) else None)
+        c = cover_frame(bare, full_r.render(f), fs, upright, boxes, ign)
         if c["full"]:
             continue
         on = ", ".join(str(L.get("id", L["type"])) for L in gl if int(L["start"]) <= f <= int(L["end"]))

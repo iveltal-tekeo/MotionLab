@@ -25,12 +25,19 @@ import math
 from . import editlist as EL
 from . import i18n as I18N
 
-EASES = ("linear", "smooth", "in", "out", "hold")
+EASES = ("linear", "smooth", "in", "out", "hold", "easy", "strong", "glide", "launch")    # 2026-10-27: + designers'
 ADD = ("punch_in", "push_in", "pull_out", "zoom_through", "shake", "flash", "white_flash", "black_frame",
-       "colour_flash", "light_leak", "rgb_split", "dip_black", "dip_white", "stutter")
+       "colour_flash", "light_leak", "rgb_split", "dip_black", "dip_white", "stutter",
+       "lean_in", "slow_push", "spotlight")
 CUT_KINDS = {"zoom_through", "white_flash", "dip_black", "dip_white"}       # placed on the cut nearest the frame
 MOVES_PICTURE = {"stutter"}                         # shifts the picture against its sound: not on a talking video
-CLIP_ONLY = {"punch_in", "push_in", "pull_out", "zoom_through", "shake", "rgb_split", "stutter"}   # a clip's picture
+CLIP_ONLY = {"punch_in", "push_in", "pull_out", "zoom_through", "shake", "rgb_split", "stutter",
+             "lean_in", "slow_push", "spotlight"}                                                    # a clip's picture
+# 2026-10-27, the face-led ones (after Vibha Ramprakash's claude-video-effects, MIT; the user: "maybe u zoom in too
+# much? try some ease-in ease-out"): small and eased - a lean-in 15 % on a word (glides in, eases out), a slow push
+# 12 % over ~3 s with the room melting out of focus, a spotlight (the room dims to 30 %, the person stays lit); each
+# turns the shot's "track": "face" on (compose: the zoom point follows the face). A "room" = curves for the room only.
+ROOM_LOOKS = {"spotlight": ("dim", "Spotlight"), "melt": ("blur", "Room out of focus"), "grey": ("grey", "Grey room")}
 SOLID_FX = ("colorflash_", "leak_", "dip_", "fade_in", "fade_out", "flash_", "black_")     # solids that are effects
 
 
@@ -105,6 +112,12 @@ def effects(P: dict) -> list[dict]:
             out.append(_fx("stutter", "Stutter", lid, int(J[1][0]), int(J[-1][0]) - int(J[1][0]) + 1, ["move", "remove"]))
         if L.get("mirror"):
             out.append(_fx("mirror", "Mirror", lid, s, e - s + 1, ["remove"]))
+        rm = L.get("room") if isinstance(L.get("room"), dict) else None
+        if rm and rm.get("look") in ROOM_LOOKS and _keys(rm.get(ROOM_LOOKS[rm["look"]][0])):
+            ch, label = ROOM_LOOKS[rm["look"]]
+            rk = sorted(_keys(rm[ch]), key=lambda k: k[0])
+            out.append(_fx("room", label, lid, int(rk[0][0]), int(rk[-1][0]) - int(rk[0][0]) + 1,
+                           ["move", "len", "strength", "remove"], round(max(float(k[1]) for k in rk), 3)))
     S = _shots(P)
     for A, B in zip(S, S[1:]):                          # a transition: the two shots overlap at the cut
         a, b = int(B["start"]), int(A["end"])
@@ -209,7 +222,12 @@ def _val(ks: list, f: float) -> float:
         return float(ks[-1][1])
     i = max(j for j in range(len(ks)) if ks[j][0] <= f)
     t = (f - ks[i][0]) / max(1e-9, ks[i + 1][0] - ks[i][0])
-    return float(ks[i][1]) + (float(ks[i + 1][1]) - float(ks[i][1])) * _EASE.get(_ez(ks[i]), _EASE["linear"])(t)
+    e = _ez(ks[i])
+    fn = _EASE.get(e)
+    if fn is None:                                          # the new curves and the chart's own (compose's tables)
+        from .compose import ease_fn
+        fn = ease_fn(e)
+    return float(ks[i][1]) + (float(ks[i + 1][1]) - float(ks[i][1])) * fn(t)
 
 
 def _changes(ks: list, i: int) -> bool:
@@ -507,6 +525,11 @@ def move(P: dict, fx: dict, by: int) -> int:
         return by
     if k in ("zoom", "punch"):
         return _zoom_move(L, fx, by)
+    if k == "room":
+        by = _clamp(by, int(L["start"]) - f0, int(L["end"]) - f1)
+        for c in _room_curves(L):
+            c["keys"] = [[int(x[0]) + by, *x[1:]] for x in c["keys"]]
+        return by
     s, e = int(L["start"]), int(L["end"])
     by = _clamp(by, (s + 1 if k == "stutter" else s) - f0, e - f1)
     if k == "shake":
@@ -548,6 +571,11 @@ def set_len(P: dict, fx: dict, n: int) -> None:
     L = _layer(P, fx["layer"])
     if k == "zoom":
         _zoom_len(L, fx, n)
+    elif k == "room":
+        n = min(n, int(L["end"]) - f0 + 1)
+        sc = (n - 1) / max(1, old - 1)
+        for c in _room_curves(L):
+            c["keys"] = [[f0 + int(round((int(x[0]) - f0) * sc)), *x[1:]] for x in c["keys"]]
     elif L.get("type") == "solid":
         s = int(L["start"])
         sc = (n - 1) / max(1, old - 1)
@@ -567,6 +595,13 @@ def set_strength(P: dict, fx: dict, x: float) -> None:
     L = _layer(P, fx["layer"])
     if k in ("zoom", "punch"):
         _zoom_strength(L, fx, x)
+    elif k == "room":
+        ch = ROOM_LOOKS[L["room"]["look"]][0]
+        top = {"dim": 0.95, "blur": 40.0, "grey": 1.0}[ch]
+        x = min(top, max(0.02, float(x)))
+        peak = fx["strength"] or 1.0
+        c = L["room"][ch]
+        c["keys"] = [[v[0], round(min(top, float(v[1]) * x / peak), 4), *v[2:]] for v in c["keys"]]
     elif k == "framing":
         L["zoom"] = round(min(3.0, max(1.01, float(x))), 4)
     elif k == "shake":
@@ -597,8 +632,10 @@ def set_strength(P: dict, fx: dict, x: float) -> None:
 
 
 def set_ease(P: dict, fx: dict, ease: str) -> None:
-    if ease not in EASES:
-        raise FxError(I18N.t("an ease: linear, smooth, in, out or hold"))
+    from .edkeys import ease_ok
+    ease = ease.replace(" ", "")
+    if ease not in EASES and not (ease.startswith("cubic(") and ease_ok(ease)):
+        raise FxError(I18N.t("an ease from the list, or a curve with its two handles"))
     L = _layer(P, fx["layer"])
     if fx["kind"] == "zoom":
         _zoom_ease(L, fx, ease)
@@ -643,6 +680,8 @@ def remove(P: dict, fx: dict) -> None:
         L.pop("jumps")
     elif k == "mirror":
         L.pop("mirror", None)
+    elif k == "room":
+        L.pop("room", None)
     elif k in ("push", "whip", "crossfade", "overlap"):
         _hard_cut(P, L, fx)
     else:
@@ -680,6 +719,10 @@ def _cut_near(P: dict, f: int) -> tuple[dict, dict, int]:
         raise FxError(I18N.t("this effect goes on a cut - the video has no plain cut"))
     A, B = min(pairs, key=lambda p: abs(int(p[1]["start"]) - f))
     return A, B, int(B["start"])
+
+
+def _room_curves(L: dict) -> list[dict]:
+    return [c for c in ((L.get("room") or {}).get(k) for k in ("dim", "blur", "grey")) if _keys(c)]
 
 
 def _zoom_now(L: dict) -> float | None:
@@ -810,7 +853,44 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
         return f"framing:{S['id']}:{s}"
     if e - s < 4:
         raise FxError(I18N.t("this shot is too short for that effect"))
+    if kind == "spotlight":                              # the room dims, the person stays lit; in and out softly
+        if S.get("room"):
+            raise FxError(I18N.t("this shot's room already changes - change that one"))
+        n = min(e - s + 1, sec(2.5))
+        if n < sec(0.8):
+            raise FxError(I18N.t("this shot is too short for that effect"))
+        a = max(s, min(f, e - n + 1))
+        h = max(2, min(sec(0.35), n // 3))
+        S["room"] = {"look": "spotlight", "dim": {"keys": [[a, 0, "easy"], [a + h, 0.7, "linear"],
+                                                           [a + n - 1 - h, 0.7, "easy"], [a + n - 1, 0]]}}
+        S["track"] = "face"
+        return f"room:{S['id']}:{a}"
     ks = _keys_of(S)
+    if kind == "lean_in":                                # 15 % closer on a word: glides in, holds, eases back out
+        a, n = _room(ks, s, e, f, sec(1.6), sec(0.6))
+        v, tail = _val(ks, a), _ease_at(ks, a + n)
+        _clear(ks, a - 1, a + n)
+        k_in, k_out = max(2, min(sec(0.2), n // 3)), max(2, min(sec(0.4), n // 3))
+        _put(ks, a, v, "glide")
+        _put(ks, a + k_in, v * 1.15, "linear")
+        _put(ks, a + n - k_out, v * 1.15, "easy")
+        _put(ks, a + n, v, tail)
+        S["track"] = "face"
+        _done(S)
+        return f"zoom:{S['id']}:{a}"
+    if kind == "slow_push":                              # 12 % closer over ~3 s, the room melting out of focus
+        if S.get("room"):
+            raise FxError(I18N.t("this shot's room already changes - change that one"))
+        a, n = _room(ks, s, e, f, sec(3.0), sec(1.2))
+        v, tail = _val(ks, a), _ease_at(ks, a + n)
+        _clear(ks, a - 1, a + n)
+        _scale_after(ks, a + n, 1.12)
+        _put(ks, a, v, "easy")
+        _put(ks, a + n, v * 1.12, tail)
+        S["track"] = "face"
+        S["room"] = {"look": "melt", "blur": {"keys": [[a, 0, "easy"], [a + n, 10]]}}
+        _done(S)
+        return f"zoom:{S['id']}:{a}"
     if kind == "punch_in":                               # a step closer from here on (what comes after: 15 % closer)
         a, _ = _room(ks, s, e, f, 0, 0)
         v, tail = _val(ks, a), _ease_at(ks, a)
@@ -968,6 +1048,31 @@ def selfcheck() -> dict:
     case("new effects at the playhead: a shake, an RGB split, a colour flash, a dip on the nearest cut, a white flash "
          "into the next shot, a punch-in", {("shake", 260), ("rgb", 40), ("colour_flash", 60), ("dip", 94),
                                             ("flash", 100), ("punch", 250)} <= E)
+    F = plan()                                           # 2026-10-27: the face-led ones
+    apply_op(F, {"op": "fxadd", "kind": "spotlight", "f": 20})
+    apply_op(F, {"op": "fxadd", "kind": "lean_in", "f": 120})
+    apply_op(F, {"op": "fxadd", "kind": "slow_push", "f": 220})
+    s1, s2, s3 = F["layers"][0], F["layers"][1], F["layers"][2]
+    E = {x["id"]: x for x in effects(F)}
+    sp = E.get("room:s01_A:20")
+    lz = [k for k in (s2["zoom"]["keys"] if isinstance(s2.get("zoom"), dict) else []) if k[0] >= 120]
+    case("face-led: a spotlight (the room dims to 70 % and back, its own chip), a lean-in 15 % that glides in and eases "
+         "out, a slow push 12 % with the room melting - each on the face",
+         sp is not None and sp["label"] == "Spotlight" and sp["strength"] == 0.7 and s1["track"] == "face"
+         and max(float(k[1]) for k in lz) == 1.15 and lz[0][2] == "glide" and s2["track"] == "face"
+         and s3["room"]["look"] == "melt" and s3["room"]["blur"]["keys"][-1][1] == 10 and s3["track"] == "face")
+    apply_op(F, {"op": "fxmove", "id": "room:s01_A:20", "by": 10})
+    apply_op(F, {"op": "fxset", "id": "room:s01_A:30", "strength": 0.5, "len": 30})
+    rk = s1["room"]["dim"]["keys"]
+    case("a spotlight moved, softer, shorter - then removed", rk[0][0] == 30 and rk[-1][0] == 59
+         and max(v[1] for v in rk) == 0.5)
+    apply_op(F, {"op": "fxremove", "id": "room:s01_A:30"})
+    try:
+        apply_op(F, {"op": "fxadd", "kind": "spotlight", "f": 230})
+        twice = False
+    except FxError:
+        twice = True
+    case("...gone; a second room look on a shot that has one is refused", "room" not in s1 and twice)
     Q2 = plan()
     try:
         apply_op(Q2, {"op": "fxadd", "kind": "zoom_through", "f": 101})

@@ -1,0 +1,139 @@
+{
+ "name": "Follow tap",
+ "kind": "social",
+ "category": "Social",
+ "what": "A profile chip with a round photo, a name, a handle and a Follow button pops up; a cursor glides in and taps the button, which flips to Following with a check mark, a quieter colour and a tiny bounce; the cursor leaves and the chip bobs.",
+ "use_for": [
+  "follow",
+  "subscribe",
+  "call to action",
+  "cta",
+  "profile",
+  "creator intro",
+  "talking head",
+  "social",
+  "outro"
+ ],
+ "tags": [
+  "follow",
+  "profile",
+  "button",
+  "cursor",
+  "tap",
+  "click",
+  "social",
+  "ui",
+  "talking head",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "A MotionLab original for a common need (a follow call to action over a talking head), rebuilt in our HyperFrames way from the look and motion of an MIT-licensed Python effect (claude-video-effects, tap and the profile card of pastel-word); 2026-10-27",
+ "motion": "f0-f12 the chip pops up (scale 0.6 to 1, back.out; rising 50 px, power3.out; fading in f0-f4); f10-f34 the cursor glides in from the lower right on a curve (x power2.out, y S-curve); f30-f37 the button swells a little (hover); f38 the tap: the cursor and the button dip 3 frames (power2.in) and come back with a bounce (back.out), a ripple spreads from the tip (16 f); f41 the flip: the colour crossfades to a quiet one (5 f), the button widens to the new word (10 f, S-curve), the old word slides up and out, the new one rises in (f43-f51) and its check mark draws itself (f46-f54); the chip hops 10 px (f42-f57); f60-f74 the cursor slides away and fades; from f55 the chip bobs 2.5 px; at the end it shrinks and fades (power2.in, 7 f)",
+ "tracks": [
+  {
+   "name": "chip in",
+   "what": "the profile chip pops up from below",
+   "start_f": 0,
+   "length_f": 12,
+   "easing": "back.out"
+  },
+  {
+   "name": "cursor in",
+   "what": "the cursor glides in from the lower right on a curve",
+   "start_f": 10,
+   "length_f": 24,
+   "easing": "x decelerating (slow end), y S-curve"
+  },
+  {
+   "name": "tap",
+   "what": "the cursor and the button dip and bounce back, a ripple spreads",
+   "start_f": 38,
+   "length_f": 15,
+   "easing": "power2.in, then back.out"
+  },
+  {
+   "name": "flip",
+   "what": "the button turns to Following: colour, width, the words swap, the check draws",
+   "start_f": 41,
+   "length_f": 13,
+   "easing": "S-curve (power3.inOut)"
+  },
+  {
+   "name": "hop",
+   "what": "the chip gives a tiny hop",
+   "start_f": 42,
+   "length_f": 15,
+   "easing": "power2.out, then back.out"
+  },
+  {
+   "name": "cursor out",
+   "what": "the cursor slides away and fades",
+   "start_f": 60,
+   "length_f": 14,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "hold",
+   "what": "the chip bobs gently",
+   "start_f": 74,
+   "length_f": 23,
+   "easing": "none"
+  },
+  {
+   "name": "out",
+   "what": "the chip shrinks a little and fades",
+   "start_f": 97,
+   "length_f": 7,
+   "easing": "power2.in"
+  }
+ ],
+ "min_frames": "round(85 * fps / 30)",
+ "min_why": "the cursor glides in, taps and leaves before the chip shrinks away",
+ "core_points": 1,
+ "text_slots": [
+  "name",
+  "handle"
+ ],
+ "media_slots": [
+  {
+   "id": "avatar_media",
+   "label": "Round photo",
+   "accept": [
+    "image"
+   ],
+   "aspect": "1:1",
+   "min_px": 200,
+   "fit": "cover",
+   "focus": "50% 50%",
+   "placeholder": "the first letter of the name on a gradient in the look"
+  }
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  2,
+  6,
+  12,
+  20,
+  30,
+  38,
+  40,
+  42,
+  45,
+  48,
+  52,
+  58,
+  66,
+  80,
+  100,
+  104
+ ]
+}

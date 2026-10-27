@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "messages", "type": "string", "label": "The messages, one after another (split with |)", "default": "wait, how did you do this?|which app is that??|send me the link pls|okay I need this now"},
+  {"id": "title", "type": "string", "label": "Title line of every message", "default": "Messages"},
+  {"id": "when", "type": "string", "label": "Time on the right", "default": "now"},
+  {"id": "fill", "type": "number", "label": "Glass fill (%: more = easier to read over a busy picture)", "default": 20, "min": 0, "max": 90, "step": 1},
+  {"id": "glow", "type": "color", "label": "Glow around each message", "default": "#FFF3E0"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.5, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Bottom of the stack (% of the height)", "default": 86, "min": 20, "max": 98, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "Fades away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a backdrop behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "message-stack" (2026-10-27): chat notifications pop in one after another (one every 14
+     frames, closer when there are many), each a creamy glass bubble with an app icon, a title line with the time and
+     the message; each lands with a small overshoot and a soft glow that blooms and settles, the newest at the bottom of
+     the stack pushing the older ones up (8 f, decelerating). In the hold the bubbles drift a little out of step and the
+     glow breathes; at the end they sink and fade. The glass is only a light tint and a rim: over a video the
+     renderer frosts the real footage under it (in_shot "glass"). Rebuilt in MotionLab's own HTML from the look of an
+     MIT-licensed Python effect (message notifications stacking over a talking-head video). No platform's logo or
+     app icon. Look-aware. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .msg { position: absolute; font-synthesis: none; }
+  .ic { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .ic svg { overflow: visible; }
+  .tx { position: absolute; display: flex; flex-direction: column; justify-content: center; white-space: nowrap; }
+  .row { display: flex; align-items: baseline; justify-content: space-between; }
+  .tt, .bd { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const fam = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- the backdrop (only when painted: over a video the footage is the backdrop, frosted under each message)
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(circle at 30% 30%, ${rgba(L.signal, 0.5)} 0%, transparent 44%), radial-gradient(circle at 74% 58%, ${rgba(L.mustard, 0.42)} 0%, transparent 48%), radial-gradient(circle at 40% 82%, ${rgba(L.paper, 0.22)} 0%, transparent 40%), linear-gradient(180deg, ${L.deep} 0%, ${mix(L.deep, "#000000", 0.45)} 100%)`
+    : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- sizes: each message 0.9 of the width (at most 960 px at a 1080-px short side), 160 px high, 18 px apart
+  const s = Number(V.size) || 1;
+  const BW = Math.min(W - 40 * U, Math.min(0.9 * W, 960 * U) * s), BH = 160 * U * s, GAP = 18 * U * s;
+  const R = Number(V.radius) > 0 ? Math.min(BH / 2, Math.max(16 * U, L.radius * 3 * s)) : BH * 0.1;
+  const BOT = Math.min(H - 12 * U, Math.max(BH + 12 * U, H * V.y / 100));
+  const PAD = 0.2 * BH, IS = 0.52 * BH, TX = PAD + IS + 0.16 * BH, TWD = BW - TX - PAD;
+  const msgs = String(V.messages || "").split("|").map(x => x.trim()).filter(Boolean);
+  const n = msgs.length;
+  const fill = clamp01(Number(V.fill) / 100);
+  const GREY = mix(L.ink, L.paper, 0.28);
+  const ICON = `<svg viewBox="0 0 24 24"><path d="M12 4.6 C 7.2 4.6, 3.4 7.7, 3.4 11.5 C 3.4 13.7, 4.6 15.6, 6.6 16.9 C 6.4 18.2, 5.8 19.3, 4.8 20.2 C 6.8 20.1, 8.4 19.4, 9.7 18.3 C 10.4 18.4, 11.2 18.5, 12 18.5 C 16.8 18.5, 20.6 15.4, 20.6 11.5 C 20.6 7.7, 16.8 4.6, 12 4.6 Z" fill="#FFFFFF"/></svg>`;
+  const B = msgs.map((m, k) => {
+    const el = document.createElement("div"); el.className = "msg"; el.id = `msg${k}`;
+    Object.assign(el.style, { left: `${(W - BW) / 2}px`, top: "0px", width: `${BW}px`, height: `${BH}px`, borderRadius: `${R}px`,
+      background: `linear-gradient(180deg, ${rgba(L.paper, Math.min(1, fill + 0.06))} 0%, ${rgba(L.paper, fill)} 100%)`,
+      border: `${Math.max(1, 1.6 * U * s)}px solid rgba(255, 255, 255, 0.55)`,
+      backdropFilter: `blur(${24 * U}px) saturate(1.5)`, webkitBackdropFilter: `blur(${24 * U}px) saturate(1.5)`,
+      fontFamily: fam, color: L.ink, transformOrigin: "50% 100%" });
+    const ic = document.createElement("div"); ic.className = "ic";
+    Object.assign(ic.style, { left: `${PAD}px`, top: `${(BH - IS) / 2}px`, width: `${IS}px`, height: `${IS}px`, borderRadius: `${IS * 0.26}px`,
+      background: `linear-gradient(160deg, ${mix(L.signal, "#FFFFFF", 0.22)} 0%, ${L.signal} 100%)` });
+    ic.innerHTML = ICON;
+    ic.firstChild.setAttribute("width", IS * 0.62); ic.firstChild.setAttribute("height", IS * 0.62);
+    const tx = document.createElement("div"); tx.className = "tx";
+    Object.assign(tx.style, { left: `${TX}px`, top: "0px", width: `${TWD}px`, height: `${BH}px`, gap: `${0.04 * BH}px`,
+      textShadow: `0 0 ${5 * U * s}px ${rgba(L.paper, 0.4)}` });
+    const row = document.createElement("div"); row.className = "row";
+    const tt = document.createElement("span"); tt.className = "tt"; tt.textContent = String(V.title || "");
+    Object.assign(tt.style, { fontSize: `${0.2 * BH}px`, fontWeight: String(fw(V.body_font, 700)) });
+    const wh = document.createElement("span"); wh.textContent = String(V.when || "");
+    Object.assign(wh.style, { fontSize: `${0.165 * BH}px`, fontWeight: String(fw(V.body_font, 600)), color: GREY });
+    row.append(tt, wh);
+    const bd = document.createElement("div"); bd.className = "bd"; bd.textContent = m;
+    Object.assign(bd.style, { fontSize: `${0.22 * BH}px`, fontWeight: String(fw(V.body_font, 500)), color: mix(L.ink, L.paper, 0.08), lineHeight: "1.2" });
+    tx.append(row, bd);
+    el.append(ic, tx);
+    hand.appendChild(el);
+    return { el, bd, tt };
+  });
+
+  // ---- the timing (frames designed at 30 fps; the cues in overlay.json use the same formula)
+  const S = Math.round(V.start), EN = FRAMES * 30 / FPS, EXIT = !!V.exit;
+  const GP = n > 1 ? Math.min(14, 56 / (n - 1)) : 0;
+  const PT = msgs.map((m, k) => Math.round(4 + k * GP));               // the frame each message pops in
+  const LAST = n ? PT[n - 1] : 4;
+
+  function render(t) {
+    const g = (Math.round(t * FPS * 1000) / 1000 - S) * 30 / FPS;
+    hand.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const ex = EXIT ? P(g, EN - 9, EN - 1, "power2.in") : 0;
+    const live = P(g, LAST + 10, LAST + 30);
+    B.forEach((b, k) => {
+      if (g < PT[k]) { b.el.style.opacity = "0"; b.el.style.visibility = "hidden"; return; }
+      b.el.style.visibility = "visible";
+      // pushed up by every newer message that has arrived (each push decelerating, 8 frames)
+      let newer = 0;
+      for (let j = k + 1; j < n; j++) newer += P(g, PT[j], PT[j] + 8, "power3.out");
+      const land = P(g, PT[k], PT[k] + 9, "back.out(1.7)"), rise = P(g, PT[k], PT[k] + 9, "power3.out");
+      const bob = 2.2 * U * s * Math.sin(2 * Math.PI * (g - LAST) / 72 + k * 1.3) * live;
+      const y = BOT - BH - newer * (BH + GAP) + (1 - rise) * 26 * U * s + bob + ex * 30 * U * s;
+      // a soft glow that blooms as it lands and settles (breathing a little in the hold)
+      const bloom = P(g, PT[k], PT[k] + 3) * (1 - P(g, PT[k] + 3, PT[k] + 22, "power2.out"));
+      const ga = 0.07 + 0.42 * bloom + 0.025 * Math.sin(2 * Math.PI * (g - LAST) / 50 + k) * live;
+      const gr = (34 + 40 * bloom) * U * s;
+      b.el.style.boxShadow = `0 0 ${gr.toFixed(1)}px ${rgba(V.glow, ga.toFixed(3))}, inset 0 ${1.5 * U * s}px 0 rgba(255, 255, 255, 0.35)`;
+      b.el.style.transform = `translate(0px, ${y.toFixed(2)}px) scale(${(0.82 + 0.18 * land).toFixed(4)})`;
+      // older messages pushed past the top of the frame fade out
+      const topFade = clamp01((y - 0.01 * H) / (0.05 * H));
+      b.el.style.opacity = String((P(g, PT[k], PT[k] + 4) * (1 - ex) * topFade).toFixed(3));
+    });
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 47 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: a long message is fitted to its bubble with the real font
+  (document.fonts && document.fonts.load ? Promise.all(["body_font"].flatMap(k =>
+    [500, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    B.forEach(b => {
+      const w = b.bd.scrollWidth;
+      if (w > TWD) b.bd.style.fontSize = `${0.22 * BH * Math.max(0.45, TWD / w)}px`;
+      const wt = b.tt.scrollWidth, room = TWD * 0.78;
+      if (wt > room) b.tt.style.fontSize = `${0.2 * BH * Math.max(0.45, room / wt)}px`;
+    });
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+ "name": "follow-tap",
+ "frames": 105,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "db": -4,
+   "what": "the profile chip pops up"
+  },
+  {
+   "f": "start + round(10 * fps / 30)",
+   "kind": "air",
+   "dur": "0.8",
+   "what": "the cursor glides in"
+  },
+  {
+   "f": "start + round(38 * fps / 30)",
+   "kind": "click",
+   "what": "the Follow button is tapped"
+  },
+  {
+   "f": "start + round(42 * fps / 30)",
+   "kind": "pop",
+   "from": 600,
+   "to": 1300,
+   "what": "it flips to Following"
+  }
+ ]
+}

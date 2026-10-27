@@ -55,7 +55,9 @@ its docstring (run it without arguments).
   `<stem>.setting` Fusion macro(s), `ref_fNNNNN.jpg`, `check.png`; `library\graphics\<name>\` = approved HTML
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
 - `tools\` the pipeline (Python 3.12 venv at `.venv\`, `requirements.txt`; ffmpeg on PATH); `tools\motionlab\` the
-  package (`compose.py` compositor, `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
+  package (`compose.py` compositor - 0.6.1: a graphic `behind` the person, `guard` off the face, `follow` the face /
+  the camera, `glass`, `shadow`, `match` the footage; `person.py` the person mask + face track per clip from its light
+  cache, `<ID>.person.u8` / `.json` beside the caches, `tools\models\selfie_segmenter.tflite` read by OpenCV; `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
   .comp text, `knowledge.py`, `photos.py` photos as still shots (2026-10-24: any format the right way up, HEIC through
   pillow-heif, the brief's sheet), `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
   explain units) + `tools\config.local.json` (2026-10-24, not in git: this PC's own values laid over it by

@@ -13,6 +13,15 @@ source "format": "i420", the default since 0.3.0) or grey ("gray"; test_4am) - s
 (plan["grades"]) are levels / gamma / output range per channel (grade_lut) plus "saturation" (1 = as shot, 0 = grey;
 colour sources only); since 0.4 also "lut3d" (a .cube applied first - colour.match_lut: the footage moved toward a
 reference's look) and "tint" (per-channel multipliers, applied last like a layer's own "tint").
+A graphic made apart from the footage looks pasted on (the user, 2026-10-27: "combining it with talking heads or people
+is where it gets kinda AI-ish"), so an overlay can be made part of the shot (0.6.1; the person track: person.py):
+"behind": true = hidden where the person is (the clip under it); "guard": true = hidden only over the face;
+"follow": "face" = moved and scaled with the face (as it is at the layer's first frame - a label, brackets) - with
+"snap": w | {"w", "dx", "dy"} its centre ON the face every frame, w face widths wide (dx / dy in face widths);
+"follow": "camera" = part of the room (a word behind the person): moved and scaled with the clip's punch-ins / pans;
+"glass": true (GLASS_BLUR) | blur px = the footage under the graphic frosted (its own fill gives the tint); "shadow": true |
+{"blur", "dy", "opacity"} = a soft shadow on the footage; "match": true | {"soft", "grain"} = the footage's own
+softness and grain on the graphic. Sizes are at 1080 px (scaled with the frame).
 """
 from __future__ import annotations
 
@@ -24,8 +33,12 @@ import numpy as np
 
 from . import footage as FC
 from . import graphics as G
+from . import person as P
 
 REC709 = np.array([0.2126, 0.7152, 0.0722], np.float32)       # luma weights (saturation, colour -> grey)
+IDLUT = np.arange(256, dtype=np.float32) / 255.0              # a mask (uint8) sampled like a picture
+GLASS_BLUR = 44.0      # "glass": true's frost (px at 1080): 18 left a brown smudge where a card covered skin (the user's
+#                        neck, 2026-10-27 - 60 washed it out); real frosted glass diffuses that much
 
 # ------------------------------------------------------------------------------------------------ curves
 EASES = {
@@ -40,6 +53,44 @@ EASES = {
     # "back out")
     "pop": lambda t: 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2,
 }
+# 2026-10-27, the user: "try some ease-in ease-out stuff ... basic flow keyframe charts": the curves motion designers
+# use (After Effects' handles / the Flow plugin's presets), as cubic Beziers - a key's ease may also be written
+# "cubic(x1,y1,x2,y2)" (the two handles, like CSS cubic-bezier) and the Editor's chart drags them
+BEZIERS = {
+    "easy": (0.33, 0.0, 0.67, 1.0),            # After Effects' Easy Ease (33 % influence): a gentle start and end
+    "strong": (0.7, 0.0, 0.3, 1.0),            # 70 % influence: slow away, quick through the middle, slow landing
+    "glide": (0.16, 1.0, 0.3, 1.0),            # expo out: off at once, a long soft landing (punch-ins, pushes)
+    "launch": (0.7, 0.0, 0.84, 0.0),           # expo in: a long wind-up, then away (exits)
+}
+_BZ: dict = {}
+
+
+def bezier(x1: float, y1: float, x2: float, y2: float):
+    """A cubic Bezier ease (handles x1, y1, x2, y2 with ends 0, 0 and 1, 1) as t -> value, tabled once."""
+    key = (round(x1, 4), round(y1, 4), round(x2, 4), round(y2, 4))
+    if key not in _BZ:
+        s = np.linspace(0, 1, 2049)
+        bx = 3 * (1 - s) ** 2 * s * x1 + 3 * (1 - s) * s * s * x2 + s ** 3
+        by = 3 * (1 - s) ** 2 * s * y1 + 3 * (1 - s) * s * s * y2 + s ** 3
+        xs = np.linspace(0, 1, 1025)
+        ys = np.interp(xs, np.maximum.accumulate(bx), by)
+        _BZ[key] = lambda t, xs=xs, ys=ys: float(np.interp(t, xs, ys))
+    return _BZ[key]
+
+
+def ease_fn(name: str):
+    """An ease by name: EASES, BEZIERS or "cubic(x1,y1,x2,y2)" (x1, x2 kept in 0..1); an unknown one = linear."""
+    if name in EASES:
+        return EASES[name]
+    if name in BEZIERS:
+        return bezier(*BEZIERS[name])
+    if isinstance(name, str) and name.startswith("cubic(") and name.endswith(")"):
+        try:
+            x1, y1, x2, y2 = (float(v) for v in name[6:-1].split(","))
+            return bezier(min(max(x1, 0.0), 1.0), y1, min(max(x2, 0.0), 1.0), y2)
+        except ValueError:
+            pass
+    return EASES["linear"]
 
 
 class Curve:
@@ -58,6 +109,7 @@ class Curve:
             self.kf = np.array([k[0] for k in ks], float)
             self.kv = np.array([k[1] for k in ks], float)
             self.ke = [k[2] if len(k) > 2 else "linear" for k in ks]
+            self.fn = [ease_fn(e) for e in self.ke]
             self.keys = True
         elif "values" in spec:
             self.f0 = int(spec["start"])
@@ -82,7 +134,7 @@ class Curve:
             else:
                 i = int(np.searchsorted(kf, f, side="right")) - 1
                 t = (f - kf[i]) / max(1e-9, kf[i + 1] - kf[i])
-                v = kv[i] + (kv[i + 1] - kv[i]) * EASES[self.ke[i]](t)
+                v = kv[i] + (kv[i + 1] - kv[i]) * self.fn[i](t)
         return float(v) * self.scale + self.offset
 
 
@@ -268,6 +320,20 @@ class ClipLayer(Layer):
         # video) = the whole picture in the rect (zoom / anchor inside its own box), over a blurred, darker cover copy
         self.fit = spec.get("fit", "cover")
         self._bg = None
+        # 0.6.1 (the face-led effects): "track": "face" = the zoom point on the face (person.py's track - a punch-in or
+        # a push lands on the person as they move); "room": {"dim", "blur", "grey"} = curves for the room around the
+        # person only (a spotlight, a room melting out of focus, a grey room)
+        self.track = spec.get("track") == "face"
+        rm = spec.get("room") if isinstance(spec.get("room"), dict) else {}
+        self.room = {k: Curve(rm[k], R.curves, 0.0) for k in ("dim", "blur", "grey") if rm.get(k) is not None}
+
+    def zoom_point(self, f: int, R: "Renderer") -> tuple[float, float]:
+        if self.track:
+            T = R.person(self.src)
+            fc = T.face(self.src_index(f)) if T is not None else None
+            if fc is not None:
+                return float(fc[0]), float(fc[1]) + 0.05       # (the face a little above the middle)
+        return self.ax(f), self.ay(f)
 
     def src_index(self, f: int) -> int:
         j = self.jumps[0]
@@ -285,8 +351,9 @@ class ClipLayer(Layer):
         y += self.dy(f)
         z, rot = self.zoom(f), self.rot(f)
         cx0, cy0 = x + w / 2, y + h / 2                         # (what a rotation turns round)
+        zax, zay = self.zoom_point(f, R)
         if z < 1.0:                                             # smaller than its box: the box shrinks round the
-            ax, ay = self.ax(f), self.ay(f)                     # zoom point (the Editor's preview does the same)
+            ax, ay = zax, zay                                   # zoom point (the Editor's preview does the same)
             x, y, w, h, z = x + ax * w * (1 - z), y + ay * h * (1 - z), w * z, h * z, 1.0
             cx0, cy0 = x + w / 2, y + h / 2
         if f in self.black:
@@ -299,21 +366,22 @@ class ClipLayer(Layer):
         src = R.frame(self.src, i)
         if self.lut3d is not None and src.ndim == 3:
             src = self.lut3d[src[..., 0] >> 1, src[..., 1] >> 1, src[..., 2] >> 1]
-        parts = []                                              # (sample_patch result, brightness)
+        parts = []                                              # (sample_patch result, brightness, the picture's box)
         if self.fit == "contain":
             sh, sw = src.shape[:2]
             if self._bg is None or self._bg[0] != i:            # the blurred copy behind, once per source frame
                 small = cv2.resize(src, (max(8, sw // 10), max(8, sh // 10)), interpolation=cv2.INTER_AREA)
                 self._bg = (i, cv2.GaussianBlur(small, (0, 0), 2.5))
-            parts.append((sample_patch(self._bg[1], self.lut, x, y, w, h, 1.0, 0.5, 0.5, R.W, R.H, self.mirror), 0.55))
+            parts.append((sample_patch(self._bg[1], self.lut, x, y, w, h, 1.0, 0.5, 0.5, R.W, R.H, self.mirror), 0.55,
+                          None))
             ar = sw / sh                                         # the whole picture in the rect; the zoom (and its
             cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)   # anchor) works inside that box
-            parts.append((sample_patch(src, self.lut, x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z,
-                                       self.ax(f), self.ay(f), R.W, R.H, self.mirror), 1.0))
+            box = (x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z, zax, zay)
+            parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
         else:
-            parts.append((sample_patch(src, self.lut, x, y, w, h, z, self.ax(f), self.ay(f), R.W, R.H,
-                                       self.mirror), 1.0))
-        for res, k_dim in parts:
+            box = (x, y, w, h, z, zax, zay)
+            parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
+        for res, k_dim, box in parts:
             if res is not None and abs(rot) > 1e-3:
                 res = rotate_patch(*res, cx0, cy0, rot, R.W, R.H)
             if res is None:
@@ -328,7 +396,84 @@ class ClipLayer(Layer):
                 patch = patch + k * (1.0 - np.clip(patch, 0, 1))
             if f in self.flash_white:                           # flat white frame (a trace of the image left)
                 patch = 0.86 + 0.06 * patch
+            if self.room and box is not None and abs(rot) <= 1e-3:    # the room around the person only
+                vals = {k: c(f) for k, c in self.room.items()}
+                if any(v > 1e-3 for v in vals.values()):
+                    m = R.person_patch(self, i, box, patch)
+                    if m is not None:
+                        patch = room_look(patch, m, vals, min(R.W, R.H) / 1080.0)
             blend(canvas, patch * k_dim if k_dim != 1.0 else patch, cov * op, X0, Y0, self.mode, self.tint)
+            if R.matte is not None:                             # the person under the graphics to come
+                R.person_into(self, i, box if abs(rot) <= 1e-3 else None, patch, cov * op, X0, Y0)
+
+    def box(self, f: int, R: "Renderer"):
+        """The picture's box at frame f as draw() samples it - (x, y, w, h, zoom, ax, ay) - or None (a black or a
+        turned frame): where the face lands (Renderer.face_at)."""
+        if f in self.black or abs(self.rot(f)) > 1e-3:
+            return None
+        x, y, w, h = self.rect
+        x += self.dx(f)
+        y += self.dy(f)
+        z = self.zoom(f)
+        if z < 1.0:
+            ax, ay = self.ax(f), self.ay(f)
+            x, y, w, h, z = x + ax * w * (1 - z), y + ay * h * (1 - z), w * z, h * z, 1.0
+        zax, zay = self.zoom_point(f, R)
+        if self.fit == "contain":
+            sw, sh = R.size(self.src)
+            ar = sw / sh
+            cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)
+            return x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z, zax, zay
+        return x, y, w, h, z, zax, zay
+
+
+def room_look(patch: np.ndarray, m: np.ndarray, vals: dict, k: float) -> np.ndarray:
+    """The room around the person (m = the person, 0..1) greyed, blurred (weighted by the room only, so the person does
+    not smear into it), dimmed - the person as it was."""
+    p3 = patch if patch.ndim == 3 else np.repeat(patch[..., None], 3, 2)
+    bg = p3
+    g = vals.get("grey", 0.0)
+    if g > 1e-3:
+        bg = bg * (1 - g) + (bg @ REC709)[..., None] * g
+    b = vals.get("blur", 0.0) * k
+    if b > 0.3:
+        wgt = (1 - m).astype(np.float32)
+        num = cv2.GaussianBlur(bg * wgt[..., None], (0, 0), b)
+        den = cv2.GaussianBlur(wgt, (0, 0), b)
+        bg = num / np.maximum(den, 1e-3)[..., None]
+    d = vals.get("dim", 0.0)
+    if d > 1e-3:
+        bg = bg * (1 - min(d, 1.0))
+    mm = m[..., None]
+    out = p3 * mm + bg * (1 - mm)
+    return out if patch.ndim == 3 else out @ REC709
+
+
+def to_out(nx: float, ny: float, sw: int, sh: int, box, mirror: bool = False) -> tuple[float, float, float]:
+    """A point of a source frame (shares of its width / height) -> output pixels, through the box sample_patch draws
+    it in; and the output pixels per source pixel."""
+    x, y, w, h, z, ax, ay = box
+    cw, ch = _cover(w, h, sw, sh)
+    cw, ch = cw / z, ch / z
+    cx = min(max(ax * sw, cw / 2), sw - cw / 2)
+    cy = min(max(ay * sh, ch / 2), sh - ch / 2)
+    u, v = (nx * sw - (cx - cw / 2)) / cw, (ny * sh - (cy - ch / 2)) / ch
+    if mirror:
+        u = 1 - u
+    return x + u * w, y + v * h, w / cw
+
+
+def from_out(X: float, Y: float, sw: int, sh: int, box, mirror: bool = False) -> tuple[float, float]:
+    """to_out() backwards: an output pixel -> the source point under it (shares of the source frame)."""
+    x, y, w, h, z, ax, ay = box
+    cw, ch = _cover(w, h, sw, sh)
+    cw, ch = cw / z, ch / z
+    cx = min(max(ax * sw, cw / 2), sw - cw / 2)
+    cy = min(max(ay * sh, ch / 2), sh - ch / 2)
+    u, v = (X - x) / w, (Y - y) / h
+    if mirror:
+        u = 1 - u
+    return (cx - cw / 2 + u * cw) / sw, (cy - ch / 2 + v * ch) / sh
 
 
 def rotate_patch(patch, cov, X0, Y0, cx, cy, deg, W, H):
@@ -728,9 +873,14 @@ class OverlayLayer(Layer):
         self.sx, self.sy = w / W0, h / H0
         cx, cy, cw, ch = self.meta["crop"]
         self.X, self.Y = x + cx * self.sx, y + cy * self.sy              # where the visible crop lands
-        self.w, self.h = cw * self.sx, ch * self.sy
+        self.cw, self.ch = cw, ch
         self.exact = (abs(self.sx - 1) < 1e-9 and abs(self.sy - 1) < 1e-9 and float(self.X).is_integer()
                       and float(self.Y).is_integer())
+        self.integ = any(spec.get(k) for k in P.KEYS)
+        self.follow = spec.get("follow") if spec.get("follow") in ("face", "camera") else None
+        self._ref = False                       # the face / the room point at the layer's first frame (looked up once)
+        sn = spec.get("snap")                   # with "follow": "face": its centre ON the face, its width = w face
+        self.snap = ({"w": float(sn)} if isinstance(sn, (int, float)) else dict(sn) if isinstance(sn, dict) else None)
 
     def draw(self, canvas, f, R):
         op = self.opacity(f)
@@ -741,14 +891,56 @@ class OverlayLayer(Layer):
         fr = np.asarray(self.arr[i], np.float32) * (1.0 / 255.0)
         rgb, a = fr[..., :3], fr[..., 3]
         light = self.mode in ("add", "screen")
-        if self.exact:
-            X0, Y0 = int(self.X), int(self.Y)
+        X, Y, sx, sy, exact = self.X, self.Y, self.sx, self.sy, self.exact
+        moved = None                            # (the point it moves with: at the start, now; the scale since)
+        if self.follow == "face" and self.snap and R.face is not None:     # on the face: brackets, an arrow, a halo
+            fx, fy, fw = R.face                 # (dx / dy = an offset in face widths: above the head, beside it)
+            sxn = float(self.snap.get("w", 1.0)) * fw / max(self.cw, 1)
+            syn = sy * sxn / max(sx, 1e-9)
+            y0, y1 = (0.0, float(R.H)) if R.W >= R.H else (220 / 1920 * R.H, 1500 / 1920 * R.H)   # upright: clear of
+            fit = min(1.0, 0.96 * R.W / max(self.cw * sxn, 1), (y1 - y0) / max(self.ch * syn, 1))   # the apps' top /
+            sxn, syn = sxn * fit, syn * fit             # bottom bands (precheck.SAFE_BANDS); a close-up's big face:
+            X = fx + float(self.snap.get("dx", 0.0)) * fw - self.cw * sxn / 2           # never past the frame's edges
+            Y = fy + float(self.snap.get("dy", 0.0)) * fw - self.ch * syn / 2
+            if float(self.snap.get("dy", 0.0)) < 0:     # above the head: it shrinks into the room there is between
+                top = fy - 0.8 * fw                     # the band and the hair (never onto the head)
+                room = top - y0
+                if self.ch * syn > room > 0:
+                    k = max(0.5, room / (self.ch * syn))
+                    X += self.cw * sxn * (1 - k) / 2
+                    sxn, syn = sxn * k, syn * k
+                Y = min(Y, top - self.ch * syn)
+            X = min(max(X, 0.0), R.W - self.cw * sxn)
+            Y = min(max(Y, y0), max(y0, y1 - self.ch * syn))
+            sx, sy, exact = sxn, syn, False
+        elif self.follow == "face":             # pinned to the face (a label, brackets): moves and scales with it
+            if self._ref is False:
+                self._ref = R.face_at(self.start)
+            if self._ref is not None and R.face is not None:
+                moved = (self._ref[:2], R.face[:2], R.face[2] / max(self._ref[2], 1e-6))
+        elif self.follow == "camera":           # part of the room (a word behind you): moves with punch-ins / pans
+            if self._ref is False:
+                self._ref = R.room_ref(self.start, X + self.cw * sx / 2, Y + self.ch * sy / 2)
+            now = R.room_at(f, self._ref) if self._ref is not None else None
+            if now is not None:
+                moved = (self._ref[3], now[:2], now[2])
+        if moved is not None:
+            (x0, y0), (x1, y1), k = moved
+            X, Y = x1 + (X - x0) * k, y1 + (Y - y0) * k
+            sx, sy, exact = sx * k, sy * k, False
+            vw, vh = self.cw * sx, self.ch * sy                 # a graphic that was inside the frame stays inside
+            if self.X >= 0 and self.X + self.cw * self.sx <= R.W and vw <= R.W:
+                X = min(max(X, 0.0), R.W - vw)
+            if self.Y >= 0 and self.Y + self.ch * self.sy <= R.H and vh <= R.H:
+                Y = min(max(Y, 0.0), R.H - vh)
+        if exact:
+            X0, Y0 = int(X), int(Y)
             col = rgb * a[..., None] if light else rgb
         else:                                   # resample premultiplied (no dark fringes at soft edges)
-            X0, Y0 = int(math.floor(self.X)), int(math.floor(self.Y))
-            ow, oh = int(math.ceil(self.X + self.w)) - X0, int(math.ceil(self.Y + self.h)) - Y0
-            M = np.array([[self.sx, 0, self.X - X0 + 0.5 * self.sx - 0.5],
-                          [0, self.sy, self.Y - Y0 + 0.5 * self.sy - 0.5]], np.float32)
+            X0, Y0 = int(math.floor(X)), int(math.floor(Y))
+            ow, oh = int(math.ceil(X + self.cw * sx)) - X0, int(math.ceil(Y + self.ch * sy)) - Y0
+            M = np.array([[sx, 0, X - X0 + 0.5 * sx - 0.5],
+                          [0, sy, Y - Y0 + 0.5 * sy - 0.5]], np.float32)
             pm = cv2.warpAffine(np.dstack([rgb * a[..., None], a]), M, (ow, oh), flags=cv2.INTER_LINEAR,
                                 borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
             a = pm[..., 3]
@@ -760,7 +952,10 @@ class OverlayLayer(Layer):
             return
         sl = (slice(ya, yb), slice(xa, xb))
         alpha = np.full((yb - ya, xb - xa), op, np.float32) if light else a[sl] * op
-        blend(canvas, col[sl], alpha, X0 + xa, Y0 + ya, self.mode)
+        col = col[sl]
+        if self.integ:
+            col, alpha = R.integrate(self.spec, canvas, col, alpha, X0 + xa, Y0 + ya)
+        blend(canvas, col, alpha, X0 + xa, Y0 + ya, self.mode)
 
 
 LAYERS = {"clip": ClipLayer, "solid": SolidLayer, "text": TextLayer, "clock": ClockLayer, "mosaic": MosaicLayer,
@@ -815,6 +1010,11 @@ class Renderer:
             self._conv[sid] = level_conversion(cache_levels(s["cache"]), self.levels)
         self._vign = {}
         self._lut3d: dict = {}
+        # graphics made part of the shot (0.6.1): the person under them, per frame (person.py's tracks)
+        self.integrate_any = any(sp.get(k) for sp in plan["layers"] for k in P.KEYS)
+        self._people: dict = {}
+        self.matte = None            # this frame: the person in output pixels (0..1), when a layer asks behind / guard
+        self.face = None             # this frame: the face (x, y, width) in output pixels, when one asks follow / guard
         self.layers = [LAYERS[sp["type"]](sp, self) for sp in plan["layers"]]
 
     def lut3d(self, path: str) -> np.ndarray:
@@ -833,6 +1033,139 @@ class Renderer:
         conv = self._conv[sid]
         return fr if conv is None else conv[fr]
 
+    def size(self, sid: str) -> tuple[int, int]:
+        s = self.plan["sources"][sid]
+        return int(s["width"]), int(s["height"])
+
+    def person(self, sid: str):
+        """Source sid's person track (person.Track) or None (none made, or made from another light cache)."""
+        if sid not in self._people:
+            where = P.source_of(self.plan["sources"].get(sid) or {})
+            self._people[sid] = P.load(*where) if where else None
+        return self._people[sid]
+
+    def face_at(self, f: int):
+        """The face (x, y, width) in output pixels at frame f: the last clip drawn that shows one; a later clip that
+        covers it (B-roll) hides it. Geometry only - the same whichever frames a render process draws."""
+        face = None
+        for L in self.layers:
+            if not (isinstance(L, ClipLayer) and L.active(f)) or L.opacity(f) < 0.5:
+                continue
+            box = L.box(f, self)
+            if box is None:
+                continue
+            T = self.person(L.src)
+            fc = T.face(L.src_index(f)) if T is not None else None
+            if fc is not None:
+                sw, sh = self.size(L.src)
+                X, Y, s = to_out(float(fc[0]), float(fc[1]), sw, sh, box, L.mirror)
+                if box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3] and 0 <= X < self.W \
+                        and 0 <= Y < self.H:
+                    face = (X, Y, float(fc[2]) * sw * s)
+                    continue
+            if face is not None and box[0] <= face[0] <= box[0] + box[2] and box[1] <= face[1] <= box[1] + box[3]:
+                face = None
+        return face
+
+    def room_ref(self, f: int, X: float, Y: float):
+        """The room point under output pixel (X, Y) at frame f: (the clip layer, its source point x, y, (X, Y), its
+        scale) from the top clip showing there - or None."""
+        for L in reversed(self.layers):
+            if isinstance(L, ClipLayer) and L.active(f) and L.opacity(f) >= 0.5:
+                box = L.box(f, self)
+                if box is not None and box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3]:
+                    sw, sh = self.size(L.src)
+                    nx, ny = from_out(X, Y, sw, sh, box, L.mirror)
+                    return L, nx, ny, (X, Y), to_out(nx, ny, sw, sh, box, L.mirror)[2]
+        return None
+
+    def room_at(self, f: int, ref):
+        """Where room_ref's point is at frame f (x, y, its scale against the start) - None once its clip is gone."""
+        L, nx, ny, _, s0 = ref
+        if not L.active(f):
+            return None
+        box = L.box(f, self)
+        if box is None:
+            return None
+        sw, sh = self.size(L.src)
+        X, Y, s = to_out(nx, ny, sw, sh, box, L.mirror)
+        return X, Y, s / max(s0, 1e-9)
+
+    def person_into(self, L: "ClipLayer", i: int, box, patch: np.ndarray, a: np.ndarray, X0: int, Y0: int):
+        """A clip just drawn -> the frame's person mask: its person where it has a track (sampled through the same
+        box, its edges moved onto the full-size picture by a guided filter), else it covers what was there."""
+        h, w = a.shape
+        reg = self.matte[Y0:Y0 + h, X0:X0 + w]
+        m = self.person_patch(L, i, box, patch) if box is not None else None
+        reg *= (1 - a)
+        if m is not None and m.shape == (h, w):
+            reg += m * a
+
+    def person_patch(self, L: "ClipLayer", i: int, box, patch: np.ndarray):
+        """The person over a clip's drawn patch (0..1, its shape) - sampled through the same box from the light-size
+        mask, its edges moved onto the full-size picture by a guided filter - or None (no track)."""
+        T = self.person(L.src)
+        res = sample_patch(T.mask(i), IDLUT, *box, self.W, self.H, L.mirror) if T is not None else None
+        if res is None or res[0].shape[:2] != patch.shape[:2]:
+            return None
+        sw, sh = self.size(L.src)                     # output pixels per mask pixel: the edge clean-up's reach
+        up = to_out(0.5, 0.5, sw, sh, box)[2] * sh / T.masks.shape[1]
+        g = np.clip(patch if patch.ndim == 2 else patch @ REC709, 0, 1).astype(np.float32)
+        m = P.guided(g, res[0].astype(np.float32), int(np.clip(round(2.5 * up), 3, 24)), 1e-3)
+        return np.clip((m - 0.5) * 1.6 + 0.5, 0, 1)
+
+    def integrate(self, spec: dict, canvas: np.ndarray, col: np.ndarray, alpha: np.ndarray, X0: int, Y0: int):
+        """A graphic (colour, alpha at X0, Y0) made part of the shot before it is blended: the footage's softness and
+        grain, behind the person / off the face, a shadow and frosted glass on the footage under it."""
+        h, w = alpha.shape
+        k = min(self.W, self.H) / 1080.0
+        mt = self.matte[Y0:Y0 + h, X0:X0 + w] if self.matte is not None else None
+        if spec.get("match"):
+            o = spec["match"] if isinstance(spec["match"], dict) else {}
+            if o.get("grain", "auto") == "auto":           # the footage's own grain, measured under the graphic
+                g = canvas[Y0:Y0 + h, X0:X0 + w] @ REC709
+                grain = float(np.clip(np.median(np.abs(g - cv2.GaussianBlur(g, (0, 0), 1.5))) * 1.4826, 0.002, 0.03))
+            else:
+                grain = float(o["grain"])
+            s = float(o.get("soft", 0.6)) * k
+            if s > 0.05:                                    # premultiplied, so the edges do not darken
+                pm = cv2.GaussianBlur(np.dstack([col * alpha[..., None], alpha]), (0, 0), s)
+                alpha = pm[..., 3]
+                col = pm[..., :3] / np.maximum(alpha, 1e-6)[..., None]
+            n = self.rng.normal(0.0, grain, (h // 2 + 1, w // 2 + 1)).astype(np.float32)
+            col = col + cv2.resize(n, (w, h), interpolation=cv2.INTER_LINEAR)[..., None]
+        if spec.get("behind") and mt is not None:
+            alpha = alpha * (1 - mt)
+        if spec.get("guard") and mt is not None and self.face is not None:
+            fx, fy, fw = self.face                         # the face itself (forehead to chin), not the body
+            yy, xx = np.ogrid[Y0:Y0 + h, X0:X0 + w]
+            e = ((xx - fx) / (fw * 0.6)) ** 2 + ((yy - fy + fw * 0.1) / (fw * 0.75)) ** 2
+            alpha = alpha * (1 - np.clip((1.1 - e) / 0.25, 0, 1) * mt)
+        if spec.get("shadow"):
+            o = spec["shadow"] if isinstance(spec["shadow"], dict) else {}
+            sg, dy, so = float(o.get("blur", 16)) * k, float(o.get("dy", 10)) * k, float(o.get("opacity", 0.35))
+            pad = int(math.ceil(3 * sg + abs(dy))) + 1
+            xa, ya, xb, yb = max(0, X0 - pad), max(0, Y0 - pad), min(self.W, X0 + w + pad), min(self.H, Y0 + h + pad)
+            buf = np.zeros((yb - ya, xb - xa), np.float32)
+            oy = int(round(dy))
+            ty0, ty1 = max(0, Y0 - ya + oy), min(yb - ya, Y0 - ya + oy + h)
+            if ty1 > ty0:
+                buf[ty0:ty1, X0 - xa:X0 - xa + w] = alpha[ty0 - (Y0 - ya + oy):ty1 - (Y0 - ya + oy)]
+                buf = cv2.GaussianBlur(buf, (0, 0), sg) * so
+                if spec.get("behind") and self.matte is not None:
+                    buf *= 1 - self.matte[ya:yb, xa:xb]
+                canvas[ya:yb, xa:xb] *= (1 - buf[..., None])
+        if spec.get("glass"):
+            gs = (GLASS_BLUR if spec["glass"] is True else float(spec["glass"])) * k
+            pad = int(math.ceil(3 * gs)) + 1
+            xa, ya, xb, yb = max(0, X0 - pad), max(0, Y0 - pad), min(self.W, X0 + w + pad), min(self.H, Y0 + h + pad)
+            bl = cv2.GaussianBlur(canvas[ya:yb, xa:xb], (0, 0), gs)[Y0 - ya:Y0 - ya + h, X0 - xa:X0 - xa + w]
+            ga = np.clip((alpha - 0.04) / 0.08, 0, 1)[..., None]     # the graphic's body, not its faint glows
+            reg = canvas[Y0:Y0 + h, X0:X0 + w]
+            reg *= (1 - ga)
+            reg += bl * ga
+        return col, alpha
+
     def vignette(self, color) -> np.ndarray:
         if color not in self._vign:
             yy, xx = np.mgrid[0:self.H, 0:self.W].astype(np.float32)
@@ -846,6 +1179,11 @@ class Renderer:
         # alone (--stills), in a range or in a parallel chunk (since 0.3.0; before, it depended on the render order)
         self.rng = np.random.default_rng([self.seed, int(f)])
         canvas = np.full((self.H, self.W, 3), self.bg, np.float32)
+        if self.integrate_any:
+            act = [L.spec for L in self.layers if L.active(f)]
+            self.matte = (np.zeros((self.H, self.W), np.float32)
+                          if any(s.get("behind") or s.get("guard") for s in act) else None)
+            self.face = self.face_at(f) if any(s.get("follow") or s.get("guard") for s in act) else None
         for L in self.layers:
             if L.active(f):
                 L.draw(canvas, f, self)

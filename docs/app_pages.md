@@ -518,6 +518,18 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   shot n · frame + timecode, following the playhead) and puts the reason under a kind that cannot go there (`.edwhy`,
   its + off, not draggable), redrawn when the shot / cut under the playhead changes (`ctxKey`); Transitions says the cut
   it goes on and what it replaces; a keyframe row a shake draws frame by frame is greyed with why.
+- **Curves, face-led effects, graphics in the shot** (0.6.1, 2026-10-27, the user: "maybe u zoom in too much? try some
+  ease-in ease-out stuff as well... basic flow keyframe charts", then the switch, the face-led effects and Vibha
+  Ramprakash's designs as templates). A keyframe's *The move after it* = curve tiles (`.edease`, a little picture of
+  each: Linear, Ease in, Ease out, Ease in and out, Easy ease, Strong ease, Glide, Launch, Hold, Pop - their line in
+  the tooltip) and a chart (`#edchart`) with two handles (After Effects / Flow's graph): a drag shapes the curve live,
+  the release keeps it as `cubic(x1,y1,x2,y2)` (compose `ease_fn` / app.js `edEaseFn` - the same tables). The
+  Effects list adds *Lean in* (15 % on a word: glides in, eases out), *Slow push* (12 % over ~3 s, the room melting
+  out of focus) and *Spotlight* (the room dims, the person stays lit) - all three turn the shot's `track: "face"` on;
+  a room look is its own chip (`room`: move, length, strength, remove). A graphic's panel has *In the shot* (on a
+  video with clips): *Behind me*, *Frosted glass*, *Keep off my face*, *Pin to my face* (`gfit`, compose's behind /
+  glass / guard / follow; the footage's grain with any); a template added in the Editor arrives the way its
+  template.json `in_shot` says. The preview shows none of these (it has no person mask) - *See it rendered* does.
 
 ## Generator vs Editor
 

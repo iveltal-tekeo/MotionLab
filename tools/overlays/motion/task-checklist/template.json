@@ -1,0 +1,32 @@
+{
+ "name": "Task checklist",
+ "kind": "lists",
+ "category": "UI Elements",
+ "what": "A glass task list under your chin with a title line: its steps run one after another - a small loader spins on the running step, then it pops green with a tick and the next one starts; waiting steps are dimmed, the header ring fills and the counter counts; when the last one ticks the ring turns green too; it floats, a band of light crosses the glass, and it sinks away at the end.",
+ "use_for": ["steps", "process", "workflow", "to do", "progress", "how I made it", "behind the scenes", "talking head", "glass", "short form"],
+ "tags": ["list", "checklist", "to do", "steps", "loader", "spinner", "tick", "progress", "glass", "frosted", "card", "talking head"],
+ "learned_from": [],
+ "origin": "Rebuilt after the checklist and todo effects of claude-video-effects (MIT): a task list whose steps spin, then tick green one after another - MotionLab's own code, a glass card made part of the shot",
+ "motion": "f0-f12 the card rises 140 px and grows from 96 % (slow end, seen within 4 f); from f10 one step at a time: its loader arc spins 18 degrees a frame for gap (20) frames, then the green disc pops (8 f, an overshoot) and its tick draws (6 f) while the next starts; the header ring fills a share per tick (8 f, slow end) and the counter counts; at the last tick + 4 f the header ring pops green with its own tick; it floats 3 px; a band of light crosses the glass 26 f (S-curve); the last 9 f it sinks 30 px and fades (accelerating)",
+ "tracks": [
+  {"name": "card in", "what": "the glass list rises into place", "start_f": 0, "length_f": 12, "easing": "decelerating (slow end)"},
+  {"name": "step 1", "what": "the first step spins, then ticks green", "start_f": 10, "length_f": 28, "easing": "decelerating (slow end), an overshoot on the tick"},
+  {"name": "step 2", "what": "the second step spins, then ticks green", "start_f": 30, "length_f": 28, "easing": "decelerating (slow end), an overshoot on the tick"},
+  {"name": "step 3", "what": "the third step spins, then ticks green", "start_f": 50, "length_f": 28, "easing": "decelerating (slow end), an overshoot on the tick"},
+  {"name": "step 4", "what": "the fourth step spins, then ticks green", "start_f": 70, "length_f": 28, "easing": "decelerating (slow end), an overshoot on the tick"},
+  {"name": "all done", "what": "the header ring pops green with a tick", "start_f": 94, "length_f": 8, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "sheen", "what": "a band of light crosses the glass", "start_f": 102, "length_f": 26, "easing": "S-curve"},
+  {"name": "card out", "what": "the list sinks away and fades", "start_f": 141, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round((10 + max(1, min(8, parts(steps))) * max(4, gap) + 14) * fps / 30)",
+ "min_why": "the last step has to tick before it ends",
+ "in_shot": {"glass": true, "shadow": true, "guard": true, "match": true},
+ "core_points": 4,
+ "text_slots": ["title", "steps"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 64,
+ "check_frames": [0, 2, 6, 12, 20, 30, 33, 38, 64, 92, 98, 110, 143, 147]
+}

@@ -1,0 +1,102 @@
+{
+ "name": "Reject stamp",
+ "kind": "callouts",
+ "category": "Callouts",
+ "what": "A big rubber stamp slams down at an angle - it falls from large and out of focus, hits with a camera jolt and a spatter of ink - and settles, its ink rough at the edges and worn in patches. NOPE, WRONG, REJECTED, APPROVED: any word, any ink colour.",
+ "use_for": [
+  "no",
+  "wrong",
+  "rejected",
+  "myth busting",
+  "verdict",
+  "reaction",
+  "callout",
+  "talking head",
+  "approved",
+  "stamp"
+ ],
+ "tags": [
+  "stamp",
+  "rubber stamp",
+  "ink",
+  "slam",
+  "impact",
+  "camera shake",
+  "callout",
+  "texture",
+  "talking head",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "A MotionLab original for a common need (a verdict stamped over a talking head), rebuilt in our HyperFrames way from the look and motion of an MIT-licensed Python effect (claude-video-effects, reject-stamp); 2026-10-27",
+ "motion": "f0-f6 the stamp falls from 1.9x to its size (accelerating: a drop), turning 7 degrees into its tilt, out of focus and casting a shadow that tightens, fading in over f0-f3; f6 the hit: it squashes 3.5 % (2 f) and settles back (back.out, 8 f), the ink spatter is flung out round the frame (4 f, power3.out) and the camera jolts and rings out over 16 frames; in the hold the ink soaks in a little (a 1 % swell, a little lighter); at the end it fades (power2.in, 6 f)",
+ "tracks": [
+  {
+   "name": "fall",
+   "what": "the stamp falls from 1.9x, out of focus, turning into its tilt",
+   "start_f": 0,
+   "length_f": 6,
+   "easing": "accelerating (slow start)"
+  },
+  {
+   "name": "hit",
+   "what": "it squashes a hair and settles; the ink spatters out",
+   "start_f": 6,
+   "length_f": 10,
+   "easing": "power2.out, then back.out"
+  },
+  {
+   "name": "jolt",
+   "what": "the camera jolts and rings out",
+   "start_f": 6,
+   "length_f": 16,
+   "easing": "decaying shake"
+  },
+  {
+   "name": "hold",
+   "what": "the ink soaks in a little",
+   "start_f": 16,
+   "length_f": 51,
+   "easing": "S-curve"
+  },
+  {
+   "name": "out",
+   "what": "the stamp fades",
+   "start_f": 67,
+   "length_f": 7,
+   "easing": "power2.in"
+  }
+ ],
+ "min_frames": "round(36 * fps / 30)",
+ "min_why": "the slam and the camera jolt ring out before it fades",
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "general": 0.45,
+ "thumb_f": 40,
+ "check_frames": [
+  0,
+  1,
+  3,
+  5,
+  6,
+  7,
+  9,
+  12,
+  16,
+  22,
+  40,
+  66,
+  70,
+  74
+ ]
+}

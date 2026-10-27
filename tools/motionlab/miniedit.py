@@ -45,6 +45,10 @@ Operations ({"op": ...}):
                                                              holds its first frame; an end past its own length holds
                                                              its last frame
     gdelete {"layer": id, "all": bool}                       the layer (all = every layer of that graphic)
+    gfit    {"layer": id, "key": k, "value": bool}           0.6.1, the graphic part of the shot (compose's keys):
+                                                             behind (behind me, moves with the camera), glass (the room
+                                                             frosted under it + a shadow), guard (off the face), pin
+                                                             (pinned to the face); the footage's grain with any of them
     gadd    {"id": new id, "template": tid, "f": f, "len": n, "values": {...}}   a Motion Graphics template as a new
                                                              graphic over everything (its own copy on save)
     set     {"graphic": layer id, "key": setting, "value": v}   any setting (words, a colour ...) - in a copy of the
@@ -85,6 +89,7 @@ What moves with a shot (the page shows it as "moves with it"):
 from __future__ import annotations
 
 import copy
+import json
 import math
 import re
 from pathlib import Path
@@ -429,7 +434,7 @@ def state(plan: dict) -> dict:
         graphics.append({"id": L["id"], "folder": f.name, "dir": str(f), "start": int(L["start"]), "end": int(L["end"]),
                          "in": int(L.get("in", 0)), "speed": _speed(L), "rect": L.get("rect"),
                          "blend": L.get("blend", "normal"), "opacity": _curve_keys(L.get("opacity")),
-                         "values": vals, "words": words, "captions": caps, "new": bool(L.get(NEW_KEY)),
+                         "values": vals, "words": words, "captions": caps, "new": bool(L.get(NEW_KEY)), "fit": fit_of(L),
                          "scene": any(L is x for x in S),
                          "pieces": sum(1 for x in P["layers"] if x.get("type") == "overlay" and x.get("file")
                                        and _graphic_folder(x) == f)})
@@ -989,6 +994,70 @@ def _cap_add(P: dict, L: dict, o: dict, folder: Path, src: Path, done: list[str]
     done.append(f"caption added at {_tcf(int(o['at']), fps)}: \"{words}\"")
 
 
+FIT_KEYS = ("behind", "glass", "guard", "pin")
+IN_SHOT_KEYS = ("behind", "guard", "follow", "snap", "glass", "shadow", "match", "over_face")
+
+
+def in_shot(folder: Path, P: dict) -> dict:
+    """A template's own way into a shot with a person (template.json "in_shot": compose's keys - a word behind you, a
+    glass card, brackets on your face) - only when the video has clips (a video of graphics has nobody in it)."""
+    if not any(x.get("type") == "clip" for x in P.get("layers", [])):
+        return {}
+    try:
+        t = json.loads((Path(folder) / "template.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    s = t.get("in_shot") if isinstance(t.get("in_shot"), dict) else {}
+    return {k: s[k] for k in IN_SHOT_KEYS if k in s}
+
+
+def fit_of(L: dict) -> dict:
+    """A graphic's place in the shot as the Editor's switches show it (compose's keys behind / glass / guard / follow)."""
+    return {"behind": bool(L.get("behind")), "glass": bool(L.get("glass")), "guard": bool(L.get("guard")),
+            "pin": L.get("follow") == "face"}
+
+
+def _gfit(L: dict, key: str, on: bool) -> None:
+    """One switch of fit_of() on / off: behind = hidden on the person + "follow": "camera" (part of the room) unless it
+    is pinned to the face; glass = the footage frosted under it + a shadow; guard = never over the face; pin =
+    "follow": "face". The footage's softness and grain ("match") with any of them."""
+    if L.get("type") != "overlay":
+        raise EditError(I18N.t("only a graphic can go behind you or turn to glass"))
+    if key not in FIT_KEYS:
+        raise EditError(I18N.t("no such change: {op}", op=f"gfit {key}"))
+    if key == "behind":
+        if on:
+            L["behind"] = True
+            if L.get("follow") != "face":
+                L["follow"] = "camera"
+        else:
+            L.pop("behind", None)
+            if L.get("follow") == "camera":
+                L.pop("follow")
+    elif key == "glass":
+        if on:
+            L["glass"], L["shadow"] = True, True
+        else:
+            L.pop("glass", None)
+            L.pop("shadow", None)
+    elif key == "guard":
+        if on:
+            L["guard"] = True
+        else:
+            L.pop("guard", None)
+    else:
+        if on:
+            L["follow"] = "face"
+        elif L.get("follow") == "face":
+            L.pop("follow")
+            if L.get("behind"):
+                L["follow"] = "camera"
+    if any(L.get(k) for k in ("behind", "glass", "guard", "follow")):
+        L["match"] = True
+    else:
+        L.pop("match", None)
+
+
 def _gtrim(P: dict, L: dict, side: str, by: int, done: list[str], fps: float) -> None:
     if by == 0:
         return
@@ -1156,6 +1225,10 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
             elif op == "gtrim":
                 _gtrim(P, _layer(P, str(o["layer"])), "start" if o.get("side") == "start" else "end", int(o["by"]),
                        done, fps)
+            elif op == "gfit":
+                L = _layer(P, str(o["layer"]))
+                _gfit(L, str(o.get("key")), bool(o.get("value")))
+                done.append(f"{L['id']}: {o.get('key')} {'on' if o.get('value') else 'off'}")
             elif op == "gdelete":
                 L = _layer(P, str(o["layer"]))
                 f = _graphic_folder(L) if L.get("file") else None
@@ -1182,6 +1255,7 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                     raise EditError("; ".join(bad))
                 L = {"type": "overlay", "id": lid, "file": str(folder / f"{lid}.mov"), "start": f,
                      "end": min(N - 1, f + ln - 1), "blend": "normal", NEW_KEY: {"template": tid, "values": vals}}
+                L.update(in_shot(folder, P))                # (0.6.1: behind you / glass / on your face, as it was made)
                 P["layers"].append(L)                       # over everything
                 done.append(f"{lid}: the template {tid} added at {_span(L, fps)}")
             elif op in FX_OPS:
@@ -1536,6 +1610,19 @@ def selfcheck() -> dict:
              and st[0]["frames"] == 50 and st[0]["values"][dk] == "Hello"
              and lay(P, "add1")["file"].replace("\\", "/").endswith("n7_01_lower-third/n7_01_lower-third.mov")
              and NEW_KEY not in lay(P, "add1"))
+        P, _, _ = apply(plan(), ops[:1] + [{"op": "gfit", "layer": "add1", "key": "behind", "value": True},
+                                           {"op": "gfit", "layer": "add1", "key": "pin", "value": True},
+                                           {"op": "gfit", "layer": "add1", "key": "behind", "value": False}], copies=False)
+        L1 = lay(P, "add1")
+        a = (L1.get("follow"), L1.get("match"), "behind" in L1)
+        P, _, _ = apply(P, [{"op": "gfit", "layer": "add1", "key": "pin", "value": False},
+                            {"op": "gfit", "layer": "add1", "key": "glass", "value": True}], copies=False)
+        L1 = lay(P, "add1")
+        g = next(x for x in state(P)["graphics"] if x["id"] == "add1")
+        case("a graphic part of the shot (gfit): behind me = moves with the camera, pinned = with the face, the "
+             "footage's grain with either; glass + its shadow; the state shows the switches",
+             a == ("face", True, False) and L1.get("glass") and L1.get("shadow") and "follow" not in L1
+             and L1.get("match") and g["fit"] == {"behind": False, "glass": True, "guard": False, "pin": False})
     else:
         case("the lower-third template is there (tools\\overlays\\motion\\lower-third)", False)
     P, _, _ = apply(plan(), [{"op": "sfxadd", "f": 120, "kind": "pop", "db": -3},

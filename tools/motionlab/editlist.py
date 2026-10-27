@@ -12,8 +12,12 @@ cut-sheet), whatever the lines before it do; cuts are applied last.
     hold f380-f404                      the picture under f380 freezes until f404 (the sound goes on)
     caption clean_box [script script-005]   captions over the whole edit: the clips' words (speech.py) moved through
                                         the edit, one caption per script line in its own words when a script is named
-    graphic <template> at f1524 for 48 [land <track>] [text="..." color=#ffd400 ...]   a template's copy as an overlay
+    graphic <template> at f1524 for 48 [land <track>] [text="..." color=#ffd400 ...] [behind | glass | guard | pin |
+        plain]   a template's copy as an overlay - over a person the way its template.json "in_shot" says (a word
+        behind you, a glass card, brackets on the face; "plain" = pasted on top), the words add to it (compose.py)
     sfx whoosh at f300 | sfx pop on punch-ins | sfx whoosh on cuts      the plan's own sound cues
+    effect lean-in at f300              one of the Editor's effects at a frame, as it adds them (motionlab\\edfx ADD:
+                                        lean-in, slow-push, spotlight, punch-in, push-in, shake, flash, light-leak ...)
     layer {"type": "solid", ...}        any plan layer as JSON (the way out for a one-off)
 
 Pure plan changes here; draft_edit.py runs the tools (overlay.py, speech) for caption / graphic lines and cuts the
@@ -57,10 +61,14 @@ def parse(text: str) -> list[dict]:
                 ops.append({"op": "caption", "preset": m[1], "script": m[2], "line": n})
             elif (m := re.fullmatch(rf"graphic ([\w.-]+) at {_F} for (\d+)(?: land (\S+))?(.*)", ln)):
                 vals = dict(re.findall(r'(\w+)=("[^"]*"|\S+)', m[5] or ""))
+                bare = re.sub(r'\w+=("[^"]*"|\S+)', " ", m[5] or "").split()     # 0.6.1: in the shot
                 ops.append({"op": "graphic", "id": m[1], "f": int(m[2]), "len": int(m[3]), "land": m[4],
-                            "values": {k: v.strip('"') for k, v in vals.items()}, "line": n})
+                            "values": {k: v.strip('"') for k, v in vals.items()}, "line": n,
+                            "fit": [w for w in bare if w in ("behind", "glass", "guard", "pin", "plain")]})
             elif (m := re.fullmatch(rf"sfx (\w+) at {_F}", ln)):
                 ops.append({"op": "sfx", "kind": m[1], "f": int(m[2]), "line": n})
+            elif (m := re.fullmatch(rf"effect ([\w-]+) at {_F}", ln)):
+                ops.append({"op": "effect", "kind": m[1].replace("-", "_"), "f": int(m[2]), "line": n})
             elif (m := re.fullmatch(r"sfx (\w+) on (punch-ins|cuts|graphics)", ln)):
                 ops.append({"op": "sfx_on", "kind": m[1], "on": m[2], "line": n})
             elif ln.startswith("layer "):
@@ -172,6 +180,9 @@ def move_curves(L: dict, fn) -> None:
     if isinstance(L.get("anchor"), list):           # (2026-10-26: a shake's frames stayed behind a moved shot)
         for a in L["anchor"]:
             one(a)
+    if isinstance(L.get("room"), dict):             # (2026-10-27: a spotlight's / a melting room's keys)
+        for k in ("dim", "blur", "grey"):
+            one(L["room"].get(k))
 
 
 def _shift(L: dict, d: int) -> dict:
@@ -246,6 +257,13 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
         elif o["op"] == "sfx":
             P["cues"].append({"f": o["f"], "kind": o["kind"], "what": f"list line {o['line']}"})
             done.append(f"sfx {o['kind']} at f{o['f']}")
+        elif o["op"] == "effect":                   # one of the Editor's effects (motionlab\edfx), as it adds them
+            from . import edfx as FX
+            try:
+                fid = FX.add(P, o["kind"], o["f"])
+            except FX.FxError as e:
+                raise ListError(f"line {o['line']}: {e}") from None
+            done.append(f"effect {o['kind']} at f{o['f']} ({fid})")
         elif o["op"] == "layer":
             P["layers"].append(o["layer"])
             done.append(f"layer {o['layer'].get('id', o['layer']['type'])} f{o['layer'].get('start')}-"

@@ -1,0 +1,18 @@
+{
+ "name": "message-stack",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((4 + i * min(14, 56 / max(1, parts(messages) - 1))) * fps / 30)",
+   "repeat": "parts(messages)",
+   "kind": "pop",
+   "from": 700,
+   "to": 1500,
+   "db": -2,
+   "what": "a message pops in"
+  }
+ ]
+}

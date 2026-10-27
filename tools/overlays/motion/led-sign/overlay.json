@@ -1,0 +1,28 @@
+{
+ "name": "led-sign",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "click",
+   "level": "tick",
+   "what": "the lights drop (a switch)"
+  },
+  {
+   "f": "start + round(4 * fps / 30)",
+   "kind": "crackle",
+   "dur": "0.7",
+   "db": -4,
+   "what": "the sign fizzes on, letter by letter"
+  },
+  {
+   "f": "frames - round(14 * fps / 30)",
+   "kind": "click",
+   "level": "tick",
+   "what": "the sign switches off"
+  }
+ ]
+}

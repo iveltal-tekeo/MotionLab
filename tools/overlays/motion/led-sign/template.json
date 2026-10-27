@@ -1,0 +1,84 @@
+{
+ "name": "LED sign behind you",
+ "kind": "text",
+ "category": "Social",
+ "what": "A glowing dot-matrix LED sign on the wall behind you: the room’s lights drop with a flicker, the sign types itself out letter by letter (each letter flicking on) with a soft bloom, hums while it holds, then flickers off and the lights come back. 1-3 lines. The Editor puts it behind the person and moves it with the camera.",
+ "use_for": [
+  "talking head",
+  "podcast",
+  "on air",
+  "studio",
+  "topic",
+  "hook",
+  "night",
+  "neon",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "led",
+  "neon",
+  "sign",
+  "glow",
+  "behind",
+  "in shot",
+  "dot matrix",
+  "typed",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of a common in-shot effect for talking-head videos: a glowing LED sign that types itself out behind the speaker (2026-10-27)",
+ "in_shot": {
+  "behind": true,
+  "follow": "camera",
+  "match": true
+ },
+ "motion": "f0-f8 the room's lights drop with a flicker (when dim is on) and the unlit panel of dots fades up (f0-f5); from f4 the letters light one after another (2.2 f apart at most, all lit within ~38 f), each on / off / on in 3-5 f, some twice; the hold hums (every dot shimmers) and one letter drops out twice for a frame mid-hold; the last 14 f the sign flickers and switches off (f-14 to f-7), the panel fades and the lights come back",
+ "tracks": [
+  {
+   "name": "lights drop",
+   "what": "the room behind dims with a flicker",
+   "start_f": 0,
+   "length_f": 9,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "letters light",
+   "what": "the sign types itself out, each letter flicking on",
+   "start_f": 4,
+   "length_f": 16,
+   "easing": "steps (flicker)"
+  },
+  {
+   "name": "switch off",
+   "what": "the sign flickers and goes out, the lights come back",
+   "start_f": 136,
+   "length_f": 13,
+   "easing": "steps, then S-curve"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  2,
+  4,
+  6,
+  9,
+  13,
+  20,
+  60,
+  92,
+  137,
+  139,
+  142,
+  146,
+  149
+ ]
+}

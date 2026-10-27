@@ -1,0 +1,30 @@
+{
+ "name": "Settings toggles",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "A phone-settings card of glass under your chin: it pops in, then its switches flip on one after another - each row lights up as if pressed, the knob slides with a stretch and the track fills with colour and glows; it floats while it holds, a band of light crosses the glass, and it sinks away at the end.",
+ "use_for": ["settings", "habits", "routine", "turn on", "features", "checklist", "talking head", "glass", "ui", "short form"],
+ "tags": ["toggle", "switch", "settings", "glass", "frosted", "ui", "card", "list", "talking head"],
+ "learned_from": [],
+ "origin": "Rebuilt after the apple-toggles effect of claude-video-effects (MIT): a settings card whose switches turn on one by one - MotionLab's own code, a glass card made part of the shot",
+ "motion": "f0-f11 the card pops in from 60 % with a small overshoot, rising 43 px (seen within 3 f); the switches flip from f14, one every gap (12) frames: a press lights the row (3 f in, 10 f out), the knob slides 7 f (slow end) stretching 1.32x mid-way while the track fills with the accent and glows; it floats 3 px while it holds; a band of light crosses the glass 24 f (S-curve) after the last flip; the last 9 f it sinks 30 px and fades (accelerating)",
+ "tracks": [
+  {"name": "card in", "what": "the glass card pops in, rising into place", "start_f": 0, "length_f": 11, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "switch 1", "what": "the first switch flips on", "start_f": 14, "length_f": 7, "easing": "decelerating (slow end)"},
+  {"name": "switch 2", "what": "the second switch flips on", "start_f": 26, "length_f": 7, "easing": "decelerating (slow end)"},
+  {"name": "switch 3", "what": "the third switch flips on", "start_f": 38, "length_f": 7, "easing": "decelerating (slow end)"},
+  {"name": "sheen", "what": "a band of light crosses the glass", "start_f": 51, "length_f": 24, "easing": "S-curve"},
+  {"name": "card out", "what": "the card sinks away and fades", "start_f": 111, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round((20 + max(1, min(6, parts(rows))) * max(3, gap)) * fps / 30)",
+ "min_why": "the last switch has to flip on (and be seen on) before it ends",
+ "in_shot": {"glass": true, "shadow": true, "guard": true, "match": true},
+ "core_points": 3,
+ "text_slots": ["rows"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 70,
+ "check_frames": [0, 2, 5, 9, 16, 19, 30, 45, 60, 70, 112, 116]
+}

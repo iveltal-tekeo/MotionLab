@@ -1,0 +1,112 @@
+{
+ "name": "Message stack",
+ "kind": "chat",
+ "category": "Social",
+ "what": "Chat notifications pop in one after another, creamy glass bubbles with an app icon, a title line and the message; each lands with a soft glow and the newest pushes the older ones up, stacking above the bottom of the frame. Over a video the real footage is frosted under each bubble.",
+ "use_for": [
+  "messages",
+  "notifications",
+  "reactions",
+  "comments",
+  "social proof",
+  "dms",
+  "talking head",
+  "story",
+  "short form"
+ ],
+ "tags": [
+  "chat",
+  "messages",
+  "notification",
+  "stack",
+  "glass",
+  "frosted",
+  "glow",
+  "ui",
+  "talking head",
+  "list"
+ ],
+ "learned_from": [],
+ "origin": "A MotionLab original for a common need (messages from viewers stacking up over a talking head), rebuilt in our HyperFrames way from the look and motion of an MIT-licensed Python effect (claude-video-effects, messages / msg_bubble); 2026-10-27",
+ "motion": "a message pops in every 14 frames from f4 (closer when there are more than 5: all of them within 56 frames): it rises 26 px and grows from 0.82 (back.out, 9 f), fading in over 4 f, with a soft glow that blooms in 3 f and settles over 19 f; each newer one pushes the older ones up by one bubble and gap (power3.out, 8 f), so the newest sits at the bottom of the stack; older ones pushed past the top fade; in the hold the bubbles drift 2 px out of step and the glow breathes; at the end they sink 30 px and fade (power2.in, 8 f). With the default four messages: pops at f4, f18, f32, f46.",
+ "tracks": [
+  {
+   "name": "message 1",
+   "what": "the first message pops in with a glow",
+   "start_f": 4,
+   "length_f": 9,
+   "easing": "back.out"
+  },
+  {
+   "name": "message 2",
+   "what": "the second pops in under it and pushes it up",
+   "start_f": 18,
+   "length_f": 9,
+   "easing": "back.out (the push power3.out, 8 f)"
+  },
+  {
+   "name": "message 3",
+   "what": "the third pops in and pushes the stack up",
+   "start_f": 32,
+   "length_f": 9,
+   "easing": "back.out (the push power3.out, 8 f)"
+  },
+  {
+   "name": "message 4",
+   "what": "the fourth pops in and pushes the stack up",
+   "start_f": 46,
+   "length_f": 9,
+   "easing": "back.out (the push power3.out, 8 f)"
+  },
+  {
+   "name": "hold",
+   "what": "the bubbles drift out of step, the glow breathes",
+   "start_f": 55,
+   "length_f": 56,
+   "easing": "none"
+  },
+  {
+   "name": "out",
+   "what": "the stack sinks and fades",
+   "start_f": 111,
+   "length_f": 8,
+   "easing": "power2.in"
+  }
+ ],
+ "min_frames": "round((4 + min(14 * (parts(messages) - 1), 56) + 37) * fps / 30)",
+ "min_why": "every message pops in and is read a moment before the stack fades",
+ "core_points": 4,
+ "text_slots": [
+  "messages",
+  "title"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "in_shot": {
+  "glass": true,
+  "shadow": true,
+  "guard": true,
+  "match": true
+ },
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  2,
+  5,
+  8,
+  13,
+  19,
+  23,
+  33,
+  40,
+  47,
+  51,
+  56,
+  80,
+  113,
+  119
+ ]
+}

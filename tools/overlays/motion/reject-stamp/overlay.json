@@ -1,0 +1,23 @@
+{
+ "name": "reject-stamp",
+ "frames": 75,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whip",
+   "dur": "0.2",
+   "from": 2600,
+   "to": 700,
+   "db": -6,
+   "what": "the stamp falls"
+  },
+  {
+   "f": "start + round(6 * fps / 30)",
+   "kind": "impact",
+   "what": "the stamp slams down"
+  }
+ ]
+}

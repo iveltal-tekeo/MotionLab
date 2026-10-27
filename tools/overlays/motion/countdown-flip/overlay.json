@@ -1,0 +1,30 @@
+{
+ "name": "countdown-flip",
+ "frames": 105,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "pop",
+   "db": -2,
+   "what": "the flip clock pops in"
+  },
+  {
+   "f": "start + round(((i + 1) * tick + 4) * fps / 30)",
+   "repeat": "count_from - 1",
+   "kind": "click",
+   "level": "tick",
+   "seed": "4100 + i",
+   "what": "a flap falls"
+  },
+  {
+   "f": "frames - round(11 * fps / 30)",
+   "kind": "air",
+   "dur": "0.3",
+   "db": -6,
+   "what": "the clock shrinks away"
+  }
+ ]
+}

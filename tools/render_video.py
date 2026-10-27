@@ -321,6 +321,8 @@ def main() -> int:
         ensure(plan, int(a.sheet.split(":")[0]), int(a.sheet.split(":")[1]))
     else:
         ensure(plan, *(a.range if a.range else (None, None)))
+    from motionlab import person                       # 0.6.1: the person under graphics that go behind / follow
+    person.ensure(plan, log)                           # the face (made once per clip, from its light cache)
     R = Renderer(plan)
     log(f"plan {name}: {len(R.layers)} layers, {R.N} frames, set-up {time.time() - t0:.1f}s")
     if a.stills:

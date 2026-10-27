@@ -2643,6 +2643,9 @@ a.brvid:hover { text-decoration: none; }
 .edlayers .edclip, .edgfx, .edsolid { position: absolute; overflow: hidden; pointer-events: none; }
 .edlayers .edclip video, .edlayers .edclip img { width: 100%; height: 100%; display: block; }
 .edgfx iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: transparent; pointer-events: none; }
+/* a graphic not on screen keeps its layout: a page measures itself when it loads (word-behind centres its word by its
+   width) and a display:none frame measured 0 - the word sat half its width right (2026-10-27) */
+.edgfx[hidden] { display: block !important; visibility: hidden; }     /* (!important: the global [hidden] rule has it) */
 .edwait { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 9999; background: #000d; border-radius: 6px;
   padding: 6px 10px; font-size: 12.5px; color: var(--ed1); }
 .edtrans { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
@@ -2810,6 +2813,22 @@ a.brvid:hover { text-decoration: none; }
   font: 12.5px var(--ui); font-variant-numeric: tabular-nums; cursor: pointer; }
 .edchips button.on { background: var(--ed1); border-color: var(--ed1); color: #061018; font-weight: 700; }
 .edchips button:disabled { opacity: .4; cursor: default; }
+/* a keyframe's ease as curve tiles + the chart with two handles (2026-10-27, "basic flow keyframe charts") */
+.edeases { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 6px; }
+.edease { display: flex; flex-direction: column; align-items: center; gap: 1px; background: #141a28; border: 1px solid var(--edline);
+  color: var(--muted); border-radius: 7px; padding: 4px 2px 3px; font: 10.5px var(--ui); cursor: pointer; line-height: 1.15; text-align: center; }
+.edease:hover { border-color: var(--ed1); color: var(--text); }
+.edease.on { border-color: var(--ed1); color: var(--text); background: color-mix(in srgb, var(--ed1) 16%, #141a28); }
+.edeico .edeax { stroke: var(--edline); stroke-width: 1.5; fill: none; }
+.edeico .edecv { stroke: var(--ed1); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.edchart { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 2px 0 8px; }
+.edchart svg { touch-action: none; overflow: visible; }
+.edchart .edcbox { fill: #0c1019; stroke: var(--edline); }
+.edchart .edcgrid { stroke: var(--edline); stroke-dasharray: 3 4; fill: none; }
+.edchart .edccv { stroke: var(--ed1); stroke-width: 3; fill: none; stroke-linecap: round; }
+.edchart .edchl { stroke: var(--ed2); stroke-width: 1.5; }
+.edchart .edchd { fill: var(--ed2); stroke: #fff; stroke-width: 2; cursor: grab; }
+.edchart .edchd:active { cursor: grabbing; }
 .edbtns { margin: 12px 0 8px; gap: 6px; }
 .eddanger:not(:disabled):hover { border-color: var(--red); color: var(--red); }
 .edset { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 8px; margin: 6px 0; font-size: 12.5px; }

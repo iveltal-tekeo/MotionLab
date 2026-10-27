@@ -1,0 +1,31 @@
+{
+ "name": "word-behind",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2400,
+   "to": 600,
+   "db": -10,
+   "what": "the letters drop in"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "thump",
+   "db": -8,
+   "what": "the word lands behind you"
+  },
+  {
+   "f": "frames - round(15 * fps / 30)",
+   "kind": "air",
+   "dur": "0.45",
+   "db": -6,
+   "what": "the letters lift away"
+  }
+ ]
+}

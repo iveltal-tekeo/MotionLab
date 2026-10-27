@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "line1", "type": "string", "label": "First line (bold, no box; empty = none)", "default": "Stop doing this"},
+  {"id": "line2", "type": "string", "label": "Second line (in the box; empty = none)", "default": "every morning."},
+  {"id": "font_role", "type": "enum", "label": "Font", "default": "body", "options": [{"value": "body", "label": "The look’s text font, bold"}, {"value": "display", "label": "The look’s headline font"}]},
+  {"id": "line1_colour", "type": "enum", "label": "First line colour", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "signal", "label": "Signal (accent)"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "box_colour", "type": "enum", "label": "Box colour (its words get a colour that reads on it)", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "signal", "label": "Signal (accent)"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "gap", "type": "number", "label": "Frames between words", "default": 3, "min": 1, "max": 30, "step": 1},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Top of the headline (% of the height)", "default": 10, "min": 0, "max": 90, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "headline-box" (2026-10-27): a two-line headline near the top, above the head. The first
+     line's words pop in one after another (from f0, one every `gap` frames: 3 f to show, 7 f to settle from 70 % with
+     a small overshoot, rising a quarter of the size); then the second line's box opens (5 f) and grows word by word
+     to the right (5 f S-curve per word) as its dark words pop in inside it; the headline pushes in 3 % while it
+     holds; the last 8 frames the box folds back to its left edge and the words fade up. Over a video with a person
+     it never covers the face and takes the footage's softness and grain (template.json "in_shot"). After the
+     "headline-box" / "split-headline" effects of claude-video-effects (MIT); MotionLab's own code.
+     Size-independent, look-aware. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; left: 0; text-align: center; white-space: nowrap; font-synthesis: none; }
+  .w { display: inline-block; transform-origin: 50% 80%; }
+  #hbox { position: absolute; left: 0; top: 0; transform-origin: 0% 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="block" class="abs"><div id="hbox"></div><div id="hl1" class="ln"></div><div id="hl2" class="ln"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eSine = x => 0.5 - 0.5 * Math.cos(Math.PI * c01(x));               // a gentle S-curve (the slow push)
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.4 * x * x * x + 1.4 * x * x; };                // slow end, a small overshoot
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const S0 = Math.round(V.start);
+  const light = lum(L.paper) >= lum(L.ink) ? L.paper : L.ink, dark = light === L.paper ? L.ink : L.paper;
+
+  // ---- the preview background (only when painted: over a video it is see-through)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.5 * W}px ${0.22 * H}px at ${0.2 * W}px ${0.28 * H}px, ${rgba(L.mustard, 0.55)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.42 * W}px ${0.2 * H}px at ${0.84 * W}px ${0.6 * H}px, ${rgba(L.paper, 0.3)}, ${rgba(L.paper, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.6 * W}px ${0.18 * H}px at ${0.45 * W}px ${0.9 * H}px, ${rgba(L.signal, 0.28)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the words: up to 124 px at 1080, both lines one size (as hers), fitted to 86 % of the width
+  const fam = V.font_role === "display" ? V.display_font : V.body_font;
+  const famCss = V.font_role === "display" ? `'${fam}', Georgia, serif` : `'${fam}', 'Segoe UI', sans-serif`;
+  const weight = fw(fam, 800);
+  const col1 = { light, signal: L.signal, mustard: L.mustard }[V.line1_colour] || light;
+  const boxC = { light, signal: L.signal, mustard: L.mustard, deep: L.deep }[V.box_colour] || light;
+  const boxT = lum(boxC) > 0.5 ? (lum(dark) < 0.5 ? dark : "#141414") : (lum(light) > 0.5 ? light : "#ffffff");
+  const words = t => String(t || "").trim().split(/\s+/).filter(Boolean);
+  const w1 = words(V.line1), w2 = words(V.line2);
+  if (!w1.length && !w2.length) w1.push("Headline");
+  const block = q("block"), l1 = q("hl1"), l2 = q("hl2"), box = q("hbox");
+  Object.assign(block.style, { width: `${W}px`, height: `${H}px` });
+  let S = 124 * U * V.size;
+  const fill = (el, ws, color, shadow) => {
+    el.innerHTML = "";
+    return ws.map((w, i) => {
+      const sp = document.createElement("span"); sp.className = "w"; sp.textContent = w;
+      el.appendChild(sp);
+      if (i < ws.length - 1) el.appendChild(document.createTextNode(" "));
+      Object.assign(sp.style, { color, textShadow: shadow });
+      return sp;
+    });
+  };
+  const sp1 = fill(l1, w1, col1, `0 ${3 * U}px ${16 * U}px ${rgba("#000000", 0.45)}`);
+  const sp2 = fill(l2, w2, boxT, "none");
+  let padX = 0, boxH = 0, y2 = 0, top0 = 0;
+  const layout = () => {
+    [l1, l2].forEach(el => Object.assign(el.style, { width: `${W}px`, fontFamily: famCss, fontWeight: String(weight), fontSize: `${S}px`, lineHeight: "1.18", letterSpacing: "-0.01em" }));
+    padX = S * 0.2; boxH = S * 1.24;
+    const lead = w1.length ? S * 1.32 : 0;
+    const blockH = lead + (w2.length ? boxH : S * 1.18);
+    top0 = Math.min(H - blockH - H * 0.04, Math.max(H * 0.04, H * V.y / 100));
+    l1.style.top = `${top0}px`;
+    y2 = top0 + lead;
+    Object.assign(l2.style, { top: `${y2}px`, height: `${boxH}px`, lineHeight: `${boxH}px` });   // the line IS the box's height: clipped to it
+    Object.assign(box.style, { top: `${y2}px`, height: `${boxH}px`, background: boxC, borderRadius: `${Math.min(S * 0.3, L.radius * 0.6)}px`,
+      boxShadow: `0 ${4 * U}px ${18 * U}px ${rgba("#000000", 0.22)}` });
+  };
+  layout();
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame"; e = frames at 30 fps before the end)
+  const GAP = Math.max(1, V.gap), T2 = w1.length ? w1.length * GAP + 3 : 0;
+  const at1 = i => i * GAP, at2 = i => T2 + 2 + i * GAP;
+  const allIn = w2.length ? at2(w2.length - 1) + 7 : at1(w1.length - 1) + 7;
+  const leave = V.leave && (FRAMES - S0) * 30 / FPS - 8 > allIn + 6;
+  let edges = [];                                        // the box's right edge after each word (measured)
+  const pop = (sp, d0, d) => {                           // a word: shows in 3 f, settles in 7 f from 70 % (a small overshoot)
+    const k = d - d0;
+    sp.style.opacity = c01((k + 0.5) / 3).toFixed(3);
+    sp.style.transform = `translateY(${((1 - eOut(k / 7)) * S * 0.25).toFixed(2)}px) scale(${(0.7 + 0.3 * eBack(k / 7)).toFixed(4)})`;
+  };
+  function render(t) {
+    const d = (t - S0 / FPS) * 30, e = (FRAMES / FPS - t) * 30;
+    block.style.visibility = d >= 0 ? "visible" : "hidden";
+    if (d < 0) return;
+    sp1.forEach((sp, i) => pop(sp, at1(i), d));
+    sp2.forEach((sp, i) => pop(sp, at2(i), d));
+    // the box: opens on its first word (5 f), then grows to the right word by word (5 f S-curve each)
+    if (w2.length && edges.length) {
+      const x0 = edges[0][0];
+      let right = edges[0][1];
+      for (let i = 1; i < edges.length; i++) right += (edges[i][1] - edges[i - 1][1]) * eIO((d - at2(i) + 1) / 5);   // one frame ahead of its word
+      const op = eOut((d - T2) / 5);
+      let fold = 1;
+      if (leave && e < 8) fold = 1 - eIn(1 - e / 8);
+      box.style.left = `${x0.toFixed(2)}px`;
+      box.style.width = `${Math.max(0, right - x0).toFixed(2)}px`;
+      box.style.opacity = d >= T2 ? "1" : "0";
+      box.style.transform = `scale(${(op * fold).toFixed(4)}, ${(0.3 + 0.7 * op).toFixed(4)})`;
+      // its words show only inside it: the box wipes them in and folds them away (dark words never sit on the footage)
+      const vis = d >= T2 ? x0 + (right - x0) * op * fold : x0;
+      l2.style.clipPath = `inset(0px ${Math.max(0, W - vis).toFixed(1)}px 0px ${Math.max(0, x0).toFixed(1)}px)`;
+    }
+    // the slow push while it holds; out: the words fade up (8 f)
+    let sc = 1 + 0.03 * eSine((d - allIn) / Math.max(20, (FRAMES - S0) * 30 / FPS - allIn)), lift = 0, op = 1;
+    if (leave && e < 8) { const x = eIn(1 - e / 8); lift = -24 * U * V.size * x; op = 1 - x; }
+    block.style.transformOrigin = `${W / 2}px ${top0}px`;
+    block.style.transform = `translateY(${lift.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    l1.style.opacity = l2.style.opacity = op.toFixed(3);
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the lines are fitted with the real font and the box measured word by word
+  (document.fonts && document.fonts.load ? Promise.all([400, 700, 800, 900].map(w => document.fonts.load(`${w} 100px "${fam}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    [...sp1, ...sp2].forEach(sp => { sp.style.transform = "none"; });
+    const wide = (sps, extra) => sps.length ? sps[sps.length - 1].offsetLeft + sps[sps.length - 1].offsetWidth - sps[0].offsetLeft + extra : 0;
+    const need = Math.max(wide(sp1, 0), wide(sp2, 2 * S * 0.2));
+    if (need > W * 0.86) { S *= W * 0.86 / need; layout(); }
+    edges = sp2.map(sp => [sp2[0].offsetLeft - padX, sp.offsetLeft + sp.offsetWidth + padX]);
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

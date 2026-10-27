@@ -1,0 +1,38 @@
+{
+ "name": "scribble-callout",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "air",
+   "dur": "0.55",
+   "db": 2,
+   "what": "the marker circles the head"
+  },
+  {
+   "f": "start + round(13 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.22",
+   "from": 1800,
+   "to": 900,
+   "db": -6,
+   "what": "the arrow is drawn"
+  },
+  {
+   "f": "start + round(21 * fps / 30)",
+   "kind": "pop",
+   "db": -3,
+   "what": "the note pops in"
+  },
+  {
+   "f": "frames - round(10 * fps / 30)",
+   "kind": "air",
+   "dur": "0.35",
+   "db": -4,
+   "what": "the doodles wipe away"
+  }
+ ]
+}

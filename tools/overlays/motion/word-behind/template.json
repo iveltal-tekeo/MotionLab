@@ -1,0 +1,78 @@
+{
+ "name": "Word behind you",
+ "kind": "text",
+ "category": "Social",
+ "what": "A giant word stands in the room behind you: its letters drop in one after another with a small settle, it drifts slowly larger while it holds (optionally glowing, the room dimmed), then the letters lift away. The Editor puts it behind the person and moves it with the camera.",
+ "use_for": [
+  "talking head",
+  "key word",
+  "topic",
+  "hook",
+  "title behind you",
+  "vlog",
+  "short form",
+  "emphasis"
+ ],
+ "tags": [
+  "text",
+  "word",
+  "behind",
+  "depth",
+  "in shot",
+  "giant word",
+  "glow",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of a common in-shot effect for talking-head videos: a giant word behind the speaker (2026-10-27)",
+ "in_shot": {
+  "behind": true,
+  "follow": "camera",
+  "match": true
+ },
+ "motion": "f1-f22 the letters drop from 0.42 em above, one every 1.6 f at most, 15 f each (decelerating with a small overshoot, blurred while they fall); the room dims f0-f9 when dim is on; the word drifts 3.5 % larger and 10 px higher over the hold (S-curve), its glow breathing every 48 f; the last 12-16 f the letters lift 0.3 em and fade (accelerating), one after another",
+ "tracks": [
+  {
+   "name": "letters drop",
+   "what": "the letters drop in one after another and settle",
+   "start_f": 1,
+   "length_f": 22,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "drift",
+   "what": "the word drifts slowly larger and higher",
+   "start_f": 8,
+   "length_f": 125,
+   "easing": "S-curve"
+  },
+  {
+   "name": "lift away",
+   "what": "the letters lift and fade one after another",
+   "start_f": 135,
+   "length_f": 14,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "scene": false,
+ "overlay": true,
+ "general": 0.6,
+ "thumb_f": 75,
+ "check_frames": [
+  0,
+  2,
+  5,
+  9,
+  14,
+  22,
+  75,
+  132,
+  138,
+  143,
+  149
+ ]
+}

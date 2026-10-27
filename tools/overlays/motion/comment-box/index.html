@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The comment typed in", "default": "LINK"},
+  {"id": "name", "type": "string", "label": "Name on the posted comment", "default": "you"},
+  {"id": "when", "type": "string", "label": "Time beside the name", "default": "now"},
+  {"id": "hint", "type": "string", "label": "Text in the empty field", "default": "Add a comment…"},
+  {"id": "likes", "type": "string", "label": "Likes beside the heart (empty = none)", "default": "1"},
+  {"id": "send_colour", "type": "enum", "label": "Send button colour", "default": "deep", "options": [{"value": "deep", "label": "Deep"}, {"value": "signal", "label": "Signal"}, {"value": "ink", "label": "Ink"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "heart", "type": "color", "label": "Heart colour", "default": "#FF3355"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.5, "max": 2, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "The bar down the frame (% of the height)", "default": 82, "min": 10, "max": 96, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "Drops away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a backdrop behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "comment-box" (2026-10-27): a social comment bar rises in at the bottom (f0-f14), the
+     caret blinks in the empty field, the comment types itself in letter by letter (from f14, at most 36 frames), the
+     send arrow lights up, is tapped (a dip and a ripple, the arrow shoots up) and the comment posts: a bubble with the
+     name, the time and the words rises from the field to just above the bar (12 f, a small overshoot); a heart pops on
+     it with a burst of dots and a like count, then beats gently while the caret keeps blinking in the empty field; at
+     the end both drop away. Rebuilt in MotionLab's own HTML from the look of an MIT-licensed Python effect (a comment
+     bar typed and posted on a talking-head video). No platform's logo. Look-aware. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ui { position: absolute; font-synthesis: none; }
+  .av { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #field { position: absolute; display: flex; align-items: center; white-space: nowrap; }
+  #caret { display: inline-block; flex: none; }
+  #hint { flex: none; }
+  #send, #sendon, #ripple { position: absolute; border-radius: 50%; }
+  #arrow { position: absolute; overflow: visible; }
+  #post { display: flex; align-items: center; white-space: nowrap; }
+  #pcol { display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1 1 auto; }
+  #pmeta { display: flex; align-items: baseline; }
+  #hbox { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #hbox svg { overflow: visible; }
+  #hfull { position: absolute; }
+  .spark { position: absolute; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="post" class="ui">
+      <div id="pav" class="av" style="position: relative; flex: none"></div>
+      <div id="pcol"><div id="pmeta"><span id="pname"></span><span id="pwhen"></span></div><div id="ptext"></div></div>
+      <div id="hbox"><svg id="hout" viewBox="0 0 24 24"><path id="hop" d="M12 20.5 C 5 15.5, 2 12, 2 8.2 C 2 5.3, 4.3 3.2, 7.1 3.2 C 9 3.2, 10.9 4.3, 12 6.1 C 13.1 4.3, 15 3.2, 16.9 3.2 C 19.7 3.2, 22 5.3, 22 8.2 C 22 12, 19 15.5, 12 20.5 Z" fill="none" stroke-width="1.9" stroke-linejoin="round"/></svg><svg id="hfull" viewBox="0 0 24 24"><path id="hfp" d="M12 20.5 C 5 15.5, 2 12, 2 8.2 C 2 5.3, 4.3 3.2, 7.1 3.2 C 9 3.2, 10.9 4.3, 12 6.1 C 13.1 4.3, 15 3.2, 16.9 3.2 C 19.7 3.2, 22 5.3, 22 8.2 C 22 12, 19 15.5, 12 20.5 Z"/></svg><div id="hcount"></div><div id="sparks" class="abs"></div></div>
+    </div>
+    <div id="bar" class="ui">
+      <div id="bav" class="av"></div>
+      <div id="field"><span id="typed"></span><span id="caret"></span><span id="hint"></span></div>
+      <div id="send"></div><div id="ripple"></div><div id="sendon"></div>
+      <svg id="arrow" viewBox="0 0 24 24"><path id="arp" d="M12 18.5 V 6 M 6.6 11.4 L 12 6 L 17.4 11.4" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const lum = h => { const [r, g, b] = hex(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const fam = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- the backdrop (only when painted: over a video the footage is the backdrop)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(circle at 28% 30%, ${rgba(L.signal, 0.42)} 0%, transparent 46%), radial-gradient(circle at 78% 64%, ${rgba(L.mustard, 0.34)} 0%, transparent 50%), linear-gradient(180deg, ${L.deep} 0%, ${mix(L.deep, "#000000", 0.45)} 100%)`
+    : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- sizes: the bar 0.9 of the width (at most 960 px at a 1080-px short side), 116 px high
+  const s = Number(V.size) || 1;
+  const BW = Math.min(W - 24 * U, Math.min(0.9 * W, 960 * U) * s), BH = 116 * U * s;
+  const PH = 1.14 * BH, GAP = 0.22 * BH;
+  const cx = Math.min(W - BW / 2 - 12 * U, Math.max(BW / 2 + 12 * U, W * V.x / 100));
+  const cy = Math.min(H - BH / 2 - 12 * U, Math.max(BH / 2 + GAP + PH + 16 * U, H * V.y / 100));
+  const sh = Number(V.shadow);
+  const SH = sh > 0 ? `0 ${10 * sh * U}px ${30 * sh * U}px rgba(0, 0, 0, ${(0.2 + 0.05 * sh).toFixed(2)}), 0 ${2 * U}px ${6 * U}px rgba(0, 0, 0, 0.12)` : "none";
+  const rad = h => Number(V.radius) > 0 ? h / 2 : h * 0.14;
+  const ACC = L[V.send_colour] || L.deep, ON = lum(ACC) < 0.55 ? "#FFFFFF" : "#111111";
+  const GREY = mix(L.paper, L.ink, 0.5);
+  const initial = (Array.from(String(V.name || "").trim())[0] || "Y").toUpperCase();
+  const avatar = (el, d) => {
+    Object.assign(el.style, { width: `${d}px`, height: `${d}px`, background: `linear-gradient(135deg, ${L.signal} 0%, ${L.mustard} 100%)`,
+      fontFamily: fam, fontWeight: String(fw(V.body_font, 700)), fontSize: `${d * 0.46}px`, color: "#FFFFFF", lineHeight: "1" });
+    el.textContent = initial;
+  };
+
+  // ---- the bar: avatar, field (typed + caret + hint), send button
+  const bar = q("bar"), field = q("field"), typed = q("typed"), caret = q("caret"), hint = q("hint");
+  const send = q("send"), sendon = q("sendon"), ripple = q("ripple"), arrow = q("arrow");
+  Object.assign(bar.style, { left: `${cx - BW / 2}px`, top: `${cy - BH / 2}px`, width: `${BW}px`, height: `${BH}px`,
+    borderRadius: `${rad(BH)}px`, background: rgba(L.paper, 0.97), boxShadow: SH, transformOrigin: "50% 100%" });
+  const DA = 0.62 * BH, DS = 0.66 * BH, PADL = 0.19 * BH, PADR = 0.17 * BH;
+  const bav = q("bav");
+  avatar(bav, DA);
+  Object.assign(bav.style, { left: `${PADL}px`, top: `${(BH - DA) / 2}px` });
+  const FX = PADL + DA + 0.2 * BH, FWD = BW - FX - (PADR + DS + 0.2 * BH);
+  let fsF = 0.3 * BH;
+  Object.assign(field.style, { left: `${FX}px`, top: "0px", width: `${FWD}px`, height: `${BH}px`, fontFamily: fam, fontSize: `${fsF}px`,
+    fontWeight: String(fw(V.body_font, 600)), color: L.ink });
+  Object.assign(hint.style, { color: GREY, fontWeight: String(fw(V.body_font, 400)), marginLeft: `${4 * U * s}px` });
+  hint.textContent = String(V.hint || "");
+  Object.assign(caret.style, { width: `${Math.max(2, 3.2 * U * s)}px`, height: `${0.42 * BH}px`, background: ACC, borderRadius: `${2 * U}px`, marginLeft: `${3 * U * s}px` });
+  const SX = BW - PADR - DS, SY = (BH - DS) / 2;
+  Object.assign(send.style, { left: `${SX}px`, top: `${SY}px`, width: `${DS}px`, height: `${DS}px`, background: mix(L.paper, L.ink, 0.1) });
+  Object.assign(sendon.style, { left: `${SX}px`, top: `${SY}px`, width: `${DS}px`, height: `${DS}px`, background: ACC });
+  Object.assign(ripple.style, { left: `${SX}px`, top: `${SY}px`, width: `${DS}px`, height: `${DS}px`, background: ACC });
+  const AS = DS * 0.56;
+  arrow.setAttribute("width", AS); arrow.setAttribute("height", AS);
+  Object.assign(arrow.style, { left: `${SX + (DS - AS) / 2}px`, top: `${SY + (DS - AS) / 2}px` });
+  const arp = q("arp");
+
+  // ---- the posted comment: avatar, name + time, the words, a heart with its count
+  const post = q("post"), pav = q("pav"), pname = q("pname"), pwhen = q("pwhen"), ptext = q("ptext");
+  const hbox = q("hbox"), hfull = q("hfull"), hout = q("hout"), hcount = q("hcount"), sparks = q("sparks");
+  const PT = cy - BH / 2 - GAP - PH;
+  Object.assign(post.style, { left: `${cx - BW / 2}px`, top: `${PT}px`, height: `${PH}px`, minWidth: `${0.56 * BW}px`, maxWidth: `${BW}px`,
+    padding: `0 ${0.2 * PH}px 0 ${0.17 * PH}px`, gap: `${0.15 * PH}px`, borderRadius: `${Number(V.radius) > 0 ? Math.min(PH / 2, Math.max(10 * U, L.radius * 2.4)) : PH * 0.12}px`,
+    background: rgba(L.paper, 0.97), boxShadow: SH, fontFamily: fam, color: L.ink, transformOrigin: "10% 100%" });
+  avatar(pav, 0.5 * PH);
+  Object.assign(pname.style, { fontSize: `${0.19 * PH}px`, fontWeight: String(fw(V.body_font, 700)) });
+  Object.assign(pwhen.style, { fontSize: `${0.17 * PH}px`, fontWeight: String(fw(V.body_font, 400)), color: GREY, marginLeft: `${0.09 * PH}px` });
+  let fsP = 0.33 * PH;
+  Object.assign(ptext.style, { fontSize: `${fsP}px`, fontWeight: String(fw(V.body_font, 700)), lineHeight: "1.15", marginTop: `${0.03 * PH}px` });
+  pname.textContent = String(V.name || ""); pwhen.textContent = String(V.when || "");
+  ptext.textContent = String(V.text || "");
+  const HS = 0.3 * PH;
+  Object.assign(hbox.style, { width: `${0.42 * PH}px`, height: `${PH}px`, marginLeft: `${0.06 * PH}px` });
+  [hout, hfull].forEach(e => { e.setAttribute("width", HS); e.setAttribute("height", HS); });
+  q("hop").setAttribute("stroke", GREY);
+  q("hfp").setAttribute("fill", V.heart);
+  const HT = V.likes ? (PH - HS - 0.19 * PH) / 2 : (PH - HS) / 2;          // the hearts' top inside the box
+  Object.assign(hfull.style, { left: `${(0.42 * PH - HS) / 2}px`, top: `${HT}px`, transformOrigin: "50% 60%" });
+  Object.assign(hcount.style, { fontSize: `${0.15 * PH}px`, fontWeight: String(fw(V.body_font, 600)), color: GREY, height: `${0.19 * PH}px`, lineHeight: `${0.19 * PH}px` });
+  hcount.textContent = String(V.likes || "");
+  if (!V.likes) hcount.style.display = "none";
+  const SP = [];
+  for (let i = 0; i < 8; i++) {
+    const d = document.createElement("div"); d.className = "spark";
+    const sz = (i % 2 ? 7 : 10) * U * s;
+    Object.assign(d.style, { width: `${sz}px`, height: `${sz}px`, marginLeft: `${-sz / 2}px`, marginTop: `${-sz / 2}px`,
+      background: [V.heart, L.mustard, V.heart, L.signal][i % 4] });
+    sparks.appendChild(d); SP.push(d);
+  }
+
+  // ---- the timing (frames designed at 30 fps; sfx cues in overlay.json use the same formulas)
+  const S = Math.round(V.start), EN = FRAMES * 30 / FPS, EXIT = !!V.exit;
+  const chars = Array.from(String(V.text || "")), n = chars.length;
+  const TS = 14, PER = n ? Math.min(3, 36 / n) : 3, TE = TS + n * PER, TAP = TE + 6, POST = TAP + 2, HEART = POST + 12;
+  const KT = chars.map((c, i) => Math.round(TS + i * PER));                 // the frame each letter appears on
+  const hcx = 0.21 * PH, hcy = HT + HS * 0.55;                                 // the heart's centre inside its box
+
+  function render(t) {
+    const g = (Math.round(t * FPS * 1000) / 1000 - S) * 30 / FPS;
+    hand.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const ex = EXIT ? P(g, EN - 9, EN - 1, "power2.in") : 0, exY = ex * 44 * U * s;
+    // the bar rises in from below (power3.out, f0-f14)
+    const bi = P(g, 0, 14, "power3.out");
+    bar.style.transform = `translate(0px, ${((1 - bi) * 0.12 * H + exY).toFixed(2)}px) scale(${(0.95 + 0.05 * bi).toFixed(4)})`;
+    bar.style.opacity = String((P(g, 0, 4) * (1 - ex)).toFixed(3));
+    // the comment types in, letter by letter; the field clears when it posts
+    const k = g < POST ? KT.filter(f => f <= g + 1e-6).length : 0;
+    const txt = chars.slice(0, k).join("");
+    if (typed.textContent !== txt) typed.textContent = txt;
+    hint.style.display = txt ? "none" : "inline";
+    hint.style.opacity = g >= POST ? String(P(g, POST + 1, POST + 6).toFixed(3)) : "1";
+    // the caret: solid while typing, blinking (8 frames on, 8 off) when the field waits
+    let on;
+    if (g < 4) on = false;
+    else if (n && g >= TS && g < TE + 3) on = true;
+    else on = Math.floor((g < TS ? g - 4 : g - (TE + 3)) / 8) % 2 === 0;
+    caret.style.opacity = on ? "1" : "0";
+    // the send button: lights up with the first letter, dips when tapped (a ripple), the arrow shoots up and comes back
+    const a0 = n ? KT[0] : TAP;
+    const lit = n ? P(g, a0, a0 + 4) * (1 - P(g, POST + 1, POST + 7)) : 0;
+    const pop = n ? Math.sin(Math.PI * P(g, a0, a0 + 8)) * 0.12 : 0;
+    const press = g < TAP ? 0 : g < TAP + 3 ? P(g, TAP, TAP + 3, "power2.in") : 1 - P(g, TAP + 3, TAP + 12, "back.out(3)");
+    const sc = (1 + pop) * (1 - 0.16 * press);
+    sendon.style.opacity = String(lit.toFixed(3));
+    [send, sendon].forEach(e => { e.style.transform = `scale(${sc.toFixed(4)})`; });
+    const rp = P(g, TAP, TAP + 14, "power2.out");
+    ripple.style.opacity = g >= TAP && g < TAP + 14 ? String((0.38 * (1 - rp)).toFixed(3)) : "0";
+    ripple.style.transform = `scale(${(0.7 + 1.4 * rp).toFixed(4)})`;
+    let ay = 0, ao = 1;
+    if (g >= TAP + 2 && g < TAP + 8) { const u = P(g, TAP + 2, TAP + 8, "power2.in"); ay = -0.85 * DS * u; ao = 1 - u; }
+    else if (g >= TAP + 8 && g < TAP + 16) { const u = P(g, TAP + 8, TAP + 16, "power3.out"); ay = 0.5 * DS * (1 - u); ao = u; }
+    arrow.style.transform = `translate(0px, ${ay.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    arrow.style.opacity = String(ao.toFixed(3));
+    arp.setAttribute("stroke", lit > 0.5 ? ON : rgba(L.ink, 0.42));
+    // the posted comment rises from the field to its place (expo.out, a small overshoot in its size), then bobs
+    const pe = P(g, POST, POST + 12, "expo.out"), ps = P(g, POST, POST + 12, "back.out(1.6)");
+    const DY = cy - (PT + PH / 2);
+    const bob = 3 * U * s * Math.sin(2 * Math.PI * (g - POST - 12) / 56) * P(g, POST + 10, POST + 24);
+    post.style.transform = `translate(0px, ${((1 - pe) * DY + bob + exY).toFixed(2)}px) scale(${(0.7 + 0.3 * ps).toFixed(4)})`;
+    post.style.opacity = g < POST ? "0" : String((P(g, POST, POST + 4) * (1 - ex)).toFixed(3));
+    // the heart pops (to 1.3, back.out to 1), the dots burst out; then it beats twice every 36 frames
+    let hs = 0;
+    if (g >= HEART) hs = g < HEART + 5 ? 1.3 * P(g, HEART, HEART + 5, "power2.out") : lerp(1.3, 1, P(g, HEART + 5, HEART + 13, "back.out(2.4)"));
+    if (g >= HEART + 20) { const ph = (g - HEART - 20) % 36; hs *= 1 + 0.09 * Math.exp(-(((ph - 2) / 2) ** 2)) + 0.05 * Math.exp(-(((ph - 8) / 2) ** 2)); }
+    hfull.style.transform = `scale(${hs.toFixed(4)})`;
+    hfull.style.opacity = g >= HEART ? "1" : "0";
+    hout.style.opacity = String((1 - P(g, HEART, HEART + 3)).toFixed(3));
+    const cu = P(g, HEART + 3, HEART + 9, "power3.out");
+    hcount.style.opacity = String(cu.toFixed(3));
+    hcount.style.transform = `translate(0px, ${((1 - cu) * 10 * U * s).toFixed(2)}px)`;
+    hcount.style.color = g >= HEART + 3 ? mix(GREY, V.heart, 0.85) : GREY;
+    const sp = P(g, HEART + 1, HEART + 13, "power3.out"), sa = g >= HEART + 1 && g < HEART + 14 ? 1 - P(g, HEART + 6, HEART + 14) : 0;
+    SP.forEach((d, i) => {
+      const a = (i * 45 + 22.5) * Math.PI / 180, r = HS * lerp(0.45, i % 2 ? 1.5 : 1.85, sp);
+      d.style.transform = `translate(${(hcx + Math.cos(a) * r).toFixed(2)}px, ${(hcy + Math.sin(a) * r).toFixed(2)}px) scale(${lerp(1, 0.35, sp).toFixed(3)})`;
+      d.style.opacity = String(sa.toFixed(3));
+    });
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 41 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: the typed comment and the posted one are fitted with the real font
+  (document.fonts && document.fonts.load ? Promise.all(["body_font"].flatMap(k =>
+    [400, 600, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    typed.textContent = chars.join(""); hint.style.display = "none";
+    const w = typed.offsetWidth + caret.offsetWidth + 6 * U;
+    if (w > FWD) { fsF *= FWD / w; field.style.fontSize = `${fsF}px`; }
+    const over = post.offsetWidth - BW;
+    if (over > 0 && ptext.offsetWidth > 0) { fsP *= Math.max(0.3, (ptext.offsetWidth - over - 2) / ptext.offsetWidth); ptext.style.fontSize = `${fsP}px`; }
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

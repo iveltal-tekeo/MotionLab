@@ -1,0 +1,98 @@
+{
+ "name": "Marker scribble: circle, arrow, note",
+ "kind": "callouts",
+ "category": "Social",
+ "what": "A hand-drawn marker circle draws itself around your head, an arrow follows from a short note (“me”) that pops in at the upper right, and three marker crosses pop around; the lines boil like a hand-drawn cartoon while it holds, then wipe away. The Editor pins it to the face every frame.",
+ "use_for": [
+  "talking head",
+  "point at me",
+  "that’s me",
+  "who",
+  "reaction",
+  "annotate",
+  "hand drawn",
+  "short form"
+ ],
+ "tags": [
+  "callout",
+  "marker",
+  "scribble",
+  "hand drawn",
+  "arrow",
+  "circle",
+  "face",
+  "in shot",
+  "doodle"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of a common in-shot effect for talking-head videos: a marker circle and arrow drawn around the speaker’s head with a short note (2026-10-27)",
+ "in_shot": {"over_face": true, 
+  "follow": "face",
+  "snap": {
+   "w": 4.2
+  },
+  "match": true
+ },
+ "motion": "f0-f16 the marker loop draws itself around the head (S-curve), once round and a little past its start; f13-f23 the arrow draws from the note to the loop (decelerating), its head f22-f26; f20-f29 the note pops in (0.7 to 1 with an overshoot), tilted -8 deg; f24 / f27 / f30 three crosses pop (8 f each, overshoot); the lines and the note boil on twos while it holds; the last 12 f the note and crosses shrink away (accelerating) and the lines un-draw from their start (S-curve, f-10 to f-1). The loop is 2 x 2.6 of the layout's 4.4-wide visible area: snap w 4.2 makes it about 1.9 face widths wide",
+ "tracks": [
+  {
+   "name": "loop draws",
+   "what": "the marker circles the head",
+   "start_f": 0,
+   "length_f": 16,
+   "easing": "S-curve"
+  },
+  {
+   "name": "arrow draws",
+   "what": "the arrow from the note to the loop, then its head",
+   "start_f": 13,
+   "length_f": 13,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "note pops",
+   "what": "the note pops in",
+   "start_f": 20,
+   "length_f": 9,
+   "easing": "decelerating (slow end), an overshoot"
+  },
+  {
+   "name": "crosses pop",
+   "what": "three marker crosses pop one after another",
+   "start_f": 24,
+   "length_f": 14,
+   "easing": "decelerating (slow end), an overshoot"
+  },
+  {
+   "name": "wipe away",
+   "what": "the note and crosses shrink, the lines un-draw",
+   "start_f": 108,
+   "length_f": 12,
+   "easing": "S-curve"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "label"
+ ],
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  2,
+  6,
+  10,
+  15,
+  18,
+  22,
+  25,
+  30,
+  60,
+  109,
+  113,
+  116,
+  119
+ ]
+}

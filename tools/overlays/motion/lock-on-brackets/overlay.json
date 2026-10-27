@@ -1,0 +1,38 @@
+{
+ "name": "lock-on-brackets",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.2",
+   "from": 3600,
+   "to": 900,
+   "db": -4,
+   "what": "the brackets snap in"
+  },
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "tick",
+   "freq": 2200,
+   "what": "locked (the brackets blink)"
+  },
+  {
+   "f": "start + round(12 * fps / 30)",
+   "kind": "tick",
+   "freq": 1650,
+   "db": -4,
+   "what": "the tag and the readout pop in"
+  },
+  {
+   "f": "frames - round(9 * fps / 30)",
+   "kind": "air",
+   "dur": "0.3",
+   "db": -6,
+   "what": "the brackets open out and fade"
+  }
+ ]
+}

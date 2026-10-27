@@ -1,0 +1,34 @@
+{
+ "name": "headline-box",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "pop",
+   "db": -8,
+   "if": "parts(line1, ' ') > 0",
+   "what": "the first line starts popping in"
+  },
+  {
+   "f": "start + round(((parts(line1, ' ') * max(1, gap) + 3) if parts(line1, ' ') > 0 else 0) * fps / 30)",
+   "kind": "whip",
+   "dur": "0.16",
+   "db": -8,
+   "if": "parts(line2, ' ') > 0",
+   "what": "the box opens on the second line"
+  },
+  {
+   "f": "frames - round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.25",
+   "from": 2200,
+   "to": 700,
+   "db": -8,
+   "if": "leave and (frames - start) * 30 / fps - 8 > (parts(line1, ' ') + parts(line2, ' ')) * max(1, gap) + 18",
+   "what": "the headline leaves"
+  }
+ ]
+}

@@ -1,0 +1,42 @@
+{
+ "name": "comment-box",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 500,
+   "to": 1800,
+   "db": -12,
+   "what": "the comment bar rises in"
+  },
+  {
+   "f": "start + round((14 + i * min(3, 36 / max(1, len(text)))) * fps / 30)",
+   "repeat": "len(text)",
+   "kind": "key",
+   "what": "a letter typed"
+  },
+  {
+   "f": "start + round((14 + len(text) * min(3, 36 / max(1, len(text))) + 6) * fps / 30)",
+   "kind": "click",
+   "what": "the send arrow is tapped"
+  },
+  {
+   "f": "start + round((14 + len(text) * min(3, 36 / max(1, len(text))) + 8) * fps / 30)",
+   "kind": "pop",
+   "db": -4,
+   "what": "the comment posts"
+  },
+  {
+   "f": "start + round((14 + len(text) * min(3, 36 / max(1, len(text))) + 20) * fps / 30)",
+   "kind": "pop",
+   "from": 700,
+   "to": 1400,
+   "what": "the heart pops"
+  }
+ ]
+}

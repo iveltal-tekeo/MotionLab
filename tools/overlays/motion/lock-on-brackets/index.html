@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "label", "type": "string", "label": "Tag under the brackets", "default": "TARGET"},
+  {"id": "readout", "type": "string", "label": "Readout above the brackets (its number counts up)", "default": "MATCH 98%"},
+  {"id": "colour", "type": "enum", "label": "Brackets colour", "default": "paper", "options": [{"value": "paper", "label": "Paper"}, {"value": "ink", "label": "Ink"}, {"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "blink", "type": "enum", "label": "Blinking dot in the tag", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "deep", "label": "Deep"}, {"value": "none", "label": "No dot"}]},
+  {"id": "pulse", "type": "number", "label": "Pulse while it holds (%)", "default": 2.5, "min": 0, "max": 8, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "lock-on-brackets" (2026-10-27): four corner brackets snap onto a face. They appear wide
+     (1.3x, f1), close in with a small overshoot (f1-f10, decelerating), blink once as they lock (f9-f10), then a tag
+     pops in under them and a readout above (f10-f18, its number counting up f8-f26); while it holds the brackets
+     breathe (a 36 f pulse) and the tag's dot blinks; at the end the tag and readout shrink away and the brackets open
+     out and fade (the last 10 f). Drawn centred in the frame around a 300 x 350 px box (at a 1080-px short side);
+     the visible area is symmetric about it, so the Editor's face snap (in_shot follow face + snap) centres the
+     brackets on the face. Look-aware. MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pill { position: absolute; left: 0; top: 0; display: flex; align-items: center; white-space: nowrap; line-height: 1; font-synthesis: none; transform-origin: 50% 50%; }
+  .dot { display: inline-block; border-radius: 50%; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="rig" class="abs">
+    <svg id="br" class="abs"></svg>
+    <div id="tag" class="pill"><span id="tdot" class="dot"></span><span id="ttx"></span></div>
+    <div id="read" class="pill"><span id="rtx"></span></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const outBack = (x, s) => { x = clamp01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const outCubic = x => 1 - Math.pow(1 - clamp01(x), 3);
+  const inCubic = x => { x = clamp01(x); return x * x * x; };
+  const S = Math.round(V.start);
+  const END = FRAMES * 30 / FPS;                          // the last frame + 1, in frames designed at 30 fps
+  const pal = { paper: L.paper, ink: L.ink, signal: L.signal, deep: L.deep, mustard: L.mustard };
+  const col = pal[V.colour] || L.paper;
+  const txc = lum(col) > 0.5 ? (lum(L.ink) < lum(L.paper) ? L.ink : L.paper) : (lum(L.ink) > lum(L.paper) ? L.ink : L.paper);
+
+  // ---- the box the brackets close on (centred in the frame), the brackets, the tag and the readout
+  const CX = W / 2, CY = H / 2, BW = 300 * U, BH = 350 * U, ARM = 0.22 * BW, SW = 7 * U, GAP = 22 * U, PH = 40 * U;
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background ? L.deep : "transparent" });
+  const svg = q("br"); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.style.filter = `drop-shadow(0 0 ${(4 * U).toFixed(1)}px ${rgba("#000000", 0.35)})`;
+  const NS = "http://www.w3.org/2000/svg";
+  const corners = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy]) => {
+    const p = document.createElementNS(NS, "path");
+    Object.assign(p.style, { fill: "none" });
+    p.setAttribute("stroke", col); p.setAttribute("stroke-linecap", "square"); p.setAttribute("stroke-linejoin", "miter");
+    svg.appendChild(p); return { p, sx, sy };
+  });
+  const tag = q("tag"), rd = q("read"), tdot = q("tdot"), ttx = q("ttx"), rtx = q("rtx");
+  const pillStyle = (el, fill, rim) => Object.assign(el.style, { height: `${PH}px`, padding: `0 ${14 * U}px`, borderRadius: `${PH / 2}px`,
+    background: fill, boxShadow: rim ? `inset 0 0 0 ${2 * U}px ${rim}` : `0 0 ${6 * U}px ${rgba("#000000", 0.25)}`,
+    fontFamily: `'${V.accent_font}', 'Consolas', monospace`, fontSize: `${21 * U}px`, fontWeight: String(fw(V.accent_font, 700)), letterSpacing: "0.08em" });
+  pillStyle(tag, col, null); ttx.style.color = txc;
+  pillStyle(rd, rgba(txc, 0.55), rgba(col, 0.9)); rtx.style.color = col;
+  const dotc = { signal: L.signal, mustard: L.mustard, deep: L.deep }[V.blink];
+  if (dotc) Object.assign(tdot.style, { width: `${10 * U}px`, height: `${10 * U}px`, marginRight: `${9 * U}px`, background: dotc });
+  else tdot.style.display = "none";
+  ttx.textContent = String(V.label || "").toUpperCase();
+  const RO = String(V.readout || "").toUpperCase(), num = RO.match(/\d+/);
+  const roAt = s => num ? RO.slice(0, num.index) + String(s) + RO.slice(num.index + num[0].length) : RO;
+  rtx.textContent = roAt(num ? num[0] : "");
+  if (!ttx.textContent) tag.style.display = "none";
+  if (!RO) rd.style.display = "none";
+
+  let tw = 1, rw = 1, tf = 1, rf = 1;
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    const vis = g > 0.001;
+    q("rig").style.visibility = vis ? "visible" : "hidden";
+    if (!vis) return;
+    // the brackets: wide at f0-f1, closing in f1-f10 with a small overshoot; a breath while they hold; opening out at the end
+    const ex = clamp01((g - (END - 8)) / 7);
+    let s = g <= 1 ? 1.3 : 1.3 - 0.3 * outBack((g - 1) / 9, 1.3);
+    s *= 1 + V.pulse / 100 * Math.sin(2 * Math.PI * Math.max(0, g - 18) / 36) * clamp01((g - 18) / 6);
+    s += 0.25 * inCubic(ex);
+    let o = clamp01(g / 1.5) * (1 - inCubic(ex));
+    if (g >= 9 && g < 10.5) o *= 0.25;                      // the lock: one blink
+    const hw = BW / 2 * s, hh = BH / 2 * s, arm = ARM * Math.sqrt(s);
+    corners.forEach(({ p, sx, sy }) => {
+      const x = CX + sx * hw, y = CY + sy * hh;
+      p.setAttribute("d", `M ${(x - sx * arm).toFixed(2)} ${y.toFixed(2)} L ${x.toFixed(2)} ${y.toFixed(2)} L ${x.toFixed(2)} ${(y - sy * arm).toFixed(2)}`);
+      p.setAttribute("stroke-width", (SW * (g >= 10.5 && g < 14 ? 1.35 : 1)).toFixed(2));
+    });
+    svg.style.opacity = String(o.toFixed(3));
+    // the tag and the readout pop in (f10-f18) and shrink away first at the end (the last 10-5 f)
+    const pe = clamp01((g - (END - 10)) / 5);
+    const pk = (0.6 + 0.4 * outBack((g - 10) / 8, 1.7)) * (1 - 0.4 * inCubic(pe));
+    const po = clamp01((g - 10) / 3) * (1 - clamp01(pe * 1.4));
+    tag.style.transform = `translate(${(CX - tw / 2).toFixed(2)}px, ${(CY + BH / 2 + GAP).toFixed(2)}px) scale(${(pk * tf).toFixed(4)})`;
+    rd.style.transform = `translate(${(CX - rw / 2).toFixed(2)}px, ${(CY - BH / 2 - GAP - PH).toFixed(2)}px) scale(${(pk * rf).toFixed(4)})`;
+    tag.style.opacity = rd.style.opacity = String(po.toFixed(3));
+    if (num) rtx.textContent = roAt(Math.round(+num[0] * outCubic((g - 8) / 18)));
+    if (dotc) tdot.style.opacity = (g - 10) % 16 < 10 ? "1" : "0.15";
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 47 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the pills are measured with their real font (kept narrower than the brackets), then the timeline is registered
+  (document.fonts && document.fonts.load ? Promise.all([400, 700].map(w => document.fonts.load(`${w} 100px "${V.accent_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    tw = Math.max(1, tag.offsetWidth); rw = Math.max(1, rd.offsetWidth);
+    tf = Math.min(1, BW * 1.0 / tw); rf = Math.min(1, BW * 1.0 / rw);
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

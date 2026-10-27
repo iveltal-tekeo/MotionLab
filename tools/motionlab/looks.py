@@ -180,7 +180,10 @@ window.MLLook = (() => {
     t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   function grain(root, tl, o) {
     const g = Number(val(o.V, "grain")) / 100;
-    if (!(g > 0)) return null;
+    // (2026-10-27: a see-through graphic over a video - its own backdrop off - drew this grey noise over the whole
+    // frame at 20 %: a grey veil on the footage. Over a video the grain is the footage's own, on the graphic only -
+    // compose.py's "match")
+    if (!(g > 0) || (o.V && (o.V.background === false || o.V.background === "false"))) return null;
     const N = 192, cv = document.createElement("canvas"); cv.width = cv.height = N;
     const ctx = cv.getContext("2d"), im = ctx.createImageData(N, N), r = rnd(o.seed || 7);
     for (let i = 0; i < N * N; i++) { const v = 128 + (r() + r() + r() - 1.5) * 150; im.data.set([v, v, v, 255], i * 4); }

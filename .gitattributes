@@ -12,5 +12,6 @@
 *.mp4 binary
 *.wav binary
 *.onnx binary
+*.tflite binary
 *.ttf binary
 *.otf binary

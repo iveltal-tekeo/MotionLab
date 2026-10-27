@@ -322,7 +322,7 @@
  "no caption {n}": "no hay subtítulo {n}",
  "{graphic} has no look {look}": "{graphic} no tiene el estilo {look}",
  "a stutter would pull the picture away from the voice - not on a talking video": "un tartamudeo separaría la imagen de la voz: no en un vídeo hablado",
- "an ease: linear, smooth, in, out or hold": "un suavizado: linear, smooth, in, out o hold",
+ "an ease from the list, or a curve with its two handles": "una curva de la lista, o una curva con sus dos tiradores",
  "no effect {effect}": "no hay efecto {effect}",
  "no such effect: {effect}": "no existe el efecto {effect}",
  "one of the two shots already has a zoom - change that one": "uno de los dos planos ya tiene un zoom: cambia ese",
@@ -337,7 +337,6 @@
  "this shot already shakes": "este plano ya tiembla",
  "no clip under the playhead - this effect changes a clip's picture": "no hay ningún clip bajo el cabezal: este efecto cambia la imagen de un clip",
  "a direction: left, right, up or down": "una dirección: izquierda, derecha, arriba o abajo",
- "an ease: linear, smooth, in, out, hold or pop": "una curva: lineal, suave, entrada, salida, mantener o pop",
  "no key at {frame}": "no hay ningún fotograma clave en {frame}",
  "no plain cut before shot {shot}": "no hay ningún corte limpio antes del plano {shot}",
  "no such property: {prop}": "no existe la propiedad: {prop}",
@@ -388,5 +387,7 @@
  "the file is empty or bigger than 10 MB": "el archivo está vacío o pesa más de 10 MB",
  "the file is empty or bigger than 300 MB": "el archivo está vacío o pesa más de 300 MB",
  "{file}: no sound found in it": "{file}: no tiene sonido",
- "{file}: not an ambience bed of the music library": "{file}: no es un ambiente de la biblioteca de música"
+ "{file}: not an ambience bed of the music library": "{file}: no es un ambiente de la biblioteca de música",
+ "only a graphic can go behind you or turn to glass": "solo un gráfico puede ir detrás de ti o volverse cristal",
+ "this shot's room already changes - change that one": "la habitación de este plano ya cambia: cambia ese efecto"
 }

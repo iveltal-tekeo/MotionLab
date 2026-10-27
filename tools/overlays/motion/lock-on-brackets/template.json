@@ -1,0 +1,98 @@
+{
+ "name": "Lock-on brackets",
+ "kind": "callouts",
+ "category": "Social",
+ "what": "Four corner brackets snap onto your face from wider out, blink once as they lock, then a tag pops in under them and a readout above (its number counting up); they breathe while they hold and open out at the end. The Editor pins them to the face every frame.",
+ "use_for": [
+  "talking head",
+  "face",
+  "target",
+  "focus on me",
+  "reveal who",
+  "reaction",
+  "hook",
+  "tech",
+  "short form"
+ ],
+ "tags": [
+  "callout",
+  "brackets",
+  "face",
+  "lock on",
+  "target",
+  "hud",
+  "in shot",
+  "label"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of a common in-shot effect for talking-head videos: corner brackets locking onto the speaker’s face (2026-10-27)",
+ "in_shot": {"over_face": true, 
+  "follow": "face",
+  "snap": {
+   "w": 2.3
+  },
+  "match": true
+ },
+ "motion": "f1 the brackets appear at 1.3x; f1-f10 they close in on the box with a small overshoot (decelerating); f9-f10 one blink (the lock), f10-f14 a thicker stroke; f10-f18 the tag (under) and the readout (above) pop in (decelerating with overshoot), the readout's number counting up f8-f26 (decelerating); from f18 the brackets breathe (+-2.5 %, 36 f) and the tag's dot blinks every 16 f; the last 10 f the tag and readout shrink away (f-10 to f-3) and the brackets open to 1.25x and fade (f-8 to f-1, accelerating). The visible area is the brackets' 1.3x pose, symmetric about the box: snap w 2.3 makes the resting brackets about 1.7 face widths wide",
+ "tracks": [
+  {
+   "name": "brackets close in",
+   "what": "the brackets snap onto the face from 1.3x",
+   "start_f": 1,
+   "length_f": 9,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "lock",
+   "what": "one blink, then a thicker stroke",
+   "start_f": 9,
+   "length_f": 5,
+   "easing": "steps"
+  },
+  {
+   "name": "tag and readout",
+   "what": "the tag under and the readout above pop in, the number counts up",
+   "start_f": 10,
+   "length_f": 16,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "breathe",
+   "what": "the brackets pulse while they hold",
+   "start_f": 18,
+   "length_f": 92,
+   "easing": "sine"
+  },
+  {
+   "name": "open out",
+   "what": "the tag and readout shrink away, the brackets open and fade",
+   "start_f": 110,
+   "length_f": 10,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "label",
+  "readout"
+ ],
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  1,
+  3,
+  6,
+  9,
+  11,
+  14,
+  20,
+  60,
+  111,
+  114,
+  117,
+  119
+ ]
+}

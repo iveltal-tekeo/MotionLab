@@ -1,0 +1,34 @@
+{
+ "name": "glass-graph",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 500,
+   "to": 1800,
+   "db": -8,
+   "what": "the glass card rises into place"
+  },
+  {
+   "f": "start + round((8 + max(12, climb)) * fps / 30)",
+   "kind": "chime",
+   "db": -6,
+   "what": "the number lands"
+  },
+  {
+   "f": "frames - round(9 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.25",
+   "from": 2200,
+   "to": 600,
+   "db": -8,
+   "if": "leave and (frames - start) * 30 / fps - 9 > 8 + max(12, climb) + 10",
+   "what": "the card sinks away"
+  }
+ ]
+}

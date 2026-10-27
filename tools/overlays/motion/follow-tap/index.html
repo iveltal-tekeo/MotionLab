@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "name", "type": "string", "label": "Name on the profile", "default": "Your Name"},
+  {"id": "handle", "type": "string", "label": "Handle under the name", "default": "@yourhandle"},
+  {"id": "avatar_media", "type": "string", "label": "Round photo: your picture (empty = your initial)", "default": ""},
+  {"id": "label", "type": "string", "label": "Button before the tap", "default": "Follow"},
+  {"id": "label_after", "type": "string", "label": "Button after the tap", "default": "Following"},
+  {"id": "button", "type": "enum", "label": "Button colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "deep", "label": "Deep"}, {"value": "ink", "label": "Ink"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.5, "max": 2, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 76, "min": 5, "max": 95, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "Shrinks away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a backdrop behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "follow-tap" (2026-10-27): a profile chip (a round photo or initial, the name, the handle and
+     a Follow button) pops up (f0-f12, back.out), a cursor glides in from the lower right on a curve (f10-f34), hovers,
+     taps the button (f38: the cursor and the button dip, a ripple) and the button flips to Following: its colour
+     changes to a quiet one, it widens, the old word slides up and out, the new one rises in with a check mark that
+     draws itself, and the chip gives a tiny hop (f41-f57); the cursor leaves (f60-f74), the chip bobs, and at the end
+     it shrinks away. Rebuilt in MotionLab's own HTML from the look of an MIT-licensed Python effect (a Follow button
+     tapped on a talking-head video, a profile card that gets followed). No platform's logo. Look-aware.
+     Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #chip { position: absolute; font-synthesis: none; }
+  #av { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #tcol { position: absolute; display: flex; flex-direction: column; justify-content: center; white-space: nowrap; }
+  #btn { position: absolute; overflow: hidden; }
+  #bA, #bB { position: absolute; inset: 0; border-radius: inherit; }
+  .lab { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+  #chk { overflow: visible; flex: none; }
+  #rip { position: absolute; border-radius: 50%; }
+  #cur { position: absolute; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3.5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs">
+    <div id="chip">
+      <div id="av"></div>
+      <div id="tcol"><div id="nm"></div><div id="hd"></div></div>
+      <div id="btn"><div id="bA"></div><div id="bB"></div>
+        <div id="l1" class="lab"></div>
+        <div id="l2" class="lab"><svg id="chk" viewBox="0 0 24 24"><path id="chkp" d="M4.5 12.5 L 9.6 17.4 L 19.5 6.8" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="l2t"></span></div>
+      </div>
+    </div>
+    <div id="rip"></div>
+    <svg id="cur" viewBox="0 0 24 30"><path id="curp" d="M3 2.5 L3 22.5 L8.2 17.8 L11.6 25.8 L15.2 24.3 L11.8 16.5 L18.6 16.5 Z" stroke-width="1.7" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 105;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const lum = h => { const [r, g, b] = hex(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const fam = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- the backdrop (only when painted: over a video the footage is the backdrop)
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(circle at 30% 28%, ${rgba(L.signal, 0.42)} 0%, transparent 46%), radial-gradient(circle at 76% 62%, ${rgba(L.mustard, 0.34)} 0%, transparent 50%), linear-gradient(180deg, ${L.deep} 0%, ${mix(L.deep, "#000000", 0.45)} 100%)`
+    : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+
+  // ---- the chip: 0.84 of the width (at most 880 px at a 1080-px short side), 150 px high
+  const s = Number(V.size) || 1;
+  const CW = Math.min(W - 24 * U, Math.min(0.84 * W, 880 * U) * s), CH = 150 * U * s;
+  const cx = Math.min(W - CW / 2 - 12 * U, Math.max(CW / 2 + 12 * U, W * V.x / 100));
+  const cy = Math.min(H - CH / 2 - 16 * U, Math.max(CH / 2 + 16 * U, H * V.y / 100));
+  const sh = Number(V.shadow);
+  const SH = sh > 0 ? `0 ${10 * sh * U}px ${30 * sh * U}px rgba(0, 0, 0, ${(0.2 + 0.05 * sh).toFixed(2)}), 0 ${2 * U}px ${6 * U}px rgba(0, 0, 0, 0.12)` : "none";
+  const chip = q("chip");
+  Object.assign(chip.style, { left: `${cx - CW / 2}px`, top: `${cy - CH / 2}px`, width: `${CW}px`, height: `${CH}px`,
+    borderRadius: `${Number(V.radius) > 0 ? Math.min(CH / 2, Math.max(12 * U, L.radius * 2.2)) : CH * 0.1}px`,
+    background: rgba(L.paper, 0.98), boxShadow: SH, fontFamily: fam, color: L.ink, transformOrigin: "50% 60%" });
+  const GREY = mix(L.paper, L.ink, 0.52);
+  // the round photo (a picture of yours) or the initial on a gradient
+  const DA = 0.62 * CH, PADL = 0.17 * CH, av = q("av");
+  Object.assign(av.style, { left: `${PADL}px`, top: `${(CH - DA) / 2}px`, width: `${DA}px`, height: `${DA}px`,
+    background: `linear-gradient(135deg, ${L.deep} 0%, ${L.signal} 100%)`, color: "#FFFFFF",
+    fontFamily: fam, fontWeight: String(fw(V.body_font, 700)), fontSize: `${DA * 0.44}px`, lineHeight: "1",
+    boxShadow: `0 0 0 ${2.5 * U * s}px ${rgba(L.paper, 1)}, 0 0 0 ${5 * U * s}px ${rgba(L.signal, 0.55)}` });
+  if (V.avatar_media && window.MLLook) MLLook.media(av, V.avatar_media, { look: L, kind: "image", fit: "cover", r: DA / 2, slot: "avatar_media" });
+  else av.textContent = (Array.from(String(V.name || "").trim())[0] || "Y").toUpperCase();
+  av.style.borderRadius = "50%";
+  // the button: its colour before the tap (bA), the quiet one after (bB)
+  const ACC = L[V.button] || L.signal, ON = lum(ACC) < 0.6 ? "#FFFFFF" : "#111111";
+  const BTH = 0.44 * CH, PADR = 0.17 * CH, fsB = 0.165 * CH;
+  const btn = q("btn"), bA = q("bA"), bB = q("bB"), l1 = q("l1"), l2 = q("l2"), l2t = q("l2t"), chk = q("chk"), chkp = q("chkp");
+  Object.assign(btn.style, { top: `${(CH - BTH) / 2}px`, height: `${BTH}px`, borderRadius: `${BTH / 2}px`, fontFamily: fam,
+    fontSize: `${fsB}px`, fontWeight: String(fw(V.body_font, 700)), transformOrigin: "50% 50%" });
+  bA.style.background = ACC;
+  Object.assign(bB.style, { background: mix(L.paper, L.ink, 0.07), boxShadow: `inset 0 0 0 ${Math.max(1, 1.6 * U * s)}px ${rgba(L.ink, 0.2)}` });
+  l1.textContent = String(V.label || ""); l2t.textContent = String(V.label_after || "");
+  Object.assign(l1.style, { color: ON, height: `${BTH}px` });
+  Object.assign(l2.style, { color: L.ink, height: `${BTH}px`, gap: `${0.3 * fsB}px` });
+  const CK = fsB * 1.05;
+  chk.setAttribute("width", CK); chk.setAttribute("height", CK);
+  chkp.setAttribute("stroke", L.signal);
+  const CKL = 22;                                                   // the check's path length (in its 24-unit box)
+  chkp.setAttribute("stroke-dasharray", String(CKL));
+  // the name and the handle
+  const TX = PADL + DA + 0.16 * CH, nm = q("nm"), hd = q("hd"), tcol = q("tcol");
+  Object.assign(tcol.style, { left: `${TX}px`, top: "0px", height: `${CH}px`, gap: `${0.02 * CH}px` });
+  let fsN = 0.2 * CH, fsH = 0.15 * CH;
+  Object.assign(nm.style, { fontSize: `${fsN}px`, fontWeight: String(fw(V.body_font, 700)), lineHeight: "1.2" });
+  Object.assign(hd.style, { fontSize: `${fsH}px`, fontWeight: String(fw(V.body_font, 400)), color: GREY, lineHeight: "1.2" });
+  nm.textContent = String(V.name || ""); hd.textContent = String(V.handle || "");
+  // the ripple and the cursor
+  const rip = q("rip"), cur = q("cur"), curp = q("curp");
+  const CUH = 78 * U * s, CUW = CUH * 24 / 30;
+  cur.setAttribute("width", CUW); cur.setAttribute("height", CUH);
+  curp.setAttribute("fill", "#FFFFFF"); curp.setAttribute("stroke", "#111111");
+  Object.assign(cur.style, { marginLeft: `${-3 / 24 * CUW}px`, marginTop: `${-2.5 / 30 * CUH}px`, transformOrigin: `${3 / 24 * CUW}px ${2.5 / 30 * CUH}px`,
+    filter: `drop-shadow(0 ${3 * U}px ${5 * U}px rgba(0, 0, 0, 0.35))` });
+  const RD = 1.25 * BTH;
+  Object.assign(rip.style, { width: `${RD}px`, height: `${RD}px`, marginLeft: `${-RD / 2}px`, marginTop: `${-RD / 2}px`, background: rgba(L.paper, 0.9),
+    border: `${Math.max(1, 2 * U * s)}px solid ${rgba(ACC, 0.8)}` });
+
+  // ---- the timing (frames designed at 30 fps; sfx cues in overlay.json use the same numbers)
+  const S = Math.round(V.start), EN = FRAMES * 30 / FPS, EXIT = !!V.exit;
+  const C0 = 10, C1 = 34, TAP = 38, FLIP = 41;
+  let wA = 2.6 * fsB * 2, wB = 3.6 * fsB * 2;                       // the button's widths before / after (measured below)
+  let tx = 0, ty = 0;                                                // where the cursor's tip presses (frame pixels)
+
+  function render(t) {
+    const g = (Math.round(t * FPS * 1000) / 1000 - S) * 30 / FPS;
+    hand.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const ex = EXIT ? P(g, EN - 8, EN - 1, "power2.in") : 0;
+    // the chip pops up (back.out), rising 50 px; a tiny hop when the button flips; a slow bob in the hold
+    const pi = P(g, 0, 12, "back.out(1.7)"), py = P(g, 0, 12, "power3.out");
+    const hop = g < FLIP + 1 ? 0 : g < FLIP + 6 ? -10 * U * s * P(g, FLIP + 1, FLIP + 6, "power2.out") : -10 * U * s * (1 - P(g, FLIP + 6, FLIP + 16, "back.out(2.2)"));
+    const bob = 2.5 * U * s * Math.sin(2 * Math.PI * (g - 57) / 64) * P(g, 55, 70);
+    const sc = (0.6 + 0.4 * pi) * (1 - 0.06 * ex);
+    chip.style.transform = `translate(0px, ${((1 - py) * 50 * U * s + hop + bob + ex * 24 * U * s).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    chip.style.opacity = String((P(g, 0, 4) * (1 - ex)).toFixed(3));
+    // the button: hover, the press (a dip), back with a bounce; it widens to the new word and changes colour
+    const hov = P(g, 30, 37, "power2.out");
+    const press = g < TAP ? 0 : g < TAP + 3 ? P(g, TAP, TAP + 3, "power2.in") : 1 - P(g, TAP + 3, TAP + 15, "back.out(3)");
+    const bs = (1 + 0.04 * hov * (1 - P(g, TAP, TAP + 3))) * (1 - 0.13 * press);   // press < 0 after the dip = the bounce
+    const bw = lerp(wA, wB, P(g, FLIP, FLIP + 7, "power3.out"));
+    Object.assign(btn.style, { left: `${CW - PADR - bw}px`, width: `${bw}px` });
+    btn.style.transform = `scale(${bs.toFixed(4)})`;
+    const cf = P(g, FLIP, FLIP + 5);
+    bA.style.opacity = String((1 - cf).toFixed(3));
+    bB.style.opacity = String(cf.toFixed(3));
+    // the words swap inside the button: the old one shrinks away, the new one grows in (the button itself bounces)
+    const o1 = P(g, FLIP - 1, FLIP + 3, "power2.in"), i2 = P(g, FLIP + 2, FLIP + 10, "power3.out");
+    Object.assign(l1.style, { width: `${bw}px`, transform: `scale(${(1 - 0.45 * o1).toFixed(4)})`, opacity: String((1 - o1).toFixed(3)) });
+    Object.assign(l2.style, { width: `${bw}px`, transform: `scale(${(0.55 + 0.45 * i2).toFixed(4)})`, opacity: g < FLIP + 2 ? "0" : String(Math.min(1, P(g, FLIP + 2, FLIP + 6)).toFixed(3)) });
+    chkp.setAttribute("stroke-dashoffset", String((CKL * (1 - P(g, FLIP + 5, FLIP + 13, "power2.out"))).toFixed(2)));
+    // the ripple from the tap point
+    const rp = P(g, TAP + 1, TAP + 17, "power2.out");
+    Object.assign(rip.style, { left: `${tx}px`, top: `${ty}px`, opacity: g >= TAP + 1 && g < TAP + 17 ? String((0.55 * (1 - rp)).toFixed(3)) : "0",
+      transform: `scale(${(0.25 + 1.1 * rp).toFixed(4)})` });
+    // the cursor: in from the lower right on a curve (x decelerating, y S-curve), the press, then away
+    const x0 = Math.max(tx + 260 * U * s, W * 0.96), y0 = ty + 420 * U * s;
+    const kx = P(g, C0, C1, "power2.out"), ky = P(g, C0, C1, "power3.inOut");
+    const lv = P(g, 60, 74, "power2.in");
+    const cpress = g < TAP ? 0 : g < TAP + 3 ? P(g, TAP, TAP + 3, "power2.in") : 1 - P(g, TAP + 3, TAP + 11, "back.out(2)");
+    const ccx = lerp(x0, tx, kx) + lv * 110 * U * s + 6 * U * s * Math.sin(Math.PI * P(g, C1, TAP)), ccy = lerp(y0, ty, ky) + lv * 170 * U * s;
+    cur.style.transform = `translate(${ccx.toFixed(2)}px, ${ccy.toFixed(2)}px) scale(${(1 - 0.2 * cpress).toFixed(4)})`;
+    cur.style.opacity = g < C0 ? "0" : String(((1 - lv) * P(g, C0, C0 + 3) * (1 - ex)).toFixed(3));
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 43 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: the button's two widths and the name are measured with the real font
+  (document.fonts && document.fonts.load ? Promise.all(["body_font"].flatMap(k =>
+    [400, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    const pad = 1.3 * fsB;
+    Object.assign(l1.style, { width: "auto" }); Object.assign(l2.style, { width: "auto" });
+    wA = Math.max(BTH * 1.6, l1.offsetWidth + 2 * pad);
+    wB = Math.max(BTH * 1.6, l2.offsetWidth + 2 * pad);
+    const room = CW - TX - PADR - Math.max(wA, wB) - 0.12 * CH;
+    const tw = Math.max(nm.offsetWidth, hd.offsetWidth);
+    if (tw > room && tw > 0) { const k = Math.max(0.4, room / tw); fsN *= k; fsH *= k; nm.style.fontSize = `${fsN}px`; hd.style.fontSize = `${fsH}px`; }
+    // the cursor's tip presses a little left of the button's centre (its place before it widens)
+    tx = cx - CW / 2 + CW - PADR - wA * 0.42; ty = cy + BTH * 0.12;
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

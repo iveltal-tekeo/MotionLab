@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The stamped word", "default": "NOPE"},
+  {"id": "colour", "type": "color", "label": "Ink colour", "default": "#D7263D"},
+  {"id": "angle", "type": "number", "label": "Tilt (degrees; minus = rising to the right)", "default": -12, "min": -45, "max": 45, "step": 1},
+  {"id": "size", "type": "number", "label": "Size (1 = about 60 % of the width)", "default": 1, "min": 0.4, "max": 1.6, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 66, "min": 5, "max": 95, "step": 1},
+  {"id": "font", "type": "enum", "label": "Stamp font", "default": "Archivo Black", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "double_line", "type": "boolean", "label": "A second, thin line inside the frame", "default": true},
+  {"id": "wear", "type": "number", "label": "Worn ink (0 = solid, 10 = very patchy)", "default": 5, "min": 0, "max": 10, "step": 0.5},
+  {"id": "jolt", "type": "number", "label": "Camera jolt at the slam (0 = none)", "default": 5, "min": 0, "max": 10, "step": 0.5},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "exit", "type": "boolean", "label": "Fades away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint the paper behind it (off = see-through, over a video)", "default": true},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "reject-stamp" (2026-10-27): a big rubber stamp slams down at an angle - it falls from
+     1.9x, out of focus and casting a shadow, turning 7 degrees into its tilt (f0-f6, accelerating) - and hits: it
+     squashes a hair and settles (back.out), ink spatters out round its frame, and the camera jolts and rings out
+     (f6-f22). The ink is rough at the edges and worn in patches (an SVG ink filter: a turbulence warp, a fine grit
+     and a coarse wear mask, seeded - the same in a snapshot and a render). In the hold the ink soaks in a little; at
+     the end it fades. Rebuilt in MotionLab's own HTML from the look of an MIT-licensed Python effect (a stamp slammed
+     onto a talking-head video). Look-aware (the paper behind it, when painted). Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #stamp { position: absolute; left: 0; top: 0; }
+  #ink { position: absolute; left: 0; top: 0; white-space: nowrap; font-synthesis: none; }
+  #word { display: block; line-height: 1; letter-spacing: 0.035em; }
+  #line2 { position: absolute; }
+  .dot { position: absolute; border-radius: 50%; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="inkf" x="-14%" y="-30%" width="128%" height="160%" color-interpolation-filters="sRGB">
+    <feTurbulence id="tWarp" type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="4" result="warp"/>
+    <feDisplacementMap id="dWarp" in="SourceGraphic" in2="warp" scale="7" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+    <feTurbulence id="tGrit" type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="9" result="grit"/>
+    <feColorMatrix id="mGrit" in="grit" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.2 0 0 0 -0.75" result="gritA"/>
+    <feTurbulence id="tWear" type="fractalNoise" baseFrequency="0.016" numOctaves="3" seed="2" result="wear"/>
+    <feColorMatrix id="mWear" in="wear" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4.5 0 0 0 -1.35" result="wearA"/>
+    <feComposite in="gritA" in2="wearA" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="mask"/>
+    <feComposite in="rough" in2="mask" operator="in"/>
+  </filter>
+</defs></svg>
+<div id="root" data-composition-id="main" data-start="0" data-duration="2.5" data-width="1080"
+     data-height="1920">
+  <div id="cam" class="abs">
+    <div id="bgfill" class="abs"></div>
+    <div id="stamp"><div id="ink"><span id="word"></span><div id="line2"></div></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 75;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+
+  // ---- the camera (everything in it jolts at the slam) and the paper, overscanned so its edges never show
+  const cam = q("cam"), bgfill = q("bgfill");
+  Object.assign(cam.style, { width: `${W}px`, height: `${H}px` });
+  const OV = 60 * U;
+  Object.assign(bgfill.style, { left: `${-OV}px`, top: `${-OV}px`, width: `${W + 2 * OV}px`, height: `${H + 2 * OV}px`, background: V.background
+    ? `radial-gradient(ellipse at 50% 45%, ${L.paper} 0%, ${L.paper} 45%, ${mix(L.paper, L.ink, 0.1)} 100%)` : "transparent" });
+
+  // ---- the stamp: the word in a rounded frame (+ a thin inner line), all in em of its font size, fitted below
+  const s = Number(V.size) || 1, COL = V.colour || "#D7263D";
+  const word = q("word"), ink = q("ink"), line2 = q("line2"), stamp = q("stamp");
+  const ffam = `'${V.font}', 'Arial Black', sans-serif`;
+  let FS = 100 * U;
+  Object.assign(ink.style, { fontFamily: ffam, fontSize: `${FS}px`, color: COL, padding: "0.2em 0.36em 0.16em 0.38em",
+    border: `0.08em solid ${COL}`, borderRadius: `${Number(V.radius) > 0 ? 0.16 : 0.03}em`, filter: "url(#inkf)" });
+  word.textContent = String(V.text || "").toUpperCase();
+  Object.assign(line2.style, { left: "0.09em", top: "0.09em", right: "0.09em", bottom: "0.09em", border: `0.03em solid ${COL}`,
+    borderRadius: `${Number(V.radius) > 0 ? 0.09 : 0.02}em`, display: V.double_line ? "block" : "none" });
+  // ink spatter round the frame: 14 dots on its edge, flung out a little at the slam (seeded)
+  const r0 = rnd(17), DOTS = [];
+  for (let i = 0; i < 14; i++) {
+    const d = document.createElement("div"); d.className = "dot";
+    const side = Math.floor(r0() * 4), u = 0.08 + 0.84 * r0(), out = 0.05 + 0.22 * r0(), sz = 0.025 + 0.06 * r0() * r0();
+    d._p = { side, u, out, sz };
+    d.style.background = COL;
+    ink.appendChild(d); DOTS.push(d);
+  }
+  // the ink filter scales with the frame: the grain stays as fine on a 4K frame; "wear" opens the patches up
+  const wr = clamp01(Number(V.wear) / 10);
+  q("tWarp").setAttribute("baseFrequency", String((0.045 / U).toFixed(5)));
+  q("dWarp").setAttribute("scale", String((7 * U).toFixed(2)));
+  q("tGrit").setAttribute("baseFrequency", String((0.75 / U).toFixed(5)));
+  q("tWear").setAttribute("baseFrequency", String((0.016 / U).toFixed(5)));
+  q("mGrit").setAttribute("values", `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${(1.5 + 3.4 * wr).toFixed(2)} 0 0 0 ${(0.35 - 1.25 * wr).toFixed(3)}`);
+  const R0 = 0.2 + 0.2 * wr;                                        // worn where the coarse noise is under R0, with firm edges
+  q("mWear").setAttribute("values", `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  9 0 0 0 ${(0.5 - 9 * R0).toFixed(3)}`);
+  if (wr <= 0) ink.style.filter = "none";
+
+  // ---- the timing (frames designed at 30 fps; the cues in overlay.json use the same numbers)
+  const S = Math.round(V.start), EN = FRAMES * 30 / FPS, EXIT = !!V.exit;
+  const SL = 6;                                                     // the frame the stamp hits
+  const cx = W * V.x / 100, cy = H * V.y / 100, ANG = Number(V.angle) || 0, J = Number(V.jolt) * 3.2 * U;
+  let iw = 0, ih = 0;
+
+  function render(t) {
+    const g = (Math.round(t * FPS * 1000) / 1000 - S) * 30 / FPS;
+    cam.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const ex = EXIT ? P(g, EN - 7, EN - 1, "power2.in") : 0;
+    // the fall: 1.9x to 1x, accelerating, turning 7 degrees into its tilt, out of focus with a shadow under it
+    const k = P(g, 0, SL, "power2.in");
+    const sq = g < SL ? 0 : g < SL + 2 ? P(g, SL, SL + 2, "power2.out") : 1 - P(g, SL + 2, SL + 10, "back.out(2.2)");
+    const soak = P(g, SL + 8, EN - 8, "sine.inOut");
+    const sc = (1.9 - 0.9 * k) * (1 - 0.035 * sq) * (1 + 0.016 * soak) * (1 + 0.03 * ex);
+    const rot = ANG + 7 * (1 - k);
+    stamp.style.transform = `translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px) rotate(${rot.toFixed(3)}deg) scale(${sc.toFixed(4)})`;
+    const air = g < SL ? 1 - k : 0;
+    stamp.style.filter = air > 0.02 ? `blur(${(air * 7 * U).toFixed(2)}px) drop-shadow(${(air * 26 * U).toFixed(1)}px ${(air * 46 * U).toFixed(1)}px ${(6 * U + air * 28 * U).toFixed(1)}px rgba(0, 0, 0, ${(0.4 * air).toFixed(3)}))` : "none";
+    stamp.style.opacity = String((P(g, 0, 3) * (1 - 0.16 * soak) * (1 - ex)).toFixed(3));
+    // the spatter: flung out at the hit (3 frames), then still
+    const fl = P(g, SL, SL + 4, "power3.out");
+    DOTS.forEach(d => {
+      const p = d._p, o = p.out * fl;
+      let x, y;
+      if (p.side === 0) { x = p.u * iw; y = -o * FS; } else if (p.side === 1) { x = iw + o * FS; y = p.u * ih; }
+      else if (p.side === 2) { x = p.u * iw; y = ih + o * FS; } else { x = -o * FS; y = p.u * ih; }
+      const z = p.sz * FS * (g < SL ? 0 : 0.4 + 0.6 * fl);
+      Object.assign(d.style, { left: `${(x - z / 2).toFixed(2)}px`, top: `${(y - z / 2).toFixed(2)}px`, width: `${z.toFixed(2)}px`, height: `${z.toFixed(2)}px` });
+    });
+    // the camera jolt: a shake that rings out over 16 frames from the hit
+    let jx = 0, jy = 0, jr = 0;
+    if (J > 0 && g >= SL && g < SL + 16) {
+      const d = g - SL, a = J * Math.exp(-d / 4.2);
+      jx = a * (Math.sin(d * 2.9 + 0.4) + 0.5 * Math.sin(d * 5.3 + 1.1)) / 1.5;
+      jy = a * 0.8 * (Math.cos(d * 2.3 + 0.2) + 0.5 * Math.sin(d * 4.1 + 2.0)) / 1.5;
+      jr = 0.5 * (a / Math.max(1e-6, J)) * Math.sin(d * 1.9 + 0.7) * Math.min(1, J / (16 * U));
+    }
+    cam.style.transform = `translate(${jx.toFixed(2)}px, ${jy.toFixed(2)}px) rotate(${jr.toFixed(3)}deg)`;
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the font is in: the stamp is fitted to about 60 % of the width with the real font
+  (document.fonts && document.fonts.load ? Promise.all([document.fonts.load(`400 100px "${V.font}"`), document.fonts.load(`700 100px "${V.font}"`), document.fonts.ready]).catch(() => {})
+    : Promise.resolve()).then(() => {
+    const w0 = ink.offsetWidth, h0 = ink.offsetHeight;
+    const TW = 0.6 * Math.min(W, 1.25 * H) * s, TH = 0.3 * H * s;
+    FS = FS * Math.min(TW / Math.max(1, w0), TH / Math.max(1, h0));
+    ink.style.fontSize = `${FS}px`;
+    iw = ink.offsetWidth; ih = ink.offsetHeight;
+    Object.assign(ink.style, { left: `${-iw / 2}px`, top: `${-ih / 2}px` });
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

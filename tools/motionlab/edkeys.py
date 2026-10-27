@@ -29,8 +29,21 @@ PROPS = {"zoom": ("zoom", None, 1.0, 0.1, 5.0), "x": ("dx", None, 0.0, -10000.0,
          "y": ("dy", None, 0.0, -10000.0, 10000.0), "rotation": ("rotation", None, 0.0, -3600.0, 3600.0),
          "opacity": ("opacity", None, 1.0, 0.0, 1.0), "ax": ("anchor", 0, 0.5, 0.0, 1.0),
          "ay": ("anchor", 1, 0.5, 0.0, 1.0)}
-EASES = ("linear", "smooth", "in", "out", "hold", "pop")
+EASES = ("linear", "smooth", "in", "out", "hold", "pop", "easy", "strong", "glide", "launch")   # + "cubic(x1,y1,x2,y2)"
 DEFAULT_EASE = "smooth"                         # (the research, 2026-10-26: motion keys ease in and out by default)
+
+
+def ease_ok(e: str) -> bool:
+    """A named ease, or the chart's own curve "cubic(x1,y1,x2,y2)" (handles: x in 0..1, y in -1..2)."""
+    if e in EASES:
+        return True
+    if not (e.startswith("cubic(") and e.endswith(")")):
+        return False
+    try:
+        x1, y1, x2, y2 = (float(v) for v in e[6:-1].split(","))
+    except ValueError:
+        return False
+    return 0 <= x1 <= 1 and 0 <= x2 <= 1 and -1 <= y1 <= 2 and -1 <= y2 <= 2
 KEY_OPS = ("kset", "kadd", "kdel", "kmove", "kease", "kreset")
 
 
@@ -155,9 +168,9 @@ def apply_op(P: dict, S: dict, o: dict) -> str:
             raise KeyError_(I18N.t("no key at {frame}", frame=f"f{f}"))
         return f"{S['id']}: the {', '.join(gone)} key{'s' if len(gone) > 1 else ''} at f{f} removed"
     if op == "kease":
-        ease = str(o.get("ease"))
-        if ease not in EASES:
-            raise KeyError_(I18N.t("an ease: linear, smooth, in, out, hold or pop"))
+        ease = str(o.get("ease")).replace(" ", "")
+        if not ease_ok(ease):
+            raise KeyError_(I18N.t("an ease from the list, or a curve with its two handles"))
         n = 0
         for p in props:
             ks = keys(S, p) or []
@@ -222,6 +235,12 @@ def selfcheck() -> dict:
          and key_frames(S)["zoom"] == [110, 179])
     apply_op(P, S, {"op": "kease", "f": 110, "ease": "pop"})
     case("an ease on the move after a key", S["zoom"]["keys"][0][2] == "pop")
+    apply_op(P, S, {"op": "kease", "f": 110, "ease": "cubic(0.2, 0.9, 0.3, 1)"})
+    from .compose import Curve
+    c = Curve(S["zoom"])
+    case("the chart's own curve (two handles): a glide - most of the move early, a soft landing",
+         S["zoom"]["keys"][0][2] == "cubic(0.2,0.9,0.3,1)" and c(130) > 1.5 + 0.5 * 0.8 and abs(c(179) - 2.0) < 1e-3
+         and not ease_ok("cubic(2,0,1,1)") and ease_ok("glide"))
     apply_op(P, S, {"op": "kset", "prop": "ax", "f": 120, "value": 0.3})
     case("the zoom point keeps the other half of the anchor", S["anchor"] == [0.3, 0.5])
     apply_op(P, S, {"op": "kdel", "prop": "rotation", "f": 179})

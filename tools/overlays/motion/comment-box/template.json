@@ -1,0 +1,119 @@
+{
+ "name": "Comment box",
+ "kind": "social",
+ "category": "Social",
+ "what": "A comment bar rises in at the bottom, a word types itself into the field with a blinking caret, the send arrow is tapped and the comment posts as a bubble just above the bar; a heart pops on it with a burst of dots and a like count, then beats gently.",
+ "use_for": [
+  "comment",
+  "call to action",
+  "cta",
+  "comment for the link",
+  "engagement",
+  "talking head",
+  "social",
+  "short form",
+  "reply"
+ ],
+ "tags": [
+  "comment",
+  "social",
+  "ui",
+  "typing",
+  "caret",
+  "send",
+  "heart",
+  "like",
+  "talking head",
+  "1 core point"
+ ],
+ "learned_from": [],
+ "origin": "A MotionLab original for a common need (a viewer comment typed and posted over a talking head), rebuilt in our HyperFrames way from the look and motion of an MIT-licensed Python effect (claude-video-effects, comment-box / comment_bar); 2026-10-27",
+ "motion": "f0-f14 the bar rises in from below (power3.out, fading in f0-f4); the caret blinks in the empty field (8 frames on, 8 off); from f14 the comment types in one letter every 3 frames (36 frames at most for a long one), the send button lights up with the first letter (a small pop); 6 frames after the last letter the send arrow is tapped (a 3-frame dip, back.out back, a ripple 14 f) and shoots up; 2 frames later the comment posts: a bubble rises from the field to just above the bar (expo.out 12 f, its size back.out from 0.7); 12 frames later a heart pops (to 1.3 in 5 f, back.out to 1 in 8 f) with eight dots bursting out (12 f) and the like count rises in; in the hold the heart beats twice every 36 frames, the bubble bobs 3 px and the caret blinks; at the end both drop 44 px and fade (power2.in, 8 f). With the default four letters: typing f14-f23, tap f32, post f34, heart f46.",
+ "tracks": [
+  {
+   "name": "bar in",
+   "what": "the comment bar rises in from below the frame's bottom",
+   "start_f": 0,
+   "length_f": 14,
+   "easing": "power3.out"
+  },
+  {
+   "name": "typing",
+   "what": "the comment types itself in, a letter every 3 frames (default text)",
+   "start_f": 14,
+   "length_f": 12,
+   "easing": "steps"
+  },
+  {
+   "name": "tap",
+   "what": "the send arrow dips and a ripple spreads (default text)",
+   "start_f": 32,
+   "length_f": 12,
+   "easing": "power2.in, then back.out"
+  },
+  {
+   "name": "post",
+   "what": "the posted comment rises from the field to above the bar (default text)",
+   "start_f": 34,
+   "length_f": 12,
+   "easing": "expo.out"
+  },
+  {
+   "name": "heart",
+   "what": "the heart pops with a burst of dots and the count (default text)",
+   "start_f": 46,
+   "length_f": 13,
+   "easing": "power2.out, then back.out"
+  },
+  {
+   "name": "hold",
+   "what": "the heart beats, the bubble bobs, the caret blinks",
+   "start_f": 59,
+   "length_f": 52,
+   "easing": "none"
+  },
+  {
+   "name": "out",
+   "what": "both drop and fade",
+   "start_f": 111,
+   "length_f": 8,
+   "easing": "power2.in"
+  }
+ ],
+ "min_frames": "round((73 + min(36, 3 * len(text))) * fps / 30)",
+ "min_why": "the comment types, posts and gets its heart before it drops away",
+ "core_points": 1,
+ "text_slots": [
+  "text",
+  "name"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "general": 0.55,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  2,
+  6,
+  12,
+  15,
+  20,
+  26,
+  32,
+  34,
+  37,
+  41,
+  46,
+  49,
+  54,
+  80,
+  114,
+  119
+ ]
+}

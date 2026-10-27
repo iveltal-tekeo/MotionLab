@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title line", "default": "Getting your video ready"},
+  {"id": "steps", "type": "string", "label": "Steps (| between, up to 8; a note after :: shows on the right)", "default": "Script written::v3|Clips trimmed::38 cuts|Captions added::auto|Ready to post::4K"},
+  {"id": "count_text", "type": "string", "label": "Counter beside the title ({done} and {all} become the numbers; empty = none)", "default": "{done} of {all}"},
+  {"id": "done_color", "type": "color", "label": "Tick colour", "default": "#34C759"},
+  {"id": "gap", "type": "number", "label": "Frames each step spins before its tick", "default": 20, "min": 4, "max": 150, "step": 1},
+  {"id": "tone", "type": "enum", "label": "Glass", "default": "smoke", "options": [{"value": "smoke", "label": "Smoke (dark, the text stands out)"}, {"value": "clear", "label": "Clear (a light frost)"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.5, "max": 1.4, "step": 0.05},
+  {"id": "x", "type": "number", "label": "Centre across (% of the width)", "default": 50, "min": 0, "max": 100, "step": 1},
+  {"id": "y", "type": "number", "label": "Centre down (% of the height)", "default": 68, "min": 0, "max": 100, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "task-checklist" (2026-10-27): a task list of glass under the chin. It rises into place
+     (f0-f12, slow end, 140 px); from f10 its steps run one after another: the running step's circle spins a loader
+     arc (18 degrees a frame), then after `gap` frames it pops green with a tick that draws itself (8 f, a small
+     overshoot) and the next one starts spinning; waiting steps are dimmed; the header's ring fills a share per tick
+     and the counter counts; when the last one ticks the ring fills green with its own tick; it floats while it holds,
+     a band of light crosses the glass, and it sinks away over the last 9 frames. Over a video with a person it is a
+     glass card: the renderer frosts the real footage under it (template.json "in_shot"), so the card paints only a
+     translucent smoke (or a light frost), a light rim and a soft highlight at its top edge (the preview background
+     below is the only thing it blurs). After the "checklist" / "todo" effects of claude-video-effects (MIT);
+     MotionLab's own code. Size-independent, look-aware. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #cardw { position: absolute; left: 0; top: 0; }
+  #card { position: absolute; overflow: hidden; }
+  #card > div, #card > svg { position: absolute; }
+  .tx { position: absolute; white-space: nowrap; font-synthesis: none; line-height: 1; }
+  .st { position: absolute; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="cardw"><div id="card"><div id="hi"></div><div id="rows"></div><svg id="rim"></svg></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.7 * x * x * x + 1.7 * x * x; };                // slow end, an overshoot
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const S = Math.round(V.start);
+  const light = lum(L.paper) >= lum(L.ink) ? L.paper : L.ink, dark = light === L.paper ? L.ink : L.paper;
+  const smoke = V.tone !== "clear", NS = "http://www.w3.org/2000/svg";
+  const esc = t => String(t == null ? "" : t).replace(/[&<>]/g, "");
+
+  // ---- the preview background (only when painted: over a video the card is see-through and the renderer frosts the footage)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.5 * W}px ${0.22 * H}px at ${0.2 * W}px ${0.28 * H}px, ${rgba(L.mustard, 0.55)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.42 * W}px ${0.2 * H}px at ${0.84 * W}px ${0.6 * H}px, ${rgba(L.paper, 0.3)}, ${rgba(L.paper, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.6 * W}px ${0.18 * H}px at ${0.45 * W}px ${0.9 * H}px, ${rgba(L.signal, 0.28)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the steps and the card: 972 wide at 1080 px, a header of 120, rows of 104 (scaled down when it would not fit)
+  const steps = String(V.steps || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 8).map(x => {
+    const i = x.indexOf("::"); return i < 0 ? [x, ""] : [x.slice(0, i).trim(), x.slice(i + 2).trim()]; });
+  if (!steps.length) steps.push(["Ready", ""]);
+  const n = steps.length;
+  const s0 = V.size * U, cw0 = 972 * s0, ch0 = (120 + 104 * n + 26) * s0;
+  const s = s0 * Math.min(1, W * 0.94 / cw0, H * 0.9 / ch0);
+  const cw = 972 * s, hh = 120 * s, rh = 104 * s, ch = (120 + 104 * n + 26) * s;
+  const R = Math.min(hh / 2, Math.max(10 * U, L.radius * 3));
+  const cx = Math.min(W - cw / 2 - W * 0.03, Math.max(cw / 2 + W * 0.03, W * V.x / 100));
+  const cy = Math.min(H - ch / 2 - H * 0.04, Math.max(ch / 2 + H * 0.04, H * V.y / 100));
+  const cardw = q("cardw"), card = q("card");
+  Object.assign(card.style, { left: `${-cw / 2}px`, top: `${-ch / 2}px`, width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`,
+    background: smoke ? `linear-gradient(180deg, ${rgba(dark, 0.56)} 0%, ${rgba(dark, 0.48)} 100%)`
+      : `linear-gradient(180deg, ${rgba("#ffffff", 0.2)} 0%, ${rgba("#ffffff", 0.13)} 50%, ${rgba("#ffffff", 0.15)} 100%)` });
+  if (V.background) {          // the preview only: the real frost of the painted background behind it + its shadow
+    card.style.backdropFilter = card.style.webkitBackdropFilter = `blur(${18 * U}px) saturate(1.25)`;
+    card.style.boxShadow = `0 ${12 * U}px ${36 * U}px ${rgba("#000000", 0.32)}`;
+  }
+  Object.assign(q("hi").style, { left: "0px", top: "0px", width: `${cw}px`, height: `${hh * 1.3}px`,
+    background: `linear-gradient(180deg, ${rgba("#ffffff", smoke ? 0.1 : 0.18)} 0%, ${rgba("#ffffff", 0)} 100%)` });
+  const rim = q("rim"), sw = Math.max(1.2, 1.6 * U), bw = cw * 0.28;
+  rim.setAttribute("width", cw); rim.setAttribute("height", ch);
+  Object.assign(rim.style, { left: "0px", top: "0px", overflow: "visible" });
+  rim.innerHTML = `<defs><linearGradient id="tcrim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="${smoke ? 0.7 : 0.9}"/>` +
+    `<stop offset="0.45" stop-color="#ffffff" stop-opacity="${smoke ? 0.14 : 0.22}"/><stop offset="1" stop-color="#ffffff" stop-opacity="${smoke ? 0.4 : 0.55}"/></linearGradient>` +
+    `<linearGradient id="tcshg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.14"/>` +
+    `<stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient><clipPath id="tcc"><rect x="0" y="0" width="${cw}" height="${ch}" rx="${R}"/></clipPath></defs>` +
+    `<g clip-path="url(#tcc)"><rect id="tcsh" x="0" y="${-ch * 0.5}" width="${bw}" height="${ch * 2}" fill="url(#tcshg)" opacity="0"/></g>` +
+    `<line x1="${30 * s}" y1="${hh}" x2="${cw - 30 * s}" y2="${hh}" stroke="${rgba("#ffffff", 0.13)}" stroke-width="${Math.max(1, 2 * U)}"/>` +
+    `<rect x="${sw / 2}" y="${sw / 2}" width="${cw - sw}" height="${ch - sw}" rx="${R - sw / 2}" fill="none" stroke="url(#tcrim)" stroke-width="${sw}"/>`;
+  const sheen = q("tcsh");
+
+  // ---- the status mark: a ring (waiting), a spinning arc (running), a green disc with a tick (done)
+  const mark = (r, x, y) => {
+    const g = document.createElementNS(NS, "svg"), b = r * 1.6;
+    g.setAttribute("class", "st"); g.setAttribute("width", 2 * b); g.setAttribute("height", 2 * b);
+    Object.assign(g.style, { left: `${x - b}px`, top: `${y - b}px` });
+    const C = 2 * Math.PI * r;
+    g.innerHTML = `<circle class="rg" cx="${b}" cy="${b}" r="${r}" fill="none" stroke="${rgba("#ffffff", 0.26)}" stroke-width="${4.5 * s}"/>` +
+      `<circle class="ar" cx="${b}" cy="${b}" r="${r}" fill="none" stroke="${L.signal}" stroke-width="${5 * s}" stroke-linecap="round" stroke-dasharray="${(C * 100 / 360).toFixed(2)} ${C.toFixed(2)}" opacity="0"/>` +
+      `<g class="dn" opacity="0"><circle cx="${b}" cy="${b}" r="${r}" fill="${V.done_color}"/>` +
+      `<path class="ck" d="M ${b - r * 0.46} ${b + r * 0.02} L ${b - r * 0.12} ${b + r * 0.36} L ${b + r * 0.5} ${b - r * 0.34}" fill="none" stroke="#ffffff" stroke-width="${5 * s}" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></g>`;
+    return { g, b, rg: g.querySelector(".rg"), ar: g.querySelector(".ar"), dn: g.querySelector(".dn"), ck: g.querySelector(".ck") };
+  };
+  const rows = q("rows");
+  Object.assign(rows.style, { left: "0px", top: "0px", width: `${cw}px`, height: `${ch}px` });
+  const txt = (cls, text, o) => { const e = document.createElement("div"); e.className = "tx " + cls; e.textContent = text; Object.assign(e.style, o); rows.appendChild(e); return e; };
+  // the header: a ring that fills a share per tick, the title, the counter
+  const H0 = mark(18 * s, 44 * s, hh / 2);
+  H0.rg.setAttribute("stroke-width", 5 * s);
+  H0.ar.setAttribute("stroke-dasharray", `0 ${2 * Math.PI * 18 * s}`); H0.ar.setAttribute("opacity", "1"); H0.ar.setAttribute("stroke", V.done_color);
+  H0.ar.setAttribute("transform", `rotate(-90 ${H0.b} ${H0.b})`);
+  rows.appendChild(H0.g);
+  const bodyF = `'${V.body_font}', 'Segoe UI', sans-serif`, accF = `'${V.accent_font}', Consolas, monospace`;
+  const title = txt("ml-body", V.title || "", { left: `${80 * s}px`, top: `${hh / 2}px`, color: light, fontFamily: bodyF, fontWeight: String(fw(V.body_font, 800)), fontSize: `${42 * s}px` });
+  const count = txt("ml-body", "", { right: `${36 * s}px`, top: `${hh / 2}px`, color: rgba(light, 0.62), fontFamily: bodyF, fontWeight: String(fw(V.body_font, 500)), fontSize: `${28 * s}px`, fontVariantNumeric: "tabular-nums" });
+  const countOf = k => String(V.count_text || "").replace(/\{done\}/g, String(k)).replace(/\{all\}/g, String(n));
+  const R_ = steps.map(([a, m], i) => {
+    const y = hh + 13 * s + rh * i + rh / 2, M = mark(24 * s, 56 * s, y);
+    rows.appendChild(M.g);
+    const tx = txt("ml-body", a, { left: `${104 * s}px`, top: `${y}px`, color: light, fontFamily: bodyF, fontWeight: String(fw(V.body_font, 700)), fontSize: `${40 * s}px` });
+    const mt = txt("ml-accent", m, { right: `${36 * s}px`, top: `${y}px`, color: rgba(light, 0.6), fontFamily: accF, fontWeight: String(fw(V.accent_font, 700)), fontSize: `${28 * s}px` });
+    return { M, tx, mt };
+  });
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame"; e = frames at 30 fps before the end)
+  const GAP = Math.max(4, V.gap), first = 10;
+  const doneAt = i => first + (i + 1) * GAP, all = doneAt(n - 1);
+  const leave = V.leave && (FRAMES - S) * 30 / FPS - 9 > all + 10;
+  const HC = 2 * Math.PI * 18 * s;
+  const mid = e => `translateY(-50%)`;
+  // the rise in and the sink out stay inside the frame when the card sits low
+  const ROOM = H - (cy + ch / 2), RISE = Math.min(140 * s, Math.max(20 * s, ROOM - 4 * U)), SINK = Math.min(30 * s, Math.max(0, ROOM - 4 * U));
+  function render(t) {
+    const d = (t - S / FPS) * 30, e = (FRAMES / FPS - t) * 30;
+    cardw.style.visibility = d >= 0 ? "visible" : "hidden";
+    if (d < 0) return;
+    const qv = eOut(d / 12);
+    let lift = (1 - qv) * RISE, op = c01((d + 0.5) / 4), sc = 0.96 + 0.04 * qv;
+    lift += 3 * s * Math.sin(2 * Math.PI * (d - all) / 96) * c01((d - all) / 20);     // it floats a hair once all are done
+    if (leave && e < 9) { const x = eIn(1 - e / 9); sc *= 1 - 0.08 * x; lift += SINK * x; op *= 1 - x; }
+    cardw.style.transform = `translate(${cx.toFixed(2)}px, ${(cy + lift).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    cardw.style.opacity = op.toFixed(3);
+    let done = 0, share = 0;
+    R_.forEach((r, i) => {
+      const f1 = doneAt(i), f0 = f1 - GAP, M = r.M;
+      if (d >= f1) {                      // done: the disc pops (8 f, an overshoot), the tick draws (6 f)
+        done++;
+        const p = eBack((d - f1) / 8);
+        M.dn.setAttribute("opacity", "1");
+        M.dn.setAttribute("transform", `translate(${M.b} ${M.b}) scale(${(0.55 + 0.45 * p).toFixed(4)}) translate(${-M.b} ${-M.b})`);
+        M.ck.setAttribute("stroke-dashoffset", (100 * (1 - eOut((d - f1 - 2) / 6))).toFixed(2));
+        M.ar.setAttribute("opacity", "0"); M.rg.setAttribute("opacity", "0");
+        r.tx.style.opacity = "1"; r.mt.style.color = V.done_color; r.mt.style.opacity = "1";
+      } else if (d >= f0) {               // running: the loader arc spins, the words are up
+        M.dn.setAttribute("opacity", "0"); M.rg.setAttribute("opacity", "0.8");
+        M.ar.setAttribute("opacity", c01((d - f0) / 3).toFixed(3));
+        M.ar.setAttribute("transform", `rotate(${((d - f0) * 18 - 90).toFixed(1)} ${M.b} ${M.b})`);
+        r.tx.style.opacity = (0.45 + 0.55 * eOut((d - f0) / 5)).toFixed(3); r.mt.style.color = rgba(light, 0.6); r.mt.style.opacity = "1";
+      } else {                            // waiting: dimmed
+        M.dn.setAttribute("opacity", "0"); M.ar.setAttribute("opacity", "0"); M.rg.setAttribute("opacity", "1");
+        r.tx.style.opacity = "0.45"; r.mt.style.color = rgba(light, 0.6); r.mt.style.opacity = "0.55";
+      }
+      share += eOut((d - f1) / 8);
+    });
+    count.textContent = countOf(done);
+    H0.ar.setAttribute("stroke-dasharray", `${(HC * share / n).toFixed(2)} ${HC.toFixed(2)}`);
+    // all done: the header ring fills green and gets its own tick
+    const pa = d >= all + 4 ? eBack((d - all - 4) / 8) : 0;
+    H0.dn.setAttribute("opacity", d >= all + 4 ? "1" : "0");
+    H0.dn.setAttribute("transform", `translate(${H0.b} ${H0.b}) scale(${(0.55 + 0.45 * pa).toFixed(4)}) translate(${-H0.b} ${-H0.b})`);
+    H0.ck.setAttribute("stroke-dashoffset", (100 * (1 - eOut((d - all - 6) / 6))).toFixed(2));
+    const sp = eIO((d - all - 12) / 26);
+    sheen.setAttribute("transform", `translate(${(-bw * 1.4 + (cw + bw * 2.2) * sp).toFixed(2)} 0) rotate(18 ${(bw / 2).toFixed(1)} ${(ch / 2).toFixed(1)})`);
+    sheen.setAttribute("opacity", sp > 0 && sp < 1 ? "1" : "0");
+  }
+  [title, count, ...R_.flatMap(r => [r.tx, r.mt])].forEach(el => { el.style.transform = mid(); });
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 47 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in; the words are fitted beside their notes with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all([500, 700, 800].flatMap(w => [document.fonts.load(`${w} 100px "${V.body_font}"`), document.fonts.load(`${w} 100px "${V.accent_font}"`)])
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    count.textContent = countOf(n);
+    const troom = cw - 80 * s - 36 * s - count.offsetWidth - 24 * s;
+    if (title.offsetWidth > troom) title.style.fontSize = `${42 * s * Math.max(0.4, troom / title.offsetWidth)}px`;
+    const metaW = Math.max(0, ...R_.map(r => r.mt.offsetWidth)), room = cw - 104 * s - 36 * s - metaW - (metaW ? 28 * s : 0);
+    const widest = Math.max(1, ...R_.map(r => r.tx.offsetWidth));
+    if (widest > room) R_.forEach(r => { r.tx.style.fontSize = `${40 * s * Math.max(0.4, room / widest)}px`; });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

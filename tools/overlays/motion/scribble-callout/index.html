@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "label", "type": "string", "label": "A short note by the arrow (1-2 words)", "default": "me"},
+  {"id": "colour", "type": "enum", "label": "Marker colour", "default": "signal", "options": [{"value": "signal", "label": "Signal"}, {"value": "mustard", "label": "Mustard"}, {"value": "paper", "label": "Paper"}, {"value": "ink", "label": "Ink"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "font", "type": "enum", "label": "Note font", "default": "Permanent Marker", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "pen", "type": "number", "label": "Marker width (px at a 1080-px short side)", "default": 10, "min": 4, "max": 24, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "scribble-callout" (2026-10-27): a marker circle draws itself around a head (f0-f16,
+     S-curve, a loose loop that overshoots its start), a hand-drawn arrow follows from a note at the upper right
+     (f13-f23, its head f22-f26), the note pops in (f20-f29) and three marker crosses pop around (f24-f38); the lines
+     boil on twos while it holds; at the end the note and crosses shrink away and the lines un-draw (the last 12 f).
+     Drawn centred in the frame around a 400 x 520 px loop (at a 1080-px short side): the note's right edge is fixed
+     and the lower-left cross mirrors it, so the visible area stays symmetric about the loop and the Editor's face snap
+     (in_shot follow face + snap) circles the face. Look-aware: the marker colour from the look. MotionLab's own code. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #note { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.15; font-synthesis: none; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <canvas id="pen" class="abs"></canvas>
+  <div id="note"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const outBack = (x, s) => { x = clamp01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const outCubic = x => 1 - Math.pow(1 - clamp01(x), 3);
+  const inCubic = x => { x = clamp01(x); return x * x * x; };
+  const sine = x => 0.5 - 0.5 * Math.cos(Math.PI * clamp01(x));
+  const S = Math.round(V.start);
+  const END = FRAMES * 30 / FPS;                          // the last frame + 1, in frames designed at 30 fps
+  const OUT0 = END - 12;
+  const col = { signal: L.signal, mustard: L.mustard, paper: L.paper, ink: L.ink, deep: L.deep }[V.colour] || L.signal;
+  const halo = lum(col) > 0.6 ? rgba("#000000", 0.4) : rgba("#000000", 0.3);
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background ? (lum(col) > 0.5 ? "#1A1917" : L.paper) : "transparent" });
+
+  // ---- the layout, in "face widths" FW (the loop is 2 FW wide, 2.6 FW tall), centred in the frame
+  const FW = 200 * U, CX = W / 2, CY = H / 2, RX = 1.0 * FW, RY = 1.3 * FW, PEN = V.pen * U;
+  const NOTE_R = CX + 2.15 * FW, NOTE_Y = CY - 0.98 * FW, NOTE_MAX = 0.85 * FW;
+  const cv = q("pen"); cv.width = W; cv.height = H;
+  const cx = cv.getContext("2d");
+  const note = q("note");
+  Object.assign(note.style, { fontFamily: `'${V.font}', 'Segoe UI', sans-serif`, fontSize: `${84 * U}px`, fontWeight: String(fw(V.font, 400)), color: col,
+    textShadow: `0 0 ${6 * U}px ${halo}` });
+  note.textContent = String(V.label || "");
+
+  // the loop: a wobbly ellipse from the upper left, once round and a little past its start, drifting outward
+  const A0 = -1.9, TURN = 2 * Math.PI * 1.08, NL = 140;
+  const loop = [];
+  for (let i = 0; i <= NL; i++) {
+    const a = A0 + TURN * i / NL, k = 1 + 0.035 * i / NL;
+    loop.push([CX + RX * k * (1 + 0.04 * Math.sin(3 * a)) * Math.cos(a), CY + RY * k * (1 + 0.04 * Math.cos(2 * a)) * Math.sin(a)]);
+  }
+  // the marker crosses: [x, y, half size] in FW; the lower-left one mirrors the note's right edge
+  const CROSSES = [[-1.45, -1.0, 0.13], [1.45, 0.55, 0.13], [-1.95, 0.85, 0.2]].map(([x, y, s]) => [CX + x * FW, CY + y * FW, s * FW]);
+  let arrow = [], head = null;
+
+  // a path drawn from u0 to u1 of its length, boiling on twos (a hand that is never quite still)
+  const lens = pts => { const out = [0]; for (let i = 1; i < pts.length; i++) out.push(out[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return out; };
+  const loopLen = lens(loop);
+  let arrowLen = [0];
+  function stroke(pts, ls, u0, u1, kk, seed) {
+    const tot = ls[ls.length - 1], a = u0 * tot, b = u1 * tot, B = 1.3 * U;
+    if (b - a < 0.5) return;
+    cx.beginPath();
+    let n = 0;
+    for (let i = 0; i < pts.length; i++) {
+      if (ls[i] < a && (i + 1 >= pts.length || ls[i + 1] < a)) continue;
+      if (ls[i] > b) {                                        // the pen's exact tip between two points
+        const j = i - 1, f = (b - ls[j]) / Math.max(1e-6, ls[i] - ls[j]);
+        const x = pts[j][0] + (pts[i][0] - pts[j][0]) * f, y = pts[j][1] + (pts[i][1] - pts[j][1]) * f;
+        cx.lineTo(x, y); break;
+      }
+      const s = ls[i];
+      const x = pts[i][0] + B * Math.sin(s * 0.021 + kk * 1.9 + seed) + 0.6 * B * Math.sin(s * 0.057 + kk * 3.1);
+      const y = pts[i][1] + B * Math.sin(s * 0.025 + kk * 2.3 + seed) + 0.6 * B * Math.sin(s * 0.049 + kk * 0.7);
+      if (n === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
+      n++;
+    }
+    cx.stroke();
+  }
+
+  let nw = 1, nh = 1, nfit = 1;
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    cx.clearRect(0, 0, W, H);
+    note.style.visibility = g > 0.001 ? "visible" : "hidden";
+    if (g <= 0.001) return;
+    const kk = Math.floor(g / 2);                             // the boil changes on twos
+    const er = sine((g - OUT0 - 2) / 9);                      // the lines un-draw from their start at the end
+    Object.assign(cx, { lineWidth: PEN, lineCap: "round", lineJoin: "round", strokeStyle: col, shadowColor: halo, shadowBlur: 5 * U });
+    // the loop (f0-f16), the arrow (f13-f23) and its head (f22-f26)
+    stroke(loop, loopLen, er, sine((g + 0.5) / 16), kk, 0);
+    if (arrow.length) {
+      stroke(arrow, arrowLen, er, outCubic((g - 13) / 10), kk, 1.3);
+      const hk = outCubic((g - 22) / 4) * (1 - er);
+      if (hk > 0.01 && head) head.forEach(([x0, y0, x1, y1]) => { cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(x0 + (x1 - x0) * hk, y0 + (y1 - y0) * hk); cx.stroke(); });
+    }
+    // the crosses pop in one after another (f24, f27, f30) and shrink away at the end
+    const shrink = 1 - inCubic((g - OUT0) / 7);
+    CROSSES.forEach(([x, y, s], j) => {
+      const k = outBack((g - 24 - 3 * j) / 8, 2.0) * shrink * s;
+      if (k <= 0.5 * U) return;
+      const w = 1 + 0.06 * Math.sin(kk * 2.1 + j);            // they boil too
+      cx.beginPath(); cx.moveTo(x - k * w, y + 0.08 * k); cx.lineTo(x + k, y - 0.08 * k * w); cx.stroke();
+      cx.beginPath(); cx.moveTo(x - 0.06 * k * w, y - k); cx.lineTo(x + 0.06 * k, y + k * w); cx.stroke();
+    });
+    // the note: pops in (f20-f29), tilted, wiggling a hair on twos; shrinks away at the end
+    const p = (0.7 + 0.3 * outBack((g - 20) / 9, 1.7)) * (1 - inCubic((g - OUT0) / 6));
+    note.style.opacity = String((clamp01((g - 20) / 3) * (1 - clamp01((g - OUT0 - 3) / 4))).toFixed(3));
+    const rot = -8 + 1.2 * Math.sin(kk * 1.7);
+    note.style.transform = `translate(${(NOTE_R - nw).toFixed(2)}px, ${(NOTE_Y - nh / 2).toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${(p * nfit).toFixed(4)})`;
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 59 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the note is measured with its real font (fitted to 0.85 FW, its right edge fixed), the arrow drawn from its left
+  // end to the loop's upper right, then the timeline is registered
+  (document.fonts && document.fonts.load ? Promise.all([400, 700].map(w => document.fonts.load(`${w} 100px "${V.font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    const w0 = Math.max(1, note.offsetWidth); nh = Math.max(1, note.offsetHeight);
+    nfit = Math.min(1, NOTE_MAX / w0);
+    nw = w0 / 2 + (w0 * nfit) / 2;                            // the note's box is scaled about its middle: keep its right edge
+    const left = NOTE_R - w0 * nfit, th = -0.7;
+    const p0 = [left - 0.06 * FW, NOTE_Y + 0.14 * FW];
+    const p1 = [CX + 1.12 * RX * Math.cos(th), CY + 1.12 * RY * Math.sin(th)];
+    const mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2, dx = p1[0] - p0[0], dy = p1[1] - p0[1], dl = Math.max(1, Math.hypot(dx, dy));
+    const c = [mx + (dy / dl) * 0.22 * dl, my - (dx / dl) * 0.22 * dl];  // a hand's curve: bulging up
+    arrow = [];
+    for (let i = 0; i <= 40; i++) { const u = i / 40; arrow.push([(1 - u) * (1 - u) * p0[0] + 2 * u * (1 - u) * c[0] + u * u * p1[0], (1 - u) * (1 - u) * p0[1] + 2 * u * (1 - u) * c[1] + u * u * p1[1]]); }
+    arrowLen = lens(arrow);
+    const [xa, ya] = arrow[36], [xb, yb] = arrow[40], ang = Math.atan2(yb - ya, xb - xa), hs = 0.2 * FW;
+    head = [2.6, -2.6].map(s => [xb, yb, xb + hs * Math.cos(ang + s), yb + hs * Math.sin(ang + s)]);
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

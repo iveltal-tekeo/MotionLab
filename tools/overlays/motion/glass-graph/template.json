@@ -1,0 +1,30 @@
+{
+ "name": "Glass graph",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "A glass stat card under your chin: it rises into place, a line graph climbs across it with a glowing head and a soft fill while the big number counts up (0 to 197K, 82 %, $4,900...); the number pops as it lands, the head sends out a ring every second, a band of light crosses the glass, and it sinks away at the end.",
+ "use_for": ["growth", "views", "followers", "revenue", "results", "stat", "milestone", "numbers", "talking head", "glass", "short form"],
+ "tags": ["chart", "line chart", "graph", "counter", "number", "stat", "glass", "frosted", "card", "glow", "talking head"],
+ "learned_from": [],
+ "origin": "Rebuilt after the liquid-glass-graph effect of claude-video-effects (MIT): a glass card with a climbing graph and a number counting up - MotionLab's own code, a glass card made part of the shot",
+ "motion": "f0-f12 the card rises 86 px and grows from 88 % (slow end, seen within 4 f) while its 3 grid lines draw in (12 f each, 3 f apart); f8-f68 the line climbs across (climb = 60 f, S-curve) with a glowing head and a fill under it, the number counting with the same curve; f68 the number pops (7 %, 8 f, slow end) and the head swells; from then a ring leaves the head every 30 f (14 f, slow end) and the card floats 3 px; a band of light crosses the glass f72-f96 (S-curve); the last 9 f it sinks 30 px and fades (accelerating)",
+ "tracks": [
+  {"name": "card in", "what": "the glass card rises into place", "start_f": 0, "length_f": 12, "easing": "decelerating (slow end)"},
+  {"name": "grid", "what": "three grid lines draw in", "start_f": 3, "length_f": 18, "easing": "decelerating (slow end)"},
+  {"name": "climb", "what": "the line climbs across with a glowing head while the number counts up", "start_f": 8, "length_f": 60, "easing": "S-curve"},
+  {"name": "land", "what": "the number pops and the head swells", "start_f": 68, "length_f": 8, "easing": "decelerating (slow end)"},
+  {"name": "sheen", "what": "a band of light crosses the glass", "start_f": 72, "length_f": 24, "easing": "S-curve"},
+  {"name": "card out", "what": "the card sinks away and fades", "start_f": 141, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round((8 + max(12, climb) + 14) * fps / 30)",
+ "min_why": "the line has to finish its climb and the number land before it ends",
+ "in_shot": {"glass": true, "shadow": true, "guard": true, "match": true},
+ "core_points": 1,
+ "text_slots": ["label", "to"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 100,
+ "check_frames": [0, 2, 6, 12, 24, 38, 52, 66, 70, 76, 84, 100, 143, 147]
+}

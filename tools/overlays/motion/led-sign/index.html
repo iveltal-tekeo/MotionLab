@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The sign (| = a new line, up to 3 lines)", "default": "ON AIR"},
+  {"id": "led", "type": "color", "label": "LED colour", "default": "#FF9A3C"},
+  {"id": "size", "type": "number", "label": "Sign width (% of the frame, at most)", "default": 88, "min": 30, "max": 96, "step": 1},
+  {"id": "y", "type": "number", "label": "Height of the sign’s middle (% of the frame, from the top)", "default": 18, "min": 5, "max": 80, "step": 1},
+  {"id": "dim", "type": "number", "label": "The lights drop behind you (%)", "default": 45, "min": 0, "max": 85, "step": 5},
+  {"id": "panel", "type": "boolean", "label": "Show the unlit dots of the panel", "default": true},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "led-sign" (2026-10-27): a dot-matrix LED sign on the wall behind the person (the Editor
+     puts it behind them: in_shot behind + follow camera). The lights in the room drop with a flicker (f0-f8) while the
+     sign's unlit panel of dots fades up (f0-f5); then it types itself out letter by letter (from f4, about 2 f a
+     letter), each letter flicking on (on, off, on - some twice), with a soft bloom; while it holds every dot hums and
+     one letter drops out for a moment; at the end it flickers and switches off, the panel fades and the lights come
+     back (the last 14 f). The letters are the look's text font, sampled into 11 rows of dots a line. Look-aware.
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  canvas { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="dim" class="abs"></div>
+  <div id="sign" class="abs"><canvas id="g2"></canvas><canvas id="g1"></canvas><canvas id="dots"></canvas></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const hex = h => { const s = String(h).replace("#", ""); const t = s.length === 3 ? s.split("").map(c => c + c).join("") : s; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const outCubic = x => 1 - Math.pow(1 - clamp01(x), 3);
+  const sine = x => 0.5 - 0.5 * Math.cos(Math.PI * clamp01(x));
+  const rnd = window.MLLook ? MLLook.rnd(77) : Math.random;
+  const S = Math.round(V.start);
+  const END = FRAMES * 30 / FPS;                          // the last frame + 1, in frames designed at 30 fps
+  const OUT0 = END - 14;                                  // the sign switches off from here
+  const col = /^#?[0-9a-f]{3,6}$/i.test(String(V.led || "")) ? V.led : "#FF9A3C";
+  const [cr, cg, cb] = hex(col);
+  const core = `rgb(${Math.round(cr + (255 - cr) * 0.65)}, ${Math.round(cg + (255 - cg) * 0.65)}, ${Math.round(cb + (255 - cb) * 0.65)})`;
+  const lines = String(V.text || "").toUpperCase().split("|").map(s => s.trim()).filter(Boolean).slice(0, 3);
+
+  const bg = q("bgfill");
+  Object.assign(bg.style, { width: `${W}px`, height: `${H}px`, background: V.background ? "#0E0D0C" : "transparent" });
+  const dim = q("dim");
+  Object.assign(dim.style, { width: `${W}px`, height: `${H}px`, opacity: "0",
+    background: `radial-gradient(ellipse 80% 60% at 50% 62%, ${rgba("#000000", 0.7)} 0%, ${rgba("#000000", 0.95)} 70%, #000000 100%)` });
+  const sign = q("sign"), cv = q("dots"), c1 = q("g1"), c2 = q("g2");
+  const ctx = cv.getContext("2d"), x1 = c1.getContext("2d"), x2 = c2.getContext("2d");
+
+  // ---- the sign as a grid of dots: each line drawn once in the font, then sampled into 11 rows (a cell is lit
+  // when most of it is ink); every lit cell knows its letter (the order they light in)
+  let grid = null;
+  function build() {
+    const fam = V.body_font, wt = fw(fam, 800), FSZ = 120;
+    const mats = [];
+    lines.forEach(s => {
+      const tc = document.createElement("canvas"), tx = tc.getContext("2d");
+      tx.font = `${wt} ${FSZ}px '${fam}', 'Segoe UI', sans-serif`;
+      const tw = Math.ceil(tx.measureText(s).width) + 40;
+      tc.width = tw; tc.height = 220;
+      tx.font = `${wt} ${FSZ}px '${fam}', 'Segoe UI', sans-serif`; tx.fillStyle = "#fff"; tx.textBaseline = "alphabetic";
+      tx.fillText(s, 20, 160);
+      const d = tx.getImageData(0, 0, tw, 220).data;
+      let y0 = 220, y1 = -1, xa = tw, xb = -1;
+      for (let y = 0; y < 220; y++) for (let x = 0; x < tw; x++) if (d[(y * tw + x) * 4 + 3] > 60) { if (y < y0) y0 = y; if (y > y1) y1 = y; if (x < xa) xa = x; if (x > xb) xb = x; }
+      if (y1 < 0) return;
+      const cell = (y1 - y0 + 1) / 11, cols = Math.max(1, Math.round((xb - xa + 1) / cell));
+      const cw = (xb - xa + 1) / cols;
+      const edges = [];                                              // where each letter starts and ends (px)
+      for (let i = 0; i <= s.length; i++) edges.push(20 + tx.measureText(s.slice(0, i)).width);
+      const m = [];
+      for (let r = 0; r < 11; r++) for (let c = 0; c < cols; c++) {
+        let sum = 0, cnt = 0;
+        const ya = Math.floor(y0 + r * cell), yb = Math.max(ya + 1, Math.floor(y0 + (r + 1) * cell));
+        const xc0 = Math.floor(xa + c * cw), xc1 = Math.max(xc0 + 1, Math.floor(xa + (c + 1) * cw));
+        for (let y = ya; y < yb; y++) for (let x = xc0; x < xc1; x++) { sum += d[(y * tw + x) * 4 + 3]; cnt++; }
+        if (sum / Math.max(1, cnt) > 0.42 * 255) {
+          const cx = xa + (c + 0.5) * cw;
+          let k = 0; while (k < s.length - 1 && edges[k + 1] <= cx) k++;
+          m.push([r, c, k]);
+        }
+      }
+      mats.push({ cols, m, len: s.length });
+    });
+    if (!mats.length) return null;
+    const cols = Math.max(...mats.map(o => o.cols)) + 2, rows = mats.length * 12 + 1;
+    const lit = new Map();
+    let base = 0;                                                    // the letters' order across the lines
+    mats.forEach((o, i) => {
+      const off = Math.floor((cols - o.cols) / 2);
+      o.m.forEach(([r, c, k]) => lit.set((1 + i * 12 + r) * cols + off + c, base + k));
+      base += o.len;
+    });
+    const n = Math.max(1, base);
+    const P = Math.min(W * V.size / 100 / cols, H * (H > W ? 0.34 : 0.3) / rows);   // the dot pitch on screen
+    const M = Math.ceil(3 * P);                                      // room for the bloom
+    const pw = cols * P, ph = rows * P;
+    const yc = Math.min(Math.max(H * V.y / 100, ph / 2 + 0.035 * H), H - ph / 2 - 0.035 * H);
+    const step = n > 1 ? Math.min(2.2, 34 / (n - 1)) : 0;
+    const flick = Array.from({ length: n }, () => rnd() < 0.4);    // these letters flicker twice
+    const phase = Array.from({ length: cols * rows }, () => rnd() * Math.PI * 2);
+    const drop = Math.floor(rnd() * n);                              // the letter that drops out once while it holds
+    return { cols, rows, lit, n, P, M, pw, ph, yc, step, flick, phase, drop };
+  }
+
+  // a letter's brightness: off, then on / off / on (some twice), humming while it holds; off at the end
+  function letterB(k, g, G) {
+    const r = g - (4 + k * G.step);
+    let b;
+    if (r < 0) b = 0;
+    else if (r < 1) b = 1;
+    else if (r < 2.5) b = 0.12;
+    else if (G.flick[k] && r < 3.5) b = 0.8;
+    else if (G.flick[k] && r < 4.5) b = 0.25;
+    else b = 1;
+    const mid = Math.round((4 + G.n * G.step + 12 + OUT0) / 2);    // one letter drops out for a moment mid-hold
+    if (k === G.drop && ((g >= mid && g < mid + 1.5) || (g >= mid + 3 && g < mid + 4))) b *= 0.15;
+    const e = g - OUT0;                                             // the switch-off: a flicker, then out
+    if (e >= 0) b *= e < 1 ? 0.25 : e < 2.5 ? 0.9 : e < 3.5 ? 0.15 : 0.6 * (1 - clamp01((e - 3.5) / 3));
+    return b;
+  }
+
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    sign.style.visibility = g >= 0 && grid ? "visible" : "hidden";
+    // the lights drop with a flicker (f0-f8) and come back as the sign leaves
+    let dk = 0;
+    if (g >= 0) dk = g < 2 ? 0.55 : g < 3 ? 0.2 : 0.2 + 0.8 * outCubic((g - 3) / 6);
+    dk *= 1 - sine((g - OUT0 - 4) / (END - 1 - OUT0 - 4));
+    dim.style.opacity = String((V.dim / 100 * dk).toFixed(3));
+    if (g < 0 || !grid) return;
+    const G = grid, P = G.P, R = 0.36 * P;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const pk = clamp01(g / 5) * (1 - clamp01((g - OUT0 - 6) / (END - 1 - OUT0 - 6)));   // the unlit panel
+    for (let r = 0; r < G.rows; r++) for (let c = 0; c < G.cols; c++) {
+      const id = r * G.cols + c, k = G.lit.get(id);
+      let b = k === undefined ? 0 : letterB(k, g, G) * (0.86 + 0.14 * Math.sin(G.phase[id] + g * 1.0));
+      const un = V.panel ? 0.1 * pk : 0;
+      const x = G.M + (c + 0.5) * P, y = G.M + (r + 0.5) * P;
+      if (b < un) b = un;
+      if (b <= 0.004) continue;
+      ctx.fillStyle = rgba(col, b);
+      ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+      if (b > 0.5) { ctx.globalAlpha = (b - 0.5) * 1.6; ctx.fillStyle = core; ctx.beginPath(); ctx.arc(x, y, R * 0.55, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+    }
+    // the bloom: the same dots, blurred twice (a tight halo and a wide soft one)
+    x1.clearRect(0, 0, c1.width, c1.height); x1.drawImage(cv, 0, 0);
+    x2.clearRect(0, 0, c2.width, c2.height); x2.drawImage(cv, 0, 0);
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 43 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the dots are sampled from the real font, so the timeline is registered once it is in
+  (document.fonts && document.fonts.load ? Promise.all([400, 700, 800, 900].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    grid = build();
+    if (grid) {
+      const cw = Math.ceil(grid.pw + 2 * grid.M), ch = Math.ceil(grid.ph + 2 * grid.M);
+      [cv, c1, c2].forEach(c => { c.width = cw; c.height = ch; });
+      Object.assign(sign.style, { left: `${(W - cw) / 2}px`, top: `${grid.yc - ch / 2}px`, width: `${cw}px`, height: `${ch}px` });
+      Object.assign(c1.style, { filter: `blur(${(0.8 * grid.P).toFixed(1)}px)`, opacity: "0.9" });
+      Object.assign(c2.style, { filter: `blur(${(2.4 * grid.P).toFixed(1)}px)`, opacity: "0.65" });
+    }
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+{
+ "name": "Countdown flip clock",
+ "kind": "numbers",
+ "category": "Social",
+ "what": "A split-flap clock counting down 3-2-1 (from 3, 4 or 5) above your head: two cards pop in, the digit flips once a second (the top flap falls, the new bottom lands with a small bounce), it floats gently, then shrinks away. The Editor pins it above the face and keeps it off the face.",
+ "use_for": [
+  "talking head",
+  "countdown",
+  "3 2 1",
+  "reveal",
+  "before the answer",
+  "launch",
+  "hook",
+  "short form"
+ ],
+ "tags": [
+  "numbers",
+  "countdown",
+  "flip clock",
+  "split flap",
+  "timer",
+  "in shot",
+  "above the head"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of a common in-shot effect for talking-head videos: a 3-2-1 flip clock above the speaker’s head (2026-10-27)",
+ "in_shot": {
+  "follow": "face",
+  "snap": {
+   "w": 1.6,
+   "dy": -1.35
+  },
+  "guard": true,
+  "shadow": true,
+  "match": true
+ },
+ "min_frames": "start + ceil(((count_from - 1) * tick + 34) * fps / 30)",
+ "min_why": "every number shows for tick frames, the last one at least half a second, then the clock leaves (11 f)",
+ "motion": "f0-f11 the two cards pop in (0.7 to 1, decelerating with an overshoot, the left one 2 f first); at f(k x tick) the digit flips (k = 1 .. count_from - 1, tick 30 by default): the old top flap falls 4.5 f (accelerating), the new bottom flap lands 4.5 f with a small bounce; from f10 it floats +-3 px (60 f); the last 11 f both cards shrink to 0.8 and fade (accelerating, the right one first)",
+ "tracks": [
+  {
+   "name": "pop in",
+   "what": "the two cards pop in",
+   "start_f": 0,
+   "length_f": 11,
+   "easing": "decelerating (slow end), an overshoot"
+  },
+  {
+   "name": "flip to 2",
+   "what": "the top flap falls, the new bottom lands",
+   "start_f": 30,
+   "length_f": 9,
+   "easing": "accelerating, then a bounce"
+  },
+  {
+   "name": "flip to 1",
+   "what": "the top flap falls, the new bottom lands",
+   "start_f": 60,
+   "length_f": 9,
+   "easing": "accelerating, then a bounce"
+  },
+  {
+   "name": "shrink away",
+   "what": "both cards shrink and fade",
+   "start_f": 94,
+   "length_f": 11,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [],
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 48,
+ "check_frames": [
+  0,
+  2,
+  5,
+  11,
+  30,
+  32,
+  34,
+  35,
+  37,
+  39,
+  48,
+  64,
+  96,
+  100,
+  104
+ ]
+}

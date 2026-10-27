@@ -3964,22 +3964,32 @@ const ED_FX_LABEL = {'Zoom in': t('Zoom in'), 'Zoom out': t('Zoom out'), 'Zoom p
   'Shake': t('Shake'), 'Flash': t('Flash'), 'White frame': t('White frame'), 'Black frame': t('Black frame'), 'Stutter': t('Stutter'),
   'Mirror': t('Mirror'), 'Whip': t('Whip'), 'Push': t('Push'), 'Crossfade': t('Crossfade'), 'Overlap': t('Overlap'),
   'RGB split': t('RGB split'), 'Colour flash': t('Colour flash'), 'Light leak': t('Light leak'), 'Dip to black': t('Dip to black'),
-  'Dip to white': t('Dip to white'), 'Fade in': t('Fade in'), 'Fade out': t('Fade out'), 'Colour layer': t('Colour layer')};
+  'Dip to white': t('Dip to white'), 'Fade in': t('Fade in'), 'Fade out': t('Fade out'), 'Colour layer': t('Colour layer'),
+  'Spotlight': t('Spotlight'), 'Room out of focus': t('Room out of focus'), 'Grey room': t('Grey room')};
 const edFxLabel = l => ED_FX_LABEL[l] || l;
+// a graphic part of the shot (0.6.1, motionlab\miniedit gfit -> compose's behind / glass / guard / follow)
+const ED_FIT = () => [['behind', t('Behind me'), t('Hidden where you are - it sits behind you and moves with the camera')],
+  ['glass', t('Frosted glass'), t('The room behind it frosted, with a soft shadow - for cards and pills')],
+  ['guard', t('Keep off my face'), t('Never over your face')],
+  ['pin', t('Pin to my face'), t('Moves with your face - for labels, arrows, brackets')]];
 const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer from here')], ['push_in', t('Push-in'), t('a slow zoom in')],
   ['pull_out', t('Pull-out'), t('a slow zoom out')], ['zoom_through', t('Zoom-through'), t('punch in to the nearest cut and out of it')],
   ['shake', t('Shake'), t('a short camera shake')], ['flash', t('Flash'), t('a bright flash')], ['white_flash', t('White flash'), t('an over-exposed flash into the next shot')],
   ['black_frame', t('Black frame'), t('one black frame')], ['colour_flash', t('Colour flash'), t('a colour flash')], ['light_leak', t('Light leak'), t('a warm light leak')],
   ['rgb_split', t('RGB split'), t('the red channel splits off for a few frames')], ['dip_black', t('Dip to black'), t('a dip through black at the nearest cut')],
-  ['dip_white', t('Dip to white'), t('a dip through white at the nearest cut')], ['stutter', t('Stutter'), t('a few frames repeat')]];
+  ['dip_white', t('Dip to white'), t('a dip through white at the nearest cut')], ['stutter', t('Stutter'), t('a few frames repeat')],
+  ['lean_in', t('Lean in'), t('a small, quick punch-in on your face for one word')],
+  ['slow_push', t('Slow push'), t('a slow push in on your face, the room melts out of focus')],
+  ['spotlight', t('Spotlight'), t('the room goes dark, you stay lit')]];
 // what needs a clip's picture (motionlab\edfx CLIP_ONLY): greyed out on a video made of graphics, the stutter on a
 // talking video (the picture would leave the voice) - the reason on hover, never an error after the click
-const ED_FX_CLIP = new Set(['punch_in', 'push_in', 'pull_out', 'zoom_through', 'shake', 'rgb_split', 'stutter']);
+const ED_FX_CLIP = new Set(['punch_in', 'push_in', 'pull_out', 'zoom_through', 'shake', 'rgb_split', 'stutter', 'lean_in', 'slow_push', 'spotlight']);
 const ED_FX_CUT = new Set(['zoom_through', 'white_flash', 'dip_black', 'dip_white']);      // (on the cut nearest the playhead)
 const edCap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const ED_FX_RANGE = {zoom: [1.01, 2, 0.01, '×'], punch: [1.01, 2, 0.01, '×'], framing: [1.01, 1.6, 0.01, '×'], shake: [0.004, 0.08, 0.002, ''],
-  flash: [0.05, 1, 0.05, '']};
-const ED_EASES = () => [['linear', t('Linear')], ['smooth', t('S-curve')], ['in', t('Slow start')], ['out', t('Slow end')]];
+  flash: [0.05, 1, 0.05, ''], room: [0.05, 0.95, 0.05, '']};
+const ED_EASES = () => [['linear', t('Linear')], ['smooth', t('S-curve')], ['in', t('Slow start')], ['out', t('Slow end')],
+  ['easy', t('Easy ease')], ['strong', t('Strong ease')], ['glide', t('Glide')]];
 // keyframes (motionlab\edkeys; 2026-10-26, CapCut / Premiere / Resolve / OpenCut's way): a selected shot's properties as
 // its panel shows them - [prop, label, unit, shown = value x k, a drag's step per pixel (shown units), the plan's
 // default] - and the eases of the move after a key
@@ -3987,7 +3997,11 @@ const ED_KEY_PROPS = () => [['zoom', t('Scale'), '%', 100, 0.5, 1], ['x', t('Pos
   ['rotation', t('Rotation'), '°', 1, 0.5, 0], ['opacity', t('Opacity'), '%', 100, 0.5, 1], ['ax', t('Zoom point X'), '%', 100, 0.25, 0.5],
   ['ay', t('Zoom point Y'), '%', 100, 0.25, 0.5]];
 const ED_KEY_EASES = () => [['linear', t('Linear')], ['in', t('Ease in')], ['out', t('Ease out')], ['smooth', t('Ease in and out')],
-  ['hold', t('Hold')], ['pop', t('Pop')]];
+  ['easy', t('Easy ease')], ['strong', t('Strong ease')], ['glide', t('Glide')], ['launch', t('Launch')], ['hold', t('Hold')], ['pop', t('Pop')]];
+const ED_EASE_TIP = () => ({linear: t('The same speed all the way'), in: t('Starts slowly, ends fast'), out: t('Starts fast, ends slowly'),
+  smooth: t('Slow start and slow end'), easy: t("A gentle start and end - After Effects' Easy Ease"),
+  strong: t('Slow away, quick through the middle, a slow landing'), glide: t('Off at once, then a long soft landing - punch-ins and pushes'),
+  launch: t('A long wind-up, then away - exits'), hold: t('Stays put, then jumps at the next key'), pop: t('Overshoots a little and settles')});
 const ED_KEY_MAP = {zoom: 'zoom', x: 'dx', y: 'dy', rotation: 'rotation', opacity: 'opacity'};
 const edKSpec = (d, p) => (p === 'ax' || p === 'ay' ? (d.anchor || [])[p === 'ax' ? 0 : 1] : d[ED_KEY_MAP[p]]);
 const edKKeys = (d, p) => { const v = edKSpec(d, p); return v && typeof v === 'object' && Array.isArray(v.keys) && v.keys.length ? v.keys : null; };
@@ -4014,6 +4028,40 @@ const edSoundUrl = file => `/api/editor/sound?file=${encodeURIComponent(file)}`;
 const meHue = k => [...String(k)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);     // a sound kind's colour
 const ED_EASE = {hold: () => 0, linear: x => x, smooth: x => x * x * (3 - 2 * x), in: x => x * x, out: x => 1 - (1 - x) * (1 - x),
   in3: x => x * x * x, out3: x => 1 - (1 - x) ** 3, pop: x => 1 + 2.70158 * (x - 1) ** 3 + 1.70158 * (x - 1) ** 2};
+// 2026-10-27 (the user: "ease-in ease-out stuff ... basic flow keyframe charts"): compose's BEZIERS + a key's own curve
+// "cubic(x1,y1,x2,y2)" (the chart's two handles); the eases that are no Bezier start the chart from a look-alike
+const ED_BEZ = {easy: [0.33, 0, 0.67, 1], strong: [0.7, 0, 0.3, 1], glide: [0.16, 1, 0.3, 1], launch: [0.7, 0, 0.84, 0]};
+const ED_BEZ_LIKE = {linear: [0, 0, 1, 1], smooth: [0.42, 0, 0.58, 1], in: [0.55, 0.085, 0.68, 0.53], out: [0.25, 0.46, 0.45, 0.94],
+  pop: [0.34, 1.56, 0.64, 1], in3: [0.55, 0.055, 0.675, 0.19], out3: [0.215, 0.61, 0.355, 1]};
+const edBezTab = {};
+function edBezier(b) {
+  const key = b.join(',');
+  if (edBezTab[key]) return edBezTab[key];
+  const [x1, y1, x2, y2] = b, N = 256, M = 1024, xs = [], ys = [], tab = [];
+  for (let i = 0; i <= M; i++) { const s = i / M, u = 1 - s; xs.push(3 * u * u * s * x1 + 3 * u * s * s * x2 + s ** 3); ys.push(3 * u * u * s * y1 + 3 * u * s * s * y2 + s ** 3); }
+  for (let i = 0, j = 0; i <= N; i++) {
+    const x = i / N;
+    while (j < M - 1 && xs[j + 1] < x) j++;
+    const r = xs[j + 1] > xs[j] ? clamp((x - xs[j]) / (xs[j + 1] - xs[j]), 0, 1) : 0;
+    tab.push(ys[j] + (ys[j + 1] - ys[j]) * r);
+  }
+  return (edBezTab[key] = x => { const p = clamp(x, 0, 1) * N, i = Math.min(N - 1, Math.floor(p)); return tab[i] + (tab[i + 1] - tab[i]) * (p - i); });
+}
+function edBezOf(e) {
+  if (ED_BEZ[e]) return ED_BEZ[e];
+  if (typeof e !== 'string' || !e.startsWith('cubic(') || !e.endsWith(')')) return null;
+  const b = e.slice(6, -1).split(',').map(Number);
+  return b.length === 4 && b.every(Number.isFinite) ? [clamp(b[0], 0, 1), b[1], clamp(b[2], 0, 1), b[3]] : null;
+}
+const edEaseFn = e => ED_EASE[e] || (edBezOf(e) ? edBezier(edBezOf(e)) : ED_EASE.linear);
+// a curve as a little picture (an ease tile) or the chart: time left to right, the value bottom to top (0..1 in the box,
+// an overshoot above it)
+function edEasePath(e, w, h) {
+  const fn = edEaseFn(e), pts = [];
+  for (let i = 0; i <= 40; i++) { const x = i / 40, v = e === 'hold' ? (i < 40 ? 0 : 1) : fn(x); pts.push(`${(x * w).toFixed(1)},${(h - v * h).toFixed(1)}`); }
+  return `M${pts.join(' L')}`;
+}
+const edEaseIcon = e => `<svg class="edeico" viewBox="-3 -7 40 34" width="40" height="34" aria-hidden="true"><path d="M0 24 L34 24 M0 24 L0 0" class="edeax"/><path d="${edEasePath(e, 34, 24)}" class="edecv"/></svg>`;
 // a plan's animated value (motionlab\compose Curve): a number, {keys: [[f, v, ease]]}, {start, values}, "@name"
 function edCurve(spec, named, dflt) {
   if (typeof spec === 'string' && spec[0] === '@') spec = (named || {})[spec.slice(1)];
@@ -4027,7 +4075,7 @@ function edCurve(spec, named, dflt) {
       if (f <= ks[0][0]) v = ks[0][1];
       else if (f >= ks[ks.length - 1][0]) v = ks[ks.length - 1][1];
       else { let i = 0; while (ks[i + 1][0] <= f) i++; const x = (f - ks[i][0]) / Math.max(1e-9, ks[i + 1][0] - ks[i][0]);
-        v = ks[i][1] + (ks[i + 1][1] - ks[i][1]) * (ED_EASE[ks[i][2] || 'linear'] || ED_EASE.linear)(x); }
+        v = ks[i][1] + (ks[i + 1][1] - ks[i][1]) * edEaseFn(ks[i][2] || 'linear')(x); }
       return v * sc + of;
     };
   }
@@ -4833,12 +4881,43 @@ function projEditor(el, P) {
         <div class="small muted mono">${esc(tcf(f))}</div>
         <div class="edkhere">${here.map(([p, lab, unit, k, , dflt]) => `<span class="edkchip">${esc(lab)} <b>${numLoc(+(edCurve(edKSpec(d, p), S.curves, dflt)(f) * k).toFixed(unit === 'px' ? 0 : 1))}${unit}</b></span>`).join('')}</div>
         <div class="edlbl">${t('The move after it')}</div>
-        <div class="edchips">${ED_KEY_EASES().map(([e, l]) => `<button data-kease="${e}" class="${ease === e ? 'on' : ''}">${esc(l)}</button>`).join('')}</div>
+        <div class="edeases">${ED_KEY_EASES().map(([e, l]) => `<button data-kease="${e}" class="edease ${ease === e ? 'on' : ''}" title="${ta(ED_EASE_TIP()[e] || l)}">${edEaseIcon(e)}<span>${esc(l)}</span></button>`).join('')}</div>
+        ${ease === 'hold' ? '' : `<div class="edchart" title="${ta('Drag the two handles to shape the move')}"><svg id="edchart" viewBox="-14 -46 168 232" width="168" height="232">
+          <rect x="0" y="0" width="140" height="140" class="edcbox"/><path d="M0 70 H140 M70 0 V140" class="edcgrid"/>
+          <line id="edch1" class="edchl"/><line id="edch2" class="edchl"/><path id="edccv" class="edccv"/>
+          <circle id="edcp1" r="7" class="edchd"/><circle id="edcp2" r="7" class="edchd"/></svg>
+          <div class="small muted" id="edcname">${esc((ED_KEY_EASES().find(([e]) => e === ease) || [0, t('Your curve')])[1])}</div></div>`}
         <div class="row edbtns"><button class="btn sm eddanger" id="edkdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button>
           <button class="btn sm ghost" id="edkback">${t('The whole shot')}</button></div>
         <div class="small muted">${t('Drag the diamond on the timeline to move it.')}</div>`;
       $$('[data-kease]', box).forEach(b => b.onclick = () => { if (b.dataset.kease === ease) return;
         push({op: 'kease', shot: s.id, f, ease: b.dataset.kease}, t('Keyframe at {at}: {ease}', {at: tcf(f), ease: b.textContent})); });
+      const svg = $('#edchart', box);
+      if (svg) {                               // the curve's two handles (Flow / After Effects' graph): drag = live, release = kept
+        const b = [...(edBezOf(ease) || ED_BEZ_LIKE[ease] || [0.33, 0, 0.67, 1])], S_ = 140;
+        const drawChart = () => {
+          const e = `cubic(${b.map(v => +v.toFixed(2)).join(',')})`;
+          $('#edccv', svg).setAttribute('d', edEasePath(e, S_, S_));
+          const p1 = [b[0] * S_, S_ - b[1] * S_], p2 = [b[2] * S_, S_ - b[3] * S_];
+          Object.entries({edch1: [0, S_, ...p1], edch2: [S_, 0, ...p2]}).forEach(([id, [x1, y1, x2, y2]]) => {
+            const l = $('#' + id, svg); l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2); });
+          $('#edcp1', svg).setAttribute('cx', p1[0]); $('#edcp1', svg).setAttribute('cy', p1[1]);
+          $('#edcp2', svg).setAttribute('cx', p2[0]); $('#edcp2', svg).setAttribute('cy', p2[1]);
+        };
+        drawChart();
+        [['#edcp1', 0], ['#edcp2', 2]].forEach(([id, k]) => $(id, svg).addEventListener('pointerdown', ev => {
+          ev.preventDefault();
+          const h = ev.currentTarget, m = svg.getScreenCTM().inverse();
+          h.setPointerCapture(ev.pointerId);
+          const move = e2 => { const pt = new DOMPoint(e2.clientX, e2.clientY).matrixTransform(m);
+            b[k] = +clamp(pt.x / S_, 0, 1).toFixed(2); b[k + 1] = +clamp(1 - pt.y / S_, -0.5, 1.5).toFixed(2); drawChart();
+            $('#edcname', box).textContent = t('Your curve'); };
+          const up = () => { h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up);
+            const e = `cubic(${b.join(',')})`;
+            if (e !== ease) push({op: 'kease', shot: s.id, f, ease: e}, t('Keyframe at {at}: {ease}', {at: tcf(f), ease: t('Your curve')})); };
+          h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+        }));
+      }
       $('#edkdel', box).onclick = () => delSel();
       $('#edkback', box).onclick = () => { sel = {k: 'shot', id: s.id}; draw(); };
       return;
@@ -4897,11 +4976,16 @@ function projEditor(el, P) {
         <div class="small muted">${T ? `${esc(t(T.name))} · ` : ''}${frange(g.start, g.end, S.fps)}</div>
         ${wl.length ? `<div class="edlbl">${t('Words')}</div>${setRows(g, wl)}` : ''}
         ${cols.length ? `<div class="edlbl">${t('Colours')}</div>${setRows(g, cols)}` : ''}
+        ${(S.clips || []).length && g.fit ? `<div class="edlbl" title="${ta('Part of the shot instead of pasted on top - it shows in the render (See it rendered)')}">${t('In the shot')}</div>
+          <div class="edchips edfit">${ED_FIT().map(([k, l, tip]) => `<button data-fit="${k}" class="${g.fit[k] ? 'on' : ''}" title="${ta(tip)}">${esc(l)}</button>`).join('')}</div>` : ''}
         ${rest.length ? `<details class="edmore"><summary>${t('More settings')}</summary>${setRows(g, rest)}</details>` : ''}
         ${fo.problem ? `<div class="small bad">${esc(fo.problem)}</div>` : ''}
         <div class="row edbtns"><button class="btn sm eddanger" id="edgdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button>
           ${g.pieces > 1 ? `<button class="btn sm ghost" id="edgdelall">${t('Remove all {n} pieces', {n: g.pieces})}</button>` : ''}</div>`;
       bindSets(box, g);
+      $$('[data-fit]', box).forEach(b => b.onclick = () => { const k = b.dataset.fit, on = !g.fit[k];
+        push({op: 'gfit', layer: g.id, key: k, value: on}, on ? t('{graphic}: {what} on', {graphic: edGfxName(g, S, lib), what: b.textContent})
+          : t('{graphic}: {what} off', {graphic: edGfxName(g, S, lib), what: b.textContent})); });
       $('#edgdel', box).onclick = () => delSel();
       const da = $('#edgdelall', box);
       if (da) da.onclick = () => push({op: 'gdelete', layer: g.id, all: true}, t('{graphic}: removed everywhere', {graphic: edGfxName(g, S, lib)}), () => { sel = null; });
@@ -4914,7 +4998,7 @@ function projEditor(el, P) {
         || (S.effects || []).filter(q => q.id.startsWith(pre)).sort((a, b) => Math.abs(a.f - at) - Math.abs(b.f - at))[0];
       if (!x) { sel = null; return drawInsp(); }
       sel.id = x.id;
-      const rg = ED_FX_RANGE[x.kind] || [0.05, 1, 0.05, ''], nm = edFxLabel(x.label);
+      const rg = (x.kind === 'room' && x.label === 'Room out of focus' ? [1, 40, 1, ' px'] : ED_FX_RANGE[x.kind]) || [0.05, 1, 0.05, ''], nm = edFxLabel(x.label);
       box.innerHTML = `<div class="edih"><span class="eddot fx"></span><b>${esc(nm)}</b></div><div class="small muted">${frange(x.f, x.f + x.len - 1, S.fps)}</div>
         ${x.can.includes('strength') && x.strength != null ? `<div class="edlbl">${t('Strength')}</div><div class="row"><input type="range" id="edfxs" min="${rg[0]}" max="${rg[1]}" step="${rg[2]}" value="${x.strength}"><span class="mono small" id="edfxsv">${numLoc(x.strength)}${rg[3]}</span></div>` : ''}
         ${x.can.includes('len') ? `<div class="edlbl">${t('Length')}</div><div class="row"><input type="number" id="edfxl" min="2" max="${S.frames}" value="${x.len}" style="width:90px"><span class="small muted">${t('frames')} · ${dec(x.len / S.fps)} s</span></div>` : ''}
