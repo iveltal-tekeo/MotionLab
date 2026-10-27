@@ -2653,6 +2653,7 @@ a.brvid:hover { text-decoration: none; }
 .edtrans .btn.edplay { width: 46px; justify-content: center; background: var(--ed1); color: #061018; border-color: var(--ed1); font-weight: 700; }
 .edtime { font-size: 12.5px; margin-left: 8px; }
 .edtime .tc { color: var(--ed1); }
+.edvol { width: 96px; accent-color: var(--ed1); }
 /* the timeline */
 .edtl { background: var(--edbg); border: 1px solid var(--edline); border-radius: 12px; overflow: hidden; }
 .edtools { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--edline); background: var(--edpan); }

@@ -4515,6 +4515,12 @@ function edSrcAt(L, f) {
 const edCapPatch = E => `(function(){var C=window.CAPTIONS;if(!C)return;C.cues=${JSON.stringify((E.cues || []).map(c => ({f0: c.f0, f1: c.f1, words: c.words}))).replace(/</g, '\\u003c')};})();`;
 
 // ---- the live preview: the edit played from its parts, no render
+function edVolume(v) {                                         // the preview's listening level, 0..1 (localStorage)
+  try {
+    if (v !== undefined) { localStorage.setItem('ml.editor.vol', String(v)); return v; }
+    const x = parseFloat(localStorage.getItem('ml.editor.vol')); return isFinite(x) ? clamp(x, 0, 1) : 0.8;
+  } catch (e) { return v === undefined ? 0.8 : v; }
+}
 class EdPreview {
   constructor(box, o) {
     this.box = box; this.fps = o.fps; this.W = o.W; this.H = o.H; this.media = o.media || {}; this.onFrame = o.onFrame || (() => {});
@@ -4523,6 +4529,7 @@ class EdPreview {
     this.stage = $('.edstage', box); this.layers = $('.edlayers', box); this.waitEl = $('.edwait', box);
     this.pool = {}; this.frames = new Map(); this.solids = new Map(); this.html = new Map(); this.buf = new Map();
     this.f = 0; this.playing = false; this.raf = 0; this.sched = []; this.capEdits = {}; this.activeIds = new Set(); this.muted = false;
+    this.vol = edVolume();                                       // the listening level (the volume slider; never saved into the video)
     this.stage.addEventListener('click', () => (this.playing ? this.pause() : this.play()));
     this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(box);
     this.fit();
@@ -4546,7 +4553,7 @@ class EdPreview {
       this.songEl.dataset.src = want; this.songEl.src = fileUrl(want);
     }
     this.songAt = S.song ? (S.song_cut || {}).start_s || 0 : 0;      // (seconds into the song where the video starts)
-    if (this.songEl) { this.songEl.volume = Math.min(1, Math.pow(10, ((S.song && S.song_cut) || {db: 0}).db / 20));
+    if (this.songEl) { this.songEl.volume = this.vol * Math.min(1, Math.pow(10, ((S.song && S.song_cut) || {db: 0}).db / 20));
       if (this.playing && !this.muted) this.songEl.currentTime = this.f / this.fps + this.songAt; }
     if (!S.audio_file) S.sfx.forEach(q => this.buffer(this.sfxUrl(q)));       // (a fixed sound has its effects in it)
     if (this.f > this.N - 1) this.f = Math.max(0, this.N - 1);
@@ -4637,7 +4644,7 @@ class EdPreview {
     for (const P of Object.values(this.pool)) for (const e of P) {
       if (!shown.has(e)) { e.wrap.hidden = true; if (!e.photo && !e.v.paused) e.v.pause(); }
       if (!e.photo) { e.v.muted = this.muted || !this.voice || e !== main || (e === main && mainDb <= -60);
-        if (e === main) e.v.volume = Math.min(1, Math.pow(10, mainDb / 20)); }       // (louder than its own: on save)
+        if (e === main) e.v.volume = this.vol * Math.min(1, Math.pow(10, mainDb / 20)); }   // (louder than its own: on save)
     }
     // graphics: each folder's own page in a frame, at its frame
     const onDirs = new Set();
@@ -4709,6 +4716,16 @@ class EdPreview {
   // sound effects: each one's sound (the recorded file the build will use, else the made-up one), on the timeline
   sfxUrl(q) { return q.sound ? edSoundUrl(q.sound) : `/api/editor/sound?kind=${encodeURIComponent(q.kind)}`; }
   ac() { if (!this.actx) this.actx = new (window.AudioContext || window.webkitAudioContext)(); return this.actx; }
+  out() {                                                      // every sound effect goes through the master level
+    if (!this.master) { this.master = this.ac().createGain(); this.master.gain.value = this.vol; this.master.connect(this.ac().destination); }
+    return this.master;
+  }
+  setVolume(v) {                                               // 0..1, as the slider says it (squared: finer when quiet)
+    this.vol = clamp(v, 0, 1);
+    if (this.master) this.master.gain.value = this.vol;
+    if (this.songEl && this.S) this.songEl.volume = this.vol * Math.min(1, Math.pow(10, ((this.S.song && this.S.song_cut) || {db: 0}).db / 20));
+    this.render(this.f);
+  }
   buffer(url) {
     if (!this.buf.has(url)) this.buf.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => b && this.ac().decodeAudioData(b)).catch(() => null));
     return this.buf.get(url);
@@ -4723,7 +4740,7 @@ class EdPreview {
         if (!b || this.run !== run || !this.playing) return;
         const s = ac.createBufferSource(), gn = ac.createGain();
         s.buffer = b; gn.gain.value = 0.55 * Math.pow(10, (q.db || 0) / 20);
-        s.connect(gn).connect(ac.destination);
+        s.connect(gn).connect(this.out());
         const when = t0 + at, now = ac.currentTime;
         if (when >= now) s.start(when); else if (now - when < b.duration) s.start(now, now - when); else return;
         this.sched.push(s);
@@ -4731,7 +4748,7 @@ class EdPreview {
     }
   }
   unschedule() { this.run = null; this.sched.forEach(s => { try { s.stop(); } catch (e) { /* done */ } }); this.sched = []; }
-  hear(url) { this.buffer(url).then(b => { if (!b) return; const ac = this.ac(), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(); }); }
+  hear(url) { this.buffer(url).then(b => { if (!b) return; const ac = this.ac(), s = ac.createBufferSource(); s.buffer = b; s.connect(this.out()); s.start(); }); }
   preroll(f) {                                                 // the next shot waits on its first frame
     const soon = f + Math.round(this.fps * 0.7);
     const nx = this.clips.find(d => d.start > f && d.start <= soon && !this.activeIds.has(d.id));
@@ -4769,7 +4786,15 @@ class EdPreview {
     if (this.playing) { this.pause(); this.f = f; this.play(); return; }
     this.render(f, true); this.onFrame(f);
   }
-  mute(on) { this.muted = on; if (this.songEl) this.songEl.muted = on; if (on) this.unschedule(); this.render(this.f); }
+  mute(on) {
+    this.muted = on; if (this.songEl) this.songEl.muted = on;
+    if (on) this.unschedule();
+    else if (this.playing) {
+      this.unschedule(); this.schedule(this.f);
+      if (this.songEl) { this.songEl.currentTime = this.f / this.fps + (this.songAt || 0); this.songEl.play().catch(() => {}); }
+    }
+    this.render(this.f);
+  }
   destroy() {
     this.pause(); this.ro.disconnect();
     for (const P of Object.values(this.pool)) for (const e of P) if (!e.photo) { e.v.removeAttribute('src'); e.v.load(); }
@@ -4800,7 +4825,8 @@ function projEditor(el, P) {
       <div class="edview"><div id="edprev"></div><div class="edrng" id="edrng" hidden></div>
         <div class="edtrans"><button class="btn sm" data-tr="start" title="${ta('First frame (Home)')}">⏮</button><button class="btn sm" data-tr="-1" title="${ta('1 frame back (←)')}">◀</button>
           <button class="btn edplay" data-tr="play" title="${ta('Play / pause (Space)')}">▶</button><button class="btn sm" data-tr="1" title="${ta('1 frame on (→)')}">▶</button><button class="btn sm" data-tr="end" title="${ta('Last frame (End)')}">⏭</button>
-          <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button></div></div>
+          <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button>
+          <input type="range" class="edvol" id="edvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}"></div></div>
       <aside class="edpanel"><div class="edpin edinsp" id="edinsp"></div></aside></div>
     <div class="edtl" id="edtl"><div class="edtools">
         <button class="btn sm" id="edsplit" title="${ta('Split the shot under the playhead (S)')}">✂ ${t('Split')}</button>
@@ -5833,6 +5859,11 @@ function projEditor(el, P) {
   $$('[data-tr]', el).forEach(b => b.onclick = () => { if (!pv) return; const a = b.dataset.tr;
     if (a === 'play') pv.toggle(); else if (a === 'start') pv.seek(0); else if (a === 'end') pv.seek(cur.frames - 1);
     else if (a === 'mute') { pv.mute(!pv.muted); b.textContent = pv.muted ? '🔇' : '🔊'; } else pv.seek(prevF + +a); });
+  $('#edvol', el).oninput = e => {
+    const v = Math.pow(+e.target.value / 100, 2); edVolume(v); if (!pv) return;
+    pv.setVolume(v);
+    if (pv.muted && v > 0) { pv.mute(false); const b = $('[data-tr=mute]', el); if (b) b.textContent = '🔊'; }
+  };
   el.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });   // the keys stay with the Editor
   const cv = $('#edcanvas', el);
   cv.addEventListener('pointerdown', onDown); cv.addEventListener('pointermove', onMove);
