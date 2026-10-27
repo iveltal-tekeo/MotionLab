@@ -7,7 +7,7 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.6.0.4 - In the shot: B-roll on your words, graphics behind you** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md))
+> **Status: v0.6.0.5 - Notes from videos and the Analyser's mascots** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md))
 > - Phase 2, the path from 0.5.0 to 1.0.0. Since 0.6.0: My Brand in every video, a content calendar, and an Editor of
 > your own - cut, trim, speed up, move graphics and sounds, effects, keyframes and transitions on a timeline, no Claude
 > needed. Before it: New edit as six simple steps, the app in English or Spanish, analyses in about half the time, a

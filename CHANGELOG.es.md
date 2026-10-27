@@ -7,16 +7,16 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
-## Unreleased
+## 0.6.0.5 - 2026-10-27 - Notas de vídeos y las mascotas del Analizador
 
 - **El Analizador: tres formas de aprender de un vídeo.** *Efectos y animaciones* (lo que hacía hasta ahora),
   *Creación de contenido* (próximamente: por qué funciona un vídeo y por qué se hizo viral) y **Notas** - cada una con
   su mascota animada: **FLUX** el cristal azul (Animaciones y efectos), **SPARK** la estrella dorada (Creación de
   contenido) e **INDEX** la esfera turquesa (Notas y conocimiento). Flotan, parpadean y reaccionan: pasa el ratón por
   una forma y su mascota responde, mientras corre un análisis o unas notas su mascota se pone a trabajar, y se ilumina
-  cuando terminan. Cada forma tiene además su propia página - haz clic en una tarjeta y su mascota te saluda allí
-  con sus vídeos; las pestañas bajo las formas siguen mostrándolo todo. Miniaturas y Guiones y prompts quedan en una fila más pequeña debajo; sus botones
-  dicen *Analizar miniaturas* y *Analizar guiones y prompts*.
+  cuando terminan. Cada forma tiene además su propia página - haz clic en una tarjeta y su mascota te saluda allí con
+  sus vídeos; las pestañas bajo las formas siguen mostrándolo todo. Miniaturas y Guiones y prompts quedan en una fila
+  más pequeña debajo; sus botones dicen *Analizar miniaturas* y *Analizar guiones y prompts*.
 - **Notas de vídeos** (Analizador > Notas > *Tomar notas*): pega enlaces o elige vídeos; los enlaces se descargan
   hasta 720p. MotionLab saca las palabras (los subtítulos de la plataforma o, si no, voz a texto), los fotogramas clave
   donde cambia la pantalla, los capítulos del creador, lo más repetido de YouTube y las partes patrocinadas

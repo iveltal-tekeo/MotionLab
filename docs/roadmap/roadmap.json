@@ -15,7 +15,7 @@
     "After a change: .venv\\Scripts\\python tools\\roadmap.py check (agrees with plans.md + CHANGELOG.md?), then render."
   ],
   "date": "2026-10-27",
-  "here": "0.6.0.4",
+  "here": "0.6.0.5",
   "versions": [
     {"v": "0.1.0", "label": "The lab", "icon": "analyze", "line": "Every cut, effect and beat measured, then rebuilt frame by frame - in the lab and in DaVinci Resolve.", "title": "The lab: analysis, rebuild, DaVinci Resolve"},
     {"v": "0.2.0", "label": "MVP for friends", "icon": "knowledge", "line": "Setup, sharing and updates through GitHub; a review page for your verdicts.", "title": "MVP for friends"},
@@ -50,6 +50,7 @@
     {"v": "0.6.0.2", "label": "Keyframes", "title": "Keyframes and transitions in the Editor"},
     {"v": "0.6.0.3", "label": "Lots of clips", "title": "Lots of clips: a light cache and a clip catalogue"},
     {"v": "0.6.0.4", "label": "In the shot", "title": "In the shot: B-roll on your words, graphics behind you"},
+    {"v": "0.6.0.5", "label": "Notes + mascots", "title": "Notes from videos and the Analyser's mascots"},
     {"v": "0.6.1", "label": "Quality first", "title": "Quality over quantity: many clips edited well, motion graphics from template packs"},
     {"v": "0.6.2", "label": "Colour + Resolve", "title": "Colour: measure a look, match it, grade in DaVinci Resolve"},
     {"v": "0.6.3", "label": "Content generation", "title": "Content generation: AI clips, pictures and voice"},

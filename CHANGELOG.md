@@ -5,15 +5,15 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
-## Unreleased
+## 0.6.0.5 - 2026-10-27 - Notes from videos and the Analyser's mascots
 
 - **The Analyser: three ways to learn from a video.** *Effects & animations* (what it did until now), *Content creation*
   (coming soon: why a video works and went viral) and **Notes** - each with its own animated mascot: **FLUX** the
   blue crystal (Animations & Effects), **SPARK** the golden star (Content Creation) and **INDEX** the teal orb (Notes &
   Knowledge). They float, blink and react: hover a way and its mascot answers, while an analysis or notes run its
   mascot gets to work, and it lights up when they are done. Each way also has its own page - click a card and its
-  mascot greets you there with its videos; the tabs under the ways still list everything. Thumbnails and Scripts & prompts sit in a
-  smaller row under them; their buttons say *Analyze thumbnails* and *Analyze scripts & prompts*.
+  mascot greets you there with its videos; the tabs under the ways still list everything. Thumbnails and Scripts &
+  prompts sit in a smaller row under them; their buttons say *Analyze thumbnails* and *Analyze scripts & prompts*.
 - **Notes from videos** (Analyser > Notes > *Take notes*): paste links or pick videos; links are downloaded up to 720p.
   MotionLab gets the words (the platform's subtitles, else speech to text), the key frames where the screen changes,
   the creator's chapters, YouTube's *Most replayed* moments and the sponsor parts (SponsorBlock); then Claude writes

@@ -159,7 +159,7 @@ simple and effective"; then "before implementing the notes section i want you to
 way and most simplest way of taking notes, how to analyze teh video corretly with our tools (yt-dlp included) and if
 we need to change anyuthing to optimize and how to structurally present the information ... like a professional, not
 crowded"). 1 = today's Videos (unchanged); 2 = *coming soon* on the page (the friend's ideas below); 3 = **Notes**,
-designed from the research below. **Built 2026-10-27 (unreleased)** after the user's answers ("yeah go ahead", "video
+designed from the research below. **Built 2026-10-27, released in 0.6.0.5** after the user's answers ("yeah go ahead", "video
 at 720p with option to delete the video afterwards but keep the notes", "drop test yourself questions", and each way
 shown "with a "character" made in motion graphics"): the three ways with their scenes and the lab's round character,
 `tools\notes.py` + `motionlab\notes.py` (the words, key frames, chapters, Most replayed, SponsorBlock; the quote gate),
