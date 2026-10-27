@@ -7,7 +7,7 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
-## Unreleased
+## 0.6.0.6 - 2026-10-27 - El Editor renovado: los subtítulos en una lista, un menú con el botón derecho, zonas seguras
 
 - **El Editor, revisado frente a CapCut, Premiere, Resolve y OpenCut.**
   - **Se abre donde no lo hacía**: un vídeo cuya carpeta tiene un #, un ! o un emoji en el nombre (salía en la lista

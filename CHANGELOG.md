@@ -5,7 +5,7 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
-## Unreleased
+## 0.6.0.6 - 2026-10-27 - The Editor reworked: captions in one list, a right-click menu, safe zones
 
 - **The Editor, reviewed against CapCut, Premiere, Resolve and OpenCut.**
   - **It opens where it did not**: a video whose folder name has a #, a ! or an emoji in it (it was listed but never
