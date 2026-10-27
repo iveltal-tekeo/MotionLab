@@ -20,8 +20,11 @@ import copy
 import math
 from pathlib import Path
 
+from . import safezones as SZ
+
 GAP = 40                        # px under the chin (on a 1080 short side; scaled)
-BAND_TOP, BAND_BOTTOM = 220, 1500    # an upright 1080x1920 video's safe height (precheck.SAFE_BANDS)
+BAND_TOP, BAND_BOTTOM = SZ.ZONES["all"]["top"], SZ.REF_H - SZ.ZONES["all"]["bottom"]   # an upright 1080x1920
+#                                 video's safe height (motionlab\safezones: the strictest of the three apps)
 MARGIN = 80                     # a wide video's safe margin at the top and the bottom (on 1080 high; scaled)
 SAMPLES = 3                     # frames looked at per shot (its start, middle and end, a little in)
 CHAR_W = {True: 0.62, False: 0.55}   # a character's width in em, capitals / not (a line's length, estimated)

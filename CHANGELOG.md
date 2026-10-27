@@ -44,6 +44,17 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
     gaps, one accent colour, a white playhead), a wider panel, a preview as big as the window allows with the whole
     timeline in sight, and a handle above the timeline to make it bigger or smaller.
 
+- **The Editor: a right-click menu and the platforms' safe zones.**
+  - **Right-click on the timeline**: split here, duplicate, delete, mute, add a transition before or after a shot (or
+    change the one there), apply a transition to every cut, edit a caption's words, listen to a sound effect, remove a
+    keyframe. Right-click an empty place to split there, add a transition at the nearest cut or a caption.
+  - **Safe zones on vertical videos**: the preview shows where TikTok, Instagram Reels and YouTube Shorts draw their
+    tabs, the like / comment / share buttons and the name, caption and sound - all three at once (the strictest) or
+    one app, or off. Keep words, faces and logos inside the dashed frame.
+  - **Claude keeps clear of them too**: when it makes or edits a vertical video its captions and graphics stay inside
+    the same safe area (x 60-880, y 220-1480 on 1080 x 1920), and the check before the render flags anything in the
+    bands.
+
 ## 0.6.0.5 - 2026-10-27 - Notes from videos and the Analyser's mascots
 
 - **The Analyser: three ways to learn from a video.** *Effects & animations* (what it did until now), *Content creation*

@@ -51,6 +51,19 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
     como permite la ventana con toda la línea de tiempo a la vista, y un tirador encima de la línea de tiempo para
     hacerla más grande o más pequeña.
 
+- **El Editor: un menú con el botón derecho y las zonas seguras de las plataformas.**
+  - **Botón derecho en la línea de tiempo**: dividir aquí, duplicar, eliminar, silenciar, añadir una transición antes o
+    después de un plano (o cambiar la que hay), aplicar una transición a todos los cortes, editar las palabras de un
+    subtítulo, escuchar un efecto de sonido, quitar un fotograma clave. Con el botón derecho en un hueco puedes dividir
+    ahí, añadir una transición en el corte más cercano o un subtítulo.
+  - **Zonas seguras en los vídeos verticales**: la vista previa muestra dónde ponen TikTok, Instagram Reels y YouTube
+    Shorts sus pestañas, los botones de me gusta / comentar / compartir y el nombre, el texto y el sonido: las tres a la
+    vez (la más estricta) o una sola app, o ninguna. Deja las palabras, las caras y los logos dentro del marco
+    discontinuo.
+  - **Claude también las evita**: cuando hace o edita un vídeo vertical, sus subtítulos y gráficos quedan dentro de la
+    misma zona segura (x 60-880, y 220-1480 en 1080 x 1920), y la comprobación antes del render avisa de lo que caiga
+    en las franjas.
+
 ## 0.6.0.5 - 2026-10-27 - Notas de vídeos y las mascotas del Analizador
 
 - **El Analizador: tres formas de aprender de un vídeo.** *Efectos y animaciones* (lo que hacía hasta ahora),

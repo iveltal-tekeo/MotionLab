@@ -75,7 +75,8 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    too much"), and she is honest that they are starter versions: the user's sound design and timing finish them.
    **Where cards fit** (learned on the user's own takes, 2026-10-27 - projects\zz_vibha_demo 16:9, zz_vibha_vertical
    9:16): upright, a card lives between the chin (the face's guard oval ends ~y 1040-1080 of 1920 when they lean in)
-   and the apps' bottom band (precheck SAFE_BANDS: y 1500+), left of the right rail (x 930+): `y` 66-69, `x` ~46,
+   and the apps' bottom band (motionlab\safezones "all", precheck SAFE_BANDS: y 1480+), left of the right rail (x
+   880+, y 720-1700): `y` 66-69, `x` ~46,
    `size` 0.7-0.8; a word or sign behind the head sits above it (`y` ~20-23; a sign's own dimmed room in the top band
    is meant). A 16:9 webcam close-up has the head in the middle: cards small at the far side (`x` ~85). Over a light
    shirt a glass card's light words vanish - `tone=smoke`; over skin the frost needs more blur (`"glass": 60` on the

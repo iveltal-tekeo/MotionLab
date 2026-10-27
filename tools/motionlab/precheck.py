@@ -43,6 +43,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+from . import safezones as SZ
 from .timecode import frame_to_tc, label as tc_label, range_label
 from .util import LAB, tool
 
@@ -557,8 +558,9 @@ FACE_PAD = 0.15                      # ... widened by this on each side (hair, c
 FULL_CARD = 0.85                     # graphics over more of the frame than this = a full-screen card: the face is
                                      # meant to be gone, not flagged
 # 0.6.0 step 21: the platforms' buttons and captions on an upright 1080x1920 video (scaled to the plan's size): the
-# top band, the bottom band and the right rail - a graphic's pixels there are hidden under the app's own
-SAFE_BANDS = {"top": (0, 0, 1080, 220), "bottom": (0, 1500, 1080, 1920), "right rail": (930, 900, 1080, 1600)}
+# top band, the bottom band and the right rail - a graphic's pixels there are hidden under the app's own (2026-10-27:
+# from motionlab\safezones, the strictest of TikTok / Reels / Shorts as the 2026 guides measure them)
+SAFE_BANDS = SZ.bands("all")
 SAFE_COVER = 0.02                    # a band is used when the graphics drew over more than this of it
 
 

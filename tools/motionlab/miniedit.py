@@ -30,6 +30,9 @@ Operations ({"op": ...}):
     take    {"shot": id, "src": clip, "in": f}               another clip of the video (the plan's "sources") in its
                                                              place, from the clip's frame f, the same length; the
                                                              captions said in the old take go
+    shotdup {"shot": id}                                     the shot again right after itself (2026-10-27, the
+                                                             timeline's right-click Duplicate): its part of its clip,
+                                                             zoom, moves, keys and effects; what comes after moves on
     clipadd {"src": clip, "in": f, "len": n, "to": k}        a clip of the video as a new shot at place k: n frames
                                                              from its frame f (a photo: held); the rest moves on
     volume  {"shot": id, "db": d}                            its own sound louder / softer (VOL_MIN..VOL_MAX dB,
@@ -102,13 +105,14 @@ from . import edfx as FX
 from . import edkeys as KF
 from . import editlist as EL
 from . import edtrans as TR
+from . import safezones as SZ
 from . import i18n as I18N
 from .timecode import frame_to_tc
 
 SAY_KEYS = ("text", "title", "words", "headline", "line", "caption", "label", "quote", "name", "top", "main",
             "bottom", "tagline", "button", "cta", "price", "what", "subtitle", "heading", "hook")
 SPEED_MIN, SPEED_MAX = 0.25, 4.0                # the slowest / fastest a shot plays (CapCut's usual chips' range)
-SHOT_OPS = ("trim", "delete", "roll", "move", "split", "speed", "volume", "slip", "take", "clipadd")
+SHOT_OPS = ("trim", "delete", "roll", "move", "split", "speed", "volume", "slip", "take", "clipadd", "shotdup")
 VOL_MIN, VOL_MAX = -60.0, 12.0                  # a shot's own sound (dB; VOL_MIN = muted)
 SONG_DB = (-24.0, 12.0)                         # the song's volume (dB)
 FX_OPS = ("fxadd", "fxmove", "fxset", "fxremove")      # the effects (motionlab\edfx): a transition removed moves a cut
@@ -658,7 +662,8 @@ def state(plan: dict) -> dict:
             "clips": [{"id": k, "name": Path(str(s.get("source") or k)).name, "frames": int(s.get("frames") or 0),
                        "photo": _is_photo(s)} for k, s in (P.get("sources") or {}).items()],
             "audio_file": str(_audio(P).get("path")) if mode == "fixed" else None,
-            "name": P.get("name", ""), "speeds": [SPEED_MIN, SPEED_MAX]}
+            "name": P.get("name", ""), "speeds": [SPEED_MIN, SPEED_MAX],
+            "safe": SZ.for_page(int(P.get("width", 1920)), int(P.get("height", 1080)))}   # (the platforms' safe zones)
 
 
 # ------------------------------------------------------------------------------------------------- changing a plan
@@ -993,6 +998,23 @@ def _clip_add(P: dict, src: str, f: int, n: int, to: int, done: list[str], fps: 
     P["layers"].insert(i, new)
     done.append(f"{new['id']}: {Path(str(s.get('source'))).name} added at place {to + 1} ({_span(new, fps)}, {n} frames)"
                 + ("" if photo else f" from its frame {new['in']}") + " - what came after moved on")
+    return new
+
+
+def _shot_dup(P: dict, S: dict, done: list[str], fps: float) -> dict:
+    """The shot again right after itself: the same part of its clip with its zoom, moves, keyframes and effects on it
+    (moved with it); its transition stays on the original; what comes after moves on."""
+    if S.get("scene"):
+        raise EditError(I18N.t("a scene is duplicated by Claude - ask for it"))
+    order = shots(P)
+    n, p = _len(S), int(S["end"]) + 1
+    nums = [int(m[1]) for x in order if (m := re.match(r"s(\d+)_", str(x.get("id"))))]
+    new = EL._shift(copy.deepcopy(S), n)
+    new["id"] = f"s{max(nums, default=0) + 1:02d}_{S.get('src', 'clip')}"
+    new.pop("trans", None)
+    _retime(P, lambda x: x + n if x >= p else x, skip=[], add=n)
+    P["layers"].insert(P["layers"].index(S) + 1, new)
+    done.append(f"{S['id']} duplicated as {new['id']} ({_span(new, fps)}) - what came after moved on")
     return new
 
 
@@ -1339,6 +1361,8 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                     lst[:] = [c for c in lst if not inn <= int(c["f0"]) <= inn + span]
             elif op == "clipadd":
                 _clip_add(P, str(o["src"]), int(o.get("in", 0)), int(o["len"]), int(o["to"]), done, fps)
+            elif op == "shotdup":
+                _shot_dup(P, _find(P, str(o["shot"])), done, fps)
             elif op == "volume":
                 if sound_mode(P) != "follows":
                     raise EditError(I18N.t("this video's sound is not its clips' own - change the song's volume instead"))
@@ -1747,6 +1771,13 @@ def selfcheck() -> dict:
          and (lay(P2, "logo")["start"], lay(P2, "logo")["end"], lay(P2, "logo")["in"]) == (0, P2["frames"] - 1, 7)
          and lay(P3, "logo")["end"] == 249 and all(int(L["start"]) >= 0 and int(L["end"]) <= P["frames"] - 1
                                                    for L in P["layers"] if L.get("type") == "overlay"))
+    dp = plan()
+    dp["layers"][1]["jumps"] = [[100, 300], [150, 300], [153, 303]]
+    P, _, _ = apply(dp, [{"op": "shotdup", "shot": "s02_A"}])
+    cp_ = next(x for x in P["layers"] if x["id"] == "s04_A")
+    case("a shot duplicated: right after itself, its zoom keys and stutter moved with it, the rest moved on",
+         (cp_["start"], cp_["end"]) == (200, 299) and cp_["zoom"]["keys"][0][0] == 200 and cp_["jumps"][1][0] == 250
+         and lay(P, "s03_A")["start"] == 300 and P["frames"] == 400 and [x["id"] for x in shots(P)][1:3] == ["s02_A", "s04_A"])
     ph = plan()
     ph["sources"]["F"] = {"frames": 1, "photo": True}
     ph["layers"][2] = {"type": "clip", "id": "s03_F", "src": "F", "start": 200, "end": 299, "in": 0, "hold": True}

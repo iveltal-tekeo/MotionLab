@@ -139,7 +139,8 @@ not say, or a rule.
   app's Motion Graphics > Music, New edit's song cards and *Ambience under your voice*), `beats.py`, `precheck.py`
   (checks before the final render; exit 1 =
   look; a video's loudness and true peak too; build.py adds `precheck.face_cover`: a caption / graphic over the
-  face, upright safe zones; `precheck.talk_checks`: a talking video's tail after its last word, whooshes per 30 s;
+  face, upright safe zones = `motionlab\safezones.py`, TikTok / Reels / Shorts and "all" = the strictest, the same
+  numbers in facefit, the Editor's guides and brief.py's *The safe area*; `precheck.talk_checks`: a talking video's tail after its last word, whooshes per 30 s;
   and, for a plan with `"captions_fit": "chin"`, `motionlab\facefit.py` places each shot's captions off the face),
   `speech.py` (speech to text, optional install; `--verbatim` keeps the fillers; `stumbles <take>` =
   `motionlab\stumbles.py`: fillers, repeats, retakes, "cut / again")

@@ -47,6 +47,15 @@ action, its voice, the ending its goal asks for, a product only from its list at
   what you make, tell the user it came from <name>.
 - Ask once, in one message, for what is missing - the brief's *a guess* lines first (format, song, look, the words) -
   then build. Say plainly what the lab cannot do instead of faking it.
+- **Vertical: the platforms' safe zones** (2026-10-27, the user: "add the safe-zone guides in general when creating or
+  editing with claude vertical videos so important stuff dont get caught"): an upright 9:16 video plays under
+  TikTok's, Reels' and Shorts' own tabs, name + caption and like / comment / share column - words, faces, logos,
+  products and a call to action go inside `tools\motionlab\safezones.py` `safe_rect("all")` = x 60-880, y 220-1480 on
+  1080 x 1920 (scaled to the plan's size; one platform only: its own zone in `ZONES`). The bands are only for
+  picture (backgrounds, b-roll, a move's edge). `build.py` flags a graphic in them (precheck "safe zone" lines in the
+  build summary): move every flagged one inside before you show the user. The Editor draws the same zones on its
+  preview. A video made from zero is all graphics (the build's
+  check sees a full card there and does not flag it), so check its words against the safe area yourself on the stills.
 - **Waits** (0.5.3): never poll - no sleep / check loops, no detached launches by hand. A command under ~9 minutes
   runs in the foreground; a longer one (the final with motion blur) is a job: `tools\job.py start build
   project=<p> plan=plan_vN.json final=1`, then `tools\job.py wait <id>` (one call, up to 9 minutes; exit 3 = call it

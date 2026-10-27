@@ -201,6 +201,7 @@ def generate_brief(p: Path, req: dict) -> list[str]:
     left += ["Claude's memory beyond the ratings (every analysed video's style in one line, the effects seen and how "
              "they were made): `knowledge.py memory` - for a copy of one reference's effects",
              "the request as JSON: build\\generate_request.json"]
+    L += safe_lines(req.get("format") or (last_format(p.name) or ("vertical",))[0])
     return L + ["", "## Left out (nothing silently)"] + [f"- {x}" for x in left]
 
 
@@ -292,6 +293,21 @@ def catalogue_lines(p: Path) -> list[str]:
     return []
 
 
+def safe_lines(fmt) -> list[str]:
+    """2026-10-27: a vertical video's safe area (motionlab\\safezones - the strictest of TikTok / Reels / Shorts), or
+    nothing for a wide / square one."""
+    f = str(fmt or "").lower()
+    if f and not any(w in f for w in ("vertical", "9:16", "auto", "upright")):
+        return []
+    from motionlab import safezones as SZ
+    x0, y0, x1, y1 = SZ.safe_rect("all")
+    return ["", "## The safe area" + ("" if "vertical" in f or "9:16" in f else " (when the video is vertical)"),
+            f"- TikTok, Reels and Shorts draw their tabs, name + caption and like / comment / share column over the "
+            f"video: words, faces, logos, products and a call to action inside x {x0}-{x1}, y {y0}-{y1} on 1080 x 1920 "
+            f"(motionlab\\safezones `safe_rect(\"all\")`, scaled to the plan's size); the bands only for picture. "
+            f"build.py flags a graphic in them; the Editor shows them on its preview."]
+
+
 def edit_brief(p: Path, req: dict) -> list[str]:
     b = p / "build" / "edit_brief.md"
     talking = req.get("sound") == "talk" or str(req.get("prompt") or "").startswith(("script-", "hook-"))
@@ -319,6 +335,7 @@ def edit_brief(p: Path, req: dict) -> list[str]:
             x if isinstance(x, str) else json.dumps(x, ensure_ascii=False) for x in req.get("on_screen") or []),
             str(st.get("type") or ""), " ".join(st.get("moods") or []), said]))
     L += ["", KN.memory_rules(), "", KN.lessons_for("talking" if talking else "all")]
+    L += safe_lines(req.get("format"))
     left = ["Claude's memory beyond the ratings: `knowledge.py memory` (a 1:1 copy of a reference reads it whole)",
             "the request as JSON: build\\edit_request.json",
             "every Motion Graphics template, one line each: `templates.py library --brief`"]

@@ -98,6 +98,14 @@ blocks up to 9 minutes (exit 3 = still running: call it again). One build = one 
    where they tell the story (an intro, a reveal, the end); the quick draft already does all this
    (`motionlab\draft.py photo_shots`). The Resolve builder does not place photos yet - say so when the user wants
    a Resolve project of an edit with photos.
+6. **Vertical: the platforms' safe zones** (2026-10-27, the user: "add the safe-zone guides in general when creating or
+   editing with claude vertical videos so important stuff dont get caught"): an upright 9:16 video plays under
+   TikTok's, Reels' and Shorts' own tabs, name + caption and like / comment / share column - words, faces, logos,
+   products and a call to action go inside `tools\motionlab\safezones.py` `safe_rect("all")` = x 60-880, y 220-1480 on
+   1080 x 1920 (scaled to the plan's size; one platform only: its own zone in `ZONES`). The bands are only for
+   picture (backgrounds, b-roll, a move's edge). `build.py` flags a graphic in them (precheck "safe zone" lines in the
+   build summary): move every flagged one inside before you show the user. The Editor draws the same zones on its
+   preview.
 
 ## Keep it lean
 Don't re-read files you have already read in this chat (`brief.md` holds the request, the style, the rules and the

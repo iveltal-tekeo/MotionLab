@@ -671,7 +671,19 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   white playhead, flat lanes with 3 px corners; the panels edge to edge with 1 px lines (no rounded cards, no gaps); the
   page's padding gone and its header one compact strip while the Editor is open (`body.edwide`); without a height of
   the user's the preview takes what the window leaves once the whole timeline is in sight (`EdPreview.fit`, again
-  after each timeline draw).
+  after each timeline draw). **Right-click menu and safe zones** (the same day, the user: "Right-click menu on the
+  timeline (split, delete, duplicate, add a transition), and safe-zone guides on vertical videos showing where TikTok,
+  Reels and Shorts put their buttons and captions"): a right-click on the timeline (`openMenu`, `.edmenu`; Esc or a
+  click elsewhere closes it) offers per item - a shot: *Split here*, *Duplicate* (the engine's `shotdup`:
+  the same clip after it, refused for a scene Claude made), *Add a transition before / after it* (or *The transition
+  …* when there is one), *Mute* / *Sound on*, *Delete*; a graphic: *Duplicate* (`gadd` with its template and values),
+  *Delete*; a caption: *Edit its words* (the list, its row focused), *Split here*, *Delete*; a sound effect: *Listen*,
+  *Duplicate*, *Delete*; an effect: *Remove*; a transition: *Apply to all cuts*, *Remove*; a keyframe: *Remove this
+  keyframe*; an empty place: *Split here*, *Add a transition at the nearest cut*, *Add a caption here*. On an upright
+  video (9:16-ish, the state's `safe` = `safezones.for_page`) the transport has *Safe zones* (`#edsafe`: all three
+  apps - the default -, TikTok, Instagram Reels, YouTube Shorts or off, remembered in `ml.editor.safe`) and the preview
+  draws each app's bands (top: tabs and search; bottom: name, caption and sound; the right rail: like, comment, share)
+  and the safe area dashed (`.edsafe`, `.edsb`, `.edsr`); only on the page, never in the render.
 
 ## Generator vs Editor
 

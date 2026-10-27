@@ -820,13 +820,15 @@ def check_miniedit() -> dict:
 
 def check_facefit() -> dict:
     """Captions off the speaker's face (0.6.0 step 21, motionlab.facefit): where a shot's captions go - under the
-    chin, under the mouth in a close-up, never up on the forehead, a face beside them ignored - no video."""
+    chin, under the mouth in a close-up, never up on the forehead, a face beside them ignored - and the platforms' safe
+    zones they keep inside (motionlab.safezones, 2026-10-27) - no video."""
     from motionlab import facefit as FF
-    print("\n=== captions off the face ===")
-    r = FF.selfcheck()
-    for line in r["lines"]:
+    from motionlab import safezones as SZ
+    print("\n=== captions off the face, the platforms' safe zones ===")
+    R = [FF.selfcheck(), SZ.selfcheck()]
+    for line in [x for r in R for x in r["lines"]]:
         print(line)
-    return {"passed": r["passed"]}
+    return {"passed": all(r["passed"] for r in R)}
 
 
 def check_feels() -> dict:

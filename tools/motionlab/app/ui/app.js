@@ -4524,6 +4524,13 @@ function edVolume(v) {                                         // the preview's 
     const x = parseFloat(localStorage.getItem('ml.editor.vol')); return isFinite(x) ? clamp(x, 0, 1) : 0.8;
   } catch (e) { return v === undefined ? 0.8 : v; }
 }
+// the platforms' safe zones over the preview of an upright video (motionlab\safezones - the state's "safe"): where
+// TikTok / Reels / Shorts draw their own tabs, name + caption and buttons; this viewer's choice (localStorage)
+const ED_SAFE_WORDS = () => ({top: t('Tabs and search'), bottom: t('Name, caption and sound'), 'right rail': t('Like, comment, share')});
+function edSafeK(v) {
+  try { if (v !== undefined) { localStorage.setItem('ml.editor.safe', v); return v; } const x = localStorage.getItem('ml.editor.safe'); return x == null ? 'all' : x; }
+  catch (e) { return v === undefined ? 'all' : v; }
+}
 function edPvH(v) {                                            // the preview's height the user dragged (px), or null
   try {
     if (v !== undefined) { if (v == null) localStorage.removeItem('ml.editor.pvh'); else localStorage.setItem('ml.editor.pvh', String(Math.round(v))); return v; }
@@ -4596,6 +4603,15 @@ class EdPreview {
     this.fit();
   }
   wait(html) { this.waitEl.hidden = !html; this.waitEl.innerHTML = html || ''; }
+  setSafe(z) { this.safe = z || null; this.drawSafe(); }
+  drawSafe() {
+    if (!this.safe) { if (this.safeEl) this.safeEl.hidden = true; return; }
+    if (!this.safeEl) { this.safeEl = document.createElement('div'); this.safeEl.className = 'edsafe'; this.stage.appendChild(this.safeEl); }
+    const s = this.sc || 1, w = ED_SAFE_WORDS(), box = ([x0, y0, x1, y1]) => `left:${x0 * s}px;top:${y0 * s}px;width:${(x1 - x0) * s}px;height:${(y1 - y0) * s}px`;
+    this.safeEl.hidden = false;
+    this.safeEl.innerHTML = Object.entries(this.safe.bands).map(([k, b]) => `<i class="edsb ${k === 'right rail' ? 'rail' : k}" style="${box(b)}"><span>${esc(w[k] || k)}</span></i>`).join('')
+      + `<b class="edsr" style="${box(this.safe.safe)}"></b>`;
+  }
   fit(soft = false) {
     // (as high as the window leaves once the whole timeline is in sight - or as the user dragged it with the handle)
     const bw = Math.max(200, this.box.clientWidth || 400), tl = document.getElementById('edtl'), tr = this.box.parentElement && $('.edtrans', this.box.parentElement);
@@ -4605,6 +4621,7 @@ class EdPreview {
     const sc = Math.min(bw / this.W, maxH / this.H);
     if (soft && this.sc && Math.abs(sc - this.sc) * this.H < 4) return;
     this.sc = sc;
+    if (this.safe) this.drawSafe();
     this.stage.style.width = `${Math.round(this.W * this.sc)}px`; this.stage.style.height = `${Math.round(this.H * this.sc)}px`;
     if (this.S) this.render(this.f, true);
   }
@@ -4914,7 +4931,8 @@ function projEditor(el, P) {
         <div class="edtrans"><button class="btn sm" data-tr="start" title="${ta('First frame (Home)')}">⏮</button><button class="btn sm" data-tr="-1" title="${ta('1 frame back (←)')}">◀</button>
           <button class="btn edplay" data-tr="play" title="${ta('Play / pause (Space)')}">▶</button><button class="btn sm" data-tr="1" title="${ta('1 frame on (→)')}">▶</button><button class="btn sm" data-tr="end" title="${ta('Last frame (End)')}">⏭</button>
           <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button>
-          <input type="range" class="edvol" id="edpvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}"></div></div>
+          <input type="range" class="edvol" id="edpvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}">
+          <select id="edsafe" class="edsafesel" hidden title="${ta('Where TikTok, Reels and Shorts put their own buttons, name and caption - keep words and faces inside the dashed box')}"></select></div></div>
       <aside class="edpanel"><div class="edpin edinsp" id="edinsp"></div></aside></div>
     <div class="edsplitter" id="edsplitter" role="separator" aria-orientation="horizontal" title="${ta('Drag to make the preview bigger or smaller - double-click: as it was')}"></div>
     <div class="edtl" id="edtl"><div class="edtools">
@@ -4972,7 +4990,7 @@ function projEditor(el, P) {
         toast(t('Your unsaved changes are back.'), 'ok'); }
       catch (e) { cur = base; try { localStorage.removeItem(store()); } catch (x) { /* */ } }
     }
-    pv.setState(cur, capEdits());
+    pv.setState(cur, capEdits()); applySafe();
     draw();
     media();
   };
@@ -4994,7 +5012,7 @@ function projEditor(el, P) {
       const f = pv.f, D = pv.box; pv.destroy();
       pv = new EdPreview(D, {fps: base.fps, W: base.width, H: base.height, media: base.media,
         onFrame: g => { prevF = g; paintHead(); }, onPlay: on => { const b = $('[data-tr=play]', el); if (b) b.textContent = on ? '❚❚' : '▶'; }});
-      pv.setState(cur, capEdits()); pv.seek(f); drawTL();
+      pv.setState(cur, capEdits()); applySafe(); pv.seek(f); drawTL();
     };
     tick();
   };
@@ -5926,6 +5944,115 @@ function projEditor(el, P) {
       () => { sel = {k: 'song'}; });
   }
   // ---------------------------------------------------------------- split, delete, add
+  // ---------------------------------------------------------------- the safe zones, the right-click menu
+  function applySafe() {                                     // (an upright video: the picker shows, the guides drawn)
+    const sf = $('#edsafe', el), S = cur || base;
+    if (!sf || !S) return;
+    sf.hidden = !S.safe;
+    if (!S.safe) { if (pv) pv.setSafe(null); return; }
+    if (!sf.options.length) sf.innerHTML = `<option value="">${t('Safe zones: off')}</option>` + S.safe.map(z => `<option value="${esc(z.id)}">${esc(z.id === 'all' ? t('Safe zones: all three apps') : t('Safe zones: {app}', {app: z.label}))}</option>`).join('');
+    const k = edSafeK();
+    sf.value = S.safe.some(z => z.id === k) ? k : '';
+    if (pv) pv.setSafe(S.safe.find(z => z.id === sf.value) || null);
+  }
+  // (2026-10-27, the user: "Right-click menu on the timeline (split, delete, duplicate, add a transition)": what the
+  // editors put there - what was right-clicked is selected, its menu acts on it at the frame clicked; Esc / a click
+  // outside close it, up / down move in it)
+  let menu = null;
+  const menuAway = e => { if (menu && !menu.contains(e.target)) closeMenu(); };
+  const menuKey = e => {
+    if (!menu) return;
+    const bs = $$('button:not(:disabled)', menu), i = bs.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation();
+      if (bs.length) bs[(i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus(); }
+    else if (!['Enter', ' ', 'Tab', 'Shift'].includes(e.key)) closeMenu();
+  };
+  function closeMenu() {
+    if (!menu) return;
+    menu.remove(); menu = null;
+    document.removeEventListener('pointerdown', menuAway, true); document.removeEventListener('keydown', menuKey, true);
+  }
+  function openMenu(e) {
+    e.preventDefault(); closeMenu();
+    if (!cur || saving || busy) return;
+    const it = e.target.closest('.edit'), f = fAt(e), k = it ? it.dataset.k : null, S = cur, lock = S.timing_locked, L = [];
+    const item = (label, fn, o = {}) => L.push({label, fn, ...o}), sep = () => L.push('-');
+    const at = g => { prevF = g; if (pv) pv.seek(g); };
+    if (k === 'shot') {
+      const s = S.shots.find(x => x.id === it.dataset.id);
+      if (!s) return;
+      sel = {k: 'shot', id: s.id};
+      const i = S.shots.indexOf(s), cuts = plainCuts(), nx = S.shots[i + 1], has = id => (S.transitions || []).some(x => x.shot === id);
+      item(t('Split here'), () => { at(f); splitHere(); }, {hint: 'S', off: lock || f <= s.start});
+      item(t('Duplicate'), () => push({op: 'shotdup', shot: s.id}, t('Shot {n} duplicated', {n: s.n})), {off: lock || !!s.scene, tip: s.scene ? t('A scene is duplicated by Claude - ask for it') : ''});
+      sep();
+      if (cuts.some(c => c.id === s.id)) item(has(s.id) ? t('The transition before it…') : t('Add a transition before it'), () => { if (has(s.id)) { sel = {k: 'tr', id: s.id}; draw(); } else addTrans(s.id, 'mix'); });
+      if (nx && cuts.some(c => c.id === nx.id)) item(has(nx.id) ? t('The transition after it…') : t('Add a transition after it'), () => { if (has(nx.id)) { sel = {k: 'tr', id: nx.id}; draw(); } else addTrans(nx.id, 'mix'); });
+      if (S.sound === 'follows') { sep(); const m = s.db <= S.vol[0];
+        item(m ? t('Sound on') : t('Mute'), () => push({op: 'volume', shot: s.id, db: m ? 0 : S.vol[0]}, m ? t('Shot {n}: its sound back on', {n: s.n}) : t('Shot {n}: muted', {n: s.n})), {off: lock}); }
+      sep(); item(t('Delete'), () => delSel(), {hint: 'Del', off: lock || S.shots.length < 2, danger: true});
+    } else if (k === 'gfx') {
+      const g = S.graphics.find(x => x.id === it.dataset.id);
+      if (!g) return;
+      sel = {k: 'gfx', id: g.id};
+      const fo = S.folders[g.dir] || {}, n = g.end - g.start + 1, f0 = g.end + n < S.frames ? g.end + 1 : Math.max(0, S.frames - n);
+      item(t('Duplicate'), () => { const id = newId();
+        push({op: 'gadd', id, template: fo.from, f: f0, len: Math.max(1, Math.min(n, S.frames - f0)), values: {...g.values}}, t('{graphic} duplicated at {at}', {graphic: edGfxName(g, S, lib), at: tcf(f0)}), () => { sel = {k: 'gfx', id}; }); },
+        {off: !fo.from, tip: fo.from ? '' : t('Only a graphic made from a Motion Graphics template can be duplicated here')});
+      sep(); item(t('Delete'), () => delSel(), {hint: 'Del', danger: true});
+    } else if (k === 'cap') {
+      const c = S.captions.find(x => x.graphic === it.dataset.g && x.cue === +it.dataset.cue);
+      if (!c) return;
+      sel = {k: 'cap', graphic: c.graphic, cue: c.cue};
+      item(t('Edit its words'), () => { capFocus = true; draw(); });
+      item(t('Split here'), () => push({op: 'capsplit', graphic: c.graphic, cue: c.cue, at: f}, t('Caption at {at}: split at {to}', {at: tcf(c.f), to: tcf(f)})),
+        {off: !!c.tail || f <= c.f || f > c.f + c.len - 1});
+      sep(); item(t('Delete'), () => delSel(), {hint: 'Del', danger: true});
+    } else if (k === 'sfx') {
+      const q = S.sfx[+it.dataset.i];
+      if (!q) return;
+      sel = {k: 'sfx', key: sfxOf(q)};
+      const g = Math.min(S.frames - 1, q.f + Math.max(1, Math.round((q.len_s || 0.4) * S.fps)));
+      item(t('Listen'), () => { if (pv) pv.hear(pv.sfxUrl(q)); });
+      item(t('Duplicate'), () => push({op: 'sfxadd', f: g, kind: q.kind, ...(q.sound ? {sound: q.sound} : {}), ...(q.db ? {db: q.db} : {})}, t('{sound} added at {at}', {sound: edKind(q.kind), at: tcf(g)})));
+      sep(); item(t('Delete'), () => delSel(), {hint: 'Del', danger: true});
+    } else if (k === 'fx') {
+      const x = (S.effects || []).find(q => q.id === it.dataset.id);
+      if (!x) return;
+      sel = {k: 'fx', id: x.id};
+      item(t('Remove'), () => delSel(), {hint: 'Del', off: !x.can.includes('remove'), danger: true});
+    } else if (k === 'tr') {
+      const x = (S.transitions || []).find(q => q.shot === it.dataset.id);
+      if (!x) return;
+      sel = {k: 'tr', id: x.shot};
+      item(t('Apply to all cuts'), () => push({op: 'transall', kind: x.kind, len: x.len, ...(x.dir ? {dir: x.dir} : {})}, t('{transition} on all {n} cuts', {transition: edTrLabel(x.label), n: plainCuts().length})));
+      sep(); item(t('Remove'), () => delSel(), {hint: 'Del', danger: true});
+    } else if (k === 'key') {
+      sel = {k: 'key', id: it.dataset.s, f: +it.dataset.f};
+      item(t('Remove this keyframe'), () => delSel(), {hint: 'Del', danger: true});
+    } else {                                                 // an empty place: at the frame clicked
+      const s = shotAt(f), c = nearCut(f);
+      item(t('Split here'), () => { at(f); splitHere(); }, {hint: 'S', off: !s || f <= s.start || lock});
+      item(t('Add a transition at the nearest cut'), () => addTrans(c.id, 'mix'), {off: !c});
+      if (capPieces().length) item(t('Add a caption here'), () => { at(f); addCaption(); }, {off: !capPieceAt(f) || !!capAt(f)});
+    }
+    while (L[0] === '-') L.shift();
+    while (L[L.length - 1] === '-') L.pop();
+    if (!L.length) return;
+    if (it) draw();
+    menu = document.createElement('div');
+    menu.className = 'edmenu'; menu.setAttribute('role', 'menu');
+    menu.innerHTML = L.map((x, i) => (x === '-' ? (L[i - 1] === '-' ? '' : '<hr>') : `<button type="button" role="menuitem" data-mi="${i}" class="${x.danger ? 'bad' : ''}"${x.off ? ' disabled' : ''}${x.tip ? ` title="${esc(x.tip)}"` : ''}><span>${esc(x.label)}</span>${x.hint ? `<kbd>${esc(x.hint)}</kbd>` : ''}</button>`)).join('');
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = `${Math.max(4, Math.min(e.clientX, window.innerWidth - r.width - 6))}px`;
+    menu.style.top = `${Math.max(4, Math.min(e.clientY, window.innerHeight - r.height - 6))}px`;
+    $$('[data-mi]', menu).forEach(b => b.onclick = () => { const x = L[+b.dataset.mi]; closeMenu(); x.fn(); });
+    document.addEventListener('pointerdown', menuAway, true); document.addEventListener('keydown', menuKey, true);
+    const first = $('button:not(:disabled)', menu);
+    if (first) first.focus({preventScroll: true});
+  }
   function splitHere() {
     const s = shotAt(prevF);
     if (!s || s.start === prevF || cur.timing_locked) return;
@@ -6161,7 +6288,10 @@ function projEditor(el, P) {
   const cv = $('#edcanvas', el);
   cv.addEventListener('pointerdown', onDown); cv.addEventListener('pointermove', onMove);
   cv.addEventListener('pointerup', onUp); cv.addEventListener('pointercancel', onUp);
-  cv.addEventListener('dblclick', e => { const it = e.target.closest('.edit'); if (it && it.dataset.k === 'cap') { const i = $('#edcapt', el); if (i) { i.focus(); i.select(); } } });
+  cv.addEventListener('dblclick', e => { const it = e.target.closest('.edit');
+    if (it && it.dataset.k === 'cap') { sel = {k: 'cap', graphic: it.dataset.g, cue: +it.dataset.cue}; capFocus = true; draw(); } });
+  cv.addEventListener('contextmenu', openMenu);
+  $('#edsafe', el).onchange = e => { edSafeK(e.target.value); applySafe(); };
   cv.addEventListener('dragover', e => { if ([...e.dataTransfer.types].some(x => x.startsWith('text/x-ml-'))) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
     const ph = $('.edins', el); ph.hidden = false; ph.style.top = '0px'; ph.style.height = '100%';
     const tc0 = [...e.dataTransfer.types].includes('text/x-ml-tr') && nearCut(fAt(e));
@@ -6206,7 +6336,7 @@ function projEditor(el, P) {
     spl.onpointerup = spl.onpointercancel = () => { spl.onpointermove = spl.onpointerup = spl.onpointercancel = null; spl.classList.remove('on'); if (cur) drawTL(); };
   };
   spl.ondblclick = () => { edPvH(null); if (pv) pv.fit(); };
-  onCleanup(() => { gone = true; document.body.classList.remove('edwide'); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) { pv.destroy(); pv = null; } });
+  onCleanup(() => { gone = true; closeMenu(); document.body.classList.remove('edwide'); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) { pv.destroy(); pv = null; } });
   brandData().then(() => { if (sel) drawInsp(); });
   api('/api/jobs').then(J => { saving = J.some(j => j.kind === 'miniedit' && (j.args || {}).project === P.name && ['running', 'queued'].includes(j.status)); if (cur) draw(); }).catch(() => {});
   const R = renderPicker($('#edpick', el), P, r => { load(r).then(() => { if (!gone && cur) drawAdd(); }); });
