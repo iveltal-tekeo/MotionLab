@@ -19,11 +19,12 @@ The worked example - copy its structure, not its numbers: `projects\test_4am\bui
 `verify_timing.py` (does the render change picture on the reference's key frames).
 
 ## 1. The footage
-- `tools\prep_footage.py <project>` decodes each clip once into `build\cache\` (IDs A, B, ... + SHA-256 in
-  `build\sources.json`, per-frame luma / motion / sharpness / pan stats): **colour** caches by default (~3.9 GB per
-  minute of footage), `--grey` for a black-and-white edit (~2.6 GB, like test_4am). It refuses to start when less
-  than 2 GB would stay free (the app's Storage page / `tools\storage.py` make room). Cache formats:
-  `tools\motionlab\footage.py`.
+- `tools\prep_footage.py <project>` reads each clip once into `build\cache\` (IDs A, B, ... + SHA-256 in
+  `build\sources.json`, per-frame luma / motion / sharpness / pan stats): since 0.6.1 a **light** cache of every
+  frame (~0.35 GB per minute) and a full colour cache that holds only what a plan shows - `render_video.py` fills it
+  before it renders, so nothing to do by hand; `--full` = every frame full size (~3.9 GB per minute), `--grey` for a
+  black-and-white edit. It refuses to start when less than 2 GB would stay free (the app's Storage page /
+  `tools\storage.py` make room). Cache formats: `tools\motionlab\footage.py`.
 - `tools\storyboard.py <project>` -> `build\boards\` (one frame per second, frame + timecode). Look at every board
   and note what each clip offers (subject, motion, light, framing).
 - Levels: `prep_footage.py` caches expand video range once (cache meta `"levels": "single"`). Plans say which caches

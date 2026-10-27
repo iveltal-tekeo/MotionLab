@@ -310,6 +310,17 @@ def main() -> int:
                 ours_first=first if (a.range and a.right) else 0)
         return 0
     t0 = time.time()
+    from prep_footage import ensure                    # 0.6.1: a sparse cache gets the full frames this render shows
+    if a.stills:                                       # first (the renderer opens the caches as they are then)
+        for f in (int(v) for v in a.stills.split(",")):
+            ensure(plan, f, f)
+    elif a.cuts:
+        for f, _ in cut_frames(plan, plan_path):
+            ensure(plan, f, f)
+    elif a.sheet:
+        ensure(plan, int(a.sheet.split(":")[0]), int(a.sheet.split(":")[1]))
+    else:
+        ensure(plan, *(a.range if a.range else (None, None)))
     R = Renderer(plan)
     log(f"plan {name}: {len(R.layers)} layers, {R.N} frames, set-up {time.time() - t0:.1f}s")
     if a.stills:
