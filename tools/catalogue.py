@@ -10,6 +10,10 @@ projects\\<name>\\build\\clips.json - motionlab\\catalogue.py explains it. The c
           {"A3": {"what": "a man walks to camera on a wet street at night", "size": "wide", "where": "city street",
           "tags": ["person", "street", "night"]}, ...}; size = wide | medium | close | detail
     .venv\\Scripts\\python tools\\catalogue.py show <project>      the catalogue in words (what the brief carries)
+    .venv\\Scripts\\python tools\\catalogue.py shots <project> [plan_vN.json]   a plan's shots BEFORE any render
+          (0.6.1 steps 3 + 7): each as it will look (from the light cache: crop, zoom point, zoom), frame + timecode,
+          its line, and what to fix - outside the usable part, across a cut, like the shot before, a moment twice,
+          the subject cut off -> build\\catalogue\\shots_<plan>_NN.jpg + .txt (the newest plan when none is named)
     .venv\\Scripts\\python tools\\catalogue.py selfcheck           a made-up clip with known moments
 Writes only into projects\\<project>\\build\\ (clips.json, catalogue\\).
 """
@@ -17,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -30,7 +35,7 @@ from motionlab.util import load_config, log, setup_console  # noqa: E402
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["make", "sheets", "say", "show", "selfcheck"])
+    ap.add_argument("cmd", choices=["make", "sheets", "say", "show", "shots", "selfcheck"])
     ap.add_argument("project", nargs="?")
     ap.add_argument("lines", nargs="?")
     ap.add_argument("--todo", action="store_true")
@@ -55,6 +60,20 @@ def main() -> int:
     if a.cmd == "sheets":
         for p in CT.sheets(prj, todo=a.todo):
             print(p)
+        return 0
+    if a.cmd == "shots":
+        plans = sorted(prj.build.glob("plan_v*.json"), key=lambda q: int(re.findall(r"\d+", q.stem)[-1]))
+        pp = prj.build / a.lines if a.lines else (plans[-1] if plans else None)
+        if not pp or not pp.exists():
+            print("no plan to look at")
+            return 1
+        sheets, lines, issues = CT.shots(prj, json.loads(pp.read_text(encoding="utf-8")), pp.stem)
+        txt = prj.check(prj.build / "catalogue" / f"shots_{pp.stem}.txt")
+        txt.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print("\n".join(lines))
+        print(f"{len(lines)} shot(s), {len(issues)} to fix")
+        for q in sheets + [txt]:
+            print(q)
         return 0
     if a.cmd == "say":
         if not a.lines:

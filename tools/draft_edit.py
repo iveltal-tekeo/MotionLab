@@ -167,9 +167,14 @@ def music_start(info: dict, T: float, fps: float, arg: str | None) -> float:
     return 0.0
 
 
-def speech(wav: Path, fps: float, n: int, offset_s: float) -> list[tuple[int, int]] | None:
+TALK_PAUSES = 0.15     # a talking take is quiet between its phrases in 30-49 % of its 10 ms windows; music, ambience,
+#                        a song under graphics in 0-9 % (measured 2026-10-27 on 4 takes and 25 B-roll clips)
+
+
+def speech(wav: Path, fps: float, n: int, offset_s: float, info: dict | None = None) -> list[tuple[int, int]] | None:
     """Spoken parts of a clip (cache frames): loud 10 ms windows, pauses under 0.25 s kept, 0.08 s around each part;
-    None when nobody talks (B-roll). offset_s = the video's start minus the sound's (video time = wav time - it)."""
+    None when nobody talks (B-roll). offset_s = the video's start minus the sound's (video time = wav time - it).
+    info gets "pauses" = the share of quiet windows (talking has pauses, music and ambience hardly any)."""
     import soundfile as sf
     y, sr = sf.read(str(wav), dtype="float32", always_2d=True)
     y = y.mean(axis=1)
@@ -182,6 +187,8 @@ def speech(wav: Path, fps: float, n: int, offset_s: float) -> list[tuple[int, in
     if float(np.percentile(db, 95)) < -45:
         return None
     v = db > max(float(np.percentile(db, 90)) - 22, -48)
+    if info is not None:
+        info["pauses"] = round(1.0 - float(v.mean()), 3)
     runs, i = [], 0
     while i < m:                                          # runs of voiced windows
         if v[i]:
@@ -263,6 +270,14 @@ def load_clips(prj: Project) -> tuple[dict, list[dict], bool]:
             k = by.get(c["id"])
             if k and not c.get("photo") and k["frames"] == c["frames"]:
                 c["cat"] = DR.catalogue_arrays(k)
+    sp = prj.build / "speech"                           # a take's words (tools\speech.py), at the cache's frames: the
+    for c in clips:                                     # B-roll lands on the words a moment's line says
+        js = sorted(q for q in sp.glob(f"{Path(c['name']).stem}.*.json") if ".verbatim." not in q.name) \
+            if sp.exists() and not c.get("photo") else []
+        if js:
+            d = read_json(js[-1]) or {}
+            c["words"] = [(int(round(float(w["t"]) * c["fps"])), str(w["w"])) for ln in d.get("lines", [])
+                          for w in ln.get("words", []) if "t" in w and "w" in w]
     return srcs, clips, color
 
 
@@ -614,9 +629,17 @@ def clip_sound(prj: Project, clips: list[dict], d: Path, fps: float, mode: str, 
         c["offset_s"] = float(info["video"].get("start_time") or 0) - float((info["audio"] or {}).get("start_time")
                                                                             or 0)
         if mode == "talk" and c["wav"]:
-            c["speech"] = speech(Path(c["wav"]), fps, c["frames"], c["offset_s"])    # video t = wav t - offset
+            c["speech"] = speech(Path(c["wav"]), fps, c["frames"], c["offset_s"], c)    # video t = wav t - offset
+    if mode == "talk" and any(c.get("speech") and c.get("pauses", 0) >= TALK_PAUSES for c in clips):
+        for c in clips:                                     # sound without pauses next to real takes: music, ambience
+            if c.get("speech") and c.get("pauses", 1) < TALK_PAUSES and (only is None or c["id"] in only):
+                c["speech"], c["no_pauses"] = None, True
+    for c in clips:
+        if only is not None and c["id"] not in only:
+            continue
         log(f"{c['id']} {c['name']}: " + ("no sound" if not c["wav"] else
                                          f"{len(c['speech'])} spoken part(s)" if c.get("speech") else
+                                         "sound without pauses - music or ambience, B-roll" if c.get("no_pauses") else
                                          "nobody talks (B-roll)" if mode == "talk" else "sound kept"))
 
 
@@ -875,6 +898,12 @@ def apply_list(a, prj: Project) -> int:
                 done.append(f"graphic {o['id']} at f{o['f']}: LEFT OUT - that frame was cut")
                 continue
             folder = prj.build / "overlays" / f"v{v}_{k:02d}_{o['id']}"
+            from motionlab import miniedit as ME
+            from motionlab import overlay_settings as OS
+            tf = ME.template_folder(o["id"])                # over a video its own backdrop is off (as the Editor does)
+            if tf is not None and "background" not in o["values"] and any(x.get("type") == "clip" for x in P["layers"]) \
+                    and any(d["id"] == "background" and d["type"] == "boolean" for d in OS.declared(tf)):
+                o["values"]["background"] = False
             cmd = [py, ov, "new", str(folder), "--from", o["id"], "--frames", str(o["len"]), "--like-plan", "--force"]
             if o["values"]:
                 cmd += ["--values", _json.dumps(o["values"], ensure_ascii=False)]
@@ -883,6 +912,13 @@ def apply_list(a, prj: Project) -> int:
             run(cmd)
             L = {"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"), "start": at,
                  "end": min(at + o["len"] - 1, int(P["frames"]) - 1), "blend": "normal"}
+            fit = o.get("fit") or []                    # 0.6.1: part of the shot (the template's in_shot + the words)
+            if "plain" not in fit:
+                tf = ME.template_folder(o["id"])
+                if tf is not None:
+                    L.update(ME.in_shot(tf, P))
+                for w in fit:
+                    ME._gfit(L, w, True)
             if o.get("land"):
                 r = TM.land_target(str(folder), o["land"], at, at)
                 L.update(start=r["start"], end=min(r["end"], int(P["frames"]) - 1), **{"in": r["in"]})

@@ -67,8 +67,25 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    storyboards. Then edit from the catalogue (the brief carries it; `catalogue.py show`): picks only inside usable
    windows, the hook from the strongest moments, the order by the day filmed for a vlog / a build for a promo, shot
    sizes that vary, never two look-alikes back to back unless that is the point, a talking video's B-roll on the
-   words its line matches. An *Improve* or *Finish it* window reads the catalogue - never the sheets again. A line
-   the user wrote (`"by": "user"`) is the truth.
+   words its line matches. **B-roll is picture only** (the user, 2026-10-27: "the idea of the b roll is to have the
+   sound from the clip before going on, so NOT changing"): a B-roll layer over the talking shot, the talking clip's
+   sound goes on under it - never a cut in the voice for a B-roll, never the B-roll clip's own sound (unless the user
+   asks for it). **Where and how long** (the rules creators' editing skills and guides agree on, researched
+   2026-10-27 - docs\ideas.md *B-roll rules*; the quick draft follows them when the take is transcribed and the
+   catalogue has lines): on the word it shows, ~0.25 s after the word starts (never before it), or right on a jump cut
+   (it hides it); 2-4 s, never under 1.5 s; the face keeps the hook (~the first 15 %) and the call to action (~the
+   last 10 %), a punchline and an emotional line; never under 2 s of face between two inserts (join them); at most
+   ~40 % covered; each moment once; a concrete word (a thing, a place, an action) earns one, an abstract one does not.
+   The draft's notes say which word each insert is on (`on "post": G1 - ...`). An *Improve* or *Finish it* window
+   reads the catalogue - never the sheets again. A line
+   the user wrote (`"by": "user"`) is the truth. Each moment's `subject` (a face, else where the eye goes) is the
+   shot's `anchor` when the clip's shape is not the video's (a horizontal clip in a vertical video) and the centre of
+   any punch-in. **Before any render** (0.6.1 steps 3 + 7): `catalogue.py shots <project> plan_vN.json` draws every
+   shot as it will look (from the light cache - seconds, no render) and flags what to fix (`!`: outside the usable
+   part, across a cut, like the shot before, a moment twice, the subject cut off; a talking video's own jump cuts are
+   marked "the talking take" and only checked for the crop; 0.6.1: a graphic that covers the face, with its first
+   frame) - fix each one in the plan, run it again until nothing is flagged, then show the user the sheet (frame +
+   timecode on every tile) before building.
 4. If `resolve` was asked: option 2 (`render.md`) once the user approves the lab render.
 5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
    (00:00:18:24)") and what is approximate.

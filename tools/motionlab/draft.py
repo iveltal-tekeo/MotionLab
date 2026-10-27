@@ -23,6 +23,21 @@ from .style import lognormal_sigma
 
 NEUTRAL = {"black": 0, "white": 255, "gamma": 1.0, "out_black": 0.0, "out_white": 1.0, "saturation": 1.0}
 HOOK_S = 3.0
+# B-roll over talking (2026-10-27, the user: "the idea of the b roll is to have the sound from the clip before going
+# on, so NOT changing" + "look into ... presets ... that work better than imagining random stuff"; the rules creators'
+# editing skills and guides agree on - docs\ideas.md *B-roll rules*): picture only, the voice goes on; an insert lands
+# ON the word it shows (a little after it starts, never before), lasts 2-4 s (never under ~1.5 s), the face keeps the
+# hook and the end, never a sliver of face between two inserts, at most ~40 % of the video covered
+BROLL_MIN_S, BROLL_LEN_S, BROLL_MAX_S = 1.5, 2.5, 4.0
+BROLL_LATE_S = 0.25                    # after its word starts (Tella's b-roll-finder: +0.2-0.5 s, "bias later")
+BROLL_FACE_GAP_S = 2.0                 # less face than this between two inserts reads as an error: they join
+BROLL_HEAD, BROLL_TAIL = 0.15, 0.10    # shares of the video kept on the face: the hook, the call to action
+BROLL_COVER = 0.40                     # the most of the video B-roll may cover (a talking-head reel's ceiling)
+STOPWORDS = set("""a an the and or but if so to of in on at for with from by as is are was were be been being it its
+this that these those i you he she we they me him her us them my your his our their what which who whom how why when
+where there here then than just very really also too not no yes do does did done have has had having will would can
+could should may might must shall about into over under again more most some any all each every one two three four
+five first last next new now get got make made like thing things way lot lots""".split())
 # what the draft can draw: where it goes (a cut between two shots, a shot, the start / end) and the shortest shot
 # (seconds) it needs. Other types (spin, blur, invert, split screen, text / graphics) are listed for Claude / Resolve.
 FX = {
@@ -317,16 +332,34 @@ def catalogue_arrays(k: dict) -> dict:
     grp = its look-alike group (-1 = none), day = the day it was filmed."""
     n = int(k["frames"])
     ok, mo, grp = np.zeros(n, bool), np.zeros(n, int), np.full(n, -1, int)
+    subj, words, say = {}, {}, {}
     for i, m in enumerate(k.get("moments", []), 1):
         a, b = max(0, int(m["a"])), min(n - 1, int(m["b"]))
         mo[a:b + 1] = i
+        if m.get("subject"):                   # (its subject: where its crop / punch-in centres)
+            subj[i] = [float(m["subject"]["x"]), float(m["subject"]["y"])]
+        s = m.get("say") or {}                 # (its line's words: B-roll on the words that say them)
+        if s:
+            say[i] = s
+            words[i] = {stem(w) for w in " ".join([s.get("what", ""), s.get("where", ""), *s.get("tags", [])]).split()
+                        if stem(w)}
         grp[a:b + 1] = int(m.get("group") or 0) or -(1000 + i)    # (no group: its own, never like another clip's)
         for u0, u1 in m.get("usable", []):
             ok[max(0, int(u0)):min(n, int(u1) + 1)] = True
-    return {"ok": np.concatenate([[0], np.cumsum(ok)]), "mo": mo, "grp": grp, "day": str(k.get("filmed") or "")[:10]}
+    return {"ok": np.concatenate([[0], np.cumsum(ok)]), "mo": mo, "grp": grp, "day": str(k.get("filmed") or "")[:10],
+            "subj": subj, "words": words, "say": say, "moments": [[int(m["a"]), int(m["b"]), m.get("usable", [])]
+                                                     for m in k.get("moments", [])]}
 
 
-def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
+def stem(w: str) -> str:
+    """A word as it is matched (lower case, letters only, a plural's s off; stop words and short ones: "")."""
+    w = "".join(ch for ch in w.lower() if ch.isalpha())
+    if len(w) < 3 or w in STOPWORDS:
+        return ""
+    return w[:-1] if len(w) > 4 and w.endswith("s") and not w.endswith("ss") else w
+
+
+def pick_windows(needs, clips, energy, fps, rng, taken: set | None = None) -> list[dict]:
     """For each shot the best unused moment of the clips (one pass, in timeline order). With the clip catalogue
     (0.6.1): a window outside the usable parts, across a cut inside its clip or like the shot before it scores down,
     and with several days filmed, going back in time a little."""
@@ -337,6 +370,8 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
     used = {c["id"]: np.zeros(c["frames"], bool) for c in clips}
     days = sorted({c["cat"]["day"] for c in clips if c.get("cat") and c["cat"]["day"]})
     picks, prev, prev_grp, prev_day = [], None, set(), ""
+    used_mo: set = set(taken or ())            # (clip, moment) already in the video
+    grp_n: dict[int, int] = {}                 # a look-alike scene: how often it is in the video so far
     for pre, L, post in needs:
         need = pre + L + post
         best = None
@@ -363,7 +398,9 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
                 cross = (k["mo"][s0] != k["mo"][s1]).astype(float)
                 alike = np.array([float(k["grp"][x] in prev_grp or k["grp"][y] in prev_grp) for x, y in zip(s0, s1)])
                 back = 0.3 if len(days) > 1 and prev_day and k["day"] and k["day"] < prev_day else 0.0
-                score = score - 4.0 * outside - 1.5 * cross - 1.5 * alike - back
+                again = np.array([float((cid, int(k["mo"][x])) in used_mo) for x in s0])    # (the same shot twice,
+                often = np.array([0.5 * grp_n.get(int(k["grp"][x]), 0) for x in s0])       # one scene too often)
+                score = score - 4.0 * outside - 1.5 * cross - 1.5 * alike - back - 1.5 * again - often
             j = int(np.argmax(score))
             if best is None or score[j] > best[0]:
                 best = (float(score[j]), c, int(A[j]))
@@ -378,9 +415,15 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
         picks.append({"sid": c["id"], "in": a + pre, "why": why})
         prev = c["id"]
         k = c.get("cat")
+        if k is not None and k["subj"].get(int(k["mo"][min(c["frames"] - 1, a + pre + L // 2)])):
+            picks[-1]["anchor"] = k["subj"][int(k["mo"][min(c["frames"] - 1, a + pre + L // 2)])]
         if k is not None:
             prev_grp = {int(g) for g in k["grp"][a + pre:min(c["frames"], a + pre + L)]}
             prev_day = k["day"] or prev_day
+            for x in range(a + pre, min(c["frames"], a + pre + L), max(1, L // 4)):
+                used_mo.add((c["id"], int(k["mo"][x])))
+            for g in prev_grp:
+                grp_n[g] = grp_n.get(g, 0) + 1
         else:
             prev_grp = set()
     return picks
@@ -446,8 +489,11 @@ def build_layers(shots, picks, at_cut, at_shot, edges, W, H, fps, rng, talk_zoom
     for i, ((s, e), p) in enumerate(zip(shots, picks)):
         base = {"type": "clip", "id": f"s{i + 1:02d}_{p['sid']}", "src": p["sid"], "start": s, "end": e,
                 "rect": [0, 0, W, H], "in": int(p["in"])}
+        if p.get("anchor"):                     # 0.6.1: the catalogue's subject (a face, else where the eye goes) -
+            base["anchor"] = [round(float(v), 3) for v in p["anchor"]]    # the crop and any zoom centre on it
         if talk_zoom and i % 2:
-            base["zoom"], base["anchor"] = 1.12, [0.5, 0.42]          # a punch-in on every other jump cut
+            base["zoom"], base["anchor"] = 1.12, [(p.get("anchor") or [0.5])[0], 0.42]   # a punch-in on every other
+            #                                                                                jump cut
         segs.append([base])
     for i, fx in sorted(at_shot.items()):
         t, layer = fx["type"], segs[i][0]
@@ -607,24 +653,97 @@ def talk_shots(clips: list[dict], fps: float, max_frames: int | None) -> tuple[l
     return shots, picks
 
 
-def broll_layers(shots, clips, every_s: float, fps, W, H, energy, rng) -> tuple[list, list]:
-    """B-roll over the talking: every `every_s` seconds (after the first 3 s) the picture switches to a clip nobody
-    talks in for 1.5-2.5 s; the sound goes on."""
+def broll_layers(shots, clips, every_s: float, fps, W, H, energy, rng, picks=None,
+                 words: dict | None = None) -> tuple[list, list]:
+    """B-roll over the talking (picture only - the voice goes on): inserts ON the words a B-roll moment's catalogue line
+    says (when the takes are transcribed and the catalogue has lines), else at the start of a phrase (after a pause),
+    every ~`every_s` seconds - one under 0.5 s after a jump cut starts on the cut and hides it; 2-4 s each, ended at a
+    pause when one comes in time; the face keeps the hook and the end;
+    two inserts with less face than BROLL_FACE_GAP_S between them join; at most BROLL_COVER of the video."""
     pool = [c for c in clips if not c.get("speech")]
     N = shots[-1][1] + 1 if shots else 0
     if not pool or not every_s or N < _f(HOOK_S + every_s, fps):
         return [], []
     longest = max(c["frames"] for c in pool) - 2
-    if longest < _f(1.0, fps):                        # cutaways under a second: none rather than a flicker
+    if longest < _f(BROLL_MIN_S, fps):                # cutaways under ~1.5 s: none rather than a flicker
         return [], []
-    starts = list(range(_f(HOOK_S + every_s * 0.5, fps), N - _f(2.0, fps), _f(every_s, fps)))
-    needs = [(0, min(_f(rng.uniform(1.5, 2.5), fps), N - f - 1, longest), 0) for f in starts]
-    picks = pick_windows(needs, pool, energy, fps, rng)
+    head = max(_f(2.0, fps), int(BROLL_HEAD * N))
+    tail = N - max(_f(1.5, fps), int(BROLL_TAIL * N))
+    late, lmin, llen, lmax = _f(BROLL_LATE_S, fps), _f(BROLL_MIN_S, fps), _f(BROLL_LEN_S, fps), _f(BROLL_MAX_S, fps)
+    gap = _f(BROLL_FACE_GAP_S, fps)
+    # what is said where on the timeline (each talking shot = a stretch of its take)
+    said = []
+    for (s, e), p in zip(shots, picks or []):
+        for f, w in (words or {}).get(p["sid"], []):
+            if p["in"] <= f <= p["in"] + (e - s):
+                said.append((s + f - int(p["in"]), stem(w)))
+    lines = []                                        # (clip, moment, its words, its longest usable part)
+    for c in pool:
+        for i, ws in (c.get("cat") or {}).get("words", {}).items():
+            use = max(c["cat"]["moments"][i - 1][2] or [[0, -1]], key=lambda r: r[1] - r[0])
+            if use[1] - use[0] + 1 >= lmin:           # (a moment under ~1.5 s, or "use none": never an insert)
+                lines.append((c, i, ws, use))
+    anchors = []                                      # (frame, strength, the moments its word names, the word)
+    for f, w in said:
+        hit = [(c, i, use) for c, i, ws, use in lines if w and w in ws]
+        if hit:
+            anchors.append((f + late, 2, [hit[j] for j in rng.permutation(len(hit))], w))
+    anchors += [(s + late, 1, None, "") for s, _ in shots[1:]]
+    space = _f(every_s * 0.75, fps)
+    chosen: list[list] = []
+    for f, strength, hint, word in sorted(anchors, key=lambda a: (-a[1], a[0])):    # the words first, then phrases
+        sh = next(((s, e) for s, e in shots if s <= f <= e), None)
+        if sh and f - sh[0] < _f(0.5, fps):           # (on the jump cut itself - it hides it - never a flash of
+            f = sh[0]                                 # face just after it)
+        if not head <= f <= tail - lmin:
+            continue
+        if any(abs(f - x[0]) < space for x in chosen):
+            continue
+        end = min(f + llen, tail) - 1
+        if sh and lmin <= sh[1] - f + 1 <= lmax:      # (ended at the pause that ends its phrase, when it comes in time)
+            end = sh[1]
+        chosen.append([f, end, hint, word])
+    chosen.sort(key=lambda x: x[0])
+    joined: list[list] = []
+    for x in chosen:                                  # never a sliver of face between two inserts
+        if joined and x[0] - joined[-1][1] - 1 < gap and x[1] - joined[-1][0] + 1 <= int(lmax * 1.5):
+            joined[-1][1] = max(joined[-1][1], x[1])
+        elif not joined or x[0] - joined[-1][1] - 1 >= gap:
+            joined.append(x)
+    out, covered = [], 0
+    for x in joined:                                  # the cover budget, the earliest first
+        L = min(x[1] - x[0] + 1, longest)
+        if covered + L > BROLL_COVER * N:
+            break
+        x[1] = x[0] + L - 1
+        out.append(x)
+        covered += L
+    fixed, taken, needs, free = {}, set(), [], []
+    for k, (f, e, hint, word) in enumerate(out):
+        L = e - f + 1
+        for c, i, (u0, u1) in hint or []:             # a moment its word names, not used yet: its longest usable part
+            if (c["id"], i) in taken:
+                continue
+            L = min(L, u1 - u0 + 1)
+            out[k][1] = f + L - 1
+            what = ((c["cat"]["say"].get(i) or {}).get("what") or "").strip()
+            fixed[k] = {"sid": c["id"], "in": int(u0 + max(0, (u1 - u0 + 1 - L) // 2)),
+                        "why": f'on "{word}": {c["id"]}{i}' + (f" - {what}" if what else ""),
+                        **({"anchor": c["cat"]["subj"][i]} if i in c["cat"]["subj"] else {})}
+            taken.add((c["id"], i))
+            break
+        else:
+            needs.append((0, L, 0))
+            free.append(k)
+    picks_b = pick_windows(needs, pool, energy, fps, rng, taken=taken) if needs else []
+    for k, p in zip(free, picks_b):
+        fixed[k] = p
     layers, notes = [], []
-    for k, (f, (_, L, _), p) in enumerate(zip(starts, needs, picks)):
-        layers.append({"type": "clip", "id": f"broll_{k + 1:02d}_{p['sid']}", "src": p["sid"], "start": f,
-                       "end": f + L - 1, "rect": [0, 0, W, H], "in": p["in"]})
-        notes.append({"frame": f, "end": f + L - 1, "sid": p["sid"], "in": p["in"], "why": p["why"]})
+    for k, (f, e, _, _) in enumerate(out):
+        p = fixed[k]
+        layers.append({"type": "clip", "id": f"broll_{k + 1:02d}_{p['sid']}", "src": p["sid"], "start": f, "end": e,
+                       "rect": [0, 0, W, H], "in": int(p["in"]), **({"anchor": p["anchor"]} if p.get("anchor") else {})})
+        notes.append({"frame": f, "end": e, "sid": p["sid"], "in": int(p["in"]), "why": p["why"]})
     return layers, notes
 
 
@@ -647,7 +766,7 @@ def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | No
         same = {i for i in range(1, len(picks)) if picks[i]["sid"] == picks[i - 1]["sid"]}     # jump cuts of one take
         at_cut, at_shot, edges, skipped = place_effects(shots, style, fps, [], set(), [], rng, talk=True, same=same)
         broll, broll_notes = broll_layers(shots, usable, float(style.get("broll_every_s") or 0), fps, W, H, energy,
-                                          rng)
+                                          rng, picks=picks, words={c["id"]: c["words"] for c in usable if c.get("words")})
     else:
         if not N:
             raise ValueError("a music edit needs a length")

@@ -217,6 +217,45 @@ def _key(met: dict, usable: list, a: int, b: int) -> int:
     return int(idx[int(np.argmax(score))])
 
 
+def _salient(rgb: np.ndarray) -> tuple[float, float]:
+    """Where the eye goes in a picture (0..1 across / down): the spectral residual (Hou & Zhang 2007) on a small grey
+    copy, a mild pull to the middle, the weighted centre of its strongest tenth."""
+    h, w = rgb.shape[:2]
+    gw, gh = (64, max(8, int(64 * h / w))) if w >= h else (max(8, int(64 * w / h)), 64)
+    g = cv2.resize(cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY), (gw, gh), interpolation=cv2.INTER_AREA).astype(np.float32)
+    F = np.fft.fft2(g)
+    amp = np.log(np.abs(F) + 1e-6)
+    S = np.abs(np.fft.ifft2(np.exp(amp - cv2.blur(amp, (3, 3)) + 1j * np.angle(F)))) ** 2
+    S = cv2.GaussianBlur(S.astype(np.float32), (0, 0), 2.0)
+    yy, xx = np.mgrid[0:gh, 0:gw]
+    S *= np.exp(-(((xx - gw / 2) / (0.6 * gw)) ** 2 + ((yy - gh / 2) / (0.6 * gh)) ** 2))
+    m = S >= np.percentile(S, 90)
+    wts = S[m]
+    return float((xx[m] * wts).sum() / wts.sum() + 0.5) / gw, float((yy[m] * wts).sum() / wts.sum() + 0.5) / gh
+
+
+def _subject(la: np.ndarray, frames: list[int]) -> dict | None:
+    """A moment's subject in its usable frames: the biggest face (the middle of its eyes-to-mouth), else where the eye
+    goes - {"x", "y" (0..1 of the picture), "by": "face" | "look"}; the crop of a clip whose shape is not the
+    video's (a horizontal clip in a vertical video) and a punch-in centre on it."""
+    from .thumbnail import faces
+    pts, by = [], "look"
+    for i in frames:
+        rgb = FC.decode(la[min(i, la.shape[0] - 1)], "i420")
+        h, w = rgb.shape[:2]
+        f = faces(rgb, 0.7)
+        if f:
+            x, y, fw, fh, _ = f[0]
+            pts.append(((x + fw / 2) / w, (y + 0.5 * fh) / h))
+            by = "face"
+    if by != "face":
+        pts = [_salient(FC.decode(la[min(i, la.shape[0] - 1)], "i420")) for i in frames]
+    if not pts:
+        return None
+    return {"x": round(float(np.median([p[0] for p in pts])), 3), "y": round(float(np.median([p[1] for p in pts])), 3),
+            "by": by}
+
+
 def filmed(path: Path) -> str | None:
     """When the clip was filmed: the file's own creation date (a phone's), else its modified time."""
     try:
@@ -259,7 +298,9 @@ def make(prj, cfg: dict, log=print) -> dict:
         for k, (a, b) in enumerate(_moments(met, thumbs, fps, cfg), 1):
             usable, bad, words = _quality(met, a, b, fps, sharp_ref)
             key = _key(met, usable, a, b)
-            mo = {"m": f"{sid}{k}", "a": a, "b": b, "key": key, **words, "usable": usable, "bad": bad}
+            subj = _subject(la, [key])                      # (one frame: the face finder is the slow part)
+            mo = {"m": f"{sid}{k}", "a": a, "b": b, "key": key, **words, "usable": usable, "bad": bad,
+                  **({"subject": subj} if subj else {})}
             say = old_say.get((json.dumps(ent.get("fingerprint"), sort_keys=True), a, b))
             if say:
                 mo["say"] = say
@@ -417,6 +458,121 @@ def text(cat: dict, limit: int = 400) -> str:
     return "\n".join(L)
 
 
+# ------------------------------------------------------------------------------------------------ a plan's shots
+def _moment_at(c: dict, i: int) -> dict | None:
+    return next((mo for mo in c["moments"] if mo["a"] <= i <= mo["b"]), None)
+
+
+def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], list[dict]]:
+    """A plan's shots BEFORE any render (0.6.1 steps 3 and 7): each one as it will look - its clip's light frame at
+    the shot's middle, cropped, zoomed and centred like the plan says - on sheets with frame + timecode, a line per
+    shot with what it shows (the catalogue's line), and what is wrong with it: outside its clip's usable parts, across
+    a cut inside its clip, like the shot before, a moment used twice, its subject cut off by the crop.
+    -> (sheets, lines, issues)."""
+    import sys
+    from .compose import Curve, sample_patch
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from storyboard import make_sheets
+    cat = load(prj) or {"clips": []}
+    by = {c["id"]: c for c in cat["clips"]}
+    W, H, fps = int(plan["width"]), int(plan["height"]), float(plan["fps"])
+    tw = 160 if H > W else 240
+    th = int(round(tw * H / W))
+    lut = np.arange(256, dtype=np.float32) / 255.0
+    named = plan.get("curves") or {}
+    layers = sorted((L for L in plan.get("layers", []) if L.get("type") == "clip" and L.get("src")
+                     and not L.get("tr") and not str(L.get("id", "")).startswith("rgb_")), key=lambda L: L["start"])
+    tiles, lines, issues, cache, prev_grp, seen = [], [], [], {}, None, {}
+    takes = ({L["src"] for L in layers if not str(L.get("id", "")).startswith("broll_")}    # a talking video's takes:
+             if (plan.get("made_by") or {}).get("sound") == "talk" else set())          # in the order said, by design
+    for k, L in enumerate(layers, 1):
+        s, e = int(L["start"]), int(L["end"])
+        f = (s + e) // 2
+        sp = float(L.get("speed", 1.0))
+        jumps = sorted([[int(x), int(y)] for x, y in L.get("jumps", [[s, L.get("in", 0)]])])
+        j = max((jj for jj in jumps if jj[0] <= f), default=jumps[0])
+        src_at = (lambda g: j[1] if L.get("hold") else j[1] + int(np.floor((g - j[0]) * sp + 1e-6)))
+        i_mid, i0, i1 = src_at(f), src_at(s), src_at(e)
+        c = by.get(L["src"])
+        sid = L["src"]
+        if sid not in cache:
+            try:
+                cache[sid] = _light(prj.cache, sid)
+            except (OSError, ValueError):
+                cache[sid] = None
+        img = np.zeros((th, tw, 3), np.uint8)
+        if cache[sid]:
+            lm, la = cache[sid]
+            rgb = FC.decode(la[min(max(i_mid, 0), la.shape[0] - 1)], "i420")
+            z = Curve(L.get("zoom"), named, 1.0)(f)
+            an = L.get("anchor") or [0.5, 0.5]
+            ax, ay = Curve(an[0], named, 0.5)(f), Curve(an[1], named, 0.5)(f)
+            r = L.get("rect") or [0, 0, W, H]
+            k_ = tw / W
+            res = sample_patch(rgb, lut, r[0] * k_, r[1] * k_, r[2] * k_, r[3] * k_, max(1.0, z), ax, ay, tw, th,
+                               bool(L.get("mirror")))
+            if res is not None:
+                patch, cov, X0, Y0 = res
+                img[Y0:Y0 + patch.shape[0], X0:X0 + patch.shape[1]] = np.clip(patch * 255 * cov[..., None], 0, 255)
+        mo = _moment_at(c, i_mid) if c else None
+        tc = f"f{s} ({frame_to_tc(s, fps)}) - f{e} ({frame_to_tc(e, fps)})"
+        what = ((mo.get("say") or {}).get("what") or "no line yet") if mo else "not in the catalogue"
+        bad = []
+        if c and mo:
+            if sid in takes:                          # (a take's jump cuts: the same take again, on purpose)
+                what += " (the talking take)"
+            else:
+                n_out = sum(1 for i in range(max(0, i0), i1 + 1) if not any(u0 <= i <= u1 for u0, u1 in mo["usable"]))
+                if n_out > 0.2 * max(1, i1 - i0 + 1):
+                    why = sorted({w for b0, b1, w in mo["bad"] if b0 <= i1 and i0 <= b1}) or ["not in a usable part"]
+                    bad.append(f"{n_out} of its frames outside the usable part ({', '.join(why)})")
+                m1 = _moment_at(c, i1)
+                if m1 is not None and m1["m"] != mo["m"]:
+                    bad.append(f"crosses a cut inside its clip ({mo['m']} -> {m1['m']})")
+                if mo.get("group") and mo.get("group") == prev_grp:
+                    bad.append("looks like the shot before")
+                if mo["m"] in seen:
+                    bad.append(f"{mo['m']} again (shot {seen[mo['m']]})")
+            sj = mo.get("subject")
+            w0, h0 = (c.get("size") or [0, 0])
+            if sj and w0 and h0 and abs(w0 / h0 - r_aspect(L, W, H)) > 0.1:
+                vis = max(1.0, Curve(L.get("zoom"), named, 1.0)(f))
+                frac = min(1.0, r_aspect(L, W, H) / (w0 / h0)) / vis if w0 / h0 > r_aspect(L, W, H) else 1.0 / vis
+                an = L.get("anchor") or [0.5, 0.5]
+                cx = min(max(Curve(an[0], named, 0.5)(f), frac / 2), 1 - frac / 2)
+                if abs(sj["x"] - cx) > frac / 2 * 0.9:
+                    bad.append(f"its subject ({sj['by']}) is cut off by the crop")
+            seen.setdefault(mo["m"], k)
+            prev_grp = mo.get("group")
+        else:
+            prev_grp = None
+        lines.append(f"{k}. {tc} {sid}{'/' + mo['m'] if mo else ''}: {what}" + (" - " + "; ".join(bad) if bad else ""))
+        if bad:
+            issues.append({"shot": k, "id": L["id"], "f": s, "moment": mo["m"] if mo else None, "issues": bad})
+        tiles.append((img, f"{k} f{s} {frame_to_tc(s, fps)}{' !' if bad else ''}"))
+    from . import person as PS                        # 0.6.1: graphics over the face (Vibha's rule: never the face)
+    try:
+        for g in PS.face_issues(plan, log=lambda *_: None):
+            at = f"from f{g['f']} ({frame_to_tc(g['f'], fps)})"
+            why = (f"the face cuts into it ({int(g['share'] * 100)} % of the face box) {at} - its words get clipped: move "
+                   f"it off the face or make it smaller" if g.get("guard") else
+                   f"covers the face ({int(g['share'] * 100)} % of it) {at} - move it, or give it guard / behind")
+            lines.append(f"graphic {g['id']}: {why}")
+            issues.append({"graphic": g["id"], "f": g["f"], "issues": [why]})
+    except (OSError, ValueError, KeyError) as e:
+        lines.append(f"(graphics over the face not checked: {e})")
+    out = prj.check(prj.build / "catalogue")
+    out.mkdir(parents=True, exist_ok=True)
+    sheets = make_sheets(tiles, out, f"shots_{name}", f"{name}: the shots before the render (! = something to fix)",
+                         8 if H > W else 6, tw, rows=6) if tiles else []
+    return sheets, lines, issues
+
+
+def r_aspect(L: dict, W: int, H: int) -> float:
+    r = L.get("rect") or [0, 0, W, H]
+    return float(r[2]) / max(1.0, float(r[3]))
+
+
 # ------------------------------------------------------------------------------------------------ self-check
 def selfcheck() -> dict:
     """A made-up clip with known moments: test pattern 2 s, colour bars 1.5 s, black 1 s, the test pattern blurred
@@ -475,4 +631,13 @@ def selfcheck() -> dict:
         case("lines kept when the catalogue is made again", (cat["clips"][0]["moments"][1].get("say") or {}).get("what") == "colour bars")
         case("the catalogue in words: frame + timecode, its line", "A2 f50-f87 (00:00:02:00-00:00:03:12)" in text(cat)
              and "wide · colour bars [test]" in text(cat))
+        plan = {"width": 360, "height": 640, "fps": 25.0, "layers": [
+            {"type": "clip", "id": "s01_A", "src": "A", "start": 0, "end": 19, "in": 55, "rect": [0, 0, 360, 640]},
+            {"type": "clip", "id": "s02_A", "src": "A", "start": 20, "end": 39, "in": 90, "rect": [0, 0, 360, 640]},
+            {"type": "clip", "id": "s03_A", "src": "A", "start": 40, "end": 59, "in": 60, "rect": [0, 0, 360, 640]}]}
+        sh, ln, iss = shots(prj, plan, "test")
+        found = {x["shot"]: " ".join(x["issues"]) for x in iss}
+        case(f"a plan's shots before the render: the black one outside its usable part, the colour bars twice "
+             f"({found})", sh and len(ln) == 3 and "outside the usable part" in found.get(2, "")
+             and "A2 again" in found.get(3, "") and 1 not in found and "colour bars" in ln[0])
     return {"passed": ok, "seconds": round(time.time() - t0, 2), "lines": lines}

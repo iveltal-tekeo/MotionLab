@@ -122,6 +122,66 @@ mark it.
 | hypit-ai/hypit (25.6k) | clones viral videos: face / host / script swaps through paid cloud models | "Apache 2.0 with conditions" | no consent safeguards, videos sent to cloud services | **no** | |
 | WyattBlue/auto-editor, video-shotcraft (Remotion), anything2explainer, video-talkcraft, onetake | silence cutting, product videos, explainers, one-take films | various / unchecked | the lab cuts pauses already; Remotion's licence; the rest not checked yet | **no** / unchecked | |
 
+## B-roll rules researched 2026-10-27
+
+The user: "the idea of the b roll is to have the sound from the clip before going on, so NOT changing right? maybe we
+should look into some claude skills or online or repos where people might have some presets for u that work better
+than imagining random stuff?" Read only - nothing installed. No repo has presets in a form the lab could load; what
+they share is rules with numbers, and the skills and guides agree on them. Those numbers are now the quick draft's
+(`motionlab\draft.py` BROLL_*) and the editing skill's (`recreate-video\by_feel.md`):
+
+1. Picture only: the voice goes on under the insert, never the B-roll clip's own sound, never a cut in the voice.
+2. On the word it shows, ~0.25 s after the word starts (0.2-0.5 s, "bias later"), never before it.
+3. Or on a jump cut: it hides it (an insert under 0.5 s after a cut starts on the cut - no flash of face).
+4. 2-4 s each (~2.5 s typical), never under ~1.5 s (a flicker).
+5. The face keeps the hook (~the first 15 %) and the call to action (~the last 10 %).
+6. Never under ~2 s of face between two inserts (it reads as a mistake): join them.
+7. At most ~40 % of a talking reel covered; an explainer every 8-12 s, a dynamic reel every 4-6 s (the
+   talking preset: every ~7 s).
+8. The face stays for a punchline and an emotional line.
+9. Cut in a word gap, not mid-word; an insert ends at the pause that ends its phrase when one comes in time.
+10. Each B-roll moment once; vary shot sizes and places.
+11. A concrete word (a thing, a place, an action) earns an insert; an abstract one does not.
+12. L / J cuts of ~0.5 s for the clip's own sound only when the user asks for it.
+13. A montage of inserts on the beat only where the voice pauses.
+14. 3-6 overlays (text, graphics) a minute on top of the inserts, not instead of them.
+15. A clip that is loud all through (music, ambience) beside a real take is B-roll, not talking (the lab's measure:
+    a take is quiet between phrases in 30-49 % of its 10 ms windows, music or ambience in 0-9 %).
+
+| Source | What it is | Licence | Taken | Claude's call |
+|---|---|---|---|---|
+| louisedesadeleer/b-roll-finder | a skill that places B-roll from a transcript | MIT | the +0.2-0.5 s anchor after the word, 2-4 s, concrete words | **ideas** (done) |
+| gamussa/reels-producer-skill | a reels editing skill | not checked | hook / CTA on the face, density | **ideas** (done) |
+| opus-pro/ai-producer-plugin | OpusClip's agent plugin | MIT | coverage by genre, B-roll pacing | **ideas** (done) |
+| browser-use/video-use | an agent video editor | MIT | cuts in word gaps | **ideas** (done) |
+| iart-ai/motion-design-skills | motion-design skills | MIT | overlays a minute | **ideas** (done) |
+| OpenMontage | an AI montage tool | AGPL | the montage-on-beat rule only (no code) | **ideas** |
+| OpusClip / Submagic docs | their B-roll features' help pages | - | the 15 % / 10 % face shares, no slivers | **ideas** (done) |
+
+## Shorts from a long video - researched 2026-10-27
+
+For 0.6.1's *Shorts from a long video* (the plan has the pipeline, the rubric and the numbers). Read only - nothing
+installed or run. (s) = seen in search results only.
+
+| Source | Licence / needs | How it picks | Taken (ideas only) |
+|---|---|---|---|
+| OpusClip (help: *virality score*; its API blog) | paid | 0-99 from hook, flow, value, trend; inputs: transcript, audio (pace, pitch, laughter, pauses), gestures; best on talking heads, low on music / animation | the four parts (trend -> fits My Brand), a cold-open hook |
+| Vizard, Klap, Submagic | paid | 0-100, method not published; quotable lines, reveals, emotion, debates, laughs | the kinds of moment |
+| Descript, Riverside Magic Clips | paid | "self-contained" moments, 1-20 clips, a topic / speaker focus | a user prompt or speaker focus |
+| ClipsAI | MIT; WhisperX + pyannote (Hugging Face token) | no ranking: TextTiling on sentence embeddings at several sizes, near-duplicates dropped | topic edges at several scales |
+| OpenShorts | MIT core; Gemini key | faster-whisper + PySceneDetect, Gemini picks 3-15 moments of 15-60 s, 3-8 windows a call; layouts TRACK / blurred / SPLIT / SCREENCAST | scoring in batches, the four layouts |
+| SamurAIGPT AI-Youtube-Shorts-Generator | MIT; OpenAI / Gemini key | a ranked rubric (hook, emotional peak, opinion, revelation, conflict, quotable line, story peak, practical value), asks for 2x the clips, drops overlaps > 50 % | ask for 2x, then drop overlaps |
+| SupoClip | AGPL-3.0 (ideas only, no code) | hook, engagement, value, shareability 0-25 each + a 0-1 "stands alone" | the stands-alone gate, start / end rules |
+| opensource-clipping | MIT; Gemini | BlazeFace tracking with a dead zone and anti-jitter, split screen for two | dead-zone tracking |
+| browser-use/video-use (a Claude skill) | MIT; ElevenLabs | ~12 KB of transcript, pictures only where a decision needs them; never cut inside a word, pad 30-200 ms, a 400 ms+ pause = a clean cut | text first, pictures on demand |
+| Google AutoFlip | Apache-2.0 | per scene: a still crop when the subject stays put, else a smoothed follow; padding when it cannot fit | the reframe's design |
+| Rhapsody (2025 paper, 13k podcasts labelled by *Most replayed*) | research | GPT-4o / Gemini untrained F1 0.057 / 0.065; a fine-tuned 1B model 0.163, 0.197 with audio | scores = a ranking within one video, learn from results |
+| SnapUGC (2025 short-video engagement challenge) | research | watching past 5 s correlates 0.928 with average watch percentage; 8 frames a clip slightly better than 5 | the hook weighs double; 8-frame check sheets |
+
+Not verified (marketing numbers, left out): "63-71 % decide in 3 s", "+23 % for hooks", "loop endings boost reach",
+"sends weigh 3-5x likes", every *best length*. YouTube Shorts allow up to 3 minutes (YouTube's help); Reels 3 minutes
+(s).
+
 ## Prompt library - still open (the 0.5.4 *Prompt generator* plan, removed 2026-10-22)
 
 Its core shipped in 0.3.1-0.3.4: the library (*Generator > Prompts*), `/write-prompt`, each prompt's check,

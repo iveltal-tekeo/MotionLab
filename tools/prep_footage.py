@@ -25,8 +25,8 @@ A photo (2026-10-24: .jpg .png .webp .heic .heif .avif .bmp .tif .gif) is a cach
 Formats and readers: tools\\motionlab\\footage.py (edit scripts take plan["sources"] from footage.plan_sources).
 Re-running skips sources whose cache is complete and whose file is unchanged. It refuses to start a cache that would
 leave less than 2 GB free on the disk.
-Colour: decoded with the clip's own colour matrix and range (Rec.709 when untagged and HD); HDR clips (PQ / HLG) are
-converted without tone mapping, so they look flat - a warning says so.
+Colour: decoded with the clip's own colour matrix and range (Rec.709 when untagged and HD); HDR clips (PQ / HLG -
+an iPhone's default) are tone-mapped to Rec.709 (0.6.1; before, they came out flat).
 Levels: both caches hold full-range values ("levels": "single"). Grey caches written before 2026-10-06 expanded the
 range a second time; they carry no "single" mark and count as "double" (plans made on them, like test_4am v1,
 declare "levels": "double").
@@ -74,6 +74,20 @@ def color_args(v: dict) -> str:
         mat = "bt709" if (v.get("height") or 0) >= 720 else "bt601"
     rng = "pc" if v.get("color_range") == "pc" else "tv"
     return f":in_color_matrix={mat}:in_range={rng}"
+
+
+# 0.6.1 step 6: an HDR clip (PQ / HLG - iPhones film it by default) tone-mapped to Rec.709 (the analyser's chain,
+# motionlab\signals.ffmpeg_frames_cmd) instead of looking flat beside the others
+TONEMAP = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,"
+           "zscale=t=bt709:m=bt709:r=tv,format=yuv420p,")
+
+
+def tone(v: dict) -> tuple[str, str]:
+    """(the filters before the scale, the scale's colour options): an HDR clip is tone-mapped first, then read as
+    Rec.709 video range."""
+    if v.get("hdr"):
+        return TONEMAP, ":in_color_matrix=bt709:in_range=tv"
+    return "", color_args(v)
 
 
 def prep_photo(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: int, color: bool = True) -> dict:
@@ -146,11 +160,11 @@ def prep_source(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: 
                          f"only {free / 1e9:.1f} GB are free (2 GB must stay free) - make room (the app's Storage "
                          f"page / tools\\storage.py)" + ("" if not color else ", or use --grey for a black-and-white "
                                                          "edit (2/3 of the size)"))
+    tm, cargs = tone(v)
     if v.get("hdr") and color:
-        log(f"  WARNING {sid}: HDR source ({v.get('color_transfer')}) - converted without tone mapping, it will "
-            f"look flat; export an SDR (Rec.709) version for exact colours")
+        log(f"  {sid}: HDR source ({v.get('color_transfer')}) - tone-mapped to Rec.709")
     if color:                     # accurate rounding: 10-bit clips otherwise come out ~2/255 too dark
-        vf = f"{pick}scale={cw}:{ch}:flags=area+accurate_rnd+full_chroma_int{color_args(v)},format=rgb24"
+        vf = f"{pick}{tm}scale={cw}:{ch}:flags=area+accurate_rnd+full_chroma_int{cargs},format=rgb24"
         pix, fsize = "rgb24", cw * ch * 3
     else:
         vf = f"{pick}scale={cw}:{ch}:flags=area,format=gray"
@@ -279,10 +293,10 @@ def prep_light(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: i
     need = expected * FC.frame_bytes(lw, lh, True)
     if need > shutil.disk_usage(prj.cache).free - KEEP_FREE:
         raise SystemExit(f"{sid} {src.name}: the light cache needs {need / 1e9:.1f} GB - make room (Storage)")
+    tm, cargs = tone(v)
     if v.get("hdr") and color:
-        log(f"  WARNING {sid}: HDR source ({v.get('color_transfer')}) - converted without tone mapping, it will "
-            f"look flat; export an SDR (Rec.709) version for exact colours")
-    vf = f"{_grid(fps_out, t0)},scale={lw}:{lh}:flags=area+accurate_rnd+full_chroma_int{color_args(v)},format=rgb24"
+        log(f"  {sid}: HDR source ({v.get('color_transfer')}) - tone-mapped to Rec.709")
+    vf = f"{_grid(fps_out, t0)},{tm}scale={lw}:{lh}:flags=area+accurate_rnd+full_chroma_int{cargs},format=rgb24"
     cmd = [tool("ffmpeg"), "-v", "error", "-nostdin", "-copyts", "-i", str(src), "-map", "0:v:0", "-vf", vf,
            "-fps_mode", "passthrough", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
     log(f"{sid} {src.name}: {w}x{h} {fps_in:g} fps -> light cache {lw}x{lh} @ {fps_out:g} fps, ~{expected} frames, "
@@ -316,7 +330,7 @@ def prep_light(prj: Project, sid: str, ent: dict, fps_out: float, ow: int, oh: i
     meta = {"id": sid, "source": str(src), "name": src.name, "fingerprint": ent["fingerprint"],
             "src_width": w, "src_height": h, "src_fps": fps_in, "src_frames": v["nb_frames"], "t0": t0,
             "fps": fps_out, "step": None, "frames": n, "width": cw, "height": ch, "out_size": [ow, oh],
-            "format": "i420" if color else "gray", "levels": "single", "color_args": color_args(v),
+            "format": "i420" if color else "gray", "levels": "single", "color_args": cargs, "tonemap": tm,
             "levels_note": "full-range RGB as decoded by ffmpeg (video range expanded once)", "complete": True,
             "segments": []}
     write_json(prj.check(meta_rel), meta)
@@ -353,7 +367,7 @@ def fill(cache: Path, sid: str, ranges: list[list[int]], log=log) -> int:
     got_all = 0
     with open(data, "ab") as out_f:
         for a, b in todo:                               # (the fps filter pads from the clip's first tick after a seek, so
-            vf = (f"{_grid(fps, t0)},trim=start_frame={a}:end_frame={b + 1},"     # its frame k is tick k - a trim by
+            vf = (f"{_grid(fps, t0)},trim=start_frame={a}:end_frame={b + 1},{m.get('tonemap', '')}"   # its frame k is
                   f"scale={cw}:{ch}:flags=area+accurate_rnd+full_chroma_int{m.get('color_args', '')},format=rgb24")
             cmd = [tool("ffmpeg"), "-v", "error", "-nostdin", "-ss", f"{max(0.0, a / fps - 1.0):.6f}", "-copyts", "-i",   # time kept one frame too many)
                    m["source"], "-map", "0:v:0", "-vf", vf, "-fps_mode", "passthrough", "-f", "rawvideo",

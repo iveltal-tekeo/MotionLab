@@ -356,6 +356,41 @@ def check_draft() -> dict:
           and T["frames"] == 300 and T["sound"] == [("T", 0, 99), ("T", 130, 229), ("T", 260, 359)]
           and [L.get("zoom", 1.0) for L in T["layers"][:3]] == [1.0, 1.12, 1.0],
           "draft: talking - the spoken parts in order, pauses cut, the sound with them, a punch-in every other cut")
+    # 2026-10-27: B-roll lands on the word its catalogue line says, picture only, never a moment under 1.5 s
+    tk = clip("T", 600, speech=[(0, 149), (170, 319), (340, 489)])
+    tk["words"] = [(10, "Your"), (200, "guitars"), (380, "today")]
+    r1, r2 = clip("R1", 300), clip("R2", 300)
+    r1["cat"] = DR.catalogue_arrays({"frames": 300, "moments": [
+        {"a": 0, "b": 149, "usable": [[0, 149]], "say": {"what": "a guitar on a stand"}},
+        {"a": 150, "b": 179, "usable": [[150, 179]], "say": {"what": "a guitar close up"}},
+        {"a": 180, "b": 299, "usable": [[180, 299]], "say": {"what": "a city street"}}]})
+    B = DR.make(ST.presets(["talking"]), [tk, r1, r2], 25.0, 1080, 1920, None, "talk", seed=1)
+    br = [L for L in B["layers"] if L["id"].startswith("broll_")]
+    first = next((n for n in B["broll"] if n["frame"] == 186), None)
+    check(first is not None and first["sid"] == "R1" and 0 <= first["in"] and first["in"] + first["end"] - 186 <= 149
+          and 'on "guitar"' in first["why"] and all(not 150 <= L["in"] <= 179 for L in br if L["src"] == "R1")
+          and all(67 <= L["start"] and L["end"] < 405 and 37 <= L["end"] - L["start"] + 1 <= 100 for L in br)
+          and sum(L["end"] - L["start"] + 1 for L in br) <= 0.4 * B["frames"]
+          and B["sound"] == [("T", 0, 149), ("T", 170, 319), ("T", 340, 489)],
+          "draft: B-roll on the words - 'guitars' said at f180 (00:00:07:05) -> R1's guitar from f186 (00:00:07:11), "
+          "not its 1.2 s close-up; 1.5-4 s inserts, the hook and the end on the face, at most 40 %, the voice unchanged")
+    import tempfile
+    import soundfile as sf
+    import draft_edit as DE
+    sr, t = 48000, np.arange(48000 * 6) / 48000
+    noise = np.random.default_rng(3).normal(0, 0.1, t.size).astype(np.float32)
+    talky = noise * ((t % 0.8) < 0.5) + noise * 0.003            # phrases of 0.5 s, 0.3 s pauses
+    song = noise * (1 + 0.3 * np.sin(2 * np.pi * 2 * t)).astype(np.float32)    # loud all through
+    pz = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        for k_, y in (("talk", talky), ("song", song)):
+            sf.write(str(Path(tmp) / f"{k_}.wav"), y, sr)
+            inf = {}
+            DE.speech(Path(tmp) / f"{k_}.wav", 25.0, 150, 0.0, inf)
+            pz[k_] = inf.get("pauses", -1)
+    check(pz["talk"] >= DE.TALK_PAUSES > pz["song"] >= 0,
+          f"draft: a take has pauses ({pz['talk']:.0%} quiet), a song under B-roll hardly any ({pz['song']:.0%}) - "
+          "music next to a real take is B-roll, not talking")
     from motionlab import sfx as SFX                          # 0.5.4: the draft's own sound effects (--sfx)
     P = {"fps": 25.0, "frames": D["frames"], "width": 1080, "height": 1920, "layers": D["layers"]}
     by = {amt: [q["f"] for q in SFX.plan_cues({**P, "sfx": {"amount": amt, "first": [400]}})]
@@ -365,13 +400,14 @@ def check_draft() -> dict:
     only = {q["kind"] for q in SFX.plan_cues({**P, "sfx": {"amount": "many", "kinds": ["impact"]}})}
     PT = {"fps": 25.0, "frames": T["frames"], "width": 1080, "height": 1920, "layers": T["layers"]}
     pt = [(q["f"], q["kind"]) for q in SFX.plan_cues({**PT, "sfx": {"amount": "few"}})]
-    own = [(q["f"], q["kind"]) for q in SFX.plan_cues({**PT, "cues": [{"f": 100, "kind": "pop"}]})]
+    own = [(q["f"], q["kind"]) for q in SFX.plan_cues({**PT, "cues": [{"f": 200, "kind": "pop"}]})]
     check(by["many"] == [q["f"] for q in SFX.plan_cues(P)] and len(by["few"]) < len(by["some"]) < len(by["many"])
-          and spaced and 400 in by["few"] and not by["none"] and only == {"impact"} and pt == [(99, "whip")]
-          and own == [(100, "pop")],
+          and spaced and 400 in by["few"] and not by["none"] and only == {"impact"} and pt == [(199, "whip")]
+          and own == [(200, "pop")],
           f"draft: sound effects - many {len(by['many'])}, some {len(by['some'])} (2 s apart), few {len(by['few'])} "
-          "(5 s apart, the drop's hit f400 (00:00:16:00) first), only the kinds asked; a talking draft's punch-in at "
-          "f100 (00:00:04:00) = a whip peaking on the cut, a cue placed there wins")
+          "(5 s apart, the drop's hit f400 (00:00:16:00) first), only the kinds asked; a talking draft's punch-out at "
+          "f200 (00:00:08:00) = a whip peaking on the cut (its punch-in at f100 hides under B-roll: none), a cue placed "
+          "there wins")
     W = ST.presets(["three_sec"], "fast paced, 2 s cuts, captions word by word")
     check(W["rhythm"]["median_shot_s"] == 2.0 and W.get("captions") and W["energy"] == "high",
           "draft: the user's words - '2 s cuts', 'fast paced', 'captions' - change the style")
@@ -612,7 +648,145 @@ def check_light_cache() -> dict:
         PF.ensure(plan, log=lambda *x: None)
         mm, arr = FC.load(prj.cache, "A")
         check(all(arr.has(i) for i in range(55, 115)), "ensure() before a render fills what the plan shows")
+        hdr = td / "hdr.mp4"                            # an HDR (PQ) clip like an iPhone's: tone-mapped, not flat
+        subprocess.run([tool("ffmpeg"), "-v", "error", "-i", str(td / "clip30.mp4"), "-vf",
+                        "zscale=tin=bt709:min=bt709:pin=bt709:t=smpte2084:m=bt2020nc:p=bt2020:r=tv:npl=203,"
+                        "format=yuv420p10le", "-c:v", "libx264", "-pix_fmt", "yuv420p10le", "-color_primaries", "bt2020",
+                        "-color_trc", "smpte2084", "-colorspace", "bt2020nc", str(hdr)], check=True)
+        m = PF.prep_light(prj, "H", {"path": str(hdr), "fingerprint": "h"}, 30.0, 320, 240)
+        lh = json.loads(FC.light_paths(prj.cache, "H")[1].read_text(encoding="utf-8"))
+        lha = np.memmap(FC.light_paths(prj.cache, "H")[0], dtype=np.uint8, mode="r",
+                        shape=(lh["frames"], lh["height"] * 3 // 2, lh["width"]))
+        rgb = FC.decode(lha[30], "i420").astype(float)
+        sat = float((rgb.max(axis=2) - rgb.min(axis=2)).mean())
+        check(bool(m.get("tonemap")) and rgb.std() > 60 and sat > 120,
+              f"an HDR (PQ) clip is tone-mapped to Rec.709, not flat (contrast {rgb.std():.0f}, colour {sat:.0f}; "
+              "untone-mapped it was ~32 / ~59)")
+        del lha
         del arr, mm, la
+        import gc
+        gc.collect()
+    return {"passed": all(passed)}
+
+
+def check_person() -> dict:
+    """Graphics made part of the shot (0.6.1, motionlab.person + compose's behind / guard / follow / glass): the mask
+    model runs through OpenCV; then, with a made-up person track (a known block of person, a known face) on a
+    checkerboard room - a band "behind" is hidden on the person and shown beside it, "guard" hides a graphic on the
+    face but not on the body, "glass" frosts the room under a faint card, a spotlight ("room" dim) darkens the room
+    only, "track": "face" puts a 2x zoom on the face, the shot check flags a graphic over the face (not one beside it,
+    not one that keeps off it), "follow": "camera" moves and grows a graphic with a 1.5x punch-in like the room does."""
+    import tempfile
+    import cv2
+    import numpy as np
+    from motionlab import compose as C, footage as FC, overlays as OV, person as P
+    print("\n=== graphics made part of the shot: behind the person, off the face, glass, with the camera ===")
+    passed = [P.selfcheck()]
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+    W, H, n = 320, 184, 6
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
+        td = Path(td)
+        yy, xx = np.mgrid[0:H, 0:W]
+        room = np.where(((xx // 8) + (yy // 8)) % 2 == 0, 70, 190).astype(np.uint8)
+        rgb = np.repeat(room[..., None], 3, 2)
+        with open(td / "S.color.yuv", "wb") as f:
+            for _ in range(n):
+                f.write(FC.encode(rgb).tobytes())
+        lw, lh = W // 4, H // 4                             # the light cache (what a person track is made from)
+        lp, lm = FC.light_paths(td, "S")
+        with open(lp, "wb") as f:
+            for _ in range(n):
+                f.write(FC.encode(cv2.resize(rgb, (lw, lh), interpolation=cv2.INTER_AREA)).tobytes())
+        lm.write_text(json.dumps({"id": "S", "frames": n, "width": lw, "height": lh, "fps": 30.0, "format": "i420"}),
+                      encoding="utf-8")
+        mask = np.zeros((lh, lw), np.uint8)
+        mask[2:, 30:50] = 255                                # the person: output x 120..199, y 8..179
+        du, dj = P.paths(td, "S")
+        np.repeat(mask[None], n, 0).tofile(du)
+        st = lp.stat()
+        dj.write_text(json.dumps({"version": P.VERSION, "frames": n, "width": lw, "height": lh, "fps": 30.0,
+                                  "light": [st.st_size, int(st.st_mtime)], "faces": [[0.5, 0.42, 0.12]] * n}),
+                      encoding="utf-8")
+
+        def overlay(name, paint):
+            mov = td / f"{name}.mov"
+            mov.write_bytes(b"test overlay")
+            fr = np.zeros((H, W, 4), np.uint8)
+            paint(fr)
+            OV.build_cache(mov, lambda: (fr for _ in range(n)), W, H, 30.0, "test")
+            return str(mov)
+        band = overlay("band", lambda fr: fr.__setitem__((slice(20, 36), slice(0, W)), (255, 214, 10, 255)))
+        dot = overlay("dot", lambda fr: fr.__setitem__((slice(70, 82), slice(150, 170)), (255, 0, 0, 255)))
+        body = overlay("body", lambda fr: fr.__setitem__((slice(150, 162), slice(150, 170)), (0, 0, 255, 255)))
+        card = overlay("card", lambda fr: fr.__setitem__((slice(110, 170), slice(10, 100)), (255, 255, 255, 40)))
+        mark = overlay("mark", lambda fr: fr.__setitem__((slice(56, 64), slice(216, 224)), (0, 255, 0, 255)))
+
+        def plan(extra: dict, zoom=1.0):
+            ly = [{"type": "clip", "id": "c", "src": "S", "start": 0, "end": n - 1, "rect": [0, 0, W, H], "in": 0,
+                   "zoom": zoom},
+                  {"type": "overlay", "id": "band", "file": band, "start": 0, "end": n - 1, **extra.get("band", {})},
+                  {"type": "overlay", "id": "dot", "file": dot, "start": 0, "end": n - 1, **extra.get("dot", {})},
+                  {"type": "overlay", "id": "body", "file": body, "start": 0, "end": n - 1, **extra.get("dot", {})},
+                  {"type": "overlay", "id": "card", "file": card, "start": 0, "end": n - 1, **extra.get("card", {})},
+                  {"type": "overlay", "id": "mark", "file": mark, "start": 0, "end": n - 1, **extra.get("mark", {})}]
+            return {"width": W, "height": H, "fps": 30.0, "frames": n, "background": 0.0, "levels": "single",
+                    "sources": {"S": {"cache": str(td / "S.color.yuv"), "format": "i420", "frames": n, "width": W,
+                                      "height": H}}, "grades": {}, "layers": ly}
+        plain = C.Renderer(plan({})).render(0).astype(np.float32)
+        R = C.Renderer(plan({"band": {"behind": True}, "dot": {"guard": True}, "card": {"glass": True}}))
+        made = R.render(0).astype(np.float32)
+        yellow = np.array([255, 214, 10], np.float32)
+        bare = plan({})
+        bare["layers"] = bare["layers"][:1]                  # the room alone, as the renderer draws it
+        room = C.Renderer(bare).render(0).astype(np.float32)
+        room_px = lambda y, x: room[y, x]
+        check(np.abs(plain[28, 160] - yellow).max() < 3 and np.abs(made[28, 60] - yellow).max() < 3
+              and np.abs(made[28, 160] - room_px(28, 160)).max() < 12,
+              "person: a band behind the person - hidden on it, shown beside it (without the key: on top)")
+        check(np.abs(made[76, 160] - room_px(76, 160)).max() < 12 and made[156, 160][2] > 200 and made[156, 160][0] < 60,
+              "person: guard - a graphic on the face hidden, one on the body (well below the face) shown")
+        card_box = (slice(115, 165), slice(15, 95))
+        sharp = float(np.std(cv2.Laplacian(plain[card_box].mean(2), cv2.CV_32F)))
+        frosted = float(np.std(cv2.Laplacian(made[card_box].mean(2), cv2.CV_32F)))
+        check(frosted < sharp * 0.5,
+              f"person: glass frosts the room under a faint card (its detail {sharp:.0f} -> {frosted:.0f})")
+        rp = plan({})                                    # the room look (a spotlight) and the zoom point on the face
+        rp["layers"] = rp["layers"][:1]
+        rp["layers"][0]["room"] = {"look": "spotlight", "dim": 0.7}
+        lit = C.Renderer(rp).render(0).astype(np.float32)
+        tp = plan({}, zoom=2.0)
+        tp["layers"] = tp["layers"][:1]
+        f_plain = C.Renderer(tp).face_at(0)
+        tp["layers"][0]["track"] = "face"
+        f_track = C.Renderer(tp).face_at(0)
+        check(abs(float(lit[28, 60].mean()) - 0.3 * float(room[28, 60].mean())) < 6
+              and np.abs(lit[100, 160] - room[100, 160]).max() < 12
+              and f_plain and f_track and abs(f_track[0] - 160) < 1 and abs(f_track[1] - 73.6) < 2
+              and abs(f_plain[1] - 62.6) < 2 and abs(f_track[2] - 76.8) < 1,
+              f"person: a spotlight dims the room to 30 % and leaves the person; a 2x zoom on the face puts it at "
+              f"({f_track[0]:.0f}, {f_track[1]:.0f}) (the frame's middle: {f_plain[1]:.0f} without)" if f_track and f_plain
+              else "person: the face under a zoom")
+        flagged = [(g["id"], g["guard"]) for g in P.face_issues(plan({}), log=lambda *_: None)]
+        guarded = [(g["id"], g["guard"]) for g in P.face_issues(plan({"dot": {"guard": True}}), log=lambda *_: None)]
+        behind = P.face_issues(plan({"dot": {"behind": True}}), log=lambda *_: None)
+        check(flagged == [("dot", False)] and guarded == [("dot", True)] and not behind,
+              f"person: the shot check flags a graphic over the face (the dot), not one beside it; kept off the face, "
+              f"the face cuts into it - flagged as that ({guarded}); behind the person - not flagged")
+        cam = C.Renderer(plan({"mark": {"follow": "camera"}}, zoom={"keys": [[0, 1.0, "hold"], [5, 1.5, "hold"]]}))
+        f0, f5 = cam.render(0).astype(np.float32), cam.render(5).astype(np.float32)
+        g0, g5 = (f0[..., 1] > 200) & (f0[..., 0] < 60), (f5[..., 1] > 200) & (f5[..., 0] < 60)
+        c0 = np.argwhere(g0).mean(0) if g0.any() else np.zeros(2)
+        c5 = np.argwhere(g5).mean(0) if g5.any() else np.zeros(2)
+        want = (H / 2 + (59.5 - H / 2) * 1.5, 160 + (219.5 - 160) * 1.5)    # the room point under it after a 1.5x punch-in
+        grow = g5.sum() / max(1, g0.sum())
+        check(abs(c0[0] - 59.5) < 1.5 and abs(c0[1] - 219.5) < 1.5 and abs(c5[0] - want[0]) < 2.5
+              and abs(c5[1] - want[1]) < 2.5 and 1.8 < grow < 2.8,
+              f"person: follow camera - a mark at (220, 60) moves to ({c5[1]:.0f}, {c5[0]:.0f}) in a 1.5x punch-in "
+              f"(the room point: ({want[1]:.0f}, {want[0]:.0f})) and grows {grow:.2f}x in area (1.5 x 1.5 = 2.25)")
+        del R, cam
         import gc
         gc.collect()
     return {"passed": all(passed)}
@@ -794,6 +968,7 @@ def main() -> int:
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "brand": check_brand(), "miniedit": check_miniedit(),
                "facefit": check_facefit(), "light_cache": check_light_cache(), "catalogue": check_catalogue(),
+               "person": check_person(),
                "usage": check_usage(),
                "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
