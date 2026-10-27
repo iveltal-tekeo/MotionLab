@@ -1394,7 +1394,9 @@ def save_generate_request(body: dict) -> dict:
 ME_MAX_OPS, ME_MAX_WORDS = 300, 300
 ME_KEYS = {"op", "shot", "side", "by", "f", "kind", "to", "graphic", "key", "value", "cue", "text", "at", "speed",
            "layer", "all", "id", "template", "len", "values", "db", "sound", "look", "strength", "ease", "start", "src",
-           "in", "prop", "props", "dir"}                    # (prop / props: keyframes; dir: a transition's direction)
+           "in", "prop", "props", "dir", "edits"}           # (prop / props: keyframes; dir: a transition's direction;
+#                                                                 edits: many captions' words at once)
+ME_MAX_EDITS = 3000
 EDITOR_SOUNDS = LAB / ".app" / "editor" / "sounds"          # the made-up sound effects as the Editor plays them
 
 
@@ -1416,6 +1418,12 @@ def _me_ops(ops) -> list[dict]:
     for o in ops:
         if not isinstance(o, dict) or set(o) - ME_KEYS or any(isinstance(v, str) and len(v) > ME_MAX_WORDS
                                                               for v in o.values()):
+            raise ValueError(I18N.t("a change the Editor does not know"))
+        eds = o.get("edits")
+        if eds is not None and (not isinstance(eds, list) or len(eds) > ME_MAX_EDITS or any(
+                not isinstance(e, dict) or set(e) - {"graphic", "cue", "text"} or not isinstance(e.get("cue"), int)
+                or not isinstance(e.get("graphic"), str) or not isinstance(e.get("text"), str)
+                or len(e["text"]) > ME_MAX_WORDS for e in eds)):
             raise ValueError(I18N.t("a change the Editor does not know"))
         vals = o.get("values")
         if vals is not None and (not isinstance(vals, dict) or len(vals) > 60

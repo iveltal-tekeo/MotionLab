@@ -2625,8 +2625,15 @@ a.brvid:hover { text-decoration: none; }
   background: var(--edpan); border: 1px solid var(--edline); border-radius: 10px; padding: 12px; box-shadow: 0 12px 30px -10px #000; }
 .edpop > b { display: block; margin-bottom: 8px; }
 #edhist svg.i { color: var(--ed1); }
-.edmain { display: grid; grid-template-columns: 320px minmax(0, 1fr) 300px; gap: 10px; align-items: stretch; }
-@media (max-width: 1280px) { .edmain { grid-template-columns: 280px minmax(0, 1fr) 270px; } }
+.edmain { display: grid; grid-template-columns: 300px minmax(0, 1fr) 360px; gap: 10px; align-items: stretch; }
+@media (max-width: 1280px) { .edmain { grid-template-columns: 260px minmax(0, 1fr) 320px; } }
+/* 2026-10-27, the user: "remove the padding from the main section so the mini editor can take up more space" */
+body.edwide main { padding: 10px 16px 24px; }
+/* between the preview row and the timeline: drag = the preview's height (remembered), double-click = as it was */
+.edsplitter { height: 10px; margin: -9px 0; position: relative; z-index: 3; cursor: row-resize; touch-action: none; }
+.edsplitter::after { content: ""; position: absolute; left: 50%; top: 3px; width: 56px; height: 4px; margin-left: -28px; border-radius: 2px;
+  background: var(--edline); transition: background .12s; }
+.edsplitter:hover::after, .edsplitter.on::after { background: var(--ed1); }
 @media (max-width: 1000px) { .edmain { grid-template-columns: minmax(0, 1fr); } }
 .edpanel { background: var(--edpan); border: 1px solid var(--edline); border-radius: 12px; position: relative; min-height: 300px; }
 .edpin { position: absolute; inset: 0; padding: 10px; overflow: auto; }   /* the preview sets the row's height */
@@ -2697,6 +2704,40 @@ a.brvid:hover { text-decoration: none; }
 .edcap.edited { border-color: #ff8ac4; }
 .edcap span { display: block; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 .edlooks { margin-bottom: 8px; }
+/* the captions list (2026-10-27): every caption a row - its frame + timecode (click = go there), its words typed in
+   place (the box grows with them), ✂ ⤓ 🗑 beside; the row under the playhead marked, the find bar kept on top */
+.edctop { position: sticky; top: -10px; z-index: 2; background: var(--edpan); padding: 8px 0 6px; margin: 0 0 4px; border-bottom: 1px solid var(--edline); }
+.edcfind { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; }
+.edcfind input { min-width: 0; }
+.edcn { min-height: 0; margin-top: 3px; }
+.edcn:empty { display: none; }
+.edcbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.edcbar .edchips { margin: 0; }
+.edcbar .edchips button { font-family: var(--mono); font-size: 11.5px; }
+.edcfol { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; }
+.edcbar #edcmode { margin-left: auto; }
+.edcl { display: flex; flex-direction: column; gap: 4px; }
+.edcr { border: 1px solid transparent; border-radius: 8px; padding: 4px 6px 6px; background: #0d111b; scroll-margin: 130px 0 40px; }
+.edcr.now { border-color: #ff8ac455; }
+.edcr.on { border-color: #ff8ac4; background: #1a1220; }
+.edcr.hit .edcx { box-shadow: inset 3px 0 0 #fbbf24; }
+.edcr.cur { outline: 2px solid #fbbf24; outline-offset: 1px; }
+.edcrh { display: flex; align-items: center; gap: 2px; }
+.edct { background: none; border: 0; padding: 1px 2px; color: var(--muted); font-size: 11px; cursor: pointer; border-radius: 4px; }
+.edct:hover { color: var(--text); background: #ffffff10; }
+.edcr.now .edct { color: #ff8ac4; }
+.edca { background: none; border: 0; color: var(--muted); cursor: pointer; width: 24px; height: 22px; border-radius: 4px; padding: 0;
+  font-size: 12.5px; opacity: .55; display: inline-flex; align-items: center; justify-content: center; }
+.edca .i { width: 13px; height: 13px; }
+.edcr:hover .edca, .edcr.on .edca, .edca:focus-visible { opacity: 1; }
+.edca:hover:not(:disabled) { background: #ffffff14; color: var(--text); }
+.edca:disabled { opacity: .2; cursor: default; }
+.edcx { display: block; width: 100%; resize: none; field-sizing: content; min-height: 30px; font: 13.5px/1.4 var(--ui); padding: 4px 6px;
+  background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--text); }
+.edcx:hover { border-color: var(--edline); }
+.edcx:focus { outline: none; border-color: #ff8ac4; background: #0a0d15; }
+.edctext { width: 100%; min-height: 320px; resize: vertical; font: 13px/1.6 var(--mono); padding: 8px; white-space: pre; overflow-x: auto; }
+.edchelp { margin-top: 8px; }
 .edlooks button { font-family: var(--ui); }
 .edsfx { background: hsl(var(--h) 50% 20%); border: 1px solid hsl(var(--h) 75% 58%); padding: 0 6px; line-height: 22px; font-size: 11px; }
 .edsfx b { font-weight: 700; color: hsl(var(--h) 85% 76%); pointer-events: none; }
@@ -2803,6 +2844,35 @@ a.brvid:hover { text-decoration: none; }
 .edtpl [data-add] { position: absolute; top: 4px; right: 4px; padding: 0 7px; }
 .edtpl:hover { border-color: var(--ed1); }
 .edlbl { font-size: 12.5px; font-weight: 600; color: var(--muted); margin: 12px 0 6px; }
+/* the panel's number rows (edNum: the name to drag, a slider, the number + unit, more controls, reset) and its
+   sections (details, open / closed as the user left them) - 2026-10-27, after Premiere's Properties panel and CapCut's
+   inspector: every value can be dragged, slid or typed, and goes back with one click */
+.ednum { display: grid; grid-template-columns: 86px minmax(40px, 1fr) auto auto 18px; align-items: center; gap: 6px; margin: 5px 0;
+  font-size: 12.5px; }
+.ednl { color: var(--muted); cursor: ew-resize; user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ednl:hover { color: var(--text); }
+.ednum.keyed .ednl { color: var(--text); }
+.ednum.off { opacity: .5; } .ednum.off .ednl { cursor: default; }
+.ednr { width: 100%; min-width: 0; accent-color: var(--ed1); }
+.ednb { display: inline-flex; align-items: center; background: #0b0f19; border: 1px solid var(--edline); border-radius: 6px; padding: 0 6px 0 0; }
+.ednb:focus-within { border-color: var(--ed1); }
+.ednum .ednv { width: 52px; font: 12px var(--mono); padding: 3px 4px; text-align: right; background: transparent; border: 0; color: var(--text);
+  appearance: textfield; border-radius: 6px; }       /* (.ednum: over the page-wide input rule's width 100 %) */
+.ednv:focus { outline: none; }
+.ednv::-webkit-inner-spin-button, .ednv::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ednu { font-size: 11px; color: var(--muted); min-width: 10px; }
+.ednk { display: inline-flex; align-items: center; }
+.ednreset { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0; height: 22px; width: 18px; border-radius: 4px;
+  font-size: 13px; }
+.ednreset:hover { background: #ffffff12; color: var(--text); }
+.ednum .btn.sm { padding: 2px 7px; }
+.edsec { border-top: 1px solid var(--edline); margin-top: 8px; padding-top: 2px; }
+.edsec > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; padding: 7px 0 5px; font-size: 12.5px;
+  font-weight: 650; color: var(--text); user-select: none; }
+.edsec > summary::-webkit-details-marker { display: none; }
+.edsec > summary::before { content: "▸"; color: var(--muted); font-size: 11px; transition: transform .12s; }
+.edsec[open] > summary::before { transform: rotate(90deg); }
+.edsec > summary .small { margin-left: auto; font-weight: 400; }
 .edempty { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 8px 4px; }
 .edempty .i { width: 26px; height: 26px; }
 .edkeys { text-align: left; margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
@@ -2832,7 +2902,7 @@ a.brvid:hover { text-decoration: none; }
 .edchart .edchd:active { cursor: grabbing; }
 .edbtns { margin: 12px 0 8px; gap: 6px; }
 .eddanger:not(:disabled):hover { border-color: var(--red); color: var(--red); }
-.edset { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 8px; margin: 6px 0; font-size: 12.5px; }
+.edset { display: grid; grid-template-columns: 96px minmax(0, 1fr) 18px; align-items: center; gap: 8px; margin: 6px 0; font-size: 12.5px; }
 .edset > span:first-child { color: var(--muted); }
 .edin { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
 .edin input[type=text], .edin select, .edin input[type=number] { width: 100%; min-width: 0; }

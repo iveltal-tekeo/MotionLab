@@ -60,6 +60,10 @@ Operations ({"op": ...}):
                                                              (its words keep their share) - both inside the shot it
                                                              is said in, never over the captions beside it
     capsplit {"graphic": layer id, "cue": n, "at": f}        a caption cut in two: f = the second one's first frame
+    capmerge {"graphic": layer id, "cue": n}                 caption n and the one after it as one (said in the same
+                                                             shot; each word keeps its frames)
+    captions {"edits": [{"graphic": id, "cue": n, "text": t}, ...]}   many captions' words at once (the captions list's
+                                                             find & replace, its case) - one change
     capadd  {"graphic": layer id, "at": f, "text": t}        a new caption from f (up to 1.5 s, up to the next one)
                                                              (captions are numbered as the state before the op has
                                                              them; the whole list is written on save: step "capfile")
@@ -439,7 +443,8 @@ def cues_now(folder: Path, ch: dict | None) -> list[dict]:
     file's): each {k, f0, f1, text, gone, edited}, k = its place in the list; frames are the graphic's."""
     cues = (ch or {}).get("cues") if ch else None
     return [{"k": k, "f0": int(c["f0"]), "f1": int(c["f1"]), "text": " ".join(w[0] for w in c["words"]), "gone": False,
-             "edited": bool(c.get("_e"))} for k, c in enumerate(cues if cues is not None else _caption_cues(folder))]
+             "edited": bool(c.get("_e")), "w0": [int(w[1]) for w in c["words"]]}
+            for k, c in enumerate(cues if cues is not None else _caption_cues(folder))]
 
 
 def cap_bounds(cs: list[dict], i: int, inn: int, span: int) -> tuple[int, int]:
@@ -573,6 +578,8 @@ def state(plan: dict) -> dict:
                         f = int(round(at(c["f0"])))          # (this part: up to its shot's end)
                         n = max(1, min(int(round((c["f1"] - c["f0"] + 1) / sp)), e - f + 1))
                         captions.append({"graphic": x["id"], "cue": c["k"], "f": f, "text": c["text"], "len": n,
+                                         "wf": [int(round(at(g))) for g in c["w0"]],   # (each word's first frame)
+                                         "next_here": i + 1 < len(cs) and inn <= cs[i + 1]["f0"] <= inn + span,
                                          "edited": c["edited"], "lo": max(s, int(math.ceil(at(lo) - 1e-6))),
                                          "hi": min(e, int(math.floor(at(hi) + 1e-6))), "min": int(math.ceil(MIN_CAP / sp))})
                     elif c["f0"] < inn <= c["f1"]:           # its end said over a cut: it shows on the next piece too
@@ -1069,6 +1076,22 @@ def _cap_time(P: dict, L: dict, o: dict, op: str, folder: Path, src: Path, steps
                           for x, a, b in moved[1:]))
 
 
+def _cap_merge(L: dict, o: dict, lst: list[dict], done: list[str]) -> None:
+    """Caption n and the next one as one caption (capmerge): its words keep their frames, the pause between them goes
+    to the first one's last word - only when the next one is said in the same shot (the piece L shows)."""
+    k = int(o["cue"])
+    if not 0 <= k < len(lst) - 1:
+        raise EditError(I18N.t("caption {n} has no caption after it", n=k + 1))
+    a, b = lst[k], lst[k + 1]
+    inn, span = int(L.get("in", 0)), int((int(L["end"]) - int(L["start"])) * _speed(L) + 1e-6)
+    if not inn <= int(b["f0"]) <= inn + span:
+        raise EditError(I18N.t("the next caption is said in another shot - they stay apart"))
+    words = [list(w) for w in a["words"]] + [list(w) for w in b["words"]]
+    words[len(a["words"]) - 1][2] = int(b["f0"]) - 1
+    lst[k:k + 2] = [{**a, "f1": int(b["f1"]), "words": words, "_e": 1}]
+    done.append(f"captions {k + 1} and {k + 2} as one: \"{' '.join(w[0] for w in words)}\"")
+
+
 def _cap_split(P: dict, L: dict, o: dict, folder: Path, src: Path, done: list[str], fps: float) -> None:
     """A caption cut in two at a frame (capsplit, "at" = the timeline frame the second one starts on): the words
     said before it stay, the rest make the second caption."""
@@ -1403,7 +1426,32 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 except KF.KeyError_ as e:
                     raise EditError(str(e)) from None
                 done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
-            elif op in ("words", "set", "caption", "capmove", "captrim", "capsplit", "capadd", "look"):
+            elif op == "captions":                          # many captions' words at once (find & replace, case)
+                lists: dict[str, tuple[list, list]] = {}
+                for e in o.get("edits") or []:
+                    L = next((x for x in P["layers"] if x.get("id") == e.get("graphic") and x.get("file")), None)
+                    if L is None:
+                        raise EditError(I18N.t("no graphic {graphic}", graphic=str(e.get("graphic"))))
+                    if L.get(NEW_KEY):
+                        raise EditError(I18N.t("a graphic added here gets its captions changed after Save"))
+                    fo = own_copy(L)
+                    if str(fo) not in lists:
+                        lists[str(fo)] = (cue_list(P, fo, original(_graphic_folder(L))), [])
+                    lists[str(fo)][1].append(e)
+                n = 0
+                for lst, es in lists.values():              # (from the last: a caption that goes renumbers the rest)
+                    for e in sorted(es, key=lambda e: -int(e["cue"])):
+                        k = int(e["cue"])
+                        if not 0 <= k < len(lst):
+                            raise EditError(I18N.t("no caption {n}", n=k + 1))
+                        txt = " ".join(str(e.get("text") or "").split())
+                        if txt:
+                            lst[k] = {**caption_words(lst[k], txt), "_e": 1}
+                        else:
+                            del lst[k]
+                        n += 1
+                done.append(f"{n} captions' words changed at once")
+            elif op in ("words", "set", "caption", "capmove", "captrim", "capsplit", "capmerge", "capadd", "look"):
                 L = next((x for x in P["layers"] if x.get("id") == o.get("graphic") and x.get("file")), None)
                 if L is None:
                     raise EditError(I18N.t("no graphic {graphic}", graphic=str(o.get("graphic"))))
@@ -1424,6 +1472,9 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                     continue
                 if op in ("capmove", "captrim"):
                     _cap_time(P, L, o, op, own_copy(L), src, steps, done, fps)
+                    continue
+                if op == "capmerge":
+                    _cap_merge(L, o, cue_list(P, own_copy(L), src), done)
                     continue
                 if op in ("capsplit", "capadd"):
                     if not int(L["start"]) <= int(o["at"]) <= int(L["end"]):
@@ -1927,6 +1978,24 @@ def selfcheck() -> dict:
             case("a caption over another is refused (change that one's words or split it)", False)
         except EditError:
             case("a caption over another is refused (change that one's words or split it)", True)
+        P, done, _ = apply(cp, [{"op": "captions", "edits": [{"graphic": "cap", "cue": 0, "text": "ONE TWO"},
+                                                             {"graphic": "cap", "cue": 1, "text": ""},
+                                                             {"graphic": "cap_b", "cue": 2, "text": "five!"}]}], copies=False)
+        case("many captions at once (one change): new words, one removed, the others renumbered after it",
+             txt(P) == ["ONE TWO", "five!"] and fr(P) == [(100, 140), (300, 360)] and len(done) == 1)
+        P, _, _ = apply(cp, [{"op": "capmerge", "graphic": "cap", "cue": 0}], copies=False)
+        cs = P[CAPTIONS_KEY][str(cf)]["cues"]
+        sv = state(cp)
+        c0 = next(c for c in sv["captions"] if c["cue"] == 0)
+        try:
+            apply(cp, [{"op": "capmerge", "graphic": "cap", "cue": 1}], copies=False)
+            apart = False
+        except EditError:
+            apart = True
+        case("two captions as one: each word keeps its frames, the pause goes to the first one's last word; the state "
+             "gives each word's first frame; a caption said in another shot stays apart",
+             fr(P)[:2] == [(100, 180), (300, 360)] and cs[0]["words"][1] == ["two", 120, 149]
+             and c0["wf"] == [0, 20] and c0["next_here"] and apart)
         tp = copy.deepcopy(cp)
         tp[CAPTIONS_KEY] = {str(cf): {"cues": [{"f0": 190, "f1": 310, "words": [["over", 190, 250], ["cut", 251, 310]]}]}}
         sv = state(tp)

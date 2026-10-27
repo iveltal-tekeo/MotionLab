@@ -37,6 +37,18 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
     deslizante; una foto se puede alargar; el tartamudeo funciona en cualquier vídeo que no sea de alguien hablando;
     un logo sobre todo el vídeo se queda sobre todo el vídeo tras un cambio de velocidad o un recorte.
 
+- **El Editor: todos los subtítulos en una lista, ajustes fáciles de usar** (a partir de OpenCut, Shotcut, Kdenlive,
+  Premiere y Resolve).
+  - **Subtítulos**: haz clic en un subtítulo y el panel los muestra todos; escribe las palabras de cada uno ahí mismo.
+    Intro entre dos palabras divide el subtítulo ahí, Intro al final pasa al siguiente y Retroceso al principio lo une
+    con el anterior. *Buscar* y *Reemplazar todo*, ABC / abc / Abc para todos y *Editar como texto* (una línea por
+    subtítulo) son un solo cambio cada uno. La lista sigue al cabezal. Su aspecto y sus ajustes están en *Estilo*.
+  - **Cada número** se puede arrastrar por su nombre, deslizar, escribir o ajustar con las flechas, y ↺ lo devuelve a
+    como estaba. El panel ya no salta arriba ni cierra sus secciones tras cada cambio; los ajustes de un plano son
+    secciones que puedes plegar (se quedan como las dejaste) en vez de pestañas.
+  - **Más espacio**: menos margen alrededor del Editor, un panel más ancho y un tirador encima de la línea de tiempo
+    para hacer la vista previa más grande o más pequeña.
+
 ## 0.6.0.5 - 2026-10-27 - Notas de vídeos y las mascotas del Analizador
 
 - **El Analizador: tres formas de aprender de un vídeo.** *Efectos y animaciones* (lo que hacía hasta ahora),

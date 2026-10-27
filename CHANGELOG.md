@@ -31,6 +31,18 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
     changes nothing; Space and the arrows work after using a slider; a photo can be made longer; the stutter works on
     any video that is not a talking one; a logo over the whole video stays over it after a speed change or a trim.
 
+- **The Editor: every caption in one list, settings that are easy to use** (after OpenCut, Shotcut, Kdenlive, Premiere
+  and Resolve).
+  - **Captions**: click a caption and the panel lists all of them - type each one's words in place. Enter between two
+    words splits a caption there, Enter at its end goes to the next one, Backspace at its start joins it to the one
+    before. *Find* and *Replace all*, ABC / abc / Abc for all of them and *Edit as text* (one line per caption) are one
+    change each. The list follows the playhead. Their look and settings are under *Style*.
+  - **Every number** can be dragged by its name, slid, typed or nudged with the arrow keys, and ↺ puts it back. The
+    panel no longer jumps to the top or closes its sections after each change; a shot's settings are sections you can
+    fold (they stay as you left them) instead of tabs.
+  - **More room**: less space around the Editor, a wider panel, and a handle above the timeline to make the preview
+    bigger or smaller.
+
 ## 0.6.0.5 - 2026-10-27 - Notes from videos and the Analyser's mascots
 
 - **The Analyser: three ways to learn from a video.** *Effects & animations* (what it did until now), *Content creation*

@@ -386,5 +386,7 @@
  "the file is empty or bigger than 300 MB": "el archivo está vacío o pesa más de 300 MB",
  "{file}: no sound found in it": "{file}: no tiene sonido",
  "{file}: not an ambience bed of the music library": "{file}: no es un ambiente de la biblioteca de música",
- "only a graphic can go behind you or turn to glass": "solo un gráfico puede ir detrás de ti o volverse cristal"
+ "only a graphic can go behind you or turn to glass": "solo un gráfico puede ir detrás de ti o volverse cristal",
+ "caption {n} has no caption after it": "el subtítulo {n} no tiene ninguno después",
+ "the next caption is said in another shot - they stay apart": "el siguiente subtítulo se dice en otro plano: se quedan separados"
 }

@@ -642,6 +642,29 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   to the video); a transition's stored length is what it can cover. Not changed: a clip layer without an `sNN_` id is
   a shot (editlist), the preview has no motion blur, no person mask and no person track of its own (a render makes
   it), graphics preview only with HyperFrames installed.
+- **The captions list and the panel's controls** (2026-10-27, the user: "improve the way we can modify the captions from
+  a video all at the same time directly instead of one clip at a time? also we need to improve the way we modify or
+  play with the settings of each section in the mini editor, cuz its a real pain in the ass to use it realistically,
+  can u look at opencut or other open source video editors"; a research pass read OpenCut (opencut-classic), Shotcut,
+  Kdenlive and Olive in their source). **Captions**: a click on a caption opens *Captions* in the panel - every
+  caption a row (`capsInsp`: its frame + timecode = go there, its words typed in place); Enter between two words splits
+  it there (`capsplit` at that word's first frame - the state's `wf`; sent to the piece that shows that word), Enter at
+  its end = the next row, Tab / Shift+Tab, Backspace at its start joins it to the one before (`capmerge` - only when
+  said in the same shot: `next_here`), Delete at its end the next one, Esc = as it was, leaving a row keeps its words;
+  ✂ ⤓ 🗑 per row; *Find* marks the rows that have it (Enter = the next), *Replace all*, ABC / abc / Abc and *Edit as
+  text* (one line per caption, an empty line removes it) are one change each (the change `captions` {edits}); *Follow
+  the playhead* (on by default, `ml.editor.capfollow`) marks and scrolls to the row under it, never while typing; the
+  *Style* tab = the look and the settings for all of them. **The panel**: every number is one row (`edNum` /
+  `edNumBind`: the name dragged left / right - Shift finer -, a slider, the number typed - a click selects it, up / down
+  one step, Shift ten, the wheel only while it has the focus -, its unit, ↺ back to its default when it differs), live
+  in the preview while dragged where it can be, one change when let go; a shot's panel is sections instead of tabs
+  (*Position and size* with ◀ ◆ ▶ per property, *Speed*, *Sound*, *Clip*) and every section stays open / closed as the
+  user left it (`ml.editor.secs`); after each change the panel keeps its scroll, the field in use (its caret) and its
+  sections (`drawInsp` around `drawInsp0`); a graphic's numbers with a range are rows too and every setting has ↺. No
+  pointer lock on the drag (Chromium shows "Press Esc to show your cursor" on each, and headless runs sent no
+  movement). **Room**: the page's padding is smaller while the Editor is open (`body.edwide`), the panel on the right
+  is 360 px, and a handle between the preview and the timeline sets the preview's height (`#edsplitter`, remembered in
+  `ml.editor.pvh`, double-click = as it was). API_LEVEL 49.
 
 ## Generator vs Editor
 

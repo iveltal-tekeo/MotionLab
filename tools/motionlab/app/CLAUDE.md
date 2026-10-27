@@ -413,7 +413,9 @@ GET `/api/brand` `_sound_words`, New edit's `ambience`; 47 (2026-10-26, the Edit
 `.../miniedit/preview` and `.../miniedit` changes take `prop` / `props` / `dir` (data.ME_KEYS - an older server refused
 them as "a change the Editor does not know"); 48 (2026-10-27, Analyser > Notes): GET `/api/notes`, `/api/notes/<name>`,
 `/api/notes/<name>/md?transcript=1`, POST `/api/notes/batch`, `/api/notes/<name>/mine` | `/meta` (label, tags, done),
-the job `notes`, the Delete kinds `notes` / `notes_video` (the video alone - the notes stay), the preset `mp4_720`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+the job `notes`, the Delete kinds `notes` / `notes_video` (the video alone - the notes stay), the preset `mp4_720`; 49
+(2026-10-27, the Editor's captions list): the changes `captions` {edits: [{graphic, cue, text}]} (many captions at once)
+and `capmerge` (data.ME_KEYS `edits` - an older server refused them), GET `/api/editor/sound` `dur`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
