@@ -7,6 +7,60 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0.4 - 2026-10-27 - En el plano: B-roll en tus palabras, gráficos detrás de ti
+
+- **Lo importante sigue en el encuadre**: un clip horizontal en un vídeo vertical se cortaba por el centro; ahora el
+  catálogo encuentra el sujeto de cada plano (una cara, si no lo que más llama la atención) y el recorte, y cualquier
+  punch-in, se centran en él.
+- **Clips HDR del iPhone con su color real**: los clips grabados en HDR (lo que graba un iPhone por defecto) se
+  convierten a colores de vídeo normales en vez de salir planos y desvaídos (unas 3 veces el color y el contraste que
+  tenían).
+- **Más variedad en los borradores rápidos**: un borrador rápido ya no usa el mismo plano dos veces ni la misma escena
+  una y otra vez: con 36 clips de prueba, un borrador de 30 segundos pasó de 18 a 26 escenas distintas en 28 planos.
+- **Los planos antes del render**: con muchos clips, Claude ahora coloca cada plano de una edición tal como se verá,
+  antes de renderizar nada, arregla lo que está mal (una parte borrosa u oscura, el mismo plano dos veces, una cara
+  cortada) y te enseña la hoja primero.
+- **El B-roll en las palabras que muestra**: en un vídeo hablado, el B-roll ahora entra en la palabra que muestra
+  (dices «post» y el móvil con tu post aparece un cuarto de segundo después) o justo en un corte de salto para
+  taparlo. Cada inserto dura de 2 a 4 segundos, tu cara se queda con el gancho y el final, nunca hay un destello de
+  cara entre dos insertos y como mucho se cubre el 40 % del vídeo: reglas sacadas de guías de edición de creadores en
+  vez de un temporizador fijo. Tu voz sigue debajo del B-roll, sin cortes y sin cambiarla por el sonido del clip.
+- **Los clips con música son B-roll, no habla**: un clip con una canción o mucho ruido de fondo junto a tu toma
+  hablada se tomaba por otra toma hablada, así que el borrador lo ponía entero y no añadía B-roll. Los clips que
+  nunca hacen pausas ahora cuentan como B-roll.
+- **Gráficos que forman parte del plano**: un gráfico sobre alguien a cámara ya no tiene por qué parecer pegado
+  encima: una palabra grande puede quedar detrás de tu cabeza y seguir en la pared cuando la cámara hace un punch-in,
+  una tarjeta de cristal esmerila la habitación real que hay detrás con una sombra suave, los gráficos toman la
+  suavidad y el grano de tu propia cámara, y todo lo que está cerca de tu cabeza se aparta de tu cara. MotionLab te
+  localiza a ti y tu cara en cada clip una sola vez (unos 30 ms por fotograma, sin instalar nada); Claude lo usa
+  cuando edita un vídeo hablado. La idea viene de los efectos de vídeo para Claude de Vibha Ramprakash.
+- **Curvas que ves y moldeas**: el movimiento de un fotograma clave ahora ofrece las curvas que usan los diseñadores
+  de motion (Suavizado fácil, Suavizado fuerte, Deslizar y Despegue junto a Entrada / Salida suave, Mantener y Pop),
+  cada una dibujada como una curvita, y un gráfico con dos tiradores que arrastras para dar forma a la tuya, como el
+  gráfico de After Effects o el plugin Flow. Los efectos de zoom también las usan.
+- **Efectos que siguen tu cara**: tres efectos nuevos en el Editor: *Acercarse* (un acercamiento pequeño y rápido a
+  tu cara para una palabra: entra deslizándose y sale suave), *Acercamiento lento* (un acercamiento lento mientras la
+  habitación se desenfoca) y *Foco* (la habitación se oscurece y tú sigues iluminado). Los zooms son pequeños y suaves,
+  y caen sobre tu cara aunque te muevas.
+- **Gráficos en el plano, desde el Editor**: el panel de un gráfico tiene *En el plano*: *Detrás de mí*, *Cristal
+  esmerilado*, *Fuera de mi cara* y *Pegado a mi cara*. Antes de renderizar nada, la comprobación de planos ahora
+  también avisa de un gráfico que te tapa la cara o de una tarjeta que tu cara cortaría, con su fotograma. Un gráfico
+  pegado a tu cara se encoge para quedarse dentro del encuadre y fuera de la barra de arriba y de la zona de textos de
+  la app en un primer plano.
+- **13 plantillas nuevas para vídeos hablados** (a partir de los diseños de Vibha Ramprakash): *Palabra detrás de
+  ti*, *Cartel LED detrás de ti*, *Corchetes de enfoque*, *Reloj de cuenta atrás con láminas*, *Garabato de rotulador*,
+  *Caja de comentario*, *Toque en Seguir*, *Pila de mensajes*, *Sello de rechazo*, *Interruptores de ajustes*,
+  *Gráfica de cristal*, *Lista de tareas* y *Titular con caja*. Cada una sabe su sitio en el plano (la palabra y el
+  cartel detrás de ti, los corchetes y el garabato sobre tu cara, las tarjetas en cristal esmerilado, todo fuera de tu
+  cara) y Claude puede ponerlas en las palabras que dices («un sello cuando digo "muere"»).
+- **Arreglado: un velo gris sobre tu vídeo**: una plantilla de Motion Graphics puesta transparente sobre un vídeo (con
+  su propio fondo apagado) ponía su grano de película sobre toda la imagen, un velo gris suave que aplanaba el
+  metraje. Ahora el grano no se pone sobre un vídeo; el gráfico toma el grano de tu propia cámara.
+- **Arreglado: una palabra fuera de sitio en el Editor**: un gráfico que se ajusta al tamaño de sus palabras (la
+  palabra grande detrás de ti) salía desplazado media palabra a la derecha y más abajo en la vista previa del Editor,
+  cortado en el borde del encuadre, aunque el vídeo en sí estaba bien. Ahora la vista previa lo muestra donde lo tiene
+  el vídeo.
+
 ## 0.6.0.3 - 2026-10-27 - Muchos clips: una caché ligera y un catálogo de clips
 
 - **Muchos clips, una fracción del disco**: los clips de un vídeo ahora se leen una sola vez en una copia ligera

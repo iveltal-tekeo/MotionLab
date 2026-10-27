@@ -5,6 +5,54 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0.4 - 2026-10-27 - In the shot: B-roll on your words, graphics behind you
+
+- **Your subject stays in the frame** - a horizontal clip in a vertical video used to be cut in the middle; now the
+  catalogue finds each shot's subject (a face, else what the eye goes to) and the crop - and any punch-in - centres
+  on it.
+- **iPhone HDR clips in real colour** - clips filmed in HDR (an iPhone's default) are converted to normal video
+  colours instead of coming out flat and washed out (about 3x the colour and contrast they had).
+- **More variety in quick drafts** - a quick draft no longer uses the same shot twice or one scene over and over: on
+  36 test clips a 30-second draft went from 18 to 26 different scenes in 28 shots.
+- **The shots before the render** - with many clips Claude now lays out every shot of an edit as it will look, before
+  anything renders, fixes what is wrong (a blurry or dark part, the same shot twice, a face cut off) and shows you
+  the sheet first.
+- **B-roll on the words it shows** - in a talking video, B-roll now comes in on the word it shows (say "post" and
+  the phone with your post appears a quarter of a second later) or right on a jump cut to hide it. Each insert lasts
+  2-4 seconds, your face keeps the hook and the ending, there is never a flash of face between two inserts, and at
+  most 40 % of the video is covered: rules taken from creators' editing guides instead of a fixed timer. Your voice
+  goes on under the B-roll, never cut or swapped for the clip's own sound.
+- **Music clips are B-roll, not talking** - a clip with a song or loud background sound beside your talking take was
+  taken for a second talking take, so the draft played all of it and laid no B-roll. Clips that never pause now
+  count as B-roll.
+- **Graphics that belong in the shot** - a graphic over someone on camera no longer has to look pasted on: a big
+  word can sit behind your head and stay on the wall when the camera punches in, a glass card frosts the real room
+  behind it with a soft shadow, graphics take on your camera's own softness and grain, and anything near your head
+  keeps off your face. MotionLab finds you and your face in each clip once (about 30 ms a frame, nothing to install);
+  Claude uses it when it edits a talking video. The idea comes from Vibha Ramprakash's video effects for Claude.
+- **Curves you can see and shape** - a keyframe's move now offers the curves motion designers use (Easy ease,
+  Strong ease, Glide, Launch beside Ease in / out, Hold and Pop), each shown as a little curve, and a chart with two
+  handles you drag to shape your own - like After Effects' graph or the Flow plugin. Zoom effects take them too.
+- **Effects that follow your face** - three new effects in the Editor: *Lean in* (a small, quick push in on your face
+  for one word - it glides in and eases out), *Slow push* (a slow push in while the room melts out of focus) and
+  *Spotlight* (the room goes dark, you stay lit). Zooms stay small and eased, and they land on your face even as you
+  move.
+- **Graphics in the shot, from the Editor** - a graphic's panel has *In the shot*: *Behind me*, *Frosted glass*,
+  *Keep off my face* and *Pin to my face*. Before anything renders, the shot check now also flags a graphic that
+  covers your face or a card your face would cut into, with its frame. A graphic pinned to your face shrinks to stay
+  inside the frame and out of the app's top bar and caption area on a close-up.
+- **13 new templates for talking videos** (after Vibha Ramprakash's designs): *Word behind you*, *LED sign behind
+  you*, *Lock-on brackets*, *Countdown flip clock*, *Marker scribble*, *Comment box*, *Follow tap*, *Message stack*,
+  *Reject stamp*, *Settings toggles*, *Glass graph*, *Task checklist* and *Headline box*. Each knows its place in the
+  shot - the word and the sign behind you, the brackets and the scribble on your face, the cards in frosted glass,
+  everything off your face - and Claude can put them on the words you say ("a stamp when I say 'dies'").
+- **Fixed: a grey veil over your video** - a Motion Graphics template placed see-through over a video (its own
+  backdrop off) laid its film grain over the whole picture, a faint grey veil that flattened the footage. Now the grain
+  stays off over a video; the graphic takes your camera's own grain instead.
+- **Fixed: a word in the wrong place in the Editor** - a graphic that sizes itself to its words (the big word behind
+  you) showed up shifted half a word to the right and lower in the Editor's preview, cut off at the frame's edge,
+  while the video itself was right. The preview now shows it where the video has it.
+
 ## 0.6.0.3 - 2026-10-27 - Lots of clips: a light cache and a clip catalogue
 
 - **Lots of clips, a fraction of the disk** - a video's clips are now read once into a light copy (every frame,

@@ -74,10 +74,10 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.6.1 | Quality over quantity: many clips edited well, template packs | next - the user's focus (2026-10-26): edits done well, ten more minutes of Claude are fine; first many B-roll clips edited well (a clip catalogue made once, a shot list with pictures before any render, Claude's own review); *Left from 0.6.0* (what waits on the user); then the template packs - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
+| 0.6.1 | Quality over quantity: many clips edited well, template packs | next - the user's focus (2026-10-26): edits done well, ten more minutes of Claude are fine; first many B-roll clips edited well (a clip catalogue made once, a shot list with pictures before any render, Claude's own review); shorts from a long video, scored on a researched rubric (moved from 0.6.4, 2026-10-27); *Left from 0.6.0* (what waits on the user); then the template packs - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
 | 0.6.2 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0; + the edit as a timeline file for Premiere / Final Cut (2026-10-25) | M |
 | 0.6.3 | Content generation | planned - AI clips back into the lab, pictures from image tools, voice-over (voice and music moved to 0.5.4 2026-10-22; voice back 2026-10-25) | M |
-| 0.6.4 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts, shorts from a long video (2026-10-25) | L |
+| 0.6.4 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts (2026-10-25; shorts from a long video moved to 0.6.1, 2026-10-27) | L |
 | 0.6.5 | Take notes from videos: competitors, videos, courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15; competitor analysis, music / voice stems and a reference's sound effects added 2026-10-25 | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
 | 0.7.5 | macOS | later | M |
@@ -330,18 +330,8 @@ screen 2) environment: experiment different environments 3) delivery: authentic 
      slots (your clips; generated ones in 0.7) -> a lab render, then the Resolve build. You approve the cut list
      (every removed part with frame + timecode) before anything renders.
   4. **Check**: the first 3 s say the hook, the HEIT parts land at their target seconds, the extras are there.
-  5. **Shorts from a long video** (the user, 2026-10-25: "get shorts from a long video (analyze contenct and
-     transcript) and see which moments could make good shorts?"): a podcast, a talk or a long video of the user's ->
-     its words with timings (faster-whisper) -> candidate stretches of 20-60 s, which Claude scores the way the
-     clipping tools do (OpusClip's score: hook, flow, value, trend): a hook that works without what came before, no
-     "as I said", a payoff, energy (loudness, laughter), length; "trend" = what 0.6.5's competitor scan found - each
-     candidate with frame + timecode and why, the user picks. Then each pick as a vertical short: reframed 16:9 ->
-     9:16 by face detection sampled ~5 times a second (MediaPipe's BlazeFace, ~3 ms a frame on a phone CPU), a still
-     or a following frame chosen per scene (AutoFlip's design), the speaker kept when two talk; screen recordings as
-     screen + face, not a crop; captions and a hook title from yapping mode. Built in the lab - ClipsAI (torch,
-     pyannote with a Hugging Face token) and OpenShorts (Gemini by default) are read for ideas, not installed.
-     Measure first: the minutes per 60 s short on a laptop CPU; the reframe's misses (OpusClip's own benchmark: the
-     wrong speaker, charts cut off, half people, lower thirds cut).
+  5. **Shorts from a long video** (the user, 2026-10-25): **moved to 0.6.1** (2026-10-27, the user's ask), researched
+     and planned there.
 - **The clips a script needs** (added 2026-10-15, from the first talking video made from a Prepare script, *MotionLab
   vs other AI editors*; its v4 note: "the script's B-roll (the report with its contact sheet, a generic AI editor,
   your render beside the reference, the Prepare page) does not exist in the project, so those moments stay on you
@@ -491,7 +481,8 @@ video = phone H.264, full range (`yuvj420p`), bt709 with sRGB tags; test_4am = D
 quantity" version, idc if you spend 10 more minutes in editing a video or sum but i want it well done, as feedback igot
 that u are having a bad time editing videos when i give u lots of b-rolls, how could we improve that?"). The measure of
 an edit is the result, not Claude's minutes (0.5.3 halved them; ten more are fine). Two halves of one aim: **many clips
-edited well** (below, first) and the graphics from **template packs** (the rest of this plan, the 2026-10-15 text).
+edited well** (below, first) and the graphics from **template packs** (the rest of this plan, the 2026-10-15 text);
+between them **shorts from a long video** (2026-10-27).
 
 **Many clips edited well - why it goes badly today** (read in the code 2026-10-26; no many-clip project on this PC -
 the biggest has 3 clips - so the friend's case is the test):
@@ -520,8 +511,24 @@ frame (checked on all 36 clips). **Step 1 built** (the lab's part + Claude's lin
 bed (dark grades are a look, not a fault), look-alikes by shape + colours + layout + edges; the brief carries it
 (`brief.catalogue_lines`), the skill's by_feel / improve read it. **Step 4, the lab's part, built**: the quick draft
 scores down windows outside the usable parts, across a cut inside a clip, like the shot before, back in time (test
-bed: 1 -> 0 crossing shots, 2 -> 0 look-alikes back to back). **Next**: step 3 (the shot list with pictures, in the
-app), 6, 7, B-roll on the words; the Editor showing each clip's lines.
+bed: 1 -> 0 crossing shots, 2 -> 0 look-alikes back to back). **Released as 0.6.0.3** (2026-10-27). Then (2026-10-27,
+the user: "release the 0.6.0.3 and continue"): **step 6** - each moment's `subject` (YuNet face, else a
+spectral-residual saliency centre) is the quick draft's anchor (the crop of a horizontal clip in a vertical video and
+any punch-in centre on it); HDR clips tone-mapped in the light read, the fill and `--full` (prep_footage.tone, the
+analyser's zscale / hable chain - a PQ test clip: contrast 32 -> 86, colour 59 -> 131); **steps 3 + 7, the lab's
+part** - `catalogue.py shots <project> [plan]`: every shot as it will look from the light cache, no render, and what
+to fix (outside the usable part, across a cut, like the shot before, a moment twice, the subject cut off); the skill
+fixes those before any render and shows the user the sheet. The quick draft now also scores down a moment already
+used and a scene used often (test bed: 18 -> 26 different scenes in 28 shots, the most used scene 9x -> 2x, the shot
+check 3 -> 0). Then (2026-10-27, the user: "the b roll is to have the sound from the clip before going on, so NOT
+changing" + "repos where people might have some presets"): **B-roll on the words** - researched rules (docs\ideas.md
+*B-roll rules*) as the quick draft's numbers: an insert on the word its catalogue line says (+0.25 s) or on a jump
+cut, 1.5-4 s, the face keeps the first 15 % and the last 10 %, no face under 2 s between inserts, at most 40 %
+covered, picture only (test project `zz_talk_broll`: a 26 s take + 10 music-video clips, inserts on "post" and
+"singing", the voice under them = the take, envelope correlation 1.00 at 0 ms); clips loud all through (music,
+ambience) next to a real take are B-roll (pauses under 15 % of 10 ms windows; takes 30-49 %, B-roll 0-9 % on 4 takes
++ 25 clips); `catalogue.py shots` no longer flags a take's own jump cuts. **Next**: the shot list in the app (approve /
+swap before the render), the Editor showing each clip's lines, the friend's real clips.
 
 **Steps** (each measured on one many-clip project before / after: Claude's minutes and tokens, the disk, the user's
 rating):
@@ -564,6 +571,108 @@ repeated, wrong subject); a second window (*Improve*) reads the catalogue withou
 prep's disk and time measured before / after. **Needs first**: that project (only read, as always); nothing to
 install (OpenCV + ffmpeg split, tone-map and pick the key frames; Claude writes the lines).
 
+**Shorts from a long video** (moved here from 0.6.4 step 5, 2026-10-27 - the user: "in the 0.6.1 it could be possible
+for it to take a 10min video and get shorts from it (calculating from the possibility of going viral like good moments
+or dramatic ...) search to see the best possible way"; it reuses this half's light cache, catalogue, subject framing
+and B-roll on the words). **Researched 2026-10-27** (docs\ideas.md *Shorts from a long video*): the paid tools
+(OpusClip's 0-99 score = hook, flow, value, trend; Vizard, Klap, Descript, Riverside) and the open repos (ClipsAI,
+OpenShorts, SamurAIGPT's generator, SupoClip, video-use) all work the same way - the words with timings -> candidate
+stretches on sentence / topic edges -> an LLM scores them on a rubric -> cut, reframe to 9:16, captions. Nobody's score
+is proven: OpusClip's own blog says 60-scored clips sometimes beat 85-scored ones, and on 13k podcasts labelled by
+YouTube's *Most replayed* (Rhapsody, 2025) GPT-4o and Gemini without training did about as well as simple rules. So the
+score ranks the moments of ONE video against each other - never "this will go viral" - and learns from real results.
+1. **The words and the signals** (the lab, no Claude): the video read once into the light cache and transcribed
+   (faster-whisper small, word timings); split into sentences (punctuation or a pause >= 0.4 s - ~120-150 in 10
+   minutes); per sentence, against this video's own median: loudness and its peak, pitch range, words a second, the
+   pause before it, faces and motion (the catalogue), scene cuts, laughter / applause (the transcript's own marks; a
+   light detector - YAMNet, 3.7 M weights - only if it earns its install, measured first), text flags (a question, a
+   number, "but / actually / nobody / mistake", "you"); minus points for a greeting, a sponsor read, an outro, "as I
+   said".
+2. **Claude reads the whole transcript** (10 minutes = ~5k tokens with sentence numbers and marks like `[LOUD +2.1]`
+   `[LAUGH]`; over ~20 minutes only the lab's top 20 windows, a sentence of context each side) and returns twice the
+   shorts wanted (~10-12): first / last sentence, the hook line, the payoff line, the rubric's parts, *stands alone*
+   yes / no, an optional cold open (a 2-5 s line from later, put first). **The rubric** (0-5 each, x weight):
+   - **hook x2**: a claim, a question, a conflict, a number or a reaction in the first 3 s - no greeting, no setup;
+   - **stands alone** (a gate): no start mid-sentence, on a filler or on a "that / he" whose subject is not in the
+     clip, no "as I said" - fixed by starting earlier;
+   - **arc and payoff x1.5**: setup -> tension -> something specific -> the payoff, ending on its last word (a payoff
+     at 60-90 % of the length);
+   - **value or emotion x1.5**: a concrete tip, or awe / anger / worry / humour;
+   - **shareable x1**: a line people would send or quote, an opinion, a "that's me";
+   - **energy x1**: above the speaker's own level, laughter, an animated delivery;
+   - **density x0.5**: words a second once the pauses go;
+   - **picture** (a gate, x0.5): a face to crop for most of it, a readable screen, the action in frame.
+   OpusClip's *trend* becomes **fits My Brand's audience** (brand.json), later what 0.6.5's competitor scan finds.
+3. **The lab cuts them**: start / end on word edges (50 ms before, 80-200 ms after, never inside a word; a pause of
+   0.4 s or more = a clean cut), past a laugh, 20-45 s by default (60 s for a story or a tutorial; the platforms allow
+   up to 3 minutes), a candidate overlapping a better one by more than half dropped, then talking mode's pause and
+   filler cuts.
+4. **The user picks** (the app): a card per short - its key frames as a 9:16 strip, the hook line, the score's parts
+   and why, first / last frame + timecode, a preview from the light cache; tick the ones to make. Before building,
+   Claude checks each pick on one sheet of 8 frames of the 9:16 crop (the hook, the crop, the ending).
+5. **Each one as a vertical short**: reframed per scene (AutoFlip's design: a still crop when the face stays inside
+   ~60 % of the crop's width - most talking shots - else following it with a dead zone of ~8 % and smoothing; a blurred
+   fill when it cannot fit); two people: a hard cut to whoever talks at a sentence edge, each held 1.5 s or more,
+   never a pan between them, a stacked split for crosstalk (who talks: mouth movement against the sound, tried first;
+   a model only if that fails); a screen recording: the screen in the top band, the face below; captions and a hook
+   title inside the platforms' safe zone and not over subtitles already burned in; B-roll on its words; the sound
+   finished -> `build\shorts\short_N` plans -> renders.
+6. **Learn from real results**: YouTube's *Most replayed* curve (yt-dlp's `heatmap`, kept at download for references)
+   shows which parts people replay - the lab's pre-rank is measured against it; the user's posted shorts (Content
+   agency's check) and their good / bad ratings move the weights.
+
+**Ships when (shorts)**: on one 10-minute video of the user's (a talk or a podcast - and one gaming or music video, to
+see where picking by the words fails) the lab + Claude offer 8-12 candidates in under ~5 minutes on a laptop
+(measured), the user rates the top 5 and calls at least 3 good, and 3 picks render as vertical shorts with the face in
+frame - no wrong speaker, no half person, no chart cut off (OpusClip's own list of misses). **Needs**: that video
+(only read); nothing to install unless the laughter detector earns it.
+
+**Graphics part of the shot** (2026-10-27 - the user, of Vibha Ramprakash's claude-video-effects skill (MIT, 45
+face-tracked effects): "the results are pretty impressive", then "hyperframe is good on its own but combining it with
+talking heads or people is where it gets kinda AI-ish"; Claude's read: not the drawing tool - our graphics are made
+blind to the footage and pasted on top; the user: "yes go ahead"). **Built**: `motionlab\person.py` - per
+clip, from its light cache, the person's mask (Google's Selfie Segmenter, 250 KB, `tools\models\`, read by OpenCV's
+own TFLite reader - no MediaPipe; the same SHA-256 as Google's file) and the face (YuNet), smoothed both ways; made by
+`render_video.py` only for plans that ask (the user's 54 s webcam take: 31.5 ms a frame, a face in 100 % of
+frames); compose.py layer keys `behind` / `guard` / `follow` ("face" or "camera") / `glass` / `shadow` / `match`
+(the mask refined at full size by a guided filter on the frame); a self-test with a made-up person (behind, guard,
+glass 70 -> 3 detail, a camera follow within 1 px); the skill's graphics.md says when to use which. **The A/B**:
+projects\zz_behind_test (a copy of the user's corner-camera take, 1920x1080) - the library's frosted-glass pill and a
+big word, today's overlays vs the same graphics integrated (`build\compare\today_vs_integrated_v2.mp4`); integrated
+renders at ~9 fps vs ~18. What the test taught: a lower third must not follow the face (it chases the punch-in into
+the face), a word behind the person follows the camera (the room), not the head; a punch-in under a lower third puts
+the chin on it. **Then built** (the user: "look very cool but maybe u zoom in too much? try some ease-in ease-out ...
+basic flow keyframe charts ... carry on with the switch, the face-led effects, recreate vibhas best design as templates
+and lets review the entire workflow"): designers' eases (easy / strong / glide / launch + "cubic(...)") and
+the Editor's curve tiles + a two-handle chart; clip `track: "face"` + `room` (dim / blur / grey) in compose; Editor
+effects *Lean in* (15 %), *Slow push* (12 %, room melting), *Spotlight* (room to 30 %) with room chips; the graphic
+panel's *In the shot* (`gfit`); `snap` (a graphic centred on the face, fitted inside the frame); templates' `in_shot`
+applied by the Editor and by edit lists (`graphic ... [behind|glass|guard|pin|plain]`, `effect <kind> at f`, the
+backdrop off over a video); the shot check flags a graphic over the face and one the face cuts into; the looks' film
+grain no longer veils a video; **13 templates** after Vibha's designs (three builders in parallel; word-behind,
+led-sign, lock-on-brackets, countdown-flip, scribble-callout, comment-box, follow-tap, message-stack, reject-stamp,
+settings-toggles, glass-graph, task-checklist, headline-box - Spanish included); the skill's graphics.md maps her 45
+to ours. **The workflow demo**: projects\zz_vibha_demo (a copy of the user's "Your song needs a real video" take, 16:9
+webcam) - talking draft -> `build\edit_v2.list` (7 graphics + 2 effects on the words) -> v2: the brackets past the frame,
+three cards bitten by the face (taught the fit + the check) -> `edit_v4.list` (cards smaller, far right) -> graphics ->
+shot check 0 -> `zz_vibha_demo_v4.mp4`. Then the user's vertical phone take (script-009, "Why MotionLab is different",
+copied into projects\zz_vibha_vertical so their own v1-v6 stay apart): talking draft -> `edit_v2.list` (3 cuts, 7
+graphics, 2 effects on the script's words) -> graphics -> shot check (a face bite, a card into the apps' bottom band,
+light words on a white shirt, a skin smudge under glass - each fixed: placement, `tone=smoke`, `glass: 60`) ->
+`zz_vibha_vertical_v2.mp4`, the shot check 0 and the safe zone clear but the LED sign's dimmed room. **The release
+check** (the user: "make sure all of the video effecets from vibha are actually here and can be used smoothly"):
+`edit_v4.list` = all 13 templates + the 3 effects on one 30 s vertical take -> `zz_vibha_vertical_v4.mp4`, every
+graphic rendered, the shot check 0, face / safe-zone flags 0 (what it fixed: a pinned graphic shrinks into the frame
+and out of the apps' top band, the brackets and the scribble carry `over_face`, a behind layer's dimmed room is not
+counted as drawn, `glass: true` = 44 px - 18 left a skin smudge); each of the 13 added through the Editor's apply
+lands with its own placement and switches. **Released as 0.6.0.4** (2026-10-27). Not built of her 45 (graphics.md
+has the map): reels-around-you (noise, orbit, carousel, phone fan, profile wall, place-in-grid, check pills), lineup,
+the bill, swipe, uninstall, reel frame, shortcut rain, rabbit hole, cover star, glass widgets, pastel word, timeline,
+tier list, B-roll split, dot reveal, headline wall, match cut, over-the-shoulder zoom. **Next**: the
+user's rating of the demos; her reels-around-you designs (the user's reel covers as a media slot);
+the Editor's preview showing behind / glass (it has no mask today); the person track on every second frame if 31 ms a
+frame is slow on a laptop (measure first).
+
 **Left from 0.6.0** (released 2026-10-26; each waits on the user or was not needed yet - 0.6.0's text: plans_history.md):
 - *Cut the stumbles* (0.6.0 step 20) stays opt-in (`--stumbles on`) until a take with mistakes in it (an "um", a
   restart, a "cut, again") shows what it catches - on by default if it handles it well, removed if not.
@@ -591,7 +700,9 @@ template packs - any 0.6.x can take them; the keyframes, transitions and a clip'
    multiply, overlay, colour, difference ...) need compose's blend() to learn them and the preview's
    mix-blend-mode the same.
 4. *Subject masking* (an idea, docs\ideas.md *Later / not now*): "implement corridorkey2.0 to mask subjects ... if u
-   specify u want the user masked it can improve edits and have motion graphics from behind".
+   specify u want the user masked it can improve edits and have motion graphics from behind". **The light version
+   is built** (2026-10-27, 0.6.1 *Graphics part of the shot*: a 250 KB person mask through OpenCV, no CorridorKey);
+   left here: the Editor's *Behind me* toggle.
 5. *The mood board, its own tab in My Brand* - and pictures / videos added from a link ("so i don have to download
    anything directly"): a post's link (Instagram, TikTok, Pinterest, YouTube) through the download tool, a picture's
    link straight in; the files stay on this PC like the rest of the board.
