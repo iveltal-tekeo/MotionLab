@@ -2614,6 +2614,7 @@ a.brvid:hover { text-decoration: none; }
    marks the main action, the selection and state only; violet = the graphics lane's colour (Review's accent now);
    no gradients, no coloured glows, no tracked capitals, no text under 11 px, a focus ring on every control */
 .ed { --ed1: var(--edc); --ed2: #a78bfa; --ed3: #ff4fa3; --edbg: #0a0d15; --edpan: #10141f; --edline: #232b3d;
+  --edsurf: #141a28; --edsunk: #0c1019;
   display: flex; flex-direction: column; gap: 10px; }
 .ed button:focus-visible, .ed select:focus-visible, .ed input:focus-visible { outline: 2px solid var(--ed1); outline-offset: 1px; }
 .edtop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -2656,7 +2657,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edwait { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 9999; background: #000d; border-radius: 6px;
   padding: 6px 10px; font-size: 12.5px; color: var(--ed1); }
 .edtrans { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.edtrans .btn { background: #141a28; border-color: var(--edline); }
+.edtrans .btn { background: var(--edsurf); border-color: var(--edline); }
 .edtrans .btn.edplay { width: 46px; justify-content: center; background: var(--ed1); color: #061018; border-color: var(--ed1); font-weight: 700; }
 .edtime { font-size: 12.5px; margin-left: 8px; }
 .edtime .tc { color: var(--ed1); }
@@ -2664,7 +2665,7 @@ body.edwide main { padding: 10px 16px 24px; }
 /* the timeline */
 .edtl { background: var(--edbg); border: 1px solid var(--edline); border-radius: 12px; overflow: hidden; }
 .edtools { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--edline); background: var(--edpan); }
-.edtools .btn { background: #141a28; border-color: var(--edline); }
+.edtools .btn { background: var(--edsurf); border-color: var(--edline); }
 .edtools .btn.on { border-color: var(--ed1); color: var(--ed1); }
 .edsep { width: 1px; height: 20px; background: var(--edline); margin: 0 4px; }
 #edzoom { width: 140px; accent-color: var(--ed1); }
@@ -2676,7 +2677,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edhd.sfx { color: #ffd166; } .edhd.wave { color: var(--green); }
 .edscroll { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; }
 .edcanvas { position: relative; min-width: 100%; user-select: none; touch-action: none; }
-.edruler { position: absolute; top: 0; left: 0; right: 0; border-bottom: 1px solid var(--edline); background: #0d111b; cursor: pointer; }
+.edruler { position: absolute; top: 0; left: 0; right: 0; border-bottom: 1px solid var(--edline); background: var(--edsunk); cursor: pointer; }
 .edtick { position: absolute; top: 0; height: 100%; border-left: 1px solid #ffffff26; padding: 4px 0 0 4px; font: 11px var(--mono);
   color: var(--muted); pointer-events: none; }
 .edit { position: absolute; border-radius: 6px; overflow: hidden; cursor: grab; font-size: 11px; color: #fff; white-space: nowrap; }
@@ -2717,7 +2718,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edcfol { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; }
 .edcbar #edcmode { margin-left: auto; }
 .edcl { display: flex; flex-direction: column; gap: 4px; }
-.edcr { border: 1px solid transparent; border-radius: 8px; padding: 4px 6px 6px; background: #0d111b; scroll-margin: 130px 0 40px; }
+.edcr { border: 1px solid transparent; border-radius: 8px; padding: 4px 6px 6px; background: var(--edsunk); scroll-margin: 130px 0 40px; }
 .edcr.now { border-color: #ff8ac455; }
 .edcr.on { border-color: #ff8ac4; background: #1a1220; }
 .edcr.hit .edcx { box-shadow: inset 3px 0 0 #fbbf24; }
@@ -2777,7 +2778,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edkr { font-size: 13px; }
 .eddot.key { background: #fbbf24; border-radius: 1px; transform: rotate(45deg) scale(.85); }
 .edkhere { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
-.edkchip { font-size: 12px; background: #1b2232; border: 1px solid var(--edline); border-radius: 10px; padding: 1px 8px; color: var(--muted); }
+.edkchip { font-size: 12px; background: var(--edsurf); border: 1px solid var(--edline); border-radius: 10px; padding: 1px 8px; color: var(--muted); }
 .edkchip b { color: var(--text); font-weight: 600; }
 /* transitions: a block on the cut (hatched where frames hold still - Premiere's look), a + on the cuts without one */
 .edtr { background: #e2e8f0eb; border: 1px solid #fff; color: #0b1220; display: flex; align-items: center; justify-content: center;
@@ -2792,7 +2793,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edcutb:hover, .edcutb:focus-visible { opacity: 1; background: var(--ed1); color: #061018; border-color: var(--ed1); }
 .eddot.tr { background: #e2e8f0; }
 .edtrgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; margin: 8px 0; }
-.edtrgrid button { display: flex; align-items: center; gap: 6px; background: #141a28; border: 1px solid var(--edline); color: var(--text);
+.edtrgrid button { display: flex; align-items: center; gap: 6px; background: var(--edsurf); border: 1px solid var(--edline); color: var(--text);
   border-radius: 6px; padding: 5px 7px; font: inherit; font-size: 12px; cursor: pointer; text-align: left; }
 .edtrgrid button span { width: 16px; text-align: center; color: #93c5fd; flex: none; }
 .edtrgrid button.on { border-color: var(--ed1); background: #0e2a33; }
@@ -2802,7 +2803,7 @@ body.edwide main { padding: 10px 16px 24px; }
    overcrowded tab bar") - the list beside it scrolls on its own */
 .edpin.edadd { padding: 0; overflow: hidden; }
 .edaddw { display: grid; grid-template-columns: 76px minmax(0, 1fr); height: 100%; }
-.edrail { display: flex; flex-direction: column; gap: 4px; padding: 8px 5px; border-right: 1px solid var(--edline); background: #0c1019;
+.edrail { display: flex; flex-direction: column; gap: 4px; padding: 8px 5px; border-right: 1px solid var(--edline); background: var(--edsunk);
   border-radius: 12px 0 0 12px; overflow-y: auto; }
 .edrail button { --k: var(--ed1); display: flex; flex-direction: column; align-items: center; gap: 4px; background: none;
   border: 1px solid transparent; border-radius: 8px; color: var(--muted); padding: 9px 2px 7px; font: inherit; font-size: 11px; cursor: pointer; }
@@ -2815,7 +2816,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edrail [data-tab=tr] { --k: #93c5fd; }
 .edaddb { overflow: auto; padding: 10px; min-width: 0; }
 .edtabs { display: flex; gap: 4px; margin-bottom: 8px; }
-.edtabs button { flex: 1; background: #141a28; border: 1px solid var(--edline); color: var(--muted); border-radius: 6px; padding: 6px;
+.edtabs button { flex: 1; background: var(--edsurf); border: 1px solid var(--edline); color: var(--muted); border-radius: 6px; padding: 6px;
   font: inherit; font-size: 13px; cursor: pointer; }
 .edtabs button.on { color: #061018; background: var(--ed1); border-color: var(--ed1); font-weight: 600; }
 .edkinds { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
@@ -2829,7 +2830,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edrow.off > .eddot, .edrow.off > .edtric, .edrow.off .edrn > b, .edrow.off .edrn > .muted { opacity: .45; }
 .edrow.off:hover { background: none; }
 .edwhy { display: block; font-size: 11.5px; color: #fbbf24; white-space: normal; line-height: 1.3; margin-top: 1px; }
-.edat { margin: 0 0 8px; padding: 5px 8px; border-radius: 6px; background: #141a28; border: 1px solid var(--edline); color: var(--muted); }
+.edat { margin: 0 0 8px; padding: 5px 8px; border-radius: 6px; background: var(--edsurf); border: 1px solid var(--edline); color: var(--muted); }
 .edat.bad { color: #fbbf24; }
 .edkrow.off { cursor: not-allowed; } .edkrow.off .edkl, .edkrow.off .edkd, .edkrow.off .edkv { opacity: .4; }
 .edkrow.off .edkv { text-align: right; }
@@ -2837,7 +2838,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .eddot { width: 9px; height: 9px; border-radius: 50%; background: hsl(var(--h, 188) 80% 62%); flex: none; display: inline-block; }
 .eddot.shot { background: var(--ed1); } .eddot.gfx { background: var(--ed2); } .eddot.cap { background: #ff8ac4; }
 .edtpls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.edtpl { position: relative; background: #141a28; border: 1px solid var(--edline); border-radius: 8px; overflow: hidden; cursor: grab;
+.edtpl { position: relative; background: var(--edsurf); border: 1px solid var(--edline); border-radius: 8px; overflow: hidden; cursor: grab;
   display: flex; flex-direction: column; }
 .edtpl img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #000; display: block; }
 .edtpl span { font-size: 11.5px; padding: 4px 6px; line-height: 1.25; }
@@ -2854,7 +2855,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .ednum.keyed .ednl { color: var(--text); }
 .ednum.off { opacity: .5; } .ednum.off .ednl { cursor: default; }
 .ednr { width: 100%; min-width: 0; accent-color: var(--ed1); }
-.ednb { display: inline-flex; align-items: center; background: #0b0f19; border: 1px solid var(--edline); border-radius: 6px; padding: 0 6px 0 0; }
+.ednb { display: inline-flex; align-items: center; background: var(--edsunk); border: 1px solid var(--edline); border-radius: 6px; padding: 0 6px 0 0; }
 .ednb:focus-within { border-color: var(--ed1); }
 .ednum .ednv { width: 52px; font: 12px var(--mono); padding: 3px 4px; text-align: right; background: transparent; border: 0; color: var(--text);
   appearance: textfield; border-radius: 6px; }       /* (.ednum: over the page-wide input rule's width 100 %) */
@@ -2880,21 +2881,21 @@ body.edwide main { padding: 10px 16px 24px; }
 .edkeys b { color: var(--text); }
 .edih { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 2px; }
 .edchips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
-.edchips button { background: #141a28; border: 1px solid var(--edline); color: var(--text); border-radius: 6px; padding: 3px 8px;
+.edchips button { background: var(--edsurf); border: 1px solid var(--edline); color: var(--text); border-radius: 6px; padding: 3px 8px;
   font: 12.5px var(--ui); font-variant-numeric: tabular-nums; cursor: pointer; }
 .edchips button.on { background: var(--ed1); border-color: var(--ed1); color: #061018; font-weight: 700; }
 .edchips button:disabled { opacity: .4; cursor: default; }
 /* a keyframe's ease as curve tiles + the chart with two handles (2026-10-27, "basic flow keyframe charts") */
 .edeases { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 6px; }
-.edease { display: flex; flex-direction: column; align-items: center; gap: 1px; background: #141a28; border: 1px solid var(--edline);
+.edease { display: flex; flex-direction: column; align-items: center; gap: 1px; background: var(--edsurf); border: 1px solid var(--edline);
   color: var(--muted); border-radius: 7px; padding: 4px 2px 3px; font: 10.5px var(--ui); cursor: pointer; line-height: 1.15; text-align: center; }
 .edease:hover { border-color: var(--ed1); color: var(--text); }
-.edease.on { border-color: var(--ed1); color: var(--text); background: color-mix(in srgb, var(--ed1) 16%, #141a28); }
+.edease.on { border-color: var(--ed1); color: var(--text); background: color-mix(in srgb, var(--ed1) 16%, var(--edsurf)); }
 .edeico .edeax { stroke: var(--edline); stroke-width: 1.5; fill: none; }
 .edeico .edecv { stroke: var(--ed1); stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .edchart { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 2px 0 8px; }
 .edchart svg { touch-action: none; overflow: visible; }
-.edchart .edcbox { fill: #0c1019; stroke: var(--edline); }
+.edchart .edcbox { fill: var(--edsunk); stroke: var(--edline); }
 .edchart .edcgrid { stroke: var(--edline); stroke-dasharray: 3 4; fill: none; }
 .edchart .edccv { stroke: var(--ed1); stroke-width: 3; fill: none; stroke-linecap: round; }
 .edchart .edchl { stroke: var(--ed2); stroke-width: 1.5; }
@@ -2946,8 +2947,52 @@ body.edwide main { padding: 10px 16px 24px; }
 .edlist .edclip img, .edclipi { width: 34px; height: 46px; object-fit: cover; border-radius: 4px; background: #000; flex: none; }
 .edlist .edclip .edrn { display: flex; flex-direction: column; gap: 1px; }
 #edtake { width: 100%; }
-.edpics.scene { position: absolute; inset: 0; background: #1d2433 var(--th) repeat-x left center / auto 100%; }
+.edpics.scene { position: absolute; inset: 0; background: var(--edsurf) var(--th) repeat-x left center / auto 100%; }
 .edshot.scene .edlab { z-index: 1; }
+/* ---- the Editor's look (2026-10-27, the user: "remove the round edges and padding in the miniedtor like "edsplitter"
+   or the padding in the main section. maybe also add a cleaner color for the mini editor"): an editing app's - graphite
+   greys with one accent (cyan: the selection and the main action), panels edge to edge with 1 px lines instead of
+   rounded cards with gaps, a white playhead, flat lanes; the page around it out of the way. The shades above are the
+   variables, set here. */
+.ed { --edbg: #111214; --edpan: #18191c; --edline: #2a2b30; --edsurf: #232428; --edsunk: #0f1012; --ed3: #f4f4f5; gap: 0; }
+body.edwide main { padding: 0 0 12px; background: #111214; }
+body.edwide main > .head { margin: 0; padding: 10px 16px 8px; align-items: center; }
+body.edwide main > .head .crumb { display: none; }
+body.edwide main > .head h1 { font-size: 18px; }
+body.edwide main > .head .sub { margin-top: 2px; font-size: 12.5px; }
+body.edwide main > .tabs { margin: 0; padding: 0 12px; border-bottom-color: var(--line); }
+body.edwide main > #pjprog:not(:empty) { padding: 8px 16px 0; }
+.edtop { padding: 6px 12px; background: var(--edpan); border-bottom: 1px solid var(--edline); min-height: 44px; }
+.edmain { gap: 0; }
+.edpanel, .edview, .edtl { border-radius: 0; border: 0; }
+.edmain > .edpanel:first-child { border-right: 1px solid var(--edline); }
+.edmain > .edpanel:last-child { border-left: 1px solid var(--edline); }
+.edview { background: var(--edbg); padding: 12px 12px 8px; }
+.edrail { border-radius: 0; background: var(--edsunk); }
+.edstage { border-radius: 2px; outline: 1px solid #ffffff14; }
+.edsplitter { height: 6px; margin: 0; background: var(--edpan); border-top: 1px solid var(--edline); border-bottom: 1px solid var(--edline); }
+.edsplitter::after { top: 1px; height: 2px; width: 40px; margin-left: -20px; background: #3a3b41; }
+.edtl { background: var(--edbg); }
+.edtools { background: var(--edpan); }
+.edheads { background: var(--edpan); }
+.edruler { background: #16171a; }
+.ed .btn { border-radius: 6px; }
+.edtrans .btn, .edtools .btn { background: var(--edsurf); border-color: var(--edline); }
+.ed .btn.ghost { background: transparent; }
+.edit { border-radius: 3px; }
+.edh.l { border-radius: 3px 0 0 3px; } .edh.r { border-radius: 0 3px 3px 0; }
+.edshot { background: #1b272d; border-color: #2f6f7c; }
+.edgi { background: #342c4f; border-color: #6a5aa6; }
+.edcap { background: #3a2333; border-color: #8c4d70; }
+.edcap.edited { border-color: #d77aa8; }
+.edcap.tail { background: #2b1a26; }
+.edfx { background: #35261a; border-color: #94603a; }
+.edsfx { background: hsl(var(--h) 30% 18%); border-color: hsl(var(--h) 45% 46%); }
+.edph i { background: var(--ed3); }
+.edph { box-shadow: 0 0 0 1px #0008; }
+.edcr { background: var(--edsunk); }
+.edcr.on { background: #1f1820; }
+
 /* Motion Graphics > Sounds (0.6.0) */
 .sdtop { gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .sdtop input[type=search] { max-width: 220px; }

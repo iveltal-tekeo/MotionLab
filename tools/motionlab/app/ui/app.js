@@ -4596,10 +4596,15 @@ class EdPreview {
     this.fit();
   }
   wait(html) { this.waitEl.hidden = !html; this.waitEl.innerHTML = html || ''; }
-  fit() {
-    const bw = Math.max(200, this.box.clientWidth || 400);            // (the timeline in sight - or as the user dragged it)
-    const maxH = clamp(edPvH() ?? window.innerHeight - 600, 160, Math.max(240, window.innerHeight - 220));
-    this.sc = Math.min(bw / this.W, maxH / this.H);
+  fit(soft = false) {
+    // (as high as the window leaves once the whole timeline is in sight - or as the user dragged it with the handle)
+    const bw = Math.max(200, this.box.clientWidth || 400), tl = document.getElementById('edtl'), tr = this.box.parentElement && $('.edtrans', this.box.parentElement);
+    const top = this.box.getBoundingClientRect().top + (($('main') || {}).scrollTop || 0);
+    const auto = window.innerHeight - top - (tr ? tr.offsetHeight + 14 : 54) - (tl ? tl.offsetHeight : 300) - 26;
+    const maxH = clamp(edPvH() ?? auto, 200, Math.max(240, window.innerHeight - 220));
+    const sc = Math.min(bw / this.W, maxH / this.H);
+    if (soft && this.sc && Math.abs(sc - this.sc) * this.H < 4) return;
+    this.sc = sc;
     this.stage.style.width = `${Math.round(this.W * this.sc)}px`; this.stage.style.height = `${Math.round(this.H * this.sc)}px`;
     if (this.S) this.render(this.f, true);
   }
@@ -5119,6 +5124,7 @@ function projEditor(el, P) {
       <div class="edhd sfx" style="top:${y.sfx}px;height:${Q.n * ED_ROW.sfx}px">${t('Sounds')}</div>
       <div class="edhd wave" style="top:${y.wave}px;height:${ED_ROW.wave}px">${S.sound === 'song' ? t('Song') : S.sound === 'follows' ? t('Voice') : t('Sound')}</div>`;
     paintWave(); paintHead();
+    if (pv && edPvH() == null) pv.fit(true);                  // (the preview as high as the timeline leaves)
   }
   const waves = {};
   async function paintWave() {

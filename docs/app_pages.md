@@ -664,7 +664,14 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   pointer lock on the drag (Chromium shows "Press Esc to show your cursor" on each, and headless runs sent no
   movement). **Room**: the page's padding is smaller while the Editor is open (`body.edwide`), the panel on the right
   is 360 px, and a handle between the preview and the timeline sets the preview's height (`#edsplitter`, remembered in
-  `ml.editor.pvh`, double-click = as it was). API_LEVEL 49.
+  `ml.editor.pvh`, double-click = as it was). API_LEVEL 49. **The look** (the same day, the user: "remove the round
+  edges and padding in the miniedtor like "edsplitter" or the padding in the main section. maybe also add a cleaner
+  color"): an editing app's - graphite greys (`.ed` --edbg / --edpan / --edline / --edsurf / --edsunk, set once in the
+  block "the Editor's look" at the end of the Editor's CSS) with cyan only for the selection and the main action, a
+  white playhead, flat lanes with 3 px corners; the panels edge to edge with 1 px lines (no rounded cards, no gaps); the
+  page's padding gone and its header one compact strip while the Editor is open (`body.edwide`); without a height of
+  the user's the preview takes what the window leaves once the whole timeline is in sight (`EdPreview.fit`, again
+  after each timeline draw).
 
 ## Generator vs Editor
 

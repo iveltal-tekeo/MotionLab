@@ -40,8 +40,9 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
   - **Every number** can be dragged by its name, slid, typed or nudged with the arrow keys, and ↺ puts it back. The
     panel no longer jumps to the top or closes its sections after each change; a shot's settings are sections you can
     fold (they stay as you left them) instead of tabs.
-  - **More room**: less space around the Editor, a wider panel, and a handle above the timeline to make the preview
-    bigger or smaller.
+  - **More room and a cleaner look**: the Editor fills the page edge to edge in graphite greys (no rounded boxes or
+    gaps, one accent colour, a white playhead), a wider panel, a preview as big as the window allows with the whole
+    timeline in sight, and a handle above the timeline to make it bigger or smaller.
 
 ## 0.6.0.5 - 2026-10-27 - Notes from videos and the Analyser's mascots
 

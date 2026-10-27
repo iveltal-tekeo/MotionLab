@@ -46,8 +46,10 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
   - **Cada número** se puede arrastrar por su nombre, deslizar, escribir o ajustar con las flechas, y ↺ lo devuelve a
     como estaba. El panel ya no salta arriba ni cierra sus secciones tras cada cambio; los ajustes de un plano son
     secciones que puedes plegar (se quedan como las dejaste) en vez de pestañas.
-  - **Más espacio**: menos margen alrededor del Editor, un panel más ancho y un tirador encima de la línea de tiempo
-    para hacer la vista previa más grande o más pequeña.
+  - **Más espacio y un aspecto más limpio**: el Editor ocupa la página de borde a borde en grises grafito (sin cajas
+    redondeadas ni huecos, un solo color de acento, un cabezal blanco), un panel más ancho, una vista previa tan grande
+    como permite la ventana con toda la línea de tiempo a la vista, y un tirador encima de la línea de tiempo para
+    hacerla más grande o más pequeña.
 
 ## 0.6.0.5 - 2026-10-27 - Notas de vídeos y las mascotas del Analizador
 
