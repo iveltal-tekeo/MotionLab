@@ -7,6 +7,21 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0.3 - 2026-10-27 - Muchos clips: una caché ligera y un catálogo de clips
+
+- **Muchos clips, una fracción del disco**: los clips de un vídeo ahora se leen una sola vez en una copia ligera
+  (todos los fotogramas, en pequeño) y solo los fotogramas que tu edición muestra de verdad se preparan a tamaño
+  completo, justo antes del render. Probado con 36 clips / 6,5 minutos de material: 2,1 GB en 35 segundos en vez de
+  33 GB en 131 segundos, y una edición de 30 segundos con ellos añade unos 2 GB, no 30. Los clips preparados antes
+  siguen funcionando igual.
+- **Claude conoce tus clips**: con muchos clips, Claude primero hace un catálogo: cada plano dentro de cada clip, las
+  partes que sirven y las que hay que dejar fuera (borrosas, movidas, demasiado oscuras), su movimiento de cámara y su
+  luz, los planos que se parecen, el día en que se grabó y una línea sobre lo que muestra. Cada paso siguiente lo lee
+  en vez de volver a mirar todos los clips, así que las ediciones con mucho B-roll eligen mejores momentos y *Mejorar*
+  parte de lo que Claude ya sabe.
+- **Borradores rápidos con muchos clips**: un borrador rápido ya no corta a través de un cambio de plano dentro de un
+  clip ni pone dos planos parecidos seguidos, y con clips de varios días tiende a mantener su orden.
+
 ## 0.6.0.2 - 2026-10-26 - Fotogramas clave y transiciones en el Editor
 
 - **Fotogramas clave en el Editor**: haz clic en un plano y su nueva pestaña *Vídeo* tiene Escala, Posición, Rotación,

@@ -5,6 +5,20 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0.3 - 2026-10-27 - Lots of clips: a light cache and a clip catalogue
+
+- **Lots of clips, a fraction of the disk** - a video's clips are now read once into a light copy (every frame,
+  small) and only the frames your edit actually shows are prepared full size, right before the render. Tested on 36
+  clips / 6.5 minutes of footage: 2.1 GB in 35 seconds instead of 33 GB in 131 seconds - and a 30-second edit of them
+  adds about 2 GB, not 30. Clips prepared before keep working as they are.
+- **Claude knows your clips** - with many clips, Claude first makes a catalogue of them: every shot inside every
+  clip, the usable parts and the ones to leave out (blurry, shaky, too dark), its camera move and light, shots that
+  look alike, the day it was filmed, and one line on what it shows. Every later step reads it instead of looking at
+  every clip again, so edits with lots of B-roll pick better moments and *Improve* starts from what Claude already
+  knows.
+- **Quick drafts with many clips** - a quick draft no longer cuts across a change of shot inside a clip or puts two
+  look-alike shots back to back, and with clips from several days it tends to keep them in order.
+
 ## 0.6.0.2 - 2026-10-26 - Keyframes and transitions in the Editor
 
 - **Keyframes in the Editor** - click a shot: its new *Video* tab has Scale, Position, Rotation, Opacity and the zoom
