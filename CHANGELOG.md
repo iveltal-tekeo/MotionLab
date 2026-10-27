@@ -5,6 +5,32 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## Unreleased
+
+- **The Editor, reviewed against CapCut, Premiere, Resolve and OpenCut.**
+  - **It opens where it did not**: a video whose folder name has a #, a ! or an emoji in it (it was listed but never
+    opened), a video with versions but no render yet (it opens the newest), a version written by hand; a version
+    that cannot open now says why instead of leaving an empty tab. Long videos are quick: a 12-minute edit opens and
+    takes each change in under a second (it took about 8).
+  - **A volume slider** beside the sound button - how loud you hear the preview; the video itself does not change.
+  - **Fewer, better effects**: Punch-in, Lean in, Slow push (smooth; the push-in is part of it now), Shake (a smooth
+    camera jolt that dies away, no more frame-by-frame jitter), Flash (an exposure flash: the bright parts bloom, the
+    dark ones stay dark - no milky grey; the quick draft's flashes too), Black frame, Stutter and RGB split (red and
+    blue split apart and close again, no coloured stripe at the edge). **Transitions**: Mix, Dip to black, Flash,
+    Slide, Whip and Zoom - the last three with motion blur, like a real camera move. Edits that already use one of
+    the others keep it.
+  - **Transitions show the right frames**: during a transition the clips jumped back to their first frame.
+  - **Sound**: a music quick draft keeps its song when you change its shots (the song was swapped for the clips' own
+    sound) and a longer edit plays more of the song instead of ending in silence; a song keeps its start when you
+    change only its volume; sound effects play on time in the preview (made-up ones were up to 0.4 s late) and at
+    their real length; turning the sound back on while it plays brings the effects back.
+  - **The preview looks like the render**: zooms frame the same way (a shake shakes), a lean-in and a slow push
+    follow your face once the video has been rendered, the flash looks the same.
+  - **Smaller fixes**: text you are typing is no longer lost when you press Save or Undo right after; picking another
+    version while one loads; the keyframe values follow the playhead; a click on a curve handle without dragging
+    changes nothing; Space and the arrows work after using a slider; a photo can be made longer; the stutter works on
+    any video that is not a talking one; a logo over the whole video stays over it after a speed change or a trim.
+
 ## 0.6.0.5 - 2026-10-27 - Notes from videos and the Analyser's mascots
 
 - **The Analyser: three ways to learn from a video.** *Effects & animations* (what it did until now), *Content creation*

@@ -131,8 +131,10 @@ def words(en: str, **v) -> Words:
 
 
 def safe_name(name: str) -> str:
-    """A folder name from a URL: no separators, no '..'."""
-    if not re.fullmatch(r"[\w.\- \[\]()&'+,]+", name or "") or ".." in name:
+    """A folder name from a URL: one name - no separators, no '..', nothing Windows refuses in a name, no control
+    characters. (2026-10-27: it allowed only letters, digits and a few signs, so a friend's video folder with a #, a !
+    or an emoji in its name was listed but never opened - the Editor "does not even open up".)"""
+    if not (name or "").strip() or ".." in name or re.search(r'[\\/:*?"<>|\x00-\x1f\x7f]', name):
         raise ValueError(I18N.t("bad name: {name}", name=repr(name)))
     return name
 
@@ -1397,10 +1399,13 @@ EDITOR_SOUNDS = LAB / ".app" / "editor" / "sounds"          # the made-up sound 
 
 
 def _me_plan(name: str, plan: str) -> tuple[Path, dict]:
+    """(the build folder, the plan) - any plan_v*.json the video's page lists; its relative paths made absolute (a
+    plan Claude wrote with paths next to it: else every clip is "missing" and the preview stays blank)."""
+    from motionlab.compose import resolve_paths
     b = PROJECTS / safe_name(name) / "build"
-    if not re.fullmatch(r"plan_v\d+\.json", str(plan or "")) or not (b / plan).is_file():
+    if not re.fullmatch(r"plan_v[\w\-]+\.json", str(plan or "")) or not (b / plan).is_file():
         raise ValueError(I18N.t("not a plan: {name}", name=repr(str(plan)[:40])))
-    return b, json.loads((b / plan).read_text(encoding="utf-8"))
+    return b, resolve_paths(json.loads((b / plan).read_text(encoding="utf-8")), b)
 
 
 def _me_ops(ops) -> list[dict]:
@@ -1725,10 +1730,10 @@ def sound_import_src(batch: str = "", folder: str = "") -> Path:
     return f
 
 
-def editor_sound(kind: str, file: str = "") -> Path:
+def editor_sound(kind: str, file: str = "", dur: str = "") -> Path:
     """A sound effect the Editor's preview plays: a recorded one of the library by its file (sounds.json's name - an
     address that does not end in .wav: Edge never answered a script's fetch of a .wav, 2026-10-26), else a kind's
-    made-up sound as a WAV (made once in .app\\editor\\sounds)."""
+    made-up sound as a WAV (made once in .app\\editor\\sounds; `dur` = the cue's own length, seconds)."""
     from motionlab import sfx as SFX
     if file:
         lib = SFX.Library.load()
@@ -1738,11 +1743,15 @@ def editor_sound(kind: str, file: str = "") -> Path:
         return SFX.SOUNDS / e["file"]
     if kind not in SFX.KINDS:
         raise ValueError(I18N.t("no sound effect kind {kind}", kind=kind))
-    p = EDITOR_SOUNDS / f"{kind}.wav"
+    try:
+        d = round(min(8.0, max(0.03, float(dur))), 2) if dur and "dur" in SFX.KINDS[kind][1] else None
+    except ValueError:
+        d = None
+    p = EDITOR_SOUNDS / (f"{kind}_{d:.2f}.wav" if d else f"{kind}.wav")
     if not p.exists():
         import soundfile as sf
         EDITOR_SOUNDS.mkdir(parents=True, exist_ok=True)
-        x = SFX.synth(kind, {}, 1)
+        x = SFX.synth(kind, {"dur": d} if d else {}, 1)
         sf.write(str(p), x, SFX.SR, subtype="PCM_16")
     return p
 

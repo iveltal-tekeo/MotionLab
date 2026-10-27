@@ -598,6 +598,50 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   video with clips): *Behind me*, *Frosted glass*, *Keep off my face*, *Pin to my face* (`gfit`, compose's behind /
   glass / guard / follow; the footage's grain with any); a template added in the Editor arrives the way its
   template.json `in_shot` says. The preview shows none of these (it has no person mask) - *See it rendered* does.
+- **The review: it opens, fewer and better effects, a volume slider** (2026-10-27, the user: "can u make a full review
+  of the mini editor? i think there are some bugs cuz some of my friends it does not even open up ... look at premiere
+  pro, open cut, capcut or davinci ... add a volume slider ... i think some effect are badly done and cant even be
+  used so i think its better if we just have few but higher quality ones"; three reviews: the page's code, the engine
+  driven with test projects, every effect and transition rendered and compared). **Opening**: `data.safe_name` takes
+  any one folder name Windows allows (a `#`, `!` or emoji folder was listed, never opened); the tab shows for a video
+  with versions but no render (it loads the newest plan); `data._me_plan` / `tools\miniedit.py read_plan` resolve a
+  plan's relative paths (`compose.resolve_paths`) and take any `plan_v*.json` the page lists; a load that fails says
+  so (*The Editor could not open this version*) and drops that version's kept changes; a second version picked while
+  one loads wins (`loadNo`); kept changes carry the plan's signature (`planSig`) and are dropped when it changed;
+  `made_by` / `audio` written as one string read as dicts (`miniedit._dict` / `_audio`); `edfx.availability` tries
+  each kind on its shot alone (a 600-shot video: 0.5 s to open, 0.4 s a change - it was ~8 s). **Volume**: a slider
+  beside the sound button (`#edpvol`, 0-100 squared, localStorage `ml.editor.vol`: one master gain for the song, the
+  clips and the effects; this viewer's own, the video never changes). **Effects offered** (`edfx.ADD`): Punch-in, Lean
+  in, Slow push (the push-in merged in, eased, no room look - a halo round the hair), Shake (`_swing`: a new direction
+  every ~1/16 s, eased between, dying away inside its own 6 % zoom - the old one flipped every frame), Flash
+  (`FLASH` 0.9 / 0.55 / 0.3 / 0.12; compose draws `flash_over` as an exposure flash - x (1 + 4k) in linear light,
+  clipped, a quarter white over - for the quick draft's flashes too; the white mix made blacks a milky grey), Black
+  frame, Stutter (refused only on a talking video: `miniedit._talking` = made_by.sound "talk"), RGB split
+  (`_rgb_split`: green / red / blue copies of the shot 5 % larger, red and blue apart in opposite directions and
+  closing 24 -> 12 -> 4 px at 1080, right above the shot, following its move, zoom and face; moved = made again).
+  **Transitions offered** (`edtrans.OFFER`): Mix, Dip to black, Flash, Slide, Whip, Zoom in - Slide, Whip and Zoom with
+  motion blur (compose `mblur`: the move sampled over half a frame, up to 16 samples, averaged; a value list read
+  between frames). Dropped (no longer offered, still built and editable where a plan has them): Pull-out,
+  Zoom-through, White flash, Colour flash, Light leak, Dip to black / white effects, Spotlight; Dip to white, Zoom out,
+  Spin, Glitch, Light leak transitions. A transition's copies show their shots' own frames (`edtrans._copy` =
+  `editlist._trim_front` at its first frame; they restarted from the shot's first frame - a jump back of 80+ frames;
+  `editlist._src_at` floors like compose). **The preview** follows compose: zoomed in, the zoom point is the crop's
+  centre kept inside the picture (`placeClip`: translate + scale round the box's centre; the shake barely moved
+  before), a face-tracked shot's zoom point = the face (the state's `face` per frame from the person track, once a
+  render made it; a shake's swing added - compose `zoom_point` does the same now), the flash = `brightness()` + a
+  quarter white; made-up sounds start on their cue frame (as `sfx.py` mixes them; they were 0.2-0.4 s late) at the
+  cue's own length (`/api/editor/sound?dur=`). **Sound**: a music draft's sound is its song (`sound_mode` "song" when
+  made_by.sound is "music"; it was cut again from the clips) and plays / is cut again from the song itself
+  (`_draft_song`: made_by.music from music_start_s) - a length change cuts it again (step `songcut`, now with a 1.2 s
+  fade-out at the video's end); a mix's song start (`sfx.py --song-start`) is kept (`song_start`), a volume change no
+  longer resets it. **Smaller**: undo / redo / save first take the field being typed in (`settle`); the keyframe rows
+  follow the playhead (`keysFollow`); a click on a curve handle without a drag records nothing; keys work after a
+  slider; `fAt` floors; a graphic's frame is keyed by folder + settings (two of one template no longer share an
+  iframe); no sound decoded after the preview closed; a photo (held frame) grows (`room`: up to 10 minutes); a layer
+  over the whole video stays so after a speed change or trim unless the user moved it (`_fit_layers`; others are cut
+  to the video); a transition's stored length is what it can cover. Not changed: a clip layer without an `sNN_` id is
+  a shot (editlist), the preview has no motion blur, no person mask and no person track of its own (a render makes
+  it), graphics preview only with HyperFrames installed.
 
 ## Generator vs Editor
 

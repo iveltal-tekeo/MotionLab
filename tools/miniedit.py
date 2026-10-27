@@ -50,7 +50,7 @@ def plans(b: Path) -> list[Path]:
 
 def base_plan(prj: Project, name: str | None) -> Path:
     if name:
-        if not re.fullmatch(r"plan_v\d+\.json", name) or not (prj.build / name).is_file():
+        if not re.fullmatch(r"plan_v[\w\-]+\.json", name) or not (prj.build / name).is_file():
             raise SystemExit(f"no plan {name} in {prj.build}")
         return prj.build / name
     ps = plans(prj.build)
@@ -59,10 +59,16 @@ def base_plan(prj: Project, name: str | None) -> Path:
     return ps[-1]
 
 
+def read_plan(bp: Path) -> dict:
+    """A plan with its relative paths made absolute (next to it first, else from the lab - compose.resolve_paths)."""
+    from motionlab.compose import resolve_paths
+    return resolve_paths(json.loads(bp.read_text(encoding="utf-8")), bp.parent)
+
+
 def cmd_state(a) -> int:
     prj = Project(a.project)
     bp = base_plan(prj, a.plan)
-    s = M.state(json.loads(bp.read_text(encoding="utf-8")))
+    s = M.state(read_plan(bp))
     if a.json:
         print(json.dumps({"plan": bp.name, **s}, ensure_ascii=False, indent=1))
         return 0
@@ -117,7 +123,7 @@ def _sound_again(prj: Project, P: dict, base: dict, v: int) -> str:
     """The clips' own sound cut to the new shots (draft_edit.py's own steps; a shot's speed stretches its part): the
     new "audio" path."""
     import draft_edit as DE
-    talk = (base.get("made_by") or {}).get("sound") == "talk"          # a talking video's voice is levelled again
+    talk = M._dict(base.get("made_by")).get("sound") == "talk"          # a talking video's voice is levelled again
     _, clips, _, _ = DE.footage(prj, int(P["width"]), int(P["height"]))
     d = prj.check(prj.build / "draft")
     segs = M.sound_segments(P)
@@ -128,14 +134,16 @@ def _sound_again(prj: Project, P: dict, base: dict, v: int) -> str:
 
 
 def _song_cut(prj: Project, s: dict, v: int, dur_s: float) -> str:
-    """The song from s["start_s"] for the video's length (+ 1 s), s["db"] louder / softer -> build\\song_from_editor_vN.m4a
-    (a "song" to the Editor next time: motionlab\\miniedit.sound_mode). The song itself is only read."""
+    """The song from s["start_s"] for the video's length (+ 1 s), s["db"] louder / softer, fading out over the video's
+    last 1.2 s (as a music draft's does) -> build\\song_from_editor_vN.m4a (a "song" to the Editor next time:
+    motionlab\\miniedit.sound_mode). The song itself is only read."""
     src = Path(s["from"])
     if not src.is_file():
         raise SystemExit(f"the song is not there any more: {src}")
     out = prj.check(prj.build / f"song_from_editor_v{v}.m4a")
     r = subprocess.run([tool("ffmpeg"), "-y", "-v", "error", "-nostdin", "-ss", f"{float(s['start_s']):.3f}", "-i",
-                        str(src), "-t", f"{dur_s + 1:.3f}", "-map", "0:a:0", "-af", f"volume={float(s['db']):g}dB",
+                        str(src), "-t", f"{dur_s + 1:.3f}", "-map", "0:a:0", "-af",
+                        f"volume={float(s['db']):g}dB,afade=t=out:st={max(0.0, dur_s - 1.2):.3f}:d=1.2",
                         "-c:a", "aac", "-b:a", "192k", str(out)], capture_output=True, text=True, encoding="utf-8",
                        errors="replace")
     if r.returncode or not out.exists():
@@ -147,7 +155,7 @@ def cmd_apply(a) -> int:
     t0 = time.time()
     prj = Project(a.project)
     bp = base_plan(prj, a.plan)
-    base = json.loads(bp.read_text(encoding="utf-8"))
+    base = read_plan(bp)
     ops = json.loads(Path(a.changes).read_text(encoding="utf-8"))
     if not isinstance(ops, list) or not ops:
         raise SystemExit("the changes file holds no changes (a JSON list)")
@@ -179,16 +187,16 @@ def cmd_apply(a) -> int:
             P["audio"] = {**P["audio"], "path": _song_cut(prj, s, v, int(P["frames"]) / fps)}
             done.append(f"sound: the song cut again -> song_from_editor_v{v}.m4a")
     mode = M.sound_mode(base)
-    base_audio = Path(str((base.get("audio") or {}).get("path") or ""))
+    base_audio = Path(str(M._audio(base).get("path") or ""))
     mixed = base_audio.parent.name == "sfx" and base_audio.stem.endswith(("_mix", "_sfx"))
     if (mixed or P.get("cues")) and not P.get("sfx"):
         P["sfx"] = True                                     # it has sound effects: build.py makes them (again)
     if mode == "follows" and any(o.get("op") in M.SHOT_OPS + M.FX_OPS for o in ops):
-        P["audio"] = {**(P.get("audio") or {}), "path": _sound_again(prj, P, base, v)}
+        P["audio"] = {**M._audio(P), "path": _sound_again(prj, P, base, v)}
         done.append("sound: the clips' own sound cut again to the shots")
     P["name"], P["output"] = f"{prj.name}_v{v}", f"{prj.name}_v{v}.mp4"
     P["made_by"] = {"tool": "miniedit.py", "list": f"edit_v{v}.list", "from": bp.name,
-                    "sound": (base.get("made_by") or {}).get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
+                    "sound": M._dict(base.get("made_by")).get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
     out = prj.check(prj.build / f"plan_v{v}.json")
     out.write_text(json.dumps(M.saved(P), indent=1, ensure_ascii=False), encoding="utf-8")
     prj.check(prj.build / f"edit_v{v}.list").write_text(M.record(bp.name, ops, done), encoding="utf-8")
@@ -271,7 +279,7 @@ def cmd_media(a) -> int:
     t0 = time.time()
     prj = Project(a.project)
     bp = base_plan(prj, a.plan)
-    P = json.loads(bp.read_text(encoding="utf-8"))
+    P = read_plan(bp)
     fps = float(P["fps"])
     d = prj.check(prj.build / "editor")
     d.mkdir(parents=True, exist_ok=True)

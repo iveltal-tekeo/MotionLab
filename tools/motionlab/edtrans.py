@@ -16,6 +16,8 @@ transition - it is made again from the two shots as they are. A pair of shots th
 push / whip / crossfade) keeps what it has.
 
     KINDS                       kind -> (label, seconds, needs the clips' spare frames)
+    OFFER                       the kinds the Editor offers (2026-10-27, the user: "few but higher quality ones");
+                                the others still build where a plan has them
     strip(P) / build(P)         in place
     transitions(P) -> [{shot, from, kind, label, f, len, cut, dir, frozen}]   (after build: where each one is)
     apply_op(P, o)              {"op": "trans", "shot": id, "kind": k | null, "len": n, "dir": d} | {"op": "transall",
@@ -36,6 +38,10 @@ KINDS = {
     "slide": ("Slide", 0.4, True), "whip": ("Whip", 0.3, True), "spin": ("Spin", 0.5, False),
     "glitch": ("Glitch", 0.3, False), "leak": ("Light leak", 0.6, True),
 }
+# 2026-10-27 the review against CapCut / Premiere / Resolve: a dip to white = a longer flash, the zoom out left most of
+# the frame black, the spin looked like a slide show, the glitch showed black / cyan strips, the light leak was a hard
+# orange box - no longer offered. A slide, a whip and a zoom move with motion blur (compose "mblur").
+OFFER = ("mix", "black", "flash", "slide", "whip", "zoom_in")
 DIRS = ("left", "right", "up", "down")
 DIRECTED = {"slide", "whip"}
 MIN_LEN = 2
@@ -122,8 +128,9 @@ def _bake(spec, named, default, a: int, b: int, fn) -> dict:
 
 
 def _copy(L: dict, a: int, b: int, hid: str, shot: str) -> dict:
-    c = {k: copy.deepcopy(v) for k, v in L.items() if k not in CLEAN}
-    c.update(id=hid, start=a, end=b, tr=shot)
+    """The shot over a..b, showing the source frames the shot itself shows there (its in-point and jumps from a)."""
+    c = EL._trim_front({k: copy.deepcopy(v) for k, v in L.items() if k not in CLEAN}, a)
+    c.update(id=hid, end=b, tr=shot)
     return c
 
 
@@ -157,6 +164,7 @@ def _helpers(P: dict, A: dict, B: dict, spec: dict) -> list[dict]:
                             "blend": "screen", "opacity": {"keys": [[a, 0, "smooth"], [c, 0.6, "smooth"], [b, 0]]}})
             return out
         d = spec.get("dir") if spec.get("dir") in DIRS else "left"
+        ca["mblur"] = cb["mblur"] = True
         ax, size = ("dx", W) if d in ("left", "right") else ("dy", H)
         sgn = -1 if d in ("left", "up") else 1              # where the outgoing picture goes
         ease = _whip if kind == "whip" else _EASE["smooth"]
@@ -172,6 +180,7 @@ def _helpers(P: dict, A: dict, B: dict, spec: dict) -> list[dict]:
     ia = lambda f: _p(f, a, c - 1)                          # noqa: E731
     ib = lambda f: _p(f, c, b)                              # noqa: E731
     if kind == "zoom_in":
+        pa["mblur"] = pb["mblur"] = True
         pa["zoom"] = _bake(A.get("zoom"), named, 1.0, a, c - 1, lambda f, v: v * (1 + 0.7 * _EASE["in"](ia(f))))
         pb["zoom"] = _bake(B.get("zoom"), named, 1.0, c, b, lambda f, v: v * (1.7 - 0.7 * _EASE["out"](ib(f))))
     elif kind == "zoom_out":
@@ -267,8 +276,10 @@ def _set(P: dict, B: dict, kind, o: dict) -> None:
     old = B.get("trans") or {}
     spec = {"kind": kind}
     n = o.get("len") if o.get("len") is not None else (old.get("len") if old.get("kind") == kind else None)
-    if n is not None:
-        spec["len"] = max(MIN_LEN, int(n))
+    if n is not None:                                       # (no longer than the shorter of its two shots: as drawn)
+        A = next((A for A, BB in _pairs(P) if BB is B), None)
+        top = min(int(A["end"]) - int(A["start"]) + 1, int(B["end"]) - int(B["start"]) + 1) if A else int(n)
+        spec["len"] = max(MIN_LEN, min(int(n), top))
     if kind in DIRECTED:
         spec["dir"] = o.get("dir") or old.get("dir") or "left"
     B["trans"] = spec
@@ -333,6 +344,22 @@ def selfcheck() -> dict:
         if not hs or any(int(L["end"]) < int(L["start"]) for L in hs):
             case(f"{k}: helpers", False)
     case("every kind builds on every cut", True)
+    off = []
+    for k in KINDS:                                 # a copy shows its shot's own source frames (not from its first)
+        S = plan()
+        S["layers"][0]["jumps"] = [[0, 100], [60, 40]]
+        apply_op(S, {"op": "transall", "kind": k})
+        build(S)
+        by = {L["id"]: L for L in S["layers"]}
+        for A, B in _pairs(S):
+            for L in S["layers"]:
+                sh = A if str(L["id"]).startswith(f"tr_{B['id']}_a") else B if str(L["id"]).startswith(f"tr_{B['id']}_b") else None
+                if sh is None or L.get("type") != "clip":
+                    continue
+                for f in (int(L["start"]), int(L["end"])):
+                    if EL._src_at(L, f) != EL._src_at(by[sh["id"]], f):
+                        off.append((k, L["id"], f))
+    case("the copies show their shots' own frames on their first and last frame (a jump in the shot kept)", not off)
     bad = []
     for o in ({"op": "trans", "shot": "s01_A", "kind": "mix"}, {"op": "trans", "shot": "s02_B", "kind": "nope"},
               {"op": "trans", "shot": "s02_B", "kind": "slide", "dir": "sideways"}):

@@ -7,6 +7,36 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## Unreleased
+
+- **El Editor, revisado frente a CapCut, Premiere, Resolve y OpenCut.**
+  - **Se abre donde no lo hacía**: un vídeo cuya carpeta tiene un #, un ! o un emoji en el nombre (salía en la lista
+    pero nunca se abría), un vídeo con versiones pero aún sin render (abre la más nueva), una versión escrita a mano;
+    una versión que no se puede abrir ahora dice por qué en vez de dejar la pestaña vacía. Los vídeos largos van
+    rápidos: una edición de 12 minutos se abre y aplica cada cambio en menos de un segundo (tardaba unos 8).
+  - **Un control de volumen** junto al botón de sonido: lo fuerte que oyes la vista previa; el vídeo no cambia.
+  - **Menos efectos, pero mejores**: Punch-in, Acercarse, Acercamiento lento (suave; el push-in ahora forma parte
+    de él), Sacudida (un golpe de cámara suave que se apaga, ya sin tembleque fotograma a fotograma), Destello (un
+    destello de exposición: lo claro se ilumina y lo oscuro sigue oscuro, sin gris lechoso; también los destellos del
+    borrador rápido), Fotograma negro, Tartamudeo y Separación RGB (el rojo y el azul se separan y vuelven a juntarse,
+    sin franja de color en el borde). **Transiciones**: Fundido, Fundido a negro, Destello, Deslizar, Látigo y Zoom
+    de acercamiento; las tres últimas con desenfoque de movimiento, como un movimiento de cámara de verdad. Las
+    ediciones que ya usan alguno de los demás lo conservan.
+  - **Las transiciones muestran los fotogramas correctos**: durante una transición los clips saltaban a su primer
+    fotograma.
+  - **Sonido**: un borrador rápido con música conserva su canción cuando cambias sus planos (se cambiaba por el
+    sonido de los clips) y una edición más larga suena con más canción en vez de acabar en silencio; una canción
+    mantiene su inicio cuando solo cambias su volumen; los efectos de sonido suenan a tiempo en la vista previa (los
+    inventados llegaban hasta 0,4 s tarde) y con su duración real; volver a activar el sonido mientras se reproduce
+    devuelve los efectos.
+  - **La vista previa se parece al render**: los zooms encuadran igual (una sacudida se sacude), Acercarse y el
+    Acercamiento lento siguen tu cara una vez renderizado el vídeo, y el destello se ve igual.
+  - **Arreglos pequeños**: ya no se pierde el texto que estás escribiendo si pulsas Guardar o Deshacer justo después;
+    elegir otra versión mientras se carga una; los valores de los fotogramas clave siguen al cabezal; un clic en un
+    tirador de la curva sin arrastrar no cambia nada; Espacio y las flechas funcionan después de usar un control
+    deslizante; una foto se puede alargar; el tartamudeo funciona en cualquier vídeo que no sea de alguien hablando;
+    un logo sobre todo el vídeo se queda sobre todo el vídeo tras un cambio de velocidad o un recorte.
+
 ## 0.6.0.5 - 2026-10-27 - Notas de vídeos y las mascotas del Analizador
 
 - **El Analizador: tres formas de aprender de un vídeo.** *Efectos y animaciones* (lo que hacía hasta ahora),

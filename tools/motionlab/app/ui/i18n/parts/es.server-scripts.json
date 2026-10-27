@@ -325,10 +325,8 @@
  "an ease from the list, or a curve with its two handles": "una curva de la lista, o una curva con sus dos tiradores",
  "no effect {effect}": "no hay efecto {effect}",
  "no such effect: {effect}": "no existe el efecto {effect}",
- "one of the two shots already has a zoom - change that one": "uno de los dos planos ya tiene un zoom: cambia ese",
  "this effect cannot be removed here": "este efecto no se puede quitar aquí",
  "this effect cannot move": "este efecto no se puede mover",
- "this effect goes on a cut - the video has no plain cut": "este efecto va en un corte: el vídeo no tiene ningún corte simple",
  "this effect has no ease to change": "este efecto no tiene suavizado que cambiar",
  "this effect has no strength to change": "este efecto no tiene intensidad que cambiar",
  "this effect's length stays": "la duración de este efecto no cambia",
@@ -388,6 +386,5 @@
  "the file is empty or bigger than 300 MB": "el archivo está vacío o pesa más de 300 MB",
  "{file}: no sound found in it": "{file}: no tiene sonido",
  "{file}: not an ambience bed of the music library": "{file}: no es un ambiente de la biblioteca de música",
- "only a graphic can go behind you or turn to glass": "solo un gráfico puede ir detrás de ti o volverse cristal",
- "this shot's room already changes - change that one": "la habitación de este plano ya cambia: cambia ese efecto"
+ "only a graphic can go behind you or turn to glass": "solo un gráfico puede ir detrás de ti o volverse cristal"
 }

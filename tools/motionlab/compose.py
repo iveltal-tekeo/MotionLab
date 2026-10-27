@@ -123,8 +123,9 @@ class Curve:
         if self.const is not None:
             return self.const
         if self.vals is not None:
-            i = int(round(f)) - self.f0
-            v = self.vals[min(max(i, 0), len(self.vals) - 1)]
+            x = min(max(float(f) - self.f0, 0.0), len(self.vals) - 1.0)
+            i = int(x)                                      # (between two frames - a motion blur's samples: in between)
+            v = self.vals[i] if x == i else self.vals[i] + (self.vals[i + 1] - self.vals[i]) * (x - i)
         else:
             kf, kv = self.kf, self.kv
             if f <= kf[0]:
@@ -302,6 +303,13 @@ class ClipLayer(Layer):
         an = spec.get("anchor", [0.5, 0.5])
         self.ax = Curve(an[0], R.curves, 0.5)
         self.ay = Curve(an[1], R.curves, 0.5)
+        # a zoom point given frame by frame (a shake, the Editor's RGB split): its swing round its last value also
+        # moves a face-tracked one (zoom_point) - (axis, first frame, frames, its resting value)
+        self._swing = [(k, int(a["start"]), len(a["values"]), float(a["values"][-1])) for k, a in enumerate(an[:2])
+                       if isinstance(a, dict) and a.get("values")]
+        # 2026-10-27 (the Editor's transitions): "mblur" = motion blur - the picture's moves sampled over half a frame
+        # (a 180 degree shutter) and averaged, as a camera blurs a slide, a whip or a zoom
+        self.mblur = bool(spec.get("mblur"))
         self.gain = Curve(spec.get("gain"), R.curves, 1.0)
         self.rot = Curve(spec.get("rotation"), R.curves, 0.0)      # degrees, clockwise, round the rect's centre
         g = {**R.grades.get(spec.get("grade", "default"), {}), **spec.get("grade_override", {})}
@@ -332,7 +340,11 @@ class ClipLayer(Layer):
             T = R.person(self.src)
             fc = T.face(self.src_index(f)) if T is not None else None
             if fc is not None:
-                return float(fc[0]), float(fc[1]) + 0.05       # (the face a little above the middle)
+                p = [float(fc[0]), float(fc[1]) + 0.05]         # (the face a little above the middle)
+                for k, s0, n, rest in self._swing:
+                    if s0 <= f < s0 + n:
+                        p[k] += (self.ax if k == 0 else self.ay)(f) - rest
+                return p[0], p[1]
         return self.ax(f), self.ay(f)
 
     def src_index(self, f: int) -> int:
@@ -342,10 +354,9 @@ class ClipLayer(Layer):
                 j = jj
         return j[1] if self.hold else j[1] + int(math.floor((f - j[0]) * self.speed + 1e-6))
 
-    def draw(self, canvas, f, R):
-        op = self.opacity(f)
-        if op <= 0.002:
-            return
+    def _geom(self, f: float, R: "Renderer"):
+        """(x, y, w, h, zoom, zoom point x, y, rotation, the rotation's centre x, y) at frame f (a fraction: a motion
+        blur's sample)."""
         x, y, w, h = self.rect
         x += self.dx(f)
         y += self.dy(f)
@@ -356,6 +367,45 @@ class ClipLayer(Layer):
             ax, ay = zax, zay                                   # zoom point (the Editor's preview does the same)
             x, y, w, h, z = x + ax * w * (1 - z), y + ay * h * (1 - z), w * z, h * z, 1.0
             cx0, cy0 = x + w / 2, y + h / 2
+        return x, y, w, h, z, zax, zay, rot, cx0, cy0
+
+    def _blurred(self, src: np.ndarray, f: int, R: "Renderer"):
+        """sample_patch's result averaged over the picture's moves from f - 1/4 to f + 1/4 (a 180 degree shutter) -
+        one sample when it barely moves, up to 16 (about one every 6 px of travel) - or None (nothing left to see)."""
+        a, b = self._geom(f - 0.25, R), self._geom(f + 0.25, R)
+        travel = max(abs(a[0] - b[0]), abs(a[1] - b[1]), abs(a[2] - b[2]), abs(a[3] - b[3]),
+                     abs(a[4] - b[4]) / max(1e-6, min(a[4], b[4])) * max(a[2], a[3]) / 2,
+                     abs(a[5] - b[5]) * a[2] * a[4], abs(a[6] - b[6]) * a[3] * a[4])
+        n = int(min(16, max(1, math.ceil(travel / 6))))
+        if n == 1:
+            g = self._geom(f, R)
+            return sample_patch(src, self.lut, *g[:7], R.W, R.H, self.mirror)
+        acc = cov = None
+        for j in range(n):
+            g = self._geom(f - 0.25 + 0.5 * (j + 0.5) / n, R)
+            res = sample_patch(src, self.lut, *g[:7], R.W, R.H, self.mirror)
+            if res is None:
+                continue
+            p, c, X0, Y0 = res
+            if acc is None:
+                acc = np.zeros((R.H, R.W) + p.shape[2:], np.float32)
+                cov = np.zeros((R.H, R.W), np.float32)
+            hh, ww = c.shape
+            acc[Y0:Y0 + hh, X0:X0 + ww] += p * (c[..., None] if p.ndim == 3 else c)
+            cov[Y0:Y0 + hh, X0:X0 + ww] += c
+        if acc is None:
+            return None
+        ys, xs = np.nonzero(cov)
+        Ya, Yb, Xa, Xb = int(ys.min()), int(ys.max()) + 1, int(xs.min()), int(xs.max()) + 1
+        c = cov[Ya:Yb, Xa:Xb]
+        p = acc[Ya:Yb, Xa:Xb] / np.maximum(c, 1e-6)[(...,) + ((None,) if acc.ndim == 3 else ())]
+        return p, c / n, Xa, Ya
+
+    def draw(self, canvas, f, R):
+        op = self.opacity(f)
+        if op <= 0.002:
+            return
+        x, y, w, h, z, zax, zay, rot, cx0, cy0 = self._geom(f, R)
         if f in self.black:
             out = sample_box(x, y, w, h, R.W, R.H)
             if out:
@@ -378,6 +428,8 @@ class ClipLayer(Layer):
             cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)   # anchor) works inside that box
             box = (x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z, zax, zay)
             parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
+        elif self.mblur and abs(rot) <= 1e-3:                   # (its box changes over the shutter: none for the room)
+            parts.append((self._blurred(src, f, R), 1.0, None))
         else:
             box = (x, y, w, h, z, zax, zay)
             parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
@@ -391,9 +443,11 @@ class ClipLayer(Layer):
             g = self.gain(f)
             if g != 1.0:
                 patch = patch * g
-            if f in self.flash_over:                            # over-exposed flash frame (image still visible)
-                k = self.flash_over[f]
-                patch = patch + k * (1.0 - np.clip(patch, 0, 1))
+            if f in self.flash_over:                            # over-exposed flash frame (image still visible):
+                k = self.flash_over[f]                          # 2026-10-27 an exposure flash - brighter in linear
+                lin = np.clip(patch, 0, 1) ** 2.2 * (1 + 4 * k)     # light, clipped, a little white over it (the old
+                patch = np.minimum(lin, 1.0) ** (1 / 2.2)       # white mix made the blacks a milky grey)
+                patch = patch + 0.25 * k * (1.0 - patch)
             if f in self.flash_white:                           # flat white frame (a trace of the image left)
                 patch = 0.86 + 0.06 * patch
             if self.room and box is not None and abs(rot) <= 1e-3:    # the room around the person only

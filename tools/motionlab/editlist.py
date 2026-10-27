@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import re
 
 TIGHT, WIDE = 1.15, 1.0
@@ -108,7 +109,7 @@ def _src_at(L: dict, f: int) -> int:
     for jj in jumps:
         if jj[0] <= f:
             j = jj
-    return j[1] if L.get("hold") else j[1] + int((f - j[0]) * float(L.get("speed", 1.0)) + 1e-6)
+    return j[1] if L.get("hold") else j[1] + math.floor((f - j[0]) * float(L.get("speed", 1.0)) + 1e-6)   # as compose
 
 
 def cut(plan: dict, a: int, b: int) -> None:

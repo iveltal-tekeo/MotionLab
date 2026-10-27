@@ -634,7 +634,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/brand/sound_logo":                             # My Brand's sound logo, to hear
             return self._file(data.brand_sound_logo_file())
         if path == "/api/editor/sound":                                 # the Editor: a made-up sound effect to hear
-            return self._file(data.editor_sound(arg("kind", ""), arg("file", "")))
+            return self._file(data.editor_sound(arg("kind", ""), arg("file", ""), arg("dur", "")))
         m = re.fullmatch(r"/api/project/([^/]+)/publish", path)        # Edit > a video > Publish (0.4.3)
         if m:
             return self._json(data.publish_info(urllib.parse.unquote(m[1])))

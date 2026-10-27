@@ -171,13 +171,15 @@ def sound_mode(plan: dict) -> str:
     """"follows" (the clips' own sound: cut again when the shots change), "song" (a song under the video: it stays),
     "none" (no sound) or "fixed" (made some other way: the shots' timing cannot change without it going out of
     sync)."""
-    made = plan.get("made_by") or {}
+    made = _dict(plan.get("made_by"))                       # (a hand-written plan may name its tool as one string)
     if made.get("sound") in ("talk", "clips"):
         return "follows"
     src = song_of(plan)
     if src is None:                                         # (the effects alone are made again on every build)
-        a = str((plan.get("audio") or {}).get("path") or "")
+        a = str(_audio(plan).get("path") or "")
         return "fixed" if a and not _effects_made(Path(a)) else "none"
+    if made.get("sound") == "music":                        # a music draft: its song excerpt (draft\vN_sound) stays
+        return "song"
     if src.parent.name == "draft" and re.fullmatch(r"v\d+_sound", src.stem):
         return "follows"                                    # the draft's clip sound, cut to the shots
     parts = [x.lower() for x in src.parts]
@@ -188,6 +190,74 @@ def sound_mode(plan: dict) -> str:
     return "fixed"                                          # made in build\ some other way: it cannot follow
 
 
+def _fit_layers(P: dict, whole: dict, touched: set) -> None:
+    """After the changes: a graphic / colour layer that covered the whole video still does (unless the user moved or
+    trimmed it: `touched`), from its own first frame; any other one stays inside the video (a speed change or a trim
+    left a logo at f-56, or ending before the video did) - cut at the ends as the render would show it. In place."""
+    N = int(P["frames"])
+    sh = {id(x) for x in shots(P)}
+    keep = []
+    for L in P["layers"]:
+        if id(L) in sh or L.get("type") not in ("overlay", "solid"):
+            keep.append(L)
+            continue
+        lid = str(L.get("id"))
+        if lid in whole and lid not in touched:
+            L["start"], L["end"] = 0, N - 1
+            if whole[lid] is not None:
+                L["in"] = whole[lid]
+            keep.append(L)
+            continue
+        if int(L["end"]) < 0 or int(L["start"]) > N - 1:
+            continue
+        if int(L["start"]) < 0:
+            EL._trim_front(L, 0)
+        L["end"] = min(int(L["end"]), N - 1)
+        keep.append(L)
+    P["layers"] = keep
+
+
+def _face_line(P: dict, L: dict, people: dict) -> dict | None:
+    """A face-tracked clip's zoom point per frame (compose zoom_point: the face a little above its middle) for the
+    preview - {"start", "values": [[x, y] | None]} - or None (not tracked, or no person track made yet: a render makes
+    it)."""
+    if L.get("track") != "face":
+        return None
+    sid = L.get("src")
+    if sid not in people:
+        from . import person as PS
+        try:
+            where = PS.source_of((P.get("sources") or {}).get(sid) or {})
+            people[sid] = PS.load(*where) if where else None
+        except (OSError, ValueError, KeyError):
+            people[sid] = None
+    T = people[sid]
+    if T is None or T.faces is None:
+        return None
+    vals = []
+    for f in range(int(L["start"]), int(L["end"]) + 1):
+        fc = T.face(EL._src_at(L, f))
+        vals.append([round(float(fc[0]), 4), round(float(fc[1]) + 0.05, 4)] if fc is not None and math.isfinite(float(fc[0]))
+                    else None)
+    return {"start": int(L["start"]), "values": vals}
+
+
+def _talking(plan: dict) -> bool:
+    """A talking video (the quick draft's "talk" sound): a stutter would pull the picture away from the voice. (A
+    video with its clips' own sound otherwise - music, ambience, no words - takes one.)"""
+    return _dict(plan.get("made_by")).get("sound") == "talk"
+
+
+def _dict(x) -> dict:
+    return x if isinstance(x, dict) else {}
+
+
+def _audio(plan: dict) -> dict:
+    """The plan's "audio" as a dict (a hand-written plan may give the path alone)."""
+    a = plan.get("audio")
+    return {"path": a} if isinstance(a, str) else _dict(a)
+
+
 def _effects_made(p: Path) -> bool:
     """The plan's sound is sfx.py's (build\\sfx\\<name>_mix.wav = a song + the effects, <name>_sfx.wav = the effects
     alone - a video with no song): build.py makes it again from the plan."""
@@ -196,27 +266,67 @@ def _effects_made(p: Path) -> bool:
 
 def song_of(plan: dict) -> Path | None:
     """The sound under the video before its sound effects (a mix's own song), or None (no sound / unreadable)."""
-    p = str((plan.get("audio") or {}).get("path") or "")
+    p = str(_audio(plan).get("path") or "")
     if not p:
         return None
     src = Path(p)
     if _effects_made(src):                                  # a mix (or the effects alone): the sound it was made from
-        import json
-        j = src.with_name(src.stem[:-4] + "_sfx.json")
-        try:
-            src = Path(str((json.loads(j.read_text(encoding="utf-8")).get("song") or {}).get("path") or ""))
-        except (OSError, ValueError):
+        song = _mix_song(src)
+        if song is None:
             return None
+        src = Path(str(song.get("path") or ""))
         if not str(src) or str(src) == ".":
             return None
     return src
 
 
+def _mix_song(mix: Path) -> dict | None:
+    """sfx.py's record of a mix's song ({path, start_s, db}), {} for the effects alone, None when unreadable."""
+    import json
+    try:
+        return _dict(_dict(json.loads(mix.with_name(mix.stem[:-4] + "_sfx.json").read_text(encoding="utf-8"))).get("song"))
+    except (OSError, ValueError):
+        return None
+
+
+def _draft_song(plan: dict) -> tuple[Path, float] | None:
+    """A music quick draft's song itself and where the draft starts in it (its sound is an excerpt exactly the
+    draft's length: a longer edit would end in silence)."""
+    made = _dict(plan.get("made_by"))
+    if made.get("sound") != "music" or not made.get("music") or not Path(str(made["music"])).is_file():
+        return None
+    try:
+        return Path(str(made["music"])), max(0.0, float(made.get("music_start_s") or 0))
+    except (TypeError, ValueError):
+        return None
+
+
+def song_start(plan: dict) -> float:
+    """Seconds into song_source(plan) that frame 0 hears: the Editor's own cut's start, else a music draft's, else the
+    mix's (sfx.py --song-start), else 0."""
+    au = _audio(plan)
+    cut = _dict(au.get("cut"))
+    if cut.get("from"):
+        return float(cut.get("start_s") or 0)
+    ds = _draft_song(plan)
+    if ds:
+        return ds[1]
+    src = Path(str(au.get("path") or ""))
+    song = _mix_song(src) if _effects_made(src) else None
+    try:
+        return max(0.0, float((song or {}).get("start_s") or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def song_source(plan: dict) -> Path | None:
     """The song the Editor shows and plays: the song itself when the Editor cut it (the plan's audio "cut" - played
-    from its start_s), else song_of."""
-    cut = (plan.get("audio") or {}).get("cut") or {}
-    return Path(cut["from"]) if cut.get("from") else song_of(plan)
+    from its start_s), a music draft's song, else song_of."""
+    cut = _dict(_audio(plan).get("cut"))
+    if cut.get("from"):
+        return Path(cut["from"])
+    ds = _draft_song(plan)
+    return ds[0] if ds else song_of(plan)
 
 
 def _speed(L: dict) -> float:
@@ -251,9 +361,12 @@ def _frames_of(plan: dict, src: str) -> int:
 
 def room(plan: dict, S: dict) -> tuple[int, int]:
     """The timeline frames a shot could grow by before its first one and after its last one, at its speed (0 when it
-    cannot grow: a still, a held frame, a stutter)."""
-    if S.get("hold") or S.get("jumps"):
+    cannot grow: a stutter; a photo / held frame grows as long as wanted - up to 10 minutes)."""
+    if S.get("jumps"):
         return 0, 0
+    if S.get("hold"):
+        n = int(600 * float(plan.get("fps") or 25))
+        return n, n
     if S.get("type") == "overlay":                          # a scene: the frames cut off its start come back; past
         sp = _speed(S)                                      # its end it holds its last frame (up to SCENE_HOLD_S)
         return max(0, int(int(S.get("in", 0)) / sp + 1e-9)), int(SCENE_HOLD_S * float(plan.get("fps") or 25))
@@ -491,8 +604,11 @@ def state(plan: dict) -> dict:
             if e is not None:
                 last[q["kind"]] = e
             rec = e is not None and not e.get("synth")
-            off = SFX.key_moment(q["kind"], q.get("params")) - (float(e.get("anchor_s") or 0) if rec else 0.0)
+            # a recorded sound's anchor lands on the cue's key moment; a made-up one starts on the frame (sfx.py mix)
+            off = SFX.key_moment(q["kind"], q.get("params")) - float(e.get("anchor_s") or 0) if rec else 0.0
+            dur = (q.get("params") or {}).get("dur")
             cues.append({"f": int(q["f"]), "kind": q["kind"], "what": str(q.get("what", ""))[:80],
+                         "dur": float(dur) if dur and not rec and "dur" in SFX.KINDS[q["kind"]][1] else None,
                          "db": float(q.get("db") or 0), "sound": e["file"] if rec else None,
                          "pinned": bool(q.get("sound")), "own": q.get("source") == "plan cues",
                          "offset_s": round(off, 3), "len_s": round(float(e.get("len_s") or 0) if rec else
@@ -500,10 +616,12 @@ def state(plan: dict) -> dict:
     except (OSError, ValueError, KeyError):
         cues = []
     draw = []                                                # the live preview's layers, in the plan's order
+    people: dict = {}
     for L in P["layers"]:
         t = L.get("type")
         if t == "clip":
             draw.append({"t": "clip", "id": L["id"], "src": L.get("src"), "start": int(L["start"]), "end": int(L["end"]),
+                         "face": _face_line(P, L, people),
                          "in": int(L.get("in", 0)), "speed": _speed(L), "hold": bool(L.get("hold")),
                          "jumps": L.get("jumps"), "rect": L.get("rect"), "zoom": _curve_keys(L.get("zoom")),
                          "anchor": L.get("anchor"), "dx": _curve_keys(L.get("dx")), "dy": _curve_keys(L.get("dy")),
@@ -518,20 +636,21 @@ def state(plan: dict) -> dict:
             draw.append({"t": "solid", "id": L["id"], "start": int(L["start"]), "end": int(L["end"]),
                          "color": L.get("color"), "rect": L.get("rect"), "opacity": _curve_keys(L.get("opacity")),
                          "blend": L.get("blend", "normal"), "tr": L.get("tr"), "cover": bool(L.get("cover"))})
-    cut, song = (P.get("audio") or {}).get("cut") or {}, song_source(P)
+    cut, song = _dict(_audio(P).get("cut")), song_source(P)
     return {"fps": fps, "frames": N, "width": int(P.get("width", 1920)), "height": int(P.get("height", 1080)),
             "sound": mode, "timing_locked": mode == "fixed", "shots": out_shots, "graphics": graphics,
             "folders": folders, "captions": sorted(captions, key=lambda c: (bool(c.get("tail")), c["f"])), "capedits": capedits,
             "effects": FX.effects(P), "fx_kinds": list(FX.ADD), "transitions": TR.transitions(P),
-            "fx_can": FX.availability(P, talk=mode == "follows"),     # (why a kind cannot go where the playhead is)
-            "trans_kinds": [[k, v[0], round(v[1] * fps)] for k, v in TR.KINDS.items()],
+            "fx_can": FX.availability(P, talk=_talking(P)),          # (why a kind cannot go where the playhead is)
+            "trans_kinds": [[k, v[0], round(v[1] * fps)] for k, v in TR.KINDS.items()       # (one no longer offered:
+                            if k in TR.OFFER or any(t["kind"] == k for t in TR.transitions(P))],   # where it is)
             "sfx": cues, "draw": draw,
             "curves": P.get("curves") or {}, "song": str(song) if song and mode == "song" else None,
-            "song_cut": {"start_s": float(cut.get("start_s") or 0), "db": float(cut.get("db") or 0)},
+            "song_cut": {"start_s": song_start(P), "db": float(cut.get("db") or 0)},
             "vol": [VOL_MIN, VOL_MAX], "song_db": list(SONG_DB),
             "clips": [{"id": k, "name": Path(str(s.get("source") or k)).name, "frames": int(s.get("frames") or 0),
                        "photo": _is_photo(s)} for k, s in (P.get("sources") or {}).items()],
-            "audio_file": str((P.get("audio") or {}).get("path")) if mode == "fixed" else None,
+            "audio_file": str(_audio(P).get("path")) if mode == "fixed" else None,
             "name": P.get("name", ""), "speeds": [SPEED_MIN, SPEED_MAX]}
 
 
@@ -1123,6 +1242,11 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
     graphic goes on save). EditError names the operation it cannot do."""
     from . import overlay_settings as OS
     P = TR.strip(unique_ids(copy.deepcopy(plan)))          # (a transition's copies: made again after the changes)
+    frames0 = int(P.get("frames") or 0)
+    sh0 = {id(x) for x in shots(P)}                         # a logo, a progress bar over the whole video: it stays so
+    whole = {str(L["id"]): L.get("in") for L in P["layers"] if id(L) not in sh0 and L.get("id")
+             and L.get("type") in ("overlay", "solid") and not _is_captions(L)
+             and int(L.get("start", 0)) <= 0 and int(L.get("end", -1)) >= frames0 - 1}
     P.setdefault("cues", [])
     fps = float(P["fps"])
     done: list[str] = []
@@ -1206,10 +1330,10 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
             elif op == "song":
                 if sound_mode(P) != "song":
                     raise EditError(I18N.t("this video has no song to change"))
-                au = P.setdefault("audio", {})
-                cut = dict(au.get("cut") or {})
-                orig = cut.get("from") or str(song_of(P))
-                start = max(0.0, min(3600.0, float(o.get("start", cut.get("start_s", 0)))))
+                au = P["audio"] = _audio(P)
+                cut = dict(_dict(au.get("cut")))
+                orig = cut.get("from") or str(song_source(P))
+                start = max(0.0, min(3600.0, float(o.get("start", song_start(P)))))   # (a volume alone: where it was)
                 db = max(SONG_DB[0], min(SONG_DB[1], float(o.get("db", cut.get("db", 0)))))
                 au["cut"] = {"from": orig, "start_s": round(start, 3), "db": round(db, 1)}
                 done.append(f"the song: from {int(start // 60)}:{start % 60:05.2f} of it, {db:+g} dB")
@@ -1260,7 +1384,7 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 done.append(f"{lid}: the template {tid} added at {_span(L, fps)}")
             elif op in FX_OPS:
                 try:
-                    line = FX.apply_op(P, o, talk=sound_mode(P) == "follows")
+                    line = FX.apply_op(P, o, talk=_talking(P))
                 except FX.FxError as e:
                     raise EditError(str(e)) from None
                 done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
@@ -1370,8 +1494,13 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
             raise EditError(I18N.t("change {k}: {why}", k=k, why=str(e))) from None
         except (KeyError, TypeError, ValueError) as e:
             raise EditError(I18N.t("change {k}: {why}", k=k, why=str(e))) from None
+    _fit_layers(P, whole, {str(o.get("layer")) for o in ops if o.get("layer")})
     if any(o.get("op") == "song" for o in ops):              # the song cut again from the song itself
         steps.append({"op": "songcut", **P["audio"]["cut"]})
+    elif int(P["frames"]) != frames0 and _draft_song(P) and sound_mode(P) == "song" \
+            and not _dict(_audio(P).get("cut")).get("from"):   # a music draft longer / shorter: its excerpt no
+        P["audio"] = {**_audio(P), "cut": {"from": str(song_source(P)), "start_s": song_start(P), "db": 0.0}}
+        steps.append({"op": "songcut", **P["audio"]["cut"]})   # longer fits - cut again from the song itself
     for folder, ch in (P.get(CAPTIONS_KEY) or {}).items():  # a captions graphic's captions, written whole
         steps.append({"op": "capfile", "folder": folder,
                       "cues": [{k: v for k, v in c.items() if k != "_e"} for c in ch["cues"]]})
@@ -1550,6 +1679,59 @@ def selfcheck() -> dict:
         locked = True
     case("a sound made some other way locks the shots' timing", locked and sound_mode(fx) == "fixed"
          and sound_mode({**fx, "audio": {"path": "C:/x/song.mp3"}}) == "song")
+    draft = str(Path("C:/x/build/draft/v1_sound.m4a"))
+    case("the sound of a quick draft: the clips' own (cut again) or a music draft's song (it stays); a hand-written "
+         "plan's made_by / audio as one string",
+         sound_mode({"made_by": {"sound": "clips"}, "audio": {"path": draft}}) == "follows"
+         and sound_mode({"made_by": {"sound": "music"}, "audio": {"path": draft}}) == "song"
+         and sound_mode({"made_by": "by hand", "audio": "C:/x/song.mp3"}) == "song"
+         and song_source({"made_by": "by hand", "audio": "C:/x/song.mp3"}) == Path("C:/x/song.mp3"))
+    W2 = plan()
+    W2["layers"].append({"type": "overlay", "id": "logo", "file": "x/logo/logo.mov", "start": 0, "end": 299, "in": 7})
+    P, _, _ = apply(W2, [{"op": "speed", "shot": "s03_A", "speed": 4}])
+    P2, _, _ = apply(W2, [{"op": "trim", "shot": "s01_A", "side": "start", "by": -20}])
+    P3, _, _ = apply(W2, [{"op": "gtrim", "layer": "logo", "side": "end", "by": -50}])
+    case("a logo over the whole video stays over it after a speed change or a trim (from its own first frame), unless "
+         "it was trimmed itself", (lay(P, "logo")["start"], lay(P, "logo")["end"], lay(P, "logo")["in"]) == (0, P["frames"] - 1, 7)
+         and (lay(P2, "logo")["start"], lay(P2, "logo")["end"], lay(P2, "logo")["in"]) == (0, P2["frames"] - 1, 7)
+         and lay(P3, "logo")["end"] == 249 and all(int(L["start"]) >= 0 and int(L["end"]) <= P["frames"] - 1
+                                                   for L in P["layers"] if L.get("type") == "overlay"))
+    ph = plan()
+    ph["sources"]["F"] = {"frames": 1, "photo": True}
+    ph["layers"][2] = {"type": "clip", "id": "s03_F", "src": "F", "start": 200, "end": 299, "in": 0, "hold": True}
+    P, _, _ = apply(ph, [{"op": "trim", "shot": "s03_F", "side": "end", "by": 50}])
+    case("a photo is made longer", lay(P, "s03_F")["end"] == 349 and P["frames"] == 350)
+    import json
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:            # a music draft: its song itself, from where the draft started
+        song = Path(td) / "song.mp3"
+        song.write_bytes(b"x")
+        md = plan()
+        md["made_by"] = {"sound": "music", "music": str(song), "music_start_s": 31.5}
+        md["audio"] = {"path": str(Path(td) / "build" / "draft" / "v1_sound.m4a")}
+        P, _, st = apply(md, [{"op": "speed", "shot": "s03_A", "speed": 0.5}])
+        P4, _, st4 = apply(md, [{"op": "move", "shot": "s03_A", "to": 0}])
+        case("a music draft made longer: its song cut again from the song itself where the draft started it (its "
+             "excerpt would end in silence); a change that keeps the length keeps the excerpt",
+             sound_mode(md) == "song" and song_source(md) == song and song_start(md) == 31.5
+             and {"op": "songcut", "from": str(song), "start_s": 31.5, "db": 0.0} in st
+             and not any(x.get("op") == "songcut" for x in st4))
+    with tempfile.TemporaryDirectory() as td:            # a song mixed with its effects from 12.5 s (sfx.py --song-start)
+        mix = Path(td) / "sfx" / "x_v2_mix.wav"
+        mix.parent.mkdir()
+        mix.with_name("x_v2_sfx.json").write_text(json.dumps({"song": {"path": "C:/x/song.mp3", "start_s": 12.5}}),
+                                                  encoding="utf-8")
+        sp = {"audio": {"path": str(mix)}}
+        S2 = copy.deepcopy(sp)
+        S2["layers"], S2["frames"], S2["fps"] = [], 100, 25.0
+        ok_cut = False
+        try:
+            S3, _, _ = apply(S2, [{"op": "song", "db": -3}])
+            ok_cut = S3["audio"]["cut"]["start_s"] == 12.5
+        except EditError:
+            pass
+        case("a mix's song plays from where the mix starts it, and a volume change alone keeps that start",
+             song_of(sp) == Path("C:/x/song.mp3") and song_start(sp) == 12.5 and ok_cut)
     P, _, _ = apply(plan(), [{"op": "move", "shot": "s03_A", "to": 0}])
     case("move the last shot first: it takes its caption piece and the cue on it, the title and the pill go with the "
          "shots they start on, the length stays", P["frames"] == 300 and lay(P, "s03_A")["start"] == 0

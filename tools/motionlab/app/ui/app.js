@@ -4393,19 +4393,17 @@ const ED_FIT = () => [['behind', t('Behind me'), t('Hidden where you are - it si
   ['glass', t('Frosted glass'), t('The room behind it frosted, with a soft shadow - for cards and pills')],
   ['guard', t('Keep off my face'), t('Never over your face')],
   ['pin', t('Pin to my face'), t('Moves with your face - for labels, arrows, brackets')]];
-const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer from here')], ['push_in', t('Push-in'), t('a slow zoom in')],
-  ['pull_out', t('Pull-out'), t('a slow zoom out')], ['zoom_through', t('Zoom-through'), t('punch in to the nearest cut and out of it')],
-  ['shake', t('Shake'), t('a short camera shake')], ['flash', t('Flash'), t('a bright flash')], ['white_flash', t('White flash'), t('an over-exposed flash into the next shot')],
-  ['black_frame', t('Black frame'), t('one black frame')], ['colour_flash', t('Colour flash'), t('a colour flash')], ['light_leak', t('Light leak'), t('a warm light leak')],
-  ['rgb_split', t('RGB split'), t('the red channel splits off for a few frames')], ['dip_black', t('Dip to black'), t('a dip through black at the nearest cut')],
-  ['dip_white', t('Dip to white'), t('a dip through white at the nearest cut')], ['stutter', t('Stutter'), t('a few frames repeat')],
+// the effects the Editor offers (motionlab\edfx ADD; 2026-10-27, the user: "few but higher quality ones" - an older
+// edit's other effects keep their chips)
+const ED_FX_ADD = () => [['punch_in', t('Punch-in'), t('the shot jumps closer from here')],
   ['lean_in', t('Lean in'), t('a small, quick punch-in on your face for one word')],
-  ['slow_push', t('Slow push'), t('a slow push in on your face, the room melts out of focus')],
-  ['spotlight', t('Spotlight'), t('the room goes dark, you stay lit')]];
+  ['slow_push', t('Slow push'), t('a slow, smooth push in - on your face when there is one')],
+  ['shake', t('Shake'), t('a short camera shake')], ['flash', t('Flash'), t('a bright flash')],
+  ['black_frame', t('Black frame'), t('one black frame')], ['stutter', t('Stutter'), t('a few frames repeat')],
+  ['rgb_split', t('RGB split'), t('the colours split apart for a few frames')]];
 // what needs a clip's picture (motionlab\edfx CLIP_ONLY): greyed out on a video made of graphics, the stutter on a
 // talking video (the picture would leave the voice) - the reason on hover, never an error after the click
-const ED_FX_CLIP = new Set(['punch_in', 'push_in', 'pull_out', 'zoom_through', 'shake', 'rgb_split', 'stutter', 'lean_in', 'slow_push', 'spotlight']);
-const ED_FX_CUT = new Set(['zoom_through', 'white_flash', 'dip_black', 'dip_white']);      // (on the cut nearest the playhead)
+const ED_FX_CLIP = new Set(['punch_in', 'lean_in', 'slow_push', 'shake', 'rgb_split', 'stutter']);
 const edCap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const ED_FX_RANGE = {zoom: [1.01, 2, 0.01, '×'], punch: [1.01, 2, 0.01, '×'], framing: [1.01, 1.6, 0.01, '×'], shake: [0.004, 0.08, 0.002, ''],
   flash: [0.05, 1, 0.05, ''], room: [0.05, 0.95, 0.05, '']};
@@ -4588,20 +4586,35 @@ class EdPreview {
     st.left = `${x}px`; st.top = `${y}px`; st.width = `${w}px`; st.height = `${h}px`; st.zIndex = z;
     st.opacity = clamp(edCurve(d.opacity, C, 1)(f), 0, 1);
     const zm = edCurve(d.zoom, C, 1)(f), an = d.anchor || [0.5, 0.5];
-    const ax = edCurve(an[0], C, 0.5)(f), ay = edCurve(an[1], C, 0.5)(f), dx = edCurve(d.dx, C, 0)(f) * s, dy = edCurve(d.dy, C, 0)(f) * s;
-    const rot = edCurve(d.rotation, C, 0)(f);
+    let ax = edCurve(an[0], C, 0.5)(f), ay = edCurve(an[1], C, 0.5)(f);
+    const dx = edCurve(d.dx, C, 0)(f) * s, dy = edCurve(d.dy, C, 0)(f) * s, rot = edCurve(d.rotation, C, 0)(f);
+    const fc = d.face && d.face.values[clamp(f - d.face.start, 0, d.face.values.length - 1)];
+    if (fc) {                     // compose zoom_point: on the face, a shake's swing (round its resting value) added
+      const sw = (a, v) => (a && Array.isArray(a.values) && a.values.length && f >= a.start && f < a.start + a.values.length ? v - a.values[a.values.length - 1] : 0);
+      ax = fc[0] + sw(an[0], ax); ay = fc[1] + sw(an[1], ay);
+    }
     e.v.style.objectFit = d.fit === 'contain' ? 'contain' : 'cover';
-    e.v.style.transformOrigin = `${ax * 100}% ${ay * 100}%`;
-    // (compose: x / y move the clip's box, a rotation turns the box round its centre; the picture scales inside it round
-    // the zoom point - under 1 it is smaller than its box)
+    // (compose: x / y move the clip's box, a rotation turns the box round its centre; zoomed in, the zoom point is the
+    // crop's centre - kept inside the picture - so the picture moves as well as scales; under 1 the box shrinks round it)
     st.transform = dx || dy || rot ? `translate(${dx}px, ${dy}px)${rot ? ` rotate(${rot}deg)` : ''}` : '';
-    e.v.style.transform = `scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
+    if (zm >= 1) {
+      const vw = e.v.videoWidth || e.v.naturalWidth || w, vh = e.v.videoHeight || e.v.naturalHeight || h;
+      const k = d.fit === 'contain' ? Math.min(w / vw, h / vh) : Math.max(w / vw, h / vh), pw = vw * k, ph = vh * k;
+      const ux = d.fit === 'contain' ? 1 : w / pw, uy = d.fit === 'contain' ? 1 : h / ph;
+      const cx = clamp(ax, ux / (2 * zm), 1 - ux / (2 * zm)), cy = clamp(ay, uy / (2 * zm), 1 - uy / (2 * zm));
+      e.v.style.transformOrigin = '50% 50%';
+      e.v.style.transform = `translate(${(d.mirror ? -1 : 1) * (0.5 - cx) * pw * zm}px, ${(0.5 - cy) * ph * zm}px) scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
+    } else {
+      e.v.style.transformOrigin = `${ax * 100}% ${ay * 100}%`;
+      e.v.style.transform = `scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
+    }
     st.mixBlendMode = d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : '';
-    e.v.style.filter = d.tint ? `url(#${this.tintFilter(d.tint)})` : '';
-    let fl = 0, flc = '#fff';                                // a flash (over-exposed), a white or a black frame
+    let fl = 0, flc = '#fff', ex = 0;                        // a flash (over-exposed), a white or a black frame
     if ((d.black || []).includes(f)) { fl = 1; flc = '#000'; }
     else if ((d.flash_white || []).includes(f)) fl = 0.9;
-    else if (d.flash_over && d.flash_over[String(f)] != null) fl = +d.flash_over[String(f)];
+    else if (d.flash_over && d.flash_over[String(f)] != null) { ex = +d.flash_over[String(f)]; fl = 0.25 * ex; }
+    // (compose's exposure flash: x (1 + 4k) in linear light = about that to the power 1 / 2.2 here, a little white over)
+    e.v.style.filter = [d.tint ? `url(#${this.tintFilter(d.tint)})` : '', ex ? `brightness(${Math.pow(1 + 4 * ex, 1 / 2.2).toFixed(3)})` : ''].filter(Boolean).join(' ');
     if (fl && !e.fl) { e.fl = document.createElement('i'); e.fl.className = 'edfl'; e.wrap.appendChild(e.fl); }
     if (e.fl) { e.fl.style.background = flc; e.fl.style.opacity = fl; }
   }
@@ -4718,7 +4731,7 @@ class EdPreview {
     F.fr.srcdoc = doc;
   }
   // sound effects: each one's sound (the recorded file the build will use, else the made-up one), on the timeline
-  sfxUrl(q) { return q.sound ? edSoundUrl(q.sound) : `/api/editor/sound?kind=${encodeURIComponent(q.kind)}`; }
+  sfxUrl(q) { return q.sound ? edSoundUrl(q.sound) : `/api/editor/sound?kind=${encodeURIComponent(q.kind)}${q.dur ? `&dur=${q.dur}` : ''}`; }
   ac() { if (!this.actx) this.actx = new (window.AudioContext || window.webkitAudioContext)(); return this.actx; }
   // (destroy() closes it; nothing makes a new one after that)
   out() {                                                      // every sound effect goes through the master level
@@ -5786,10 +5799,9 @@ function projEditor(el, P) {
     }
     if (addTab === 'fx') {
       const A = ED_FX_ADD().filter(([k, l, how]) => !q || `${l} ${how} ${k}`.toLowerCase().includes(q));
-      const S0 = cur || base, noClip = !S0.shots.some(s => !s.scene), can = S0.fx_can || {}, sh = ctxShot(), ct = ctxCut();
+      const S0 = cur || base, noClip = !S0.shots.some(s => !s.scene), can = S0.fx_can || {}, sh = ctxShot();
       const why = k => edCap(noClip && ED_FX_CLIP.has(k) ? t('Works on a clip - this video is made of graphics')
-        : ED_FX_CUT.has(k) ? (ct ? ((can.cuts || {})[ct.id] || {})[k] || '' : t('The video has no plain cut for this effect'))
-        : k === 'colour_flash' || k === 'light_leak' ? '' : sh ? ((can.shots || {})[sh.id] || {})[k] || '' : (can.none || {})[k] || '');
+        : sh ? ((can.shots || {})[sh.id] || {})[k] || '' : (can.none || {})[k] || '');
       list = `<div class="edat small">${esc(sh ? t('At the playhead: shot {n}', {n: sh.n}) : t('At the playhead: no clip'))} · <span class="mono">${esc(tcf(prevF))}</span></div>
         <div class="edlist">${A.map(([k, l, how]) => { const no = why(k);
           return `<div class="edrow${no ? ' off' : ''}" draggable="${no ? 'false' : 'true'}" data-fxk="${k}"${no ? ' data-off="1"' : ''} title="${no ? esc(no) : ta('Drag it onto the timeline, or + = at the playhead')}">
