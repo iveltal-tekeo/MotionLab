@@ -7,6 +7,9 @@ part and pressed *Send it to Claude*.
   captions, graphics, effects, pacing, overall) and `made_from.json`; keep what was rated good, change what was rated
   OK / bad as the notes say (a new edit version, never overwrite the last one); when the video came from a prompt,
   add what worked / failed to that prompt's result note (`prompts.py rate <id> ... --note`).
+- The clips: `build\clips.json` when there is one (0.6.1, `tools\catalogue.py show <project>`) - every moment with
+  its line, usable part and look-alikes, written once; a shot to swap = another moment from it, never a new look at
+  every clip. A clip added since: `catalogue.py make` again (the lines stay), then `sheets --todo` for the new ones.
 - **Fixed by hand** (0.6.0, the Editor tab): `outcome.json` `"hand_fixes"` (and that version's `edit_vN.list`) =
   what the user trimmed, moved, split, sped up / slowed, deleted, added (sounds, templates) or reworded themselves - build on that version, never undo those changes, and
   treat them as lessons (a cut Claude placed 5 frames late, a sound on a word, a caption mis-heard). Since 2026-10-26

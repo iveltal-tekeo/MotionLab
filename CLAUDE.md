@@ -80,8 +80,10 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
   pick, check, tracks, sizes, land, finish)
 - Making (0.5.3 first): `brief.py <project>` (the brief), `build.py <project> [plan]` (one build: graphics, sound,
   video, precheck, cut-sheet), `job.py start | wait` (a long step as the app's job - never poll); `overlay.py`,
-  `sfx.py` (never guess a volume), `music.py` (0.6.0: the songs and ambience beds, measured), `render_video.py`, `precheck.py`, `draft_edit.py`, `prep_footage.py`,
-  `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`, `miniedit.py`
+  `sfx.py` (never guess a volume), `music.py` (0.6.0: the songs and ambience beds, measured), `render_video.py`, `precheck.py`, `draft_edit.py`, `prep_footage.py`
+  (0.6.1: a light cache of every frame; full frames only for what a plan shows, filled by render_video.py),
+  `catalogue.py` (0.6.1: every clip's moments, usable parts, look-alikes + Claude's line each - with many clips, before
+  editing), `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`, `miniedit.py`
   (0.6.0: the app's Editor tab - the user's own timeline changes as the next version)
 - Prepare and posting: `script.py`, `prompts.py`, `thumbnail.py`, `publish.py` (YouTube's rules first, nothing written
   on a FAIL); `brand.py` (My Brand: `import` = read the user's own website, `show` = the *For my brand* brief), `agency.py` (Content

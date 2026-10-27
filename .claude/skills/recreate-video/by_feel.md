@@ -59,6 +59,16 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    have them (`overlay.py new`); the colour (`plan["grades"]`) if the style has a look. Show the user the shot list
    (frame + timecode), build (`render.md`), iterate. The clips' boards when you need to see every clip:
    `tools\storyboard.py <project>` (`copy.md` section 1).
+   **Many clips (6 or more - 0.6.1, the user: "u are having a bad time editing videos when i give u lots of
+   b-rolls")**: the clip catalogue first, once - `tools\catalogue.py make <project>` (the lab: each clip's moments,
+   usable / bad windows, motion, light, look-alikes, the day filmed; ~1 minute for 6 minutes of footage), then
+   `catalogue.py sheets <project> --todo` and ONE look at each sheet, writing a line per moment (what it shows, size
+   wide / medium / close / detail, where, a few tags) with `catalogue.py say <project> <lines.json>` - instead of the
+   storyboards. Then edit from the catalogue (the brief carries it; `catalogue.py show`): picks only inside usable
+   windows, the hook from the strongest moments, the order by the day filmed for a vlog / a build for a promo, shot
+   sizes that vary, never two look-alikes back to back unless that is the point, a talking video's B-roll on the
+   words its line matches. An *Improve* or *Finish it* window reads the catalogue - never the sheets again. A line
+   the user wrote (`"by": "user"`) is the truth.
 4. If `resolve` was asked: option 2 (`render.md`) once the user approves the lab render.
 5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
    (00:00:18:24)") and what is approximate.

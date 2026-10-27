@@ -264,6 +264,34 @@ def clip_lines(p: Path) -> list[str]:
                  ["- no clips in the folder"])
 
 
+MANY_CLIPS = 6                                  # from this many clips, the catalogue first (0.6.1)
+
+
+def catalogue_lines(p: Path) -> list[str]:
+    """0.6.1 ("quality over quantity", many B-rolls): the clip catalogue - every moment of every clip with its usable
+    part, what to leave out and its look-alikes (tools\\catalogue.py), so no window edits blind or looks again."""
+    from motionlab import catalogue as CT
+    from motionlab.project import Project, clip_files
+    prj = Project(p.name)
+    cat = CT.load(prj)
+    if cat:
+        n = sum(len(c["moments"]) for c in cat["clips"])
+        todo = sum(1 for _, mo in CT.moments(cat) if not mo.get("say"))
+        return ["", f"## The clip catalogue (build\\clips.json, {len(cat['clips'])} clips, {n} moments; made "
+                f"{cat.get('made', '')[:16]})",
+                "Each moment = one shot inside a clip, by the day filmed: frames, motion, light, what it shows (the "
+                "line), the usable part, what to leave out, the moments that look like it. Pick from the usable parts; "
+                "never two look-alikes back to back unless that is the point."
+                + (f" {todo} moment(s) have no line yet: tools\\catalogue.py sheets {p.name} --todo, look at each "
+                   "sheet once, then tools\\catalogue.py say with one line each." if todo else ""),
+                "```", CT.text(cat), "```"]
+    if len(clip_files(p, VIDEO_EXT)) >= MANY_CLIPS:
+        return ["", f"## The clip catalogue: not made yet - {len(clip_files(p, VIDEO_EXT))} clips: first "
+                f"tools\\prep_footage.py {p.name} (with the edit's size), then tools\\catalogue.py make {p.name}, "
+                "sheets, say - every later step reads it instead of looking again"]
+    return []
+
+
 def edit_brief(p: Path, req: dict) -> list[str]:
     b = p / "build" / "edit_brief.md"
     talking = req.get("sound") == "talk" or str(req.get("prompt") or "").startswith(("script-", "hook-"))
@@ -273,7 +301,7 @@ def edit_brief(p: Path, req: dict) -> list[str]:
          "*Left out* at the end names what is not here.", ""]
     L += [b.read_text(encoding="utf-8").strip() if b.exists() else "(no edit_brief.md: the request is "
           "build\\edit_request.json)", "", "## The clips (the lab measured them; only read)"] + clip_lines(p) \
-        + photo_lines(p, req)
+        + photo_lines(p, req) + catalogue_lines(p)
     pid = str(req.get("prompt") or "")
     rec = next(iter((KN.LOCAL / "prompts").glob(f"*/{pid}.json")), None) if pid else None
     said = ""

@@ -255,6 +255,14 @@ def load_clips(prj: Project) -> tuple[dict, list[dict], bool]:
                      zoom=PH.KEN_BURNS if o.get("zoom", True) else 1.0, fit=o.get("fit") or "")
             c["stats"] = {k: np.repeat(np.asarray(v)[:1], c["frames"]) for k, v in st.items()}
         clips.append(c)
+    from motionlab import catalogue as CT               # 0.6.1: the clip catalogue, when made - picks inside usable
+    cat = CT.load(prj)                                  # windows, never across a cut inside a clip, no look-alike
+    if cat:                                             # right after the shot before it
+        by = {c["id"]: c for c in cat["clips"]}
+        for c in clips:
+            k = by.get(c["id"])
+            if k and not c.get("photo") and k["frames"] == c["frames"]:
+                c["cat"] = DR.catalogue_arrays(k)
     return srcs, clips, color
 
 

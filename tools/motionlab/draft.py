@@ -312,14 +312,31 @@ def quality(clip: dict, energy: str) -> tuple[np.ndarray, np.ndarray]:
     return q, spike.astype(float)
 
 
+def catalogue_arrays(k: dict) -> dict:
+    """A clip's catalogue (motionlab\\catalogue) per frame: ok = inside a usable window, mo = its moment's number,
+    grp = its look-alike group (-1 = none), day = the day it was filmed."""
+    n = int(k["frames"])
+    ok, mo, grp = np.zeros(n, bool), np.zeros(n, int), np.full(n, -1, int)
+    for i, m in enumerate(k.get("moments", []), 1):
+        a, b = max(0, int(m["a"])), min(n - 1, int(m["b"]))
+        mo[a:b + 1] = i
+        grp[a:b + 1] = int(m.get("group") or 0) or -(1000 + i)    # (no group: its own, never like another clip's)
+        for u0, u1 in m.get("usable", []):
+            ok[max(0, int(u0)):min(n, int(u1) + 1)] = True
+    return {"ok": np.concatenate([[0], np.cumsum(ok)]), "mo": mo, "grp": grp, "day": str(k.get("filmed") or "")[:10]}
+
+
 def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
-    """For each shot the best unused moment of the clips (one pass, in timeline order)."""
+    """For each shot the best unused moment of the clips (one pass, in timeline order). With the clip catalogue
+    (0.6.1): a window outside the usable parts, across a cut inside its clip or like the shot before it scores down,
+    and with several days filmed, going back in time a little."""
     prep = {}
     for c in clips:
         q, sp = quality(c, energy)
         prep[c["id"]] = (np.concatenate([[0.0], np.cumsum(q)]), np.concatenate([[0.0], np.cumsum(sp)]), q)
     used = {c["id"]: np.zeros(c["frames"], bool) for c in clips}
-    picks, prev = [], None
+    days = sorted({c["cat"]["day"] for c in clips if c.get("cat") and c["cat"]["day"]})
+    picks, prev, prev_grp, prev_day = [], None, set(), ""
     for pre, L, post in needs:
         need = pre + L + post
         best = None
@@ -339,6 +356,14 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
             score = q - 3.0 * np.minimum(spikes, 1) - 2.5 * over + rng.normal(0, 0.12, len(A))
             if prev == cid and len(clips) > 1:
                 score = score - 0.6
+            k = c.get("cat")
+            if k is not None:                   # the catalogue: the shot's own frames (not its handles)
+                s0, s1 = A + pre, np.minimum(A + pre + L, n) - 1
+                outside = 1.0 - (k["ok"][s1 + 1] - k["ok"][s0]) / np.maximum(1, s1 - s0 + 1)
+                cross = (k["mo"][s0] != k["mo"][s1]).astype(float)
+                alike = np.array([float(k["grp"][x] in prev_grp or k["grp"][y] in prev_grp) for x, y in zip(s0, s1)])
+                back = 0.3 if len(days) > 1 and prev_day and k["day"] and k["day"] < prev_day else 0.0
+                score = score - 4.0 * outside - 1.5 * cross - 1.5 * alike - back
             j = int(np.argmax(score))
             if best is None or score[j] > best[0]:
                 best = (float(score[j]), c, int(A[j]))
@@ -352,6 +377,12 @@ def pick_windows(needs, clips, energy, fps, rng) -> list[dict]:
         why = _why(c, a + pre, L) if c["frames"] >= need else "the longest clip - shorter than the shot, its end holds"
         picks.append({"sid": c["id"], "in": a + pre, "why": why})
         prev = c["id"]
+        k = c.get("cat")
+        if k is not None:
+            prev_grp = {int(g) for g in k["grp"][a + pre:min(c["frames"], a + pre + L)]}
+            prev_day = k["day"] or prev_day
+        else:
+            prev_grp = set()
     return picks
 
 

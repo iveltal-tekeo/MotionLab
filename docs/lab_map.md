@@ -98,7 +98,13 @@ not say, or a rule.
   annotate` / a JSON `import`), `templates.py` (captured template clips + the Motion Graphics library: 189 templates in
   `tools\overlays\motion\`, 57 rebuilt from the Swishy clips, 18 MotionLab originals and 114 MotionLab builds in the
   Editorial warm look)
-- Making: `prep_footage.py`, `storyboard.py`, `render_video.py` (0.6.0: masters every render's sound -
+- Making: `prep_footage.py` (0.6.1: every clip read once into a light cache - `build\cache\<ID>.light.yuv`, the
+  stats - and a sparse full cache that `render_video.py` fills with only the frames a plan shows: 36 clips / 6.5 min
+  of footage 2.1 GB in 35 s instead of 33 GB in 131 s; `--full` = the old way), `catalogue.py` (0.6.1: the clip
+  catalogue `build\clips.json` - each clip's moments by the analyser's cut detector on the light frames, usable / bad
+  windows, motion, light, look-alike groups, the day filmed, key frames on sheets, Claude's line per moment via
+  `say`, the user's line wins; the brief carries it, `motionlab\catalogue.py`), `storyboard.py`,
+  `render_video.py` (0.6.0: masters every render's sound -
   `motionlab\loudness.py`, config "master": -14 LUFS, true peak <= -1 dBTP after AAC; `--no-master`),
   `compare_renders.py`, `miniedit.py` (0.6.0: the app's Editor tab - `state` = the shots, graphics, captions,
   sound effects of a plan; `apply <changes.json> --build` = the user's changes in order (trims, moves, splits, speed,

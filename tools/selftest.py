@@ -559,6 +559,76 @@ def check_brand() -> dict:
     return {"passed": r["passed"] and s["passed"] and a["passed"] and o["passed"] and m["passed"] and x["passed"]}
 
 
+def check_light_cache() -> dict:
+    """Light + sparse frame caches (0.6.1 step 5, prep_footage.prep_light / fill / ensure, footage.SparseFrames): a
+    test clip (ffmpeg testsrc, every frame different) read once small, then full frames filled for a range - each on
+    exactly the light cache's frame (30 -> 30 fps), a 25 fps clip on a 30 fps grid too; a frame not filled = the light
+    frame scaled up, counted; a plan's needed frames."""
+    import tempfile
+    import types
+    import cv2
+    import numpy as np
+    import prep_footage as PF
+    from motionlab import footage as FC
+    from motionlab.util import tool
+    print("\n=== light caches: every frame small, full frames only for what a plan shows ===")
+    passed = []
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:     # (Windows: a memmap holds its file)
+        td = Path(td)
+        prj = types.SimpleNamespace(cache=td / "cache", check=lambda p: p)
+        for rate, sid in ((30, "A"), (25, "B")):
+            src = td / f"clip{rate}.mp4"
+            subprocess.run([tool("ffmpeg"), "-v", "error", "-f", "lavfi", "-i", f"testsrc=size=320x240:rate={rate}:duration=4",
+                            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-g", "50", str(src)], check=True)
+            ent = {"path": str(src), "fingerprint": f"t{rate}"}
+            m = PF.prep_light(prj, sid, ent, 30.0, 320, 240)
+            lm = json.loads(FC.light_paths(prj.cache, sid)[1].read_text(encoding="utf-8"))
+            la = np.memmap(FC.light_paths(prj.cache, sid)[0], dtype=np.uint8, mode="r",
+                           shape=(lm["frames"], lm["height"] * 3 // 2, lm["width"]))
+            check(m["segments"] == [] and lm["frames"] == m["frames"] in (120, 121) and lm["width"] == 80,
+                  f"{rate} fps clip: read once - {m['frames']} light frames at 80 px, nothing full yet")
+            PF.fill(prj.cache, sid, [[40, 60]], log=lambda *x: None)
+            mm, arr = FC.load(prj.cache, sid)
+            off = 0
+            for i in range(40, 61, 5):
+                full = cv2.resize(FC.image(mm, arr, i), (lm["width"], lm["height"]), interpolation=cv2.INTER_AREA).astype(int)
+                d = [np.abs(full - FC.decode(la[j], "i420").astype(int)).mean() for j in (i - 1, i, i + 1)]
+                off += int(d[1] > min(d) + 0.5)
+            check(off == 0 and arr.missing == 0, f"{rate} fps clip: full frames f40-f60 filled, each the light cache's own "
+                                                  "frame (a seek lands on the same grid)")
+            FC.image(mm, arr, 5)
+            check(arr.missing == 1 and not arr.has(5) and arr.has(50), "a frame not filled = the light one scaled up, counted")
+        plan = {"frames": 30, "layers": [{"type": "clip", "id": "s01", "src": "A", "start": 0, "end": 29, "in": 70},
+                                         {"type": "clip", "id": "s02", "src": "B", "start": 10, "end": 19, "in": 5,
+                                          "hold": True}],
+                "sources": {"A": {"cache": str(FC.paths(prj.cache, "A", True)[0])},
+                            "B": {"cache": str(FC.paths(prj.cache, "B", True)[0])}}}
+        need = FC.needed(plan, handle=PF.HANDLE)
+        check(need == {"A": [[55, 114]], "B": [[0, 20]]}, f"a plan's frames per source, with handles: {need}")
+        PF.ensure(plan, log=lambda *x: None)
+        mm, arr = FC.load(prj.cache, "A")
+        check(all(arr.has(i) for i in range(55, 115)), "ensure() before a render fills what the plan shows")
+        del arr, mm, la
+        import gc
+        gc.collect()
+    return {"passed": all(passed)}
+
+
+def check_catalogue() -> dict:
+    """The clip catalogue (0.6.1 step 1, motionlab.catalogue): a made-up clip with known moments - five shots, the
+    black one unusable, the colour bars twice one look-alike group, the filmed date, lines kept / refused."""
+    from motionlab import catalogue as CT
+    print("\n=== the clip catalogue: moments, usable parts, look-alikes, lines ===")
+    r = CT.selfcheck()
+    for line in r["lines"]:
+        print(line)
+    return {"passed": r["passed"]}
+
+
 def check_miniedit() -> dict:
     """The Editor (0.6.0 step 6, motionlab.miniedit), no video: trims, deletes, a moved cut, moves, splits, speed, graphics, sound effect edits and
     words on a made-up plan - what moves with a shot, what is refused, a sound it cannot cut again locking the shots;
@@ -723,7 +793,7 @@ def main() -> int:
                "stumbles": check_stumbles(),
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "brand": check_brand(), "miniedit": check_miniedit(),
-               "facefit": check_facefit(),
+               "facefit": check_facefit(), "light_cache": check_light_cache(), "catalogue": check_catalogue(),
                "usage": check_usage(),
                "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}

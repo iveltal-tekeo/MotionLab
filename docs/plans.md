@@ -510,6 +510,19 @@ the biggest has 3 clips - so the friend's case is the test):
   (no tone mapping - the cache warns); a horizontal clip in a vertical edit is cut in the middle or shown whole over a
   blur - its subject is not looked for.
 
+**Where it stands (2026-10-26, the user's "go" to steps 5 + 1 first)** - test bed `projects\zz_many_clips` / `2`: 36
+clips (6.5 min) cut from four music videos and a reel in `refs\` (25 / 30 fps, horizontal and vertical, three filming
+days) - not the friend's B-roll, which is still the real test. **Step 5 built**: the light cache + sparse full cache
+(prep_footage `prep_light` / `fill` / `ensure`, footage `SparseFrames` / `needed`; render_video fills before it renders):
+33.0 GB / 131 s -> 2.1 GB / 35 s, a 30 s draft's full frames ~2.2 GB; every filled frame on the light cache's own
+frame (checked on all 36 clips). **Step 1 built** (the lab's part + Claude's lines): `tools\catalogue.py` make / sheets
+/ say / show - 244 moments in 48 s (the analyser's cut detector on the light frames), quality words tuned on the test
+bed (dark grades are a look, not a fault), look-alikes by shape + colours + layout + edges; the brief carries it
+(`brief.catalogue_lines`), the skill's by_feel / improve read it. **Step 4, the lab's part, built**: the quick draft
+scores down windows outside the usable parts, across a cut inside a clip, like the shot before, back in time (test
+bed: 1 -> 0 crossing shots, 2 -> 0 look-alikes back to back). **Next**: step 3 (the shot list with pictures, in the
+app), 6, 7, B-roll on the words; the Editor showing each clip's lines.
+
 **Steps** (each measured on one many-clip project before / after: Claude's minutes and tokens, the disk, the user's
 rating):
 1. **A clip catalogue, made once** - `build\clips.json`. The lab's part (no Claude): every clip split into its moments
