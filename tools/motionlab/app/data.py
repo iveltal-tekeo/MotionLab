@@ -2167,8 +2167,12 @@ def library(videos: bool = True) -> dict:
             continue
         last = PROJECTS / pr["name"] / "build" / f"{pr['plans'][-1]}.json" if pr["plans"] else None
         pl = (read_json(last, {}) or {}) if last else {}
+        try:
+            ovs = [s["name"] for s in OS.project_overlays(pr["name"])]
+        except (OSError, ValueError):                     # (a graphic's settings broken by hand: the page still opens)
+            ovs = []
         vids.append({"name": pr["name"], "width": pl.get("width"), "height": pl.get("height"), "fps": pl.get("fps"),
-                     "overlays": [s["name"] for s in OS.project_overlays(pr["name"])]})
+                     "overlays": ovs})
     # the motion templates (0.5.0) have their own page, Motion Graphics: not repeated in the saved graphics - and not
     # worked out at all (OS.library()'s loop without its 75 motion templates: the same list, ~20 ms instead of ~0.35 s)
     graphics = []
