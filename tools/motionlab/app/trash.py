@@ -89,7 +89,8 @@ def users_of(video: Path, skip_analysis: str | None = None) -> dict:
         files = list(b.glob("plan_v*.json")) + list((b / "resolve").glob("*_build.json"))
         if any(_mentions(data.read_json(f, {}), needle) for f in files):
             projs.append(d.name)
-    return {"analyses": ana, "projects": projs}
+    from motionlab import notes as NT                  # 2026-10-27: notes made from it (they stay without it)
+    return {"analyses": ana, "projects": projs, "notes": NT.users_of(video)}
 
 
 def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) -> dict:
@@ -99,6 +100,8 @@ def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) ->
     if us["analyses"]:
         warn.append(I18N.t("also analysed as {names} - that analysis keeps working only while the video is there",
                            names=", ".join(us["analyses"])))
+    if us.get("notes"):
+        warn.append(I18N.t("its notes stay, without the video to play"))
     if us["projects"]:
         warn.append(I18N.tn(len(us["projects"]), "used by your video(s) {names} (as the reference / soundtrack of an "
                                                  "edit or in its DaVinci Resolve timeline) - deleting it breaks their "
@@ -118,8 +121,8 @@ def _human(n: float | None) -> str:
 
 def plan_reference(name: str) -> dict:
     d = ANALYSIS / data.safe_name(name)
-    if not d.is_dir() or d.name.lower() in ("thumbs", "templates", "texts"):   # thumbnail sets (kind "thumbs"), motion
-        # packs (0.5.0), sets of scripts & prompts (kind "texts", 2026-10-18)
+    if not d.is_dir() or d.name.lower() in ("thumbs", "templates", "texts", "notes"):   # thumbnail sets (kind
+        # "thumbs"), motion packs (0.5.0), sets of scripts & prompts (kind "texts", 2026-10-18), notes (kind "notes")
         raise FileNotFoundError(name)
     inside(d)
     ev = data.read_json(d / "events.json", {}) or {}
@@ -265,8 +268,38 @@ def plan_texts(name: str) -> dict:
                                                   "and your verdicts on them"), "default": True, "warn": []}]}
 
 
+def plan_notes(name: str, video_only: bool = False) -> dict:
+    """Notes from a video (2026-10-27, analysis\\notes\\<name>): the notes (Claude's, the user's own, the words, the
+    key frames) and the video when it lies in refs\\. video_only (kind "notes_video", the user: "option to delete the
+    video afterwards but keep the notes") = the video alone - the notes stay, without the player."""
+    from motionlab import notes as NT
+    d, n = NT.need(name)
+    inside(d)
+    items, notes = [], []
+    if not video_only:
+        b, k = size_of(d)
+        items.append({"key": "notes", "label": I18N.t("The notes"), "path": data.rel(d), "bytes": b, "files": k,
+                      "what": I18N.t("Claude's notes, your own notes, the words and the key frames"),
+                      "default": True, "warn": []})
+    src = Path(n["video"]).resolve() if n.get("video") else None
+    if src and src.is_file() and REFS in src.parents:
+        us = users_of(src)
+        us["notes"] = [x for x in us["notes"] if x != d.name]       # these notes: said by the dialog's keeps
+        items.append(_video_item(src, None, us))
+    elif src and src.is_file():
+        notes.append(I18N.t("The video stays where it is ({path}): only videos inside the lab's refs folder are "
+                            "deleted here.", path=src))
+    elif video_only:
+        raise FileNotFoundError(I18N.t("The video file is not there any more."))
+    return {"kind": "notes_video" if video_only else "notes", "name": d.name, "title": NT.label_of(n),
+            "items": items, "notes": notes,
+            "keeps": [I18N.t("the notes, your own notes and the key frames")] if video_only else []}
+
+
 def plan(kind: str, name: str, resolve_state: str = "") -> dict:
-    if kind == "thumbs":
+    if kind in ("notes", "notes_video"):
+        out = plan_notes(name, kind == "notes_video")
+    elif kind == "thumbs":
         out = plan_thumbs(name)
     elif kind == "texts":
         out = plan_texts(name)

@@ -44,8 +44,9 @@ from motionlab.util import (ANALYSIS, SourceGuard, fix_dotted_names, load_config
 def pick_out_dir(src: Path, name: str | None) -> tuple[str, Path]:
     base = safe_name(name or src.stem)
     # analysis/thumbs = thumbnail sets (0.4.5), analysis/templates = motion template packs (0.5.0), analysis/texts = sets
-    # of scripts & prompts (2026-10-18): a video with one of these names gets "_video"
-    if base.lower() in ("thumbs", "templates", "texts"):
+    # of scripts & prompts (2026-10-18), analysis/notes = notes from videos (2026-10-27): a video with one of these names
+    # gets "_video"
+    if base.lower() in ("thumbs", "templates", "texts", "notes"):
         base = f"{base.lower()}_video"
     out = ANALYSIS / base
     sj = out / "source.json"

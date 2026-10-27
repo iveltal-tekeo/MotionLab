@@ -2963,3 +2963,207 @@ a.brvid:hover { text-decoration: none; }
 .brsndmk input { flex: 1; min-width: 200px; }
 .nesong { border-radius: 12px; }
 .nesong .row { flex-wrap: nowrap; overflow: hidden; }
+
+/* ---------------- The Analyser's mascots (2026-10-27, the user's brief "MotionLab - Analysis Mascots" + its reference
+   sheet): FLUX a blue crystal, SPARK a golden star, INDEX a teal orb - app.js mascot(). States on data-state (idle,
+   hover, analysing, success; a hovered / focused .mhost shows idle as hover). Only transform + opacity animate, no SVG
+   filters; .still (reduced motion, animated:false) = no movement; .paused = off screen. FLUX precise, SPARK lively,
+   INDEX calm - never the same rhythm. */
+.masc { display: inline-block; width: var(--ms); height: var(--ms); flex: none; line-height: 0; pointer-events: none; }
+.masc svg { display: block; overflow: visible; }
+.masc g, .masc path, .masc rect, .masc circle, .masc ellipse { transform-box: view-box; }
+.masc .m-float, .masc .m-tilt, .masc .ix-orb, .masc .ix-orbit { transform-origin: 60px 60px; }
+.masc-flux .m-float, .masc-flux .m-tilt { transform-origin: 60px 58px; }
+.masc .m-spin, .masc .m-all, .masc .fx-boost, .masc .ix-card { transform-origin: 0 0; }
+.masc .m-lids, .masc .sp-glint, .masc .sp-burst, .masc .sp-fr, .masc .m-glow { transform-box: fill-box; transform-origin: center; }
+.masc .sp-bubin { transform-box: fill-box; transform-origin: 25% 100%; }
+.masc .sp-link, .masc .ix-ln { transform-box: fill-box; transform-origin: 0 50%; }
+.masc .m-glow { opacity: .75; transition: opacity .3s ease-out; }
+.masc .m-floor { opacity: .8; }
+.masc .m-lids { animation: msblink 5.2s infinite; }
+.masc .m-halo { animation: mshalo 2.8s ease-in-out infinite alternate; }
+.masc .m-flash, .masc .fx-sweep, .masc .ix-markhi { transition: opacity .25s ease-out; }
+@keyframes msfloat { from { transform: translateY(2px); } to { transform: translateY(-2.5px); } }
+@keyframes msblink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.12); } }
+@keyframes mshalo { from { opacity: .5; } to { opacity: 1; } }
+@keyframes msspin { to { transform: rotate(360deg); } }
+@keyframes msspinrev { to { transform: rotate(-360deg); } }
+@keyframes msflash { 0% { opacity: 0; } 30% { opacity: .5; } 100% { opacity: 0; } }
+/* FLUX: floats, barely tilts, its square nodes travel the orbit */
+.masc-flux .m-float { animation: msfloat 3.6s ease-in-out infinite alternate; }
+.masc-flux .m-tilt { animation: fxtilt 4.8s ease-in-out infinite alternate; }
+.masc-flux .m-spin { animation: msspin 14s linear infinite; }
+.masc-flux .m-spin.rev { animation-name: msspinrev; }
+.masc-flux .fx-node { fill: #6ff3ff; }
+@keyframes fxtilt { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
+@keyframes fxinspect { 0%, 12% { transform: rotate(-5deg); } 50%, 62% { transform: rotate(4deg); } 100% { transform: rotate(-5deg); } }
+@keyframes fxsweep { 0% { transform: translateX(0); opacity: 0; } 20% { opacity: .38; } 70% { opacity: .38; } 100% { transform: translateX(118px); opacity: 0; } }
+:is(.masc-flux[data-state=hover], .mhost:is(:hover, :focus-within) .masc-flux[data-state=idle]) .m-glow { opacity: 1; }
+:is(.masc-flux[data-state=hover], .mhost:is(:hover, :focus-within) .masc-flux[data-state=idle]) .m-spin { animation-duration: 8s; }
+:is(.masc-flux[data-state=hover], .mhost:is(:hover, :focus-within) .masc-flux[data-state=idle]) .fx-boost { animation: msspin .8s cubic-bezier(.2, .8, .2, 1); }
+:is(.masc-flux[data-state=hover], .mhost:is(:hover, :focus-within) .masc-flux[data-state=idle]) .fx-boost.rev { animation-name: msspinrev; }
+.masc-flux[data-state=analysing] .m-glow { opacity: 1; }
+.masc-flux[data-state=analysing] .m-tilt { animation: fxinspect 2.6s ease-in-out infinite; }
+.masc-flux[data-state=analysing] .m-spin { animation-duration: 6.5s; }
+.masc-flux[data-state=analysing] .fx-sweep { animation: fxsweep 2.2s ease-in-out infinite; }
+.masc-flux[data-state=success] .m-flash { animation: msflash .7s ease-out; }
+.masc-flux[data-state=success] .m-all { animation: msspin .75s cubic-bezier(.2, .8, .2, 1); }
+.masc-flux[data-state=success] .m-all.rev { animation-name: msspinrev; }
+/* SPARK: bobs and tilts more, a glint now and then; the bubble pops on hover, the frames line up when it creates */
+.masc-spark .m-float { animation: msfloat 2.8s ease-in-out infinite alternate; }
+.masc-spark .m-tilt { transform-origin: 58px 56px; animation: sptilt 3.4s ease-in-out infinite alternate; }
+.masc-spark .sp-glint { opacity: 0; animation: spglint 4.6s ease-out infinite 1.2s; }
+.masc-spark .sp-rays { animation: sprays 3.2s ease-in-out infinite; }
+.masc-spark .sp-bub { animation: msfloat 3.1s ease-in-out infinite alternate-reverse; }
+.masc-spark .sp-fr { transition: transform .4s cubic-bezier(.3, 1.4, .5, 1), opacity .3s; }
+.masc-spark .sp-fr.f0 { transform: translate(-1px, 2px) rotate(-6deg); }
+.masc-spark .sp-fr.f2 { transform: translate(1px, -2px) rotate(7deg); }
+@keyframes sptilt { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes spglint { 0%, 70% { opacity: 0; transform: scale(.3) rotate(0); } 78% { opacity: 1; transform: scale(1) rotate(45deg); } 88%, 100% { opacity: 0; transform: scale(.4) rotate(90deg); } }
+@keyframes sprays { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes sppop { 0% { transform: scale(.6); opacity: .3; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes spbounce { 0% { transform: scale(1); } 35% { transform: scale(1.09) rotate(-3deg); } 65% { transform: scale(.97); } 100% { transform: scale(1); } }
+@keyframes spgrow { 0%, 100% { transform: scale(1); } 40%, 60% { transform: scale(1.045); } }
+@keyframes spframe { 0% { opacity: .2; } 25%, 85% { opacity: 1; } 100% { opacity: .2; } }
+@keyframes splink { 0%, 30% { transform: scaleX(0); opacity: 0; } 55% { transform: scaleX(1); opacity: .9; } 80%, 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes spburst { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.45); opacity: 0; } }
+:is(.masc-spark[data-state=hover], .mhost:is(:hover, :focus-within) .masc-spark[data-state=idle]) .m-tilt { animation: spbounce .55s cubic-bezier(.3, 1.4, .5, 1); }
+:is(.masc-spark[data-state=hover], .mhost:is(:hover, :focus-within) .masc-spark[data-state=idle]) .m-flash { opacity: .16; }
+:is(.masc-spark[data-state=hover], .mhost:is(:hover, :focus-within) .masc-spark[data-state=idle]) .sp-bubin { animation: sppop .45s cubic-bezier(.3, 1.4, .5, 1); }
+:is(.masc-spark[data-state=hover], .mhost:is(:hover, :focus-within) .masc-spark[data-state=idle]) .m-glow { opacity: 1; }
+.masc-spark[data-state=analysing] .m-tilt { animation: spgrow 1.9s ease-in-out infinite; }
+.masc-spark[data-state=analysing] .sp-fr { transform: none; animation: spframe 2.4s ease-in-out infinite; }
+.masc-spark[data-state=analysing] .sp-fr.f1 { animation-delay: .25s; }
+.masc-spark[data-state=analysing] .sp-fr.f2 { animation-delay: .5s; }
+.masc-spark[data-state=analysing] .sp-link { animation: splink 2.4s ease-in-out infinite .6s; }
+.masc-spark[data-state=success] .sp-burst { animation: spburst .7s ease-out; }
+.masc-spark[data-state=success] .m-flash { animation: msflash .6s ease-out; }
+.masc-spark[data-state=success] .sp-fr { transform: none; }
+/* INDEX: floats slowly, its orbit turns, the cards drift; hover brings them close, organising lines them up */
+.masc-index .m-float { animation: msfloat 4.4s ease-in-out infinite alternate; }
+.masc-index .ix-orbit { animation: msspin 46s linear infinite; }
+.masc-index .ix-orb { transition: transform .35s cubic-bezier(.3, 1.5, .5, 1); }
+.masc-index .ix-card { transform: translate(var(--x), var(--y)) rotate(var(--r)); transition: transform .5s cubic-bezier(.3, 1.2, .4, 1); }
+.masc-index .ix-card.c1 { --x: 21px; --y: 23px; --r: -9deg; }
+.masc-index .ix-card.c2 { --x: 101px; --y: 34px; --r: 8deg; }
+.masc-index .ix-card.c3 { --x: 99px; --y: 87px; --r: 5deg; }
+.masc-index .ix-drift { animation: ixdrift 5.2s ease-in-out infinite alternate; }
+.masc-index .c2 .ix-drift { animation-delay: -1.7s; } .masc-index .c3 .ix-drift { animation-delay: -3.4s; }
+.masc-index .ix-orbit ellipse { transition: stroke-opacity .3s; }
+@keyframes ixdrift { from { transform: translate(0, 0); } to { transform: translate(1.5px, -2.5px); } }
+@keyframes ixline { 0% { transform: scaleX(0); } 30%, 85% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: .4; } }
+@keyframes ixorbit { from { stroke-opacity: .35; } to { stroke-opacity: 1; } }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .ix-card.c1 { --x: 27px; --y: 29px; }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .ix-card.c2 { --x: 95px; --y: 38px; }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .ix-card.c3 { --x: 93px; --y: 82px; }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .ix-orb { transform: scale(1.04); }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .ix-markhi { opacity: .5; }
+:is(.masc-index[data-state=hover], .mhost:is(:hover, :focus-within) .masc-index[data-state=idle]) .m-glow { opacity: 1; }
+.masc-index:is([data-state=analysing], [data-state=success]) .ix-card { --r: 0deg; }
+.masc-index:is([data-state=analysing], [data-state=success]) .ix-drift { animation: none; }
+.masc-index[data-state=analysing] .ix-card.c1 { --x: 101px; --y: 22px; }
+.masc-index[data-state=analysing] .ix-card.c2 { --x: 101px; --y: 42px; }
+.masc-index[data-state=analysing] .ix-card.c3 { --x: 101px; --y: 62px; }
+.masc-index[data-state=analysing] .ix-ln { animation: ixline 2.6s ease-out infinite; }
+.masc-index[data-state=analysing] .ix-ln.l1 { animation-delay: .3s; } .masc-index[data-state=analysing] .ix-ln.l2 { animation-delay: .6s; }
+.masc-index[data-state=analysing] .ix-orbit ellipse { animation: ixorbit 1.3s ease-in-out infinite alternate; }
+.masc-index[data-state=analysing] .m-glow { opacity: 1; }
+.masc-index[data-state=success] .ix-card.c1 { --x: 97px; --y: 30px; }
+.masc-index[data-state=success] .ix-card.c2 { --x: 100px; --y: 34px; }
+.masc-index[data-state=success] .ix-card.c3 { --x: 103px; --y: 38px; }
+.masc-index[data-state=success] .ix-markhi { animation: msflash .8s ease-out; }
+.masc-index[data-state=success] .m-flash { animation: msflash .7s ease-out; }
+/* no movement: reduced motion / animated:false keep the states as still pictures; off screen = paused */
+.masc.still *, .masc.still .m-tilt { animation: none !important; }
+.masc.paused * { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) { .masc * { animation: none !important; transition: none !important; } }
+/* the three ways: the mascot on top, its name in its colour, the selected one in its colour */
+.anways .anway { position: relative; align-items: center; text-align: center; gap: 6px; padding-top: 14px; --mc: var(--acc); }
+:is(.anway, .anhead).w-videos { --mc: #6a86ff; } :is(.anway, .anhead).w-spark { --mc: #ffb43a; } :is(.anway, .anhead).w-notes { --mc: #3ee6bd; }
+:is(.anway, .anhead) .mname { font-size: 13px; font-weight: 700; letter-spacing: .34em; padding-left: .34em; color: var(--mc); margin-top: 2px; }
+.anway h2 { color: color-mix(in srgb, var(--mc) 72%, #fff); font-size: 16px; }
+.anway p { max-width: 44ch; color: var(--muted); }
+.anway > .row { justify-content: center; margin-top: 6px; }
+.anway .gway-foot { align-self: stretch; }
+.anway .soonchip { position: absolute; top: 12px; right: 12px; margin: 0; }
+.anways .anway:hover { border-color: color-mix(in srgb, var(--mc) 40%, var(--line)); }
+.anways .anway.on { border-color: color-mix(in srgb, var(--mc) 70%, var(--line)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--mc) 22%, transparent), 0 16px 44px -22px var(--mc); }
+.anways .anway.on .gway-foot { color: var(--mc); }
+.anway.soon > .row, .anway.soon p { opacity: .8; }
+.ncard .ppic .masc { margin: auto; }
+/* a way's own page (2026-10-27, the user: "they each have their own section ... the character appears in a new page"):
+   the header = its mascot, its name and mode in its colour, the main buttons; a video's page carries a small one */
+.anway, .gmw { cursor: pointer; }
+:is(.anway, .gmw) h2 a { color: inherit; }
+:is(.anway, .gmw) h2 a:hover { text-decoration: none; }
+.anhead { --mc: var(--acc); display: flex; align-items: center; gap: 22px; padding: 16px 24px 16px 18px; margin-bottom: 16px; border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--mc) 32%, var(--line));
+  background: radial-gradient(ellipse at 7% 55%, color-mix(in srgb, var(--mc) 15%, transparent), transparent 48%), var(--panel); }
+.anhead .mname { text-align: left; padding-left: 0; margin: 2px 0 0; }
+.anhead h1 { color: color-mix(in srgb, var(--mc) 72%, #fff); margin: 2px 0 4px; display: flex; align-items: center; gap: 10px; }
+.anhead .sub { color: var(--muted); }
+.anhead > .row { flex: none; }
+@media (max-width: 900px) { .anhead { flex-wrap: wrap; } }
+.ansoon { max-width: 70ch; }
+.ansoon .nlist { margin-bottom: 10px; }
+.mtitle { display: flex; align-items: center; gap: 8px; }
+.mtitle .masc { margin: -8px -2px -8px -6px; }
+body[data-page] .head .mtitle h1::before { display: none; }         /* the mascot marks the title instead of the bar */
+.nwait .masc { float: right; margin: -6px 0 0 12px; }
+.soonchip { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--violet);
+  border: 1px solid #a78bfa66; background: #a78bfa14; border-radius: 999px; padding: 2px 9px; }
+.avstep.opt b { background: transparent; border: 1px dashed var(--dim); color: var(--dim); }
+/* the smaller row: Thumbnails, Scripts & prompts */
+.gways.gmini { margin-top: 12px; }
+.gmini .gway.gmw { flex-direction: row; align-items: center; gap: 14px; padding: 12px 16px; }
+.gmini .gmt { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.gmini .gmt h2 { font-size: 14.5px; margin: 0; }
+.gmini .gmt p { font-size: 12.5px; }
+.gmini .gmt .gway-foot { border-top: 0; padding-top: 0; margin-top: 0; }
+.gmini .gway > .row { flex-wrap: nowrap; flex: none; }
+/* Notes: the cards and one video's notes (#/note/<name>) - one reading column, the video and My notes beside it */
+.ncard .ntl2 { padding: 0 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ngrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); gap: 26px; align-items: start; margin-top: 16px; }
+@media (max-width: 1150px) { .ngrid { grid-template-columns: minmax(0, 1fr); } }
+.nnotes { max-width: 74ch; font-size: 14.5px; line-height: 1.55; }
+.nask { margin-bottom: 10px; }
+.ntldr { border-left: 3px solid var(--acc); background: var(--acc-soft); padding: 12px 16px; border-radius: 8px; font-size: 15.5px; line-height: 1.5; }
+.ntk { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--acc); margin-right: 6px; }
+.nh { margin: 24px 0 8px; font-size: 15px; }
+.nh .small { font-weight: 400; margin-left: 6px; }
+.nlist { margin: 0; padding-left: 20px; }
+.nlist li { margin: 7px 0; }
+.nlist li::marker { color: var(--dim); }
+.ntime { font: 11.5px/1.6 var(--mono); color: var(--cyan); background: #38d6f514; border-radius: 999px; padding: 1px 8px; margin-left: 4px; white-space: nowrap; }
+.ntime:hover { background: #38d6f530; text-decoration: none; }
+.nrep { display: inline-block; font-size: 10.5px; color: var(--amber); border: 1px solid #ffc40055; border-radius: 999px; padding: 0 7px; margin-left: 4px; vertical-align: 1px; }
+details.nsec { border-top: 1px solid var(--line); }
+details.nsec:last-of-type { border-bottom: 1px solid var(--line); }
+details.nsec > summary { cursor: pointer; padding: 9px 2px; display: flex; gap: 10px; align-items: baseline; list-style: none; }
+details.nsec > summary::-webkit-details-marker { display: none; }
+details.nsec > summary::before { content: "▸"; color: var(--dim); width: 10px; flex: none; transition: transform .15s; }
+details.nsec[open] > summary::before { transform: rotate(90deg); }
+.nst { font-weight: 600; }
+.nsg { color: var(--muted); font-size: 13px; flex: 1; min-width: 0; }
+details.nsec > .nlist { margin: 0 0 10px 18px; }
+.napply { display: flex; flex-direction: column; gap: 6px; }
+.napply .chk { align-items: flex-start; }
+.napply .chk.done span { color: var(--dim); text-decoration: line-through; }
+.nctx { white-space: pre-wrap; font: 12.5px/1.5 var(--mono); background: #101014; border: 1px solid var(--line); border-radius: 6px; padding: 10px; max-height: 320px; overflow: auto; }
+.nfoot { margin-top: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nwait { max-width: 60ch; }
+.nside { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.nside video { width: 100%; max-height: 420px; border-radius: 10px; background: #000; }
+.nnovid { border: 1px dashed var(--line2); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.nnovid img { width: 100%; border-radius: 6px; opacity: .6; }
+.ntabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.ntabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 6px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+.ntabs button.on { color: var(--text); border-bottom-color: var(--acc); }
+#nmine { width: 100%; min-height: 280px; resize: vertical; font: 13.5px/1.55 var(--ui); }
+.nlines { max-height: 420px; overflow: auto; margin-top: 8px; font-size: 13px; }
+.nline { padding: 4px 6px; border-radius: 5px; cursor: pointer; }
+.nline:hover { background: var(--panel2); }
+.nline.sel { background: #38d6f51c; }
+.ntc { font: 11px var(--mono); color: var(--dim); margin-right: 4px; }
+.nsheets { display: flex; flex-direction: column; gap: 8px; max-height: 460px; overflow: auto; }
+.nsheets img { width: 100%; border-radius: 6px; cursor: zoom-in; }

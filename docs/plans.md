@@ -152,6 +152,88 @@ on a laptop setting, and its niche card - each reason with its videos and frame 
 **Renamed 2026-10-22** (the user: "Rename 'describe videos' to 'take notes froms videos'"); older notes call it
 *describe video*. Competitors added 2026-10-25.
 
+**The Analyser's three ways of analysing a video** (the user, 2026-10-27: "3 ways of analizing videos: 1) animations
+and effects (currently) 2) content creation (scripts, why its viral, structure...) 3) information (take notes, how to
+apply to urself, context to apply to other ai's...)"; for 3: "kinda like a notion but not that big, i just want to be
+simple and effective"; then "before implementing the notes section i want you to deep research the topic, the best
+way and most simplest way of taking notes, how to analyze teh video corretly with our tools (yt-dlp included) and if
+we need to change anyuthing to optimize and how to structurally present the information ... like a professional, not
+crowded"). 1 = today's Videos (unchanged); 2 = *coming soon* on the page (the friend's ideas below); 3 = **Notes**,
+designed from the research below. **Built 2026-10-27 (unreleased)** after the user's answers ("yeah go ahead", "video
+at 720p with option to delete the video afterwards but keep the notes", "drop test yourself questions", and each way
+shown "with a "character" made in motion graphics"): the three ways with their scenes and the lab's round character,
+`tools\notes.py` + `motionlab\notes.py` (the words, key frames, chapters, Most replayed, SponsorBlock; the quote gate),
+the `/take-notes` skill, the job `notes` (Claude opens by itself when a batch is ready), the notes page
+(docs\app_pages.md *Notes*), *Delete the video, keep the notes*. Not yet: words only (no download), the TikTok
+captions in several languages, large-v3-turbo measured, collections across many notes.
+
+**Notes - the research (2026-10-27)**:
+- *How people remember notes.* Cornell notes (notes + cue questions + a summary) recalled lecture content best against
+  outline and verbatim notes in a lecture study; reviewing the notes mattered most
+  (dspace.unijos.edu.ng/jspui/handle/123456789/2566). Testing yourself beats rereading a week later (the testing
+  effect, Roediger & Karpicke 2006, widely replicated). Progressive summarization (Tiago Forte): notes -> bold ->
+  highlight -> an executive summary, each layer a filter, added when needed, not all up front. Typing more words
+  verbatim did not hurt conceptual recall in the 2021 replication of Mueller & Oppenheimer (Urry et al., Psychological
+  Science) - but a transcript is still not notes. So: a short summary on top, few points in our words with the
+  video's own words as evidence, questions to test yourself, actions, and the user's own notes beside them.
+- *What the video already tells us (yt-dlp, checked in its source 2026-10-27).* One `yt-dlp -J` (no download) gives
+  the title, the description (links, resources, often the creator's chapters), `chapters`, YouTube's `heatmap` (the
+  *Most replayed* graph: 100 points, 0-1), views / likes / comments, on TikTok `repost_count` (shares) and
+  `save_count` (saves), the followers, the language, the subtitles and automatic captions (TikTok's auto captions
+  too). SponsorBlock is built into yt-dlp (`--sponsorblock-mark`; it asks with the first 4 characters of the id's
+  SHA-256, so the video is not named): sponsor, self-promotion, "like and subscribe", intro / outro ranges and the
+  highlight (`poi_highlight`).
+- *The words.* The platform's subtitles first (YouTube: uploaded ones, else the `-orig` auto captions with word
+  timings), else speech to text (faster-whisper small, with VAD - Instagram has none). Pass the title, the channel
+  and the chapter names as `names` (the spelling of names and brands). large-v3-turbo is clearly more accurate on GPU
+  benchmarks; no CPU numbers were found - measure it on the laptop before switching.
+- *What is shown.* Key frames only where the screen changes (a new slide, code, a new shot): ffmpeg decoding only the
+  keyframes (`-skip_frame nokey`) with its scene score - seconds, not a full decode - capped at ~36 frames, filled
+  every N s where nothing changes; sheets of 12, each frame labelled f480 (00:00:16:00); Claude reads them (no OCR to
+  install). Talking heads and podcasts need none.
+- *Claude.* The transcript, chapters, description, the *Most replayed* peaks and the sheets first, the user's question
+  last; quotes first, then the notes (Anthropic's long-context advice: docs.anthropic.com/en/docs/long-context-window-tips).
+  The gate = every point quotes the video's words (or names a frame it shows) and the tool finds the words and sets
+  the frame + timecode itself; nothing is saved when one check fails.
+- *To change in the tools*: `content.py` keeps a trimmed `info.json` (description, chapters, heatmap, tags, language)
+  and shares / saves in stats.json; TikTok captions in several languages with no language named are skipped today
+  (speech to text then hears it - slower); the `names` hint; a notes download of at most 720p (small, the screen
+  still readable) or *words only* (nothing downloaded - a podcast, a long talk; the frame rate from `-J`).
+- *How to show it (professional, not crowded).* Progressive disclosure: the little most readers need first, the rest
+  one click away. A reading column (~70 characters) with the player and *My notes* beside it. In order: the title (the
+  subject, not the clickbait) and one muted line (channel · platform · length · date · tags); **TL;DR** (1-2
+  sentences); **Key takeaways** (3-7: a bold phrase + one sentence + a time chip that moves the player, the quote on
+  hover, a mark on a *Most replayed* moment); **Sections** (the video's chapters, or Claude's: a title + one line each,
+  folded; open = 2-5 points); **Steps** (how-to videos only, a checklist); **Apply it** (3-5 actions to tick - My
+  Brand's goal and audience when there is one); **Test yourself** (3-5 questions, answers hidden); folded at the end:
+  Resources (the description's links) and *Context for another AI* (Copy). The limits are the tool's, not the
+  wording's. The kind of video picks the shape: tutorial (steps first), lecture / explainer (concepts), interview /
+  podcast (topics, who said what), list video (the list), opinion / news (claims and their evidence). The Markdown
+  download = the same order + My notes (+ the transcript when ticked).
+
+**The friend's ideas for Content creation, reviewed (2026-10-27, pasted by the user)**:
+- *The numbers from a screenshot* (comments = it shocked or split people, shares = people saw themselves in it): yes,
+  as ratios against the channel's usual, not alone. yt-dlp already reads views, likes and comments, and on TikTok the
+  shares and saves; a screenshot only where the platform hides them (Instagram's shares and saves, your own
+  insights - watch time, retention), the numbers Claude reads shown to the user to confirm.
+- *Merge it with Videos*: one video can be analysed both ways and its page shows both - not one combined pass (the
+  effects pass is heavy, the *why* is cheap).
+- *Learn from all of them, by itself*: yes - the collections / niche card above, after one video's *why it worked*
+  works.
+- *Claude right after the download, no corrections asked*: yes for Content creation and Notes (Claude's part starts by
+  itself; the user's review stays optional, as Teach Claude is today).
+- *Voice apart from the music, why that song*: the stems (*Sound*, below, measure first) + the song's measured tempo,
+  energy and where its drop lands against the cuts + the platform's own track name (TikTok gives it) -> Claude's
+  explanation; a lesson only when the user agrees.
+- *A text's engagement as if 200-500 people read it*: a model cannot measure people - a simulated panel's
+  percentages would look like data and are not. Instead: the script check part by part (0-5 stars, exists) and *where
+  a viewer would drop* line by line, named as Claude's judgement, later checked against the user's real retention
+  (step 19 below).
+- *The same for a video before posting*: yes - a pre-post check of a render (the hook in the first 3 s, dead air,
+  pacing against the references, captions readable, loudness: precheck.py measures part of it) with Claude's notes per
+  moment, frame + timecode; Editor > Review.
+- *Save the final video where you want*: yes, small - *Save a copy…* on a render (a copy; the build keeps its own).
+
 **Competitor analysis** (the friend's points 3 and 5, 2026-10-25, pasted by the user: "un análisis de competencia
 estaría súper potente coger los 20 vídeos más virales de la competencia ... analiza los 20 perfiles más influyentes y
 más reconocidos en instagram, tik tok y YouTube y de esos perfiles analiza sus 20 vídeos más virales, extrae el guion,

@@ -34,6 +34,7 @@ FAILED: list[str] = []
 PAGES = ["#/", "#/analyze", "#/prepare", "#/edit", "#/generate", "#/motion", "#/motion/learned", "#/motion/logos", "#/prompts", "#/memory",
          "#/memory/lessons", "#/memory/learned", "#/jobs", "#/skills", "#/storage", "#/settings",
          "#/analyze/thumbs", "#/analyze/texts", "#/memory/shared",      # 2026-10-18: Analyser tabs, Shared knowledge
+         "#/analyze/videos", "#/analyze/spark", "#/analyze/notes",      # 2026-10-27: a page per way
          "#/brand", "#/brand/style", "#/brand/catalogue", "#/agency", "#/agency/videos",   # 0.6.0: My Brand, Content agency
          "#/motion/sounds", "#/motion/music",                           # 0.6.0: the sound and music libraries
          "#/refs", "#/projects", "#/library", "#/knowledge"]              # 0.3 addresses: still work (rewritten)
@@ -45,6 +46,7 @@ ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "
           "/api/motion", "/api/motion/pick?want=a%20bold%20title",                              # 0.5.0
           "/api/logos",                                                                         # the logo library
           "/api/texts", "/api/styles",                      # 2026-10-18: sets of scripts & prompts, the style pickers
+          "/api/notes",                                     # 2026-10-27: notes from videos
           "/api/seen", "/api/thumbtest", *(f"/api/changes?s={s}" for s in ("home", "analyze", "projects", "generate",
                                                                             "prompts", "motion", "memory"))]   # 2026-10-24
 

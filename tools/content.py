@@ -133,6 +133,19 @@ def choose_track(info: dict, want: str | None) -> tuple[str, str] | None:
     return ("auto", hit) if hit else None
 
 
+def save_info(ref: dict, info: dict) -> dict:
+    """yt-dlp's info (-J) -> content\\info.json: what the video tells about itself beyond its numbers (2026-10-27,
+    Analyser > Notes): the description (links, resources), the creator's chapters, YouTube's *Most replayed* graph
+    (heatmap: start / end in seconds, value 0-1), tags, its language and the song a TikTok uses. No formats."""
+    keep = ("id", "title", "description", "chapters", "heatmap", "tags", "categories", "language", "uploader",
+            "channel", "channel_url", "duration", "upload_date", "webpage_url", "extractor_key", "track", "artist")
+    out = {k: info[k] for k in keep if info.get(k) not in (None, "", [])}
+    d = ref["dir"] / "content"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "info.json").write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
+    return out
+
+
 def save_stats(ref: dict, info: dict, url: str) -> dict:
     """yt-dlp's info (-J) -> analysis\\<name>\\content\\stats.json: the public numbers, the outperformer score
     (views / the channel's followers) and the history of every fetch."""
@@ -147,6 +160,7 @@ def save_stats(ref: dict, info: dict, url: str) -> dict:
          "title": info.get("title"), "uploader": info.get("uploader") or info.get("channel"),
          "channel_url": info.get("channel_url") or info.get("uploader_url"),
          "views": num("view_count"), "likes": num("like_count"), "comments": num("comment_count"),
+         "shares": num("repost_count"), "saves": num("save_count"),            # TikTok gives both (2026-10-27)
          "followers": num("channel_follower_count"),
          "upload_date": f"{up[:4]}-{up[4:6]}-{up[6:8]}" if len(up) == 8 else None,
          "duration_s": info.get("duration"), "fetched": now}
@@ -157,7 +171,7 @@ def save_stats(ref: dict, info: dict, url: str) -> dict:
         s["days_online"] = int(days)
         s["views_per_day"] = int(round(s["views"] / days))
     s["history"] = (old.get("history") or []) + [{k: s[k] for k in ("fetched", "views", "likes", "comments",
-                                                                     "followers")}]
+                                                                     "shares", "saves", "followers")}]
     p.write_text(json.dumps(s, indent=1, ensure_ascii=False), encoding="utf-8")
     return s
 
@@ -165,7 +179,7 @@ def save_stats(ref: dict, info: dict, url: str) -> dict:
 THUMB_EXT = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/webp": ".webp", "image/png": ".png"}
 
 
-def save_thumbnail(ref: dict, info: dict) -> Path:
+def save_thumbnail(ref: dict, info: dict, measure: bool = True) -> Path:
     """yt-dlp's info (-J) -> the video's thumbnail as the platform shows it: analysis\\<name>\\content\\thumbnail.<ext>
     (the biggest one offered) + its measures (thumbnail.json). Raises on a network error."""
     import urllib.error
@@ -203,6 +217,8 @@ def save_thumbnail(ref: dict, info: dict) -> Path:
     for old in out.glob("thumbnail.*"):                         # one thumbnail: an older one in another format goes
         if old != dest and old.suffix.lower() in (".jpg", ".webp", ".png"):
             old.unlink()
+    if not measure:                                             # a notes folder: no analysis to measure it for
+        return dest
     try:
         from motionlab import thumbnail as TH
         TH.measure_ref(ref["name"], force=True)
@@ -211,9 +227,9 @@ def save_thumbnail(ref: dict, info: dict) -> Path:
     return dest
 
 
-def _thumb_note(ref: dict, info: dict) -> None:
+def _thumb_note(ref: dict, info: dict, measure: bool = True) -> None:
     try:
-        p = save_thumbnail(ref, info)
+        p = save_thumbnail(ref, info, measure)
         print(f"thumbnail: {p}")
     except SystemExit as e:
         print(f"thumbnail: {e}")
@@ -243,7 +259,9 @@ def thumbnail(args) -> int:
 def stats_line(s: dict) -> str:
     n = lambda v: "-" if v is None else f"{v:,}"                                        # noqa: E731
     return (f"{n(s.get('views'))} views · {n(s.get('likes'))} likes · {n(s.get('comments'))} comments · "
-            f"{n(s.get('followers'))} followers"
+            + (f"{n(s['shares'])} shares · " if s.get("shares") is not None else "")
+            + (f"{n(s['saves'])} saves · " if s.get("saves") is not None else "")
+            + f"{n(s.get('followers'))} followers"
             + (f" · {s['outperformer']}x its followers" if s.get("outperformer") is not None else "")
             + (f" · online since {s['upload_date']} ({s.get('views_per_day', 0):,} views/day)" if s.get("upload_date")
                else ""))
@@ -263,22 +281,30 @@ def stats(args) -> int:
 
 def transcript(args) -> int:
     ref = resolve(args.target)
-    out = ref["dir"] / "content"
-    tj = out / "transcript.json"
+    tj = ref["dir"] / "content" / "transcript.json"
     if tj.exists() and not args.force:
         print(f"already done: {tj} (--force fetches again)")
         return show_lines(ref, _load(tj), None, None, limit=8)
-    url = find_url(ref, args.url)
+    return show_lines(ref, fetch_subtitles(ref, find_url(ref, args.url), args.lang), None, None, limit=8)
+
+
+def fetch_subtitles(ref: dict, url: str, lang: str | None = None, measure: bool = True) -> dict:
+    """The platform's subtitles of ref's video -> ref["dir"]\\content\\transcript.json + .txt (and the numbers and the
+    thumbnail from the same answer). ref = resolve()'s dict - or a notes folder's (Analyser > Notes, 2026-10-27).
+    Raises SystemExit when the video has none."""
+    out = ref["dir"] / "content"
+    tj = out / "transcript.json"
     exe = ytdlp()
     print(f"{ref['name']}: asking {url} for subtitles ...", flush=True)
     info = json.loads(run([exe, "-J", "--skip-download", "--no-playlist", "--no-warnings", url]))
     print(stats_line(save_stats(ref, info, url)), flush=True)          # the same answer has the video's numbers
-    _thumb_note(ref, info)                                             # ... and its thumbnail
-    track = choose_track(info, args.lang)
+    save_info(ref, info)                                               # ... its chapters, description, Most replayed
+    _thumb_note(ref, info, measure)                                    # ... and its thumbnail
+    track = choose_track(info, lang)
     if not track:
         langs = sorted(set(info.get("subtitles") or {}) | {k for k in (info.get("automatic_captions") or {}) if k.endswith("-orig")})
-        raise SystemExit("this video has no subtitles or captions" + (f" in '{args.lang}' (it has: {', '.join(langs)})"
-                         if args.lang and langs else "") + " - speech to text can hear it instead (Settings > Programs)")
+        raise SystemExit("this video has no subtitles or captions" + (f" in '{lang}' (it has: {', '.join(langs)})"
+                         if lang and langs else "") + " - speech to text can hear it instead (Settings > Programs)")
     kind, key = track
     dur = info.get("duration")
     vid_dur = ref["frames"] / ref["fps"]
@@ -316,10 +342,10 @@ def transcript(args) -> int:
     (out / "transcript.txt").write_text("\n".join(txt) + "\n", encoding="utf-8")
     print(f"{len(rows)} lines, {data['words']} words ({'uploaded subtitles' if kind == 'manual' else 'auto captions'} "
           f"'{key}'{', word timings' if has_words else ''}) -> {tj}")
-    return show_lines(ref, data, None, None, limit=8)
+    return data
 
 
-def speech_transcript(ref: dict, log=print) -> dict | None:
+def speech_transcript(ref: dict, log=print, names: str = "") -> dict | None:
     """The transcript by speech to text (faster-whisper, when it is installed with its model - Settings > Programs >
     Speech to text): for a video whose platform has no subtitles, or that has no known link. The analysis' own
     audio.wav is heard (the source is never touched); the times follow the video (the audio's start offset added)."""
@@ -334,7 +360,7 @@ def speech_transcript(ref: dict, log=print) -> dict | None:
         return None
     log(f"{ref['name']}: no subtitles - listening (speech to text, small) ...")
     t0 = time.time()
-    sp = SP.transcribe(media, "small", log=log)
+    sp = SP.transcribe(media, "small", names=names, log=log)
     fps, n, drop = ref["fps"], ref["frames"], ref["drop"]
 
     def fr(t):

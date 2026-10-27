@@ -53,6 +53,7 @@ def _latest_plan(project: str) -> Path:
 # English (Job.title_en - job logs never follow the language)
 TITLES = {
     "analyze": "Analyse {file}",
+    "notes": "Notes of {file}",
     "report": "Rebuild report {name}",
     "resolve_doctor": "Resolve check-up ({video})",
     "resolve_diff": "Resolve: what changed by hand ({video})",
@@ -143,6 +144,26 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
             extra += ["--focus", focus]
         return _title("analyze", file=v.name), [PY, str(TOOLS / "analyze.py"), str(v)] + (
             ["--redetect"] if a.get("redetect") else []) + extra, "cpu"
+    if kind == "notes":                 # Analyser > Notes (2026-10-27): the words, key frames, chapters of one video
+        v = Path(str(a.get("video", ""))).expanduser()
+        if not v.is_file() or v.suffix.lower() not in data.VIDEO_EXT:
+            raise JobError(I18N.t("not a video file: {file}", file=v))
+        if LAB in v.resolve().parents and v.resolve().parts[len(LAB.parts)] in ("analysis", ".app", "tools"):
+            raise JobError(I18N.t("pick the original video, not a file the lab made"))
+        extra = []
+        url = str(a.get("url") or "").strip()
+        if url:
+            if not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", url):
+                raise JobError(I18N.t("not a link: {link} (a full link starts with https://)", link=url))
+            extra += ["--url", url]
+        ask = " ".join(str(a.get("ask") or "").split())
+        if len(ask) > 1000:
+            raise JobError(I18N.t("at most {n} characters", n=1000))
+        if ask:
+            extra += ["--ask", ask]
+        if a.get("tags"):
+            extra += ["--tags", ", ".join(clean_tags(a.get("tags") or ""))]
+        return _title("notes", file=v.name), [PY, str(TOOLS / "notes.py"), "prepare", str(v)] + extra, "cpu"
     if kind == "report":
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
@@ -492,7 +513,7 @@ class Job:
         self.lines: list[str] = []
         self.proc: subprocess.Popen | None = None
         self.log = LOGS / f"{jid:04d}_{kind}.log"
-        self.then_claude = kind == "analyze" and bool(args.get("claude"))      # open Claude when it ends well
+        self.then_claude = kind in ("analyze", "notes") and bool(args.get("claude"))   # open Claude when it ends well
         self.claude: dict | None = None                                         # what was opened afterwards
         self.then: dict | None = None          # a download followed by its analysis: the analyze job's settings
         self.batch: int | None = None          # the jobs of one Add videos share it
@@ -503,7 +524,8 @@ class Job:
              "seconds": round((self.ended or time.time()) - self.started, 1),
              "command": " ".join(Path(c).name if i < 2 else c for i, c in enumerate(self.cmd)),
              "lines": len(self.lines), "then_claude": self.then_claude, "claude": self.claude,
-             "then": bool(self.then), "batch": self.batch,
+             "then": bool(self.then), "then_kind": (self.then or {}).get("kind") or ("analyze" if self.then else None),
+             "batch": self.batch,
              "ended_ago_s": round(time.time() - self.ended) if self.ended else None}
         if since is not None:
             d["log"] = self.lines[since:since + 5000]
@@ -518,6 +540,7 @@ class Runner:
         self.lock = threading.Lock()
         self.measured: dict[int, list[tuple[str, str]]] = {}     # batch -> (video, analysis) measured for Claude
         self.opened: set[int] = set()                             # batches whose Claude window is open
+        self.noted: dict[int | None, list[str]] = {}              # batch -> notes prepared for Claude (2026-10-27)
 
     def running(self) -> list[Job]:
         return [j for j in self.jobs.values() if j.status in ("running", "cancelling")]
@@ -537,6 +560,8 @@ class Runner:
         if then is not None:                                  # checked now, not when the download has ended
             if kind != "download":
                 raise JobError(I18N.t("only a download can be followed by an analysis"))
+            if then.get("kind") not in (None, "notes"):        # Notes (2026-10-27): its own job checks its arguments
+                raise JobError(I18N.t("unknown kind {kind}", kind=repr(then.get("kind"))))
             if str(then.get("focus") or "") not in ("", *FOCUS):
                 raise JobError(I18N.t("unknown focus {id} (content, cinematic or both)", id=then.get("focus")))
             cat = str(then.get("category") or "")
@@ -597,7 +622,9 @@ class Runner:
             job.status = "cancelled" if job.status == "cancelling" else (
                 "done" if job.rc in OK_RC.get(job.kind, (0,)) else "failed")
             data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
-            if job.then_claude and job.status == "done":
+            if job.then_claude and job.status == "done" and job.kind == "notes":
+                self._collect_notes(job, f)
+            elif job.then_claude and job.status == "done":
                 if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it
                     self._collect(job, f)
                 else:
@@ -606,6 +633,7 @@ class Runner:
                 self._then_analyse(job, f)
             if job.batch is not None:
                 self._batch_to_claude(job, f)
+            self._notes_to_claude(job, f)
         self._next()
 
     def _mates(self, job: Job) -> list[Job]:
@@ -653,9 +681,52 @@ class Runner:
         job.lines.append(msg)
         f.write(msg + "\n")
 
+    def _collect_notes(self, job: Job, f) -> None:
+        """Notes (2026-10-27): the words and key frames of a video are ready - Claude writes the notes when its batch
+        is ready (one window for all of them)."""
+        name = next((ln.split("NOTES:", 1)[1].strip() for ln in reversed(job.lines) if ln.startswith("NOTES:")), "")
+        if name:
+            with self.lock:
+                self.noted.setdefault(job.batch, []).append(name)
+
+    def _notes_to_claude(self, job: Job, f) -> None:
+        """The last job of a Notes batch ended (downloads, preparing - in any order): ONE Claude window writes the
+        notes of every video prepared (`/take-notes <name>`, or `/take-notes pending` for several)."""
+        with self.lock:
+            if job.batch not in self.noted or (job.batch is not None and any(
+                    j.status in ("running", "queued", "cancelling") for j in self.jobs.values() if j.batch == job.batch)):
+                return
+            got = self.noted.pop(job.batch, [])
+        if not got:
+            return
+        try:
+            prompt = f"/take-notes {got[0]}" if len(got) == 1 else "/take-notes pending"
+            job.claude = system.open_claude(prompt, "notes", got[0] if len(got) == 1 else f"{len(got)} videos")
+            msg = f"Claude Code opened to write the notes ({job.claude['prompt']})"
+        except Exception as e:                                  # noqa: BLE001 - the preparing itself succeeded
+            job.claude = {"ok": False, "error": str(e)}
+            msg = f"Could not open Claude Code: {e} - the notes' page has *Write the notes with Claude*"
+        job.lines.append(msg)
+        f.write(msg + "\n")
+
     def _then_analyse(self, job: Job, f) -> None:
-        """Add videos: the download ended well - its saved video is analysed next (queued behind the others)."""
+        """Add videos: the download ended well - its saved video is analysed next (queued behind the others).
+        Notes (then kind "notes"): its notes are prepared next instead."""
         saved = saved_file(job.lines)
+        if (job.then or {}).get("kind") == "notes":
+            try:
+                if saved is None or saved.suffix.lower() not in data.VIDEO_EXT:
+                    msg = "the saved video was not found - add it again from Analyser > Notes"
+                else:
+                    args = {k: v for k, v in job.then.items() if k != "kind"}
+                    nj = self.start("notes", {**args, "video": str(saved), "url": str(job.args.get("url") or "")},
+                                    queue=True, batch=job.batch)
+                    msg = f"Next: the notes of {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
+            except Exception as e:                              # noqa: BLE001 - the download itself succeeded
+                msg = f"Could not start the notes of {saved.name if saved else 'the video'}: {e}"
+            job.lines.append(msg)
+            f.write(msg + "\n")
+            return
         try:
             if saved is None:
                 msg = "the saved file was not found - analyse it from the Analyze page (Downloaded, not analysed yet)"

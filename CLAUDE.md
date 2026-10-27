@@ -30,6 +30,7 @@ explore the whole lab:
 |---|---|
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | edit the user's footage like references (1:1 or by feel, a quick draft) or from their words; then Resolve | the `/recreate-video` skill |
+| notes from a video (Analyser > Notes): what it teaches, takeaways, steps, context for another AI | the `/take-notes` skill |
 | a script to say on camera: improve one for reach or write one from zero (Prepare), hooks | the `/write-script` skill |
 | titles, thumbnails, a video's package (description, chapters, hashtags), YouTube's A/B test | the `/write-title` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), briefs, image prompts | the `/write-prompt` skill |
@@ -54,7 +55,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 - `analysis\<video name>\` one per analysed video: `events.json` (all data), `report.html`, `review.json` (Claude's
   reviews), `review_todo.md`, `meta.json` (category, tags, focus, link, `label` = the user's name for it),
   `feedback\verdicts.json` (the user's verdicts, their ONE home), sheets, previews, frames, `cache\`, `content\`,
-  `colour\`. Not video analyses: `analysis\thumbs\<set>\`, `analysis\texts\<set>\`, `analysis\templates\<pack>\`
+  `colour\`. Not video analyses: `analysis\thumbs\<set>\`, `analysis\texts\<set>\`, `analysis\templates\<pack>\`,
+  `analysis\notes\<name>\` (2026-10-27: a video's notes - `notes.json` only through `notes.py save`, `mine.md` = the user's)
 - `projects\<name>\` the user's footage (read-only, top level); everything made goes to `build\`: `brief.md` (0.5.3:
   the lab's brief - read it first), `edit_request.json` + `edit_brief.md` or `generate_request.json`, `edit_vN.py` ->
   `plan_vN.json` -> `<name>_vN.mp4`, `overlays\`, `sfx\`, `checks\` (precheck, cut-sheet, build summary),
@@ -74,7 +76,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 
 ## Tools (run from C:\MotionLab as `.venv\Scripts\python tools\<tool>.py`; usage = each docstring)
 Beside a name only a rule its docstring does not hold; every tool in detail: `docs\lab_map.md`.
-- Analysing: `analyze.py` (the full pipeline; `--category` / `--tags` / `--focus` kept in meta.json), `report.py`,
+- Analysing: `analyze.py` (the full pipeline; `--category` / `--tags` / `--focus` kept in meta.json), `notes.py`
+  (2026-10-27: Notes - `prepare` the words + key frames, `save` = the quote gate), `report.py`,
   `feedback.py`, `sheet.py`, `content.py`, `colour.py`, `download.py`; sets: `thumbsets.py`, `textsets.py` (Claude's
   check is saved only when every quote is found in THAT text), `templates.py` (the Motion Graphics library: read,
   pick, check, tracks, sizes, land, finish)
@@ -102,8 +105,9 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
 `MotionLab.bat` = a local server + an Edge app window. The sidebar = the user's ways in: Home, **My Brand** (#/brand,
 0.6.0: the user's goal, audience, logo, colours, voice and catalogue - `knowledge\local\brand.json`, never shared; *For
 my brand* in New edit, the Generator and Prepare puts it in the request's brief), **Content agency** (#/agency, 0.6.0:
-the content calendar - `knowledge\local\calendar.json`, `motionlab\agency.py`), **Analyser** (#/analyze:
-Videos, Thumbnails, Scripts & prompts), **Prepare** (#/prepare: the script, the title and the thumbnail before filming),
+the content calendar - `knowledge\local\calendar.json`, `motionlab\agency.py`), **Analyser** (#/analyze: the
+ways + the tabs with every list; each way also its own page - FLUX effects /videos, SPARK content creation /spark (coming soon), INDEX notes /notes;
+Thumbnails /thumbs, Scripts & prompts /texts), **Prepare** (#/prepare: the script, the title and the thumbnail before filming),
 **Editor** (#/edit: the user's clips - new edits, renders, graphics, Review, Ready to post), **Generator** (#/generate:
 a video from zero; the prompt library #/prompts), **Motion Graphics** (#/motion), **Claude's memory** (#/memory: the
 user's ratings as rules, the lessons, and Shared knowledge - what the user shares, ticked or kept on this PC, and what

@@ -66,6 +66,7 @@ TASKS = {
     "script": ("high", "MotionLab script", False),     # /write-script: check, improve or write what you say on camera
     "title": ("high", "MotionLab title", False),       # /write-title: titles, thumbnails, the package of a video (0.4.3)
     "plan": ("medium", "MotionLab next steps", False), # /whats-next: where the lab stands, options, a recommendation
+    "notes": ("medium", "MotionLab notes", True),      # /take-notes: a video's words and key frames -> notes (2026-10-27)
 }
 # on Fable one level less is enough: Anthropic's guidance puts Fable at "high" where Opus needed "xhigh"
 FABLE_EFFORT = {"xhigh": "high", "max": "xhigh"}
@@ -77,6 +78,9 @@ PRESETS = {
     "mp4_1080": ("MP4 video, best up to 1080p (recommended)",
                  ["-f", VIDEO_F, "-S", "res:1080,fps,vcodec:h264,acodec:aac", "--merge-output-format", "mp4"], "refs"),
     "mp4_best": ("MP4 video, best quality (can be 4K)", ["-f", VIDEO_F, "--merge-output-format", "mp4"], "refs"),
+    # Notes (2026-10-27, the user: "video at 720p"): small and quick, the screen still readable
+    "mp4_720": ("MP4 video, up to 720p (smaller - for notes)",
+                ["-f", VIDEO_F, "-S", "res:720,fps,vcodec:h264,acodec:aac", "--merge-output-format", "mp4"], "refs"),
     "mp3": ("MP3 audio only (e.g. the song)", ["-x", "--audio-format", "mp3", "--audio-quality", "0"], "refs/audio"),
 }
 DOWNLOAD_TITLE = "Download ({what}) from {site}"      # a download job's title (what = the preset's label before " (")

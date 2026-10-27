@@ -35,6 +35,7 @@ from motionlab import fonts as FL
 from motionlab import i18n as I18N
 from motionlab import knowledge as KN
 from motionlab import logos as LGO
+from motionlab import notes as NT
 from motionlab import looks as LK
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
@@ -47,7 +48,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 47                                  # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 48                                  # app.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -649,6 +650,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.thumb_set(urllib.parse.unquote(m[1])))
         if path == "/api/texts":                         # 2026-10-18: the sets of scripts & prompts (Analyser)
             return self._json(data.text_sets())
+        if path == "/api/notes":                         # 2026-10-27: notes from videos (Analyser > Notes)
+            return self._json(NT.list_notes())
+        m = re.fullmatch(r"/api/notes/([^/]+)(/md)?", path)
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2]:                                      # Download: the Markdown (+ the transcript when ticked)
+                fname, text = NT.export_md(name, arg("transcript") == "1")
+                return self._json({"file": fname, "text": text})
+            return self._json(NT.get(name))
         m = re.fullmatch(r"/api/texts/([^/]+)", path)
         if m:
             return self._json(data.text_set(urllib.parse.unquote(m[1])))
@@ -923,6 +933,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(analyze_batch(body))
         if path == "/api/edit/batch":                   # 0.4.5: several videos edited the same way
             return self._json(edit_batch(body))
+        if path == "/api/notes/batch":                  # 2026-10-27: Analyser > Notes - links + files
+            return self._json(notes_batch(body))
+        m = re.fullmatch(r"/api/notes/([^/]+)/(mine|meta)", path)   # My notes; the name, tags, actions ticked
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2] == "mine":
+                return self._json(NT.save_mine(name, str(body.get("text") or "")))
+            return self._json(NT.save_meta(name, body.get("label"), body.get("tags"), body.get("done")))
         if path == "/api/batches/forget":               # 0.4.5: a batch row's ✕ (the videos stay as they are)
             return self._json(data.forget_batch(str(body.get("id", ""))))
         m = re.fullmatch(r"/api/thumbs/([^/]+)/(verdicts|remove)", path)   # 0.4.5: a thumbnail set
@@ -1191,6 +1209,32 @@ def analyze_batch(body: dict) -> dict:
                                       queue=True, batch=batch))
     for u in links:
         started.append(S.runner.start("download", {"url": u, "preset": preset}, queue=True, then=opts, batch=batch))
+    return {"batch": batch, "jobs": [j.info() for j in started]}
+
+
+def notes_batch(body: dict) -> dict:
+    """Analyser > Notes (2026-10-27): every link is downloaded (up to 720p - the user's pick) and then its notes are
+    prepared, every file prepared - one after another (queued jobs, one batch); claude=true: one Claude window writes
+    all their notes when the last one is ready. Nothing starts if anything is wrong."""
+    links = [str(u).strip() for u in body.get("links") or [] if str(u).strip()]
+    files = [str(f).strip().strip('"') for f in body.get("files") or [] if str(f).strip()]
+    if not links and not files:
+        raise ValueError(I18N.t("paste a link or pick a video first"))
+    if len(links) + len(files) > BATCH_MAX:
+        raise ValueError(I18N.t("at most {n} videos at a time - add the rest when these are done", n=BATCH_MAX))
+    opts = {"ask": " ".join(str(body.get("ask") or "").split())[:1000], "tags": str(body.get("tags") or ""),
+            "claude": bool(body.get("claude"))}
+    for u in links:                                     # check everything before anything starts
+        if not re.match(r"https?://\S+$", u):
+            raise ValueError(I18N.t("not a link: {link} (a full link starts with https://)", link=u))
+        system.download_cmd(u, "mp4_720")
+    for f in files:
+        jobs.make("notes", {**opts, "video": f})
+    batch = int(time.time() * 1000) % 10_000_000
+    started = [S.runner.start("notes", {**opts, "video": f}, queue=True, batch=batch) for f in files]
+    for u in links:
+        started.append(S.runner.start("download", {"url": u, "preset": "mp4_720"}, queue=True,
+                                      then={"kind": "notes", **opts}, batch=batch))
     return {"batch": batch, "jobs": [j.info() for j in started]}
 
 

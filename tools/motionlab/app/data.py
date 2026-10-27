@@ -537,7 +537,9 @@ def waiting() -> list[dict]:
     sound of a post (downloads.json "post"). The parts of one post come together, in their order (the page shows
     them as one post)."""
     idx = read_json(LAB / "refs" / "downloads.json", {}) or {}
-    files = [Path(c["path"]) for c in candidate_videos() if not c["analysed"]]
+    from motionlab import notes as NT                  # 2026-10-27: a video downloaded for its notes is not waiting
+    noted = NT.videos()
+    files = [Path(c["path"]) for c in candidate_videos() if not c["analysed"] and c["name"].lower() not in noted]
     ad = LAB / "refs" / "audio"
     files += [p for p in sorted(ad.glob("*")) if p.is_file() and p.suffix.lower() in AUDIO_EXT] if ad.is_dir() else []
     files += [p for p in sorted((LAB / "refs").glob("*")) if p.is_file() and post_of(idx.get(p.name))

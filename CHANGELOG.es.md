@@ -7,6 +7,27 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## Unreleased
+
+- **El Analizador: tres formas de aprender de un vídeo.** *Efectos y animaciones* (lo que hacía hasta ahora),
+  *Creación de contenido* (próximamente: por qué funciona un vídeo y por qué se hizo viral) y **Notas** - cada una con
+  su mascota animada: **FLUX** el cristal azul (Animaciones y efectos), **SPARK** la estrella dorada (Creación de
+  contenido) e **INDEX** la esfera turquesa (Notas y conocimiento). Flotan, parpadean y reaccionan: pasa el ratón por
+  una forma y su mascota responde, mientras corre un análisis o unas notas su mascota se pone a trabajar, y se ilumina
+  cuando terminan. Cada forma tiene además su propia página - haz clic en una tarjeta y su mascota te saluda allí
+  con sus vídeos; las pestañas bajo las formas siguen mostrándolo todo. Miniaturas y Guiones y prompts quedan en una fila más pequeña debajo; sus botones
+  dicen *Analizar miniaturas* y *Analizar guiones y prompts*.
+- **Notas de vídeos** (Analizador > Notas > *Tomar notas*): pega enlaces o elige vídeos; los enlaces se descargan
+  hasta 720p. MotionLab saca las palabras (los subtítulos de la plataforma o, si no, voz a texto), los fotogramas clave
+  donde cambia la pantalla, los capítulos del creador, lo más repetido de YouTube y las partes patrocinadas
+  (SponsorBlock); después Claude escribe las notas solo - un resumen, 3-7 ideas clave, las secciones, los pasos de un
+  tutorial, qué aplicar, los recursos que enlaza la descripción y un bloque de contexto para otra IA. Cada punto va
+  unido a las palabras del vídeo (o a un fotograma que muestra) con fotograma + código de tiempo, y un clic reproduce
+  ese momento; no se guarda nada si una cita no está en el vídeo. Escribe tus propias notas al lado, marca las acciones,
+  descárgalo todo en Markdown (con la transcripción si quieres) o cópialo para otra IA. *Borrar el vídeo, guardar las
+  notas* libera el espacio cuando termines.
+- Los números de un vídeo ahora guardan también sus compartidos y guardados (TikTok da los dos).
+
 ## 0.6.0.4 - 2026-10-27 - En el plano: B-roll en tus palabras, gráficos detrás de ti
 
 - **Lo importante sigue en el encuadre**: un clip horizontal en un vídeo vertical se cortaba por el centro; ahora el

@@ -16,7 +16,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   refs, docs, library, knowledge, fonts (0.4.6), logos (2026-10-16) only. Writes only: verdicts / feedback exports, library picks, `.app\`,
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags / label),
   a thumbnail set's or a text set's folder (`analysis\thumbs\<set>\`, `analysis\texts\<set>\`, through `thumbsets` /
-  `textsets`),
+  `textsets`), a video's notes (2026-10-27, `analysis\notes\<name>\`: `mine.md` = My notes, note.json `label` / `tags` /
+  `done` - through `motionlab\notes.py`; notes.json only through `notes.py save`, Claude's gate),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate; since 0.6.0 My Brand's
   `local\brand.json` + its logo `local\brand\logo.<ext>` through `motionlab\brand.py`, checked on every save; Import from
   your website's `local\brand\import\` (the job) and the ticked products' pictures `local\brand\products\`; 0.6.0 step 10
@@ -55,7 +56,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   | page / part | address · entry in app.js | its section in `docs\app_pages.md` |
   |---|---|---|
   | the sidebar, Home, each section's colour and band | `ALIASES`, `PAGES`, `pageHome`, `WAYS` | Sidebar and Home |
-  | Analyser | #/analyze (/videos, /thumbs, /texts) · `pageRefs`, `addVideosModal` | Analyser |
+  | Analyser | #/analyze (/videos, /notes, /thumbs, /texts) · `pageRefs`, `mascot`, `addVideosModal` | Analyser |
+  | a video's notes | #/note/<name> · `pageNote`, `noteCard`, `addNotesModal` | Notes |
   | an analysis | #/ref/<name> · `pageRef`, `overviewTab`, `contentTab` | The analysis page |
   | bulk work, thumbnail sets | #/thumbs/<set> · `pageThumbs`, `addThumbsModal`, `bulkEditModal`, `batchRows` | Bulk and thumbnail sets |
   | sets of scripts & prompts | #/texts/<set> · `pageTexts`, `addTextsModal`, `textSetCard` | Text sets |
@@ -94,7 +96,29 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     user: "Done … showing all the time? a 5 s pop up, or a discard option". The analysis page's `flowStrip` (round 2,
     the user: "remove the listing in analyze as well"): no numbered steps. Cards, the analysis page's title and Home's
     next lines show the readable name (`label`, 2026-10-19); keys, links, commands and the Claude buttons' session
-    label keep the folder / file name.
+    label keep the folder / file name. **The three ways of analysing a video** (2026-10-27, the user: "3 ways of
+    analizing videos: 1) animations and effects (currently) 2) content creation (scripts, why its viral, structure...)
+    3) information (take notes, how to apply to urself, context to apply to other ai's...)"; "every option ... shown
+    with a "character" made in motion graphics ... in similar style of motion labs"): Effects & animations / Content
+    creation (coming soon) / Notes on top; Thumbnails and Scripts & prompts in a smaller row under them (`.gmini`). Each
+    way has its own page (the user: "they each have their own section ... to not clutter the overview page of the
+    analyzer"): #/analyze/videos | spark | notes | thumbs | texts = its list (`anSection`); the overview keeps the tabs
+    with every list (`anOverview`, `anList` - the user: "dont remove the existing tabs of stuff, cuz people would not
+    know where to look for": never take them away); Thumbnails and Scripts & prompts stay apart without a mascot, their buttons *Analyze
+    thumbnails* / *Analyze scripts & prompts* (the user's words).
+    **The mascots** (the user's brief "MotionLab - Analysis Mascots" + its reference sheet, 2026-10-27: "recreate these
+    exact visual concepts, not redesign them"): FLUX (Animations & Effects, a faceted blue crystal, an orbit with
+    square nodes), SPARK (Content Creation, a golden origami star, a speech bubble, storyboard frames), INDEX (Notes &
+    Knowledge, a teal orb, a lime bookmark, note cards on an orbit) - `mascot(kind, {size, state, animated, cls})`,
+    `mascotState(el, state, ms)`, `mascotsLive(root)` (app.js, before `pageRefs`; app.css "The Analyser's mascots"):
+    layered SVG, no filters, CSS states idle / hover / analysing / success on `data-state`, a hovered `.mhost` shows
+    idle as hover, `.still` = reduced motion / animated:false, `.paused` = off screen; under 56 px no props. Each must
+    stay recognisable at 32-48 px; the three never move alike (FLUX precise, SPARK lively, INDEX calm).
+  - **Notes** (2026-10-27, the user: "kinda like a notion but not that big, i just want to be simple and effective",
+    "like a professional, not crowded", "video at 720p with option to delete the video afterwards but keep the notes",
+    no test-yourself questions; the research: docs\plans.md 0.6.5): one reading column, the video and My notes beside
+    it; every time = frame + timecode and plays the moment; the limits (7 takeaways, 5 points a section, 5 actions)
+    are the gate's, never the page's; Claude's notes are never edited on the page (My notes is the user's own).
   - **The analysis page**: the user's 2026-10-07 layout, since 2026-10-18 in the one review pattern (**Reviews**,
     below); the raw text behind *Copy what Claude gets* = GET `/api/feedback/<name>` - no file path in the page's words.
   - **Bulk and thumbnail sets**: **Bulk** (0.4.5, the user: "bulk analyze thumbnails, videos, and also bulk edit stuff
@@ -289,7 +313,9 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   resolve) / overlay_resolve_clip = Graphics; speech_install = Settings > Programs > Speech to text; captions read the user's .srt / .vtt / transcript.json, never change
   it; 0.4.2.1: ytdlp_update (group net, `dry_run` = print the command, run nothing) and player_copy (group cpu) =
   `jobtools.py ytdlp-update | player-copy`, the app's own small jobs; 0.4.3: thumb_candidates / thumb_make /
-  thumb_render / thumb_check (group cpu, Publish above; thumb_check = `jobtools.py thumb-check`); `jobtools.py selfcheck` = the report's
+  thumb_render / thumb_check (group cpu, Publish above; thumb_check = `jobtools.py thumb-check`); 2026-10-27: notes
+  (group cpu, `tools\notes.py prepare`; `claude: true` = one Claude window `/take-notes <name>` | `pending` when its
+  batch is ready, `Runner._notes_to_claude`; a download's `then: {"kind": "notes"}` prepares the saved video); `jobtools.py selfcheck` = the report's
   scrubbing + link and the install kinds, no network), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
   status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
   holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
@@ -385,7 +411,9 @@ a new file in `library\music\` or `ambience\<kind>\`), `/api/music/index` (the j
 raw body -> `knowledge\local\brand\sound_logo.<ext>`), POST `/api/brand/sound_logo/make` (the job `brand_sound_logo`),
 GET `/api/brand` `_sound_words`, New edit's `ambience`; 47 (2026-10-26, the Editor's keyframes and transitions): the
 `.../miniedit/preview` and `.../miniedit` changes take `prop` / `props` / `dir` (data.ME_KEYS - an older server refused
-them as "a change the Editor does not know"). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+them as "a change the Editor does not know"); 48 (2026-10-27, Analyser > Notes): GET `/api/notes`, `/api/notes/<name>`,
+`/api/notes/<name>/md?transcript=1`, POST `/api/notes/batch`, `/api/notes/<name>/mine` | `/meta` (label, tags, done),
+the job `notes`, the Delete kinds `notes` / `notes_video` (the video alone - the notes stay), the preset `mp4_720`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

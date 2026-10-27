@@ -13,6 +13,11 @@ its docstring (run it without arguments).
   id + sha1 + facts + the stamp of Claude's verified check), `patterns.json` (written only by textsets.py from Claude's
   draft), `verdicts.json` (the user's), `claude\` (drafts) - not a video analysis; the texts themselves live in the
   prompt library
+- `analysis\notes\<name>\` = a video's notes (2026-10-27, the Analyser's Notes; `tools\notes.py`,
+  `motionlab\notes.py`, Claude = `/take-notes`): `note.json` (the video, SHA-256, fps, link, ask, tags, chapters, Most
+  replayed, sponsor parts, `done`), `content\` (transcript, stats, info.json, thumbnail), `frames\` (key-frame sheets),
+  `notes.json` + `notes.md` (only through `notes.py save`, the quote gate), `mine.md` (the user's own notes) - not a
+  video analysis
 - `analysis\templates\<pack>\` = a pack of captured motion-graphics clips (0.5.0, e.g. `refs\swishy\`; measured by
   `templates.py read`, Claude's `cards.json`) - not a video analysis; `tools\overlays\motion\<id>\` = the Motion
   Graphics library (MotionLab's own templates rebuilt from them, in the repo)
@@ -94,6 +99,9 @@ not say, or a rule.
   `--redetect`), `report.py`, `feedback.py` (`--import` = also into verdicts.json),
   `sheet.py` (any frame range), `content.py` (what a video says and how it performs; MCP `transcript`), `colour.py`,
   `download.py` (yt-dlp); `motionlab\profile.py` = the video in numbers per focus
+- Notes from a video (2026-10-27): `notes.py prepare <video>` (MotionLab's part: words, key frames, chapters, Most
+  replayed, sponsor parts) and `notes.py save <name> <draft.json>` (Claude's notes through the gate: every quote found
+  in the transcript, the frame + timecode set by the tool, the limits)
 - Sets that are not a video: `thumbsets.py` (thumbnail sets; Claude's patterns = `/analyze-reference thumbs <set>`,
   used by `thumbnail.py make / check --style <set>`), `textsets.py` (scripts & prompts, 2026-10-18: Claude's check of
   a text is saved only when every quote is found in THAT text - `prompts.verify_check`, also behind `prompts.py

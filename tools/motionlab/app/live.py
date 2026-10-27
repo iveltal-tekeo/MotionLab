@@ -138,6 +138,7 @@ def _analyses() -> list:
     out = [_listing(ANALYSIS, ("events.json", "review.json", "meta.json")), _ent(LAB / "refs" / "downloads.json")]
     for sub in ("thumbs", "texts"):
         out.append(_listing(ANALYSIS / sub, ("set.json", "style.json", "patterns.json", "verdicts.json")))
+    out.append(_listing(ANALYSIS / "notes", ("note.json", "notes.json")))          # 2026-10-27: Notes
     return out
 
 

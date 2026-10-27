@@ -123,6 +123,74 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   thumbnails. Theirs: picked or dropped (object URLs - nothing
   is saved, nothing leaves the window), each with its title and channel to type; placed among the first ones seen,
   *Shuffle* moves them, *Squint* blurs the page (what still reads is what pops), *Where is mine?* outlines them.
+- **The three ways of analysing a video** (2026-10-27, the user: "3 ways of analizing videos: 1) animations and
+  effects (currently) 2) content creation (scripts, why its viral, structure...) 3) information (take notes ...)" and
+  "every option ... shown with a "character" made in motion graphics ... in similar style of motion labs"): the top
+  row `.gways.g3.anways` = *Effects & animations* (the old *Videos* way: Add videos, Download from link), *Content
+  creation* (`.soon`, a violet *Coming soon* chip, its button disabled - the friend's ideas reviewed in docs\plans.md
+  0.6.5) and *Notes* (*Take notes* = `addNotesModal`). Since the user's mascot brief (2026-10-27) each card is centred:
+  its mascot (116 px) - **FLUX** a faceted blue crystal with an orbit of square nodes, **SPARK** a golden origami star
+  with a speech bubble and storyboard frames, **INDEX** a teal orb with a lime bookmark and note cards on an orbit -
+  then the name in its colour (letter-spaced), the mode (*Animations & Effects*, *Content Creation*, *Notes &
+  Knowledge*), one line and the buttons; the selected way's border and glow take its mascot's colour (`--mc`). The
+  states follow the jobs: an analysis / a download to analyse running = FLUX *analysing* (it inspects, a light sweeps
+  its facets, the orbit speeds up), notes being prepared = INDEX *analysing* (the cards line up, their lines write
+  themselves); a job of its kind that just ended well = *success* once (`AN_SEEN`), then idle; a way's page greets
+  you with *hover* when it opens; hovering a card = hover (FLUX's node runs round, SPARK bounces and its bubble pops,
+  INDEX's cards come closer). INDEX also sits on a notes card without a picture (72 px, still) and on a page waiting
+  for Claude. `mascot()` / app.css "The Analyser's mascots": layered SVG + CSS, no filters, reduced motion = still
+  pictures, off screen = paused. Under them `.gways.g2.gmini` = Thumbnails (+ *Preview your thumbnail*) and Scripts & prompts in
+  one line each (`mini()`; their buttons *Analyze thumbnails* / *Analyze scripts & prompts*, the user's words).
+- **A page per way** (2026-10-27, the user: "the corresponding videos analyzed from a specific topic (flux, spark, or
+  index) they each have their own section? ... to not clutter the overview page of the analyzer"; Thumbnails and
+  Scripts & prompts stay apart, no mascot): `pageRefs(main, tab)` = `anOverview` (#/analyze: the head, the ways, the
+  smaller row, the in-progress panel, the open batches, the downloads waiting, then the tabs Effects | Notes |
+  Thumbnails | Scripts & prompts with their counts and lists - kept at the user's ask: "dont remove the existing tabs
+  of stuff, cuz people would not know where to look for"; a tab switches in place and is remembered, `ml.anTab`; a
+  card, its title or its count opens its page: `data-go`, `anWire`) or `anSection(main, k)` - both draw the same
+  lists (`anList`, `anListWire`): **#/analyze/videos** (FLUX: the analyses, focus / category / tag filters, the
+  test videos, the open batches, the downloads waiting), **#/analyze/spark** (SPARK: what it will do, coming soon),
+  **#/analyze/notes** (INDEX: the notes, a tag filter), **#/analyze/thumbs**, **#/analyze/texts**. A mascot's page
+  opens with `.anhead` (the mascot 92 px, *Analyser /*, its name, mode and line in its colour, its buttons) and the
+  in-progress panel of its own jobs (`anIsFx` / `anIsNt`); Thumbnails and Scripts & prompts with the usual sub-page
+  head. A video analysed for its effects (#/ref) and a video's notes (#/note) carry their mascot (46 px) beside the
+  title and *Analyser / FLUX* or *Analyser / INDEX* in the crumb. Old addresses: #/analyze/flux, /index, /content
+  and #/refs lead to the pages (`ALIASES`). The in-progress panel follows `notes` jobs too (*→ then its notes*, *→ then Claude
+  writes the notes*); a video downloaded for its notes is never *waiting to be analysed* (`data.waiting` skips
+  `notes.videos()`).
+
+## Notes
+
+A video's notes (2026-10-27, the Analyser's third way; the research and design: docs\plans.md 0.6.5 *Notes - the
+research*; the user: "simple and effective", "like a professional, not crowded", "video at 720p with option to delete
+the video afterwards but keep the notes", no test-yourself questions).
+- **Take notes** (`addNotesModal`): 1 links (one per line, downloaded with the preset `mp4_720`) and / or videos in
+  refs\ or a path, up to `AV_MAX`; 2 *What do you want from it?* (optional, the note's `ask` - it decides what Claude
+  stresses); 3 *Claude writes the notes when the words are ready* (default) or *Only get the words and key frames*;
+  More options = tags. POST `/api/notes/batch` (`server.notes_batch`: everything checked first; files -> queued
+  `notes` jobs, links -> downloads with `then: {"kind": "notes", ...}`; one batch) -> `#/analyze/notes`. The job =
+  `tools\notes.py prepare` (the words: the platform's subtitles through `content.fetch_subtitles`, else speech to text
+  with the title / channel / chapters as names; `content\info.json` = chapters, description, *Most replayed*; the key
+  frames where the screen changes - keyframes only (`-skip_frame nokey`) + the scene score, 8-36 of them on sheets of
+  12 labelled f480 (00:00:16:00); SponsorBlock's ranges for YouTube) and prints `NOTES: <name>`; with `claude` the
+  batch's last job opens ONE Claude window: `/take-notes <name>` or `/take-notes pending`.
+- **The card** (`noteCard`): the platform's thumbnail (else `frames\cover.jpg`), the date, the notes' title, length ·
+  channel · platform, the TL;DR (2 lines), takeaways · sections, two tags, *Waiting for Claude* + *Write the notes*
+  until Claude wrote them; Delete on hover (kind `notes`).
+- **The page** (#/note/<name>, `pageNote`): the head = the notes' title (the video's own title on hover), source link ·
+  channel · length · fps · tags + *edit* (name and tags, POST `.../meta`), then *Download (.md)* (a small dialog: + the
+  whole transcript; GET `.../md` -> a Blob download, Claude's notes + the ticks + My notes), *Copy for another AI*
+  (the context block with the video's title and link), Folder, *Delete the video, keep the notes* (only when the
+  video is in refs\: the Delete kind `notes_video` = the video alone) and Delete (kind `notes`: the folder + the video
+  when it is in refs\ and nothing else uses it). Left, one reading column (74ch): *You asked for*, the **TL;DR**
+  callout, **Key takeaways** (a bold phrase + one sentence + the time chip `f480 (00:00:16:00)` - a click plays it,
+  the quote on hover, *most replayed* when it falls on a peak), **Sections** folded (title, one-line gist, its time;
+  open = its points), **Steps** (how-tos only), **Apply it** (ticks = note.json `done`, POST `.../meta`), folded
+  Resources and *Context for another AI* (+ Copy), the footer (when, *Write them again*). Without notes yet: what
+  MotionLab has (words, key frames, the issues) + *Write the notes with Claude*. Right, sticky: the video (only when
+  it is inside the lab folder - else a line, or *The video was deleted - the notes stay.* with the thumbnail), the
+  tabs *My notes* (a textarea saved 600 ms after typing and on leaving, POST `.../mine`), *Transcript* (search, a
+  click plays the line, the line being said is marked) and *Key frames* (the sheets, the lightbox).
 
 ## The analysis page
 

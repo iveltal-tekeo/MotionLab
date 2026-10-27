@@ -1,5 +1,7 @@
 {
  "_by_key": [
+  "Notes of {file}",
+  "MP4 video, up to 720p (smaller - for notes)",
   "A clip of {graphic} for DaVinci Resolve",
   "A copy of {file} that plays here",
   "Add the graphic {graphic} to {video} as {name}",
@@ -586,5 +588,11 @@
  "Sound effects made with ElevenLabs": "Efectos de sonido creados con ElevenLabs",
  "Measure your music": "Medir tu música",
  "Ambience made with ElevenLabs": "Ambiente creado con ElevenLabs",
- "Your sound logo, made with ElevenLabs": "Tu logo sonoro, creado con ElevenLabs"
+ "Your sound logo, made with ElevenLabs": "Tu logo sonoro, creado con ElevenLabs",
+ "Claude's notes, your own notes, the words and the key frames": "las notas de Claude, tus propias notas, las palabras y los fotogramas clave",
+ "The notes": "Las notas",
+ "its notes stay, without the video to play": "sus notas se quedan, sin el vídeo para reproducir",
+ "the notes, your own notes and the key frames": "las notas, tus propias notas y los fotogramas clave",
+ "Notes of {file}": "Notas de {file}",
+ "MP4 video, up to 720p (smaller - for notes)": "Vídeo MP4, hasta 720p (más pequeño - para notas)"
 }
