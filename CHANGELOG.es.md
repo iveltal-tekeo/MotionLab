@@ -21,9 +21,10 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
 - **Añadir vídeos se abre al momento** - *Añadir vídeos*, *Analizar guiones y prompts* y *Editar varios vídeos* esperaban
   al tiempo habitual de Claude en este PC antes de abrirse (unos 6 segundos después de arrancar MotionLab), así que
   parecía que el botón no hacía nada. Ahora se abren enseguida y esa línea aparece cuando está lista.
-- **Examina para elegir los vídeos que analizar** - *Analizar vídeos* tiene un botón *Examinar…*: la ventana de
-  archivos de Windows, donde eliges uno o varios vídeos de cualquier sitio de tu PC (se quedan donde están); *Añadir*
-  con la casilla vacía también la abre. Añadir un vídeo por su ruta ya no vacía la lista de vídeos de tu carpeta refs.
+- **Examina para elegir tus propios vídeos** - *Analizar vídeos*, *Tomar notas* y *Analizar con SPARK* tienen un botón
+  *Examinar…*: la ventana de archivos de Windows, donde eliges uno o varios vídeos de cualquier sitio de tu PC (se
+  quedan donde están); *Añadir* con la casilla vacía también la abre. Añadir un vídeo por su ruta ya no vacía la lista
+  de vídeos de tu carpeta refs.
 
 ## 0.6.0.9 - 2026-11-02 - Aprende de tus propias publicaciones: dónde se fue la gente, pruebas, lecciones y un repaso del mes
 

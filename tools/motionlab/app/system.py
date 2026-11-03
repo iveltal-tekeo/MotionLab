@@ -621,13 +621,17 @@ _PICK = {"dir": ""}                                  # the last pick's folder (t
 _PICK_LOCK = threading.Lock()                        # one file picker at a time
 
 
-def pick_videos() -> dict:
-    """*Browse…* in Analyze videos (2026-11-03, the user: "or the full path of a video elsewhere ... i still click Add
-    there and it does not open"): Windows' own Open dialog - a page in a browser never learns a file's place - for
-    several videos at once, in front of MotionLab (owned by a hidden always-on-top window), in the last pick's folder
-    or the user's Videos. The files stay where they are (only read). -> {"paths": [...], "skipped": n} ([] = cancelled;
-    skipped = picked files that are not videos)."""
+def pick_videos(purpose: str = "analyse") -> dict:
+    """*Browse…* in the Analyser's add dialogs - Analyze videos, Take notes, SPARK = purpose analyse | notes | spark
+    (2026-11-03, the user: "or the full path of a video elsewhere ... i still click Add there and it does not open",
+    then "i just want to be able to analyze local videos"): Windows' own Open dialog - a page in a browser never learns
+    a file's place - for several videos at once, in front of MotionLab (owned by a hidden always-on-top window; a timer
+    asks Windows to give it the focus too - a window opened by the server may not take it by itself), in the last
+    pick's folder or the user's Videos. The files stay where they are (only read).
+    -> {"paths": [...], "skipped": n} ([] = cancelled; skipped = picked files that are not videos)."""
     import base64
+    titles = {"analyse": I18N.t("Pick the videos to analyse"), "notes": I18N.t("Pick the videos to take notes from"),
+              "spark": I18N.t("Pick the videos for SPARK")}
     if sys.platform != "win32":
         raise ValueError(I18N.t("the file picker needs Windows - paste the video's full path instead"))
     lock = _PICK_LOCK
@@ -642,7 +646,10 @@ def pick_videos() -> dict:
               "$o = New-Object System.Windows.Forms.Form; $o.TopMost = $true; $o.ShowInTaskbar = $false; "
               "$o.Opacity = 0; $o.StartPosition = 'CenterScreen'; $o.Show(); $o.Activate(); "
               "$d = New-Object System.Windows.Forms.OpenFileDialog; $d.Multiselect = $true; "
-              f"$d.Title = {q(I18N.t('Pick the videos to analyse'))}; "
+              f"$d.Title = {q(titles.get(purpose, titles['analyse']))}; "
+              "$tm = New-Object System.Windows.Forms.Timer; $tm.Interval = 300; "      # (the focus, once it is up)
+              "$tm.Add_Tick({ $tm.Stop(); try { [void](New-Object -ComObject WScript.Shell).AppActivate($d.Title) } "
+              "catch { } }); $tm.Start(); "
               f"$d.Filter = {q(I18N.t('Videos') + f' ({exts})|{exts}|' + I18N.t('All files') + ' (*.*)|*.*')}; "
               + (f"$d.InitialDirectory = {q(start)}; " if start
                  else "$d.InitialDirectory = [Environment]::GetFolderPath('MyVideos'); ")

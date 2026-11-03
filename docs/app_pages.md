@@ -92,6 +92,8 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   *Add videos* = `addVideosModal` (links one per line + files from refs\ or a
   path - 2026-11-03 *Browse…* = POST `/api/pick/videos`, Windows' own Open dialog for several videos anywhere, which
   stay where they are; *Add* with an empty box opens it too, the user: "i still click Add there and it does not open";
+  the same in *Take notes* and *SPARK* - js\home.js `pickVideos(btn, for, add, done)` + `browseBtn`, the picker's title per
+  dialog, a timer asking Windows to give it the focus;
   it opens at once and its estimate line follows - `estLater`, the estimate reads every Claude Code log -, up to `AV_MAX` 10; the focus `FOCUS_OPTS`; kind of video; "Claude checks each video when it is measured" =
   claude:true per analyze job, or Measure only) -> POST `/api/analyze/batch` (`server.analyze_batch`: everything is
   checked before anything starts; files -> queued analyze jobs, links -> queued download jobs whose `then` starts

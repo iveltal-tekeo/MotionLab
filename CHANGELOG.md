@@ -18,9 +18,9 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
 - **Add videos opens at once** - *Add videos*, *Analyze scripts & prompts* and *Edit several videos* waited for Claude's
   usual time on this PC before they opened (about 6 seconds after MotionLab starts), so the button seemed to do
   nothing. They open right away now and that line appears when it is ready.
-- **Browse for videos to analyse** - *Analyze videos* has a *Browse…* button: Windows' own file window, where you pick
-  one or several videos anywhere on your PC (they stay where they are); *Add* with an empty box opens it too. Adding a
-  video by its path no longer empties the list of videos in your refs folder.
+- **Browse for your own videos** - *Analyze videos*, *Take notes* and *Analyze with SPARK* have a *Browse…* button:
+  Windows' own file window, where you pick one or several videos anywhere on your PC (they stay where they are); *Add*
+  with an empty box opens it too. Adding a video by its path no longer empties the list of videos in your refs folder.
 
 ## 0.6.0.9 - 2026-11-02 - Learn from your own posts: where people left, tests, lessons and a monthly review
 

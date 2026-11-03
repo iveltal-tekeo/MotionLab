@@ -75,7 +75,7 @@ async function addSparkModal(pre = [], links = []) {         // links: filled in
     ${yt.found ? '' : `<div class="small amber">${t('Links need the downloader (yt-dlp): <a href="#/settings" onclick="closeModal()">Settings → Programs</a>. Files work without it.')}</div>`}
     <div class="small muted" style="margin:8px 0 4px">${t('or pick videos you already have (in the refs folder):')}</div>
     <div class="avfiles" id="spfiles">${preRows}${cands.map(c => fileRow(c, pre.includes(c.path))).join('') || (preRows ? '' : `<div class="small dim">${t('No videos in refs yet - paste a link, or the path of a video below.')}</div>`)}</div>
-    <div class="row" style="margin-top:6px"><input type="text" id="sppath" placeholder="${ta('…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4')}" style="flex:1"><button class="btn sm" id="spaddp">${t('Add')}</button></div>
+    <div class="row" style="margin-top:6px">${browseBtn('spbrowse')}<input type="text" id="sppath" placeholder="${ta('…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4')}" style="flex:1"><button class="btn sm" id="spaddp" title="${ta('Adds the path in the box - with the box empty, it opens Browse')}">${t('Add')}</button></div>
     <div class="avstep opt"><b>2</b><span>${t('What do you want to know?')}</span>${optTag()}</div>
     <input type="text" id="spask" maxlength="1000" style="width:100%" placeholder="${ta('e.g. why it got so many views, what I can copy for my channel, why the comments exploded…')}">
     <div class="avstep"><b>3</b><span>${t("Claude's write-up")}</span></div>
@@ -96,13 +96,18 @@ async function addSparkModal(pre = [], links = []) {         // links: filled in
     };
     $('#spl', el).oninput = upd;
     $('#spfiles', el).onchange = upd;
-    $('#spaddp', el).onclick = () => {
-      const v = $('#sppath', el).value.trim().replace(/^"|"$/g, '');
-      if (!v) return;
-      const box = $('#spfiles', el);
+    const addPath = v => {                          // a video into the list, ticked (one already there is ticked again)
+      const box = $('#spfiles', el), had = $$('input', box).find(x => x.value === v);
+      if (had) { had.checked = true; return; }
       const empty = box.querySelector('div.small.dim'); if (empty) empty.remove();
       box.insertAdjacentHTML('afterbegin', fileRow({path: v, name: v, size: null}, true));
-      $('#sppath', el).value = ''; upd();
+    };
+    const browse = () => pickVideos($('#spbrowse', el), 'spark', addPath, upd);      // 2026-11-03: Browse… (home.js)
+    $('#spbrowse', el).onclick = browse;
+    $('#spaddp', el).onclick = () => {
+      const v = $('#sppath', el).value.trim().replace(/^"|"$/g, '');
+      if (!v) return browse();                                 // (an empty box: the picker)
+      addPath(v); $('#sppath', el).value = ''; upd();
     };
     $('#spgo', el).onclick = async () => {
       const b = $('#spgo', el); b.disabled = true;

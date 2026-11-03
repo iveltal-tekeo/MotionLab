@@ -258,6 +258,24 @@ function estWords(e, n, what = 'video') {
 function estLater(then) {
   api('/api/estimate').catch(() => ({})).then(e => then(e || {}));
 }
+// *Browse…* in the Analyser's add dialogs - Analyze videos, Take notes, SPARK (2026-11-03, the user: "i just want to be
+// able to analyze local videos"): Windows' own Open dialog, opened by the server (POST /api/pick/videos {for}) - a page
+// never learns a file's place; each video picked goes to add(path), then done(); the button busy meanwhile
+async function pickVideos(btn, purpose, add, done) {
+  if (!btn || btn.disabled) return;
+  const was = btn.innerHTML;
+  btn.disabled = true; btn.textContent = t('Pick them in the window that opened…');
+  try {
+    const r = await api('/api/pick/videos', {for: purpose});
+    if (!btn.isConnected) return;                            // (the dialog was closed meanwhile)
+    r.paths.forEach(add);
+    if (r.skipped) toast(tn(r.skipped, '{n} file is not a video - left out', '{n} files are not videos - left out'));
+    done();
+  } catch (e) { toast(e.message, 'err'); }
+  finally { if (btn.isConnected) { btn.disabled = false; btn.innerHTML = was; } }
+}
+// the Browse… button of those dialogs (its id: <prefix>browse), left of the path box
+const browseBtn = id => `<button class="btn sm pri" id="${id}" title="${ta('Pick videos anywhere on this PC - they stay where they are')}"><svg class="i"><use href="#i-folder"/></svg>${t('Browse…')}</button>`;
 async function addVideosModal(pre = {}) {
   const [cands, ST] = await Promise.all([api('/api/candidates'), api('/api/settings')]);
   let EST = null;                                   // Claude's usual time: drawn when it comes (estLater)
@@ -274,7 +292,7 @@ async function addVideosModal(pre = {}) {
     ${yt.found ? '' : `<div class="small amber">${t('Links need the downloader (yt-dlp): <a href="#/settings" onclick="closeModal()">Settings → Programs</a>. Files work without it.')}</div>`}
     <div class="small muted" style="margin:8px 0 4px">${t('or pick videos you already have (in the refs folder):')}</div>
     <div class="avfiles" id="avfiles">${[...elsewhere, ...fresh, ...done].map(fileRow).join('') || `<div class="small dim">${t('No videos in refs yet - paste a link, or the path of a video below.')}</div>`}</div>
-    <div class="row" style="margin-top:6px"><button class="btn sm pri" id="avbrowse" title="${ta('Pick videos anywhere on this PC - they stay where they are')}"><svg class="i"><use href="#i-folder"/></svg>${t('Browse…')}</button>
+    <div class="row" style="margin-top:6px">${browseBtn('avbrowse')}
       <input type="text" id="avpath" placeholder="${ta('…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4')}" style="flex:1"><button class="btn sm" id="avadd" title="${ta('Adds the path in the box - with the box empty, it opens Browse')}">${t('Add')}</button></div>
     <div class="avstep"><b>2</b><span>${t('What should Claude look at?')}</span></div>
     <div class="avmodes">${FOCUS_OPTS.map(([k, lab, d, ex, extra]) => `<label class="avmode${k === focus ? ' on' : ''}"><input type="radio" name="avf" value="${k}" ${k === focus ? 'checked' : ''}>
@@ -315,22 +333,8 @@ async function addVideosModal(pre = {}) {
       box.querySelector('input').checked = true;
     };
     // *Browse…* (2026-11-03, the user: "or the full path of a video elsewhere ... i still click Add there and it does
-    // not open"): Windows' own Open dialog, opened by the server (POST /api/pick/videos - a page never learns a file's
-    // place); the videos picked join the list ticked, the files stay where they are
-    const browse = async () => {
-      const b = $('#avbrowse', el);
-      if (b.disabled) return;
-      const was = b.innerHTML;
-      b.disabled = true; b.textContent = t('Pick them in the window that opened…');
-      try {
-        const r = await api('/api/pick/videos', {});
-        if (!$('#avfiles', el)) return;                       // (the dialog was closed meanwhile)
-        r.paths.forEach(addPath);
-        if (r.skipped) toast(tn(r.skipped, '{n} file is not a video - left out', '{n} files are not videos - left out'));
-        upd();
-      } catch (e) { toast(e.message, 'err'); }
-      finally { if ($('#avbrowse', el) === b) { b.disabled = false; b.innerHTML = was; } }
-    };
+    // not open"): the videos picked join the list ticked, the files stay where they are (pickVideos)
+    const browse = () => pickVideos($('#avbrowse', el), 'analyse', addPath, upd);
     $('#avbrowse', el).onclick = browse;
     $('#avadd', el).onclick = () => {
       const v = $('#avpath', el).value.trim().replace(/^"|"$/g, '');

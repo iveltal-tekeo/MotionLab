@@ -1250,8 +1250,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(r)
         if path == "/api/shortcut":
             return self._json(system.make_shortcut(str(body.get("where", ""))))
-        if path == "/api/pick/videos":                   # 2026-11-03: Analyze videos' *Browse…* - Windows' Open dialog
-            return self._json(system.pick_videos())
+        if path == "/api/pick/videos":                   # 2026-11-03: the Analyser's *Browse…* - Windows' Open dialog
+            return self._json(system.pick_videos(str(body.get("for") or "analyse")))
         if path == "/api/open":
             if str(body.get("path", "")) in ("", "."):
                 subprocess.Popen(["explorer", str(LAB)])
