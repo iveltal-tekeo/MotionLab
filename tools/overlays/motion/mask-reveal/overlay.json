@@ -1,0 +1,26 @@
+{
+ "name": "mask-reveal",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "air",
+   "dur": "0.45",
+   "db": -8,
+   "what": "the words rise in"
+  },
+  {
+   "f": "frames - round(17 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2400,
+   "to": 700,
+   "db": -10,
+   "if": "leave and (frames - start) * 30 / fps > (len(text) * gap / 3 if by == 'letters' else (parts(text, '|') * gap * 2 if by == 'lines' else (parts(text, ' ') + parts(text, '|') - 1) * gap)) + 50",
+   "what": "the words slide out"
+  }
+ ]
+}

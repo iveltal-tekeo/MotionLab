@@ -10,8 +10,9 @@ with the command that prints it.
           (knowledge.py memory --rules), the lessons for this kind (knowledge.py lessons --kind generate).
           An edit (build\\edit_request.json): the request in words (edit_brief.md), the clips (length, rate, size,
           sound, their words if transcribed), the photos (2026-10-24: size, shape, date taken, the user's length /
-          zoom, one sheet of them all), the references' style, the ratings as rules, the lessons (talking videos:
-          --kind talking; others: every lesson).
+          zoom, one sheet of them all), the references' style, the parts the user cut in New edit's Segments step
+          with each one's edit and whose pick it is (0.6.1, tools\\segments.py), the ratings as rules, the lessons
+          (talking videos: --kind talking; others: every lesson).
 The app writes it when a request is saved; /generate-video and /recreate-video read it first (they run this when it
 is missing or older than the request). Reads only; writes brief.md (+ build\\photos\\photos_sheet.jpg).
 """
@@ -308,6 +309,46 @@ def safe_lines(fmt) -> list[str]:
             f"build.py flags a graphic in them; the Editor shows them on its preview."]
 
 
+def segments_lines(p: Path, req: dict) -> list[str]:
+    """0.6.1 (Edit by segments, step 7): the parts the user cut in New edit's *Segments* step, each with its edit and
+    whose pick it is (tools\\segments.py) - when they were cut from THIS request (the bare draft's own arguments = the
+    request's); cut from other answers with picks of the user's in them = a line to cut again; nothing when the step
+    was not used (or the request is one a quick draft cannot make: an exact copy...)."""
+    import segments as SGT
+    from motionlab import editreq as ER
+    from motionlab.project import Project
+    try:
+        want = [x for x in ER.draft_args(req) if x != "--render"]
+    except ValueError:
+        return []
+    prj = Project(p.name)
+    made = lambda q: json.loads(q.read_text(encoding="utf-8")).get("made_by") or {}         # noqa: E731
+    bare = next((q for q in reversed(SGT.plans_of(prj)) if made(q).get("bare")), None)
+    if bare is None:
+        return []
+    got = [x for x in (made(bare).get("args") or [])[1:] if x not in ("--bare", "--render")]
+    head = ["", "## Segments (New edit > Segments: the edit picked part by part - recreate-video by_feel.md *By "
+                "segments*)"]
+    if got != want:
+        if not any(SGT.by_user(x) for x in SGT.load_picks(prj)["picks"]):
+            return []
+        return head + [f"- The parts in build\\ ({bare.name}) were cut from other answers ({' '.join(got)}) and the user "
+                       f"picked some: cut again with this request first - `tools\\segments.py \"{p.name}\" --request` "
+                       "(their picks stay with their parts), then pick."]
+    R = SGT.analyse(prj, bare, write=False)
+    doc = R["doc"]
+    segs = doc["segments"]
+    n_user, n_cl = (sum(1 for s in segs if s["by"] == b) for b in ("user", "claude"))
+    L = head + [f"- {bare.name} (a bare quick draft of this request: the cuts, sound, colour and framing only) in "
+                f"{len(segs)} parts ({doc['kind']}, words in {doc['lang']}): {n_user} picked by the user (YOURS: theirs - "
+                f"never pick over them), {n_cl} by Claude before (CLAUDE'S), the rest the rules' suggestion. The list "
+                f"now: `tools\\segments.py \"{p.name}\"`; your picks: build\\segments_claude.json -> `--claude`; the edit: "
+                "`--build --render`."]
+    if R["lost"]:
+        L.append(f"- {len(R['lost'])} pick(s) of the user's are for parts this cut no longer has (kept aside).")
+    return L + ["```", *SGT.table(doc), "```"]
+
+
 def edit_brief(p: Path, req: dict) -> list[str]:
     b = p / "build" / "edit_brief.md"
     talking = req.get("sound") == "talk" or str(req.get("prompt") or "").startswith(("script-", "hook-"))
@@ -334,6 +375,8 @@ def edit_brief(p: Path, req: dict) -> list[str]:
         L += edit_template_lines(p.name, " ".join([str(req.get("want") or ""), str(req.get("about") or ""), *(
             x if isinstance(x, str) else json.dumps(x, ensure_ascii=False) for x in req.get("on_screen") or []),
             str(st.get("type") or ""), " ".join(st.get("moods") or []), said]))
+    if not req.get("exact"):
+        L += segments_lines(p, req)
     L += ["", KN.memory_rules(), "", KN.lessons_for("talking" if talking else "all")]
     L += safe_lines(req.get("format"))
     left = ["Claude's memory beyond the ratings: `knowledge.py memory` (a 1:1 copy of a reference reads it whole)",

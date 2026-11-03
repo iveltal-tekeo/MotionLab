@@ -1,0 +1,225 @@
+{
+ "name": "Carousel spin (your reels spin round you)",
+ "kind": "social",
+ "category": "Social",
+ "what": "Your reels stand in a 3D carousel round you, each turned to face outward, near ones big and bright, far ones small and dim behind your head. It opens out, spins fast, slows to a stop with reel 1 facing the camera, that reel steps forward and a light crosses it while the room dims; it closes in at the end. Every reel shows its cover, a play mark and a view count. The Editor pins it on your face, puts the far side behind you and dims the room with it.",
+ "use_for": [
+  "talking head",
+  "my reels",
+  "pick one",
+  "the winner",
+  "best video",
+  "portfolio",
+  "creator",
+  "reveal",
+  "hook",
+  "short form"
+ ],
+ "tags": [
+  "social",
+  "reels",
+  "carousel",
+  "3d",
+  "spin",
+  "perspective",
+  "behind",
+  "in shot",
+  "face",
+  "view count",
+  "cards",
+  "needs media",
+  "talking head"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0-f13 the carousel opens out from behind the person (radius from 25 %, reels from 50 %, decelerating), seen from f0; it spins from f0 and slows to a stop at f88 (1.25 turns, decelerating: fast at first, a horizontal motion smear while a reel moves over 8 px a frame) with reel 1 facing the camera; f88-f96 reel 1 steps forward 7 % (a small overshoot) while the others dim; f92-f108 a band of light crosses it (S-curve); the last 9 f the carousel closes to 70 % and fades (accelerating)",
+ "tracks": [
+  {
+   "name": "open",
+   "what": "the carousel opens out from behind the person",
+   "start_f": 0,
+   "length_f": 13,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "spin",
+   "what": "the carousel spins fast and slows to a stop with reel 1 in front",
+   "start_f": 0,
+   "length_f": 88,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "step forward",
+   "what": "reel 1 steps forward, the others dim",
+   "start_f": 88,
+   "length_f": 8,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "sheen",
+   "what": "a band of light crosses reel 1",
+   "start_f": 92,
+   "length_f": 16,
+   "easing": "S-curve"
+  },
+  {
+   "name": "close",
+   "what": "the carousel closes in and fades",
+   "start_f": 110,
+   "length_f": 9,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "start + round((30 + 22 + (10 if leave else 1)) * fps / 30)",
+ "min_why": "the carousel needs a second to spin down and a moment to show the reel that stopped in front",
+ "in_shot": {
+  "behind": "top",
+  "follow": "face",
+  "snap": {
+   "w": 5.0,
+   "dy": 0.35
+  },
+  "match": true
+ },
+ "with": [
+  {
+   "effect": "spotlight",
+   "at": 0.0,
+   "len": null,
+   "opts": {}
+  }
+ ],
+ "core_points": 1,
+ "text_slots": [
+  "views"
+ ],
+ "media_slots": [
+  {
+   "id": "reel1_media",
+   "label": "Reel 1 (the one that stops in front): your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel2_media",
+   "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel3_media",
+   "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel4_media",
+   "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel5_media",
+   "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel6_media",
+   "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel7_media",
+   "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel8_media",
+   "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.3,
+ "thumb_f": 100,
+ "check_frames": [
+  0,
+  1,
+  3,
+  6,
+  10,
+  20,
+  35,
+  55,
+  75,
+  88,
+  92,
+  96,
+  104,
+  110,
+  114,
+  119
+ ]
+}

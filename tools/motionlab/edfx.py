@@ -10,7 +10,9 @@ effects from the layers on every build).
     move(P, fx, by) / set_len(P, fx, n) / set_strength(P, fx, x) / set_ease(P, fx, ease) / remove(P, fx)
     add(P, kind, f) -> the new effect's id; ADD = the kinds the Editor offers (2026-10-27, the user: "few but higher
         quality ones" - the review against CapCut / Premiere / Resolve kept these; the rest stay editable where a plan
-        has them: a zoom-through / pull-out, colour flash, light leak, dips, white flash, spotlight)
+        has them: a zoom-through / pull-out, colour flash, light leak, dips, white flash, spotlight); ADD_MORE = the
+        whole-picture effects and painted rooms after Vibha Ramprakash's designs - added by edit lists and templates,
+        not offered in the Editor
 
 Where each kind lives (draft.py writes them so): a zoom move = a shot's "zoom" keys (Zoom in / out; a "hold" key =
 a punch-in step); a shot's constant "zoom" = tight framing; a shake = "anchor" value lists (+ a 6 % zoom); a flash =
@@ -40,7 +42,27 @@ RGB_DROP = ("id", "flash_over", "flash_white", "black", "trans", "sound_db", "tr
 # 12 % over ~3 s (the same day: the push-in merged into it, the room no longer melts - a halo round the hair); each
 # turns the shot's "track": "face" on (compose: the zoom point follows the face). A "room" = curves for the room only
 # (an older plan's spotlight / melt: still found, moved, changed).
-ROOM_LOOKS = {"spotlight": ("dim", "Spotlight"), "melt": ("blur", "Room out of focus"), "grey": ("grey", "Grey room")}
+ROOM_LOOKS = {"spotlight": ("dim", "Spotlight"), "melt": ("blur", "Room out of focus"), "grey": ("grey", "Grey room"),
+              "paint": ("paint", "Painted room")}
+# 2026-10-28, the rest of her designs (the user: "build the rest of the effects from the vibhas set"): effects on the
+# whole picture = a "fx" layer (compose.FxLayer, motionlab\screenfx.py), right after the clips (the graphics stay
+# clean on top); the room painted a pastel or grid paper (a clip's room); the ones only a template brings with it
+# (COMPANIONS: they need its numbers - template.json "with", miniedit.companions)
+SCREEN = {"swipe": "swipe", "dot_reveal": "dots", "rabbit_hole": "tunnel", "glitch": "glitch", "corner_push": "push",
+          "frame": "frame", "grade": "grade"}                             # an Editor kind -> the fx layer's kind
+LOOK_KINDS = {"look_moody": "moody", "look_bw": "bw", "look_warm": "warm", "look_cool": "cool", "look_pop": "pop",
+              "look_red": "red_film", "look_film": "editorial"}
+ROOM_PAINTS = {"pastel_room": ("#CDBEF5", None), "paper_room": ("#EEF0F4", "grid")}
+SCREEN_LABEL = {"swipe": "Before / after", "dots": "Dot reveal", "tunnel": "Rabbit hole", "glitch": "Glitch",
+                "push": "Corner push", "frame": "Into a frame"}
+LOOK_LABEL = {"moody": "Moody look", "bw": "Black and white", "warm": "Warm look", "cool": "Cool look",
+              "pop": "Pop look", "red_film": "Red film", "editorial": "Soft film", "lavender": "Lavender look"}
+# (not in ADD: they were built before the Editor's review kept its eight - the user, 2026-10-27: "few but higher
+# quality ones"; edit lists and a template's "with" add them, a plan that has one shows its chip)
+ADD_MORE = ("rabbit_hole", "dot_reveal", "glitch", "swipe", "corner_push", "pastel_room", "paper_room") + tuple(LOOK_KINDS)
+COMPANIONS = ("frame", "grade", "room_paint", "spotlight")      # (spotlight: carousel-spin's, no longer the Editor's)
+CLIP_ONLY |= {"pastel_room", "paper_room", "room_paint", "spotlight"}
+FX_CURVES = ("amount", "pos", "zoom", "px", "py")
 SOLID_FX = ("colorflash_", "leak_", "dip_", "fade_in", "fade_out", "flash_", "black_")     # solids that are effects
 
 
@@ -87,6 +109,14 @@ def effects(P: dict) -> list[dict]:
             if lid.startswith(SOLID_FX):                    # (a corner camera's frame, an end card's background:
                 out.append(_solid_fx(L))                    # the layout, not an effect)
             continue
+        if t == "fx":                                       # an effect on the whole picture
+            k = L.get("kind")
+            label = LOOK_LABEL.get(L.get("look"), "Colour look") if k == "grade" else SCREEN_LABEL.get(k, "Effect")
+            ak = _keys(L.get("amount"))
+            peak = round(max(float(x[1]) for x in ak), 3) if ak and k in ("grade", "glitch") else None
+            out.append(_fx("screen", label, lid, s, e - s + 1, ["move", "len", "remove"] + (["strength"] if peak else []),
+                           peak))
+            continue
         if t != "clip":
             continue
         an = L.get("anchor")
@@ -118,6 +148,8 @@ def effects(P: dict) -> list[dict]:
         rm = L.get("room") if isinstance(L.get("room"), dict) else None
         if rm and rm.get("look") in ROOM_LOOKS and _keys(rm.get(ROOM_LOOKS[rm["look"]][0])):
             ch, label = ROOM_LOOKS[rm["look"]]
+            if ch == "paint":
+                label = "Grid paper room" if rm.get("pattern") == "grid" else "Pastel room"
             rk = sorted(_keys(rm[ch]), key=lambda k: k[0])
             out.append(_fx("room", label, lid, int(rk[0][0]), int(rk[-1][0]) - int(rk[0][0]) + 1,
                            ["move", "len", "strength", "remove"], round(max(float(k[1]) for k in rk), 3)))
@@ -524,7 +556,7 @@ def move(P: dict, fx: dict, by: int) -> int:
             set_len(P, find(P, nid), fx["len"])
         return by
     L = _layer(P, fx["layer"])
-    if L.get("type") == "solid":
+    if L.get("type") in ("solid", "fx"):
         by = _clamp(by, -int(L["start"]), N - 1 - int(L["end"]))
         EL._shift(L, by)
         return by
@@ -581,6 +613,14 @@ def set_len(P: dict, fx: dict, n: int) -> None:
         sc = (n - 1) / max(1, old - 1)
         for c in _room_curves(L):
             c["keys"] = [[f0 + int(round((int(x[0]) - f0) * sc)), *x[1:]] for x in c["keys"]]
+    elif L.get("type") == "fx":                           # every curve of it stretched with it
+        s = int(L["start"])
+        n = min(n, int(P["frames"]) - s)
+        sc = (n - 1) / max(1, old - 1)
+        for c in (L.get(x) for x in FX_CURVES):
+            if _keys(c):
+                c["keys"] = [[s + int(round((int(v[0]) - s) * sc)), *v[1:]] for v in c["keys"]]
+        L["end"] = s + n - 1
     elif L.get("type") == "solid":
         s = int(L["start"])
         sc = (n - 1) / max(1, old - 1)
@@ -602,13 +642,17 @@ def set_strength(P: dict, fx: dict, x: float) -> None:
         _zoom_strength(L, fx, x)
     elif k == "room":
         ch = ROOM_LOOKS[L["room"]["look"]][0]
-        top = {"dim": 0.95, "blur": 40.0, "grey": 1.0}[ch]
+        top = {"dim": 0.95, "blur": 40.0, "grey": 1.0, "paint": 1.0}[ch]
         x = min(top, max(0.02, float(x)))
         peak = fx["strength"] or 1.0
         c = L["room"][ch]
         c["keys"] = [[v[0], round(min(top, float(v[1]) * x / peak), 4), *v[2:]] for v in c["keys"]]
     elif k == "framing":
         L["zoom"] = round(min(3.0, max(1.01, float(x))), 4)
+    elif L.get("type") == "fx" and _keys(L.get("amount")):         # a look's mix, a glitch's peak
+        x = min(1.0, max(0.05, float(x)))
+        peak = fx["strength"] or 1.0
+        L["amount"]["keys"] = [[v[0], round(min(1.0, float(v[1]) * x / peak), 4), *v[2:]] for v in L["amount"]["keys"]]
     elif k == "shake":
         x = min(0.15, max(0.002, float(x)))
         dev = fx["strength"] or 1e-6
@@ -658,7 +702,7 @@ def remove(P: dict, fx: dict) -> None:
         P["layers"] = [x for x in P["layers"] if not any(x is g for g in gone)]
         return
     L = _layer(P, fx["layer"])
-    if L.get("type") == "solid":
+    if L.get("type") in ("solid", "fx"):
         P["layers"] = [x for x in P["layers"] if x is not L]
     elif k in ("zoom", "punch"):
         _zoom_remove(L, fx)
@@ -715,8 +759,23 @@ def _shot_at(P: dict, f: int) -> dict | None:
     return next((x for x in _shots(P) if int(x["start"]) <= f <= int(x["end"])), None)
 
 
+def _room_span(s: int, e: int, f: int, n: int | None, dflt: int, least: int, with_: bool) -> tuple[int, int]:
+    """Where a room look goes on the shot s-e: (first frame, length). The Editor's: the whole look inside the shot,
+    moved earlier near its end; a template's companion (with_): from the graphic's first frame, cut at the shot's end -
+    never before the graphic shows (2026-10-29: check-pills near a cut painted the room before it appeared)."""
+    if with_:
+        a = max(s, f)
+        m = min(int(n) if n else dflt, e - a + 1)
+    else:
+        m = max(2, min(int(n) if n else dflt, e - s + 1))
+        a = max(s, min(f, e - m + 1))
+    if m < least:
+        raise FxError(I18N.t("this shot is too short for that effect"))
+    return a, m
+
+
 def _room_curves(L: dict) -> list[dict]:
-    return [c for c in ((L.get("room") or {}).get(k) for k in ("dim", "blur", "grey")) if _keys(c)]
+    return [c for c in ((L.get("room") or {}).get(k) for k in ("dim", "blur", "grey", "paint")) if _keys(c)]
 
 
 def _zoom_now(L: dict) -> float | None:
@@ -732,12 +791,15 @@ def _solid(P: dict, prefix: str, f: int, n: int, color: list, blend: str, opacit
     return lid
 
 
-def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
-    """A new effect of `kind` (ADD) at frame f (on the shot under it, or the cut nearest it); its id. A zoom on a shot
-    that already zooms goes in beside its other moves, near a shot's end it starts earlier; a flash / black frame where
-    no clip is under f (an end card, a video made from zero) is a colour layer over everything."""
+def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False, n: int | None = None,
+        opts: dict | None = None) -> str:
+    """A new effect of `kind` (ADD, ADD_MORE, or COMPANIONS for a template's "with") at frame f (on the shot under it);
+    its id. A zoom on a shot that already zooms goes in beside its other moves, near a shot's end it
+    starts earlier; a flash / black frame where no clip is under f (an end card, a video made from zero) is a colour
+    layer over everything. n = its length in frames (a whole-picture effect / a painted room: else its own), opts = a
+    companion's numbers (screenfx's keys: look, to, r, in, out, focus, zoom, first, color, pattern, amount...)."""
     import random
-    if kind not in ADD:
+    if kind not in ADD and kind not in ADD_MORE and kind not in COMPANIONS:
         raise FxError(I18N.t("no such effect: {effect}", effect=kind))
     if talk and kind in MOVES_PICTURE:
         raise FxError(I18N.t("a stutter would pull the picture away from the voice - not on a talking video"))
@@ -745,6 +807,9 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
     f = max(0, min(N - 1, int(f)))
     rng = random.Random(seed * 7919 + f)
     sec = lambda s: max(1, int(round(s * fps)))           # noqa: E731
+    o = opts or {}
+    if kind in SCREEN or kind in LOOK_KINDS:
+        return _add_screen(P, kind, f, n, o, sec)
     S = _shot_at(P, f)
     if S is None:
         if kind == "flash":
@@ -774,8 +839,10 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
         S["in"] = S["jumps"][0][1]
         return f"stutter:{S['id']}:{f}"
     if kind == "shake":                                  # a handheld jolt: smooth, decaying, inside its own 6 % zoom
-        if any(isinstance(a, dict) for a in (S.get("anchor") or [])):
+        if any(isinstance(a, dict) and "values" in a for a in (S.get("anchor") or [])):
             raise FxError(I18N.t("this shot already shakes"))
+        if any(isinstance(a, dict) for a in (S.get("anchor") or [])):     # (0.6.1: a pan that follows the person -
+            raise FxError(I18N.t("this shot's picture pans on its own keyframes - a shake would stop the pan"))   # reframe)
         if e - s < 6:
             raise FxError(I18N.t("this shot is too short for that effect"))
         a, n = _room(_keys_of(S), s, e, f, max(8, min(18, sec(0.5))), 6)
@@ -791,6 +858,26 @@ def add(P: dict, kind: str, f: int, seed: int = 1, talk: bool = False) -> str:
         return f"framing:{S['id']}:{s}"
     if e - s < 4:
         raise FxError(I18N.t("this shot is too short for that effect"))
+    if kind in ROOM_PAINTS or kind == "room_paint":      # her pastel / grid-paper rooms: you stay, the room is painted
+        if S.get("room"):
+            raise FxError(I18N.t("this shot's room already changes - change that one"))
+        col, pat = ROOM_PAINTS.get(kind, ("#CDBEF5", None))
+        col, pat = o.get("color") or col, o.get("pattern", pat)
+        a, m = _room_span(s, e, f, n, sec(3.0), sec(0.8), bool(o.get("_with")))
+        h = max(2, min(sec(0.3), m // 3))
+        v = round(min(1.0, max(0.1, float(o.get("amount", 0.92)))), 3)
+        S["room"] = {"look": "paint", "paint": {"keys": [[a, 0, "easy"], [a + h, v, "linear"], [a + m - 1 - h, v, "easy"],
+                                                         [a + m - 1, 0]]}, "color": col, **({"pattern": pat} if pat else {})}
+        return f"room:{S['id']}:{a}"
+    if kind == "spotlight":                              # the room dims, the person stays lit; in and out softly
+        if S.get("room"):
+            raise FxError(I18N.t("this shot's room already changes - change that one"))
+        a, m = _room_span(s, e, f, n, sec(2.5), sec(0.8), bool(o.get("_with")))
+        h = max(2, min(sec(0.35), m // 3))
+        S["room"] = {"look": "spotlight", "dim": {"keys": [[a, 0, "easy"], [a + h, 0.7, "linear"],
+                                                           [a + m - 1 - h, 0.7, "easy"], [a + m - 1, 0]]}}
+        S["track"] = "face"
+        return f"room:{S['id']}:{a}"
     ks = _keys_of(S)
     if kind == "lean_in":                                # 15 % closer on a word: glides in, holds, eases back out
         if e - s < sec(0.6):
@@ -865,6 +952,61 @@ def _rgb_split(P: dict, S: dict, f: int, W: int, n: int = 3) -> str:
                                             for i in range(n)]})
         P["layers"].insert(at + k, L)
     return f"rgb:{base}:{f}"
+
+
+SCREEN_SECONDS = {"swipe": 3.0, "dots": 1.6, "tunnel": 2.5, "glitch": 0.6, "push": 4.0, "frame": 3.0, "grade": 3.0}
+
+
+def _add_screen(P: dict, kind: str, f: int, n: int | None, o: dict, sec) -> str:
+    """A whole-picture effect: a "fx" layer right after the clips (or over everything in a video made from zero), its
+    curves in her timings - the frame's shrink in `in` s (expo out = our "glide") and back in `out` s ("easy"), a look
+    in and out in 0.3 s, a glitch a burst (a template's: a ramp to its end), a corner push two corners."""
+    N = int(P["frames"])
+    fk = "grade" if kind in LOOK_KINDS else SCREEN[kind]
+    n = max(2, min(int(n) if n else sec(SCREEN_SECONDS[fk]), N))
+    f = max(0, min(f, N - n))
+    e = f + n - 1
+    L: dict = {"type": "fx", "id": _free_id(P, "fx_"), "kind": fk, "start": f, "end": e}
+    if fk == "grade":
+        h = max(1, min(sec(0.3), n // 3))
+        L["look"] = LOOK_KINDS.get(kind) or str(o.get("look") or "moody")
+        L["amount"] = {"keys": [[f, 0, "easy"], [f + h, 1, "linear"], [e - h, 1, "easy"], [e, 0]]}
+    elif fk == "glitch":
+        L["amount"] = ({"keys": [[f, 0, "in"], [e, 1.0]]} if o.get("shape", "ramp" if o.get("_with") else "burst") == "ramp"
+                       else {"keys": [[f, 0, "out"], [f + max(1, n // 3), 0.7, "in"], [e, 0]]})
+    elif fk == "tunnel":
+        a, b = max(1, min(sec(0.4), n // 3)), max(1, min(sec(0.3), n // 3))
+        L["amount"] = {"keys": [[f, 0, "glide"], [f + a, 1, "linear"], [e - b, 1, "easy"], [e, 0]]}
+        L.update({k: float(o[k]) for k in ("ratio", "speed", "spin") if k in o})
+    elif fk == "dots":
+        L["amount"] = {"keys": [[f, 0, "linear"], [e, 1]]}
+        if o.get("color"):
+            L["color"] = o["color"]
+    elif fk == "swipe":                                  # her slider: across to the left, then back to the middle
+        h = max(1, min(sec(0.2), n // 4))
+        L["amount"] = {"keys": [[f, 0, "easy"], [f + h, 1, "linear"], [e - h, 1, "easy"], [e, 0]]}
+        L["pos"] = {"keys": [[f, 1.05, "smooth"], [f + n // 2, 0.1, "smooth"], [f + int(n * 0.9), 0.5, "hold"], [e, 0.5]]}
+        L["look"] = str(o.get("look") or "moody")
+        L["labels"] = [I18N.t("Before"), I18N.t("After")]
+    elif fk == "push":                                   # into a corner beside the head, back, into the other one
+        z = min(2.0, max(1.1, float(o.get("zoom", 1.6))))
+        half, d = n // 2, max(2, min(sec(0.4), n // 6))
+        xa, xb = (0.33, 0.69) if o.get("first", "left") == "left" else (0.69, 0.33)
+        L["zoom"] = {"keys": [[f, 1, "strong"], [f + d, z, "linear"], [f + half - d, z, "strong"], [f + half - 1, 1, "hold"],
+                              [f + half, 1, "strong"], [f + half + d, z, "linear"], [e - d, z, "strong"], [e, 1]]}
+        L["px"] = {"keys": [[f, xa, "hold"], [f + half, xb, "hold"], [e, xb]]}
+        L["py"] = 0.33
+    elif fk == "frame":                                  # into the hole a template leaves (its numbers)
+        a = max(1, min(sec(float(o.get("in", 0.4))), n // 2))
+        b = sec(float(o.get("out", 0.4))) if float(o.get("out", 0.4)) > 0 else 0
+        b = min(b, n // 2)
+        L["amount"] = {"keys": [[f, 0, "glide"], [f + a, 1, "linear"]] + ([[e - b, 1, "easy"], [e, 0]] if b else [[e, 1]])}
+        L["to"] = o.get("to") or {"v": [0.1, 0.1, 0.8, 0.8], "h": [0.3, 0.05, 0.4, 0.9]}
+        L["r"] = float(o.get("r", 0.0))
+        L["focus"] = o.get("focus", "face")
+    clips = [i for i, x in enumerate(P["layers"]) if x.get("type") == "clip"]
+    P["layers"].insert(clips[-1] + 1 if clips else len(P["layers"]), L)
+    return f"screen:{L['id']}:{f}"
 
 
 def _free_id(P: dict, prefix: str, rgb: bool = False) -> str:
@@ -1033,14 +1175,24 @@ def selfcheck() -> dict:
     apply_op(F, {"op": "fxremove", "id": "room:s01_A:30"})
     case("...gone", "room" not in s1)
     gone = []
-    for k in ("push_in", "pull_out", "zoom_through", "white_flash", "colour_flash", "light_leak", "dip_black",
-              "spotlight"):
+    for k in ("push_in", "pull_out", "zoom_through", "white_flash", "colour_flash", "light_leak", "dip_black"):
         try:
             add(plan(), k, 50)
             gone.append(k)
         except FxError:
             pass
-    case("the kinds no longer offered are refused as new ones", not gone)
+    G = plan()
+    add(G, "spotlight", 20, n=60, opts={"_with": True})
+    case("the kinds no longer offered are refused as new ones; a spotlight only comes with a template (carousel-spin's: "
+         "its length, the room dimmed to 70 %), never from the Editor's list",
+         not gone and "spotlight" not in ADD and G["layers"][0]["room"]["dim"]["keys"][-1][0] == 79
+         and max(k[1] for k in G["layers"][0]["room"]["dim"]["keys"]) == 0.7)
+    G = plan()
+    e1 = int(G["layers"][0]["end"])
+    add(G, "room_paint", e1 - 30, n=90, opts={"_with": True})
+    rk = G["layers"][0]["room"]["paint"]["keys"]
+    case("a template's room near a cut starts with the graphic and stops at the cut (never painted before it shows)",
+         rk[0][0] == e1 - 30 and rk[-1][0] == e1)
     # 2026-10-26 (the user: "most of the time i cant even use them due to an error"): the quick draft's first shot
     # zooms in slowly (a hold key from a trim in front), shots that zoom took no other zoom, a punch-in never moved
     R = {"fps": 25.0, "frames": 400, "width": 1920, "height": 1080, "sources": {"A": {"frames": 2000}},
@@ -1080,4 +1232,41 @@ def selfcheck() -> dict:
     apply_op(R, {"op": "fxadd", "kind": "black_frame", "f": 390})
     E = {x["kind"] for x in effects(R)}
     case("a flash and a black frame on an end card (no clip under them) are colour layers", {"solid_flash", "solid_black"} <= E)
+    V = plan()                                           # 2026-10-28: the rest of her designs
+    for kind, f in (("look_red", 20), ("rabbit_hole", 120), ("swipe", 200), ("pastel_room", 230)):
+        apply_op(V, {"op": "fxadd", "kind": kind, "f": f})
+    add(V, "frame", 30, n=60, opts={"to": {"v": [0, 0.5, 1, 0.5], "h": [0.5, 0, 0.5, 1]}, "in": 0.4, "out": 0.4})
+    add(V, "glitch", 140, n=30, opts={"_with": True})
+    E = {x["id"]: x for x in effects(V)}
+    fx = [x for x in V["layers"] if x.get("type") == "fx"]
+    last_clip = max(i for i, x in enumerate(V["layers"]) if x.get("type") == "clip")
+    gl = next(x for x in fx if x["kind"] == "glitch")
+    fr = next(x for x in fx if x["kind"] == "frame")
+    case("whole-picture effects: a red film look (a chip with its name and its mix), a rabbit hole, a before / after, "
+         "a frame (in 0.4 s = 10 frames, out at the end), a template's glitch ramping to its end - each a layer right "
+         "after the clips; a pastel room on its shot",
+         E.get("screen:fx_e01:20", {}).get("label") == "Red film" and E["screen:fx_e01:20"]["strength"] == 1.0
+         and {x["kind"] for x in fx} == {"grade", "tunnel", "swipe", "frame", "glitch"}
+         and all(V["layers"].index(x) > last_clip for x in fx)
+         and fr["amount"]["keys"][1][0] == 40 and fr["amount"]["keys"][-1] == [89, 0]
+         and gl["amount"]["keys"] == [[140, 0, "in"], [169, 1.0]]
+         and V["layers"][2]["room"]["look"] == "paint" and E["room:s03_A:225"]["label"] == "Pastel room")   # (3 s fit)
+    apply_op(V, {"op": "fxmove", "id": "screen:fx_e01:20", "by": 15})
+    apply_op(V, {"op": "fxset", "id": "screen:fx_e01:35", "len": 40, "strength": 0.5})
+    g = next(x for x in V["layers"] if x.get("id") == "fx_e01")
+    case("a look moved, shorter, half strength - then removed", g["start"] == 35 and g["end"] == 74
+         and g["amount"]["keys"][-1][0] == 74 and max(v[1] for v in g["amount"]["keys"]) == 0.5)
+    apply_op(V, {"op": "fxremove", "id": "screen:fx_e01:35"})
+    av = availability(R)
+    case("...gone; the Editor offers its eight only (the whole-picture effects come from edit lists and templates)",
+         not any(x.get("id") == "fx_e01" for x in V["layers"]) and set(av["none"]) == set(ADD))
+    W = plan()                                     # 0.6.1: a shot that pans to follow someone (reframe.py's keys)
+    W["layers"][1]["anchor"] = [{"keys": [[100, 0.3, "smooth"], [140, 0.6, "linear"]]}, 0.5]
+    try:
+        add(W, "shake", 120)
+        why = ""
+    except FxError as e:
+        why = str(e)
+    case("a shake on a shot that pans on its own keys: refused for that reason (not \"already shakes\"), the pan kept",
+         "pans on its own keyframes" in why and W["layers"][1]["anchor"][0]["keys"][1] == [140, 0.6, "linear"])
     return {"passed": ok, "seconds": round(time.time() - t0, 3), "lines": lines}

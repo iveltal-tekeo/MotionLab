@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (above the head; beside you on a wide frame)", "default": "Every way to edit, ranked"},
+  {"id": "item", "type": "string", "label": "The item that flies into the S tier", "default": "MotionLab"},
+  {"id": "others", "type": "string", "label": "Items already in the A, B and C tiers (a | list, up to 6)", "default": "Presets|Plugins|By hand"},
+  {"id": "tone", "type": "enum", "label": "Glass", "default": "smoke", "options": [{"value": "clear", "label": "Clear (a light frost)"}, {"value": "smoke", "label": "Smoke (darker, for bright rooms)"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.6, "max": 1.3, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "tier-list" (2026-10-28): a tier list of glass under the chin (beside the person on a
+     wide frame). The board drops in (f0-f12, a slow end with a small overshoot) while the title rises in above the
+     head; the S / A / B / C labels pop in one after another (f4-f20) and their tracks wipe open; the items already
+     ranked slide into the A, B and C rows (from f12). The item pops in beside the chin (f24-f32), waits with a small
+     wobble, then flies on an arc into the S tier (f36-f54, S-curve), lands with a squash, a burst of dots and the S
+     label flashing; while it holds the S label glows, the board floats and a band of light crosses the glass; the
+     last 9 frames it sinks away. Over a video with a person it is a glass card: the renderer frosts the real footage
+     under it (template.json "in_shot"), so the board paints only a translucent fill, a light rim and a soft
+     highlight at its top edge. After a design in claude-video-effects (MIT, fx_tier_list); MotionLab's own code.
+     Size-independent, look-aware. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #boardw, #itemw, #ttlw { position: absolute; left: 0; top: 0; }
+  #board { position: absolute; overflow: hidden; }
+  #board > div, #board > svg { position: absolute; }
+  .tlab, .ttrk, .tchip, .tdot { position: absolute; }
+  .ttxt, #ttl, #itxt { white-space: nowrap; font-synthesis: none; line-height: 1; }
+  #item { position: absolute; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="ttlw"><div id="ttl"></div></div>
+  <div id="boardw"><div id="board"><div id="hi"></div><div id="rows"></div><svg id="rim"></svg></div></div>
+  <div id="burst" class="abs"></div>
+  <div id="itemw"><div id="item"><div id="itxt"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const ital = fam => !!(window.MLLook && MLLook.FONTS[fam] && MLLook.FONTS[fam].italic);
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIO2 = x => { x = c01(x); return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };      // a softer S-curve
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.4 * x * x * x + 1.4 * x * x; };                // slow end, a small overshoot
+  // a function run at every frame's time: seek-safe (a render, a snapshot and a preview land on the same picture)
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const S = Math.round(V.start), s = V.size * U;
+  const light = lum(L.paper) >= lum(L.ink) ? L.paper : L.ink, dark = light === L.paper ? L.ink : L.paper;
+  const smoke = V.tone === "smoke";
+  const HOR = W > H;                     // a wide frame: the board beside the person, the title above it
+
+  // ---- the preview background (only when painted: over a video the board is see-through and the renderer frosts the footage)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.5 * W}px ${0.22 * H}px at ${0.3 * W}px ${0.3 * H}px, ${rgba(L.mustard, 0.5)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.42 * W}px ${0.2 * H}px at ${0.84 * W}px ${0.62 * H}px, ${rgba(L.paper, 0.28)}, ${rgba(L.paper, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.6 * W}px ${0.18 * H}px at ${0.4 * W}px ${0.9 * H}px, ${rgba(L.signal, 0.26)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the board: 780 wide at 1080 px (her 0.66 of the width, 4 rows here), 620 beside the person on a wide frame
+  const BW = (HOR ? 620 : 780) * s;
+  const cw = Math.min(BW, W * (HOR ? 0.42 : 0.92)), k = cw / BW;
+  const rh = (HOR ? 92 : 104) * s * k, gap = rh * 0.14, pad = rh * 0.2;
+  const ch = 2 * pad + 4 * rh + 3 * gap;
+  const R = Math.min(rh * 0.5, Math.max(10 * U, L.radius * 2.4));
+  const bx = HOR ? Math.min(W - cw / 2 - W * 0.04, W * 0.775) : W / 2;
+  const by = HOR ? H * 0.6 : Math.min(H - ch / 2 - H * 0.04, H * 0.65);
+  const boardw = q("boardw"), board = q("board");
+  Object.assign(board.style, { left: `${-cw / 2}px`, top: `${-ch / 2}px`, width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`,
+    background: smoke ? `linear-gradient(180deg, ${rgba(dark, 0.52)} 0%, ${rgba(dark, 0.44)} 100%)`
+      : `linear-gradient(180deg, ${rgba("#ffffff", 0.2)} 0%, ${rgba("#ffffff", 0.13)} 50%, ${rgba("#ffffff", 0.15)} 100%)` });
+  if (V.background) {          // the preview only: the real frost of the painted background behind it + its shadow
+    board.style.backdropFilter = board.style.webkitBackdropFilter = `blur(${18 * U}px) saturate(1.25)`;
+    board.style.boxShadow = `0 ${10 * U}px ${32 * U}px ${rgba("#000000", 0.3)}`;
+  }
+  Object.assign(q("hi").style, { left: "0px", top: "0px", width: `${cw}px`, height: `${ch * 0.3}px`,
+    background: `linear-gradient(180deg, ${rgba("#ffffff", smoke ? 0.1 : 0.18)} 0%, ${rgba("#ffffff", 0)} 100%)` });
+  const rim = q("rim"), sw = Math.max(1.2, 1.6 * U), shw = cw * 0.3;
+  rim.setAttribute("width", cw); rim.setAttribute("height", ch);
+  Object.assign(rim.style, { left: "0px", top: "0px", overflow: "visible" });
+  rim.innerHTML = `<defs><linearGradient id="tlrimg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>` +
+    `<stop offset="0.45" stop-color="#ffffff" stop-opacity="0.22"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.55"/></linearGradient>` +
+    `<linearGradient id="tlshg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.2"/>` +
+    `<stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient><clipPath id="tlclip"><rect x="0" y="0" width="${cw}" height="${ch}" rx="${R}"/></clipPath></defs>` +
+    `<g clip-path="url(#tlclip)"><rect id="tlsheen" x="0" y="${-ch * 0.5}" width="${shw}" height="${ch * 2}" fill="url(#tlshg)" opacity="0"/></g>` +
+    `<rect x="${sw / 2}" y="${sw / 2}" width="${cw - sw}" height="${ch - sw}" rx="${R - sw / 2}" fill="none" stroke="url(#tlrimg)" stroke-width="${sw}"/>`;
+  const sheen = q("tlsheen");
+
+  // ---- the rows: a coloured label, a track, the items already ranked (A, B, C round the list)
+  const TIERS = [["S", "#FF7F7F"], ["A", "#FFBF7F"], ["B", "#FFDF7F"], ["C", "#BFFF7F"]];
+  const others = String(V.others || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 6);
+  const rowsEl = q("rows");
+  Object.assign(rowsEl.style, { left: "0px", top: "0px", width: `${cw}px`, height: `${ch}px` });
+  const tx0 = pad + rh + gap, tw = cw - pad - tx0, lr = rh * 0.16;
+  const chipH = rh * 0.64, chipFs0 = rh * 0.34;
+  let chipFs = chipFs0;
+  const rowY = i => pad + i * (rh + gap);
+  const ROWS = TIERS.map(([lab, col], i) => {
+    const trk = document.createElement("div"); trk.className = "ttrk";
+    Object.assign(trk.style, { left: `${tx0}px`, top: `${rowY(i)}px`, width: `${tw}px`, height: `${rh}px`, borderRadius: `${lr}px`,
+      background: rgba("#ffffff", smoke ? 0.07 : 0.1), transformOrigin: "0% 50%" });
+    rowsEl.appendChild(trk);
+    const lb = document.createElement("div"); lb.className = "tlab";
+    Object.assign(lb.style, { left: `${pad}px`, top: `${rowY(i)}px`, width: `${rh}px`, height: `${rh}px`, borderRadius: `${lr}px`, background: col,
+      display: "flex", alignItems: "center", justifyContent: "center", transformOrigin: "50% 50%" });
+    const lt = document.createElement("div"); lt.className = "ttxt"; lt.textContent = lab;
+    Object.assign(lt.style, { color: "#18171A", fontFamily: `'${V.body_font}', 'Segoe UI', sans-serif`, fontWeight: String(fw(V.body_font, 800)), fontSize: `${rh * 0.5}px` });
+    lb.appendChild(lt); rowsEl.appendChild(lb);
+    return { lb, trk, col, chips: [] };
+  });
+  const CHIPS = others.map((txt, j) => {
+    const row = ROWS[1 + (j % 3)];
+    const c = document.createElement("div"); c.className = "tchip";
+    Object.assign(c.style, { top: `${rowY(1 + (j % 3)) + (rh - chipH) / 2}px`, height: `${chipH}px`, borderRadius: `${chipH * 0.22}px`,
+      background: rgba("#ffffff", smoke ? 0.16 : 0.24), boxShadow: `inset 0 ${1 * U}px 0 ${rgba("#ffffff", 0.18)}`,
+      display: "flex", alignItems: "center", padding: `0 ${rh * 0.2}px` });
+    const t = document.createElement("div"); t.className = "ttxt"; t.textContent = txt;
+    Object.assign(t.style, { color: light, fontFamily: `'${V.body_font}', 'Segoe UI', sans-serif`, fontWeight: String(fw(V.body_font, 600)), fontSize: `${chipFs}px`,
+      textShadow: smoke ? "none" : `0 ${1 * U}px ${6 * U}px ${rgba("#000000", 0.3)}` });
+    c.appendChild(t); rowsEl.appendChild(c);
+    const ch_ = { c, t, j, row: 1 + (j % 3) };
+    row.chips.push(ch_);
+    return ch_;
+  });
+  function layChips() {                  // left to right in each row; smaller type only when a row is too long
+    const inner = tw - 2 * gap * 0.8;
+    let worst = 1;
+    ROWS.forEach(r => { if (!r.chips.length) return;
+      const sum = r.chips.reduce((a, c) => a + c.c.offsetWidth, 0) + gap * 0.7 * (r.chips.length - 1);
+      worst = Math.min(worst, inner / sum); });
+    if (worst < 1) { chipFs = chipFs0 * worst * 0.98; CHIPS.forEach(c => { c.t.style.fontSize = `${chipFs}px`; c.c.style.padding = `0 ${rh * 0.2 * worst}px`; }); }
+    ROWS.forEach(r => { let x = tx0 + gap * 0.8; r.chips.forEach(c => { c.c.style.left = `${x}px`; c.x = x; x += c.c.offsetWidth + gap * 0.7; }); });
+  }
+
+  // ---- the title: her serif italic in yellow, above the head (above the board on a wide frame)
+  const ttlw = q("ttlw"), ttl = q("ttl");
+  ttl.textContent = String(V.title || "");
+  let ttlFs = (HOR ? 84 : 104) * s;
+  Object.assign(ttl.style, { position: "absolute", color: L.mustard, fontFamily: `'${V.display_font}', Georgia, serif`,
+    fontStyle: ital(V.display_font) ? "italic" : "normal", fontWeight: String(fw(V.display_font, 400)), fontSize: `${ttlFs}px`,
+    textShadow: `0 ${3 * U}px ${18 * U}px ${rgba("#000000", 0.45)}`, letterSpacing: "-0.01em" });
+  const ttlMax = HOR ? Math.min(W * 0.44, cw * 1.25) : W * 0.86;
+  const tcx = HOR ? bx : W / 2;
+  const tcy = HOR ? by - ch / 2 - 64 * s : H * 0.152;
+
+  // ---- the item: a solid tile in the signal colour that flies into the S tier
+  const itemw = q("itemw"), item = q("item"), itxt = q("itxt");
+  const iH = rh * 0.72;
+  let iFs = rh * 0.34, iW = rh * 2.4;
+  itxt.textContent = String(V.item || "");
+  const onSig = lum(L.signal) > 0.6 ? "#18171A" : "#FFFFFF";
+  Object.assign(itxt.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+    color: onSig, fontFamily: `'${V.body_font}', 'Segoe UI', sans-serif`, fontWeight: String(fw(V.body_font, 800)), fontSize: `${iFs}px` });
+  // where it waits (beside the chin; below-left of the board on a wide frame) and where it lands (the S row's first slot)
+  const SX = HOR ? Math.min(W * 0.575, bx - cw / 2 - rh * 1.6) : W * 0.735, SY = HOR ? by + rh * 0.4 : H * 0.44;
+  // a burst of 8 dots on landing
+  const burst = q("burst"), DOTS = [];
+  for (let i = 0; i < 8; i++) { const dd = document.createElement("div"); dd.className = "tdot";
+    const r0 = rh * (i % 2 ? 0.07 : 0.1);
+    Object.assign(dd.style, { width: `${2 * r0}px`, height: `${2 * r0}px`, borderRadius: "50%", background: i % 2 ? L.mustard : TIERS[0][1], opacity: "0" });
+    burst.appendChild(dd); DOTS.push({ dd, r0, a: i * Math.PI / 4 + 0.3 }); }
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame"; e = frames at 30 fps before the end)
+  const POP = 24, FLY = 36, FLYN = 18, LAND = FLY + FLYN;
+  const leave = V.leave && (FRAMES - S) * 30 / FPS - 9 > LAND + 16;
+  const DROP = 90 * s, SINK = Math.min(30 * s, Math.max(0, H - (by + ch / 2) - 4 * U));
+  function render(t) {
+    const d = (t - S / FPS) * 30, e = (FRAMES / FPS - t) * 30;
+    const vis = d >= 0 ? "visible" : "hidden";
+    boardw.style.visibility = ttlw.style.visibility = itemw.style.visibility = burst.style.visibility = vis;
+    if (d < 0) return;
+    const xo = leave && e < 9 ? eIn(1 - e / 9) : 0;
+    // the board drops in from 90 px higher (12 f, slow end with a small overshoot), seen within 3 f; floats once in
+    const sc = (0.94 + 0.06 * eBack(d / 12)) * (1 - 0.08 * xo);
+    const lift = -(1 - eOut(d / 12)) * DROP + 3 * s * Math.sin(2 * Math.PI * (d - 30) / 96) * c01((d - 30) / 20) + SINK * xo;
+    const op = c01((d + 0.5) / 3) * (1 - xo);
+    boardw.style.transform = `translate(${bx.toFixed(2)}px, ${(by + lift).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    boardw.style.opacity = op.toFixed(3);
+    // the labels pop in one after another (8 f each, 3 f apart), their tracks wipe open (10 f)
+    ROWS.forEach((r, i) => {
+      const a = 4 + 3 * i;
+      r.lb.style.transform = `scale(${(0.3 + 0.7 * eBack((d - a) / 8)).toFixed(4)})`;
+      r.lb.style.opacity = c01((d - a + 0.5) / 2).toFixed(3);
+      r.trk.style.transform = `scaleX(${eOut((d - a - 1) / 10).toFixed(4)})`;
+    });
+    // the S label flashes as the item lands, then glows softly while it holds
+    const fl = d >= LAND ? 1 - eOut((d - LAND) / 14) : 0;
+    const br = d >= LAND ? (0.35 + 0.2 * Math.sin(2 * Math.PI * (d - LAND) / 40)) * c01((d - LAND) / 10) : 0;
+    ROWS[0].lb.style.boxShadow = `0 0 ${(10 + 26 * fl) * s}px ${rgba(TIERS[0][1], Math.min(0.95, 0.9 * fl + br))}`;
+    if (d >= LAND) ROWS[0].lb.style.transform = `scale(${(1 + 0.14 * (1 - eOut((d - LAND) / 10))).toFixed(4)})`;
+    // the ranked items slide in from the left (8 f each, 3 f apart from f12)
+    CHIPS.forEach((c, j) => { const a = 12 + 3 * j, u = eOut((d - a) / 8);
+      c.c.style.transform = `translateX(${(-30 * s * (1 - u)).toFixed(2)}px)`; c.c.style.opacity = c01((d - a + 0.5) / 3).toFixed(3); });
+    // the title rises in (12 f, slow end) and drifts a hair while it holds
+    const tq = eOut((d - 2) / 12);
+    ttlw.style.transform = `translate(${tcx.toFixed(2)}px, ${(tcy + 26 * s * (1 - tq) - 4 * s * c01((d - 14) / 120) + 18 * s * xo).toFixed(2)}px) scale(${(0.94 + 0.06 * tq).toFixed(4)})`;
+    ttlw.style.opacity = (c01((d - 1.5) / 4) * (1 - xo)).toFixed(3);
+    // the item: pops in beside the chin (8 f), wobbles, flies on an arc into the S slot (18 f, S-curve), squashes as it lands
+    const tx = bx + sc * (tx0 + gap * 0.8 + iW / 2 - cw / 2), ty = by + lift + sc * (rowY(0) + rh / 2 - ch / 2);
+    let x = SX, y = SY, isc = 0, rot = 12, sx = 1, sy = 1;
+    if (d >= POP) {
+      isc = 1.15 * eBack((d - POP) / 8);
+      rot = 12 + 5 * Math.sin(2 * Math.PI * (d - POP) / 16) * c01((FLY - d) / 4);
+    }
+    if (d >= FLY) {
+      const u = (d - FLY) / FLYN, p = eIO2(u);
+      x = SX + (tx - SX) * p; y = SY + (ty - SY) * p - 120 * s * Math.sin(Math.PI * c01(u));
+      isc = 1.15 + (sc - 1.15) * p;
+      rot = 12 * (1 - p);
+    }
+    if (d >= LAND) { const w = 1 - eOut((d - LAND) / 9); x = tx; y = ty; isc = sc; rot = 0; sx = 1 + 0.14 * w; sy = 1 - 0.1 * w; }
+    itemw.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${(isc * sx).toFixed(4)}, ${(isc * sy).toFixed(4)})`;
+    itemw.style.opacity = (d >= POP ? c01((d - POP + 0.5) / 2) * (1 - xo) : 0).toFixed(3);
+    // a light crosses the tile every 48 f once it landed
+    const ip = d >= LAND + 8 ? ((d - LAND - 8) % 48) / 14 : 1;
+    item.style.backgroundPosition = `${ip < 1 ? (130 - 160 * eIO(ip)).toFixed(2) : -40}% 0%, 0% 0%`;
+    // the burst: 8 dots fly out from the slot (12 f, slow end) and fade
+    DOTS.forEach(o => { const b = d >= LAND ? (d - LAND) / 12 : -1, u = eOut(b), rr = (iW * 0.55 + rh * 0.9 * u);
+      o.dd.style.transform = `translate(${(tx + Math.cos(o.a) * rr - o.r0).toFixed(2)}px, ${(ty + Math.sin(o.a) * rr * 0.6 - o.r0).toFixed(2)}px) scale(${(1 - 0.6 * u).toFixed(3)})`;
+      o.dd.style.opacity = (b >= 0 && b < 1 ? 1 - u * u : 0).toFixed(3); });
+    // a band of light crosses the glass after the landing (24 f, S-curve)
+    const sp = eIO((d - LAND - 4) / 24);
+    sheen.setAttribute("transform", `translate(${(-shw * 1.4 + (cw + shw * 2.2) * sp).toFixed(2)} 0) rotate(18 ${(shw / 2).toFixed(1)} ${(ch / 2).toFixed(1)})`);
+    sheen.setAttribute("opacity", sp > 0 && sp < 1 ? "1" : "0");
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the title, the item and the rows fitted with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all([400, 600, 800].flatMap(w => [document.fonts.load(`${w} 100px "${V.body_font}"`), document.fonts.load(`italic ${w} 100px "${V.display_font}"`), document.fonts.load(`${w} 100px "${V.display_font}"`)])
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    if (ttl.offsetWidth > ttlMax) { ttlFs *= ttlMax / ttl.offsetWidth; ttl.style.fontSize = `${ttlFs}px`; }
+    ttl.style.left = `${-ttl.offsetWidth / 2}px`; ttl.style.top = `${-ttl.offsetHeight / 2}px`;
+    // the tile: at least 2.4 rows wide, as wide as its word needs, never wider than the track
+    const probe = document.createElement("span"); probe.textContent = itxt.textContent;
+    Object.assign(probe.style, { position: "absolute", visibility: "hidden", whiteSpace: "nowrap", fontFamily: itxt.style.fontFamily, fontWeight: itxt.style.fontWeight, fontSize: `${iFs}px` });
+    root.appendChild(probe);
+    const maxW = tw - 2 * gap;
+    iW = Math.min(maxW, Math.max(rh * 2.4, probe.offsetWidth + rh * 0.6));
+    if (probe.offsetWidth + rh * 0.5 > maxW) { iFs *= (maxW - rh * 0.5) / probe.offsetWidth; itxt.style.fontSize = `${iFs}px`; }
+    probe.remove();
+    Object.assign(item.style, { left: `${-iW / 2}px`, top: `${-iH / 2}px`, width: `${iW}px`, height: `${iH}px`, borderRadius: `${iH * 0.24}px`,
+      backgroundImage: `linear-gradient(110deg, ${rgba("#ffffff", 0)} 38%, ${rgba("#ffffff", 0.42)} 50%, ${rgba("#ffffff", 0)} 62%), linear-gradient(180deg, ${L.signal}, ${rgba(L.signal, 0.92)})`,
+      backgroundSize: "250% 100%, 100% 100%", backgroundRepeat: "no-repeat", backgroundPosition: "-40% 0%, 0% 0%",
+      boxShadow: `0 ${6 * U}px ${18 * U}px ${rgba("#000000", 0.35)}, inset 0 ${1.5 * U}px 0 ${rgba("#ffffff", 0.35)}` });
+    layChips();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

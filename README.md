@@ -7,15 +7,15 @@
 **A local lab that takes apart the editing of any video - every cut, flash, zoom, speed ramp, split screen, text
 pop and transition, frame-accurately - so you can learn its style and pacing and rebuild it with your own footage.**
 
-> **Status: v0.6.0.6 - The Editor reworked: captions in one list, a right-click menu, safe zones** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md))
-> - Phase 2, the path from 0.5.0 to 1.0.0. Since 0.6.0: My Brand in every video, a content calendar, and an Editor of
+> **Status: v0.6.0.9 - Learn from your own posts: where people left, tests, lessons and a monthly review** ([what's new](CHANGELOG.md) · [en español](CHANGELOG.es.md))
+> - Phase 2, the path from 0.5.0 to 1.0.0. Since 0.6.0: My Brand in every video, a content calendar that learns from your own posts, and an Editor of
 > your own - cut, trim, speed up, move graphics and sounds, effects, keyframes and transitions on a timeline, no Claude
 > needed. Before it: New edit as six simple steps, the app in English or Spanish, analyses in about half the time, a
 > one-file install, one way to review everything. **Analyse** videos you like (several at once, by focus: content creation, cinematic or both -
 > colour grading included), a channel's thumbnails and scripts & prompts, **Prepare** a script, a title and a
 > thumbnail, **Edit** your clips like up to three of them or the way you say (a quick draft in minutes, then Claude
 > makes it great), **Generate** a video from zero (a motion-graphics video, or every prompt for AI video tools),
-> **Motion Graphics** - 189 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
+> **Motion Graphics** - 223 ready-made animated graphics (titles, lower thirds, transitions, charts, call-outs, end
 > screens...) you change live and put in any video - and **Claude's memory**: everything it learned, in one place,
 > used when it edits or generates for you. Since 0.3: colour rebuilds, 3x faster renders,
 > graphics written as HTML, Claude Code connected to the lab and to DaVinci Resolve, updates that only offer versions

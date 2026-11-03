@@ -1,0 +1,39 @@
+{
+ "name": "place-in-grid",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2600,
+   "to": 500,
+   "db": -8,
+   "what": "you shrink into the grid"
+  },
+  {
+   "f": "round(3 * fps / 30)",
+   "kind": "pop",
+   "db": -6,
+   "what": "the reels pop in around you"
+  },
+  {
+   "f": "round(23 * fps / 30)",
+   "kind": "chime",
+   "db": -6,
+   "what": "the ring lights round your tile"
+  },
+  {
+   "f": "frames - round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 600,
+   "to": 2400,
+   "db": -8,
+   "what": "you grow back to the full frame"
+  }
+ ]
+}

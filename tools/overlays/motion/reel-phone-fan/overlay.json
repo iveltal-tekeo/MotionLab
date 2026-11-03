@@ -1,0 +1,35 @@
+{
+ "name": "reel-phone-fan",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(3 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 500,
+   "to": 1800,
+   "db": -8,
+   "what": "the phones rise into place"
+  },
+  {
+   "f": "start + round(9 * fps / 30)",
+   "kind": "flutter",
+   "dur": "0.4",
+   "db": -4,
+   "what": "the phones fan out like a hand of cards"
+  },
+  {
+   "f": "frames - round(10 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 600,
+   "db": -8,
+   "if": "leave and (frames - start) * 30 / fps - 11 > 34",
+   "what": "the phones fold away"
+  }
+ ]
+}

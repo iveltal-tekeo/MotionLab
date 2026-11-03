@@ -1,0 +1,11 @@
+{
+ "name": "match-cut",
+ "frames": 105,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round((4 * i + i * i / max(1, pages - 1)) * fps / 30)", "repeat": "pages", "kind": "shutter", "db": -6, "seed": "40 + i", "what": "a page cuts in"},
+  {"f": "start + round(5 * (pages - 1) * fps / 30)", "kind": "thump", "db": -8, "what": "the last page lands"}
+ ]
+}

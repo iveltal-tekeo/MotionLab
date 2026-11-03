@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Masthead (the magazine’s name, behind your head)", "default": "AURA"},
+  {"id": "lines", "type": "string", "label": "Cover lines, | between them: the big line, a second big line, a small caps line, then one or two side lines", "default": "Your story,|told big|NO STUDIO · ONE TAKE|THE NEW ISSUE|10 EDITS TO STEAL"},
+  {"id": "issue", "type": "string", "label": "Issue line over the masthead", "default": "THE ONE-TAKE ISSUE · NO. 12 · 2026"},
+  {"id": "colour", "type": "color", "label": "Colour (classic: the masthead; editorial: the second big line)", "default": "#E82434"},
+  {"id": "look", "type": "enum", "label": "Look", "default": "classic", "options": [{"value": "classic", "label": "Classic (a bold masthead in colour, white cover lines, a barcode)"}, {"value": "editorial", "label": "Editorial (a serif masthead in ink, elegant lines)"}]},
+  {"id": "barcode", "type": "boolean", "label": "A barcode in the corner (classic)", "default": true},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#7D7268"},
+  {"id": "mast_font", "type": "enum", "label": "Classic masthead and bold lines font", "default": "Archivo Black", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "serif_font", "type": "enum", "label": "Editorial masthead font", "default": "Playfair Display", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "italic_font", "type": "enum", "label": "Big italic line font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font (editorial small caps)", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (the issue line)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "cover-star" (2026-10-28): the person becomes a magazine cover. A giant masthead sits
+     at the top, behind the head (the Editor uses in_shot behind "top": the person covers it above the chin, as on a
+     real cover), with an issue line over it; cover lines come in beside the head and below the chin, in front, and a
+     barcode sits in a lower corner. classic = a bold sans masthead in colour that drops into place (11 f, slow end),
+     white bold cover lines with a big serif italic line in yellow sliding in from the sides one after another;
+     editorial = a classic serif masthead in ink that settles from 105 % (15 f), a thin rule under it, elegant serif
+     lines with a soft cream glow. While it holds the masthead grows 2.5 % (S-curve); the last 9 frames everything
+     fades and drifts out (accelerating). Three layouts: upright, square and 16:9. After a design in
+     claude-video-effects (MIT); MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .t { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; visibility: hidden; }
+  .wrap { white-space: normal; }
+  #mast { transform-origin: 50% 100%; }
+  #bar { position: absolute; left: 0; top: 0; visibility: hidden; background: #FFFFFF; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="mast" class="t"></div>
+  <div id="iss" class="t"></div>
+  <div id="rule" class="abs"></div>
+  <div id="ln0" class="t"></div><div id="ln1" class="t"></div><div id="ln2" class="t"></div>
+  <div id="sd0" class="t wrap"></div><div id="sd1" class="t wrap"></div>
+  <div id="bar"><svg id="bars"></svg><div id="bnum" class="t"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.4 * x * x * x + 1.4 * x * x; };                // slow end, a small overshoot
+  const S = Math.round(V.start), M = Math.min(W, H);
+  const ED = V.look === "editorial";
+  const CREAM = "#FCF4EC", YELLOW = "#FFD60A";
+
+  // ---- the places, per shape of frame (shares of W / H; sizes in shares of the short side M)
+  const AR = H / W, MODE = AR >= 1.4 ? "v" : AR > 0.75 ? "sq" : "h";
+  const P = {
+    v:  { mTop: 0.132, mMax: 0.15, mW: 0.92, iss: 0.118, sL: [0.05, 0.30, 0.28], sR: [0.95, 0.335, 0.28], low: [0.05, ED ? 0.575 : 0.5, 0.74], right: [0.86, 0.715], bar: [0.95, 0.775, 0.16] },
+    sq: { mTop: 0.085, mMax: 0.2, mW: 0.9, iss: 0.055, sL: [0.04, 0.36, 0.26], sR: [0.96, 0.4, 0.26], low: [0.04, ED ? 0.6 : 0.6, 0.55], right: [0.96, 0.78], bar: [0.96, 0.95, 0.14] },
+    h:  { mTop: 0.085, mMax: 0.24, mW: 0.72, iss: 0.05, sL: [0.05, 0.4, 0.24], sR: [0.95, 0.4, 0.24], low: [0.05, ED ? 0.6 : 0.6, 0.38], right: [0.95, 0.68], bar: [0.95, 0.93, 0.1] }
+  }[MODE];
+
+  // ---- the preview background (only when painted: over a video the person is the cover)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.6 * W}px ${0.3 * H}px at ${0.5 * W}px ${0.12 * H}px, ${rgba("#F3ECE2", 0.85)}, ${rgba("#F3ECE2", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.35 * H}px at ${0.5 * W}px ${0.95 * H}px, ${rgba("#2B2520", 0.7)}, ${rgba("#2B2520", 0)} 100%), ${V.bg}`;
+
+  // ---- the words
+  const parts = String(V.lines || "").split("|").map(s => s.trim());
+  const mast = q("mast"), iss = q("iss"), rule = q("rule");
+  const lows = [q("ln0"), q("ln1"), q("ln2")], sides = [q("sd0"), q("sd1")];
+  const bar = q("bar"), bars = q("bars"), bnum = q("bnum");
+  const MCOL = ED ? L.ink : V.colour;
+  const MFAM = ED ? V.serif_font : V.mast_font, MW = ED ? fw(V.serif_font, 900) : fw(V.mast_font, 900);
+  mast.textContent = String(V.title || "").toUpperCase();
+  Object.assign(mast.style, { fontFamily: `'${MFAM}', Georgia, serif`, fontWeight: String(MW), color: MCOL, letterSpacing: ED ? "0.04em" : "-0.01em",
+    textShadow: ED ? `0 0 ${0.02 * M}px ${rgba(CREAM, 0.35)}` : `0 ${0.004 * M}px ${0.02 * M}px ${rgba("#000000", 0.18)}` });
+  iss.textContent = String(V.issue || "");
+  Object.assign(iss.style, { fontFamily: ED ? `'${V.body_font}', 'Segoe UI', sans-serif` : `'${V.accent_font}', Consolas, monospace`,
+    fontWeight: String(ED ? fw(V.body_font, 600) : 700), fontSize: `${(ED ? 0.022 : 0.025) * M}px`, letterSpacing: ED ? "0.28em" : "0.08em",
+    color: ED ? L.ink : "#FFFFFF", textShadow: ED ? `0 0 ${0.01 * M}px ${rgba(CREAM, 0.7)}` : `0 ${0.002 * M}px ${0.008 * M}px ${rgba("#000000", 0.5)}` });
+  // the lower block: the big line, a second big line, a small caps line
+  const shadowW = `0 ${0.003 * M}px ${0.012 * M}px ${rgba("#000000", 0.5)}`, glowC = `0 0 ${0.012 * M}px ${rgba(CREAM, 0.9)}, 0 0 ${0.03 * M}px ${rgba(CREAM, 0.5)}`;
+  const LOW = ED ? [
+      { fam: V.italic_font, w: 400, it: true, s: 0.085, col: L.ink, sh: glowC, tr: "0em", up: false },
+      { fam: V.serif_font, w: 800, it: false, s: 0.105, col: V.colour, sh: glowC, tr: "-0.01em", up: false },
+      { fam: V.body_font, w: 700, it: false, s: 0.03, col: L.ink, sh: glowC, tr: "0.22em", up: true }]
+    : [
+      { fam: V.italic_font, w: 400, it: true, s: 0.088, col: YELLOW, sh: shadowW, tr: "0em", up: false },
+      { fam: V.mast_font, w: 900, it: false, s: 0.062, col: "#FFFFFF", sh: shadowW, tr: "0em", up: true },
+      { fam: V.mast_font, w: 900, it: false, s: 0.036, col: "#FFFFFF", sh: shadowW, tr: "0.04em", up: true }];
+  lows.forEach((e, j) => { const st = LOW[j];
+    e.textContent = st.up ? (parts[j] || "").toUpperCase() : (parts[j] || "");
+    Object.assign(e.style, { fontFamily: `'${st.fam}', Georgia, serif`, fontWeight: String(fw(st.fam, st.w)), fontStyle: st.it ? "italic" : "normal",
+      fontSize: `${st.s * M}px`, color: st.col, textShadow: st.sh, letterSpacing: st.tr }); });
+  // the side lines: classic = beside the head (left, then right), bold caps; editorial = lower right, italic
+  sides.forEach((e, j) => {
+    e.textContent = ED ? (parts[3 + j] || "") : (parts[3 + j] || "").toUpperCase();
+    Object.assign(e.style, ED ? { fontFamily: `'${V.italic_font}', Georgia, serif`, fontWeight: "400", fontStyle: "italic", fontSize: `${0.058 * M}px`, color: L.ink, textShadow: glowC, whiteSpace: "nowrap", textAlign: "right" }
+      : { fontFamily: `'${V.mast_font}', 'Arial Black', sans-serif`, fontWeight: String(fw(V.mast_font, 900)), fontSize: `${0.048 * M}px`, color: "#FFFFFF", textShadow: shadowW,
+          lineHeight: "1.02", textAlign: j ? "right" : "left", width: `${(j ? P.sR[2] : P.sL[2]) * W}px` });
+  });
+  // the barcode: bars from a seeded random, numbers under them
+  const showBar = !ED && V.barcode;
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const bw = P.bar[2] * W, bh = bw * 0.56;
+  if (showBar) {
+    Object.assign(bar.style, { width: `${bw}px`, height: `${bh}px`, left: `${P.bar[0] * W - bw}px`, top: `${P.bar[1] * H - bh}px`, transformOrigin: "100% 100%" });
+    bars.setAttribute("viewBox", `0 0 100 56`); Object.assign(bars.style, { position: "absolute", left: "0px", top: "0px", width: `${bw}px`, height: `${bh}px` });
+    const r = rnd(1); let x = 6, out = "";
+    while (x < 94) { const w = [1.2, 1.2, 1.8, 3][Math.floor(r() * 4)]; if (x + w > 94) break; out += `<rect x="${x.toFixed(2)}" y="5" width="${w}" height="38" fill="#111111"/>`; x += w + [1.2, 1.8, 2.4][Math.floor(r() * 3)]; }
+    bars.innerHTML = out;
+    bnum.textContent = "0 12026 01212 6";
+    Object.assign(bnum.style, { visibility: "inherit", fontFamily: `'${V.accent_font}', Consolas, monospace`, fontWeight: "700", fontSize: `${bh * 0.13}px`, color: "#111111",
+      left: "0px", width: `${bw}px`, textAlign: "center", top: `${bh * 0.8}px`, letterSpacing: "0.04em" });
+  }
+
+  // ---- the layout, once the fonts are in (the masthead fitted to the width, the lines to their room)
+  let mx = 0, my = 0, mw = 0, mh = 0;
+  const place = [];
+  function layout() {
+    // the masthead: fitted to its width, its cap top at mTop, never taller than mMax
+    mast.style.fontSize = "100px";
+    const w100 = Math.max(1, mast.offsetWidth);
+    const cv = document.createElement("canvas").getContext("2d");
+    cv.font = `${MW} 100px '${MFAM}'`; try { cv.letterSpacing = ED ? "4px" : "-1px"; } catch (err) {}
+    cv.textBaseline = "alphabetic";
+    const m = cv.measureText(mast.textContent || "H");
+    const capA = (m.actualBoundingBoxAscent || 72) / 100, fa = (m.fontBoundingBoxAscent || 95) / 100, fd = (m.fontBoundingBoxDescent || 25) / 100;
+    const fs = Math.min(P.mW * W / w100 * 100, P.mMax * H / capA);
+    mast.style.fontSize = `${fs}px`;
+    mw = mast.offsetWidth; mh = capA * fs;
+    const base = (fs - (fa + fd) * fs) / 2 + fa * fs;               // the baseline inside its line box (line-height 1)
+    mx = W / 2 - mw / 2; my = P.mTop * H - (base - capA * fs);
+    // the issue line over the masthead, centred; the editorial rule under it
+    const iw = iss.offsetWidth;
+    if (iw > W * 0.9) iss.style.fontSize = `${parseFloat(iss.style.fontSize) * W * 0.9 / iw}px`;
+    place.iss = [W / 2 - iss.offsetWidth / 2, P.iss * H - iss.offsetHeight / 2];
+    Object.assign(rule.style, { width: `${0.86 * W}px`, height: `${Math.max(1, 2.5 * U)}px`, left: `${0.07 * W}px`, top: `${P.mTop * H + mh + 0.012 * H}px`,
+      background: rgba(L.ink, 0.8), transformOrigin: "50% 50%", visibility: ED ? "visible" : "hidden" });
+    // the lower block: each line fitted to its room, one under the other
+    let y = P.low[1] * H;
+    lows.forEach((e, j) => {
+      const room = P.low[2] * W;
+      if (e.offsetWidth > room) e.style.fontSize = `${parseFloat(e.style.fontSize) * room / e.offsetWidth}px`;
+      place[j] = [P.low[0] * W, y];
+      y += e.offsetHeight * (ED ? (j === 2 ? 1.6 : 0.86) : (j === 0 ? 0.98 : 1.04));
+    });
+    // the side lines: wrapped in their column (at most three lines), smaller until the longest word fits
+    sides.forEach((e, j) => {
+      if (ED) {
+        const room = 0.6 * W;
+        if (e.offsetWidth > room) e.style.fontSize = `${parseFloat(e.style.fontSize) * room / e.offsetWidth}px`;
+        const yy = P.right[1] * H + j * e.offsetHeight * 0.95;
+        place[3 + j] = [P.right[0] * W - e.offsetWidth, yy];
+        return;
+      }
+      const col = j ? P.sR : P.sL, cw = col[2] * W;
+      const words = (e.textContent || "").split(/\s+/);
+      for (let i = 0; i < 12; i++) {
+        const fs0 = parseFloat(e.style.fontSize);
+        const probe = document.createElement("span"); probe.style.whiteSpace = "nowrap"; e.appendChild(probe);
+        let widest = 0; words.forEach(wd => { probe.textContent = wd; widest = Math.max(widest, probe.offsetWidth); });
+        e.removeChild(probe);
+        if (widest <= cw && e.offsetHeight <= fs0 * 1.02 * 3 + 2) break;
+        e.style.fontSize = `${fs0 * 0.92}px`;
+      }
+      place[3 + j] = [j ? col[0] * W - cw : col[0] * W, col[1] * H];
+    });
+  }
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame"; e = frames at 30 fps before the end)
+  const LEN = (FRAMES - S) * 30 / FPS;
+  const leave = V.leave && LEN > 40;
+  let ready = false;
+  function render(t) {
+    const d = (t - S / FPS) * 30, e = (FRAMES / FPS - t) * 30;
+    const on = d >= 0 && ready;
+    [mast, iss, ...lows, ...sides].forEach(x => x.style.visibility = on && x.textContent ? "visible" : "hidden");
+    bar.style.visibility = on && showBar ? "visible" : "hidden";
+    if (!on) { rule.style.opacity = "0"; return; }
+    const out = leave ? eIn(1 - c01((e - 0.5) / 9)) : 0;           // the exit, 0 -> 1 over the last 9 frames
+    const k = eOut(d / 10.5);
+    // the masthead: classic drops a quarter of its height into place; editorial settles from 105 %; it grows 2.5 % while it holds
+    const hold = eIO((d - 12) / Math.max(1, LEN - 24));
+    let sc = (ED ? 1.05 - 0.05 * eOut(d / 15) : 1) * (1 + 0.025 * hold);
+    const dy = ED ? 0 : -(1 - k) * 0.25 * mh;
+    mast.style.transform = `translate(${mx.toFixed(2)}px, ${(my + dy - out * 0.04 * mh).toFixed(2)}px) scale(${sc.toFixed(5)})`;
+    mast.style.opacity = (c01((d + 0.5) / (ED ? 10 : 4)) * (1 - out)).toFixed(3);
+    iss.style.transform = `translate(${place.iss[0].toFixed(2)}px, ${place.iss[1].toFixed(2)}px)`;
+    iss.style.opacity = (eOut((d - 3) / 8) * (1 - out)).toFixed(3);
+    rule.style.opacity = (0.9 * (1 - out)).toFixed(3);
+    rule.style.transform = `scaleX(${eIO((d - 4) / 14).toFixed(4)})`;
+    // the lower lines slide in from the left one after another; the side lines from their own side
+    lows.forEach((el, j) => {
+      const kj = ED ? eOut((d - 6 - 3 * j) / 10.5) : eOut((d - 4.5 - 2.4 * j) / 9);
+      const sx = -(1 - kj) * (ED ? 0.03 : 0.056) * M - out * 0.02 * M;
+      el.style.transform = `translate(${(place[j][0] + sx).toFixed(2)}px, ${place[j][1].toFixed(2)}px)`;
+      el.style.opacity = (c01(kj * 1.6) * (1 - out)).toFixed(3);
+    });
+    sides.forEach((el, j) => {
+      const kj = ED ? eOut((d - 13.5 - 3 * j) / 10.5) : eOut((d - 9 - 2.4 * j) / 9);
+      const dir = ED || j ? 1 : -1, sx = dir * ((1 - kj) * (ED ? 0.03 : 0.056) * M + out * 0.02 * M);
+      el.style.transform = `translate(${(place[3 + j][0] + sx).toFixed(2)}px, ${place[3 + j][1].toFixed(2)}px)`;
+      el.style.opacity = (c01(kj * 1.6) * (1 - out)).toFixed(3);
+    });
+    if (showBar) {
+      const kb = eBack((d - 12) / 8);
+      bar.style.transform = `scale(${(0.8 + 0.2 * kb).toFixed(4)})`;
+      bar.style.opacity = (c01((d - 12) / 2.5) * (1 - out)).toFixed(3);
+    }
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 59 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  const FACES = [`${MW} 100px "${MFAM}"`, `${fw(V.mast_font, 900)} 100px "${V.mast_font}"`, `italic 400 100px "${V.italic_font}"`, `400 100px "${V.italic_font}"`,
+    `${fw(V.serif_font, 800)} 100px "${V.serif_font}"`, `${fw(V.body_font, 700)} 100px "${V.body_font}"`, `700 100px "${V.accent_font}"`];
+  (document.fonts && document.fonts.load ? Promise.all(FACES.map(f => document.fonts.load(f).catch(() => {})).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    layout(); ready = true;
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

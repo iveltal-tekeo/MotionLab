@@ -17,9 +17,64 @@
       "Write(./projects/*/build/**)",
       "Edit(./analysis/**)",
       "Write(./analysis/**)"
+    ],
+    "ask": [
+      "Bash(.venv/Scripts/python tools/download.py*)",
+      "Bash(.venv/Scripts/python tools/agency.py check*)",
+      "Bash(.venv/Scripts/python tools/content.py stats*)",
+      "Bash(.venv/Scripts/python tools/overlay.py install*)",
+      "Bash(.venv/Scripts/python tools/library.py install*)",
+      "Bash(.venv/Scripts/python tools/library.py uninstall*)",
+      "Bash(.venv/Scripts/python tools/resolve_mcp.py install*)",
+      "Bash(.venv/Scripts/python tools/resolve_mcp.py remove*)",
+      "Bash(.venv/Scripts/python tools/storage.py --prune*)",
+      "Bash(.venv\\Scripts\\python tools\\download.py*)",
+      "Bash(.venv\\Scripts\\python tools\\agency.py check*)",
+      "Bash(.venv\\Scripts\\python tools\\content.py stats*)",
+      "Bash(.venv\\Scripts\\python tools\\overlay.py install*)",
+      "Bash(.venv\\Scripts\\python tools\\library.py install*)",
+      "Bash(.venv\\Scripts\\python tools\\library.py uninstall*)",
+      "Bash(.venv\\Scripts\\python tools\\resolve_mcp.py install*)",
+      "Bash(.venv\\Scripts\\python tools\\resolve_mcp.py remove*)",
+      "Bash(.venv\\Scripts\\python tools\\storage.py --prune*)",
+      "PowerShell(.venv\\Scripts\\python tools\\download.py*)",
+      "PowerShell(.venv\\Scripts\\python tools\\agency.py check*)",
+      "PowerShell(.venv\\Scripts\\python tools\\content.py stats*)",
+      "PowerShell(.venv\\Scripts\\python tools\\overlay.py install*)",
+      "PowerShell(.venv\\Scripts\\python tools\\library.py install*)",
+      "PowerShell(.venv\\Scripts\\python tools\\library.py uninstall*)",
+      "PowerShell(.venv\\Scripts\\python tools\\resolve_mcp.py install*)",
+      "PowerShell(.venv\\Scripts\\python tools\\resolve_mcp.py remove*)",
+      "PowerShell(.venv\\Scripts\\python tools\\storage.py --prune*)",
+      "PowerShell(.venv/Scripts/python tools/download.py*)",
+      "PowerShell(.venv/Scripts/python tools/agency.py check*)",
+      "PowerShell(.venv/Scripts/python tools/content.py stats*)",
+      "PowerShell(.venv/Scripts/python tools/overlay.py install*)",
+      "PowerShell(.venv/Scripts/python tools/library.py install*)",
+      "PowerShell(.venv/Scripts/python tools/library.py uninstall*)",
+      "PowerShell(.venv/Scripts/python tools/resolve_mcp.py install*)",
+      "PowerShell(.venv/Scripts/python tools/resolve_mcp.py remove*)",
+      "PowerShell(.venv/Scripts/python tools/storage.py --prune*)"
+    ],
+    "deny": [
+      "Edit(/refs/**)",
+      "Edit(./refs/**)"
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-sources.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking the sources stay untouched"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "startup|resume",

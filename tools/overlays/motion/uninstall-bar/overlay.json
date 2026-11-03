@@ -1,0 +1,35 @@
+{
+ "name": "uninstall-bar",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "pop",
+   "db": -7,
+   "what": "the dialog pops in"
+  },
+  {
+   "f": "round(2.5 * fps)",
+   "kind": "zap",
+   "db": -5,
+   "what": "it hangs and starts to break apart"
+  },
+  {
+   "f": "frames - round(0.6 * fps)",
+   "kind": "zap",
+   "db": -5,
+   "seed": 2,
+   "if": "frames - round(0.6 * fps) > round(2.8 * fps)",
+   "what": "the glitch peaks"
+  },
+  {
+   "f": "frames - round(4 * fps / 30)",
+   "kind": "thump",
+   "db": -6,
+   "what": "the dialog collapses to a line and is gone"
+  }
+ ]
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title (big, top left)", "default": "ROUGH CUT"},
+  {"id": "sub", "type": "string", "label": "Line under the title", "default": "edited in MotionLab"},
+  {"id": "tc", "type": "string", "label": "Starting timecode (HH:MM:SS:FF; it runs from there)", "default": "00:01:24:00"},
+  {"id": "color", "type": "color", "label": "Red (clips, REC, the line under the title)", "default": "#FF342C"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.6, "max": 1.3, "step": 0.05},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2A0A09"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "timeline" (2026-10-28): an editing timeline on a dark red film look. Made for its
+     companion (template.json "with": grade red_film, which turns the whole picture into the dark red grade). A REC
+     dot + a running timecode, a big title and a red sub line slide in at the top left (f0-f10, slow end); the
+     timeline panel rises in at the bottom (f2-f13): a ruler with the seconds, three tracks of clips and a glowing
+     white playhead that runs across for the whole length - each clip lights up red (with a glow) as the playhead
+     reaches it. The REC dot blinks, the timecode counts frame by frame. The last 8 frames it all fades (the panel
+     sinks, the title slides back). The panel and the words stay off the face (in_shot guard). With "Paint a
+     background" on, the preview paints a dark red room in place of the graded video. After a design in
+     claude-video-effects (MIT, fx_timeline, red_timeline); MotionLab's own code. Size-independent, look-aware. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #head, #panelw { position: absolute; left: 0; top: 0; }
+  #panel { position: absolute; overflow: hidden; }
+  #panel div { position: absolute; }
+  .t1 { white-space: nowrap; font-synthesis: none; line-height: 1; position: absolute; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="head"><div id="dot" class="abs"></div><div id="rec" class="t1"></div><div id="ttl" class="t1"></div><div id="sub" class="t1"></div></div>
+  <div id="panelw"><div id="panel"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 150;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const s = V.size * U;
+  const HOR = W > H;
+  const RED = V.color || "#FF342C";
+  const hex6 = h => { const x = String(h).replace("#", ""); return "#" + (x.length === 3 ? x.split("").map(c => c + c).join("") : x.slice(0, 6)); };
+  const mix = (a, b, u) => { const pa = [1, 3, 5].map(i => parseInt(hex6(a).slice(i, i + 2), 16) || 0), pb = [1, 3, 5].map(i => parseInt(hex6(b).slice(i, i + 2), 16) || 0);
+    return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * u).toString(16).padStart(2, "0")).join(""); };
+  const DIM = mix(RED, "#140606", 0.6);                                      // a clip the playhead has not reached
+  const MONO = `'${V.accent_font}', Consolas, monospace`, BODY = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- the preview background: a dark red room in place of the graded video (only when painted)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.2 * Math.min(W, H)}px ${0.26 * Math.min(W, H)}px at ${0.5 * W}px ${(HOR ? 0.42 : 0.36) * H}px, ${rgba("#E07A6A", 0.45)}, ${rgba("#E07A6A", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.3 * H}px at ${0.25 * W}px ${0.25 * H}px, ${rgba("#B3221C", 0.5)}, ${rgba("#B3221C", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.75 * W}px ${0.7 * H}px at ${0.5 * W}px ${0.5 * H}px, ${rgba("#000000", 0)} 55%, ${rgba("#000000", 0.6)} 100%), ${V.bg}`;
+
+  // ---- the timecode: HH:MM:SS:FF at the template's own rate, running from the setting
+  const NOM = Math.round(FPS);
+  const tc0 = (() => { const m = String(V.tc || "").match(/(\d+)\D+(\d+)\D+(\d+)(?:\D+(\d+))?/);
+    return m ? ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * NOM + Math.min(NOM - 1, +(m[4] || 0)) : 84 * NOM; })();
+  const p2 = n => String(n).padStart(2, "0");
+  const tcs = f => { const ff = f % NOM, ss = Math.floor(f / NOM); return `${p2(Math.floor(ss / 3600))}:${p2(Math.floor(ss / 60) % 60)}:${p2(ss % 60)}:${p2(ff)}`; };
+  const mmss = f => { const ss = Math.floor(f / NOM); return `${p2(Math.floor(ss / 60) % 60)}:${p2(ss % 60)}`; };
+
+  // ---- the top: REC + timecode, the title, the sub line (top left, out of the apps' top band)
+  const head = q("head"), dot = q("dot"), rec = q("rec"), ttl = q("ttl"), sub = q("sub");
+  const hx = W * (HOR ? 0.05 : 0.065), hy = HOR ? H * 0.075 : Math.max(H * 0.122, 230 * U);
+  const recFs = 34 * s, ttlFs0 = (HOR ? 120 : 132) * s, subFs = 40 * s;
+  let ttlFs = ttlFs0;
+  const dd = recFs * 0.46;
+  Object.assign(dot.style, { left: "0px", top: `${(recFs - dd) / 2}px`, width: `${dd}px`, height: `${dd}px`, borderRadius: "50%", background: RED,
+    boxShadow: `0 0 ${10 * s}px ${rgba(RED, 0.8)}` });
+  Object.assign(rec.style, { left: `${dd * 1.6}px`, top: "0px", color: RED, fontFamily: MONO, fontWeight: String(fw(V.accent_font, 700)), fontSize: `${recFs}px`,
+    letterSpacing: "0.04em", textShadow: `0 0 ${12 * s}px ${rgba(RED, 0.45)}` });
+  ttl.textContent = String(V.title || "");
+  Object.assign(ttl.style, { left: `${-ttlFs0 * 0.04}px`, top: `${recFs * 1.35}px`, color: "#FFFFFF", fontFamily: BODY, fontWeight: String(fw(V.body_font, 900)),
+    fontSize: `${ttlFs}px`, letterSpacing: "-0.03em", textShadow: `0 ${4 * s}px ${22 * s}px ${rgba("#000000", 0.45)}` });
+  sub.textContent = String(V.sub || "");
+  Object.assign(sub.style, { left: "0px", color: RED, fontFamily: BODY, fontWeight: String(fw(V.body_font, 600)), fontSize: `${subFs}px`,
+    textShadow: `0 ${2 * s}px ${12 * s}px ${rgba("#000000", 0.5)}` });
+
+  // ---- the timeline panel at the bottom: a ruler, three tracks of clips, the playhead
+  const pw = W * (HOR ? 0.88 : 0.9), ph = Math.min(H * (HOR ? 0.25 : 0.18), pw * 0.36) * Math.min(1.15, V.size);
+  const pcx = W / 2, pcy = HOR ? H * 0.965 - ph / 2 : Math.min(H * 0.735 + ph / 2, H * 0.96 - ph / 2);
+  const panelw = q("panelw"), panel = q("panel");
+  const pr = Math.min(ph * 0.12, Math.max(8 * U, L.radius * 2.2));
+  Object.assign(panel.style, { left: `${-pw / 2}px`, top: `${-ph / 2}px`, width: `${pw}px`, height: `${ph}px`, borderRadius: `${pr}px`,
+    background: `linear-gradient(180deg, ${rgba("#160C0C", 0.9)}, ${rgba("#0E0909", 0.86)})`,
+    boxShadow: `inset 0 0 0 ${Math.max(1, 1.5 * U)}px ${rgba(RED, 0.32)}, 0 ${12 * U}px ${36 * U}px ${rgba("#000000", 0.45)}` });
+  const el = (css, cls) => { const e = document.createElement("div"); if (cls) e.className = cls; Object.assign(e.style, css); panel.appendChild(e); return e; };
+  const hdw = Math.min(pw * 0.085, 96 * U), ax0 = hdw + pw * 0.012, ax1 = pw - pw * 0.02, aw = ax1 - ax0;   // the tracks' area
+  const rulerH = ph * 0.2, ty0 = ph * 0.27, trh = ph * 0.19, tgap = ph * 0.045;
+  const fsSmall = Math.max(13 * U, ph * 0.075);
+  // where a second sits on the area: the playhead runs from 4 % to 96 % over 95 % of the length
+  const SEC = FRAMES / FPS * 0.95;
+  const fx = tsec => ax0 + aw * (0.04 + 0.92 * c01(tsec / SEC));
+  el({ left: "0px", top: `${rulerH}px`, width: `${pw}px`, height: `${Math.max(1, 1.2 * U)}px`, background: rgba("#ffffff", 0.08) });
+  el({ left: `${hdw}px`, top: `${rulerH}px`, width: `${Math.max(1, 1.2 * U)}px`, height: `${ph - rulerH}px`, background: rgba("#ffffff", 0.08) });
+  for (let i = 0; i * 0.25 <= SEC + 0.001; i++) {                          // ticks every quarter second, a label every second
+    const x = fx(i * 0.25), big = i % 4 === 0;
+    el({ left: `${x}px`, top: `${rulerH - (big ? rulerH * 0.36 : rulerH * 0.18)}px`, width: `${Math.max(1, 1.4 * U)}px`, height: `${big ? rulerH * 0.36 : rulerH * 0.18}px`, background: rgba("#ffffff", big ? 0.4 : 0.2) });
+    if (big && x + fsSmall * 3.2 < pw) el({ left: `${x + fsSmall * 0.3}px`, top: `${rulerH * 0.16}px`, color: rgba("#ffffff", 0.55), fontFamily: MONO, fontSize: `${fsSmall}px` }, "t1").textContent = mmss(tc0 + (i / 4) * NOM);
+  }
+  const TRACKS = [["V2", [[0.04, 0.24], [0.26, 0.5], [0.53, 0.76], [0.79, 0.96]]], ["V1", [[0.04, 0.3], [0.33, 0.45], [0.48, 0.7], [0.73, 0.98]]], ["A1", [[0.04, 0.55], [0.6, 0.97]]]];
+  const CLIPS = [];
+  TRACKS.forEach(([name, segs], r) => {
+    const y = ty0 + r * (trh + tgap);
+    el({ left: `${pw * 0.022}px`, top: `${y + (trh - fsSmall) / 2}px`, color: rgba("#ffffff", 0.5), fontFamily: MONO, fontWeight: String(fw(V.accent_font, 700)), fontSize: `${fsSmall}px` }, "t1").textContent = name;
+    segs.forEach(([a, b], j) => {
+      const x0 = ax0 + aw * a, x1 = ax0 + aw * b;
+      const c = el({ left: `${x0}px`, top: `${y}px`, width: `${x1 - x0}px`, height: `${trh}px`, borderRadius: `${trh * 0.22}px`, background: DIM, overflow: "hidden" });
+      const lit = document.createElement("div");
+      Object.assign(lit.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", background: `linear-gradient(180deg, ${mix(RED, "#ffffff", 0.12)}, ${RED})`, opacity: "0" });
+      c.appendChild(lit);
+      if (name === "A1") {                                                     // an audio clip: a waveform
+        const wv = document.createElementNS("http://www.w3.org/2000/svg", "svg"), cw_ = x1 - x0, n = Math.max(8, Math.floor(cw_ / (5 * U)));
+        wv.setAttribute("width", cw_); wv.setAttribute("height", trh); Object.assign(wv.style, { position: "absolute", left: "0px", top: "0px" });
+        let dpath = "";
+        for (let i = 0; i < n; i++) { const xx = (i + 0.5) * cw_ / n, amp = trh * 0.38 * (0.25 + 0.75 * Math.abs(Math.sin(i * 0.9 + j) * Math.cos(i * 0.37 + 2 * j)));
+          dpath += `M ${xx.toFixed(1)} ${(trh / 2 - amp).toFixed(1)} L ${xx.toFixed(1)} ${(trh / 2 + amp).toFixed(1)} `; }
+        wv.innerHTML = `<path d="${dpath}" stroke="${rgba("#000000", 0.42)}" stroke-width="${Math.max(1.2, 2 * U)}" stroke-linecap="round"/>`;
+        c.appendChild(wv);
+      } else {
+        const hl = document.createElement("div");                             // a thin light along the clip's top
+        Object.assign(hl.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: `${Math.max(1, 2 * U)}px`, background: rgba("#ffffff", 0.22) });
+        c.appendChild(hl);
+      }
+      CLIPS.push({ c, lit, x0 });
+    });
+  });
+  // the playhead: a glowing white line with a head on the ruler
+  const phW = Math.max(2, 3 * U);
+  const phl = el({ left: "0px", top: `${rulerH * 0.55}px`, width: `${phW}px`, height: `${ph - rulerH * 0.55 - ph * 0.04}px`, background: "#FFFFFF",
+    boxShadow: `0 0 ${8 * U}px ${rgba("#ffffff", 0.9)}, 0 0 ${22 * U}px ${rgba("#ffffff", 0.45)}` });
+  const phh = el({ left: "0px", top: `${rulerH * 0.3}px`, width: `${rulerH * 0.5}px`, height: `${rulerH * 0.42}px`, background: "#FFFFFF",
+    clipPath: "polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%)" });
+
+  // ---- the motion (d = frames at 30 fps; e = frames at 30 fps before the end)
+  const RISE = Math.max(0, Math.min(H * 0.1, H - (pcy + ph / 2) - 2 * U));   // the panel rises from inside the frame
+  function render(t) {
+    const d = t * 30, e = (FRAMES / FPS - t) * 30, f = Math.round(t * FPS);
+    const xo = e < 8 ? eIn(1 - e / 8) : 0;
+    // the top block slides in from the left (10 f, slow end), seen within 2 f
+    const hq = eOut(d / 10);
+    head.style.transform = `translate(${(hx - (1 - hq) * hx * 0.8 - xo * hx * 0.6).toFixed(2)}px, ${hy.toFixed(2)}px)`;
+    head.style.opacity = (c01((d + 0.5) / 4) * (1 - xo)).toFixed(3);
+    dot.style.opacity = Math.floor(t * 2.5) % 2 === 0 ? "1" : "0.3";          // blinks 2.5 times a second
+    rec.textContent = `REC ${tcs(tc0 + f)}`;
+    // the panel rises in from below (11 f from f2, slow end), sinks out
+    const pq = eOut((d - 2) / 11);
+    panelw.style.transform = `translate(${pcx.toFixed(2)}px, ${(pcy + (1 - pq) * RISE + xo * RISE * 0.4).toFixed(2)}px)`;
+    panelw.style.opacity = (c01((d - 1.5) / 4) * (1 - xo)).toFixed(3);
+    // the playhead runs across; a clip lights up (3 f) as it reaches it
+    const x = fx(t);
+    phl.style.left = `${(x - phW / 2).toFixed(2)}px`;
+    phh.style.left = `${(x - rulerH * 0.25).toFixed(2)}px`;
+    CLIPS.forEach(c => { const u = c01((x - c.x0) / (aw * 0.012 + 1));
+      c.lit.style.opacity = u.toFixed(3);
+      c.c.style.boxShadow = u > 0 ? `0 0 ${(14 * U * u).toFixed(1)}px ${rgba(RED, 0.55 * u)}` : "none"; });
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 65 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the title fitted to the width, the sub line under it
+  (document.fonts && document.fonts.load ? Promise.all([400, 600, 700, 900].flatMap(w => [document.fonts.load(`${w} 100px "${V.body_font}"`), document.fonts.load(`${w} 100px "${V.accent_font}"`)])
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    const maxW = HOR ? W * 0.42 : W * 0.87;
+    if (ttl.offsetWidth > maxW) { ttlFs *= maxW / ttl.offsetWidth; ttl.style.fontSize = `${ttlFs}px`; }
+    const sm = HOR ? W * 0.42 : W * 0.87;
+    if (sub.offsetWidth > sm) sub.style.fontSize = `${subFs * sm / sub.offsetWidth}px`;
+    sub.style.top = `${recFs * 1.35 + ttlFs * 0.98}px`;
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

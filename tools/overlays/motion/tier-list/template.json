@@ -1,0 +1,32 @@
+{
+ "name": "Tier list",
+ "kind": "lists",
+ "category": "Social",
+ "what": "A tier list of glass drops in under your chin (beside you on a wide frame) with a title above your head: the S / A / B / C labels pop in, the items already ranked slide into A, B and C, then your item pops in beside you and flies on an arc into the S tier - it lands with a squash, a burst of dots and the S label flashing. The board floats while it holds and sinks away at the end.",
+ "use_for": ["ranking", "tier list", "best tool", "comparison", "opinion", "hot take", "which is best", "talking head", "glass", "short form"],
+ "tags": ["tier list", "ranking", "list", "glass", "frosted", "board", "fly in", "s tier", "talking head", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0-f12 the board drops in from 90 px higher, growing from 94 % (slow end, a small overshoot, seen within 3 f) while the title rises 26 px into place (f2-f14); the S / A / B / C labels pop in from 30 % (8 f each, 3 f apart from f4) and their tracks wipe open (10 f); the ranked items slide in from the left (8 f each, 3 f apart from f12); f24-f32 the item pops in beside the chin at 1.15x (slow end, overshoot) and wobbles; f36-f54 it flies on a 120 px arc into the S slot (S-curve); f54 it lands with a squash (9 f), a burst of 8 dots (12 f) and the S label flashing and swelling (14 f); then the S label glows (a 40 f breath), a light crosses the tile every 48 f, the board floats 3 px and a band of light crosses the glass (f58-f82, S-curve); the last 9 f it sinks 30 px and fades (accelerating)",
+ "tracks": [
+  {"name": "board in", "what": "the glass board drops into place", "start_f": 0, "length_f": 12, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "labels", "what": "the S / A / B / C labels pop in one after another, their tracks wipe open", "start_f": 4, "length_f": 20, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "ranked items", "what": "the items already ranked slide into A, B and C", "start_f": 12, "length_f": 14, "easing": "decelerating (slow end)"},
+  {"name": "item pops", "what": "the item pops in beside the chin", "start_f": 24, "length_f": 8, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "item flies", "what": "the item flies on an arc into the S tier", "start_f": 36, "length_f": 18, "easing": "S-curve"},
+  {"name": "land", "what": "it lands with a squash, a burst of dots and the S label flashing", "start_f": 54, "length_f": 14, "easing": "decelerating (slow end)"},
+  {"name": "sheen", "what": "a band of light crosses the glass", "start_f": 58, "length_f": 24, "easing": "S-curve"},
+  {"name": "board out", "what": "the board sinks away and fades", "start_f": 141, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round(80 * fps / 30)",
+ "min_why": "the item has to fly into the S tier and land (f54) and be seen there before it ends",
+ "in_shot": {"glass": true, "shadow": true, "guard": true, "match": true},
+ "core_points": 1,
+ "text_slots": ["title", "item", "others"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 100,
+ "check_frames": [0, 2, 6, 12, 18, 26, 34, 40, 45, 50, 56, 62, 100, 143, 148]
+}

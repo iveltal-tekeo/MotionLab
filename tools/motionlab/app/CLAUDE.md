@@ -10,6 +10,34 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   (2026-10-24: the list pages' change fingerprints + the NEW badge's `.app\seen.json`), `winicon.py` (2026-10-24:
   MotionLab's own AppUserModelID + icon on its Edge windows and shortcuts, ctypes), `ui\` (plain HTML/CSS/JS, no build
   step).
+- The page's code = `ui\js\*.js` (2026-11-02: app.js, 12.3k lines, split - docs\design_brain_and_hardening.md section
+  4): plain scripts sharing ONE scope, loaded in order by `index.html` (no modules). Open only the file you need. A name
+  from any file works inside a function; code that runs while the files load may use earlier files only - starting
+  things goes in `main.js` (the `PAGES` table, the timers, the first `route()`). A new page = its file (a new one gets a
+  `<script>` in index.html before main.js) + its row in `PAGES`. `i18n_check.py` reads the files in index.html's order.
+
+  | file | what is in it |
+  |---|---|
+  | `core.js` | helpers (`t` / `tn` / `ta`, `api`, `$`, `esc`, `toast`, `modal`, `openClaude`, `reviewPanel`, `optTag`), the shell (sidebar, `route`, live pages, NEW badges, the heartbeat `ping`, `API_LEVEL`), Report a problem |
+  | `player.js` | the player and its formats, `Timeline`, an analysis' Overview / Content tabs |
+  | `home.js` | Home (`pageHome`, `plural`), Add videos, a reference's workflow, Delete |
+  | `analyser-sets.js` | the analysed videos' progress, thumbnail sets (`pageThumbs`), Preview your thumbnail, scripts & prompts sets (`pageTexts`) |
+  | `analyser.js` | the Analyser (`pageRefs`, its mascots), Notes (`pageNote`, combined notes) |
+  | `analysis.js` | SPARK (`pageSpark`), one analysis (`pageRef`) |
+  | `edit.js` | the Editor's list (`pageProjects`), Bulk, New edit's steps |
+  | `video.js` | a video's page (`pageProject`), What it took, Review |
+  | `editor-preview.js` | the Editor's helpers (`edEaseFn`...) and its live preview `EdPreview` |
+  | `editor.js` | the Editor itself (`projEditor`, one 1.5k-line function) |
+  | `video-publish.js` | a video's Footage, Publish, Graphics, Resolve |
+  | `memory.js` | Claude's memory (`pageMemory`), `ptool` |
+  | `prepare.js` | Prepare (`pagePrepare`), the Generator (`pageGenerate`) |
+  | `motion.js` | Motion Graphics (`pageMotion`), the prompt library page (`pagePrompts`) |
+  | `prompts.js` | Film it, the prompt library's pop-ups, Title & thumbnail |
+  | `jobs.js` | Claude skills, Jobs, Storage, Downloads, `brandData` |
+  | `brand.js` | My Brand (`pageBrand`) |
+  | `agency.js` | Content agency (`pageAgency`: calendar, videos, tests, what works, monthly review) |
+  | `settings.js` | Settings, Shared knowledge's page, the category / tags editor |
+  | `main.js` | the start: `PAGES`, the heartbeat and live timers, the font list, the first `route()` |
 - Python standard library only (nothing installed): a server on 127.0.0.1:8765 + Microsoft Edge in app mode (its
   own window, 1600x1000). It stops ~10 s after the window closes (3 min without heartbeat), unless a job runs.
   Security: Host header check, a session token on every POST, `/files/` serves read-only from analysis, projects,
@@ -17,7 +45,15 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `settings.json`, downloads into `refs\` (+ `refs\audio\`), `analysis\<name>\meta.json` (category / tags / label),
   a thumbnail set's or a text set's folder (`analysis\thumbs\<set>\`, `analysis\texts\<set>\`, through `thumbsets` /
   `textsets`), a video's notes (2026-10-27, `analysis\notes\<name>\`: `mine.md` = My notes, note.json `label` / `tags` /
-  `done` - through `motionlab\notes.py`; notes.json only through `notes.py save`, Claude's gate),
+  `done` - through `motionlab\notes.py`; notes.json only through `notes.py save`, Claude's gate), a video's SPARK
+  (2026-10-30, `analysis\spark\<name>\` - only its jobs write it, `tools\spark.py`; spark.json only through `spark.py save`),
+  where people left (2026-11-02: a screenshot the user adds = a new file in `knowledge\local\retention\`, the traced
+  curves in `knowledge\local\retention.json` - through `motionlab\retention.py`, traced again on every save), tests
+  of one idea (`knowledge\local\experiments.json` through `motionlab\experiments.py`; Claude's review only through
+  `experiments.py review`, the gate), the lessons from the user's posts (`knowledge\local\findings.json` through
+  `motionlab\findings.py` - a kept pattern, every retest, forget), the monthly review's picks
+  (`knowledge\local\monthly.json` + a calendar idea, `monthly.plan`; Claude's review only through `monthly.py review`,
+  the gate),
   `knowledge\` (cards, summary, packs, imports; the prompt library `local\prompts\`: Add / rate; since 0.6.0 My Brand's
   `local\brand.json` + its logo `local\brand\logo.<ext>` through `motionlab\brand.py`, checked on every save; Import from
   your website's `local\brand\import\` (the job) and the ticked products' pictures `local\brand\products\`; 0.6.0 step 10
@@ -53,11 +89,12 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   page, read its section there** - what the page shows, its helpers, how it came to be. Here stay the rules that hold
   everywhere, the contracts, and per page the user's own words and its never / always rules.
 
-  | page / part | address · entry in app.js | its section in `docs\app_pages.md` |
+  | page / part | address · entry (its file: the table above) | its section in `docs\app_pages.md` |
   |---|---|---|
   | the sidebar, Home, each section's colour and band | `ALIASES`, `PAGES`, `pageHome`, `WAYS` | Sidebar and Home |
   | Analyser | #/analyze (/videos, /notes, /thumbs, /texts) · `pageRefs`, `mascot`, `addVideosModal` | Analyser |
   | a video's notes | #/note/<name> · `pageNote`, `noteCard`, `addNotesModal` | Notes |
+  | why a video worked | #/spark/<name> · `pageSpark`, `sparkCard`, `addSparkModal`, `sparkLink` | SPARK |
   | an analysis | #/ref/<name> · `pageRef`, `overviewTab`, `contentTab` | The analysis page |
   | bulk work, thumbnail sets | #/thumbs/<set> · `pageThumbs`, `addThumbsModal`, `bulkEditModal`, `batchRows` | Bulk and thumbnail sets |
   | sets of scripts & prompts | #/texts/<set> · `pageTexts`, `addTextsModal`, `textSetCard` | Text sets |
@@ -100,7 +137,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     analizing videos: 1) animations and effects (currently) 2) content creation (scripts, why its viral, structure...)
     3) information (take notes, how to apply to urself, context to apply to other ai's...)"; "every option ... shown
     with a "character" made in motion graphics ... in similar style of motion labs"): Effects & animations / Content
-    creation (coming soon) / Notes on top; Thumbnails and Scripts & prompts in a smaller row under them (`.gmini`). Each
+    creation (SPARK since 2026-10-30 - its page: `docs\app_pages.md` *SPARK*) / Notes on top; Thumbnails and Scripts & prompts in a smaller row under them (`.gmini`). Each
     way has its own page (the user: "they each have their own section ... to not clutter the overview page of the
     analyzer"): #/analyze/videos | spark | notes | thumbs | texts = its list (`anSection`); the overview keeps the tabs
     with every list (`anOverview`, `anList` - the user: "dont remove the existing tabs of stuff, cuz people would not
@@ -110,15 +147,19 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     exact visual concepts, not redesign them"): FLUX (Animations & Effects, a faceted blue crystal, an orbit with
     square nodes), SPARK (Content Creation, a golden origami star, a speech bubble, storyboard frames), INDEX (Notes &
     Knowledge, a teal orb, a lime bookmark, note cards on an orbit) - `mascot(kind, {size, state, animated, cls})`,
-    `mascotState(el, state, ms)`, `mascotsLive(root)` (app.js, before `pageRefs`; app.css "The Analyser's mascots"):
+    `mascotState(el, state, ms)`, `mascotsLive(root)` (js\analyser.js, before `pageRefs`; app.css "The Analyser's mascots"):
     layered SVG, no filters, CSS states idle / hover / analysing / success on `data-state`, a hovered `.mhost` shows
     idle as hover, `.still` = reduced motion / animated:false, `.paused` = off screen; under 56 px no props. Each must
     stay recognisable at 32-48 px; the three never move alike (FLUX precise, SPARK lively, INDEX calm).
   - **Notes** (2026-10-27, the user: "kinda like a notion but not that big, i just want to be simple and effective",
     "like a professional, not crowded", "video at 720p with option to delete the video afterwards but keep the notes",
-    no test-yourself questions; the research: docs\plans.md 0.6.5): one reading column, the video and My notes beside
-    it; every time = frame + timecode and plays the moment; the limits (7 takeaways, 5 points a section, 5 actions)
-    are the gate's, never the page's; Claude's notes are never edited on the page (My notes is the user's own).
+    no test-yourself questions; the research: docs\plans.md 0.6.5; 2026-10-29: "kinda like Notion would, also ur
+    missing half the screen", "make each section ... more meaningful, maybe add some colors"): the notes over the whole
+    width, the video and My notes beside them, one colour per section; every time = frame + timecode and plays the
+    moment; the limits (7 takeaways, 5 points a section, 5 actions) are the gate's, never the page's; Claude's notes are
+    never edited on the page (My notes is the user's own). *Ask Claude* (2026-10-29, "run a prompt fo that video notes")
+    and *Combine notes* ("combine the knowledge of the videos selected ... a markdown with all important info"): the
+    question goes in a file, an answer keeps what the video says (quoted) apart from what Claude adds (`more`).
   - **The analysis page**: the user's 2026-10-07 layout, since 2026-10-18 in the one review pattern (**Reviews**,
     below); the raw text behind *Copy what Claude gets* = GET `/api/feedback/<name>` - no file path in the page's words.
   - **Bulk and thumbnail sets**: **Bulk** (0.4.5, the user: "bulk analyze thumbnails, videos, and also bulk edit stuff
@@ -133,7 +174,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   - **Text sets** (the user's words: **Analyser**): each text's ONE home is the prompt library (Claude's check card,
     wishes, Optimize, Film it, ratings, Style like keep working; the same words after folding = the same sha1 =
     re-used, never copied); a set's numbers never change, removing #3 leaves a gap; no `.app\batches` kind: the set
-    is the batch and `textsets.state` its only truth; `prompts.tool_named` / `needs` = the twins of app.js `ptool` /
+    is the batch and `textsets.state` its only truth; `prompts.tool_named` / `needs` = the twins of js\memory.js `ptool` /
     `pneeds` - keep them alike. **Anti-hallucination by tools, not by wording**: `prompts.verify_check` (A every quote
     found in THAT text - whole words in order, pieces with ..., ≤ 400 chars, saved as the original words + `at`
     [start, end]; B missing = no words, clear / vague quote; C the kind's parts, once; D every part a row or `skipped`
@@ -147,7 +188,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     is our most powerful tool ... simplicity and clarity rather than having everything in a single section"; then "just
     show section per section, make the sidebar steps with numbers ... and make a line go through them", in the look of
     their mock-up new_edit_section.html): one step at a time - 1 Clips (2026-10-16: "choose between an old video clip
-    or new clips, intuitive and distinct"), 2 Text, 3 References, 4 Style, 5 Sound, 6 Final (+ the summary); the
+    or new clips, intuitive and distinct"), 2 Text, 3 References, 4 Style, 5 Sound, 6 Final (+ the summary), 7
+    Segments (0.6.1: "select each segment how u would like it edited and then create the edit entirely"); the
     steps on a gold line on the left, Back / Next in the footer; round 3 ("less text and more colors, icons"): a
     coloured icon per question, help in tooltips, the clips as pictures with a bin (the Delete route's kind "clip" =
     one file of the video's folder, the yes inside the step) and the references as picture cards; only the clips are
@@ -315,7 +357,10 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `jobtools.py ytdlp-update | player-copy`, the app's own small jobs; 0.4.3: thumb_candidates / thumb_make /
   thumb_render / thumb_check (group cpu, Publish above; thumb_check = `jobtools.py thumb-check`); 2026-10-27: notes
   (group cpu, `tools\notes.py prepare`; `claude: true` = one Claude window `/take-notes <name>` | `pending` when its
-  batch is ready, `Runner._notes_to_claude`; a download's `then: {"kind": "notes"}` prepares the saved video); `jobtools.py selfcheck` = the report's
+  batch is ready, `Runner._notes_to_claude`; a download's `then: {"kind": "notes"}` prepares the saved video); 2026-10-30:
+  spark (group cpu, `tools\spark.py prepare` - its lookups are the user's click; `claude: true` = one Claude window
+  `/spark <name>` | `pending`, `Runner._spark_to_claude`; a download's `then: {"kind": "spark"}`, up to 1080p) and
+  spark_numbers (group net, `spark.py numbers` = the lookup again); `jobtools.py selfcheck` = the report's
   scrubbing + link and the install kinds, no network), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
   status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
   holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
@@ -369,9 +414,9 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   program installed since Explorer read its PATH is found (the jobs inherit it); Update yt-dlp's winget command has
   `--skip-dependencies` (no second ffmpeg). Tests: `tools\dev\install_test.py` (a fake winget + test PATH file, a
   fake GitHub, scratch folders; about 2 minutes; this PC's shortcuts / settings / user PATH hashed before and after).
-- Versions: `server.VERSION` = `__version__`; the page carries `<meta name="ml-version">` and `API_LEVEL` (app.js)
+- Versions: `server.VERSION` = `__version__`; the page carries `<meta name="ml-version">` and `API_LEVEL` (js\core.js)
   and the ping returns version / api / phase / update: a newer page on an older server shows "Restart now", a new
-  server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `app.js` when the page needs new
+  server version reloads the page. Raise `API_LEVEL` in BOTH `server.py` and `js\core.js` when the page needs new
   server routes (3 since v0.2.5: delete, waiting downloads, Claude tasks; 4 since v0.3.0: update seen; 5 since 0.4: prompts;
   6 since 0.3.2: graphics; 7: the Content tab's jobs; 8 since 0.3.3: the prompt dialog's guess / file routes; 11: Style like; 12: prompt examples; 13: skills; 14 since 0.4: analyze batch, memory, edit options / request, generate options / request; 15: Prepare - script
   check / improve / request / requests / forget; 16 since 0.4.1.1: `/api/claude` `options` = the model dialog's data;
@@ -415,7 +460,23 @@ them as "a change the Editor does not know"); 48 (2026-10-27, Analyser > Notes):
 `/api/notes/<name>/md?transcript=1`, POST `/api/notes/batch`, `/api/notes/<name>/mine` | `/meta` (label, tags, done),
 the job `notes`, the Delete kinds `notes` / `notes_video` (the video alone - the notes stay), the preset `mp4_720`; 49
 (2026-10-27, the Editor's captions list): the changes `captions` {edits: [{graphic, cue, text}]} (many captions at once)
-and `capmerge` (data.ME_KEYS `edits` - an older server refused them), GET `/api/editor/sound` `dur`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+and `capmerge` (data.ME_KEYS `edits` - an older server refused them), GET `/api/editor/sound` `dur`; 50 (2026-10-29,
+Notes - Ask Claude, Combine notes): POST `/api/notes/<name>/ask` | `/unask`, GET `/api/notes-combined`,
+`/api/notes-combined/<id>`, `/api/notes-combined/md?names=`, POST `/api/notes-combined/ask` | `/remove`, GET
+`/api/notes/<name>` `asks` / `combined`; 51 (2026-10-29, vertical framing step 5): the Editor's change `frame` (data.ME_KEYS
+`layout` / `mode` / `x` / `y` / `panel` - an older server refused them), the state's `frame` per shot, edit_request
+`framing`; 52 (2026-10-30, Edit by segments steps 5-6): GET / POST `/api/project/<p>/segments` (the parts and the user's
+picks - `data.segments` / `segments_change`, tools\segments.py), the jobs `segments` / `segments_preview` /
+`segments_build`, New edit's 7th step and the Editor's Parts lane; 53 (2026-10-30, SPARK): GET `/api/spark`,
+`/api/spark/<name>`, `/api/spark/<name>/md`, POST `/api/spark/batch` + `/api/spark/<name>/numbers`, the jobs `spark` /
+`spark_numbers`, the Delete kind `spark`, `/api/reference/<name>` and `/api/notes/<name>` `spark`; 54 (2026-11-02,
+where people left): POST `/api/agency/retention/upload?name=` (a screenshot, raw body), `/api/agency/retention/trace`
+(the live trace, nothing saved), `/api/agency/retention` (save | `remove`), GET `/api/agency/social` `retention` +
+`spark`, `/api/spark/<name>` `retention` / `post_key` / `own`; 55 (the same day, tests of one idea): GET / POST
+`/api/agency/tests` (save | close | again | delete - `motionlab\experiments.py`), the route `#/agency/tests`; 56 (the
+same day, what works): GET / POST `/api/agency/learn` (keep | retest | forget - `motionlab\findings.py`), the route
+`#/agency/learn`; 57 (the same day, the monthly review): GET `/api/agency/month?m=YYYY-MM`, POST `/api/agency/month`
+{action: plan, month, n} (`motionlab\monthly.py`), the route `#/agency/month`, a calendar post's `next`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);
@@ -424,7 +485,7 @@ and `capmerge` (data.ME_KEYS `edits` - an older server refused them), GET `/api/
   way if im either reviewing a script in prepare, reviewing a video analyzed or an edit or a generation of motion
   graphics, it needs to look the same so that the user is familiar with the process of reviewing it and making it
   easier in the future."): ONE pattern everywhere - the thing being judged on the left, `reviewPanel(host, opts)` on
-  the right (app.js, the helpers block after `optTag`; app.css block "Reviews: one pattern everywhere"): sticky (12 px
+  the right (js\core.js, the helpers block after `optTag`; app.css block "Reviews: one pattern everywhere"): sticky (12 px
   under main's padding, at the top inside a dialog), its rows scroll inside it, stacked in a narrow window (1100 px;
   thumbnail sets 1150, dialogs 1000). The panel: "N of M reviewed" + a live bar (optional rows counted apart), the
   place's filters, the sections (each heading asks its question), one row per item with the one control
@@ -480,11 +541,11 @@ and `capmerge` (data.ME_KEYS `edits` - an older server refused them), GET `/api/
   Spain, tú; "Claude's stored knowledge stays English"). Settings > General > Language (`langRow`, settings.json
   "language", `system.LANGUAGES` en | es): the app's words and Claude's replies; what Claude writes into the lab
   (reviews, lessons, cards, memory.md) stays English. Every new user-facing text goes through `t()` / `tn()` / `ta()`
-  / `plural()` (app.js, next to `esc`) or `motionlab.i18n.t` / `tn` (words built on the server) with its Spanish in
+  / `plural()` (js\core.js / js\home.js) or `motionlab.i18n.t` / `tn` (words built on the server) with its Spanish in
   the area's part file `ui\i18n\parts\es.<area>.json` in the same change (never es.json: `tools\dev\i18n_check.py
   merge` makes it); `i18n_check.py check` must PASS. Key = the English exactly as written, `{name}` placeholders,
   inline tags kept, `Open|verb` = a context, a count = {"one", "other"}; `_nouns` = plural()'s nouns; `_meta` = the
-  glossary (es.core.json). `server._index` inlines the catalogue before app.js (`window.ML_I18N`, English = {}) and
+  glossary (es.core.json). `server._index` inlines the catalogue before the page's code (`window.ML_I18N`, English = {}) and
   fills `<html lang>` + index.html's `{{t:...}}`. Numbers: `dec` / `numStr` / `numLoc` (never frame numbers, fps,
   timecodes); dates: `whenWords` / `whenStr` / `dayWords` / `MONTHS`. Jobs start every tool with MOTIONLAB_LANG (the
   self-test: en); CLI tools Claude runs stay English. Claude windows opened in Spanish get `system.LANG_LINE` after the

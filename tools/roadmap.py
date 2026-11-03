@@ -4,11 +4,14 @@ badges on the main line, every other number on its major's branch, "you are here
 The app's Home plays that page live; README shows docs\\roadmap.png, rendered from the same page.
 
     .venv\\Scripts\\python tools\\roadmap.py [check]     the data is valid and agrees with docs\\plans.md (planned
-          versions) and CHANGELOG.md (released ones); says when docs\\roadmap.png is older than the data. Exit 1 = errors
+          versions) and CHANGELOG.md (released ones); says when docs\\roadmap.png is older than the data; an error
+          when __version__ has no section in CHANGELOG.md or CHANGELOG.es.md, or README's status line names another
+          version (2026-11-02: docs that cannot drift; smoke.py runs this check). Exit 1 = errors
     .venv\\Scripts\\python tools\\roadmap.py sync [--dry-run]   brings the data in line with those two files: adds the
           versions it lacks (label = the heading's title, cut short - then write a better one), refreshes every
           "title", drops versions neither file has (unless "keep": true), "here" = the newest released version,
-          today's date; writes one line per version
+          today's date; writes one line per version - and README's status line ("> **Status: v<version> - <its
+          CHANGELOG title>**", the line's own ends kept)
     .venv\\Scripts\\python tools\\roadmap.py show        the roadmap as text (whatsnext.py prints it)
     .venv\\Scripts\\python tools\\roadmap.py render [--video]   docs\\roadmap.png = the frame at 4.5 s (HyperFrames
           snapshot, ~10 s) and with --video docs\\roadmap.mp4 (12 s, ~1 min); needs Node.js + HyperFrames (Settings >
@@ -41,6 +44,10 @@ MP4 = LAB / "docs" / "roadmap.mp4"
 WORK = LAB / ".app" / "roadmap"
 PLANS = LAB / "docs" / "plans.md"
 CHANGELOG = LAB / "CHANGELOG.md"
+CHANGELOG_ES = LAB / "CHANGELOG.es.md"
+README = LAB / "README.md"
+INIT = LAB / "tools" / "motionlab" / "__init__.py"
+STATUS = re.compile(r"^(> \*\*Status: )v(\S+) - (.+?)(\*\*)", re.M)     # README's status line (sync writes it)
 FPS, SECONDS, STILL_AT = 30, 12, 4.5                 # the page's timeline: build-up to 4.5 s, then a loop to 12 s
 ICONS = {"analyze", "prepare", "edit", "generate", "memory", "library", "knowledge", "home", "videos", "prompts",
          "claude", "update", "news", "settings"}       # = ICONS in index.html (the app's own icons)
@@ -90,6 +97,47 @@ def documented() -> tuple[dict[str, str], dict[str, str]]:
         if CHANGELOG.exists() else {}
     plan = {m.group(1): m.group(2) for m in PLAN_HEAD.finditer(PLANS.read_text(encoding="utf-8"))} if PLANS.exists() else {}
     return rel, plan
+
+
+def version() -> str:
+    """This copy's version (motionlab.__version__, read as text - no import)."""
+    m = re.search(r'^__version__\s*=\s*"([^"]+)"', INIT.read_text(encoding="utf-8"), re.M) if INIT.exists() else None
+    return m[1] if m else ""
+
+
+def release_problems(rel: dict[str, str]) -> list[str]:
+    """Docs that must not drift (2026-11-02, design_brain_and_hardening.md section 8): the version has its section in
+    both changelogs (hard rule 5) and README's status line names it."""
+    v, err = version(), []
+    if not v:
+        return [f"no __version__ in {INIT.relative_to(LAB)}"]
+    if v not in rel:
+        err.append(f'__version__ {v} has no "## {v} - <date> - <title>" section in CHANGELOG.md')
+    es = {m.group(1) for m in LOG_HEAD.finditer(CHANGELOG_ES.read_text(encoding="utf-8"))} if CHANGELOG_ES.exists() else set()
+    if v not in es:
+        err.append(f"__version__ {v} has no section in CHANGELOG.es.md (both languages, hard rule 5)")
+    m = STATUS.search(README.read_text(encoding="utf-8")) if README.exists() else None
+    if not m:
+        err.append('README.md has no status line ("> **Status: v<version> - <title>**")')
+    elif m[2] != v:
+        err.append(f"README.md's status line says v{m[2]}, the version is {v} - roadmap.py sync writes it")
+    return err
+
+
+def status_line(rel: dict[str, str], write: bool) -> str | None:
+    """README's status line = the version and its CHANGELOG.md title -> what changed, or None (the line ends kept)."""
+    v = version()
+    t = rel.get(v)
+    if not v or not t or not README.exists():
+        return None
+    with open(README, encoding="utf-8", newline="") as f:          # newline="": the line ends as they are
+        text = f.read()
+    m = STATUS.search(text)
+    if not m or (m[2], m[3]) == (v, t):
+        return None
+    if write:
+        README.write_text(text[:m.start()] + f"{m[1]}v{v} - {t}{m[4]}" + text[m.end():], encoding="utf-8", newline="")
+    return f"README.md status: v{m[2]} -> v{v} - {t}"
 
 
 def short_label(title: str) -> str:
@@ -157,8 +205,9 @@ def problems(d: dict) -> tuple[list[str], list[str]]:
                        f"roadmap.py sync adds it")
     if rel and d.get("here") and vt(max(rel, key=vt)) != here:
         warn.append(f'"here" = {d.get("here")}, the newest release in CHANGELOG.md is {max(rel, key=vt)}')
+    err += release_problems(rel)
     newest = max(DATA.stat().st_mtime, PAGE.stat().st_mtime) if PAGE.exists() else DATA.stat().st_mtime
-    if not PNG.exists() or PNG.stat().st_mtime < newest:
+    if not PNG.exists() or PNG.stat().st_mtime < newest - 2:     # (git writes both in one checkout, ~1 ms apart)
         warn.append("docs\\roadmap.png is older than the data - roadmap.py render")
     if MP4.exists() and MP4.stat().st_mtime < newest:
         warn.append("docs\\roadmap.mp4 is older than the data - roadmap.py render --video")
@@ -227,7 +276,8 @@ def cmd_sync(a) -> int:
     today = datetime.date.today().isoformat()
     if changes and d.get("date") != today:
         d["date"] = today
-    for c in changes:
+    readme = status_line(rel, write=not a.dry_run)                  # README's status line follows the version
+    for c in changes + ([readme] if readme else []):
         print("  " + c)
     if not changes:
         print("  nothing to change - the roadmap agrees with plans.md and CHANGELOG.md")

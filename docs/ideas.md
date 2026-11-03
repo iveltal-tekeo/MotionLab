@@ -182,6 +182,131 @@ Not verified (marketing numbers, left out): "63-71 % decide in 3 s", "+23 % for 
 "sends weigh 3-5x likes", every *best length*. YouTube Shorts allow up to 3 minutes (YouTube's help); Reels 3 minutes
 (s).
 
+## Vertical framing - researched 2026-10-29
+
+For 0.6.1's *Vertical framing for every edit* (the plan has the steps). The user: "encuadre para redes (en
+vertical)". Read only - nothing installed. (v) = Claude read the source itself on 2026-10-29, (r) = read by the
+research pass, (s) = search results only.
+
+| Source | Licence / cost | What it does | Taken (ideas only) |
+|---|---|---|---|
+| Google AutoFlip (research blog; cropping.proto, scene_cropping_calculator.proto) (r) | Apache-2.0; legacy since 2023-03-01, OpenCV 3 only | decides per scene with the whole scene buffered; still crop when the subject moves less than a share of the SOURCE width (0.3-0.5), else a smoothed follow; letterbox when the required content cannot fit - a solid colour when >= 60 % of the frames have a plain background, else a blurred frame (blur 200, black 0.6 over it); detects at 480 px wide, 5 fps; weights face 0.8-0.9, person 0.75-0.8, object 0.1-0.2 | the design, not the code; the hold test made relative to the CROP (8 % margin in 95 % of frames - the source-width rule is too loose for a 608 px crop) |
+| OpusClip layouts help + its *reframe benchmark* (2026-09, vendor-run) (r) | paid | Fill (9:16 on the speaker), Fit (the source cropped to 4:3, padded), Split / Three / Four (only when they share the frame), Screenshare (screen top, speaker bottom), Gameplay (face 30 %, game 70 %); failures named: crop on the listener, past the chart, one crop while the layout changes, a sliced chyron | the five layouts, the failure list as tests |
+| Vizard stacking guide (2026-10-10) (r) | paid | never 50/50 (a half-frame head loses its top); band heights measured; captions in the gap; at most two panels; a dense screen as a cutaway | the split's rules |
+| AutoCut (r), Descript multicam feedback (r) | paid | a 2-3 s minimum shot, a wide shot after ~10 s; users report split-second cuts on "yes / mm-hmm" | hold >= 2 s, turns under 1 s ignored, a variant after ~10 s |
+| ClipsAI resizer.py (r) | MIT (pyannote + MTCNN) | merges moves under 4 % of the width; the talker = the face whose mouth opens most | skip small moves; the mouth signal |
+| Grundmann et al., L1 optimal camera paths (r) | research | a path of constant / linear / parabolic pieces | holds, constant pans and eases - never a wobble |
+| Light-ASD (CVPR 2023) (v licence) | MIT, 1.0 M parameters, needs PyTorch, GPU timings only | active speaker detection: 112x112 face crops + MFCC; cross-domain F1 81.1 vs TalkNet 56.2 | only if the mouth-vs-sound signal fails, measured first |
+| Silero VAD (v licence) | MIT, ~2 MB, < 1 ms a 30 ms chunk on one thread | speech segments | only if the words' timings are not enough |
+| TalkNet (r) MIT, CUDA by default; LoCoNet (r) no licence file | - | speaker detection | not used |
+| Blitzcut, LSU / Maryland filming guides, Reap safe zones (2026-09) (r) | - | eyes on the upper third (~y 640 on 1920), mid-chest up, captions ~y 1200-1550 and never over the mouth; YouTube Shorts' interface changed in June 2026; Meta's ads zone keeps the bottom 35 % clear (stricter than our y 1480) | the Film it checklist; an *ads* safe-zone preset (option) |
+
+Numbers that are Claude's or the research pass's own starting values, to measure (not sourced): pans capped at ~0.5
+crop widths a second, eases >= 12 frames, a total upscale cap of ~2.0-2.2x (a 1080p source in a 1080 x 1920 crop
+is already 1.78x - arithmetic), snap to the centre only within ~3 % of the crop. Not verified: AutoFlip's or
+Light-ASD's CPU speed, CapCut's reframe settings, an official TikTok safe zone.
+
+## Editing by segments - researched 2026-10-29
+
+For 0.6.1's *Edit by segments* (the plan has the steps). The user: "editar por segmentos" and "borrador (quick
+draft) select each segment how u would like it edited and then create the edit entirely". Read only. Marks as above.
+
+| Source | What it shows | Taken (ideas only) |
+|---|---|---|
+| Descript help (scenes, layout packs, properties) + its feedback board (r) | a scene per idea (`/` in the script), one layout pack = the global style, layouts by role (talking head, screen, graphics) filled from the script, a user's edited layers kept when the layout changes; the most-asked missing piece: apply to many scenes at once ("200 scenes in a 9-minute video... a nightmare", 2023-2025) | the three layers (style, rules, overrides), *Apply to all like this* |
+| Captions AI Edit (r) | one style for the whole video, then re-run one take in another style with *Keep existing images* | picks kept through a re-run |
+| OpusClip, Pictory, VEED, Submagic (r) | a layout per segment; a scene per sentence with *Apply to all scenes*; regenerate / replace each B-roll; zoom styles on the transcript | per-card choices, few options |
+| B-Script (CHI 2019) (v) | 115 expert edits of 3-minute talking vlogs: 13.2 % of the video replaced by B-roll on average; for 73 % of inserts the query word is within 1 s of the start; words predict placement better than pauses, sentence ends or blinks | B-roll on its word (we do +0.25 s); measure our own coverage (BROLL_COVER 0.40 is a ceiling) |
+| LAVE (IUI 2024), ExpressEdit (IUI 2024) (r) | clips described as text for the model; users want the final say; plausible but wrong rationales; vague commands misread; 46 % of suggestions accepted, 58 % adjusted | a recommendation + alternatives, the user decides; the reason shown in one line |
+| VideoDiff (CHI 2025) (r) | alternatives aligned on shared sections with a short description of each change: 38 s vs 74 s to compare, satisfaction 5.25 vs 3.67; 10 options overwhelmed some; it claimed cuts it had not made | 2-3 alternatives, a line per change, a check that every claimed change is in the plan |
+| browser-use/video-use (r) | MIT; a ~12 KB phrase-level transcript, filmstrips only at decision points, every cut boundary checked after the render | text first, pictures on demand, the boundary check |
+| BertSeg / TextTiling, librosa segmentation, Chapter-Llama (r, some abstracts only) | topic edges from sentence embeddings; music sections; chapters from the words | segments per kind (the plan's table) |
+
+Not verified: Premiere's text-based editing (403), CapCut "smart segments" (no such feature found), Riverside /
+Firefly per-segment features, GPT-4o vs TextTiling on lectures.
+
+## SPARK (why a video worked) - researched 2026-10-29
+
+For 0.6.5's *SPARK* (the plan has the steps). Evidence grades: [R] peer-reviewed or a registered trial, [P] a
+platform's own statement, [C] a creator's claim. Marks as above.
+
+- **What holds up** [R]: negative words raised headline clicks in the Upworthy trials (Robertson et al. 2023); arousing
+  emotions were shared more in field data (Berger & Milkman 2012) but two 2024 replications of the experiment failed
+  (Psychological Science) - moderate; moral-emotional words raise sharing ~12 % a word (2025 pooled replication);
+  shared to one person = chosen to be useful, broadcast = chosen to make the sharer look good (Berger's review);
+  controversy raises discussion up to a moderate level, then lowers it (Chen & Berger 2013); social influence makes
+  success partly unpredictable (Salganik et al. 2006); the best cascade models explain under half the variance. A small
+  2026 study (one 20 s talking clip, 7 versions, N = 242) found faster pacing LOWERED completion - never score "more
+  cuts = better".
+- **What the platforms say** [P]: TikTok: over 63 % of its highest-CTR ads state the key message in 3 s (winners only);
+  YouTube: high CTR with low view duration reads as clickbait; YouTube counts "valued watch time" (rated 4-5 stars);
+  YouTube's Most replayed is normalised within the video and a spike can mean rewatching, sharing or confusion.
+- **Creators** [C]: Paddy Galloway (an outlier = 3-4x the channel's average; "the idea itself, the title or the
+  thumbnail"; check whether similar videos flopped); the MrBeast production doc (not authenticated); Kallaway's hook
+  steps; Jenny Hoyos (clear on mute, "but / so" between beats).
+- **Data rules** (v, YouTube API developer policies, read 2026-10-29): III.E.6 no scraping; III.E.4.b statistics not
+  authorised by their owner kept 30 days at most; III.E.4.h no "new or derived data or metrics" from API data, the
+  exception being audited developers who asked for it (III.L). **Views** (v, YouTube help): since 2026-08-24 a view
+  counts the moment a video starts to play, in every format, ad views included - compare a video only with the same
+  creator's videos of the same era. Instagram: shares, saves, watch time only in the owner's Insights; Business
+  Discovery gives likes, comments and views of other professional accounts (r). TikTok's Research API is for
+  non-profit academics in the US / EU (r).
+- **Tools** (r): 1of10, Viewstats, vidIQ, OutlierKit, Virlo, Sandcastles, Spotter, OpusClip's score - fast outlier
+  finding against a channel baseline; formulas unpublished or inconsistent (mean vs median, subscribers vs uploads);
+  none validates its "why". A builder of a "why it went viral" tool: free-form answers could not be compared across
+  videos, a fixed taxonomy was his biggest gain (dev.to, 2025).
+- **Repos** (r): pandich93/youtube-niche-finder (MIT, median multiplier, breakouts vs ordinary), shkuratovdesigner/
+  yuben-app (MIT, likes per 1,000 views to spot bought views), ScrapeCreators/social-media-research-skills (MIT, needs
+  their paid key), egbertbouman/youtube-comment-downloader + BERTopic (MIT, comment clusters), pelpeljakob-creator/
+  viral-video-analyzer (no licence on GitHub, unvalidated hook score); the Upworthy Research Archive (32,487 headline
+  tests).
+
+## Claude's guides, skills and repos - checked 2026-10-29 (for the user's pick)
+
+The user: "see what else could we improve based on claude style and guide on generating content, search online,
+public courses, github repos, instagram". No official Anthropic guide to video scripts was found; Anthropic's useful
+material is general (skills, evals, prompting, vision); no Instagram source could be verified. Ranked by what it would
+improve now; none is planned yet. Checked in the lab's code by Claude: HyperFrames pinned to 0.8.149
+(`tools\overlays\package.json`), `overlay.py check` runs with `--no-contrast`, the MCP `frames()` reads 640 px wide,
+`.claude\settings.json` has no deny rules.
+
+1. **HyperFrames' newer craft checks and review sheets** (M; v) -> picked for 0.6.1 (2026-10-29): `check` names a line on screen too briefly to read
+   (`line_unread`), over 3 s with nothing changing (`dead_stretch`), text under 2.6 % of the short side, an empty first
+   frame, a film over 15 s with no sound; `snapshot --review` sheets (scene starts / middles, a strip across every cut,
+   the beats at phone width); review notes as `t=4.2s · where · problem -> exact change · what stays`, P0 / P1 / P2,
+   "never score the film out of 10", "a busy film: remove a third of the motion". An upgrade from 0.8.149 through
+   `overlay.py upgrade-test` + the self-test; the contrast audit turned back on.
+2. **A divergent concept step before a Generate plan** (S; r): five ideas, three shown, one the bold one Claude would
+   not pick first; no two with the same layout - against the *template variety* problem (Anthropic's Opus 5.5 guide:
+   name the exact patterns to avoid and grow the list after each result).
+3. **A slideshow-risk score on a plan before building** (M; r, OpenMontage - AGPL, the idea only): repetition,
+   decorative visuals, weak motion, weak shot intent, text overuse, unsupported claims, 0-5 each; a critical finding
+   needs a concrete fix.
+4. **A zoom / crop on the MCP picture tools** (S; r, Anthropic's crop-tool recipe): `frames()` with a region read at
+   full size - flashes, grain, glow, small text; each zoom costs tokens.
+5. **A waveform and the words on the cut-sheet** (S-M; r, video-use's timeline view) -> picked for 0.6.1 (2026-10-29): a cut inside a word or an audio
+   pop shows; every cut boundary checked after the render.
+6. **Skill evals from the user's own verdicts** (M; r, Anthropic's agent-evals article, 2026-01): 20-50 tasks from
+   real failures, code graders first; verdicts.json / outcome.json are the labels (with *Evals for the lab's own
+   skills* under *Later*).
+7. **Hard rule 1 enforced by Claude Code itself** (S; r, Claude Code best practices) -> picked for 0.6.1 (2026-10-29): deny rules for writing into
+   `refs\` and a hook that blocks deleting or moving in source folders - they hold in every permission mode; the
+   tools' SHA-256 check stays. A change to `.claude\settings.json` - the user's call.
+8. **Skills carry their own effort / model** (S; r): a typed `/recreate-video` gets the effort the app picks.
+9. **Untrusted text tagged** (S; r, Opus 5.5 guide): friends' lessons, downloaded subtitles, website text and pasted
+   prompts handed to Claude inside `<pasted_content>` tags.
+10. **A ban list for scripts and titles** (S; r, Fable 5.1 guide's "mannered prose" instruction + named AI-sounding
+    patterns, English and Spanish) in `/write-script` and `/write-title`.
+11. **Lesson hygiene** (S; second-hand): an exception never becomes a default - a lesson tagged to its kind, or seen
+    twice, before it is global.
+
+Don't copy: hosted clipping services and cloud editors (privacy), transcript-only editing that never looks at the
+picture, Anthropic's "unattended" prompt (MotionLab keeps the user in the loop), parallel fan-out for quality
+("parallelism multiplies incorrect cuts"), one-shot single-HTML screen recordings (not frame-accurate), scores shown as
+promises, code under AGPL (OpenMontage) or without a licence (remotion-dev/skills per the GitHub API). Risk to know:
+the DaVinci Resolve MCP's README says Resolve 21.1 moved Python scripting to Studio; whether the free edition's bridge
+still works on 21.1 is unconfirmed (friends on free Resolve).
+
 ## Prompt library - still open (the 0.5.4 *Prompt generator* plan, removed 2026-10-22)
 
 Its core shipped in 0.3.1-0.3.4: the library (*Generator > Prompts*), `/write-prompt`, each prompt's check,

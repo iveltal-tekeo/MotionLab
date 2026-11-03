@@ -1,0 +1,41 @@
+{
+ "name": "carousel-spin",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 400,
+   "to": 2600,
+   "db": -7,
+   "what": "the carousel opens out and spins"
+  },
+  {
+   "f": "start + round(max(30, (frames - start) * 30 / fps - (10 if leave else 1) - 22) * (1 - (1 - (i + 1) / max(1, round(turns * max(4, min(12, round(count)))))) ** (1 / 2.6)) * fps / 30)",
+   "repeat": "max(0, max(1, round(turns * max(4, min(12, round(count))))) - 1)",
+   "kind": "tick",
+   "freq": 1900,
+   "db": -8,
+   "seed": "400 + i",
+   "what": "a reel passes the front (the ticks slow down with the spin; the pop is the stop)"
+  },
+  {
+   "f": "start + round(max(30, (frames - start) * 30 / fps - (10 if leave else 1) - 22) * fps / 30)",
+   "kind": "pop",
+   "db": -4,
+   "what": "the carousel stops and reel 1 steps forward"
+  },
+  {
+   "f": "frames - round(10 * fps / 30)",
+   "kind": "air",
+   "dur": "0.35",
+   "db": -6,
+   "if": "leave",
+   "what": "the carousel closes in and fades"
+  }
+ ]
+}

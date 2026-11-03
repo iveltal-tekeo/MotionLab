@@ -1,0 +1,51 @@
+{
+ "name": "shoulder-graphs",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 400,
+   "to": 2200,
+   "db": -9,
+   "what": "the camera pushes into the first corner"
+  },
+  {
+   "f": "round(0.3 * fps)",
+   "kind": "pop",
+   "db": -7,
+   "what": "the line graph pops up"
+  },
+  {
+   "f": "round(0.4 * fps) + round(max(12, min(28, (frames / fps - 1.6) * 30 / 2 - 22)) * fps / 30) + round(3 * fps / 30)",
+   "kind": "chime",
+   "db": -7,
+   "what": "the first number lands"
+  },
+  {
+   "f": "round(frames / 2 - 0.4 * fps)",
+   "kind": "whoosh",
+   "dur": "0.8",
+   "from": 2200,
+   "to": 500,
+   "db": -9,
+   "what": "the camera pulls back and pushes into the other corner"
+  },
+  {
+   "f": "round(frames / 2 + 0.3 * fps)",
+   "kind": "pop",
+   "db": -7,
+   "what": "the bar graph pops up"
+  },
+  {
+   "f": "round(frames / 2 + 0.4 * fps) + round(max(12, min(28, (frames / fps - 1.6) * 30 / 2 - 22)) * fps / 30) + round(3 * fps / 30)",
+   "kind": "chime",
+   "db": -7,
+   "what": "the second number lands"
+  }
+ ]
+}

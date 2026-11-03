@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "keys", "type": "string", "label": "The keys’ labels (split with |; short words or single letters)", "default": "Ctrl|C|V|Z|Shift|Tab|Esc|K|Enter"},
+  {"id": "count", "type": "number", "label": "How many keys fall", "default": 22, "min": 4, "max": 60, "step": 1},
+  {"id": "caps", "type": "enum", "label": "Key colour", "default": "light", "options": [{"value": "light", "label": "Light keys"}, {"value": "dark", "label": "Dark keys"}, {"value": "mixed", "label": "Light, every fourth in the accent"}]},
+  {"id": "size", "type": "number", "label": "Key size (1 = normal)", "default": 1, "min": 0.5, "max": 1.8, "step": 0.05},
+  {"id": "seed", "type": "number", "label": "Shuffle (another number = another rain)", "default": 1, "min": 1, "max": 99, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Key label font", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "shortcut-rain" (2026-10-28): keyboard keycaps with labels rain down behind the
+     person (the Editor puts them behind: in_shot behind), tumbling as they fall (a spin and a wobble in depth),
+     speeding up to a steady fall under 60 px a frame, and they land at the bottom of the frame with a bounce and a
+     settle, piling on the ones that landed before. The first three are already falling at f0; the rest come in
+     one after another until ~2 s before the end; at the end the pile drops away through the floor. Seeded: the
+     same rain in a preview, a snapshot and a render. Rebuilt in MotionLab's own HTML after a design in an
+     MIT-licensed Python effect. Look-aware. Size-independent, laid out again for landscape. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .cap { position: absolute; left: 0; top: 0; font-synthesis: none; transform-origin: 50% 50%; will-change: transform; }
+  .base, .face { position: absolute; }
+  .face { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+  .lab { display: block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const outCubic = x => 1 - Math.pow(1 - clamp01(x), 3);
+  const inCubic = x => { x = clamp01(x); return x * x * x; };
+  const rnd = seed => { let a = (seed * 2654435761) >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const S = Math.round(V.start), END = FRAMES * 30 / FPS;   // END = the last frame + 1, in frames designed at 30 fps
+  const PORT = H >= W;
+
+  // ---- the keys
+  const labels = String(V.keys || "").split("|").map(x => x.trim()).filter(Boolean);
+  if (!labels.length) labels.push("K");
+  const N = Math.max(1, Math.min(60, Math.round(Number(V.count) || 22)));
+  const KS = 118 * U * (Number(V.size) || 1);                       // a key's height
+  const FLOOR = H - 6 * U;                                          // they land on the bottom of the frame
+  const SW = Math.max(10, END - 68);                                // the last key starts falling here
+  const OUT0 = END - 12;                                            // the pile drops away
+  const COL = {
+    light: { base: "#B9B9C2", top0: "#FBFBFC", top1: "#E9E9EE", ink: "#17171A" },
+    dark: { base: "#09090B", top0: "#34343B", top1: "#202026", ink: "#F2F2F5" },
+    acc: { base: mix(L.signal, "#000000", 0.3), top0: mix(L.signal, "#FFFFFF", 0.18), top1: L.signal, ink: "#FFFFFF" } };
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `linear-gradient(180deg, ${mix(L.paper, L.deep, 0.2)} 0%, ${mix(L.paper, L.deep, 0.6)} 100%)` : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const R = rnd(Math.round(Number(V.seed) || 1));
+
+  // spread the keys over the width: each takes its own strip (shuffled), with a little play inside it
+  const strips = Array.from({ length: N }, (_, i) => i); for (let i = N - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [strips[i], strips[j]] = [strips[j], strips[i]]; }
+  const C = [];
+  for (let i = 0; i < N; i++) {
+    const lab = labels[i % labels.length];
+    const col = V.caps === "dark" ? COL.dark : V.caps === "mixed" && i % 4 === 1 ? COL.acc : COL.light;
+    const el = document.createElement("div"); el.className = "cap"; el.id = `key${i}`;
+    const base = document.createElement("div"); base.className = "base";
+    const face = document.createElement("div"); face.className = "face";
+    const sp = document.createElement("span"); sp.className = "lab"; sp.textContent = lab;
+    Object.assign(sp.style, { fontFamily: `'${V.accent_font}', 'Consolas', monospace`, fontSize: `${0.36 * KS}px`,
+      fontWeight: String(fw(V.accent_font, 700)), color: col.ink, lineHeight: "1" });
+    face.appendChild(sp); el.append(base, face);
+    el.style.visibility = "hidden";
+    hand.appendChild(el);
+    C.push({ el, base, face, sp, col, lab,
+      u: (strips[i] + 0.15 + 0.7 * R()) / N,                       // where across the frame (0-1)
+      t0: i < 3 ? 0 : 3 + (i - 3) * (SW - 3) / Math.max(1, N - 4) + (R() - 0.5) * 2,
+      y0: i < 3 ? [0.07, 0.19, 0.0][i] * H : -0.9 * KS - R() * 0.4 * KS,
+      v0: (7 + 6 * R()) * U, acc: 1.8 * U, vmax: (44 + 12 * R()) * U,
+      r0: (R() - 0.5) * 50, spin: (R() < 0.5 ? -1 : 1) * (2.5 + 4.5 * R()),
+      wob: 22 + 18 * R(), wper: 16 + 12 * R(), wph: R() * 6.28,
+      rest: (R() - 0.5) * 22, z: i });
+  }
+  // the fall: speeding up (acc a frame) to a steady vmax - distance after tau frames, and its inverse
+  const dist = (c, tau) => { const tc = (c.vmax - c.v0) / c.acc; return tau <= tc ? c.v0 * tau + 0.5 * c.acc * tau * tau
+    : c.v0 * tc + 0.5 * c.acc * tc * tc + c.vmax * (tau - tc); };
+  const when = (c, d) => { const tc = (c.vmax - c.v0) / c.acc, dc = c.v0 * tc + 0.5 * c.acc * tc * tc;
+    return d <= dc ? (-c.v0 + Math.sqrt(c.v0 * c.v0 + 2 * c.acc * d)) / c.acc : tc + (d - dc) / c.vmax; };
+  let ready = false;
+  function layout() {
+    // widths with the real font, then the pile: in the order they land, each rests on the highest key under it
+    C.forEach(c => { c.w = Math.max(KS, c.sp.offsetWidth + 0.55 * KS); c.h = KS;
+      c.x = Math.min(W - c.w / 2 - 6 * U, Math.max(c.w / 2 + 6 * U, 6 * U + c.w / 2 + c.u * (W - c.w - 12 * U)));
+      Object.assign(c.el.style, { width: `${c.w}px`, height: `${c.h}px` });
+      Object.assign(c.base.style, { left: "0px", top: "0px", width: `${c.w}px`, height: `${c.h}px`, borderRadius: `${0.2 * KS}px`,
+        background: `linear-gradient(180deg, ${c.col.base} 0%, ${mix(c.col.base, "#000000", 0.18)} 100%)`,
+        boxShadow: `0 ${0.06 * KS}px ${0.1 * KS}px rgba(0, 0, 0, 0.32)` });
+      Object.assign(c.face.style, { left: `${0.04 * KS}px`, top: `${0.03 * KS}px`, width: `${c.w - 0.08 * KS}px`, height: `${0.84 * KS}px`,
+        borderRadius: `${0.17 * KS}px`, background: `linear-gradient(180deg, ${c.col.top0} 0%, ${c.col.top1} 100%)`,
+        boxShadow: `inset 0 ${0.015 * KS}px 0 rgba(255, 255, 255, 0.7), inset 0 ${-0.02 * KS}px ${0.03 * KS}px rgba(0, 0, 0, 0.08)` });
+      c.land0 = c.t0 + when(c, FLOOR - c.h / 2 - c.y0); });
+    const BIN = 0.25 * KS, NB = Math.ceil(W / BIN) + 1, hgt = new Array(NB).fill(0);
+    C.slice().sort((a, b) => a.land0 - b.land0).forEach(c => {
+      const b0 = Math.max(0, Math.floor((c.x - c.w / 2) / BIN)), b1 = Math.min(NB - 1, Math.floor((c.x + c.w / 2) / BIN));
+      let top0 = 0; for (let b = b0; b <= b1; b++) top0 = Math.max(top0, hgt[b]);
+      c.yL = FLOOR - top0 - c.h / 2;
+      const k0 = Math.max(b0, Math.floor((c.x - 0.36 * c.w) / BIN)), k1 = Math.min(b1, Math.floor((c.x + 0.36 * c.w) / BIN));
+      for (let b = k0; b <= k1; b++) hgt[b] = top0 + 0.84 * c.h;
+      c.tauL = when(c, Math.max(0, c.yL - c.y0));
+      const rL = c.r0 + c.spin * c.tauL;
+      c.rL = c.rest + ((((rL - c.rest) % 360) + 540) % 360 - 180);      // it tumbles to rest the nearest way round
+    });
+    ready = true;
+  }
+
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    hand.style.visibility = g >= 0 && ready ? "visible" : "hidden";
+    if (g < 0 || !ready) return;
+    const ex = clamp01((g - OUT0) / 10.5);
+    C.forEach(c => {
+      const tau = g - c.t0;
+      if (tau < 0) { c.el.style.visibility = "hidden"; return; }
+      let y, rot, ry;
+      if (tau < c.tauL) {                        // falling: speeding up, spinning and wobbling in depth
+        y = c.y0 + dist(c, tau); rot = c.r0 + c.spin * tau; ry = c.wob * Math.sin(2 * Math.PI * tau / c.wper + c.wph);
+      } else {                                   // landed: a bounce (8 f) and a small one (5 f), turning to rest
+        const s = tau - c.tauL;
+        const bh = 0.17 * KS * (s < 8 ? Math.sin(Math.PI * s / 8) : s < 13 ? 0.3 * Math.sin(Math.PI * (s - 8) / 5) : 0);
+        y = c.yL - bh;
+        rot = c.rest + (c.rL - c.rest) * (1 - outCubic(s / 9));
+        ry = c.wob * Math.sin(2 * Math.PI * c.tauL / c.wper + c.wph) * (1 - outCubic(s / 8));
+      }
+      y += 0.3 * H * inCubic(ex);
+      const hd = 0.5 * Math.hypot(c.w, c.h);                       // wholly off the frame (above it or through the floor): hidden
+      if (y + hd < 0 || y - hd > H) { c.el.style.visibility = "hidden"; return; }
+      c.el.style.visibility = "visible";
+      c.el.style.zIndex = String(c.z);
+      c.el.style.transform = `translate(${(c.x - c.w / 2).toFixed(2)}px, ${(y - c.h / 2).toFixed(2)}px) perspective(${(1400 * U).toFixed(0)}px) rotate(${rot.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      c.el.style.opacity = (1 - inCubic(ex)).toFixed(3);
+    });
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: the keys' widths come from their labels in the real font
+  (document.fonts && document.fonts.load ? Promise.all([400, 700].map(w => document.fonts.load(`${w} 100px "${V.accent_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    layout();
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

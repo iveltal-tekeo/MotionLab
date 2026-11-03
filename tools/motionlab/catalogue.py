@@ -501,19 +501,28 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
             except (OSError, ValueError):
                 cache[sid] = None
         img = np.zeros((th, tw, 3), np.uint8)
+        views = _views(L, f, named, W, H, Curve)
         if cache[sid]:
             lm, la = cache[sid]
             rgb = FC.decode(la[min(max(i_mid, 0), la.shape[0] - 1)], "i420")
-            z = Curve(L.get("zoom"), named, 1.0)(f)
-            an = L.get("anchor") or [0.5, 0.5]
-            ax, ay = Curve(an[0], named, 0.5)(f), Curve(an[1], named, 0.5)(f)
-            r = L.get("rect") or [0, 0, W, H]
             k_ = tw / W
-            res = sample_patch(rgb, lut, r[0] * k_, r[1] * k_, r[2] * k_, r[3] * k_, max(1.0, z), ax, ay, tw, th,
-                               bool(L.get("mirror")))
-            if res is not None:
-                patch, cov, X0, Y0 = res
-                img[Y0:Y0 + patch.shape[0], X0:X0 + patch.shape[1]] = np.clip(patch * 255 * cov[..., None], 0, 255)
+            bd = L.get("backdrop") if L.get("panels") else None
+            if bd == "blur":                          # (a layout's backdrop, as compose draws it)
+                small = cv2.GaussianBlur(cv2.resize(rgb, (max(8, rgb.shape[1] // 10), max(8, rgb.shape[0] // 10)),
+                                                    interpolation=cv2.INTER_AREA), (0, 0), 2.5)
+                res = sample_patch(small, lut, 0, 0, tw, th, 1.0, 0.5, 0.5, tw, th, bool(L.get("mirror")))
+                if res is not None:
+                    img[:] = np.clip(res[0] * 255 * 0.55, 0, 255)
+            elif bd:
+                img[:] = [int(bd.lstrip("#")[q:q + 2], 16) for q in (0, 2, 4)]
+            for r, z, ax, ay in views:
+                res = sample_patch(rgb, lut, r[0] * k_, r[1] * k_, r[2] * k_, r[3] * k_, z, ax, ay, tw, th,
+                                   bool(L.get("mirror")))
+                if res is not None:
+                    patch, cov, X0, Y0 = res
+                    reg = img[Y0:Y0 + patch.shape[0], X0:X0 + patch.shape[1]].astype(np.float32)
+                    img[Y0:Y0 + patch.shape[0], X0:X0 + patch.shape[1]] = np.clip(
+                        reg * (1 - cov[..., None]) + patch * 255 * cov[..., None], 0, 255)
         mo = _moment_at(c, i_mid) if c else None
         tc = f"f{s} ({frame_to_tc(s, fps)}) - f{e} ({frame_to_tc(e, fps)})"
         what = ((mo.get("say") or {}).get("what") or "no line yet") if mo else "not in the catalogue"
@@ -535,13 +544,17 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
                     bad.append(f"{mo['m']} again (shot {seen[mo['m']]})")
             sj = mo.get("subject")
             w0, h0 = (c.get("size") or [0, 0])
-            if sj and w0 and h0 and abs(w0 / h0 - r_aspect(L, W, H)) > 0.1:
-                vis = max(1.0, Curve(L.get("zoom"), named, 1.0)(f))
-                frac = min(1.0, r_aspect(L, W, H) / (w0 / h0)) / vis if w0 / h0 > r_aspect(L, W, H) else 1.0 / vis
-                an = L.get("anchor") or [0.5, 0.5]
-                cx = min(max(Curve(an[0], named, 0.5)(f), frac / 2), 1 - frac / 2)
-                if abs(sj["x"] - cx) > frac / 2 * 0.9:
-                    bad.append(f"its subject ({sj['by']}) is cut off by the crop")
+            cut = []                                  # per view (a layout: per panel - cut off when no panel shows it)
+            for r, vis, ax, _ in views:
+                asp = float(r[2]) / max(1.0, float(r[3]))
+                if not (sj and w0 and h0 and abs(w0 / h0 - asp) > 0.1):
+                    cut.append(False)
+                    continue
+                frac = min(1.0, asp / (w0 / h0)) / vis if w0 / h0 > asp else 1.0 / vis
+                cx = min(max(ax, frac / 2), 1 - frac / 2)
+                cut.append(abs(sj["x"] - cx) > frac / 2 * 0.9)
+            if cut and all(cut):
+                bad.append(f"its subject ({sj['by']}) is cut off by the crop")
             seen.setdefault(mo["m"], k)
             prev_grp = mo.get("group")
         else:
@@ -571,6 +584,23 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
 def r_aspect(L: dict, W: int, H: int) -> float:
     r = L.get("rect") or [0, 0, W, H]
     return float(r[2]) / max(1.0, float(r[3]))
+
+
+def _views(L: dict, f: int, named: dict, W: int, H: int, Curve) -> list:
+    """Where a shot's picture is drawn at frame f: [(rect, zoom, crop centre x, y)] - its rect, or each panel of a
+    layout (0.6.1, motionlab\\reframe.py: the first panel's centre is the clip's own, the zoom x the clip's - as
+    compose draws it)."""
+    z = max(1.0, Curve(L.get("zoom"), named, 1.0)(f))
+    an = L.get("anchor") or [0.5, 0.5]
+    ax, ay = Curve(an[0], named, 0.5)(f), Curve(an[1], named, 0.5)(f)
+    if not L.get("panels"):
+        return [(L.get("rect") or [0, 0, W, H], z, ax, ay)]
+    out = []
+    for j, p in enumerate(L["panels"]):
+        pa = p.get("anchor") or [0.5, 0.5]
+        c = (ax, ay) if j == 0 else (Curve(pa[0], named, 0.5)(f), Curve(pa[1], named, 0.5)(f))
+        out.append((p["rect"], z * max(1.0, Curve(p.get("zoom"), named, 1.0)(f)), *c))
+    return out
 
 
 # ------------------------------------------------------------------------------------------------ self-check

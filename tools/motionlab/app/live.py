@@ -139,6 +139,7 @@ def _analyses() -> list:
     for sub in ("thumbs", "texts"):
         out.append(_listing(ANALYSIS / sub, ("set.json", "style.json", "patterns.json", "verdicts.json")))
     out.append(_listing(ANALYSIS / "notes", ("note.json", "notes.json")))          # 2026-10-27: Notes
+    out.append(_listing(ANALYSIS / "spark", ("video.json", "numbers.json", "spark.json")))   # 2026-10-30: SPARK
     return out
 
 

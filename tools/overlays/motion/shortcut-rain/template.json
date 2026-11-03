@@ -1,0 +1,87 @@
+{
+ "name": "Shortcut rain",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "Keyboard keycaps with labels (Ctrl, C, V, Shift, Enter...) rain down behind you, tumbling as they fall, and land at the bottom of the frame with a bounce, piling on the ones before; at the end the pile drops away. The Editor puts them behind the person.",
+ "use_for": [
+  "talking head",
+  "shortcuts",
+  "keyboard",
+  "tips",
+  "productivity",
+  "coding",
+  "tutorial",
+  "tech",
+  "short form"
+ ],
+ "tags": [
+  "keyboard",
+  "keys",
+  "keycaps",
+  "rain",
+  "falling",
+  "pile",
+  "physics",
+  "behind",
+  "in shot",
+  "ui"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {
+  "behind": true,
+  "match": true
+ },
+ "motion": "three keys are already falling at f0, the rest start one after another until ~2.3 s before the end (seeded, spread over the width); each speeds up (accelerating) to a steady fall of 44-56 px a frame, spinning 2.5-7 degrees a frame and wobbling in depth; it lands on the bottom of the frame or on the highest key under it, bounces (8 f, then a small 5 f one) and turns to rest the nearest way round (9 f, decelerating); the last 11 f the pile drops away through the floor and fades (accelerating).",
+ "tracks": [
+  {
+   "name": "rain",
+   "what": "the keys fall in, tumbling",
+   "start_f": 0,
+   "length_f": 100,
+   "easing": "accelerating (slow start) to a steady fall"
+  },
+  {
+   "name": "landings",
+   "what": "the keys land with a bounce and pile up",
+   "start_f": 38,
+   "length_f": 68,
+   "easing": "decelerating (slow end), a bounce"
+  },
+  {
+   "name": "drop away",
+   "what": "the pile drops through the floor and fades",
+   "start_f": 108,
+   "length_f": 11,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "round(84 * fps / 30)",
+ "min_why": "the last key has to land before the pile drops away",
+ "core_points": 1,
+ "text_slots": [
+  "keys"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 95,
+ "check_frames": [
+  0,
+  2,
+  5,
+  10,
+  18,
+  28,
+  40,
+  55,
+  70,
+  85,
+  100,
+  108,
+  113,
+  119
+ ]
+}

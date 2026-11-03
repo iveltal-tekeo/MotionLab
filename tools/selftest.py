@@ -588,11 +588,18 @@ def check_brand() -> dict:
     from motionlab import social as SO
     print("\n=== my brand: brand.json checked on every save, Import from your website; the content calendar, your videos ===")
     from motionlab import moodboard as MB                  # (0.6.0 step 7: the mood board; 13: your stats files)
+    from motionlab import retention as RT                  # (2026-11-02: where people left - a graph traced)
     from motionlab import stats as STS
     r, s, a, o, m, x = BR.selfcheck(), SR.selfcheck(), AG.selfcheck(), SO.selfcheck(), MB.selfcheck(), STS.selfcheck()
-    for line in r["lines"] + s["lines"] + a["lines"] + o["lines"] + m["lines"] + x["lines"]:
+    from motionlab import experiments as EX                # (2026-11-02: tests of one idea - the rule, the gate)
+    from motionlab import findings as FD                   # (2026-11-02: lessons that earn their confidence)
+    from motionlab import monthly as MO                    # (2026-11-02: the monthly review - three next tests' gate)
+    rt, ex, fd, mo = RT.selfcheck(), EX.selfcheck(), FD.selfcheck(), MO.selfcheck()
+    for line in (r["lines"] + s["lines"] + a["lines"] + o["lines"] + m["lines"] + x["lines"] + rt["lines"] + ex["lines"]
+                 + fd["lines"] + mo["lines"]):
         print(line)
-    return {"passed": r["passed"] and s["passed"] and a["passed"] and o["passed"] and m["passed"] and x["passed"]}
+    return {"passed": r["passed"] and s["passed"] and a["passed"] and o["passed"] and m["passed"] and x["passed"]
+            and rt["passed"] and ex["passed"] and fd["passed"] and mo["passed"]}
 
 
 def check_light_cache() -> dict:
@@ -667,6 +674,156 @@ def check_light_cache() -> dict:
         import gc
         gc.collect()
     return {"passed": all(passed)}
+
+
+def check_reframe() -> dict:
+    """Vertical framing (0.6.1 steps 1-2, motionlab.reframe), no video: faces made up - a still talking head held, a
+    walk followed with ONE eased pan under the speed cap, small moves and one stray face ignored, a close-up kept on
+    its middle, someone's own moves never changed; the layouts picked (fill, split, fit, screen, game); then the
+    layouts drawn by compose from a made-up clip whose colour says where in it a pixel comes from (red = x): a split's
+    two panels each on its own point at its own zoom, a shake moving both, a fit's band over a blurred copy or a
+    colour."""
+    import tempfile
+    import numpy as np
+    from motionlab import compose as C, footage as FC, reframe as RF
+    print("\n=== vertical framing: hold or follow per shot, the layouts (a clip wider than its place) ===")
+    r = RF.selfcheck()
+    for line in r["lines"]:
+        print(line)
+    passed = [r["passed"]]
+
+    def check(cond, what):
+        print(("PASS  " if cond else "FAIL  ") + what)
+        passed.append(bool(cond))
+    W0, H0, OW, OH, n = 320, 180, 180, 320, 3
+    red = lambda x: x * 255 * (W0 - 1) / W0 + 255 * 0.5 / W0          # noqa: E731 - the red of the clip's point x
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
+        td = Path(td)
+        rgb = np.zeros((H0, W0, 3), np.uint8)
+        rgb[..., 0] = np.round(np.arange(W0) * 255 / (W0 - 1)).astype(np.uint8)[None, :]
+        rgb[..., 1] = 128
+        rgb[..., 2] = 255 - rgb[..., 0]
+        with open(td / "S.color.yuv", "wb") as f:
+            for _ in range(n):
+                f.write(FC.encode(rgb).tobytes())
+        (td / "S.color.json").write_text(json.dumps({"levels": "single"}), encoding="utf-8")   # (else "double")
+
+        def draw(layer, f=0):
+            P = {"width": OW, "height": OH, "fps": 30.0, "frames": n, "background": 0.0, "levels": "single",
+                 "sources": {"S": {"cache": str(td / "S.color.yuv"), "format": "i420", "frames": n, "width": W0,
+                                   "height": H0}},
+                 "grades": {"default": {"black": 0, "white": 255, "gamma": 1.0, "out_black": 0.0, "out_white": 1.0}},
+                 "layers": [{"type": "clip", "id": "s01_S", "src": "S", "start": 0, "end": n - 1,
+                             "rect": [0, 0, OW, OH], **layer}]}
+            return C.Renderer(P).render(f).astype(np.float32)
+        sp = {"anchor": [0.25, 0.5], "panels": [{"rect": [0, 0, OW, 160], "zoom": 2.0},
+                                                {"rect": [0, 160, OW, 160], "zoom": 2.0, "anchor": [0.75, 0.5]}]}
+        a = draw(sp)
+        edge = 0.25 - 101.25 / 2 / W0                       # a 180 x 160 panel at zoom 2: 101 px of the clip's 320
+        check(abs(a[80, 90, 0] - red(0.25)) < 8 and abs(a[240, 90, 0] - red(0.75)) < 8
+              and abs(a[80, 0, 0] - red(edge)) < 8 and abs(a[80, 179, 0] - red(0.5 - edge)) < 8,
+              f"compose: a split - the top panel on x 0.25 (red {a[80, 90, 0]:.0f}, wanted {red(0.25):.0f}), the bottom "
+              f"one on x 0.75 ({a[240, 90, 0]:.0f} / {red(0.75):.0f}), each at zoom 2 (its edges {a[80, 0, 0]:.0f} - "
+              f"{a[80, 179, 0]:.0f})")
+        b = draw({**sp, "anchor": [{"start": 0, "values": [0.30, 0.25]}, 0.5]})
+        check(abs(b[80, 90, 0] - red(0.30)) < 8 and abs(b[240, 90, 0] - red(0.80)) < 8,
+              "compose: a shake on a split moves both panels (+0.05: 0.30 and 0.80)")
+        fit = {"anchor": [0.6, 0.5], "panels": [{"rect": [0, 92, OW, 135]}]}
+        c, d = draw({**fit, "backdrop": "blur"}), draw({**fit, "backdrop": "#336699"})
+        check(abs(c[160, 90, 0] - red(0.6)) < 8 and abs(c[40, 90, 1] - 128 * 0.55) < 10 and c[40, 90, 1] < c[160, 90, 1]
+              and np.abs(d[40, 90] - np.array([51, 102, 153], np.float32)).max() < 4
+              and abs(d[160, 90, 0] - red(0.6)) < 8,
+              f"compose: a fit - the band on x 0.6, over a darker blurred copy (green {c[40, 90, 1]:.0f} of 128) or the "
+              f"colour asked for ({d[40, 90].round().tolist()})")
+        del a, b, c, d
+        import gc
+        gc.collect()
+    return {"passed": all(passed)}
+
+
+def check_segments() -> dict:
+    """Edit by segments (0.6.1 steps 1-4 and 7, motionlab.segments), no video: made-up words, beats and shots - a talk
+    grouped into one-idea beats that tile the edit and start on sentences, the rules' picks (a number, a list, B-roll
+    on the words), two alternatives each, never one treatment three times in a row; a song's phrases with the drop on
+    its own, no piece under the minimum; a montage's runs of shots; the user's picks kept through a re-run, the B-roll
+    budget; Claude's picks between the rules' and the user's, its topics' titles, its words on the cards; the build's
+    edit-list lines applied to a made-up plan and checked (and a broken one caught); a beat cut inside one usable part
+    of its clip."""
+    from motionlab import segments as SG
+    print("\n=== edit by segments: the segments, a treatment for each, the edit built from the picks ===")
+    r = SG.selfcheck()
+    for line in r["lines"]:
+        print(line)
+    return {"passed": r["passed"]}
+
+
+def check_spark() -> dict:
+    """SPARK - why a video worked (motionlab.spark), no video, no network: the creator's usual (the median of the videos
+    around it, the video left out, too few = none, never across YouTube's view-count change), the result words, the
+    table's ratios, the gate (a cause, a ratio of its own, a late hook, a frame not shown, a missing point, a quote not
+    said - all refused; nothing saved on a failure; a good draft saved with its Markdown)."""
+    from motionlab import spark as SP
+    print("\n=== SPARK: why a video worked - the creator's usual, the table, the gate ===")
+    return {"passed": SP.selfcheck() == 0}
+
+
+def check_ratchets() -> dict:
+    """Ratchets (2026-11-02, docs\\design_brain_and_hardening.md section 7 - the user's pick "do 1"), no video: the
+    `except ...: pass` blocks that hide a failure and the functions over 150 lines may not grow in number - read by
+    Python's own parser from every tools\\**\\*.py. tools\\dev\\ratchets.json keeps the numbers per file (written the
+    first time); a count that drops is written down by itself (it only ever goes down), one that grows FAILs with
+    the file / function named. Lowering them is welcome; a new silent except should log or tell the user instead."""
+    import ast
+    print("\n=== Ratchets: silent excepts and long functions may not grow ===")
+    path, limit = HERE / "dev" / "ratchets.json", 150
+    silent: dict[str, int] = {}
+    long_fns: list[str] = []
+    for f in sorted(HERE.rglob("*.py")):
+        if {"node_modules", "__pycache__"} & set(f.parts):
+            continue
+        rel = f.relative_to(HERE).as_posix()
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8", errors="replace"))
+        except SyntaxError as e:
+            print(f"FAIL  {rel} does not parse: {e}")
+            return {"passed": False}
+        for n in ast.walk(tree):
+            if isinstance(n, ast.ExceptHandler) and len(n.body) == 1 and isinstance(n.body[0], ast.Pass):
+                silent[rel] = silent.get(rel, 0) + 1
+            elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.end_lineno - n.lineno + 1 > limit:
+                long_fns.append(f"{rel}:{n.name}")
+    now = {"silent_except": sum(silent.values()), "long_functions": len(long_fns)}
+    try:
+        base = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        base = None
+    if not base:
+        path.write_text(json.dumps({"_about": "selftest.py check_ratchets: these numbers may only go down",
+                                    "limit_lines": limit, **now, "silent_except_per_file": silent,
+                                    "long_function_names": sorted(long_fns)}, indent=1) + "\n", encoding="utf-8")
+        print(f"PASS  first count written to {path.relative_to(LAB)}: {now}")
+        return {"passed": True}
+    ok = True
+    grew = [f"{k}: {base.get('silent_except_per_file', {}).get(k, 0)} -> {v}" for k, v in silent.items()
+            if v > base.get("silent_except_per_file", {}).get(k, 0)]
+    new_long = sorted(set(long_fns) - set(base.get("long_function_names") or []))
+    if now["silent_except"] > base["silent_except"]:
+        ok = False
+        print(f"FAIL  `except ...: pass` blocks: {base['silent_except']} -> {now['silent_except']} (" + "; ".join(grew)
+              + ") - log the error or tell the user instead of hiding it")
+    else:
+        print(f"PASS  `except ...: pass` blocks: {now['silent_except']} (at most {base['silent_except']})")
+    if now["long_functions"] > base["long_functions"]:
+        ok = False
+        print(f"FAIL  functions over {limit} lines: {base['long_functions']} -> {now['long_functions']} (new: "
+              + ", ".join(new_long) + ") - split the new one")
+    else:
+        print(f"PASS  functions over {limit} lines: {now['long_functions']} (at most {base['long_functions']})")
+    if ok and (now["silent_except"] < base["silent_except"] or now["long_functions"] < base["long_functions"]):
+        base.update(now, silent_except_per_file=silent, long_function_names=sorted(long_fns))
+        path.write_text(json.dumps(base, indent=1) + "\n", encoding="utf-8")
+        print(f"      lower than before - written down in {path.relative_to(LAB)}")
+    return {"passed": ok}
 
 
 def check_person() -> dict:
@@ -775,6 +932,24 @@ def check_person() -> dict:
         check(flagged == [("dot", False)] and guarded == [("dot", True)] and not behind,
               f"person: the shot check flags a graphic over the face (the dot), not one beside it; kept off the face, "
               f"the face cuts into it - flagged as that ({guarded}); behind the person - not flagged")
+        top = C.Renderer(plan({"dot": {"behind": "top"}})).render(0).astype(np.float32)    # 2026-10-28
+        check(top[76, 160, 0] < 200 and np.abs(top[156, 160] - np.array([0, 0, 255], np.float32)).max() < 3,
+              "person: behind the head, in front of the body (\"behind\": \"top\") - a mark on the face hidden, one on "
+              "the chest (below the chin) shown")
+        from motionlab import screenfx as SF
+        try:
+            for line in SF.selfcheck():
+                check(True, "screenfx: " + line)
+        except AssertionError as e:
+            check(False, f"screenfx: {e}")
+        look = {"type": "fx", "id": "fx_e01", "kind": "grade", "look": "bw", "start": 0, "end": n - 1}
+        gp, gq = plan({}), plan({})
+        gp["layers"].append(look)
+        gq["layers"].insert(1, look)
+        bw, under = C.Renderer(gp).render(0).astype(np.float32), C.Renderer(gq).render(0).astype(np.float32)
+        check(abs(bw[156, 160, 0] - bw[156, 160, 2]) < 2 and under[156, 160, 2] - under[156, 160, 0] > 200,
+              "screenfx: a look layer greys what is drawn before it (last: the blue mark too) and leaves what comes "
+              "after it (right after the clip: the mark stays blue)")
         cam = C.Renderer(plan({"mark": {"follow": "camera"}}, zoom={"keys": [[0, 1.0, "hold"], [5, 1.5, "hold"]]}))
         f0, f5 = cam.render(0).astype(np.float32), cam.render(5).astype(np.float32)
         g0, g5 = (f0[..., 1] > 200) & (f0[..., 0] < 60), (f5[..., 1] > 200) & (f5[..., 0] < 60)
@@ -970,8 +1145,8 @@ def main() -> int:
                "precheck": check_precheck(), "memory": check_lessons_ratings(), "downloads": check_downloads_report(),
                "thumbnail": check_thumbnail(), "publish": check_publish(), "brand": check_brand(), "miniedit": check_miniedit(),
                "facefit": check_facefit(), "light_cache": check_light_cache(), "catalogue": check_catalogue(),
-               "person": check_person(),
-               "usage": check_usage(),
+               "person": check_person(), "reframe": check_reframe(), "segments": check_segments(),
+               "spark": check_spark(), "usage": check_usage(), "ratchets": check_ratchets(),
                "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:

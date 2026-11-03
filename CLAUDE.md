@@ -9,7 +9,9 @@ Windows app (`MotionLab.bat`) + Python tools, shared with friends through GitHub
    re-encoding in place, renaming, moving, trimming or deleting. Only read it. All copies, CFR proxies, extracted
    frames, sheets and previews go into `analysis\<video name>\` (analysis) or `projects\<name>\build\` (renders).
    `tools\analyze.py` and `tools\prep_footage.py` refuse writes outside those folders and record/verify the source
-   SHA-256; tell the user if a check ever reports a change. The app's Delete buttons are the user's own clicks (a
+   SHA-256; tell the user if a check ever reports a change. Claude Code refuses it too (2026-10-29): a deny rule on
+   `refs\` and a hook (`.claude\hooks\guard_sources.py`) on deletes / moves / renames / overwrites of `refs\` and a
+   project's top level - a refusal means: work on a copy in `build\` or `analysis\`. The app's Delete buttons are the user's own clicks (a
    dialog, then the Windows Recycle Bin); Claude never deletes sources, not through those routes either.
 2. **Every timestamp shown to the user must include the frame number AND the timecode** `HH:MM:SS:FF` at the
    video's real frame rate, e.g. `f480 (00:00:16:00)`, so the user can verify it. Reports, contact sheets,
@@ -31,6 +33,7 @@ explore the whole lab:
 | analyse / review a reference, apply `MOTIONLAB FEEDBACK`, review incoming lessons | the `/analyze-reference` skill |
 | edit the user's footage like references (1:1 or by feel, a quick draft) or from their words; then Resolve | the `/recreate-video` skill |
 | notes from a video (Analyser > Notes): what it teaches, takeaways, steps, context for another AI | the `/take-notes` skill |
+| why a video worked (Analyser > Content creation, SPARK): the rubric, its numbers against the creator's usual | the `/spark` skill |
 | a script to say on camera: improve one for reach or write one from zero (Prepare), hooks | the `/write-script` skill |
 | titles, thumbnails, a video's package (description, chapters, hashtags), YouTube's A/B test | the `/write-title` skill |
 | prompts: the user pastes / asks for video-model shots (Seedance...), briefs, image prompts | the `/write-prompt` skill |
@@ -56,7 +59,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
   reviews), `review_todo.md`, `meta.json` (category, tags, focus, link, `label` = the user's name for it),
   `feedback\verdicts.json` (the user's verdicts, their ONE home), sheets, previews, frames, `cache\`, `content\`,
   `colour\`. Not video analyses: `analysis\thumbs\<set>\`, `analysis\texts\<set>\`, `analysis\templates\<pack>\`,
-  `analysis\notes\<name>\` (2026-10-27: a video's notes - `notes.json` only through `notes.py save`, `mine.md` = the user's)
+  `analysis\notes\<name>\` (2026-10-27: a video's notes - `notes.json` only through `notes.py save`, `mine.md` = the user's),
+  `analysis\spark\<name>\` (2026-10-30: SPARK - `spark.json` only through `spark.py save`; its numbers stay on this PC)
 - `projects\<name>\` the user's footage (read-only, top level); everything made goes to `build\`: `brief.md` (0.5.3:
   the lab's brief - read it first), `edit_request.json` + `edit_brief.md` or `generate_request.json`, `edit_vN.py` ->
   `plan_vN.json` -> `<name>_vN.mp4`, `overlays\`, `sfx\`, `checks\` (precheck, cut-sheet, build summary),
@@ -77,7 +81,8 @@ Every tool starts with a usage docstring: read its first lines (or run it withou
 ## Tools (run from C:\MotionLab as `.venv\Scripts\python tools\<tool>.py`; usage = each docstring)
 Beside a name only a rule its docstring does not hold; every tool in detail: `docs\lab_map.md`.
 - Analysing: `analyze.py` (the full pipeline; `--category` / `--tags` / `--focus` kept in meta.json), `notes.py`
-  (2026-10-27: Notes - `prepare` the words + key frames, `save` = the quote gate), `report.py`,
+  (2026-10-27: Notes - `prepare` the words + key frames, `save` = the quote gate), `spark.py` (2026-10-30: SPARK -
+  `prepare` the words, numbers, shots; `save` = the rubric's gate; a lookup only when the user starts it), `report.py`,
   `feedback.py`, `sheet.py`, `content.py`, `colour.py`, `download.py`; sets: `thumbsets.py`, `textsets.py` (Claude's
   check is saved only when every quote is found in THAT text), `templates.py` (the Motion Graphics library: read,
   pick, check, tracks, sizes, land, finish)
@@ -86,11 +91,16 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
   `sfx.py` (never guess a volume), `music.py` (0.6.0: the songs and ambience beds, measured), `render_video.py`, `precheck.py`, `draft_edit.py`, `prep_footage.py`
   (0.6.1: a light cache of every frame; full frames only for what a plan shows, filled by render_video.py),
   `catalogue.py` (0.6.1: every clip's moments, usable parts, look-alikes + Claude's line each - with many clips, before
-  editing), `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`, `miniedit.py`
+  editing), `segments.py` (0.6.1: an edit's segments - sentences, phrases or shots - and a treatment recommended for
+  each; the user's picks kept through re-runs; `--claude` = Claude's, under the user's; `--build` = the edit from the
+  picks on a bare draft), `storyboard.py`, `style.py`, `beats.py`, `fonts.py`, `logos.py`, `speech.py`, `compare_renders.py`, `miniedit.py`
   (0.6.0: the app's Editor tab - the user's own timeline changes as the next version)
 - Prepare and posting: `script.py`, `prompts.py`, `thumbnail.py`, `publish.py` (YouTube's rules first, nothing written
   on a FAIL); `brand.py` (My Brand: `import` = read the user's own website, `show` = the *For my brand* brief), `agency.py` (Content
-  agency: `check` = the user's own pages' videos and views, only when they press it)
+  agency: `check` = the user's own pages' videos and views, only when they press it), `experiments.py` (2026-11-02:
+  Content agency > Tests - `show <id>`, `review` = the gate for Claude's keep / change / cut; `/spark test <id>`),
+  `findings.py` (What works: `show` = the lessons from the user's posts with their confidence, `retest`), `monthly.py`
+  (Monthly review: `show <YYYY-MM>`, `review` = the gate for Claude's three next tests; `/spark month <YYYY-MM>`)
 - The lab: `knowledge.py` (`memory [--rules | --styles]`, `lessons --kind <talking|generate|templates|all>`,
   `next-lesson-id [--kind making]`, `pending`), `usage.py` (the app shows time only - the user's call),
   `whatsnext.py`, `roadmap.py`, `storage.py` (`--prune` deletes only what the lab can rebuild), `mcp_server.py`
@@ -98,15 +108,17 @@ Beside a name only a rule its docstring does not hold; every tool in detail: `do
   server)
 - DaVinci Resolve (`docs\resolve_notes.md`): `resolve_build.py`, `library.py build | test | title | install`,
   `resolve_mcp.py`
-- Tests: `selftest.py [--extended]` (must PASS after any change), `make_testvideo.py`, `tools\dev\smoke.py`,
-  `tools\dev\install_test.py`, `tools\dev\i18n_check.py check` (must PASS) | `merge` | `todo <area>`
+- Tests: `selftest.py [--extended]` (must PASS after any change; its ratchets: silent excepts and 150+-line functions
+  may not grow), `make_testvideo.py`, `tools\dev\smoke.py` (runs `tools\dev\server_test.py` - the server's Host,
+  token, size and path guards - and `roadmap.py check`), `tools\dev\install_test.py`, `tools\dev\i18n_check.py check`
+  (must PASS) | `merge` | `todo <area>`
 
 ## The app (details: `tools\motionlab\app\CLAUDE.md`; its pages: `docs\app_pages.md`)
 `MotionLab.bat` = a local server + an Edge app window. The sidebar = the user's ways in: Home, **My Brand** (#/brand,
 0.6.0: the user's goal, audience, logo, colours, voice and catalogue - `knowledge\local\brand.json`, never shared; *For
 my brand* in New edit, the Generator and Prepare puts it in the request's brief), **Content agency** (#/agency, 0.6.0:
 the content calendar - `knowledge\local\calendar.json`, `motionlab\agency.py`), **Analyser** (#/analyze: the
-ways + the tabs with every list; each way also its own page - FLUX effects /videos, SPARK content creation /spark (coming soon), INDEX notes /notes;
+ways + the tabs with every list; each way also its own page - FLUX effects /videos, SPARK why it worked /spark, INDEX notes /notes;
 Thumbnails /thumbs, Scripts & prompts /texts), **Prepare** (#/prepare: the script, the title and the thumbnail before filming),
 **Editor** (#/edit: the user's clips - new edits, renders, graphics, Review, Ready to post), **Generator** (#/generate:
 a video from zero; the prompt library #/prompts), **Motion Graphics** (#/motion), **Claude's memory** (#/memory: the
@@ -169,7 +181,7 @@ and an effort level per task. A video or an analysis may carry the user's own na
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` and
   `tools\dev\smoke.py` all PASS, raise `__version__`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
   update banner shows it; it takes in the `## Unreleased` lines) and the same section in Spain Spanish (tú) to
-  `CHANGELOG.es.md`, raise `API_LEVEL` in `server.py` + `app.js` if the page needs new routes; the user commits and
+  `CHANGELOG.es.md`, raise `API_LEVEL` in `server.py` + `ui\js\core.js` if the page needs new routes; the user commits and
   pushes (`roadmap.py sync` for the roadmap's "here"; a new roadmap label's Spanish goes into
   `parts\es.release.json` as `<English>|roadmap`, listed in its `_by_key`). GitHub's full tests run only for a new
   `x.y.0` or by hand; other versions get a ~1 min release check - the user's choice 2026-10-15, so the local

@@ -1,6 +1,11 @@
 {
  "_by_key": [
+  "{video} cut into parts",
+  "Part {n} of {video}, previewed",
+  "{video} built from your picks",
   "Notes of {file}",
+  "SPARK of {file}",
+  "The numbers of {name} again",
   "MP4 video, up to 720p (smaller - for notes)",
   "A clip of {graphic} for DaVinci Resolve",
   "A copy of {file} that plays here",
@@ -594,5 +599,21 @@
  "its notes stay, without the video to play": "sus notas se quedan, sin el vídeo para reproducir",
  "the notes, your own notes and the key frames": "las notas, tus propias notas y los fotogramas clave",
  "Notes of {file}": "Notas de {file}",
- "MP4 video, up to 720p (smaller - for notes)": "Vídeo MP4, hasta 720p (más pequeño - para notas)"
+ "MP4 video, up to 720p (smaller - for notes)": "Vídeo MP4, hasta 720p (más pequeño - para notas)",
+ "no parts yet - cut the video into parts first": "aún no hay partes: divide primero el vídeo en partes",
+ "that change is not possible for this part": "ese cambio no es posible en esta parte",
+ "{video} cut into parts": "{video} dividido en partes",
+ "Part {n} of {video}, previewed": "Parte {n} de {video}, previsualizada",
+ "{video} built from your picks": "{video} montado con tus elecciones",
+ "SPARK of {file}": "SPARK de {file}",
+ "The numbers of {name} again": "Los números de {name}, otra vez",
+ "no link known for this video": "no se conoce el enlace de este vídeo",
+ "its SPARK stays, without the video to play": "su SPARK se queda, sin el vídeo para reproducir",
+ "Its SPARK": "Su SPARK",
+ "Claude's write-up, the numbers, the words and the pictures": "el análisis de Claude, los números, las palabras y las imágenes",
+ "the video": "el vídeo",
+ "the screenshot is empty or bigger than 15 MB": "la captura está vacía o pesa más de 15 MB",
+ "save, close, again or delete": "guardar, cerrar, otra vez o borrar",
+ "keep, retest or forget": "guardar, volver a probar u olvidar",
+ "plan a next test": "planifica una próxima prueba"
 }

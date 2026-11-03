@@ -90,7 +90,8 @@ def users_of(video: Path, skip_analysis: str | None = None) -> dict:
         if any(_mentions(data.read_json(f, {}), needle) for f in files):
             projs.append(d.name)
     from motionlab import notes as NT                  # 2026-10-27: notes made from it (they stay without it)
-    return {"analyses": ana, "projects": projs, "notes": NT.users_of(video)}
+    from motionlab import spark as SP                  # 2026-10-30: SPARK read it (it stays without it)
+    return {"analyses": ana, "projects": projs, "notes": NT.users_of(video), "spark": SP.users_of(video)}
 
 
 def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) -> dict:
@@ -102,6 +103,8 @@ def _video_item(src: Path, skip_analysis: str | None, us: dict | None = None) ->
                            names=", ".join(us["analyses"])))
     if us.get("notes"):
         warn.append(I18N.t("its notes stay, without the video to play"))
+    if us.get("spark"):
+        warn.append(I18N.t("its SPARK stays, without the video to play"))
     if us["projects"]:
         warn.append(I18N.tn(len(us["projects"]), "used by your video(s) {names} (as the reference / soundtrack of an "
                                                  "edit or in its DaVinci Resolve timeline) - deleting it breaks their "
@@ -121,7 +124,7 @@ def _human(n: float | None) -> str:
 
 def plan_reference(name: str) -> dict:
     d = ANALYSIS / data.safe_name(name)
-    if not d.is_dir() or d.name.lower() in ("thumbs", "templates", "texts", "notes"):   # thumbnail sets (kind
+    if not d.is_dir() or d.name.lower() in ("thumbs", "templates", "texts", "notes", "spark"):   # thumbnail sets (kind
         # "thumbs"), motion packs (0.5.0), sets of scripts & prompts (kind "texts", 2026-10-18), notes (kind "notes")
         raise FileNotFoundError(name)
     inside(d)
@@ -296,9 +299,24 @@ def plan_notes(name: str, video_only: bool = False) -> dict:
             "keeps": [I18N.t("the notes, your own notes and the key frames")] if video_only else []}
 
 
+def plan_spark(name: str) -> dict:
+    """SPARK of a video (2026-10-30, analysis\\spark\\<name>): Claude's write-up, the numbers, the words and the pictures.
+    The video stays: notes, an analysis or an edit may use it (its own Delete is in Downloaded, not analysed yet)."""
+    from motionlab import spark as SP
+    d, v = SP.need(name)
+    inside(d)
+    b, k = size_of(d)
+    return {"kind": "spark", "name": d.name, "title": SP.label_of(v), "notes": [], "keeps": [I18N.t("the video")],
+            "items": [{"key": "spark", "label": I18N.t("Its SPARK"), "path": data.rel(d), "bytes": b, "files": k,
+                       "what": I18N.t("Claude's write-up, the numbers, the words and the pictures"), "default": True,
+                       "warn": []}]}
+
+
 def plan(kind: str, name: str, resolve_state: str = "") -> dict:
     if kind in ("notes", "notes_video"):
         out = plan_notes(name, kind == "notes_video")
+    elif kind == "spark":
+        out = plan_spark(name)
     elif kind == "thumbs":
         out = plan_thumbs(name)
     elif kind == "texts":

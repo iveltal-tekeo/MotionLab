@@ -1202,8 +1202,12 @@ def ref_thumb(name: str) -> Path | None:
 def measure_ref(name: str, force: bool = False) -> dict | None:
     """One reference's thumbnail measured -> analysis\\<name>\\content\\thumbnail.json (re-used while unchanged)."""
     p = ref_thumb(name)
-    if not p:
-        return None
+    return measure_file(p, force) if p else None
+
+
+def measure_file(p: Path, force: bool = False) -> dict:
+    """A thumbnail picture measured -> thumbnail.json beside it (re-used while unchanged): an analysis' or a SPARK
+    folder's content\\ (2026-10-30)."""
     out = p.parent / "thumbnail.json"
     st = p.stat()
     sig = f"{p.name}:{st.st_size}:{st.st_mtime_ns}"

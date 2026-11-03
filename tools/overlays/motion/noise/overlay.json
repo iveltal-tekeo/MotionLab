@@ -1,0 +1,25 @@
+{
+ "name": "noise",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((1 + i * 7) * fps / 30)",
+   "repeat": "min(16, max(4, floor(((frames - start) * 30 / fps - (12.5 if leave else 1) - 9) / 7) + 1))",
+   "kind": "pop",
+   "db": -6,
+   "seed": "300 + i",
+   "what": "a reel lands on the wall"
+  },
+  {
+   "f": "frames - round(12 * fps / 30)",
+   "kind": "air",
+   "dur": "0.35",
+   "db": -6,
+   "if": "leave",
+   "what": "the pile clears away"
+  }
+ ]
+}

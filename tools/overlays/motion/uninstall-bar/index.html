@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "What is uninstalling (the dialog says: Uninstalling <this>…)", "default": "doomscrolling"},
+  {"id": "tone", "type": "enum", "label": "Dialog", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "dark", "label": "Dark"}]},
+  {"id": "bar", "type": "color", "label": "Progress bar colour", "default": "#0A84FF"},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.6, "max": 1.3, "step": 0.05},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "uninstall-bar" (2026-10-28): a system-style dialog "Uninstalling <text>…" whose
+     progress bar fills in stutters (striped, a spinner turning, the status line changing) - then it hangs at 99 %,
+     "Not responding", and breaks apart. Made for its companion (template.json "with": glitch from 2.5 s to the end,
+     which breaks the whole frame apart, ramping up to the end); in sync with it the dialog glitches too: its slices
+     shift sideways, an RGB fringe splits its edges and its text, it jitters - more and more toward the end - and in
+     the last 4 frames it collapses to a bright line and is gone. It pops in at the start (f0-f9, slow end with a
+     small overshoot). Kept off the face (in_shot guard). Its timing is in seconds (the break at 2.5 s whatever the
+     length), so the companion and the dialog break together. After a design in claude-video-effects (MIT,
+     fx_uninstall); MotionLab's own code. Size-independent, look-aware (its fonts). -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #dlgw { position: absolute; left: 0; top: 0; }
+  .slice { position: absolute; left: 0; top: 0; }
+  .dlg { position: absolute; overflow: hidden; }
+  .dlg div, .dlg svg { position: absolute; }
+  .t1 { white-space: nowrap; font-synthesis: none; line-height: 1.1; }
+  #bgwrap { position: absolute; left: 0; top: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgwrap"><div id="bgfill" class="abs"></div></div>
+  <div id="dlgw"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.4 * x * x * x + 1.4 * x * x; };                // slow end, a small overshoot
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const s = V.size * U;
+  const HOR = W > H;
+  const DARK = V.tone === "dark";
+  const BAR = V.bar || "#0A84FF";
+  // ---- the companion's timing (template.json "with": glitch at BREAK seconds, to the end; it ramps up to the end)
+  const LSEC = FRAMES / FPS, BREAK = 2.5;
+  const FILL0 = 0.2, FILL1 = BREAK - 0.1;                                   // the bar fills from 0.2 s to just before the break
+
+  // ---- the preview background (only when painted); it shakes a little with the glitch, as the frame will
+  const bgwrap = q("bgwrap"), bgfill = q("bgfill");
+  Object.assign(bgwrap.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.2 * Math.min(W, H)}px ${0.26 * Math.min(W, H)}px at ${0.5 * W}px ${(HOR ? 0.4 : 0.34) * H}px, ${rgba(L.paper, 0.3)}, ${rgba(L.paper, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.22 * H}px at ${0.22 * W}px ${0.2 * H}px, ${rgba(L.mustard, 0.45)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.6 * W}px ${0.2 * H}px at ${0.6 * W}px ${0.9 * H}px, ${rgba(L.signal, 0.25)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the dialog: 800 x 236 at 1080 px (her 0.7 x 0.2 of the width), a light (or dark) system card
+  const dw = Math.min((HOR ? 720 : 800) * s, W * 0.9), k = dw / ((HOR ? 720 : 800) * s);
+  const dh = 236 * s * k, pad = 36 * s * k, ic = 76 * s * k;
+  const dr = Math.max(14 * U, 26 * s * k);
+  const dcx = W / 2, dcy = HOR ? H * 0.8 : Math.max(H * 0.18, 220 * U + dh / 2 + 14 * U);
+  const C = DARK ? { bg: "#1F1F22", ink: "#F4F4F6", grey: "#9A9AA2", trk: "#3A3A40", rim: rgba("#ffffff", 0.12) }
+                 : { bg: "#F5F5F7", ink: "#1C1C1E", grey: "#6E6E73", trk: "#DCDCE1", rim: rgba("#000000", 0.08) };
+  const BODY = `'${V.body_font}', 'Segoe UI', sans-serif`;
+  const titleFs0 = 40 * s * k, stFs = 29 * s * k;
+  const tx = pad + ic + pad * 0.6, by0 = dh - pad - 22 * s * k, bh = 18 * s * k, bx0 = pad, bw = dw - 2 * pad;
+  const NS = "http://www.w3.org/2000/svg";
+  const STATUS = ["Preparing…", "Removing files…", "Cleaning up…", "Almost done…"];
+  function dialog() {                       // one copy of the dialog (the slices are copies, each clipped to a band)
+    const d = document.createElement("div"); d.className = "dlg";
+    Object.assign(d.style, { left: `${-dw / 2}px`, top: `${-dh / 2}px`, width: `${dw}px`, height: `${dh}px`, borderRadius: `${dr}px`,
+      background: rgba(C.bg, 0.97), boxShadow: `inset 0 0 0 ${Math.max(1, 1.2 * U)}px ${C.rim}` });
+    const icon = document.createElement("div");                              // an app icon: a box on a tile
+    Object.assign(icon.style, { left: `${pad}px`, top: `${pad}px`, width: `${ic}px`, height: `${ic}px`, borderRadius: `${ic * 0.24}px`,
+      background: `linear-gradient(160deg, ${L.mustard}, ${L.signal})`, boxShadow: `inset 0 ${1.5 * U}px 0 ${rgba("#ffffff", 0.35)}` });
+    icon.innerHTML = `<svg width="${ic}" height="${ic}" viewBox="0 0 24 24" style="position:absolute;left:0;top:0"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round">` +
+      `<path d="M6 9 L12 6 L18 9 L18 16 L12 19 L6 16 Z"/><path d="M6 9 L12 12 L18 9 M12 12 L12 19"/></g></svg>`;
+    const ttl = document.createElement("div"); ttl.className = "t1";
+    ttl.textContent = `Uninstalling ${String(V.text || "").trim()}…`;
+    Object.assign(ttl.style, { left: `${tx}px`, top: `${pad - 2 * s * k}px`, color: C.ink, fontFamily: BODY, fontWeight: String(fw(V.body_font, 650)), fontSize: `${titleFs0}px` });
+    const spin = document.createElementNS(NS, "svg"), sd = stFs * 0.9;
+    spin.setAttribute("width", sd); spin.setAttribute("height", sd); spin.setAttribute("viewBox", "0 0 20 20");
+    Object.assign(spin.style, { left: `${tx}px`, top: `${pad + titleFs0 * 1.32 + (stFs - sd) / 2}px` });
+    spin.innerHTML = `<circle cx="10" cy="10" r="7.5" fill="none" stroke="${C.trk}" stroke-width="2.6"/><path d="M10 2.5 A7.5 7.5 0 0 1 17.5 10" fill="none" stroke="${C.grey}" stroke-width="2.6" stroke-linecap="round"/>`;
+    const st = document.createElement("div"); st.className = "t1";
+    Object.assign(st.style, { left: `${tx + sd * 1.45}px`, top: `${pad + titleFs0 * 1.32}px`, color: C.grey, fontFamily: BODY, fontWeight: String(fw(V.body_font, 500)), fontSize: `${stFs}px` });
+    const pct = document.createElement("div"); pct.className = "t1";
+    Object.assign(pct.style, { right: `${pad}px`, top: `${pad + titleFs0 * 1.32}px`, color: C.grey, fontFamily: BODY, fontWeight: String(fw(V.body_font, 600)),
+      fontSize: `${stFs}px`, fontVariantNumeric: "tabular-nums", textAlign: "right" });
+    const trk = document.createElement("div");
+    Object.assign(trk.style, { left: `${bx0}px`, top: `${by0}px`, width: `${bw}px`, height: `${bh}px`, borderRadius: `${bh / 2}px`, background: C.trk, overflow: "hidden" });
+    const fill = document.createElement("div");                              // the fill + its moving stripes
+    Object.assign(fill.style, { left: "0px", top: "0px", width: "0px", height: `${bh}px`, borderRadius: `${bh / 2}px`, backgroundColor: BAR,
+      backgroundImage: `repeating-linear-gradient(115deg, ${rgba("#ffffff", 0.22)} 0px, ${rgba("#ffffff", 0.22)} ${bh * 0.6}px, ${rgba("#ffffff", 0)} ${bh * 0.6}px, ${rgba("#ffffff", 0)} ${bh * 1.4}px)` });
+    trk.appendChild(fill);
+    d.append(icon, ttl, spin, st, pct, trk);
+    return { d, ttl, spin, st, pct, fill };
+  }
+  const dlgw = q("dlgw"), NSL = 7, SL = [];
+  for (let i = 0; i < NSL; i++) {           // 7 bands, each a full copy clipped to its slice of the height
+    const sl = document.createElement("div"); sl.className = "slice";
+    const D = dialog();
+    const a = (i / NSL) * 100, b = 100 - ((i + 1) / NSL) * 100;
+    D.d.style.clipPath = `inset(${(i ? a : -20).toFixed(3)}% -20% ${(i < NSL - 1 ? b : -20).toFixed(3)}% -20%)`;
+    D.d.style.overflow = "visible";
+    sl.appendChild(D.d); dlgw.appendChild(sl);
+    SL.push({ sl, ...D });
+  }
+
+  // ---- the progress: stutters forward (fast runs, short stalls), hangs at 99 % from the break
+  const KEYS = [[0, 0], [0.12, 0.08], [0.22, 0.11], [0.4, 0.34], [0.5, 0.36], [0.68, 0.62], [0.76, 0.64], [0.9, 0.88], [1, 0.97]];
+  const prog = u => { u = c01(u); for (let i = 1; i < KEYS.length; i++) if (u <= KEYS[i][0]) { const [a0, v0] = KEYS[i - 1], [a1, v1] = KEYS[i];
+    return v0 + (v1 - v0) * eIO((u - a0) / (a1 - a0)); } return 0.97; };
+
+  function render(t) {
+    const d = t * 30, e = (LSEC - t) * 30, f = Math.floor(d);
+    // in: a pop from 80 % with a small overshoot (9 f), seen within 3 f
+    let sc = 0.8 + 0.2 * eBack(d / 9), sy = 1, op = c01((d + 0.5) / 3);
+    // the glitch: from the break, ramping (^1.6) to the end - in sync with the companion
+    const g = t >= BREAK ? Math.pow(c01((t - BREAK) / Math.max(0.1, LSEC - BREAK)), 1.6) : 0;
+    const R = rnd(1000 + f * 7);
+    const hit = t >= BREAK && (R() < 0.35 + 0.6 * g);                       // a glitching frame (more and more often)
+    let jx = 0, jy = 0;
+    if (hit) { jx = (R() - 0.5) * 2 * dw * 0.05 * (0.3 + g); jy = (R() - 0.5) * 2 * dh * 0.12 * g; }
+    // out: the last 4 frames it collapses to a bright line and is gone
+    let bright = 1;
+    if (e < 4) { const x = eIn(1 - e / 4); sy = Math.max(0.015, 1 - x); sc *= 1 + 0.08 * x; bright = 1 + 1.5 * x; if (e < 0.75) op = 0; }
+    dlgw.style.transform = `translate(${(dcx + jx).toFixed(2)}px, ${(dcy + jy).toFixed(2)}px) scale(${sc.toFixed(4)}, ${(sc * sy).toFixed(4)})`;
+    dlgw.style.opacity = op.toFixed(3);
+    // the RGB fringe: red one way, cyan the other, wider as it breaks
+    const fr = hit ? (4 + 22 * g + 6 * R()) * s : t >= BREAK ? 2 * s : 0;
+    dlgw.style.filter = (fr > 0 ? `drop-shadow(${fr.toFixed(1)}px 0 0 ${rgba("#FF1E46", 0.75)}) drop-shadow(${(-fr).toFixed(1)}px 0 0 ${rgba("#00E0FF", 0.7)})` : "") +
+      (bright > 1 ? ` brightness(${bright.toFixed(2)})` : "") || "none";
+    // the progress, the status and the percent (the same on every slice)
+    const p = t < BREAK ? prog((t - FILL0) / (FILL1 - FILL0)) : 0.99;
+    const pc = Math.floor(p * 100 + 1e-6), broke = t >= BREAK;
+    const stTxt = broke ? "Not responding" : STATUS[Math.min(3, Math.floor(p * 4.2))];
+    const ang = (d * 14) % 360;
+    SL.forEach((o, i) => {
+      o.fill.style.width = `${(bw * Math.max(0.03, p)).toFixed(2)}px`;
+      o.fill.style.backgroundPosition = `${(d * 2.2 * s).toFixed(2)}px 0px`;
+      o.pct.textContent = `${pc}%`;
+      o.st.textContent = stTxt;
+      o.st.style.color = broke ? "#FF3B30" : C.grey;
+      o.spin.style.transform = `rotate(${(broke ? (Math.floor(d / 8) % 2) * 45 : ang).toFixed(1)}deg)`;
+      const ts = hit && R() < 0.6 ? `${(fr * 0.5).toFixed(1)}px 0 0 ${rgba("#FF1E46", 0.8)}, ${(-fr * 0.5).toFixed(1)}px 0 0 ${rgba("#00E0FF", 0.8)}` : "none";
+      o.ttl.style.textShadow = ts;
+      // the slices shift sideways on a glitching frame
+      const off = hit && R() < 0.3 + 0.6 * g ? (R() - 0.5) * 2 * dw * (0.04 + 0.16 * g) : 0;
+      o.sl.style.transform = `translateX(${off.toFixed(2)}px)`;
+    });
+    if (V.background) bgfill.style.backgroundPosition = hit ? `${(jx * 0.4).toFixed(2)}px 0px` : "0px 0px";
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 67 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the title fitted on its line beside the icon
+  (document.fonts && document.fonts.load ? Promise.all([400, 500, 600, 700].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    const room = dw - tx - pad;
+    const w0 = SL[0].ttl.offsetWidth;
+    if (w0 > room) SL.forEach(o => { o.ttl.style.fontSize = `${titleFs0 * room / w0}px`; });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

@@ -13,11 +13,21 @@ cut-sheet), whatever the lines before it do; cuts are applied last.
     caption clean_box [script script-005]   captions over the whole edit: the clips' words (speech.py) moved through
                                         the edit, one caption per script line in its own words when a script is named
     graphic <template> at f1524 for 48 [land <track>] [text="..." color=#ffd400 ...] [behind | glass | guard | pin |
-        plain]   a template's copy as an overlay - over a person the way its template.json "in_shot" says (a word
-        behind you, a glass card, brackets on the face; "plain" = pasted on top), the words add to it (compose.py)
+        plain | column]   a template's copy as an overlay - over a person the way its template.json "in_shot" says (a
+        word behind you, a glass card, brackets on the face; "plain" = pasted on top), the words add to it
+        (compose.py); column (0.6.1) = a wide video's card made COLUMN_W of its width at its left edge (local-make-1)
     sfx whoosh at f300 | sfx pop on punch-ins | sfx whoosh on cuts      the plan's own sound cues
-    effect lean-in at f300              one of the Editor's effects at a frame, as it adds them (motionlab\\edfx ADD:
-                                        lean-in, slow-push, spotlight, punch-in, push-in, shake, flash, light-leak ...)
+    effect lean-in at f300 [for 60] [look=moody ...]   an effect at a frame, as the Editor adds them (motionlab\\edfx
+        ADD: punch-in, lean-in, slow-push, shake, flash, black-frame, stutter, rgb-split; ADD_MORE: rabbit-hole,
+        dot-reveal, glitch, swipe, corner-push, pastel-room, paper-room, look-moody / -bw / -warm / -cool / -pop / -red /
+        -film); "for" = its length in frames, key=value = its options, edfx.add's opts
+    frame 4 split | frame s04_A fit hold | frame 4 follow | frame 4 auto    0.6.1: a shot's framing (a horizontal clip
+        in a vertical video - motionlab\\reframe.frame_shot): fill / fit / split / screen / game, hold = one still
+        crop, follow = its pans; auto = the rules' again; the user's from then on (no automatic run changes it)
+    broll C at f300 for 60 [from 412] [anchor=0.4,0.5]   0.6.1 (Edit by segments): clip C over the talking from f300
+        for 60 frames, from its frame 412 (else 0), its crop centred on the anchor - the picture only, the voice goes on
+    jump f300 to 812                    0.6.1: the shot under f300 shows its clip from frame 812 on (a cut inside it -
+        a music edit's cut on the beat; the clips' own sound would not follow)
     layer {"type": "solid", ...}        any plan layer as JSON (the way out for a one-off)
 
 Pure plan changes here; draft_edit.py runs the tools (overlay.py, speech) for caption / graphic lines and cuts the
@@ -31,6 +41,7 @@ import math
 import re
 
 TIGHT, WIDE = 1.15, 1.0
+COLUMN_W = 0.2917               # a "column" graphic's width in a wide video (560 px of 1920 - local-make-1, -25)
 _F = r"f?(\d+)"
 
 
@@ -65,11 +76,23 @@ def parse(text: str) -> list[dict]:
                 bare = re.sub(r'\w+=("[^"]*"|\S+)', " ", m[5] or "").split()     # 0.6.1: in the shot
                 ops.append({"op": "graphic", "id": m[1], "f": int(m[2]), "len": int(m[3]), "land": m[4],
                             "values": {k: v.strip('"') for k, v in vals.items()}, "line": n,
-                            "fit": [w for w in bare if w in ("behind", "glass", "guard", "pin", "plain")]})
+                            "fit": [w for w in bare if w in ("behind", "glass", "guard", "pin", "plain", "column")]})
             elif (m := re.fullmatch(rf"sfx (\w+) at {_F}", ln)):
                 ops.append({"op": "sfx", "kind": m[1], "f": int(m[2]), "line": n})
-            elif (m := re.fullmatch(rf"effect ([\w-]+) at {_F}", ln)):
-                ops.append({"op": "effect", "kind": m[1].replace("-", "_"), "f": int(m[2]), "line": n})
+            elif (m := re.fullmatch(rf"effect ([\w-]+) at {_F}(?: for (\d+))?((?:\s+\w+=\S+)*)", ln)):
+                opts = {k: (float(v) if re.fullmatch(r"-?\d+(\.\d+)?", v) else v)
+                        for k, v in re.findall(r"(\w+)=(\S+)", m[4] or "")}
+                ops.append({"op": "effect", "kind": m[1].replace("-", "_"), "f": int(m[2]), "line": n,
+                            "len": int(m[3]) if m[3] else None, "opts": opts})
+            elif (m := re.fullmatch(r"frame (\S+)(?: (auto|fill|fit|split|screen|game))?(?: (hold|follow))?", ln)) \
+                    and (m[2] or m[3]):
+                ops.append({"op": "frame", "shot": m[1], "layout": m[2], "mode": m[3], "line": n})
+            elif (m := re.fullmatch(rf"broll (\S+) at {_F} for (\d+)(?: from (\d+))?(?: anchor=([\d.]+),([\d.]+))?",
+                                    ln)):
+                ops.append({"op": "broll", "src": m[1], "f": int(m[2]), "len": int(m[3]), "in": int(m[4] or 0),
+                            "anchor": [float(m[5]), float(m[6])] if m[5] else None, "line": n})
+            elif (m := re.fullmatch(rf"jump {_F} to (\d+)", ln)):
+                ops.append({"op": "jump", "f": int(m[1]), "to": int(m[2]), "line": n})
             elif (m := re.fullmatch(r"sfx (\w+) on (punch-ins|cuts|graphics)", ln)):
                 ops.append({"op": "sfx_on", "kind": m[1], "on": m[2], "line": n})
             elif ln.startswith("layer "):
@@ -166,7 +189,8 @@ def _trim_front(L: dict, f: int) -> dict:
     return L
 
 
-CURVES = ("zoom", "dx", "dy", "opacity", "gain", "rotation")    # a layer's animated values on the timeline's frames
+CURVES = ("zoom", "dx", "dy", "opacity", "gain", "rotation",    # a layer's animated values on the timeline's frames
+          "amount", "pos", "px", "py")                           # (+ a whole-picture effect's, 2026-10-28)
 
 
 def move_curves(L: dict, fn) -> None:
@@ -181,9 +205,13 @@ def move_curves(L: dict, fn) -> None:
     if isinstance(L.get("anchor"), list):           # (2026-10-26: a shake's frames stayed behind a moved shot)
         for a in L["anchor"]:
             one(a)
-    if isinstance(L.get("room"), dict):             # (2026-10-27: a spotlight's / a melting room's keys)
-        for k in ("dim", "blur", "grey"):
+    if isinstance(L.get("room"), dict):             # (2026-10-27: a spotlight's / a melting room's / a painted one's)
+        for k in ("dim", "blur", "grey", "paint"):
             one(L["room"].get(k))
+    for p in L.get("panels") or []:                 # (0.6.1: a layout's panels - their zoom and crop centre)
+        one(p.get("zoom"))
+        for a in p.get("anchor") or []:
+            one(a)
 
 
 def _shift(L: dict, d: int) -> dict:
@@ -218,13 +246,23 @@ def _zoom_keys(L: dict, curves: dict) -> list:
     return [[f, round(float(c(f)), 5), "linear"] for f in range(int(L["start"]), int(L["end"]) + 1)]
 
 
+def _named(P: dict, o: dict) -> dict:
+    """The shot a line names: its layer id or its number (1 = the first)."""
+    S = shots(P)
+    L = next((x for x in S if x.get("id") == o["shot"]), None) or (
+        S[int(o["shot"]) - 1] if o["shot"].isdigit() and 0 < int(o["shot"]) <= len(S) else None)
+    if L is None:
+        raise ListError(f"line {o['line']}: no shot {o['shot']} ({len(S)} shots)")
+    return L
+
+
 def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
     """The list on a copy of the plan: (the new plan, a line per change with frame numbers, the tool steps still to
     run - captions / graphics - for draft_edit.py). Cuts last, from the end, so every frame refers to the plan given."""
     from . import edtrans as TR                     # (an Editor's transitions: made again from the shots after the list)
     P = TR.strip(copy.deepcopy(plan))
     P.setdefault("cues", [])
-    done, steps, punches = [], [], []
+    done, steps, punches, jumped = [], [], [], []
     for o in ops:
         if o["op"] == "punch":                       # merged into the shot's zoom: earlier punches and keys stay
             from .compose import Curve
@@ -241,11 +279,7 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
             punches.append(o["f"])
             done.append(f"punch-in {o['z']:g} at f{o['f']} on {L['id']}")
         elif o["op"] == "shot":
-            S = shots(P)
-            L = next((x for x in S if x.get("id") == o["shot"]), None) or (
-                S[int(o["shot"]) - 1] if o["shot"].isdigit() and 0 < int(o["shot"]) <= len(S) else None)
-            if L is None:
-                raise ListError(f"line {o['line']}: no shot {o['shot']} ({len(S)} shots)")
+            L = _named(P, o)
             L["zoom"] = o["z"]
             L.setdefault("anchor", [0.5, 0.42])
             done.append(f"{L['id']} f{L['start']}-f{L['end']}: zoom {o['z']:g}")
@@ -261,16 +295,52 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
         elif o["op"] == "effect":                   # one of the Editor's effects (motionlab\edfx), as it adds them
             from . import edfx as FX
             try:
-                fid = FX.add(P, o["kind"], o["f"])
+                fid = FX.add(P, o["kind"], o["f"], n=o.get("len"), opts=o.get("opts") or None)
             except FX.FxError as e:
                 raise ListError(f"line {o['line']}: {e}") from None
             done.append(f"effect {o['kind']} at f{o['f']} ({fid})")
+        elif o["op"] == "frame":                    # 0.6.1: a shot's framing (motionlab\reframe), as the Editor sets it
+            from . import reframe as RF
+            try:
+                done.append(RF.frame_shot(P, _named(P, o)["id"], o.get("layout"), o.get("mode"), save=True))
+            except RF.FrameError as e:
+                raise ListError(f"line {o['line']}: {e}") from None
+        elif o["op"] == "broll":                    # 0.6.1: under the graphics, over the shots
+            n_src = int(((P.get("sources") or {}).get(o["src"]) or {}).get("frames") or 0)
+            if not n_src:
+                raise ListError(f"line {o['line']}: no clip {o['src']} in this plan's sources")
+            if o["in"] + o["len"] > n_src:
+                raise ListError(f"line {o['line']}: clip {o['src']} has {n_src} frames - from {o['in']} for "
+                                f"{o['len']} runs past its end")
+            k = 1 + sum(1 for x in P["layers"] if str(x.get("id", "")).startswith("broll_"))
+            L = {"type": "clip", "id": f"broll_{k:02d}_{o['src']}", "src": o["src"], "start": o["f"],
+                 "end": min(o["f"] + o["len"], int(P["frames"])) - 1, "rect": [0, 0, P["width"], P["height"]],
+                 "in": o["in"], **({"anchor": o["anchor"]} if o.get("anchor") else {})}
+            at = next((i for i, x in enumerate(P["layers"]) if x.get("type") == "overlay"), len(P["layers"]))
+            P["layers"].insert(at, L)
+            done.append(f"B-roll {o['src']} f{L['start']}-f{L['end']} (from its frame {o['in']})")
+        elif o["op"] == "jump":
+            L = shot_at(P, o["f"])
+            if o["f"] <= int(L["start"]):
+                raise ListError(f"line {o['line']}: a jump at f{o['f']} - the shot's first frame (a cut is there "
+                                "already)")
+            js = [j for j in (L.get("jumps") or [[int(L["start"]), int(L.get("in", 0))]]) if int(j[0]) != o["f"]]
+            L["jumps"] = sorted(js + [[o["f"], o["to"]]], key=lambda j: int(j[0]))
+            L["in"] = int(L["jumps"][0][1])
+            jumped.append((L, o))
+            done.append(f"{L['id']}: from f{o['f']} its clip's frame {o['to']}")
         elif o["op"] == "layer":
             P["layers"].append(o["layer"])
             done.append(f"layer {o['layer'].get('id', o['layer']['type'])} f{o['layer'].get('start')}-"
                         f"f{o['layer'].get('end')}")
         elif o["op"] in ("caption", "graphic"):
             steps.append(o)
+    for L, o in jumped:                                 # each piece a jump starts stays inside its clip
+        n_src = int(((P.get("sources") or {}).get(L["src"]) or {}).get("frames") or 0)
+        nxt = min([int(j[0]) for j in L["jumps"] if int(j[0]) > o["f"]] + [int(L["end"]) + 1])
+        if n_src and o["to"] + nxt - 1 - o["f"] >= n_src:
+            raise ListError(f"line {o['line']}: a jump at f{o['f']} to {o['to']} runs past the end of clip "
+                            f"{L['src']} ({n_src} frames)")
     for o in ops:                                       # after the punches they may name
         if o["op"] == "sfx_on":
             at = (punches if o["on"] == "punch-ins" else [x["start"] for x in shots(P)][1:] if o["on"] == "cuts"

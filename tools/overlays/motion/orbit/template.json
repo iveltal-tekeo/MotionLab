@@ -1,0 +1,200 @@
+{
+ "name": "Orbit (your reels circle your head)",
+ "kind": "social",
+ "category": "Social",
+ "what": "Your reels circle your head on a tilted ring, in perspective: bigger and brighter at the front, where they pass just under your chin, smaller and dimmer at the back, behind your head. The ring opens out from behind you, keeps turning, and closes back in at the end. Every reel shows its cover, a play mark and a view count. The Editor pins it on your face and puts the far side behind you.",
+ "use_for": [
+  "talking head",
+  "my reels",
+  "my content",
+  "creator",
+  "portfolio",
+  "social media",
+  "everything I made",
+  "hook",
+  "short form",
+  "orbit"
+ ],
+ "tags": [
+  "social",
+  "reels",
+  "orbit",
+  "ring",
+  "3d",
+  "perspective",
+  "behind",
+  "in shot",
+  "face",
+  "view count",
+  "cards",
+  "needs media",
+  "talking head"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0-f12 the ring opens out from behind the head (radius from 30 %, the reels from 55 % of their size, decelerating), seen from f0 (fades in over 4 f); the ring turns all the time (speed 0.3 turns a second: one turn in 3.3 s), each reel scaled 74-104 % and shaded by its depth, turned up to 6 degrees by its side; the last 10 f it closes to 70 % and fades (accelerating)",
+ "tracks": [
+  {
+   "name": "ring opens",
+   "what": "the ring opens out from behind the head",
+   "start_f": 0,
+   "length_f": 12,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "turn",
+   "what": "the reels circle the head, in front low and behind high",
+   "start_f": 0,
+   "length_f": 120,
+   "easing": "linear"
+  },
+  {
+   "name": "ring closes",
+   "what": "the ring closes in and fades",
+   "start_f": 110,
+   "length_f": 9,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "start + round(30 * fps / 30)",
+ "min_why": "the ring needs to open and turn a little before it closes",
+ "in_shot": {
+  "behind": "top",
+  "follow": "face",
+  "snap": {
+   "w": 4.2,
+   "dy": 0.15
+  },
+  "match": true
+ },
+ "core_points": 1,
+ "text_slots": [
+  "views"
+ ],
+ "media_slots": [
+  {
+   "id": "reel1_media",
+   "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel2_media",
+   "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel3_media",
+   "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel4_media",
+   "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel5_media",
+   "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel6_media",
+   "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel7_media",
+   "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel8_media",
+   "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  1,
+  3,
+  6,
+  9,
+  12,
+  30,
+  60,
+  90,
+  110,
+  113,
+  116,
+  119
+ ]
+}

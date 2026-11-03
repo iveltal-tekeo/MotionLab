@@ -1,0 +1,29 @@
+{
+ "name": "Uninstall bar",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "A system-style dialog pops in: \"Uninstalling doomscrolling…\" with a striped progress bar filling in stutters, a spinner and a status line. It hangs at 99 %, says Not responding, and the whole frame breaks apart - the dialog glitches with it (slices shifting, an RGB split) and collapses to a line at the very end.",
+ "use_for": ["quitting a habit", "deleting", "uninstall", "breaking a habit", "glitch", "joke", "hook", "tech", "talking head", "short form"],
+ "tags": ["uninstall", "progress bar", "dialog", "system", "glitch", "rgb split", "loading", "ui", "talking head", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "with": [{"effect": "glitch", "at": 2.5, "len": null}],
+ "in_shot": {"guard": true, "match": true},
+ "motion": "f0-f9 the dialog pops in from 80 % (slow end, a small overshoot, seen within 3 f); from 0.2 s the bar fills in stutters to 97 % by 2.4 s (fast runs on S-curves, short stalls: 8, 11, 34, 36, 62, 64, 88, 97 %), its stripes moving and the spinner turning, the status line changing (Preparing…, Removing files…, Cleaning up…, Almost done…); at 2.5 s (f75) it hangs at 99 %, the status turns red (Not responding) and the companion glitch starts: on more and more frames (35 % at first, 95 % at the end) the dialog jitters, its 7 slices shift sideways and an RGB fringe splits its edges and title, all ramping (^1.6) to the end; the last 4 f it collapses to a bright line (accelerating) and is gone. The timing is in seconds: the break stays at 2.5 s at any length",
+ "tracks": [
+  {"name": "pop in", "what": "the dialog pops in", "start_f": 0, "length_f": 9, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "progress", "what": "the bar fills in stutters to 97 %", "start_f": 6, "length_f": 66, "easing": "S-curve runs with stalls"},
+  {"name": "break", "what": "it hangs at 99 % and glitches more and more (slices, RGB split, jitter)", "start_f": 75, "length_f": 41, "easing": "accelerating (slow start)"},
+  {"name": "collapse", "what": "the dialog collapses to a bright line and is gone", "start_f": 116, "length_f": 4, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "round(3.1 * fps)",
+ "min_why": "the bar fills until 2.4 s and the break (the companion glitch) starts at 2.5 s; it needs a moment of breaking after that",
+ "core_points": 1,
+ "text_slots": ["text"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.3,
+ "thumb_f": 64,
+ "check_frames": [0, 2, 5, 9, 20, 40, 64, 74, 78, 88, 100, 110, 116, 118]
+}

@@ -1,0 +1,12 @@
+{
+ "name": "glass-widgets",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start + round(i * 2.1 * fps / 30)", "repeat": "4 if look == 'simple' else 8", "kind": "pop", "from": 650, "to": 1400, "db": -6, "seed": "60 + i", "what": "a glass widget pops in"},
+  {"f": "start + round(30 * fps / 30)", "kind": "shimmer", "dur": "0.5", "db": -8, "what": "light crosses the pill"},
+  {"f": "frames - round(11 * fps / 30)", "kind": "whoosh", "dur": "0.3", "from": 2200, "to": 600, "db": -8, "if": "leave and (frames - start) * 30 / fps > 40", "what": "the widgets shrink away"}
+ ]
+}

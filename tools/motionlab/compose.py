@@ -21,7 +21,13 @@ is where it gets kinda AI-ish"), so an overlay can be made part of the shot (0.6
 "follow": "camera" = part of the room (a word behind the person): moved and scaled with the clip's punch-ins / pans;
 "glass": true (GLASS_BLUR) | blur px = the footage under the graphic frosted (its own fill gives the tint); "shadow": true |
 {"blur", "dy", "opacity"} = a soft shadow on the footage; "match": true | {"soft", "grain"} = the footage's own
-softness and grain on the graphic. Sizes are at 1080 px (scaled with the frame).
+softness and grain on the graphic. Sizes are at 1080 px (scaled with the frame). "behind": "top" = behind the person
+above their chin, in front of them below it (a ring of reels round the head, a wall with a total under the chin).
+A "fx" layer changes the whole picture drawn before it (a card it shrinks into, a colour look, a glitch, a tunnel,
+dots, a before / after slider, a corner push - motionlab/screenfx.py); a clip's "room" may also "paint" the room
+a colour or grid paper ({"paint": curve, "color": "#RRGGBB", "pattern": "grid"}).
+A clip's "panels" (0.6.1, the vertical layouts of motionlab/reframe.py) draw it in several boxes at once - two people
+stacked, the picture in a band, a screen over its face camera - over its "backdrop" (a blurred copy or a colour).
 """
 from __future__ import annotations
 
@@ -34,6 +40,7 @@ import numpy as np
 from . import footage as FC
 from . import graphics as G
 from . import person as P
+from . import screenfx as SF
 
 REC709 = np.array([0.2126, 0.7152, 0.0722], np.float32)       # luma weights (saturation, colour -> grey)
 IDLUT = np.arange(256, dtype=np.float32) / 255.0              # a mask (uint8) sampled like a picture
@@ -332,8 +339,22 @@ class ClipLayer(Layer):
         # a push lands on the person as they move); "room": {"dim", "blur", "grey"} = curves for the room around the
         # person only (a spotlight, a room melting out of focus, a grey room)
         self.track = spec.get("track") == "face"
+        # 0.6.1 (vertical framing, step 2 - motionlab\reframe.py's layouts): "panels" = the clip drawn in each panel
+        # instead of its rect - [{"rect": [x, y, w, h] (frame px, moved and shrunk with the clip's own rect), "zoom" (x
+        # the clip's), "anchor" (panels after the first: their own crop centre + a shake's swing; the first panel's is
+        # the clip's own zoom point)}] - a split, the picture in a band, a screen over its face camera; "backdrop":
+        # "blur" | "#RRGGBB" = the clip's rect filled first (a blurred, darker copy of the frame, as behind a "contain"
+        # photo, or a colour - through the clip's grade)
+        self.rect0 = list(self.rect)
+        self.panels = []
+        for p in spec.get("panels") or []:
+            pa = p.get("anchor") or [0.5, 0.5]
+            self.panels.append(([float(v) for v in p["rect"]], Curve(p.get("zoom"), R.curves, 1.0),
+                                Curve(pa[0], R.curves, 0.5), Curve(pa[1], R.curves, 0.5)))
+        self.backdrop = spec.get("backdrop") if self.panels else None
         rm = spec.get("room") if isinstance(spec.get("room"), dict) else {}
-        self.room = {k: Curve(rm[k], R.curves, 0.0) for k in ("dim", "blur", "grey") if rm.get(k) is not None}
+        self.room = {k: Curve(rm[k], R.curves, 0.0) for k in ("dim", "blur", "grey", "paint") if rm.get(k) is not None}
+        self.paint = (hex_rgb(rm.get("color") or "#CDBEF5"), rm.get("pattern"))   # (2026-10-28: a pastel / paper room)
 
     def zoom_point(self, f: int, R: "Renderer") -> tuple[float, float]:
         if self.track:
@@ -368,6 +389,53 @@ class ClipLayer(Layer):
             x, y, w, h, z = x + ax * w * (1 - z), y + ay * h * (1 - z), w * z, h * z, 1.0
             cx0, cy0 = x + w / 2, y + h / 2
         return x, y, w, h, z, zax, zay, rot, cx0, cy0
+
+    def _panel_boxes(self, f: float, g) -> list:
+        """The panels' boxes at frame f from _geom's result g: (x, y, w, h, zoom, crop centre x, y) each."""
+        x, y, w, h, z, zax, zay = g[:7]
+        r0 = self.rect0
+        sx, sy = w / max(1e-6, r0[2]), h / max(1e-6, r0[3])
+        dax = day = 0.0                                         # a shake's swing moves every panel
+        for k, s0, n, rest in self._swing:
+            if s0 <= f < s0 + n:
+                d = (self.ax if k == 0 else self.ay)(f) - rest
+                dax, day = (dax + d, day) if k == 0 else (dax, day + d)
+        out = []
+        for j, (pr, pz, pax, pay) in enumerate(self.panels):
+            cx, cy = (zax, zay) if j == 0 else (pax(f) + dax, pay(f) + day)
+            out.append((x + (pr[0] - r0[0]) * sx, y + (pr[1] - r0[1]) * sy, pr[2] * sx, pr[3] * sy,
+                        z * max(1.0, pz(f)), cx, cy))
+        return out
+
+    def _backdrop(self, src: np.ndarray, i: int, g, R: "Renderer"):
+        """The backdrop over the clip's box (sample_patch's kind of result) - or None."""
+        x, y, w, h = g[:4]
+        if self.backdrop == "blur":
+            if self._bg is None or self._bg[0] != i:
+                sh, sw = src.shape[:2]
+                small = cv2.resize(src, (max(8, sw // 10), max(8, sh // 10)), interpolation=cv2.INTER_AREA)
+                self._bg = (i, cv2.GaussianBlur(small, (0, 0), 2.5))
+            return sample_patch(self._bg[1], self.lut, x, y, w, h, 1.0, 0.5, 0.5, R.W, R.H, self.mirror)
+        out = sample_box(x, y, w, h, R.W, R.H)
+        if out is None:
+            return None
+        c = np.array([int(round(v * 255)) for v in hex_rgb(self.backdrop)], np.uint8)
+        conv = R._conv.get(self.src)
+        if conv is not None:                                    # (the frame's own way: levels, a match LUT, the grade)
+            c = conv[c]
+        if self.lut3d is not None:
+            c = self.lut3d[c[0] >> 1, c[1] >> 1, c[2] >> 1]
+        cov, X0, Y0 = out
+        return np.broadcast_to(self.lut[c], cov.shape + (3,)).copy(), cov, X0, Y0
+
+    def boxes(self, f: int, R: "Renderer") -> list:
+        """Every box the picture is drawn in at frame f (one, or one per panel) - [] on a black or a turned frame."""
+        if self.panels:
+            if f in self.black or abs(self.rot(f)) > 1e-3:
+                return []
+            return self._panel_boxes(f, self._geom(f, R))
+        b = self.box(f, R)
+        return [b] if b is not None else []
 
     def _blurred(self, src: np.ndarray, f: int, R: "Renderer"):
         """sample_patch's result averaged over the picture's moves from f - 1/4 to f + 1/4 (a 180 degree shutter) -
@@ -428,6 +496,12 @@ class ClipLayer(Layer):
             cw, ch = (h * ar, float(h)) if w / h > ar else (float(w), w / ar)   # anchor) works inside that box
             box = (x + (w - cw) / 2, y + (h - ch) / 2, cw, ch, z, zax, zay)
             parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
+        elif self.panels:                                       # a layout: the backdrop, then each panel
+            g = (x, y, w, h, z, zax, zay)
+            if self.backdrop:
+                parts.append((self._backdrop(src, i, g, R), 0.55 if self.backdrop == "blur" else 1.0, None))
+            for box in self._panel_boxes(f, g):
+                parts.append((sample_patch(src, self.lut, *box, R.W, R.H, self.mirror), 1.0, box))
         elif self.mblur and abs(rot) <= 1e-3:                   # (its box changes over the shutter: none for the room)
             parts.append((self._blurred(src, f, R), 1.0, None))
         else:
@@ -455,16 +529,18 @@ class ClipLayer(Layer):
                 if any(v > 1e-3 for v in vals.values()):
                     m = R.person_patch(self, i, box, patch)
                     if m is not None:
-                        patch = room_look(patch, m, vals, min(R.W, R.H) / 1080.0)
+                        patch = room_look(patch, m, vals, min(R.W, R.H) / 1080.0, self.paint)
             blend(canvas, patch * k_dim if k_dim != 1.0 else patch, cov * op, X0, Y0, self.mode, self.tint)
             if R.matte is not None:                             # the person under the graphics to come
                 R.person_into(self, i, box if abs(rot) <= 1e-3 else None, patch, cov * op, X0, Y0)
 
     def box(self, f: int, R: "Renderer"):
         """The picture's box at frame f as draw() samples it - (x, y, w, h, zoom, ax, ay) - or None (a black or a
-        turned frame): where the face lands (Renderer.face_at)."""
+        turned frame): where the face lands (Renderer.face_at). A layout: its first panel's (boxes() = every one)."""
         if f in self.black or abs(self.rot(f)) > 1e-3:
             return None
+        if self.panels:
+            return self.boxes(f, R)[0]
         x, y, w, h = self.rect
         x += self.dx(f)
         y += self.dy(f)
@@ -481,11 +557,29 @@ class ClipLayer(Layer):
         return x, y, w, h, z, zax, zay
 
 
-def room_look(patch: np.ndarray, m: np.ndarray, vals: dict, k: float) -> np.ndarray:
-    """The room around the person (m = the person, 0..1) greyed, blurred (weighted by the room only, so the person does
-    not smear into it), dimmed - the person as it was."""
+def hex_rgb(c) -> tuple[float, float, float]:
+    """"#RRGGBB" (or [r, g, b] 0..1) -> floats 0..1."""
+    if isinstance(c, (list, tuple)) and len(c) == 3:
+        return tuple(float(v) for v in c)
+    s = str(c).lstrip("#")
+    try:
+        return tuple(int(s[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    except ValueError:
+        return (0.80, 0.745, 0.96)
+
+
+def room_look(patch: np.ndarray, m: np.ndarray, vals: dict, k: float, paint=None) -> np.ndarray:
+    """The room around the person (m = the person, 0..1) painted (a colour that keeps a little of the room's light, or
+    grid paper - her pastel and check-pills rooms), greyed, blurred (weighted by the room only, so the person does not
+    smear into it), dimmed - the person as it was."""
     p3 = patch if patch.ndim == 3 else np.repeat(patch[..., None], 3, 2)
     bg = p3
+    pa = vals.get("paint", 0.0)
+    if pa > 1e-3 and paint is not None:
+        lum = (p3 @ REC709)[..., None]
+        h, w = p3.shape[:2]
+        sheet = SF.paper(w, h, paint[0], paint[1]) * ((0.9 + 0.12 * lum) if paint[1] else (0.86 + 0.22 * lum))
+        bg = bg * (1 - min(pa, 1.0)) + sheet * min(pa, 1.0)
     g = vals.get("grey", 0.0)
     if g > 1e-3:
         bg = bg * (1 - g) + (bg @ REC709)[..., None] * g
@@ -1012,8 +1106,80 @@ class OverlayLayer(Layer):
         blend(canvas, col, alpha, X0 + xa, Y0 + ya, self.mode)
 
 
+class FxLayer(Layer):
+    """An effect on the whole picture drawn before it (motionlab/screenfx.py): "kind" frame | grade | glitch | tunnel |
+    dots | swipe | push, "amount" a curve (what 0..1 means: screenfx's docstring); frame: "to" [x, y, w, h] shares or
+    {"v": [...], "h": [...]} (upright / landscape), "r", "focus"; grade / swipe: "look"; swipe: "pos" (a curve),
+    "labels"; tunnel: "ratio", "speed", "spin"; dots: "color", "cell"; push: "zoom", "px", "py" (curves). The person
+    mask and the face move with the picture (frame, push): the graphics drawn after it stay on the person."""
+
+    def __init__(self, spec, R):
+        super().__init__(spec, R)
+        self.kind = spec.get("kind")
+        self.amount = Curve(spec.get("amount", 1.0), R.curves, 1.0)
+        self.zoom = Curve(spec.get("zoom"), R.curves, 1.0)
+        self.px = Curve(spec.get("px", 0.2), R.curves, 0.2)
+        self.py = Curve(spec.get("py", 0.2), R.curves, 0.2)
+        self.pos = Curve(spec.get("pos", 0.5), R.curves, 0.5)
+
+    def rect(self, R) -> tuple:
+        to = self.spec.get("to") or [0, 0, 1, 1]
+        if isinstance(to, dict):
+            to = to.get("v" if R.H > R.W else "h") or to.get("v") or [0, 0, 1, 1]
+        return float(to[0]) * R.W, float(to[1]) * R.H, float(to[2]) * R.W, float(to[3]) * R.H
+
+    def move_face(self, f: int, R, face):
+        """Where the face is after this layer at frame f (a frame / a push moves the picture) - geometry only."""
+        if face is None or not self.active(f):
+            return face
+        if self.kind == "push":
+            z, x0, y0 = SF.push_geo(R.W, R.H, self.zoom(f), self.px(f) * R.W, self.py(f) * R.H)
+            return face if z <= 1.002 else ((face[0] - x0) * z, (face[1] - y0) * z, face[2] * z)
+        a = self.amount(f)
+        if self.kind == "frame" and a > 1e-3:
+            focus = face[:2] if self.spec.get("focus", "face") == "face" else (R.W / 2, R.H / 2)
+            x, y, _, _, s, cx0, cy0 = SF.frame_geo(R.W, R.H, self.rect(R), focus, min(a, 1.0))
+            return x + (face[0] - cx0) * s, y + (face[1] - cy0) * s, face[2] * s
+        return face
+
+    def draw(self, canvas, f, R):
+        s, kind, W, H = self.spec, self.kind, R.W, R.H
+        a = self.amount(f)
+        if kind == "push":
+            z = self.zoom(f)
+            if z > 1.002:
+                out, R.matte, R.face = SF.push(canvas, R.matte, R.face, z, self.px(f) * W, self.py(f) * H)
+                canvas[...] = out
+            return
+        if a <= 1e-3:
+            return
+        t = (f - self.start) / R.fps
+        if kind == "frame":
+            focus = R.face[:2] if s.get("focus", "face") == "face" and R.face is not None else (W / 2, H / 2)
+            out, R.matte, R.face = SF.frame(canvas, R.matte, R.face, self.rect(R), float(s.get("r", 0)) * min(W, H),
+                                            focus, min(a, 1.0))
+        elif kind == "grade":
+            g = SF.grade(canvas, s.get("look", "moody"), R.matte)
+            out = canvas * (1 - min(a, 1.0)) + g * min(a, 1.0)
+        elif kind == "glitch":
+            out = SF.glitch(canvas, a, R.rng)
+        elif kind == "tunnel":
+            c = R.face[:2] if R.face is not None else (W / 2, H / 2)
+            out = SF.tunnel(canvas, R.matte, c, min(a, 1.0), t, float(s.get("ratio", 0.62)), float(s.get("speed", 0.8)),
+                            float(s.get("spin", 10.0)))
+        elif kind == "dots":
+            out = SF.dots(canvas, min(a, 1.0), t, hex_rgb(s.get("color") or "#FF8050"), float(s.get("cell", 0.017)))
+        elif kind == "swipe":
+            out = SF.swipe(canvas, self.pos(f), min(a, 1.0), s.get("look", "moody"),
+                           tuple(s.get("labels") or ("Before", "After")), R.matte)
+        else:
+            return
+        canvas[...] = out
+
+
 LAYERS = {"clip": ClipLayer, "solid": SolidLayer, "text": TextLayer, "clock": ClockLayer, "mosaic": MosaicLayer,
-          "firework": FireworkLayer, "streaks": StreaksLayer, "strip": StripLayer, "overlay": OverlayLayer}
+          "firework": FireworkLayer, "streaks": StreaksLayer, "strip": StripLayer, "overlay": OverlayLayer,
+          "fx": FxLayer}
 
 
 # ------------------------------------------------------------------------------------------------ renderer
@@ -1065,7 +1231,8 @@ class Renderer:
         self._vign = {}
         self._lut3d: dict = {}
         # graphics made part of the shot (0.6.1): the person under them, per frame (person.py's tracks)
-        self.integrate_any = any(sp.get(k) for sp in plan["layers"] for k in P.KEYS)
+        self.integrate_any = any(sp.get(k) for sp in plan["layers"] for k in P.KEYS) or \
+            any(sp.get("type") == "fx" and SF.needs_person(sp) for sp in plan["layers"])
         self._people: dict = {}
         self.matte = None            # this frame: the person in output pixels (0..1), when a layer asks behind / guard
         self.face = None             # this frame: the face (x, y, width) in output pixels, when one asks follow / guard
@@ -1105,20 +1272,37 @@ class Renderer:
         for L in self.layers:
             if not (isinstance(L, ClipLayer) and L.active(f)) or L.opacity(f) < 0.5:
                 continue
-            box = L.box(f, self)
-            if box is None:
+            bxs = L.boxes(f, self)
+            if not bxs:
                 continue
             T = self.person(L.src)
             fc = T.face(L.src_index(f)) if T is not None else None
+            seen = None
             if fc is not None:
                 sw, sh = self.size(L.src)
-                X, Y, s = to_out(float(fc[0]), float(fc[1]), sw, sh, box, L.mirror)
-                if box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3] and 0 <= X < self.W \
-                        and 0 <= Y < self.H:
-                    face = (X, Y, float(fc[2]) * sw * s)
-                    continue
-            if face is not None and box[0] <= face[0] <= box[0] + box[2] and box[1] <= face[1] <= box[1] + box[3]:
-                face = None
+                for box in bxs:                                # (a layout: the panel that shows it)
+                    X, Y, s = to_out(float(fc[0]), float(fc[1]), sw, sh, box, L.mirror)
+                    if box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3] and 0 <= X < self.W \
+                            and 0 <= Y < self.H:
+                        seen = (X, Y, float(fc[2]) * sw * s)
+                        break
+            if seen is not None:
+                face = seen
+                continue
+            if face is not None and any(b[0] <= face[0] <= b[0] + b[2] and b[1] <= face[1] <= b[1] + b[3]
+                                        for b in ([L._geom(f, self)[:4]] if L.backdrop else bxs)):
+                face = None                                    # (covered - by a backdrop too)
+        return face
+
+    def face_seen(self, f: int, layer):
+        """The face as a layer sees it at frame f: face_at() moved by the whole-picture effects drawn before that layer
+        (a card that shrinks you into a tile, a corner push) - what the shot checks measure a graphic against."""
+        face = self.face_at(f)
+        for L in self.layers:
+            if L is layer:
+                break
+            if isinstance(L, FxLayer):
+                face = L.move_face(f, self, face)
         return face
 
     def room_ref(self, f: int, X: float, Y: float):
@@ -1126,19 +1310,20 @@ class Renderer:
         scale) from the top clip showing there - or None."""
         for L in reversed(self.layers):
             if isinstance(L, ClipLayer) and L.active(f) and L.opacity(f) >= 0.5:
-                box = L.box(f, self)
-                if box is not None and box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3]:
-                    sw, sh = self.size(L.src)
-                    nx, ny = from_out(X, Y, sw, sh, box, L.mirror)
-                    return L, nx, ny, (X, Y), to_out(nx, ny, sw, sh, box, L.mirror)[2]
+                for k, box in enumerate(L.boxes(f, self)):     # (a layout: the panel under the point)
+                    if box[0] <= X <= box[0] + box[2] and box[1] <= Y <= box[1] + box[3]:
+                        sw, sh = self.size(L.src)
+                        nx, ny = from_out(X, Y, sw, sh, box, L.mirror)
+                        return L, nx, ny, (X, Y), to_out(nx, ny, sw, sh, box, L.mirror)[2], k
         return None
 
     def room_at(self, f: int, ref):
         """Where room_ref's point is at frame f (x, y, its scale against the start) - None once its clip is gone."""
-        L, nx, ny, _, s0 = ref
+        L, nx, ny, _, s0 = ref[:5]
         if not L.active(f):
             return None
-        box = L.box(f, self)
+        bxs = L.boxes(f, self)
+        box = bxs[ref[5]] if len(ref) > 5 and ref[5] < len(bxs) else (bxs[0] if bxs else None)
         if box is None:
             return None
         sw, sh = self.size(L.src)
@@ -1188,7 +1373,12 @@ class Renderer:
                 col = pm[..., :3] / np.maximum(alpha, 1e-6)[..., None]
             n = self.rng.normal(0.0, grain, (h // 2 + 1, w // 2 + 1)).astype(np.float32)
             col = col + cv2.resize(n, (w, h), interpolation=cv2.INTER_LINEAR)[..., None]
-        if spec.get("behind") and mt is not None:
+        if spec.get("behind") == "top" and mt is not None and self.face is not None:
+            fx, fy, fw = self.face                         # behind the head, in front of the body: a soft line at the
+            chin, ramp = fy + 0.75 * fw, 0.25 * fw         # chin (a ring of reels round the head)
+            yy = np.arange(Y0, Y0 + h, dtype=np.float32)[:, None]
+            alpha = alpha * (1 - mt * np.clip((chin + ramp - yy) / (2 * ramp), 0, 1))
+        elif spec.get("behind") and mt is not None:
             alpha = alpha * (1 - mt)
         if spec.get("guard") and mt is not None and self.face is not None:
             fx, fy, fw = self.face                         # the face itself (forehead to chin), not the body
@@ -1235,9 +1425,11 @@ class Renderer:
         canvas = np.full((self.H, self.W, 3), self.bg, np.float32)
         if self.integrate_any:
             act = [L.spec for L in self.layers if L.active(f)]
+            fxp = any(s.get("type") == "fx" and SF.needs_person(s) for s in act)
             self.matte = (np.zeros((self.H, self.W), np.float32)
-                          if any(s.get("behind") or s.get("guard") for s in act) else None)
-            self.face = self.face_at(f) if any(s.get("follow") or s.get("guard") for s in act) else None
+                          if fxp or any(s.get("behind") or s.get("guard") for s in act) else None)
+            self.face = self.face_at(f) if fxp or any(s.get("follow") or s.get("guard") or s.get("behind") == "top"
+                                                      for s in act) else None
         for L in self.layers:
             if L.active(f):
                 L.draw(canvas, f, self)

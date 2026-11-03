@@ -62,15 +62,25 @@ new compositor or Fusion code. One file serves both the lab render and Resolve (
    the talking draft's notes / `speech.py`), then edit-list lines (`effect <kind> at f`, `graphic <template> at f for n
    text="..."` - the template's own `in_shot` puts it in the shot), stills at the middle of each, then the render.
    Hers -> ours: lean-in = `effect lean-in`; locked-on = `graphic lock-on-brackets` (+ `effect lean-in`); slow-push =
-   `effect slow-push`; spotlight = `effect spotlight` (+ `graphic word-behind` or `led-sign`); backdrop-word =
+   `effect slow-push`; spotlight = not added any more (the Editor's review dropped it, 2026-10-27 - say so; the
+   nearest: `effect look-moody` on the shot, + `graphic word-behind` or `led-sign`); backdrop-word =
    `word-behind`; led-sign = `led-sign`; countdown-flip = `countdown-flip`; scribble / pause-point = `scribble-callout`
    (+ `hold fA-fB` to freeze); comment-box = `comment-box`; tap = `follow-tap`; messages = `message-stack`;
    reject-stamp = `reject-stamp`; apple-toggles = `settings-toggles`; liquid-glass-graph = `glass-graph`; checklist /
-   todo = `task-checklist`; headline-box / split-headline = `headline-box`; moody = a grade; red-collage = `word-behind`
-   red + a grey grade. Not yet (0.6.x plans): her reels-around-you ones (noise, orbit, carousel, phone-fan, profile
-   wall, place-in-grid, check-pills - they need the user's own reel covers), lineup, the-bill, swipe, uninstall,
-   reel-frame, shortcut-rain, rabbit-hole, cover-star, glass-widgets, pastel-word, timeline, tier-list, broll-split,
-   dot-reveal, headline-wall, match-cut, over-the-shoulder-zoom - say so instead of faking one. Her rules hold here
+   todo = `task-checklist`; headline-box = `headline-box`; moody = `effect look-moody` (her other grades: `look-bw`,
+   `look-warm`, `look-cool`, `look-pop`; ours too: `look-red` = her timeline's red film, `look-film` = her editorial).
+   **The rest (2026-10-28)** - each a template of her name unless named here: noise, orbit, carousel-spin,
+   profile-wall, phone-fan = `reel-phone-fan`, place-in-grid, check-pills (the user's reels: `reel<N>_media` slots -
+   copy the user's own covers, thumbnails or frames of their clips into the graphic's `assets\media\` and set the slot
+   to `assets/media/<file>`; empty = a placeholder reel), lineup, the-bill, shortcut-rain, headline-wall, red-collage,
+   match-cut, glass-widgets, cover-star, tier-list, timeline, reel-frame, uninstall = `uninstall-bar`,
+   over-the-shoulder-zoom = `shoulder-graphs`. Not built yet: pastel-word, broll-split, split-headline. A design that also changes the picture or needs a second graphic brings it with it
+   (template.json `"with"`, added by the Editor and by edit lists: the video shrinking into a card / a tile / half the
+   screen, a look, a glitch, the corner push, a painted room, `word-behind` / `follow-tap`) - never add those again by
+   hand. Effects alone: swipe = `effect swipe [look=pop]`, dot-reveal = `effect dot-reveal`, rabbit-hole = `effect
+   rabbit-hole`, `effect glitch`, `effect corner-push`, `effect pastel-room` / `paper-room` (`for N` = its length,
+   key=value = its options). Not built: her named looks (glitter-spotlight, the bento graph, the toggles above the
+   head) - say so instead of faking one. Her rules hold here
    too: 1.5-4 s each, never over the face, zoom at most 2x (ours: small, eased - the user, 2026-10-27: "maybe u zoom in
    too much"), and she is honest that they are starter versions: the user's sound design and timing finish them.
    **Where cards fit** (learned on the user's own takes, 2026-10-27 - projects\zz_vibha_demo 16:9, zz_vibha_vertical

@@ -1,0 +1,23 @@
+{
+ "name": "red-collage",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((6 + 4 * i) * fps / 30)",
+   "repeat": "min(parts(lines), 4)",
+   "kind": "thump",
+   "db": -6,
+   "what": "a line slams in"
+  },
+  {
+   "f": "frames - round(9 * fps / 30)",
+   "kind": "whip",
+   "dur": "0.2",
+   "db": -10,
+   "what": "the lines slide out"
+  }
+ ]
+}

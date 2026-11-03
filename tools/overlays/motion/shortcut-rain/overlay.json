@@ -1,0 +1,34 @@
+{
+ "name": "shortcut-rain",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.7",
+   "from": 2600,
+   "to": 700,
+   "db": -12,
+   "what": "the keys start to fall"
+  },
+  {
+   "f": "start + round((34 + i * max(10, frames * 30 / fps - 68) / min(count, 14)) * fps / 30)",
+   "repeat": "min(count, 14)",
+   "kind": "key",
+   "db": -6,
+   "what": "a key lands"
+  },
+  {
+   "f": "frames - round(12 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 1400,
+   "to": 300,
+   "db": -10,
+   "what": "the pile drops away"
+  }
+ ]
+}

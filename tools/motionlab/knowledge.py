@@ -1301,10 +1301,21 @@ def memory_rules() -> str:
     Generate brief and an edit by feel carry instead of the whole memory (`knowledge.py memory --rules`, MCP
     knowledge("memory:rules")). memory.md stays the whole memory; a 1:1 copy of a reference still reads it."""
     M = memory()
+    fl = _findings_lines()                                 # 2026-11-02 (R3): what the user's own posts taught
     if not M["rating_rules"]:
-        return "No rated videos yet: no rules from the user's ratings."
+        return "\n".join(["No rated videos yet: no rules from the user's ratings.", ""] + fl).rstrip()
     return "\n".join([f"## Your ratings -> rules for every new video ({M['ratings']['videos']} rated video(s); "
-                      "a part rated bad once stays a default)", ""] + M["rating_rules"])
+                      "a part rated bad once stays a default)", ""] + M["rating_rules"] + ([""] + fl if fl else [])).rstrip()
+
+
+def _findings_lines() -> list[str]:
+    """The lessons from the user's own posts that are likely or settled today (motionlab\\findings.py); never breaks
+    the memory."""
+    try:
+        from . import findings as FD
+        return FD.memory_lines()
+    except Exception:                                      # noqa: BLE001 - a broken store leaves the block out
+        return []
 
 
 def memory_index(write: bool = True, styles: bool = False) -> str:
@@ -1331,6 +1342,7 @@ def memory_index(write: bool = True, styles: bool = False) -> str:
     if M["rating_rules"]:
         L += [f"## Your ratings -> rules for every new video ({M['ratings']['videos']} rated video(s); "
               "a part rated bad once stays a default)", ""] + M["rating_rules"] + [""]
+    L += _findings_lines()                                 # 2026-11-02 (R3): what the user's own posts taught
     L += ["## Videos (styles)", ""]
     for v in M["videos"]:
         p, ln = v["pacing"], v["lines"]

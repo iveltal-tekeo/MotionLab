@@ -77,6 +77,8 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
         return "keep", "text sets"
     if p[0] == "analysis" and len(p) >= 4 and p[1] == "notes":       # 2026-10-27: notes from a video
         return "keep", "notes"
+    if p[0] == "analysis" and len(p) >= 4 and p[1] == "spark":       # 2026-10-30: SPARK, why a video worked
+        return "keep", "SPARK"
     if p[0] == "analysis" and len(p) >= 3:
         if p[1].startswith("synthetic_"):
             return "cache", "self-test"
@@ -108,7 +110,7 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
 
 def unit_of(rel: Path) -> str:
     p = rel.parts
-    if p[0] == "analysis" and len(p) >= 4 and p[1] in ("thumbs", "templates", "texts", "notes"):   # one unit per set
+    if p[0] == "analysis" and len(p) >= 4 and p[1] in ("thumbs", "templates", "texts", "notes", "spark"):   # one unit each
         return f"analysis\\{p[1]}\\{p[2]}"
     if p[0] in ("analysis", "projects") and len(p) >= 3:
         return f"{p[0]}\\{p[1]}"

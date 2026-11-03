@@ -1,0 +1,33 @@
+{
+ "name": "timeline",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 2400,
+   "db": -9,
+   "what": "the title slides in and the timeline rises"
+  },
+  {
+   "f": "round(0.1 * fps)",
+   "kind": "shutter",
+   "db": -6,
+   "what": "REC starts"
+  },
+  {
+   "f": "frames - round(8 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.25",
+   "from": 2200,
+   "to": 600,
+   "db": -9,
+   "what": "the timeline sinks away"
+  }
+ ]
+}

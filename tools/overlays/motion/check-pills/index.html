@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "pills", "type": "string", "label": "The pills the cursor clicks, one after another (split with |, up to 6)", "default": "Hook|Script|Edit|Post"},
+  {"id": "reel1_media", "type": "string", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel6_media", "type": "string", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "handle", "type": "string", "label": "Title of the left board", "default": "@yourhandle"},
+  {"id": "board", "type": "string", "label": "Title of the right board", "default": "Saved reels"},
+  {"id": "pill", "type": "color", "label": "Pill colour", "default": "#0A84FF"},
+  {"id": "gap", "type": "number", "label": "Frames between clicks", "default": 9, "min": 4, "max": 30, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint the grid-paper room and a stand-in for you (a preview; off over your video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent: the avatars)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "check-pills" (2026-10-28): two boards of the user's reels pinned on the wall behind the
+     head, and a cursor that clicks blue pills one after another in front of the person. The room turns to grid
+     paper (template.json "with": the renderer's room_paint); the Editor puts this graphic behind the head and in
+     front below the chin (in_shot behind "top") and moves it with the camera. The boards pop onto the wall (f0 and
+     f3, from 0.6 with an overshoot, 10 f) and float a little; each pill pops in (from f5, then every "gap" frames,
+     7 f, an overshoot) as the cursor glides to it (7 f, S-curve), the cursor presses (f+6: it dips, a ripple), the
+     pill squashes, widens and its tick draws. After the last click the cursor slides away; the pills bob out of step;
+     the last 9 frames the pills shrink away one after another and the boards fade and sink. Look-aware,
+     size-independent (a wide frame gets its own places). MotionLab's own code after a design in an MIT-licensed
+     effects pack. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .pl { white-space: nowrap; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="wall" class="abs"></div>
+  <div id="you" class="abs"></div>
+  <div id="front" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                                 // accelerating (exits only)
+  const backOut = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };   // slow end, an overshoot
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const mk = (parent, css) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, css || {}); if (parent) parent.appendChild(e); return e; };
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const LAND = W > H;
+  const BODY = `'${V.body_font}', 'Segoe UI', sans-serif`;
+  const PAPER = "#EEF1F5", LINES = "#DBDFE5";                          // her grid paper (= template.json room_paint)
+
+  // ---- a reel tile (the same in reel-phone-fan, place-in-grid and check-pills): the user's cover or clip, else a
+  //      placeholder that reads as a real reel (its own colour gradient, a light, a short bold caption); always a dark
+  //      fade at its foot, a play icon with the view count, and a thin light rim
+  const PAL = [["#FF8A5B", "#6B2A86"], ["#2BC0A4", "#0F3A5C"], ["#F6C445", "#D9482B"], ["#6F8FFF", "#1C1E5C"],
+    ["#F48FB1", "#7E3160"], ["#9BD27A", "#21503A"], ["#B9A2FF", "#40307A"], ["#8A8A96", "#16161B"]];
+  const CAPS = ["day 12 of 30", "my desk setup", "3 quick tips", "before / after", "watch till the end", "how I edit", "it worked!", "POV: monday"];
+  const PLAY = `<svg viewBox="0 0 24 24" width="100%" height="100%" style="display:block"><path d="M7.5 4.6 L19.2 12 L7.5 19.4 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/></svg>`;
+  function reel(box, k, w, h, src, slot, views, o) {
+    o = o || {};
+    const S = Math.min(w, h), R = o.r !== undefined ? o.r : 0.0625 * S;
+    Object.assign(box.style, { overflow: "hidden", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px` });
+    const cov = mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` });
+    if (src && window.MLLook) MLLook.media(cov, src, { look: L, kind: "image", fit: "cover", seed: k + 1, label: "", slot, r: 0, start: 0, duration: FRAMES / FPS });
+    else {
+      const [c1, c2] = PAL[k % PAL.length], r = rnd(31 + 7 * k);
+      const ang = Math.round(140 + r() * 80), bx = Math.round(22 + r() * 56), by = Math.round(14 + r() * 30);
+      cov.style.background = `radial-gradient(circle at ${bx}% ${by}%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 50%), ` +
+        `radial-gradient(ellipse at 50% 112%, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 62%), linear-gradient(${ang}deg, ${c1} 0%, ${c2} 100%)`;
+      const cap = mk(cov, { left: `${0.09 * w}px`, width: `${0.82 * w}px`, top: `${0.3 * h - 0.06 * S}px`, textAlign: "center", color: "#FFFFFF",
+        fontFamily: BODY, fontWeight: String(fw(V.body_font, 800)), fontSize: `${0.118 * S}px`, lineHeight: "1.06", letterSpacing: "-0.01em",
+        textShadow: `0 ${0.012 * S}px ${0.04 * S}px rgba(0, 0, 0, 0.45)` });
+      cap.textContent = CAPS[k % CAPS.length];
+    }
+    mk(box, { left: "0px", top: `${h - 0.46 * S}px`, width: `${w}px`, height: `${0.46 * S}px`,
+      background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.58) 100%)" });
+    const cnt = mk(box, { left: `${0.07 * S}px`, top: `${h - 0.075 * S - 0.11 * S}px`, height: `${0.11 * S}px`,
+      display: "flex", alignItems: "center", gap: `${0.028 * S}px`, whiteSpace: "nowrap", transformOrigin: "0% 100%" });
+    const ic = document.createElement("div"); cnt.appendChild(ic);
+    Object.assign(ic.style, { width: `${0.09 * S}px`, height: `${0.09 * S}px`, flex: "0 0 auto" });
+    ic.innerHTML = PLAY;
+    const tx = document.createElement("span"); cnt.appendChild(tx);
+    Object.assign(tx.style, { color: "#FFFFFF", fontFamily: BODY, fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.094 * S}px`,
+      lineHeight: "1", textShadow: `0 ${0.01 * S}px ${0.03 * S}px rgba(0, 0, 0, 0.5)` });
+    tx.textContent = views || "";
+    mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px`,
+      border: `${Math.max(1, 1.5 * U)}px solid rgba(255, 255, 255, ${o.rim !== undefined ? o.rim : 0.4})` });
+    return { cnt, tx };
+  }
+  // a stand-in person for the preview only (background on): a head and shoulders where a talking head's usually is
+  function standin(parent) {
+    const fx = 0.5 * W, fy = (LAND ? 0.4 : 0.333) * H, f = (LAND ? 0.11 : 0.26) * W, sy = fy + 1.02 * f, sw = 1.7 * f, nk = 0.25 * f;
+    const el = mk(parent, { left: "0px", top: "0px", width: `${W}px`, height: `${H}px`, overflow: "hidden" });
+    el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">` +
+      `<path d="M${fx - sw} ${H} L${fx - sw} ${sy + 0.55 * f} C${fx - sw} ${sy + 0.08 * f} ${fx - 0.9 * f} ${sy - 0.06 * f} ${fx - nk} ${sy - 0.14 * f} L${fx - nk} ${fy + 0.45 * f} ` +
+      `L${fx + nk} ${fy + 0.45 * f} L${fx + nk} ${sy - 0.14 * f} C${fx + 0.9 * f} ${sy - 0.06 * f} ${fx + sw} ${sy + 0.08 * f} ${fx + sw} ${sy + 0.55 * f} L${fx + sw} ${H} Z" fill="#24323C"/>` +
+      `<ellipse cx="${fx}" cy="${fy - 0.13 * f}" rx="${0.55 * f}" ry="${0.64 * f}" fill="#2A201B"/>` +
+      `<ellipse cx="${fx}" cy="${fy + 0.02 * f}" rx="${0.45 * f}" ry="${0.58 * f}" fill="#C8977A"/></svg>`;
+    return el;
+  }
+
+  // ---- the preview (background on): the grid-paper room and a stand-in (over a video the renderer paints the room)
+  ["bgfill", "wall", "you", "front"].forEach(id => Object.assign(q(id).style, { width: `${W}px`, height: `${H}px` }));
+  if (V.background) {
+    const st = Math.max(20, Math.round(W / 20)), lw = Math.max(1, Math.round(W / 700));
+    Object.assign(q("bgfill").style, { backgroundColor: PAPER, backgroundImage: `linear-gradient(180deg, ${LINES} 0px, ${LINES} ${lw}px, rgba(0, 0, 0, 0) ${lw}px), ` +
+      `linear-gradient(90deg, ${LINES} 0px, ${LINES} ${lw}px, rgba(0, 0, 0, 0) ${lw}px)`, backgroundSize: `${st}px ${st}px` });
+    standin(q("you"));
+  }
+
+  // ---- the two boards on the wall behind the head: a white card, an avatar and a title, a 3 x 2 grid of reels
+  const wall = q("wall"), front = q("front");
+  const BW = (LAND ? 400 : 475) * U, BP = 0.05 * BW, BHD = 0.15 * BW, BG = 0.022 * BW;
+  const CW = (BW - 2 * BP - 2 * BG) / 3, CH = CW * 4 / 3, BH = BP + BHD + 2 * CH + BG + BP;
+  const SPOT_B = LAND ? [[0.35, 0.29, -7], [0.65, 0.28, 7]] : [[0.25, 0.255, -8], [0.755, 0.245, 8]];
+  const VB = ["1.2M", "486K", "2.7M", "158K", "904K", "3.3M", "621K", "75K", "5.8M", "2.1M", "347K", "1.9M"];
+  const titles = [String(V.handle || ""), String(V.board || "")];
+  const B = SPOT_B.map(([sx, sy, rot], b) => {
+    const el = mk(wall, { left: "0px", top: "0px", width: `${BW}px`, height: `${BH}px`, borderRadius: `${0.06 * BW}px`, background: "#FFFFFF",
+      boxShadow: `0 ${10 * U}px ${30 * U}px rgba(20, 24, 32, 0.18), 0 ${2 * U}px ${5 * U}px rgba(20, 24, 32, 0.08)`, opacity: "0", transformOrigin: "50% 50%" });
+    const av = 0.1 * BW;
+    mk(el, { left: `${BP}px`, top: `${BP + (BHD - av) / 2 - 0.01 * BW}px`, width: `${av}px`, height: `${av}px`, borderRadius: `${av / 2}px`,
+      background: b ? `linear-gradient(150deg, ${L.mustard} 0%, ${L.signal} 100%)` : `linear-gradient(150deg, #FFB49C 0%, ${L.signal} 100%)` });
+    const ti = mk(el, { left: `${BP + av + 0.035 * BW}px`, top: `${BP - 0.01 * BW}px`, height: `${BHD}px`, width: `${BW - 2 * BP - av - 0.035 * BW - 0.1 * BW}px`,
+      display: "flex", alignItems: "center", whiteSpace: "nowrap", overflow: "hidden", color: "#16161A", fontFamily: BODY,
+      fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.056 * BW}px` });
+    ti.textContent = titles[b];
+    const dots = mk(el, { left: `${BW - BP - 0.08 * BW}px`, top: `${BP - 0.01 * BW}px`, width: `${0.08 * BW}px`, height: `${BHD}px`,
+      display: "flex", alignItems: "center", justifyContent: "flex-end", gap: `${0.012 * BW}px` });
+    for (let i = 0; i < 3; i++) mk(dots, { position: "relative", width: `${0.014 * BW}px`, height: `${0.014 * BW}px`, borderRadius: "50%", background: "#9A9CA6" });
+    for (let j = 0; j < 6; j++) {
+      const box = mk(el, { left: `${BP + (j % 3) * (CW + BG)}px`, top: `${BP + BHD + Math.floor(j / 3) * (CH + BG)}px` });
+      const n = (b * 3 + j) % 6, slot = `reel${n + 1}_media`;
+      reel(box, b * 6 + j, CW, CH, V[slot], slot, VB[b * 6 + j], { rim: 0.25 });
+    }
+    return { el, x: sx * W, y: sy * H, rot };
+  });
+
+  // ---- the pills (in front, below the chin) and the cursor
+  const pills = String(V.pills || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 6);
+  const PH = (LAND ? 78 : 90) * U, PAD = 0.32 * PH, TK = 0.4 * PH, TG = 0.14 * PH;
+  const SPOT_P = LAND ? [[0.33, 0.69], [0.66, 0.675], [0.43, 0.79], [0.73, 0.80], [0.29, 0.885], [0.58, 0.895]]
+    : [[0.28, 0.65], [0.70, 0.646], [0.47, 0.708], [0.74, 0.716], [0.27, 0.758], [0.60, 0.766]];
+  const XMAX = LAND ? 0.96 * W : 0.86 * W, XMIN = 0.04 * W;            // right of 0.86 = the apps' buttons on an upright video
+  const P = pills.map((txt, i) => {
+    const el = mk(front, { left: "0px", top: "0px", height: `${PH}px`, borderRadius: `${PH / 2}px`, background: V.pill, overflow: "hidden", opacity: "0",
+      transformOrigin: "50% 50%", boxShadow: `0 ${6 * U}px ${16 * U}px rgba(10, 30, 70, 0.28), inset 0 ${1.5 * U}px 0 rgba(255, 255, 255, 0.28)` });
+    el.className = "pl";
+    const sp = mk(el, { left: `${PAD}px`, top: "0px", height: `${PH}px`, lineHeight: `${PH}px`, color: "#FFFFFF", fontFamily: BODY,
+      fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.42 * PH}px` });
+    sp.textContent = txt;
+    const tk = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    tk.setAttribute("viewBox", "0 0 24 24"); tk.setAttribute("width", TK); tk.setAttribute("height", TK);
+    Object.assign(tk.style, { position: "absolute", top: `${(PH - TK) / 2}px`, overflow: "visible" });
+    tk.innerHTML = `<path d="M4.5 12.6 L9.6 17.6 L19.5 6.8" pathLength="1" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1" stroke-dashoffset="1"/>`;
+    el.appendChild(tk);
+    return { el, sp, tk, path: tk.firstChild, x: SPOT_P[i][0] * W, y: SPOT_P[i][1] * H, w0: PH * 2, w1: PH * 2.6 };
+  });
+  const ripple = mk(front, { left: "0px", top: "0px", width: `${2 * PH}px`, height: `${2 * PH}px`, borderRadius: "50%",
+    border: `${Math.max(2, 3 * U)}px solid rgba(255, 255, 255, 0.9)`, opacity: "0" });
+  const CUR = (LAND ? 52 : 60) * U;
+  const cur = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  cur.setAttribute("viewBox", "0 0 24 30"); cur.setAttribute("width", CUR * 0.8); cur.setAttribute("height", CUR);
+  Object.assign(cur.style, { position: "absolute", left: "0px", top: "0px", overflow: "visible", opacity: "0", transformOrigin: "0px 0px",
+    filter: `drop-shadow(0 ${3 * U}px ${4 * U}px rgba(0, 0, 0, 0.35))` });
+  cur.innerHTML = `<path d="M3 2.5 L3 22.5 L8.2 17.8 L11.6 25.8 L15.2 24.3 L11.8 16.5 L18.6 16.5 Z" fill="#FFFFFF" stroke="#111114" stroke-width="1.6" stroke-linejoin="round"/>`;
+  front.appendChild(cur);
+  const TIPX = 3 / 24 * CUR * 0.8, TIPY = 2.5 / 30 * CUR;                // the arrow's tip inside its svg
+
+  // ---- the motion (g = frames at 30 fps from the graphic's start; the room paint starts with it)
+  const EN = FRAMES * 30 / FPS, LASTG = EN - 30 / FPS;
+  const GAP = Math.max(4, Number(V.gap) || 9), n = P.length;
+  const POP = i => 5 + i * GAP, CLK = i => POP(i) + 6, LASTC = n ? CLK(n - 1) : 0;
+  const START = [LAND ? 0.95 * W : 0.92 * W, LAND ? 1.02 * H : 0.97 * H];
+  const tip = i => [P[i].x + 0.22 * P[i].w0, P[i].y + 0.16 * PH];        // where the cursor presses: right of the pill's middle
+  function render(t) {
+    const g = t * 30;
+    const xb = eIn((g - (LASTG - 9)) / 9), live = c01((g - 14) / 20);
+    // the boards: pop onto the wall, float a little, fade and sink at the end
+    B.forEach((b, i) => {
+      const b0 = 3 * i, k = backOut((g - b0) / 10, 1.5);
+      const fl = Math.sin(2 * Math.PI * (g - 14) / 90 + i * 1.6) * live;
+      const x = b.x - BW / 2, y = b.y - BH / 2 + 4 * U * fl + 24 * U * xb;
+      b.el.style.opacity = (c01((g - b0 + 0.5) / 2) * (1 - xb)).toFixed(3);
+      b.el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(b.rot + 0.5 * fl).toFixed(3)}deg) scale(${((0.6 + 0.4 * k) * (1 - 0.05 * xb)).toFixed(4)})`;
+    });
+    // the pills: pop in as the cursor comes, squash, widen and tick when it clicks; bob; shrink away at the end
+    P.forEach((p, i) => {
+      const p0 = POP(i), c0 = CLK(i), xp = eIn((g - (LASTG - 9 + 0.8 * i)) / (9 - 0.8 * i));
+      const wv = p.w0 + (p.w1 - p.w0) * eOut((g - c0) / 5);
+      const sq = 1 - 0.08 * Math.sin(Math.PI * c01((g - c0) / 6));
+      const sc = (0.5 + 0.5 * backOut((g - p0) / 7, 1.7)) * sq * (1 - 0.35 * xp);
+      const bob = 2 * U * Math.sin(2 * Math.PI * (g - c0) / 56 + i * 1.3) * c01((g - c0 - 8) / 14);
+      const x = Math.min(XMAX - wv, Math.max(XMIN, p.x - wv / 2));
+      p.el.style.width = `${wv.toFixed(2)}px`;
+      p.el.style.opacity = (c01((g - p0 + 0.5) / 2) * (1 - xp)).toFixed(3);
+      p.el.style.transform = `translate(${x.toFixed(2)}px, ${(p.y - PH / 2 + bob).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+      p.tk.style.left = `${(wv - PAD - TK + 0.04 * PH).toFixed(2)}px`;
+      p.path.setAttribute("stroke-dashoffset", (1 - eOut((g - c0 - 1) / 5)).toFixed(4));
+      p.tk.style.opacity = g >= c0 ? "1" : "0";
+      p.px = x; p.wv = wv;
+    });
+    // the cursor: glides to each pill (7 f, S-curve) as it pops, presses, and slides away after the last click
+    if (!n) { cur.style.opacity = "0"; return; }
+    let cx = START[0], cy = START[1];
+    for (let i = 0; i < n; i++) {
+      const [tx, ty] = tip(i), a = i ? POP(i) - 3 : 1, b = POP(i) + 4, k = eIO((g - a) / (b - a));
+      if (g >= a) { cx = cx + (tx - cx) * k; cy = cy + (ty - cy) * k; }
+    }
+    const away = eIO((g - LASTC - 12) / 14);
+    cx += 0.14 * W * away; cy += 0.06 * H * away;
+    let press = 0;
+    for (let i = 0; i < n; i++) { const d = g - CLK(i); if (d >= -1 && d < 5) press = Math.max(press, d < 1 ? c01(d + 1) : 1 - (d - 1) / 4); }
+    cur.style.opacity = (c01((g - 0.5) / 3) * (1 - away) * (1 - xb)).toFixed(3);
+    cur.style.transform = `translate(${(cx - TIPX).toFixed(2)}px, ${(cy - TIPY).toFixed(2)}px) scale(${(1 - 0.14 * press).toFixed(4)})`;
+    // a ripple from the tip at each click (9 f, slow end)
+    let ri = -1;
+    for (let i = 0; i < n; i++) if (g >= CLK(i) && g < CLK(i) + 9) ri = i;
+    if (ri >= 0) {
+      const d = (g - CLK(ri)) / 9, [tx, ty] = tip(ri), rr = (0.15 + 0.85 * eOut(d)) * PH;
+      ripple.style.opacity = (0.75 * (1 - d)).toFixed(3);
+      ripple.style.transform = `translate(${(tx - PH).toFixed(2)}px, ${(ty - PH).toFixed(2)}px) scale(${(rr / PH).toFixed(4)})`;
+    } else ripple.style.opacity = "0";
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 67 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: each pill is measured with the real font (its width before and after the tick)
+  (document.fonts && document.fonts.load ? Promise.all([700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    const room = (LAND ? 0.34 : 0.62) * W - 2 * PAD - TK - TG;            // a long word is set smaller to keep its pill in the frame
+    P.forEach(p => {
+      let tw = p.sp.offsetWidth;
+      if (tw > room) { p.sp.style.fontSize = `${0.42 * PH * room / tw}px`; tw = room; }
+      p.w0 = tw + 2 * PAD; p.w1 = tw + 2 * PAD + TK + TG;
+    });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

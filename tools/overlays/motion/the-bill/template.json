@@ -1,0 +1,102 @@
+{
+ "name": "The bill",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "A receipt prints out of a slot into the wall beside or above your head: a dark printer drops in, the paper feeds down row by row while each row is typed onto it (title, a small line, dashed rules, the numbered lines, the total), its bottom edge torn; then it jolts and swings from the slot and settles. The Editor puts it behind the person, moves it with the camera and adds a soft shadow.",
+ "use_for": [
+  "talking head",
+  "receipt",
+  "what it cost",
+  "breakdown",
+  "list",
+  "what I did",
+  "recap",
+  "price",
+  "short form"
+ ],
+ "tags": [
+  "receipt",
+  "bill",
+  "printer",
+  "typed",
+  "list",
+  "total",
+  "behind",
+  "in shot",
+  "ui",
+  "talking head"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {
+  "behind": true,
+  "follow": "camera",
+  "shadow": true,
+  "match": true
+ },
+ "motion": "f0-f8 the printer drops 34 px into place with a small settle (fading in over 4 f); from f7 the paper feeds down a row every 5 frames (closer with many lines: all rows within 56 f), each feed 4 f decelerating, and each row is typed onto it over 6 f as it comes out (the rules draw from the left); the printer's light blinks while it prints; after the total (f61 with the default 5 lines) the strip jolts 9 px down (3 f) and swings from the slot, 2.4 degrees damped over ~30 f, then sways 0.35 degrees while it holds; the last 10 f it all rises 30 px and fades (accelerating).",
+ "tracks": [
+  {
+   "name": "printer in",
+   "what": "the printer drops into place",
+   "start_f": 0,
+   "length_f": 8,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "print",
+   "what": "the paper feeds down row by row and each row is typed",
+   "start_f": 4,
+   "length_f": 55,
+   "easing": "decelerating steps (each row 4 f, slow end)"
+  },
+  {
+   "name": "tear",
+   "what": "the strip jolts down and swings from the slot, settling",
+   "start_f": 61,
+   "length_f": 30,
+   "easing": "decelerating (slow end), a damped swing"
+  },
+  {
+   "name": "out",
+   "what": "the printer and the receipt rise and fade",
+   "start_f": 109,
+   "length_f": 10,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "round((56 + min(5 * (parts(lines) + 5), 56)) * fps / 30)",
+ "min_why": "every row has to print and the strip has to settle before it rises away",
+ "core_points": 5,
+ "text_slots": [
+  "title",
+  "subtitle",
+  "lines",
+  "total",
+  "label"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  2,
+  5,
+  9,
+  14,
+  22,
+  32,
+  45,
+  58,
+  62,
+  66,
+  75,
+  90,
+  111,
+  115,
+  119
+ ]
+}

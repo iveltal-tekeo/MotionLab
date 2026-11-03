@@ -8,6 +8,8 @@
              .inputs_hash): a version that changed one graphic's settings renders one graphic; --jobs N at a time
              (default by the CPU: 1-3); plain, or with --final motion blur (--motion-blur, default 5; a graphic
              that hardly moves keeps its plain render, captions are always rendered plain - nothing in them travels)
+             then (0.6.0) each shot's captions off the face ("captions_fit": "chin", motionlab\facefit) and
+             (0.6.1) an edit by segments' cards ("clear_face": true) moved off the faces and the captions
           2. the sound: with --sfx, a plan "sfx": true, or when the plan's audio is already a mix sfx.py made:
              sfx.py plan -> build\\sfx\\<name>_mix.wav becomes the plan's "audio" (made from the same song)
           3. the composite (render_video.py - 0.6.0: its sound mastered to config "master"'s LUFS and true peak;
@@ -217,6 +219,13 @@ def main() -> int:
         if json.dumps(plan, sort_keys=True) != before:
             plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
         lines += [f"captions fit: {x}" for x in fit] or ["captions fit: every shot's captions already clear of the face"]
+    if any(L.get("clear_face") for L in plan.get("layers", [])):     # 0.6.1: an edit by segments' cards off the face
+        from motionlab import facefit as FF
+        before = json.dumps(plan, sort_keys=True)
+        fit = FF.fit_cards(plan, build)
+        if json.dumps(plan, sort_keys=True) != before:
+            plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+        lines += [f"cards fit: {x}" for x in fit] or ["cards fit: every card already clear of the faces"]
     # 2. the sound
     audio = (plan.get("audio") or {}).get("path") or ""
     made_mix = Path(audio).parent.name == "sfx" and Path(audio).stem.endswith(("_mix", "_sfx"))

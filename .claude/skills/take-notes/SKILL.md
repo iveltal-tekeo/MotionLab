@@ -1,7 +1,7 @@
 ---
 name: take-notes
 description: MotionLab - notes from a video (the Analyser's Notes): what it says and shows, written like a professional's notes - a TL;DR, 3-7 key takeaways, the sections (the creator's chapters), the steps of a how-to, what to apply to yourself, the resources it links and a context block to paste into another AI, every point tied to the video's own words with frame + timecode. Use for "/take-notes <name>", "/take-notes pending", "take notes on this video", "notes of", "summarise this video", "toma notas", "resume este vídeo".
-argument-hint: <name> | pending
+argument-hint: <name> | pending | <name> ask <id> | combined <id>
 ---
 
 # /take-notes
@@ -14,6 +14,9 @@ notes themselves.
 - `<name>` → the notes of `analysis\notes\<name>\` (the app prepared them: the words, key frames, chapters).
 - `pending` → `tools\notes.py pending` lists every video waiting; write each one's notes in turn (one at a time, a
   line to the user after each).
+- `<name> ask <id>` → the user asked a question on that video's notes page (*Ask Claude*): answer it - **Questions**
+  at the end, not steps 1-5.
+- `combined <id>` → one question across several videos' notes (Analyser > Notes > *Combine notes*): **Questions**.
 - a link or a file instead → tell the user to add it in the app (Analyser > Notes > *Take notes*), or run
   `.venv\Scripts\python tools\notes.py prepare "<video>" [--url <link>]` yourself for a file already on this PC.
 
@@ -75,3 +78,22 @@ user's own notes).
 In two or three lines: the TL;DR, how many takeaways / sections / steps / actions, and that the notes are in
 Analyser > Notes (the page plays each point's moment; *Download* gives the Markdown, *Copy for another AI* the
 context block). Every time you mention has frame + timecode, e.g. f480 (00:00:16:00).
+
+## Questions (`<name> ask <id>`, `combined <id>`)
+The user's own question on notes already written (2026-10-29: "expand on some topic", "combine the knowledge of the
+videos selected"). Read `tools\notes.py ask <name> <id>` (for `combined`, `<name>` = `_combined`): the question, then
+per video its notes.json, the user's mine.md and its transcript. Read the notes first, then the transcript parts the
+question touches (whole when it asks about the whole video); key frames only when what is shown matters.
+- Answer what was asked, for this user (`knowledge\local\brand.json` when it asks about their own content).
+- Draft `.app\dev\answer_<id>.json`:
+  `{"title": "a few words", "summary": "1-3 sentences", "points": [{"text": "...", "quote": "word for word", "video": "<folder name>"}], "more": "Markdown"}`
+  - `points` (1-8) = what the video(s) SAY about it, each quoted like the notes (or `shown` a frame); `video` = the
+    folder name (one video: leave it out). Across several videos, quote more than one and say where they agree or
+    differ.
+  - `more` = what you add from your own knowledge (a plan, examples, a deeper explanation, what to do first) - kept
+    apart on the page as *Going further*; plain Markdown (headings, lists, **bold**), no frame numbers or timecodes
+    (the tool refuses them: times belong to the points). Leave it out when the videos say it all.
+- `.venv\Scripts\python tools\notes.py answer <name> <id> .app\dev\answer_<id>.json` - the same gate as the notes;
+  fix what it lists and save again. The page shows the answer by itself within seconds.
+- Tell the user in two lines: the answer's gist and that it is under *Ask Claude* on the notes page (or on the
+  combined page); every time you mention has frame + timecode.

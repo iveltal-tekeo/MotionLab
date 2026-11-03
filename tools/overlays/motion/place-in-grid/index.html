@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "reel1_media", "type": "string", "label": "Reel 1 (top left): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2 (top middle): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3 (top right): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4 (middle left): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5 (middle right): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel6_media", "type": "string", "label": "Reel 6 (bottom left): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel7_media", "type": "string", "label": "Reel 7 (bottom middle): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel8_media", "type": "string", "label": "Reel 8 (bottom right): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "views", "type": "string", "label": "View counts: the 8 reels in reading order, then yours in the middle (split with |)", "default": "1.2M|486K|2.7M|158K|904K|3.3M|621K|75K|5.8M"},
+  {"id": "fill", "type": "number", "label": "Glass panel fill (%: more = calmer behind the reels)", "default": 34, "min": 0, "max": 80, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background and a stand-in for you (a preview; off over your video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent: the ring round you)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "place-in-grid" (2026-10-28): the person shrinks into the CENTRE tile of a 3x3 profile
+     grid on a glass panel. The centre tile is a transparent hole: the renderer's "frame" effect (template.json
+     "with") shrinks the video into exactly that rectangle (HOLE_V / HOLE_H below = its opts.to) in 0.4 s on an
+     expo-out (cubic-bezier 0.16, 1, 0.3, 1), and the whole grid - panel, tiles, the hole - is scaled by the same
+     amount about the one point that stays still, so the video and the grid move as one piece (every tile has the
+     frame's own shape: the hole is the frame made small). While it shrinks the 8 reels pop into the tiles around it,
+     one a frame (f2-f9, a small overshoot); then their view counts pop one a frame (f14-f21); a ring in the look's
+     accent lights round you (f23) and your own count pops and counts up (f24-f48). In the hold the ring's glow
+     breathes and a band of light crosses the tiles (f54-f84); in the last 0.4 s the video grows back (S-curve,
+     cubic-bezier 0.33, 0, 0.67, 1) and the grid with it, off the frame. The panel paints only a translucent fill, a
+     rim and a highlight: around the hole the renderer shows a blurred, darker copy of the video. Look-aware,
+     size-independent (a wide or square frame gets its own numbers). MotionLab's own code after a design in an
+     MIT-licensed effects pack. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="grid" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const backOut = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };   // slow end, an overshoot
+  // CSS cubic-bezier(x1, y1, x2, y2), the renderer's own eases (solved for x by halving)
+  const bez = (x1, y1, x2, y2) => x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let lo = 0, hi = 1, u = x;
+    for (let i = 0; i < 40; i++) { const bx = 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u; if (bx < x) lo = u; else hi = u; u = (lo + hi) / 2; }
+    return 3 * (1 - u) * (1 - u) * u * y1 + 3 * (1 - u) * u * u * y2 + u * u * u;
+  };
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const mk = (parent, css) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, css || {}); if (parent) parent.appendChild(e); return e; };
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const LAND = W > H;
+  const BODY = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- THE HOLE: where the renderer's "frame" effect puts the video, as shares of the frame [x, y, w, h] - the same
+  //      numbers as template.json "with" frame opts.to ("v" upright, "h" wide and square); w = h as shares, so the
+  //      hole has the frame's own shape. HOLE_R = its corners as a share of the shorter side ("r").
+  const HOLE_V = [0.38, 0.30, 0.24, 0.24], HOLE_H = [0.365, 0.365, 0.27, 0.27], HOLE_R = 0.015;
+  const IN_S = 0.4, OUT_S = 0.4;                                     // the frame effect's "in" and "out" (seconds)
+  const EIN = bez(0.16, 1, 0.3, 1), EOUT = bez(0.33, 0, 0.67, 1);   // its eases: expo-out in, S-curve out
+  const HS = W >= H ? HOLE_H : HOLE_V, MN = Math.min(W, H);
+  const hx = HS[0] * W, hy = HS[1] * H, tw = HS[2] * W, th = HS[3] * H, SK = HS[2];
+  const RT = HOLE_R * MN, G = 0.015 * MN, PAD = 0.03 * MN, PR = 0.045 * MN, TS = Math.min(tw, th);
+  // the one point the shrink keeps still: the grid scaled by K about it puts the hole exactly where the video is
+  const OX = hx / (1 - SK), OY = hy / (1 - SK);
+  const cell = c => ({ x: hx + (c % 3 - 1) * (tw + G), y: hy + (Math.floor(c / 3) - 1) * (th + G) });
+  const GL = hx - tw - G, GT = hy - th - G, GW = 3 * tw + 2 * G, GH = 3 * th + 2 * G;
+
+  // ---- a reel tile (the same in reel-phone-fan, place-in-grid and check-pills): the user's cover or clip, else a
+  //      placeholder that reads as a real reel (its own colour gradient, a light, a short bold caption); always a dark
+  //      fade at its foot, a play icon with the view count, and a thin light rim
+  const PAL = [["#FF8A5B", "#6B2A86"], ["#2BC0A4", "#0F3A5C"], ["#F6C445", "#D9482B"], ["#6F8FFF", "#1C1E5C"],
+    ["#F48FB1", "#7E3160"], ["#9BD27A", "#21503A"], ["#B9A2FF", "#40307A"], ["#8A8A96", "#16161B"]];
+  const CAPS = ["day 12 of 30", "my desk setup", "3 quick tips", "before / after", "watch till the end", "how I edit", "it worked!", "POV: monday"];
+  const PLAY = `<svg viewBox="0 0 24 24" width="100%" height="100%" style="display:block"><path d="M7.5 4.6 L19.2 12 L7.5 19.4 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/></svg>`;
+  function reel(box, k, w, h, src, slot, views, o) {
+    o = o || {};
+    const S = Math.min(w, h), R = o.r !== undefined ? o.r : 0.0625 * S;
+    Object.assign(box.style, { overflow: "hidden", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px` });
+    const cov = mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` });
+    if (src && window.MLLook) MLLook.media(cov, src, { look: L, kind: "image", fit: "cover", seed: k + 1, label: "", slot, r: 0, start: 0, duration: FRAMES / FPS });
+    else {
+      const [c1, c2] = PAL[k % PAL.length], r = rnd(31 + 7 * k);
+      const ang = Math.round(140 + r() * 80), bx = Math.round(22 + r() * 56), by = Math.round(14 + r() * 30);
+      cov.style.background = `radial-gradient(circle at ${bx}% ${by}%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 50%), ` +
+        `radial-gradient(ellipse at 50% 112%, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 62%), linear-gradient(${ang}deg, ${c1} 0%, ${c2} 100%)`;
+      const cap = mk(cov, { left: `${0.09 * w}px`, width: `${0.82 * w}px`, top: `${0.3 * h - 0.06 * S}px`, textAlign: "center", color: "#FFFFFF",
+        fontFamily: BODY, fontWeight: String(fw(V.body_font, 800)), fontSize: `${0.118 * S}px`, lineHeight: "1.06", letterSpacing: "-0.01em",
+        textShadow: `0 ${0.012 * S}px ${0.04 * S}px rgba(0, 0, 0, 0.45)` });
+      cap.textContent = CAPS[k % CAPS.length];
+    }
+    mk(box, { left: "0px", top: `${h - 0.46 * S}px`, width: `${w}px`, height: `${0.46 * S}px`,
+      background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.58) 100%)" });
+    const cnt = mk(box, { left: `${0.07 * S}px`, top: `${h - (o.bar ? 0.11 : 0.075) * S - 0.11 * S}px`, height: `${0.11 * S}px`,
+      display: "flex", alignItems: "center", gap: `${0.028 * S}px`, whiteSpace: "nowrap", transformOrigin: "0% 100%" });
+    const ic = document.createElement("div"); cnt.appendChild(ic);
+    Object.assign(ic.style, { width: `${0.09 * S}px`, height: `${0.09 * S}px`, flex: "0 0 auto" });
+    ic.innerHTML = PLAY;
+    const tx = document.createElement("span"); cnt.appendChild(tx);
+    Object.assign(tx.style, { color: "#FFFFFF", fontFamily: BODY, fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.094 * S}px`,
+      lineHeight: "1", textShadow: `0 ${0.01 * S}px ${0.03 * S}px rgba(0, 0, 0, 0.5)` });
+    tx.textContent = views || "";
+    mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px`,
+      border: `${Math.max(1, 1.5 * U)}px solid rgba(255, 255, 255, ${o.rim !== undefined ? o.rim : 0.4})` });
+    return { cnt, tx };
+  }
+  // a stand-in person for the preview only (background on): a room in lamp light, a head and shoulders; the face where
+  // a talking head's usually is (upper middle). Never drawn over a video.
+  function standin(parent, room) {
+    const fx = 0.5 * W, fy = (LAND ? 0.4 : 0.333) * H, f = (LAND ? 0.11 : 0.26) * W, sy = fy + 1.02 * f, sw = 1.7 * f, nk = 0.25 * f;
+    const el = mk(parent, { left: "0px", top: "0px", width: `${W}px`, height: `${H}px`, overflow: "hidden" });
+    if (room) el.style.background = `radial-gradient(ellipse ${0.6 * W}px ${0.42 * H}px at ${0.18 * W}px ${0.2 * H}px, rgba(255, 190, 120, 0.55) 0%, rgba(255, 190, 120, 0) 100%), ` +
+      `radial-gradient(ellipse ${0.5 * W}px ${0.3 * H}px at ${0.86 * W}px ${0.55 * H}px, rgba(120, 160, 200, 0.22) 0%, rgba(120, 160, 200, 0) 100%), linear-gradient(180deg, #5B4738 0%, #3B2F27 60%, #2B231E 100%)`;
+    el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">` +
+      `<path d="M${fx - sw} ${H} L${fx - sw} ${sy + 0.55 * f} C${fx - sw} ${sy + 0.08 * f} ${fx - 0.9 * f} ${sy - 0.06 * f} ${fx - nk} ${sy - 0.14 * f} L${fx - nk} ${fy + 0.45 * f} ` +
+      `L${fx + nk} ${fy + 0.45 * f} L${fx + nk} ${sy - 0.14 * f} C${fx + 0.9 * f} ${sy - 0.06 * f} ${fx + sw} ${sy + 0.08 * f} ${fx + sw} ${sy + 0.55 * f} L${fx + sw} ${H} Z" fill="#24323C"/>` +
+      `<ellipse cx="${fx}" cy="${fy - 0.13 * f}" rx="${0.55 * f}" ry="${0.64 * f}" fill="#2A201B"/>` +
+      `<ellipse cx="${fx}" cy="${fy + 0.02 * f}" rx="${0.45 * f}" ry="${0.58 * f}" fill="#C8977A"/></svg>`;
+    return el;
+  }
+
+  // ---- the preview (background on): a dark blurred room around the panel (the renderer's blurred copy over a video)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.7 * W}px ${0.45 * H}px at ${0.25 * W}px ${0.25 * H}px, rgba(190, 140, 90, 0.5) 0%, rgba(190, 140, 90, 0) 100%), ` +
+    `linear-gradient(180deg, #3A2E26 0%, #2A221D 60%, #1E1915 100%)`;
+
+  // ---- the grid layer: everything below is laid out at its final place and scaled by K about (OX, OY)
+  const grid = q("grid");
+  Object.assign(grid.style, { width: `${W}px`, height: `${H}px`, transformOrigin: `${OX}px ${OY}px` });
+  if (V.background) {
+    const st = mk(grid, { left: `${hx}px`, top: `${hy}px`, width: `${tw}px`, height: `${th}px`, overflow: "hidden", borderRadius: `${RT}px` });
+    const inner = standin(st, true);
+    Object.assign(inner.style, { transformOrigin: "0px 0px", transform: `scale(${SK})` });
+  }
+  // the glass panel: a translucent fill round the hole (the hole's own wide shadow, clipped to the panel), a highlight
+  // along its top edge and a light rim; a soft shadow on the blurred room under it
+  const pl = GL - PAD, pt = GT - PAD, pw = GW + 2 * PAD, ph = GH + 2 * PAD;
+  const fill = c01(Number(V.fill) / 100);
+  const panel = mk(grid, { left: `${pl}px`, top: `${pt}px`, width: `${pw}px`, height: `${ph}px`, borderRadius: `${PR}px`, overflow: "hidden",
+    boxShadow: `0 ${18 * U}px ${56 * U}px rgba(0, 0, 0, 0.26)` });
+  mk(panel, { left: "0px", top: "0px", width: `${pw}px`, height: `${PAD + 0.5 * th}px`,
+    background: "linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 100%)" });
+  const cut = mk(panel, { left: `${hx - pl}px`, top: `${hy - pt}px`, width: `${tw}px`, height: `${th}px`, borderRadius: `${RT}px`,
+    boxShadow: `0 0 0 ${Math.ceil(1.2 * Math.max(W, H))}px ${rgba(L.paper, fill.toFixed(3))}` });
+  mk(grid, { left: `${pl}px`, top: `${pt}px`, width: `${pw}px`, height: `${ph}px`, borderRadius: `${PR}px`,
+    border: `${Math.max(1, 1.6 * U)}px solid rgba(255, 255, 255, 0.55)` });
+
+  // ---- the 8 reels in reading order round the hole (cell 4 = you), each with a band of light for the sheen
+  const views = String(V.views || "").split("|").map(x => x.trim());
+  const READ = [0, 1, 2, 3, 5, 6, 7, 8], SLOTS = [1, 5, 7, 3, 2, 8, 6, 0];   // where each reel sits; the order they pop in
+  const BAND = 0.5 * TS;
+  const T = READ.map((c, n) => {
+    const p = cell(c);
+    const wrap = mk(grid, { left: `${p.x}px`, top: `${p.y}px`, width: `${tw}px`, height: `${th}px`, opacity: "0", transformOrigin: "50% 50%" });
+    const box = mk(wrap, { left: "0px", top: "0px" });
+    const slot = `reel${n + 1}_media`;
+    const r = reel(box, n, tw, th, V[slot], slot, views[n] || "", { r: RT });
+    r.cnt.style.opacity = "0";
+    const sh = mk(box, { left: "0px", top: "0px", width: `${tw}px`, height: `${th}px`, opacity: "0", backgroundRepeat: "no-repeat", backgroundSize: `${BAND}px ${th}px`,
+      backgroundImage: "linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.26) 50%, rgba(255, 255, 255, 0) 100%)" });
+    return { c, x: p.x, wrap, cnt: r.cnt, sh };
+  });
+  const byCell = {};
+  T.forEach(t => { byCell[t.c] = t; });
+
+  // ---- you: the ring round the hole, and your own count over the foot of your tile (the hole stays clear above it)
+  const RW = Math.max(3, 0.0045 * MN), RG = 0.004 * MN;
+  const ring = mk(grid, { left: `${hx - RG - RW}px`, top: `${hy - RG - RW}px`, width: `${tw + 2 * (RG + RW)}px`, height: `${th + 2 * (RG + RW)}px`,
+    borderRadius: `${RT + RG + RW}px`, border: `${RW}px solid ${L.signal}`, opacity: "0", transformOrigin: "50% 50%" });
+  const me = mk(grid, { left: `${hx}px`, top: `${hy}px`, width: `${tw}px`, height: `${th}px`, overflow: "hidden", borderRadius: `${RT}px`, opacity: "0" });
+  mk(me, { left: "0px", top: `${th - 0.42 * TS}px`, width: `${tw}px`, height: `${0.42 * TS}px`,
+    background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%)" });
+  const mc = mk(me, { left: `${0.07 * TS}px`, top: `${th - 0.075 * TS - 0.11 * TS}px`, height: `${0.11 * TS}px`, display: "flex", alignItems: "center",
+    gap: `${0.028 * TS}px`, whiteSpace: "nowrap", transformOrigin: "0% 100%" });
+  const mic = document.createElement("div"); mc.appendChild(mic);
+  Object.assign(mic.style, { width: `${0.09 * TS}px`, height: `${0.09 * TS}px`, flex: "0 0 auto" });
+  mic.innerHTML = PLAY;
+  const mtx = document.createElement("span"); mc.appendChild(mtx);
+  Object.assign(mtx.style, { color: "#FFFFFF", fontFamily: BODY, fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.094 * TS}px`, lineHeight: "1",
+    textShadow: `0 ${0.01 * TS}px ${0.03 * TS}px rgba(0, 0, 0, 0.55)` });
+  // your count counts up from 0 (its decimals and its letter kept: 5.8M, 312K, 197,000)
+  const mine = views[8] || "";
+  const mm = /^(\D*)([\d.,]+)(.*)$/.exec(mine);
+  const mval = mm ? parseFloat(mm[2].replace(/,/g, "")) : 0, mdec = mm ? (mm[2].split(".")[1] || "").length : 0, mcom = mm ? mm[2].indexOf(",") >= 0 : false;
+  const shown = k => !mm ? mine : mm[1] + (mcom ? Math.round(mval * k).toLocaleString("en-US") : (mval * k).toFixed(mdec)) + mm[3];
+  mtx.textContent = shown(1);
+
+  // ---- the motion: t in seconds; g = frames at 30 fps from the graphic's start (no "start" setting: the frame effect
+  //      begins with the graphic)
+  const D = FRAMES / FPS;
+  function render(t) {
+    const g = t * 30;
+    const tout = (t - (D - OUT_S)) / OUT_S;
+    const p = Math.min(EIN(t / IN_S), 1 - EOUT(tout));               // 0 = the full frame, 1 = you in the tile
+    const K = (1 - p * (1 - SK)) / SK;
+    grid.style.transform = `scale(${K.toFixed(5)})`;
+    cut.style.borderRadius = `${(RT * p / K).toFixed(3)}px`;         // the hole's corners grow as the video's do
+    // the 8 reels pop in one a frame while you shrink (f2-f9), their counts one a frame after (f14-f21)
+    SLOTS.forEach((c, j) => {
+      const tt = byCell[c], t0 = 2 + j, c0 = 14 + j;
+      tt.wrap.style.opacity = c01((g - t0 + 0.5) / 2).toFixed(3);
+      tt.wrap.style.transform = `scale(${(0.82 + 0.18 * backOut((g - t0) / 7, 1.6)).toFixed(4)})`;
+      tt.cnt.style.opacity = c01((g - c0 + 0.5) / 2).toFixed(3);
+      tt.cnt.style.transform = `scale(${(0.5 + 0.5 * backOut((g - c0) / 6, 1.8)).toFixed(4)})`;
+    });
+    // the ring lights round you, your count pops and counts up; both fade as you grow back
+    const gone = 1 - c01(tout * 3);
+    const live = c01((g - 30) / 15);
+    ring.style.opacity = (c01((g - 22.5) / 3) * gone).toFixed(3);
+    ring.style.transform = `scale(${(1.06 - 0.06 * eOut((g - 23) / 8)).toFixed(4)})`;
+    const ga = 0.38 + 0.2 * Math.sin(2 * Math.PI * (g - 30) / 40) * live;
+    ring.style.boxShadow = `0 0 ${(18 * U).toFixed(1)}px ${rgba(L.signal, ga.toFixed(3))}, inset 0 0 ${(10 * U).toFixed(1)}px ${rgba(L.signal, (0.5 * ga).toFixed(3))}`;
+    me.style.opacity = (c01((g - 23.5) / 2) * gone).toFixed(3);
+    mc.style.transform = `scale(${(0.5 + 0.5 * backOut((g - 24) / 6, 1.8)).toFixed(4)})`;
+    mtx.textContent = shown(eOut((g - 24) / 24));
+    // a band of light crosses the tiles once in the hold (S-curve), never over you
+    const sp = eIO((g - 54) / 30), bx = GL - BAND + (GW + BAND) * sp;
+    T.forEach(tt => {
+      tt.sh.style.opacity = sp > 0 && sp < 1 ? "1" : "0";
+      tt.sh.style.backgroundPosition = `${(bx - tt.x).toFixed(2)}px 0px`;   // the band moves inside the tile (no box outside it)
+    });
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  (document.fonts && document.fonts.load ? Promise.all([700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

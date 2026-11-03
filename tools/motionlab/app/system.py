@@ -67,6 +67,7 @@ TASKS = {
     "title": ("high", "MotionLab title", False),       # /write-title: titles, thumbnails, the package of a video (0.4.3)
     "plan": ("medium", "MotionLab next steps", False), # /whats-next: where the lab stands, options, a recommendation
     "notes": ("medium", "MotionLab notes", True),      # /take-notes: a video's words and key frames -> notes (2026-10-27)
+    "spark": ("high", "MotionLab SPARK", True),        # /spark: why a video worked - pictures, words, numbers (2026-10-30)
 }
 # on Fable one level less is enough: Anthropic's guidance puts Fable at "high" where Opus needed "xhigh"
 FABLE_EFFORT = {"xhigh": "high", "max": "xhigh"}

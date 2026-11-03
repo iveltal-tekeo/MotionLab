@@ -1,0 +1,124 @@
+{
+ "name": "Red collage",
+ "kind": "text",
+ "category": "Text",
+ "what": "Three bold lines slam in under your chin - white, red, white - with a small tag and a blinking red dot above them, off your face. It comes with the whole look: the picture turns black and white and a giant red word stands behind you (the word-behind graphic).",
+ "use_for": [
+  "talking head",
+  "hook",
+  "claim",
+  "three points",
+  "manifesto",
+  "bold statement",
+  "intro",
+  "short form"
+ ],
+ "tags": [
+  "text",
+  "bold",
+  "slam",
+  "red",
+  "black and white",
+  "editorial",
+  "collage",
+  "in shot",
+  "talking head",
+  "3 core points"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "with": [
+  {
+   "effect": "grade",
+   "opts": {
+    "look": "bw"
+   }
+  },
+  {
+   "graphic": "word-behind",
+   "values": {
+    "text": "{word}",
+    "word_colour": "signal",
+    "signal": "#E0201B",
+    "display_font": "Inter",
+    "glow": true,
+    "dim": 35,
+    "y": 18
+   }
+  }
+ ],
+ "motion": "the tag fades in over f0-f4, its red dot blinking every 6 f; from f2 a line slams in every 4 frames: from 145 % to its size in 5 f (slow end), fading in over 3 f and sharpening from a 7 px blur over 4 f; as each lands the block jolts 3.5 px, dying over 6 f; the block drifts 2.5 % larger while it holds (S-curve); the last 9 f the lines slide 70 px left and fade one a frame apart, the tag with them (accelerating).",
+ "tracks": [
+  {
+   "name": "line 1",
+   "what": "the first line slams in",
+   "start_f": 2,
+   "length_f": 5,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "line 2",
+   "what": "the red line slams in",
+   "start_f": 6,
+   "length_f": 5,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "line 3",
+   "what": "the third line slams in",
+   "start_f": 10,
+   "length_f": 5,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "push",
+   "what": "the block drifts slowly larger",
+   "start_f": 15,
+   "length_f": 96,
+   "easing": "S-curve"
+  },
+  {
+   "name": "out",
+   "what": "the lines slide out one after another",
+   "start_f": 111,
+   "length_f": 8,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "round((54 + 5 * min(parts(lines), 4)) * fps / 30)",
+ "min_why": "every line slams in and is read before they slide out",
+ "core_points": 3,
+ "text_slots": [
+  "lines",
+  "tag",
+  "word"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 70,
+ "check_frames": [
+  0,
+  2,
+  4,
+  6,
+  8,
+  10,
+  12,
+  15,
+  18,
+  40,
+  70,
+  100,
+  111,
+  114,
+  117,
+  119
+ ]
+}

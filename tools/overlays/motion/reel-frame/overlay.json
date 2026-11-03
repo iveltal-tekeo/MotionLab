@@ -1,0 +1,41 @@
+{
+ "name": "reel-frame",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 2400,
+   "to": 500,
+   "db": -8,
+   "what": "the video shrinks into the reel card"
+  },
+  {
+   "f": "round(8 * fps / 30)",
+   "kind": "pop",
+   "db": -10,
+   "what": "the reel's buttons pop in"
+  },
+  {
+   "f": "round(40 * fps / 30)",
+   "kind": "pop",
+   "db": -7,
+   "seed": 2,
+   "if": "frames > round(52 * fps / 30)",
+   "what": "the heart is liked"
+  },
+  {
+   "f": "frames - round(0.4 * fps)",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 2400,
+   "db": -8,
+   "what": "the card grows back to the full frame"
+  }
+ ]
+}

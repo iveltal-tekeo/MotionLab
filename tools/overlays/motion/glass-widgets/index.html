@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "number", "type": "string", "label": "Big number on the first widget (counts up; K, M, % kept)", "default": "24"},
+  {"id": "sub", "type": "string", "label": "Lines under the number (| = a new line)", "default": "edits|one take"},
+  {"id": "name", "type": "string", "label": "Name on the profile widget", "default": "Your Name"},
+  {"id": "handle", "type": "string", "label": "Handle under the name", "default": "@yourhandle"},
+  {"id": "pill", "type": "string", "label": "Pill at the bottom (the part after | is highlighted)", "default": "Edited with |MotionLab"},
+  {"id": "look", "type": "enum", "label": "Look", "default": "full", "options": [{"value": "full", "label": "Full (seven widgets round your head)"}, {"value": "simple", "label": "Simple (three widgets)"}]},
+  {"id": "size", "type": "number", "label": "Widget size (1 = normal)", "default": 1, "min": 0.8, "max": 1.15, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#3A2E25"},
+  {"id": "ui_font", "type": "enum", "label": "Widget font", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "glass-widgets" (2026-10-28): frosted glass phone widgets and mini artifacts float round
+     the head - a big number that counts up, a render bar that fills, a profile card, a mini views page whose bars
+     grow, a now-editing player, a calendar day and a 4K ring that closes - with a small glass pill at the bottom
+     ("Edited with MotionLab"). They pop in one after another (one every 2.1 f, 10 f each, slow end with an
+     overshoot), bob gently while they hold (6 px, every 1.8 s, each its own phase) and shrink away together over the
+     last 7 frames. "simple" = three widgets + the pill. Over a video they are glass: the renderer frosts the real
+     footage under each card (template.json "in_shot"), so a card paints only a thin translucent fill, a light rim
+     and a soft highlight at its top edge (the preview background below is the only thing it blurs). Three layouts:
+     upright, square and 16:9, each keeping the head's area clear. After a design in claude-video-effects (MIT);
+     MotionLab's own code. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .wg { position: absolute; left: 0; top: 0; visibility: hidden; }
+  .card { position: absolute; left: 0; top: 0; overflow: hidden; }
+  .card > div, .card > svg { position: absolute; }
+  .tx { white-space: nowrap; line-height: 1; font-synthesis: none; color: #FFFFFF; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="wgs" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                            // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                          // accelerating (exits only)
+  const eBack = x => { x = c01(x) - 1; return 1 + 2.7 * x * x * x + 1.7 * x * x; };                // slow end, an overshoot
+  const S = Math.round(V.start), z = V.size * U;
+  const UI = `'${V.ui_font}', 'Segoe UI', sans-serif`, MONO = `'${V.accent_font}', Consolas, monospace`;
+  const NS = "http://www.w3.org/2000/svg";
+  const WHITE = "#FFFFFF", PEACH = "#FFB092", RED = "#FF453A", GREEN = "#34C759";
+
+  // ---- the preview background (only when painted: over a video the cards are see-through and the renderer frosts the footage)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.42 * W}px ${0.2 * H}px at ${0.16 * W}px ${0.26 * H}px, ${rgba("#FFD9A0", 0.7)}, ${rgba("#FFD9A0", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.3 * W}px ${0.3 * H}px at ${0.5 * W}px ${0.42 * H}px, ${rgba("#2A211B", 0.9)}, ${rgba("#2A211B", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.4 * W}px ${0.22 * H}px at ${0.86 * W}px ${0.58 * H}px, ${rgba("#C98A4B", 0.55)}, ${rgba("#C98A4B", 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.7 * W}px ${0.2 * H}px at ${0.5 * W}px ${0.95 * H}px, ${rgba("#8A5A35", 0.6)}, ${rgba("#8A5A35", 0)} 100%), ${V.bg}`;
+
+  // ---- the layouts: [widget, x, y, w, h] in px at a 1080-px short side; x < 0 = from the right edge.
+  //      Upright (9:16): two columns beside the head, under the top band; square; 16:9: two blocks beside the head.
+  const AR = H / W, MODE = AR >= 1.4 ? "v" : AR > 0.75 ? "sq" : "h";
+  const LAY = {
+    full: {
+      v:  [["stat", 40, 240, 300, 300], ["render", -40, 240, 330, 136], ["profile", -40, 396, 330, 136], ["views", 40, 566, 330, 330],
+           ["now", -40, 552, 330, 210], ["cal", 40, 922, 330, 190], ["ring", -40, 782, 240, 240]],
+      sq: [["stat", 30, 40, 270, 270], ["render", -30, 40, 330, 136], ["profile", -30, 192, 330, 136], ["views", 30, 330, 300, 300],
+           ["now", -30, 344, 330, 210], ["cal", 30, 650, 300, 180], ["ring", -30, 570, 220, 220]],
+      h:  [["stat", 90, 80, 300, 300], ["render", -400, 80, 330, 136], ["profile", -400, 236, 330, 136], ["views", 420, 80, 330, 330],
+           ["now", -400, 392, 330, 210], ["cal", 90, 406, 300, 190], ["ring", -110, 80, 240, 240]]
+    },
+    simple: {
+      v:  [["stat", 40, 240, 330, 330], ["render", -40, 240, 360, 150], ["profile", -40, 410, 360, 150]],
+      sq: [["stat", 30, 40, 300, 300], ["render", -30, 40, 350, 146], ["profile", -30, 206, 350, 146]],
+      h:  [["stat", 110, 90, 330, 330], ["render", -110, 90, 360, 150], ["profile", -110, 260, 360, 150]]
+    }
+  };
+  const lay = (LAY[V.look] || LAY.full)[MODE];
+  const PILL_Y = MODE === "v" ? 0.73 : MODE === "sq" ? 0.9 : 0.88;
+
+  // ---- one glass card: a translucent fill, a 1.5 px light rim, a soft highlight at its top edge (no fake blur)
+  const wgs = q("wgs");
+  const mk = (parent, css, html) => { const e = document.createElement("div"); Object.assign(e.style, css || {}); if (html != null) e.innerHTML = html; parent.appendChild(e); return e; };
+  const txt = (parent, x, y, s, w, col, str, extra) => { const e = mk(parent, Object.assign({ left: `${x * z}px`, top: `${y * z}px`, fontFamily: UI, fontSize: `${s * z}px`,
+    fontWeight: String(fw(V.ui_font, w)), color: col || WHITE }, extra || {})); e.className = "tx"; e.textContent = str; return e; };
+  function glassCard(w, h, r, dark) {
+    const wg = mk(wgs, { width: `${w * z}px`, height: `${h * z}px` }); wg.className = "wg";
+    const c = mk(wg, { width: `${w * z}px`, height: `${h * z}px`, borderRadius: `${r * z}px`,
+      background: dark ? `linear-gradient(180deg, ${rgba("#46464C", 0.42)} 0%, ${rgba("#2E2E34", 0.36)} 100%)`
+        : `linear-gradient(180deg, ${rgba(WHITE, 0.2)} 0%, ${rgba(WHITE, 0.12)} 55%, ${rgba(WHITE, 0.15)} 100%), ${rgba("#1E1A16", 0.14)}`,
+      boxShadow: `inset 0 0 0 ${Math.max(1, 1.5 * U)}px ${rgba(WHITE, 0.3)}, inset 0 ${Math.max(1, 1.5 * U)}px 0 ${rgba(WHITE, 0.55)}` });
+    c.className = "card";
+    if (V.background) { c.style.backdropFilter = c.style.webkitBackdropFilter = `blur(${20 * U}px) saturate(1.2)`;
+      c.style.boxShadow += `, 0 ${10 * U}px ${28 * U}px ${rgba("#000000", 0.22)}`; }
+    mk(c, { left: "0px", top: "0px", width: "100%", height: "42%", background: `linear-gradient(180deg, ${rgba(WHITE, dark ? 0.12 : 0.2)} 0%, ${rgba(WHITE, 0)} 100%)` });
+    return { wg, c };
+  }
+  const shade = { textShadow: `0 ${1 * U}px ${6 * U}px ${rgba("#000000", 0.3)}` };
+
+  // ---- the number: counts up from 0 to the setting, keeping a prefix / suffix (K, M, %, $)
+  const parse = str => {
+    const m = String(str == null ? "" : str).trim().match(/^([^\d.,-]*)(-?\d[\d,]*(?:\.\d+)?|-?\.\d+)(.*)$/);
+    if (!m) return { p: "", v: 0, s: String(str || "").trim(), dec: 0, grp: false };
+    const clean = m[2].replace(/,/g, "");
+    return { p: m[1], v: parseFloat(clean) || 0, s: m[3], dec: clean.includes(".") ? clean.split(".")[1].length : 0, grp: /\d,\d{3}/.test(m[2]) };
+  };
+  const NUM = parse(V.number);
+  const fmt = v => NUM.p + (NUM.grp ? Number(v.toFixed(NUM.dec)).toLocaleString("en-US", { minimumFractionDigits: NUM.dec, maximumFractionDigits: NUM.dec }) : v.toFixed(NUM.dec)) + NUM.s;
+
+  // ---- the widgets (each draws at its own size w x h; inner places in px of a 300-px stat tile etc., times z)
+  const W_ = {};
+  const builders = {
+    stat(w, h) {
+      const g = glassCard(w, h, Math.min(w, h) * 0.2), k = w / 300;
+      mk(g.c, { left: `${30 * k * z}px`, top: `${34 * k * z}px`, width: `${18 * k * z}px`, height: `${18 * k * z}px`, borderRadius: "50%", background: L.signal });
+      txt(g.c, 58 * k, 33 * k, 25 * k, 560, rgba(WHITE, 0.92), "MotionLab", shade);
+      const num = txt(g.c, 24 * k, 58 * k, 132 * k, 800, WHITE, fmt(NUM.v), Object.assign({ letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }, shade));
+      String(V.sub || "").split("|").slice(0, 2).forEach((s, i) => txt(g.c, 30 * k, (206 + 33 * i) * k, 25 * k, 520, rgba(WHITE, 0.9), s.trim(), shade));
+      return Object.assign(g, { num, k });
+    },
+    render(w, h) {
+      const g = glassCard(w, h, h * 0.28), k = h / 136, bw = w - 48 * k;
+      mk(g.c, { left: `${24 * k * z}px`, top: `${30 * k * z}px`, width: `${14 * k * z}px`, height: `${14 * k * z}px`, borderRadius: "50%", background: RED });
+      txt(g.c, 48 * k, 26 * k, 24 * k, 560, rgba(WHITE, 0.95), "Rendering", shade);
+      mk(g.c, { left: `${24 * k * z}px`, top: `${66 * k * z}px`, width: `${bw * z}px`, height: `${11 * k * z}px`, borderRadius: `${6 * k * z}px`, background: rgba(WHITE, 0.27) });
+      const fill = mk(g.c, { left: `${24 * k * z}px`, top: `${66 * k * z}px`, width: `${bw * z}px`, height: `${11 * k * z}px`, borderRadius: `${6 * k * z}px`, background: rgba(WHITE, 0.95), transformOrigin: "0% 50%" });
+      const lab = txt(g.c, 24 * k, 96 * k, 18 * k, 500, rgba(WHITE, 0.84), "4K render · 0%", shade);
+      return Object.assign(g, { fill, lab });
+    },
+    profile(w, h) {
+      const g = glassCard(w, h, h * 0.28), k = h / 136, av = 84 * k;
+      const nm = txt(g.c, 26 * k, 34 * k, 30 * k, 760, WHITE, String(V.name || ""), shade);
+      const hd = txt(g.c, 26 * k, 78 * k, 19 * k, 500, rgba(WHITE, 0.85), String(V.handle || ""), shade);
+      const ring = mk(g.c, { left: `${(w - 24 * k - av) * z}px`, top: `${(h - av) / 2 * z}px`, width: `${av * z}px`, height: `${av * z}px`, borderRadius: "50%",
+        background: `linear-gradient(135deg, ${L.mustard} 0%, ${L.signal} 100%)`, boxShadow: `0 0 0 ${3 * k * z}px ${rgba(WHITE, 0.5)}` });
+      const ini = (String(V.name || "").trim()[0] || "Y").toUpperCase();
+      const it = txt(ring, 0, 0, 38 * k, 800, WHITE, ini, { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "absolute" });
+      it.style.left = "0px"; it.style.top = "0px";
+      return Object.assign(g, { nm, hd, ring, room: w - 24 * k - av - 26 * k - 14 * k });
+    },
+    views(w, h) {
+      const g = glassCard(w, h, 44), k = w / 330;
+      txt(g.c, 22 * k, 20 * k, 14 * k, 700, rgba(WHITE, 0.85), "preview · views.html", { fontFamily: MONO, letterSpacing: "0.02em" });
+      const iw = w - 36 * k, ih = h - 70 * k;
+      const inn = mk(g.c, { left: `${18 * k * z}px`, top: `${52 * k * z}px`, width: `${iw * z}px`, height: `${ih * z}px`, borderRadius: `${20 * k * z}px`, background: "#FAF8F4", overflow: "hidden" });
+      ["#FF5F57", "#FFBD2E", "#28C840"].forEach((c, j) => mk(inn, { position: "absolute", left: `${(14 + 16 * j) * k * z}px`, top: `${14 * k * z}px`, width: `${10 * k * z}px`, height: `${10 * k * z}px`, borderRadius: "50%", background: c }));
+      const t1 = txt(inn, 16 * k, 36 * k, 25 * k, 760, "#18161A", "Top videos"); t1.style.position = "absolute";
+      const t2 = txt(inn, 16 * k, 68 * k, 42 * k, 800, "#C8553D", "197K", { letterSpacing: "-0.03em" }); t2.style.position = "absolute";
+      const vals = [197, 140, 124, 83, 50, 40, 38], bars = [];
+      const gx0 = 16 * k, gx1 = iw - 16 * k, gy1 = ih - 16 * k, bwid = (gx1 - gx0) / 7 * 0.66;
+      vals.forEach((v, j) => bars.push(mk(inn, { position: "absolute", left: `${(gx0 + (gx1 - gx0) * j / 7) * z}px`, top: `${(gy1 - ih * 0.42 * v / 197) * z}px`,
+        width: `${bwid * z}px`, height: `${ih * 0.42 * v / 197 * z}px`, borderRadius: `${5 * k * z}px ${5 * k * z}px ${2 * k * z}px ${2 * k * z}px`,
+        background: j === 0 ? "#F2C46D" : "#C8553D", transformOrigin: "50% 100%" })));
+      return Object.assign(g, { bars });
+    },
+    now(w, h) {
+      const g = glassCard(w, h, 40), k = h / 210, A = 96 * k;
+      const art = mk(g.c, { left: `${20 * k * z}px`, top: `${20 * k * z}px`, width: `${A * z}px`, height: `${A * z}px`, borderRadius: `${16 * k * z}px`,
+        background: "linear-gradient(180deg, #FF966E 0%, #D95A46 100%)" });
+      const star = document.createElementNS(NS, "svg");
+      star.setAttribute("viewBox", "-50 -50 100 100"); Object.assign(star.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%" });
+      star.innerHTML = [0, 1, 2, 3, 4, 5].map(i => { const a = i * Math.PI / 6; return `<line x1="${(-27 * Math.cos(a)).toFixed(2)}" y1="${(-27 * Math.sin(a)).toFixed(2)}" x2="${(27 * Math.cos(a)).toFixed(2)}" y2="${(27 * Math.sin(a)).toFixed(2)}" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"/>`; }).join("");
+      art.appendChild(star);
+      txt(g.c, 132 * k, 26 * k, 14 * k, 700, rgba(WHITE, 0.8), "NOW EDITING", { fontFamily: MONO, letterSpacing: "0.06em" });
+      txt(g.c, 132 * k, 52 * k, 27 * k, 760, WHITE, "soft UI pops", shade);
+      txt(g.c, 132 * k, 88 * k, 18 * k, 500, rgba(WHITE, 0.8), "sfx · 25.7 s", shade);
+      mk(g.c, { left: `${20 * k * z}px`, top: `${136 * k * z}px`, width: `${(w - 40 * k) * z}px`, height: `${6 * k * z}px`, borderRadius: `${3 * k * z}px`, background: rgba(WHITE, 0.27) });
+      const prog = mk(g.c, { left: `${20 * k * z}px`, top: `${136 * k * z}px`, width: `${(w - 40 * k) * z}px`, height: `${6 * k * z}px`, borderRadius: `${3 * k * z}px`, background: rgba(WHITE, 0.95), transformOrigin: "0% 50%" });
+      const tr = document.createElementNS(NS, "svg");
+      tr.setAttribute("viewBox", `0 0 ${w} 50`);
+      Object.assign(tr.style, { left: "0px", top: `${152 * k * z}px`, width: `${w * z}px`, height: `${50 * k * z}px` });
+      const cx = w / 2, cy = 25;
+      const tri = (x, d) => `<path d="M ${x - d * 9} ${cy - 10} L ${x - d * 9} ${cy + 10} L ${x + d * 7} ${cy} Z" fill="#FFFFFF" fill-opacity="0.88"/>`;
+      tr.innerHTML = `<path d="M ${cx - 11} ${cy - 15} L ${cx - 11} ${cy + 15} L ${cx + 15} ${cy} Z" fill="#FFFFFF"/>` + tri(cx - 82, -1) + tri(cx - 66, -1) + tri(cx + 66, 1) + tri(cx + 82, 1);
+      g.c.appendChild(tr);
+      return Object.assign(g, { star, prog });
+    },
+    cal(w, h) {
+      const g = glassCard(w, h, 40), k = h / 190;
+      txt(g.c, 24 * k, 24 * k, 22 * k, 800, "#FF6B5F", "WED", Object.assign({ letterSpacing: "0.04em" }, shade));
+      txt(g.c, 24 * k, 50 * k, 56 * k, 800, WHITE, "21", shade);
+      const pill = mk(g.c, { left: `${20 * k * z}px`, top: `${118 * k * z}px`, width: `${(w - 40 * k) * z}px`, height: `${50 * k * z}px`, borderRadius: `${12 * k * z}px`,
+        background: rgba("#FF5C52", 0.85), transformOrigin: "0% 50%" });
+      const pt = txt(pill, 16 * k, 14 * k, 20 * k, 760, WHITE, "Post 2 videos · tonight"); pt.style.position = "absolute";
+      return Object.assign(g, { ev: pill, pt, room: w - 72 * k });
+    },
+    ring(w, h) {
+      const g = glassCard(w, h, 56), k = w / 240, R = 70, sw = 15;
+      const sv = document.createElementNS(NS, "svg");
+      sv.setAttribute("viewBox", "0 0 240 240");
+      Object.assign(sv.style, { left: "0px", top: "0px", width: `${w * z}px`, height: `${h * z}px` });
+      const C = 2 * Math.PI * R;
+      sv.innerHTML = `<circle cx="120" cy="104" r="${R}" fill="none" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="${sw}"/>` +
+        `<circle id="rgarc" cx="120" cy="104" r="${R}" fill="none" stroke="${GREEN}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" transform="rotate(-90 120 104)"/>`;
+      g.c.appendChild(sv);
+      txt(g.c, 0, 82 * k, 46 * k, 800, WHITE, "4K", Object.assign({ width: `${w * z}px`, textAlign: "center" }, shade));
+      txt(g.c, 0, 196 * k, 18 * k, 500, rgba(WHITE, 0.84), "render", Object.assign({ width: `${w * z}px`, textAlign: "center" }, shade));
+      return Object.assign(g, { arc: sv.querySelector("#rgarc"), C });
+    }
+  };
+  lay.forEach(([id, x, y, w, h]) => {
+    const o = builders[id](w, h);
+    const left = x >= 0 ? x * U : W + x * U - w * z, topY = y * U;
+    // a bigger size grows round the widget's own place: the left column from its left, the right one from its right
+    Object.assign(o, { id, x: left, y: topY, w: w * z, h: h * z, right: x < 0 });
+    o.wg.style.transformOrigin = x >= 0 ? "0% 0%" : "100% 0%";
+    W_[id] = o;
+  });
+  const order = lay.map(l => W_[l[0]]);
+
+  // ---- the pill (in front, under the chin): "Edited with" + the highlighted word
+  const [pre, hi] = String(V.pill || "").includes("|") ? String(V.pill).split("|") : [String(V.pill || ""), ""];
+  const ph = 104 * z;
+  const pg = glassCard(10, 104, 52, true);
+  const p1 = txt(pg.c, 0, 30, 44, 500, WHITE, pre, shade), p2 = txt(pg.c, 0, 30, 44, 760, PEACH, hi, shade);
+  p1.style.whiteSpace = p2.style.whiteSpace = "pre";
+  const psh = mk(pg.c, { left: "0px", top: "0px", width: "100%", height: "100%", opacity: "0" });
+  order.push(Object.assign(pg, { id: "pill", pill: true, x: W / 2, y: H * PILL_Y - ph / 2, w: 0, h: ph }));
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame"; e = frames at 30 fps before the end)
+  const LEN = (FRAMES - S) * 30 / FPS;
+  const leave = V.leave && LEN > 40;
+  let ringC = 0;
+  function render(t) {
+    const d = (t - S / FPS) * 30, e = (FRAMES / FPS - t) * 30;
+    order.forEach((o, i) => {
+      const t0 = 2.1 * i, a = d - t0;
+      o.wg.style.visibility = a >= 0 ? "visible" : "hidden";
+      if (a < 0) return;
+      let sc = 0.6 + 0.4 * eBack(a / 10), op = c01((a + 0.5) / 2.4);
+      const bob = (o.pill ? 2 : 6) * U * Math.sin(2 * Math.PI * (d / 30 * 0.55 + i * 0.17)) * c01(a / 10);
+      if (leave && e < 8 + 0.5 * (order.length - 1 - i)) { const x = eIn(1 - (e - 0.5 * (order.length - 1 - i)) / 8); sc *= 1 - 0.14 * x; op *= 1 - x; }
+      o.wg.style.opacity = op.toFixed(3);
+      const ox = o.pill ? -o.w / 2 : 0;
+      o.wg.style.transform = `translate(${(o.x + ox).toFixed(2)}px, ${(o.y + bob).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    });
+    // inside the widgets
+    const st = W_.stat; if (st) st.num.textContent = fmt(NUM.v * eIO((d - 4) / 18));
+    const rd = W_.render;
+    if (rd) { const p = eIO(d / Math.max(30, LEN * 0.85)); rd.fill.style.transform = `scaleX(${Math.max(0.04, p).toFixed(4)})`; rd.lab.textContent = `4K render · ${Math.round(p * 100)}%`; }
+    const vw = W_.views; if (vw) vw.bars.forEach((b, j) => b.style.transform = `scaleY(${eOut((d - 10.5 - 1.5 * j) / 12).toFixed(4)})`);
+    const nw = W_.now;
+    if (nw) { nw.prog.style.transform = `scaleX(${Math.max(0.02, c01(d / Math.max(30, LEN))).toFixed(4)})`; nw.star.style.transform = `rotate(${(d * 2).toFixed(2)}deg)`; }
+    const cl = W_.cal; if (cl) { const p = eBack((d - 14) / 8); cl.ev.style.transform = `scaleX(${c01(p).toFixed(4)})`; cl.pt.style.opacity = c01((d - 18) / 4).toFixed(3); }
+    const rg = W_.ring; if (rg) rg.arc.setAttribute("stroke-dashoffset", (rg.C * (1 - eIO((d - 12) / 30))).toFixed(2));
+    const pf = W_.profile; if (pf) { const k = d - 4.2 - 6; pf.ring.style.transform = `scale(${(1 + 0.08 * Math.sin(Math.PI * c01(k / 8))).toFixed(4)})`; }
+    // a band of light crosses the pill once (S-curve, 18 f)
+    const sp = eIO((d - 30) / 18), sx = -20 + 140 * sp;
+    psh.style.background = sp > 0 && sp < 1 ? `linear-gradient(105deg, rgba(255,255,255,0) ${(sx - 12).toFixed(1)}%, rgba(255,255,255,0.32) ${sx.toFixed(1)}%, rgba(255,255,255,0) ${(sx + 12).toFixed(1)}%)` : "none";
+    psh.style.opacity = "1";
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the number, the name and the pill are fitted with the real fonts
+  (document.fonts && document.fonts.load ? Promise.all([400, 500, 700, 800].map(w => document.fonts.load(`${w} 100px "${V.ui_font}"`))
+    .concat([document.fonts.load(`700 100px "${V.accent_font}"`), document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    const st = W_.stat;
+    if (st) {                                       // the widest number fits the tile
+      let wn = 0; [NUM.v, NUM.v * 0.88].forEach(v => { st.num.textContent = fmt(v); wn = Math.max(wn, st.num.offsetWidth); });
+      const room = st.w - 48 * st.k * z;
+      if (wn > room) st.num.style.fontSize = `${132 * st.k * z * room / wn}px`;
+    }
+    const pf = W_.profile;
+    if (pf) [pf.nm, pf.hd].forEach(el => { const r = pf.room * z; if (el.offsetWidth > r) el.style.fontSize = `${parseFloat(el.style.fontSize) * r / el.offsetWidth}px`; });
+    const cl = W_.cal;
+    if (cl) { const r = cl.room * z; if (cl.pt.offsetWidth > r) cl.pt.style.fontSize = `${parseFloat(cl.pt.style.fontSize) * r / cl.pt.offsetWidth}px`; }
+    // the pill: as wide as its words, centred, under the chin
+    let fsz = 44 * z;
+    const maxw = Math.min(W * 0.84, 900 * U);
+    let tw = p1.offsetWidth + p2.offsetWidth;
+    if (tw + ph * 0.9 > maxw) { fsz *= (maxw - ph * 0.9) / tw; p1.style.fontSize = p2.style.fontSize = `${fsz}px`; tw = p1.offsetWidth + p2.offsetWidth; }
+    const pw = tw + ph * 0.9;
+    [pg.wg, pg.c].forEach(e => { e.style.width = `${pw}px`; e.style.height = `${ph}px`; });
+    const ty = (ph - p1.offsetHeight) / 2;
+    p1.style.left = `${(pw - tw) / 2}px`; p2.style.left = `${(pw - tw) / 2 + p1.offsetWidth}px`;
+    p1.style.top = p2.style.top = `${ty}px`;
+    Object.assign(pg, { x: W / 2, y: H * PILL_Y - ph / 2, w: pw, h: ph });
+    pg.wg.style.transformOrigin = "50% 50%";
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

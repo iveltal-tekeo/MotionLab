@@ -1,0 +1,41 @@
+{
+ "name": "profile-wall",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.35",
+   "from": 600,
+   "to": 2000,
+   "db": -9,
+   "what": "the panel settles on the wall and the counter rises"
+  },
+  {
+   "f": "start + round((5 + i * 4) * fps / 30)",
+   "repeat": "8",
+   "kind": "tick",
+   "freq": 2100,
+   "db": -10,
+   "seed": "500 + i",
+   "what": "the grid fills tile by tile"
+  },
+  {
+   "f": "start + round(42 * fps / 30)",
+   "kind": "chime",
+   "db": -6,
+   "what": "the number lands"
+  },
+  {
+   "f": "frames - round(10 * fps / 30)",
+   "kind": "air",
+   "dur": "0.3",
+   "db": -7,
+   "if": "leave and (frames - start) * 30 / fps - 10 > 50",
+   "what": "the counter sinks away and the panel fades"
+  }
+ ]
+}

@@ -1,0 +1,106 @@
+{
+ "name": "Headline wall",
+ "kind": "text",
+ "category": "Social",
+ "what": "A wall of your headlines piles up behind your head: cards in white, dark, paper and mustard, each a bold headline with a small line (your name, the views), dropped onto the wall one after another. Then a big total pops in front of you under the chin and counts up, with a label beside it. The Editor puts the cards behind the person and the total in front.",
+ "use_for": [
+  "talking head",
+  "results",
+  "social proof",
+  "views",
+  "my videos",
+  "track record",
+  "portfolio",
+  "creator",
+  "short form"
+ ],
+ "tags": [
+  "headlines",
+  "cards",
+  "wall",
+  "pile",
+  "total",
+  "counter",
+  "behind",
+  "in shot",
+  "talking head",
+  "text"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {
+  "behind": "top",
+  "follow": "camera",
+  "match": true
+ },
+ "motion": "from f1 a card drops onto the wall every 3 frames (closer with more than 9: all within 24 f), each from 55 % and 24 px higher, turning 7 degrees into its own slight tilt (7 f, a small overshoot, fading in over 2 f); the cards sit above the shoulders round the head and drift 2 px out of step while they hold; 8 f after the last card (f30 with 8 headlines) the total pill pops in front under the chin (from 60 %, rising 30 px, 9 f, a small overshoot, tilted -3 degrees) and its number counts up over 20 f (slow end); a light crosses the pill (14 f, S-curve) and it breathes; the last 10 f the cards lift away and the pill sinks, fading (accelerating).",
+ "tracks": [
+  {
+   "name": "cards",
+   "what": "the headline cards drop onto the wall one after another",
+   "start_f": 1,
+   "length_f": 28,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "total in",
+   "what": "the total pill pops in front under the chin",
+   "start_f": 30,
+   "length_f": 9,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "count up",
+   "what": "the total counts up",
+   "start_f": 32,
+   "length_f": 20,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "shine",
+   "what": "a light crosses the pill",
+   "start_f": 56,
+   "length_f": 14,
+   "easing": "S-curve"
+  },
+  {
+   "name": "out",
+   "what": "the cards lift away and the pill sinks",
+   "start_f": 109,
+   "length_f": 10,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "round((62 + min(3 * (parts(headlines) - 1), 24)) * fps / 30)",
+ "min_why": "every card lands and the total counts up and is read before it all leaves",
+ "core_points": 2,
+ "text_slots": [
+  "headlines",
+  "handle",
+  "total",
+  "label"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 80,
+ "check_frames": [
+  0,
+  2,
+  4,
+  8,
+  13,
+  19,
+  25,
+  31,
+  36,
+  44,
+  60,
+  80,
+  110,
+  115,
+  119
+ ]
+}

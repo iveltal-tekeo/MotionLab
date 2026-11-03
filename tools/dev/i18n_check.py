@@ -43,6 +43,34 @@ from pathlib import Path
 LAB = Path(__file__).resolve().parents[2]
 UI = LAB / "tools" / "motionlab" / "app" / "ui"
 APPJS, INDEX, CSS_FILE = UI / "app.js", UI / "index.html", UI / "app.css"
+JS_DIR = UI / "js"                 # the page's code since 2026-11-02 (app.js split; the order = index.html's tags)
+_PAGE: tuple[str, list[tuple[int, str]]] | None = None
+
+
+def page_code() -> tuple[str, list[tuple[int, str]]]:
+    """The page's code as one text, in index.html's order, + where each file starts in it (1-based) - the same text
+    app.js was, so the areas and the function names stay as they were."""
+    global _PAGE
+    if _PAGE is None:
+        names = re.findall(r'<script src="/ui/js/([\w-]+\.js)\?', INDEX.read_text(encoding="utf-8"))
+        if not names:                                   # a copy from before the split
+            _PAGE = (APPJS.read_text(encoding="utf-8"), [(1, "app.js")])
+        else:
+            parts, starts, line = [], [], 1
+            for n in names:
+                t = (JS_DIR / n).read_text(encoding="utf-8")
+                t += "" if t.endswith("\n") else "\n"
+                starts.append((line, "js/" + n))
+                parts.append(t)
+                line += t.count("\n")
+            _PAGE = ("".join(parts), starts)
+    return _PAGE
+
+
+def where(line: int) -> str:
+    """A line of page_code()'s text -> 'js/<file>:<line>'."""
+    start, name = max((s for s in page_code()[1] if s[0] <= line), default=(1, "app.js"))
+    return f"{name}:{line - start + 1}"
 I18N_DIR = UI / "i18n"
 AREAS_FILE = Path(__file__).resolve().with_name("i18n_areas.json")
 REPORT = LAB / "tools" / "motionlab" / "report_html.py"
@@ -53,8 +81,8 @@ PY_FILES = (["tools/motionlab/app/" + f for f in ("server.py", "data.py", "syste
             + ["tools/motionlab/" + f + ".py" for f in ("thumbsets", "usage", "speech", "upstream", "style", "publish",
                                                        "prompts", "knowledge", "styles", "thumbnail", "taxonomy",
                                                        "script", "profile", "logos", "fonts", "colour", "textsets",
-                                                       "editreq", "brand", "agency", "miniedit", "edfx", "edkeys",
-                                                       "edtrans")]
+                                                       "editreq", "brand", "agency", "experiments", "findings", "monthly", "miniedit", "edfx", "edkeys",
+                                                       "edtrans", "reframe")]
             + ["tools/download.py"])
 # the user's other Claude window works on these (2026-10-19): their words wait (never edited from here)
 WAITS = ["tools/motionlab/templates.py", "tools/motionlab/overlay_settings.py", "tools/motionlab/looks.py",
@@ -475,7 +503,8 @@ def code_text(sc: Scan) -> str:
 def js_report(src: str | None = None, file: str = "app.js") -> dict:
     """app.js: the keys it uses, the texts not wrapped yet (per top-level function), plural()'s nouns, the label
     sites, the local t / tn / ta names that would hide the helpers."""
-    src = APPJS.read_text(encoding="utf-8") if src is None else src
+    page = src is None                                   # the page's own code: messages say js/<file>:<line>
+    src = page_code()[0] if page else src
     sc = Scan(src)
     code = code_text(sc)
     calls = js_calls(sc)
@@ -486,7 +515,8 @@ def js_report(src: str | None = None, file: str = "app.js") -> dict:
             continue
         ms, why = lit_messages(L, code)
         for kind, text in ms:
-            msgs.append({"file": file, "line": L["line"], "fn": enclosing(table, L["line"]), "kind": kind,
+            f, ln = where(L["line"]).rsplit(":", 1) if page else (file, L["line"])
+            msgs.append({"file": f, "line": int(ln), "fn": enclosing(table, L["line"]), "kind": kind,
                          "text": text.replace(PH, "{}")})
     # plural(n, 'noun') (and the wrappers that pass a noun on: n(x, 'cut')), the ?: nouns inside its argument
     nouns = collections.defaultdict(list)
@@ -951,7 +981,7 @@ def cmd_check(area: str | None, lang: str) -> int:
     js, ix = G["js"], G["index"]
     used: dict[str, list[str]] = collections.defaultdict(list)
     for k, lines in js["keys"].items():
-        used[k] += [f"app.js:{x}" for x in lines]
+        used[k] += [where(x) for x in lines]
     for k, lines in ix["keys"].items():
         used[k] += [f"index.html:{x}" for x in lines]
     for rel, r in G["py"].items():
@@ -1018,14 +1048,14 @@ def cmd_check(area: str | None, lang: str) -> int:
             continue
         f = nouns.get(w)
         if not (isinstance(f, list) and len(f) == 2 and all(isinstance(x, str) and x for x in f)):
-            errs.append(f"_nouns has no [singular, plural] for {w!r} (plural() at app.js:{lines[0]})")
+            errs.append(f"_nouns has no [singular, plural] for {w!r} (plural() at {where(lines[0])})")
     # 5. templates with ${} as keys, local t / tn / ta that hide the helpers, f-strings as Python keys
     for ln, txt in js["bad"]:
         if not area or fa.get(enclosing(table, ln)) == area:
-            errs.append(f"app.js:{ln}: a template with ${{...}} as a key ({txt[:60]!r}) - use {{placeholders}} + vars")
+            errs.append(f"{where(ln)}: a template with ${{...}} as a key ({txt[:60]!r}) - use {{placeholders}} + vars")
     for x in js["shadow"]:
         if not area or fa.get(x["fn"]) == area:
-            errs.append(f"app.js:{x['line']} {x['fn']}: a local {x['name']!r} hides {x['name']}() - rename it")
+            errs.append(f"{where(x['line'])} {x['fn']}: a local {x['name']!r} hides {x['name']}() - rename it")
     for rel, r in G["py"].items():
         for ln, txt in r["bad"]:
             errs.append(f"{rel}:{ln}: an f-string as a key ({txt[:60]!r}) - use {{placeholders}} + vars")

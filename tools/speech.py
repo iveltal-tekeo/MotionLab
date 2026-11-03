@@ -40,13 +40,30 @@ def out_path(media: Path, model: str, verbatim: bool = False) -> Path:
     return LAB / ".app" / "speech" / name
 
 
+LAB_NAMES = "MotionLab, Claude"     # the lab's own names: said in every video about it, never guessed right without a prompt
+
+
+def default_names() -> str:
+    """The names a transcript is made with when the caller gives none (2026-10-30: one answer for every caller, so one
+    cache serves them all - the captions' transcript of Why MotionLab is different was remade without names by a
+    nameless call and heard "MotionLove"): the lab's own + My Brand's glossary words. --names replaces them."""
+    try:
+        from motionlab import brand as BR
+        words = BR.glossary_words()
+    except Exception:                                           # noqa: BLE001 - no brand = no glossary
+        words = []
+    return ", ".join(dict.fromkeys([w.strip() for w in LAB_NAMES.split(",")] + [w.strip() for w in words if w.strip()]))[:300]
+
+
 def transcript(media: Path, model: str = "small", names: str = "", lang: str | None = None,
                force: bool = False, verbatim: bool = False) -> tuple[Path, dict]:
     """The cached transcript of a video (made when missing or when its settings / the video changed). verbatim =
-    the one that keeps the fillers (for stumbles), cached apart from the one captions use."""
+    the one that keeps the fillers (for stumbles), cached apart from the one captions use. names = words the video
+    uses (names, brands); none given = default_names()."""
     if not SP.available():
         raise SystemExit("speech to text is not installed: Settings > Programs > Speech to text > Install "
                          "(or tools\\speech.py install)")
+    names = names.strip() or default_names()
     st = media.stat()
     fp = {"size": st.st_size, "mtime_ns": st.st_mtime_ns, "model": model, "names": names.strip(), "lang": lang or "",
           **({"verbatim": True} if verbatim else {})}

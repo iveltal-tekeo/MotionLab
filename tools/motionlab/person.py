@@ -215,7 +215,9 @@ def wanted(plan: dict) -> list[str]:
         if L.get("type") == "clip" and L.get("src") in plan.get("sources", {}) and L["src"] not in out \
                 and (L.get("track") == "face" or L.get("room")):
             out.append(L["src"])
-    asks = [(int(L["start"]), int(L["end"])) for L in plan.get("layers", []) if any(L.get(k) for k in NEEDS_PERSON)]
+    from .screenfx import needs_person              # (a tunnel, a red-film room, a card that keeps the face in)
+    asks = [(int(L["start"]), int(L["end"])) for L in plan.get("layers", [])
+            if any(L.get(k) for k in NEEDS_PERSON) or (L.get("type") == "fx" and needs_person(L))]
     if not asks:
         return out
     for L in plan.get("layers", []):
@@ -277,7 +279,7 @@ def face_issues(plan: dict, log=print) -> list[dict]:
         if not isinstance(L, OverlayLayer) or L.spec.get("behind") or L.mode != "normal":     # hole in it: move it)
             continue
         for f in range(L.start, L.end + 1, step):
-            face = R.face_at(f)
+            face = R.face_seen(f, L)                    # (moved by a card / a push drawn before it)
             if face is None:
                 continue
             fx, fy, fw = face

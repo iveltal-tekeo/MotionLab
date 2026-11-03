@@ -36,6 +36,7 @@ from motionlab import i18n as I18N
 from motionlab import knowledge as KN
 from motionlab import logos as LGO
 from motionlab import notes as NT
+from motionlab import spark as SP
 from motionlab import looks as LK
 from motionlab import overlay_settings as OS
 from motionlab import prompts as PR
@@ -48,7 +49,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 49                                  # app.js API_LEVEL: the functions the page needs
+API_LEVEL = 57                                  # ui\js\core.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -373,9 +374,10 @@ class Handler(BaseHTTPRequestHandler):
         # Settings > Language (2026-10-18): <html lang>, index.html's {{t:...}} texts and the page's words, inlined
         # before app.js so its label tables are translated as they load (English: {} - the page as before)
         lg = I18N.lang()
-        # app.css / app.js addressed by the version + when they last changed: a change between versions reaches the
-        # window on its next load, never a stale copy from the browser's cache (2026-10-25: black icons on My Brand)
-        uiv = f"{VERSION}-{int(max((UI / f).stat().st_mtime for f in ('app.css', 'app.js')))}"
+        # app.css and the page's code (js\*.js since 2026-11-02, app.js before) addressed by the version + when one
+        # last changed: a change between versions reaches the window on its next load, never a stale copy from the
+        # browser's cache (2026-10-25: black icons on My Brand)
+        uiv = f"{VERSION}-{int(max(p.stat().st_mtime for p in [UI / 'app.css', *(UI / 'js').glob('*.js')]))}"
         html = (UI / "index.html").read_text(encoding="utf-8").replace("{{TOKEN}}", S.token) \
             .replace("{{UIV}}", uiv).replace("{{VERSION}}", VERSION).replace("{{LANG}}", lg)
         html = I18N.fill_html(html, lg).replace("{{I18N}}", I18N.page_script(lg))
@@ -560,9 +562,21 @@ class Handler(BaseHTTPRequestHandler):
             from motionlab import agency as AG
             return self._json(AG.load())
         if path == "/api/agency/social":                  # 0.6.0: your posted videos (the last Check my pages)
+            from motionlab import retention as RTN
             from motionlab import social as SO
             from motionlab import stats as STS
-            return self._json({**SO.load(), "stats": STS.load()})      # + the stats files imported (step 13)
+            return self._json({**SO.load(), "stats": STS.load(),       # + the stats files imported (step 13)
+                               "retention": RTN.load()["videos"],      # + where people left (2026-11-02)
+                               "spark": SP.by_post()})                 # + each post's SPARK (SP = the module's)
+        if path == "/api/agency/tests":                   # 2026-11-02: tests of one idea (+ numbers, result, state)
+            from motionlab import experiments as EX
+            return self._json(EX.views())
+        if path == "/api/agency/learn":                   # 2026-11-02: what works - lessons + patterns (R3)
+            from motionlab import findings as FD
+            return self._json(FD.view())
+        if path == "/api/agency/month":                   # 2026-11-02: the monthly review + three next tests (R4)
+            from motionlab import monthly as MO
+            return self._json(MO.view((q.get("m") or [""])[0] or None))
         if path == "/api/agency/calendar.ics":            # the dated posts for Windows Calendar / Outlook / Google
             from motionlab import agency as AG
             return self._send(200, AG.ics().encode("utf-8"), "text/calendar; charset=utf-8",
@@ -623,6 +637,9 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/miniedit", path)       # 0.6.0: the Editor tab (a plan's state)
         if m:
             return self._json(data.miniedit_state(urllib.parse.unquote(m[1]), arg("plan", "")))
+        m = re.fullmatch(r"/api/project/([^/]+)/segments", path)       # 0.6.1: Edit by segments - the parts + picks
+        if m:
+            return self._json(data.segments(urllib.parse.unquote(m[1]), arg("plan", "")))
         if path == "/api/brand/mood":                                   # 0.6.0 My Brand > Style: the mood board
             return self._json(data.brand_mood())
         if path == "/api/sounds":                                       # 0.6.0 Motion Graphics > Sounds
@@ -652,6 +669,29 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.text_sets())
         if path == "/api/notes":                         # 2026-10-27: notes from videos (Analyser > Notes)
             return self._json(NT.list_notes())
+        if path == "/api/spark":                         # 2026-10-30: SPARK - why a video worked (Content creation)
+            return self._json(SP.list_spark())
+        m = re.fullmatch(r"/api/spark/([^/]+)(/md)?", path)
+        if m:
+            name = urllib.parse.unquote(m[1])
+            if m[2]:                                      # Download: the write-up as Markdown
+                d, _ = SP.need(name)
+                if not (d / "spark.md").exists():
+                    raise FileNotFoundError(name)
+                return self._json({"file": f"SPARK - {d.name}.md", "text": (d / "spark.md").read_text(encoding="utf-8")})
+            return self._json(SP.get(name))
+        if path == "/api/notes-combined":                # 2026-10-29: questions across several videos' notes
+            return self._json(NT.list_combined())
+        if path == "/api/notes-combined/md":             # ... and their notes in one Markdown file (no Claude)
+            try:
+                fname, text = NT.combined_md(arg("names") or "")
+            except ValueError as e:
+                raise ValueError(I18N.t(str(e))) from None
+            return self._json({"file": fname, "text": text})
+        m = re.fullmatch(r"/api/notes-combined/([^/]+)", path)
+        if m:
+            rec = NT.combined(urllib.parse.unquote(m[1]))
+            return self._json({**rec, "sources": [NT._source(x) for x in rec.get("names") or []], "md": NT.answer_md(rec)})
         m = re.fullmatch(r"/api/notes/([^/]+)(/md)?", path)
         if m:
             name = urllib.parse.unquote(m[1])
@@ -708,6 +748,12 @@ class Handler(BaseHTTPRequestHandler):
             q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             return self._json(data.agency_stats_upload((q.get("name") or [""])[0], (q.get("platform") or [""])[0],
                                                        self.rfile, int(self.headers.get("Content-Length") or 0)))
+        if path == "/api/agency/retention/upload":  # 2026-11-02: a screenshot of a retention graph - a raw body
+            if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
+                raise PermissionError(I18N.t("missing or wrong session token"))
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            return self._json(data.agency_retention_upload((q.get("name") or [""])[0], self.rfile,
+                                                           int(self.headers.get("Content-Length") or 0)))
         if path == "/api/brand/mood/upload":      # 0.6.0 My Brand > Style: a mood board picture - a raw body
             if not secrets.compare_digest(str(self.headers.get("X-ML-Token") or ""), S.token):
                 raise PermissionError(I18N.t("missing or wrong session token"))
@@ -784,6 +830,37 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/agency":                        # 0.6.0: the content calendar saved as the page has it (checked)
             from motionlab import agency as AG
             return self._json(AG.save(body))
+        if path in ("/api/agency/retention/trace", "/api/agency/retention"):   # 2026-11-02: where people left
+            return self._json(data.agency_retention(body, save=path.endswith("/retention")))
+        if path == "/api/agency/tests":                  # 2026-11-02: a test of one idea - save | close | again | delete
+            from motionlab import experiments as EX
+            act, tid = body.get("action"), str(body.get("id") or "")
+            if act == "save":
+                return self._json(EX.view(EX.save(body.get("test") or {})))
+            if act == "close":
+                return self._json(EX.view(EX.close(tid, str(body.get("pick") or ""), str(body.get("note") or ""))))
+            if act == "again":
+                return self._json(EX.view(EX.again(tid)))
+            if act == "delete":
+                EX.remove(tid)
+                return self._json({"removed": tid})
+            raise ValueError(I18N.t("save, close, again or delete"))
+        if path == "/api/agency/learn":                  # 2026-11-02: keep a pattern as a hunch | retest | forget
+            from motionlab import findings as FD
+            act = body.get("action")
+            if act == "keep":
+                return self._json(FD.keep(body.get("spec") or {}))
+            if act == "retest":
+                return self._json({"changes": FD.retest_all()})
+            if act == "forget":
+                FD.forget(str(body.get("id") or ""))
+                return self._json({"removed": True})
+            raise ValueError(I18N.t("keep, retest or forget"))
+        if path == "/api/agency/month":                  # 2026-11-02: a monthly review's next test onto the calendar
+            from motionlab import monthly as MO
+            if body.get("action") == "plan":
+                return self._json({"post": MO.plan(str(body.get("month") or ""), body.get("n"))})
+            raise ValueError(I18N.t("plan a next test"))
         if path == "/api/brand/product_image":           # 0.6.0: a product's own picture (Catalogue), base64 (checked)
             from motionlab import brand as BR
             return self._json(BR.save_product_image(str(body.get("id", "")), str(body.get("name", "")),
@@ -873,6 +950,9 @@ class Handler(BaseHTTPRequestHandler):
             if m[2] == "outcome":
                 return self._json(data.save_outcome(name, body))
             return self._json({"made_from": data.add_made_from(name, str(body.get("kind", "")), str(body.get("id", "")))})
+        m = re.fullmatch(r"/api/project/([^/]+)/segments", path)            # 0.6.1: a pick of the user's per part
+        if m:
+            return self._json(data.segments_change(urllib.parse.unquote(m[1]), body))
         m = re.fullmatch(r"/api/project/([^/]+)/miniedit/preview", path)   # 0.6.0: the changes so far, nothing saved
         if m:
             return self._json(data.miniedit_preview(urllib.parse.unquote(m[1]), str(body.get("plan", "")), body.get("ops")))
@@ -935,9 +1015,28 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(edit_batch(body))
         if path == "/api/notes/batch":                  # 2026-10-27: Analyser > Notes - links + files
             return self._json(notes_batch(body))
-        m = re.fullmatch(r"/api/notes/([^/]+)/(mine|meta)", path)   # My notes; the name, tags, actions ticked
+        if path == "/api/spark/batch":                  # 2026-10-30: Analyser > Content creation - links + files
+            return self._json(spark_batch(body))
+        m = re.fullmatch(r"/api/spark/([^/]+)/numbers", path)     # the lookup again (the user's click)
+        if m:
+            return self._json(S.runner.start("spark_numbers", {"name": urllib.parse.unquote(m[1])}, queue=True).info())
+        if path == "/api/notes-combined/ask":            # 2026-10-29: Ask Claude across several videos' notes
+            try:
+                return self._json(NT.add_combined(body.get("names") or [], body.get("q")))
+            except ValueError as e:
+                raise ValueError(I18N.t(str(e))) from None
+        if path == "/api/notes-combined/remove":
+            return self._json(NT.remove_ask(NT.COMBINED, str(body.get("id") or "")))
+        m = re.fullmatch(r"/api/notes/([^/]+)/(mine|meta|ask|unask)", path)   # My notes; name, tags, ticks; Ask Claude
         if m:
             name = urllib.parse.unquote(m[1])
+            if m[2] == "ask":
+                try:
+                    return self._json(NT.add_ask(name, body.get("q")))
+                except ValueError as e:
+                    raise ValueError(I18N.t(str(e))) from None
+            if m[2] == "unask":
+                return self._json(NT.remove_ask(name, str(body.get("id") or "")))
             if m[2] == "mine":
                 return self._json(NT.save_mine(name, str(body.get("text") or "")))
             return self._json(NT.save_meta(name, body.get("label"), body.get("tags"), body.get("done")))
@@ -1235,6 +1334,32 @@ def notes_batch(body: dict) -> dict:
     for u in links:
         started.append(S.runner.start("download", {"url": u, "preset": "mp4_720"}, queue=True,
                                       then={"kind": "notes", **opts}, batch=batch))
+    return {"batch": batch, "jobs": [j.info() for j in started]}
+
+
+def spark_batch(body: dict) -> dict:
+    """Analyser > Content creation (2026-10-30): SPARK - every link downloaded (up to 1080p: its frames are read), every
+    file prepared (queued jobs, one batch); claude=true: one Claude window writes them all when the last one is ready.
+    Nothing starts if anything is wrong."""
+    links = [str(u).strip() for u in body.get("links") or [] if str(u).strip()]
+    files = [str(f).strip().strip('"') for f in body.get("files") or [] if str(f).strip()]
+    if not links and not files:
+        raise ValueError(I18N.t("paste a link or pick a video first"))
+    if len(links) + len(files) > BATCH_MAX:
+        raise ValueError(I18N.t("at most {n} videos at a time - add the rest when these are done", n=BATCH_MAX))
+    opts = {"ask": " ".join(str(body.get("ask") or "").split())[:1000], "tags": str(body.get("tags") or ""),
+            "claude": bool(body.get("claude"))}
+    for u in links:                                     # check everything before anything starts
+        if not re.match(r"https?://\S+$", u):
+            raise ValueError(I18N.t("not a link: {link} (a full link starts with https://)", link=u))
+        system.download_cmd(u, "mp4_1080")
+    for f in files:
+        jobs.make("spark", {**opts, "video": f})
+    batch = int(time.time() * 1000) % 10_000_000
+    started = [S.runner.start("spark", {**opts, "video": f}, queue=True, batch=batch) for f in files]
+    for u in links:
+        started.append(S.runner.start("download", {"url": u, "preset": "mp4_1080"}, queue=True,
+                                      then={"kind": "spark", **opts}, batch=batch))
     return {"batch": batch, "jobs": [j.info() for j in started]}
 
 

@@ -7,6 +7,172 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## 0.6.0.9 - 2026-11-02 - Aprende de tus propias publicaciones: dónde se fue la gente, pruebas, lecciones y un repaso del mes
+
+- **Texto que entra palabra a palabra**: tres plantillas de texto nuevas en Motion Graphics, para cualquier vídeo,
+  sobre tus clips o con su propio fondo: *Revelado con máscara* (líneas, palabras o letras que suben hasta su sitio
+  desde detrás de un borde invisible), *Letras escalonadas* (letras o palabras de una en una: suben desde un
+  desenfoque, caen con un rebote, bajan con un zoom desde fuera de foco o se levantan girando en 3D; de izquierda a
+  derecha, desde el centro hacia fuera o al azar) y *Descifrar* (cada letra se revuelve entre signos al azar y se fija
+  en su sitio, con una línea fina por debajo). Pon una palabra entre asteriscos (`*palabra*`) para el acento, una serif
+  cursiva en tu color de acento, y `|` para una línea nueva; usan las fuentes y los colores de tu look y nunca tapan
+  una cara.
+- **Dónde se fue la gente**: la retención de tus propios vídeos, a partir de una captura de su gráfico. En Agencia de
+  contenido > Tus vídeos, *Dónde se fue la gente* en un vídeo recibe una captura del gráfico de retención de TikTok
+  Studio, YouTube Studio o Instagram (pégala con Ctrl+V). Arrastras cuatro líneas sobre los ejes del gráfico y MotionLab
+  lee la curva por sí mismo (sin Claude y sin iniciar sesión; la captura se queda en tu PC): cuántos seguían viendo a
+  los 3 s, a los 10 s y al final, y las caídas más fuertes, donde más gente se fue en 3 segundos. Un segundo que no
+  puede leer queda como desconocido, nunca se inventa. La tarjeta muestra la curva; cuando 5 de tus vídeos de una
+  plataforma tienen la suya, SPARK compara cada uno con lo habitual tuyo.
+- **SPARK en tus propios vídeos**: la tarjeta de un vídeo en Tus vídeos abre ahora su SPARK, o lo empieza. En la página
+  de SPARK tu vídeo tiene *Dónde se fue la gente*: la curva bajo el reproductor (un clic reproduce ese momento) y las
+  caídas más fuertes en su fotograma exacto, con las palabras que se dicen ahí. Claude usa esos números como medidos
+  y dice qué hizo que la gente se fuera solo como su propia lectura: una caída muestra dónde se fue la gente, no por
+  qué.
+- **Pruebas**: la tercera pestaña de Agencia de contenido. Publica dos o tres versiones de una idea en la misma
+  plataforma (otro gancho, otra duración) y compáralas por el número que elijas antes: visualizaciones a las 48 horas,
+  a los 7 días o a los 28 días, cuántos seguían viendo a los 3 s, a los 10 s o al final, me gusta o comentarios por
+  cada 1000 visualizaciones, o el % medio visto, con un mínimo de visualizaciones. Elige cada versión entre tus vídeos
+  publicados; sus números y sus curvas aparecen uno al lado del otro. Una versión solo gana con un margen claro; si no,
+  está demasiado igualado para decidir, y una publicación de cada una es siempre una pista, nunca una prueba. Después
+  Claude puede revisar las versiones (antes las lee SPARK): qué mantener, cambiar o quitar, en fotogramas exactos, cada
+  cambio marcado como *solo edición* o *volver a grabar* y *por probar*, con la próxima prueba que hacer. *Hacer la
+  siguiente versión* se lo pasa a Claude para el vídeo del que salió; al cerrar una prueba guardas con qué versión
+  sigues, y *Probar de nuevo* empieza la continuación desde ella.
+- **Lo que funciona**: la cuarta pestaña de Agencia de contenido. Patrones en tus propias publicaciones (vídeos más
+  cortos, el día o la hora en que se publicaron, tu pilar de contenido, texto o cortes en los 3 primeros segundos...)
+  frente al número que movieron, solo cuando hay 8 vídeos o más a cada lado, la diferencia es clara y se mantiene sin
+  su vídeo más fuerte. Guarda uno y empieza como *corazonada*; pasa a *probable* y luego a *confirmada* solo cuando
+  publicaciones posteriores lo confirman (los mismos vídeos nunca cuentan dos veces). Si las publicaciones nuevas no
+  pueden confirmarlo, se debilita; si van en sentido contrario, queda refutado (la afirmación de antes se mantiene, con
+  los números que la refutaron), y una lección sin probar durante 30 días baja un nivel (caduca a los 90). Se vuelven a
+  probar cada vez que pulsas *Revisar mis perfiles*. Las lecciones probables y confirmadas entran en la memoria de
+  Claude, como patrones en tus publicaciones, nunca como la causa de un vídeo. Mientras una plataforma no tenga
+  publicaciones suficientes, la pestaña muestra cuánto le falta; *Medir mis publicaciones con SPARK* lee los primeros
+  segundos y los cortes de tus publicaciones (sin Claude).
+- **Repaso del mes**: la quinta pestaña de Agencia de contenido. Un mes de tus publicaciones de un vistazo (‹ › para
+  cambiar de mes). Por plataforma, la mediana del mes frente a tus visualizaciones habituales (tus publicaciones de los
+  últimos 120 días); las publicaciones que mejor fueron por visualizaciones y por retención, cada una con su ×-tu-habitual
+  (las que tenían menos de una semana en la última revisión todavía están creciendo y nunca se clasifican); qué tenían
+  en común (pilar, duración, texto en los 3 primeros segundos), como una pista, porque un mes son pocas publicaciones;
+  las pruebas del mes y qué pasó con tus lecciones. Termina en **tres próximas pruebas** que Claude escribe a partir de
+  esos números: qué probar, qué se mantiene igual, el número que lo decide y las publicaciones, lecciones o pruebas que
+  lo respaldan, nunca la afirmación de que algo *causó* un resultado, y cada × o % tiene que ser uno de los números del
+  propio mes. *Ponerla en el calendario* convierte una prueba en una idea de tu calendario de contenido, y el repaso
+  del mes siguiente muestra hasta dónde llegó.
+- **Claude pregunta antes de salir a internet**: en las ventanas de Claude Code que abre MotionLab, Claude ahora te
+  pregunta antes de descargar un vídeo, revisar tus perfiles en línea, consultar los números de un vídeo, instalar algo
+  en DaVinci Resolve o HyperFrames, o borrar cachés para liberar espacio. Todo lo demás lo sigue haciendo como antes,
+  sin preguntar.
+
+## 0.6.0.8 - 2026-10-30 - SPARK: por qué funcionó un vídeo, encuadre vertical y editar por segmentos
+
+- **SPARK: por qué funcionó un vídeo**: ya está aquí la forma *Creación de contenido* del Analizador. Añade un enlace o
+  un vídeo: MotionLab lo mide (sus cortes, los primeros 3 segundos, lo rápido que se habla, una imagen de cada plano) y
+  busca sus números una vez: me gusta, comentarios, compartidos y guardados por cada 1.000 visualizaciones, y lo
+  habitual del creador, la mediana de visualizaciones de los vídeos que publicó alrededor, para que veas si fue un caso
+  excepcional en su canal. Después Claude lo explica con la misma lista de 12 puntos para todos los vídeos (la idea, el
+  envoltorio, el gancho, la promesa cumplida, las intrigas abiertas, el ritmo, la emoción, por qué la gente lo envía y
+  lo comenta, la factura, el final, el contexto), cada punto marcado como *Medido*, *Criterio de Claude* o *Se
+  desconoce* con su prueba (una cita que reproduce su momento, un fotograma, un número), además de lo que el vídeo no
+  puede explicar y de 3 a 5 ideas para tus propios vídeos. Los números se quedan en tu PC. Un vídeo analizado y las
+  notas de un vídeo también tienen *Analizar con SPARK*.
+- **Los clips horizontales, encuadrados en la cara en los vídeos verticales**: un borrador rápido encuadra ahora plano
+  a plano cada clip más ancho que el vídeo: un encuadre fijo en la cara cuando no se mueve (la mayoría de planos),
+  paneos lentos y suaves cuando la persona cruza la imagen, nunca un seguimiento que tiembla; un primer plano se queda
+  en el centro de la cara. Un clip que cortaba media cara en el borde sale ahora centrado. Las notas del borrador dicen
+  cómo se encuadró cada plano.
+- **Composiciones para vídeos verticales**: cada plano de un clip horizontal recibe ahora la composición que le va:
+  dos personas separadas van una encima de la otra (cada una en su panel, las caras del mismo tamaño, los subtítulos
+  en la línea entre ellas); un grupo, o alguien que se mueve demasiado rápido para seguirlo, va en una franja en el
+  centro sobre una copia desenfocada del plano (o sobre el color de la propia pared, para que la franja se funda con
+  ella); una grabación de pantalla con cámara de la cara pone la pantalla arriba y tu cara debajo; un juego pone la
+  cámara de la cara arriba. La vista previa del Editor las muestra.
+- **El encuadre vertical conoce sus límites**: un clip demasiado pequeño para llenar un vídeo vertical con nitidez
+  (720p o menos) va en una franja en lugar de ampliarse de más; los subtítulos que ya trae el clip, las letras de
+  canciones, los rótulos con nombres y cualquier otro texto incrustado en él ya no se cortan: el plano va en una
+  franja lo bastante ancha para que el texto se vea entero; las caras quedan fuera de los botones y textos de las apps
+  (TikTok, Reels, Shorts); tus subtítulos se colocan entre las dos mitades de una composición apilada y nunca encima
+  del texto incrustado en la imagen.
+- **Elige tú el encuadre**: en el Editor, un plano de un clip horizontal en un vídeo vertical tiene una sección
+  *Encuadre*: Auto, Llena, Ajustada, Dividida, Pantalla o Juego, un encuadre fijo o uno que sigue a la persona; y
+  puedes arrastrar la imagen en la vista previa para mover el encuadre. Lo que elijas se queda como tuyo. En Nueva
+  edición, el último paso pregunta cómo deben llenar los clips horizontales un vídeo vertical (Auto, Llena, Ajustada o
+  Dividida) cuando eliges el formato vertical.
+- **Cómo grabar para las dos formas**: *Grábalo* en Preparar muestra una lista corta antes de grabar, con un dibujo
+  del encuadre: el objetivo a la altura de los ojos, los ojos en el tercio superior, de medio pecho para arriba a un
+  metro más o menos, de cara a una ventana; y si quieres un vídeo vertical y otro horizontal de una misma toma, graba
+  en horizontal en 4K contigo en el centro, y MotionLab encuadra el vertical.
+- **Arreglado**: en la vista previa del Editor, un clip horizontal en un vídeo vertical mostraba su centro cuando el
+  encuadre estaba a un lado, y un plano podía quedarse mal en pausa justo después de saltar en la línea de tiempo;
+  ahora los dos coinciden con el render. Una sacudida en un plano que se desplaza para seguir a alguien decía "este
+  plano ya tiembla"; ahora dice por qué no se puede.
+- **Editar por segmentos**: Nueva edición tiene un 7.º paso, *Segmentos*: MotionLab corta tus clips con tus respuestas
+  y divide el vídeo en partes (tus frases, las frases de una canción o tandas de planos) y sugiere una edición para
+  cada una: un punch-in en la palabra clave, B-roll en la palabra que muestra un clip, el número que dices contando en
+  una tarjeta, un título de sección donde empieza una parte numerada, una lista, un gráfico animado, cortes al ritmo,
+  un golpe en el drop o nada. Cada parte muestra su imagen, sus palabras, por qué esa edición y otras dos; cambia las
+  que quieras, aplica una a todas las parecidas o vuelve a *Lo recomendado para todas*. *Vista previa* renderiza una
+  parte con su edición en cerca de medio minuto; *Montar la edición* hace el vídeo entero de una vez y comprueba que
+  cada parte salió como la elegiste. Tus elecciones se quedan con sus partes cuando vuelves a cortar el vídeo. Las
+  tarjetas no tapan tu cara (en un vídeo horizontal van en una columna en el borde). Un vídeo montado así tiene una
+  fila *Partes* en el Editor: haz clic en una parte para cambiar su edición y volver a montarlo. O pulsa *Hazlo con
+  Claude* en el paso Segmentos: Claude elige las partes que dejaste, marca dónde tu charla pasa a otro punto (ahí va
+  una tarjeta de título), escribe las palabras de las tarjetas y elige la palabra en la que cae cada punch-in o
+  B-roll; tus elecciones se quedan, las de Claude aparecen como *De Claude* con su motivo, y puedes cambiar cualquiera
+  igual (*volver a la sugerencia* recupera la de Claude). El B-roll puede ir ya en cualquier parte en la que hablas,
+  no solo donde coinciden las palabras de un clip.
+- **Las notas de un vídeo, ordenadas como una página de Notion**: las notas ocupan ahora toda la página: una fila para
+  saltar a cada parte, los datos del vídeo de un vistazo, un mapa de colores de sus secciones (haz clic en una para
+  reproducirla), las ideas clave como tarjetas y cada sección con su propio color, dónde empieza y acaba, cuánto dura
+  y qué parte del vídeo ocupa. Las ideas clave y los pasos llevan el color de la sección en la que se dicen; *Aplícalo*
+  muestra cuánto llevas hecho.
+- **Pregúntale a Claude sobre las notas de un vídeo**: profundiza en una parte, conviértela en un plan, pregunta qué
+  significa para ti. Claude responde con lo que dice el vídeo (cada punto reproduce su momento) y separa lo que añade
+  de su propio conocimiento, en *Para ir más lejos*. Tus preguntas y respuestas se quedan con las notas.
+- **Combinar notas**: elige varios vídeos de un tema en Analizador > Notas: descarga todas sus notas en un solo archivo
+  Markdown (con un bloque de contexto para otra IA), o hazle a Claude una pregunta sobre todos: cada punto dice de qué
+  vídeo es y reproduce su momento.
+- **Arreglado**: un vídeo de YouTube con pistas de audio dobladas podía sacar sus notas de una pista traducida (un
+  vídeo en inglés salió en árabe); las palabras salen ahora del idioma del propio vídeo, y se avisa si no coinciden.
+- **Tus vídeos, más a salvo del propio Claude**: Claude Code se niega ahora, por sí mismo, a borrar, mover, renombrar
+  o sobrescribir nada de tus descargas (refs) ni los clips que hay en la carpeta de un vídeo; trabaja con copias en la
+  carpeta build del vídeo, como debe hacerlo siempre.
+- **Un vídeo hablado empieza en tu primera palabra**: el borrador rápido ya no guarda un golpe, una respiración o el
+  móvil al dejarlo como "parte hablada" (1,4 s así abrían un vídeo antes de "Most editors..."): una parte sin ninguna
+  palabra se va, y una primera palabra dicha bajito que el volumen no captó ("thank" antes de "you.") entra. Los
+  subtítulos ya no pierden una palabra que empieza un pelo antes de su plano.
+- **Nombres en cada transcripción**: al reconocer la voz se le dan ahora siempre los nombres del propio laboratorio
+  (MotionLab, Claude) y el glosario de tu marca, pida quien pida la transcripción; una transcripción para subtítulos
+  hecha sin ellos había oído "MotionLove", y ahora todas las herramientas comparten una misma transcripción guardada en
+  vez de rehacerla.
+- **Arreglado**: una edición por segmentos con subtítulos (*Subtítulos* en Nueva edición, o `--captions` en
+  tools\segments.py) se negaba a escribir su plan ("refusing to write outside build"); y cuando eliges para una parte
+  el mismo tratamiento que Claude sugirió (un título, un gráfico), la tarjeta lleva ahora las palabras y la plantilla de
+  Claude en vez de la frase automática de las reglas.
+
+## 0.6.0.7 - 2026-10-29 - Efectos para vídeos hablados: 20 plantillas más, looks de color y efectos en toda la imagen
+
+- **Más diseños de efectos de Vibha Ramprakash**: casi todo el resto de sus 45 efectos para vídeos hablados ya está
+  en MotionLab, con 20 plantillas nuevas y efectos nuevos. Tus reels a tu alrededor (se amontonan detrás de ti, giran
+  alrededor de tu cabeza, dan vueltas en un carrusel 3D, llenan la pared, se abren en abanico como móviles, una
+  cuadrícula de 3x3 contigo en la casilla del centro), un ticket que se imprime encima de ti, teclas que caen,
+  titulares que se apilan, una portada de revista, páginas de periódico que cortan en una palabra, widgets de
+  cristal, un tier list, una línea de tiempo de edición, una barra de desinstalación que rompe la imagen, tu vídeo
+  encogiéndose en una tarjeta de reel, fichas numeradas que se abren en abanico encima de tu cabeza, tres frases
+  grandes que entran de golpe bajo tu barbilla, tableros de tus reels sobre papel cuadriculado en los que clica un
+  cursor y una cámara que se acerca a una esquina junto a tu cabeza mientras aparece un gráfico. Un diseño que también
+  cambia la imagen o necesita un segundo gráfico lo trae consigo al añadirlo, y se lo lleva al moverlo o borrarlo.
+- **Efectos nuevos para las ediciones de Claude**: *Madriguera* (la habitación se hunde en sí misma mientras tú sigues
+  delante), *Revelado de puntos*, *Glitch*, *Antes / después* (un deslizador con un look a un lado), *Empuje a la
+  esquina*, *Habitación pastel* y *Habitación de papel cuadriculado* (la habitación detrás de ti pintada, tú tal cual) y
+  siete looks de color: *Melancólico*, *Blanco y negro*, *Cálido*, *Frío*, *Intenso*, *Película roja* (la habitación
+  roja, tú en tonos cálidos) y *Película suave*. Funcionan en cualquier vídeo, también en los de gráficos; Claude los
+  añade cuando edita, y un vídeo que tiene uno lo muestra en el Editor para moverlo, alargarlo o quitarlo. La lista de
+  efectos del propio Editor sigue siendo la de los ocho que dejó su revisión.
+- **Arreglado**: Claude ya no pide el efecto *Foco* que quitó la revisión del Editor (una edición con él se paraba con
+  un error); una plantilla que lo necesita, como el carrusel de reels, lo sigue trayendo consigo.
+
 ## 0.6.0.6 - 2026-10-27 - El Editor renovado: los subtítulos en una lista, un menú con el botón derecho, zonas seguras
 
 - **El Editor, revisado frente a CapCut, Premiere, Resolve y OpenCut.**

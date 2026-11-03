@@ -1,0 +1,31 @@
+{
+ "name": "check-pills",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "0",
+   "kind": "pop",
+   "db": -6,
+   "what": "the boards pop onto the wall"
+  },
+  {
+   "f": "round((11 + i * max(4, gap)) * fps / 30)",
+   "repeat": "max(1, min(6, parts(pills)))",
+   "kind": "click",
+   "seed": "400 + i",
+   "what": "the cursor clicks a pill and it ticks"
+  },
+  {
+   "f": "frames - round(9 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 600,
+   "db": -10,
+   "what": "the pills and boards leave"
+  }
+ ]
+}

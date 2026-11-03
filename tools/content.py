@@ -116,21 +116,26 @@ def run(cmd: list[str], timeout: float = 180) -> str:
 
 def choose_track(info: dict, want: str | None) -> tuple[str, str] | None:
     """('manual' | 'auto', language key): uploaded subtitles in the video's language first, then the auto captions
-    of the original audio ('<lang>-orig' on YouTube; the other auto languages are machine translations)."""
+    of the original audio ('<lang>-orig' on YouTube; the other auto languages are machine translations). A video with
+    YouTube's dubbed audio tracks lists one '-orig' per track (2026-10-29: ar-orig came first on an English video and
+    the notes got Arabic words): the one in the video's own language wins."""
     subs = {k: v for k, v in (info.get("subtitles") or {}).items() if k not in ("live_chat", "rechat")}
     auto = info.get("automatic_captions") or {}
-    orig = next((k for k in auto if k.endswith("-orig")), None)
-    lang = want or info.get("language") or (orig[:-5] if orig else None)
+    origs = [k for k in auto if k.endswith("-orig")]
+    lang = want or info.get("language") or (origs[0][:-5] if len(origs) == 1 else None)
 
     def same(k):
         return lang and (k == lang or k.split("-")[0] == lang.split("-")[0])
     hit = next((k for k in subs if same(k)), None)
     if hit or (subs and not want and len(subs) == 1):
         return "manual", hit or next(iter(subs))
-    if orig and (not want or same(orig[:-5])):
-        return "auto", orig
+    orig = next((k for k in origs if same(k[:-5])), None)
+    if orig or (len(origs) == 1 and not want):
+        return "auto", orig or origs[0]
     hit = next((k for k in auto if same(k)), None)
-    return ("auto", hit) if hit else None
+    if hit:
+        return "auto", hit
+    return ("auto", origs[0]) if origs and not want else None
 
 
 def save_info(ref: dict, info: dict) -> dict:
@@ -138,7 +143,7 @@ def save_info(ref: dict, info: dict) -> dict:
     Analyser > Notes): the description (links, resources), the creator's chapters, YouTube's *Most replayed* graph
     (heatmap: start / end in seconds, value 0-1), tags, its language and the song a TikTok uses. No formats."""
     keep = ("id", "title", "description", "chapters", "heatmap", "tags", "categories", "language", "uploader",
-            "channel", "channel_url", "duration", "upload_date", "webpage_url", "extractor_key", "track", "artist")
+            "channel", "channel_url", "channel_id", "uploader_url", "duration", "upload_date", "webpage_url", "extractor_key", "track", "artist")
     out = {k: info[k] for k in keep if info.get(k) not in (None, "", [])}
     d = ref["dir"] / "content"
     d.mkdir(parents=True, exist_ok=True)

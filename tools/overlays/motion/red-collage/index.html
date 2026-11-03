@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "word", "type": "string", "label": "The giant red word behind you (drawn by the word-behind graphic that comes with this one)", "default": "EDIT"},
+  {"id": "lines", "type": "string", "label": "The three lines that slam in (split with |; the second is red)", "default": "ONE TAKE.|FIVE EFFECTS.|ZERO APPS."},
+  {"id": "tag", "type": "string", "label": "Small tag above the lines, with a blinking dot (empty = none)", "default": "REC  ·  TAKE 01"},
+  {"id": "red", "type": "color", "label": "Red (the second line, the tag)", "default": "#E0201B"},
+  {"id": "size", "type": "number", "label": "Line size (px at a 1080-px short side; long lines are fitted to the width)", "default": 150, "min": 60, "max": 260, "step": 5},
+  {"id": "y", "type": "number", "label": "Top of the lines (% of the frame, from the top)", "default": 56, "min": 35, "max": 80, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "lines_font", "type": "enum", "label": "Lines font (a heavy sans looks most like the design)", "default": "Inter", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Tag font", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "red-collage" (2026-10-28): three bold lines slam in, in front of the person and off
+     the face (in_shot guard), in the lower half: white, red, white, each from 145 % with a blur (5 f, slow end), one
+     every 4 frames, the block jolting a little as each lands; a small tag with a blinking red dot sits above them. The
+     block drifts slowly larger while it holds, and at the end the lines slide out one after another. The whole design
+     comes with it (template.json "with"): the picture graded black and white, and the word-behind graphic drawing the
+     giant red word behind the person. Rebuilt in MotionLab's own HTML after a design in an MIT-licensed Python
+     effect. Size-independent, laid out again for landscape. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-synthesis: none; will-change: transform; }
+  #tag { position: absolute; left: 0; top: 0; display: flex; align-items: center; white-space: nowrap; font-synthesis: none; }
+  #dot { flex: none; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="block" class="abs"><div id="tag"><div id="dot"></div><span id="tagt"></span></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const S = Math.round(V.start), END = FRAMES * 30 / FPS;   // END = the last frame + 1, in frames designed at 30 fps
+  const PORT = H >= W;
+
+  // ---- the lines: left-aligned in the lower half (portrait: under the chin, clear of the right-hand buttons and
+  //      the bottom captions band; landscape: the lower left, clear of a centred face)
+  const RED = V.red || "#E0201B";
+  const lines = String(V.lines || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 4);
+  const n = lines.length;
+  const X0 = (PORT ? 0.06 : 0.05) * W, BOXW = (PORT ? 0.8 : 0.5) * W;
+  const Y0 = H * V.y / 100, YMAX = PORT ? Math.min(H - 20 * U, 0.78 * H) : H - 0.05 * H;
+  let FS = V.size * U;
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(ellipse 70% 50% at 50% 35%, #3A3A3A 0%, #0D0D0D 100%)` : "transparent" });
+  const block = q("block");
+  Object.assign(block.style, { width: `${W}px`, height: `${H}px` });
+  const LN = lines.map((txt, j) => {
+    const el = document.createElement("div"); el.className = "ln"; el.id = `line${j}`; el.textContent = txt;
+    const col = j === 1 ? RED : "#FFFFFF";
+    Object.assign(el.style, { fontFamily: `'${V.lines_font}', 'Arial Black', sans-serif`, fontWeight: String(fw(V.lines_font, 900)),
+      fontSize: `${FS}px`, letterSpacing: "-0.025em", color: col, visibility: "hidden",
+      textShadow: j === 1 ? `0 0 ${(14 * U).toFixed(1)}px ${rgba(RED, 0.45)}, 0 ${(4 * U).toFixed(1)}px ${(14 * U).toFixed(1)}px rgba(0, 0, 0, 0.55)`
+        : `0 ${(4 * U).toFixed(1)}px ${(14 * U).toFixed(1)}px rgba(0, 0, 0, 0.6)` });
+    block.appendChild(el);
+    return { el, w: 0 };
+  });
+  const tag = q("tag"), dot = q("dot"), tagt = q("tagt");
+  const TS = 30 * U;
+  tagt.textContent = String(V.tag || "");
+  Object.assign(tagt.style, { fontFamily: `'${V.accent_font}', 'Consolas', monospace`, fontSize: `${TS}px`, fontWeight: String(fw(V.accent_font, 700)),
+    color: RED, letterSpacing: "0.08em", lineHeight: "1", textShadow: `0 ${(2 * U).toFixed(1)}px ${(6 * U).toFixed(1)}px rgba(0, 0, 0, 0.5)` });
+  Object.assign(dot.style, { width: `${0.5 * TS}px`, height: `${0.5 * TS}px`, marginRight: `${0.45 * TS}px`, background: RED,
+    boxShadow: `0 0 ${(8 * U).toFixed(1)}px ${rgba(RED, 0.8)}` });
+  if (!String(V.tag || "").trim()) tag.style.display = "none";
+
+  // ---- the timing (frames designed at 30 fps; overlay.json's cues use the same formulas)
+  const IN = j => 2 + 4 * j;                               // a line slams in every 4 frames from f2, each 5 f
+  const LAST = IN(Math.max(0, n - 1)) + 5;
+  const OUT0 = END - 6 - Math.max(1, n);                   // they slide out, one a frame (all gone half a frame early)
+  let LH = FS;
+
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    block.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    // the block jolts as each line lands (3 px, dying over 6 f) and drifts 2.5 % larger while it holds
+    let jx = 0, jy = 0;
+    LN.forEach((l, j) => { const s = g - (IN(j) + 5); if (s >= 0 && s < 6) { const a = 3.5 * U * (1 - s / 6);
+      jx += a * Math.sin(s * 2.7 + j); jy += a * Math.cos(s * 3.1 + j * 2); } });
+    const push = 1 + 0.025 * P(g, LAST, OUT0, "sine.inOut");
+    block.style.transformOrigin = `${X0}px ${Y0 + LH * n / 2}px`;
+    block.style.transform = `translate(${jx.toFixed(2)}px, ${jy.toFixed(2)}px) scale(${push.toFixed(5)})`;
+    LN.forEach((l, j) => {
+      const k = P(g, IN(j), IN(j) + 5, "power3.out");
+      if (g < IN(j)) { l.el.style.visibility = "hidden"; return; }
+      l.el.style.visibility = "visible";
+      const o = P(g, IN(j), IN(j) + 3);
+      const e = P(g, OUT0 + j, OUT0 + j + 5.5, "power2.in");
+      const sc = 1.45 - 0.45 * k, bl = 7 * U * (1 - P(g, IN(j), IN(j) + 4));
+      const x = X0 + l.w / 2, y = Y0 + j * LH + LH / 2;
+      l.el.style.transform = `translate(${(x - l.w / 2 - 70 * U * e).toFixed(2)}px, ${(y - LH / 2).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+      l.el.style.opacity = (o * (1 - e)).toFixed(3);
+      l.el.style.filter = bl > 0.3 ? `blur(${bl.toFixed(2)}px)` : "none";
+    });
+    // the tag: fades in (4 f), the dot blinks (on 6 f, dim 6 f), it leaves with the lines
+    const te = P(g, OUT0, OUT0 + 6, "power2.in");
+    tag.style.opacity = (P(g, 0, 4) * (1 - te)).toFixed(3);
+    tag.style.transform = `translate(${X0.toFixed(2)}px, ${(Y0 - 1.6 * TS).toFixed(2)}px)`;
+    dot.style.opacity = Math.floor(g / 6) % 2 ? "0.3" : "1";
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 71 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: the widest line fitted to the box, the block to the room below
+  (document.fonts && document.fonts.load ? Promise.all(["lines_font", "accent_font"].flatMap(k =>
+    [700, 800, 900].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    const widest = Math.max(1, ...LN.map(l => l.el.offsetWidth));
+    FS = Math.max(24 * U, Math.min(FS, FS * BOXW / widest, (YMAX - Y0) / Math.max(1, n)));
+    LH = FS;
+    LN.forEach(l => { l.el.style.fontSize = `${FS}px`; l.w = l.el.offsetWidth; l.el.style.transformOrigin = "50% 50%"; });
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

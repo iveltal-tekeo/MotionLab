@@ -1,0 +1,29 @@
+{
+ "name": "Cover star",
+ "kind": "text",
+ "category": "Social",
+ "what": "You become a magazine cover: a giant masthead across the top, behind your head (your head covers part of it, as on a real cover), an issue line over it, cover lines beside your head and under your chin, and a barcode in the corner. Classic = a bold masthead in colour with white and yellow lines; editorial = a classic serif masthead in ink with elegant serif lines.",
+ "use_for": ["talking head", "intro", "about me", "personal brand", "announcement", "fashion", "lifestyle", "hook", "short form", "title"],
+ "tags": ["text", "magazine", "cover", "masthead", "editorial", "behind", "in shot", "cover lines", "barcode", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {"behind": "top", "match": true},
+ "motion": "classic: f0-f10 the masthead drops a quarter of its height into place (slow end) and fades in over 4 f; editorial: it settles from 105 % over 15 f (slow end) and fades in over 10 f, a thin rule draws out under it f4-f18 (S-curve); the issue line fades in f3-f11; the lower lines slide in from the left one after another (classic from f4.5, 2.4 f apart, 9 f each; editorial from f6, 3 f apart, 10.5 f each; slow end) and the side lines from their sides (classic from f9 beside the head; editorial from f13.5, lower right); classic: the barcode pops f12-f20 (slow end, small overshoot); while it holds the masthead grows 2.5 % (S-curve); the last 9 f everything fades and drifts out (accelerating)",
+ "tracks": [
+  {"name": "masthead in", "what": "the masthead drops (classic) or settles (editorial) into place", "start_f": 0, "length_f": 15, "easing": "decelerating (slow end)"},
+  {"name": "lines in", "what": "the cover lines slide in one after another", "start_f": 4, "length_f": 24, "easing": "decelerating (slow end)"},
+  {"name": "barcode", "what": "the barcode pops in (classic)", "start_f": 12, "length_f": 8, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "hold", "what": "the masthead grows slowly", "start_f": 12, "length_f": 96, "easing": "S-curve"},
+  {"name": "out", "what": "everything fades and drifts out", "start_f": 111, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round(45 * fps / 30)",
+ "min_why": "the masthead and every cover line need about a second to land and a moment to be read",
+ "core_points": 1,
+ "text_slots": ["title", "lines", "issue"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 60,
+ "check_frames": [0, 2, 5, 8, 11, 15, 20, 26, 40, 60, 100, 112, 116, 119]
+}

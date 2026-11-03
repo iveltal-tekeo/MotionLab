@@ -1,0 +1,39 @@
+{
+ "name": "The noise (reels pile up behind you)",
+ "kind": "social",
+ "category": "Social",
+ "what": "Your reels pile up on the wall behind your head, one every quarter second, each at its own slight angle and spot around you with a soft shadow, until the wall is busy; each lands with a small overshoot and settles, the pile drifts a hair while it grows, and it clears away at the end. Every reel shows its cover, a play mark and a view count. The Editor puts it behind you and moves it with the camera.",
+ "use_for": ["talking head", "too much content", "information overload", "the noise", "everyone posts", "my reels", "social media", "creator", "hook", "short form"],
+ "tags": ["social", "reels", "pile", "collage", "behind", "in shot", "view count", "cards", "needs media", "talking head"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "from f1 a reel lands every 7 f (about a quarter second; 15 reels in 4 s, 4 to 16 by the length): each scales from 60 % with a small overshoot (8 f, decelerating with overshoot), fades in over 2-3 f and turns 5-9 degrees into its own slight angle; once landed each drifts 2-3 px and 0.5 degree (a slow sine, out of step); the last 12 f the pile clears, the newest first, 0.3 f apart: each shrinks 12 %, sinks 14 px and fades in 7 f (accelerating)",
+ "tracks": [
+  {"name": "reels land", "what": "a reel lands every 7 frames with a small overshoot and a settling turn", "start_f": 1, "length_f": 106, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "drift", "what": "the landed reels drift a hair, out of step", "start_f": 9, "length_f": 99, "easing": "sine"},
+  {"name": "clear", "what": "the pile clears away, the newest first", "start_f": 107, "length_f": 12, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round(43 * fps / 30)",
+ "min_why": "at least four reels have to land before the pile clears",
+ "in_shot": {"behind": true, "follow": "camera", "match": true},
+ "core_points": 1,
+ "text_slots": ["views"],
+ "media_slots": [
+  {"id": "reel1_media", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel2_media", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel3_media", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel4_media", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel5_media", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel6_media", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel7_media", "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel8_media", "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel9_media", "label": "Reel 9: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true},
+  {"id": "reel10_media", "label": "Reel 10: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count", "optional": true}
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 100,
+ "check_frames": [0, 1, 3, 6, 9, 22, 50, 80, 100, 106, 110, 114, 119]
+}

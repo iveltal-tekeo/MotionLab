@@ -12,6 +12,11 @@ frame + timecode (the design: tools\\motionlab\\notes.py and docs\\plans.md 0.6.
     .venv\\Scripts\\python tools\\notes.py save <name> <draft.json>
           Claude's notes through the gate (every quote found in the transcript, the frame + timecode set by the tool,
           the limits) -> notes.json + notes.md; nothing is written when a check fails (exit 1, every problem listed)
+    .venv\\Scripts\\python tools\\notes.py ask <name> <id>     a question the user asked on the notes page (Ask Claude,
+          2026-10-29): the question, then what to read; <name> = _combined for one across several videos
+    .venv\\Scripts\\python tools\\notes.py answer <name> <id> <draft.json>
+          Claude's answer through the same gate: {"title", "summary", "points": [{"text", "quote" | "shown", "video"}],
+          "more": "Markdown - Claude's own knowledge beyond the video(s), no frame numbers"}
     .venv\\Scripts\\python tools\\notes.py pending           the notes waiting for Claude
     .venv\\Scripts\\python tools\\notes.py list
 
@@ -242,6 +247,11 @@ def prepare(a) -> int:
             issues.append(f"subtitles: {type(e).__name__}: {e}")
             print(f"subtitles: {type(e).__name__}: {e}", flush=True)
     info = N._load(d / "content" / "info.json") or {}
+    tr0 = N.transcript(d)
+    said, own = str((tr0 or {}).get("lang") or ""), str(info.get("language") or "")
+    if tr0 and tr0.get("source") == "subtitles" and said and own and said.split("-")[0] != own.split("-")[0]:
+        issues.append(f"the words are in '{said}' but the video says it is in '{own}' - a dubbed or translated track? "
+                      "Take the notes again with fresh words (--force) or check the video's audio")
     n["title"] = info.get("title") or n["title"]
     n["uploader"] = info.get("uploader") or info.get("channel") or n.get("uploader")
     n["platform"] = n.get("platform") or info.get("extractor_key")
@@ -303,6 +313,22 @@ def save(a) -> int:
     return 0
 
 
+def answer(a) -> int:
+    p = Path(a.draft)
+    try:
+        draft = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        raise SystemExit(f"cannot read {p}: {e}") from None
+    try:
+        rec = N.save_answer(a.name, a.id, draft)
+    except ValueError as e:
+        print(e)
+        return 1
+    print(f"saved: the answer to {rec['id']} ({len(rec['answer']['points'])} points from the video(s)"
+          f"{', + going further' if rec['answer'].get('more') else ''}) - the page shows it under Ask Claude")
+    return 0
+
+
 def main() -> int:
     setup_console()
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -319,6 +345,13 @@ def main() -> int:
     s = sub.add_parser("save")
     s.add_argument("name")
     s.add_argument("draft")
+    s = sub.add_parser("ask")
+    s.add_argument("name")
+    s.add_argument("id")
+    s = sub.add_parser("answer")
+    s.add_argument("name")
+    s.add_argument("id")
+    s.add_argument("draft")
     sub.add_parser("pending")
     sub.add_parser("list")
     a = ap.parse_args()
@@ -329,6 +362,11 @@ def main() -> int:
         return 0
     if a.cmd == "save":
         return save(a)
+    if a.cmd == "ask":
+        print(N.ask_text(a.name if a.name == N.COMBINED else safe_name(a.name), a.id))
+        return 0
+    if a.cmd == "answer":
+        return answer(a)
     if a.cmd == "pending":
         print("\n".join(N.pending()) or "none")
         return 0

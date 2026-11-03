@@ -1,0 +1,30 @@
+{
+ "name": "Match cut pages",
+ "kind": "text",
+ "category": "Social",
+ "what": "News pages cut one after another behind you, every 4-6 frames, each a different invented paper and layout (a masthead, a headline in its own typeface, columns of grey text, a picture) - and on every page the same word sits in a red box at the same spot above your head, so the cuts match on it. The pages push in slowly, the last one stays while a band of light crosses the word.",
+ "use_for": ["talking head", "key word", "in the news", "everyone is talking about", "headline", "hook", "trend", "press", "short form", "emphasis"],
+ "tags": ["text", "match cut", "news", "newspaper", "headline", "pages", "behind", "in shot", "fast cuts", "highlight", "red box", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {"behind": true, "follow": "camera", "match": true},
+ "motion": "f0 the first page cuts in (2 f) and the red box pops from 116 % (7 f, slow end with a small overshoot); page k cuts in at 4k + k*k/(pages - 1) - every 4 frames at first, every 6 at the end (pages 10: f0, f4, f8, f13, f18, f23, f28, f33, f39, f45) - and the box punches 2.5 % on each cut (3 f, slow end) in the new page's typeface, its centre locked; the pages push in round the word 5 % over the whole length (slow end); the last page lands at 5 * (pages - 1) (f45) with a 4 % swell (8 f) and a band of light crosses the box f49-f65 (S-curve); the last 5 f it fades (accelerating)",
+ "tracks": [
+  {"name": "box pop", "what": "the red box with the word pops in", "start_f": 0, "length_f": 7, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "page cuts", "what": "a new page cuts in every 4-6 frames, the word locked in place", "start_f": 0, "length_f": 45, "easing": "steps"},
+  {"name": "push", "what": "the page pushes in slowly round the word", "start_f": 0, "length_f": 105, "easing": "decelerating (slow end)"},
+  {"name": "land", "what": "the last page lands, the box swells", "start_f": 45, "length_f": 8, "easing": "S-curve"},
+  {"name": "sheen", "what": "a band of light crosses the box", "start_f": 49, "length_f": 16, "easing": "S-curve"},
+  {"name": "out", "what": "the page fades", "start_f": 100, "length_f": 5, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round((5 * (pages - 1) + 24) * fps / 30)",
+ "min_why": "every page has to cut in and the last one hold a moment before it ends",
+ "core_points": 1,
+ "text_slots": ["word"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 70,
+ "check_frames": [0, 1, 3, 6, 8, 13, 18, 23, 28, 33, 39, 45, 50, 57, 70, 100, 104]
+}

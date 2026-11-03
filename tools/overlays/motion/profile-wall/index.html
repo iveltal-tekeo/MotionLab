@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "reel1_media", "type": "string", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel6_media", "type": "string", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel7_media", "type": "string", "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel8_media", "type": "string", "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel9_media", "type": "string", "label": "Reel 9: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel10_media", "type": "string", "label": "Reel 10: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "count", "type": "string", "label": "The number it counts up to (e.g. 312, 1,248, 2.4M)", "default": "312"},
+  {"id": "label", "type": "string", "label": "Under the number", "default": "reels made"},
+  {"id": "views", "type": "string", "label": "View counts on the reels, one after another (split with |)", "default": "1.2M|486K|2.7M|93K|640K|1.9M|318K|5.1M|77K|820K"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "body_font", "type": "enum", "label": "Text font (the number, captions, view counts)", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "profile-wall" (2026-10-28): a dark profile panel of the user's reels fills the wall
+     behind them, above the shoulders and round the head: the panel settles in (f0-f10, decelerating), its tab mark
+     slides to the reels tab (f4-f16, S-curve) and the grid fills tile by tile, one every 2 frames (each pops from 85 %
+     with a small overshoot); meanwhile a smoke-glass counter rises in front, under the chin (f3-f15), its number
+     counting up (f8-f42, decelerating) and popping as it lands, with a label under it. In the hold a light crosses the
+     grid and the counter, the avatar ring turns and the panel floats; the last 9 f the counter sinks away and the
+     panel fades. The Editor hides the panel by the person above the chin and keeps the counter in front below it
+     (in_shot behind "top" + follow camera). Upright: 5 x 3 tiles, the counter below 62 % of the height; landscape or
+     square: 2 rows as wide as fits. Ten media slots, round-robin over the grid. After a design in an MIT-licensed
+     effects pack; MotionLab's own code. Look-aware. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #wallw, #cntw { position: absolute; left: 0; top: 0; }
+  #wall, #cnt { position: absolute; left: 0; top: 0; overflow: hidden; }
+  #cnum, #clab { position: absolute; white-space: nowrap; line-height: 1; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="wallw"><div id="wall"></div></div>
+  <div id="cntw"><div id="cnt"><div id="chi"></div><div id="cav"></div><div id="cnum"></div><div id="clab"></div><div id="csh"></div></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                                 // accelerating (exits only)
+  const outBack = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const S = Math.round(V.start);
+  const AV = (FRAMES - S) * 30 / FPS;                    // frames (designed at 30 fps) from the start to the end
+  const FONT = `'${V.body_font}', 'Segoe UI', sans-serif`;
+  const SHK = Math.max(0, Number(V.shadow));
+
+  // ---- the reel tiles (one style in noise, orbit, carousel-spin and profile-wall): a 9:16 cover with round corners,
+  // a soft shadow, a light rim, a play mark and a view count at the bottom. A filled slot shows the user's cover or
+  // clip (a clip only once: the page plays one video per slot; a repeated picture gets its own grade); an empty slot
+  // is a made-up cover - a colour gradient, a person shape and a short bold caption.
+  const NSLOT = 10;
+  const PH = [["#FF7A59", "#B8306B", "#FFD36E", "day 1 vs day 30"], ["#2EC5CE", "#1B3F8F", "#B9F3FF", "3 apps I use daily"],
+    ["#8E6CFF", "#2B1B6B", "#F0B8FF", "my 5 am routine"], ["#9BDB4D", "#1E6B4F", "#F5FFB0", "watch till the end"],
+    ["#FF5A5F", "#5B1A3A", "#FFC2A8", "the edit that worked"], ["#4D7CFE", "#0F1C3F", "#9FE8FF", "desk setup tour"],
+    ["#F6B93B", "#B4471F", "#FFF1B8", "one tip a day"], ["#E84393", "#3D1460", "#FFB3E0", "before / after"],
+    ["#7F8FA6", "#1E272E", "#E3ECF5", "how I film alone"], ["#20BF6B", "#0B3D2E", "#C9FFD9", "the honest review"]];
+  const VIEWS = String(V.views == null ? "" : V.views).split("|").map(s => s.trim()).filter(Boolean);
+  const MEDIA = [...Array(NSLOT)].map((_, i) => String(V[`reel${i + 1}_media`] == null ? "" : V[`reel${i + 1}_media`]).trim());
+  const isVid = s => /\.(mp4|mov|webm|m4v)$/i.test(s);
+  const REP = ["saturate(1.3) contrast(1.06)", "grayscale(1) contrast(1.12)", "sepia(0.35) saturate(1.2)",
+    "hue-rotate(-14deg) saturate(0.9) brightness(0.95)", "contrast(1.1) brightness(1.06)"];
+  function covers(n) {
+    const filled = MEDIA.map((s, i) => ({ s, i })).filter(m => m.s), imgs = filled.filter(m => !isVid(m.s)), out = [];
+    for (let k = 0; k < n; k++) {
+      if (!filled.length) out.push({ ph: k % PH.length, rep: 0 });
+      else if (k < filled.length) out.push({ m: filled[k], rep: 0 });
+      else if (imgs.length) { const j = k - filled.length; out.push({ m: imgs[j % imgs.length], rep: 1 + Math.floor(j / imgs.length) }); }
+      else out.push({ ph: k % PH.length, rep: 0 });
+    }
+    return out;
+  }
+  const box = (parent, st) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, st); parent.appendChild(e); return e; };
+  function cover(el, p, w, h, k) {
+    const [a, b, c, cap] = p, ang = 155 + (k * 29) % 50, gx = 25 + (k * 37) % 50, gy = 14 + (k * 23) % 26;
+    el.style.background = `radial-gradient(circle at ${gx}% ${gy}%, ${rgba(c, 0.8)} 0%, ${rgba(c, 0)} 46%), linear-gradient(${ang}deg, ${a} 0%, ${b} 100%)`;
+    const d = w * 0.3;                                   // a person shape: head and shoulders, a shade darker
+    box(el, { left: `${w * 0.16}px`, top: `${h * 0.75}px`, width: `${w * 0.68}px`, height: `${h * 0.25}px`, borderRadius: `${w * 0.34}px ${w * 0.34}px 0 0`, background: rgba(b, 0.5) });
+    box(el, { left: `${(w - d) / 2}px`, top: `${h * 0.75 - d * 1.04}px`, width: `${d}px`, height: `${d}px`, borderRadius: "50%", background: rgba(b, 0.5) });
+    const cp = box(el, { left: `${w * 0.07}px`, top: `${h * 0.3}px`, width: `${w * 0.86}px`, textAlign: "center", lineHeight: "1.34",
+      fontFamily: FONT, fontWeight: String(fw(V.body_font, 800)), fontSize: `${w * 0.1}px`, color: "#ffffff", fontSynthesis: "none" });
+    const sp = document.createElement("span");
+    sp.textContent = cap;
+    Object.assign(sp.style, { background: rgba("#000000", 0.5), padding: `${w * 0.012}px ${w * 0.035}px`, borderRadius: `${w * 0.025}px`,
+      boxDecorationBreak: "clone", webkitBoxDecorationBreak: "clone" });
+    cp.appendChild(sp);
+  }
+  function reel(parent, k, c, w, h) {
+    const r = w * Math.min(0.14, Math.max(0.025, Number(V.radius) / 200)), R = `${r}px`;
+    const el = box(parent, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, transformOrigin: "50% 50%",
+      boxShadow: SHK > 0 ? `0 ${(w * 0.045 * SHK).toFixed(1)}px ${(w * 0.12 * SHK).toFixed(1)}px ${rgba("#000000", Math.min(0.6, 0.42 * SHK))}` : "none" });
+    const pic = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, overflow: "hidden" });
+    if (c.m) {
+      if (window.MLLook) MLLook.media(pic, c.m.s, { look: L, kind: isVid(c.m.s) ? "video" : "image", fit: "cover", seed: c.m.i + 1, label: " ", r,
+        slot: `reel${c.m.i + 1}_media`, id: `rv${k}`, start: S / FPS, duration: Math.max(0.2, (FRAMES - S) / FPS) });
+      else { const im = document.createElement("img"); im.src = c.m.s; Object.assign(im.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", objectFit: "cover" }); pic.appendChild(im); }
+      if (c.rep) pic.style.filter = REP[(c.rep + k) % REP.length];
+    } else cover(pic, PH[c.ph % PH.length], w, h, k);
+    box(el, { left: "0px", top: `${h * 0.64}px`, width: `${w}px`, height: `${h * 0.36}px`, borderRadius: `0 0 ${R} ${R}`,
+      background: `linear-gradient(180deg, ${rgba("#000000", 0)} 0%, ${rgba("#000000", 0.6)} 100%)` });
+    const fs = w * 0.092;
+    const vr = box(el, { left: `${w * 0.075}px`, top: `${h - w * 0.08 - fs}px`, height: `${fs}px`, display: "flex", alignItems: "center",
+      gap: `${fs * 0.3}px`, whiteSpace: "nowrap", lineHeight: "1", color: "#ffffff", fontFamily: FONT, fontWeight: String(fw(V.body_font, 700)),
+      fontSize: `${fs}px`, fontSynthesis: "none", textShadow: `0 ${fs * 0.05}px ${fs * 0.3}px ${rgba("#000000", 0.5)}` });
+    vr.innerHTML = `<svg width="${(fs * 0.74).toFixed(1)}" height="${(fs * 0.82).toFixed(1)}" viewBox="0 0 20 22" style="overflow:visible"><path d="M4 2.8 C4 1.6 5.3 0.9 6.3 1.5 L18.4 9.8 C19.3 10.4 19.3 11.6 18.4 12.2 L6.3 20.5 C5.3 21.1 4 20.4 4 19.2 Z" fill="none" stroke="#ffffff" stroke-width="2.7" stroke-linejoin="round"/></svg>`;
+    const vs = document.createElement("span");
+    vs.textContent = VIEWS.length ? VIEWS[k % VIEWS.length] : "";
+    vr.appendChild(vs);
+    box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R,
+      boxShadow: `inset 0 0 0 ${Math.max(1, w / 170).toFixed(2)}px ${rgba("#ffffff", 0.3)}`,
+      background: `linear-gradient(180deg, ${rgba("#ffffff", 0.12)} 0%, ${rgba("#ffffff", 0)} 20%)` });
+    const dk = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, background: "#05060A", opacity: "0" });
+    return { el, dk };
+  }
+
+  // ---- the preview background (only when painted: over a video the panel is on the real wall)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.6 * W}px ${0.3 * H}px at ${0.5 * W}px ${0.25 * H}px, ${rgba(L.mustard, 0.25)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.25 * H}px at ${0.7 * W}px ${0.85 * H}px, ${rgba(L.signal, 0.18)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the layout round a talking head (upright: the face at a third of the height, 26 % of the width; landscape or
+  // square: 37 % down, 19 % of the height). The panel stays above the chin line; the counter sits under it.
+  const UPRIGHT = H / W >= 1.3;
+  const FWP = UPRIGHT ? 0.26 * W : 0.19 * H, FY = UPRIGHT ? H / 3 : 0.37 * H, CHIN = FY + 0.57 * FWP;
+  const PAD = 14 * U, GAPT = 8 * U, TABH = (UPRIGHT ? 56 : 46) * U, ROWS = UPRIGHT ? 3 : 2;
+  const pTop = (UPRIGHT ? 0.035 : 0.04) * H, pH = CHIN - pTop;
+  const th = (pH - 2 * PAD - TABH - (ROWS - 1) * GAPT) / ROWS, tw = th / 1.25;
+  const COLS = UPRIGHT ? 5 : Math.max(3, Math.min(8, Math.floor((0.86 * W - 2 * PAD + GAPT) / (tw + GAPT))));
+  const pW = COLS * tw + (COLS - 1) * GAPT + 2 * PAD, pX = (W - pW) / 2, pR = Math.min(38 * U, pW * 0.04);
+  const wallw = q("wallw"), wall = q("wall");
+  Object.assign(wallw.style, { left: `${pX}px`, top: `${pTop}px`, width: `${pW}px`, height: `${pH}px`, transformOrigin: "50% 40%" });
+  Object.assign(wall.style, { width: `${pW}px`, height: `${pH}px`, borderRadius: `${pR}px`, background: rgba("#101012", 0.94),
+    boxShadow: `inset 0 0 0 ${Math.max(1, U)}px ${rgba("#ffffff", 0.08)}${SHK > 0 ? `, 0 ${10 * U * SHK}px ${40 * U * SHK}px ${rgba("#000000", Math.min(0.6, 0.4 * SHK))}` : ""}` });
+  // the tabs: a grid, the reels (active) and a tagged person - drawn marks, no words
+  const tabX = j => pW * (1 + 2 * j) / 6, ic = TABH * 0.42, icw = Math.max(1.5, 2.2 * U);
+  const ICON = [
+    `<rect x="2" y="2" width="20" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.7 2v20M15.3 2v20M2 8.7h20M2 15.3h20" stroke="currentColor" stroke-width="2"/>`,
+    `<rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 8h20M8 2l3 6M14 2l3 6" stroke="currentColor" stroke-width="2"/><path d="M10 11.5v6.5l5.5-3.25z" fill="currentColor"/>`,
+    `<rect x="2" y="2" width="20" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 20c1.2-3.4 3.6-5 6.5-5s5.3 1.6 6.5 5" fill="none" stroke="currentColor" stroke-width="2"/>`];
+  ICON.forEach((p, j) => {
+    const e = document.createElement("div");
+    Object.assign(e.style, { position: "absolute", left: `${tabX(j) - ic / 2}px`, top: `${PAD + (TABH - ic) / 2 - 2 * U}px`, width: `${ic}px`, height: `${ic}px`,
+      color: j === 1 ? "#ffffff" : rgba("#ffffff", 0.42) });
+    e.innerHTML = `<svg width="${ic}" height="${ic}" viewBox="0 0 24 24" style="overflow:visible">${p}</svg>`;
+    wall.appendChild(e);
+  });
+  const ulW = pW / 3 * 0.62, ul = document.createElement("div");
+  Object.assign(ul.style, { position: "absolute", left: "0px", top: `${PAD + TABH - 3 * U}px`, width: `${ulW}px`, height: `${Math.max(2, 3 * U)}px`, background: "#ffffff", borderRadius: `${2 * U}px` });
+  wall.appendChild(ul);
+  // the grid, tile by tile in reading order
+  const NT = ROWS * COLS, CV = covers(NT), tiles = [];
+  for (let j = 0; j < NT; j++) {
+    const t = reel(wall, j, CV[j], tw, th);
+    t.el.style.boxShadow = "none";
+    tiles.push({ ...t, x: PAD + (j % COLS) * (tw + GAPT), y: PAD + TABH + Math.floor(j / COLS) * (th + GAPT) });
+  }
+  // a light that crosses the panel in the hold (a band slid across a gradient 3 panels wide: it never leaves its box)
+  const wsh = document.createElement("div");
+  Object.assign(wsh.style, { position: "absolute", left: "0px", top: "0px", width: `${pW}px`, height: `${pH}px`, opacity: "0",
+    background: `linear-gradient(112deg, ${rgba("#ffffff", 0)} 0%, ${rgba("#ffffff", 0)} 44%, ${rgba("#ffffff", 0.16)} 50%, ${rgba("#ffffff", 0)} 56%, ${rgba("#ffffff", 0)} 100%)` });
+  wsh.style.backgroundSize = "300% 100%";
+  wall.appendChild(wsh);
+
+  // ---- the counter: smoke glass under the chin (upright: below 62 % of the height), an avatar, the number, the label
+  const cw = UPRIGHT ? 0.7 * W : Math.min(0.66 * W, 0.6 * H * 1.15), chh = UPRIGHT ? 0.19 * W : 0.17 * H;
+  const ccx = W / 2, ccy = UPRIGHT ? Math.max(0.62 * H + chh / 2 + 6 * U, Math.min(0.77 * H - chh / 2, CHIN + 2.1 * FWP)) : Math.min(H - chh / 2 - 0.05 * H, CHIN + 0.5 * (H - CHIN));
+  const cntw = q("cntw"), cnt = q("cnt"), cR = chh * 0.22;
+  Object.assign(cntw.style, { left: `${ccx - cw / 2}px`, top: `${ccy - chh / 2}px`, width: `${cw}px`, height: `${chh}px`, transformOrigin: "50% 50%" });
+  Object.assign(cnt.style, { width: `${cw}px`, height: `${chh}px`, borderRadius: `${cR}px`,
+    background: `linear-gradient(180deg, ${rgba("#16161A", 0.9)} 0%, ${rgba("#0E0E10", 0.86)} 100%)`,
+    boxShadow: `inset 0 0 0 ${Math.max(1, 1.5 * U)}px ${rgba("#ffffff", 0.14)}${SHK > 0 ? `, 0 ${12 * U * SHK}px ${36 * U * SHK}px ${rgba("#000000", Math.min(0.6, 0.38 * SHK))}` : ""}` });
+  Object.assign(q("chi").style, { position: "absolute", left: "0px", top: "0px", width: `${cw}px`, height: `${chh * 0.45}px`,
+    background: `linear-gradient(180deg, ${rgba("#ffffff", 0.1)} 0%, ${rgba("#ffffff", 0)} 100%)` });
+  const avD = chh * 0.6, avX = chh * 0.2, cav = q("cav");
+  Object.assign(cav.style, { position: "absolute", left: `${avX}px`, top: `${(chh - avD) / 2}px`, width: `${avD}px`, height: `${avD}px` });
+  const rw = Math.max(2, avD * 0.055);
+  cav.innerHTML = `<div id="cring" style="position:absolute;left:0px;top:0px;width:${avD}px;height:${avD}px;border-radius:50%;` +
+    `background:conic-gradient(${L.signal}, ${L.mustard}, ${L.signal}, ${L.mustard}, ${L.signal})"></div>` +
+    `<div style="position:absolute;left:${rw * 1.8}px;top:${rw * 1.8}px;width:${avD - rw * 3.6}px;height:${avD - rw * 3.6}px;border-radius:50%;overflow:hidden;` +
+    `background:linear-gradient(160deg, ${L.deep}, #0E0E10);box-shadow:0 0 0 ${rw * 0.8}px #0E0E10">` +
+    `<div style="position:absolute;left:34%;top:20%;width:32%;height:32%;border-radius:50%;background:${rgba("#ffffff", 0.82)}"></div>` +
+    `<div style="position:absolute;left:16%;top:58%;width:68%;height:42%;border-radius:50% 50% 0 0;background:${rgba("#ffffff", 0.82)}"></div></div>`;
+  const cring = q("cring");
+  // the number: a prefix, the number (commas, decimals) and a suffix (K, M, +) are kept
+  const parse = str => {
+    const m = String(str == null ? "" : str).trim().match(/^([^\d.,-]*)(-?\d[\d,]*(?:\.\d+)?|-?\.\d+)(.*)$/);
+    if (!m) return { p: "", v: 0, s: String(str || "").trim(), dec: 0, grp: false };
+    const clean = m[2].replace(/,/g, "");
+    return { p: m[1], v: parseFloat(clean) || 0, s: m[3], dec: clean.includes(".") ? clean.split(".")[1].length : 0, grp: /\d,\d{3}/.test(m[2]) };
+  };
+  const B = parse(V.count);
+  const fmt = v => B.p + (B.grp ? Number(v.toFixed(B.dec)).toLocaleString("en-US", { minimumFractionDigits: B.dec, maximumFractionDigits: B.dec }) : v.toFixed(B.dec)) + B.s;
+  const tx = avX + avD + chh * 0.2, room = cw - tx - chh * 0.24;
+  const cnum = q("cnum"), clab = q("clab");
+  let numFs = chh * 0.36, labFs = chh * 0.15;
+  Object.assign(cnum.style, { left: `${tx}px`, top: `${chh * 0.17}px`, color: "#ffffff", fontFamily: FONT, fontWeight: String(fw(V.body_font, 800)),
+    fontSize: `${numFs}px`, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", transformOrigin: "0% 60%" });
+  Object.assign(clab.style, { left: `${tx}px`, top: `${chh * 0.62}px`, color: rgba("#ffffff", 0.72), fontFamily: FONT, fontWeight: String(fw(V.body_font, 500)),
+    fontSize: `${labFs}px` });
+  clab.textContent = String(V.label == null ? "" : V.label);
+  const csh = q("csh");
+  Object.assign(csh.style, { position: "absolute", left: "0px", top: "0px", width: `${cw}px`, height: `${chh}px`, opacity: "0",
+    background: `linear-gradient(108deg, ${rgba("#ffffff", 0)} 0%, ${rgba("#ffffff", 0)} 42%, ${rgba("#ffffff", 0.16)} 50%, ${rgba("#ffffff", 0)} 58%, ${rgba("#ffffff", 0)} 100%)` });
+  csh.style.backgroundSize = "300% 100%";
+
+  // ---- the motion (d = frames at 30 fps since "Starts at frame")
+  const T0 = 5, TG = 2, C0 = 8, CL = 34, LAND = C0 + CL, XL = 9;
+  const leave = V.leave && AV - XL - 1 > LAND + 8;
+  const RISE = Math.min(110 * U, H - (ccy + chh / 2) + chh * 0.4);
+  function render(t) {
+    const d = t * 30 - S * 30 / FPS;
+    const vis = d >= 0;
+    wallw.style.visibility = cntw.style.visibility = vis ? "visible" : "hidden";
+    if (!vis) return;
+    const x = leave ? eIn((d - (AV - XL - 1.5)) / XL) : 0;
+    // the panel settles in, floats a hair in the hold, fades at the end
+    const kp = eOut(d / 10), fl = 3 * U * Math.sin(6.283 * (d - 20) / 96) * c01((d - 20) / 20);
+    wallw.style.opacity = (c01((d + 0.5) / 5) * (1 - x)).toFixed(3);
+    wallw.style.transform = `translateY(${((1 - kp) * 22 * U + fl - 8 * U * x).toFixed(2)}px) scale(${((0.94 + 0.06 * kp) * (1 - 0.03 * x)).toFixed(4)})`;
+    ul.style.transform = `translateX(${(tabX(0) - ulW / 2 + (tabX(1) - tabX(0)) * eIO((d - 4) / 12)).toFixed(2)}px)`;
+    tiles.forEach((c, j) => {
+      const t0 = T0 + j * TG;
+      if (d < t0 - 0.5) { c.el.style.visibility = "hidden"; return; }
+      c.el.style.visibility = "visible";
+      const sc = 0.85 + 0.15 * outBack((d - t0) / 7, 1.6);
+      c.el.style.opacity = c01((d - t0 + 0.5) / 3).toFixed(3);
+      c.el.style.transform = `translate(${c.x.toFixed(2)}px, ${c.y.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    });
+    const gs = eIO((d - LAND - 8) / 30);
+    wsh.style.opacity = gs > 0 && gs < 1 ? "1" : "0";
+    wsh.style.backgroundPosition = `${(100 - 100 * gs).toFixed(2)}% 0%`;
+    // the counter rises in front, counts up, pops as it lands; sinks away at the end
+    const kc = eOut((d - 3) / 12);
+    cntw.style.opacity = (c01((d - 3 + 0.5) / 4) * (1 - x)).toFixed(3);
+    cntw.style.transform = `translateY(${((1 - kc) * RISE + 30 * U * x).toFixed(2)}px) scale(${(0.96 + 0.04 * kc).toFixed(4)})`;
+    cntw.style.visibility = d >= 2.5 ? "visible" : "hidden";
+    cnum.textContent = fmt(B.v * eOut((d - C0) / CL));
+    cnum.style.transform = `scale(${(d >= LAND ? 1 + 0.08 * (1 - eOut((d - LAND) / 8)) : 1).toFixed(4)})`;
+    const cs = eIO((d - LAND - 2) / 24);
+    csh.style.opacity = cs > 0 && cs < 1 ? "1" : "0";
+    csh.style.backgroundPosition = `${(100 - 100 * cs).toFixed(2)}% 0%`;
+    cring.style.transform = `rotate(${(d * 2.2).toFixed(2)}deg)`;
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 64 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the widest number and the label are fitted beside the avatar
+  (document.fonts && document.fonts.load ? Promise.all([500, 700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    cnum.textContent = fmt(B.v);
+    const wn = cnum.offsetWidth;
+    if (wn > room) { numFs *= room / wn; cnum.style.fontSize = `${numFs}px`; }
+    const wl = clab.offsetWidth;
+    if (wl > room) { labFs *= room / wl; clab.style.fontSize = `${labFs}px`; }
+    // the card hugs what it holds (never narrower than 2.8 x its height), centred under the chin
+    const cwF = Math.max(chh * 2.8, Math.min(cw, tx + Math.max(cnum.offsetWidth, clab.offsetWidth) + chh * 0.3));
+    Object.assign(cntw.style, { left: `${ccx - cwF / 2}px`, width: `${cwF}px` });
+    [cnt, q("chi"), csh].forEach(e => { e.style.width = `${cwF}px`; });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

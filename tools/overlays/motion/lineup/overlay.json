@@ -1,0 +1,32 @@
+{
+ "name": "lineup",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round(1 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.45",
+   "from": 500,
+   "to": 2200,
+   "db": -10,
+   "what": "the tiles fan out"
+  },
+  {
+   "f": "start + round((19 + min(3 * (parts(items) - 1), 18) + i * min(5, 36 / max(1, parts(items) - 1))) * fps / 30)",
+   "repeat": "min(parts(items), 16)",
+   "kind": "tick",
+   "db": -6,
+   "what": "the count reaches a tile"
+  },
+  {
+   "f": "frames - round(16 * fps / 30)",
+   "kind": "air",
+   "dur": "0.4",
+   "db": -8,
+   "what": "the tiles fold back"
+  }
+ ]
+}

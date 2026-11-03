@@ -1,0 +1,37 @@
+{
+ "name": "Reels in a phone fan",
+ "kind": "social",
+ "category": "Social",
+ "what": "Your reels fan out like a hand of phones under a headline, in front of you in the lower half: the headline lines rise in, the five phones rise together and fan out with a small overshoot, each screen a reel with a play icon, a view count and a progress bar that runs; the hand sways while it holds, then folds away.",
+ "use_for": ["my reels", "portfolio", "content showcase", "results", "social proof", "creator", "talking head", "short form", "app promo"],
+ "tags": ["phones", "fan", "reels", "social", "mockup", "headline", "view count", "in shot", "talking head", "2 core points"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f1 the headline lines rise in one after another (3 f apart, 8 f, slow end; the last line's box opens from the middle, 7 f S-curve); f3-f13 the five phones rise together 150 px from below (slow end, fading in over 3 f); the inner pair fans out from f9, the outer pair from f11 (12 f, slow end with a small overshoot), each tilting 8.5 degrees a step and dropping on an arc; the screens' progress bars run; in the hold the hand sways 1.1 degrees from a wrist far below (96 f) and each phone bobs 3 px out of step; the last 10 f the phones fold back and drop 90 px (accelerating) and the headline lifts away (8 f, one frame apart).",
+ "tracks": [
+  {"name": "headline", "what": "the headline lines rise in one after another, the last on a box", "start_f": 1, "length_f": 11, "easing": "decelerating (slow end)"},
+  {"name": "phones up", "what": "the five phones rise together from below", "start_f": 3, "length_f": 10, "easing": "decelerating (slow end)"},
+  {"name": "fan inner", "what": "the two phones beside the middle fan out and tilt", "start_f": 9, "length_f": 12, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "fan outer", "what": "the two outer phones fan out, tilt and drop on the arc", "start_f": 11, "length_f": 12, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "hold", "what": "the hand sways, the phones bob out of step, the progress bars run", "start_f": 24, "length_f": 85, "easing": "S-curve (a sway)"},
+  {"name": "out", "what": "the phones fold back and drop, the headline lifts away", "start_f": 109, "length_f": 10, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round(48 * fps / 30)",
+ "min_why": "the phones fan out and are seen a moment before they fold away",
+ "in_shot": {"guard": true, "shadow": true, "match": true},
+ "core_points": 2,
+ "text_slots": ["lines", "views"],
+ "media_slots": [
+  {"id": "reel1_media", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel2_media", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel3_media", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel4_media", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel5_media", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true}
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 60,
+ "check_frames": [0, 2, 5, 9, 12, 15, 19, 24, 60, 100, 112, 116, 119]
+}

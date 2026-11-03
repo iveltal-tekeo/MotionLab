@@ -16,8 +16,16 @@ its docstring (run it without arguments).
 - `analysis\notes\<name>\` = a video's notes (2026-10-27, the Analyser's Notes; `tools\notes.py`,
   `motionlab\notes.py`, Claude = `/take-notes`): `note.json` (the video, SHA-256, fps, link, ask, tags, chapters, Most
   replayed, sponsor parts, `done`), `content\` (transcript, stats, info.json, thumbnail), `frames\` (key-frame sheets),
-  `notes.json` + `notes.md` (only through `notes.py save`, the quote gate), `mine.md` (the user's own notes) - not a
-  video analysis
+  `notes.json` + `notes.md` (only through `notes.py save`, the quote gate), `mine.md` (the user's own notes),
+  `asks.json` (2026-10-29: the user's questions + Claude's answers, only through `notes.py answer`) - not a video
+  analysis; `analysis\notes\_combined\<id>.json` = one question across several videos' notes
+- `analysis\spark\<name>\` = why a video worked (2026-10-30, the Analyser's SPARK; `tools\spark.py`,
+  `motionlab\spark.py`, Claude = `/spark`): `video.json` (the video, SHA-256, fps, link, ask, tags, format, chapters,
+  Most replayed), `content\` (transcript, stats, info.json, thumbnail + its measures), `shots\` (hook.jpg, end.jpg,
+  sheets of a frame per shot, shots.json = the frames a point may show), `measures.json` (the light read's pacing,
+  first 3 s, words / min, text), `numbers.json` (the lookup the user started: the video's numbers, the creator's usual
+  and how it was found), `spark.json` + `spark.md` (only through `spark.py save`, the rubric's gate) - not a video
+  analysis; its numbers stay on this PC
 - `analysis\templates\<pack>\` = a pack of captured motion-graphics clips (0.5.0, e.g. `refs\swishy\`; measured by
   `templates.py read`, Claude's `cards.json`) - not a video analysis; `tools\overlays\motion\<id>\` = the Motion
   Graphics library (MotionLab's own templates rebuilt from them, in the repo)
@@ -32,7 +40,13 @@ its docstring (run it without arguments).
   SHARED lessons waiting for review; private: `local\` (this PC's cards, `brand.json` = My Brand (0.6.0) + `brand\`
   (its logo, `products\` pictures, `import\` = what Import from your website last found) + `brand_backups\` (Start from
   zero's copies), `calendar.json` = the Content agency's content calendar (0.6.0), `social.json` + `social\thumbs\` = your
-  posted videos (Check my pages), `lessons.md` = new lessons `local-N`,
+  posted videos (Check my pages), `retention.json` + `retention\` = where people left (2026-11-02: each own post's
+  retention curve traced from the user's screenshot, `motionlab\retention.py`; the screenshots are never replaced),
+  `experiments.json` = tests of one idea (2026-11-02: versions, the rule, Claude's keep / change / cut - `tools\experiments.py`),
+  `findings.json` = the lessons from the user's own posts with their confidence (2026-11-02, `tools\findings.py`),
+  `monthly.json` = the monthly reviews: Claude's summary + three next tests per month and the ones put on the calendar
+  (2026-11-02, `tools\monthly.py`; a calendar idea from one carries `"next": "<YYYY-MM>:<n>"`),
+  `lessons.md` = new lessons `local-N`,
   `lessons_making.md` = lessons on making videos `local-make-N`, `shared.json` = what was shared + what the user keeps
   on this PC (private / include) + imports, `summary.md` + `summary\<category>.md` - Claude reads both before a
   review, `memory.md` = Claude's memory (0.4: every video's style in one line, the effects seen and how they were
@@ -61,8 +75,15 @@ its docstring (run it without arguments).
   graphics with their settings + rendered .mov (`overlay.py save`; `motionlab\overlay_settings.py`)
 - `tools\` the pipeline (Python 3.12 venv at `.venv\`, `requirements.txt`; ffmpeg on PATH); `tools\motionlab\` the
   package (`compose.py` compositor - 0.6.1: a graphic `behind` the person, `guard` off the face, `follow` the face /
-  the camera, `glass`, `shadow`, `match` the footage; `person.py` the person mask + face track per clip from its light
-  cache, `<ID>.person.u8` / `.json` beside the caches, `tools\models\selfie_segmenter.tflite` read by OpenCV; `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
+  the camera, `glass`, `shadow`, `match` the footage, `behind: "top"` behind the head and in front of the body;
+  2026-10-28 a `fx` layer = `screenfx.py`'s whole-picture effects (the video into a card / tile / half the screen,
+  colour looks, glitch, rabbit hole, dots, before / after, corner push) and a clip's room `paint`; `person.py` the person mask + face track per clip from its light
+  cache, `<ID>.person.u8` / `.json` beside the caches, `tools\models\selfie_segmenter.tflite` read by OpenCV; `reframe.py`
+  (2026-10-29) a clip wider than its place framed per shot - hold or follow on the faces (`<ID>.faces.json` beside the
+  caches) in a layout (fill, split, fit, screen + face, game: compose's clip `panels` over a `backdrop`) within its
+  limits (the upscale cap, text burned in kept whole, faces inside the apps' safe area) - `frame_shot` = the user's
+  choice for one shot (the Editor's Framing, an edit list's `frame` line, New edit's `--framing`), the clip's `anchor` +
+  `"reframe"`, run by every quick draft; `graphics.py` pixel font / seven-segment / firework / streaks, `fusion.py` Fusion
   .comp text, `knowledge.py`, `photos.py` photos as still shots (2026-10-24: any format the right way up, HEIC through
   pillow-heif, the brief's sheet), `app\` the app); `tools\config.json` every detection threshold (`_comment` keys
   explain units) + `tools\config.local.json` (2026-10-24, not in git: this PC's own values laid over it by
@@ -86,7 +107,9 @@ its docstring (run it without arguments).
   `-Here` = setup.bat's repair run; docs\organization.md *Install*), `LICENSE` (MIT), `CHANGELOG.md` (the Update
   button's dialog shows it) + `CHANGELOG.es.md` (the same sections in Spanish from 0.5.1 on - the app in Spanish shows
   them, a version missing there in English), `.mcp.json` (MotionLab's MCP server), `.claude\settings.json` (a
-  SessionStart hook: cloud sessions only, docs\cloud.md), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
+  SessionStart hook: cloud sessions only, docs\cloud.md; 2026-10-29 hard rule 1: a deny rule on `refs\` and a
+  PreToolUse hook - `.claude\hooks\guard-sources.sh` runs `guard_sources.py` with the venv's Python or python3 - that
+  refuses deletes / moves / renames / overwrites of `refs\` and a project's top level, `--selfcheck` in the smoke test), `.github\workflows\tests.yml` (GitHub's tests, see Publishing),
   `.gitignore` (refs, analysis, projects, library, settings.json, .app, .venv, knowledge\local|inbox|outbox and the
   self-test videos stay private), `.gitattributes` (LF in the repo, `.bat` always CRLF), `MotionLab.ico`. The
   version is `tools\motionlab\__init__.py` `__version__`.
@@ -101,7 +124,14 @@ not say, or a rule.
   `download.py` (yt-dlp); `motionlab\profile.py` = the video in numbers per focus
 - Notes from a video (2026-10-27): `notes.py prepare <video>` (MotionLab's part: words, key frames, chapters, Most
   replayed, sponsor parts) and `notes.py save <name> <draft.json>` (Claude's notes through the gate: every quote found
-  in the transcript, the frame + timecode set by the tool, the limits)
+  in the transcript, the frame + timecode set by the tool, the limits); 2026-10-29 `notes.py ask <name> <id>` + `answer <name> <id>
+  <draft.json>` (a question from the page - Ask Claude, Combine notes with `<name>` = `_combined` - through the same gate)
+- SPARK, why a video worked (2026-10-30): `spark.py prepare <video>` (MotionLab's part: a light read - the analyser's
+  cut detector and text measure on a fixed frame grid -, the words, the lookups the user started: the video's numbers
+  and the creator's list -> the usual and the outlier score; the pictures), `spark.py numbers <name>` (the lookup
+  again), `spark.py save <name> <draft.json>` (Claude's rubric through the gate: 12 points labelled measured /
+  judgement / unknown, every quote found, every frame on the sheets, every number cited from the table, no claim of
+  cause; the result set by the tool), `show`, `pending`, `list`, `selfcheck`
 - Sets that are not a video: `thumbsets.py` (thumbnail sets; Claude's patterns = `/analyze-reference thumbs <set>`,
   used by `thumbnail.py make / check --style <set>`), `textsets.py` (scripts & prompts, 2026-10-18: Claude's check of
   a text is saved only when every quote is found in THAT text - `prompts.verify_check`, also behind `prompts.py
@@ -113,7 +143,20 @@ not say, or a rule.
   of footage 2.1 GB in 35 s instead of 33 GB in 131 s; `--full` = the old way), `catalogue.py` (0.6.1: the clip
   catalogue `build\clips.json` - each clip's moments by the analyser's cut detector on the light frames, usable / bad
   windows, motion, light, look-alike groups, the day filmed, key frames on sheets, Claude's line per moment via
-  `say`, the user's line wins; the brief carries it, `motionlab\catalogue.py`), `storyboard.py`,
+  `say`, the user's line wins; the brief carries it, `motionlab\catalogue.py`), `segments.py` (0.6.1, edit by
+  segments: an edit's segments - a talk's sentences grouped into 3-12 s beats (its jump cuts count as pauses), a song's
+  phrases with the drop on its own, else runs of shots - and per segment a treatment by rules with why and two
+  alternatives -> `build\segments_vN.json`; the rules in `motionlab\segments.py`; steps 3-4: `--set 3=broll` /
+  `--like 3` / `--reset all` = the user's picks in `build\segment_picks.json`, kept through a re-run (tied to where a
+  segment starts in its clip / song); `--build` = every pick as edit-list lines on a bare draft (`draft_edit.py
+  --bare`: the cuts, sound, colour and framing only - made first from the draft's own arguments) -> the next plan,
+  checked: every cut where it was, each pick in it, nothing in a plain one, the B-roll share; steps 5-6: `--stills`
+  (a picture per segment), `--preview N` (one segment with its pick, rendered), `--request` (the app's New edit >
+  Segments: a bare draft from the request first) - `build\segments\v<B>\`; `draft_edit.py --apply --out <name>.json`
+  = a plan that is no version; step 7: `--claude <file>` = Claude's picks and topics (/recreate-video by_feel.md *By
+  segments*: the word a punch-in / B-roll lands on, a card's words, why) in segment_picks.json as `"by": "claude"`,
+  under the user's - *back to the suggestion* = Claude's; `--reset claude`; brief.py's *Segments* = the list when the
+  parts were cut from the request), `storyboard.py`,
   `render_video.py` (0.6.0: masters every render's sound -
   `motionlab\loudness.py`, config "master": -14 LUFS, true peak <= -1 dBTP after AAC; `--no-master`),
   `compare_renders.py`, `miniedit.py` (0.6.0: the app's Editor tab - `state` = the shots, graphics, captions,
@@ -141,7 +184,9 @@ not say, or a rule.
   look; a video's loudness and true peak too; build.py adds `precheck.face_cover`: a caption / graphic over the
   face, upright safe zones = `motionlab\safezones.py`, TikTok / Reels / Shorts and "all" = the strictest, the same
   numbers in facefit, the Editor's guides and brief.py's *The safe area*; `precheck.talk_checks`: a talking video's tail after its last word, whooshes per 30 s;
-  and, for a plan with `"captions_fit": "chin"`, `motionlab\facefit.py` places each shot's captions off the face),
+  and, for a plan with `"captions_fit": "chin"`, `motionlab\facefit.py` places each shot's captions off the face;
+  0.6.1: an edit by segments' cards (`"clear_face": true`) moved the least way off the faces and the captions,
+  measured once rendered - `facefit.fit_cards`),
   `speech.py` (speech to text, optional install; `--verbatim` keeps the fillers; `stumbles <take>` =
   `motionlab\stumbles.py`: fillers, repeats, retakes, "cut / again")
 - Prepare and posting: `script.py` (the script check; the app's requests - kinds new / improve / title / prompt,
@@ -160,7 +205,11 @@ not say, or a rule.
 - Tests: `selftest.py [--extended]` (the synthetic test videos scored - must PASS after any change;
   `make_testvideo.py [--extended|--negative|--vfr]` builds them), `tools\dev\install_test.py` (the installer's tests,
   ~2 min, never touches this PC; `setup.bat /lab` = the lab steps alone), `tools\dev\smoke.py` (every module, GET
-  route and page, the MCP server, the Spanish catalogue, Home once in Spanish), `tools\dev\i18n_check.py check | todo
+  route and page, the MCP server, the Spanish catalogue, Home once in Spanish, `roadmap.py check` - the version in
+  both changelogs and README's status line - and `tools\dev\server_test.py`: from outside, a test server's Host
+  header, session token, body cap, paths out of /ui/ and /files/ and private files through /api/text, 2026-11-02),
+  the self-test's ratchets (`tools\dev\ratchets.json`: `except ...: pass` blocks and functions over 150 lines may
+  only go down - 72 and 27 on 2026-11-02), `tools\dev\i18n_check.py check | todo
   <area> | scan | areas | merge` (the app's Spanish, 0.5.1: `check` must PASS - every key has its Spanish with the same
   {placeholders} and tags, no unused keys; `todo` = an area's texts not wrapped yet, `tools\dev\i18n_areas.json`;
   `merge` = the part files -> `ui\i18n\es.json`)
@@ -189,7 +238,7 @@ not say, or a rule.
 - Publishing a new version (the repo owner = the user, with Claude's help): self-test `--extended` all PASS, raise
   `__version__` in `tools\motionlab\__init__.py`, add a `## x.y.z - date - title` section to `CHANGELOG.md` (the
   update banner shows it; it takes in the `## Unreleased` lines - the app shows only version sections) and the same
-  section in Spain Spanish (tú) to `CHANGELOG.es.md`, raise `API_LEVEL` in `server.py` + `app.js` if the page needs
+  section in Spain Spanish (tú) to `CHANGELOG.es.md`, raise `API_LEVEL` in `server.py` + `ui\js\core.js` if the page needs
   new routes; the user commits and pushes (the roadmap's "here" too: `roadmap.py sync`; a new roadmap label's Spanish
   goes into `tools\motionlab\app\ui\i18n\parts\es.release.json` as `<English>|roadmap`, listed in its `_by_key`). GitHub's full tests (self-test + `tools\dev\smoke.py`,
   ~15 min) run only for a new `x.y.0` or by hand (Actions > Run workflow); any other new version (0.4.2.1, 0.4.3...)

@@ -449,6 +449,14 @@ def content_info(d: Path) -> dict:
     return {"transcript": tr, "stats": st}
 
 
+def _spark_of(src: dict) -> dict | None:
+    from motionlab import spark as SP
+    try:
+        return SP.of_video(src.get("sha256"), src.get("path"))
+    except OSError:
+        return None
+
+
 def reference(name: str) -> dict:
     d = ANALYSIS / safe_name(name)
     ev = read_json(d / "events.json", None)
@@ -497,6 +505,7 @@ def reference(name: str) -> dict:
         "cuts": [{"id": c["id"], "frame": c["frame"], "tc": c["tc"], "kind": c.get("kind"), "on_beat": c.get("on_beat"),
                   "thumb": rel(d / c["thumb"]) if c.get("thumb") else None} for c in ev.get("hard_cuts", [])],
         "events": evs, "families": taxonomy.FAMILIES,
+        "spark": _spark_of(ev.get("source") or {}),           # 2026-10-30: the same video read by SPARK
         "near_misses": [{"frame": n["frame"], "tc": n["tc"], "why": n.get("why", ""), "checked": n.get("checked", ""),
                          "frames": [rel(d / f) for f in n.get("frames", []) if (d / f).exists()]}
                         for n in ev.get("near_misses") or []],
@@ -540,7 +549,8 @@ def waiting() -> list[dict]:
     them as one post)."""
     idx = read_json(LAB / "refs" / "downloads.json", {}) or {}
     from motionlab import notes as NT                  # 2026-10-27: a video downloaded for its notes is not waiting
-    noted = NT.videos()
+    from motionlab import spark as SP                  # ... nor one SPARK read (2026-10-30)
+    noted = NT.videos() | SP.videos()
     files = [Path(c["path"]) for c in candidate_videos() if not c["analysed"] and c["name"].lower() not in noted]
     ad = LAB / "refs" / "audio"
     files += [p for p in sorted(ad.glob("*")) if p.is_file() and p.suffix.lower() in AUDIO_EXT] if ad.is_dir() else []
@@ -1394,8 +1404,9 @@ def save_generate_request(body: dict) -> dict:
 ME_MAX_OPS, ME_MAX_WORDS = 300, 300
 ME_KEYS = {"op", "shot", "side", "by", "f", "kind", "to", "graphic", "key", "value", "cue", "text", "at", "speed",
            "layer", "all", "id", "template", "len", "values", "db", "sound", "look", "strength", "ease", "start", "src",
-           "in", "prop", "props", "dir", "edits"}           # (prop / props: keyframes; dir: a transition's direction;
-#                                                                 edits: many captions' words at once)
+           "in", "prop", "props", "dir", "edits",
+           "layout", "mode", "x", "y", "panel"}             # (prop / props: keyframes; dir: a transition's direction;
+#                                                  edits: many captions' words at once; layout ... panel: a shot's framing)
 ME_MAX_EDITS = 3000
 EDITOR_SOUNDS = LAB / ".app" / "editor" / "sounds"          # the made-up sound effects as the Editor plays them
 
@@ -1522,6 +1533,45 @@ def agency_stats_upload(name: str, platform: str, stream, size: int) -> dict:
             return STS.import_file(f, platform or None, Path(str(name)).name[:120])
         except (ValueError, zipfile.BadZipFile) as e:
             raise ValueError(I18N.t(str(e)) if str(e) else I18N.t("the file could not be read"))
+
+
+def agency_retention_upload(name: str, stream, size: int) -> dict:
+    """Content agency > Where people left (2026-11-02): a screenshot of a video's retention graph the user pasted or
+    picked (a raw body, <= 15 MB) -> knowledge\\local\\retention\\ (a new file) + where its four lines probably go."""
+    from motionlab import retention as RT
+    if not 0 < size <= RT.MAX_BYTES:
+        _drain(stream, size)
+        raise ValueError(I18N.t("the screenshot is empty or bigger than 15 MB"))
+    data = stream.read(size)
+    try:
+        return RT.add_image(str(name), data)
+    except ValueError as e:
+        raise ValueError(I18N.t(str(e))) from None
+
+
+def agency_retention(body: dict, save: bool) -> dict:
+    """The live trace of a screenshot (nothing saved), or - save - the curve traced again and kept for its post;
+    {remove: true} = the curve forgotten (its screenshot stays)."""
+    from motionlab import retention as RT
+    body = body if isinstance(body, dict) else {}
+    try:
+        if save and body.get("remove"):
+            RT.remove(str(body.get("key") or ""))
+            return {"removed": True}
+        axes, colour = body.get("axes") or {}, body.get("colour")
+        if not save:
+            return RT.trace_image(str(body.get("image") or ""), axes, colour)
+        entry = RT.save(str(body.get("key") or ""), str(body.get("image") or ""), axes, colour,
+                        url=str(body.get("url") or ""), title=str(body.get("title") or ""))
+    except ValueError as e:
+        raise ValueError(I18N.t(str(e))) from None
+    try:                                                 # R3: a new graph = new evidence for the lessons (never fails the save)
+        from motionlab import findings as FD
+        FD.retest_all()
+    except Exception as ex:                               # noqa: BLE001
+        with open(LAB / ".app" / "server.log", "a", encoding="utf-8") as fh:
+            fh.write(f"{stamp()} the lessons' retest after a retention graph failed: {ex!r}\n")
+    return entry
 
 
 def brand_mood_upload(name: str, stream, size: int) -> dict:
@@ -1785,6 +1835,92 @@ def miniedit_preview(name: str, plan: str, ops) -> dict:
     except ME.EditError as e:
         raise ValueError(str(e))
     return {"done": done, **_me_paths(ME.state(N))}
+
+
+# ------------------------------------------------------------------ 0.6.1: Edit by segments (tools\segments.py)
+SEG_KEYS = ("n", "kind", "f0", "f1", "key", "say", "pick", "by", "why", "why_k", "alts", "can", "rule", "opt", "drop",
+            "template", "claude", "topic", "text")
+
+
+def _bare(b: Path, plan: str) -> bool:
+    return bool(((read_json(b / plan, {}) or {}).get("made_by") or {}).get("bare")) if (b / plan).is_file() else False
+
+
+def segments(name: str, plan: str = "") -> dict:
+    """New edit's *Segments* step and the Editor's Segments lane: a bare draft's parts, each with its pick (the rules',
+    Claude's or the user's - build\\segments_vN.json; Claude's kept under the user's as "claude", a topic's name on
+    its first part as "topic"), its picture and its preview while it shows this pick (and its words)
+    (build\\segments\\v<N>\\stills.json, previews.json). A version built from them (its made_by "from" = a bare draft):
+    that draft's parts now + "built" = the picks it was built with and its check. plan "" = the newest bare draft;
+    no parts yet = "segments": []."""
+    from motionlab import segments as SG
+    b = PROJECTS / safe_name(name) / "build"
+    if not b.is_dir():
+        raise ValueError(I18N.t("no project {video}", video=name))
+    built = None
+    if plan:
+        if not re.fullmatch(r"plan_v\d+\.json", plan) or not (b / plan).is_file():
+            raise ValueError(I18N.t("not a plan: {name}", name=repr(plan[:40])))
+        if not _bare(b, plan):
+            up = str(((read_json(b / plan, {}) or {}).get("made_by") or {}).get("from") or "")
+            if not re.fullmatch(r"plan_v\d+\.json", up) or not _bare(b, up):
+                return {"plan": plan, "segments": []}
+            done = read_json(b / f"segments_v{re.sub(r'[^0-9]', '', plan)}.json", {}) or {}
+            built = {"plan": plan, "picks": {str(s["n"]): s.get("pick") for s in done.get("segments") or []},
+                     "ok": done.get("check_ok"), "check": done.get("check") or []}
+            plan = up
+    else:
+        bare = [p.name for p in sorted(b.glob("plan_v*.json"), key=lambda p: -int(re.sub(r"\D", "", p.stem) or 0))
+                if _bare(b, p.name)]
+        if not bare:
+            return {"plan": None, "segments": []}
+        plan = bare[0]
+    v = re.sub(r"\D", "", plan)
+    doc = read_json(b / f"segments_v{v}.json", {}) or {}
+    if not doc.get("segments"):
+        return {"plan": plan, "segments": [], "built": built}
+    d = b / "segments" / f"v{v}"
+    stills = (read_json(d / "stills.json", {}) or {}).get("stills") or {}
+    prev = read_json(d / "previews.json", {}) or {}
+    fps, out = float(doc.get("fps") or 25), []
+    for s in doc["segments"]:
+        st, pv = stills.get(str(s["n"])) or {}, prev.get(str(s["n"])) or {}
+        ok = pv and pv.get("t") == s.get("pick") and pv.get("opt") == s.get("opt") and pv.get("text") == s.get("text") \
+            and (b / str(pv.get("file"))).is_file()
+        out.append({**{k: s[k] for k in SEG_KEYS if k in s}, "tc0": frame_to_tc(int(s["f0"]), fps),
+                    "tc1": frame_to_tc(int(s["f1"]), fps), "like": SG.like(doc["segments"], s["n"]),
+                    "still": rel(b / st["file"]) if st.get("file") and (b / st["file"]).is_file() else None,
+                    "preview": rel(b / pv["file"]) if ok else None})
+    return {"plan": plan, "kind": doc.get("kind"), "fps": fps, "frames": doc.get("frames"), "lang": doc.get("lang"),
+            "made": doc.get("made"), "picks_lost": doc.get("picks_lost", 0), "segments": out, "built": built,
+            "claude": bool(any(s.get("claude") for s in doc["segments"])),
+            "treatments": list(SG.TREATMENTS)}
+
+
+def segments_change(name: str, body: dict) -> dict:
+    """POST .../segments: the user's picks (build\\segment_picks.json through tools\\segments.py change_picks - all or
+    nothing): "set" {n: treatment | "treatment:option"}, "like" n (Apply to all like this), "reset" n | "all"
+    (Recommended for all) -> the parts again, as segments(name, plan) shows them."""
+    import segments as SGT                                   # tools\segments.py (the app runs from tools\)
+    from motionlab.project import Project
+    view = str(body.get("plan") or "")
+    st = segments(name, view)
+    if not st["segments"]:
+        raise ValueError(I18N.t("no parts yet - cut the video into parts first"))
+    sets = []
+    for k, x in (body.get("set") or {}).items():
+        if not str(k).isdigit() or not re.fullmatch(r"[a-z]+(:[\w.-]{1,60})?", str(x)):
+            raise ValueError(I18N.t("that change is not possible for this part"))
+        sets.append(f"{int(k)}={x}")
+    like = [int(body["like"])] if str(body.get("like") or "").isdigit() else []
+    reset = [str(body["reset"])] if re.fullmatch(r"\d+|all", str(body.get("reset") or "")) else []
+    prj = Project(safe_name(name))
+    pp = prj.build / st["plan"]
+    lines = SGT.change_picks(prj, SGT.analyse(prj, pp, write=False), sets, like, reset)
+    if any(ln.startswith("ERROR") for ln in lines):
+        raise ValueError(I18N.t("that change is not possible for this part"))
+    SGT.analyse(prj, pp)
+    return {**segments(name, view), "done": lines}
 
 
 ME_RANGE_MAX = 150                                         # the longest moment rendered exactly (frames)

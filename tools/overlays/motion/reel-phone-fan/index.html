@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "lines", "type": "string", "label": "Headline lines (split with |; the last one sits on a box)", "default": "my top 5 reels.|made in one afternoon."},
+  {"id": "reel1_media", "type": "string", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "views", "type": "string", "label": "View count on each phone, left to right (split with |)", "default": "1.2M|486K|2.7M|904K|158K"},
+  {"id": "side", "type": "enum", "label": "On a wide video: where it sits", "default": "right", "options": [{"value": "right", "label": "Right"}, {"value": "left", "label": "Left"}, {"value": "centre", "label": "Centre"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.6, "max": 1.3, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Phones’ centre down (% of the height)", "default": 65, "min": 35, "max": 90, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Folds away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "reel-phone-fan" (2026-10-28): the user's reels fan out like a hand of phones under a
+     headline, in the lower half, in front of the person. The headline lines rise in one after another (from f1, 3 f
+     apart, 8 f, slow end; the last line on a box that opens from the middle), the five phones rise together from
+     below (f3-f13, slow end) and fan out like a hand of cards (the inner pair from f9, the outer pair from f11, 12 f,
+     a small overshoot), each tilting and dropping a little on an arc. Every screen is a reel: the user's cover or
+     clip, else a placeholder that still reads as a reel (its own colour gradient, a short bold caption), with a play
+     icon, the view count and a progress bar that runs. In the hold the hand sways and each phone bobs out of step;
+     at the end the phones fold back and drop and the headline lifts away (the last 10 frames). On a wide video the
+     whole unit sits at the side (setting "side"). The phones stay off the face ("guard"). Look-aware, size-independent.
+     MotionLab's own code after a design in an MIT-licensed effects pack. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ph, .ln { position: absolute; left: 0; top: 0; }
+  .ln { white-space: nowrap; font-synthesis: none; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"><div id="fan" class="abs"></div><div id="head" class="abs"></div></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                                 // accelerating (exits only)
+  const backOut = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };   // slow end, an overshoot
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const mk = (parent, css) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, css || {}); if (parent) parent.appendChild(e); return e; };
+  // a function run at every frame's time: seek-safe (a render, a snapshot and a preview land on the same picture)
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const LAND = W > H;
+  const BODY = `'${V.body_font}', 'Segoe UI', sans-serif`;
+
+  // ---- a reel tile (the same in phone-fan, place-in-grid and check-pills): the user's cover or clip, else a
+  //      placeholder that reads as a real reel (its own colour gradient, a light, a short bold caption); always a dark
+  //      fade at its foot, a play icon with the view count, and a thin light rim
+  const PAL = [["#FF8A5B", "#6B2A86"], ["#2BC0A4", "#0F3A5C"], ["#F6C445", "#D9482B"], ["#6F8FFF", "#1C1E5C"],
+    ["#F48FB1", "#7E3160"], ["#9BD27A", "#21503A"], ["#B9A2FF", "#40307A"], ["#8A8A96", "#16161B"]];
+  const CAPS = ["day 12 of 30", "my desk setup", "3 quick tips", "before / after", "watch till the end", "how I edit", "it worked!", "POV: monday"];
+  const PLAY = `<svg viewBox="0 0 24 24" width="100%" height="100%" style="display:block"><path d="M7.5 4.6 L19.2 12 L7.5 19.4 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/></svg>`;
+  function reel(box, k, w, h, src, slot, views, o) {
+    o = o || {};
+    const S = Math.min(w, h), R = o.r !== undefined ? o.r : 0.0625 * S;
+    Object.assign(box.style, { overflow: "hidden", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px` });
+    const cov = mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` });
+    if (src && window.MLLook) MLLook.media(cov, src, { look: L, kind: "image", fit: "cover", seed: k + 1, label: "", slot, r: 0, start: 0, duration: FRAMES / FPS });
+    else {
+      const [c1, c2] = PAL[k % PAL.length], r = rnd(31 + 7 * k);
+      const ang = Math.round(140 + r() * 80), bx = Math.round(22 + r() * 56), by = Math.round(14 + r() * 30);
+      cov.style.background = `radial-gradient(circle at ${bx}% ${by}%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 50%), ` +
+        `radial-gradient(ellipse at 50% 112%, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 62%), linear-gradient(${ang}deg, ${c1} 0%, ${c2} 100%)`;
+      const cap = mk(cov, { left: `${0.09 * w}px`, width: `${0.82 * w}px`, top: `${0.3 * h - 0.06 * S}px`, textAlign: "center", color: "#FFFFFF",
+        fontFamily: BODY, fontWeight: String(fw(V.body_font, 800)), fontSize: `${0.118 * S}px`, lineHeight: "1.06", letterSpacing: "-0.01em",
+        textShadow: `0 ${0.012 * S}px ${0.04 * S}px rgba(0, 0, 0, 0.45)` });
+      cap.textContent = CAPS[k % CAPS.length];
+    }
+    mk(box, { left: "0px", top: `${h - 0.46 * S}px`, width: `${w}px`, height: `${0.46 * S}px`,
+      background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.58) 100%)" });
+    const cnt = mk(box, { left: `${0.07 * S}px`, top: `${h - (o.bar ? 0.11 : 0.075) * S - 0.11 * S}px`, height: `${0.11 * S}px`,
+      display: "flex", alignItems: "center", gap: `${0.028 * S}px`, whiteSpace: "nowrap", transformOrigin: "0% 100%" });
+    const ic = document.createElement("div"); cnt.appendChild(ic);
+    Object.assign(ic.style, { width: `${0.09 * S}px`, height: `${0.09 * S}px`, flex: "0 0 auto" });
+    ic.innerHTML = PLAY;
+    const tx = document.createElement("span"); cnt.appendChild(tx);
+    Object.assign(tx.style, { color: "#FFFFFF", fontFamily: BODY, fontWeight: String(fw(V.body_font, 700)), fontSize: `${0.094 * S}px`,
+      lineHeight: "1", textShadow: `0 ${0.01 * S}px ${0.03 * S}px rgba(0, 0, 0, 0.5)` });
+    tx.textContent = views || "";
+    let bar = null;
+    if (o.bar) {                                     // a reel playing: a thin bar along its foot
+      const bb = mk(box, { left: `${0.07 * S}px`, top: `${h - 0.06 * S}px`, width: `${w - 0.14 * S}px`, height: `${Math.max(2, 0.014 * S)}px`,
+        borderRadius: `${0.01 * S}px`, background: "rgba(255, 255, 255, 0.3)", overflow: "hidden" });
+      bar = mk(bb, { left: "0px", top: "0px", width: "100%", height: "100%", background: "rgba(255, 255, 255, 0.92)", transformOrigin: "0% 50%" });
+    }
+    mk(box, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: `${R}px`,
+      border: `${Math.max(1, 1.5 * U)}px solid rgba(255, 255, 255, ${o.rim !== undefined ? o.rim : 0.4})` });
+    return { cnt, tx, bar };
+  }
+
+  // ---- the preview background (only when painted: over a video the footage is the background)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.55 * W}px ${0.3 * H}px at ${0.3 * W}px ${0.22 * H}px, ${rgba(L.mustard, 0.42)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.28 * H}px at ${0.8 * W}px ${0.72 * H}px, ${rgba(L.signal, 0.3)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- the unit: phones (her proportions: 0.19 of a 9:16 width, twice as tall), the headline above them
+  const s = (Number(V.size) || 1) * U;
+  const PW = (LAND ? 178 : 205) * s, PHH = 2.03 * PW;                    // a phone
+  const ARC = 0.065 * PW, ROT = LAND ? 8 : 8.5;                          // the fan: drop and tilt per step
+  const EXT = PW / 2 * Math.cos(ROT * 2 * Math.PI / 180) + PHH / 2 * Math.sin(ROT * 2 * Math.PI / 180);   // an outer phone's half width
+  // the spacing per step, closer when a big size would push the outer phones off the frame
+  const DX = Math.max(0.5 * PW, Math.min((LAND ? 0.72 : 0.82) * PW, ((LAND ? 0.22 : 0.485) * W - EXT) / 2));
+  const RAD = 0.155 * PW, BEZ = 0.03 * PW, SW = PW - 2 * BEZ, SH = PHH - 2 * BEZ, SR = RAD - BEZ;
+  const side = String(V.side || "right");
+  const span = 2 * DX + EXT;                                              // half the fan's width
+  const CX = LAND ? (side === "left" ? Math.max(span + 0.02 * W, 0.23 * W) : side === "centre" ? W / 2 : Math.min(W - span - 0.02 * W, 0.77 * W)) : W / 2;
+  const CY = Math.min(H - PHH / 2 - 4 * ARC - 0.02 * H, Math.max(0.3 * H, H * V.y / 100));
+  const fan = q("fan"), head = q("head"), hand = q("hand");
+  [fan, head, hand].forEach(e => Object.assign(e.style, { width: `${W}px`, height: `${H}px` }));
+  fan.style.transformOrigin = `${CX}px ${CY + 2.4 * PHH}px`;               // the hand's wrist, far below: it sways from there
+  const views = String(V.views || "").split("|").map(x => x.trim());
+  const P = [];
+  for (let k = 0; k < 5; k++) {
+    const wrap = mk(fan, { left: "0px", top: "0px", width: `${PW}px`, height: `${PHH}px`, transformOrigin: "50% 50%", opacity: "0", zIndex: String(k + 1) });
+    wrap.className = "ph";
+    mk(wrap, { left: "0px", top: "0px", width: `${PW}px`, height: `${PHH}px`, borderRadius: `${RAD}px`,
+      background: "linear-gradient(155deg, #3A3A42 0%, #141418 30%, #070709 100%)",
+      boxShadow: `0 ${12 * U}px ${28 * U}px rgba(0, 0, 0, ${V.background ? 0.42 : 0.24}), inset 0 0 0 ${Math.max(1, 1.2 * U)}px rgba(255, 255, 255, 0.14)` });
+    const scr = mk(wrap, { left: `${BEZ}px`, top: `${BEZ}px` });
+    const slot = `reel${k + 1}_media`;
+    const r = reel(scr, k, SW, SH, V[slot], slot, views[k] || "", { r: SR, bar: true, rim: 0.12 });
+    mk(wrap, { left: `${(PW - 0.3 * PW) / 2}px`, top: `${BEZ + 0.028 * PW}px`, width: `${0.3 * PW}px`, height: `${0.075 * PW}px`,
+      borderRadius: `${0.04 * PW}px`, background: "#050507" });                // the camera island
+    mk(wrap, { left: `${BEZ}px`, top: `${BEZ}px`, width: `${SW}px`, height: `${SH}px`, borderRadius: `${SR}px`,
+      background: "linear-gradient(118deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.12) 46%, rgba(255, 255, 255, 0) 58%)" });   // glare
+    P.push({ wrap, o: k - 2, bar: r.bar });
+  }
+
+  // ---- the headline: one line a row, the last on a box in the look's paper colour
+  const lines = String(V.lines || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 3);
+  const FS0 = (LAND ? 62 : 74) * s, MAXW = LAND ? Math.min(0.42 * W, 2 * span + 0.06 * W) : 0.72 * W;
+  const LN = lines.map((txt, j) => {
+    const last = j === lines.length - 1 && lines.length > 1 || lines.length === 1;
+    const el = mk(head, { left: "0px", top: "0px", opacity: "0" });
+    el.className = "ln";
+    let bg = null;
+    if (last) bg = mk(el, { left: "0px", top: "0px", width: "100%", height: "100%", background: L.paper });
+    const sp = document.createElement("span"); el.appendChild(sp);
+    Object.assign(sp.style, { position: "relative", display: "block", fontFamily: BODY, fontWeight: String(fw(V.body_font, 800)), color: last ? L.ink : L.paper,
+      letterSpacing: "-0.015em", lineHeight: "1.12", textShadow: last ? "none" : `0 ${2 * U}px ${12 * U}px rgba(0, 0, 0, 0.5)` });
+    sp.textContent = txt;
+    return { el, sp, bg, last, x: 0, y: 0 };
+  });
+  let FS = FS0;
+  function layout() {
+    LN.forEach(l => { l.sp.style.fontSize = `${FS}px`; if (l.last) l.sp.style.padding = `${0.1 * FS}px ${0.24 * FS}px ${0.12 * FS}px`; });
+    const widest = Math.max(1, ...LN.map(l => l.el.offsetWidth));
+    if (widest > MAXW) {
+      FS = FS * MAXW / widest;
+      LN.forEach(l => { l.sp.style.fontSize = `${FS}px`; if (l.last) l.sp.style.padding = `${0.1 * FS}px ${0.24 * FS}px ${0.12 * FS}px`; });
+    }
+    const rr = Math.min(0.26 * FS, Math.max(4 * U, L.radius * 1.1));
+    LN.forEach(l => { if (l.bg) l.bg.style.borderRadius = `${rr}px`; });
+    // stacked upward from just above the fan's top (the middle phone)
+    let y = CY - PHH / 2 - 30 * s;
+    for (let j = LN.length - 1; j >= 0; j--) {
+      const l = LN[j], hh = l.el.offsetHeight, ww = l.el.offsetWidth;
+      y -= hh;
+      l.x = Math.min(W - ww - 0.03 * W, Math.max(0.03 * W, CX - ww / 2)); l.y = Math.max(0.02 * H, y);
+      y -= 0.1 * FS;
+    }
+  }
+
+  // ---- the motion (g = frames at 30 fps since "Comes in at frame"; EN = g at the end)
+  const ST = Math.round(V.start), EN = (FRAMES - ST) * 30 / FPS, LASTG = EN - 30 / FPS;   // LASTG = g at the last frame
+  const LEAVE = !!V.leave && LASTG - 10 > 34;
+  const RISE = Math.min(150 * s, H - CY);
+  function render(t) {
+    const g = (Math.round(t * FPS * 1000) / 1000 - ST) * 30 / FPS;
+    hand.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    const xo = LEAVE ? eIn((g - (LASTG - 10)) / 10) : 0;                      // the fold-away: the last 10 frames
+    const live = c01((g - 24) / 20);
+    // the hand sways from the wrist while it holds
+    fan.style.transform = `rotate(${(1.1 * Math.sin(2 * Math.PI * (g - 24) / 96) * live).toFixed(3)}deg)`;
+    const up = 1 - eOut((g - 3) / 10), op = c01((g - 2.5) / 3);
+    P.forEach((p, k) => {
+      const a = Math.abs(p.o), qk = backOut((g - (7 + 2 * a)) / 12, 1.3) * (1 - xo);
+      const bob = 3 * U * Math.sin(2 * Math.PI * (g - 24) / 64 + k * 1.1) * live;
+      const x = CX + p.o * DX * qk - PW / 2, y = CY + p.o * p.o * ARC * qk + up * RISE + xo * 90 * s + bob - PHH / 2;
+      p.wrap.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${(p.o * ROT * qk).toFixed(3)}deg) scale(${(0.92 + 0.08 * (1 - up)).toFixed(4)})`;
+      p.wrap.style.opacity = (op * (1 - xo)).toFixed(3);
+      if (p.bar) p.bar.style.transform = `scaleX(${c01((g + 22 * k + 10) / 190).toFixed(4)})`;   // each reel playing (linear, like a real bar)
+    });
+    LN.forEach((l, j) => {
+      const t0 = 1 + 3 * j, k1 = c01((g - t0 + 0.5) / 4), dy = (1 - eOut((g - t0) / 8)) * 26 * s;
+      const xl = LEAVE ? eIn((g - (LASTG - 9 + j)) / (9 - j)) : 0;
+      l.el.style.opacity = (k1 * (1 - xl)).toFixed(3);
+      l.el.style.transform = `translate(${l.x.toFixed(2)}px, ${(l.y + dy - xl * 22 * s).toFixed(2)}px)`;
+      if (l.bg) {                                    // the box opens from the middle, its words with it
+        const cut = 32 * (1 - eIO((g - t0) / 7));
+        l.el.style.clipPath = cut > 0.05 ? `inset(0% ${cut.toFixed(2)}% 0% ${cut.toFixed(2)}% round ${(0.2 * FS).toFixed(1)}px)` : "none";
+      }
+    });
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: the headline is fitted with the real font
+  (document.fonts && document.fonts.load ? Promise.all([700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    layout();
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

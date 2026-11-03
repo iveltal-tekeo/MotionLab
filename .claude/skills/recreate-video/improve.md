@@ -31,6 +31,22 @@ part and pressed *Send it to Claude*.
 - In every mode the ratings of ALL the user's videos are rules (`knowledge.py memory --rules`): a part rated bad once
   is a default.
 
+## From a test (`improve <project> test:<id>`, 2026-11-02 - plans.md *Learn from your own posts* R2)
+The user posted versions of one idea, compared them in Content agency > Tests, and Claude reviewed the test (keep /
+change / cut). `tools\experiments.py show <id>` = the test, its result and each version's project / SPARK; the review
+is in `knowledge\local\experiments.json` (that test's `"review"`: items with `version`, `kind`, `from` / `to` = frames
+of THAT version's posted video (its SPARK), `how`, `metric`, `text`, `quote`; `next_test`).
+- Build on this project's newest version (the one that was posted - `made_from.json` / the newest render) as a new
+  edit version, never overwriting the last one. **Keep** items stay as they are. **Change** / **cut** items marked
+  `edit_only`: do them - find each passage in this project's plan by its words (`quote`) or its place in the video
+  (the review's frames are the POSTED video's: the same render when it was posted as it is, else match by the words).
+  `re_record` items: never invented - list them for the user (what to film or say again, at frame + timecode) and
+  leave that passage as it is.
+- Change only what the review lists - it is a test: one change at a time is what lets the next test tell. Its
+  `next_test` is what the new version tries.
+- Tell the user what changed (each at frame + timecode of the new version) and that posting it and adding its link as
+  version B of a new test (*Test again*) measures it.
+
 ## Finish a quick draft (`finish <project>`, 2026-10-24)
 The user liked the quick draft's cuts and pressed *Finish it with Claude* on the video's page (the user: "it worked
 good and actually made some good cuts and transitions but then what? how do i tell him to go next step which is some

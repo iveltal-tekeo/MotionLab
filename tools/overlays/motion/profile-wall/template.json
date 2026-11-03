@@ -1,0 +1,255 @@
+{
+ "name": "Profile wall (your reels behind you, a counter in front)",
+ "kind": "social",
+ "category": "Social",
+ "what": "A dark profile panel of your reels fills the wall behind you, above your shoulders and round your head: the tab mark slides to the reels and the grid fills tile by tile, while a smoke-glass counter rises in front of you under your chin and its number counts up (312 reels made, 1,248 posts, 2.4M views...) and pops as it lands. A light crosses the grid and the counter in the hold; the counter sinks away at the end. The Editor puts the panel behind you and the counter in front.",
+ "use_for": [
+  "talking head",
+  "my reels",
+  "my profile",
+  "how many",
+  "milestone",
+  "results",
+  "creator",
+  "portfolio",
+  "consistency",
+  "hook",
+  "short form"
+ ],
+ "tags": [
+  "social",
+  "reels",
+  "profile",
+  "grid",
+  "counter",
+  "number",
+  "behind",
+  "in shot",
+  "view count",
+  "needs media",
+  "talking head",
+  "glass"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0-f10 the panel settles in (from 94 % and 22 px lower, decelerating), seen from f0; f4-f16 the tab mark slides to the reels tab (S-curve); from f5 a tile pops in every 2 f in reading order (from 85 % with a small overshoot, 7 f; 15 tiles upright, by f33); f3-f15 the counter rises in front under the chin (decelerating) and its number counts up f8-f42 (decelerating), then pops 8 % (8 f); a light crosses the counter f44-f68 and the grid f50-f80 (S-curve); the avatar ring turns and the panel floats 3 px in the hold; the last 9 f the counter sinks 30 px and the panel fades (accelerating)",
+ "tracks": [
+  {
+   "name": "panel in",
+   "what": "the profile panel settles on the wall",
+   "start_f": 0,
+   "length_f": 10,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "tab",
+   "what": "the tab mark slides to the reels tab",
+   "start_f": 4,
+   "length_f": 12,
+   "easing": "S-curve"
+  },
+  {
+   "name": "tiles",
+   "what": "the grid fills tile by tile",
+   "start_f": 5,
+   "length_f": 35,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "counter in",
+   "what": "the counter rises in front under the chin",
+   "start_f": 3,
+   "length_f": 12,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "count",
+   "what": "the number counts up, then pops as it lands",
+   "start_f": 8,
+   "length_f": 42,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "sheen",
+   "what": "a light crosses the counter, then the grid",
+   "start_f": 44,
+   "length_f": 36,
+   "easing": "S-curve"
+  },
+  {
+   "name": "out",
+   "what": "the counter sinks away and the panel fades",
+   "start_f": 110,
+   "length_f": 9,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "start + round(60 * fps / 30)",
+ "min_why": "the grid has to fill and the number land before it leaves",
+ "in_shot": {
+  "behind": "top",
+  "follow": "camera",
+  "match": true
+ },
+ "core_points": 1,
+ "text_slots": [
+  "count",
+  "label",
+  "views"
+ ],
+ "media_slots": [
+  {
+   "id": "reel1_media",
+   "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel2_media",
+   "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel3_media",
+   "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel4_media",
+   "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel5_media",
+   "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel6_media",
+   "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel7_media",
+   "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel8_media",
+   "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel9_media",
+   "label": "Reel 9: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  },
+  {
+   "id": "reel10_media",
+   "label": "Reel 10: your cover or clip, 9:16 (empty = a placeholder)",
+   "accept": [
+    "image",
+    "video"
+   ],
+   "aspect": "9:16",
+   "min_px": 720,
+   "fit": "cover",
+   "placeholder": "a made-up reel cover: a colour gradient, a person shape, a short bold caption, a play mark and a view count",
+   "optional": true
+  }
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 90,
+ "check_frames": [
+  0,
+  1,
+  3,
+  6,
+  10,
+  16,
+  24,
+  34,
+  42,
+  46,
+  56,
+  70,
+  90,
+  110,
+  114,
+  119
+ ]
+}

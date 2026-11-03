@@ -9,6 +9,8 @@ this module only plans.
   the style's effects drawn with the compositor's layers at its rate per minute (FX), a flash on each drop.
 - talk mode (a talking video): the clips' own sound in order with the pauses cut out (jump cuts), a punch-in on every
   other cut, B-roll (clips nobody talks in) over the talking now and then.
+- bare (0.6.1, Edit by segments): the same cuts and moments, nothing on them - no effects, no punch-ins, no B-roll;
+  the style's fade in / out stays. tools\\segments.py --build puts each segment's pick on it.
 The result is a normal plan (compose.py): render_video.py renders it, Claude refines it, resolve_build builds it.
 Frames are the plan's (the caches' fps); everything is seeded, so the same arguments give the same draft.
 """
@@ -750,8 +752,9 @@ def broll_layers(shots, clips, every_s: float, fps, W, H, energy, rng, picks=Non
 # ------------------------------------------------------------------------------------------------ the draft
 def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | None, mode: str,
          beats: list[float] | None = None, downbeats: set | None = None, drops: list[float] | None = None,
-         seed: int = 1) -> dict:
-    """The whole draft: shots, picks, effects, layers. N = frames (music mode: required; talk mode: at most)."""
+         seed: int = 1, bare: bool = False) -> dict:
+    """The whole draft: shots, picks, effects, layers. N = frames (music mode: required; talk mode: at most). bare =
+    the shots only (the module's docstring) - the effects are still drawn, so the moments picked are the same."""
     rng = np.random.default_rng(seed)
     beats, downbeats, drops = beats or [], downbeats or set(), drops or []
     energy = style.get("energy") or "medium"
@@ -779,8 +782,10 @@ def make(style: dict, clips: list[dict], fps: float, W: int, H: int, N: int | No
                                                         max_src=max(c["frames"] for c in usable))
         needs = source_need(shots, at_cut, at_shot, fps)
         picks = pick_windows(needs, usable, energy, fps, rng)
+    if bare:
+        at_cut, at_shot, broll, broll_notes = {}, {}, [], []
     layers, placed = build_layers(shots, picks, at_cut, at_shot, edges, W, H, fps, rng,
-                                  talk_zoom=mode == "talk", broll=broll)
+                                  talk_zoom=mode == "talk" and not bare, broll=broll)
     photo_shots(layers, clips)
     N = shots[-1][1] + 1
     sound = [(p["sid"], int(p["in"]), int(p["in"]) + (e - s)) for (s, e), p in zip(shots, picks)]

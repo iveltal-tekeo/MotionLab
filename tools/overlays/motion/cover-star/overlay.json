@@ -1,0 +1,13 @@
+{
+ "name": "cover-star",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {"f": "start", "kind": "whoosh", "dur": "0.3", "from": 2400, "to": 700, "db": -8, "what": "the masthead drops in"},
+  {"f": "start + round(10 * fps / 30)", "kind": "shutter", "db": -6, "what": "the cover is shot"},
+  {"f": "start + round(12 * fps / 30)", "kind": "pop", "db": -10, "if": "look == 'classic' and barcode", "what": "the barcode pops in"},
+  {"f": "frames - round(9 * fps / 30)", "kind": "air", "dur": "0.3", "db": -8, "if": "leave and (frames - start) * 30 / fps > 40", "what": "the cover fades"}
+ ]
+}

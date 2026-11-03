@@ -37,7 +37,11 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
 3. **Make it good** (what rules cannot): look at the draft's cut-sheet (`render_video.py build\plan_vN.json --cuts`;
    `--sheet 0:<last>:12` for every 12th frame); then **the edit as a list** (0.5.3, the usual way): a few lines in
    `build\edit_v<N+1>.list` - `cut f120-f188`, `punch-in 1.2 at f300`, `shot 4 tight`, `hold f380-f404`, `caption
-   clean_box script script-005`, `graphic <template> at f1524 for 48 text="..."`, `sfx whoosh on punch-ins`, `layer
+   clean_box script script-005`, `graphic <template> at f1524 for 48 text="..."`, `sfx whoosh on punch-ins`, `frame 4
+   split` (0.6.1: a horizontal clip's layout in a vertical video - fill / fit / split / screen / game / auto, `hold` /
+   `follow`; the draft framed every shot already, its notes say how - change only what looks wrong), `broll C at
+   f300 for 60 from 412` (0.6.1: a clip over the talking), `jump f300 to 812` (a cut inside a shot - music only),
+   `column` on a `graphic` line (a wide video: the card a quarter of the width at its edge, local-make-1), `layer
    {...}` for a one-off (`motionlab\editlist.py` lists them all; every frame = the draft's frame, cuts applied last)
    -> `tools\draft_edit.py <project> --apply build\edit_v<N+1>.list` = `plan_v<N+1>.json` (a talking edit's sound cut
    again and its voice levelled, captions in the script's own words at the said times, graphics from templates).
@@ -89,6 +93,43 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
 4. If `resolve` was asked: option 2 (`render.md`) once the user approves the lab render.
 5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
    (00:00:18:24)") and what is approximate.
+
+## By segments - when `brief.md` has *Segments* (0.6.1, the user cut the video into parts in New edit)
+The user picks how each part is edited (New edit's 7th step, the Editor's *Parts* lane) and pressed *Make it with
+Claude*: you are the layer between the rules and the user - your picks replace the rules' suggestion, the user's stay
+on top of yours, and afterwards the user changes any of yours the same way (*back to the suggestion* = yours). So a
+Claude edit and the user's picks are one format: the edit is the parts' picks, built by the lab, never a free edit list.
+1. **The list** (in the brief; `tools\segments.py <project>` prints it as it is now): each part with frame + timecode,
+   every word said, its pick and whose (the rules' / CLAUDE'S / YOURS), why, two alternatives, all it `can` have, under
+   its topic. A part marked YOURS is the user's decision: leave it (a pick of yours there only sits under theirs). If
+   the brief says the parts were cut from other answers, cut again first (`segments.py <project> --request`).
+2. **Read the words once, as a whole**: where the talk turns to a new point (the problem, each tip, the example, the
+   call to action) = `topics`; the hook keeps the face (a punch-in, a number); the word each punch-in or B-roll lands
+   on (the stressed one, the concrete thing); the words on each card - written, short, punctuated, in the video's own
+   language (the list's `lang`), not the transcript's run-on words; B-roll from the brief's catalogue lines (a clip
+   that shows what is said, never the same moment twice, ~40 % of the video at most); a breather (plain) between busy
+   parts. Pick only where you differ from the rules or have words / a clip / a word to add - the rest stays theirs.
+3. **Write `build\segments_claude.json`**, then `.venv\Scripts\python tools\segments.py <project> --claude
+   projects\<project>\build\segments_claude.json` - every pick checked (all or nothing; an error says what that part
+   can have), your earlier picks replaced whole:
+   ```json
+   {"picks": [{"n": 2, "t": "broll", "opt": "G", "text": "scroll", "why": "show the scroll the line talks about"},
+              {"n": 3, "t": "title", "text": "What to do|Sing the hook", "why": "the advice starts here"}],
+    "topics": [{"n": 1, "name": "The problem"}, {"n": 3, "name": "What to do"}]}
+   ```
+   `t` = a treatment the part `can` have; `opt` = the B-roll clip, or the template of a card (graphic / number / title
+   / list - `templates.py pick`); `text` = the word a punch-in / B-roll lands on (said in that part), or the card's
+   words - a title `line 1|line 2`, a number's words under it, a list's items `a|b|c`, a graphic's main words (80
+   characters at most); `why` = one line the user reads beside the part (120 at most), in the video's language. A
+   topic's part gets a title card with its name unless a pick says otherwise (never on the hook).
+4. **The edit**: `segments.py <project> --build --render` = a new version on the bare draft's cuts, every part as
+   picked (the check: every cut where it was, each pick in the plan, nothing in a plain part, the B-roll share) +
+   build.py (its graphics moved off the faces, the precheck, the cut-sheet). Fix what it flags by changing picks and
+   building again - not by editing the plan (a later *Build again with these picks* would drop it). What picks cannot
+   say (a split, a one-off layer) only when the user asks - and tell them a rebuild from the picks leaves it out.
+5. **Tell the user** the parts you picked (frame + timecode, the edit, why), the topics, the words on the cards, and
+   that New edit > Segments and the Editor's *Parts* lane show your picks marked *Claude's* - any one can be changed
+   there, and *back to the suggestion* brings yours back.
 
 ## From a prompt - `prompt:<id> <project>` (the app's *How did it turn out?*, 0.3.3)
 A video from a prompt of the library (`prompts(id=...)`; its `tags` say what it is for). By kind:

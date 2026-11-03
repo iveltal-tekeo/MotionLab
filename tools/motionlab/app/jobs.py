@@ -32,7 +32,8 @@ JOBTOOLS = Path(__file__).resolve().parent / "jobtools.py"       # the app's own
 _PY = Path(sys.executable)
 PY = str(_PY.with_name("python.exe")) if _PY.name.lower() == "pythonw.exe" else str(_PY)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-OK_RC = {"build": (0, 2), "miniedit": (0, 2)}   # build.py 2 = built, with precheck flags to look at - not a failure
+OK_RC = {"build": (0, 2), "miniedit": (0, 2),   # build.py 2 = built, with precheck flags to look at - not a failure
+         "segments_build": (0, 1)}               # segments.py 1 = built, a part not as picked (its check says which)
 
 
 class JobError(ValueError):
@@ -54,6 +55,8 @@ def _latest_plan(project: str) -> Path:
 TITLES = {
     "analyze": "Analyse {file}",
     "notes": "Notes of {file}",
+    "spark": "SPARK of {file}",
+    "spark_numbers": "The numbers of {name} again",
     "report": "Rebuild report {name}",
     "resolve_doctor": "Resolve check-up ({video})",
     "resolve_diff": "Resolve: what changed by hand ({video})",
@@ -88,6 +91,9 @@ TITLES = {
     "miniedit": "Your changes to {video}",
     "editor_media": "Getting {video} ready for the Editor",
     "editor_range": "A moment of {video}, rendered",
+    "segments": "{video} cut into parts",
+    "segments_preview": "Part {n} of {video}, previewed",
+    "segments_build": "{video} built from your picks",
     "sound_import": "Sounds added to your library",
     "sound_generate": "Sound effects made with ElevenLabs",
     "music_index": "Measure your music",
@@ -164,6 +170,32 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if a.get("tags"):
             extra += ["--tags", ", ".join(clean_tags(a.get("tags") or ""))]
         return _title("notes", file=v.name), [PY, str(TOOLS / "notes.py"), "prepare", str(v)] + extra, "cpu"
+    if kind == "spark":                 # Analyser > Content creation (2026-10-30): SPARK - why a video worked
+        v = Path(str(a.get("video", ""))).expanduser()
+        if not v.is_file() or v.suffix.lower() not in data.VIDEO_EXT:
+            raise JobError(I18N.t("not a video file: {file}", file=v))
+        if LAB in v.resolve().parents and v.resolve().parts[len(LAB.parts)] in ("analysis", ".app", "tools"):
+            raise JobError(I18N.t("pick the original video, not a file the lab made"))
+        extra = []
+        url = str(a.get("url") or "").strip()
+        if url:
+            if not re.fullmatch(r"https?://[^\s\"'<>|^`]{4,2000}", url):
+                raise JobError(I18N.t("not a link: {link} (a full link starts with https://)", link=url))
+            extra += ["--url", url]
+        ask = " ".join(str(a.get("ask") or "").split())
+        if len(ask) > 1000:
+            raise JobError(I18N.t("at most {n} characters", n=1000))
+        if ask:
+            extra += ["--ask", ask]
+        if a.get("tags"):
+            extra += ["--tags", ", ".join(clean_tags(a.get("tags") or ""))]
+        return _title("spark", file=v.name), [PY, str(TOOLS / "spark.py"), "prepare", str(v)] + extra, "cpu"
+    if kind == "spark_numbers":         # SPARK's lookup again (views keep changing) - the user's click
+        from motionlab import spark as SP
+        d, sv = SP.need(str(a.get("name", "")))
+        if not sv.get("url"):
+            raise JobError(I18N.t("no link known for this video"))
+        return _title("spark_numbers", name=SP.label_of(sv)), [PY, str(TOOLS / "spark.py"), "numbers", d.name], "net"
     if kind == "report":
         n = data.safe_name(str(a.get("name", "")))
         if not (ANALYSIS / n / "events.json").exists():
@@ -339,6 +371,22 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
             raise JobError(I18N.t("no project {video}", video=p))
         return (_title(kind, video=p), [PY, str(TOOLS / "miniedit.py"), "apply", p, str(b / "miniedit" / ch), "--plan", plan,
                                         "--build"], "cpu")
+    if kind in ("segments", "segments_preview", "segments_build"):     # 0.6.1, Edit by segments (tools\segments.py):
+        p = data.safe_name(str(a.get("project", "")))                   # New edit's Segments = a bare draft from the
+        b = data.PROJECTS / p / "build"                                 # request + its parts and their pictures; one
+        if kind == "segments":                                          # part previewed; the edit built from the picks
+            if not (b / "edit_request.json").exists():
+                raise JobError(I18N.t("no project {video}", video=p))
+            return _title(kind, video=p), [PY, str(TOOLS / "segments.py"), p, "--request"], "cpu"
+        plan = str(a.get("plan") or "")
+        if not re.fullmatch(r"plan_v\d+\.json", plan) or not (b / plan).exists():
+            raise JobError(I18N.t("no project {video}", video=p))
+        if kind == "segments_preview":
+            n = int(a.get("n") or 0)
+            if not 0 < n < 1000:
+                raise JobError(I18N.t("no project {video}", video=p))
+            return _title(kind, video=p, n=n), [PY, str(TOOLS / "segments.py"), p, plan, "--preview", str(n)], "cpu"
+        return _title(kind, video=p), [PY, str(TOOLS / "segments.py"), p, plan, "--build", "--render"], "cpu"
     if kind == "editor_range":      # the Editor's *See it rendered*: a moment of the changes so far, exact frames
         p = data.safe_name(str(a.get("project", "")))
         f = data.PROJECTS / p / "build" / "editor" / str(a.get("file") or "")
@@ -513,7 +561,7 @@ class Job:
         self.lines: list[str] = []
         self.proc: subprocess.Popen | None = None
         self.log = LOGS / f"{jid:04d}_{kind}.log"
-        self.then_claude = kind in ("analyze", "notes") and bool(args.get("claude"))   # open Claude when it ends well
+        self.then_claude = kind in ("analyze", "notes", "spark") and bool(args.get("claude"))   # Claude when it ends well
         self.claude: dict | None = None                                         # what was opened afterwards
         self.then: dict | None = None          # a download followed by its analysis: the analyze job's settings
         self.batch: int | None = None          # the jobs of one Add videos share it
@@ -541,6 +589,7 @@ class Runner:
         self.measured: dict[int, list[tuple[str, str]]] = {}     # batch -> (video, analysis) measured for Claude
         self.opened: set[int] = set()                             # batches whose Claude window is open
         self.noted: dict[int | None, list[str]] = {}              # batch -> notes prepared for Claude (2026-10-27)
+        self.sparked: dict[int | None, list[str]] = {}            # batch -> SPARK prepared for Claude (2026-10-30)
 
     def running(self) -> list[Job]:
         return [j for j in self.jobs.values() if j.status in ("running", "cancelling")]
@@ -560,7 +609,7 @@ class Runner:
         if then is not None:                                  # checked now, not when the download has ended
             if kind != "download":
                 raise JobError(I18N.t("only a download can be followed by an analysis"))
-            if then.get("kind") not in (None, "notes"):        # Notes (2026-10-27): its own job checks its arguments
+            if then.get("kind") not in (None, "notes", "spark"):   # Notes / SPARK: their own job checks its arguments
                 raise JobError(I18N.t("unknown kind {kind}", kind=repr(then.get("kind"))))
             if str(then.get("focus") or "") not in ("", *FOCUS):
                 raise JobError(I18N.t("unknown focus {id} (content, cinematic or both)", id=then.get("focus")))
@@ -624,6 +673,8 @@ class Runner:
             data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
             if job.then_claude and job.status == "done" and job.kind == "notes":
                 self._collect_notes(job, f)
+            elif job.then_claude and job.status == "done" and job.kind == "spark":
+                self._collect_spark(job)
             elif job.then_claude and job.status == "done":
                 if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it
                     self._collect(job, f)
@@ -634,6 +685,7 @@ class Runner:
             if job.batch is not None:
                 self._batch_to_claude(job, f)
             self._notes_to_claude(job, f)
+            self._spark_to_claude(job, f)
         self._next()
 
     def _mates(self, job: Job) -> list[Job]:
@@ -709,10 +761,53 @@ class Runner:
         job.lines.append(msg)
         f.write(msg + "\n")
 
+    def _collect_spark(self, job: Job) -> None:
+        """SPARK (2026-10-30): a video's words, numbers and pictures are ready - Claude writes it when its batch is
+        ready (one window for all of them), like Notes."""
+        name = next((ln.split("SPARK:", 1)[1].strip() for ln in reversed(job.lines)
+                     if ln.startswith("SPARK:") and "->" not in ln), "")
+        if name:
+            with self.lock:
+                self.sparked.setdefault(job.batch, []).append(name)
+
+    def _spark_to_claude(self, job: Job, f) -> None:
+        """The last job of a SPARK batch ended: ONE Claude window writes every video's SPARK (`/spark <name>`, or
+        `/spark pending` for several)."""
+        with self.lock:
+            if job.batch not in self.sparked or (job.batch is not None and any(
+                    j.status in ("running", "queued", "cancelling") for j in self.jobs.values() if j.batch == job.batch)):
+                return
+            got = self.sparked.pop(job.batch, [])
+        if not got:
+            return
+        try:
+            prompt = f"/spark {got[0]}" if len(got) == 1 else "/spark pending"
+            job.claude = system.open_claude(prompt, "spark", got[0] if len(got) == 1 else f"{len(got)} videos")
+            msg = f"Claude Code opened to write SPARK ({job.claude['prompt']})"
+        except Exception as e:                                  # noqa: BLE001 - the preparing itself succeeded
+            job.claude = {"ok": False, "error": str(e)}
+            msg = f"Could not open Claude Code: {e} - the SPARK page has *Write it with Claude*"
+        job.lines.append(msg)
+        f.write(msg + "\n")
+
     def _then_analyse(self, job: Job, f) -> None:
         """Add videos: the download ended well - its saved video is analysed next (queued behind the others).
         Notes (then kind "notes"): its notes are prepared next instead."""
         saved = saved_file(job.lines)
+        if (job.then or {}).get("kind") == "spark":
+            try:
+                if saved is None or saved.suffix.lower() not in data.VIDEO_EXT:
+                    msg = "the saved video was not found - add it again from Analyser > Content creation"
+                else:
+                    args = {k: v for k, v in job.then.items() if k != "kind"}
+                    nj = self.start("spark", {**args, "video": str(saved), "url": str(job.args.get("url") or "")},
+                                    queue=True, batch=job.batch)
+                    msg = f"Next: SPARK of {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
+            except Exception as e:                              # noqa: BLE001 - the download itself succeeded
+                msg = f"Could not start SPARK of {saved.name if saved else 'the video'}: {e}"
+            job.lines.append(msg)
+            f.write(msg + "\n")
+            return
         if (job.then or {}).get("kind") == "notes":
             try:
                 if saved is None or saved.suffix.lower() not in data.VIDEO_EXT:

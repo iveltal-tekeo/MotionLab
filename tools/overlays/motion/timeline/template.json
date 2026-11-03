@@ -1,0 +1,29 @@
+{
+ "name": "Red timeline",
+ "kind": "ui",
+ "category": "UI Elements",
+ "what": "The picture turns a dark red film grade and an editing timeline rises in at the bottom: three tracks of clips that light up red as a glowing playhead runs across them. At the top a blinking REC dot with a running timecode, a big title and a red line under it.",
+ "use_for": ["editing", "behind the scenes", "how I edit", "workflow", "process", "creator", "tutorial", "tech", "talking head", "short form"],
+ "tags": ["timeline", "editing", "playhead", "rec", "timecode", "red", "grade", "film", "ui", "title", "talking head", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "with": [{"effect": "grade", "at": 0.0, "len": null, "opts": {"look": "red_film"}}],
+ "in_shot": {"guard": true, "match": true},
+ "motion": "f0-f10 the REC dot + timecode, the title and the sub line slide in from 8 % of the width to the left (slow end, seen within 2 f); f2-f13 the timeline panel rises in from 16 % of the height lower (slow end); the playhead runs from 4 % to 96 % of the tracks over 95 % of the length (steady, a ticker) and each clip lights up red with a glow over ~3 f as it reaches it; the REC dot blinks 2.5 times a second and the timecode counts frame by frame from the tc setting; the last 8 f it fades, the panel sinking 40 px and the top sliding back (accelerating). The grade companion fades the red film look in and out over 0.3 s",
+ "tracks": [
+  {"name": "top in", "what": "REC + timecode, the title and the sub line slide in", "start_f": 0, "length_f": 10, "easing": "decelerating (slow end)"},
+  {"name": "panel in", "what": "the timeline panel rises in at the bottom", "start_f": 2, "length_f": 11, "easing": "decelerating (slow end)"},
+  {"name": "playhead", "what": "the playhead runs across, the clips light up red as it reaches them", "start_f": 0, "length_f": 142, "easing": "linear"},
+  {"name": "out", "what": "it all fades, the panel sinks", "start_f": 142, "length_f": 8, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "round(1.5 * fps)",
+ "min_why": "the playhead needs a moment to run across the clips",
+ "core_points": 1,
+ "text_slots": ["title", "sub", "tc"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 90,
+ "check_frames": [0, 2, 5, 9, 14, 30, 60, 90, 120, 141, 145, 149]
+}

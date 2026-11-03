@@ -1,0 +1,55 @@
+{
+ "name": "tier-list",
+ "frames": 150,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 600,
+   "db": -8,
+   "what": "the board drops into place"
+  },
+  {
+   "f": "start + round(24 * fps / 30)",
+   "kind": "pop",
+   "db": -6,
+   "what": "the item pops in beside the chin"
+  },
+  {
+   "f": "start + round(36 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.55",
+   "from": 500,
+   "to": 2600,
+   "db": -8,
+   "what": "the item flies toward the S tier"
+  },
+  {
+   "f": "start + round(54 * fps / 30)",
+   "kind": "thump",
+   "db": -4,
+   "what": "the item lands in the S tier"
+  },
+  {
+   "f": "start + round(55 * fps / 30)",
+   "kind": "chime",
+   "db": -8,
+   "what": "the S label flashes"
+  },
+  {
+   "f": "frames - round(9 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.25",
+   "from": 2200,
+   "to": 600,
+   "db": -8,
+   "if": "leave and (frames - start) * 30 / fps - 9 > 70",
+   "what": "the board sinks away"
+  }
+ ]
+}

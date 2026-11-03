@@ -1,0 +1,42 @@
+{
+ "name": "You in your profile grid",
+ "kind": "social",
+ "category": "Social",
+ "what": "You shrink into the middle tile of a 3x3 profile grid on a glass panel while eight of your reels pop into the tiles around you, one a frame; then a view count pops onto every tile, a ring lights round yours and your own count counts up; at the end you grow back to the full frame and the grid flies out with you.",
+ "use_for": ["my reels", "my channel", "profile", "results", "social proof", "creator", "growth", "views", "talking head", "short form"],
+ "tags": ["grid", "profile", "reels", "social", "view count", "glass", "shrink", "frame", "in shot", "talking head", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0-f12 (0.4 s, expo-out) the video shrinks into the middle tile (the renderer's frame effect) and the grid shrinks with it from 4x, about the one point that stays still, so the hole and the video stay one piece; the 8 reels pop into their tiles one a frame in the order top, right, bottom, left, then the corners (f2-f9, from 0.82 with an overshoot, 7 f); their view counts pop one a frame (f14-f21, from 0.5, 6 f); f23 a ring in the accent colour lights round you (8 f, slow end) and your count pops (f24) and counts up to its number (f24-f48, slow end); in the hold the ring's glow breathes (40 f) and a band of light crosses the tiles (f54-f84, S-curve); the last 0.4 s (S-curve) you grow back to the full frame and the grid scales out with you, the ring and your count fading.",
+ "tracks": [
+  {"name": "shrink", "what": "you shrink into the middle tile, the grid closes in round you", "start_f": 0, "length_f": 12, "easing": "decelerating (slow end), expo-out"},
+  {"name": "reels", "what": "eight reels pop into the tiles, one a frame", "start_f": 2, "length_f": 14, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "counts", "what": "the view counts pop onto the eight tiles, one a frame", "start_f": 14, "length_f": 13, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "ring", "what": "a ring lights round your tile", "start_f": 23, "length_f": 8, "easing": "decelerating (slow end)"},
+  {"name": "your count", "what": "your view count pops and counts up", "start_f": 24, "length_f": 24, "easing": "decelerating (slow end)"},
+  {"name": "sheen", "what": "a band of light crosses the tiles", "start_f": 54, "length_f": 30, "easing": "S-curve"},
+  {"name": "grow back", "what": "you grow back to the full frame, the grid scales out with you", "start_f": 108, "length_f": 12, "easing": "S-curve"}
+ ],
+ "min_frames": "round(64 * fps / 30)",
+ "min_why": "the grid builds, your count counts up and it is seen a moment before you grow back",
+ "in_shot": {"match": true},
+ "with": [{"effect": "frame", "at": 0.0, "len": null, "opts": {"to": {"v": [0.38, 0.30, 0.24, 0.24], "h": [0.365, 0.365, 0.27, 0.27]}, "r": 0.015, "in": 0.4, "out": 0.4, "focus": "face"}}],
+ "core_points": 1,
+ "text_slots": ["views"],
+ "media_slots": [
+  {"id": "reel1_media", "label": "Reel 1 (top left): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel2_media", "label": "Reel 2 (top middle): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel3_media", "label": "Reel 3 (top right): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel4_media", "label": "Reel 4 (middle left): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel5_media", "label": "Reel 5 (middle right): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel6_media", "label": "Reel 6 (bottom left): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel7_media", "label": "Reel 7 (bottom middle): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel8_media", "label": "Reel 8 (bottom right): your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 720, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true}
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.3,
+ "thumb_f": 60,
+ "check_frames": [0, 1, 2, 4, 7, 10, 13, 17, 23, 30, 60, 70, 110, 114, 119]
+}

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "reel1_media", "type": "string", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel6_media", "type": "string", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel7_media", "type": "string", "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel8_media", "type": "string", "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel9_media", "type": "string", "label": "Reel 9: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel10_media", "type": "string", "label": "Reel 10: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "size", "type": "number", "label": "Reel size (1 = normal)", "default": 1, "min": 0.5, "max": 1.8, "step": 0.05},
+  {"id": "views", "type": "string", "label": "View counts on the reels, one after another (split with |)", "default": "1.2M|486K|2.7M|93K|640K|1.9M|318K|5.1M|77K|820K"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Clears away at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "body_font", "type": "enum", "label": "Text font (captions, view counts)", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "noise" (2026-10-28): the user's reels pile up on the wall behind their head, one every
+     7 frames (about a quarter second), each at its own slight angle and spot around the head with a soft shadow,
+     until the wall is busy. Each reel lands from 60 % with a small overshoot and a turn that settles (8 f), then
+     drifts a hair while the pile grows; at the end the pile clears, the newest first (accelerating). The Editor puts
+     it behind the person and moves it with the camera (in_shot behind + follow camera). The spots are measured from
+     a talking head (face in the upper middle of an upright frame, ~26 % of the width); a landscape or square frame
+     gets its own wider spread. Ten media slots, round-robin over the pile; an empty slot is a made-up reel cover.
+     After a design in an MIT-licensed effects pack; MotionLab's own code. Look-aware. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #pile { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="pile"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIn = x => c01(x) * c01(x);                                                 // accelerating (exits only)
+  const outBack = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const rnd = seed => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const S = Math.round(V.start);
+  const AV = (FRAMES - S) * 30 / FPS;                    // frames (designed at 30 fps) from the start to the end
+  const FONT = `'${V.body_font}', 'Segoe UI', sans-serif`;
+  const SHK = Math.max(0, Number(V.shadow));
+
+  // ---- the reel tiles (one style in noise, orbit, carousel-spin and profile-wall): a 9:16 cover with round corners,
+  // a soft shadow, a light rim, a play mark and a view count at the bottom. A filled slot shows the user's cover or
+  // clip (a clip only once: the page plays one video per slot; a repeated picture gets its own grade); an empty slot
+  // is a made-up cover - a colour gradient, a person shape and a short bold caption.
+  const NSLOT = 10;
+  const PH = [["#FF7A59", "#B8306B", "#FFD36E", "day 1 vs day 30"], ["#2EC5CE", "#1B3F8F", "#B9F3FF", "3 apps I use daily"],
+    ["#8E6CFF", "#2B1B6B", "#F0B8FF", "my 5 am routine"], ["#9BDB4D", "#1E6B4F", "#F5FFB0", "watch till the end"],
+    ["#FF5A5F", "#5B1A3A", "#FFC2A8", "the edit that worked"], ["#4D7CFE", "#0F1C3F", "#9FE8FF", "desk setup tour"],
+    ["#F6B93B", "#B4471F", "#FFF1B8", "one tip a day"], ["#E84393", "#3D1460", "#FFB3E0", "before / after"],
+    ["#7F8FA6", "#1E272E", "#E3ECF5", "how I film alone"], ["#20BF6B", "#0B3D2E", "#C9FFD9", "the honest review"]];
+  const VIEWS = String(V.views == null ? "" : V.views).split("|").map(s => s.trim()).filter(Boolean);
+  const MEDIA = [...Array(NSLOT)].map((_, i) => String(V[`reel${i + 1}_media`] == null ? "" : V[`reel${i + 1}_media`]).trim());
+  const isVid = s => /\.(mp4|mov|webm|m4v)$/i.test(s);
+  const REP = ["saturate(1.3) contrast(1.06)", "grayscale(1) contrast(1.12)", "sepia(0.35) saturate(1.2)",
+    "hue-rotate(-14deg) saturate(0.9) brightness(0.95)", "contrast(1.1) brightness(1.06)"];
+  function covers(n) {
+    const filled = MEDIA.map((s, i) => ({ s, i })).filter(m => m.s), imgs = filled.filter(m => !isVid(m.s)), out = [];
+    for (let k = 0; k < n; k++) {
+      if (!filled.length) out.push({ ph: k % PH.length, rep: 0 });
+      else if (k < filled.length) out.push({ m: filled[k], rep: 0 });
+      else if (imgs.length) { const j = k - filled.length; out.push({ m: imgs[j % imgs.length], rep: 1 + Math.floor(j / imgs.length) }); }
+      else out.push({ ph: k % PH.length, rep: 0 });
+    }
+    return out;
+  }
+  const box = (parent, st) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, st); parent.appendChild(e); return e; };
+  function cover(el, p, w, h, k) {
+    const [a, b, c, cap] = p, ang = 155 + (k * 29) % 50, gx = 25 + (k * 37) % 50, gy = 14 + (k * 23) % 26;
+    el.style.background = `radial-gradient(circle at ${gx}% ${gy}%, ${rgba(c, 0.8)} 0%, ${rgba(c, 0)} 46%), linear-gradient(${ang}deg, ${a} 0%, ${b} 100%)`;
+    const d = w * 0.3;                                   // a person shape: head and shoulders, a shade darker
+    box(el, { left: `${w * 0.16}px`, top: `${h * 0.75}px`, width: `${w * 0.68}px`, height: `${h * 0.25}px`, borderRadius: `${w * 0.34}px ${w * 0.34}px 0 0`, background: rgba(b, 0.5) });
+    box(el, { left: `${(w - d) / 2}px`, top: `${h * 0.75 - d * 1.04}px`, width: `${d}px`, height: `${d}px`, borderRadius: "50%", background: rgba(b, 0.5) });
+    const cp = box(el, { left: `${w * 0.07}px`, top: `${h * 0.3}px`, width: `${w * 0.86}px`, textAlign: "center", lineHeight: "1.34",
+      fontFamily: FONT, fontWeight: String(fw(V.body_font, 800)), fontSize: `${w * 0.1}px`, color: "#ffffff", fontSynthesis: "none" });
+    const sp = document.createElement("span");
+    sp.textContent = cap;
+    Object.assign(sp.style, { background: rgba("#000000", 0.5), padding: `${w * 0.012}px ${w * 0.035}px`, borderRadius: `${w * 0.025}px`,
+      boxDecorationBreak: "clone", webkitBoxDecorationBreak: "clone" });
+    cp.appendChild(sp);
+  }
+  function reel(parent, k, c, w, h) {
+    const r = w * Math.min(0.14, Math.max(0.025, Number(V.radius) / 200)), R = `${r}px`;
+    const el = box(parent, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, transformOrigin: "50% 50%",
+      boxShadow: SHK > 0 ? `0 ${(w * 0.045 * SHK).toFixed(1)}px ${(w * 0.12 * SHK).toFixed(1)}px ${rgba("#000000", Math.min(0.6, 0.42 * SHK))}` : "none" });
+    const pic = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, overflow: "hidden" });
+    if (c.m) {
+      if (window.MLLook) MLLook.media(pic, c.m.s, { look: L, kind: isVid(c.m.s) ? "video" : "image", fit: "cover", seed: c.m.i + 1, label: " ", r,
+        slot: `reel${c.m.i + 1}_media`, id: `rv${k}`, start: S / FPS, duration: Math.max(0.2, (FRAMES - S) / FPS) });
+      else { const im = document.createElement("img"); im.src = c.m.s; Object.assign(im.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", objectFit: "cover" }); pic.appendChild(im); }
+      if (c.rep) pic.style.filter = REP[(c.rep + k) % REP.length];
+    } else cover(pic, PH[c.ph % PH.length], w, h, k);
+    box(el, { left: "0px", top: `${h * 0.64}px`, width: `${w}px`, height: `${h * 0.36}px`, borderRadius: `0 0 ${R} ${R}`,
+      background: `linear-gradient(180deg, ${rgba("#000000", 0)} 0%, ${rgba("#000000", 0.6)} 100%)` });
+    const fs = w * 0.092;
+    const vr = box(el, { left: `${w * 0.075}px`, top: `${h - w * 0.08 - fs}px`, height: `${fs}px`, display: "flex", alignItems: "center",
+      gap: `${fs * 0.3}px`, whiteSpace: "nowrap", lineHeight: "1", color: "#ffffff", fontFamily: FONT, fontWeight: String(fw(V.body_font, 700)),
+      fontSize: `${fs}px`, fontSynthesis: "none", textShadow: `0 ${fs * 0.05}px ${fs * 0.3}px ${rgba("#000000", 0.5)}` });
+    vr.innerHTML = `<svg width="${(fs * 0.74).toFixed(1)}" height="${(fs * 0.82).toFixed(1)}" viewBox="0 0 20 22" style="overflow:visible"><path d="M4 2.8 C4 1.6 5.3 0.9 6.3 1.5 L18.4 9.8 C19.3 10.4 19.3 11.6 18.4 12.2 L6.3 20.5 C5.3 21.1 4 20.4 4 19.2 Z" fill="none" stroke="#ffffff" stroke-width="2.7" stroke-linejoin="round"/></svg>`;
+    const vs = document.createElement("span");
+    vs.textContent = VIEWS.length ? VIEWS[k % VIEWS.length] : "";
+    vr.appendChild(vs);
+    box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R,
+      boxShadow: `inset 0 0 0 ${Math.max(1, w / 170).toFixed(2)}px ${rgba("#ffffff", 0.3)}`,
+      background: `linear-gradient(180deg, ${rgba("#ffffff", 0.12)} 0%, ${rgba("#ffffff", 0)} 20%)` });
+    const dk = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, background: "#05060A", opacity: "0" });
+    return { el, dk };
+  }
+
+  // ---- the preview background (only when painted: over a video the pile sits on the real wall)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.55 * W}px ${0.3 * H}px at ${0.5 * W}px ${0.3 * H}px, ${rgba(L.mustard, 0.32)}, ${rgba(L.mustard, 0)} 100%), ` +
+    `radial-gradient(ellipse ${0.5 * W}px ${0.25 * H}px at ${0.2 * W}px ${0.85 * H}px, ${rgba(L.signal, 0.2)}, ${rgba(L.signal, 0)} 100%), ${V.bg}`;
+
+  // ---- where the reels land: around a talking head (upright: the face at a third of the height, 26 % of the width;
+  // landscape or square: 37 % down, 19 % of the height), in face widths from its centre: [across, down, turn]
+  const UPRIGHT = H / W >= 1.3;
+  const FWP = UPRIGHT ? 0.26 * W : 0.19 * H, FX = W / 2, FY = UPRIGHT ? H / 3 : 0.37 * H;
+  const SPOTS = UPRIGHT
+    ? [[-1.02, -0.14, -6], [1.02, -0.29, 5], [0.0, -1.0, -2], [-1.3, 0.93, 4], [1.3, 0.86, -5], [-0.78, -0.98, 7], [0.8, -1.05, -4], [-1.45, -0.45, -3],
+       [1.45, -0.6, 6], [-0.45, -0.62, -5], [0.45, -0.6, 4], [-0.88, 0.62, -7], [0.9, 0.55, 6], [-1.25, -1.0, 3], [1.25, -1.02, -6], [0.05, -0.55, 2]]
+    : [[-1.3, -0.2, -6], [1.3, -0.3, 5], [-2.4, 0.2, 4], [2.4, 0.05, -5], [0.0, -1.0, -2], [-3.4, -0.4, 7], [3.4, -0.45, -4], [-1.05, -0.95, -3],
+       [1.05, -1.0, 6], [-2.1, -0.9, -5], [2.15, -0.85, 4], [-3.1, 1.0, -7], [3.1, 1.05, 6], [-4.3, 0.35, 3], [4.3, 0.25, -6], [0.0, -0.45, 2]];
+  const cw = 0.85 * FWP * V.size, ch = cw * 16 / 9;
+  const KX = UPRIGHT ? 1 : Math.min(1, (W / 2 - cw / 2 - 0.012 * W) / (4.3 * FWP));
+  const GAP = 7, XL = 7, STG = 0.3;                      // one reel every 7 f; each leaves in 7 f, 0.3 f apart
+  const XS = V.leave ? AV - 1 - XL - STG * 15 : AV - 1;  // the pile starts to clear here
+  const N = Math.min(16, Math.max(4, Math.floor((XS - 9) / GAP) + 1));
+  const pile = q("pile"), R0 = rnd(71), cards = [];
+  const CV = covers(N);
+  for (let i = 0; i < N; i++) {
+    const [dx, dy, tr] = SPOTS[i];
+    let x = FX + (dx + (R0() - 0.5) * 0.12) * FWP * KX, y = FY + (dy + (R0() - 0.5) * 0.12) * FWP;
+    x = Math.min(W - cw / 2 - 0.012 * W, Math.max(cw / 2 + 0.012 * W, x));
+    const ymin = UPRIGHT ? Math.max(ch / 2 + 0.01 * H, 0.115 * H - 0.3 * ch + ch / 2 + 4 * U) : ch / 2 + 0.01 * H;   // captions under the top band
+    y = Math.min(H - ch / 2 - 0.01 * H, Math.max(ymin, y));
+    const t = reel(pile, i, CV[i], cw, ch);
+    cards.push({ ...t, x, y, rot: tr + (R0() - 0.5) * 3, spin: (R0() < 0.5 ? -1 : 1) * (5 + R0() * 4),
+      per: 70 + R0() * 40, ph: R0() * 6.283 });
+  }
+
+  // ---- the motion (d = frames at 30 fps since "Starts at frame")
+  function render(t) {
+    const d = t * 30 - S * 30 / FPS;
+    cards.forEach((c, i) => {
+      const t0 = 1 + i * GAP;
+      if (d < t0 - 0.5) { c.el.style.visibility = "hidden"; c.el.style.opacity = "0"; return; }
+      c.el.style.visibility = "visible";
+      const p = (d - t0) / 8;
+      let sc = 0.6 + 0.4 * outBack(p, 1.7), op = c01((d - t0 + 0.5) / 2.5);
+      const live = c01((d - t0 - 8) / 12);               // once landed it drifts a hair
+      let x = c.x + 1.5 * U * Math.cos(6.283 * (d - t0) / c.per + c.ph) * live;
+      let y = c.y + 2.5 * U * Math.sin(6.283 * (d - t0) / c.per + c.ph) * live;
+      let rot = c.rot + (1 - eOut(p)) * c.spin + 0.5 * Math.sin(6.283 * (d - t0) / (c.per * 1.3) + c.ph) * live;
+      if (V.leave) {                                     // the pile clears, the newest first
+        const k = eIn((d - (XS + (N - 1 - i) * STG)) / XL);
+        sc *= 1 - 0.12 * k; op *= 1 - k; y += 14 * U * k;
+      }
+      c.el.style.opacity = op.toFixed(3);
+      c.el.style.transform = `translate(${(x - cw / 2).toFixed(2)}px, ${(y - ch / 2).toFixed(2)}px) rotate(${rot.toFixed(3)}deg) scale(${sc.toFixed(4)})`;
+    });
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 61 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  (document.fonts && document.fonts.load ? Promise.all([700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

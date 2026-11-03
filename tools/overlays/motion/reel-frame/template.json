@@ -1,0 +1,30 @@
+{
+ "name": "Reel frame",
+ "kind": "social",
+ "category": "Social",
+ "what": "Your video shrinks into a social reel card in the middle of the frame: a top bar and a row of navigation icons frame it, and over your video the reel's own buttons pop in - a heart, comments and share with their counts, a turning music disc, your handle with a Follow pill, the caption and a scrolling music line. The heart gets liked, small hearts float up, and the card grows back to the full frame at the end.",
+ "use_for": ["social proof", "this video went viral", "reels", "short form", "creator", "my content", "views", "talking head", "hook", "story"],
+ "tags": ["reel", "social", "phone", "card", "frame", "shrink", "like", "heart", "ui", "picture in picture", "talking head", "1 core point"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "with": [{"effect": "frame", "at": 0.0, "len": null, "opts": {"to": {"v": [0.17, 0.1672, 0.66, 0.66], "h": [0.3734, 0.0968, 0.2531, 0.8]}, "r": 0, "in": 0.4, "out": 0.4, "focus": "face"}}],
+ "in_shot": {"match": true},
+ "motion": "f0-f12 the companion shrinks the video into the hole (0.4 s, expo-out) and the card's top and bottom bars ride on its edges, the same ease, so card and video move as one; f6-f14 a soft dark scrim fades in at the bottom of the video; the rail's heart, comment, share and more buttons pop in from 50 % (8 f each, 2 f apart from f8, slow end with a small overshoot) with their counts; f10-f20 the handle, Follow pill, caption and music line rise 24 px into place (slow end); f40 the heart is liked: it fills, pops 1.32x and rings out (9 f), three small hearts float up and fade (30 f each, 4 f apart); all the while the music disc turns, the music line scrolls and the progress line fills; the UI fades over 5 f just before the last 0.4 s, when the card grows back to the full frame with the video (ease cubic-bezier 0.33, 0, 0.67, 1)",
+ "tracks": [
+  {"name": "shrink", "what": "the video shrinks into the card, the bars ride on its edges", "start_f": 0, "length_f": 12, "easing": "decelerating (slow end), expo-out"},
+  {"name": "buttons", "what": "the heart, comment, share and more buttons pop in with their counts", "start_f": 8, "length_f": 14, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "info", "what": "the handle, Follow, caption and music line rise into place", "start_f": 10, "length_f": 10, "easing": "decelerating (slow end)"},
+  {"name": "like", "what": "the heart is liked and small hearts float up", "start_f": 40, "length_f": 40, "easing": "decelerating (slow end)"},
+  {"name": "grow back", "what": "the UI fades and the card grows back to the full frame", "start_f": 102, "length_f": 18, "easing": "S-curve"}
+ ],
+ "min_frames": "round(1.6 * fps)",
+ "min_why": "the shrink (0.4 s) and the grow back (0.4 s) need the card to be seen for a moment between them",
+ "core_points": 1,
+ "text_slots": ["handle", "caption", "likes", "comments"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 60,
+ "check_frames": [0, 2, 4, 7, 10, 14, 20, 40, 44, 52, 60, 100, 106, 110, 114, 118]
+}

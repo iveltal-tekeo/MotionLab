@@ -17,6 +17,8 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
                       colours") - that is the plan. ~10-20 s once the frame caches exist.
   --length 30         seconds (default: the style's typical length; at most the music / what is said)
   --format vertical   vertical | horizontal | square (default: the style's, else the clips')
+  --framing fit       fill | fit | split - how a horizontal clip fills a vertical / square video, every shot (0.6.1;
+                      default: per shot, motionlab\\reframe's rules - a split only where a shot has two people)
   --music <file>      an audio file in the project folder (a name, or a path; "none" = no music; default: the only
                       or first one there)
   --music-start auto  seconds into the song (auto: the strongest part - a drop - comes right after the hook)
@@ -40,6 +42,11 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
   --colour match      match: the footage moved toward the references' colour (a .cube, build\\colour\\match_vN.cube -
                       also for DaVinci Resolve) | grade: the style's starting grade only | none
   --seed 1            another seed = another draft from the same rules
+  --bare              0.6.1 Edit by segments: the cuts, the sound, the colour and the framing only - no effects, no
+                      punch-ins, no B-roll (their sound effects come on the picks); tools\\segments.py --build puts
+                      each segment's pick on it
+  --apply <list> [--base plan_vN.json] [--out <name>.json]   an edit list (motionlab\\editlist.py) on the newest
+                      plan (or that one); --out = the result under that name, no new version (a segment's preview)
   --render            render <project>_vN.mp4 too; the frame caches (prep_footage.py) are made first when missing;
                       a song from refs\\ (a download) -> also build\\publish\\<project>_vN_post.mp4 without it, to post
                       (the same sound added in TikTok / Instagram; motionlab\\publish.py post_copy)
@@ -387,15 +394,18 @@ def write_sound(prj: Project, d: Path, v, y: np.ndarray, stem: str | None = None
 
 
 def add_sfx(plan_p: Path, plan: dict, amount: str, kinds: list[str], talk: bool, drops: list[float],
-            sounds: list[str] | None = None, bed: str = "") -> str:
+            sounds: list[str] | None = None, bed: str = "", keep: bool = False) -> str:
     """0.5.4 (step 6): the draft's own effects get their sounds - the plan's "sfx" {amount, kinds, first = the drops'
     frames, kept first} picks which (motionlab\\sfx.py choose), tools\\sfx.py plan levels each against the sound under
     it (a voice is not lowered) and its mix becomes the plan's "audio"; build.py makes them again on every build of
-    this plan and its copies."""
+    this plan and its copies. keep (0.6.1, a bare draft): only the choice, for the effects the segments' picks add."""
     plan["sfx"] = {"amount": amount, **({"kinds": kinds} if kinds else {}),
                    **({"first": [int(round(x)) for x in drops]} if drops else {}),
                    **({"song_db": 0.0, "voice": True} if talk else {}), **({"sounds": sounds} if sounds else {}),
                    **({"bed": {"file": bed}} if bed else {})}
+    if keep:
+        write_json(plan_p, plan)
+        return f"sound effects ({amount}) made on the segments' picks when the edit is built (build.py)"
     if not SFX.plan_cues(plan) and not bed:
         del plan["sfx"]
         return "no sound effects: none of the draft's effects " + (f"is a {' / '.join(kinds)}" if kinds else "has one")
@@ -585,6 +595,56 @@ def cut_stumbles(clips: list[dict], fps: float, keep: set[int]) -> tuple[str, li
     if len(found) > len(gone):
         line += f", {len(found) - len(gone)} put back"
     return line, found
+
+
+WORD_REACH_S = 0.2     # a word that starts this close before a spoken part is a quiet first word the loudness missed
+#                        ("thank" before "you."): the part starts on it
+
+
+def cut_by_words(clips: list[dict], fps: float) -> str:
+    """2026-10-30 (local-make-2 built: cut by the words, not by the sound alone): each talking clip's spoken parts
+    against its transcript (tools\\speech.py - the captions' one, made when missing). A part with no word in it is a
+    noise - a tap, a breath, the phone set down (1.4 s of them opened Why MotionLab is different v10, before "Most
+    editors...") - and goes; a word outside every part that starts within WORD_REACH_S before one or ends within it
+    after one is taken in. A part is never made shorter. Returns the line for the notes ("" = nothing to say)."""
+    from motionlab import speech as SPM
+    if not SPM.available():
+        return ""
+    import speech as SPT                                        # tools\speech.py (cached per clip)
+    gone, took, secs = 0, 0, 0.0
+    for c in clips:
+        if not c.get("speech"):
+            continue
+        try:
+            _, tr = SPT.transcript(Path(c["source"]))
+        except SystemExit:
+            continue
+        words = [(float(w["t"]), float(w.get("t1") or w["t"])) for w in SPT.take_words(tr)]
+        if not words:
+            continue
+        off = float(c.get("offset_s") or 0.0)
+        parts = [(f0 / fps + off, (f1 + 1) / fps + off) for f0, f1 in c["speech"]]
+        out = []
+        for (f0, f1), (t0, t1) in zip(c["speech"], parts):
+            if not any(a < t1 and b > t0 for a, b in words):
+                gone += 1
+                secs += (f1 - f0 + 1) / fps
+                continue
+            # a word that starts just before the part ("Most" 0.01 s before its shot: the captions lost it; a quiet
+            # "thank" before "you."): the part starts on it. Only the start: a word's END from speech to text runs
+            # on into the pause after it (0.35 s past every part = the pauses back, 16 of them on one take)
+            a0 = min((a for a, _ in words if t0 - WORD_REACH_S <= a < t0), default=None)
+            if a0 is not None:
+                f0, took = max(0, int(math.floor((a0 - 0.08 - off) * fps))), took + 1
+            if out and f0 <= out[-1][1] + 1:
+                out[-1] = (out[-1][0], max(out[-1][1], f1))
+            else:
+                out.append((f0, f1))
+        if out:
+            c["speech"] = out
+    bits = ([f"{gone} part(s) with no word in them dropped ({secs:.1f} s)"] if gone else []) + (
+        [f"{took} quiet first / last word(s) taken in"] if took else [])
+    return ", ".join(bits)
 
 
 def clean_takes(prj: Project, clips: list[dict], d: Path) -> str:
@@ -853,9 +913,14 @@ def edit_words(prj: Project, plan: dict, fps: float) -> dict:
         a = int(L.get("in", 0)) / fps
         b = a + (int(L["end"]) - int(L["start"]) + 1) / fps
         off = int(L["start"]) / fps - a
+        def inside(w):            # a word of the shot: it starts in it - or most of it plays in it ("Most" started
+            t = float(w["t"])     # 0.01 s before its shot and the captions lost it, 2026-10-30)
+            t1 = float(w["t1"]) if w.get("t1") is not None else t
+            return a <= t < b or (t1 > t and min(t1, b) - max(t, a) >= 0.5 * (t1 - t))
         for ln in tr.get("lines", []):
-            ws = [{"t": round(float(w["t"]) + off, 3), "w": w["w"]} for w in ln.get("words") or []
-                  if a <= float(w["t"]) < b]
+            ws = [{"t": round(max(float(w["t"]), a) + off, 3), "w": w["w"],    # (its end too: the pauses between
+                   **({"t1": round(min(float(w["t1"]), b) + off, 3)} if w.get("t1") is not None else {})}   # them)
+                  for w in ln.get("words") or [] if inside(w)]
             if ws:
                 lines.append({"t0": ws[0]["t"], "t1": min(float(ln["t1"]) + off, b + off), "text":
                               " ".join(w["w"] for w in ws), "words": ws})
@@ -876,7 +941,9 @@ def apply_list(a, prj: Project) -> int:
     plans = sorted(prj.build.glob("plan_v*.json"), key=lambda q: int(re.sub(r"\D", "", q.stem) or 0))
     if not plans:
         raise SystemExit(f"no plan in {prj.build} - a quick draft first (draft_edit.py {prj.name} ...)")
-    base_p = plans[-1]
+    base_p = plans[-1] if not getattr(a, "base", None) else prj.build / Path(a.base).name
+    if not base_p.is_file():
+        raise SystemExit(f"--base: no {base_p.name} in {prj.build}")
     base = _json.loads(base_p.read_text(encoding="utf-8"))
     try:
         ops = EL.parse(src.read_text(encoding="utf-8"))
@@ -884,6 +951,10 @@ def apply_list(a, prj: Project) -> int:
     except EL.ListError as e:
         raise SystemExit(f"{src.name}:\n{e}")
     fps, v = float(P["fps"]), next_version(prj.build, prj.name)
+    out = prj.build / Path(a.out).name if getattr(a, "out", None) else None      # (0.6.1: a plan that is no version -
+    if out is not None and (out.suffix != ".json" or re.fullmatch(r"plan_v\d+", out.stem)):   # a segment's preview)
+        raise SystemExit(f"--out: a .json name in build\\ that is not plan_vN.json ({out.name})")
+    tag = out.stem if out is not None else f"v{v}"              # (its graphics' and captions' folder names)
     py, ov = sys.executable, str(LAB / "tools" / "overlay.py")
 
     def run(cmd: list[str]) -> str:
@@ -897,7 +968,7 @@ def apply_list(a, prj: Project) -> int:
             if at is None:
                 done.append(f"graphic {o['id']} at f{o['f']}: LEFT OUT - that frame was cut")
                 continue
-            folder = prj.build / "overlays" / f"v{v}_{k:02d}_{o['id']}"
+            folder = prj.build / "overlays" / f"{tag}_{k:02d}_{o['id']}"
             from motionlab import miniedit as ME
             from motionlab import overlay_settings as OS
             tf = ME.template_folder(o["id"])                # over a video its own backdrop is off (as the Editor does)
@@ -905,6 +976,11 @@ def apply_list(a, prj: Project) -> int:
                     and any(d["id"] == "background" and d["type"] == "boolean" for d in OS.declared(tf)):
                 o["values"]["background"] = False
             cmd = [py, ov, "new", str(folder), "--from", o["id"], "--frames", str(o["len"]), "--like-plan", "--force"]
+            fit = o.get("fit") or []                    # 0.6.1: part of the shot (the template's in_shot + the words)
+            col = "column" in fit and int(P["width"]) > int(P["height"])     # (a wide video's card at its edge)
+            cw = int(round(int(P["width"]) * EL.COLUMN_W / 2)) * 2
+            if col:
+                cmd += ["--width", str(cw), "--height", str(int(P["height"]))]
             if o["values"]:
                 cmd += ["--values", _json.dumps(o["values"], ensure_ascii=False)]
             if o.get("land"):
@@ -912,13 +988,15 @@ def apply_list(a, prj: Project) -> int:
             run(cmd)
             L = {"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"), "start": at,
                  "end": min(at + o["len"] - 1, int(P["frames"]) - 1), "blend": "normal"}
-            fit = o.get("fit") or []                    # 0.6.1: part of the shot (the template's in_shot + the words)
+            if col:
+                L["rect"] = L["rect0"] = [0, 0, cw, int(P["height"])]
             if "plain" not in fit:
                 tf = ME.template_folder(o["id"])
                 if tf is not None:
                     L.update(ME.in_shot(tf, P))
                 for w in fit:
-                    ME._gfit(L, w, True)
+                    if w != "column":
+                        ME._gfit(L, w, True)
             if o.get("land"):
                 r = TM.land_target(str(folder), o["land"], at, at)
                 L.update(start=r["start"], end=min(r["end"], int(P["frames"]) - 1), **{"in": r["in"]})
@@ -926,19 +1004,38 @@ def apply_list(a, prj: Project) -> int:
             P["layers"].append(L)
             done.append(f"graphic {o['id']} f{L['start']}-f{L['end']} ({frame_to_tc(L['start'], fps)})"
                         + (f", '{o['land']}' landed on f{at}" if o.get("land") else ""))
+            if tf is not None and "plain" not in fit:   # 2026-10-28: what the template brings with it ("with")
+
+                def with_graphic(t2, a, n, v2, L=L, folder=folder):
+                    f2 = ME.template_folder(t2)
+                    if f2 is None:
+                        return None
+                    if "background" not in v2 and any(d["id"] == "background" and d["type"] == "boolean"
+                                                      for d in OS.declared(f2)):
+                        v2 = {**v2, "background": False}
+                    g = folder.parent / f"{folder.name}_w_{t2}"
+                    run([py, ov, "new", str(g), "--from", t2, "--frames", str(n), "--like-plan", "--force"]
+                        + (["--values", _json.dumps(v2, ensure_ascii=False)] if v2 else []))
+                    G = {"type": "overlay", "id": g.name, "file": str(g / f"{g.name}.mov"), "start": a,
+                         "end": min(a + n - 1, int(P["frames"]) - 1), "blend": "normal", **ME.in_shot(f2, P)}
+                    P["layers"].insert(P["layers"].index(L), G)
+                    return G
+                done += ME.add_companions(P, L, tf, o["values"], with_graphic)
         elif o["op"] == "caption":
-            words = prj.check(prj.build / f"captions_v{v}.json")
+            words = prj.check(prj.build / f"captions_{tag}.json")
             write_json(words, edit_words(prj, P, fps))
-            folder = prj.build / "overlays" / f"captions_v{v}"
+            folder = prj.build / "overlays" / f"captions_{tag}"
             if folder.exists():
                 shutil.rmtree(folder)
-            out = run([py, ov, "captions", str(folder), "--from", str(words), "--preset", o["preset"], "--fps",
+            cap = run([py, ov, "captions", str(folder), "--from", str(words), "--preset", o["preset"], "--fps",
                        f"{fps:g}", "--width", str(P["width"]), "--height", str(P["height"]), "--frames",
                        str(P["frames"])] + (["--script", o["script"]] if o.get("script") else []))
+            # (its own name: `out` is the --out plan path since 0.6.1 - a caption line overwrote it with this log and
+            #  the apply refused to write "outside build\", 2026-10-30)
             P["layers"].append({"type": "overlay", "id": folder.name, "file": str(folder / f"{folder.name}.mov"),
                                 "start": 0, "end": int(P["frames"]) - 1, "blend": "normal"})
             P.setdefault("captions_fit", "chin")       # 0.6.0: spoken captions sit off the speaker's face (build.py)
-            missing = [ln for ln in out.splitlines() if ln.startswith("NOT SAID")]
+            missing = [ln for ln in cap.splitlines() if ln.startswith("NOT SAID")]
             done.append(f"captions ({o['preset']}" + (f", script {o['script']}" if o.get("script") else "")
                         + f") over f0-f{int(P['frames']) - 1}" + (f"; {len(missing)} script line(s) not said" if missing
                                                                     else ""))
@@ -959,13 +1056,14 @@ def apply_list(a, prj: Project) -> int:
             segs, by_id, fps, d, level="take" if made.get("sound") == "talk" else None)))}
         done.append("sound: the clips' own sound cut again to the shots" + (" (voice levelled per take)"
                                                                             if made.get("sound") == "talk" else ""))
-    P["name"], P["output"] = f"{prj.name}_v{v}", f"{prj.name}_v{v}.mp4"
-    P["made_by"] = {"tool": "draft_edit.py --apply", "list": f"edit_v{v}.list", "from": base_p.name,
-                    "sound": made.get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
-    out = prj.check(prj.build / f"plan_v{v}.json")
+    name = f"{prj.name}_{tag}" if out is not None else f"{prj.name}_v{v}"
+    P["name"], P["output"] = name, f"{name}.mp4"
+    P["made_by"] = {"tool": "draft_edit.py --apply", "list": src.name if out is not None else f"edit_v{v}.list",
+                    "from": base_p.name, "sound": made.get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
+    out = prj.check(out if out is not None else prj.build / f"plan_v{v}.json")
     write_json(out, P)
     keep = prj.build / f"edit_v{v}.list"
-    if src.resolve() != keep.resolve():
+    if P["made_by"]["list"] == keep.name and src.resolve() != keep.resolve():
         shutil.copyfile(src, prj.check(keep))
     print(f"{base_p.name} + {src.name} -> {out.name} ({int(P['frames'])} frames, "
           f"{frame_to_tc(int(P['frames']) - 1, fps)} last):")
@@ -1097,11 +1195,16 @@ def main() -> int:
     ap.add_argument("--want", default="", help="the user's own words (the draft understands a few)")
     ap.add_argument("--length", type=float)
     ap.add_argument("--format", choices=sorted(ST.SIZES))
+    ap.add_argument("--framing", choices=("fill", "fit", "split"))
     ap.add_argument("--music")
     ap.add_argument("--music-start")
     ap.add_argument("--sound", choices=["auto", "music", "clips", "talk"], default="auto")
     ap.add_argument("--apply", metavar="LIST", help="0.5.3: an edit list (motionlab\\editlist.py) on the newest plan "
                     "-> plan_v<N+1>.json")
+    ap.add_argument("--base", help="--apply: on this plan (plan_vN.json in build\\) instead of the newest")
+    ap.add_argument("--out", help="--apply: write the plan as this .json in build\\ - no new version (0.6.1, a preview)")
+    ap.add_argument("--bare", action="store_true", help="0.6.1: the cuts, sound, colour and framing only - for "
+                                                        "tools\\segments.py --build")
     ap.add_argument("--per-shot", action="store_true", help="talk: level the voice per shot (default: one gain per take)")
     ap.add_argument("--stumbles", choices=["on", "off"], default="off",
                     help="talk: cut fillers, repeats, retakes and 'cut / again' too (0.6.0, opt-in: a loose, "
@@ -1172,6 +1275,11 @@ def main() -> int:
         keep = {int(x) for x in re.findall(r"\d+", a.keep_stumbles or "")}
         stumble_line, stumbles = cut_stumbles(clips, fps, keep)
         log(f"stumbles: {stumble_line}")
+    if mode == "talk":
+        wl = cut_by_words(clips, fps)
+        if wl:
+            log(f"words: {wl}")
+            stumble_line = f"{stumble_line}; {wl}" if stumble_line else wl
     if mode == "talk" and a.voice_clean:
         vc = clean_takes(prj, clips, d)
         log(f"voice: {vc}")
@@ -1189,7 +1297,8 @@ def main() -> int:
         drops = [x - sf0 for x in info["drops"] if 0 < x - sf0 < length * fps]
     N = int(round(length * fps)) if (mode != "talk" or a.length) else None
     try:
-        D = DR.make(style, clips, fps, W, H, N, "talk" if mode == "talk" else "music", beats, downbeats, drops, a.seed)
+        D = DR.make(style, clips, fps, W, H, N, "talk" if mode == "talk" else "music", beats, downbeats, drops, a.seed,
+                    bare=a.bare)
     except ValueError as e:
         raise SystemExit(str(e))
     v = next_version(prj.build, prj.name)
@@ -1231,23 +1340,40 @@ def main() -> int:
             "made_by": {"tool": "draft_edit.py", "like": a.like, "presets": a.preset, "want": a.want,
                         "sound": mode, "music": str(music) if music else None, "music_start_s": start,
                         "feel": a.feel, "seed": a.seed, "date": time.strftime("%Y-%m-%d %H:%M"),
-                        "style": ST.summary(style)}}
+                        "style": ST.summary(style), "args": sys.argv[1:], **({"bare": True} if a.bare else {})}}
+    try:                                            # 0.6.1: a clip wider than its place framed per shot on the face,
+        from motionlab import reframe as RF         # in a layout (fill / split / fit / screen / game)
+        framing = RF.apply(plan, replace_static=True, prefer=a.framing)
+        framed = RF.summary(framing)
+    except Exception as e:                          # noqa: BLE001 - a draft without framing is still a draft
+        framing = [f"not framed ({type(e).__name__}: {e})"]
+        framed = framing[0]
+    if framing:
+        log(f"framing: {framed}")
     plan_p = prj.check(prj.build / f"plan_v{v}.json")
     write_json(plan_p, plan)
     if a.sfx != "none" or a.ambience:
         sfx_line = add_sfx(plan_p, plan, ("few" if mode == "talk" else "some") if a.sfx == "auto" else a.sfx,
                            sfx_kinds, mode == "talk", drops,
-                           [x.strip() for x in (a.sfx_sounds or "").split(",") if x.strip()], a.ambience or "")
+                           [x.strip() for x in (a.sfx_sounds or "").split(",") if x.strip()], a.ambience or "",
+                           keep=a.bare)
         log(f"sound: {sfx_line}")
         sound_line += f"; {sfx_line}"
     args_line = " ".join(sys.argv[1:])
     md = notes(prj, v, style, D, by_id, fps, W, H, orient, sound_line, music_note, args_line, colour_line)
-    if stumbles:                                    # 0.6.0 step 20: what went besides the pauses, each to put back
+    if a.bare:                                      # 0.6.1: the base of an edit by segments
+        md += ("\n## Bare - for an edit by segments\n\nThe cuts, the sound, the colour and the framing only. "
+               f"`tools\\segments.py \"{prj.name}\" plan_v{v}.json` lists its segments with a treatment each; "
+               "`--set 3=broll` changes one, `--build` puts every pick on it as the next version.\n")
+    if stumbles:                                   # 0.6.0 step 20: what went besides the pauses, each to put back
         md += ("\n## Stumbles cut (in each clip's own frames)\n\n" + "\n".join(
             f"- {s['n']}. {s['kind']} - clip {s['clip']} f{s['f0']}-f{s['f1']} ({frame_to_tc(s['f0'], fps)}-"
             f"{frame_to_tc(s['f1'], fps)}): {s['why']}" + (" - PUT BACK" if s["kept"] else "") for s in stumbles)
                + "\n\nPut one back: the same command with `--keep-stumbles 2,5` (their numbers); none cut: "
                "`--stumbles off`.\n")
+    if framing:
+        md += ("\n## Framing (a clip wider than its place, per shot - motionlab\\reframe.py)\n\n" + framed + ":\n\n"
+               + "\n".join(f"- {x}" for x in framing) + "\n")
     prj.check(prj.build / f"draft_v{v}.md").write_text(md, encoding="utf-8")
     write_json(prj.check(d / f"draft_v{v}.json"), {k: D[k] for k in ("frames", "shots", "effects", "skipped", "broll")}
                | {"style": style, "sound": sound_line, "mode": mode, "stumbles": stumbles})

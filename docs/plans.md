@@ -74,11 +74,11 @@ Phase 2's planned versions (0.5.1 opened it, 1.0.0 ends it):
 
 | Version | Plan | State | Size |
 |---|---|---|---|
-| 0.6.1 | Quality over quantity: many clips edited well, template packs | next - the user's focus (2026-10-26): edits done well, ten more minutes of Claude are fine; first many B-roll clips edited well (a clip catalogue made once, a shot list with pictures before any render, Claude's own review); shorts from a long video, scored on a researched rubric (moved from 0.6.4, 2026-10-27); *Left from 0.6.0* (what waits on the user); then the template packs - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
+| 0.6.1 | Quality over quantity: many clips edited well, template packs | next - the user's focus (2026-10-26): edits done well, ten more minutes of Claude are fine; first many B-roll clips edited well (a clip catalogue made once, a shot list with pictures before any render, Claude's own review); shorts from a long video, scored on a researched rubric (moved from 0.6.4, 2026-10-27); vertical framing for every edit and editing by segments - a choice per segment, then the whole edit (2026-10-29); *Left from 0.6.0* (what waits on the user); then the template packs - the library shipped in 0.5.0; Resolve / After Effects / Lottie packs read exactly (AE with py-aep, no AE needed - 2026-10-25), templates used as they are, 3D blocks (Three.js), the motion check, formats, a preview before the render | L, ships in parts |
 | 0.6.2 | Colour + DaVinci Resolve | planned - measuring a look + the match LUT shipped in 0.4.0; + the edit as a timeline file for Premiere / Final Cut (2026-10-25) | M |
 | 0.6.3 | Content generation | planned - AI clips back into the lab, pictures from image tools, voice-over (voice and music moved to 0.5.4 2026-10-22; voice back 2026-10-25) | M |
 | 0.6.4 | Yapping mode | planned - talking quick draft + talking-head pack shipped; starts with the content foundations; + the clips a script needs (from 0.5.0, 2026-10-15) (moved from 0.5.2, 2026-10-22); + *Research it* for scripts (2026-10-25; shorts from a long video moved to 0.6.1, 2026-10-27) | L |
-| 0.6.5 | Take notes from videos: competitors, videos, courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15; competitor analysis, music / voice stems and a reference's sound effects added 2026-10-25 | L |
+| 0.6.5 | Take notes from videos: competitors, videos, courses | later - transcripts, numbers, the content panel shipped; courses added 2026-10-15; competitor analysis, music / voice stems and a reference's sound effects added 2026-10-25; SPARK - why a video worked - planned 2026-10-29 (can ship early, as Notes did) | L |
 | 0.7.0 | AI B-roll and cinematics | later | L |
 | 0.7.5 | macOS | later | M |
 | 1.0.0 | Deployment | later - the end of Phase 2; what deployment means is the user's call (added 2026-10-19) | - |
@@ -234,6 +234,84 @@ captions in several languages, large-v3-turbo measured, collections across many 
   moment, frame + timecode; Editor > Review.
 - *Save the final video where you want*: yes, small - *Save a copy…* on a render (a copy; the build keeps its own).
 
+**SPARK - why a video worked** (planned 2026-10-29 - the user: "after that maybe start working on the SPARK content
+creation section on the analyser, make a good plan for everything and dont rush"; the Analyser's second way, its page
+says *coming soon* since 0.6.0.5; researched the same day: docs\ideas.md *SPARK (why a video worked) - researched
+2026-10-29*). It can ship early, as Notes did (0.6.0.5), and it is built the way Notes is: the lab prepares, Claude
+writes, a gate checks, the page shows. **Before it**: the analysis Overview's Content creation panel (`profile.py`:
+the first 3 s, words per minute, text on screen), Claude's `_breakdown` per focus, `content.py stats` (views, likes,
+comments, followers, views / followers; TikTok's shares and saves), Most replayed kept at download, the thumbnail's
+measures - spread over pages, with no *why* and nothing to compare against.
+**Steps 1-4 built 2026-10-30, released in 0.6.0.8** (the user: "can u work on the SPARK section?"; "Put SPARK in
+0.6.0.8"): `tools\spark.py` +
+`motionlab\spark.py` (always its own folder `analysis\spark\<name>\` - the other ways are linked by SHA-256, not
+shared), the `/spark` skill, the app (Content creation's way, its tab and page, #/spark/<name>, *Analyze with SPARK*
+from an analysis or a video's notes; API_LEVEL 53). Measured on this PC: a light read of every frame at the analyser's
+size on a fixed frame grid (its cut detector + text measure; a flash under 0.25 s is no shot) - a 2:36 min 1080p
+video in ~37 s, a 26 s reel in 5 s; the words reused from the same video's notes / analysis; the creator's usual from
+one flat yt-dlp list (~2 s; YouTube's videos tab rounds views and gives approximate months, the Shorts tab neither
+dates nor lengths - its neighbours are its era); never across 2026-08-24; Instagram: views and the creator's list
+unknown (likes / comments shown raw). Tested on NEMZZZ - 4AM (3.29x its usual - an outlier; Claude's write-up through
+the gate on the first try but for a long verdict: the 3:59 -> 04:00 clock found as the title's payoff at 91 %) and an
+Instagram reel (waiting for Claude). A FLUX analysis of the same video gives the hook's text (its checked text events
+beat the rough measure). **2026-11-02**: the user's retention from a screenshot (traced by the lab, *Learn from your
+own posts* R1 below) - on the user's own videos, with the drops at their frames and words. **Not yet**: step 1's
+screenshot of Instagram's hidden shares / saves; steps 5-6 (6 begun with R1); the ship test on the user's 5 videos.
+1. **`tools\spark.py prepare <video>`** (the lab, no Claude) -> `analysis\spark\<name>\` (or the analysis' own
+   folder when it has one - one video, three ways): the words with timings, the first 3 s (cuts, words, text on
+   screen), the pacing against the creator's own videos, the chapters and Most replayed, the thumbnail's measures, a
+   sheet of one key frame per shot; **the numbers** (one `yt-dlp -J` the user starts, kept on this PC): views, likes,
+   comments, shares and saves where the platform gives them, each per 1,000 views; **the creator's usual**: the median
+   of the same creator's same-format videos from the same era (YouTube counts a view the moment it starts playing,
+   ad views included, since 2026-08-24 - never compared across that date), the video itself left out, Shorts apart
+   from long videos; the outlier score = views / that median (views / followers is weak for Shorts, Reels and TikTok,
+   where most views come from non-followers). What a platform hides (Instagram shares and saves, the user's own
+   retention and CTR): a screenshot Claude reads and the user confirms.
+2. **Claude writes it** (a `/spark` skill, opened by itself when a video is ready, like Notes - nothing for the user
+   to correct): one rubric for every video, so videos can be compared (a builder of such a tool: free-form answers
+   could not be compared, a fixed list was his biggest gain) - **the idea and who it is for** (does it reach past the
+   niche); **the packaging promise** (title, thumbnail / cover, first frame - the glance); **the hook, 0-3 s** (its
+   type from a fixed list; picture, words and text saying the same thing); **the promise kept** (where the payoff
+   lands, as a share of the length); **open loops and re-hooks** (questions, "but", where Most replayed rises);
+   **structure and pacing** (against the creator's own median - never "more cuts = better": a 2026 study found faster
+   pacing lowered completion); **emotion** (awe, anger, worry, humour - moderate evidence); **why people would send
+   it** (useful to one person, or makes the sharer look good); **why people would comment** (a question, a split
+   opinion); **craft** (captions, sound, graphics - FLUX's measures where the video has an analysis); **the ending**
+   (loop, call to action); **context** (a trend, a collab, timing, paid views) - and always the line **"not
+   explained"**: what the video itself cannot account for. Each point is labelled *measured* / *Claude's judgement* /
+   *unknown* and carries its evidence (a quote, a frame + timecode, or a number); words like "consistent with", never
+   "caused" or "will go viral"; no simulated audience. Then **what to take for your videos** (3-5 actions, with My
+   Brand's audience when there is one; a ticked one goes to Prepare's script check and hooks). High views with low
+   ratios = the packaging did it, not the video - said so.
+3. **The gate** (`spark.py save`, like `notes.py save`): every quote found in the words, every frame + timecode set by
+   the tool, every number recomputed by the tool from the saved numbers (Claude cannot write a ratio of its own), every
+   rubric point labelled, the *not explained* line present; nothing saved when a check fails.
+4. **The page**: SPARK's list (like Notes'); a video's page - one line of verdict, its numbers against the creator's
+   usual (bars), the rubric as cards whose evidence chips play the moment, *not explained*, the take-aways;
+   *Analyze with SPARK* on a FLUX or INDEX video, and the other way round.
+5. **Many videos** (the second step): the contrast set - a creator's or a niche's outliers against the same
+   creators' weak videos of the same format and era, "present in X of 20 outliers vs Y of 10 weak", matched pairs
+   (same topic, different result) - is the *Competitor analysis* below (its depths 1-3), its niche card read by
+   Prepare, New edit and the quick draft.
+6. **Learn from real results**: the user's own posts (Content agency's check, their screenshots of retention) set
+   against what SPARK said of the references they followed. The retention part: *Learn from your own posts* R1 below
+   (built 2026-11-02); the tests, the lessons' confidence and the next tests: R2-R4 (all built 2026-11-02).
+
+**Data rules - checked 2026-10-29 in YouTube's API developer policies** (they correct step 17's "fixes a terms
+problem" below): III.E.6 no scraping; III.E.4.b statistics not authorised by their owner kept at most 30 days;
+III.E.4.h no "new or derived data or metrics" from API data unless an audited developer asked for it (III.L) - so the
+API makes the *fetching* allowed, not an outlier score made from its numbers. The choices were: (a) per-video
+lookups the user starts with yt-dlp (as `content.py stats` does today - YouTube's terms bar automated access; few,
+user-started, never shared), (b) the API showing its numbers as they are with the creator's usual beside them and no
+score, or (c) the user's own channel only, through their login (step 19). **The user's choice (2026-10-29): (a)** -
+"Lookups you start": one video at a time when the user clicks, the outlier score kept, the numbers on this PC only,
+never in shared cards. Instagram bars automated collection; TikTok's research API is for non-profit academics.
+
+**Ships when (SPARK)**: on 5 videos the user picks (3 that went viral and 2 ordinary ones of the same creators), every
+SPARK page passes the gate, the numbers match what the platform shows, and the user calls at least 4 of the 5
+explanations useful, with no measured fact wrong. **Needs first**: the user's data-rules choice above; nothing to
+install (Notes' parts are built; the data rules chosen: (a)).
+
 **Competitor analysis** (the friend's points 3 and 5, 2026-10-25, pasted by the user: "un análisis de competencia
 estaría súper potente coger los 20 vídeos más virales de la competencia ... analiza los 20 perfiles más influyentes y
 más reconocidos en instagram, tik tok y YouTube y de esos perfiles analiza sus 20 vídeos más virales, extrae el guion,
@@ -265,15 +343,92 @@ user: "youtube analytics stuff for later 0.6.x versions"; the scan above runs th
 - 17. **The YouTube competitor and outlier scan through the Data API** (S-M): a free API key (no login; 10,000 units a
     day, a video or channel = 1 unit). **Fixes a terms problem**: reading YouTube stats with yt-dlp (`content.py
     stats`, 0.6.5's planned scan) is against YouTube's terms (no automated access); the API does the same within
-    them (other channels' stats kept 30 days at most unless refreshed). TikTok / Instagram competitors stay single
+    them (other channels' stats kept 30 days at most unless refreshed; checked 2026-10-29 - true for fetching, but
+    a score derived from the API's numbers is barred too: *Data rules* under SPARK above). TikTok / Instagram competitors stay single
     lookups the user starts. YouTube is testing the same idea in Studio (a *Research* tab with outlier multipliers).
-- 18. **What worked this month** (M, once there is data): top videos by retention and views, which pillar, hook and
-    format worked, the A/B winners - into Claude's lessons.
+- 18. **What worked this month** (M, once there is data; **built 2026-11-02** with R4 as Content agency > *Monthly
+    review*, released in 0.6.0.9): top videos by retention and views, which pillar, hook and format worked, the A/B winners -
+    into Claude's lessons, with R3's confidence and ending in R4's three next tests (*Learn from your own posts*,
+    below - what was built and what is not yet).
 - 19. **YouTube Analytics connection** (M, later): retention curves, traffic sources, impressions + CTR (the bulk
     Reporting API, since 2026-01) - OAuth with the user's own Google project (a desktop client, 127.0.0.1; in
     *Testing* the login lapses every 7 days, so the client is published unverified - a warning screen, 100 users at
     most). Instagram after it (a Creator account - not Business, which loses music - and a token pasted from Meta's
     dashboard, 60 days, refreshable); TikTok's API last, if ever (counts only, an app review with a demo video).
+
+**Learn from your own posts** (2026-11-02 - the user brought a creator's "AI content coach" guide (six prompts and a
+TikTok Studio collector) and asked whether it fits Content agency; reviewed the same day, then: "add them to plans and
+start working on improving the SPARK and content agency secitons"). **Not taken**: its tooling - a collector that reads
+TikTok Studio with the user's saved login on a daily timer (its own notes: it "does not make automated access
+undetectable or remove account risk"; the lab reads public numbers only, when the user presses it), PostgreSQL,
+Descript, NotebookLM, scheduled runs. **Kept: four ideas**, fitted to SPARK's labels (measured / judgement / unknown)
+and steps 18-19:
+- R1. **Where people left** (S-M, **built 2026-11-02**, released in 0.6.0.9): the user's own retention graph - a screenshot of
+  TikTok Studio's, YouTube Studio's or Instagram's (the user's own numbers, no login, no reading of the platforms) -
+  traced by the lab, not read by Claude (more exact than a reading, no Claude time): the user puts four lines on the
+  graph's axes (0 s, the end, the top and bottom %), the tool finds the curve's colour (or the user clicks it) and
+  follows it column by column -> the share still watching at every second, *unknown* where the curve cannot be seen
+  (never filled in). Then every 3-second window's relative loss, `1 - r(t+3) / r(t)` (when r(t) > 0), the holds at 3 s,
+  10 s and the end, and the user's usual (the median of their own traced videos on that platform, from 5). In Content
+  agency a video card gets *Where people left*; in SPARK, the user's own video gets the curve under its player with
+  the steepest drops lined up with the words and the shot on screen (frame + timecode), and the table's `ret_*`
+  numbers for Claude - "a drop shows where people left, not why": the why stays *judgement*. This is SPARK step 1's
+  screenshot and the first piece of step 6; step 19's API gives the same curves for YouTube later.
+- R2. **Tests of one idea** (M, **built 2026-11-02**, released in 0.6.0.9 - the user: "continue with R2"): Content agency's
+  third tab *Tests* (`motionlab\experiments.py`, `tools\experiments.py`, `knowledge\local\experiments.json`): 2-3
+  versions of one idea posted on ONE platform (A / B / C - a fixed id, never told apart by their caption), each its
+  post link (picked from Check my pages' videos or pasted) and optionally the MotionLab video it was made in; the rule
+  picked first = one number (views at 48 h / 7 d / 28 d from the checks near that age, held at 3 s / 10 s / the end
+  from R1's graphs, likes / comments per 1,000 views, the stats file's average % viewed) + a minimum of views; the
+  tool's result = waiting (and why) / too close to call / a winner that beats every other version by 25 % (views,
+  ratios) or 3 points (%), always with "one post each - not a controlled test, repeat it". The states are worked out:
+  planned (a version not posted) -> testing -> compared -> reviewed (Claude) -> closed (the user's pick + note; a
+  closed test stays closed); *Test again* = a new test linked to its parent with the picked version as A. Claude's
+  review (`/spark test <id>`, the gate `experiments.py review`): needs every version read by SPARK (the test's button
+  starts it, no Claude) - **keep / change / cut** at frames of each version's video (frame + timecode set by the
+  tool, quotes found in that version's words), each change `edit_only` / `re_record`, every change and cut *to test*
+  with the number it should move, the retention over its frames when traced, and a next test (try / the same / the
+  number); *Make the next version* = `/recreate-video improve <project> test:<id>` (improve.md *From a test*:
+  edit-only items done, re-record items listed for the user). The post's `ab` line stays - it is YouTube's own Test &
+  compare (thumbnails / titles inside one video), another thing.
+- R3. **Lessons that earn their confidence** (M, **built 2026-11-02**, released in 0.6.0.9 - the user: "continue with R3"):
+  Content agency's fourth tab *What works* (`motionlab\findings.py`, `tools\findings.py`,
+  `knowledge\local\findings.json`). Every own post (Check my pages + the traced graphs, the last 120 days) = its numbers
+  (R2's) + features **measured by the lab only** - length, the hour and day it went up, the calendar's pillar, and when
+  SPARK read it: text / cuts / words in the first 3 s, the first cut, cuts and words per minute - so nothing is
+  labelled after the numbers were seen. A pattern = one feature split (a number at its median, yes / no, one value
+  against the rest) x one number, per platform; it stands out only with >= 8 videos a side, a clear margin (R2's) and
+  still with its strongest video left out ("one video carried it" = can't tell). The scan lists what stands out now
+  (hunches only, with how many patterns were tried - some are chance); the user keeps one = confirmation 1 (*hunch*).
+  Every *Check my pages* (and a traced graph, and the button) tests the active lessons again: supports with >= 3 videos
+  no counted run used = +1 (2 *likely*, 3 *settled*); the same videos = nothing; can't tell with >= 3 new = *weakened*
+  (one step down); the other way = *refuted* (the claim kept, the run's numbers shown); untested 30 days = one step
+  lower, 90 = *stale* (worked out, never stored). Likely / settled lessons go into Claude's memory (`knowledge.py
+  memory` and `--rules`: "patterns across the user's posts, never one video's cause"; hunches only counted). Measured
+  2026-11-02 on the user's posts: 38 in the window, nothing testable yet (likes per 1,000 views known for 14 TikTok
+  posts, 16 needed) - the tab shows each platform's distance to the bar and *Measure my posts with SPARK* (no Claude,
+  ten at a time). **Not yet**: Claude's blind labels (the hook's type and the like, written by a pass that sees no
+  numbers) - SPARK's own `hook_type` is written with the numbers in view, so it is not used.
+- R4. **The review ends in three next tests** (S, with step 18; **built 2026-11-02** with step 18 as Content agency's
+  fifth tab *Monthly review*, released in 0.6.0.9 - the user: "continue with R4"; `motionlab\monthly.py`, `tools\monthly.py`,
+  `knowledge\local\monthly.json`): the lab's month first, no Claude - per platform the month's median against the usual
+  (the median views of the platform's posts of the last 120 days that were 7+ days old at their check, from 5; younger
+  posts are *still growing*, never ranked), the best posts by views and by held at 3 s, the month's posts grouped by
+  pillar / length (up to 30 s, 31-60 s, 1-3 min, over 3 min - the long videos apart) / text in the first 3 s (median
+  × and n: "a hint, not a pattern"), the month's tests, the lessons and their runs that month, last month's next tests
+  and where they got to on the calendar. Then Claude (`/spark month <YYYY-MM>`, the gate `monthly.py review`): one
+  line of summary and exactly three next tests - `try` (one change), `same`, `metric` (R2's; Instagram only retention /
+  average viewed), `why` and 1-6 evidence items (posts of the last 120 days, lessons, tests; at least one post of the
+  month); three different tries, no cause words, every × / % / per 1,000 one of the month's numbers **of that unit**
+  (an × must be an × against the usual - a % that happens to be near is refused). *Put it on the calendar* = an idea
+  (`"next": "<month>:<n>"`, its words, the same + the number in the notes), once per test; a new review keeps the
+  picks. Checked 2026-11-02 on the user's October (20 posts, 6 still growing at the 2026-10-26 check): it reads and
+  ranks them; nothing written to the real stores. **Not yet**: the review into Claude's memory (the lessons already
+  go there through R3); YouTube's own retention per month (step 19).
+**The bars** (measured 2026-11-02 on the user's pages, the last *Check my pages*, 2026-10-26): 10 TikTok and 10
+YouTube videos with 1,000+ views in the last 60 days - the guide's own bar (20 per platform) would answer "too few"
+for now, so R3 waits for more posts; R1 works from the first video and R4's review from the first month of posts (its
+groups say "a hint", the patterns stay R3's).
 
 **Sound** (moved from 0.5.4's steps 5 and 7, 2026-10-25 - the user: "lets just move to a later version"):
 - **Separate music from voice** (measure first - heavy on CPU): Demucs stems for cleaner beats / drops and cleaner
@@ -653,6 +808,277 @@ repeated, wrong subject); a second window (*Improve*) reads the catalogue withou
 prep's disk and time measured before / after. **Needs first**: that project (only read, as always); nothing to
 install (OpenCV + ffmpeg split, tone-map and pick the key frames; Claude writes the lines).
 
+**Vertical framing for every edit** (planned 2026-10-29 - the user: "encuadre para redes (en vertical)"; researched
+the same day: docs\ideas.md *Vertical framing - researched 2026-10-29*). One piece the many-clips half (step 6),
+the shorts (step 5 below) and the Editor share, built once. **Released as 0.6.0.8** (2026-10-30): steps 1, 2, 4, 5
+and 7; steps 3 and 6 wait on the user's three videos. **Today**: a horizontal clip in a vertical edit is cropped
+round one fixed point per moment (the catalogue's `subject`: a YuNet face, else a saliency centre); the person track
+(`person.py`, smoothed both ways) moves only the zoom point of the face-led effects; a photo can be shown whole over a
+blurred copy (`"fit": "contain"`). The renderer already draws everything a reframe needs - an `anchor` that moves
+(a curve), a clip in part of the frame (`rect`: splits, a corner camera), the blurred fill - what is missing is the
+decision per shot, the layouts, who is talking, the limits and the controls.
+1. **Hold or follow, per shot** (the lab, `motionlab\reframe.py`, no Claude): with the whole shot known in advance
+   (AutoFlip's way), the subject's track (the face track, else the person mask's centre, else saliency; detected at
+   ~480 px wide, ~5 fps, on the light cache) -> **hold** = one still crop when the face box stays inside the crop
+   with >= 8 % margin in >= 95 % of its frames (most talking shots), snapped to the centre only within ~3 % of the
+   crop; else **follow** = a path of holds, constant pans and eases (never a frame-by-frame wobble): moves under 4 %
+   of the source width skipped, pans at most ~0.5 crop widths a second, eases of >= 12 frames, a new path at every
+   cut. Written as the clip's `anchor` curve (compose draws it); the eye line stays where the camera put it (a
+   full-height crop cannot move it without a zoom). **Built 2026-10-29** (released in 0.6.0.8): `motionlab\reframe.py`
+   (`apply(plan)`; faces at ~5 a second from the light cache, kept in `<ID>.faces.json`; pans that touch joined into
+   one - an S-curve stops at both ends; a close-up wider than the crop kept on its middle; never changed: a clip that
+   follows the face itself, a shake, keyframes, a point set by hand) run by every quick draft (`framing:` in its log,
+   *Framing* in `draft_vN.md`); self-check 11 cases (`selftest.py` *reframe*; the path the same as compose draws it).
+   On `zz_many_clips2` (28 shots of music-video clips): 23 framed in 0.9 s (0.06 s once the faces are kept) - 9 held
+   on the face, 14 kept (no face, or a shake); s22_I f697 (00:00:23:07) had half the face cut off by the catalogue's
+   point, now centred. Not yet: a real follow (no test clip with someone crossing the picture), a vertical clip in a
+   horizontal video (the y axis), the subtitles burned in at the crop's edges (step 4).
+2. **Layouts** (a shot's `layout`, picked by rules, changed by the user): **Fill** (9:16 on the subject - one face);
+   **Fit** (the source cropped to 4:3, over a blurred copy - a solid colour when its background is plain; not the
+   whole 16:9 band, which fills 32 % of the height) for a wide shot, a chart or two people too far apart; **Split**
+   (two people stacked - never 50 / 50 when a half loses the top of a head: bands measured on the faces, the captions
+   on the seam, at most two panels); **Screen + face** (a screen recording on top, the face below - a dense screen
+   as a cutaway instead); **Game** (the face 30 %, the game 70 %). **Built 2026-10-29** (released in 0.6.0.8; the user's
+   changes = step 5): compose draws a clip in `panels` over a `backdrop` (one layer per shot, so the Editor's moves,
+   cuts and transitions carry them; the first panel's crop centre = the clip's own anchor - its keys, a shake, the
+   face track - the others' their own + a shake's swing; the face found in whichever panel shows it); reframe.py
+   picks per shot: **fill** (one face, or people that fit in one crop together), **split** (two people of a size -
+   the second at least half the first's face, in 70 % of the samples - too far apart for one crop: the left one on
+   top, each panel zoomed so the other face stays out and both faces come out 30 % of their panel wide, the upscale
+   at most 2.2x; else a fit), **fit** (a 4:3 band - zoomed in on a group, the faces 40 % down - over a blurred copy,
+   or the wall's own colour when the band's edges are plain: seamless; three or more people, a split that does not
+   fit, someone too fast to follow), **screen** / **game** (a face camera found by its straight borders round a
+   small face that stays put - the screen on top 58 % cropped round where it changes, the face below; a moving
+   picture round it = a game, the face on top 30 %); captions on a split's seam (facefit.py). The Editor's preview
+   draws them, and two older preview faults it showed are fixed (a crop off the middle of a horizontal clip in a
+   vertical video showed the middle; a clip placed before its size was known stayed wrong while paused). Tested:
+   self-check 23 cases + the panels rendered from a made-up clip (selftest *reframe*); `zz_layouts` (made from the
+   user's two takes, only read: one talker, two far apart, two side by side, two in tiles, a screen recording and a
+   game with a face camera, a dash across) - every layout where expected, the renders and the Editor's preview
+   alike; `zz_many_clips2`'s draft unchanged (a passer-by in s22_I first turned its shot into a fit: the size and
+   presence rule above). Not yet: a real two-person talk or screen recording (the user's three videos), a
+   borderless or round face camera (Loom's bubble), a voice-over screen recording without a face (step 4's text
+   check), the face camera's upscale (2.7-3.1x on the tests: soft - step 4).
+3. **Who is talking** (two or more faces in one shot, one mixed sound): the words' timings say when someone speaks;
+   per face a mouth signal (a frame difference in the mouth box YuNet's landmarks give - nothing to install)
+   correlated with the sound's loudness over 1-2 s windows - a nodding listener moves but does not correlate.
+   Measured first on a two-person clip; Light-ASD (MIT, 1 M parameters, needs PyTorch) only if that fails and earns
+   its install. Cuts only in word gaps, each speaker held >= 2 s, turns under 1 s ignored ("yeah", "mm-hmm"), after
+   ~10 s on one speaker a variant (the wide shot or a punch-in); crosstalk = Split.
+4. **Limits**: the total upscale at most ~2.0-2.2x (a 1080p source in a 1080 x 1920 crop is already 1.78x; a 4K
+   source can punch in freely) - past it Fit or Split; a chart, a chyron or text burned in at the frame's edge kept
+   whole (an edge-text check on the light frames -> Fit); captions and graphics inside `safezones.py`'s safe area and
+   never over the mouth (the face box). **Built 2026-10-29** (released in 0.6.0.8): layouts decided on the zoom a shot holds
+   (80 % of its frames - a zoom-through's 1.7x peak at a cut no longer counts; step 2 took the peak); a fill past
+   2.2x = a fit (a 720p clip: 2.7x -> its band 1.1x); text burned in (subtitles, lyrics, chyrons, titles - lines of
+   letter edges, wide, near the top or the bottom, at one place in 40 % of the samples; the poster on the user's wall,
+   a shelf, a room's words never) that a fill or a split would cut = a fit as wide as the text needs (up to the whole
+   picture), its crop kept round the text; a shot with no face whose crop cuts it = a fit round it too; the panels'
+   faces inside the apps' safe area (safezones.py "all"): the eyes under the top band, the mouth over the bottom one
+   (the chin may go under it, as captions may) - a split zooms both panels in alike (at most 1.5x, while the faces
+   stay under 45 % of the panel) for a low face, a game's face camera moves down under the tabs, a screen + face ends
+   at the bottom band (the backdrop under it; its face camera less blown up: 2.4x, was 3.1x); captions on the seam of
+   any two stacked panels, the least-covering place when a moving face blocks every other one, and off text burned in
+   (`"reframe"` `"text"`). Tested: reframe self-check 30 cases, facefit's 7; `zz_layouts` + a subtitled talker, a 720p
+   talker and a two-shot with a chyron (renders and the Editor alike); a 6-shot captions test (overlay.py captions +
+   facefit: every caption on a seam, under the text or off the faces); `zz_many_clips2`: the lyrics burned into its
+   music-video clips found in 6 shots and nothing else in any shot - those 6 now fits (the people smaller: the user
+   decides whether a montage keeps that). Not yet: charts (only lines of text are found), text in the room's middle
+   (a slide, a sign held up), a person who moves a lot vertically in a held split (a hold does not chase it).
+5. **Where it is used**: the quick draft (every clip whose shape is not the video's); New edit's step *Framing*
+   (Auto / Fill / Fit / Split, Auto by default); the Editor (a shot's *Framing* section: the layout, hold / follow,
+   the crop dragged on the preview - its keys in *Position and size*; the safe zones already drawn); the shorts (step
+   5); Claude's edit lists (`frame <shot> fill|fit|split|screen|game [hold|follow]`). **Built 2026-10-29** (released in 0.6.0.8,
+   API_LEVEL 51): `reframe.frame_shot` = the user's framing of one shot (a layout - the rules' limits aside - Still /
+   Follow, or the crop's dragged centre per panel), marked `"by": "user"` so no automatic run changes it, Auto = the
+   rules' again (its own point back); refused with why (a split of one person, screen / game with no face camera, a
+   shaking shot, a picture shown whole); the Editor: a shot's *Framing* section above *Position and size* (Auto /
+   Fill / Fit / Split / Screen / Game as little phones - Auto's own pick dashed -, Still / Follow, *yours* once
+   changed; the change `frame`) and the crop dragged on the preview (the picture follows the pointer, the panel under
+   it, a press that does not move still plays; `EdPreview.cropDown`; the faces found kept only on a save, never by a
+   preview); the edit list's `frame 4 split | frame s04_A fit hold | frame 3 follow | frame 2 auto`; New edit: a
+   *Framing* question in 6. Final beside the format (not a step of its own: it only matters with a vertical or square
+   format, and shows only then) -> the request's `framing`, the brief's line, the quick draft's `--framing` (every
+   shot that way where it can be, the rules elsewhere). Tested: reframe self-check 34, miniedit 55; on `zz_layouts`'s
+   faces every choice, refusal, Auto and drag through the Editor's change; in the app (a test server + headless Edge):
+   the section, Fit, a refused Split, Auto, an 80 px drag, New edit's question shown / hidden with the format; the
+   save (`tools\miniedit.py apply`) -> plan_v3 rendered as chosen. The shorts: when step 5 of *Shorts* is built.
+6. **Checks** (`catalogue.py shots` + the precheck): the face out of the crop, half a person, the crop on the
+   listener, the upscale past its cap, text cut at the edge, captions over the mouth; a test set of the known
+   failures built once (`make_testvideo.py` + the user's clips): a reacting listener, "mm-hmm" flicker, three people,
+   two people too far apart, fast walking, a profile / tiny face, a face on a poster or a TV, no subject at all, a
+   chart at the edge, small screen text, a cut inside a pan, a soft upscale.
+7. **Film it** (Prepare): a short checklist - the lens at eye level, eyes on the upper third, mid-chest up, ~1-1.2 m
+   away, facing a window; filming horizontal for both shapes: 4K, the subject centred. **Built 2026-10-29**
+   (released in 0.6.0.8): Film it's *Before you film* (`FI_FRAME`, `FI_CHECKS`) = a framing picture (a 16:9 picture, you in
+   the middle from the chest up, the eye line on its upper third, the 9:16 crop drawn in it) + five rows with icons,
+   their why in the tooltips; it replaces two lines of *While you film* (eye level / light in front; "vertical for
+   TikTok, horizontal for YouTube" - now "only vertical? film vertical; both shapes? horizontal, 4K, you in the
+   middle"). Checked in the app in English and Spanish.
+
+**Ships when (framing)**: three of the user's horizontal videos - a talking head, a two-person talk, a screen
+recording - come out of the quick draft as vertical videos with the face in frame in every shot, no wrong speaker, no
+cut-off chart or screen text and no wobble, and the user calls them good; the test set passes; the cost on a laptop
+measured (seconds per minute of footage). **Needs first**: those three videos (only read); nothing to install.
+
+**Edit by segments: a choice per segment, then the whole edit** (planned 2026-10-29 - the user: "editar por
+segmentos" and "borrador (quick draft) select each segment how u would like it edited and then create the edit
+entirely"; researched the same day: docs\ideas.md *Editing by segments - researched 2026-10-29*). Step 3's shot list
+grown up: the list the user approves becomes the list the user edits with. **Released as 0.6.0.8** (2026-10-30): all
+seven steps. **Today**: the quick draft follows one
+style for the whole video (a preset, a feel or up to three references); the feel test shows only the hook in 2-3
+feels; anything per shot is changed afterwards in the Editor, one by one.
+1. **Segments** (the lab, no Claude), by kind of video: talking / vlog = sentences (word timings + pauses >= 0.4 s -
+   the same splitter as the shorts' step 1) grouped into one-idea beats of ~3-12 s, never cut inside a sentence, with
+   topic edges above them (Claude reads the transcript once - or 0.6.4's Hook / Explain / Illustrate / Teach parts
+   once they exist); a music edit = phrases of 4 or 8 bars between downbeats, the drop its own segment (`beats.py`);
+   a tutorial = its steps (the words + where the screen changes); a B-roll montage = the catalogue's moments. Each
+   segment: a key frame, its words (or its bars), first / last frame + timecode. **Built 2026-10-29** (with step 2;
+   released in 0.6.0.8; the app = step 6): `motionlab\segments.py` + `tools\segments.py <project> [plan]` ->
+   `build\segments_vN.json`. Talk: the edit's words (`draft_edit.edit_words`, now with each word's end) ->
+   `stumbles.sentences` (a pause of 0.4 s, and a **jump cut between two words = a pause**: a quick draft cuts the
+   pauses out, so on its timeline the words run on - without this a 36 s draft gave 3 segments, one 14.6 s long) ->
+   beats of 3-12 s; a count said before its pause ("... and four | Color grade") opens the next part. Music: phrases
+   of 8 / 4 bars between downbeats (only with a song under the video - the clips' own sound is no song), the drop on
+   its own, no piece under 3 s. Else (a montage, no words, no song): runs of shots. The segments tile the edit.
+   Not yet: a tutorial's steps (where the screen changes). Topic edges: built in step 7 (Claude's topics).
+2. **Treatments** - recipes the lab knows, each with what it needs: *Plain* (nothing - the rest between busier
+   parts); *Punch-in + key word* (the framing above + the word to stress); *B-roll on the words* (a catalogue moment
+   that shows a concrete word, starting within ~1 s of it - B-Script: 73 % of expert inserts); *List / steps* (an
+   enumeration said + a template with that many slots); *Number* (a number said -> a counter / callout); *Split /
+   picture in picture* (a second source: a screen, a product); *Section title* (at a topic edge); *Screen zoom /
+   cursor* (a tutorial); *Beat montage / drop hit* (music); *A motion graphic* (a library template picked by the
+   words). Each segment shows ONE recommended treatment with its reason in one line and two alternatives (the
+   research: more options overwhelm) - by rules: a number -> *Number*, an enumeration -> *List*, a concrete word with
+   a matching clip -> *B-roll*, a topic edge -> *Section title*, else *Plain* or *Punch-in* in turn. **Built
+   2026-10-29** (the recommendations; their build = step 4): in this order - two items counted inside it -> list, a
+   part opened by a count ("Three, every graphic...") -> title (its count no number said), a number -> number, a word
+   a B-roll clip's catalogue line says (`draft.stem`, as the quick draft matches) -> broll, a softer opening ("next",
+   "now") -> title, mostly a screen recording (its framing) -> screen, else a punch-in on its key word (a number, else
+   its longest content word, never a "something") and plain in turn, the hook a punch-in; music: the drop, the
+   build-up before it -> beat, the intro -> plain, then beat / plain in turn; a motion graphic always an alternative
+   (`templates.pick` names the template when its words score 6+); never one treatment three times in a row. On the
+   user's footage: the corner-camera take (36 s) = 6 segments - the hook a *Number*, each numbered part opening its
+   own with a *Section title*; *Your song needs a real video* = 8 (its "200" a *Number*, *now-playing* offered from
+   "music, song"); `zz_talk_broll` = B-roll on "scroll" (the clip of a phone with an Instagram feed); a song test and
+   two montages. Self-check 10 cases (selftest *segments*). Not yet: the word the voice stresses (its loudness) as the
+   key word.
+3. **Three layers, as Descript does**: the style once (fonts, colours, the caption look, zoom strength, the sounds,
+   the transition family, the pacing measured from the references - New edit's steps as today); the rules' picks;
+   the user's own picks - kept through any re-run or style change. *Recommended for all*, then only the exceptions;
+   *Apply to all like this* (same kind of segment or same treatment); limits across segments: never one treatment
+   three times in a row, a template once a video, B-roll coverage capped - today's 40 % (`draft.py` BROLL_COVER) is a
+   ceiling, and B-Script's experts covered 13.2 % of 3-minute vlogs: the drafts' real share measured first, then the
+   target taken from the references' own measured B-roll share. **Built 2026-10-30** (with step 4; the lab only - the
+   app is step 6): the style = the request's (its captions look, the brand's / the palette's colours and fonts on the
+   cards - a dark accent gives way to the brand's light text colour over footage); the user's picks in
+   `build\segment_picks.json` (`segments.py --set 3=broll[:C]`, `--like 3` = Apply to all like this: the segments the
+   rules gave the same pick, `--reset 3 | all` = Recommended for all; a set of changes all or nothing, a pick a segment
+   cannot take refused with what it can), each tied to where its segment starts in its clip (talk / clips) or its song
+   (music), so a re-run of the draft keeps it (within 0.6 s); a pick whose part is gone is kept aside. Limits for the
+   rules' picks (the user's stay): never one treatment three times in a row, a template the words pick once a video,
+   a B-roll moment once, never on the hook, at most draft.BROLL_COVER (40 %) of the edit; music = beat and plain in turn.
+   The drafts' B-roll share measured: 21-26 % (`zz_talk_broll`, the only draft with B-roll). Not yet: the references'
+   own B-roll share (the analysis does not measure it) as the target.
+4. **The build** (the lab, seconds): the picks compiled into an edit list (`cut`, `graphic <template> at f for n`,
+   `effect`, `caption`, `sfx`, `frame`) on the quick draft - one plan, deterministic; nothing is guessed that the
+   user picked. Claude fills only what needs judgement when asked (*Finish it with Claude*: which clip, the words on
+   a card), then checks every cut boundary and that each claimed change is in the plan (the research: editing agents
+   claim cuts they never made). **Built 2026-10-30**: `segments.py <project> --build` - on a BARE quick draft
+   (`draft_edit.py --bare`: the cuts, sound, colour and framing only; made first from a full draft's own arguments,
+   now kept in its made_by "args", else its notes' *Arguments* line; a built plan builds again on its bare one), the
+   picks as edit-list lines (`build\segments_vB.list`, a block per segment with frame + timecode and whose pick) ->
+   `draft_edit.py --apply --base` -> the next plan, then `segments.verify`: every cut where it was, each segment's
+   pick in the plan, nothing added to a plain one, the B-roll share. New list lines: `broll C at f for n from k
+   anchor=x,y`, `jump f to k` (a cut inside a shot, music), `column` on a graphic (below). punch = 15 % closer on the
+   key word, back at the segment's end; number = big-counter (the value said, its unit, the words after it); title =
+   headline-box (the part's opening words / the next 4); list = checklist (the items counted); graphic = the template
+   the words pick, its main words the first phrase; screen = a slow push; drop = a flash + a shake (a punch-in on a
+   panned shot); beat = a cut on every beat, each piece inside one usable part of its clip (a catalogue moment - one
+   that crossed into the next scene was the precheck's vanish). Cards (`"clear_face": true`) are moved the least way
+   off the faces and the captions once rendered (`facefit.fit_cards`, build.py); in a wide video each card is a
+   column a quarter of the width at its edge, size 1.5 (local-make-1, -25 - a 1920-wide headline-box was 1327 px
+   wide, over the face in every close-up). Tested: the corner-camera take (horizontal, For my brand) = a number, three
+   titles, a punch-in - every card clear of the face (the precheck agrees); `zz_talk_broll` (vertical) = a punch-in,
+   B-roll on "beat", the user's title kept through the bare draft's re-run; a music montage (a song from refs\audio)
+   = beat / drop / plain / beat, precheck PASS; a montage through the framing's fit = punch-ins inside the band.
+   Not yet: the words on the cards are the rules' (the transcript's - often no punctuation) - Claude's (*Finish it
+   with Claude*) or the user's in the Editor; a split with a second clip; captions by the brand's own values (only
+   its look's id).
+5. **Previews that cost nothing**: per segment a still with its treatment at its key frame (from the light cache,
+   `render_video.py --stills`) and one line saying what changes; *Preview this segment* = a small render of that
+   segment alone; the full render once, at the end. **Built 2026-10-30** (with step 6): `segments.py --stills` = the
+   bare draft's frame at each segment's key frame (render_video.py --stills from the light cache, ~2 s for all) ->
+   `build\segments\v<B>\seg_<n>.jpg` - the footage, not the edit: a still is made once and never goes stale; what the
+   edit does is its chip + its why line, and its preview; `--preview N` = that segment's own lines on the bare draft
+   as a plan that is no version (`draft_edit.py --apply --out segpreview_v<B>_s<N>.json`), its cards rendered and
+   moved off the faces, `render_video.py --range` its frames -> `build\segments\v<B>\preview_<N>_<f0>-<f1>.mp4`
+   (19 s with B-roll, 28 s with a card on zz_talk_broll); previews.json keeps the pick it shows (a changed pick = no
+   preview shown).
+6. **The app**: New edit gets a *Segments* step after Clips and Text - one row per segment (its picture, its words,
+   the treatment chip with its two alternatives, *Recommended for all*, *Apply to all like this*), then *Build the
+   edit*; the Editor shows the segments as a lane (a changed pick rebuilds only that segment). **Built
+   2026-10-30**: New edit's 7th step *Segments* (after Final, not after Text: the parts come from the draft's cuts,
+   which need steps 3-6) - *Cut it into parts* (the job `segments` = `segments.py --request`: a bare draft from the
+   request + the parts + their pictures; 4 s with the caches made), a row per part (its picture / preview, frame +
+   timecode, its words, its edit + two others + the rest, why in one line - translated by key -, *yours*, back to the
+   suggestion, *Apply to all like this*, *Preview*), *Recommended for all*, *Cut it again* (the picks stay with their
+   parts), *Build the edit* (the job `segments_build` = `--build --render`, 32 s on zz_talk_broll); GET / POST
+   `/api/project/<p>/segments` (a pick in 1.6 s, all or nothing); the Editor's *Parts* lane on a bare draft or a
+   version built from one (a part's panel, dashed = changed since that build, *Build again with these picks*). The
+   app's test found one thing the engine fixed: a pick of the user's moved the next part (the rules' plain / punch-in
+   turns counted it) - now the rules' run follows the rules' picks only. Not done: "rebuilds only that segment" - a
+   changed pick builds the whole edit again from the bare draft (seconds + its cards' renders); hand changes made in
+   the Editor after a build are not carried into the next one (the panel says so).
+7. **Claude's way in**: `brief.md` gets *Segments* (the list with the picks); `/recreate-video` writes its own picks
+   in the same form, so a Claude edit and the user's picks are one format, and the user can change Claude's. **Built
+   2026-10-30**: Claude is a layer between the rules and the user - `segments.py --claude <file>` (`{"picks": [{"n",
+   "t", "opt", "text", "why"}], "topics": [{"n", "name"}]}`, checked against the parts - all or nothing - and replacing
+   Claude's earlier ones; `--reset claude`) puts them in segment_picks.json as `"by": "claude"`, anchored like the
+   user's; the suggestion = Claude's pick where it made one, else the rules'; the user's stay on top (*back to the
+   suggestion* = Claude's; *Recommended for all* takes back only the user's). What rules cannot do and Claude adds:
+   `text` = the word a punch-in / B-roll lands on, or a card's words (a title "line 1|line 2", a number's words, a
+   list's items, a graphic's main words - the rules' are the transcript's), `why` in the video's language, and the
+   **topic edges** (step 1's not-yet): a topic's first part gets a title card with its name (never the hook). B-roll
+   is now a pick for any talking part when the edit has B-roll clips (a clip the user / Claude chooses where the
+   rules' stems matched nothing - a phone scrolling for "scroll past"); a Claude B-roll's moment is kept from the
+   rules' later picks. brief.py's *Segments* = the list (every word, whose pick, all a part can have, the topics) when
+   the parts were cut from THIS request (the bare draft's arguments = the request's), a line to cut again when they
+   were not and the user picked some, else nothing; recreate-video `by_feel.md` *By segments* = how Claude picks
+   (never over the user's) and builds (`--build --render`, never a free edit list over it); New edit's Segments step
+   shows *Make it with Claude* beside *Build the edit*; the rows, the Editor's lane and panel mark *Claude's* with its
+   own why and words, a topic above its first part. Tested on `zz_talk_broll`: a file with five mistakes refused whole
+   (a pick a part cannot have, a word not said, no such template, no such part, a part starting two topics); Claude's
+   3 picks + 2 topics built as picked (plan_v10: the punch-in on "real" f24, clip G on "scroll" f174, the title "What to
+   do / Sing the hook" f212, the rules' B-roll on part 4 moved to clip I since Claude's took G), the app in English and
+   Spanish (a pick over Claude's and back). Not yet: a real Claude window's run on the user's footage (the corner-camera
+   take) - the user's to start; Claude's why stays in the video's language in a Spanish app.
+
+**Ships when (segments)**: on one ~60 s talking video and one music edit, the user sets every segment in under ~3
+minutes (*Recommended for all* + a few changes), the edit builds from the picks in one go with no segment unlike its
+pick, a re-run keeps them, and the user calls the result good; the B-roll share measured against the references.
+**Needs first**: the vertical framing above (for punch-ins and splits on horizontal footage), the sentence splitter
+(shared with the shorts' step 1); nothing to install (topics by Claude; a small sentence-embedding model only if it
+earns its install, measured first).
+
+**From the research, picked for 0.6.1** (2026-10-29, the user ticked three of docs\ideas.md *Claude's guides,
+skills and repos*; the user's order: vertical framing first, then segments, then SPARK):
+- **HyperFrames' craft checks**: the upgrade from 0.8.149 tried with `overlay.py upgrade-test` and the self-test
+  first; then `check`'s `line_unread` (a line on screen too briefly to read), `dead_stretch` (over 3 s with nothing
+  changing), `text_below_floor`, `first_frame_empty`, `film_silent` in the build summary, the contrast audit back on
+  (`overlay.py` passes `--no-contrast` today) and the review sheets (scene starts / middles, a strip across every
+  cut, the beats at phone width). A template the upgrade draws differently is fixed or the pin stays.
+- **A waveform and the words on the cut-sheet**: `render_video.py --cuts` draws stills only - under each cut the
+  sound's waveform and the words around it, so a cut inside a word or a pop shows on the sheet Claude reads after
+  every build.
+- **Hard rule 1 enforced by Claude Code**: deny rules in `.claude\settings.json` for writing into `refs\` and the top
+  of `projects\<name>\`, and a hook that stops a delete / move / rename aimed at them - in every permission mode; the
+  tools' own SHA-256 checks stay. **Built 2026-10-29** (released in 0.6.0.8): `Edit(/refs/**)` denied; the PreToolUse hook
+  `.claude\hooks\guard-sources.sh` -> `guard_sources.py` on Bash, PowerShell, Edit, Write and NotebookEdit - refuses
+  a write at a project's top level (a `projects/*/*` deny rule would also match `build` itself, so that part is the
+  hook's) and a delete / move / rename / overwrite (a redirect's target only) of `refs\` or a project's top; 32 known
+  cases (`--selfcheck`, in `tools\dev\smoke.py`); seen live: `rm refs\<a file>` refused in this session.
+
 **Shorts from a long video** (moved here from 0.6.4 step 5, 2026-10-27 - the user: "in the 0.6.1 it could be possible
 for it to take a 10min video and get shorts from it (calculating from the possibility of going viral like good moments
 or dramatic ...) search to see the best possible way"; it reuses this half's light cache, catalogue, subject framing
@@ -692,9 +1118,11 @@ score ranks the moments of ONE video against each other - never "this will go vi
 4. **The user picks** (the app): a card per short - its key frames as a 9:16 strip, the hook line, the score's parts
    and why, first / last frame + timecode, a preview from the light cache; tick the ones to make. Before building,
    Claude checks each pick on one sheet of 8 frames of the 9:16 crop (the hook, the crop, the ending).
-5. **Each one as a vertical short**: reframed per scene (AutoFlip's design: a still crop when the face stays inside
+5. **Each one as a vertical short**: reframed per scene by *Vertical framing for every edit* above (built once; its
+   first design, kept for the record - AutoFlip's design: a still crop when the face stays inside
    ~60 % of the crop's width - most talking shots - else following it with a dead zone of ~8 % and smoothing; a blurred
-   fill when it cannot fit); two people: a hard cut to whoever talks at a sentence edge, each held 1.5 s or more,
+   fill when it cannot fit; the framing's own numbers win); two people: a hard cut to whoever talks at a sentence
+   edge, each held 2 s or more (1.5 s in the first design),
    never a pan between them, a stacked split for crosstalk (who talks: mouth movement against the sound, tried first;
    a model only if that fails); a screen recording: the screen in the top band, the face below; captions and a hook
    title inside the platforms' safe zone and not over subtitles already burned in; B-roll on its words; the sound
@@ -750,10 +1178,19 @@ counted as drawn, `glass: true` = 44 px - 18 left a skin smudge); each of the 13
 lands with its own placement and switches. **Released as 0.6.0.4** (2026-10-27). Not built of her 45 (graphics.md
 has the map): reels-around-you (noise, orbit, carousel, phone fan, profile wall, place-in-grid, check pills), lineup,
 the bill, swipe, uninstall, reel frame, shortcut rain, rabbit hole, cover star, glass widgets, pastel word, timeline,
-tier list, B-roll split, dot reveal, headline wall, match cut, over-the-shoulder zoom. **Next**: the
-user's rating of the demos; her reels-around-you designs (the user's reel covers as a media slot);
-the Editor's preview showing behind / glass (it has no mask today); the person track on every second frame if 31 ms a
-frame is slow on a laptop (measure first).
+tier list, B-roll split, dot reveal, headline wall, match cut, over-the-shoulder zoom. **Round 4** (built 2026-10-27,
+lost in a git stash by the next chat, restored and merged with the Editor's review 2026-10-29, **0.6.0.7**): 20 of
+those as templates + `motionlab\screenfx.py` (a `fx` layer: frame, grade, glitch, tunnel, dots, swipe, push) + the
+painted rooms; the 14 new effects are Claude's (`edfx.ADD_MORE`: edit lists and a template's `"with"`), not in the
+Editor's menu until the user has seen them. The release check: `showcase_a.list` / `showcase_b.list` -> 
+`zz_vibha_vertical_v10.mp4` / `_v12.mp4` (10 templates each, every companion landed; shoulder-graphs' template-literal
+selectors crashed the bundler - local-make-31) + `_v6` (the 11 effects). Still open from it: pastel word, B-roll
+split and split headline not built; a room look (check-pills' grid paper, carousel-spin's spotlight) stays inside one
+shot, so it stops at a cut while the graphic goes on; reel-phone-fan's headline sits at face height on an upright
+take and the face guard cuts holes in it; the reels-around-you and cover-star templates reach into the apps' right
+rail (the precheck's safe-zone lines). **Next**: the user's rating of the demos and the showcases; the Editor's preview
+showing behind / glass (it has no mask today); the person track on every second frame if 31 ms a frame is slow on a
+laptop (measure first).
 
 **Left from 0.6.0** (released 2026-10-26; each waits on the user or was not needed yet - 0.6.0's text: plans_history.md):
 - *Cut the stumbles* (0.6.0 step 20) stays opt-in (`--stumbles on`) until a take with mistakes in it (an "um", a

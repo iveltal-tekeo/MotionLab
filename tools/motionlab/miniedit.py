@@ -74,6 +74,9 @@ Operations ({"op": ...}):
   effects (motionlab\\edfx): fxadd / fxmove / fxset / fxremove
   keyframes on a shot (motionlab\\edkeys - zoom, x, y, rotation, opacity, the zoom point):
     kset / kadd / kdel / kmove / kease / kreset {"shot": id, "prop": p | "props": [..], "f": f, ...}
+  a shot's framing (0.6.1, motionlab\\reframe.frame_shot - a horizontal clip in a vertical video; marked the user's):
+    frame    {"shot": id, "layout": auto|fill|fit|split|screen|game, "mode": hold|follow}   or   {"shot": id, "x": x,
+             "y": y, "panel": k}   the crop dragged on the preview: its centre (shares of the picture) in panel k, still
   transitions on a plain cut (motionlab\\edtrans; stored on the shot after the cut, its helper layers stripped first
   and made again last, so no shot op ever breaks one):
     trans    {"shot": id, "kind": k | null, "len": n, "dir": d}    transall {"kind": k | null, "len": n, "dir": d}
@@ -488,6 +491,24 @@ def _graphic_folder(L: dict) -> Path:
     return Path(str(L.get("file") or "")).parent
 
 
+def _frame_of(P: dict, L: dict) -> dict | None:
+    """A shot's framing for the Editor's Framing section (0.6.1, motionlab\\reframe): {"layout", "mode", "by" (user /
+    auto / None = nobody framed it), "shake"} - None when there is nothing to frame (its clip has the video's shape, a
+    picture shown whole, a crop that follows the face by itself, a scene)."""
+    from . import reframe as RF
+    s = (P.get("sources") or {}).get(L.get("src")) or {}
+    if L.get("type") != "clip" or not L.get("rect") or not s.get("width") or not s.get("height") \
+            or L.get("fit") == "contain" or L.get("track") == "face":
+        return None
+    if RF.crop_share(L, float(s["width"]), float(s["height"])) >= RF.WIDER:
+        return None
+    rf, an = L.get("reframe") or {}, L.get("anchor")
+    keys = isinstance(an, list) and len(an) == 2 and isinstance(an[0], dict) and "keys" in an[0]
+    return {"layout": rf.get("layout") or ("own" if L.get("panels") else "fill"),
+            "mode": rf.get("mode") or ("follow" if keys else "hold"), "by": rf.get("by") or ("auto" if rf else None),
+            "shake": isinstance(an, list) and any(isinstance(a, dict) and "values" in a for a in an)}
+
+
 def _curve_keys(v):
     return v if isinstance(v, (int, float, str)) or v is None else {k: v[k] for k in ("keys", "start", "values", "scale",
                                                                                       "offset") if k in v}
@@ -510,7 +531,8 @@ def state(plan: dict) -> dict:
                           "db": float(L.get("sound_db") or 0),
                           "special": bool(L.get("hold") or L.get("jumps")),
                           "scene": str(_graphic_folder(L)) if L.get("type") == "overlay" else None,
-                          "attached": list(dict.fromkeys(_graphic_folder(x).name for x in _attached(P, L)))})
+                          "attached": list(dict.fromkeys(_graphic_folder(x).name for x in _attached(P, L))),
+                          "frame": _frame_of(P, L)})
     TR.build(P)                                             # (drawn and heard like the save makes them)
     edits_v = P.get(VALUES_KEY) or {}
     edits_c = P.get(CAPTIONS_KEY) or {}
@@ -640,7 +662,10 @@ def state(plan: dict) -> dict:
                          "opacity": _curve_keys(L.get("opacity")), "mirror": bool(L.get("mirror")),
                          "fit": L.get("fit", "cover"), "flash_over": L.get("flash_over"),
                          "flash_white": L.get("flash_white"), "black": L.get("black"), "tint": L.get("tint"),
-                         "blend": L.get("blend", "normal")})
+                         "blend": L.get("blend", "normal"),
+                         "panels": [{"rect": p["rect"], "zoom": _curve_keys(p.get("zoom")), "anchor": p.get("anchor")}
+                                    for p in L.get("panels") or []] or None,      # (0.6.1: a vertical layout)
+                         "backdrop": L.get("backdrop") if L.get("panels") else None})
         elif t == "overlay" and L.get("file"):
             draw.append({"t": "overlay", "id": L["id"]})
         elif t == "solid":
@@ -1175,6 +1200,67 @@ def in_shot(folder: Path, P: dict) -> dict:
     return {k: s[k] for k in IN_SHOT_KEYS if k in s}
 
 
+def companions(folder: Path) -> list[dict]:
+    """What a template brings with it (template.json "with", 2026-10-28 - after Vibha Ramprakash's designs, where one
+    effect is a graphic AND a change to the picture): {"effect": <edfx kind>, "at", "len", "opts"} (a card it shrinks
+    you into, a colour look, a glitch, a corner push, a painted room) or {"graphic": <template>, "at", "len",
+    "values"} (a second graphic at another depth); at / len in seconds from its start (len null = to its end)."""
+    try:
+        t = json.loads((Path(folder) / "template.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    w = t.get("with")
+    return [c for c in w if isinstance(c, dict) and (c.get("effect") or c.get("graphic"))] if isinstance(w, list) else []
+
+
+def add_companions(P: dict, L: dict, folder: Path, own: dict, graphic=None, talk: bool = False) -> list[str]:
+    """L's template's companions into P, each tagged "with_of" = L's id (a deleted / moved graphic takes them along):
+    the effects now (edfx.add with the template's numbers), a graphic through graphic(template, f, n, values) -> its
+    new layer (the caller's own way to make one; "{setting}" in its values = L's own value). A line each; one that
+    cannot go there (no clip under it, a room that already changes) is left out with why."""
+    from . import overlay_settings as OS
+    fps = float(P["fps"])
+    s, e = int(L["start"]), int(L["end"])
+    lines = []
+    try:                                                # (a setting not given = the template's own default)
+        own = {**{d["id"]: d.get("default") for d in OS.declared(folder)}, **(own or {})}
+    except (OSError, ValueError, KeyError):
+        own = dict(own or {})
+    for c in companions(folder):
+        a = s + int(round(float(c.get("at") or 0) * fps))
+        n = int(round(float(c["len"]) * fps)) if c.get("len") else e - a + 1
+        if a > e or n < 2:
+            continue
+        if c.get("effect"):
+            kind = str(c["effect"])
+            try:
+                fid = FX.add(P, kind, a, n=n, opts={**(c.get("opts") or {}), "_with": True}, talk=talk)
+            except FX.FxError as err:
+                lines.append(f"{L['id']}: its {kind} left out - {err}")
+                continue
+            what, lid = fid.split(":")[:2]
+            T = next((x for x in P["layers"] if x.get("id") == lid), None)
+            if what == "screen" and T is not None:
+                T["with_of"] = L["id"]
+            elif what == "room" and T is not None:
+                T["room"]["with_of"] = L["id"]
+            lines.append(f"{L['id']}: with {kind} f{a}-f{a + n - 1}")
+        elif graphic is not None:
+            vals = {k: (re.sub(r"\{(\w+)\}", lambda m: str(own.get(m[1], m[0])), v) if isinstance(v, str) else v)
+                    for k, v in (c.get("values") or {}).items()}
+            G = graphic(str(c["graphic"]), a, n, vals)
+            if G is not None:
+                G["with_of"] = L["id"]
+                lines.append(f"{L['id']}: with the graphic {c['graphic']} f{G['start']}-f{G['end']}")
+    return lines
+
+
+def companions_of(P: dict, lid: str) -> list[dict]:
+    """The layers (and painted rooms' shots) that came with graphic lid."""
+    return [x for x in P["layers"] if x.get("with_of") == lid
+            or (isinstance(x.get("room"), dict) and x["room"].get("with_of") == lid)]
+
+
 def fit_of(L: dict) -> dict:
     """A graphic's place in the shot as the Editor's switches show it (compose's keys behind / glass / guard / follow)."""
     return {"behind": bool(L.get("behind")), "glass": bool(L.get("glass")), "guard": bool(L.get("guard")),
@@ -1392,6 +1478,11 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                                     if int(L["start"]) + by < 0 else f"f{int(L['end']) + by}"))
                 EL._shift(L, by)
                 L.pop("land", None)
+                for X in companions_of(P, str(L["id"])):    # what came with it moves with it
+                    if X.get("with_of") == L["id"]:
+                        EL._shift(X, by)
+                    else:                                   # (a painted room: its keys, inside its shot)
+                        EL.move_curves({"room": X["room"]}, lambda q: min(max(q + by, int(X["start"])), int(X["end"])))
                 done.append(f"{L['id']} moved {by:+d} frame{'s' if abs(by) != 1 else ''} (now {_span(L, fps)})")
             elif op == "gtrim":
                 _gtrim(P, _layer(P, str(o["layer"])), "start" if o.get("side") == "start" else "end", int(o["by"]),
@@ -1405,6 +1496,12 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 f = _graphic_folder(L) if L.get("file") else None
                 gone = [x for x in P["layers"] if x is L or (o.get("all") and f is not None and x.get("file")
                                                              and _graphic_folder(x) == f)]
+                for g in list(gone):                        # what came with it goes with it (a card's frame effect,
+                    for X in companions_of(P, str(g["id"])):    # its look, its second graphic, a painted room)
+                        if X.get("with_of") == g["id"]:
+                            gone.append(X)
+                        else:
+                            X.pop("room", None)
                 P["layers"] = [x for x in P["layers"] if not any(x is g for g in gone)]
                 done.append(f"{L['id']} removed ({_span(L, fps)})" + (f" with its {len(gone) - 1} other piece(s)"
                                                                       if len(gone) > 1 else ""))
@@ -1429,6 +1526,25 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 L.update(in_shot(folder, P))                # (0.6.1: behind you / glass / on your face, as it was made)
                 P["layers"].append(L)                       # over everything
                 done.append(f"{lid}: the template {tid} added at {_span(L, fps)}")
+
+                def with_graphic(t2, a, n, v2, L=L, lid=lid):   # a companion graphic: under the one it came with
+                    f2 = template_folder(t2)
+                    if f2 is None:
+                        return None
+                    d2 = declared(f2)
+                    if any(x.get("type") == "clip" for x in P["layers"]) and "background" not in v2 and any(
+                            d["id"] == "background" and d["type"] == "boolean" for d in d2):
+                        v2 = {**v2, "background": False}    # (over the video, as the page does for its graphics)
+                    v2, _ = OS.check(d2, v2)
+                    k2 = 1
+                    while any(x.get("id") == f"{lid}_w{k2}" for x in P["layers"]):
+                        k2 += 1
+                    G = {"type": "overlay", "id": f"{lid}_w{k2}", "file": str(f2 / f"{lid}_w{k2}.mov"), "start": a,
+                         "end": min(N - 1, a + n - 1), "blend": "normal", NEW_KEY: {"template": t2, "values": v2}}
+                    G.update(in_shot(f2, P))
+                    P["layers"].insert(next(i for i, x in enumerate(P["layers"]) if x is L), G)
+                    return G
+                done += add_companions(P, L, folder, vals, with_graphic, talk=sound_mode(P) == "follows")
             elif op in FX_OPS:
                 try:
                     line = FX.apply_op(P, o, talk=_talking(P))
@@ -1450,6 +1566,16 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
                 except KF.KeyError_ as e:
                     raise EditError(str(e)) from None
                 done.append(re.sub(r"\bf(\d+)\b", lambda m: _tcf(int(m[1]), fps), line))
+            elif op == "frame":                             # 0.6.1: a shot's framing (motionlab\reframe, step 5)
+                from . import reframe as RF
+                S = _find(P, str(o["shot"]))
+                if S.get("type") != "clip":
+                    raise EditError(I18N.t("framing moves a clip's picture - this scene is a graphic"))
+                try:                                        # (the faces found are kept on a save, never by a preview)
+                    done.append(RF.frame_shot(P, str(S["id"]), o.get("layout"), o.get("mode"), o.get("x"), o.get("y"),
+                                              int(o.get("panel") or 0), save=copies))
+                except RF.FrameError as e:
+                    raise EditError(str(e)) from None
             elif op == "captions":                          # many captions' words at once (find & replace, case)
                 lists: dict[str, tuple[list, list]] = {}
                 for e in o.get("edits") or []:
@@ -2055,4 +2181,20 @@ def selfcheck() -> dict:
     c = caption_words({"f0": 10, "f1": 29, "words": [["helo", 10, 29]]}, "hello world")
     case("a caption's new words share its frames", c["words"][0][1] == 10 and c["words"][-1][2] == 29
          and c["words"][1][1] == c["words"][0][2] + 1)
+    fp = plan()                                     # 0.6.1: a horizontal clip in this vertical video - its framing
+    fp["sources"]["A"].update(width=1920, height=1080)
+    for x in fp["layers"][:3]:
+        x["rect"] = [0, 0, 1080, 1920]
+    fp["layers"][2]["anchor"] = [{"start": 200, "values": [0.5, 0.53, 0.5]}, 0.5]
+    P, done, _ = apply(fp, [{"op": "frame", "shot": "s01_A", "x": 0.3}])
+    fr = [_frame_of(P, x) for x in shots(P)]
+    try:
+        apply(fp, [{"op": "frame", "shot": "s03_A", "layout": "fit"}])
+        shook = ""
+    except EditError as e:
+        shook = str(e)
+    case("a shot's crop dragged on the preview: that point, still, the user's (the state says so); a shaking shot's "
+         "framing refused", lay(P, "s01_A")["anchor"][0] == 0.3 and fr[0] == {"layout": "fill", "mode": "hold",
+                                                                              "by": "user", "shake": False}
+         and fr[1]["by"] is None and fr[2]["shake"] and "shake" in shook and "0.300" in done[0])
     return {"passed": ok, "seconds": round(time.time() - t0, 3), "lines": lines}

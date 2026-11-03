@@ -31,6 +31,10 @@ SONGS = LAB / "refs" / "audio"                     # downloaded songs (Analyser 
 PROMPT_ID = r"(shot|image|hook|script|brief|title)-\d{3,}"
 TALK_ID = r"(script|hook)-\d{3,}"                  # a talking video: the user films the script
 SOUND = ("auto", "music", "clips", "talk")
+FRAMING = {"fill": "Fill - the face fills the frame (no band, even where the rules would use one)",
+           "fit": "Fit - all of the picture in a band across the middle, over a blurred copy",
+           "split": "Split - two people one above the other wherever a shot has two (the rules elsewhere)"}
+#           (0.6.1, framing step 5: how a horizontal clip fills a vertical / square video - none = per shot)
 MIN_PER_S = 1.0                                    # New edit's estimate: about a minute of Claude per second of video
 
 # 4. Style - every table: id -> {"label", "help"}; the numbers after them are for Claude and the quick draft
@@ -245,6 +249,9 @@ def clean(body: dict, folder: Path) -> dict:
     fmt = body.get("format") or None
     if fmt is not None and fmt not in ST.SIZES:
         raise ValueError(I18N.t("format: one of {choices}", choices=", ".join(ST.SIZES)))
+    framing = body.get("framing") or None
+    if framing is not None and framing not in FRAMING:
+        raise ValueError(I18N.t("framing: one of {choices}", choices=", ".join(FRAMING)))
     sound = str(body.get("sound") or "auto")
     if sound not in SOUND:
         raise ValueError(I18N.t("sound: one of {choices}", choices=", ".join(SOUND)))
@@ -285,7 +292,7 @@ def clean(body: dict, folder: Path) -> dict:
                      "captions": _one(CAPTIONS, sty.get("captions"), "captions"), "palette": palette},
            "sfx": {"amount": _one(SFX_AMOUNT, sfx.get("amount"), "sfx"), "kinds": _some(SFX_KINDS, sfx.get("kinds"), "kinds"),
                    "notes": _text(sfx.get("notes"), 600), "sounds": _sounds(sfx.get("sounds"))},
-           "length_s": length, "format": fmt, "music": _music(body.get("music"), folder), "sound": sound,
+           "length_s": length, "format": fmt, "framing": framing, "music": _music(body.get("music"), folder), "sound": sound,
            "ambience": _bed(body.get("ambience")),
            "resolve": bool(body.get("resolve")), "photos": photos,
            "brand": BR.snapshot() if body.get("brand") else None}      # 0.6.0: For my brand - My Brand as it is now
@@ -451,6 +458,11 @@ def brief(req: dict, f: dict) -> str:
                           "automatic - the reference's for a 1:1 copy, else what the song and the story need."),
           "- Format: " + (FORMAT_WORDS.get(req["format"], req["format"]) + "." if req.get("format") else
                           "automatic - the footage's own shape (a 1:1 copy: the reference's)."),
+          "- Framing of horizontal clips: " + (FRAMING[req["framing"]] + " - `tools\\draft_edit.py --framing "
+                                               + req["framing"] + "`, or `frame <shot> " + req["framing"]
+                                               + "` lines in an edit list (motionlab\\editlist)." if req.get("framing")
+                                               else "automatic - per shot (motionlab\\reframe: fill, split, fit, "
+                                               "screen + face, game; the quick draft does it by itself)."),
           "- DaVinci Resolve: " + ("yes - build it (the skill's render.md, option 2) once the user approves the lab "
                                    "render." if req.get("resolve") else "no - the lab render only.")]
     m = estimate_min(req)
@@ -486,6 +498,8 @@ def draft_args(req: dict) -> list[str]:
         out += ["--length", f"{float(req['length_s']):g}"]
     if req.get("format"):
         out += ["--format", req["format"]]
+    if req.get("framing"):
+        out += ["--framing", req["framing"]]
     music = req.get("music")
     if music:
         out += ["--music", str(LAB / music) if "/" in music else music]

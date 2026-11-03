@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "reel1_media", "type": "string", "label": "Reel 1 (the one that stops in front): your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel2_media", "type": "string", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel3_media", "type": "string", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel4_media", "type": "string", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel5_media", "type": "string", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel6_media", "type": "string", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel7_media", "type": "string", "label": "Reel 7: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "reel8_media", "type": "string", "label": "Reel 8: your cover or clip, 9:16 (empty = a placeholder)", "default": ""},
+  {"id": "count", "type": "number", "label": "Reels in the carousel", "default": 8, "min": 4, "max": 12, "step": 1},
+  {"id": "turns", "type": "number", "label": "Turns before it stops", "default": 1.25, "min": 0.5, "max": 3, "step": 0.25},
+  {"id": "size", "type": "number", "label": "Reel size (1 = normal)", "default": 1, "min": 0.6, "max": 1.4, "step": 0.05},
+  {"id": "views", "type": "string", "label": "View counts on the reels, one after another (split with |)", "default": "2.7M|486K|1.2M|93K|640K|1.9M|318K|5.1M"},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Closes in at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#2E2925"},
+  {"id": "body_font", "type": "enum", "label": "Text font (captions, view counts)", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "carousel-spin" (2026-10-28): the user's reels stand in a 3D carousel round the person,
+     each turned to face outward (perspective, rotateY), the ring seen a little from above - near reels low, big and
+     bright, far reels high, small and dim. It opens out from behind the person (f0-f13, decelerating) while it spins
+     fast, slows to a stop (decelerating, `turns` turns, a horizontal motion smear while it is fast) with reel 1 facing
+     the camera; that reel steps forward (8 f, a small overshoot) and a light crosses it while the others dim; the
+     last 9 f the carousel closes in and fades (accelerating). Drawn round the canvas centre = the face, in face widths
+     (200 px at a 1080-px short side): the Editor pins it on the face (in_shot follow face + snap w 5.0, dy 0.35),
+     hides it by the person above the chin and puts it in front below (behind "top"); the room dims with it
+     (template.json "with": spotlight). Four near-invisible anchor dots (alpha ~1 %) fix the drawn area to a box 5
+     face widths wide centred 0.35 below the face, whatever the reel size. After a design in an MIT-licensed effects
+     pack; MotionLab's own code. Look-aware. Size-independent. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #ring { position: absolute; left: 0; top: 0; }
+  #fx { position: absolute; left: 0; top: 0; width: 0; height: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="anchors" class="abs"></div>
+  <svg id="fx"></svg>
+  <div id="ring"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none", rgba: (h, a) => h };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eOut = x => 1 - Math.pow(1 - c01(x), 3);                                   // decelerating (slow end)
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eIn = x => c01(x) * c01(x);                                                 // accelerating (exits only)
+  const outBack = (x, s) => { x = c01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const S = Math.round(V.start);
+  const AV = (FRAMES - S) * 30 / FPS;                    // frames (designed at 30 fps) from the start to the end
+  const FONT = `'${V.body_font}', 'Segoe UI', sans-serif`;
+  const SHK = Math.max(0, Number(V.shadow));
+
+  // ---- the reel tiles (one style in noise, orbit, carousel-spin and profile-wall): a 9:16 cover with round corners,
+  // a soft shadow, a light rim, a play mark and a view count at the bottom. A filled slot shows the user's cover or
+  // clip (a clip only once: the page plays one video per slot; a repeated picture gets its own grade); an empty slot
+  // is a made-up cover - a colour gradient, a person shape and a short bold caption.
+  const NSLOT = 10;
+  const PH = [["#FF7A59", "#B8306B", "#FFD36E", "day 1 vs day 30"], ["#2EC5CE", "#1B3F8F", "#B9F3FF", "3 apps I use daily"],
+    ["#8E6CFF", "#2B1B6B", "#F0B8FF", "my 5 am routine"], ["#9BDB4D", "#1E6B4F", "#F5FFB0", "watch till the end"],
+    ["#FF5A5F", "#5B1A3A", "#FFC2A8", "the edit that worked"], ["#4D7CFE", "#0F1C3F", "#9FE8FF", "desk setup tour"],
+    ["#F6B93B", "#B4471F", "#FFF1B8", "one tip a day"], ["#E84393", "#3D1460", "#FFB3E0", "before / after"],
+    ["#7F8FA6", "#1E272E", "#E3ECF5", "how I film alone"], ["#20BF6B", "#0B3D2E", "#C9FFD9", "the honest review"]];
+  const VIEWS = String(V.views == null ? "" : V.views).split("|").map(s => s.trim()).filter(Boolean);
+  const MEDIA = [...Array(NSLOT)].map((_, i) => String(V[`reel${i + 1}_media`] == null ? "" : V[`reel${i + 1}_media`]).trim());
+  const isVid = s => /\.(mp4|mov|webm|m4v)$/i.test(s);
+  const REP = ["saturate(1.3) contrast(1.06)", "grayscale(1) contrast(1.12)", "sepia(0.35) saturate(1.2)",
+    "hue-rotate(-14deg) saturate(0.9) brightness(0.95)", "contrast(1.1) brightness(1.06)"];
+  function covers(n) {
+    const filled = MEDIA.map((s, i) => ({ s, i })).filter(m => m.s), imgs = filled.filter(m => !isVid(m.s)), out = [];
+    for (let k = 0; k < n; k++) {
+      if (!filled.length) out.push({ ph: k % PH.length, rep: 0 });
+      else if (k < filled.length) out.push({ m: filled[k], rep: 0 });
+      else if (imgs.length) { const j = k - filled.length; out.push({ m: imgs[j % imgs.length], rep: 1 + Math.floor(j / imgs.length) }); }
+      else out.push({ ph: k % PH.length, rep: 0 });
+    }
+    return out;
+  }
+  const box = (parent, st) => { const e = document.createElement("div"); Object.assign(e.style, { position: "absolute" }, st); parent.appendChild(e); return e; };
+  function cover(el, p, w, h, k) {
+    const [a, b, c, cap] = p, ang = 155 + (k * 29) % 50, gx = 25 + (k * 37) % 50, gy = 14 + (k * 23) % 26;
+    el.style.background = `radial-gradient(circle at ${gx}% ${gy}%, ${rgba(c, 0.8)} 0%, ${rgba(c, 0)} 46%), linear-gradient(${ang}deg, ${a} 0%, ${b} 100%)`;
+    const d = w * 0.3;                                   // a person shape: head and shoulders, a shade darker
+    box(el, { left: `${w * 0.16}px`, top: `${h * 0.75}px`, width: `${w * 0.68}px`, height: `${h * 0.25}px`, borderRadius: `${w * 0.34}px ${w * 0.34}px 0 0`, background: rgba(b, 0.5) });
+    box(el, { left: `${(w - d) / 2}px`, top: `${h * 0.75 - d * 1.04}px`, width: `${d}px`, height: `${d}px`, borderRadius: "50%", background: rgba(b, 0.5) });
+    const cp = box(el, { left: `${w * 0.07}px`, top: `${h * 0.3}px`, width: `${w * 0.86}px`, textAlign: "center", lineHeight: "1.34",
+      fontFamily: FONT, fontWeight: String(fw(V.body_font, 800)), fontSize: `${w * 0.1}px`, color: "#ffffff", fontSynthesis: "none" });
+    const sp = document.createElement("span");
+    sp.textContent = cap;
+    Object.assign(sp.style, { background: rgba("#000000", 0.5), padding: `${w * 0.012}px ${w * 0.035}px`, borderRadius: `${w * 0.025}px`,
+      boxDecorationBreak: "clone", webkitBoxDecorationBreak: "clone" });
+    cp.appendChild(sp);
+  }
+  function reel(parent, k, c, w, h) {
+    const r = w * Math.min(0.14, Math.max(0.025, Number(V.radius) / 200)), R = `${r}px`;
+    const el = box(parent, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, transformOrigin: "50% 50%",
+      boxShadow: SHK > 0 ? `0 ${(w * 0.045 * SHK).toFixed(1)}px ${(w * 0.12 * SHK).toFixed(1)}px ${rgba("#000000", Math.min(0.6, 0.42 * SHK))}` : "none" });
+    const pic = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, overflow: "hidden" });
+    if (c.m) {
+      if (window.MLLook) MLLook.media(pic, c.m.s, { look: L, kind: isVid(c.m.s) ? "video" : "image", fit: "cover", seed: c.m.i + 1, label: " ", r,
+        slot: `reel${c.m.i + 1}_media`, id: `rv${k}`, start: S / FPS, duration: Math.max(0.2, (FRAMES - S) / FPS) });
+      else { const im = document.createElement("img"); im.src = c.m.s; Object.assign(im.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", objectFit: "cover" }); pic.appendChild(im); }
+      if (c.rep) pic.style.filter = REP[(c.rep + k) % REP.length];
+    } else cover(pic, PH[c.ph % PH.length], w, h, k);
+    box(el, { left: "0px", top: `${h * 0.64}px`, width: `${w}px`, height: `${h * 0.36}px`, borderRadius: `0 0 ${R} ${R}`,
+      background: `linear-gradient(180deg, ${rgba("#000000", 0)} 0%, ${rgba("#000000", 0.6)} 100%)` });
+    const fs = w * 0.092;
+    const vr = box(el, { left: `${w * 0.075}px`, top: `${h - w * 0.08 - fs}px`, height: `${fs}px`, display: "flex", alignItems: "center",
+      gap: `${fs * 0.3}px`, whiteSpace: "nowrap", lineHeight: "1", color: "#ffffff", fontFamily: FONT, fontWeight: String(fw(V.body_font, 700)),
+      fontSize: `${fs}px`, fontSynthesis: "none", textShadow: `0 ${fs * 0.05}px ${fs * 0.3}px ${rgba("#000000", 0.5)}` });
+    vr.innerHTML = `<svg width="${(fs * 0.74).toFixed(1)}" height="${(fs * 0.82).toFixed(1)}" viewBox="0 0 20 22" style="overflow:visible"><path d="M4 2.8 C4 1.6 5.3 0.9 6.3 1.5 L18.4 9.8 C19.3 10.4 19.3 11.6 18.4 12.2 L6.3 20.5 C5.3 21.1 4 20.4 4 19.2 Z" fill="none" stroke="#ffffff" stroke-width="2.7" stroke-linejoin="round"/></svg>`;
+    const vs = document.createElement("span");
+    vs.textContent = VIEWS.length ? VIEWS[k % VIEWS.length] : "";
+    vr.appendChild(vs);
+    box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R,
+      boxShadow: `inset 0 0 0 ${Math.max(1, w / 170).toFixed(2)}px ${rgba("#ffffff", 0.3)}`,
+      background: `linear-gradient(180deg, ${rgba("#ffffff", 0.12)} 0%, ${rgba("#ffffff", 0)} 20%)` });
+    const dk = box(el, { left: "0px", top: "0px", width: `${w}px`, height: `${h}px`, borderRadius: R, background: "#05060A", opacity: "0" });
+    return { el, dk };
+  }
+
+  // ---- the preview background (only when painted: over a video the carousel spins round the person)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.55 * Math.min(W, H)}px ${0.55 * Math.min(W, H)}px at ${0.5 * W}px ${0.55 * H}px, ${rgba(L.mustard, 0.28)}, ${rgba(L.mustard, 0)} 100%), ${V.bg}`;
+
+  // ---- the carousel, in face widths round the canvas centre (= the face): the near reel stands just under the chin
+  // (its top 0.54 face widths down), the far ones high (their bottoms 0.45 up, behind the head); 5 face widths wide.
+  const K = Math.max(4, Math.min(12, Math.round(V.count)));
+  const SF = 1.0, SB = 0.66, POP = 1.07;                 // the reels' scale near and far; reel 1 steps forward by 7 %
+  const faceA = th => Math.atan(Math.sin(th) / (Math.abs(Math.cos(th)) < 1e-9 ? 1e-9 : Math.cos(th)));   // -90..90 deg
+  const geo = u => {                                      // the carousel for a face u px wide -> its numbers + drawn area
+    const cw = 1.1 * V.size * u, ch = cw * 16 / 9, P = 4 * cw;
+    const marg = sd => (0.12 + 0.045) * SHK * cw * sd + 0.01 * u;
+    const yF = 0.54 * u + ch * SF / 2, yB = -0.45 * u - ch * SB / 2;
+    const OY = (yF + yB) / 2, RY = (yF - yB) / 2;
+    const bounds = R => {
+      let x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+      for (let j = 0; j < 360; j++) {
+        const th = j * Math.PI / 180, dep = (Math.cos(th) + 1) / 2, a = faceA(th);
+        const sd = (SB + (SF - SB) * dep) * (j === 0 ? POP : 1), bul = P / (P - (cw / 2) * Math.abs(Math.sin(a)));
+        const hw = (cw * sd / 2) * Math.abs(Math.cos(a)) * bul, hh = (ch * sd / 2) * bul, m = marg(sd);
+        const x = R * Math.sin(th), y = OY + RY * Math.cos(th);
+        x0 = Math.min(x0, x - hw - m); x1 = Math.max(x1, x + hw + m); y0 = Math.min(y0, y - hh - m); y1 = Math.max(y1, y + hh + m);
+      }
+      return [x0, x1, y0, y1];
+    };
+    let R = 2.3 * u;
+    for (let it = 0; it < 4; it++) { const b = bounds(R); R = Math.max(1.4 * u, R - (Math.max(-b[0], b[1]) - 2.5 * u)); }
+    const [x0, x1, y0, y1] = bounds(R);
+    const AX = Math.max(2.5 * u, -x0, x1), CY = 0.35 * u, AY = Math.max(CY - y0, y1 - CY);
+    return { cw, ch, P, OY, RY, R, AX, CY, AY };
+  };
+  const g1 = geo(1);
+  const FWC = Math.min(200 * U, 0.49 * H / (g1.AY + g1.CY), 0.49 * W / g1.AX);
+  const G = geo(FWC), FX = W / 2, FY = H / 2;
+  // the anchor dots: the drawn area = this box, so the Editor's snap (w 5.0, dy 0.35) lands the centre on the face
+  const anc = q("anchors"), ad = Math.max(2, 2 * U);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+    const e = document.createElement("div");
+    Object.assign(e.style, { position: "absolute", width: `${ad}px`, height: `${ad}px`, background: "#ffffff", opacity: "0.012",
+      left: `${FX + sx * G.AX - (sx > 0 ? ad : 0)}px`, top: `${FY + G.CY + sy * G.AY - (sy > 0 ? ad : 0)}px` });
+    anc.appendChild(e);
+  });
+  // each reel: a holder (place, scale, the motion smear) > the reel turned in perspective to face outward
+  const ring = q("ring"), CV = covers(K), cards = [], NS = "http://www.w3.org/2000/svg", fx = q("fx");
+  for (let i = 0; i < K; i++) {
+    const hold = document.createElement("div");
+    Object.assign(hold.style, { position: "absolute", left: "0px", top: "0px", width: `${G.cw}px`, height: `${G.ch}px`, transformOrigin: "50% 50%" });
+    ring.appendChild(hold);
+    const t = reel(hold, i, CV[i], G.cw, G.ch);
+    const f = document.createElementNS(NS, "filter");
+    f.setAttribute("id", `csmb${i}`); f.setAttribute("x", "-40%"); f.setAttribute("y", "-5%"); f.setAttribute("width", "180%"); f.setAttribute("height", "110%");
+    const gb = document.createElementNS(NS, "feGaussianBlur");
+    gb.setAttribute("stdDeviation", "0 0"); f.appendChild(gb); fx.appendChild(f);
+    cards.push({ hold, el: t.el, dk: t.dk, gb });
+  }
+  // the light that crosses reel 1 once it stopped
+  const shc = document.createElement("div");
+  Object.assign(shc.style, { position: "absolute", left: "0px", top: "0px", width: `${G.cw}px`, height: `${G.ch}px`, overflow: "hidden",
+    borderRadius: `${G.cw * Math.min(0.14, Math.max(0.025, Number(V.radius) / 200))}px` });
+  const sheen = document.createElement("div");      // a band in a gradient 3 reels wide, slid across (it never leaves its box)
+  Object.assign(sheen.style, { position: "absolute", left: "0px", top: "0px", width: `${G.cw}px`, height: `${G.ch}px`, opacity: "0",
+    background: `linear-gradient(106deg, ${rgba("#ffffff", 0)} 0%, ${rgba("#ffffff", 0)} 42%, ${rgba("#ffffff", 0.34)} 50%, ${rgba("#ffffff", 0)} 58%, ${rgba("#ffffff", 0)} 100%)` });
+  sheen.style.backgroundSize = "300% 100%";
+  shc.appendChild(sheen); cards[0].el.appendChild(shc);
+
+  // ---- the motion (d = frames at 30 fps since "Starts at frame")
+  const EXIT = 9, HOLD = 22;
+  const DS = Math.max(30, AV - (V.leave ? EXIT + 1 : 1) - HOLD);   // the spin stops here
+  const TURNS = Math.max(1, Math.round(V.turns * K)) / K;         // reel 1 ends in front
+  const OFF = -2 * Math.PI * Math.round(TURNS * K) / K;            // so reel 1 is the one that stops in front
+  const spin = d => OFF + 2 * Math.PI * TURNS * (1 - Math.pow(1 - c01(d / DS), 2.2));
+  const kAt = d => {                                     // ring radius, reel scale and opacity at d
+    const ki = eOut(d / 13);
+    let kr = 0.25 + 0.75 * ki, ks = 0.5 + 0.5 * ki, op = c01((d + 0.5) / 4);
+    if (V.leave) { const k = eIn((d - (AV - EXIT - 1.5)) / EXIT); kr *= 1 - 0.3 * k; ks *= 1 - 0.1 * k; op *= 1 - k; }
+    return [kr, ks, op];
+  };
+  const xAt = (i, d) => FX + G.R * kAt(d)[0] * Math.sin(i * 2 * Math.PI / K + spin(d));
+  function render(t) {
+    const d = t * 30 - S * 30 / FPS;
+    ring.style.visibility = d >= 0 ? "visible" : "hidden";
+    if (d < 0) return;
+    const [kr, ks, op] = kAt(d), sp = spin(d);
+    const pop = outBack((d - DS) / 8, 1.6), hd = c01((d - DS) / 8);   // reel 1 steps forward, the others dim
+    cards.forEach((c, i) => {
+      const th = i * 2 * Math.PI / K + sp, cs = Math.cos(th), dep = (cs + 1) / 2;
+      let sd = (SB + (SF - SB) * dep) * ks;
+      if (i === 0) sd *= 1 + (POP - 1) * pop;
+      const x = FX + G.R * kr * Math.sin(th), y = FY + G.OY + G.RY * kr * cs;
+      c.hold.style.zIndex = String(i === 0 && d >= DS ? 99999 : Math.round(dep * 1000) * 16 + i);
+      c.hold.style.opacity = op.toFixed(3);
+      c.hold.style.transform = `translate(${(x - G.cw / 2).toFixed(2)}px, ${(y - G.ch / 2).toFixed(2)}px) scale(${sd.toFixed(4)})`;
+      c.el.style.transform = `perspective(${G.P.toFixed(1)}px) rotateY(${(faceA(th) * 180 / Math.PI).toFixed(3)}deg)`;
+      c.dk.style.opacity = Math.min(0.75, (1 - dep) * 0.5 + (i === 0 ? 0 : 0.18 * hd)).toFixed(3);
+      // a horizontal smear while it moves fast (its speed over the next half frame)
+      const vx = Math.abs(xAt(i, d + 0.5) - x) * 2;
+      const sdv = vx > 10 * U ? Math.min(10 * U, (vx - 10 * U) * 0.18) / Math.max(0.3, sd) : 0;
+      c.gb.setAttribute("stdDeviation", `${sdv.toFixed(2)} 0`);
+      c.hold.style.filter = sdv > 0.2 ? `url(#csmb${i})` : "none";
+    });
+    const sh = eIO((d - DS - 4) / 16);
+    sheen.style.opacity = sh > 0 && sh < 1 ? "1" : "0";
+    sheen.style.backgroundPosition = `${(100 - 100 * sh).toFixed(2)}% 0%`;
+  }
+  const px = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 63 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  (document.fonts && document.fonts.load ? Promise.all([700, 800].map(w => document.fonts.load(`${w} 100px "${V.body_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

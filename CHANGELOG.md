@@ -5,6 +5,150 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## 0.6.0.9 - 2026-11-02 - Learn from your own posts: where people left, tests, lessons and a monthly review
+
+- **Text that comes in word by word** - three new text templates in Motion Graphics, for any video, over your footage
+  or on their own background: *Masked reveal* (lines, words or letters rise into place from behind an invisible
+  edge), *Letter stagger* (letters or words one at a time - rising out of a blur, dropping in with a bounce, zooming
+  down out of focus or flipping up in 3D; left to right, from the middle out or at random) and *Decode* (each letter
+  scrambles through random signs and locks into place, a thin line running under it). Put a word between asterisks
+  (`*word*`) for the accent - an italic serif in your accent colour - and `|` for a new line; they take your look's
+  fonts and colours and never cover a face.
+- **Where people left** - your own video's retention, from a screenshot of its graph: in Content agency > Your
+  videos, a video's *Where people left* takes a screenshot of TikTok Studio's, YouTube Studio's or Instagram's
+  retention graph (paste it with Ctrl+V). You drag four lines onto the graph's axes and MotionLab reads the curve itself
+  (no Claude, no login - the screenshot stays on your PC): how many were still watching at 3 s, at 10 s and at the end,
+  and the steepest drops - where the most viewers left within 3 seconds. A second it cannot read stays unknown, never
+  guessed. The card shows the curve; once 5 of your videos on a platform have one, SPARK compares each with your usual.
+- **SPARK on your own videos** - a video's card in Your videos now opens its SPARK, or starts one. On SPARK's page your
+  video gets *Where people left*: the curve under the player (a click plays that moment) and the steepest drops at
+  their exact frames, with the words said there. Claude's write-up uses them as measured numbers, and says what made
+  people leave only as its own reading - a drop shows where people left, not why.
+- **Tests** - Content agency's third tab: post two or three versions of one idea on the same platform (another hook,
+  another length) and compare them by the number you pick first - views at 48 hours, 7 days or 28 days, how many were
+  still watching at 3 s, 10 s or the end, likes or comments per 1,000 views, or the average % viewed - with a minimum
+  of views. Pick each version from your posted videos; their numbers and curves sit side by side. A version wins only
+  by a clear margin, otherwise it is too close to call - and one post each is always a hint, never proof. Claude can
+  then review the versions (SPARK reads them first): what to keep, change or cut, at exact frames, each change marked
+  *edit only* or *re-record* and *to test*, with the next test to run. *Make the next version* hands that to Claude
+  for the video it came from; closing a test records which version you go on with, and *Test again* starts the
+  follow-up from it.
+- **What works** - Content agency's fourth tab: patterns across your own posts (shorter videos, the day or hour they
+  went up, your content pillar, text or cuts in the first 3 seconds...) against the number they moved - only when 8
+  videos or more sit on each side, the difference is clear, and it still holds with the strongest video left out.
+  Keep one and it starts as a *hunch*; it becomes *likely*, then *settled*, only when later posts confirm it - the same
+  videos never count twice. New posts that cannot tell weaken it, posts that go the other way refute it (the old claim
+  stays, with the numbers that refuted it), and a lesson not tested for 30 days drops a step (stale after 90). They are
+  tested again every time you press *Check my pages*. Likely and settled lessons go into Claude's memory - as patterns
+  across your posts, never as the cause of one video. Until a platform has enough posts, the tab shows how far it is
+  from the bar; *Measure my posts with SPARK* reads your posts' first seconds and cuts (no Claude).
+- **Monthly review** - Content agency's fifth tab: a month of your posts at a glance (‹ › to change the month). Per
+  platform, the month's median against your usual views (your posts of the last 120 days); the posts that did best by
+  views and by retention, each with its ×-your-usual (posts under a week old at the last check are still growing and
+  never ranked); what they had in common - pillar, length, text in the first 3 seconds - shown as a hint, since a month
+  is only a few posts; the month's tests and what happened to your lessons. It ends in **three next tests** Claude
+  writes from those numbers: what to try, what stays the same, the number that decides it, and the posts, lessons or
+  tests behind it - never a claim that something *caused* a result, and every × or % must be one of the month's own
+  numbers. *Put it on the calendar* makes a test an idea in your content calendar, and next month's review shows where
+  it got to.
+- **Claude asks before it reaches out** - in the Claude Code windows MotionLab opens, Claude now asks you first before
+  it downloads a video, checks your pages online, looks up a video's numbers, installs something into DaVinci Resolve
+  or HyperFrames, or clears caches to free space. Everything else it runs as before, without asking.
+
+## 0.6.0.8 - 2026-10-30 - SPARK: why a video worked, vertical framing and edit by segments
+
+- **SPARK - why a video worked** - the Analyser's *Content creation* way is here. Add a link or a video: MotionLab
+  measures it (its cuts, the first 3 seconds, how fast it talks, a picture of every shot) and looks its numbers up once
+  - likes, comments, shares and saves per 1,000 views, and the creator's usual: the median views of the videos they
+  posted around it, so you see whether it was an outlier for them. Claude then explains it with the same 12-point
+  checklist for every video (the idea, the packaging, the hook, the promise kept, open loops, pacing, emotion, why
+  people send it and comment, craft, the ending, the context), each point marked *Measured*, *Claude's judgement* or
+  *Unknown* with its evidence - a quote that plays its moment, a frame, a number - plus what the video cannot explain
+  and 3-5 things to take for your own videos. The numbers stay on your PC. An analysed video and a video's notes have
+  *Analyze with SPARK* too.
+- **Horizontal clips framed on the face in vertical videos** - a quick draft now frames every clip that is wider than
+  the video shot by shot: one still crop on the face when it stays put (most shots), slow eased pans when the person
+  moves across, never a shaky follow; a close-up stays on the face's middle. A clip that had half a face cut off at the
+  edge is centred now. The draft's notes say how each shot was framed.
+- **Layouts for vertical videos** - each shot of a horizontal clip now gets the layout that suits it: two people far
+  apart are stacked one above the other (each in their own panel, the faces the same size, the captions on the line
+  between them); a group, or someone moving too fast to follow, goes in a band across the middle over a blurred copy
+  of the shot (or over the wall's own colour, so the band disappears into it); a screen recording with a face camera
+  puts the screen on top and your face below; a game puts the face camera on top. The Editor's preview shows them.
+- **Vertical framing knows its limits** - a clip too small to fill a vertical video sharply (720p and lower) goes in a
+  band instead of being blown up; subtitles, lyrics, name titles and other text burned into a clip are never cut
+  off - the shot goes in a band wide enough to keep the text whole; faces stay out from under the apps' buttons and
+  captions (TikTok, Reels, Shorts); captions sit between the two halves of a stacked layout and never over text
+  burned into the picture.
+- **Choose the framing yourself** - in the Editor, a shot of a horizontal clip in a vertical video has a *Framing*
+  section: Auto, Fill, Fit, Split, Screen or Game, a still crop or one that follows the person - and you can drag the
+  picture in the preview to move the crop. What you choose stays yours. In New edit, the last step asks how
+  horizontal clips should fill a vertical video (Auto, Fill, Fit or Split) when you pick the vertical format.
+- **How to film for both shapes** - Prepare's *Film it* shows a short checklist before you film, with a picture of
+  the framing: the lens at eye level, your eyes on the upper third, from mid-chest up about a metre away, facing a
+  window - and if you want a vertical and a horizontal video from one take, film horizontal in 4K with yourself in
+  the middle, and MotionLab frames the vertical one.
+- **Fixed**: in the Editor's preview, a horizontal clip in a vertical video showed its middle when the crop was off
+  to one side, and a shot could stay wrong while paused right after a jump on the timeline; both now match the render.
+  A shake on a shot that pans to follow someone said "this shot already shakes" - it now says why it can't.
+- **Edit by segments** - New edit has a 7th step, *Segments*: MotionLab cuts your clips with your answers and splits
+  the video into parts - your sentences, a song's phrases or runs of shots - and suggests an edit for each: a punch-in
+  on the key word, B-roll on the word a clip shows, the number you say counting up on a card, a section title where a
+  numbered part starts, a list, a motion graphic, cuts on the beat, a hit on the drop, or nothing. Each part shows its
+  picture, its words, why that edit and two others; change any of them, apply one to every part like it, or go back
+  to *Recommended for all*. *Preview* renders one part with its edit in about half a minute; *Build the edit* makes the
+  whole video in one go and checks that every part came out as you picked. Your picks stay with their parts when you
+  cut the video again. Cards stay off your face (in a horizontal video they sit in a column at the edge). A video
+  built this way has a *Parts* row in the Editor: click a part to change its edit and build it again. Or press *Make
+  it with Claude* on the Segments step: Claude picks the parts you left, marks where your talk turns to a new point
+  (a title card there), writes the words on the cards and chooses the word each punch-in or B-roll lands on - your
+  picks stay, Claude's show as *Claude's* with its reason, and you can change any of them the same way (*back to the
+  suggestion* brings Claude's back). B-roll can now go on any part you talk in, not only where a clip's words match.
+- **A video's notes, laid out like a Notion page** - the notes now use the whole page: a row to jump to each part,
+  the video's facts at a glance, a coloured map of its sections (click one to play it), the takeaways as cards, and
+  each section in its own colour with where it starts and ends, how long it lasts and its share of the video.
+  Takeaways and steps carry the colour of the section they are said in; *Apply it* shows how much you have done.
+- **Ask Claude about a video's notes** - go deeper on a part, turn it into a plan, ask what it means for you. Claude
+  answers with what the video says (each point plays its moment) and keeps what it adds from its own knowledge apart,
+  under *Going further*. Your questions and answers stay with the notes.
+- **Combine notes** - pick several videos on one topic in Analyser > Notes: download all their notes as one Markdown
+  file (with one context block for another AI), or ask Claude one question across them - each point names its video
+  and plays its moment.
+- **Fixed**: a YouTube video with dubbed audio tracks could get its notes from a translated track (an English video
+  came out in Arabic); the words now come from the video's own language, and a mismatch is flagged.
+- **Your videos are safer from Claude itself** - Claude Code now refuses, by itself, to delete, move, rename or
+  overwrite anything in your downloads (refs) or the clips at the top of a video's folder; it works on copies in
+  the video's build folder, as it always should.
+- **A talking video starts on your first word** - the quick draft no longer keeps a tap, a breath or the phone being
+  set down as a "spoken part" (1.4 s of it opened a video before "Most editors..."): a part with no word in it goes,
+  and a quiet first word the loudness missed ("thank" before "you.") is taken in. Captions no longer lose a word that
+  starts a hair before its shot.
+- **Names in every transcript** - speech to text is now always given the lab's own names (MotionLab, Claude) and
+  your brand's glossary, whoever asks for the transcript; a captions transcript made without them had heard
+  "MotionLove", and every tool now shares one cached transcript instead of remaking it.
+- **Fixed**: an edit by segments with captions on (New edit's *Captions*, or `--captions` in tools\segments.py) refused
+  to write its plan ("refusing to write outside build"); and when you pick the same treatment Claude suggested for a
+  part (a title, a graphic), the card now carries Claude's words and template instead of the rules' automatic phrase.
+
+## 0.6.0.7 - 2026-10-29 - Effects for talking videos: 20 more templates, colour looks and whole-picture effects
+
+- **More of Vibha Ramprakash's effect designs** - most of the rest of her 45 effects for talking videos are now in
+  MotionLab: 20 new templates and new effects. Your reels around you (they pile up behind you, circle your head, spin in a 3D
+  carousel, fill the wall, fan out like phones, a 3x3 grid with you in the middle tile), a receipt printing above you,
+  keys raining down, headlines piling up, a magazine cover, news pages cutting on one word, glass widgets, a tier
+  list, an editing timeline, an uninstall bar that breaks the picture, your video shrinking into a reel card,
+  numbered tiles fanning out above your head, three bold lines slamming in under your chin, boards of your reels on
+  grid paper that a cursor clicks, and a camera that pushes into a corner beside your head while a graph pops up. A design that also changes the picture or needs a second graphic brings it with it
+  when you add it, and takes it along when you move or delete it.
+- **New effects for Claude's edits** - *Rabbit hole* (the room tunnels into itself while you stay in front), *Dot
+  reveal*, *Glitch*, *Before / after* (a slider with a look on one side), *Corner push*, *Pastel room* and *Grid paper
+  room* (the room behind you painted, you as you are), and seven colour looks: *Moody*, *Black and white*, *Warm*,
+  *Cool*, *Pop*, *Red film* (the room red, you warm) and *Soft film*. They work on any video, graphics included; Claude
+  adds them when it edits, and a video that has one shows it in the Editor to move, lengthen or remove. The Editor's
+  own list of effects stays the eight its review kept.
+- **Fixed**: Claude no longer asks for the *Spotlight* effect the Editor's review took out (an edit with it stopped
+  with an error) - a template that needs it, like the reels carousel, still brings it along.
+
 ## 0.6.0.6 - 2026-10-27 - The Editor reworked: captions in one list, a right-click menu, safe zones
 
 - **The Editor, reviewed against CapCut, Premiere, Resolve and OpenCut.**

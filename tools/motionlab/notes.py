@@ -183,58 +183,69 @@ def replayed_of(info: dict, fps: float, frames: int, top: int = 3) -> list[list[
 
 
 # ------------------------------------------------------------------------------------------------ the gate
+def _ctx(name: str) -> dict:
+    """What the gate checks a note's evidence against: the transcript's words, the sheets' frames, the sponsor parts."""
+    d, n = need(name)
+    tr = transcript(d)
+    return {"d": d, "n": n, "tr": tr, "fps": float(n["fps"]), "frames": int(n["frames"]), "drop": bool(n.get("drop_frame")),
+            "idx": _index(tr) if tr else [],
+            "sheet": {int(f["f"]) for f in (_load(d / "frames" / "frames.json") or {}).get("frames", [])},
+            "chapters": n.get("chapters") or [], "replayed": n.get("replayed") or [],
+            "skips": [s for s in n.get("skip") or [] if s.get("category") in SKIP_KINDS]}
+
+
+def _evidence(C: dict, where: str, it: dict, out: dict, bad: list[str]) -> None:
+    """the item's quote (found -> at / end / at_label) or the frame it shows (shown)."""
+    fps, drop, idx = C["fps"], C["drop"], C["idx"]
+    hint = it.get("at")
+    hint = int(hint) if isinstance(hint, (int, float)) and not isinstance(hint, bool) else None
+    q = " ".join(str(it.get("quote") or "").split())
+    shown = it.get("shown")
+    if q:
+        if len(q) > QUOTE_MAX_CHARS:
+            bad.append(f"{where}: the quote has {len(q)} characters - quote at most {QUOTE_MAX_CHARS}")
+        elif len(_tokens(q)) < QUOTE_MIN_WORDS:
+            bad.append(f"{where}: quote at least {QUOTE_MIN_WORDS} words, so it points at one place")
+        elif not idx:
+            bad.append(f"{where}: there is no transcript to quote - point at a frame of the sheets (shown) instead")
+        else:
+            hit = find_quote(idx, q, hint)
+            if hit is None:
+                bad.append(f"{where}: the quote is not in the transcript, word for word: {q[:120]!r}")
+            else:
+                a, b = hit
+                sk = next((s for s in C["skips"] if s["start"] <= a <= s["end"]), None)
+                if sk:
+                    bad.append(f"{where}: the quote is inside a {sk['category']} part ("
+                               f"{label(sk['start'], fps, drop)} - {label(sk['end'], fps, drop)}) - leave it out")
+                out.update(quote=q, at=a, end=max(a, b), at_label=label(a, fps, drop))
+    if shown is not None:
+        sf = int(shown) if isinstance(shown, (int, float)) and not isinstance(shown, bool) else None
+        if sf is None or sf not in C["sheet"]:
+            bad.append(f"{where}: shown={shown!r} is not a frame of the sheets (frames\\frames.json)")
+        else:
+            out.update(shown=sf, shown_label=label(sf, fps, drop))
+            if "at" not in out:
+                out.update(at=sf, end=sf, at_label=label(sf, fps, drop))
+    if not q and shown is None:
+        bad.append(f"{where}: neither a quote of the video's words nor a frame it shows (shown) - every point "
+                   "comes from the video")
+    if "at" in out and any(a <= out["at"] <= b for a, b in C["replayed"]):
+        out["replayed"] = True
+
+
 def check_draft(name: str, draft: dict) -> tuple[dict, list[str]]:
     """Claude's draft -> (the notes as saved, problems). Problems = nothing may be saved."""
-    d, n = need(name)
-    fps, frames, drop = float(n["fps"]), int(n["frames"]), bool(n.get("drop_frame"))
-    tr = transcript(d)
-    idx = _index(tr) if tr else []
-    sheet = {int(f["f"]) for f in (_load(d / "frames" / "frames.json") or {}).get("frames", [])}
-    chapters = n.get("chapters") or []
-    skips = [s for s in n.get("skip") or [] if s.get("category") in SKIP_KINDS]
-    replayed = n.get("replayed") or []
+    C = _ctx(name)
+    d, n, tr, fps, drop = C["d"], C["n"], C["tr"], C["fps"], C["drop"]
+    sheet, chapters = C["sheet"], C["chapters"]
     desc = str((_load(d / "content" / "info.json") or {}).get("description") or "")
     bad: list[str] = []
     if not isinstance(draft, dict):
         return {}, ["the draft is not a JSON object"]
 
     def evidence(where: str, it: dict, out: dict) -> None:
-        """the item's quote (found -> at / end / at_label) or the frame it shows (shown)."""
-        hint = it.get("at")
-        hint = int(hint) if isinstance(hint, (int, float)) and not isinstance(hint, bool) else None
-        q = " ".join(str(it.get("quote") or "").split())
-        shown = it.get("shown")
-        if q:
-            if len(q) > QUOTE_MAX_CHARS:
-                bad.append(f"{where}: the quote has {len(q)} characters - quote at most {QUOTE_MAX_CHARS}")
-            elif len(_tokens(q)) < QUOTE_MIN_WORDS:
-                bad.append(f"{where}: quote at least {QUOTE_MIN_WORDS} words, so it points at one place")
-            elif not idx:
-                bad.append(f"{where}: there is no transcript to quote - point at a frame of the sheets (shown) instead")
-            else:
-                hit = find_quote(idx, q, hint)
-                if hit is None:
-                    bad.append(f"{where}: the quote is not in the transcript, word for word: {q[:120]!r}")
-                else:
-                    a, b = hit
-                    sk = next((s for s in skips if s["start"] <= a <= s["end"]), None)
-                    if sk:
-                        bad.append(f"{where}: the quote is inside a {sk['category']} part ("
-                                   f"{label(sk['start'], fps, drop)} - {label(sk['end'], fps, drop)}) - leave it out")
-                    out.update(quote=q, at=a, end=max(a, b), at_label=label(a, fps, drop))
-        if shown is not None:
-            sf = int(shown) if isinstance(shown, (int, float)) and not isinstance(shown, bool) else None
-            if sf is None or sf not in sheet:
-                bad.append(f"{where}: shown={shown!r} is not a frame of the sheets (frames\\frames.json)")
-            else:
-                out.update(shown=sf, shown_label=label(sf, fps, drop))
-                if "at" not in out:
-                    out.update(at=sf, end=sf, at_label=label(sf, fps, drop))
-        if not q and shown is None:
-            bad.append(f"{where}: neither a quote of the video's words nor a frame it shows (shown) - every point "
-                       "comes from the video")
-        if "at" in out and any(a <= out["at"] <= b for a, b in replayed):
-            out["replayed"] = True
+        _evidence(C, where, it, out, bad)
 
     def text_of(where: str, it: dict, limit: int) -> str:
         t = str(it.get("text") or "").strip()
@@ -386,8 +397,9 @@ def _src_line(n: dict) -> str:
     return " · ".join(parts)
 
 
-def render_md(n: dict, notes: dict) -> str:
-    """The notes as Markdown, in the page's order: every time as f480 (00:00:16:00) at the video's own frame rate."""
+def render_md(n: dict, notes: dict, level: int = 1, context: bool = True) -> str:
+    """The notes as Markdown, in the page's order: every time as f480 (00:00:16:00) at the video's own frame rate.
+    level 2 = one video inside the combined notes (every heading one deeper); context=False leaves its AI block out."""
     done = set(n.get("done") or [])
     L = [f"# {notes.get('title') or label_of(n)}", "", f"*{_src_line(n)}*  ",
          f"*Notes by Claude, {notes.get('made', '')}. Every time = frame + timecode, e.g. f480 (00:00:16:00).*", ""]
@@ -414,10 +426,12 @@ def render_md(n: dict, notes: dict) -> str:
         L += ["## Apply it", ""] + [f"- [{'x' if i in done else ' '}] {a}" for i, a in enumerate(notes["apply"])] + [""]
     if notes.get("resources"):
         L += ["## Resources", ""] + [f"- [{r['name']}]({r['url']})" for r in notes["resources"]] + [""]
-    if notes.get("ai_context"):
+    if notes.get("ai_context") and context:
         L += ["## Context for another AI", "", "```text", notes["ai_context"], "```", ""]
     if notes.get("tags"):
         L += ["Tags: " + ", ".join(notes["tags"]), ""]
+    if level > 1:
+        L = [("#" * (level - 1) + x) if x.startswith("#") else x for x in L]
     return "\n".join(L).rstrip() + "\n"
 
 
@@ -478,6 +492,270 @@ def save_meta(name: str, label_: str | None = None, tags=None, done=None) -> dic
         return {"label": label_of(n), "tags": n.get("tags") or [], "done": n.get("done") or []}
 
 
+# ------------------------------------------------------------------------------------------------ Ask Claude
+# 2026-10-29, the user: "a posibility to run a prompt fo that video notes (imagine i wanted to expand on some topic)";
+# "multiple videos analized on the same topic ... combine the knowledge of the videos selected, or ... a markdown with
+# all important info from both videos". A question = the user's words, kept with the notes: one video's in
+# <name>\asks.json, one across several videos in ROOT\_combined\<id>.json (no note.json there: never a video's notes).
+# Claude answers through save_answer: what the videos say is quoted like the notes (the same gate, per video); what
+# Claude adds from its own knowledge stays apart, in `more`, and names no frames.
+COMBINED = "_combined"
+Q_MAX, ASKS_MAX, ANSWER_POINTS, MORE_MAX, COMBINE_MAX = 2000, 60, 8, 6000, 12
+ASK_ID = re.compile(r"[qc]\d{14}(?:-\d+)?")
+
+
+def _new_id(prefix: str, taken) -> str:
+    base = prefix + time.strftime("%Y%m%d%H%M%S")
+    k, i = base, 1
+    while k in taken:
+        i += 1
+        k = f"{base}-{i}"
+    return k
+
+
+def _combined_dir() -> Path:
+    return ROOT / COMBINED
+
+
+def asks(name: str) -> list[dict]:
+    d, _ = need(name)
+    v = _load(d / "asks.json") or []
+    return v if isinstance(v, list) else []
+
+
+def _question(q) -> str:
+    q = str(q or "").replace("\r\n", "\n").strip()
+    if not q:
+        raise ValueError("write the question first")
+    if len(q) > Q_MAX:
+        raise ValueError("the question is too long")
+    return q
+
+
+def add_ask(name: str, q) -> dict:
+    """One video: the user's question, waiting for Claude (the page then opens /take-notes <name> ask <id>)."""
+    q = _question(q)
+    with _LOCK:
+        d, _ = need(name)
+        if not (d / "notes.json").exists():
+            raise ValueError("Claude writes the notes first - then ask about them")
+        lst = asks(name)
+        if len(lst) >= ASKS_MAX:
+            raise ValueError("too many questions on this video - remove an old one")
+        rec = {"id": _new_id("q", {a.get("id") for a in lst}), "q": q, "made": _now(), "names": [d.name]}
+        write_json(d / "asks.json", lst + [rec])
+        return rec
+
+
+def remove_ask(name: str, ask_id: str) -> dict:
+    """The user's ✕ on a question (one video's, or name = _combined for one across several videos)."""
+    with _LOCK:
+        if name == COMBINED:
+            p = _combined_dir() / f"{ask_id}.json"
+            if not ASK_ID.fullmatch(str(ask_id)) or not p.exists():
+                raise FileNotFoundError(f"no question {ask_id!r}")
+            p.unlink()
+            return {"ok": True}
+        d, _ = need(name)
+        lst = asks(name)
+        left = [a for a in lst if a.get("id") != ask_id]
+        if len(left) == len(lst):
+            raise FileNotFoundError(f"no question {ask_id!r}")
+        write_json(d / "asks.json", left)
+        return {"ok": True}
+
+
+def _names(names) -> list[str]:
+    raw = names.split(",") if isinstance(names, str) else list(names or [])
+    out = list(dict.fromkeys(note_dir(x).name for x in raw if str(x).strip()))
+    if len(out) < 2:
+        raise ValueError("pick at least two videos")
+    if len(out) > COMBINE_MAX:
+        raise ValueError("too many videos at a time")
+    for x in out:
+        d, _ = need(x)
+        if not (d / "notes.json").exists():
+            raise ValueError("a video you picked has no notes yet")
+    return out
+
+
+def add_combined(names, q) -> dict:
+    """Several videos: one question across their notes -> ROOT\\_combined\\<id>.json (/take-notes combined <id>)."""
+    q, names = _question(q), _names(names)
+    with _LOCK:
+        cd = _combined_dir()
+        cd.mkdir(parents=True, exist_ok=True)
+        rec = {"id": _new_id("c", {p.stem for p in cd.glob("*.json")}), "q": q, "made": _now(), "names": names}
+        write_json(cd / f"{rec['id']}.json", rec)
+        return rec
+
+
+def combined(ask_id: str) -> dict:
+    p = _combined_dir() / f"{ask_id}.json"
+    rec = _load(p) if ASK_ID.fullmatch(str(ask_id or "")) else None
+    if not isinstance(rec, dict):
+        raise FileNotFoundError(f"no combined question {ask_id!r}")
+    return rec
+
+
+def _source(name: str) -> dict:
+    """A video as a combined page names it: its notes' title, link, rate - and whether its notes are still there."""
+    try:
+        d, n = need(name)
+    except (FileNotFoundError, ValueError):
+        return {"name": name, "gone": True, "label": name}
+    nt = _load(d / "notes.json") or {}
+    return {"name": d.name, "label": label_of(n), "title": nt.get("title") or label_of(n), "url": n.get("url"),
+            "uploader": n.get("uploader"), "fps": n.get("fps"), "frames": n.get("frames"), "thumb": _thumb(d),
+            "drop_frame": bool(n.get("drop_frame"))}
+
+
+def list_combined() -> list[dict]:
+    cd = _combined_dir()
+    out = [r for r in (_load(p) for p in sorted(cd.glob("*.json"))) if isinstance(r, dict)] if cd.is_dir() else []
+    for r in out:
+        r["sources"] = [_source(x) for x in r.get("names") or []]
+    return sorted(out, key=lambda r: r.get("made") or "", reverse=True)
+
+
+def check_answer(names: list[str], draft: dict) -> tuple[dict, list[str]]:
+    """Claude's answer -> (the answer as saved, problems). Every point quotes ONE video's words (`video` = its folder
+    name; one video = it may be left out) or names a frame it shows - the notes' own gate; `more` = Claude's own
+    knowledge beyond the videos, Markdown, no frame numbers (the times belong to the points)."""
+    bad: list[str] = []
+    if not isinstance(draft, dict):
+        return {}, ["the draft is not a JSON object"]
+    ctx = {x: _ctx(x) for x in names}
+    title = _clean(draft.get("title"), 160)
+    if not title:
+        bad.append("title: missing (what the answer is about, in a few words)")
+    summ = " ".join(str(draft.get("summary") or "").split())
+    if not summ:
+        bad.append("summary: missing (the answer in one to three sentences)")
+    elif len(summ) > 600:
+        bad.append(f"summary: {len(summ)} characters - at most 600")
+    pts = draft.get("points") or []
+    if not isinstance(pts, list) or not 1 <= len(pts) <= ANSWER_POINTS:
+        bad.append(f"points: a list of 1-{ANSWER_POINTS} (what the video(s) say about it, each quoted)")
+        pts = pts[:ANSWER_POINTS] if isinstance(pts, list) else []
+    points = []
+    for i, p in enumerate(pts):
+        w = f"points[{i}]"
+        if not isinstance(p, dict):
+            bad.append(f"{w}: not an object")
+            continue
+        v = str(p.get("video") or (names[0] if len(names) == 1 else "")).strip()
+        if v not in ctx:
+            bad.append(f"{w}: video {v!r} - one of {', '.join(names)}")
+            continue
+        t = str(p.get("text") or "").strip()
+        if not t:
+            bad.append(f"{w}: no text")
+        elif len(t) > 400:
+            bad.append(f"{w}: {len(t)} characters - at most 400")
+        out = {"video": v, "text": t[:400]}
+        _evidence(ctx[v], w, p, out, bad)
+        points.append(out)
+    more = str(draft.get("more") or "").strip()
+    if len(more) > MORE_MAX:
+        bad.append(f"more: {len(more)} characters - at most {MORE_MAX}")
+    if re.search(r"\bf\d{2,}\b|\b\d{2}:\d{2}:\d{2}[:;]\d{2}\b", more):
+        bad.append("more: names a frame or a timecode - what a video says goes into points (quoted), `more` is "
+                   "Claude's own knowledge")
+    if len(names) > 1 and len({p["video"] for p in points}) < min(2, len(names)):
+        bad.append("points: quote more than one of the videos - the question is across them")
+    return {"made": _now(), "by": "Claude", "title": title, "summary": summ[:600], "points": points,
+            "more": more[:MORE_MAX]}, bad
+
+
+def save_answer(name: str, ask_id: str, draft: dict) -> dict:
+    """The gate's only way in for an answer (name = the video's notes, or _combined). Raises ValueError with every
+    problem; nothing is written then."""
+    with _LOCK:
+        if name == COMBINED:
+            rec = combined(ask_id)
+            ans, bad = check_answer([note_dir(x).name for x in rec.get("names") or []], draft)
+            if bad:
+                raise ValueError("nothing saved - fix these and save again:\n- " + "\n- ".join(bad))
+            rec["answer"] = ans
+            write_json(_combined_dir() / f"{rec['id']}.json", rec)
+            return rec
+        d, _ = need(name)
+        lst = asks(name)
+        rec = next((a for a in lst if a.get("id") == ask_id), None)
+        if rec is None:
+            raise FileNotFoundError(f"no question {ask_id!r} on {d.name}")
+        ans, bad = check_answer([d.name], draft)
+        if bad:
+            raise ValueError("nothing saved - fix these and save again:\n- " + "\n- ".join(bad))
+        rec["answer"] = ans
+        write_json(d / "asks.json", lst)
+        return rec
+
+
+def answer_md(rec: dict) -> str:
+    """A question and Claude's answer as Markdown (Copy / Download on the page)."""
+    src = {x: _source(x) for x in rec.get("names") or []}
+    many = len(src) > 1
+    a = rec.get("answer") or {}
+    L = [f"# {a.get('title') or rec.get('q', '')}", "", f"> **Question:** {rec.get('q', '')}", ""]
+    if many:
+        L += ["Videos: " + "; ".join(s.get("title") or s["name"] for s in src.values()), ""]
+    if not a:
+        return "\n".join(L + ["*Waiting for Claude's answer.*"]) + "\n"
+    L += [a.get("summary", ""), "", "## From the video" + ("s" if many else ""), ""]
+    for p in a.get("points") or []:
+        who = f" ({src[p['video']].get('title') or p['video']})" if many and p.get("video") in src else ""
+        L.append(f"- {p['text']}{' - ' + p['at_label'] if p.get('at_label') else ''}{who}")
+    if a.get("more"):
+        L += ["", "## Going further (Claude's own knowledge, not from the video" + ("s" if many else "") + ")", "",
+              a["more"]]
+    return "\n".join(L).rstrip() + "\n"
+
+
+def combined_md(names) -> tuple[str, str]:
+    """(file name, Markdown) of several videos' notes in one file: an index, each video's notes, one context block
+    for another AI with every video's (no Claude - MotionLab puts them together)."""
+    names = _names(names)
+    parts, ctx, idx = [], [], []
+    for x in names:
+        d, n = need(x)
+        nt = _load(d / "notes.json") or {}
+        title = nt.get("title") or label_of(n)
+        idx.append(f"{len(idx) + 1}. {title} - {_src_line(n)}")
+        parts.append(render_md(n, nt, level=2, context=False))
+        mine = mine_text(x).strip()
+        if mine:
+            parts.append("### My notes\n\n" + mine + "\n")
+        if nt.get("ai_context"):
+            ctx.append(f"From \"{title}\"{' (' + n['url'] + ')' if n.get('url') else ''}:\n{nt['ai_context']}")
+    body = "\n".join([f"# Combined notes - {len(names)} videos", "",
+                      f"*Made by MotionLab, {_now()}. Every time = frame + timecode at each video's own frame rate.*",
+                      "", "## The videos", ""] + idx + [""]) + "\n" + "\n".join(parts)
+    if ctx:
+        body += "\n## Context for another AI\n\n```text\n" + "\n\n".join(ctx) + "\n```\n"
+    return f"Combined notes - {len(names)} videos.md", body
+
+
+def ask_text(name: str, ask_id: str) -> str:
+    """What Claude reads first for a question (notes.py ask): the question, then each video's notes and words."""
+    rec = combined(ask_id) if name == COMBINED else next((a for a in asks(name) if a.get("id") == ask_id), None)
+    if rec is None:
+        raise FileNotFoundError(f"no question {ask_id!r} on {name}")
+    names = rec.get("names") or [name]
+    L = [f"question {rec['id']} ({'across ' + str(len(names)) + ' videos' if len(names) > 1 else 'one video'}), "
+         f"asked {rec.get('made')}:", "", rec["q"], ""]
+    if rec.get("answer"):
+        L += [f"already answered {rec['answer'].get('made')} - saving again replaces it", ""]
+    for x in names:
+        d, _ = need(x)
+        L += [f"--- video: {d.name}", f"notes: {d / 'notes.json'}", f"my notes (the user's): {d / 'mine.md'}"]
+        L += [ln for ln in show_text(x).splitlines() if ln.startswith(("transcript:", "chapter ", "SponsorBlock",
+                                                                    "most replayed", "key frames:", "source:"))]
+        L.append("")
+    return "\n".join(L).rstrip()
+
+
 def _thumb(d: Path) -> str | None:
     for p in sorted((d / "content").glob("thumbnail.*")) if (d / "content").is_dir() else []:
         if p.suffix.lower() in (".jpg", ".png", ".webp"):
@@ -532,9 +810,21 @@ def get(name: str) -> dict:
                stats=_load(d / "content" / "stats.json"), notes_full=_load(d / "notes.json"),
                chapters=n.get("chapters") or [], replayed=n.get("replayed") or [], skip=n.get("skip") or [],
                done=n.get("done") or [], mine_text=mine_text(name),
+               asks=[{**a, "md": answer_md(a)} for a in reversed(asks(name))],
+               combined=[{"id": r["id"], "q": r["q"], "made": r.get("made"), "answered": bool(r.get("answer")),
+                          "n": len(r.get("names") or [])} for r in list_combined() if d.name in (r.get("names") or [])],
                sheets=[rel(p) for p in sorted((d / "frames").glob("sheet_*.jpg"))] if (d / "frames").is_dir() else [],
-               folder=rel(d))
+               spark=_spark_of(n), folder=rel(d))
     return out
+
+
+def _spark_of(n: dict) -> dict | None:
+    """The same video read by SPARK (2026-10-30): the notes page links to it."""
+    from . import spark as SP
+    try:
+        return SP.of_video(n.get("sha256"), n.get("video"))
+    except OSError:
+        return None
 
 
 def users_of(video: Path) -> list[str]:

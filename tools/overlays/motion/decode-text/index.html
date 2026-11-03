@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "text", "type": "string", "label": "The words (| = a new line, *word* = the accent)", "default": "Decode the|*message*"},
+  {"id": "order", "type": "enum", "label": "Locks", "default": "left", "options": [{"value": "left", "label": "Left to right"}, {"value": "random", "label": "In a random order"}]},
+  {"id": "signs", "type": "enum", "label": "Scrambles through", "default": "mixed", "options": [{"value": "mixed", "label": "Letters, numbers and signs"}, {"value": "letters", "label": "Letters"}, {"value": "binary", "label": "Zeros and ones"}, {"value": "blocks", "label": "Blocks"}]},
+  {"id": "gap", "type": "number", "label": "Frames between letters", "default": 1.5, "min": 0.3, "max": 20, "step": 0.1},
+  {"id": "scramble", "type": "number", "label": "Frames each letter scrambles before it locks", "default": 10, "min": 2, "max": 40, "step": 1},
+  {"id": "flash", "type": "boolean", "label": "Locked letters flash in the accent colour", "default": true},
+  {"id": "bar", "type": "boolean", "label": "A line under the text runs with the decoding", "default": true},
+  {"id": "glitch", "type": "boolean", "label": "Now and then a letter flickers while it holds", "default": true},
+  {"id": "font_role", "type": "enum", "label": "Font", "default": "body", "options": [{"value": "body", "label": "The look’s text font, bold"}, {"value": "display", "label": "The look’s headline font"}]},
+  {"id": "colour", "type": "enum", "label": "Text colour", "default": "light", "options": [{"value": "light", "label": "Light"}, {"value": "dark", "label": "Dark"}, {"value": "signal", "label": "Signal (accent)"}, {"value": "mustard", "label": "Mustard"}]},
+  {"id": "accent", "type": "enum", "label": "Accent words (*word*)", "default": "colour", "options": [{"value": "serif", "label": "Headline font, italic, in the accent colour"}, {"value": "colour", "label": "In the accent colour"}, {"value": "none", "label": "Like the rest"}]},
+  {"id": "align", "type": "enum", "label": "Lines", "default": "center", "options": [{"value": "center", "label": "Centred"}, {"value": "left", "label": "On the left"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.4, "max": 2.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Middle of the text (% of the height)", "default": 50, "min": 5, "max": 95, "step": 1},
+  {"id": "start", "type": "number", "label": "Comes in at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "leave", "type": "boolean", "label": "Leaves at the end", "default": true},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": true},
+  {"id": "bg", "type": "color", "label": "Background colour", "default": "#111316"},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "decode-text" (2026-10-31): a clean title that decodes. Each letter turns up as a
+     random sign in the look's label font (a new sign every 2 f) one every `gap` frames from f0 - left to right or in a
+     random order - scrambles for `scramble` frames and locks into its own letter, flashing the accent colour and
+     settling to the text colour over 8 f. A line under each row grows with its locked letters, then slides off to
+     the right 6 f after the row is done (12 f, S-curve). While it holds the text pushes in 3 % (gentle S-curve) and
+     now and then one letter flickers back to signs for 4 f. At the end the letters scramble again and go out in
+     reverse order (5 f each). After GSAP's ScrambleText idea; this page's own code. Size-independent, look-aware. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .ln { position: relative; width: fit-content; white-space: nowrap; font-synthesis: none; }
+  .wd { display: inline-block; white-space: nowrap; }
+  .lt { display: inline-block; text-align: center; overflow: visible; }
+  .uline { position: absolute; left: 0; height: 4px; transform-origin: 0% 50%; }
+  .acc { font-synthesis: style; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="block" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U };
+  const rgba = (h, a) => window.MLLook ? MLLook.rgba(h, a) : h;
+  const lum = h => window.MLLook ? MLLook.lum(h) : 0.5;
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const c01 = x => Math.min(1, Math.max(0, x));
+  const eIO = x => { x = c01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };   // S-curve
+  const eSine = x => 0.5 - 0.5 * Math.cos(Math.PI * c01(x));               // a gentle S-curve (the slow push)
+  const rnd = (i, s) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
+  const hx = h => { h = String(h || "#000000").replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const v = parseInt(h.slice(0, 6), 16) || 0; return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; };
+  const mix = (a, b, t) => { const A = hx(a), B = hx(b); return "rgb(" + A.map((x, i) => Math.round(x + (B[i] - x) * c01(t))).join(",") + ")"; };
+  const every = fn => { const p = { t: 0 }; fn(0); tl.fromTo(p, { t: 0 }, { t: FRAMES / FPS, duration: FRAMES / FPS, ease: "none", immediateRender: false, onUpdate: () => fn(p.t) }, 0); return p; };
+  const S0 = Math.round(V.start);
+  const light = lum(L.paper) >= lum(L.ink) ? L.paper : L.ink, dark = light === L.paper ? L.ink : L.paper;
+
+  // ---- the preview background (only when painted: over a video it is see-through)
+  const bgfill = q("bgfill");
+  Object.assign(bgfill.style, { width: `${W}px`, height: `${H}px` });
+  if (V.background) bgfill.style.background = `radial-gradient(ellipse ${0.7 * W}px ${0.3 * H}px at ${0.5 * W}px ${0.5 * H}px, ${rgba(L.deep, 0.45)}, ${rgba(L.deep, 0)} 100%), ${V.bg}`;
+
+  // ---- the words: "|" = a new line, *a few words* = the accent
+  const parse = t => { let on = false; return String(t || "").split("|").map(ln => ln.trim().split(/\s+/).filter(Boolean).map(w => {
+    let s = w, acc = on;
+    if (s[0] === "*") { s = s.slice(1); acc = on = true; }
+    const m = s.match(/^(.*)\*([^*\w]*)$/);
+    if (m) { s = m[1] + m[2]; acc = true; on = false; }
+    return { t: s, acc };
+  }).filter(w => w.t)).filter(l => l.length); };
+  const lines = parse(V.text);
+  if (!lines.length) lines.push([{ t: "Your words", acc: false }]);
+  const display = V.font_role === "display";
+  const fam = display ? V.display_font : V.body_font;
+  const famCss = display ? `'${fam}', Georgia, serif` : `'${fam}', 'Segoe UI', sans-serif`;
+  const accCss = `'${V.display_font}', Georgia, serif`;
+  const signCss = `'${V.accent_font}', Consolas, 'Segoe UI Symbol', monospace`;
+  const col = { light, dark, signal: L.signal, mustard: L.mustard }[V.colour] || light;
+  const hot = V.colour === "signal" ? L.mustard : L.signal;              // the flash and the line
+  const accCol = V.accent === "none" ? col : hot;
+  const shade = lum(col) > 0.5 && V.shadow > 0 ? `0 ${3 * U}px ${18 * U}px ${rgba("#000000", Math.min(0.8, 0.38 * V.shadow))}` : "none";
+  const SET = Array.from({ mixed: "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&*+=?/<>", letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    binary: "01", blocks: "░▒▓█▌▐" }[V.signs] || "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&*+=?/<>");
+
+  // ---- the split: every letter its own box (its final width, so the signs never move the line)
+  const block = q("block");
+  const rows = [], lts = [], bars = [];
+  lines.forEach((ws, li) => {
+    const ln = document.createElement("div"); ln.className = "ln"; block.appendChild(ln); rows.push(ln);
+    const bar = document.createElement("div"); bar.className = "uline"; bar.style.background = hot; ln.appendChild(bar); bars.push(bar);
+    ws.forEach((w, i) => {
+      const wd = document.createElement("span"); wd.className = "wd";
+      const acc = w.acc && V.accent !== "none";
+      if (acc && V.accent === "serif") { wd.classList.add("acc"); Object.assign(wd.style, { fontFamily: accCss, fontStyle: "italic", fontWeight: String(fw(V.display_font, 400)), fontSize: "1.1em" }); }
+      Array.from(w.t).forEach(ch => {
+        const c = document.createElement("span"); c.className = "lt"; c.textContent = ch; wd.appendChild(c);
+        lts.push({ el: c, ch, row: li, acc, font: acc && V.accent === "serif" ? accCss : famCss, up: ch !== ch.toLowerCase() || !/\p{L}/u.test(ch) });
+      });
+      ln.appendChild(wd);
+      if (i < ws.length - 1) ln.appendChild(document.createTextNode(" "));
+    });
+  });
+  const N = lts.length;
+  const order = V.order === "random" ? lts.map((x, i) => [rnd(i, 5), i]).sort((a, b) => a[0] - b[0]).map(x => x[1]) : lts.map((x, i) => i);
+  order.forEach((i, r) => { lts[i].r = r; });
+  // ---- the layout: up to 120 px at 1080, fitted to 86 % of the width
+  let S = 120 * U * V.size;
+  const layout = () => {
+    Object.assign(block.style, { width: `${W}px`, color: col, textShadow: shade, fontFamily: famCss,
+      fontWeight: String(display ? fw(fam, 400) : fw(fam, 800)), fontSize: `${S}px`, lineHeight: "1.16", letterSpacing: "0" });
+    rows.forEach(ln => Object.assign(ln.style, { marginLeft: V.align === "left" ? `${0.08 * W}px` : "auto", marginRight: V.align === "left" ? "0px" : "auto" }));
+    bars.forEach(b => Object.assign(b.style, { top: `${1.12 * S}px`, height: `${Math.max(3, 0.045 * S).toFixed(2)}px`, borderRadius: `${0.03 * S}px` }));
+    const bh = block.offsetHeight || lines.length * 1.16 * S;
+    block.style.top = `${Math.min(H * 0.97 - bh, Math.max(H * 0.03, H * V.y / 100 - bh / 2))}px`;
+  };
+  layout();
+
+  // ---- the motion (d = frames at 30 fps since "Comes in at frame")
+  const GAP = Math.max(0.2, V.gap), SCR = Math.max(2, V.scramble);
+  const a = x => x.r * GAP, lock = x => a(x) + SCR, allIn = (N - 1) * GAP + SCR + 8;
+  const rowDone = rows.map((ln, li) => Math.max(...lts.filter(x => x.row === li).map(lock)));
+  const XS = Math.min(GAP, 14 / Math.max(1, N)), exitLen = 6 + XS * (N - 1);
+  const T = (FRAMES - S0) * 30 / FPS, EX0 = T - exitLen - 1;
+  const leave = V.leave && EX0 > allIn + 6;
+  const flick = (x, d) => {                                 // the hold: now and then one letter flickers for 4 f
+    if (!V.glitch || d < allIn + 10 || (leave && d >= EX0 - 2)) return false;
+    const m = Math.floor((d - allIn - 10) / 26), k = d - allIn - 10 - m * 26;
+    return k < 4 && lts[Math.floor(rnd(m, 7) * N)] === x;
+  };
+  const sign = (i, d, x) => { const s = SET[Math.floor(rnd(i, Math.floor(d / 2)) * SET.length)]; return x.up ? s : s.toLowerCase(); };
+  function render(t) {
+    const d = (t - S0 / FPS) * 30;
+    block.style.visibility = d >= 0 ? "visible" : "hidden";
+    if (d < 0) return;
+    lts.forEach((x, i) => {
+      const k = d - lock(x);
+      let show = d >= a(x), scr = k < 0 || flick(x, d);
+      if (leave) { const kx = d - EX0 - (N - 1 - x.r) * XS; if (kx >= 0) { scr = true; if (kx >= 6) show = false; } }
+      const el = x.el;
+      el.style.visibility = show ? "visible" : "hidden";
+      if (scr) {
+        const s = sign(i, d, x);
+        if (el.textContent !== s) el.textContent = s;
+        Object.assign(el.style, { fontFamily: signCss, fontStyle: "normal", fontSize: "0.8em", color: V.flash ? hot : col, opacity: "0.85" });
+      } else {
+        if (el.textContent !== x.ch) el.textContent = x.ch;
+        const base = x.acc ? accCol : col;
+        Object.assign(el.style, { fontFamily: x.font, fontStyle: x.font === accCss ? "italic" : "normal", fontSize: "1em", opacity: "1",
+          color: V.flash && !x.acc && k < 8 ? mix(hot, base, k / 8) : base });
+      }
+    });
+    // the line under each row: grows with its locked letters, then slides off to the right
+    rows.forEach((ln, li) => {
+      const mine = lts.filter(x => x.row === li), b = bars[li];
+      if (!V.bar || !mine.length) { b.style.display = "none"; return; }
+      const grown = mine.reduce((s, x) => s + c01((d - lock(x) + 1) / 3), 0) / mine.length;
+      const off = eIO((d - rowDone[li] - 6) / 12);
+      b.style.display = off >= 1 ? "none" : "block";
+      const wRow = ln.offsetWidth;
+      b.style.width = `${(wRow * Math.max(0, grown - off)).toFixed(2)}px`;
+      b.style.transform = `translateX(${(wRow * off).toFixed(2)}px)`;
+    });
+    const sc = 1 + 0.03 * eSine((d - allIn) / Math.max(20, (leave ? EX0 : T) - allIn));
+    block.style.transformOrigin = `${W / 2}px ${block.offsetHeight / 2}px`;
+    block.style.transform = `scale(${sc.toFixed(4)})`;
+  }
+  const px = every(render);
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 71 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // registered once the fonts are in: fitted with the real fonts, then every letter's box set to its own width
+  (document.fonts && document.fonts.load ? Promise.all([`400 100px "${fam}"`, `800 100px "${fam}"`, `italic 400 100px "${V.display_font}"`, `400 100px "${V.accent_font}"`]
+    .map(f => document.fonts.load(f)).concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    lts.forEach(x => { x.el.textContent = x.ch; x.el.style.width = ""; Object.assign(x.el.style, { fontFamily: x.font, fontSize: "1em", visibility: "visible" }); });
+    layout();
+    const need = Math.max(...rows.map(ln => ln.offsetWidth));
+    if (need > W * 0.86) { S *= W * 0.86 / need; layout(); }
+    if (block.offsetHeight > H * 0.8) { S *= H * 0.8 / block.offsetHeight; layout(); }
+    lts.forEach(x => { x.el.style.width = `${x.el.getBoundingClientRect().width.toFixed(3)}px`; });
+    render(px.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

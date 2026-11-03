@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "items", "type": "string", "label": "The tiles, in order (split with |, up to 16)", "default": "Hook|Cuts|Captions|B-roll|Music"},
+  {"id": "accent", "type": "enum", "label": "Accent colour (the numbers)", "default": "mustard", "options": [{"value": "mustard", "label": "Mustard"}, {"value": "signal", "label": "Signal"}, {"value": "paper", "label": "Paper"}, {"value": "deep", "label": "Deep"}]},
+  {"id": "size", "type": "number", "label": "Tile size (1 = normal)", "default": 1, "min": 0.6, "max": 1.5, "step": 0.05},
+  {"id": "y", "type": "number", "label": "Height of the arc’s top (% of the frame, from the top)", "default": 17, "min": 6, "max": 50, "step": 1},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Number font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Label font (small caps, numbers)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "lineup" (2026-10-28): numbered tiles fan out in an arc above the person's head (the
+     Editor puts them behind the person: in_shot behind + follow camera). Each tile is a dark smoke card with a big
+     number in the accent colour and a short name. They come out from behind the head one after another and swing to
+     their place on the arc (14 f each, decelerating with a small overshoot), then a pulse runs through them in order
+     (each lifts and glows, as if counted), they bob out of step while they hold, and at the end they fold back
+     behind the head. Up to 7 tiles = one arc, 8-16 = two. Rebuilt in MotionLab's own HTML after a design in an
+     MIT-licensed Python effect. Look-aware. Size-independent, laid out again for landscape. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .tile { position: absolute; left: 0; top: 0; font-synthesis: none; transform-origin: 50% 50%; will-change: transform; }
+  .num, .nm { position: absolute; left: 0; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .bar { position: absolute; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="hand" class="abs"></div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const lum = h => { const [r, g, b] = hex(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const outBack = (x, s) => { x = clamp01(x) - 1; return x * x * ((s + 1) * x + s) + 1; };
+  const outCubic = x => 1 - Math.pow(1 - clamp01(x), 3);
+  const inCubic = x => { x = clamp01(x); return x * x * x; };
+  const S = Math.round(V.start), END = FRAMES * 30 / FPS;   // END = the last frame + 1, in frames designed at 30 fps
+  const PORT = H >= W;
+
+  // ---- the tiles: up to 7 on one arc, 8-16 on two (the outer arc gets the extra one)
+  const names = String(V.items || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 16);
+  const n = names.length;
+  const ACC0 = { mustard: L.mustard, signal: L.signal, paper: L.paper, deep: L.deep }[V.accent] || L.mustard;
+  const ACC = lum(ACC0) < 0.35 ? mix(ACC0, "#FFFFFF", 0.55) : ACC0;      // the numbers stay bright on the dark tiles
+  const sz = Number(V.size) || 1;
+  const TW = U * sz * (n <= 7 ? Math.min(190, Math.max(130, 1150 / (n + 1.6))) : n <= 11 ? 128 : 112);
+  const TH = 1.25 * TW;
+  // the arc: an ellipse round the head, its top at y (% of the frame); landscape = wider and flatter in the frame
+  const RX = PORT ? 0.38 * W : 0.29 * W, RY = PORT ? 0.235 * H : 0.47 * H;
+  const TOP = Math.max(TH * 0.62 + 12 * U, H * V.y / 100), CX = W / 2, CY = TOP + RY;
+  const rows = n <= 7 ? [n] : [Math.ceil(n / 2 + 0.5), n - Math.ceil(n / 2 + 0.5)];
+  const SLOT = [];
+  rows.forEach((cnt, r) => { for (let j = 0; j < cnt; j++)
+    SLOT.push({ a: Math.PI * (r ? 0.85 - 0.7 * (cnt > 1 ? j / (cnt - 1) : 0.5) : 0.93 - 0.86 * (cnt > 1 ? j / (cnt - 1) : 0.5)), k: r ? 0.7 : 1 }); });   // the inner arc spans less
+
+  // ---- the timing (frames designed at 30 fps; overlay.json's cues use the same formulas)
+  const ST = n > 1 ? Math.min(3, 18 / (n - 1)) : 0;                     // one tile every ST frames, all out by f19
+  const IN = i => 1 + i * ST;
+  const PULSE0 = 19 + (n > 1 ? Math.min(3 * (n - 1), 18) : 0);           // the count runs through them in order
+  const PG = n > 1 ? Math.min(5, 36 / (n - 1)) : 0;
+  const EST = n > 1 ? Math.min(1, 6 / (n - 1)) : 0;
+  const OUT0 = END - 12 - (n > 1 ? (n - 1) * EST : 0);                   // they fold back, the last one first
+
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(ellipse 70% 45% at 50% 30%, ${mix(L.paper, L.deep, 0.15)} 0%, ${mix(L.paper, L.deep, 0.55)} 100%)` : "transparent" });
+  const hand = q("hand");
+  Object.assign(hand.style, { width: `${W}px`, height: `${H}px` });
+  const T = names.map((nm, i) => {
+    const el = document.createElement("div"); el.className = "tile"; el.id = `tile${i}`;
+    Object.assign(el.style, { width: `${TW}px`, height: `${TH}px`, borderRadius: `${0.16 * TW}px`,
+      background: `linear-gradient(180deg, rgba(34, 34, 40, 0.9) 0%, rgba(18, 18, 22, 0.88) 100%)`,
+      border: `${Math.max(1, 1.5 * U)}px solid rgba(255, 255, 255, 0.22)`, visibility: "hidden", opacity: "0" });
+    const num = document.createElement("div"); num.className = "num"; num.textContent = String(i + 1).padStart(2, "0");
+    Object.assign(num.style, { top: `${0.06 * TW}px`, width: `${TW}px`, height: `${0.56 * TW}px`, color: ACC,
+      fontFamily: `'${V.display_font}', 'Georgia', serif`, fontSize: `${0.46 * TW}px`, lineHeight: "1",
+      fontWeight: String(fw(V.display_font, 400)) });
+    const bar = document.createElement("div"); bar.className = "bar";
+    Object.assign(bar.style, { left: `${0.39 * TW}px`, top: `${0.66 * TW}px`, width: `${0.22 * TW}px`,
+      height: `${Math.max(2, 0.022 * TW)}px`, borderRadius: `${TW}px`, background: ACC, opacity: "0.75" });
+    const nmEl = document.createElement("div"); nmEl.className = "nm"; nmEl.textContent = nm;
+    Object.assign(nmEl.style, { left: `${0.08 * TW}px`, top: `${0.72 * TW}px`, width: `${0.84 * TW}px`, height: `${0.46 * TW}px`,
+      color: "#FFFFFF", fontFamily: `'${V.body_font}', 'Segoe UI', sans-serif`, fontSize: `${0.17 * TW}px`,
+      fontWeight: String(fw(V.body_font, 700)), lineHeight: "1.12", overflowWrap: "break-word" });
+    el.append(num, bar, nmEl);
+    hand.appendChild(el);
+    return { el, nm: nmEl, s: SLOT[i] };
+  });
+
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    hand.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    T.forEach((b, i) => {
+      const t0 = IN(i), p = (g - t0) / 14;
+      if (p <= 0) { b.el.style.visibility = "hidden"; b.el.style.opacity = "0"; return; }
+      b.el.style.visibility = "visible";
+      // out from behind the head: the angle swings from the top of the arc to its place (a small overshoot),
+      // the radius grows from 55 % (decelerating), the tile grows from half its size
+      const ea = outBack(p, 1.3), er = outCubic(p);
+      let a = Math.PI / 2 + (b.s.a - Math.PI / 2) * ea, rk = b.s.k * (0.55 + 0.45 * er), sc = 0.5 + 0.5 * outBack(p, 1.6);
+      let op = clamp01(p * 4);
+      // the count: each tile lifts and glows in turn (5 f up, 9 f down)
+      const pp = PULSE0 + i * PG;
+      const pu = P(g, pp, pp + 5, "power2.out") * (1 - P(g, pp + 5, pp + 14, "power2.inOut"));
+      // the hold: a bob out of step
+      const live = P(g, t0 + 14, t0 + 26, "sine.inOut");
+      let dy = 2.6 * U * Math.sin(2 * Math.PI * (g - t0) / 66 + i * 0.9) * live - 10 * U * pu;
+      // the end: folding back behind the head, the last one first (accelerating)
+      const e = clamp01((g - (OUT0 + (n - 1 - i) * EST)) / 10);
+      if (e > 0) { const k = inCubic(e); a = a + (Math.PI / 2 - a) * 0.55 * k; rk *= 1 - 0.3 * k; sc *= 1 - 0.35 * k; op *= 1 - k; }
+      const x = CX + RX * rk * Math.cos(a), y = CY - RY * rk * Math.sin(a) + dy;
+      const rot = -(a - Math.PI / 2) * 180 / Math.PI * 0.3;
+      b.el.style.transform = `translate(${(x - TW / 2).toFixed(2)}px, ${(y - TH / 2).toFixed(2)}px) rotate(${rot.toFixed(3)}deg) scale(${(sc * (1 + 0.07 * pu)).toFixed(4)})`;
+      b.el.style.opacity = op.toFixed(3);
+      b.el.style.boxShadow = `0 ${(6 * U).toFixed(1)}px ${(18 * U).toFixed(1)}px rgba(0, 0, 0, 0.32), inset 0 ${(1.5 * U).toFixed(1)}px 0 rgba(255, 255, 255, 0.16)`
+        + (pu > 0.01 ? `, 0 0 ${(26 * U * pu).toFixed(1)}px ${rgba(ACC, (0.75 * pu).toFixed(3))}` : "");
+      b.el.style.borderColor = pu > 0.01 ? rgba(ACC, (0.22 + 0.6 * pu).toFixed(3)) : "rgba(255, 255, 255, 0.22)";
+    });
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 53 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: a long name is fitted to its tile (two lines at most)
+  (document.fonts && document.fonts.load ? Promise.all(["display_font", "body_font"].flatMap(k =>
+    [400, 600, 700].map(w => document.fonts.load(`${w} 100px "${V[k]}"`))).concat([document.fonts.ready])).catch(() => {})
+    : Promise.resolve()).then(() => {
+    T.forEach(b => {
+      const box = b.nm, fs0 = 0.17 * TW;
+      let fs = fs0;
+      for (let k = 0; k < 12 && (box.scrollWidth > box.clientWidth + 0.5 || box.scrollHeight > box.clientHeight + 0.5); k++) {
+        fs *= 0.9; box.style.fontSize = `${fs}px`;
+      }
+    });
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

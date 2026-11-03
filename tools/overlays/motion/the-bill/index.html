@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[
+  {"id": "title", "type": "string", "label": "Title at the top of the receipt", "default": "Edit ticket"},
+  {"id": "subtitle", "type": "string", "label": "Small line under the title (empty = none)", "default": "Order #1021 · 1 video"},
+  {"id": "lines", "type": "string", "label": "The lines, one after another (split with |; name::value puts the value on the right)", "default": "Follow the face|Cut the dead air|Word behind me|Kill the lights|Colour grade"},
+  {"id": "total", "type": "string", "label": "The total line (name::value puts the value on the right)", "default": "Total::1 prompt"},
+  {"id": "numbers", "type": "boolean", "label": "Number the lines (01, 02 ...)", "default": true},
+  {"id": "label", "type": "string", "label": "Name on the printer", "default": "MotionLab"},
+  {"id": "side", "type": "enum", "label": "Where it hangs", "default": "left", "options": [{"value": "left", "label": "Left of the head"}, {"value": "centre", "label": "Above the head"}, {"value": "right", "label": "Right of the head"}]},
+  {"id": "size", "type": "number", "label": "Size (1 = normal)", "default": 1, "min": 0.6, "max": 1.5, "step": 0.05},
+  {"id": "start", "type": "number", "label": "Starts at frame", "default": 0, "min": 0, "max": 600, "step": 1},
+  {"id": "background", "type": "boolean", "label": "Paint a background (off = see-through, over a video)", "default": false},
+  {"id": "display_font", "type": "enum", "label": "Headline font", "default": "Instrument Serif", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "body_font", "type": "enum", "label": "Text font", "default": "Hanken Grotesk", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "accent_font", "type": "enum", "label": "Receipt font (a mono font looks most like a till)", "default": "Space Mono", "options": [{"value": "Anton", "label": "Anton"}, {"value": "Barlow Condensed", "label": "Barlow Condensed"}, {"value": "Bebas Neue", "label": "Bebas Neue"}, {"value": "Oswald", "label": "Oswald"}, {"value": "Archivo Black", "label": "Archivo Black"}, {"value": "Inter", "label": "Inter"}, {"value": "League Spartan", "label": "League Spartan"}, {"value": "Montserrat", "label": "Montserrat"}, {"value": "Poppins", "label": "Poppins"}, {"value": "Unbounded", "label": "Unbounded"}, {"value": "Nunito", "label": "Nunito"}, {"value": "Rubik", "label": "Rubik"}, {"value": "Bagel Fat One", "label": "Bagel Fat One"}, {"value": "Bangers", "label": "Bangers"}, {"value": "Lilita One", "label": "Lilita One"}, {"value": "Luckiest Guy", "label": "Luckiest Guy"}, {"value": "Pacifico", "label": "Pacifico"}, {"value": "Permanent Marker", "label": "Permanent Marker"}, {"value": "DM Serif Display", "label": "DM Serif Display"}, {"value": "Fraunces", "label": "Fraunces"}, {"value": "Instrument Serif", "label": "Instrument Serif"}, {"value": "Playfair Display", "label": "Playfair Display"}, {"value": "Hanken Grotesk", "label": "Hanken Grotesk"}, {"value": "Lato", "label": "Lato"}, {"value": "Raleway", "label": "Raleway"}, {"value": "Roboto", "label": "Roboto"}, {"value": "Space Grotesk", "label": "Space Grotesk"}, {"value": "Space Mono", "label": "Space Mono"}, {"value": "Arial Black", "label": "Arial Black (Windows only)"}, {"value": "Impact", "label": "Impact (Windows only)"}, {"value": "Bahnschrift", "label": "Bahnschrift (Windows only)"}, {"value": "Segoe UI", "label": "Segoe UI (Windows only)"}, {"value": "Verdana", "label": "Verdana (Windows only)"}, {"value": "Georgia", "label": "Georgia (Windows only)"}]},
+  {"id": "ink", "type": "color", "label": "Ink (text)", "default": "#14120F"},
+  {"id": "paper", "type": "color", "label": "Paper (background)", "default": "#F2EDE4"},
+  {"id": "signal", "type": "color", "label": "Signal (accent)", "default": "#FF4D2E"},
+  {"id": "deep", "type": "color", "label": "Deep (second colour)", "default": "#1C3D5A"},
+  {"id": "mustard", "type": "color", "label": "Mustard (highlight)", "default": "#E6B422"},
+  {"id": "radius", "type": "number", "label": "Corners (px)", "default": 14, "min": 0, "max": 80, "step": 1},
+  {"id": "shadow", "type": "number", "label": "Shadow (0 = none, 1 = soft and low)", "default": 1, "min": 0, "max": 3, "step": 0.1},
+  {"id": "grain", "type": "number", "label": "Film grain (%)", "default": 8, "min": 0, "max": 40, "step": 1}
+]'>
+<head>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="assets/looks/look.css">
+<script src="assets/looks/looks.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1920">
+<!-- MotionLab motion template "the-bill" (2026-10-28): a receipt prints out of a slot into the wall above / beside
+     the person's head (the Editor puts it behind them: in_shot behind + follow camera + shadow). A dark printer
+     drops in (f0-f8), then the paper feeds down row by row (each row 4 f, decelerating) while each row is typed onto
+     it (title, small line, a dashed rule, the numbered lines, a rule, the total); its bottom edge is torn. When the
+     total is printed the paper jolts down and swings from the slot, settling (damped); it sways a little while it
+     holds and the printer's light blinks; at the end it all rises and fades. Rebuilt in MotionLab's own HTML after a
+     design in an MIT-licensed Python effect. Look-aware. Size-independent, laid out again for landscape. -->
+<script src="./gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .abs { position: absolute; left: 0; top: 0; }
+  #win { position: absolute; overflow: hidden; font-synthesis: none; }
+  .row { position: absolute; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; text-transform: uppercase; }
+  .row span { display: block; }
+  .rule { position: absolute; transform-origin: 0% 50%; }
+  #printer { position: absolute; font-synthesis: none; }
+  .dot { position: absolute; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080"
+     data-height="1920">
+  <div id="bgfill" class="abs"></div>
+  <div id="rig" class="abs">
+    <div id="sw" class="abs"><div id="win"><div id="slotshade" class="abs"></div></div></div>
+    <div id="printer"><div id="plabel" class="abs"></div></div>
+  </div>
+</div>
+<script>
+  const FPS = 30, FRAMES = 120;
+  const W = 1080, H = 1920;
+  const F = n => n / FPS;
+  const AT = n => Math.max(0, (n - 0.5) / FPS);
+  const V = window.__hyperframes.getVariables();
+  const U = Math.min(W, H) / 1080;
+  const tl = gsap.timeline({ paused: true });
+  const q = id => document.getElementById(id);
+  const root = q("root");
+  const L = window.MLLook ? MLLook.apply(root, V, U) : { dark: false, ink: V.ink, paper: V.paper, signal: V.signal, deep: V.deep, mustard: V.mustard, radius: V.radius * U, shadow: "none" };
+  const hex = h => { const t0 = String(h).replace("#", ""); const t = t0.length === 3 ? t0.split("").map(c => c + c).join("") : t0; return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16) || 0); };
+  const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+  const mix = (a, b, k) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * k)).join(", ")})`; };
+  const lum = h => { const [r, g, b] = hex(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  const fw = (fam, want) => { const i = window.MLLook && MLLook.FONTS[fam]; return i ? Math.max(i.min, Math.min(i.max, want)) : want; };
+  const clamp01 = x => Math.min(1, Math.max(0, x));
+  const EC = {};
+  const ez = e => (EC[e] = EC[e] || gsap.parseEase(e));
+  const P = (g, f0, f1, e) => { const k = clamp01((g - f0) / (f1 - f0)); return e ? ez(e)(k) : k; };
+  const S = Math.round(V.start), END = FRAMES * 30 / FPS;   // END = the last frame + 1, in frames designed at 30 fps
+  const PORT = H >= W;
+
+  // ---- the receipt's rows: title, small line, rule, the lines, rule, total
+  const split = s => { const i = String(s).indexOf("::"); return i < 0 ? [String(s).trim(), ""] : [String(s).slice(0, i).trim(), String(s).slice(i + 2).trim()]; };
+  const items = String(V.lines || "").split("|").map(x => x.trim()).filter(Boolean).slice(0, 14);
+  const R_ = [{ kind: "title", a: String(V.title || "").trim(), b: "" }];
+  if (String(V.subtitle || "").trim()) R_.push({ kind: "sub", a: String(V.subtitle).trim(), b: "" });
+  R_.push({ kind: "rule" });
+  items.forEach((x, i) => { const [a, b] = split(x); R_.push({ kind: "line", a: (V.numbers ? String(i + 1).padStart(2, "0") + " " : "") + a, b }); });
+  R_.push({ kind: "rule" });
+  { const [a, b] = split(V.total || ""); R_.push({ kind: "total", a, b }); }
+  const NR = R_.length;
+
+  // ---- the layout: the printer + its paper beside the head (or above it); landscape = a narrower strip, higher up
+  const sz = Number(V.size) || 1;
+  const SX = { left: PORT ? 0.26 : 0.21, centre: 0.5, right: PORT ? 0.74 : 0.79 }[V.side] || (PORT ? 0.26 : 0.21);
+  const PWD = (PORT ? (V.side === "centre" ? 0.52 : 0.46) * W : 0.235 * W) * sz;   // the paper's width
+  const PRW = PWD * 1.14, PH = 64 * U * sz;                                           // the printer
+  const CXr = Math.min(W - PRW / 2 - 8 * U, Math.max(PRW / 2 + 8 * U, SX * W));
+  const PY = PORT ? Math.max(0.112 * H, 200 * U) : 0.07 * H;
+  const PAPT = PY + PH * 0.72;                                                        // the paper comes out here
+  const PADX = 0.075 * PWD, PADT = 0.36 * 52 * U * sz, Z = 0.26 * 52 * U * sz;        // Z = the torn edge's teeth
+  const AV = (PORT ? 0.47 * H : 0.86 * H) - PAPT - PADT - 1.2 * Z;
+  const RH = Math.min(52 * U * sz, AV / (NR + 0.5));
+  const PAPH = PADT + NR * RH + 0.5 * RH;                                             // the whole printed strip
+  const PAPER = lum(L.paper) > 0.6 ? L.paper : "#F4E9D8";
+  const INK = lum(L.ink) < 0.35 ? L.ink : "#17161A";
+  const mono = `'${V.accent_font}', 'Consolas', monospace`;
+
+  // ---- the timing (frames designed at 30 fps; overlay.json's cues use the same formulas)
+  const F0 = 7, RF = Math.min(5, 56 / NR);                // the paper feeds a row every RF frames from f7
+  const FEED = r => F0 + r * RF;
+  const TEAR = F0 + NR * RF + 4;                          // the total is out: the paper jolts and swings
+  const OUT0 = END - 11;
+
+  Object.assign(q("bgfill").style, { width: `${W}px`, height: `${H}px`, background: V.background
+    ? `radial-gradient(ellipse 80% 50% at 40% 30%, ${mix(L.paper, L.deep, 0.12)} 0%, ${mix(L.paper, L.deep, 0.5)} 100%)` : "transparent" });
+  const rig = q("rig"), sw = q("sw"), win = q("win"), printer = q("printer");
+  Object.assign(rig.style, { width: `${W}px`, height: `${H}px` });
+  Object.assign(sw.style, { width: `${W}px`, height: `${H}px`, transformOrigin: `${CXr}px ${PAPT}px` });
+  Object.assign(win.style, { left: `${CXr - PWD / 2}px`, top: `${PAPT}px`, width: `${PWD}px`, height: `${PAPH + Z}px`,
+    background: `linear-gradient(180deg, ${mix(PAPER, "#000000", 0.05)} 0%, ${PAPER} 12%, ${PAPER} 100%)`, color: INK, fontFamily: mono });
+  Object.assign(q("slotshade").style, { width: `${PWD}px`, height: `${0.5 * RH}px`, background: "linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 100%)" });
+  const rows = R_.map((r, i) => {
+    const y = PADT + i * RH;
+    if (r.kind === "rule") {
+      const el = document.createElement("div"); el.className = "rule";
+      Object.assign(el.style, { left: `${PADX}px`, top: `${y + RH / 2 - U}px`, width: `${PWD - 2 * PADX}px`, height: "0px",
+        borderTop: `${Math.max(1.5, 2.2 * U * sz)}px dashed ${rgba(INK, 0.6)}`, transform: "scaleX(0)" });
+      win.appendChild(el);
+      return { r, el };
+    }
+    const el = document.createElement("div"); el.className = "row";
+    const big = r.kind === "total" ? 0.68 : r.kind === "title" ? 0.64 : r.kind === "sub" ? 0.46 : 0.56;
+    Object.assign(el.style, { left: `${PADX}px`, top: `${y}px`, width: `${PWD - 2 * PADX}px`, height: `${RH}px`,
+      fontSize: `${big * RH}px`, fontWeight: String(fw(V.accent_font, r.kind === "line" || r.kind === "sub" ? 400 : 700)),
+      justifyContent: r.kind === "title" || r.kind === "sub" ? "center" : "space-between",
+      letterSpacing: r.kind === "title" ? "0.08em" : "0.01em", opacity: r.kind === "sub" ? "0.72" : "1" });
+    const a = document.createElement("span"), b = document.createElement("span");
+    el.append(a, b); win.appendChild(el);
+    return { r, el, a, b, fs: big * RH };
+  });
+  // the printer: a dark head with three dots, a light and its name; the slot is its lower edge
+  Object.assign(printer.style, { left: `${CXr - PRW / 2}px`, top: `${PY}px`, width: `${PRW}px`, height: `${PH}px`,
+    borderRadius: `${0.3 * PH}px`, background: "linear-gradient(180deg, #34343A 0%, #1E1E22 55%, #141417 100%)",
+    border: `${Math.max(1, 1.5 * U)}px solid rgba(255, 255, 255, 0.16)`,
+    boxShadow: `0 ${4 * U}px ${14 * U}px rgba(0, 0, 0, 0.35), inset 0 ${1.5 * U}px 0 rgba(255, 255, 255, 0.14)` });
+  const DS = 0.17 * PH;
+  [0, 1, 2].forEach(k => { const d = document.createElement("div"); d.className = "dot";
+    Object.assign(d.style, { left: `${0.34 * PH + k * DS * 1.7}px`, top: `${0.4 * PH - DS / 2}px`, width: `${DS}px`, height: `${DS}px`, background: "#55555C" });
+    printer.appendChild(d); });
+  const led = document.createElement("div"); led.className = "dot";
+  Object.assign(led.style, { left: `${PRW - 0.34 * PH - DS}px`, top: `${0.4 * PH - DS / 2}px`, width: `${DS}px`, height: `${DS}px`, background: "#39D86A" });
+  printer.appendChild(led);
+  const slot = document.createElement("div"); slot.className = "abs";
+  Object.assign(slot.style, { left: `${(PRW - PWD * 1.06) / 2}px`, top: `${0.74 * PH}px`, width: `${PWD * 1.06}px`, height: `${Math.max(2, 0.08 * PH)}px`,
+    borderRadius: `${PH}px`, background: "#060607" });
+  printer.appendChild(slot);
+  const pl = q("plabel");
+  Object.assign(pl.style, { left: "0px", top: `${0.4 * PH - 0.17 * PH}px`, width: `${PRW - 0.34 * PH - DS * 1.9}px`, height: `${0.34 * PH}px`,
+    display: "flex", alignItems: "center", justifyContent: "flex-end", whiteSpace: "nowrap", fontFamily: mono,
+    fontSize: `${0.27 * PH}px`, fontWeight: String(fw(V.accent_font, 700)), letterSpacing: "0.12em", textTransform: "uppercase", color: "#8C8C95" });
+  pl.textContent = String(V.label || "");
+
+  // the torn edge: the strip shows down to y, then a row of teeth
+  const NT = Math.max(4, Math.round(PWD / (2 * Z)));
+  function clip(y) {
+    const pts = [`0px 0px`, `${PWD}px 0px`, `${PWD}px ${y.toFixed(1)}px`];
+    for (let k = NT; k > 0; k--) { const x = PWD * (k - 0.5) / NT; pts.push(`${x.toFixed(1)}px ${(y + Z).toFixed(1)}px`, `${(PWD * (k - 1) / NT).toFixed(1)}px ${y.toFixed(1)}px`); }
+    return `polygon(${pts.join(", ")})`;
+  }
+  const full = rows.map(x => x.r.kind === "rule" ? null : [String(x.r.a || ""), String(x.r.b || "")]);
+
+  function render(t) {
+    const g = t * 30 - S * 30 / FPS;
+    rig.style.visibility = g >= 0 ? "visible" : "hidden";
+    if (g < 0) return;
+    // the printer drops in (8 f, a small settle), the whole rig rises and fades at the end
+    const pin = P(g, 0, 8, "back.out(1.6)"), ex = P(g, OUT0, END - 1.5, "power2.in");
+    rig.style.transform = `translate(0px, ${(-34 * U * (1 - pin) - 30 * U * ex).toFixed(2)}px)`;
+    rig.style.opacity = (P(g, 0, 4) * (1 - ex)).toFixed(3);
+    // the paper: row by row (each feed 4 f, decelerating), one more half row after the total
+    let fed = PADT * P(g, F0 - 3, F0, "power2.out");
+    for (let r = 0; r < NR; r++) fed += RH * P(g, FEED(r), FEED(r) + 4, "power2.out");
+    fed += 0.5 * RH * P(g, TEAR - 4, TEAR, "power2.out");
+    win.style.visibility = fed > 0.5 ? "visible" : "hidden";
+    win.style.clipPath = clip(fed);
+    // each row typed as it comes out (from a frame after its feed, over 6 f at most)
+    rows.forEach((x, r) => {
+      const k = P(g, FEED(r) + 1, FEED(r) + 1 + Math.max(3, Math.min(6, RF + 2)));
+      if (x.r.kind === "rule") { x.el.style.transform = `scaleX(${k.toFixed(3)})`; return; }
+      const [a, b] = full[r], na = a.length, nb = b.length, c = Math.round(k * (na + nb));
+      x.a.textContent = a.slice(0, Math.min(na, c));
+      x.b.textContent = c > na ? b.slice(0, c - na) : "";
+      x.el.style.visibility = c > 0 ? "visible" : "hidden";
+    });
+    // torn off: the strip jolts down and swings from the slot, settling; then a slow sway while it holds
+    const jolt = P(g, TEAR, TEAR + 3, "power2.out") * (1 - 0.6 * P(g, TEAR + 3, TEAR + 12, "sine.inOut"));
+    const dt = g - TEAR;
+    const swing = dt > 0 ? 2.4 * Math.exp(-dt / 13) * Math.sin(2 * Math.PI * dt / 17) : 0;
+    const sway = 0.35 * Math.sin(2 * Math.PI * (g - TEAR) / 70) * P(g, TEAR + 10, TEAR + 30, "sine.inOut");
+    sw.style.transform = `translate(0px, ${(9 * U * sz * jolt).toFixed(2)}px) rotate(${(swing + sway).toFixed(3)}deg)`;
+    // the light blinks while it prints, then breathes
+    const printing = g >= F0 && g < TEAR;
+    led.style.opacity = printing ? (Math.floor(g / 3) % 2 ? "0.35" : "1") : (0.55 + 0.45 * Math.sin(2 * Math.PI * g / 40)).toFixed(3);
+    led.style.boxShadow = `0 0 ${(8 * U).toFixed(1)}px rgba(57, 216, 106, ${printing ? 0.8 : 0.5})`;
+  }
+  const pxx = window.MLLook ? MLLook.every(tl, { fps: FPS, from: 0, to: FRAMES }, render) : (render(0), { t: 0 });
+
+  if (window.MLLook && V.background) MLLook.grain(root, tl, { V, fps: FPS, frames: FRAMES, at: AT, U, seed: 59 });
+  tl.set({}, {}, F(FRAMES));
+  window.__timelines = window.__timelines || {};
+  // the timeline is registered once the fonts are in: a long row is fitted to the paper's width with the real font
+  (document.fonts && document.fonts.load ? Promise.all([400, 700].map(w => document.fonts.load(`${w} 100px "${V.accent_font}"`))
+    .concat([document.fonts.ready])).catch(() => {}) : Promise.resolve()).then(() => {
+    rows.forEach((x, r) => {
+      if (x.r.kind === "rule") return;
+      x.a.textContent = full[r][0]; x.b.textContent = full[r][1];
+      x.b.style.marginLeft = full[r][1] ? `${0.6 * x.fs}px` : "0px";
+      const room = PWD - 2 * PADX, w = x.a.offsetWidth + x.b.offsetWidth + (full[r][1] ? 0.6 * x.fs : 0);
+      if (w > room) x.el.style.fontSize = `${x.fs * Math.max(0.4, room / w) * 0.98}px`;
+    });
+    render(pxx.t);
+    window.__timelines["main"] = tl;
+  });
+</script>
+</body>
+</html>

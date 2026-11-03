@@ -48,13 +48,14 @@ def _lang(lang: str | None) -> str:
     return "es" if (lang or "").lower().startswith("es") else "en"
 
 
-def sentences(words: list[dict]) -> list[list[int]]:
-    """Word indexes per sentence: one ends at . ! ? or a pause of SENTENCE_GAP_S."""
+def sentences(words: list[dict], pause: float = SENTENCE_GAP_S, breaks: set | None = None) -> list[list[int]]:
+    """Word indexes per sentence: one ends at . ! ? or a pause of `pause` seconds (motionlab\\segments: 0.4), or after
+    a word in `breaks` (indexes: an edit's jump cut, where a pause was cut out)."""
     out, cur = [], []
     for i, w in enumerate(words):
         cur.append(i)
         gap = float(words[i + 1]["t"]) - float(w.get("t1", w["t"])) if i + 1 < len(words) else 99.0
-        if re.search(r"[.!?…]$", w["w"]) or gap >= SENTENCE_GAP_S:
+        if re.search(r"[.!?…]$", w["w"]) or gap >= pause or (breaks and i in breaks):
             out.append(cur)
             cur = []
     if cur:

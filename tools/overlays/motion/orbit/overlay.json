@@ -1,0 +1,28 @@
+{
+ "name": "orbit",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start",
+   "kind": "whoosh",
+   "dur": "0.4",
+   "from": 500,
+   "to": 2200,
+   "db": -8,
+   "what": "the ring opens out from behind the head"
+  },
+  {
+   "f": "frames - round(10 * fps / 30)",
+   "kind": "whoosh",
+   "dur": "0.3",
+   "from": 2200,
+   "to": 600,
+   "db": -9,
+   "if": "leave",
+   "what": "the ring closes in and fades"
+  }
+ ]
+}

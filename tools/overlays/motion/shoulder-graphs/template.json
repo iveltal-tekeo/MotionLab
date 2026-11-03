@@ -1,0 +1,32 @@
+{
+ "name": "Over-the-shoulder graphs",
+ "kind": "charts",
+ "category": "Charts",
+ "what": "The camera pushes into one top corner and a see-through glass line graph pops up beside your head: the line climbs with a glowing head while the number counts up. It pulls back, pushes into the other top corner, and a related glass bar graph pops up there, its bars growing while the second number counts. Your head stays in front of the glass.",
+ "use_for": ["growth", "views", "results", "before and after", "stats", "numbers", "milestone", "talking head", "glass", "short form"],
+ "tags": ["chart", "line chart", "bar chart", "graph", "counter", "glass", "liquid glass", "camera push", "zoom", "behind", "in shot", "talking head", "2 core points"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "with": [{"effect": "corner_push", "at": 0.0, "len": null, "opts": {"zoom": 1.6, "first": "left"}}],
+ "in_shot": {"behind": true, "glass": true, "match": true},
+ "motion": "The companion corner_push moves the video: over the length L (150 f) corner A (top-left) f0-f75 (push f0-f12, hold, pull f63-f75), corner B (top-right) f75-f150 (push f75-f87, pull f138-f150). f9-f21 the line graph pops up in the top-left area from 82 % and 40 px lower (slow end, a small overshoot, seen within 3 f) while its grid lines draw in; f15-f43 the line climbs with a glowing head and a fill under it, the number counting with the same S-curve; f43 the number pops (8 f) and the head sends out a ring every 20 f; a band of light crosses the glass f45-f61; f57-f64 it shrinks and fades (accelerating) before the pull. f84-f96 the bar graph pops up in the top-right area; f90-f118 its 7 bars grow one after another (10 f each, slow end with a small overshoot) while the number counts; the highest bar glows and breathes; f132-f139 it shrinks away before the pull. All of it follows L: the holds are L/2 - 0.8 s each",
+ "tracks": [
+  {"name": "graph A in", "what": "the glass line graph pops up in the top-left area", "start_f": 9, "length_f": 12, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "climb", "what": "the line climbs with a glowing head while the number counts up", "start_f": 15, "length_f": 28, "easing": "S-curve"},
+  {"name": "land A", "what": "the number pops, the head sends out rings", "start_f": 43, "length_f": 8, "easing": "decelerating (slow end)"},
+  {"name": "graph A out", "what": "the line graph shrinks and fades before the pull", "start_f": 57, "length_f": 7, "easing": "accelerating (slow start)"},
+  {"name": "graph B in", "what": "the glass bar graph pops up in the top-right area", "start_f": 84, "length_f": 12, "easing": "decelerating (slow end), a small overshoot"},
+  {"name": "bars", "what": "the bars grow one after another while the number counts up", "start_f": 90, "length_f": 28, "easing": "S-curve"},
+  {"name": "graph B out", "what": "the bar graph shrinks and fades before the pull", "start_f": 132, "length_f": 7, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "round(4 * fps)",
+ "min_why": "each corner needs its push (0.4 s), a hold of at least 1.2 s for its graph to pop up and count, and its pull (0.4 s)",
+ "core_points": 2,
+ "text_slots": ["labels", "to"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.4,
+ "thumb_f": 110,
+ "check_frames": [0, 6, 10, 14, 22, 32, 44, 52, 60, 66, 80, 86, 92, 100, 110, 125, 134, 140]
+}

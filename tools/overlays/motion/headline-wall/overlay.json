@@ -1,0 +1,37 @@
+{
+ "name": "headline-wall",
+ "frames": 120,
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "cues": [
+  {
+   "f": "start + round((1 + i * min(3, 24 / max(1, parts(headlines) - 1))) * fps / 30)",
+   "repeat": "min(parts(headlines), 14)",
+   "kind": "pop",
+   "from": 600,
+   "to": 1300,
+   "db": -4,
+   "what": "a card lands on the wall"
+  },
+  {
+   "f": "start + round((9 + min(3 * (parts(headlines) - 1), 24)) * fps / 30)",
+   "kind": "thump",
+   "db": -8,
+   "what": "the total pops in front"
+  },
+  {
+   "f": "start + round((31 + min(3 * (parts(headlines) - 1), 24)) * fps / 30)",
+   "kind": "ching",
+   "db": -10,
+   "what": "the total has counted up"
+  },
+  {
+   "f": "frames - round(11 * fps / 30)",
+   "kind": "air",
+   "dur": "0.4",
+   "db": -8,
+   "what": "the wall clears"
+  }
+ ]
+}

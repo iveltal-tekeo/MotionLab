@@ -1,7 +1,9 @@
 """App smoke test (GitHub Actions, and after any change to the app or the MCP server): every Python file compiles,
-every motionlab module imports, the Spanish catalogue passes tools\\dev\\i18n_check.py check, the app server answers
+every motionlab module imports, the Spanish catalogue passes tools\\dev\\i18n_check.py check, the version has its
+section in both changelogs and README's status line names it (tools\\roadmap.py check), the app server answers
 its read-only routes, every page renders in headless Edge without a script error, Home loads in Spanish from a second
-test server (MOTIONLAB_LANG=es - settings.json is never written), and MotionLab's MCP server starts and lists its
+test server (MOTIONLAB_LANG=es - settings.json is never written), the server's own guards hold (server_test.py: the
+Host header, the token, the body's size, paths, private files), and MotionLab's MCP server starts and lists its
 tools.
 
     .venv\\Scripts\\python tools\\dev\\smoke.py [--port N] [--cdp-port N] [--no-browser]     (free ports by default)
@@ -47,6 +49,7 @@ ROUTES = ["/api/status", "/api/references", "/api/candidates", "/api/waiting", "
           "/api/logos",                                                                         # the logo library
           "/api/texts", "/api/styles",                      # 2026-10-18: sets of scripts & prompts, the style pickers
           "/api/notes",                                     # 2026-10-27: notes from videos
+          "/api/spark",                                     # 2026-10-30: SPARK - why a video worked
           "/api/seen", "/api/thumbtest", *(f"/api/changes?s={s}" for s in ("home", "analyze", "projects", "generate",
                                                                             "prompts", "motion", "memory"))]   # 2026-10-24
 
@@ -230,6 +233,15 @@ def check_installer() -> None:
         "" if r.returncode == 0 else f" ({r.returncode} error(s)){(r.stderr or '')[-300:]}"))
 
 
+def check_guard() -> None:
+    """Hard rule 1 in Claude Code itself (2026-10-29): the PreToolUse hook's guard refuses a delete / move / rename /
+    overwrite aimed at refs\\ or a project's top level and lets everything else through (its own known cases)."""
+    r = subprocess.run([PY, str(LAB / ".claude" / "hooks" / "guard_sources.py"), "--selfcheck"], cwd=str(LAB),
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+    ok(r.returncode == 0, "the sources guard (.claude\\hooks\\guard_sources.py)" + (
+        "" if r.returncode == 0 else "\n      " + (r.stdout or r.stderr)[-600:]))
+
+
 def check_i18n() -> None:
     """The app's Spanish (0.5.1): every key the code uses has its Spanish, the placeholders and tags kept, no unused
     keys (tools\\dev\\i18n_check.py check: the code is read as text, nothing written)."""
@@ -382,6 +394,27 @@ def check_mcp() -> None:
         p.kill()
 
 
+def check_release_docs() -> None:
+    """Docs that cannot drift (2026-11-02, tools\\roadmap.py check): the roadmap agrees with plans.md and the
+    changelogs, the version has its section in CHANGELOG.md and CHANGELOG.es.md, README's status line names it."""
+    r = subprocess.run([PY, str(TOOLS / "roadmap.py"), "check"], cwd=str(LAB), capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", timeout=60)
+    errs = [ln.strip() for ln in (r.stdout or "").splitlines() if "ERROR" in ln]
+    ok(r.returncode == 0, "roadmap.py check: the version in both changelogs, README's status, the roadmap" + (
+        "" if r.returncode == 0 else "".join("\n      " + ln for ln in (errs or (r.stdout or r.stderr).splitlines()[-6:]))))
+
+
+def check_server_guards() -> None:
+    """The server's own guards from outside (2026-11-02, tools\\dev\\server_test.py): the Host header, the session
+    token, the body's size, paths out of /ui/ and /files/, private files through /api/text - its own test server."""
+    r = subprocess.run([PY, str(HERE / "server_test.py")], cwd=str(LAB), capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", timeout=180)
+    bad = [ln for ln in (r.stdout or "").splitlines() if ln.startswith("FAIL")]
+    n = sum(1 for ln in (r.stdout or "").splitlines() if ln.startswith("PASS"))
+    ok(r.returncode == 0, f"server_test.py: the Host, token, size and path guards ({n} checks)" + (
+        "" if r.returncode == 0 else "".join("\n      " + ln for ln in (bad or (r.stdout or r.stderr).splitlines()[-8:]))))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--port", type=int, default=0, help="the test server's port (default: a free one)")
@@ -393,6 +426,8 @@ def main() -> int:
     compile_all()
     import_all()
     check_i18n()
+    check_release_docs()
+    check_guard()
     check_installer()
     check_prompts()
     check_graphics()
@@ -420,6 +455,7 @@ def main() -> int:
     finally:
         if before is not None:
             sj.write_bytes(before)
+    check_server_guards()
     check_mcp()
     print("\nSMOKE " + ("PASS" if not FAILED else f"FAIL ({len(FAILED)})"))
     return 0 if not FAILED else 1

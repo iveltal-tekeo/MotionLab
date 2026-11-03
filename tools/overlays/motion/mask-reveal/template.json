@@ -1,0 +1,83 @@
+{
+ "name": "Masked reveal",
+ "kind": "text",
+ "category": "Text",
+ "what": "Text that rises into place from behind an invisible edge - line by line, word by word or letter by letter - each piece sliding up out of its line with a small tilt that straightens; it pushes in slowly while it holds, and at the end the pieces slide up out of their lines. Accent words in an italic serif.",
+ "use_for": [
+  "title",
+  "statement",
+  "quote",
+  "key line",
+  "talking head",
+  "intro",
+  "word by word",
+  "minimal",
+  "premium"
+ ],
+ "tags": [
+  "text",
+  "mask",
+  "reveal",
+  "split text",
+  "line by line",
+  "word by word",
+  "letter by letter",
+  "clean",
+  "italic accent"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of the masked line / word / letter reveal of GSAP SplitText (its mask option) and the masked-reveal web pattern - the user asked for text that appears word by word or similar (2026-10-31)",
+ "motion": "from f0 the pieces (words by default, one every gap = 3 f; letters a third of it, lines twice) rise 1.36 em from under their line's edge into place over 16 f (12 f a letter), decelerating hard (slow end), a 7 degree tilt (3 for a line) straightening as they land; the text pushes in 3 % over the hold (gentle S-curve); at the end the pieces slide on up out of their lines one after another, 10 f each (accelerating)",
+ "tracks": [
+  {
+   "name": "rise",
+   "what": "the words rise into place one after another",
+   "start_f": 0,
+   "length_f": 28,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "push",
+   "what": "the text pushes in 3 %",
+   "start_f": 28,
+   "length_f": 75,
+   "easing": "S-curve (gentle)"
+  },
+  {
+   "name": "out",
+   "what": "the words slide on up out of their lines",
+   "start_f": 103,
+   "length_f": 16,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "start + round(((len(text) * gap / 3 if by == 'letters' else (parts(text, '|') * gap * 2 if by == 'lines' else (parts(text, ' ') + parts(text, '|') - 1) * gap)) + 20) * fps / 30)",
+ "min_why": "every piece has to rise in before it ends",
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.8,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  2,
+  5,
+  8,
+  12,
+  16,
+  22,
+  28,
+  60,
+  104,
+  110,
+  116
+ ]
+}

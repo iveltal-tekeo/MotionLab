@@ -127,8 +127,8 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   effects (currently) 2) content creation (scripts, why its viral, structure...) 3) information (take notes ...)" and
   "every option ... shown with a "character" made in motion graphics ... in similar style of motion labs"): the top
   row `.gways.g3.anways` = *Effects & animations* (the old *Videos* way: Add videos, Download from link), *Content
-  creation* (`.soon`, a violet *Coming soon* chip, its button disabled - the friend's ideas reviewed in docs\plans.md
-  0.6.5) and *Notes* (*Take notes* = `addNotesModal`). Since the user's mascot brief (2026-10-27) each card is centred:
+  creation* (SPARK since 2026-10-30: *Analyze with SPARK* = `addSparkModal`, the section *SPARK* below; it was a
+  *Coming soon* card until then) and *Notes* (*Take notes* = `addNotesModal`). Since the user's mascot brief (2026-10-27) each card is centred:
   its mascot (116 px) - **FLUX** a faceted blue crystal with an orbit of square nodes, **SPARK** a golden origami star
   with a speech bubble and storyboard frames, **INDEX** a teal orb with a lime bookmark and note cards on an orbit -
   then the name in its colour (letter-spaced), the mode (*Animations & Effects*, *Content Creation*, *Notes &
@@ -144,12 +144,12 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
 - **A page per way** (2026-10-27, the user: "the corresponding videos analyzed from a specific topic (flux, spark, or
   index) they each have their own section? ... to not clutter the overview page of the analyzer"; Thumbnails and
   Scripts & prompts stay apart, no mascot): `pageRefs(main, tab)` = `anOverview` (#/analyze: the head, the ways, the
-  smaller row, the in-progress panel, the open batches, the downloads waiting, then the tabs Effects | Notes |
+  smaller row, the in-progress panel, the open batches, the downloads waiting, then the tabs Effects | Why it worked | Notes |
   Thumbnails | Scripts & prompts with their counts and lists - kept at the user's ask: "dont remove the existing tabs
   of stuff, cuz people would not know where to look for"; a tab switches in place and is remembered, `ml.anTab`; a
   card, its title or its count opens its page: `data-go`, `anWire`) or `anSection(main, k)` - both draw the same
   lists (`anList`, `anListWire`): **#/analyze/videos** (FLUX: the analyses, focus / category / tag filters, the
-  test videos, the open batches, the downloads waiting), **#/analyze/spark** (SPARK: what it will do, coming soon),
+  test videos, the open batches, the downloads waiting), **#/analyze/spark** (SPARK: why each video worked),
   **#/analyze/notes** (INDEX: the notes, a tag filter), **#/analyze/thumbs**, **#/analyze/texts**. A mascot's page
   opens with `.anhead` (the mascot 92 px, *Analyser /*, its name, mode and line in its colour, its buttons) and the
   in-progress panel of its own jobs (`anIsFx` / `anIsNt`); Thumbnails and Scripts & prompts with the usual sub-page
@@ -157,7 +157,56 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   title and *Analyser / FLUX* or *Analyser / INDEX* in the crumb. Old addresses: #/analyze/flux, /index, /content
   and #/refs lead to the pages (`ALIASES`). The in-progress panel follows `notes` jobs too (*→ then its notes*, *→ then Claude
   writes the notes*); a video downloaded for its notes is never *waiting to be analysed* (`data.waiting` skips
-  `notes.videos()`).
+  `notes.videos()`); SPARK's jobs and downloads the same (`anIsSp`, `spark.videos()`).
+
+## SPARK
+
+Why a video worked (2026-10-30, the Analyser's second way - *Content creation*; the plan and research: docs\plans.md
+0.6.5 *SPARK - why a video worked*, docs\ideas.md *SPARK (why a video worked) - researched 2026-10-29*; the user:
+"start working on the SPARK content creation section on the analyser"). Built the way Notes is: the lab prepares,
+Claude writes (`/spark`), a gate checks, the page shows. The numbers are a lookup the user starts (the user's data-rules
+choice (a), 2026-10-29): kept on this PC, never in shared cards.
+- **Analyze with SPARK** (`addSparkModal(pre)`): 1 links (downloaded with `mp4_1080` - its frames are read) and / or
+  videos in refs\ or a path, up to `AV_MAX`; 2 *What do you want to know?* (optional `ask`); 3 *Claude writes it when
+  the video is ready* (default) or *Only measure it and look up the numbers*; a line that MotionLab looks the numbers
+  up once, when the user starts, and keeps them on this PC; More options = tags. POST `/api/spark/batch`
+  (`server.spark_batch`, like Notes') -> `#/analyze/spark`. The job `spark` = `tools\spark.py prepare` (a light read of
+  every frame at the analyser's size on a fixed frame grid - its cut detector and text measure: shots, cuts / min with
+  flashes joined, the first 3 s; the words: the same video's notes / analysis, else the platform's subtitles, else
+  speech to text; one `yt-dlp -J` of the video and one flat list of the creator's videos -> numbers.json; hook.jpg,
+  end.jpg and sheets of a frame per shot) and prints `SPARK: <name>`; with `claude` the batch's last job opens ONE
+  Claude window: `/spark <name>` or `/spark pending`.
+- **The card** (`sparkCard`): the thumbnail, the date, Claude's title, length · channel · platform, the verdict (2
+  lines), the result chip (`spResChip`: *An outlier* / *Above its usual* / *About its usual* / *Below its usual* /
+  *Usual unknown* · the outlier ×), the views; *Waiting for Claude* + *Write it* until written; Delete (kind `spark`:
+  the folder only - the video stays, notes / an analysis / an edit may use it).
+- **The page** (#/spark/<name>, `pageSpark`; the same two columns as Notes): the head (title, source · channel · length
+  · fps · tags; *Download (.md)*, *Look the numbers up again* = the job `spark_numbers`, then the page looks again every
+  3 s until its numbers change; FLUX / INDEX when the same video has them - `spark.same_video`; Folder; Delete). Left:
+  the verdict (`.spverd`: the result chip, the hook's type, the verdict, how many points are measured / Claude's
+  judgement / unknown), **Its numbers** (`.spnums`, *MotionLab · no Claude*: this video's views against the creator's
+  usual as two bars, likes / comments / shares / saves per 1,000 views, views per follower and per day - the raw counts
+  when the platform hides views (Instagram) - the measured pacing, and folded *How the usual was found*: the median of
+  the videos around it, those left out across 24 Aug 2026, the list's rounding, every video with its views and month;
+  an unknown usual says why - `SP_WHY` by `usual_code`), **Why it worked** = the 12 rubric cards (`.sprub`, a label
+  chip each: *Measured* cyan, *Claude's judgement* violet, *Unknown* grey; the evidence chips: a quote's time plays it,
+  a frame shows *(on screen)*, a number = its value and words; the promise kept says how far in), **Not explained**,
+  **For your videos** (the take-aways; each links its card, which flashes). Not written yet: what MotionLab has, the
+  issues, *Write it with Claude* and the numbers; the page looks again every 5 s. Right: the video, the tabs *First and
+  last 3 s* (the strips, lightbox), *Transcript* (search, a click plays the line), *Shots* (the sheets).
+- **Where people left** (2026-11-02, plans.md *Learn from your own posts* R1): the user's own video (`get()` `own` =
+  the post's key in Check my pages or a traced curve; `post_key` = `retention.key_of(url)`) gets a panel under *Its
+  numbers* (`.sprt`, agency blue, *MotionLab · no Claude*): `spark.retention_view` = the curve traced in Content agency
+  (`retSvg` with the 3 steepest drops red and a playhead that follows the video; a click plays that second), the holds
+  and the user's usual (`ret_*` of the table - the usual from 5 of their other traced videos on that platform), the
+  drops as rows (`.rtdropr`: frame + timecode – frame + timecode, the loss, the words said there; a click plays it),
+  and the rule "a drop shows where people left, not why". A curve whose length is not the video's (`mismatch`, more
+  than 1.5 s / 5 % off) is shown with a warning and its numbers are left out of the table. *Change* / *Add your
+  retention graph* = Content agency's `retentionModal`. For Claude: `spark.py show` lists the drops with their frames,
+  words and shot; the `/spark` skill cites `ret_*` (measured) and reads the why as judgement.
+- **From the other ways**: an analysis (#/ref) and a video's notes (#/note) show *Why it worked* (its SPARK) or
+  *Analyze with SPARK* (`sparkLink` / `sparkWire`: the dialog with that video ticked); GET `/api/reference/<name>` and
+  `/api/notes/<name>` carry `spark` (`spark.of_video`, by SHA-256 or path).
 
 ## Notes
 
@@ -191,6 +240,36 @@ the video afterwards but keep the notes", no test-yourself questions).
   it is inside the lab folder - else a line, or *The video was deleted - the notes stay.* with the thumbnail), the
   tabs *My notes* (a textarea saved 600 ms after typing and on leaving, POST `.../mine`), *Transcript* (search, a
   click plays the line, the line being said is marked) and *Key frames* (the sheets, the lightbox).
+- **Notion-like, the whole width** (2026-10-29, the user: "present the information we got more structureally kinda
+  like Notion would, also ur missing half the screen (cuz half the page is empty), also make each sectio in the index
+  notes video more meaningful, maybe add some colors some corresponding section dividing"): the 74ch cap is gone - the
+  notes column fills the page beside the video (460 px). Top to bottom: a sticky contents row (`.ntoc`, `data-go` =
+  the part's id), the properties (`.nprops`: type `NKIND`, length, channel, words + source + language, views, made,
+  Done n / m), the map of the video (`.nmap`: one `.nseg` per section at its real place and length, a dot per takeaway,
+  the red playhead; a click plays it), the TL;DR, the takeaways as cards (`.ntkgrid`: number, phrase, sentence, time,
+  the section it falls in), the sections as coloured blocks, open (`details.nsb`: number, title, gist, start → end,
+  length · points · % of the video; points in two columns when wide), the steps with numbered circles, Apply it with a
+  progress bar. One colour per section (`NCOL`, in order), carried by its block, its map piece, and every takeaway /
+  step said inside it. A section's end = its chapter's end, else the next section's start - 1.
+- **Ask Claude** (2026-10-29, the user: "add a posiblity to run a prompt fo that video notes (imagine i wanted to
+  expand on some topic or so)"): the panel under Apply it - suggestion chips (three general + *Go deeper on "<a
+  section>"*), a text box, *Ask Claude* = POST `/api/notes/<name>/ask` {q} (`notes.add_ask` -> `asks.json`) then
+  `openClaude('/take-notes <name> ask <id>')` - the words travel in the file, never through cmd. The list
+  (`noteDives` / `diveHtml`): the question, ✕ (POST `.../unask`), waiting = dashed + *Open Claude*, answered = title,
+  summary, **From the video** (quoted points with their time) and **Going further** (`more`, Claude's own knowledge,
+  Markdown, violet) + Copy (the answer's Markdown, `answer_md`) and *Answer it again*. While one waits the list (only
+  it) is fetched again every 5 s. Answers go through `notes.save_answer` (`notes.py answer`): the notes' own quote gate
+  per point, `more` may not name frames or timecodes.
+- **Combine notes** (2026-10-29, the user: "imagine i ahve multiple videos analized onthe sam topic ... combine the
+  knowledge of the videos selected, or maybe create a markdown with all important info form both videos to maybe use
+  it elsewhere or ask questions"): the Notes list's *Combine notes…* (2+ videos with notes; `combineModal`) - pick the
+  videos, then *Download (.md)* = GET `/api/notes-combined/md?names=` (`notes.combined_md`: an index, each video's
+  notes one heading deeper + its My notes, ONE context block with every video's; MotionLab, no Claude) or *Ask Claude
+  across them* = POST `/api/notes-combined/ask` {names, q} -> `analysis\notes\_combined\<id>.json` (no note.json: never
+  listed as a video) + `/take-notes combined <id>`, and the page #/notes-combined/<id> (`pageCombined`: the videos as
+  numbered coloured cards, the answer; each point's chip = its video's number + time and opens #/note/<name>/<frame>,
+  which plays that moment). The Notes list shows them under *Across videos*; a video's page lists the ones it is in.
+  An answer across videos must quote more than one of them.
 
 ## The analysis page
 
@@ -301,7 +380,7 @@ One analysis (#/ref/<name>, `?verdicts` = the Effects tab): tabs right
   and `textsets.state` its only truth (checked = a stamp whose sha1 + kind match the record now; `left`, `stale`,
   `disputed` = the user marked parts wrong / partly, `to_sort` = files the lab could not read, patterns none / ok /
   stale, `done`). Measured inline (milliseconds, no job): words, language, the kind guess + why (`prompts.kind_evidence`),
-  tool / needs (`prompts.tool_named` / `needs` = the twins of app.js `ptool` / `pneeds` - keep them alike), @-references,
+  tool / needs (`prompts.tool_named` / `needs` = the twins of js\memory.js `ptool` / `pneeds` - keep them alike), @-references,
   words that name a part (evidence only), twins (same sha1; 5-word shingles ≥ 0.8), phrases of 4-8 words shared by 2+
   texts with their numbers, the script check for scripts / hooks, the user's ratings. **`addTextsModal(pre)`**: a name
   (optional: the first words), one paste box (lines of only `---` between texts, or PROMPT n blocks) + a drop zone for
@@ -347,7 +426,7 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   options and customability ... simplicity and clarity rather than having everything in a single section"; a page for
   a few hours that day, then: "still make it a pop up as before? and just show section per section, make the sidebar
   steps with numbers isntead of letters, and make a line go through them so the user know where to go", in the look
-  of their mock-up (`new_edit_section.html`, a deck in the lab folder: gold ticks and rings, cards with a corner tick,
+  of their mock-up (`new_edit_section.html`, a deck - built, then to the Recycle Bin 2026-11-02: gold ticks and rings, cards with a corner tick,
   pills, a footer "Step n of 7"); round 3 the same day: "a little preview when we have selected clips ... manage them?
   delete ... too much text and it clutters the vision of the user ... less text and more colors, icons and more
   distinct" - so no line under the step titles, a coloured icon (`neIcon`, new sprite symbols) on every question, what
@@ -356,7 +435,8 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   red = no clips; the line gold down to the step on screen, `.rchn`; a click jumps there), ONE step on the right (a
   title (+ a count on its right, `.nestx`), its cards and pills; `NE_STEPS`, one function each: `neClips`, `neText`, `neRefs`, `neStyle`,
   `neSound`, `neFinal`; each draws its `<section>`, writes `ne.st` and may return a refresh run by `ne.changed()`), a
-  footer (*Step n of 6* | Back | *Next: <step> →*; on 6 the Resolve option + *Quick draft now* + *Make it with Claude*).
+  footer (*Step n of 7* | Back | *Next: <step> →*; on 6 *Quick draft now* + *Make it with Claude* + *Next: Segments*,
+  on 7 *Make it with Claude* + *Build the edit* - 7 = **Segments**, 0.6.1, the bullet *Edit by segments* below).
   Picked = a gold border, a tint and a tick (`.necard` and the modal's `.cvopt` / `.nep`). Only 1 is
   required; 2-6 carry `optTag()` and what is left on Auto is Claude's call. **1 Clips** = the two wide cards of
   2026-10-16 (the user: "choose between an old video clip or new clips, intuitive and distinct": *Clips you already
@@ -386,7 +466,9 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   lose it - that starts the `download` job with preset mp3 and picks the saved song; *A song* with none yet shows
   that row instead of the file picker) -, the clips' own sound, Talking), sound effects - a card per amount (Auto / none / a few / some / many, a strip = how often
   one plays) and which kinds (groups of `motionlab\sfx.py`'s cue kinds) -, notes. **6 Final**: length (pills or
-  seconds), format cards with the platforms (their shape drawn), **Build in DaVinci** (2026-10-25, the user: "move ...
+  seconds), format cards with the platforms (their shape drawn), **Framing** (0.6.1, vertical framing step 5: Auto /
+  Fill / Fit / Split as cards with the Editor's little phones, `#neframeq` shown only for a vertical or square format -
+  `NE_FRAMES`, `neFramed`; `st.framing` -> the request's `framing`, left out otherwise), **Build in DaVinci** (2026-10-25, the user: "move ...
   build it as a davinci project in the actual form in the final section and make it more simple ... add the davinci
   logo, and just say 'build in davinci'": one card `#nedvr` with the logo `logos\davinci-resolve\color.svg` on a white
   tile, a click = on / off = `st.resolve`; the footer's checkbox is gone), the summary (one table, a row per step - a
@@ -515,7 +597,11 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   at their speed and zoom / anchor / opacity curves -, each graphic's own page in an iframe seeked to its frame (a
   new one from its template at the video's size; captions' unsaved words patched in after captions.js), solids, the
   sound effects through Web Audio at the build's offsets (the same recorded file the build picks), the song under it
-  or the clips' own voice; a click on it = play / pause), the **selected item** (`#edinsp`: a shot = speed chips ¼×-4×,
+  or the clips' own voice; a click on it = play / pause; 0.6.1: the selected shot's crop dragged on it -
+  `EdPreview.cropDown`, the picture follows the pointer, the panel under it, the change `frame` {x, y, panel} on
+  release; a press that does not move still plays), the **selected item** (`#edinsp`: a shot = 0.6.1 its **Framing**
+  for a horizontal clip in a vertical video - `edFrameSec`: `ED_FRAMES` as little phones `edFrameIcon`, Auto's own
+  pick dashed `.now`, Still / Follow, *yours* once the user chose; the state's `frame` per shot -, speed chips ¼×-4×,
   split at the playhead, delete, its clip's room, what moves with it; a graphic = its words, its colours with My
   Brand's swatches, *More settings* (the other settings, `gsetInput`), remove / remove all its pieces; a sound = listen,
   volume -12..+12 dB, its sound (the kind's recorded ones + made-up), remove; a caption = its words, the captions'
@@ -591,13 +677,21 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   Ramprakash's designs as templates). A keyframe's *The move after it* = curve tiles (`.edease`, a little picture of
   each: Linear, Ease in, Ease out, Ease in and out, Easy ease, Strong ease, Glide, Launch, Hold, Pop - their line in
   the tooltip) and a chart (`#edchart`) with two handles (After Effects / Flow's graph): a drag shapes the curve live,
-  the release keeps it as `cubic(x1,y1,x2,y2)` (compose `ease_fn` / app.js `edEaseFn` - the same tables). The
+  the release keeps it as `cubic(x1,y1,x2,y2)` (compose `ease_fn` / js\editor-preview.js `edEaseFn` - the same tables). The
   Effects list adds *Lean in* (15 % on a word: glides in, eases out), *Slow push* (12 % over ~3 s, the room melting
   out of focus) and *Spotlight* (the room dims, the person stays lit) - all three turn the shot's `track: "face"` on;
   a room look is its own chip (`room`: move, length, strength, remove). A graphic's panel has *In the shot* (on a
   video with clips): *Behind me*, *Frosted glass*, *Keep off my face*, *Pin to my face* (`gfit`, compose's behind /
   glass / guard / follow; the footage's grain with any); a template added in the Editor arrives the way its
-  template.json `in_shot` says. The preview shows none of these (it has no person mask) - *See it rendered* does.
+  template.json `in_shot` says. 2026-10-28 (the rest of Vibha Ramprakash's designs): whole-picture effects
+  (`edfx.ADD_MORE`: added by edit lists and a template's `"with"`, not offered in the Effects list - the review
+  below kept eight; a `fx` layer right after the clips, one chip each, `screen`: move, length, remove, strength
+  for a look / a glitch; they need no clip) - *Rabbit hole*, *Dot reveal*, *Glitch*, *Before / after*, *Corner push*
+  and seven colour looks (*Moody*, *Black and white*, *Warm*, *Cool*, *Pop*, *Red film*, *Soft film*) - and two
+  room paints on a clip (*Pastel room*, *Grid paper room*: a `room` chip). A template with `"with"` in its
+  template.json brings its effect / second graphic along (`miniedit.add_companions`, tagged `with_of`): deleting or
+  moving the graphic takes them along. The preview shows none of these (it has no person mask) - *See it rendered*
+  does.
 - **The review: it opens, fewer and better effects, a volume slider** (2026-10-27, the user: "can u make a full review
   of the mini editor? i think there are some bugs cuz some of my friends it does not even open up ... look at premiere
   pro, open cut, capcut or davinci ... add a volume slider ... i think some effect are badly done and cant even be
@@ -627,7 +721,13 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   `editlist._trim_front` at its first frame; they restarted from the shot's first frame - a jump back of 80+ frames;
   `editlist._src_at` floors like compose). **The preview** follows compose: zoomed in, the zoom point is the crop's
   centre kept inside the picture (`placeClip`: translate + scale round the box's centre; the shake barely moved
-  before), a face-tracked shot's zoom point = the face (the state's `face` per frame from the person track, once a
+  before; 2026-10-29: `object-position` puts the part of the picture the box shows on the crop's centre first - the
+  `<video>` holds only that part, 32 % of a horizontal clip in a vertical video, so a crop off the middle showed the
+  middle, moved - and a clip placed before its size is known is drawn again when it loads), a layout (0.6.1,
+  `reframe.py`: the state's `panels` / `backdrop`) = the clip once per panel (`EdPreview.views`: the first panel
+  keeps its id and sound, the others `<id>#p<k>`; the backdrop `<id>#bg` = a blurred, darker copy or a colour box;
+  z-index (layer + 1) x 4 + k, `.edlayers` isolated), a face-tracked shot's zoom point = the face (the state's
+  `face` per frame from the person track, once a
   render made it; a shake's swing added - compose `zoom_point` does the same now), the flash = `brightness()` + a
   quarter white; made-up sounds start on their cue frame (as `sfx.py` mixes them; they were 0.2-0.4 s late) at the
   cue's own length (`/api/editor/sound?dur=`). **Sound**: a music draft's sound is its song (`sound_mode` "song" when
@@ -684,6 +784,40 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   apps - the default -, TikTok, Instagram Reels, YouTube Shorts or off, remembered in `ml.editor.safe`) and the preview
   draws each app's bands (top: tabs and search; bottom: name, caption and sound; the right rail: like, comment, share)
   and the safe area dashed (`.edsafe`, `.edsb`, `.edsr`); only on the page, never in the render.
+- **Edit by segments** (0.6.1, 2026-10-30, docs\plans.md *Edit by segments* steps 5-6; the user: "editar por
+  segmentos" and "borrador (quick draft) select each segment how u would like it edited and then create the edit
+  entirely"). **New edit > 7 Segments** (`neSegs`, after Final - the parts come from the draft's cuts, which need the
+  style, sound, length, format and framing of 3-6): empty = one card *Choose how each part is edited* + *Cut it into
+  parts* (off without the quick draft's style - its button's rule and tooltip) = the answers saved, then the job
+  `segments` (`tools\segments.py <p> --request`: a bare quick draft from edit_request.json, its parts, a picture of
+  each - `build\segments\v<B>\seg_<n>.jpg`); then a row per part (`.neseg`, its edge in its edit's colour `--sc` -
+  `.t-<edit>`): the picture (or its preview, a `<video>` with the picture as poster) with its number and *▶ Preview*
+  (the job `segments_preview`: that part alone with its edit, rendered - about half a minute), frame + timecode and
+  its length, its words (a song: its bars, a montage: its shots), the chips (`.segc`: its edit lit, the rules' two
+  others, +N = every edit it can have), why in one line (`why_k` = the tool's key + values, translated by key -
+  es.editor-1.json `_by_key`) or *yours* + *back to the suggestion (…)*, *Apply to all like this (n more)* (the parts
+  the rules gave the same edit); on top *N parts · n picked by you*, *Cut it again* (a new bare draft with the answers
+  as they are now - the picks stay with their parts), *Recommended for all*. A chip / link = POST
+  `/api/project/<p>/segments` {plan, set | like | reset} (`data.segments_change` -> tools\segments.py `change_picks`,
+  build\segment_picks.json; all or nothing; the rows drawn again from its answer); GET `.../segments[?plan=]` =
+  `data.segments` (the newest bare draft's parts, or a built version's: its bare draft's + `built` = the picks it was
+  built with and its check). *Build the edit* = the job `segments_build` (`segments.py <p> <bare> --build --render`:
+  every part as picked on the cuts, checked, rendered; rc 1 = built with a part not as picked) - the pop-up closes, the
+  video's page follows the job. **The Editor's Parts lane** (a bare draft or a version built from one): a row under the
+  ruler (`.edseg`, `ED_ROW.seg`; a click only - it moves with its cuts; dashed = its edit changed since this version was
+  built), a part's panel (`segInsp`: its words, *Its edit* = every edit it can have, why or *yours*, *Apply to all
+  like this*, "Built as … - build again to see the change", *Build again with these picks* = the job segments_build
+  from the bare draft - what was changed by hand in the Editor is not in it, the panel says so); its right-click menu
+  *back to the suggestion*. A pick of the user's changes its own part only (the rules' run follows the rules' picks).
+  API_LEVEL 52. **Claude's picks** (step 7, 2026-10-30): on Segments the footer has *Make it with Claude* too (not the
+  main button; its tooltip says Claude picks the parts left, writes the cards' words and builds - `neFinal`'s refresh
+  sets it, `ne.cur` = the last step; `.nefoot.last`) = the usual `/recreate-video request <p>`: brief.md's *Segments*
+  lists the parts, by_feel.md *By segments* writes Claude's layer (`segments.py --claude`). A part Claude picked shows
+  `.clchip` *Claude's* + its own why (`segWhyOf`: the video's language, no key - never through t()) and its words
+  (`.nesegtx`, a card's lines / items with " / "); a topic Claude marked = a violet heading above its first part
+  (`.nesegtopic`; the lane block's tooltip and the panel's range line carry it); *back to the suggestion* = Claude's
+  pick where it made one (`segSug`, `segWho`); *Recommended for all* takes back the user's picks only; the counts *n
+  picked by Claude* on top and in Final's summary. Claude's picks are made only by Claude (no route sets them).
 
 ## Generator vs Editor
 
@@ -841,7 +975,11 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   the card's `pstage` chip), 1 Film it = cue cards (GET `/api/script/cards?id=` = `script.cue_cards`: parts with heading, lines,
   notes; `[check]` kept in a line, a lone one = `check`), *Teleprompter* (`teleprompter(lines)`: full screen,
   `wpm` 150, Space / click, arrows, Esc only closes it; [check] left out), *Copy the lines*, *Film these too*
-  (B-ROLL / VISUAL / SHOT notes), *The edit adds these*, tips; 2 Add your recording = a video (linked ones first) or
+  (B-ROLL / VISUAL / SHOT notes), *The edit adds these*, *Before you film* (0.6.1, vertical framing step 7: a framing
+  picture `FI_FRAME` - a 16:9 picture, you centred from the chest up, the eye line on its upper third, the 9:16 crop
+  in it - and five rows `FI_CHECKS`, their why in the tooltips: the lens at eye level, eyes on the upper third, mid-chest
+  up about 1 m away, facing a window, only vertical = film vertical / both shapes = horizontal 4K centred), *While you
+  film* (two tips); 2 Add your recording = a video (linked ones first) or
   a new one named after the script (`folderName`), drop / choose -> `uploadClip` with `prompt`; 3 Edit it = ONE big
   card in the Editor's gold, **Continue in the Editor** (`.ficont`, 2026-10-24, the user: "we spent a lot of time
   going through changes and improving the edit page and now in the film it page u do the same thing (add clips... a
@@ -1234,8 +1372,78 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   likes, comments, when it went up, "+n since <when>" when it grew, ×n against the page's median when >= 1.5. On the
   Calendar each day shows what went up as a blue chip with its views (`.aglive`, a click opens it); "This week" counts
   the days with something planned or posted.
+- **Where people left** (2026-11-02, plans.md *Learn from your own posts* R1, API_LEVEL 54; the user brought a coaching
+  guide whose collector reads TikTok Studio with a saved login - not taken): a card (`.agvc`, now a div: the link is
+  `.agvl` = picture + title) of a TikTok / YouTube / Instagram post gets *Where people left* and SPARK (its page when
+  `SOC.spark` has one - `spark.by_post()`, else `addSparkModal([], [url])` with the link filled in). The dialog
+  (`retentionModal(post, done)`, `.rtmodal`): where each platform shows its graph (`RT_WHERE`), a drop zone that takes a
+  paste (Ctrl+V - a `paste` listener that removes itself with the dialog), a drop or a file -> POST
+  `/api/agency/retention/upload?name=` (a raw body -> `data.agency_retention_upload` -> `retention.add_image`: a new file
+  in `knowledge\local\retention\`, never replacing one, + `guess`: the curve's colour, its first / last column, the top
+  line where it starts snapped to a gridline, the bottom on the lowest of the evenly spaced gridlines or a fill's base).
+  Then the screenshot with four amber lines dragged by pointer (`.rtln` v / h; 0 s, the end · n s, top %, bottom % -
+  the values typed beside, the end = the video's length from Check my pages), a click on the curve = its colour (the
+  most saturated pixel near the click, `Find it again` = automatic), each change -> POST `/api/agency/retention/trace`
+  (nothing saved; `trace_image`) -> the dots = what is read, the steepest drop red, the holds at 3 s / 10 s / the end,
+  "n of m seconds read". Save = POST `/api/agency/retention` {key, url, title, image, axes, colour} - traced again on
+  the server (`retention.save`, never the page's numbers) -> `knowledge\local\retention.json`; {key, remove: true} =
+  *Forget this curve* (the screenshot stays). The card then shows the curve (`retSvg(points, end, {mini})`, its
+  steepest drop red) and 3 s / 10 s / end - a click reopens the dialog; *How it did* on a calendar post adds "n %
+  still watching at 3 s". GET `/api/agency/social` carries `retention` (every saved curve) and `spark` (post key ->
+  SPARK). Rule 2: no time position is written here (the posted video's frame rate is unknown) - only the holds; the
+  drops at frame + timecode are on SPARK's page.
+- **Tests** (the third tab, #/agency/tests, 2026-11-02, plans.md *Learn from your own posts* R2, API_LEVEL 55; the
+  router takes `videos|tests`): GET `/api/agency/tests` = `experiments.views()` (every test + each version's numbers,
+  `missing` reasons, picture / title / date from Check my pages, its SPARK by post key; the result; the state worked
+  out). The tab: *New test* + one line, the tests as cards (`.excard`: the state chip `EX_STATE`, the platform, the
+  versions in their colours `EXC` - A agency blue, B amber, C pink - each picture, label and value of the rule's
+  number, the winner outlined; the rule's words and the result line `exResLine`; "a follow-up of “title”"). A test's
+  pop-up (`exModal`, `.exmodal`): what is tested, the one thing that differs, the platform; the versions side by side
+  (`.exvcol`: label, picture, the post = a select of that platform's checked videos or a pasted link, *Made in
+  MotionLab* = a project, every number of `EX_METRIC` with the rule's outlined and a missing one's reason as its
+  tooltip, SPARK when read); their retention curves in one graph (`exCurves`); the rule (the number + at least n views)
+  and "pick the number before the results are in"; the result + "one post each … repeat it"; Claude's review
+  (`.exreview`: the summary, per version its keep / change / cut items - kind, frames + timecode, *edit only* /
+  *re-record*, *to test* · the number, the quote, still watching from → to - and the next test; *Make the next
+  version* = `/recreate-video improve <project> test:<id>` for the picked / winning version's project, *Review it
+  again*) or what it needs (*Read n versions with SPARK* = POST `/api/spark/batch` {links, claude: false}; then
+  *Review it with Claude* = `/spark test <id>`, task spark). Actions: Save (POST `/api/agency/tests` {action: save,
+  test}), *Close the test…* (pick A / B / C / neither + why -> {action: close}), Delete; a closed test is read-only and
+  offers *Test again* ({action: again}: a new test, parent = this one, A = the picked version).
+- **What works** (the fourth tab, #/agency/learn, 2026-11-02, plans.md *Learn from your own posts* R3, API_LEVEL 56;
+  read when the tab is first opened - `drawLearn`): GET `/api/agency/learn` = `findings.view()` (the lessons with
+  their worth today `status_of`, the last runs, the videos on each side of the last run; the scan's patterns; `bars` =
+  per platform the posts, those measured by SPARK and how many have each number). The bar: *Test them again* (POST
+  {action: retest} -> "n confirmed, n weakened, n refuted"), *Measure my posts with SPARK (n left)* (`/api/spark/batch`
+  with the next ten own posts SPARK has not read, no Claude) and one line. **Your lessons** (`.fdcard`: the state chip
+  `FD_ST` - Hunch amber, Likely blue, Settled green, Stale grey, Refuted red and struck through -, three dots =
+  confirmations, *weakened* / *untested n days*, tested when; the claim built from its parts on the page (`fdClaim`:
+  "{platform} videos {side}: **{number}** is higher / lower than for the rest"); the medians and n / n videos of the
+  last run that had them; a refuted one: the refuting run's numbers; folded: the videos on each side (picture, title,
+  value - a click opens the post) and every test (date, agreed / went the other way / too few / one video carried it /
+  too close, n new videos, ✓ = counted); *Forget* = {action: forget}). **Patterns in your posts now**: the scan's
+  candidates (dashed cards, *Keep as a hunch* = {action: keep, spec}) with "MotionLab tried n patterns - some will be
+  chance", or - none - each platform's bars (`.fdbar`: n / 16 per number, the fill = how far). No time positions here
+  (dates only).
+- **Monthly review** (the fifth tab, #/agency/month, 2026-11-02, plans.md step 18 + *Learn from your own posts* R4,
+  API_LEVEL 57; read when the tab is first opened - `drawMonth`): GET `/api/agency/month?m=YYYY-MM` = `monthly.view()`
+  (no month = this one when it has posts, else the one before). The bar: ‹ the month › (no month after this one), "Numbers
+  from your last Check my pages, <when>", *Write them again* (`/spark month <m>`, task spark) once reviewed. Then, from
+  the lab (no Claude): per platform a tile (`.mnplat`: posts, *n still growing* = under 7 days at the last check, the
+  month's median **×** against the usual = the median views of the platform's posts of the last 120 days that were 7+
+  days old, from 5; held at 3 s when traced); **Best by views** (`.mnpost` tiles: picture, title, views, × usual - green
+  from 1.5×, red to 0.67× -, young ones never ranked) and **Held best at 3 s**; **What they had in common** (pillar,
+  length - up to 30 s / 31-60 s / 1-3 min / over 3 min -, text in the first 3 s: the median × per value on a log bar, n
+  posts; "a hint, not a pattern"); **Tests this month** (state, result - a click opens the test in Tests);
+  **Your lessons** (state, `fdClaim`, this month's last run); **Last month's next tests** (their calendar status now,
+  the post's link once posted - shown on a month without posts too); **Three next tests** (`.mnrev`): Claude's
+  summary and three cards (n, platform, *try*, *The same*, *Decided by*, why, the evidence chips - a post opens it, a
+  lesson in the page's words, a test opens it) with *Put it on the calendar* (POST `/api/agency/month` {action: plan,
+  month, n} -> a calendar idea with `next`, pushed into the page's calendar too so its next save keeps it; then the
+  calendar status chip + *On your calendar*), or - not reviewed - *Three next tests with Claude* (`/spark month <m>`).
+  An idea from a next test carries the `i-ab` mark on its calendar chip. No time positions here (dates only).
 - Next (plans.md): stats from the user's exports (13 - Instagram), pillars (14), checklist + repurpose (15), when to
-  post (16), the YouTube Data API key (17 - within the terms), what worked this month (18), YouTube Analytics (19).
+  post (16), the YouTube Data API key (17 - within the terms), YouTube Analytics (19).
 
 ## Shared knowledge
 

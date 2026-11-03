@@ -1,0 +1,84 @@
+{
+ "name": "Letter stagger",
+ "kind": "text",
+ "category": "Text",
+ "what": "Text that comes in one letter (or one word) at a time - left to right, from the middle out or in a random order - each rising out of a blur, dropping in with a bounce, zooming down out of focus or flipping up in 3D; it pushes in slowly while it holds, and at the end the letters leave the same way. Accent words in an italic serif.",
+ "use_for": [
+  "title",
+  "hook",
+  "key word",
+  "name",
+  "intro",
+  "talking head",
+  "statement",
+  "letter by letter",
+  "word by word"
+ ],
+ "tags": [
+  "text",
+  "split text",
+  "letter by letter",
+  "word by word",
+  "stagger",
+  "blur",
+  "bounce",
+  "3d flip",
+  "clean",
+  "italic accent"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of the letter and word staggers of GSAP SplitText (from the start, the centre or at random) - the user asked for text that appears word by word or similar (2026-10-31)",
+ "motion": "from f0 the letters come in one every gap (1.2 f; words three times as far apart) in the order chosen: each rises 0.55 em out of a blur over 14 f (decelerating hard) - or drops from 0.7 em above with a small overshoot (16 f), zooms down from 1.9x out of focus (14 f, slow end) or flips up 100 degrees around its foot (15 f, a small overshoot); the text pushes in 3 % over the hold (gentle S-curve); at the end the letters leave in the same order, each the move's own way out, 9 f each (accelerating)",
+ "tracks": [
+  {
+   "name": "letters",
+   "what": "the letters come in one after another",
+   "start_f": 0,
+   "length_f": 32,
+   "easing": "decelerating (slow end)"
+  },
+  {
+   "name": "push",
+   "what": "the text pushes in 3 %",
+   "start_f": 32,
+   "length_f": 67,
+   "easing": "S-curve (gentle)"
+  },
+  {
+   "name": "out",
+   "what": "the letters leave one after another",
+   "start_f": 99,
+   "length_f": 20,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "start + round(((len(text) * gap if by == 'letters' else (parts(text, ' ') + parts(text, '|') - 1) * gap * 3) + 20) * fps / 30)",
+ "min_why": "every letter has to come in before it ends",
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.8,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  2,
+  5,
+  8,
+  12,
+  18,
+  24,
+  32,
+  60,
+  100,
+  108,
+  116
+ ]
+}

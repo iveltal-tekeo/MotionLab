@@ -1,0 +1,87 @@
+{
+ "name": "The lineup",
+ "kind": "lists",
+ "category": "Social",
+ "what": "Numbered tiles fan out in an arc above your head: dark smoke cards with a big number in the accent colour and a short name come out from behind you one after another, a pulse runs through them in order as if counted, and they fold back behind your head at the end. The Editor puts them behind the person and moves them with the camera.",
+ "use_for": [
+  "talking head",
+  "list",
+  "steps",
+  "top 5",
+  "ranking",
+  "options",
+  "tools",
+  "what I use",
+  "short form"
+ ],
+ "tags": [
+  "list",
+  "numbers",
+  "tiles",
+  "arc",
+  "fan",
+  "behind",
+  "depth",
+  "in shot",
+  "talking head"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {
+  "behind": true,
+  "follow": "camera",
+  "match": true
+ },
+ "motion": "f1 on the tiles come out from behind the head one every 3 frames (closer when there are more than 7: all out by f19), each swinging from the top of the arc to its place in 14 f (angle decelerating with a small overshoot, radius from 55 % decelerating, size from 50 % with a small overshoot, fading in over 4 f); up to 7 tiles on one arc, 8-16 on two; from f31 (default 5 tiles) a pulse runs through them in order, one every 5 f (each lifts 10 px, grows 7 % and glows in the accent: 5 f up, 9 f down); they bob 2.6 px out of step while they hold; the last 12-18 f they fold back towards the top of the arc and fade, the last one first (accelerating).",
+ "tracks": [
+  {
+   "name": "fan out",
+   "what": "the tiles come out from behind the head and swing to their places on the arc",
+   "start_f": 1,
+   "length_f": 26,
+   "easing": "decelerating (slow end), a small overshoot"
+  },
+  {
+   "name": "count",
+   "what": "a pulse runs through the tiles in order: each lifts and glows",
+   "start_f": 31,
+   "length_f": 34,
+   "easing": "S-curve"
+  },
+  {
+   "name": "fold back",
+   "what": "the tiles fold back behind the head and fade, the last one first",
+   "start_f": 104,
+   "length_f": 14,
+   "easing": "accelerating (slow start)"
+  }
+ ],
+ "min_frames": "round((53 + min(3 * (parts(items) - 1), 18) + min(5 * (parts(items) - 1), 36) + min(parts(items) - 1, 6)) * fps / 30)",
+ "min_why": "every tile fans out and the count runs through all of them before they fold back",
+ "core_points": 5,
+ "text_slots": [
+  "items"
+ ],
+ "media_slots": [],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.5,
+ "thumb_f": 85,
+ "check_frames": [
+  0,
+  2,
+  5,
+  9,
+  14,
+  20,
+  27,
+  33,
+  43,
+  60,
+  85,
+  106,
+  112,
+  119
+ ]
+}

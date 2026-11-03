@@ -1,0 +1,30 @@
+{
+ "name": "Glass widgets",
+ "kind": "ui",
+ "category": "Social",
+ "what": "Frosted glass phone widgets float round your head - a big number counting up, a render bar filling, your name and handle, a mini views page with growing bars, a now-editing player, a calendar day and a 4K ring closing - with a small glass pill under your chin (Edited with MotionLab). They pop in one after another, bob gently while you talk and shrink away at the end. Simple = three widgets and the pill.",
+ "use_for": ["talking head", "creator", "behind the scenes", "how I edit", "workflow", "stats", "intro", "about me", "glass", "short form", "tech"],
+ "tags": ["ui", "widgets", "glass", "frosted", "phone", "dashboard", "profile", "counter", "progress", "in shot", "floating", "around the head"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "in_shot": {"glass": true, "shadow": true, "guard": true, "match": true},
+ "motion": "the widgets pop in one after another, one every 2.1 f from f0 (full: 7 widgets + the pill by f15; simple: 3 + the pill by f7), each from 60 % with an overshoot over 10 f (slow end) and seen within 2 f; while they hold each bobs 6 px on its own phase (one cycle every 1.8 s); inside them the number counts up f4-f22 (S-curve), the views bars grow f10-f33 one after another (12 f each, slow end), the calendar's event slides out f14-f22, the 4K ring closes f12-f42 (S-curve), the render bar fills over 85 % of the length (S-curve) and the player's bar runs to the end (linear, a playback), its icon turning slowly; a band of light crosses the pill f30-f48 (S-curve); the last 8-11 f they shrink to 86 % and fade, the first one first (accelerating)",
+ "tracks": [
+  {"name": "widgets in", "what": "the widgets pop in one after another", "start_f": 0, "length_f": 25, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "count", "what": "the big number counts up", "start_f": 4, "length_f": 18, "easing": "S-curve"},
+  {"name": "bars", "what": "the views bars grow one after another", "start_f": 10, "length_f": 23, "easing": "decelerating (slow end)"},
+  {"name": "ring", "what": "the 4K ring closes", "start_f": 12, "length_f": 30, "easing": "S-curve"},
+  {"name": "sheen", "what": "a band of light crosses the pill", "start_f": 30, "length_f": 18, "easing": "S-curve"},
+  {"name": "widgets out", "what": "the widgets shrink away and fade", "start_f": 109, "length_f": 11, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "start + round(60 * fps / 30)",
+ "min_why": "the widgets need about two seconds to pop in, fill and close before they leave",
+ "core_points": 1,
+ "text_slots": ["number", "name", "handle", "pill"],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.45,
+ "thumb_f": 60,
+ "check_frames": [0, 1, 3, 6, 9, 12, 15, 20, 26, 34, 42, 60, 90, 112, 116, 119]
+}

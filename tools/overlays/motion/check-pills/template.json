@@ -1,0 +1,40 @@
+{
+ "name": "Boards and checked pills",
+ "kind": "social",
+ "category": "Social",
+ "what": "The room turns to grid paper, two boards of your reels pop onto the wall behind your head, and a cursor clicks blue pills in front of you one after another - each pill pops in, squashes and ticks checked; the cursor slides away, then the pills shrink away and the boards fade.",
+ "use_for": ["steps", "checklist", "process", "what I did", "workflow", "my reels", "creator", "talking head", "short form", "tutorial"],
+ "tags": ["pills", "checklist", "cursor", "click", "boards", "reels", "grid paper", "behind", "in shot", "talking head", "4 core points"],
+ "learned_from": [],
+ "origin": "MotionLab's own build after a design in Vibha Ramprakash's claude-video-effects (MIT), 2026-10-28",
+ "motion": "f0 and f3 the two boards pop onto the wall from 0.6 (10 f, an overshoot) and then float 4 px and half a degree; the cursor fades in at the lower right and glides to the first pill (f1-f9, S-curve); each pill pops in from 0.5 (7 f, an overshoot) at f5 and then every gap (9) frames, the cursor gliding to it (7 f, S-curve) and pressing 6 frames after the pop (it dips, a ripple spreads 9 f), the pill squashing, widening (5 f, slow end) and its tick drawing (5 f); 12 f after the last click the cursor slides away and fades (14 f, S-curve); the pills bob 2 px out of step; the last 9 f the pills shrink away one after another and the boards fade and sink (accelerating). With the default four pills: clicks at f11, f20, f29, f38.",
+ "tracks": [
+  {"name": "boards", "what": "two boards of reels pop onto the wall behind the head", "start_f": 0, "length_f": 13, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "pill 1", "what": "the first pill pops in, the cursor clicks it and it ticks", "start_f": 5, "length_f": 12, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "pill 2", "what": "the second pill pops in and is clicked", "start_f": 14, "length_f": 12, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "pill 3", "what": "the third pill pops in and is clicked", "start_f": 23, "length_f": 12, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "pill 4", "what": "the fourth pill pops in and is clicked", "start_f": 32, "length_f": 12, "easing": "decelerating (slow end), an overshoot"},
+  {"name": "cursor away", "what": "the cursor slides away and fades", "start_f": 50, "length_f": 14, "easing": "S-curve"},
+  {"name": "out", "what": "the pills shrink away, the boards fade and sink", "start_f": 110, "length_f": 9, "easing": "accelerating (slow start)"}
+ ],
+ "min_frames": "round((11 + (max(1, min(6, parts(pills))) - 1) * max(4, gap) + 34) * fps / 30)",
+ "min_why": "every pill is clicked and seen ticked before the boards and pills leave",
+ "in_shot": {"behind": "top", "follow": "camera", "match": true},
+ "with": [{"effect": "room_paint", "at": 0.0, "len": null, "opts": {"pattern": "grid", "color": "#EEF1F5", "amount": 0.92}}],
+ "core_points": 4,
+ "text_slots": ["pills", "handle", "board"],
+ "media_slots": [
+  {"id": "reel1_media", "label": "Reel 1: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel2_media", "label": "Reel 2: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel3_media", "label": "Reel 3: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel4_media", "label": "Reel 4: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel5_media", "label": "Reel 5: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true},
+  {"id": "reel6_media", "label": "Reel 6: your cover or clip, 9:16 (empty = a placeholder)", "accept": ["image", "video"], "aspect": "9:16", "min_px": 480, "fit": "cover", "focus": "50% 50%", "placeholder": "a colour gradient of its own with a short bold caption, a play icon and the view count", "optional": true}
+ ],
+ "look_aware": true,
+ "scene": false,
+ "overlay": true,
+ "general": 0.35,
+ "thumb_f": 60,
+ "check_frames": [0, 2, 5, 8, 11, 13, 17, 20, 29, 38, 45, 60, 112, 116, 119]
+}

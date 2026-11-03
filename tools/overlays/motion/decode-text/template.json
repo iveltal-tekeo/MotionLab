@@ -1,0 +1,91 @@
+{
+ "name": "Decode",
+ "kind": "text",
+ "category": "Text",
+ "what": "A clean title that decodes: each letter flickers through random signs and locks into place - left to right or in a random order - flashing the accent colour as it lands, while a thin line runs under the text and slides away; now and then a letter flickers while it holds, and at the end the letters scramble out in reverse.",
+ "use_for": [
+  "title",
+  "reveal",
+  "tech",
+  "code",
+  "AI",
+  "data",
+  "hook",
+  "intro",
+  "statement",
+  "saas"
+ ],
+ "tags": [
+  "text",
+  "scramble",
+  "decode",
+  "glitch",
+  "letter by letter",
+  "tech",
+  "clean",
+  "underline"
+ ],
+ "learned_from": [],
+ "origin": "MotionLab's own build of the decode / scramble text (the idea of GSAP's ScrambleText) as a clean title for any video - not the footage and padlock of scramble-text-lock or the sci-fi status line of glitch-status - the user asked for text that appears word by word or similar (2026-10-31)",
+ "motion": "from f0 a letter turns up as a random sign (a new one every 2 f) every gap (1.5 f), scrambles for 10 f and locks, flashing the accent colour and settling to the text colour over 8 f; a line under each row grows with its locked letters and slides off to the right 6 f after the row is done (12 f, S-curve); the text pushes in 3 % over the hold (gentle S-curve) and every 26 f one letter flickers back to signs for 4 f; at the end the letters scramble again and go out right to left, 6 f each",
+ "tracks": [
+  {
+   "name": "decode",
+   "what": "the letters scramble and lock one after another",
+   "start_f": 0,
+   "length_f": 33,
+   "easing": "linear (a new sign every 2 f)"
+  },
+  {
+   "name": "line",
+   "what": "the line under each row grows with it and slides off to the right",
+   "start_f": 1,
+   "length_f": 50,
+   "easing": "S-curve"
+  },
+  {
+   "name": "push",
+   "what": "the text pushes in 3 %",
+   "start_f": 41,
+   "length_f": 59,
+   "easing": "S-curve (gentle)"
+  },
+  {
+   "name": "out",
+   "what": "the letters scramble out right to left",
+   "start_f": 100,
+   "length_f": 19,
+   "easing": "linear"
+  }
+ ],
+ "min_frames": "start + round(((len(text) * gap + scramble) + 12) * fps / 30)",
+ "min_why": "every letter has to lock before it ends",
+ "in_shot": {
+  "guard": true,
+  "match": true
+ },
+ "core_points": 1,
+ "text_slots": [
+  "text"
+ ],
+ "look_aware": true,
+ "scene": true,
+ "overlay": true,
+ "general": 0.7,
+ "thumb_f": 60,
+ "check_frames": [
+  0,
+  2,
+  6,
+  10,
+  14,
+  20,
+  26,
+  34,
+  44,
+  60,
+  101,
+  108,
+  116
+ ]
+}

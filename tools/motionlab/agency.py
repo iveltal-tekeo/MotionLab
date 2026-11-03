@@ -10,7 +10,8 @@ calendar.json:
               app when posting" (never in the render), "pillar": "one of My Brand's content pillars" | "",
               "links": {"tiktok": "https://..."} (where it went up),
               "ab": "B won - the red thumbnail, 54 %" (YouTube's Test & compare, step 12),
-              "checks": {"youtube:package": true, ...} (the posting checklist ticked, step 15)}]
+              "checks": {"youtube:package": true, ...} (the posting checklist ticked, step 15),
+              "next": "2026-10:2" (an idea from a monthly review's next test, monthly.py - 2026-11-02)}]
   "when":   {"youtube": ["tue 18:00", "thu 19:00"], ...}   (step 16: the user's own best times, typed from YouTube
              Studio's "When your viewers are on YouTube" / Instagram's "Most active times")
   "updated": "2026-10-25 23:50:12"
@@ -30,7 +31,7 @@ from pathlib import Path
 from . import i18n as I18N
 from .util import LAB
 
-PATH = LAB / "knowledge" / "local" / "calendar.json"
+PATH = Path(os.environ.get("MOTIONLAB_CALENDAR") or (LAB / "knowledge" / "local" / "calendar.json"))  # env: a test server's own
 STATUSES = ("idea", "scripted", "filmed", "edited", "ready", "posted")
 DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 MAX = {"title": 120, "notes": 1000, "sound": 200, "posts": 2000, "url": 300}
@@ -110,6 +111,8 @@ def clean(body: dict) -> dict:
                       "checks": {k: True for k, v in (p.get("checks") or {}).items()
                                  if v is True and re.fullmatch(r"[a-z]{1,12}:[a-z_]{1,20}", str(k))} if isinstance(
                                      p.get("checks"), dict) else {}})
+        if re.fullmatch(r"20\d{2}-\d{2}:[1-9]", str(p.get("next") or "")):
+            posts[-1]["next"] = p["next"]                        # from a monthly review's next test (monthly.py)
     out["posts"] = posts
     return out
 
