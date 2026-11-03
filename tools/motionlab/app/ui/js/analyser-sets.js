@@ -491,7 +491,8 @@ function textSetCard(s) {
 // (POST /api/texts/split - nothing is saved yet) and the kind of each can be changed; then whose they are, and Claude's
 // check now (one window for all) or later. pre = {set, label, count, who, creator, after} for the set page's Add more
 async function addTextsModal(pre = {}) {
-  const [ST, EST] = await Promise.all([api('/api/settings'), api('/api/estimate').catch(() => ({}))]);
+  const ST = await api('/api/settings');
+  let EST = null;                                   // Claude's usual time: drawn when it comes (estLater)
   const cl = ST.tools.find(x => x.name === 'claude') || {};
   const room = pre.set ? Math.max(0, TX_MAX - (pre.count || 0)) : TX_MAX;
   const st = {who: pre.who || 'tested'}, files = [], kinds = {};
@@ -540,8 +541,9 @@ async function addTextsModal(pre = {}) {
         : bad ? `<span class="bad">${t('a text marked red cannot be checked - fix it or take it out')}</span>`
         : n || un ? [n && tn(n, '{n} text numbered', '{n} texts numbered'), known && t('{n} from your library', {n: known}), un && t('{files} for Claude to read', {files: plural(un, 'file')})].filter(Boolean).join(' · ')
         : t('Paste a script or a prompt, or drop a file.');
-      $('#txest', el).innerHTML = ' ' + estWords(EST.texts, n, 'text') + '.';
+      $('#txest', el).innerHTML = EST ? ' ' + estWords(EST.texts, n, 'text') + '.' : '';
     };
+    estLater(e => { EST = e; if ($('#txest', el)) draw(); });
     let seq = 0;
     const refresh = async () => {
       const my = ++seq, text = paste.value;

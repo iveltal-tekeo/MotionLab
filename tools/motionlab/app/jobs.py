@@ -32,7 +32,7 @@ JOBTOOLS = Path(__file__).resolve().parent / "jobtools.py"       # the app's own
 _PY = Path(sys.executable)
 PY = str(_PY.with_name("python.exe")) if _PY.name.lower() == "pythonw.exe" else str(_PY)
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-OK_RC = {"build": (0, 2), "miniedit": (0, 2),   # build.py 2 = built, with precheck flags to look at - not a failure
+OK_RC = {"build": (0, 2), "miniedit": (0, 2), "render": (0, 2),   # build.py 2 = built, with precheck flags to look at
          "segments_build": (0, 1)}               # segments.py 1 = built, a part not as picked (its check says which)
 
 
@@ -89,6 +89,8 @@ TITLES = {
     "build": "Claude's build of {video}",
     "build_final": "Claude's final render of {video}",
     "miniedit": "Your changes to {video}",
+    "render": "{video}, rendered with its shots",
+    "catalogue": "The clips of {video}, catalogued",
     "editor_media": "Getting {video} ready for the Editor",
     "editor_range": "A moment of {video}, rendered",
     "segments": "{video} cut into parts",
@@ -345,10 +347,13 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if not (data.PROJECTS / p).is_dir():
             raise JobError(I18N.t("no project {video}", video=p))
         try:
-            extra = ER.draft_args(data.edit_request(p))
+            req = data.edit_request(p)
+            extra = ER.draft_args(req)
         except (FileNotFoundError, ValueError) as e:
             raise JobError(str(e))
-        return _title(kind, video=p), [PY, str(TOOLS / "draft_edit.py"), p] + extra + ["--render"], "cpu"
+        # (2026-11-03: "check the shots first" = the plan only - the video's page shows its shots, the user renders)
+        return (_title(kind, video=p), [PY, str(TOOLS / "draft_edit.py"), p] + extra
+                + ([] if req.get("shots_first") else ["--render"]), "cpu")
     if kind == "build":             # 0.5.3: Claude's builds (tools\job.py start build ...) - on the Jobs page, kept alive
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"
@@ -362,6 +367,18 @@ def make(kind: str, a: dict) -> tuple[str, list[str], str]:
         if str(a.get("sfx", "")).lower() in ("1", "true", "yes"):
             cmd.append("--sfx")
         return _title("build_final" if final else "build", video=p), cmd, "cpu"
+    if kind == "catalogue":         # 2026-11-03: the shot list's *Catalogue the clips* (the lab's part, no Claude)
+        p = data.safe_name(str(a.get("project", "")))
+        if not (data.PROJECTS / p / "build" / "sources.json").exists():
+            raise JobError(I18N.t("no project {video}", video=p))
+        return _title(kind, video=p), [PY, str(TOOLS / "catalogue.py"), "make", p], "cpu"
+    if kind == "render":            # 2026-11-03: the shot list's *Render with these shots*, none swapped - one build
+        p = data.safe_name(str(a.get("project", "")))
+        b = data.PROJECTS / p / "build"
+        plan = str(a.get("plan") or "")
+        if not re.fullmatch(r"plan_v\d+\.json", plan) or not (b / plan).exists():
+            raise JobError(I18N.t("no project {video}", video=p))
+        return _title(kind, video=p), [PY, str(TOOLS / "build.py"), p, plan], "cpu"
     if kind == "miniedit":          # 0.6.0: the Editor's Save - the changes -> the next plan + one plain build
         p = data.safe_name(str(a.get("project", "")))
         b = data.PROJECTS / p / "build"

@@ -251,8 +251,16 @@ function estWords(e, n, what = 'video') {
   const [one, many, none] = EST_LINES[what] || EST_LINES.video;
   return e ? fillVars(n > 1 ? many : one, {time: minWords(e.minutes), total: minWords(e.minutes * n), n}) : none;
 }
+// GET /api/estimate without waiting for it (2026-11-03, the user: "the add button in the analyze section ... is not
+// working"): it reads every Claude Code log on this PC - 6 s on a freshly started server - and the dialogs that waited
+// for it opened that much later, looking broken. They open at once and `then(est)` draws the line when it comes ({} =
+// none); a dialog closed by then is left alone (each checks its own line is still there).
+function estLater(then) {
+  api('/api/estimate').catch(() => ({})).then(e => then(e || {}));
+}
 async function addVideosModal(pre = {}) {
-  const [cands, ST, EST] = await Promise.all([api('/api/candidates'), api('/api/settings'), api('/api/estimate').catch(() => ({}))]);
+  const [cands, ST] = await Promise.all([api('/api/candidates'), api('/api/settings')]);
+  let EST = null;                                   // Claude's usual time: drawn when it comes (estLater)
   const cl = ST.tools.find(x => x.name === 'claude') || {}, yt = ST.tools.find(x => x.name === 'yt-dlp') || {};
   const picked = new Set(pre.files || []);
   let focus = pre.focus || ST.settings.default_focus || 'both';
@@ -266,7 +274,8 @@ async function addVideosModal(pre = {}) {
     ${yt.found ? '' : `<div class="small amber">${t('Links need the downloader (yt-dlp): <a href="#/settings" onclick="closeModal()">Settings → Programs</a>. Files work without it.')}</div>`}
     <div class="small muted" style="margin:8px 0 4px">${t('or pick videos you already have (in the refs folder):')}</div>
     <div class="avfiles" id="avfiles">${[...elsewhere, ...fresh, ...done].map(fileRow).join('') || `<div class="small dim">${t('No videos in refs yet - paste a link, or the path of a video below.')}</div>`}</div>
-    <div class="row" style="margin-top:6px"><input type="text" id="avpath" placeholder="${ta('…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4')}" style="flex:1"><button class="btn sm" id="avadd">${t('Add')}</button></div>
+    <div class="row" style="margin-top:6px"><button class="btn sm pri" id="avbrowse" title="${ta('Pick videos anywhere on this PC - they stay where they are')}"><svg class="i"><use href="#i-folder"/></svg>${t('Browse…')}</button>
+      <input type="text" id="avpath" placeholder="${ta('…or the full path of a video elsewhere, e.g. C:\\Videos\\clip.mp4')}" style="flex:1"><button class="btn sm" id="avadd" title="${ta('Adds the path in the box - with the box empty, it opens Browse')}">${t('Add')}</button></div>
     <div class="avstep"><b>2</b><span>${t('What should Claude look at?')}</span></div>
     <div class="avmodes">${FOCUS_OPTS.map(([k, lab, d, ex, extra]) => `<label class="avmode${k === focus ? ' on' : ''}"><input type="radio" name="avf" value="${k}" ${k === focus ? 'checked' : ''}>
       <b>${lab}</b><span>${d}</span><span class="small dim">${ex}</span><span class="small acc">${extra}</span></label>`).join('')}</div>
@@ -291,18 +300,42 @@ async function addVideosModal(pre = {}) {
       const what = [L.length ? tn(L.length, '{n} link (downloaded first)', '{n} links (downloaded first)') : '', F.length ? plural(F.length, 'file') : ''].filter(Boolean).join(' + ');
       $('#avsum', el).innerHTML = bad.length ? `<span class="bad">${t('not a link: {link}', {link: esc(bad[0])})}</span>` : n > AV_MAX ? `<span class="bad">${t('at most {n} at a time', {n: AV_MAX})}</span>`
         : n ? `${what} · ${focus !== 'cinematic' ? t('about 1–2 minutes per minute of video, + the transcript') : t('about 1–2 minutes per minute of video')}` : t('Paste a link or pick a video.');
-      $('#avest', el).innerHTML = ' ' + estWords(EST.review, n) + '.';
+      $('#avest', el).innerHTML = EST ? ' ' + estWords(EST.review, n) + '.' : '';
     };
+    estLater(e => { EST = e; if ($('#avest', el)) upd(); });
     $('#avl', el).oninput = upd;
     $('#avfiles', el).onchange = upd;
     $$('input[name=avf]', el).forEach(r => r.onchange = () => { focus = r.value; $$('.avmode', el).forEach(x => x.classList.toggle('on', $('input', x).checked)); upd(); });
+    const addPath = v => {                          // a video into the list, ticked (one already there is ticked again)
+      const box = $('#avfiles', el), had = $$('input', box).find(x => x.value === v);
+      if (had) { had.checked = true; return; }
+      const none = box.querySelector(':scope > .dim');        // ("No videos in refs yet" - not a row's size, which
+      if (none) none.remove();                               // is .dim too: the old test emptied the whole list)
+      box.insertAdjacentHTML('afterbegin', fileRow({path: v, name: v, size: null, analysed: false}));
+      box.querySelector('input').checked = true;
+    };
+    // *Browse…* (2026-11-03, the user: "or the full path of a video elsewhere ... i still click Add there and it does
+    // not open"): Windows' own Open dialog, opened by the server (POST /api/pick/videos - a page never learns a file's
+    // place); the videos picked join the list ticked, the files stay where they are
+    const browse = async () => {
+      const b = $('#avbrowse', el);
+      if (b.disabled) return;
+      const was = b.innerHTML;
+      b.disabled = true; b.textContent = t('Pick them in the window that opened…');
+      try {
+        const r = await api('/api/pick/videos', {});
+        if (!$('#avfiles', el)) return;                       // (the dialog was closed meanwhile)
+        r.paths.forEach(addPath);
+        if (r.skipped) toast(tn(r.skipped, '{n} file is not a video - left out', '{n} files are not videos - left out'));
+        upd();
+      } catch (e) { toast(e.message, 'err'); }
+      finally { if ($('#avbrowse', el) === b) { b.disabled = false; b.innerHTML = was; } }
+    };
+    $('#avbrowse', el).onclick = browse;
     $('#avadd', el).onclick = () => {
       const v = $('#avpath', el).value.trim().replace(/^"|"$/g, '');
-      if (!v) return;
-      const box = $('#avfiles', el);
-      if (box.querySelector('.dim')) box.innerHTML = '';
-      box.insertAdjacentHTML('afterbegin', fileRow({path: v, name: v, size: null, analysed: false}));
-      box.querySelector('input').checked = true; $('#avpath', el).value = ''; upd();
+      if (!v) return browse();                                 // (an empty box: the picker)
+      addPath(v); $('#avpath', el).value = ''; upd();
     };
     $('#avgo', el).onclick = async () => {
       const b = $('#avgo', el); b.disabled = true;

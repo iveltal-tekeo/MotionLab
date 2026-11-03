@@ -764,8 +764,12 @@ cut, 1.5-4 s, the face keeps the first 15 % and the last 10 %, no face under 2 s
 covered, picture only (test project `zz_talk_broll`: a 26 s take + 10 music-video clips, inserts on "post" and
 "singing", the voice under them = the take, envelope correlation 1.00 at 0 ms); clips loud all through (music,
 ambience) next to a real take are B-roll (pauses under 15 % of 10 ms windows; takes 30-49 %, B-roll 0-9 % on 4 takes
-+ 25 clips); `catalogue.py shots` no longer flags a take's own jump cuts. **Next**: the shot list in the app (approve /
-swap before the render), the Editor showing each clip's lines, the friend's real clips.
++ 25 clips); `catalogue.py shots` no longer flags a take's own jump cuts. **The shot list in the app, built 2026-11-03**
+(the user's /whats-next pick "Shot list in the app"; steps 1 + 3 below): a plan's shots as pictures before any render
+(the video's page: *Check the shots*), swap any for another moment of the clips, then *Render with these shots*; New
+edit's *Check the shots first* (on from 6 clips) = the quick draft makes the catalogue and stops before its render,
+Claude stops before its build; the Editor shows each shot's line and takes the user's correction. **Next**: the
+friend's real clips (the ship test below).
 
 **Steps** (each measured on one many-clip project before / after: Claude's minutes and tokens, the disk, the user's
 rating):

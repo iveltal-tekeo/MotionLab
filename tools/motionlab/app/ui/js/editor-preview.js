@@ -15,6 +15,8 @@
 // render comes on *Save* = the next version as a job (tools\miniedit.py apply --build). Its own colours (cyan / violet,
 // `.ed`), apart from Review's player. Unsaved changes stay in this browser (localStorage) until saved or dropped.
 const ED_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+// a clip catalogue line's shot size (motionlab\catalogue.SIZES; 2026-11-03: the shot panel's *What it shows*)
+const ED_SIZES = () => [['wide', t('wide|shot')], ['medium', t('medium|shot')], ['close', t('close|shot')], ['detail', t('detail|shot')]];
 const ED_CAP_STYLE = ['font', 'weight', 'font_size', 'uppercase', 'first_capital', 'y', 'y_upright'];   // the captions' style first
 const ED_ROW = {ruler: 24, seg: 24, cap: 26, gfx: 28, shot: 64, fx: 26, sfx: 30, wave: 40};
 // the effects (motionlab\edfx): a chip's name as the engine sends it (English) shown in the page's language; what can

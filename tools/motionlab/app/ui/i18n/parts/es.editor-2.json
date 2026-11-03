@@ -747,5 +747,16 @@
  "Build again with these picks": "Volver a montar con estas elecciones",
  "A new version from the cuts of {version}, every part as picked.": "Una versión nueva a partir de los cortes de {version}, cada parte como la elegiste.",
  "What you changed here by hand is not in it.": "Lo que cambiaste aquí a mano no entra.",
- "The last build has a part not as picked - see its log on the Jobs page.": "El último montaje tiene una parte distinta de lo elegido: mira su registro en Tareas."
+ "The last build has a part not as picked - see its log on the Jobs page.": "El último montaje tiene una parte distinta de lo elegido: mira su registro en Tareas.",
+ "Correct it": "Corregirla",
+ "No line yet": "Aún sin descripción",
+ "Saved - Claude keeps your line": "Guardado: Claude mantiene tu descripción",
+ "Tags: person, street, night": "Etiquetas: persona, calle, noche",
+ "What it shows": "Qué muestra",
+ "Where: a city street": "Dónde: una calle de ciudad",
+ "a man walks to camera on a wet street at night": "un hombre camina hacia la cámara por una calle mojada de noche",
+ "close|shot": "primer plano",
+ "detail|shot": "detalle",
+ "medium|shot": "plano medio",
+ "wide|shot": "plano general"
 }

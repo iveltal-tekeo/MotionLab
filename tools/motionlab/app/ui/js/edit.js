@@ -106,7 +106,8 @@ function wireBatchRows(main, redraw) {
 // words), optional length / format; then a quick draft each (queued jobs, no Claude) or ONE Claude window for all
 // (/recreate-video batch <id>) - Claude's usual time per edit on this PC said first
 async function bulkEditModal() {
-  const [ps, S, OPT, EST] = await Promise.all([api('/api/projects'), loadStyles(), api('/api/edit/options'), api('/api/estimate').catch(() => ({}))]);
+  const [ps, S, OPT] = await Promise.all([api('/api/projects'), loadStyles(), api('/api/edit/options')]);
+  let EST = null;                                   // Claude's usual time: drawn when it comes (estLater)
   const vids = ps.filter(p => !inGenerator(p) && p.clips).sort((a, b) => (b.sort_t || 0) - (a.sort_t || 0));
   const st = {how: 'style', like: [], presets: [], length: '', format: ''};
   modal(`<h2>${t('Edit several videos the same way')}</h2>
@@ -130,8 +131,9 @@ async function bulkEditModal() {
       $('#bkdraft', el).disabled = $('#bkclaude', el).disabled = !ok;
       $('#bkstyle', el).hidden = st.how !== 'style'; $('#bkwords', el).hidden = st.how !== 'words';
       $('#bksum', el).innerHTML = n < 2 ? t('Pick at least two videos.') : n > AV_MAX ? t('At most {n} at a time.', {n: AV_MAX}) : !styled ? t('Pick a style.')
-        : t('<b>Quick drafts</b>: a first edit of each in minutes, made by rules - no Claude. <b>With Claude</b>: one window edits them one after another - {time}.', {time: estWords(EST.recreate, n, 'edit')});
+        : t('<b>Quick drafts</b>: a first edit of each in minutes, made by rules - no Claude. <b>With Claude</b>: one window edits them one after another - {time}.', {time: EST ? estWords(EST.recreate, n, 'edit') : '…'});
     };
+    estLater(e => { EST = e; if ($('#bksum', el)) upd(); });
     spSeg(el, '#bkhow', st, 'how', upd); spSeg(el, '#bklen', st, 'length'); spSeg(el, '#bkfmt', st, 'format');
     stylePicker($('#bkstyle', el), st, {S, purpose: 'edit', max: OPT.max_refs, onChange: upd});
     $$('[data-p]', el).forEach(b => b.onclick = () => {
@@ -209,7 +211,7 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
               about: '', onscreen: '', prompt: pick, like: pre.from === 'reference' && pre.pick ? [pre.pick] : [], exact: false,
               where: '', type: '', rhythm: '', moods: [], captions: '', presets: [], want: '', palette: [],
               sound: neTalk(pick) ? 'talk' : 'auto', ambience: '', sfx: '', kinds: [], sounds: [], snotes: '', length: '', format: '', resolve: false,
-              photos: {}, products: [], framing: ''};
+              photos: {}, products: [], framing: '', shots: null};
   const ne = {S, PRM, ps, OPT, st, cur: 0};
   ne.proj = () => st.src === 'old' ? st.project : st.src === 'new' ? st.newp : '';
   ne.P = () => ps.find(x => x.name === ne.proj());
@@ -252,7 +254,7 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
     $$('.nenav button', el).forEach(b => b.onclick = () => go(b.dataset.go));
     $('#neback', el).onclick = () => go(NE_STEPS[ne.cur - 1][0]);
     $('#nenext', el).onclick = () => go(NE_STEPS[ne.cur + 1][0]);
-    const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, {...neBody(st), brand: brandOn(el, '#nebrand')});
+    const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, {...neBody(st), shots_first: neShots(st, ne.P()), brand: brandOn(el, '#nebrand')});
     $('#cvgo', el).onclick = async () => {
       try { const pj = ne.proj(), r = await save();
         openClaude(r.command, 'recreate', `${r.request.how} → ${pj}`); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
@@ -261,7 +263,8 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
     $('#cvdraft', el).onclick = async () => {
       try { const pj = ne.proj(); await save();
         await api('/api/jobs', {kind: 'draft', args: {project: pj}, queue: true});
-        toast(t('The quick draft is on its way - it shows up here when it is ready'), 'ok'); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
+        toast(neShots(st, ne.P()) ? t('The quick draft is on its way - check its shots here when it is ready, then render it')
+          : t('The quick draft is on its way - it shows up here when it is ready'), 'ok'); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
       catch (e) { toast(e.message, 'err'); }
     };
     $('#cvbuild', el).onclick = async () => {                 // 7: every part as picked, on the cuts, then rendered
@@ -771,7 +774,8 @@ function neFinal(box, ne) {
       <div class="nefmts">${fmts.map(([v, l, s]) => `<button class="necard nefmt" data-f="${v}"><i class="neshape ${v || 'auto'}"></i><span><b>${l}</b><span>${s}</span></span></button>`).join('')}</div></div>
     <div class="neq" id="neframeq"><label title="${ta('How a horizontal clip fills the vertical video')}">${neIcon('i-videos', '--pink')}${t('Framing')}</label>
       <div class="nefmts">${NE_FRAMES().map(([v, l, s]) => `<button class="necard nefmt" data-fr="${v}"><i class="nefri">${edFrameIcon(v || 'auto')}</i><span><b>${l}</b><span>${s}</span></span></button>`).join('')}</div></div>
-    <div class="neq"><button class="necard nedvr" id="nedvr" title="${ta('the same edit as a timeline you can keep editing by hand')}"><span class="nedvlogo"><img src="/files/logos/davinci-resolve/color.svg" alt=""></span><b>${t('Build in DaVinci')}</b></button></div>
+    <div class="neq nerow2"><button class="necard nedvr" id="nedvr" title="${ta('the same edit as a timeline you can keep editing by hand')}"><span class="nedvlogo"><img src="/files/logos/davinci-resolve/color.svg" alt=""></span><b>${t('Build in DaVinci')}</b></button>
+      <button class="necard nedvr neshots" id="neshots" title="${ta('every shot as a picture before anything renders - swap any, then render it (on by itself from 6 clips)')}"><span class="nedvlogo">${neIcon('i-shots', '--cyan')}</span><b>${t('Check the shots first')}</b></button></div>
     <div class="neq"><label>${neIcon('i-clipboard', '--green')}${t('Summary')}</label><div class="nesum" id="nesumc"></div></div>
     <div class="nefinb"><span class="neest" id="neest"></span><span class="small amber" id="neneed"></span></div>`;
   const seg = $('#nelen', box), other = $('#nelenx', box);
@@ -782,7 +786,10 @@ function neFinal(box, ne) {
     $$('[data-fr]', box).forEach(b => b.classList.toggle('on', b.dataset.fr === st.framing));
     $('#neframeq', box).hidden = !neFramed(st);           // (0.6.1: only where a horizontal clip has to be framed)
     $('#nedvr', box).classList.toggle('on', !!st.resolve);
+    $('#neshots', box).classList.toggle('on', neShots(st, ne.P()));
   };
+  // 2026-11-03 (0.6.1 step 3, the shot list): the plan first, its shots on the video's page, the render after
+  $('#neshots', box).onclick = () => { st.shots = !neShots(st, ne.P()); paint(); ne.changed(); };
   $$('[data-fr]', box).forEach(b => b.onclick = () => { st.framing = b.dataset.fr; paint(); ne.changed(); });
   // DaVinci Resolve (2026-10-25, the user: "move ... build it as a davinci project in the actual form in the final
   // section and make it more simple ... add the davinci logo, and just say 'build in davinci'"): one card, on / off
@@ -981,7 +988,8 @@ function neRows(ne) {
     final: [row(t('Length'), st.length ? `${st.length} s` : t('Auto'), '', !st.length),
       row(t('Format'), st.format ? {vertical: t('Vertical 9:16'), horizontal: t('Horizontal 16:9'), square: t('Square 1:1')}[st.format] : t('Auto'), '', !st.format),
       neFramed(st) && st.framing && row(t('Framing'), (NE_FRAMES().find(([v]) => v === st.framing) || [0, st.framing])[1]),
-      st.resolve && row('DaVinci Resolve', t('yes, a project too'))].filter(Boolean),
+      st.resolve && row('DaVinci Resolve', t('yes, a project too')),
+      neShots(st, P) && row(t('Shots'), t('checked by you before the render'))].filter(Boolean),
     segs: (Sg => Sg && Sg.segments.length ? [row(t('Parts'), tn(Sg.segments.length, '{n} part', '{n} parts')),
       Sg.segments.some(s => s.by === 'user') && row(t('Yours'), tn(Sg.segments.filter(s => s.by === 'user').length, '{n} picked by you', '{n} picked by you')),
       Sg.segments.some(s => s.by === 'claude') && row('Claude', tn(Sg.segments.filter(s => s.by === 'claude').length, '{n} picked by Claude', '{n} picked by Claude'))].filter(Boolean)
@@ -991,6 +999,8 @@ function neRows(ne) {
 const NE_FRAMES = () => [['', t('Auto'), t('picked per shot')], ['fill', t('Fill'), t('the face fills the frame')],
   ['fit', t('Fit'), t('all of the picture in a band')], ['split', t('Split'), t('two people, one above the other')]];
 const neFramed = st => st.format === 'vertical' || st.format === 'square';
+// 2026-11-03: *Check the shots first* - by itself from 6 clips (tools\brief.py MANY_CLIPS), else the user's tick
+const neShots = (st, P) => st.shots == null ? ((P && P.clips) || 0) >= 6 : !!st.shots;
 // the steps on the left: before the one on screen = a tick and the short answer (Auto when nothing was picked), the one
 // on screen = a gold ring and Now, the rest their number (dashed = optional) and their answer once something is picked;
 // red = no clips; .rchn = the line down to the next step is gold (that step is reached)

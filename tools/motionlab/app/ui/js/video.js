@@ -50,7 +50,7 @@ async function pageProject(main, name, tab = 'overview') {
   const bk = $('#pjback'); if (bk) bk.onclick = () => move(false);
   $('#pjren').onclick = () => renameModal(P);
   const stopProg = progressPanel($('#pjprog'), () => { if (location.hash.startsWith('#/project/' + encodeURIComponent(name))) route(); },
-                                 ['draft', 'miniedit', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
+                                 ['draft', 'miniedit', 'render', 'catalogue', ...THUMB_JOBS], j => (j.args || {}).project === P.name);
   onCleanup(stopProg);
   const el = $('#tab');
   if (tab === 'review') return projReview(el, P);
@@ -142,6 +142,7 @@ function finishModal(P, from, done) {
 function projOverview(el, P, toPub = false) {
   const R = newestFirst(P), nx = (P.outcome || {}).next || null, enc = encodeURIComponent(P.name);
   const draft = R.length > 0 && planOfRender(P, R[0]).made_by === 'draft_edit.py';     // the newest = a quick draft
+  const pend = unrenderedPlan(P), wait = (LIVE || []).some(y => y.project === P.name);  // 2026-11-03: its shots first
   if (!P.plans.length && !R.length) {
     const scr = (P.made_from || []).filter(x => x.kind === 'prompt' && /^(script|hook)-/.test(x.id)).pop();
     el.innerHTML = P.generated
@@ -165,6 +166,8 @@ function projOverview(el, P, toPub = false) {
       ${mf.length ? `<div class="small muted pvmade">${t('Made from {list}', {list: mf.join(', ')})}</div>` : ''}</div>
       <nav class="panel pvindex" id="pvidx"></nav></div>
     ${R.length ? `<div class="pvnext">
+        ${pend && !wait ? `<button class="onx shots" data-go="shots"><span class="oic"><svg class="i"><use href="#i-shots"/></svg></span>
+          <span class="otx"><b>${t('{version} is not rendered yet - check its shots', {version: esc(pend.version)})}</b><span>${t('every shot as a picture: swap any, then render it')}</span></span><span class="oar">→</span></button>` : ''}
         ${draft ? `<button class="onx fin${nx === 'finish' ? ' on' : ''}" data-go="finish"><span class="oic"><svg class="i"><use href="#i-sparkle"/></svg></span>
           <span class="otx"><b>${t('Happy with the cuts? Finish it with Claude')}</b><span>${t('the cuts and transitions stay - Claude adds motion graphics, captions, sound effects')}</span></span><span class="oar">→</span></button>` : ''}
         ${P.plans.length ? `<button class="onx ed" data-go="editor"><span class="oic"><svg class="i"><use href="#i-edit"/></svg></span>
@@ -182,7 +185,10 @@ function projOverview(el, P, toPub = false) {
   if (!R.length) {                                   // planned, not rendered yet (a quick draft or Claude is on it)
     const pl = P.plans[P.plans.length - 1];
     $('#pvpl', el).innerHTML = `<div class="pvnone">${P.picture ? `<img src="${picUrl(P.picture)}" alt="">` : ''}<div><b>${t('Not rendered yet')}</b>
-      <div class="small muted">${t('A quick draft or Claude renders it - it plays here when it is ready.')}</div></div></div>`;
+      <div class="small muted">${wait ? t('A quick draft or Claude renders it - it plays here when it is ready.')
+        : t('Look at every shot first - swap any you do not like - then render it.')}</div>
+      ${wait ? '' : `<button class="btn pri" id="pvshots" style="margin-top:10px"><svg class="i"><use href="#i-shots"/></svg>${t('Check the shots')}</button>`}</div></div>`;
+    const sb = $('#pvshots', el); if (sb) sb.onclick = () => shotsModal(P, pl.file);
     $('#pvkv', el).innerHTML = `${esc(pl.version)}${pl.made_by === 'draft_edit.py' ? ' · ' + t('quick draft') : ' · ' + t('by Claude')}${pl.frames ? ` · ${lenWords(pl.frames, pl.fps)} · ${pl.fps} fps` : ''}`;
   }
   let pl = null, cur = null;
@@ -196,6 +202,7 @@ function projOverview(el, P, toPub = false) {
   $$('[data-go]', el).forEach(b => b.onclick = async e => {
     e.preventDefault();
     if (b.dataset.go === 'editor') { location.hash = `#/project/${enc}/editor`; return; }
+    if (b.dataset.go === 'shots') return shotsModal(P, pend.file);
     if (b.dataset.go === 'start_over') return startOver(P);
     if (b.dataset.go === 'finish') return finishModal(P, R[0].version || '', () => projOverview(el, P));
     try { if (nx !== 'fix') await setNext(P, 'fix'); } catch (e) { toast(e.message, 'err'); return; }
@@ -413,6 +420,118 @@ function wirePackaging(el, P) {
       const box = $('.opack', el); box.outerHTML = packagingBox(P); wirePackaging(el, P);
     } catch (e) { toast(e.message, 'err'); }
   };
+}
+
+// ---- The shot list (2026-11-03, docs\plans.md 0.6.1 step 3 - "a shot list with pictures before any render": the user
+// swaps or approves before anything renders). A plan's shots as they will look (catalogue.shot_rows from the light cache
+// - no render), each with frame + timecode, the clip catalogue's line and what to fix (`bad_k` = English keys + values,
+// translated here - es.editor-1.json `_by_key`); *Swap* = another moment of the clips in its place (inside its usable
+// part, the shot's length kept); nothing is saved until *Render with these shots* (none swapped = the job render, else
+// the Editor's own save: the next version + its build). Without a catalogue: the shots, no swaps, *Catalogue the clips*
+// (the job catalogue). GET / POST /api/project/<p>/shots, GET .../moment?m=, POST .../shots/render.
+const slBad = b => t(b[0], {...(b[1] || {}), why: ((b[1] || {}).why || []).map(w => t(w)).join(', ')});
+const slMeasured = m => [m.motion, m.light].filter(Boolean).map(w => t(w)).join(' · ');
+const unrenderedPlan = P => { const pl = P.plans[P.plans.length - 1];          // the newest plan, when nothing shows it yet
+  return pl && pl.file && !P.renders.some(r => planOfRender(P, r) === pl) ? pl : null; };
+async function shotsModal(P, plan) {
+  const enc = encodeURIComponent(P.name), swaps = {};
+  let D = null, sel = null, busy = false;
+  const flt = {fit: true, fresh: false, q: ''};
+  const list = () => Object.entries(swaps).map(([shot, moment]) => ({shot, moment}));
+  const load = () => list().length ? api(`/api/project/${enc}/shots`, {plan, swaps: list()})
+    : api(`/api/project/${enc}/shots?plan=${encodeURIComponent(plan)}`);
+  try { D = await load(); } catch (e) { toast(e.message, 'err'); return; }
+  const vert = D.H > D.W, fps = D.fps, ver = (P.plans.find(p => p.file === plan) || {}).version || '';
+  modal(`<div class="slm${vert ? ' vert' : ''}">
+      <div class="slhead"><h2>${neIcon('i-shots', '--cyan')}${t('The shots of {version}', {version: esc(ver)})}</h2><span class="small muted" id="slsum"></span></div>
+      <div class="slnote small" id="slnote" hidden></div>
+      <div class="slbody"><div class="slgrid" id="slgrid"></div><aside class="slside" id="slside"></aside></div>
+      <div class="slfoot"><span class="small muted" id="slcount"></span><span class="grow"></span>
+        <button class="btn ghost" id="sled"><svg class="i"><use href="#i-edit"/></svg>${t('Open in the Editor')}</button>
+        <button class="btn pri" id="slgo"><svg class="i"><use href="#i-play"/></svg><span></span></button></div></div>`, root => {
+    const moOf = m => D.moments.find(x => x.m === m);
+    const paint = () => {
+      const bad = D.shots.filter(s => (s.bad_k || []).length).length, n = list().length;
+      $('#slsum', root).innerHTML = [tn(D.shots.length, '{n} shot', '{n} shots'), D.frames ? lenWords(D.frames, fps) : '',
+        bad ? `<span class="bad">${tn(bad, '{n} to fix', '{n} to fix')}</span>` : `<span class="good">${t('nothing to fix')}</span>`].filter(Boolean).join(' · ');
+      const notes = [];
+      if (!D.catalogue) notes.push(`<span>${t('Swaps need the clip catalogue: each clip looked at once, its moments and usable parts (about a minute, no Claude).')}</span>
+        <button class="btn sm" id="slcat">${t('Catalogue the clips')}</button>`);
+      else if (D.stale) notes.push(`<span>${t('A clip changed since the catalogue was made.')}</span><button class="btn sm" id="slcat">${t('Catalogue them again')}</button>`);
+      D.graphics.forEach(g => notes.push(`<span class="bad">${g.guard ? t('A graphic cuts into the face ({share} %) from {at} - its words get clipped', {share: g.share, at: ftc(g.f, fps)})
+        : t('A graphic covers the face ({share} %) from {at}', {share: g.share, at: ftc(g.f, fps)})}</span>`));
+      $('#slnote', root).hidden = !notes.length; $('#slnote', root).innerHTML = notes.map(x => `<div>${x}</div>`).join('');
+      const cb = $('#slcat', root);
+      if (cb) cb.onclick = async () => {
+        try { await api('/api/jobs', {kind: 'catalogue', args: {project: P.name}, queue: true});
+          toast(t('Your clips are being catalogued - open the shots again when it is done'), 'ok'); closeModal(); }
+        catch (e) { toast(e.message, 'err'); }
+      };
+      $('#slgrid', root).innerHTML = D.shots.map(s => { const bk = s.bad_k || [], say = s.say || {}, mo = moOf(s.moment);
+        return `<div class="slcard${bk.length ? ' bad' : ''}${s.swapped ? ' sw' : ''}${sel === s.id ? ' on' : ''}" data-id="${esc(s.id)}">
+          <div class="slpic"><img src="${s.img}" alt=""><b class="slno">${s.k}</b>${bk.length ? '<i class="slbadge">!</i>' : ''}${s.swapped ? `<i class="slswt">${t('swapped')}</i>` : ''}</div>
+          <div class="sltc small" title="${esc(frange(s.s, s.e, fps).replace(/<[^>]+>/g, ''))}">${ftc(s.s, fps)} · <span class="nowrap">${dec((s.e - s.s + 1) / fps)}&nbsp;s</span></div>
+          <div class="slwhat" title="${esc(s.name)}">${say.what ? esc(say.what) : `<span class="muted">${s.take ? t('your talking take') : mo ? esc(slMeasured(mo)) : t('not in the catalogue')}</span>`}</div>
+          ${bk.length ? `<ul class="slbad small">${bk.map(b => `<li>${esc(slBad(b))}</li>`).join('')}</ul>` : ''}
+          <div class="slact">${s.take ? `<span class="small muted">${t('your voice - it stays')}</span>` : !D.catalogue ? ''
+            : s.swapped ? `<button class="btn sm ghost" data-undo="${esc(s.id)}">${t('Undo')}</button><button class="btn sm" data-swap="${esc(s.id)}"><svg class="i"><use href="#i-swap"/></svg>${t('Another')}</button>`
+            : `<button class="btn sm${bk.length ? ' pri' : ''}" data-swap="${esc(s.id)}"><svg class="i"><use href="#i-swap"/></svg>${t('Swap')}</button>`}</div></div>`; }).join('');
+      $$('[data-swap]', root).forEach(b => b.onclick = () => { sel = b.dataset.swap; paint(); });
+      $$('[data-undo]', root).forEach(b => b.onclick = () => { delete swaps[b.dataset.undo]; redo(); });
+      $('#slcount', root).textContent = n ? tn(n, '{n} shot swapped', '{n} shots swapped') : t('Nothing swapped yet');
+      $('#sled', root).hidden = n > 0;                      // (the swaps live here until the render)
+      $('#slgo span', root).textContent = n ? t('Render with these shots') : t('Looks good - render it');
+      $('#slgo', root).disabled = busy;
+      side();
+    };
+    const side = () => {
+      const box = $('#slside', root), s = sel && D.shots.find(x => x.id === sel);
+      if (!s) { box.innerHTML = `<div class="slempty">${neIcon('i-swap', '--cyan')}<b>${t('Swap a shot')}</b>
+          <span class="small muted">${D.catalogue ? t('Press Swap on a shot: the other moments of your clips that fit it show here.') : t('Catalogue the clips first (above).')}</span></div>`; return; }
+      const used = {};
+      D.shots.forEach(x => { if (x.moment) (used[x.moment] = used[x.moment] || []).push(x.k); });
+      const near = new Set([D.shots[s.k - 2], D.shots[s.k]].filter(Boolean).map(x => (moOf(x.moment) || {}).group).filter(Boolean));
+      const q = flt.q.trim().toLowerCase();
+      const ms = D.moments.filter(m => m.m !== s.moment && (!flt.fit || m.usable >= s.need) && (!flt.fresh || !used[m.m])
+          && (!q || [m.name, ...(m.say ? [m.say.what, m.say.where, ...(m.say.tags || [])] : [])].join(' ').toLowerCase().includes(q)))
+        .map((m, i) => ({m, i, alike: near.has(m.group), u: used[m.m]}))
+        .sort((a, b) => (a.alike - b.alike) || (!!a.u - !!b.u) || (!a.m.say - !b.m.say) || (a.i - b.i));
+      box.innerHTML = `<div class="slsh"><b>${t('Shot {n}: swap it for', {n: s.k})}</b><span class="small muted">${dec(s.need / fps)} s ${t('of a clip')}</span>
+          <button class="btn sm ghost" id="slclose" title="${ta('Close')}">✕</button></div>
+        <div class="slflt"><button class="nech${flt.fit ? ' on' : ''}" data-f="fit" title="${ta('a usable part at least as long as the shot')}">${t('Long enough')}</button>
+          <button class="nech${flt.fresh ? ' on' : ''}" data-f="fresh">${t('Not used yet')}</button>
+          <input type="search" id="slq" placeholder="${ta('Find: sky, street, a clip…')}" value="${esc(flt.q)}"></div>
+        <div class="small muted">${tn(ms.length, '{n} moment', '{n} moments')}</div>
+        <div class="slmos">${ms.slice(0, 160).map(({m, alike, u}) => `<button class="slmo${alike ? ' alike' : ''}" data-m="${esc(m.m)}" title="${esc(m.name)} · ${esc(frange(m.a, m.b, m.fps).replace(/<[^>]+>/g, ''))}">
+            <img loading="lazy" src="/api/project/${enc}/moment?m=${encodeURIComponent(m.m)}" alt="">
+            <span>${m.say ? esc(m.say.what) : `<span class="muted">${esc(slMeasured(m))}</span>`}</span>
+            <small>${dec(m.usable / m.fps)} s${u ? ` · ${t('in shot {k}', {k: u.join(', ')})}` : ''}${alike ? ` · <b class="amber">${t('looks like its neighbour')}</b>` : ''}</small></button>`).join('')}
+          ${ms.length > 160 ? `<div class="small muted">${t('{n} more - find them with a word', {n: ms.length - 160})}</div>` : ''}
+          ${!ms.length ? `<div class="small muted">${flt.fit ? t('None long enough - untick Long enough to see shorter ones (the shot then runs past them).') : t('Nothing found')}</div>` : ''}</div>`;
+      $('#slclose', box).onclick = () => { sel = null; paint(); };
+      $$('[data-f]', box).forEach(b => b.onclick = () => { flt[b.dataset.f] = !flt[b.dataset.f]; side(); });
+      const qi = $('#slq', box);
+      qi.oninput = debounce(() => { flt.q = qi.value; side(); const n2 = $('#slq', root); n2.focus(); n2.setSelectionRange(n2.value.length, n2.value.length); }, 250);
+      $$('[data-m]', box).forEach(b => b.onclick = () => { swaps[s.id] = b.dataset.m; redo(); });
+    };
+    const redo = async () => {
+      if (busy) return;
+      busy = true; $('#slgo', root).disabled = true;
+      try { D = await load(); }
+      catch (e) { toast(e.message, 'err'); if (sel && swaps[sel]) delete swaps[sel]; }
+      busy = false; paint();
+    };
+    $('#sled', root).onclick = () => { closeModal(); location.hash = `#/project/${enc}/editor`; };
+    $('#slgo', root).onclick = async () => {
+      if (busy) return;
+      busy = true; $('#slgo', root).disabled = true;
+      try { await api(`/api/project/${enc}/shots/render`, {plan, swaps: list()});
+        toast(list().length ? t('Your swaps are saved as the next version - it plays here when it is rendered') : t('Rendering - it plays here when it is ready'), 'ok');
+        closeModal(); route(true); }
+      catch (e) { toast(e.message, 'err'); busy = false; $('#slgo', root).disabled = false; }
+    };
+    paint();
+  }, 'wide slmodal');
 }
 
 // ---- Versions: every edit version (how each was made) and its renders, the side-by-sides with the reference

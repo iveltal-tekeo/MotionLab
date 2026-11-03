@@ -295,6 +295,7 @@ def clean(body: dict, folder: Path) -> dict:
            "length_s": length, "format": fmt, "framing": framing, "music": _music(body.get("music"), folder), "sound": sound,
            "ambience": _bed(body.get("ambience")),
            "resolve": bool(body.get("resolve")), "photos": photos,
+           "shots_first": bool(body.get("shots_first")),       # 2026-11-03: the user checks the shots before a render
            "brand": BR.snapshot() if body.get("brand") else None}      # 0.6.0: For my brand - My Brand as it is now
     req["how"] = how_of(req)
     return req
@@ -320,6 +321,14 @@ def _quote(s: str) -> list[str]:
 def estimate_min(req: dict) -> float | None:
     """The page's estimate of Claude's time: about MIN_PER_S minutes per second of the video (a length picked)."""
     return round(req["length_s"] * MIN_PER_S) if req.get("length_s") else None
+
+
+# 2026-11-03, the shot list: New edit's *Check the shots first* (edit_request "shots_first") in the brief's Final
+SHOTS_FIRST = {True: "**yes - the user checks every shot in the app first.** Build the plan from the clip catalogue, "
+                     "run `tools\\catalogue.py shots <project> plan_vN.json` and fix what it flags, then STOP: no build, "
+                     "no render. Tell the user the shots wait on the video's page (*Check the shots*) - the app renders "
+                     "it with their swaps.",
+               False: "no - the lab render as usual."}
 
 
 def brief(req: dict, f: dict) -> str:
@@ -464,7 +473,8 @@ def brief(req: dict, f: dict) -> str:
                                                else "automatic - per shot (motionlab\\reframe: fill, split, fit, "
                                                "screen + face, game; the quick draft does it by itself)."),
           "- DaVinci Resolve: " + ("yes - build it (the skill's render.md, option 2) once the user approves the lab "
-                                   "render." if req.get("resolve") else "no - the lab render only.")]
+                                   "render." if req.get("resolve") else "no - the lab render only."),
+          "- The shots before the render: " + SHOTS_FIRST[bool(req.get("shots_first"))]]
     m = estimate_min(req)
     if m:
         L.append(f"- The app told the user this could take about {m:g} min of Claude (about {MIN_PER_S:g} min per "
@@ -518,4 +528,6 @@ def draft_args(req: dict) -> list[str]:
             out += ["--sfx-sounds", ",".join(sx["sounds"])]
     if req.get("ambience"):
         out += ["--ambience", str(LAB / req["ambience"])]
+    if req.get("shots_first"):                      # 2026-11-03: the clip catalogue first; the job leaves out --render
+        out += ["--catalogue"]
     return out

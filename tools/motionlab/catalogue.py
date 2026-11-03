@@ -14,6 +14,10 @@ shot size, where, a few tags) - `say()`; a line the user corrects wins over Clau
     sheets(prj, todo=False) -> the key frames' sheets (build\\catalogue\\sheet_NN.jpg, frame + timecode on each)
     say(prj, lines, by) -> what was kept / refused        lines = {moment id: {what, size, where, tags}}
     text(cat) -> the catalogue in words (the brief's *The clips*, Claude's reading)
+    shot_rows(prj, plan, tw) -> a plan's shots before any render as data (2026-11-03: the app's shot list - a picture,
+        the line, what to fix, each as text for Claude and as a key + values for the page); shots() = them on sheets
+    pick_in(moment, need), moment_rows(cat), moment_picture(prj, m) -> the shot list's swaps (a moment into a shot,
+        inside its usable part); line_at(cat, clip, frame) -> the Editor's line of a shot
 """
 from __future__ import annotations
 
@@ -351,6 +355,20 @@ def load(prj) -> dict | None:
         return None
 
 
+def stale(prj) -> bool:
+    """True when there is no catalogue yet, or a clip with a light cache is new, changed or gone since it was made
+    (draft_edit.py --catalogue makes it again only then)."""
+    cat = load(prj)
+    try:
+        man = json.loads(prj.manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return True
+    now = {sid: json.dumps(ent.get("fingerprint"), sort_keys=True) for sid, ent in man.get("sources", {}).items()
+           if not ent.get("photo") and FC.light_paths(prj.cache, sid)[1].exists()}
+    was = {c["id"]: json.dumps(c.get("fingerprint"), sort_keys=True) for c in (cat or {}).get("clips", [])}
+    return not cat or now != was
+
+
 def moments(cat: dict):
     for c in cat.get("clips", []):
         for mo in c.get("moments", []):
@@ -463,28 +481,76 @@ def _moment_at(c: dict, i: int) -> dict | None:
     return next((mo for mo in c["moments"] if mo["a"] <= i <= mo["b"]), None)
 
 
-def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], list[dict]]:
-    """A plan's shots BEFORE any render (0.6.1 steps 3 and 7): each one as it will look - its clip's light frame at
-    the shot's middle, cropped, zoomed and centred like the plan says - on sheets with frame + timecode, a line per
-    shot with what it shows (the catalogue's line), and what is wrong with it: outside its clip's usable parts, across
-    a cut inside its clip, like the shot before, a moment used twice, its subject cut off by the crop.
-    -> (sheets, lines, issues)."""
-    import sys
+def pick_in(mo: dict, need: int) -> int:
+    """Where a shot of `need` frames of its clip starts when it takes this moment (the app's shot list: a swap): inside
+    the usable window that holds the key frame when that one is long enough, else the longest that is, else around the
+    key frame inside the moment (the shot check then says what it runs into); centred on the key frame where it can."""
+    need = max(1, int(need))
+    key = int(mo.get("key", mo["a"]))
+    wins = [w for w in mo.get("usable") or [] if w[1] - w[0] + 1 >= need]
+    if wins:
+        w = next((w for w in wins if w[0] <= key <= w[1]), max(wins, key=lambda w: w[1] - w[0]))
+        lo, hi = int(w[0]), int(w[1]) - need + 1
+    else:
+        lo, hi = int(mo["a"]), max(int(mo["a"]), int(mo["b"]) - need + 1)
+    return int(min(max(key - need // 2, lo), hi))
+
+
+def moment_rows(cat: dict) -> list[dict]:
+    """Every moment as the app's shot list offers it for a swap: its clip, frames, longest usable window, motion,
+    light, look-alike group, the day filmed and its line (None = no line yet)."""
+    return [{"m": mo["m"], "clip": c["id"], "name": c.get("name") or c["id"], "a": int(mo["a"]), "b": int(mo["b"]),
+             "key": int(mo.get("key", mo["a"])), "fps": float(c.get("fps") or 25.0),
+             "usable": max((int(w[1]) - int(w[0]) + 1 for w in mo.get("usable") or []), default=0),
+             "motion": mo.get("motion"), "light": mo.get("light"), "group": mo.get("group"),
+             "filmed": c.get("filmed"), "say": mo.get("say") or None} for c, mo in moments(cat)]
+
+
+def talk_takes(plan: dict) -> set[str]:
+    """A talking video's takes (its clips under the B-roll): the shots of them are the voice - never swapped."""
+    if (plan.get("made_by") or {}).get("sound") != "talk":
+        return set()
+    return {L["src"] for L in plan.get("layers", []) if L.get("type") == "clip" and L.get("src")
+            and not L.get("tr") and not str(L.get("id", "")).startswith(("broll_", "rgb_"))}
+
+
+def line_at(cat: dict, src: str, i: int) -> dict | None:
+    """The moment of clip `src` at its frame i (the Editor's shot panel: what the shot shows) - None outside it."""
+    c = next((c for c in cat.get("clips", []) if c["id"] == src), None)
+    return _moment_at(c, int(i)) if c else None
+
+
+def moment_picture(prj, m: str) -> np.ndarray | None:
+    """A moment's key frame from its clip's light cache (RGB), or None (no catalogue / such moment / light cache)."""
+    cat = load(prj) or {}
+    for c, mo in moments(cat):
+        if mo["m"] == m:
+            try:
+                _, la = _light(prj.cache, c["id"])
+            except (OSError, ValueError, KeyError):
+                return None
+            return FC.decode(la[min(max(int(mo.get("key", mo["a"])), 0), la.shape[0] - 1)], "i420")
+    return None
+
+
+def shot_rows(prj, plan: dict, tw: int | None = None) -> dict:
+    """A plan's shots BEFORE any render (0.6.1 steps 3 and 7) as data: each one as it will look - its clip's light
+    frame at the shot's middle, cropped, zoomed and centred like the plan says (`img`, tw px wide) - with what it shows
+    (the catalogue's line) and what is wrong with it: outside its clip's usable parts, across a cut inside its clip,
+    like the shot before, a moment used twice, its subject cut off by the crop; + the graphics over a face.
+    -> {"W", "H", "fps", "rows": [{k, id, src, s, e, need, moment, say, what, take, bad, img}], "graphics": [...]}."""
     from .compose import Curve, sample_patch
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from storyboard import make_sheets
     cat = load(prj) or {"clips": []}
     by = {c["id"]: c for c in cat["clips"]}
     W, H, fps = int(plan["width"]), int(plan["height"]), float(plan["fps"])
-    tw = 160 if H > W else 240
+    tw = int(tw or (160 if H > W else 240))
     th = int(round(tw * H / W))
     lut = np.arange(256, dtype=np.float32) / 255.0
     named = plan.get("curves") or {}
     layers = sorted((L for L in plan.get("layers", []) if L.get("type") == "clip" and L.get("src")
                      and not L.get("tr") and not str(L.get("id", "")).startswith("rgb_")), key=lambda L: L["start"])
-    tiles, lines, issues, cache, prev_grp, seen = [], [], [], {}, None, {}
-    takes = ({L["src"] for L in layers if not str(L.get("id", "")).startswith("broll_")}    # a talking video's takes:
-             if (plan.get("made_by") or {}).get("sound") == "talk" else set())          # in the order said, by design
+    rows, cache, prev_grp, seen = [], {}, None, {}
+    takes = talk_takes(plan)                          # a talking video's takes: in the order said, by design
     for k, L in enumerate(layers, 1):
         s, e = int(L["start"]), int(L["end"])
         f = (s + e) // 2
@@ -524,9 +590,8 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
                     img[Y0:Y0 + patch.shape[0], X0:X0 + patch.shape[1]] = np.clip(
                         reg * (1 - cov[..., None]) + patch * 255 * cov[..., None], 0, 255)
         mo = _moment_at(c, i_mid) if c else None
-        tc = f"f{s} ({frame_to_tc(s, fps)}) - f{e} ({frame_to_tc(e, fps)})"
         what = ((mo.get("say") or {}).get("what") or "no line yet") if mo else "not in the catalogue"
-        bad = []
+        bad, bad_k = [], []                           # (bad_k: the same for the app - an English key + its values)
         if c and mo:
             if sid in takes:                          # (a take's jump cuts: the same take again, on purpose)
                 what += " (the talking take)"
@@ -535,13 +600,19 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
                 if n_out > 0.2 * max(1, i1 - i0 + 1):
                     why = sorted({w for b0, b1, w in mo["bad"] if b0 <= i1 and i0 <= b1}) or ["not in a usable part"]
                     bad.append(f"{n_out} of its frames outside the usable part ({', '.join(why)})")
+                    bad_k.append(["{n} of its frames outside the usable part", {"n": n_out}]
+                                 if why == ["not in a usable part"] else      # (no reason measured: no brackets)
+                                 ["{n} of its frames outside the usable part ({why})", {"n": n_out, "why": why}])
                 m1 = _moment_at(c, i1)
                 if m1 is not None and m1["m"] != mo["m"]:
                     bad.append(f"crosses a cut inside its clip ({mo['m']} -> {m1['m']})")
+                    bad_k.append(["crosses a cut inside its clip", {}])
                 if mo.get("group") and mo.get("group") == prev_grp:
                     bad.append("looks like the shot before")
+                    bad_k.append(["looks like the shot before", {}])
                 if mo["m"] in seen:
                     bad.append(f"{mo['m']} again (shot {seen[mo['m']]})")
+                    bad_k.append(["the same moment as shot {k}", {"k": seen[mo["m"]]}])
             sj = mo.get("subject")
             w0, h0 = (c.get("size") or [0, 0])
             cut = []                                  # per view (a layout: per panel - cut off when no panel shows it)
@@ -555,14 +626,15 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
                 cut.append(abs(sj["x"] - cx) > frac / 2 * 0.9)
             if cut and all(cut):
                 bad.append(f"its subject ({sj['by']}) is cut off by the crop")
+                bad_k.append(["its subject is cut off by the crop", {}])
             seen.setdefault(mo["m"], k)
             prev_grp = mo.get("group")
         else:
             prev_grp = None
-        lines.append(f"{k}. {tc} {sid}{'/' + mo['m'] if mo else ''}: {what}" + (" - " + "; ".join(bad) if bad else ""))
-        if bad:
-            issues.append({"shot": k, "id": L["id"], "f": s, "moment": mo["m"] if mo else None, "issues": bad})
-        tiles.append((img, f"{k} f{s} {frame_to_tc(s, fps)}{' !' if bad else ''}"))
+        rows.append({"k": k, "id": L["id"], "src": sid, "s": s, "e": e, "need": int(round((e - s + 1) * sp)),
+                     "moment": mo["m"] if mo else None, "say": (mo.get("say") or None) if mo else None,
+                     "what": what, "take": sid in takes, "bad": bad, "bad_k": bad_k, "img": img})
+    graphics, gerr = [], None
     from . import person as PS                        # 0.6.1: graphics over the face (Vibha's rule: never the face)
     try:
         for g in PS.face_issues(plan, log=lambda *_: None):
@@ -570,10 +642,35 @@ def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], l
             why = (f"the face cuts into it ({int(g['share'] * 100)} % of the face box) {at} - its words get clipped: move "
                    f"it off the face or make it smaller" if g.get("guard") else
                    f"covers the face ({int(g['share'] * 100)} % of it) {at} - move it, or give it guard / behind")
-            lines.append(f"graphic {g['id']}: {why}")
-            issues.append({"graphic": g["id"], "f": g["f"], "issues": [why]})
+            graphics.append({"id": g["id"], "f": g["f"], "why": why, "guard": bool(g.get("guard")),
+                             "share": int(g["share"] * 100)})
     except (OSError, ValueError, KeyError) as e:
-        lines.append(f"(graphics over the face not checked: {e})")
+        gerr = str(e)
+    return {"W": W, "H": H, "fps": fps, "tw": tw, "th": th, "rows": rows, "graphics": graphics, "graphics_error": gerr}
+
+
+def shots(prj, plan: dict, name: str = "plan") -> tuple[list[Path], list[str], list[dict]]:
+    """A plan's shots BEFORE any render (0.6.1 steps 3 and 7) for Claude: `shot_rows` on sheets with frame + timecode,
+    a line per shot with what it shows and what is wrong with it. -> (sheets, lines, issues)."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from storyboard import make_sheets
+    R = shot_rows(prj, plan)
+    W, H, fps, tw = R["W"], R["H"], R["fps"], R["tw"]
+    tiles, lines, issues = [], [], []
+    for r in R["rows"]:
+        k, s, e, bad = r["k"], r["s"], r["e"], r["bad"]
+        tc = f"f{s} ({frame_to_tc(s, fps)}) - f{e} ({frame_to_tc(e, fps)})"
+        lines.append(f"{k}. {tc} {r['src']}{'/' + r['moment'] if r['moment'] else ''}: {r['what']}"
+                     + (" - " + "; ".join(bad) if bad else ""))
+        if bad:
+            issues.append({"shot": k, "id": r["id"], "f": s, "moment": r["moment"], "issues": bad})
+        tiles.append((r["img"], f"{k} f{s} {frame_to_tc(s, fps)}{' !' if bad else ''}"))
+    for g in R["graphics"]:
+        lines.append(f"graphic {g['id']}: {g['why']}")
+        issues.append({"graphic": g["id"], "f": g["f"], "issues": [g["why"]]})
+    if R["graphics_error"]:
+        lines.append(f"(graphics over the face not checked: {R['graphics_error']})")
     out = prj.check(prj.build / "catalogue")
     out.mkdir(parents=True, exist_ok=True)
     sheets = make_sheets(tiles, out, f"shots_{name}", f"{name}: the shots before the render (! = something to fix)",
@@ -670,4 +767,25 @@ def selfcheck() -> dict:
         case(f"a plan's shots before the render: the black one outside its usable part, the colour bars twice "
              f"({found})", sh and len(ln) == 3 and "outside the usable part" in found.get(2, "")
              and "A2 again" in found.get(3, "") and 1 not in found and "colour bars" in ln[0])
+        R = shot_rows(prj, plan, 120)                 # the app's shot list: the same checks as keys + a picture each
+        ks = [[k for k, _ in r["bad_k"]] for r in R["rows"]]
+        case(f"the app's rows: a 120 px picture each, the issues as keys ({ks})",
+             len(R["rows"]) == 3 and R["rows"][0]["img"].shape[:2] == (213, 120) and not ks[0]
+             and "{n} of its frames outside the usable part ({why})" in ks[1] and ks[2] == ["the same moment as shot {k}"]
+             and R["rows"][0]["need"] == 20 and R["rows"][0]["moment"] == "A2")
+        mo = cat["clips"][0]["moments"]
+        ok_in = []
+        for m in mo:                                  # a swap's start: inside a usable window long enough, else the moment
+            for need in (10, 30, 400):
+                i = pick_in(m, need)
+                fits = [w for w in m["usable"] if w[1] - w[0] + 1 >= need]
+                ok_in.append(any(w[0] <= i and i + need - 1 <= w[1] for w in fits) if fits else
+                             (m["a"] <= i and (i + need - 1 <= m["b"] or i == m["a"])))
+        case(f"a swap starts inside a usable part long enough for the shot, else inside its moment ({sum(ok_in)} of "
+             f"{len(ok_in)})", all(ok_in))
+        rows_m = moment_rows(cat)
+        case("the moments for a swap: every one, its line and longest usable part",
+             len(rows_m) == 5 and rows_m[1]["say"]["what"] == "colour bars" and rows_m[2]["usable"] == 0
+             and (line_at(cat, "A", 60) or {}).get("m") == "A2" and line_at(cat, "B", 60) is None
+             and moment_picture(prj, "A2") is not None and moment_picture(prj, "A9") is None)
     return {"passed": ok, "seconds": round(time.time() - t0, 2), "lines": lines}

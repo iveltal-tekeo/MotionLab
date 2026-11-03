@@ -50,6 +50,8 @@ draft). Claude starts from it for an edit by feel (/recreate-video feel:...); th
   --render            render <project>_vN.mp4 too; the frame caches (prep_footage.py) are made first when missing;
                       a song from refs\\ (a download) -> also build\\publish\\<project>_vN_post.mp4 without it, to post
                       (the same sound added in TikTok / Instagram; motionlab\\publish.py post_copy)
+  --catalogue         2026-11-03: the clip catalogue (tools\\catalogue.py make) first when it is missing or a clip
+                      changed - the app's *Check the shots first* runs the draft with it and without --render
 Writes only into projects\\<project>\\build\\: plan_vN.json (a normal plan: render_video.py renders it, Claude refines
 it, resolve_build builds it), draft_vN.md (the style aimed for; every shot with frame + timecode, its clip and where
 in it, why that moment; the effects; what the draft cannot draw), draft\\ (the music's beats, the edit's sound). The
@@ -521,6 +523,20 @@ def pick_orientation(prj: Project, fmt: str | None, style: dict | None) -> str:
         vv = probe(f)["video"]
         shapes[orientation(vv["display_width"], vv["display_height"])] += 1
     return shapes.most_common(1)[0][0] if shapes else "vertical"
+
+
+def fresh_catalogue(prj: Project, W: int, H: int) -> None:
+    """--catalogue (2026-11-03, the app's *Check the shots first*): the clip catalogue made before the draft picks -
+    its moments and usable parts guide the picks, and the app's shot list shows them; made again only when a clip is
+    new or changed (Claude's / the user's lines stay)."""
+    from motionlab import catalogue as CT
+    ensure_caches(prj, W, H)
+    if not CT.stale(prj):
+        return
+    log("the clip catalogue first (each clip's moments and usable parts - made once)")
+    cat = CT.make(prj, load_config(), log=log)
+    log(f"catalogue: {len(cat['clips'])} clip(s), {sum(len(c['moments']) for c in cat['clips'])} moment(s) in "
+        f"{cat['seconds']} s")
 
 
 def footage(prj: Project, W: int, H: int) -> tuple[dict, list[dict], bool, float]:
@@ -1223,6 +1239,8 @@ def main() -> int:
     ap.add_argument("--ambience", help="0.6.0: an ambience bed (library\\music\\ambience\\...) under the voice")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--render", action="store_true")
+    ap.add_argument("--catalogue", action="store_true", help="2026-11-03: the clip catalogue first when missing or "
+                                                              "out of date (the app's shot list)")
     ap.add_argument("--presets", action="store_true", help="list the presets")
     ap.add_argument("--feel", help=f"a feel instead of presets: {', '.join(ST.FEEL_ORDER)}")
     ap.add_argument("--feel-test", action="store_true", help="2-3 hooks in different feels, side by side")
@@ -1259,6 +1277,8 @@ def main() -> int:
     log(f"style: {ST.summary(style)}")
     orient = pick_orientation(prj, a.format, style)
     W, H = ST.size(orient)
+    if a.catalogue:                                 # 2026-11-03: the app's "check the shots first"
+        fresh_catalogue(prj, W, H)
     srcs, clips, color, fps = footage(prj, W, H)
     d = prj.build / "draft"
     d.mkdir(parents=True, exist_ok=True)

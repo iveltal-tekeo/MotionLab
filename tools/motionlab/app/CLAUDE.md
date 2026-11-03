@@ -25,7 +25,7 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   | `analyser.js` | the Analyser (`pageRefs`, its mascots), Notes (`pageNote`, combined notes) |
   | `analysis.js` | SPARK (`pageSpark`), one analysis (`pageRef`) |
   | `edit.js` | the Editor's list (`pageProjects`), Bulk, New edit's steps |
-  | `video.js` | a video's page (`pageProject`), What it took, Review |
+  | `video.js` | a video's page (`pageProject`), What it took, Review, the shot list (`shotsModal`) |
   | `editor-preview.js` | the Editor's helpers (`edEaseFn`...) and its live preview `EdPreview` |
   | `editor.js` | the Editor itself (`projEditor`, one 1.5k-line function) |
   | `video-publish.js` | a video's Footage, Publish, Graphics, Resolve |
@@ -68,7 +68,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   "._" file (`project.is_junk`: a dot name, Thumbs.db, the AppleDouble header 00 05 16 07); `prompt` adds the script
   to made_from), `projects\<p>\build\made_from.json` + `outcome.json` (+ since 0.6.0 the Editor's
   `build\miniedit\changes_<time>.json`, its job writing the next plan, and its preview's `build\editor\` - the job
-  `editor_media`), since 0.4.3 a thumbnail's settings
+  `editor_media`; 2026-11-03 the shot list: a moment's line the user corrects in `build\clips.json` through
+  `catalogue.say` by the user, the moments' pictures in `.app\thumbs\cat_*.jpg`), since 0.4.3 a thumbnail's settings
   (`build\publish\thumbs\<id>\overlay.json` "values") + a picture the user brings (`build\publish\images\`) - never
   `package.json` itself (the tools own it; the words go through `publish.write`) - and - on a click - a Desktop / Start-menu shortcut, git pull
   (Update) / commit + push of `knowledge\` only (Share), and Delete (below; a prompt card's Delete = POST
@@ -360,7 +361,8 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   batch is ready, `Runner._notes_to_claude`; a download's `then: {"kind": "notes"}` prepares the saved video); 2026-10-30:
   spark (group cpu, `tools\spark.py prepare` - its lookups are the user's click; `claude: true` = one Claude window
   `/spark <name>` | `pending`, `Runner._spark_to_claude`; a download's `then: {"kind": "spark"}`, up to 1080p) and
-  spark_numbers (group net, `spark.py numbers` = the lookup again); `jobtools.py selfcheck` = the report's
+  spark_numbers (group net, `spark.py numbers` = the lookup again); 2026-11-03 (the shot list): render (group cpu,
+  `build.py <p> <plan>` - a plan as it is) and catalogue (group cpu, `catalogue.py make <p>`); `jobtools.py selfcheck` = the report's
   scrubbing + link and the install kinds, no network), one per group (cpu / resolve / light / net); since 0.4 a job may wait its turn (`Runner.start(queue=True)`,
   status "queued", `_next` starts it when its group is free, `active()` = running + queued keeps the server up and
   holds back updates / deletes) and a download may carry `then` (analyse the saved video: `_then_analyse`,
@@ -476,7 +478,12 @@ where people left): POST `/api/agency/retention/upload?name=` (a screenshot, raw
 `/api/agency/tests` (save | close | again | delete - `motionlab\experiments.py`), the route `#/agency/tests`; 56 (the
 same day, what works): GET / POST `/api/agency/learn` (keep | retest | forget - `motionlab\findings.py`), the route
 `#/agency/learn`; 57 (the same day, the monthly review): GET `/api/agency/month?m=YYYY-MM`, POST `/api/agency/month`
-{action: plan, month, n} (`motionlab\monthly.py`), the route `#/agency/month`, a calendar post's `next`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+{action: plan, month, n} (`motionlab\monthly.py`), the route `#/agency/month`, a calendar post's `next`; 58 (2026-11-03,
+the shot list): GET `/api/project/<p>/shots?plan=`, `/api/project/<p>/moment?m=` (a catalogue moment's picture), POST
+`.../shots` {plan, swaps}, `.../shots/render` (the jobs `render` / `miniedit`), `.../catalogue/line` (the user's line),
+the job `catalogue`, the Editor state's `lines`, edit_request `shots_first`; 59 (the same day, Analyze videos'
+*Browse…*): POST `/api/pick/videos` (`system.pick_videos`: Windows' own Open dialog through PowerShell, owned by a hidden
+always-on-top window, several videos, one picker at a time - the page can never learn a file's place). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

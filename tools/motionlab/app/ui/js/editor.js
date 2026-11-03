@@ -45,6 +45,7 @@ function projEditor(el, P) {
   let plan = '', base = null, cur = null, ops = [], labels = [], redo = [], sel = null, busy = false, pv = null, saving = false;
   let pxf = 1, zoom = 0, snap = true, lib = [], mediaJob = null, prevF = 0, capFocus = false;
   let segs = null;                                           // 0.6.1: an edit by segments' parts (its lane), or null
+  let lineEdit = null;                                       // 2026-11-03: the shot whose line is being corrected
   const fps = () => (cur || base).fps;
   const tcf = f => `f${f} (${tc(f, fps())})`;
   const store = () => `ml.editor.${P.name}.${plan}`;
@@ -222,7 +223,7 @@ function projEditor(el, P) {
         pics = `<div class="edpics">${tr ? `<img src="/api/thumb?video=${encodeURIComponent(tr)}&f=${Math.round(mid / S.fps) * S.fps}&fps=${S.fps}" loading="lazy" alt="" draggable="false">` : ''}</div>`;
       }
       return `<div class="edit edshot${on('shot', sel && sel.id === s.id)}${lock ? ' locked' : ''}${s.scene ? ' scene' : ''}" data-k="shot" data-id="${esc(s.id)}" style="left:${(s.start * pxf).toFixed(1)}px;width:${w.toFixed(1)}px;top:${y.shot}px;height:${ED_ROW.shot - 6}px"
-        title="${esc(s.scene ? `${t('Scene {n}', {n: s.n})} · ${edGfxName(S.graphics.find(g => g.id === s.id) || {id: s.id}, S, lib)}` : t('Shot {n}', {n: s.n}))} · ${esc(tcf(s.start))} - ${esc(tcf(s.end))}">${pics}
+        title="${esc(s.scene ? `${t('Scene {n}', {n: s.n})} · ${edGfxName(S.graphics.find(g => g.id === s.id) || {id: s.id}, S, lib)}` : t('Shot {n}', {n: s.n}))} · ${esc(tcf(s.start))} - ${esc(tcf(s.end))}${((((S.lines || {})[s.id] || {}).say || {}).what) ? `\n${esc(S.lines[s.id].say.what)}` : ''}">${pics}
         <span class="edlab">${s.n} · ${dec((s.end - s.start + 1) / S.fps)} s</span>${s.speed !== 1 ? `<span class="edspd">${numLoc(s.speed)}×</span>` : ''}
         ${lock ? '' : '<i class="edh l"></i><i class="edh r"></i>'}</div>`;
     };
@@ -541,6 +542,42 @@ function projEditor(el, P) {
     const n = !inspFocused && fid && $(fid, box);
     if (n && !n.disabled) { n.focus({preventScroll: true}); if (caret) try { n.setSelectionRange(...caret); } catch (e) { /* not a text field */ } }
   }
+  // 2026-11-03 (docs\plans.md 0.6.1 step 1: "the Editor shows the line under each clip and the user can correct it (a
+  // correction wins)"): what the shot shows = the clip catalogue's line of the moment it uses (Claude's or yours) -
+  // corrected here (POST .../catalogue/line = the user's line; Claude's never replace it). No catalogue = no section.
+  function lineSec(S, s) {
+    const L = (S.lines || {})[s.id];
+    if (!L) return '';
+    const y = L.say || {};
+    if (lineEdit === s.id) return `<details class="edsec" data-sec="shot.line" open><summary>${t('What it shows')}</summary>
+      <textarea id="edlnw" rows="2" maxlength="200" placeholder="${ta('a man walks to camera on a wet street at night')}">${esc(y.what || '')}</textarea>
+      <div class="edchips">${ED_SIZES().map(([k, l]) => `<button data-lsize="${k}" class="${y.size === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <input id="edlnwh" maxlength="80" placeholder="${ta('Where: a city street')}" value="${esc(y.where || '')}">
+      <input id="edlnt" maxlength="200" placeholder="${ta('Tags: person, street, night')}" value="${esc((y.tags || []).join(', '))}">
+      <div class="row edbtns"><button class="btn sm pri" id="edlnok">${t('Save')}</button><button class="btn sm ghost" id="edlnno">${t('Cancel')}</button></div></details>`;
+    const more = [y.size && (ED_SIZES().find(([k]) => k === y.size) || [0, y.size])[1], y.where && esc(y.where), ...(y.tags || []).map(esc)].filter(Boolean);
+    return `<details class="edsec" data-sec="shot.line" open><summary>${t('What it shows')}</summary>
+      <div class="edline">${y.what ? esc(y.what) : `<span class="muted">${t('No line yet')}</span>`}${y.by === 'user' ? ` <span class="edlnby">${t('yours')}</span>` : y.by === 'claude' ? ' <span class="clchip">Claude</span>' : ''}</div>
+      ${more.length ? `<div class="small muted">${more.join(' · ')}</div>` : ''}
+      <button class="btn sm ghost" id="edlned"><svg class="i"><use href="#i-pen"/></svg>${y.what ? t('Correct it') : t('Write it')}</button></details>`;
+  }
+  function bindLine(box, S, s) {
+    const L = (S.lines || {})[s.id];
+    if (!L) return;
+    const ed = $('#edlned', box); if (ed) ed.onclick = () => { lineEdit = s.id; drawInsp(); const w = $('#edlnw', box); if (w) w.focus(); };
+    const no = $('#edlnno', box); if (no) no.onclick = () => { lineEdit = null; drawInsp(); };
+    let size = (L.say || {}).size || '';
+    $$('[data-lsize]', box).forEach(b => b.onclick = () => { size = size === b.dataset.lsize ? '' : b.dataset.lsize;
+      $$('[data-lsize]', box).forEach(x => x.classList.toggle('on', x.dataset.lsize === size)); });
+    const ok = $('#edlnok', box);
+    if (ok) ok.onclick = async () => {
+      try { const r = await api(`/api/project/${encodeURIComponent(P.name)}/catalogue/line`,
+                                {moment: L.m, what: $('#edlnw', box).value, size, where: $('#edlnwh', box).value, tags: $('#edlnt', box).value});
+        [cur, base].forEach(X => Object.values((X && X.lines) || {}).forEach(x => { if (x.m === L.m) x.say = r.say; }));   // (every shot of it)
+        lineEdit = null; toast(t('Saved - Claude keeps your line'), 'ok'); draw(); }
+      catch (e) { toast(e.message, 'err'); }
+    };
+  }
   function drawInsp0() {
     const box = $('#edinsp', el), S = cur;
     if (!S) return;
@@ -565,6 +602,7 @@ function projEditor(el, P) {
       // Premiere's Properties panel shows a clip)
       box.innerHTML = `<div class="edih"><span class="eddot shot"></span><b>${t('Shot {n}', {n: s.n})}</b><span class="small muted">${dec((s.end - s.start + 1) / S.fps)} s</span></div>
         <div class="small muted">${frange(s.start, s.end, S.fps)}</div>
+        ${lineSec(S, s)}
         ${edFrameSec(s)}
         <details class="edsec" data-sec="shot.look" open><summary>${t('Position and size')}</summary><div id="edkeysbox">${keyRows(s)}</div></details>
         <details class="edsec" data-sec="shot.speed" open><summary>${t('Speed')}</summary>
@@ -587,6 +625,7 @@ function projEditor(el, P) {
         ${s.attached.length ? `<div class="small muted">${t('Moves with it: {what}', {what: esc(s.attached.map(f => /^captions/.test(f) ? t('the captions') : f.replace(/^(v\d+_|n\d+_)?(g|d)?\d+_/, '').replace(/_m\d+$/, '').replace(/[-_]/g, ' ')).join(', '))})}</div>` : ''}
         ${lock ? `<div class="small bad">${t('This video\'s sound was made in a way the Editor cannot cut again, so its shots keep their timing - ask Claude for those changes.')}</div>` : s.special ? `<div class="small muted">${t('A held frame or a stutter: it keeps its speed.')}</div>` : ''}`;
       bindKeys(box, s);
+      bindLine(box, S, s);
       $$('[data-frame]', box).forEach(b => b.onclick = () => { if (b.classList.contains('on')) return;
         push({op: 'frame', shot: s.id, layout: b.dataset.frame}, t('Shot {n}: framing {how}', {n: s.n, how: b.dataset.name})); });
       $$('[data-fmode]', box).forEach(b => b.onclick = () => { if (b.classList.contains('on')) return;

@@ -5,6 +5,23 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## Unreleased
+
+- **Check the shots before the render** - a video's page shows every shot of an edit that is not rendered yet as a
+  picture of how it will look, with its frame and timecode, what it shows and what to fix (a blurry part, the same
+  moment twice, a shot like the one before it). *Swap* puts another moment of your clips in its place - only moments
+  long enough, the ones not used yet, or a word you search - and *Render with these shots* makes it. In New edit's
+  last step, *Check the shots first* (on by itself with 6 clips or more) makes the quick draft, or Claude, stop before
+  the render so you can look first.
+- **What each shot shows, in the Editor** - a shot's panel says what its moment shows (the line Claude wrote when it
+  looked at your clips), and *Correct it* keeps your own words - Claude never writes over them.
+- **Add videos opens at once** - *Add videos*, *Analyze scripts & prompts* and *Edit several videos* waited for Claude's
+  usual time on this PC before they opened (about 6 seconds after MotionLab starts), so the button seemed to do
+  nothing. They open right away now and that line appears when it is ready.
+- **Browse for videos to analyse** - *Analyze videos* has a *Browse…* button: Windows' own file window, where you pick
+  one or several videos anywhere on your PC (they stay where they are); *Add* with an empty box opens it too. Adding a
+  video by its path no longer empties the list of videos in your refs folder.
+
 ## 0.6.0.9 - 2026-11-02 - Learn from your own posts: where people left, tests, lessons and a monthly review
 
 - **Text that comes in word by word** - three new text templates in Motion Graphics, for any video, over your footage

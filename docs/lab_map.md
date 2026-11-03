@@ -143,7 +143,8 @@ not say, or a rule.
   of footage 2.1 GB in 35 s instead of 33 GB in 131 s; `--full` = the old way), `catalogue.py` (0.6.1: the clip
   catalogue `build\clips.json` - each clip's moments by the analyser's cut detector on the light frames, usable / bad
   windows, motion, light, look-alike groups, the day filmed, key frames on sheets, Claude's line per moment via
-  `say`, the user's line wins; the brief carries it, `motionlab\catalogue.py`), `segments.py` (0.6.1, edit by
+  `say`, the user's line wins; the brief carries it, `motionlab\catalogue.py`; 2026-11-03 the app's shot list reads it -
+  `shot_rows`, swaps by `pick_in` - and `draft_edit.py --catalogue` makes it first), `segments.py` (0.6.1, edit by
   segments: an edit's segments - a talk's sentences grouped into 3-12 s beats (its jump cuts count as pauses), a song's
   phrases with the drop on its own, else runs of shots - and per segment a treatment by rules with why and two
   alternatives -> `build\segments_vN.json`; the rules in `motionlab\segments.py`; steps 3-4: `--set 3=broll` /

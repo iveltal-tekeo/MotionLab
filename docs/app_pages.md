@@ -90,7 +90,9 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   works* = three buttons Videos / Thumbnails / Scripts (`WAY_GO` link / thumbs / texts) + a foot with the three counts
   (`/api/status` `thumbs` = the sets' pictures, `texts` = the sets' texts); the sidebar tooltip names all three.
   *Add videos* = `addVideosModal` (links one per line + files from refs\ or a
-  path, up to `AV_MAX` 10; the focus `FOCUS_OPTS`; kind of video; "Claude checks each video when it is measured" =
+  path - 2026-11-03 *Browse…* = POST `/api/pick/videos`, Windows' own Open dialog for several videos anywhere, which
+  stay where they are; *Add* with an empty box opens it too, the user: "i still click Add there and it does not open";
+  it opens at once and its estimate line follows - `estLater`, the estimate reads every Claude Code log -, up to `AV_MAX` 10; the focus `FOCUS_OPTS`; kind of video; "Claude checks each video when it is measured" =
   claude:true per analyze job, or Measure only) -> POST `/api/analyze/batch` (`server.analyze_batch`: everything is
   checked before anything starts; files -> queued analyze jobs, links -> queued download jobs whose `then` starts
   the analysis of the saved file; `system` remembers `default_focus`). The page's in-progress panel
@@ -818,6 +820,34 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   (`.nesegtopic`; the lane block's tooltip and the panel's range line carry it); *back to the suggestion* = Claude's
   pick where it made one (`segSug`, `segWho`); *Recommended for all* takes back the user's picks only; the counts *n
   picked by Claude* on top and in Final's summary. Claude's picks are made only by Claude (no route sets them).
+- **The shot list** (2026-11-03, docs\plans.md 0.6.1 *Many clips* steps 1 + 3 - "a shot list with pictures before any
+  render", the user swaps or approves before anything renders; their /whats-next pick "Shot list in the app"). Way in:
+  the video's Overview when its newest plan has no render (`unrenderedPlan`) and Claude is not working on it (`LIVE`) -
+  no render at all = *Check the shots* in the *Not rendered yet* box, else a cyan card on the whole row above the next
+  steps (`.onx.shots`, "<version> is not rendered yet - check its shots"). `shotsModal(P, plan)` (js\video.js, app.css
+  "The shot list", `.sl*`): every shot as it will look (`catalogue.shot_rows` from the light cache - no render; a data
+  URL each, 180 px wide for a vertical video, 300 for a wide one), its number, its first frame + timecode and length
+  (the range on hover), the clip catalogue's line (else its measured motion · light, *your talking take*, *not in the
+  catalogue*) and what to fix in red (`bad_k`: the shot check's English keys + values, translated on the page -
+  es.editor-1.json `_by_key`, with the catalogue's bad-window / motion / light words). *Swap* = the right panel: the
+  moments of every clip (`catalogue.moment_rows`, pictures through GET `.../moment?m=` - the key frame from the light
+  cache, cached in `.app\thumbs\cat_*.jpg`), filters *Long enough* (a usable part at least as long as the shot - on)
+  and *Not used yet*, a word search; moments that look like the shot's neighbours last and dimmed; a click = the swap
+  (`{shot, moment}`, nothing saved: POST `.../shots` {plan, swaps} draws them again - `data._shot_ops` = the Editor's
+  `take` from `catalogue.pick_in`: inside the moment's usable part, centred on its key frame, the shot's length kept),
+  *Undo* / *Another* on a swapped shot. A talking take's shots never swap (its voice; `catalogue.talk_takes`, refused
+  by the route too). Footer: *Looks good - render it* / *Render with these shots* = POST `.../shots/render`
+  (`data.shots_render`: none swapped = the job `render` = build.py on the plan; swapped = the Editor's own save, the job
+  `miniedit` - the next version + its build; refused while a job for the video runs), *Open in the Editor* (hidden
+  while a swap waits). No catalogue: the shots without swaps + *Catalogue the clips* (the job `catalogue` =
+  `catalogue.py make`); a clip changed since: *Catalogue them again*. **New edit > Final**: *Check the shots first*
+  (`#neshots`, `neShots`: on by itself from 6 clips - brief.py MANY_CLIPS - else the user's tick) = edit_request
+  `shots_first`: the quick draft job runs `draft_edit.py ... --catalogue` without `--render` (the catalogue made when
+  missing or a clip changed - `catalogue.stale`), Claude's brief says to stop before the build (by_feel.md). **The
+  Editor**: a shot's panel *What it shows* (`lineSec` / `bindLine`: the catalogue's line of the moment in the middle
+  of the shot's part of its clip - `data._shot_lines`, the state's `lines`; *yours* / Claude; *Correct it* = POST
+  `.../catalogue/line` = `catalogue.say` by the user, which Claude's lines never replace) and the line in the shot's
+  tooltip. API_LEVEL 58.
 
 ## Generator vs Editor
 

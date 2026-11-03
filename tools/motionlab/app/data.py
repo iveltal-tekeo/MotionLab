@@ -1821,9 +1821,10 @@ def miniedit_state(name: str, plan: str) -> dict:
     b, P = _me_plan(name, plan)
     out = b / str(P.get("output") or "-")
     media, need, more = editor_media(b, P)
+    st = _me_paths(ME.state(P))
     return {"plan": plan, "render": rel(out) if out.is_file() else None, "media": media, "need_media": need,
             "need_more": more,
-            "library": editor_sounds(), **_me_paths(ME.state(P))}
+            "library": editor_sounds(), **st, "lines": _shot_lines(name, st.get("shots", []))}
 
 
 def miniedit_preview(name: str, plan: str, ops) -> dict:
@@ -1834,7 +1835,172 @@ def miniedit_preview(name: str, plan: str, ops) -> dict:
         N, done, _ = ME.apply(P, _me_ops(ops), copies=False)
     except ME.EditError as e:
         raise ValueError(str(e))
-    return {"done": done, **_me_paths(ME.state(N))}
+    st = _me_paths(ME.state(N))
+    return {"done": done, **st, "lines": _shot_lines(name, st.get("shots", []))}
+
+
+# ------------------------------------------------------------------ 2026-11-03: the shot list (0.6.1 step 3)
+SHOT_TW = (180, 300)                                         # the shot list's pictures: px wide (a vertical / wide video)
+SHOT_PICS = LAB / ".app" / "thumbs"                          # a moment's picture, cached (the server's THUMBS)
+
+
+def _jpeg_url(img) -> str:
+    import base64
+    import cv2
+    ok, buf = cv2.imencode(".jpg", cv2.cvtColor(img, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 82])
+    return "data:image/jpeg;base64," + base64.b64encode(buf.tobytes()).decode("ascii") if ok else ""
+
+
+def _shot_ops(P: dict, cat: dict, swaps) -> list[dict]:
+    """The shot list's swaps [{"shot": a shot's id, "moment": a catalogue moment}] as the Editor's changes: a `take`
+    of the moment's clip, from where catalogue.pick_in starts it (inside its usable part, the shot's length kept)."""
+    from motionlab import catalogue as CT
+    if not swaps:
+        return []
+    if not isinstance(swaps, list) or len(swaps) > ME_MAX_OPS:
+        raise ValueError(I18N.t("a change the Editor does not know"))
+    mos = {mo["m"]: (c, mo) for c, mo in CT.moments(cat)}
+    clips = {str(L.get("id")): L for L in P.get("layers", []) if L.get("type") == "clip" and L.get("src")}
+    takes, ops = CT.talk_takes(P), []
+    for w in swaps:
+        if not isinstance(w, dict) or set(w) - {"shot", "moment"}:
+            raise ValueError(I18N.t("a change the Editor does not know"))
+        L, cm = clips.get(str(w.get("shot"))), mos.get(str(w.get("moment")))
+        if L is None or cm is None:
+            raise ValueError(I18N.t("no shot {shot} or moment {moment} in this video",
+                                    shot=str(w.get("shot"))[:40], moment=str(w.get("moment"))[:40]))
+        if L["src"] in takes:
+            raise ValueError(I18N.t("a shot of the talking take keeps its clip - it is your voice"))
+        c, mo = cm
+        if c["id"] not in (P.get("sources") or {}):
+            raise ValueError(I18N.t("no clip {clip} in this video", clip=c.get("name") or c["id"]))
+        need = int(round((int(L["end"]) - int(L["start"]) + 1) * float(L.get("speed", 1.0))))
+        ops.append({"op": "take", "shot": str(L["id"]), "src": c["id"], "in": CT.pick_in(mo, need)})
+    return ops
+
+
+def shot_list(name: str, plan: str, swaps=None) -> dict:
+    """The shot list (2026-11-03, 0.6.1 step 3 - "a shot list with pictures before any render"): a plan's shots, each
+    as it will look (catalogue.shot_rows: a picture from the light cache), its frame + timecode, the catalogue's line
+    and what to fix (`bad_k`: English keys + values, translated on the page) - with the user's swaps so far applied,
+    nothing saved; + every moment the shots can take (`moments`; their pictures: moment_picture)."""
+    from motionlab import catalogue as CT
+    from motionlab import miniedit as ME
+    from motionlab.project import Project
+    _, P = _me_plan(name, plan)
+    ME.unique_ids(P)
+    prj = Project(safe_name(name))
+    cat = CT.load(prj)
+    out = {"plan": plan, "catalogue": bool(cat), "stale": bool(cat) and CT.stale(prj), "shots": [], "moments": [],
+           "graphics": [], "fps": float(P.get("fps") or 25), "W": int(P["width"]), "H": int(P["height"])}
+    if not cat and swaps:                                    # (without a catalogue: the shots as they are, no swaps)
+        raise ValueError(I18N.t("no clip catalogue yet"))
+    ops = _shot_ops(P, cat, swaps) if cat else []
+    N = P
+    if ops:
+        try:
+            N = ME.apply(P, ops, copies=False)[0]
+        except ME.EditError as e:
+            raise ValueError(str(e))
+    R = CT.shot_rows(prj, N, SHOT_TW[0] if out["H"] > out["W"] else SHOT_TW[1])
+    names = {sid: Path(str(s.get("source") or sid)).name for sid, s in (P.get("sources") or {}).items()}
+    names |= {c["id"]: c.get("name") or c["id"] for c in (cat or {}).get("clips", [])}
+    mine = {str(w.get("shot")): str(w.get("moment")) for w in swaps or [] if isinstance(w, dict)}
+    out["shots"] = [{k: r[k] for k in ("k", "id", "src", "s", "e", "need", "moment", "say", "take", "bad_k")}
+                    | {"name": names.get(r["src"], r["src"]), "swapped": r["id"] in mine, "img": _jpeg_url(r["img"])}
+                    for r in R["rows"]]
+    out["graphics"] = [{k: g[k] for k in ("id", "f", "share", "guard")} for g in R["graphics"]]
+    out["moments"] = CT.moment_rows(cat) if cat else []
+    out["frames"] = int(N.get("frames") or 0)
+    return out
+
+
+def shots_render(name: str, plan: str, swaps) -> tuple[str, dict]:
+    """*Render with these shots* -> (the job's kind, its arguments): none swapped = the plan as it is (the job render:
+    build.py); swapped = the Editor's own save - the changes kept for the job miniedit (the next version + its build)."""
+    from motionlab import catalogue as CT
+    from motionlab import miniedit as ME
+    from motionlab.project import Project
+    p = safe_name(name)
+    _, P = _me_plan(p, plan)
+    if not swaps:
+        return "render", {"project": p, "plan": plan}
+    ME.unique_ids(P)
+    cat = CT.load(Project(p))
+    if not cat:
+        raise ValueError(I18N.t("no clip catalogue yet"))
+    return "miniedit", {"project": p, "plan": plan, "changes": miniedit_save(p, plan, _shot_ops(P, cat, swaps))}
+
+
+def moment_picture(name: str, m: str) -> Path:
+    """A catalogue moment's key frame as a small JPEG (the shot list's swaps), cached in .app\\thumbs\\ until the
+    catalogue changes."""
+    import hashlib
+    import cv2
+    from motionlab import catalogue as CT
+    from motionlab.project import Project
+    if not re.fullmatch(r"[\w\-]{1,48}", str(m or "")):
+        raise ValueError(I18N.t("no such moment: {m}", m=str(m)[:48]))
+    prj = Project(safe_name(name))
+    f = prj.build / "clips.json"
+    if not f.is_file():
+        raise FileNotFoundError(I18N.t("no clip catalogue yet"))
+    st = f.stat()
+    out = SHOT_PICS / f"cat_{hashlib.sha1(f'{f}|{st.st_mtime_ns}|{m}'.encode()).hexdigest()[:16]}.jpg"
+    if not out.is_file():
+        img = CT.moment_picture(prj, m)
+        if img is None:
+            raise FileNotFoundError(I18N.t("no such moment: {m}", m=m))
+        ok, buf = cv2.imencode(".jpg", cv2.cvtColor(img, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 80])
+        if not ok:
+            raise FileNotFoundError(I18N.t("no such moment: {m}", m=m))
+        SHOT_PICS.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(buf.tobytes())                       # (bytes, not cv2.imwrite: a path with accents)
+    return out
+
+
+def catalogue_line(name: str, body: dict) -> dict:
+    """The user's own line for a moment (the Editor's *What it shows* - "a correction wins"): catalogue.say by the
+    user, so Claude's lines never replace it."""
+    from motionlab import catalogue as CT
+    from motionlab.project import Project
+    prj = Project(safe_name(name))
+    if not CT.load(prj):
+        raise ValueError(I18N.t("no clip catalogue yet"))
+    m, what = str(body.get("moment") or "")[:48], " ".join(str(body.get("what") or "").split())
+    size, where = str(body.get("size") or ""), " ".join(str(body.get("where") or "").split())
+    tags = body.get("tags") or []
+    if isinstance(tags, str):
+        tags = [x for x in re.split(r"[,;]", tags) if x.strip()]
+    if not what:
+        raise ValueError(I18N.t("write what it shows"))
+    if size and size not in CT.SIZES:
+        raise ValueError(I18N.t("size: one of {choices}", choices=", ".join(CT.SIZES)))
+    if not isinstance(tags, list) or any(not isinstance(x, str) for x in tags):
+        raise ValueError(I18N.t("tags: a few words"))
+    r = CT.say(prj, {m: {"what": what[:200], "size": size, "where": where[:80], "tags": tags[:8]}}, by="user")
+    if m not in r["kept"]:
+        raise ValueError(I18N.t("no such moment: {m}", m=m))
+    return {"moment": m, "say": next((mo.get("say") for _, mo in CT.moments(CT.load(prj) or {}) if mo["m"] == m), None)}
+
+
+def _shot_lines(name: str, shots: list) -> dict:
+    """Each shot's catalogue line for the Editor (its panel's *What it shows*, its tooltip): the moment at the middle
+    of the part of its clip it shows -> {shot id: {"m", "say"}}; {} without a catalogue."""
+    from motionlab import catalogue as CT
+    from motionlab.project import Project
+    cat = CT.load(Project(safe_name(name)))
+    if not cat:
+        return {}
+    out = {}
+    for s in shots:
+        if s.get("scene") or not s.get("src"):
+            continue
+        mid = int(s.get("in", 0)) + int(round((int(s["end"]) - int(s["start"])) * float(s.get("speed") or 1) / 2))
+        mo = CT.line_at(cat, s["src"], mid)
+        if mo:
+            out[s["id"]] = {"m": mo["m"], "say": mo.get("say") or None}
+    return out
 
 
 # ------------------------------------------------------------------ 0.6.1: Edit by segments (tools\segments.py)

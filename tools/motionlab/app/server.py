@@ -49,7 +49,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 57                                  # ui\js\core.js API_LEVEL: the functions the page needs
+API_LEVEL = 59                                  # ui\js\core.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -640,6 +640,12 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/project/([^/]+)/segments", path)       # 0.6.1: Edit by segments - the parts + picks
         if m:
             return self._json(data.segments(urllib.parse.unquote(m[1]), arg("plan", "")))
+        m = re.fullmatch(r"/api/project/([^/]+)/shots", path)          # 2026-11-03: the shot list before a render
+        if m:
+            return self._json(data.shot_list(urllib.parse.unquote(m[1]), arg("plan", "")))
+        m = re.fullmatch(r"/api/project/([^/]+)/moment", path)         # a catalogue moment's picture (its swaps)
+        if m:
+            return self._file(data.moment_picture(urllib.parse.unquote(m[1]), arg("m", "")))
         if path == "/api/brand/mood":                                   # 0.6.0 My Brand > Style: the mood board
             return self._json(data.brand_mood())
         if path == "/api/sounds":                                       # 0.6.0 Motion Graphics > Sounds
@@ -962,6 +968,19 @@ class Handler(BaseHTTPRequestHandler):
             ch = data.miniedit_save(p, str(body.get("plan", "")), body.get("ops"))
             return self._json(S.runner.start("miniedit", {"project": p, "plan": str(body.get("plan", "")), "changes": ch},
                                              queue=True).info(0))
+        m = re.fullmatch(r"/api/project/([^/]+)/shots", path)               # 2026-11-03: the shot list with the swaps
+        if m:                                                                # so far (nothing saved)
+            return self._json(data.shot_list(urllib.parse.unquote(m[1]), str(body.get("plan", "")), body.get("swaps")))
+        m = re.fullmatch(r"/api/project/([^/]+)/shots/render", path)        # *Render with these shots* (a job)
+        if m:
+            p = data.safe_name(urllib.parse.unquote(m[1]))
+            if any((j.args or {}).get("project") == p for j in S.runner.active()):  # (a draft still rendering it)
+                raise ValueError(I18N.t("{video} is still being made - render it when that is done", video=p))
+            kind, args = data.shots_render(p, str(body.get("plan", "")), body.get("swaps"))
+            return self._json(S.runner.start(kind, args, queue=True).info(0))
+        m = re.fullmatch(r"/api/project/([^/]+)/catalogue/line", path)      # the user's own line for a moment
+        if m:
+            return self._json(data.catalogue_line(urllib.parse.unquote(m[1]), body))
         m = re.fullmatch(r"/api/project/([^/]+)/editor/range", path)        # the Editor's *See it rendered* (a job)
         if m:
             p = urllib.parse.unquote(m[1])
@@ -1231,6 +1250,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(r)
         if path == "/api/shortcut":
             return self._json(system.make_shortcut(str(body.get("where", ""))))
+        if path == "/api/pick/videos":                   # 2026-11-03: Analyze videos' *Browse…* - Windows' Open dialog
+            return self._json(system.pick_videos())
         if path == "/api/open":
             if str(body.get("path", "")) in ("", "."):
                 subprocess.Popen(["explorer", str(LAB)])

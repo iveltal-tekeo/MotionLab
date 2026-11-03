@@ -3755,3 +3755,61 @@ details.nsec > .nlist { margin: 0 0 10px 18px; }
 .sptake li { margin: 6px 0; line-height: 1.5; }
 .sptake li a { margin-left: 4px; }
 .spstrip { width: 100%; border-radius: 6px; cursor: zoom-in; margin: 4px 0 10px; display: block; }
+
+/* The shot list (2026-11-03, 0.6.1 step 3: a plan's shots as pictures before any render - swap, then render;
+   js\video.js shotsModal). Cyan = the Editor's; red = something to fix; a swapped shot glows cyan. */
+.mbox.slmodal { width: min(1320px, 96vw); --acc: var(--edc); --necard: #141418; --nepick: color-mix(in srgb, var(--edc) 10%, #141418); }
+.slm .bad { color: var(--red); } .slm .good { color: var(--green); }
+.slhead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.slhead h2 { display: flex; align-items: center; gap: 10px; margin: 0; }
+.slhead h2 .i { width: 22px; height: 22px; }
+.slnote { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; margin: 6px 0 10px; border-radius: 10px;
+  background: var(--panel2); border: 1px solid var(--line2); }
+.slnote > div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.slbody { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+.slgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; max-height: 68vh; overflow: auto; padding: 2px 4px 2px 2px; }
+.slm.vert .slgrid { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); }
+.slcard { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+.slcard.bad { border-color: color-mix(in srgb, var(--red) 55%, var(--line)); }
+.slcard.sw { border-color: var(--edc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--edc) 22%, transparent); }
+.slcard.on { border-color: var(--edc); background: color-mix(in srgb, var(--edc) 8%, var(--panel)); }
+.slpic { position: relative; border-radius: 8px; overflow: hidden; background: #000; }
+.slpic img { display: block; width: 100%; height: auto; }
+.slno { position: absolute; left: 6px; top: 6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; display: grid; place-items: center;
+  background: #000c; color: #fff; font-size: 12.5px; }
+.slbadge { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--red); color: #fff; font-style: normal; font-weight: 700; }
+.slswt { position: absolute; left: 6px; bottom: 6px; padding: 2px 8px; border-radius: 10px; background: var(--edc); color: #001318; font-style: normal; font-size: 12px; font-weight: 600; }
+.sltc { color: var(--muted); }
+.sltc .nowrap { white-space: nowrap; }
+.slwhat { font-size: 13.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.slbad { margin: 0; padding-left: 16px; color: var(--red); line-height: 1.35; }
+.slact { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.slact .btn .i { width: 15px; height: 15px; }
+.slside { position: sticky; top: 0; max-height: 68vh; overflow: auto; padding: 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line2);
+  display: flex; flex-direction: column; gap: 10px; }
+.slempty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 30px 10px; }
+.slempty .i { width: 30px; height: 30px; }
+.slsh { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.slsh #slclose { margin-left: auto; }
+.slflt { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.slflt .nech { padding: 4px 12px; font-size: 13px; }
+.slflt input { flex: 1 1 140px; min-width: 0; }
+.slmos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.slmo { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line);
+  color: var(--text); font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; min-width: 0; }
+.slmo:hover { border-color: var(--edc); }
+.slmo.alike { opacity: .72; }
+.slmo img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; background: #000; }
+.slm.vert .slmo img { aspect-ratio: 9 / 14; }
+.slmo > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+.slmo small { color: var(--muted); }
+.slfoot { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+@media (max-width: 1000px) { .slbody { grid-template-columns: 1fr; } .slside { position: static; max-height: none; } }
+.pvnext .onx.shots { --oc: var(--edc); grid-column: 1 / -1; }
+.nerow2 { display: flex; gap: 10px; flex-wrap: wrap; }
+.neshots .nedvlogo { background: color-mix(in srgb, var(--cyan) 16%, transparent); }
+.neshots .nedvlogo .i { width: 22px; height: 22px; }
+.edline { font-size: 13.5px; line-height: 1.4; margin-bottom: 4px; }
+.edlnby { font-size: 11.5px; padding: 1px 7px; border-radius: 8px; background: color-mix(in srgb, var(--edc) 18%, transparent); color: var(--edc); }
+.edsec #edlnw, .edsec #edlnwh, .edsec #edlnt { width: 100%; margin: 4px 0; }

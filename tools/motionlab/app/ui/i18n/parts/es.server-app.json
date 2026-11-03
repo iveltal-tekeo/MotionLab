@@ -1,5 +1,7 @@
 {
  "_by_key": [
+  "{video}, rendered with its shots",
+  "The clips of {video}, catalogued",
   "{video} cut into parts",
   "Part {n} of {video}, previewed",
   "{video} built from your picks",
@@ -615,5 +617,20 @@
  "the screenshot is empty or bigger than 15 MB": "la captura está vacía o pesa más de 15 MB",
  "save, close, again or delete": "guardar, cerrar, otra vez o borrar",
  "keep, retest or forget": "guardar, volver a probar u olvidar",
- "plan a next test": "planifica una próxima prueba"
+ "plan a next test": "planifica una próxima prueba",
+ "a shot of the talking take keeps its clip - it is your voice": "un plano de la toma hablando mantiene su clip: es tu voz",
+ "no clip catalogue yet": "aún no hay catálogo de clips",
+ "no shot {shot} or moment {moment} in this video": "no hay ningún plano {shot} ni momento {moment} en este vídeo",
+ "no such moment: {m}": "no existe el momento {m}",
+ "size: one of {choices}": "tamaño: uno de {choices}",
+ "tags: a few words": "etiquetas: unas pocas palabras",
+ "write what it shows": "escribe qué muestra",
+ "{video} is still being made - render it when that is done": "{video} todavía se está haciendo: renderízalo cuando termine",
+ "{video}, rendered with its shots": "{video}, renderizado con sus planos",
+ "The clips of {video}, catalogued": "Los clips de {video}, catalogados",
+ "Pick the videos to analyse": "Elige los vídeos que analizar",
+ "All files": "Todos los archivos",
+ "the file picker did not open: {why}": "no se ha abierto el selector de archivos: {why}",
+ "the file picker is open already - look for it behind this window": "el selector de archivos ya está abierto: búscalo detrás de esta ventana",
+ "the file picker needs Windows - paste the video's full path instead": "el selector de archivos necesita Windows: pega mejor la ruta completa del vídeo"
 }

@@ -89,7 +89,10 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    part, across a cut, like the shot before, a moment twice, the subject cut off; a talking video's own jump cuts are
    marked "the talking take" and only checked for the crop; 0.6.1: a graphic that covers the face, with its first
    frame) - fix each one in the plan, run it again until nothing is flagged, then show the user the sheet (frame +
-   timecode on every tile) before building.
+   timecode on every tile) before building. When the brief's Final says **The shots before the render: yes** (New
+   edit's *Check the shots first*, 2026-11-03): stop there - no build, no render. Tell the user the shots wait on the
+   video's page (*Check the shots*: every shot as a picture, swap any, then render); the app builds it with their
+   swaps (build.py, or the Editor's save when they swapped).
 4. If `resolve` was asked: option 2 (`render.md`) once the user approves the lab render.
 5. Tell the user what came from which reference ("the zoom-throughs on the drops are from <title> f564
    (00:00:18:24)") and what is approximate.

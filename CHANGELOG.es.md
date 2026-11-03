@@ -7,6 +7,24 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## Sin publicar
+
+- **Revisa los planos antes del render** - la página de un vídeo muestra cada plano de una edición que aún no está
+  renderizada como una imagen de cómo va a quedar, con su fotograma y su código de tiempo, qué muestra y qué hay que
+  arreglar (una parte borrosa, el mismo momento dos veces, un plano igual que el anterior). *Cambiar* pone en su
+  lugar otro momento de tus clips (solo los bastante largos, los que aún no usas o los que encuentres con una
+  palabra) y *Renderizar con estos planos* lo hace. En el último paso de Nueva edición, *Revisar los planos antes* (se
+  activa solo con 6 clips o más) hace que el borrador rápido, o Claude, se pare antes del render para que lo mires
+  primero.
+- **Qué muestra cada plano, en el Editor** - el panel de un plano dice qué muestra su momento (la línea que Claude
+  escribió al mirar tus clips), y *Corregirla* guarda tus propias palabras: Claude nunca las sobrescribe.
+- **Añadir vídeos se abre al momento** - *Añadir vídeos*, *Analizar guiones y prompts* y *Editar varios vídeos* esperaban
+  al tiempo habitual de Claude en este PC antes de abrirse (unos 6 segundos después de arrancar MotionLab), así que
+  parecía que el botón no hacía nada. Ahora se abren enseguida y esa línea aparece cuando está lista.
+- **Examina para elegir los vídeos que analizar** - *Analizar vídeos* tiene un botón *Examinar…*: la ventana de
+  archivos de Windows, donde eliges uno o varios vídeos de cualquier sitio de tu PC (se quedan donde están); *Añadir*
+  con la casilla vacía también la abre. Añadir un vídeo por su ruta ya no vacía la lista de vídeos de tu carpeta refs.
+
 ## 0.6.0.9 - 2026-11-02 - Aprende de tus propias publicaciones: dónde se fue la gente, pruebas, lecciones y un repaso del mes
 
 - **Texto que entra palabra a palabra**: tres plantillas de texto nuevas en Motion Graphics, para cualquier vídeo,

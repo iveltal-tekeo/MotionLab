@@ -346,5 +346,10 @@
  "The channels the feed comes from, one per line (@handle or a channel link):": "Los canales de los que sale el feed, uno por línea (@usuario o el enlace del canal):",
  "Save and get their videos": "Guardar y traer sus vídeos",
  "Back to the usual ones": "Volver a los de siempre",
- "Could not get the newest videos: {why}": "No se han podido traer los vídeos más nuevos: {why}"
+ "Could not get the newest videos: {why}": "No se han podido traer los vídeos más nuevos: {why}",
+ "Browse…": "Examinar…",
+ "Pick videos anywhere on this PC - they stay where they are": "Elige vídeos de cualquier sitio de este PC: se quedan donde están",
+ "Adds the path in the box - with the box empty, it opens Browse": "Añade la ruta de la casilla; con la casilla vacía, abre Examinar",
+ "Pick them in the window that opened…": "Elígelos en la ventana que se ha abierto…",
+ "{n} files are not videos - left out": {"one": "{n} archivo no es un vídeo: se ha dejado fuera", "other": "{n} archivos no son vídeos: se han dejado fuera"}
 }

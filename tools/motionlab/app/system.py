@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 from motionlab import i18n as I18N
@@ -614,6 +615,55 @@ def make_shortcut(where: str, folder: Path | None = None) -> dict:
         except Exception:                                # noqa: BLE001 - the shortcut works without it
             pass
     return {"ok": True, "path": path}
+
+
+_PICK = {"dir": ""}                                  # the last pick's folder (this server's life)
+_PICK_LOCK = threading.Lock()                        # one file picker at a time
+
+
+def pick_videos() -> dict:
+    """*Browse…* in Analyze videos (2026-11-03, the user: "or the full path of a video elsewhere ... i still click Add
+    there and it does not open"): Windows' own Open dialog - a page in a browser never learns a file's place - for
+    several videos at once, in front of MotionLab (owned by a hidden always-on-top window), in the last pick's folder
+    or the user's Videos. The files stay where they are (only read). -> {"paths": [...], "skipped": n} ([] = cancelled;
+    skipped = picked files that are not videos)."""
+    import base64
+    if sys.platform != "win32":
+        raise ValueError(I18N.t("the file picker needs Windows - paste the video's full path instead"))
+    lock = _PICK_LOCK
+    if not lock.acquire(blocking=False):
+        raise ValueError(I18N.t("the file picker is open already - look for it behind this window"))
+    try:
+        q = lambda x: "'" + str(x).replace("'", "''") + "'"              # noqa: E731 - a PowerShell string
+        exts = ";".join(f"*{e}" for e in sorted(data.VIDEO_EXT))
+        start = _PICK["dir"] if _PICK["dir"] and Path(_PICK["dir"]).is_dir() else ""
+        ps = ("[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false; "
+              "Add-Type -AssemblyName System.Windows.Forms; "
+              "$o = New-Object System.Windows.Forms.Form; $o.TopMost = $true; $o.ShowInTaskbar = $false; "
+              "$o.Opacity = 0; $o.StartPosition = 'CenterScreen'; $o.Show(); $o.Activate(); "
+              "$d = New-Object System.Windows.Forms.OpenFileDialog; $d.Multiselect = $true; "
+              f"$d.Title = {q(I18N.t('Pick the videos to analyse'))}; "
+              f"$d.Filter = {q(I18N.t('Videos') + f' ({exts})|{exts}|' + I18N.t('All files') + ' (*.*)|*.*')}; "
+              + (f"$d.InitialDirectory = {q(start)}; " if start
+                 else "$d.InitialDirectory = [Environment]::GetFolderPath('MyVideos'); ")
+              + "$r = $d.ShowDialog($o); $o.Close(); "
+              "if ($r -eq [System.Windows.Forms.DialogResult]::OK) { $d.FileNames | ForEach-Object { [Console]::Out.WriteLine($_) } }")
+        try:
+            out = subprocess.run(["powershell", "-NoProfile", "-STA", "-EncodedCommand",
+                                  base64.b64encode(ps.encode("utf-16-le")).decode("ascii")],
+                                 capture_output=True, timeout=1800, creationflags=NO_WINDOW)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            raise RuntimeError(I18N.t("the file picker did not open: {why}", why=str(e)[:200]))
+        if out.returncode != 0:
+            raise RuntimeError(I18N.t("the file picker did not open: {why}",
+                                      why=out.stderr.decode("utf-8", "replace").strip()[-200:]))
+        picked = [x.strip().lstrip("﻿") for x in out.stdout.decode("utf-8", "replace").splitlines() if x.strip()]
+        paths = [p for p in picked if Path(p).is_file() and Path(p).suffix.lower() in data.VIDEO_EXT]
+        if picked:
+            _PICK["dir"] = str(Path(picked[0]).parent)
+        return {"paths": paths[:60], "skipped": len(picked) - len(paths)}
+    finally:
+        lock.release()
 
 
 def downloads() -> list[dict]:
