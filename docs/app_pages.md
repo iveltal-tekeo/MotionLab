@@ -211,6 +211,22 @@ choice (a), 2026-10-29): kept on this PC, never in shared cards.
 - **From the other ways**: an analysis (#/ref) and a video's notes (#/note) show *Why it worked* (its SPARK) or
   *Analyze with SPARK* (`sparkLink` / `sparkWire`: the dialog with that video ticked); GET `/api/reference/<name>` and
   `/api/notes/<name>` carry `spark` (`spark.of_video`, by SHA-256 or path).
+- **A style reference** (2026-11-03, the user: "videos i analyzed as SPARK wont show up as references when i try to
+  create a new edit", then "add Prepare's pickers too"): a written SPARK is offered in New edit's *3 References*, *Edit
+  several videos* and Prepare's *In the style of* (Improve my script, Write one from zero, Title & thumbnail) - never
+  in My Brand's look or the Generator (they take effects, transitions, colour). Key `spark:<folder>`
+  (`spark.REF`, `ref_name`); `style.find` -> `spark.ref_card` = a style card of origin `spark`: SPARK's light-read
+  pacing (cuts / min, the median shot, p10 / p90 from its shots, the first 3 s), its words only when `spark.talking`
+  (110+ words / min over 40 %+ of it, no music tag - speech to text writes a song's words too), effects / beat /
+  colour None (not measured), and `spark.structure` = the verdict, the hook's type, the rubric's points on structure
+  that are not *unknown* (idea, packaging, hook, loops, payoff, pacing, ending, craft; 320 characters each), the
+  take-aways, the path of spark.md - no lookup, no views of its own (a write-up that cites one keeps it).
+  `style.text` prints it as *Structure (SPARK)*, says the effects are "not measured" (never "none"), and rates a mixed
+  pick's effects over the FLUX videos only. A video with a FLUX analysis too keeps its analysis key: `style.find`
+  adds its SPARK (`spark.structure_of`, by the card id = the SHA-256's first 12) and the picker shows it once with the
+  chip (`knowledge.style` carries `sha256`). An exact copy of a SPARK-only pick is refused (`editreq.clean` needs
+  events.json; the page greys the card with why); the brief marks each `spark:` reference; prompt records'
+  `style_refs` stay analysis folders.
 
 ## Notes
 
@@ -456,7 +472,8 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   video: sound Talking). **3 References** = picture cards of this PC's analyses (`ownVideos`; the picture, its length
   - the end of the format label - and the name, nothing else: "i dont care about the cuts per min stuff"; up to
   `max_refs` 3, "1 / 3" by the title, a search over 8) + two cards *In its / their style* or *An exact copy* (one
-  local analysis). **4 Style** (2026-10-22: "first make a row for the A ready-made style, then show the questions ...
+  local analysis). Since 2026-11-03 also the videos only SPARK read (`ownVideos(S, {spark: true})`, the gold `.refspk`
+  chip = `sparkRefChip`; *An exact copy* greyed for one, with why - *SPARK* section *A style reference*). **4 Style** (2026-10-22: "first make a row for the A ready-made style, then show the questions ...
   reduce ... to 4-5 options ... and a '+' ... show the color palette without having to scroll down ... make it more
   big"; fits a 1366x768 window, `@media (max-height: 820px)` trims the spacing): the ready-made styles in one row
   (`style.PRESETS`; `presets_info` carries their rhythm, drawn as grey bars by `neBars`: a shot each, the wider the longer,
@@ -1520,7 +1537,9 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   title | edit | graphics | ai, max, prompts, onChange})` (`.stp`: `.cvlist` / `.cvitem` rows with a search over 4+)
   fed by GET `/api/styles` = `data.style_choices()` (`loadStyles()`; an older server's 404 -> GET `/api/memory`'s own
   videos): this PC's analyses only (key = the analysis folder; picture, name, by · platform, format · kind · talking % or
-  cuts/min · checked by Claude; talk = talking first, < 30 % faded), and with `prompts` the *Scripts & hooks* group
+  cuts/min · checked by Claude; talk = talking first, < 30 % faded) - since 2026-11-03 + the videos only SPARK read
+  (`spark_only`, key `spark:<folder>`, "its structure and pacing") for purpose edit / talk / title, and the SPARK chip
+  on an analysis that has a SPARK too (`spark`; the *SPARK* section *A style reference*) - and with `prompts` the *Scripts & hooks* group
   (the user's good-rated first, then Claude's stars; source yours / <creator>'s; the first spoken line). Friends'
   cards are never offered in a picker (they stay in Claude's memory as data). `ownVideos(M, opts)` = the same rows for
   any other picker. Used by Prepare's three dialogs (videos + scripts: `like` + `like_prompts` -> POST

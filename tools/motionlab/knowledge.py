@@ -253,6 +253,8 @@ def label(c: dict, user_label: str | None = None) -> dict:
     "@handle's video". -> {"name", "by" (the uploader, else @handle), "handle", "platform"}."""
     if user_label is None and c.get("origin") != "shared" and c.get("analysis"):
         user_label = _user_label(c["analysis"])
+    elif user_label is None and c.get("origin") == "spark":              # a SPARK's own name (spark.ref_card)
+        user_label = c.get("label") or ""
     bd = c.get("breakdown") if isinstance(c.get("breakdown"), dict) else {}
     clean = _HASHTAGS.sub("", _ID_TAIL.sub("", " ".join(str(c.get("title") or "").split()))).strip()
     m = _BY_HANDLE.match(clean)
@@ -327,7 +329,8 @@ def style(name: str) -> dict | None:
          "format": fmt(w, h, v.get("duration_s")), "fps": v.get("fps"), "pacing": pc,
          "reviewed": sum(1 for e in evs if e.get("review")), "effects": len(evs),
          "verdicts": sum(1 for x in S.values() if x.get("v")),
-         "transcript": sig[3] is not None, "test": str(name).startswith("synthetic_")}
+         "transcript": sig[3] is not None, "test": str(name).startswith("synthetic_"),
+         "sha256": (ev.get("source") or {}).get("sha256")}            # its SPARK is found by it (data.style_choices)
     s["line"] = style_line(s)
     with _STYLE_LOCK:
         _STYLE[name] = (sig, s)

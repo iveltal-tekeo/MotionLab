@@ -87,7 +87,8 @@ function renderPicker(box, P, onPick) {
 }
 // a made_from video by name (data.project refs, 2026-10-18): this PC's = a link to its analysis, a friend's = the chip
 const madeRef = r => r.author ? `${esc(r.label)} ${sharedChip(r.author, r.shared)}`
-  : r.analysis ? `<a href="#/ref/${encodeURIComponent(r.analysis)}">${esc(r.label)}</a>` : esc(r.label);
+  : r.analysis ? `<a href="#/ref/${encodeURIComponent(r.analysis)}">${esc(r.label)}</a>`
+  : r.spark ? `<a href="#/spark/${encodeURIComponent(r.spark)}">${esc(r.label)}</a>` : esc(r.label);    // a video SPARK read
 // the stored words of "words" (presets' labels joined by ", ": a piece the catalogue has is translated, the user's own
 // words stay as typed) and "generated" (data.py's two fixed texts) shown in the page's language
 const madeFromWords = P => (P.made_from || []).map(x => { const link = `<a href="#/prompts/${esc(x.id)}">${esc(x.title || x.id)}</a>`;

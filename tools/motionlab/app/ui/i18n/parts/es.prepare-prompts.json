@@ -229,5 +229,8 @@
  "Answer a few questions instead": "Responder unas preguntas",
  "Claude saves one improved version - it takes the place of the one you paste (that one goes to the Recycle Bin).": "Claude guarda una versión mejorada: ocupa el lugar de la que pegas (esa va a la Papelera de reciclaje).",
  "Paste it the way you would say it. The check on the right needs no Claude; Claude then checks every part and writes a better version that takes its place.": "Pégalo tal como lo dirías. La comprobación de la derecha no necesita a Claude; después Claude revisa cada parte y escribe una versión mejor que ocupa su lugar.",
- "improving…": "mejorando…"
+ "improving…": "mejorando…",
+ "Read by SPARK: its hook, structure and pacing - no effects measured": "Lo leyó SPARK: su gancho, su estructura y su ritmo; sin efectos medidos",
+ "Its SPARK goes with it: the hook, the structure and the pacing": "Su SPARK va con él: el gancho, la estructura y el ritmo",
+ "its structure and pacing": "su estructura y su ritmo"
 }

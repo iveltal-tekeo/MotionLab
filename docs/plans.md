@@ -242,6 +242,13 @@ writes, a gate checks, the page shows. **Before it**: the analysis Overview's Co
 the first 3 s, words per minute, text on screen), Claude's `_breakdown` per focus, `content.py stats` (views, likes,
 comments, followers, views / followers; TikTok's shares and saves), Most replayed kept at download, the thumbnail's
 measures - spread over pages, with no *why* and nothing to compare against.
+**SPARK videos as style references - built 2026-11-03, Unreleased** (the user: "videos i analyzed as SPARK wont show
+up as references when i try to create a new edit, why is that?" -> option 2 of two, "go, and add Prepare's pickers
+too"; the other option, an Animations & Effects pass of the same video, still works): a written SPARK is offered in
+New edit's References, Edit several videos and Prepare's *In the style of* as `spark:<folder>` - its pacing and its
+structure (the hook, loops, payoff, ending, craft, take-aways), no effects, never an exact copy; a video with both
+ways shows once and carries its SPARK into the style. Details: docs\app_pages.md *SPARK* > *A style reference*.
+
 **Steps 1-4 built 2026-10-30, released in 0.6.0.8** (the user: "can u work on the SPARK section?"; "Put SPARK in
 0.6.0.8"): `tools\spark.py` +
 `motionlab\spark.py` (always its own folder `analysis\spark\<name>\` - the other ways are linked by SHA-256, not
@@ -764,8 +771,8 @@ cut, 1.5-4 s, the face keeps the first 15 % and the last 10 %, no face under 2 s
 covered, picture only (test project `zz_talk_broll`: a 26 s take + 10 music-video clips, inserts on "post" and
 "singing", the voice under them = the take, envelope correlation 1.00 at 0 ms); clips loud all through (music,
 ambience) next to a real take are B-roll (pauses under 15 % of 10 ms windows; takes 30-49 %, B-roll 0-9 % on 4 takes
-+ 25 clips); `catalogue.py shots` no longer flags a take's own jump cuts. **The shot list in the app, built 2026-11-03**
-(the user's /whats-next pick "Shot list in the app"; steps 1 + 3 below): a plan's shots as pictures before any render
++ 25 clips); `catalogue.py shots` no longer flags a take's own jump cuts. **The shot list in the app, built 2026-11-03,
+released in 0.6.0.10** (the user's /whats-next pick "Shot list in the app"; steps 1 + 3 below): a plan's shots as pictures before any render
 (the video's page: *Check the shots*), swap any for another moment of the clips, then *Render with these shots*; New
 edit's *Check the shots first* (on from 6 clips) = the quick draft makes the catalogue and stops before its render,
 Claude stops before its build; the Editor shows each shot's line and takes the user's correction. **Next**: the

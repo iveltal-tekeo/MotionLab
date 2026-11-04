@@ -320,21 +320,41 @@ def style_choices() -> dict:
     """GET /api/styles - every "In the style of" picker (2026-10-18, the user: "normal people or my friends wouldnt
     know what that is? so it would be fine to only look in style of "prompts" or "videos" they already analize"):
     `videos` = this PC's analyses (key = the analysis folder, what style.find and the saved requests take; self-test
-    videos left out) with their picture and readable name; `prompts` = the prompt library's scripts and hooks (the
+    videos left out) with their picture and readable name, then the videos only SPARK read (key "spark:<name>",
+    `spark_only`; 2026-11-03); `prompts` = the prompt library's scripts and hooks (the
     user's good-rated first, then Claude's stars). Friends' cards are left out on purpose: they stay in Claude's
     memory as data, marked as shared. Light: knowledge.style() and the profiles are cached per file change."""
     from motionlab import script as SC
+    from motionlab import spark as SP
     from motionlab import style as ST
-    videos = []
-    for s in PR.all_styles():
+    videos, done = [], SP.finished()                       # done = every SPARK Claude wrote, by its video's card id
+    with_spark, styles = {x["id"] for x in done if x["id"]}, PR.all_styles()
+    for s in styles:
         sp = ((PF.profile(s["name"]) or {}).get("content") or {}).get("speech") or {}
+        vid = str(s.get("sha256") or "")[:12]
         videos.append({"key": s["name"], "title": s["title"], "label": s.get("label") or s["title"],
                        "by": s.get("by") or "", "platform": s.get("platform") or "", "picture": s.get("thumb"),
                        "format": (s.get("format") or {}).get("label"), "category_label": s.get("category_label"),
                        "focus": s.get("focus"), "talk_pct": sp.get("talk_pct"),
                        "cuts_per_min": (s.get("pacing") or {}).get("cuts_per_min"),
                        "checked": bool(s.get("breakdown")) or bool(s["effects"]) and s["reviewed"] >= s["effects"],
-                       "summary": (s.get("summary") or "")[:220], "line": s.get("line"), "analysed": s.get("analysed")})
+                       "summary": (s.get("summary") or "")[:220], "line": s.get("line"), "analysed": s.get("analysed"),
+                       "spark": bool(vid) and vid in with_spark})
+    # 2026-11-03 (the user: SPARK videos "wont show up as references"): a video SPARK read and no FLUX analysis of it =
+    # a reference for its structure and pacing ("spark:<name>", spark_only - the page offers it in the edit and Prepare
+    # pickers only, never as an exact copy); one with a FLUX analysis shows once, above (spark: true)
+    flux = {str(s.get("sha256") or "")[:12] for s in styles} - {""}
+    for x in done:
+        c = SP.ref_card(x["name"]) if not (x["id"] and x["id"] in flux) else None
+        if c:
+            L = KN.label(c)
+            videos.append({"key": c["key"], "title": c["title"], "label": L["name"], "by": L["by"],
+                           "platform": c.get("platform") or "", "picture": c.get("thumb"),
+                           "format": c["format"].get("label"), "category_label": None, "focus": None,
+                           "talk_pct": ((c["profile"]["content"].get("speech")) or {}).get("talk_pct"),
+                           "cuts_per_min": c["pacing"].get("cuts_per_min"), "checked": True,
+                           "summary": c["spark"]["verdict"][:220], "line": c["spark"]["verdict"],
+                           "analysed": c.get("made"), "spark": True, "spark_only": True})
     videos.sort(key=lambda v: str(v.get("analysed") or ""), reverse=True)
     prompts = []
     for r in PR.load_all("script") + PR.load_all("hook"):
@@ -1106,6 +1126,10 @@ def _made_refs(ids: str) -> list[dict]:
 
     def find(k: str) -> dict | None:
         nonlocal cards
+        from motionlab import spark as SP
+        if SP.ref_name(k) is not None:                                   # a video SPARK read (2026-11-03)
+            c = SP.ref_card(SP.ref_name(k))
+            return {"key": k, "label": KN.label(c)["name"], "spark": c["spark_name"]} if c else None
         if k and ".." not in k and "/" not in k and "\\" not in k and (ANALYSIS / k / "events.json").exists():
             s = KN.style(k)
             return {"key": k, "label": (s or {}).get("label") or k, "analysis": k}

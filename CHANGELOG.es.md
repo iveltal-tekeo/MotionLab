@@ -7,7 +7,14 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
-## Sin publicar
+## 0.6.0.10 - 2026-11-03 - Revisa los planos antes del render y examina tus propios vídeos
+
+- **Los vídeos que analizaste con SPARK ya sirven de referencia** - Las *Referencias* de Nueva edición, *Editar varios
+  vídeos* y *Al estilo de* en Preparar (Mejorar mi guion, Escribir uno desde cero, Título y miniatura) muestran cada
+  vídeo que SPARK ha explicado, con una etiqueta dorada SPARK, aunque no tenga análisis de Animaciones y efectos.
+  Claude sigue su gancho, su estructura y su ritmo (nunca sus palabras), y el borrador rápido, su ritmo. SPARK no mide
+  efectos, así que *Una copia exacta* sigue siendo para los vídeos analizados en Animaciones y efectos. Un vídeo leído
+  de las dos formas sale una sola vez, y ahora su SPARK va con él.
 
 - **Revisa los planos antes del render** - la página de un vídeo muestra cada plano de una edición que aún no está
   renderizada como una imagen de cómo va a quedar, con su fotograma y su código de tiempo, qué muestra y qué hay que

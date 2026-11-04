@@ -1241,6 +1241,12 @@ button.necard:disabled { opacity: .4; cursor: not-allowed; }
 .nerefp img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nerefp i { position: absolute; right: 6px; bottom: 6px; font-style: normal; font-size: 11px; padding: 1px 7px; border-radius: 6px; background: #000b; color: #fff; }
 .neref b { padding: 0 4px; font-size: 13px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* a reference SPARK read (2026-11-03): SPARK's gold, on the picture's top left and after a picker row's name */
+.refspk { display: inline-flex; align-items: center; gap: 3px; font: 700 10.5px/17px var(--ui); letter-spacing: .05em; padding: 0 7px 0 5px;
+  border-radius: 999px; white-space: nowrap; vertical-align: 1px; color: #ffb43a;
+  background: color-mix(in srgb, #ffb43a 14%, #0000); border: 1px solid color-mix(in srgb, #ffb43a 50%, #0000); }
+.refspk svg.i { width: 11px; height: 11px; margin: 0; vertical-align: 0; stroke-width: 2; }
+.nerefp .refspk { position: absolute; left: 6px; top: 6px; background: #000c; }
 .neexact { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .nexo { display: flex; gap: 14px; align-items: center; padding: 14px 40px 14px 16px; }
 .nexo .ic { color: var(--pink); } .nexo[data-x="1"] .ic { color: var(--cyan); }

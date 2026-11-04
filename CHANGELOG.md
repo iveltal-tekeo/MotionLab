@@ -5,7 +5,13 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
-## Unreleased
+## 0.6.0.10 - 2026-11-03 - Check the shots before the render, and browse for your own videos
+
+- **Videos you analysed with SPARK are references now** - New edit's *References*, *Edit several videos* and
+  Prepare's *In the style of* (Improve my script, Write one from zero, Title & thumbnail) list every video SPARK wrote
+  up, with a gold SPARK tag, even without an Animations & Effects analysis. Claude follows its hook, its structure and
+  its pacing - never its words - and the quick draft its rhythm. SPARK measures no effects, so *An exact copy* stays
+  for videos analysed in Animations & Effects. A video read both ways shows once, and its SPARK now comes with it.
 
 - **Check the shots before the render** - a video's page shows every shot of an edit that is not rendered yet as a
   picture of how it will look, with its frame and timecode, what it shows and what to fix (a blurry part, the same

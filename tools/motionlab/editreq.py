@@ -23,6 +23,7 @@ from pathlib import Path
 from motionlab import brand as BR
 from motionlab import i18n as I18N
 from motionlab import style as ST
+from motionlab.spark import REF as SPARK_REF
 from motionlab.styles import CATEGORIES
 from motionlab.util import ANALYSIS, LAB
 
@@ -331,6 +332,31 @@ SHOTS_FIRST = {True: "**yes - the user checks every shot in the app first.** Bui
                False: "no - the lab render as usual."}
 
 
+def _refs_lines(req: dict, f: dict) -> list[str]:
+    """brief()'s *3. References*: the picked videos (a `spark:` one marked - its structure, no effects), else the
+    brand's look, else none."""
+    L = ["", "## 3. References"]
+    if req.get("like"):
+        refs = f.get("refs") or {}
+        L.append("- **References** - " + ("an exact 1:1 copy: the same song, the same cuts and effects frame by frame "
+                                           "with the user's clips (the skill's copy.md):" if req.get("exact") else
+                                           "their style, mixed: `tools\\style.py` with them (+ the presets and words "
+                                           "of 4) - their rhythm, effects and captions, never their content "
+                                           "(the skill's by_feel.md):"))
+        L += [f"  - `{k}`" + (f" - {refs[k]}" if refs.get(k) and refs[k] != k else "")
+              + (" - read by SPARK only: its hook, structure and pacing (style.py's *Structure (SPARK)*); no effects "
+                 "were measured on it - take them from the other references or 4. Style" if k.startswith(SPARK_REF)
+                 else "") for k in req["like"]]
+    elif ((req.get("brand") or {}).get("look") or {}).get("like"):
+        L.append("- None picked here, but **For my brand** is ticked: the brand's editing look is the reference - "
+                 + ", ".join(f"`{x}`" for x in req["brand"]["look"]["like"]) + " - their style, mixed (`tools\\style.py` "
+                 "with them + 4. Style; the skill's by_feel.md).")
+    else:
+        L.append("- None: the style comes from 4. Style (nothing there either = `tools\\style.py closest \"<their "
+                 "words>\"` first, the skill's by_feel.md step 0).")
+    return L
+
+
 def brief(req: dict, f: dict) -> str:
     """The request in words for Claude (build\\edit_brief.md): one section per step of New edit, each line what the
     user picked and what to do with it; what they left on automatic is said to be Claude's call. f = what the app
@@ -392,22 +418,7 @@ def brief(req: dict, f: dict) -> str:
                                                                                  "frame of the clips that shows it")
                      + f"; settings {_json.dumps(BR.product_card_values(b, p), ensure_ascii=False)}"
                      + BR.product_facts(p).replace(" - ", "; ", 1))      # 5b: say only what its facts say
-    L += ["", "## 3. References"]
-    if req.get("like"):
-        refs = f.get("refs") or {}
-        L.append("- **References** - " + ("an exact 1:1 copy: the same song, the same cuts and effects frame by frame "
-                                           "with the user's clips (the skill's copy.md):" if req.get("exact") else
-                                           "their style, mixed: `tools\\style.py` with them (+ the presets and words "
-                                           "of 4) - their rhythm, effects and captions, never their content "
-                                           "(the skill's by_feel.md):"))
-        L += [f"  - `{k}`" + (f" - {refs[k]}" if refs.get(k) and refs[k] != k else "") for k in req["like"]]
-    elif ((req.get("brand") or {}).get("look") or {}).get("like"):
-        L.append("- None picked here, but **For my brand** is ticked: the brand's editing look is the reference - "
-                 + ", ".join(f"`{x}`" for x in req["brand"]["look"]["like"]) + " - their style, mixed (`tools\\style.py` "
-                 "with them + 4. Style; the skill's by_feel.md).")
-    else:
-        L.append("- None: the style comes from 4. Style (nothing there either = `tools\\style.py closest \"<their "
-                 "words>\"` first, the skill's by_feel.md step 0).")
+    L += _refs_lines(req, f)
     # 4. Style
     L += ["", "## 4. Style"]
     rows = []

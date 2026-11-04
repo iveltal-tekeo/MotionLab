@@ -727,6 +727,121 @@ def creator_pacing(name: str, uploader: str | None) -> dict | None:
     return {"n": len(vals), "cuts_per_min": round(statistics.median(vals), 1)} if vals else None
 
 
+# ------------------------------------------------------------------------------------------------ a style reference
+# 2026-11-03 (the user: "videos i analyzed as SPARK wont show up as references when i try to create a new edit", then
+# "add Prepare's pickers too"): a finished SPARK is a style reference - New edit, Edit several videos and Prepare's *In
+# the style of* - for its structure and pacing only: SPARK measures no effects, beat or colour. style.find takes it as
+# REF + the folder name (never an analysis folder's name); a video with a FLUX analysis too keeps that key and its
+# SPARK goes with it (structure_of).
+REF = "spark:"
+REF_POINTS = ("idea", "packaging", "hook", "loops", "payoff", "pacing", "ending", "craft")   # how the video is built
+POINT_MAX = 320
+TALK_WPM, TALK_PCT = 110, 40        # this fast for this long = someone talks; slower = a song's words or a few lines
+_SUNG = re.compile(r"\b(?:music|lyrics?|songs?|rap|singing)\b", re.I)
+
+
+def ref_name(key) -> str | None:
+    """The SPARK folder a style key names (REF + the name), else None."""
+    k = str(key or "")
+    return k[len(REF):] if k.startswith(REF) and k[len(REF):].strip(" ._") else None
+
+
+def _cut(s, n: int) -> str:
+    s = " ".join(str(s or "").split())
+    return s if len(s) <= n else s[:n].rsplit(" ", 1)[0].rstrip(",;:-") + " …"
+
+
+def talking(m: dict, tags) -> bool:
+    """A talking video by SPARK's light read: at least TALK_WPM words a minute over TALK_PCT % of it, and no tag that
+    says music (speech to text writes down a song's words too - the 4AM video: 177 "words/min" of lyrics)."""
+    sp = (m or {}).get("speech") or {}
+    if any(_SUNG.search(str(t)) for t in tags or []):
+        return False
+    return (sp.get("words_per_min") or 0) >= TALK_WPM and (sp.get("talk_pct") or 0) >= TALK_PCT
+
+
+def structure(name: str) -> dict | None:
+    """What a finished SPARK says about how the video is built (style.py's *Structure (SPARK)*): the verdict, the
+    hook's type, the rubric's points on structure that it could judge, the take-aways, where the whole write-up is.
+    No views and no result: an edit or a script copies a structure, never a result. None until Claude wrote it."""
+    try:
+        d = spark_dir(name)
+    except ValueError:
+        return None
+    rep = _load(d / "spark.json")
+    if not isinstance(rep, dict):
+        return None
+    m = _load(d / "measures.json") or {}
+    pts = {r["key"]: r for r in rep.get("rubric") or [] if isinstance(r, dict) and r.get("key") in REF_POINTS}
+    names = dict(RUBRIC)
+    takes = [t.get("text") if isinstance(t, dict) else t for t in rep.get("takeaways") or []]
+    return {"name": d.name, "verdict": _cut(rep.get("verdict"), VERDICT_MAX), "lang": rep.get("lang"),
+            "hook_type": HOOK_TYPES.get(str(rep.get("hook_type") or ""), ""),
+            "hook_text": (m.get("hook") or {}).get("text"), "text_pct": (m.get("text") or {}).get("visible_pct"),
+            "points": [{"key": k, "label": names[k], "text": _cut(pts[k].get("text"), POINT_MAX)} for k in REF_POINTS
+                       if k in pts and pts[k].get("label") != "unknown" and str(pts[k].get("text") or "").strip()],
+            "takeaways": [_cut(t, TAKE_MAX) for t in takes if str(t or "").strip()],
+            "file": f"analysis\\spark\\{d.name}\\spark.md"}
+
+
+def ref_card(name: str) -> dict | None:
+    """A finished SPARK as a style card (the shape style.find gives, origin "spark"): its format, the pacing of
+    SPARK's light read (shots, cuts / min, the shot lengths from its shots, the first 3 s), its words when it is a
+    talking video, and structure(). Effects, beat and colour stay None - not measured, never zero."""
+    S = structure(name)
+    if not S:
+        return None
+    d = spark_dir(name)
+    v = _load(d / "video.json")
+    if not isinstance(v, dict):
+        return None
+    from .styles import fmt
+    m = _load(d / "measures.json") or {}
+    rep = _load(d / "spark.json") or {}
+    P, H, sp = m.get("pacing") or {}, m.get("hook") or {}, m.get("speech") or {}
+    fps = float(v.get("fps") or m.get("fps") or 25)
+    dur = v.get("duration_s") or m.get("duration_s")
+    lens = sorted((s["end"] - s["start"] + 1) / fps for s in (_load(d / "shots" / "shots.json") or {}).get("shots") or []
+                  if isinstance(s, dict) and isinstance(s.get("start"), int) and isinstance(s.get("end"), int))
+
+    def q(p: float):
+        return round(lens[min(len(lens) - 1, int(p * (len(lens) - 1) + 0.5))], 2) if lens else None
+    tags = list(dict.fromkeys(str(t) for t in [*(v.get("tags") or []), *(rep.get("tags") or [])] if str(t).strip()))
+    talk = talking(m, tags)
+    content = {"hook": {"words": H.get("words")}, "speech": {"talk_pct": sp.get("talk_pct"),
+                                                             "words_per_min": sp.get("words_per_min")}} if talk else {}
+    return {"origin": "spark", "spark": S, "spark_name": d.name, "key": REF + d.name, "analysis": None,
+            "video_id": str(v.get("sha256") or "")[:12] or None, "title": v.get("title") or d.name,
+            "label": v.get("label") or "", "url": v.get("url"), "platform": v.get("platform"),
+            "uploader": v.get("uploader"), "category": None, "category_label": None, "tags": tags, "focus": None,
+            "format": fmt(v.get("width"), v.get("height"), dur), "thumb": _thumb(d), "made": rep.get("made"),
+            "video": {"duration_s": dur, "fps": fps, "width": v.get("width"), "height": v.get("height"),
+                      "frames": v.get("frames")},
+            "pacing": {"duration_s": dur, "shots": P.get("shots"), "cuts_per_min": P.get("cuts_per_min"),
+                       "avg_shot_s": P.get("avg_shot_s"), "median_shot_s": P.get("median_shot_s"),
+                       "p10_shot_s": q(0.1), "p90_shot_s": q(0.9), "hook_cuts_3s": H.get("cuts"),
+                       "first_cut_s": P.get("first_cut_s"), "cuts_on_beat_pct": None, "effects": None,
+                       "effects_per_min": None, "families": {}, "bpm": None},
+            "effects": [], "profile": {"content": content, "lines": {}}, "breakdown": None, "talking": talk}
+
+
+def finished() -> list[dict]:
+    """Every SPARK Claude has written: [{name, id}] - id = the video's card id (its SHA-256's first 12, as
+    knowledge.card), so a video with a FLUX analysis too is known as one video."""
+    out = []
+    for d in sorted(ROOT.iterdir()) if ROOT.is_dir() else []:
+        v = _load(d / "video.json") if d.is_dir() and (d / "spark.json").exists() else None
+        if isinstance(v, dict):
+            out.append({"name": d.name, "id": str(v.get("sha256") or "")[:12] or None})
+    return out
+
+
+def structure_of(video_id: str | None) -> dict | None:
+    """structure() of a video's SPARK by its card id - a FLUX reference's SPARK goes with it."""
+    hit = next((x["name"] for x in finished() if video_id and x["id"] == video_id), None)
+    return structure(hit) if hit else None
+
+
 def get(name: str) -> dict:
     """Everything a SPARK page shows."""
     d, v = need(name)
@@ -944,6 +1059,22 @@ def selfcheck() -> int:
             check((d / "spark.json").exists() and "## Not explained" in (d / "spark.md").read_text(encoding="utf-8"),
                   "a good draft is saved with its Markdown")
             check(pending() == [] and list_spark()[0]["status"] == "ready", "the list: ready once written")
+            # 2026-11-03: a finished SPARK is a style reference (style.find "spark:x") - its pacing and structure,
+            # never effects; the points it could not judge and the views stay out
+            from . import style as ST
+            c = ST.find(REF + "x")
+            txt = ST.text(ST.merge([c])) if c else ""
+            check(c and c["origin"] == "spark" and c["pacing"]["cuts_per_min"] == 22.0 and c["effects"] == []
+                  and c["talking"] is False and "## Structure (SPARK" in txt and "A secret named at once." in txt
+                  and "Open on the secret." in txt and "not measured: SPARK reads the structure" in txt
+                  and "The video cannot tell." not in txt and "90000" not in txt,
+                  "a SPARK as a style reference: its pacing, hook and take-aways; effects 'not measured', no views")
+            check(ST.find(REF + "nope") is None and ref_name("x") is None and ref_name(REF) is None
+                  and ref_name(REF + "x") == "x", "only a written SPARK, by its spark: key")
+            sp = {"speech": {"words_per_min": 150, "talk_pct": 70}}
+            check(talking(sp, ["tutorial"]) and not talking(sp, ["music video"])
+                  and not talking({"speech": {"words_per_min": 77, "talk_pct": 67}}, []),
+                  "a talking video: fast words over most of it, never a tagged song")
             # 2026-11-02: the user's own retention graph (motionlab\retention), matched by the post's link
             from . import retention as RT
             old_rt = RT.PATH

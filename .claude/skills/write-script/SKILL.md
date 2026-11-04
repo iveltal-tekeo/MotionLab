@@ -54,7 +54,10 @@ speaking rate measured on the picked videos, sentences, fillers, the longest fla
 the last line, the notes for what is on screen. Use its numbers and don't re-count them by hand.
 Picked or linked analysed videos: `.venv\Scripts\python tools\style.py <name> [<name>]` (words per minute, words in
 the first 3 s, cuts in the hook) and MCP `transcript(<name>, 0, <3 s in frames>)` for how its hook sounds
-(guidelines section 10).
+(guidelines section 10). A `spark:<name>` pick (2026-11-03) = a video only SPARK read: the same `style.py` call gives
+its pace (when it is a talking video) and *Structure (SPARK)* - the hook type, the loops, the payoff, the ending, the
+take-aways; its words are in `analysis\spark\<name>\content\transcript.txt` (MCP `transcript` reads analyses only).
+Never put a `spark:` key in `style_refs` (those are analysis folders; the import refuses it).
 
 ## 2. Check (`check`, and the first half of `improve`)
 Write Claude's check of the script as a JSON file and save it with

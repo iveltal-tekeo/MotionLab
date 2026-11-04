@@ -114,14 +114,23 @@ function sharedChip(author, what = '') {
   return `<span class="shchip" title="${tip}"><svg class="i"><use href="#i-shared"/></svg>${t('from {who}', {who: esc(who)})}</span>`;
 }
 // the analysed videos of THIS PC for a style picker, each {key, title, label, picture, line, by, platform, format,
-// category_label, focus, talk_pct, cuts_per_min, checked}: from GET /api/styles, or GET /api/memory on an older server
-// (its local videos only - friends' cards are never offered in a picker). o.talk = the talking ones first.
+// category_label, focus, talk_pct, cuts_per_min, checked, spark, spark_only}: from GET /api/styles, or GET /api/memory
+// on an older server (its local videos only - friends' cards are never offered in a picker). o.talk = the talking ones
+// first; o.spark = also the videos only SPARK read (2026-11-03: their structure and pacing - the edit and Prepare
+// pickers; never My Brand's look or the Generator, which take effects / transitions / colour)
 function ownVideos(M, o = {}) {
-  const out = ((M && M.videos) || []).filter(v => v.key || (v.origin === 'local' && v.analysis)).map(v => v.key ? v : {
+  const out = ((M && M.videos) || []).filter(v => (v.key || (v.origin === 'local' && v.analysis)) && (o.spark || !v.spark_only)).map(v => v.key ? v : {
     key: v.analysis, title: v.title, label: v.label || v.title, picture: null, by: v.by || '', platform: v.platform || '',
     line: Object.values(v.lines || {}).filter(Boolean).join(' · '), format: v.format, category_label: v.category_label,
     focus: v.focus, talk_pct: null, cuts_per_min: (v.pacing || {}).cuts_per_min, checked: !!v.summary, summary: v.summary || ''});
   return o.talk ? out.slice().sort((a, b) => ((b.talk_pct ?? 50) >= 30) - ((a.talk_pct ?? 50) >= 30)) : out;
+}
+// the gold SPARK chip on a reference SPARK read (2026-11-03): only = SPARK alone read it (its hook, structure and
+// pacing - no effects); else the video's effects analysis has a SPARK too, and it goes with it
+function sparkRefChip(only) {
+  const tip = only ? ta('Read by SPARK: its hook, structure and pacing - no effects measured')
+    : ta('Its SPARK goes with it: the hook, the structure and the pacing');
+  return `<span class="refspk" title="${tip}"><svg class="i"><use href="#i-sparkle"/></svg>SPARK</span>`;
 }
 async function loadStyles() {
   try { return await api('/api/styles'); }
@@ -139,17 +148,17 @@ async function loadStyles() {
 // talk | title | edit | graphics | ai, max, prompts, onChange}.
 function stylePicker(box, st, o = {}) {
   const S = o.S || {}, max = o.max || S.max || 3, talk = o.purpose === 'talk';
-  const vids = ownVideos(S, {talk}), prs = o.prompts ? (S.prompts || []) : [];
+  const vids = ownVideos(S, {talk, spark: ['edit', 'talk', 'title'].includes(o.purpose)}), prs = o.prompts ? (S.prompts || []) : [];
   st.like = st.like || []; st.likePrompts = st.likePrompts || [];
   let q = '';
   const has = (...xs) => !q || xs.join(' ').toLowerCase().includes(q);
   const vrow = v => { const on = st.like.includes(v.key), full = !on && st.like.length >= max, low = talk && v.talk_pct != null && v.talk_pct < 30;
     return `<label class="cvitem${on ? ' on' : ''}${full ? ' off' : ''}${low ? ' stplow' : ''}" title="${esc(v.line || v.summary || '')}"><input type="checkbox" data-g="v" value="${esc(v.key)}" ${on ? 'checked' : ''} ${full ? 'disabled' : ''}>
       ${v.picture ? `<img src="${fileUrl(v.picture)}" loading="lazy" alt="">` : '<span class="cvnoimg"></span>'}
-      <span class="grow"><b>${esc(v.label || v.title || v.key)}</b> ${focusChip(v.focus)}
+      <span class="grow"><b>${esc(v.label || v.title || v.key)}</b> ${focusChip(v.focus)}${v.spark ? ' ' + sparkRefChip(v.spark_only) : ''}
         ${v.by || v.platform ? `<span class="small muted stpl">${[v.by ? t('by {name}', {name: esc(v.by)}) : '', esc(v.platform || '')].filter(Boolean).join(' · ')}</span>` : ''}
         <span class="small muted stpl">${[esc((v.format || '').split(' · ').map((x, i) => i ? x : t(x)).join(' · ')), esc(t(v.category_label || '')), talk ? (v.talk_pct != null ? t('talking {pct} %', {pct: Math.round(v.talk_pct)}) : '')
-          : v.cuts_per_min != null ? tn(v.cuts_per_min, '{n} cuts/min', '{n} cuts/min') : '', v.checked ? t('checked by Claude') : t('not checked by Claude yet')].filter(Boolean).join(' · ')}${low ? ' · ' + t('too little talking to measure its pace') : ''}</span></span></label>`; };
+          : v.cuts_per_min != null ? tn(v.cuts_per_min, '{n} cuts/min', '{n} cuts/min') : '', v.spark_only ? t('its structure and pacing') : v.checked ? t('checked by Claude') : t('not checked by Claude yet')].filter(Boolean).join(' · ')}${low ? ' · ' + t('too little talking to measure its pace') : ''}</span></span></label>`; };
   const prow = p => { const on = st.likePrompts.includes(p.id), full = !on && st.likePrompts.length >= max;
     return `<label class="cvitem stpp${on ? ' on' : ''}${full ? ' off' : ''}"><input type="checkbox" data-g="p" value="${esc(p.id)}" ${on ? 'checked' : ''} ${full ? 'disabled' : ''}>
       <span class="stpk k-${esc(p.kind)}">${p.kind === 'hook' ? t('Hook') : t('Script')}</span>

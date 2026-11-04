@@ -710,7 +710,8 @@ def _videos_words(keys) -> str:
         if not c:
             out.append(f"{k} (not on this PC any more)")
             continue
-        who = "this PC" if c.get("origin") == "local" else f"from {c.get('author') or 'a friend'}"
+        who = ("this PC" if c.get("origin") == "local" else "this PC, read by SPARK only: style.py gives its structure"
+               if c.get("origin") == "spark" else f"from {c.get('author') or 'a friend'}")
         out.append(f"{KN.label(c)['name']} ({k}; {who})")
     return ", ".join(out)
 

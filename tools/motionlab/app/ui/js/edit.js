@@ -501,9 +501,10 @@ function neText(box, ne) {
 }
 
 // 3. References: this PC's analysed videos as picture cards (up to OPT.max_refs, the count by the title) - their style,
-// or an exact copy of one (two cards under them)
+// or an exact copy of one (two cards under them). Since 2026-11-03 also the videos only SPARK read (the gold chip):
+// their structure and pacing, never an exact copy (that needs the effects measured)
 function neRefs(box, ne) {
-  const {st, OPT} = ne, max = OPT.max_refs, vids = ownVideos(ne.S);
+  const {st, OPT} = ne, max = OPT.max_refs, vids = ownVideos(ne.S, {spark: true});
   let q = '', paintLook = () => {};
   box.innerHTML = `<div id="nebl"></div>${vids.length > 8 ? `<input type="search" class="nerq" placeholder="${ta('Search…')}">` : ''}<div class="nerefs"></div><div id="neexact"></div>`;
   const count = $('.nestx', box.closest('.nesec'));
@@ -519,12 +520,13 @@ function neRefs(box, ne) {
     };
     paintLook();
   });
-  const exact = () => {               // an exact copy needs one video analysed on this PC (every picked one is)
-    const one = st.like.length === 1 && vids.some(v => v.key === st.like[0]);
+  const exact = () => {               // an exact copy needs one video analysed on this PC (every picked one is) - its
+    const one = st.like.length === 1 && vids.some(v => v.key === st.like[0] && !v.spark_only);     // effects measured
+    const sparkOnly = st.like.length === 1 && vids.some(v => v.key === st.like[0] && v.spark_only);
     if (!one) st.exact = false;
     $('#neexact', box).innerHTML = st.like.length ? `<div class="neexact">
       <button class="necard nexo${st.exact ? '' : ' on'}" data-x="0"><svg class="ic"><use href="#i-palette"/></svg><span><b>${st.like.length > 1 ? t('In their style') : t('In its style')}</b><span>${t('your music, your length')}</span></span></button>
-      <button class="necard nexo${st.exact ? ' on' : ''}" data-x="1" ${one ? '' : `disabled title="${ta('(one video analysed on this PC)')}"`}><svg class="ic"><use href="#i-copy"/></svg><span><b>${t('An exact copy')}</b><span>${t('the same song and cuts, with your clips')}</span></span></button></div>` : '';
+      <button class="necard nexo${st.exact ? ' on' : ''}" data-x="1" ${one ? '' : `disabled title="${sparkOnly ? ta("An exact copy needs the video's effects - analyse it in Animations & Effects too") : ta('(one video analysed on this PC)')}"`}><svg class="ic"><use href="#i-copy"/></svg><span><b>${t('An exact copy')}</b><span>${t('the same song and cuts, with your clips')}</span></span></button></div>` : '';
     $$('.nexo', box).forEach(b => b.onclick = () => { st.exact = b.dataset.x === '1'; exact(); ne.changed(); });
   };
   const draw = () => {
@@ -536,7 +538,7 @@ function neRefs(box, ne) {
     $('.nerefs', box).innerHTML = vids.length ? list.map(v => { const on = st.like.includes(v.key), full = !on && st.like.length >= max,
       dur = (String(v.format || '').split(' · ')[1] || '').trim();
       return `<button class="necard neref${on ? ' on' : ''}" data-k="${esc(v.key)}" ${full ? 'disabled' : ''} title="${esc(v.line || v.summary || v.label || v.key)}">
-        <span class="nerefp">${v.picture ? `<img src="${fileUrl(v.picture)}" loading="lazy" alt="">` : ''}${dur ? `<i>${esc(dur)}</i>` : ''}</span>
+        <span class="nerefp">${v.picture ? `<img src="${fileUrl(v.picture)}" loading="lazy" alt="">` : ''}${dur ? `<i>${esc(dur)}</i>` : ''}${v.spark ? sparkRefChip(v.spark_only) : ''}</span>
         <b>${esc(v.label || v.title || v.key)}</b></button>`; }).join('')
         || `<div class="small muted">${t('No video matches.')}</div>`
       : `<div class="empty">${t('No video analysed on this PC yet - add one in the <a href="#/analyze" onclick="closeModal()">Analyser</a>.')}</div>`;
@@ -963,7 +965,7 @@ function neRows(ne) {
   const plain = v => String(v).replace(/<[^>]+>/g, '').replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'"}[e]));
   const row = (k, v, s = '', auto = false) => ({k, v, s: s || plain(v), auto});     // s goes in as text, v as html
   const pr = st.prompt && PRM.items.find(x => x.id === st.prompt);
-  const names = st.like.map(k => { const v = ownVideos(ne.S).find(x => x.key === k); return v ? v.label || v.title || k : k; });
+  const names = st.like.map(k => { const v = ownVideos(ne.S, {spark: true}).find(x => x.key === k); return v ? v.label || v.title || k : k; });
   const snd = st.sound.startsWith('music:') ? st.sound.slice(6).split('/').pop() : {auto: t('Automatic'), clips: t("The clips' own sound"), talk: t('Talking')}[st.sound];
   const lines = st.onscreen.split('\n').filter(x => x.trim());
   return {

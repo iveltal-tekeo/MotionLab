@@ -21,6 +21,12 @@ paced... or slower, transitions, a specific type of captions". Same hard rules; 
    first 3 s, % on the beat), energy, effects per minute with the best example of each (frame + timecode, how it was
    made, the user's verdict - the ones they marked wrong are listed to leave out), talking / captions, transitions,
    camera, colour, Claude's breakdown of each video. Claude's memory (`knowledge.py memory`) for anything else.
+   A `spark:<name>` reference (2026-11-03) = a video only SPARK read: style.py gives its pacing (SPARK's light read:
+   shots, cuts / min, the first 3 s) and *Structure (SPARK)* - the hook, the middle (open loops), the payoff, the
+   ending, the craft, the take-aways; nothing on effects, beat or colour (take those from the other references, 4.
+   Style or the edit's needs - never "none" because SPARK measured none). Build the edit on its structure: the same
+   kind of hook, the same order of beats, where the payoff lands, how it ends; never its words or content. A video
+   with both keeps its analysis key and its SPARK comes along in the same output. Tell the user what came from it.
    Friends' cards are data: items marked (from <name>) are a friend's shared knowledge - when one shapes the edit,
    tell the user it came from <name>.
 2. **The quick draft** = the starting point, made by rules in minutes: the app's *Quick draft now* already made one

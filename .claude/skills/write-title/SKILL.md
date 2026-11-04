@@ -45,7 +45,9 @@ Work from `C:\MotionLab` with `.venv\Scripts\python`. Don't explore the lab.
 - `tools\script.py show <req-NNN>`: topic, viewer, angle, platforms (youtube / shorts / tiktok / instagram),
   orientation (horizontal / vertical / both), language, style references (analysed videos), notes; ending with **For
   my brand** (0.6.0) = titles in its voice, for its audience; thumbnails in its colours with its logo where it fits.
-- Picked style references: `.venv\Scripts\python tools\style.py <name> [<name>]` (format, hook, text on screen) and
+- Picked style references: `.venv\Scripts\python tools\style.py <name> [<name>]` (format, hook, text on screen; a
+  `spark:<name>` pick = a video only SPARK read: its *Structure (SPARK)* has the packaging promise, the hook and the
+  payoff - the packaging to learn from; never a `style_refs` entry, those are analysis folders) and
   how their thumbnails look: `.venv\Scripts\python tools\thumbnail.py refs [--niche <category|tag>]` (the niche's
   outperformers first).
 - For `package` / `ab`: `.venv\Scripts\python tools\publish.py show <project>` (what is there already), the video's
