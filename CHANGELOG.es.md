@@ -34,6 +34,15 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
   canales, etiquetas y lo que escribió Claude: las ideas clave y secciones de unas notas, el veredicto de un SPARK) y
   filtros: el estado de Claude, la plataforma, las etiquetas, el tipo de notas o el resultado de SPARK, y el orden (más
   nuevos, más antiguos, de la A a la Z, más largos, más cortos).
+- **Combinar notas, de verdad** - las respuestas entre vídeos son tarjetas en lo alto de Notas (las imágenes de los
+  vídeos, el título de la respuesta, tu pregunta) y el buscador también las encuentra. Busca o filtra la lista y el
+  botón pasa a ser *Combinar estos N…*, con esos vídeos ya marcados; la ventana tiene su propio buscador, *Marcar los
+  N que se ven* y cuatro tipos de pregunta para empezar. La página de una respuesta tiene *Preguntar otra cosa a estos
+  vídeos* (los mismos vídeos, una pregunta nueva), *Descargar (.md)*, las notas de todos los vídeos en un archivo, las
+  otras preguntas hechas sobre los mismos vídeos y *Hecho con esta respuesta*: un calendario o una tabla que Claude
+  escribió junto a la respuesta se abre desde ahí. Las respuestas de Claude entre vídeos tienen más espacio - dos
+  puntos por vídeo en vez de 8 en total, bajo títulos, y sitio para un plan entero - y quitar una pregunta ya
+  respondida te pregunta antes una vez.
 - **Más sólido cuando algo se cancela, falla o se repite** - arreglos de una revisión de todo el código. *Quitar* en
   una tarea detiene ahora todo lo que había puesto en marcha (un render cancelado ya no sigue renderizando por
   detrás), y una tarea ya no puede quedarse «en marcha» para siempre y bloquear la cola. Un render que falla a medias

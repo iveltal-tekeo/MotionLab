@@ -513,7 +513,20 @@ def save_meta(name: str, label_: str | None = None, tags=None, done=None) -> dic
 # Claude adds from its own knowledge stays apart, in `more`, and names no frames.
 COMBINED = "_combined"
 Q_MAX, ASKS_MAX, ANSWER_POINTS, MORE_MAX, COMBINE_MAX = 2000, 60, 8, 6000, 12
+# Across videos an answer gets more room (2026-11-10: every one of the user's four combined questions - 9 or 10 videos
+# each - filled the 8 points, less than one a video, and a 6-month plan did not fit `more`, so Claude wrote its calendar
+# into loose files the page never showed): two points a video up to 24, twice the `more`, the points under up to 6
+# headings (`group`), and the files Claude made beside the answer are listed on its page (`answer_files`).
+POINTS_MANY, MORE_MANY, GROUPS_MAX, GROUP_CHARS = 24, 12000, 6, 60
+ANSWER_FILE_EXT = (".html", ".md", ".txt", ".csv", ".ics", ".pdf")
 ASK_ID = re.compile(r"[qc]\d{14}(?:-\d+)?")
+
+
+def answer_limits(videos: int) -> tuple[int, int]:
+    """(points, characters of `more`) an answer may have: one video's 8 and 6,000; across videos more of both."""
+    if videos < 2:
+        return ANSWER_POINTS, MORE_MAX
+    return max(ANSWER_POINTS, min(POINTS_MANY, 2 * videos)), MORE_MANY
 
 
 def _new_id(prefix: str, taken) -> str:
@@ -622,12 +635,44 @@ def _source(name: str) -> dict:
             "drop_frame": bool(n.get("drop_frame"))}
 
 
-def list_combined() -> list[dict]:
+def _combined_recs() -> list[dict]:
+    """Every question across videos as it is saved (no video is read)."""
     cd = _combined_dir()
-    out = [r for r in (_load(p) for p in sorted(cd.glob("*.json"))) if isinstance(r, dict)] if cd.is_dir() else []
+    return [r for r in (_load(p) for p in sorted(cd.glob("*.json"))) if isinstance(r, dict)] if cd.is_dir() else []
+
+
+def list_combined() -> list[dict]:
+    out = _combined_recs()
     for r in out:
         r["sources"] = [_source(x) for x in r.get("names") or []]
+        a = r.get("answer") or {}
+        r["find"] = " ".join(str(b) for b in [r.get("q"), a.get("title"), a.get("summary")]            # the list's search
+                             + [f"{s.get('title', '')} {s.get('uploader') or ''}" for s in r["sources"]] if b).lower()[:6000]
     return sorted(out, key=lambda r: r.get("made") or "", reverse=True)
+
+
+def answer_files(ask_id: str) -> list[dict]:
+    """What Claude made beside a combined answer when the user asked for it (a calendar to print, a table):
+    ROOT\\_combined\\<id>_<word>.<ext>, listed on the answer's page - the page opens them, nothing here writes them."""
+    cd = _combined_dir()
+    if not ASK_ID.fullmatch(str(ask_id or "")) or not cd.is_dir():
+        return []
+    return [{"name": p.name, "label": p.stem[len(ask_id) + 1:].replace("_", " ").strip() or p.name, "rel": rel(p),
+             "size": p.stat().st_size, "ext": p.suffix.lower().lstrip(".")}
+            for p in sorted(cd.glob(f"{ask_id}_*")) if p.is_file() and p.suffix.lower() in ANSWER_FILE_EXT]
+
+
+def combined_page(ask_id: str) -> dict:
+    """Everything a combined question's page shows: the question, its videos, the answer as Markdown, the files made
+    beside it, and the other questions asked about the same videos."""
+    rec = combined(ask_id)
+    names = set(rec.get("names") or [])
+    same = [{"id": r["id"], "q": r.get("q", ""), "made": r.get("made"), "title": (r.get("answer") or {}).get("title")}
+            for r in sorted(_combined_recs(), key=lambda r: r.get("made") or "", reverse=True)
+            if r.get("id") != rec.get("id") and set(r.get("names") or []) == names]
+    pts, more = answer_limits(len(names))
+    return {**rec, "sources": [_source(x) for x in rec.get("names") or []], "md": answer_md(rec),
+            "files": answer_files(rec.get("id")), "same": same, "limits": {"points": pts, "more": more}}
 
 
 def check_answer(names: list[str], draft: dict) -> tuple[dict, list[str]]:
@@ -646,10 +691,11 @@ def check_answer(names: list[str], draft: dict) -> tuple[dict, list[str]]:
         bad.append("summary: missing (the answer in one to three sentences)")
     elif len(summ) > 600:
         bad.append(f"summary: {len(summ)} characters - at most 600")
+    max_points, max_more = answer_limits(len(names))
     pts = draft.get("points") or []
-    if not isinstance(pts, list) or not 1 <= len(pts) <= ANSWER_POINTS:
-        bad.append(f"points: a list of 1-{ANSWER_POINTS} (what the video(s) say about it, each quoted)")
-        pts = pts[:ANSWER_POINTS] if isinstance(pts, list) else []
+    if not isinstance(pts, list) or not 1 <= len(pts) <= max_points:
+        bad.append(f"points: a list of 1-{max_points} (what the video(s) say about it, each quoted)")
+        pts = pts[:max_points] if isinstance(pts, list) else []
     points = []
     for i, p in enumerate(pts):
         w = f"points[{i}]"
@@ -666,18 +712,32 @@ def check_answer(names: list[str], draft: dict) -> tuple[dict, list[str]]:
         elif len(t) > 400:
             bad.append(f"{w}: {len(t)} characters - at most 400")
         out = {"video": v, "text": t[:400]}
+        g = _clean(p.get("group"), 200)
+        if len(g) > GROUP_CHARS:
+            bad.append(f"{w}: group {len(g)} characters - a heading of at most {GROUP_CHARS}")
+        elif g:
+            out["group"] = g
         _evidence(ctx[v], w, p, out, bad)
         points.append(out)
+    groups = list(dict.fromkeys(p.get("group", "") for p in points))
+    if any(groups):                                  # headings over the points: all of them or none, each heading once
+        if "" in groups:
+            bad.append("points: some have a group and some have none - give every point one, or none at all")
+        if len(groups) > GROUPS_MAX:
+            bad.append(f"points: {len(groups)} groups - at most {GROUPS_MAX}")
+        order = [p.get("group", "") for p in points]
+        if any(g in order[:i] and order[i - 1] != g for i, g in enumerate(order)):
+            bad.append("points: keep the points of one group together (a group came back after another one)")
     more = str(draft.get("more") or "").strip()
-    if len(more) > MORE_MAX:
-        bad.append(f"more: {len(more)} characters - at most {MORE_MAX}")
+    if len(more) > max_more:
+        bad.append(f"more: {len(more)} characters - at most {max_more}")
     if re.search(r"\bf\d{2,}\b|\b\d{2}:\d{2}:\d{2}[:;]\d{2}\b", more):
         bad.append("more: names a frame or a timecode - what a video says goes into points (quoted), `more` is "
                    "Claude's own knowledge")
     if len(names) > 1 and len({p["video"] for p in points}) < min(2, len(names)):
         bad.append("points: quote more than one of the videos - the question is across them")
     return {"made": _now(), "by": "Claude", "title": title, "summary": summ[:600], "points": points,
-            "more": more[:MORE_MAX]}, bad
+            "more": more[:max_more]}, bad
 
 
 def save_answer(name: str, ask_id: str, draft: dict) -> dict:
@@ -716,7 +776,11 @@ def answer_md(rec: dict) -> str:
     if not a:
         return "\n".join(L + ["*Waiting for Claude's answer.*"]) + "\n"
     L += [a.get("summary", ""), "", "## From the video" + ("s" if many else ""), ""]
+    group = None
     for p in a.get("points") or []:
+        if p.get("group") and p["group"] != group:
+            group = p["group"]
+            L += ([""] if L[-1] else []) + [f"### {group}", ""]
         who = f" ({src[p['video']].get('title') or p['video']})" if many and p.get("video") in src else ""
         L.append(f"- {p['text']}{' - ' + p['at_label'] if p.get('at_label') else ''}{who}")
     if a.get("more"):
@@ -759,6 +823,13 @@ def ask_text(name: str, ask_id: str) -> str:
          f"asked {rec.get('made')}:", "", rec["q"], ""]
     if rec.get("answer"):
         L += [f"already answered {rec['answer'].get('made')} - saving again replaces it", ""]
+    pts, more = answer_limits(len(names))
+    L += [f"the answer: 1-{pts} points, `more` up to {more} characters"
+          + (f", the points under up to {GROUPS_MAX} headings (`group`)" if len(names) > 1 else ""), ""]
+    if name == COMBINED:
+        L += [f"a file the user asks for beside it (a calendar to print, a table): "
+              f"{_combined_dir() / (rec['id'] + '_<word>.html')} (or .md) - the page lists it"]
+        L += [f"already made: {f['name']}" for f in answer_files(rec["id"])] + [""]
     for x in names:
         d, _ = need(x)
         L += [f"--- video: {d.name}", f"notes: {d / 'notes.json'}", f"my notes (the user's): {d / 'mine.md'}"]
@@ -921,6 +992,7 @@ def selfcheck() -> int:
     be on the sheets, nothing from a sponsor part, a resource only from the description, the limits; nothing is saved
     on a failure; a good draft is saved with every place as frame + timecode. -> 0 = all passed."""
     import copy
+    import shutil
     import tempfile
     global ROOT
     ok = True
@@ -995,6 +1067,33 @@ def selfcheck() -> int:
             md = (d / "notes.md").read_text(encoding="utf-8") if (d / "notes.md").exists() else ""
             check((_load(d / "notes.json") or {}).get("takeaways") and label(30, 30.0, False) in md,
                   "a good draft: notes.json + notes.md, the quote's place in the Markdown as frame + timecode")
+            # one question across two videos (Combine notes): the same gate per point, each point's own video
+            shutil.copytree(d, ROOT / "y")
+            rec = add_combined(["x", "y"], "What do they agree on?")
+            ans = {"title": "Sleep", "summary": "Both say to sleep early.", "points": [
+                {"text": "Sleep early.", "quote": "you should sleep early", "video": "x", "group": "They agree"},
+                {"text": "Eat.", "quote": "never skip a meal", "video": "y", "group": "They agree"}]}
+
+            def ans_refused(change, words: str) -> bool:
+                dr = copy.deepcopy(ans)
+                change(dr)
+                return any(words in b for b in check_answer(["x", "y"], dr)[1])
+
+            check(answer_limits(1) == (ANSWER_POINTS, MORE_MAX) and answer_limits(10) == (20, MORE_MANY)
+                  and answer_limits(40)[0] == POINTS_MANY, "an answer's room: 8 points for one video, two a video across "
+                                                           "several, never more than 24")
+            check(ans_refused(lambda dr: dr["points"][1].update(video="x"), "quote more than one"),
+                  "an answer across videos that quotes only one of them: refused")
+            check(ans_refused(lambda dr: dr["points"][1].pop("group"), "give every point one"),
+                  "a heading on some points only: refused")
+            check(ans_refused(lambda dr: dr.update(more="x" * (MORE_MANY + 1)), f"at most {MORE_MANY}"),
+                  "Claude's own part longer than its room: refused")
+            save_answer(COMBINED, rec["id"], ans)
+            (ROOT / COMBINED / f"{rec['id']}_calendar.html").write_text("<p>the plan</p>", encoding="utf-8")
+            page = combined_page(rec["id"])
+            check("### They agree" in page["md"] and [f["label"] for f in page["files"]] == ["calendar"]
+                  and len(page["answer"]["points"]) == 2 and not page["same"],
+                  "a good answer: saved, its heading in the Markdown, the file made beside it listed on its page")
         finally:
             ROOT = old
     print("notes selfcheck: " + ("PASS" if ok else "FAIL"))

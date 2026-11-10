@@ -49,7 +49,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 62                                  # ui\js\core.js API_LEVEL: the functions the page needs
+API_LEVEL = 63                            # ui\js\core.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -701,8 +701,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"file": fname, "text": text})
         m = re.fullmatch(r"/api/notes-combined/([^/]+)", path)
         if m:
-            rec = NT.combined(urllib.parse.unquote(m[1]))
-            return self._json({**rec, "sources": [NT._source(x) for x in rec.get("names") or []], "md": NT.answer_md(rec)})
+            return self._json(NT.combined_page(urllib.parse.unquote(m[1])))
         m = re.fullmatch(r"/api/notes/([^/]+)(/md)?", path)
         if m:
             name = urllib.parse.unquote(m[1])

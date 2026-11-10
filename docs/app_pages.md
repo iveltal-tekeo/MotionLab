@@ -318,7 +318,19 @@ the video afterwards but keep the notes", no test-yourself questions).
   listed as a video) + `/take-notes combined <id>`, and the page #/notes-combined/<id> (`pageCombined`: the videos as
   numbered coloured cards, the answer; each point's chip = its video's number + time and opens #/note/<name>/<frame>,
   which plays that moment). The Notes list shows them under *Across videos*; a video's page lists the ones it is in.
-  An answer across videos must quote more than one of them.
+  An answer across videos must quote more than one of them. **2026-11-10** (the user's pick after the review: Notes is
+  the most used part, and what they do with notes is combine them - four questions, each across 9-10 of 42 videos,
+  every answer filled the 8 points and one plan ended as loose calendar files the page never showed): on the list the
+  answers are cards above the notes (`combCard`: the videos' pictures, the answer's title, the question; the newest
+  `NC_TOP`, *Show all*; found by the list's search - `find`), and with a search or a filter on the button reads
+  *Combine these N…* and opens with the videos shown ticked (`combPick`, 2 to `NC_MAX`); the pop-up has the list's
+  search, *Tick the N shown*, a count, and the kinds of question as chips; an answer's page has *Ask these videos
+  something else* (the pop-up with the same videos), *Download (.md)* of the answer, *Made with this answer* (the
+  files Claude wrote beside it at the user's ask, `notes.answer_files`: `_combined\<id>_<word>.html|md|...`, opened
+  in a window of their own; the page looks again every 20 s for a new one), every video's notes in one file, *Also
+  asked about these videos* (`same`), and *Remove this question* asks once when there is an answer (the files stay).
+  The gate gives an answer across videos more room (`notes.answer_limits`: two points a video up to 24, `more` up to
+  12,000 characters) and an optional heading per point (`group`: every point or none, up to 6, kept together).
 
 ## The analysis page
 

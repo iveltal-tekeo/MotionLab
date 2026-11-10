@@ -183,7 +183,7 @@ function anFilter(k, items, F) {
 }
 function anCards(k, F) {
   const rows = anFilter(k, AN_LAST.items, F);
-  return {n: rows.length, html: rows.length ? `<div class="cards pcards">${rows.map(AN_CARD[k]).join('')}</div>`
+  return {n: rows.length, rows, html: rows.length ? `<div class="cards pcards">${rows.map(AN_CARD[k]).join('')}</div>`
     : `<div class="empty">${t('Nothing matches.')} <a href="#" data-fclear>${t('Clear the search and filters')}</a></div>`};
 }
 function anFilterRow(k, items, F, tail = '') {
@@ -199,7 +199,7 @@ function anFilterRow(k, items, F, tail = '') {
     : (() => { const res = Object.keys(SP_RESULT).filter(r => items.some(x => (x.result || 'unknown') === r));
         return res.length > 1 ? sel('fres', t('Every result'), res.map(r => [r, SP_RESULT[r], count(x => x.result || 'unknown', r)]), F.res) : ''; })();
   return `<div class="row frow anfil">
-      <label class="ansearch"><svg class="i"><use href="#i-search"/></svg><input type="search" id="fq" value="${esc(F.q || '')}" placeholder="${ta(k === 'videos' ? 'Search names, categories, tags…' : 'Search names, channels, tags and what Claude wrote…')}" autocomplete="off"></label>
+      <label class="ansearch"><svg class="i"><use href="#i-search"/></svg><input type="search" id="fq" value="${esc(F.q || '')}" placeholder="${k === 'videos' ? ta('Search names, categories, tags…') : ta('Search names, channels, tags and what Claude wrote…')}" autocomplete="off"></label>
       ${sel('fst', t('Any state'), [['ready', k === 'videos' ? t('Checked by Claude') : t('Ready')], ['claude', waitWord]], F.st)}
       ${plats.length > 1 ? sel('fplat', t('Every platform'), plats.map(p => [p, p, count(x => x.platform, p)]), F.plat) : ''}
       ${tags.length ? sel('ftag', t('All tags'), tags.map(g => [g, g]), F.tag) : ''}${own}
@@ -212,7 +212,7 @@ function anList(k, D, F) {
     AN_LAST = {k, items};
     if (F.sort === undefined) F.sort = anPref('anSort.' + k) || 'new';
     const tail = k === 'videos' ? `<label class="chk small dim"><input type="checkbox" id="tests" ${F.tests ? 'checked' : ''}> ${t('show the test videos')}</label>`
-      : k === 'notes' && items.filter(n => n.status === 'ready').length >= 2 ? `<button class="btn" id="ncombine" title="${ta('Several videos on one topic: one Markdown file with all their notes, or one question to Claude across them')}"><svg class="i"><use href="#i-copy"/></svg>${t('Combine notes…')}</button>` : '';
+      : k === 'notes' && items.filter(n => n.status === 'ready').length >= 2 ? `<button class="btn" id="ncombine" title="${ta('Several videos on one topic: one Markdown file with all their notes, or one question to Claude across them')}"><svg class="i"><use href="#i-copy"/></svg><span id="ncombw">${t('Combine notes…')}</span></button>` : '';
     if (!items.length) return (tail ? `<div class="row frow"><span class="grow"></span>${tail}</div>` : '') + `<div class="pcempty">${{videos: t('The videos you analyse land here - <i>Add videos</i> above.'),
       notes: t('The notes you take land here - <i>Take notes</i> above: a link or a video file.'),
       spark: t('Why your references worked lands here - <i>Analyze with SPARK</i> above: a link or a video file.')}[k]}</div>`;
@@ -230,8 +230,25 @@ function anListWire(main, F, draw, wait) {      // the filters and bars a list m
   on('#wbar', 'onclick', () => waitingModal(wait));
   on('#tests', 'onchange', e => { F.tests = e.target.checked; draw(); });
   const k = AN_LAST.k, box = $('#ancards', main);
+  // Combine notes on the list (2026-11-10 - what the user does with their notes: four questions, each across 9-10
+  // videos): the answers sit above the notes as cards of their own, found by the same search; with a search or a
+  // filter on, the button takes the videos shown (*Combine these N…*)
+  const nc = $('#ncomb', main);
+  let COMB = null;
+  const combDraw = () => {
+    if (!nc || !COMB) return;
+    const words = (F.q || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const L = COMB.filter(c => words.every(w => (c.find || String(c.q).toLowerCase()).includes(w)));
+    nc.innerHTML = L.length ? `<div class="ncombh"><span class="ncombt">${t('Across videos')}</span><span class="ncount">${L.length}</span>
+        ${L.length > NC_TOP ? `<a href="#" id="ncall" class="small">${F.combAll ? t('Show fewer') : t('Show all')}</a>` : ''}</div>
+      <div class="ncombl">${(F.combAll ? L : L.slice(0, NC_TOP)).map(combCard).join('')}</div>` : '';
+    const a = $('#ncall', nc); if (a) a.onclick = e => { e.preventDefault(); F.combAll = !F.combAll; combDraw(); };
+  };
+  if (nc) api('/api/notes-combined').then(L => { COMB = L; combDraw(); }).catch(() => {});
   if (box) {                                    // the search and filters: the cards drawn again, nothing fetched
     const cards = () => { const C = anCards(k, F); box.innerHTML = C.html; wireGo(box);
+      if (k === 'notes') { const w = $('#ncombw', main), P = combPick(F, C.rows);
+        if (w) w.textContent = P ? t('Combine these {n}…', {n: P.length}) : t('Combine notes…'); combDraw(); }
       $('#fcount', main).textContent = anFiltered(F) ? t('{n} of {total}', {n: C.n, total: AN_LAST.items.length}) : '';
       $$('[data-fclear]', box).forEach(a => a.onclick = e => { e.preventDefault(); Object.assign(F, {q: '', st: '', plat: '', tag: '', cat: '', foc: '', nk: '', res: ''});
         $$('.anfil select', main).forEach(s => { if (s.id !== 'fsort') s.value = ''; }); $('#fq', main).value = ''; cards(); }); };
@@ -245,10 +262,25 @@ function anListWire(main, F, draw, wait) {      // the filters and bars a list m
     cards();
     if (F.focusQ) { const q = $('#fq', main); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
   }
-  on('#ncombine', 'onclick', () => combineModal());
-  const nc = $('#ncomb', main);
-  if (nc) api('/api/notes-combined').then(L => { nc.innerHTML = L.length ? `<div class="ncombl"><span class="small muted">${t('Across videos')}</span>${L.map(c => `<a class="ncombc" href="#/notes-combined/${encodeURIComponent(c.id)}">
-      <svg class="i"><use href="#i-claude"/></svg><span class="grow">${esc(c.answer ? c.answer.title : c.q)}</span><span class="small dim">${tn((c.names || []).length, '{n} video', '{n} videos')} · ${c.answer ? t('answered') : t('waiting for Claude')}</span></a>`).join('')}</div>` : ''; }).catch(() => {});
+  on('#ncombine', 'onclick', () => combineModal({names: combPick(F, anCards(k, F).rows) || []}));
+}
+const NC_MAX = 12, NC_TOP = 4;                   // notes.COMBINE_MAX; the answers shown before *Show all*
+// the videos a filtered Notes list hands to Combine notes: the ones shown that have notes, when they are 2 to NC_MAX
+const combPick = (F, rows) => { if (!anFiltered(F)) return null;
+  const r = rows.filter(n => n.status === 'ready'); return r.length >= 2 && r.length <= NC_MAX ? r.map(n => n.name) : null; };
+// an answer across videos as a card: its videos' pictures, the answer's title, the question
+function combCard(c) {
+  const P = (c.sources || []).filter(s => s.thumb), S = P.slice(0, P.length >= 4 ? 4 : P.length >= 2 ? 2 : 1), n = (c.names || []).length;
+  return `<a class="ncombc${c.answer ? '' : ' wait'}" href="#/notes-combined/${encodeURIComponent(c.id)}">
+    <span class="ncth">${S.map(s => `<img src="${fileUrl(s.thumb)}" alt="" loading="lazy">`).join('') || '<svg class="i"><use href="#i-claude"/></svg>'}</span>
+    <span class="nccb"><b>${esc(c.answer ? c.answer.title : c.q)}</b>${c.answer ? `<span class="small muted nccq">${esc(c.q)}</span>` : ''}
+      <span class="small dim">${tn(n, '{n} video', '{n} videos')} · ${c.answer ? esc(whenStr(c.made) || t('answered')) : t('waiting for Claude')}</span></span></a>`;
+}
+function downloadText(file, text) {              // a Markdown file made on the page, saved by the browser
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type: 'text/markdown;charset=utf-8'})); a.download = file;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast(t('Downloaded: {file}', {file}), 'ok');
 }
 const anWaitBar = wait => { const wv = wait.filter(w => !w.photo && !w.audio).length;
   return wait.length ? `<button class="wbar" id="wbar"><svg class="i"><use href="#i-download"/></svg><span class="grow">${wv ? tn(wv, '<b>{n} downloaded video</b> waits to be analysed', '<b>{n} downloaded videos</b> wait to be analysed') : tn(wait.length, '<b>{n} download</b> not analysed', '<b>{n} downloads</b> not analysed')}</span><span class="wgo">${t('Show them →')}</span></button>` : ''; };
@@ -378,10 +410,15 @@ function diveHtml(a, i, cmd, src) {
   const chip = p => { if (!many) return nTime(p.at, src.fps, p.quote || '', p.replayed);
     const s = src.names[p.video] || {};
     return p.at == null ? '' : `<a class="ntime" href="#/note/${encodeURIComponent(p.video)}/${p.at}" style="--c:${NCOL[(s.i || 0) % NCOL.length]}" title="${esc((s.title || p.video) + (p.quote ? ' · “' + p.quote + '”' : ''))}">${esc(s.short || '')} f${p.at} (${tc(p.at, s.fps || 30)})</a>`; };
+  // the points, under Claude's headings when an answer across videos has them (`group`: every point or none)
+  const list = L => `<ul class="nlist">${L.map(p => `<li>${esc(p.text)} ${chip(p)}</li>`).join('')}</ul>`;
+  const points = P => !P.some(p => p.group) ? list(P)
+    : P.reduce((G, p) => { if (!G.length || G[G.length - 1].g !== p.group) G.push({g: p.group, L: []}); G[G.length - 1].L.push(p); return G; }, [])
+      .map(g => `${g.g ? `<div class="ndg">${esc(g.g)}</div>` : ''}${list(g.L)}`).join('');
   return `<div class="ndive${A ? '' : ' wait'}"><div class="ndq"><svg class="i"><use href="#i-claude"/></svg><span class="grow">${esc(a.q)}</span>
       <span class="small dim">${esc(whenStr(a.made) || '')}</span><button type="button" class="btn sm ghost" data-unask="${esc(a.id)}" title="${ta('Remove this question')}">✕</button></div>
     ${A ? `<div class="nda"><div class="ndt">${esc(A.title)}</div><p>${esc(A.summary)}</p>
-        <div class="ndl">${many ? t('From the videos') : t('From the video')}</div><ul class="nlist">${A.points.map(p => `<li>${esc(p.text)} ${chip(p)}</li>`).join('')}</ul>
+        <div class="ndl">${many ? t('From the videos') : t('From the video')}</div>${points(A.points)}
         ${A.more ? `<div class="ndl more">${many ? t("Going further - Claude's own knowledge, not from the videos") : t("Going further - Claude's own knowledge, not from the video")}</div><div class="md">${md(A.more)}</div>` : ''}
         <div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-dcopy="${i}"><svg class="i"><use href="#i-copy"/></svg>${t('Copy')}</button>
           ${claudeBtn(cmd, t('Answer it again'), 'notes', '', 'sm ghost')}</div></div>`
@@ -470,29 +507,49 @@ async function addNotesModal() {
 // videos selected, or maybe create a markdown with all important info form both videos to maybe use it elsewhere or ask
 // questions"): pick 2+ videos with notes -> one Markdown file (MotionLab, no Claude) or one question across them
 // (ROOT\_combined\<id>.json, /take-notes combined <id>, its page #/notes-combined/<id>)
-async function combineModal() {
-  const all = (await api('/api/notes')).filter(n => n.status === 'ready');
+// 2026-11-10 (the user's four questions each took 9-10 of 42 videos, ticked one by one): `opts.names` = the videos
+// ticked already (the Notes list's filter, or *Ask these videos something else* on an answer's page - `again`: the
+// question box starts empty), a search over the same words as the list's, *Tick the N shown*, and the kinds of
+// question as chips
+async function combineModal(opts = {}) {
+  const had = new Set(opts.names || []);
+  const all = (await api('/api/notes')).filter(n => n.status === 'ready').sort((a, b) => had.has(b.name) - had.has(a.name));
+  const find = Object.fromEntries(all.map(n => [n.name, n.find || [n.label, n.title, n.uploader, (n.tags || []).join(' ')].join(' ').toLowerCase()]));
+  const ASKS = [[t('Agree, differ, do first'), t('Combine what these videos teach into one set of notes: what they agree on, where they differ, and what to do first.')],
+    [t('One plan, week by week'), t('Turn what these videos teach into one plan I can follow, week by week: what to do, in which order, and which video each step comes from.')],
+    [t('The best of each'), t('The most useful advice of each video, the strongest first, and what all of them leave out.')],
+    [t('Where they disagree'), t('Where do these videos contradict each other, and which advice fits my situation best?')]];
   modal(`<h2>${t('Combine notes')}</h2>
     <div class="avstep"><b>1</b><span>${t('Which videos?')}</span><span class="small muted">${t('at least two - same topic works best')}</span></div>
-    <div class="avfiles ncpick">${all.map(n => `<label class="avfile"><input type="checkbox" value="${esc(n.name)}">${n.thumb ? `<img src="${fileUrl(n.thumb)}" alt="" loading="lazy">` : ''}
+    <div class="row ncfind"><label class="ansearch"><svg class="i"><use href="#i-search"/></svg><input type="search" id="ncf" placeholder="${ta('Search names, channels, tags and what Claude wrote…')}" autocomplete="off"></label>
+      <a href="#" id="ncshown" class="small" hidden></a><span class="grow"></span><span class="small" id="ncn"></span></div>
+    <div class="avfiles ncpick">${all.map(n => `<label class="avfile"><input type="checkbox" value="${esc(n.name)}" ${had.has(n.name) ? 'checked' : ''}>${n.thumb ? `<img src="${fileUrl(n.thumb)}" alt="" loading="lazy">` : ''}
       <span class="grow">${esc(n.notes && n.notes.title || n.label)}</span><span class="small dim">${esc(lenWords(n.frames, n.fps))}${(n.tags || []).length ? ' · ' + esc(n.tags.slice(0, 2).join(', ')) : ''}</span></label>`).join('')}</div>
     <div class="avstep"><b>2</b><span>${t('What do you want?')}</span></div>
     <div class="ncways"><div class="ncway"><b>${t('One Markdown file')}</b><span class="small muted">${t("Every video's notes, your own notes and one context block for another AI - made by MotionLab, no Claude.")}</span>
         <button class="btn" id="ncmd" disabled><svg class="i"><use href="#i-download"/></svg>${t('Download (.md)')}</button></div>
       <div class="ncway"><b>${t('Ask Claude across them')}</b><span class="small muted">${t('Claude reads every video and answers with each point tied to its video and moment.')}</span>
-        <textarea id="ncq" rows="3" maxlength="2000">${esc(t('Combine what these videos teach into one set of notes: what they agree on, where they differ, and what to do first.'))}</textarea>
+        <div class="nsugg">${ASKS.map(([w, q]) => `<button type="button" class="nchip" data-q="${esc(q)}">${esc(w)}</button>`).join('')}</div>
+        <textarea id="ncq" rows="3" maxlength="2000" placeholder="${ta('Ask anything across these videos…')}">${esc(opts.again ? '' : ASKS[0][1])}</textarea>
         <button class="btn cl" id="ncask" disabled><svg class="i"><use href="#i-claude"/></svg>${t('Ask Claude')}</button></div></div>`, el => {
-    const names = () => $$('.ncpick input:checked', el).map(x => x.value);
-    const upd = () => { const n = names().length; $('#ncmd', el).disabled = n < 2; $('#ncask', el).disabled = n < 2 || !$('#ncq', el).value.trim(); };
+    const rows = $$('.ncpick .avfile', el), box = r => $('input', r);
+    const names = () => rows.filter(r => box(r).checked).map(r => box(r).value);
+    const free = () => rows.filter(r => !r.hidden && !box(r).checked);
+    const upd = () => {
+      const n = names().length, over = n > NC_MAX, f = free().length, a = $('#ncshown', el), c = $('#ncn', el);
+      c.textContent = over ? t('{n} picked - at most {max} at a time', {n, max: NC_MAX}) : n ? tn(n, '{n} picked', '{n} picked') : '';
+      c.classList.toggle('bad', over);
+      a.hidden = !f || !$('#ncf', el).value.trim(); a.textContent = tn(f, 'Tick the one shown', 'Tick the {n} shown');
+      $('#ncmd', el).disabled = n < 2 || over; $('#ncask', el).disabled = n < 2 || over || !$('#ncq', el).value.trim();
+    };
     $('.ncpick', el).onchange = upd; $('#ncq', el).oninput = upd;
+    $('#ncf', el).oninput = e => { const w = e.target.value.toLowerCase().split(/\s+/).filter(Boolean);
+      rows.forEach(r => { r.hidden = !w.every(x => find[box(r).value].includes(x)); }); upd(); };
+    $('#ncshown', el).onclick = e => { e.preventDefault(); free().forEach(r => { box(r).checked = true; }); upd(); };
+    $$('.nchip', el).forEach(b => b.onclick = () => { const q = $('#ncq', el); q.value = b.dataset.q; q.focus(); upd(); });
     $('#ncmd', el).onclick = async () => {
-      try {
-        const r = await api('/api/notes-combined/md?names=' + encodeURIComponent(names().join(',')));
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([r.text], {type: 'text/markdown;charset=utf-8'})); a.download = r.file;
-        document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        toast(t('Downloaded: {file}', {file: r.file}), 'ok');
-      } catch (e) { toast(e.message, 'err'); }
+      try { const r = await api('/api/notes-combined/md?names=' + encodeURIComponent(names().join(','))); downloadText(r.file, r.text); }
+      catch (e) { toast(e.message, 'err'); }
     };
     $('#ncask', el).onclick = async () => {
       try {
@@ -501,34 +558,59 @@ async function combineModal() {
         openClaude('/take-notes combined ' + rec.id, 'notes', 'combined');
       } catch (e) { toast(e.message, 'err'); }
     };
+    upd();
+    $(opts.again ? '#ncq' : '#ncf', el).focus();
   }, 'wide');
 }
 async function pageCombined(main, id) {
   let R = await api('/api/notes-combined/' + encodeURIComponent(id));
   const src = () => ({names: Object.fromEntries(R.sources.map((s, i) => [s.name, {...s, i, short: String(i + 1).padStart(2, '0')}]))});
   const cmd = '/take-notes combined ' + R.id;
+  // 2026-11-10: the answer's page is where the work goes on - *Ask these videos something else* (the same videos
+  // ticked), the answer as a file, the files Claude made beside it (a calendar to print: `files`, opened in a window
+  // of their own), every video's notes in one file, and the other questions asked about the same videos (`same`)
   const draw = () => {
+    const files = R.files || [], same = R.same || [], alive = R.sources.filter(s => !s.gone).map(s => s.name);
     main.innerHTML = `<div class="head"><div><div class="crumb"><a href="#/analyze">${t('Analyser')}</a> / <a href="#/analyze/notes">INDEX</a> / ${t('across videos')}</div>
       <div class="mtitle mhost">${mascot('index', {size: 46})}<h1>${esc(R.answer ? R.answer.title : t('A question across {n} videos', {n: R.names.length}))}</h1></div>
       <div class="sub">${esc(whenStr(R.made) || '')}</div></div>
-      <div class="row">${R.answer ? `<button class="btn" id="ccopy"><svg class="i"><use href="#i-copy"/></svg>${t('Copy for another AI')}</button>` : ''}
+      <div class="row">${alive.length >= 2 ? `<button class="btn cl" id="cagain"><svg class="i"><use href="#i-claude"/></svg>${t('Ask these videos something else')}</button>` : ''}
+        ${R.answer ? `<button class="btn" id="cdl"><svg class="i"><use href="#i-download"/></svg>${t('Download (.md)')}</button>
+          <button class="btn" id="ccopy"><svg class="i"><use href="#i-copy"/></svg>${t('Copy for another AI')}</button>` : ''}
         <button class="btn ghost" id="cdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove this question')}</button></div></div>
       <div class="ncsrc">${R.sources.map((s, i) => `<a class="ncs" style="--c:${NCOL[i % NCOL.length]}" href="${s.gone ? '#/analyze/notes' : '#/note/' + encodeURIComponent(s.name)}">
         <span class="nsn">${String(i + 1).padStart(2, '0')}</span>${s.thumb ? `<img src="${fileUrl(s.thumb)}" alt="">` : ''}<span class="grow">${esc(s.title || s.name)}${s.gone ? ` <span class="bad small">${t('(its notes were deleted)')}</span>` : ''}</span><span class="small dim">${esc(s.uploader || '')}</span></a>`).join('')}</div>
-      <div class="ncmain">${diveHtml(R, 0, cmd, src())}</div>`;
-    const c = $('#ccopy', main); if (c) c.onclick = () => copy(R.md);
+      <div class="ncfiles">${files.length ? `<span class="ncombt">${t('Made with this answer')}</span>${files.map(f => `<a class="ncfile" href="${fileUrl(f.rel)}" target="_blank" rel="noopener"><svg class="i"><use href="#i-${/calendar/i.test(f.label) ? 'calendar' : 'clipboard'}"/></svg><b>${esc(f.label)}</b><span class="small dim">${esc(String(f.ext || '').toUpperCase())} · ${bytes(f.size)}</span></a>`).join('')}` : ''}
+        <span class="grow"></span>${alive.length >= 2 ? `<a href="#" id="call" class="small">${t("All these videos' notes in one file (.md)")}</a>` : ''}</div>
+      <div class="ncmain">${diveHtml(R, 0, cmd, src())}
+        ${same.length ? `<div class="ncombh" style="margin-top:18px"><span class="ncombt">${t('Also asked about these videos')}</span></div>
+          <div class="ncombl">${same.map(s => `<a class="ncombc${s.title ? '' : ' wait'}" href="#/notes-combined/${encodeURIComponent(s.id)}"><span class="nccb"><b>${esc(s.title || s.q)}</b>
+            ${s.title ? `<span class="small muted nccq">${esc(s.q)}</span>` : ''}<span class="small dim">${s.title ? esc(whenStr(s.made) || '') : t('waiting for Claude')}</span></span></a>`).join('')}</div>` : ''}</div>`;
+    const on = (id, fn) => { const x = $(id, main); if (x) x.onclick = fn; };
+    on('#ccopy', () => copy(R.md));
+    on('#cdl', () => downloadText(String(R.answer.title || 'answer').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) + '.md', R.md));
+    on('#cagain', () => combineModal({names: alive, again: true}));
+    on('#call', async e => { e.preventDefault();
+      try { const r = await api('/api/notes-combined/md?names=' + encodeURIComponent(alive.join(','))); downloadText(r.file, r.text); } catch (x) { toast(x.message, 'err'); } });
     $$('[data-dcopy]', main).forEach(b => b.onclick = () => copy(R.md));
     const un = $('[data-unask]', main); if (un) un.remove();
-    $('#cdel', main).onclick = async () => {
-      try { await api('/api/notes-combined/remove', {id: R.id}); location.hash = '#/analyze/notes'; } catch (e) { toast(e.message, 'err'); }
+    $('#cdel', main).onclick = () => {              // an answer took Claude minutes: one more yes before it goes
+      const go = async () => { try { await api('/api/notes-combined/remove', {id: R.id}); closeModal(); location.hash = '#/analyze/notes'; } catch (e) { toast(e.message, 'err'); } };
+      if (!R.answer) return go();
+      modal(`<h2>${t('Remove this question?')}</h2><p>${t("Claude's answer goes with it and cannot be brought back.")}${files.length ? ' ' + t('The files made with it stay in the notes folder.') : ''}</p>
+        <div class="row" style="margin-top:14px"><button class="btn danger" id="cyes"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button><button class="btn" id="cno">${t('Cancel')}</button></div>`,
+        el => { $('#cno', el).onclick = closeModal; $('#cyes', el).onclick = go; });
     };
   };
   draw();
-  let timer = 0;                                       // waiting for Claude: look again every 5 s
-  const wait = () => { if (R.answer) return; timer = setTimeout(async () => {
-    try { const NR = await api('/api/notes-combined/' + encodeURIComponent(id)); if (NR.answer) { R = NR; draw(); } } catch (e) { /* again */ }
-    wait(); }, 5000); };
-  onCleanup(() => clearTimeout(timer));
+  // waiting for Claude: look again every 5 s; with the answer there every 20 s, for a file Claude makes after it or
+  // an answer written again - drawn again only when one of those changed
+  let timer = 0, left = false;
+  const sig = X => JSON.stringify([(X.answer || {}).made, (X.files || []).map(f => [f.name, f.size]), (X.same || []).map(s => [s.id, s.title])]);
+  const wait = () => { timer = setTimeout(async () => {
+    try { const NR = await api('/api/notes-combined/' + encodeURIComponent(id)); if (!left && sig(NR) !== sig(R) && $('#modal').hidden) { R = NR; draw(); } } catch (e) { /* again */ }
+    if (!left) wait(); }, R.answer ? 20000 : 5000); };
+  onCleanup(() => { left = true; clearTimeout(timer); });
   wait();
 }
 // one video's notes (#/note/<name>): the notes on the left in one reading column - TL;DR, Key takeaways, the sections

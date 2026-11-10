@@ -92,8 +92,18 @@ question touches (whole when it asks about the whole video); key frames only whe
     folder name (one video: leave it out). Across several videos, quote more than one and say where they agree or
     differ.
   - `more` = what you add from your own knowledge (a plan, examples, a deeper explanation, what to do first) - kept
-    apart on the page as *Going further*; plain Markdown (headings, lists, **bold**), no frame numbers or timecodes
-    (the tool refuses them: times belong to the points). Leave it out when the videos say it all.
+    apart on the page as *Going further*; plain Markdown (headings, lists, tables, **bold**), no frame numbers or
+    timecodes (the tool refuses them: times belong to the points). Leave it out when the videos say it all.
+  - **Across videos (`combined`) there is more room** - `notes.py ask` prints it: two points a video (24 at most)
+    and a `more` twice as long, enough for a whole plan. Use it: a point for each video that says something of its
+    own, not one point that names five creators with one quote. With more than about 8 points give every point a
+    `"group"` (a heading of a few words, the same on the points that belong together, up to 6 headings, e.g. "What
+    they agree on", "Where they differ", "Do first") - all points or none.
+  - **A file the user asks for beside the answer** (a calendar to print, a table to fill in, a checklist): write it
+    with the Write tool as `analysis\notes\_combined\<id>_<word>.html` (or `.md`; `<word>` = what it is, e.g.
+    `calendar`) - a new file, everything inside it (no scripts or fonts from the web). The answer's page lists it
+    under *Made with this answer* and opens it; save the answer first, then say the file is there. Never for what
+    fits in `more`.
 - `.venv\Scripts\python tools\notes.py answer <name> <id> .app\dev\answer_<id>.json` - the same gate as the notes;
   fix what it lists and save again. The page shows the answer by itself within seconds.
 - Tell the user in two lines: the answer's gist and that it is under *Ask Claude* on the notes page (or on the

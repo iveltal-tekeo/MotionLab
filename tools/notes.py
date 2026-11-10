@@ -16,7 +16,8 @@ frame + timecode (the design: tools\\motionlab\\notes.py and docs\\plans.md 0.6.
           2026-10-29): the question, then what to read; <name> = _combined for one across several videos
     .venv\\Scripts\\python tools\\notes.py answer <name> <id> <draft.json>
           Claude's answer through the same gate: {"title", "summary", "points": [{"text", "quote" | "shown", "video"}],
-          "more": "Markdown - Claude's own knowledge beyond the video(s), no frame numbers"}
+          "more": "Markdown - Claude's own knowledge beyond the video(s), no frame numbers"}; across videos more
+          points and a longer `more` (ask prints the room), and a "group" on every point = a heading over them
     .venv\\Scripts\\python tools\\notes.py pending           the notes waiting for Claude
     .venv\\Scripts\\python tools\\notes.py list
 

@@ -160,7 +160,9 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     moment; the limits (7 takeaways, 5 points a section, 5 actions) are the gate's, never the page's; Claude's notes are
     never edited on the page (My notes is the user's own). *Ask Claude* (2026-10-29, "run a prompt fo that video notes")
     and *Combine notes* ("combine the knowledge of the videos selected ... a markdown with all important info"): the
-    question goes in a file, an answer keeps what the video says (quoted) apart from what Claude adds (`more`).
+    question goes in a file, an answer keeps what the video says (quoted) apart from what Claude adds (`more`). An
+    answer across videos has more room than one video's (`notes.answer_limits`), and a file Claude makes beside it at
+    the user's ask is listed on its page, never written by the app (2026-11-10).
   - **The analysis page**: the user's 2026-10-07 layout, since 2026-10-18 in the one review pattern (**Reviews**,
     below); the raw text behind *Copy what Claude gets* = GET `/api/feedback/<name>` - no file path in the page's words.
   - **Bulk and thumbnail sets**: **Bulk** (0.4.5, the user: "bulk analyze thumbnails, videos, and also bulk edit stuff
@@ -495,7 +497,8 @@ always-on-top window, several videos, one picker at a time - the page can never 
 blend modes): the Editor's change `blend` {shot | layer, value} (compose.BLEND_MODES - an older server's engine does not
 know it), the state's `bg`; 61 (2026-11-10, a download that wanted the login): POST `/api/jobs/<id>/retry`, a job's
 `login` / `retried`; 62 (the same day): GET / POST `/api/failed` (the runs that did not work, `.app\failed.json` -
-try again / forget), a job's `parent` / `progress` / `why`, the lists' `find`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+try again / forget), a job's `parent` / `progress` / `why`, the lists' `find`; 63 (the same day, Combine notes): GET
+`/api/notes-combined/<id>` `files` / `same` / `limits` (`notes.combined_page`), `/api/notes-combined` `find`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

@@ -29,6 +29,14 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
 - **Search and filters for what you analysed** - Effects, Why it worked and Notes have a search box (names, channels,
   tags, and what Claude wrote: a note's takeaways and sections, a SPARK's verdict) and filters: Claude's state, the
   platform, tags, the kind of notes or SPARK's result, and the order (newest, oldest, A to Z, longest, shortest).
+- **Combine notes, properly** - the answers across videos are cards at the top of Notes (the videos' pictures, the
+  answer's title, your question) and the search finds them too. Search or filter the list and the button becomes
+  *Combine these N…*, with those videos already ticked; the pop-up has its own search, *Tick the N shown* and four
+  kinds of question to start from. An answer's page gets *Ask these videos something else* (the same videos, a new
+  question), *Download (.md)*, every video's notes in one file, the other questions asked about the same videos, and
+  *Made with this answer*: a calendar or a table Claude wrote beside the answer opens from there. Claude's answers
+  across videos have more room - two points a video instead of 8 in all, under headings, and space for a whole plan -
+  and removing an answered question asks once first.
 - **Sturdier when something is cancelled, fails or is tried again** - fixes from a review of the whole code. *Remove*
   on a job now stops everything it started (a cancelled render no longer keeps rendering in the background), and a
   job can no longer stay "running" for ever and hold the queue. A render that fails half-way never leaves a short
