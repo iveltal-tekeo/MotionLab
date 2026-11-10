@@ -75,6 +75,34 @@ const ED_KEY_MAP = {zoom: 'zoom', x: 'dx', y: 'dy', rotation: 'rotation', opacit
 const edKSpec = (d, p) => (p === 'ax' || p === 'ay' ? (d.anchor || [])[p === 'ax' ? 0 : 1] : d[ED_KEY_MAP[p]]);
 const edKKeys = (d, p) => { const v = edKSpec(d, p); return v && typeof v === 'object' && Array.isArray(v.keys) && v.keys.length ? v.keys : null; };
 function edKSet(d, p, v) { if (p === 'ax' || p === 'ay') { const a = [...(d.anchor || [0.5, 0.5])]; a[p === 'ax' ? 0 : 1] = v; d.anchor = a; } else d[ED_KEY_MAP[p]] = v; }
+// blend modes (2026-11-10, the user: "an option to modify opacity for the clip, as well as to add a mode, like screen
+// mode, add colour, difference"): compose.BLEND_MODES in Premiere / CapCut's groups (darker, lighter, contrast, colour),
+// a line on each, and the CSS mix-blend-mode that mixes the same in the live preview (the W3C formulas compose uses)
+const ED_BLENDS = () => [['normal', t('Normal|blend')], ['darken', t('Darken|blend')], ['multiply', t('Multiply|blend')],
+  ['lighten', t('Lighten|blend')], ['screen', t('Screen|blend')], ['add', t('Add|blend')], ['overlay', t('Overlay|blend')],
+  ['soft_light', t('Soft light|blend')], ['difference', t('Difference|blend')], ['colour', t('Colour|blend')]];
+const ED_BLEND_TIP = () => ({normal: t('Covers what is under it'), darken: t('Keeps the darker of the two, pixel by pixel'),
+  multiply: t('Darkens: white disappears, black stays'), lighten: t('Keeps the lighter of the two, pixel by pixel'),
+  screen: t('Lightens: black disappears - light leaks, flares, smoke'), add: t('Adds its light - glows and sparks burn brighter'),
+  overlay: t('More contrast: darks darker, lights lighter'), soft_light: t('A gentle overlay - texture and light without harsh contrast'),
+  difference: t('Inverts where it is bright - a glitchy, negative look'), colour: t('Its colour over the brightness under it - tints the picture')});
+const ED_BLEND_CSS = {screen: 'screen', add: 'plus-lighter', multiply: 'multiply', darken: 'darken', lighten: 'lighten',
+  overlay: 'overlay', soft_light: 'soft-light', difference: 'difference', colour: 'color'};
+const edBlendCss = m => ED_BLEND_CSS[m] || '';
+// the panel's row: a select of the modes (their lines as its options' tips) and ↺ back to Normal
+function edBlendRow(mode) {
+  const m = mode || 'normal', tip = ED_BLEND_TIP();
+  return `<label class="edset edblend"><span title="${ta('How it mixes with what is under it')}">${t('Blend')}</span>
+    <select id="edblend" title="${esc(tip[m] || '')}">${ED_BLENDS().map(([k, l]) => `<option value="${k}"${k === m ? ' selected' : ''} title="${esc(tip[k] || '')}">${esc(l)}</option>`).join('')}</select>
+    <button type="button" class="ednreset" id="edblendreset"${m === 'normal' ? ' hidden' : ''} title="${ta('Back to Normal')}">↺</button></label>`;
+}
+const edBlendName = m => (ED_BLENDS().find(([k]) => k === m) || [m, m])[1];
+function edBlendBind(box, mode, commit) {                     // commit(mode) = one change (the Editor's push)
+  const s = $('#edblend', box), rs = $('#edblendreset', box);
+  if (!s) return;
+  s.onchange = () => { if (s.value !== (mode || 'normal')) commit(s.value); };
+  if (rs) rs.onclick = e => { e.preventDefault(); commit('normal'); };
+}
 // transitions (motionlab\edtrans): a sign per kind, its name as the engine sends it (English) in the page's language, a
 // line on each, the directions of a slide / whip
 const ED_TR_ICON = {mix: '◐', black: '●', white: '○', flash: '✦', zoom_in: '⊕', zoom_out: '⊖', slide: '⇆', whip: '≫', spin: '↻', glitch: '▚', leak: '☀'};
@@ -181,6 +209,18 @@ function edPvH(v) {                                            // the preview's 
     if (v !== undefined) { if (v == null) localStorage.removeItem('ml.editor.pvh'); else localStorage.setItem('ml.editor.pvh', String(Math.round(v))); return v; }
     const x = parseFloat(localStorage.getItem('ml.editor.pvh')); return isFinite(x) ? x : null;
   } catch (e) { return null; }
+}
+// 2026-11-10 (the user, 2026-10-26: "make the preview bigger, move from left to right... like a normal video editor"):
+// the side panels' widths as dragged (px; gone = as they were) and their sides swapped - this PC's (localStorage)
+function edLayout(ch) {
+  let L = {};
+  try { L = JSON.parse(localStorage.getItem('ml.editor.layout') || '{}') || {}; } catch (e) { L = {}; }
+  if (ch) {
+    L = {...L, ...ch};
+    Object.keys(L).forEach(k => { if (L[k] == null || L[k] === false) delete L[k]; });
+    try { localStorage.setItem('ml.editor.layout', JSON.stringify(L)); } catch (e) { /* a private window: this session only */ }
+  }
+  return L;
 }
 // the panel's sections (<details data-sec>) open or closed as the user left them - this viewer's own
 function edSecs() { try { return JSON.parse(localStorage.getItem('ml.editor.secs') || '{}') || {}; } catch (e) { return {}; } }
@@ -333,6 +373,8 @@ class EdPreview {
   }
   setState(S, capEdits) {
     this.S = S; this.N = S.frames; this.capEdits = capEdits || {}; this.over = null;
+    const g0 = Math.round(clamp(S.bg ?? 0.045, 0, 1) * 255);   // (the ground the render starts from: a blend mode on the
+    this.layers.style.background = `rgb(${g0},${g0},${g0})`;  // lowest clip mixes with it there too - 2026-11-10)
     this.g = Object.fromEntries(S.graphics.map(g => [g.id, g]));
     const live = new Set(S.graphics.map(g => this.gkey(g)));
     for (const [k, F] of this.frames) if (!live.has(k)) { F.wrap.remove(); this.frames.delete(k); }
@@ -424,8 +466,8 @@ class EdPreview {
       e.v.style.transform = `scale(${zm})${d.mirror ? ' scaleX(-1)' : ''}`;
       e.geo = null;
     }
-    st.mixBlendMode = d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : '';
-    let fl = 0, flc = '#fff', ex = 0;                        // a flash (over-exposed), a white or a black frame
+    st.mixBlendMode = edBlendCss(d.blend);
+    let fl = 0, flc = '#fff', ex = 0;                       // a flash (over-exposed), a white or a black frame
     if ((d.black || []).includes(f)) { fl = 1; flc = '#000'; }
     else if ((d.flash_white || []).includes(f)) fl = 0.9;
     else if (d.flash_over && d.flash_over[String(f)] != null) { ex = +d.flash_over[String(f)]; fl = 0.25 * ex; }
@@ -501,7 +543,7 @@ class EdPreview {
       const fo = S.folders[g.dir] || {}, gw = g.new ? this.W : (fo.w || this.W), gh = g.new ? this.H : (fo.h || this.H);
       const r = g.rect || [0, 0, gw, gh], [x, y, w, h] = this.box4(r);
       Object.assign(F.wrap.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, zIndex: (i + 1) * 4,
-        opacity: clamp(edCurve(g.opacity, S.curves, 1)(f), 0, 1)});
+        opacity: clamp(edCurve(g.opacity, S.curves, 1)(f), 0, 1), mixBlendMode: edBlendCss(g.blend)});
       F.fr.style.width = `${gw}px`; F.fr.style.height = `${gh}px`; F.fr.style.transform = `scale(${w / gw})`;
       const n = Math.max(1, fo.frames || 1), k = clamp(g.in + Math.floor((f - g.start) * (g.speed || 1) + 1e-6), 0, n - 1);
       try { F.tl.seek(k / (fo.fps || fps), false); } catch (err) { /* the graphic's own error */ }
@@ -517,7 +559,7 @@ class EdPreview {
       const c = Array.isArray(c0) ? (c0.length >= 3 ? c0 : [c0[0] ?? 1, c0[0] ?? 1, c0[0] ?? 1]) : [+c0, +c0, +c0];
       Object.assign(el.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, zIndex: (i + 1) * 4,
         background: `rgb(${c.map(v => Math.round(clamp(v, 0, 1) * 255)).join(',')})`, opacity: clamp(edCurve(d.opacity, S.curves, 1)(f), 0, 1),
-        mixBlendMode: d.blend === 'screen' ? 'screen' : d.blend === 'add' ? 'plus-lighter' : ''});
+        mixBlendMode: edBlendCss(d.blend)});
       el.hidden = false; onSol.add(d.id);
     }
     for (const [id, el] of this.solids) if (!onSol.has(id)) el.hidden = true;

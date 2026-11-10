@@ -144,6 +144,7 @@ async function downloadModal() {
       followJob(j.id, pre, done => {
         $('#dgo', el).disabled = false;
         $('#dst', el).innerHTML = done.status === 'done' ? t('done ✓') : esc(t(done.status)) + (done.status === 'failed' ? ' ' + reportBtn(done.id, 'sm ghost') : '');
+        if (done.login) { loginInline($('#ddone', el), done.login, () => $('#dgo', el).click()); return; }   // then the same Download
         const file = pre.textContent.split('\n').map(l => l.trim()).reverse().find(l => FILE_RX.test(l));
         if (done.status !== 'done' || !file) return;
         const isVideo = !/\.(mp3|m4a)$/i.test(file);
@@ -156,6 +157,53 @@ async function downloadModal() {
         if (rel) $('#dop', el).onclick = () => openPath(rel, true);
       });
     };
+  });
+}
+
+// ---- a download that wanted the browser's login (2026-11-10, the user: "check when there is an error with the
+// cookies and stuff and maybe add a pop up to add the 'cookies from browser' option in motionlab so that we can
+// download stuff"): download.py's LOGIN line -> the job's `login` (needed | failed | cookies). The pop-up turns on
+// Settings > Downloads > "Use my browser's login" with the browser picked and starts the same downloads again (POST
+// /api/jobs/<id>/retry: what follows them - notes, SPARK, an analysis - follows again). Offered once per job by
+// itself (`LOGIN_ASKED`), then from the job's row.
+const LOGIN_ASKED = new Set();
+const LOGIN_WORDS = {
+  needed: () => [t('This site wants you logged in'), t('Some videos (Instagram, Vimeo, YouTube\'s “are you a bot” check) only download for someone logged in. MotionLab can let the downloader use your own login from a browser on this PC.')],
+  failed: () => [t('Your browser\'s login did not work'), t('Log in to the site in the browser below (open the video there once), then try again - or pick another browser.')],
+  cookies: () => [t('MotionLab could not read your browser\'s login'), t('Chrome and Edge lock and encrypt it while they are open: close that browser completely and try again, or pick Firefox (log in to the site there first).')]};
+function loginForm(kind, S) {
+  const [title, what] = (LOGIN_WORDS[kind] || LOGIN_WORDS.needed)(), cur = (S.settings || {}).download_browser || 'firefox';
+  return `<h2 class="lgtitle"><svg class="i"><use href="#i-download"/></svg>${esc(title)}</h2><p>${esc(what)}</p>
+    <div class="row"><label for="lgbr">${t('Use the login of')}</label><select id="lgbr">${(S.browsers || []).map(b => `<option value="${esc(b.id)}" ${b.id === cur ? 'selected' : ''}>${esc(t(b.label))}</option>`).join('')}</select></div>
+    <div class="small muted" style="margin-top:6px">${t('The downloader reads it on this PC for each download - MotionLab keeps it nowhere and sends it nowhere. Turn it off any time in Settings → Downloads.')}</div>
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="lggo"><svg class="i"><use href="#i-download"/></svg>${kind === 'needed' ? t('Use my login and try again') : t('Try again')}</button><button class="btn" id="lgno">${t('Not now')}</button></div>`;
+}
+function loginWire(el, go, no) {          // go() = the download(s) again, once the setting is saved
+  $('#lgno', el).onclick = no;
+  $('#lggo', el).onclick = async () => {
+    const b = $('#lggo', el); b.disabled = true;
+    try { await api('/api/settings', {settings: {download_login: true, download_browser: $('#lgbr', el).value}}); await go(); }
+    catch (e) { b.disabled = false; toast(e.message, 'err'); }
+  };
+}
+// the same form inside a dialog's own box (Download from a link, a song from a link in New edit and Music): again()
+// = that box's Download pressed again, once the setting is saved
+async function loginInline(box, kind, again) {
+  let S;
+  try { S = await api('/api/settings'); } catch (e) { return; }
+  const shut = () => { box.hidden = true; box.innerHTML = ''; };
+  box.hidden = false; box.innerHTML = `<div class="lginl">${loginForm(kind, S)}</div>`;
+  loginWire(box, async () => { shut(); again(); }, shut);
+}
+async function loginModal(jobs, onDone = () => {}) {
+  let S;
+  try { S = await api('/api/settings'); } catch (e) { toast(e.message, 'err'); return; }
+  const kind = jobs.some(j => j.login === 'cookies') ? 'cookies' : jobs.some(j => j.login === 'failed') ? 'failed' : 'needed';
+  modal(`${loginForm(kind, S)}<div class="small dim" style="margin-top:10px">${jobs.map(j => esc(j.title)).join('<br>')}</div>`, el => {
+    loginWire(el, async () => {
+      for (const j of jobs) await api(`/api/jobs/${j.id}/retry`, {});
+      closeModal(); toast(tn(jobs.length, 'Downloading it again with your login', 'Downloading {n} again with your login')); ping(); onDone();
+    }, () => { closeModal(); onDone(); });
   });
 }
 

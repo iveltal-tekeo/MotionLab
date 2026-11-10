@@ -9,6 +9,31 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
 
 ## Sin publicar
 
+- **Modos de fusión en el Editor** - un plano o un gráfico tiene *Fusión* en sus ajustes: Normal, Oscurecer,
+  Multiplicar, Aclarar, Trama, Sumar, Superponer, Luz suave, Diferencia y Color: cómo se mezcla con lo que hay debajo
+  (una fuga de luz en Trama, una textura en Superponer, un negativo con glitch en Diferencia). La vista previa muestra
+  la misma mezcla que el render.
+- **Paneles laterales a tu medida y en tu lado** - arrastra el borde interior del panel izquierdo o derecho del Editor
+  para hacerlo más ancho o más estrecho (doble clic: como estaba), y ⇄ junto a Deshacer los intercambia, para tener los
+  clips, los sonidos y los gráficos a la derecha. MotionLab recuerda las dos cosas en este PC.
+- **Una descarga que necesita tu sesión te la pide** - cuando un enlace en Notas, SPARK, Animaciones y efectos,
+  *Descargar desde un enlace* o una canción desde un enlace (Nueva edición, Música) falla porque el sitio quiere que
+  inicies sesión (Instagram, Vimeo, la comprobación de YouTube de «¿eres un bot?»), MotionLab te ofrece la sesión de
+  tu navegador: elige el navegador, pulsa *Usar mi sesión y volver a intentarlo* y la misma descarga empieza de nuevo,
+  con sus notas, su SPARK o su análisis después. Si la sesión del navegador no funcionó, o Chrome / Edge la
+  bloquearon, te dice qué hacer. La fila de la descarga fallida conserva un botón *Usar la sesión de mi navegador…*.
+- **Barras de progreso en el Analizador** - mientras trabaja, las páginas de Animaciones y efectos, SPARK y Notas
+  muestran cada vídeo en una barra de progreso con el color de su forma: su descarga (con su %), la parte de MotionLab
+  paso a paso (Efectos: 10 pasos, cada fotograma con su propio %; SPARK y Notas: 4; escuchar con voz a texto es el
+  largo) y luego Claude revisando o escribiendo, con la barra del lote encima («2 de 5 listos»).
+- **Volver a intentarlo más tarde** - un vídeo o enlace que no funcionó (una descarga, unas notas, SPARK, un análisis)
+  se guarda 30 días: la página de cada forma muestra «N vídeos no han funcionado: vuelve a intentarlo», una lista
+  agrupada por el lote en que los añadiste, con *Volver a intentarlo*, *Volver a intentarlos todos* y ✕. Lo que venía
+  después vuelve también; el que funcione sale de la lista.
+- **Búsqueda y filtros para lo que has analizado** - Efectos, Por qué funcionó y Notas tienen un buscador (nombres,
+  canales, etiquetas y lo que escribió Claude: las ideas clave y secciones de unas notas, el veredicto de un SPARK) y
+  filtros: el estado de Claude, la plataforma, las etiquetas, el tipo de notas o el resultado de SPARK, y el orden (más
+  nuevos, más antiguos, de la A a la Z, más largos, más cortos).
 - **Más sólido cuando algo se cancela, falla o se repite** - arreglos de una revisión de todo el código. *Quitar* en
   una tarea detiene ahora todo lo que había puesto en marcha (un render cancelado ya no sigue renderizando por
   detrás), y una tarea ya no puede quedarse «en marcha» para siempre y bloquear la cola. Un render que falla a medias

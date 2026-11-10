@@ -258,9 +258,39 @@ def sample_patch(src: np.ndarray, lut: np.ndarray, x: float, y: float, w: float,
     return np.clip(patch, 0, 1.5), cov, Xa, Ya
 
 
+def _overlay(b, s):
+    return np.where(b <= 0.5, 2 * b * s, 1 - 2 * (1 - b) * (1 - s))
+
+
+def _soft_light(b, s):
+    d = np.where(b <= 0.25, ((16 * b - 12) * b + 4) * b, np.sqrt(b))
+    return np.where(s <= 0.5, b - (1 - 2 * s) * b * (1 - b), b + (2 * s - 1) * (d - b))
+
+
+_LUM = np.array([0.3, 0.59, 0.11], np.float32)                # (the W3C blend modes' own luminosity weights)
+
+
+def _colour(b, s):
+    """CSS "color": the layer's hue and saturation with the brightness under it (W3C SetLum + ClipColor)."""
+    c = s + (b @ _LUM - s @ _LUM)[..., None]
+    lum = (c @ _LUM)[..., None]
+    n, x = c.min(axis=-1, keepdims=True), c.max(axis=-1, keepdims=True)
+    c = np.where(n < 0, lum + (c - lum) * lum / np.maximum(lum - n, 1e-6), c)
+    return np.where(x > 1, lum + (c - lum) * (1 - lum) / np.maximum(x - lum, 1e-6), c)
+
+
+# 2026-11-10, the Editor's blend modes (the user, 2026-10-26: "an option to modify opacity for the clip, as well as to add
+# a mode, like screen mode, add colour, difference"): the W3C compositing formulas on the 0..1 values as they are stored
+# (not linear light) - what the live preview's CSS mix-blend-mode does, so both show the same mix
+_BLENDS = {"multiply": lambda b, s: b * s, "darken": np.minimum, "difference": lambda b, s: np.abs(b - s),
+           "overlay": _overlay, "soft_light": _soft_light, "colour": _colour}
+BLEND_MODES = ("normal", "darken", "multiply", "lighten", "screen", "add", "overlay", "soft_light", "difference",
+               "colour")
+
+
 def blend(canvas: np.ndarray, patch: np.ndarray, alpha: np.ndarray, X0: int, Y0: int, mode: str = "normal",
           color=None):
-    """Composite a grey (h, w) or RGB (h, w, 3) patch with per-pixel alpha into the float RGB canvas."""
+    """Composite a grey (h, w) or RGB (h, w, 3) patch with per-pixel alpha into the float RGB canvas (BLEND_MODES)."""
     h, w = alpha.shape
     reg = canvas[Y0:Y0 + h, X0:X0 + w]
     p = patch if patch.ndim == 3 else patch[..., None]
@@ -276,6 +306,9 @@ def blend(canvas: np.ndarray, patch: np.ndarray, alpha: np.ndarray, X0: int, Y0:
         reg += p * a
     elif mode == "lighten":
         reg[:] = np.maximum(reg, reg * (1 - a) + p * a)
+    elif mode in _BLENDS:                                       # mixed by its alpha: the layer's own see-through parts
+        b, s = np.clip(reg, 0, 1), np.clip(np.broadcast_to(p, reg.shape), 0, 1)   # and its opacity show the plain
+        reg[:] = reg * (1 - a) + _BLENDS[mode](b, s) * a                          # picture under it
     else:
         raise ValueError(mode)
 
@@ -1008,7 +1041,7 @@ class OverlayLayer(Layer):
     plan frame f shows clip frame in + (f - start) (its last frame holds; "speed" x, 0.6.0 the Editor: in +
     floor((f - start) * x) - captions on a sped-up shot). "rect" [x, y, w, h] places and scales the clip (default: at
     0, 0 at the size it was authored). blend "normal" composites with its alpha; "add" / "screen" add its light
-    (colour x alpha) like the lab's glows and fireworks."""
+    (colour x alpha) like the lab's glows and fireworks; the other BLEND_MODES mix its colour by its alpha."""
 
     def __init__(self, spec, R):
         super().__init__(spec, R)

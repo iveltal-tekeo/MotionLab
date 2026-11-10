@@ -162,6 +162,25 @@ steps, `modalBack` - are in `tools\motionlab\app\CLAUDE.md`. *Recreate with my f
   and #/refs lead to the pages (`ALIASES`). The in-progress panel follows `notes` jobs too (*→ then its notes*, *→ then Claude
   writes the notes*); a video downloaded for its notes is never *waiting to be analysed* (`data.waiting` skips
   `notes.videos()`); SPARK's jobs and downloads the same (`anIsSp`, `spark.videos()`).
+- **Search and filters** (2026-11-10, the user: "for the videos already analyzed (either from index, spark or flux) add
+  some filters so i can roam around them notes, and maybe a search bar"): the Effects, Why it worked and Notes lists
+  (their pages and the overview's tabs) open with one row `.anfil` (`anFilterRow`): the search `#fq` (every word must
+  be found - names, channel, tags, platform, and what Claude wrote: `find` from `notes._find_text` / `spark.summary`,
+  FLUX's profile lines), Claude's state, the platform, the tags, the way's own (FLUX focus + category, Notes' kind,
+  SPARK's result), the order (`AN_SORT`, kept in `ml.anSort.<way>`), the count "n of N" and the row's tail (*show the
+  test videos*, *Combine notes…*). A change redraws `#ancards` only (`anCards` from `AN_LAST`, nothing fetched, the
+  search keeps the focus); the filters live in `AN_F` while MotionLab is open (a live redraw keeps them), an overview
+  tab switch clears them; nothing matches = *Clear the search and filters*.
+- **Did not work - try again** (2026-11-10, the user: "store a temporal log of videos or batches I tried to run and
+  failed so I can retry in the future"): jobs.py `Runner._remember` keeps a failed download / notes / SPARK / analysis
+  in `.app\failed.json` (30 days, 200 at most, one per link or video: a new failure replaces it, a success removes it;
+  its args, `then`, way, why, login); GET `/api/failed` (+ `running` = at work again now). Each mascot page and the
+  overview show `failedBar` (that way's runs; the overview all) -> `failedModal`: grouped by the batch they were added
+  in, *Try again* / *Try them all again* (POST `/api/failed` {action: retry, ids} - one new batch, so one Claude window)
+  and ✕ (forget); a download that wanted the login puts `loginForm` on top (the setting, then those again).
+- **A download that wanted the login** (2026-11-10): download.py's `LOGIN:` line -> the job's `login`; the progress
+  panels pop `loginModal` once (`loginAsk`, when no other download runs) and keep a row button; *Download from a
+  link*, New edit's and Music's song links show `loginInline`; POST `/api/jobs/<id>/retry`.
 
 ## SPARK
 
@@ -243,7 +262,17 @@ the video afterwards but keep the notes", no test-yourself questions).
   frames where the screen changes - keyframes only (`-skip_frame nokey`) + the scene score, 8-36 of them on sheets of
   12 labelled f480 (00:00:16:00); SponsorBlock's ranges for YouTube) and prints `NOTES: <name>`; with `claude` the
   batch's last job opens ONE Claude window: `/take-notes <name>` or `/take-notes pending`.
-- **The card** (`noteCard`): the platform's thumbnail (else `frames\cover.jpg`), the date, the notes' title, length ·
+- **The progress bars** (2026-11-10, the user: "make the Take Notes stuff as a progress bar? so its more visual instead
+  of the similar table for jobs", then "add the progress bars to SPARK and FLUX too"): the FLUX, SPARK and INDEX pages
+  draw `pipePanel(el, onEnd, match, way)` instead of the job table (the overview keeps the table) - `PIPE[way]` = its
+  kinds, colour, words and step names. One row per video: its download and its job joined (`Job.parent`, set in
+  `_then_analyse`), the steps Download · the lab's part · Claude (dots: ✓ done, the one at work ringed, ✕ failed; the
+  Claude step from `then_claude`, a download's from `then_cl`), a bar (download 0-35 % from yt-dlp's %, the tool's
+  `STEP i/n` lines 35-90 % - notes.py 4, spark.py prepare 4, analyze.py 10, its every-frame pass with its own %
+  (`sub`) - Claude 90-100; `Job.progress`), striped while it waits its turn, listens with speech to text, or Claude
+  works (a batch's window lights every row of the batch), and the words of the moment (`pipeState`); a plain download
+  = one step; SPARK's *Look the numbers up again* (`spark_numbers`) = one step. The batch on top ("2 of 5 ready", its
+  bar). Finished rows stay while the batch runs, then 8 s; a failed one 15 min with why. the platform's thumbnail (else `frames\cover.jpg`), the date, the notes' title, length ·
   channel · platform, the TL;DR (2 lines), takeaways · sections, two tags, *Waiting for Claude* + *Write the notes*
   until Claude wrote them; Delete on hover (kind `notes`).
 - **The page** (#/note/<name>, `pageNote`): the head = the notes' title (the video's own title on hover), source link ·
@@ -785,7 +814,19 @@ Edit: **New edit** = a pop-up of steps (`newEdit(pre)`, 2026-10-22; was the four
   pointer lock on the drag (Chromium shows "Press Esc to show your cursor" on each, and headless runs sent no
   movement). **Room**: the page's padding is smaller while the Editor is open (`body.edwide`), the panel on the right
   is 360 px, and a handle between the preview and the timeline sets the preview's height (`#edsplitter`, remembered in
-  `ml.editor.pvh`, double-click = as it was). API_LEVEL 49. **The look** (the same day, the user: "remove the round
+  `ml.editor.pvh`, double-click = as it was). API_LEVEL 49. **The side panels** (2026-11-10, the user's 0.6.x ask of
+  2026-10-26: "make the preview bigger, move from left to right... like a normal video editor"): each side panel's
+  inner edge (`.edvsplit`) drags its width (220 px up to a third of the window; `--edl` / `--edr` on `#edmain`),
+  double-click = as it was; ⇄ (`#edswap`, before Undo) swaps them (`.edmain.swap`: CSS `order`, the columns follow
+  the panels); both in `edLayout()` = `ml.editor.layout` {l, r, swap}, this PC's; the preview fits itself to the room
+  left (its ResizeObserver). Under 1000 px wide the panels stack and neither shows. **Blend modes** (2026-11-10, the
+  user, 2026-10-26: "an option to modify opacity for the clip, as well as to add a mode, like screen mode, add colour,
+  difference"): *Blend* under a shot's Opacity (*Position and size*) and in a graphic's panel (`edBlendRow` /
+  `edBlendBind`, js\editor-preview.js) = the change `blend` {shot | layer, value}; the modes `compose.BLEND_MODES`
+  (the W3C formulas) and the preview's CSS `mix-blend-mode` (`ED_BLEND_CSS`) mix the same - measured 2026-11-10 in
+  Edge: every mode within 1/255 of compose at opacity 1 / 0.6 / 0.25, a graphic in its iframe too; the preview's layer
+  box takes the plan's `background` (the state's `bg`) so a blend on the lowest clip mixes with the same ground.
+  API_LEVEL 60. **The look** (the same day, the user: "remove the round
   edges and padding in the miniedtor like "edsplitter" or the padding in the main section. maybe also add a cleaner
   color"): an editing app's - graphite greys (`.ed` --edbg / --edpan / --edline / --edsurf / --edsunk, set once in the
   block "the Editor's look" at the end of the Editor's CSS) with cyan only for the selection and the main action, a

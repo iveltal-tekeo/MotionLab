@@ -1224,11 +1224,17 @@ template packs - any 0.6.x can take them; the keyframes, transitions and a clip'
    ...) as a rail of their own, each opening its panel - not four small tabs over one list.
 2. *A layout you change* - "make the preview bigger, move from left to right... like a normal video editor": panels
    resized by dragging their borders (preview / timeline / side panels), the side panels swapped left - right, kept
-   per PC.
+   per PC. **Built 2026-11-10** (the user's /whats-next pick "Editor leftovers"; Unreleased): the preview / timeline
+   handle was there (0.6.0); now each side panel's inner edge drags its width, ⇄ swaps them, both kept on this PC
+   (docs\app_pages.md *The side panels*). UI test 19/19 on a test server.
 3. *Blend modes* - "an option to modify opacity for the clip, as well as to add a mode, like screen mode, add colour,
    difference": the clip's opacity comes with the keyframes; modes for clips and graphics (normal, screen, add,
    multiply, overlay, colour, difference ...) need compose's blend() to learn them and the preview's
-   mix-blend-mode the same.
+   mix-blend-mode the same. **Built 2026-11-10** (Unreleased): `compose.BLEND_MODES` = normal, darken, multiply,
+   lighten, screen, add, overlay, soft light, difference, colour (the W3C formulas), the Editor's change `blend` on a
+   shot or a graphic; the preview mixes within 1/255 of the render (measured in Edge, every mode, three opacities).
+   Not yet: the new modes in a DaVinci Resolve build - mapped to Resolve's composite modes (`resolve_build.RESOLVE_BLEND`,
+   "colour" = Colorize), not tried in Resolve; a clip with a blend goes to Resolve rendered by the lab, as before.
 4. *Subject masking* (an idea, docs\ideas.md *Later / not now*): "implement corridorkey2.0 to mask subjects ... if u
    specify u want the user masked it can improve edits and have motion graphics from behind". **The light version
    is built** (2026-10-27, 0.6.1 *Graphics part of the shot*: a 250 KB person mask through OpenCV, no CorridorKey);

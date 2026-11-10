@@ -16,19 +16,20 @@ function projEditor(el, P) {
   const enc = encodeURIComponent(P.name);
   el.innerHTML = `<div class="ed">
     <div class="edtop"><div id="edpick"></div><div class="edtitle" id="edtitle"></div><div class="grow"></div>
+      <button class="btn sm ghost edswap" id="edswap" title="${ta('Swap the side panels - drag their inner edges to make them wider or narrower')}" aria-label="${ta('Swap the side panels')}">⇄</button>
       <button class="btn sm ghost" id="edundo" title="${ta('Undo (Ctrl+Z)')}" disabled>↶ ${t('Undo')}</button>
       <button class="btn sm ghost" id="edredo" title="${ta('Redo (Ctrl+Shift+Z)')}" disabled>↷ ${t('Redo')}</button>
       <span class="edhw"><button class="btn sm ghost" id="edhist" disabled aria-haspopup="true" aria-expanded="false" title="${ta('What you changed, in order')}"></button><div class="edpop" id="edpop" hidden></div></span>
       <button class="btn pri edsave" id="edsave" disabled><svg class="i"><use href="#i-edit"/></svg>${t('Save as a new version')}</button></div>
-    <div class="edmain">
-      <aside class="edpanel"><div class="edpin edadd" id="edadd"></div></aside>
+    <div class="edmain" id="edmain">
+      <aside class="edpanel edl"><div class="edpin edadd" id="edadd"></div><div class="edvsplit" data-side="l" role="separator" aria-orientation="vertical" title="${ta('Drag to make this panel wider or narrower - double-click: as it was')}"></div></aside>
       <div class="edview"><div id="edprev"></div><div class="edrng" id="edrng" hidden></div>
         <div class="edtrans"><button class="btn sm" data-tr="start" title="${ta('First frame (Home)')}">⏮</button><button class="btn sm" data-tr="-1" title="${ta('1 frame back (←)')}">◀</button>
           <button class="btn edplay" data-tr="play" title="${ta('Play / pause (Space)')}">▶</button><button class="btn sm" data-tr="1" title="${ta('1 frame on (→)')}">▶</button><button class="btn sm" data-tr="end" title="${ta('Last frame (End)')}">⏭</button>
           <span class="edtime mono" id="edtime"></span><button class="btn sm ghost" data-tr="mute" title="${ta('Sound on / off (M)')}">🔊</button>
           <input type="range" class="edvol" id="edpvol" min="0" max="100" step="1" value="${Math.round(Math.sqrt(edVolume()) * 100)}" title="${ta('Preview volume - how loud you hear it here; the video itself does not change')}" aria-label="${ta('Preview volume')}">
           <select id="edsafe" class="edsafesel" hidden title="${ta('Where TikTok, Reels and Shorts put their own buttons, name and caption - keep words and faces inside the dashed box')}"></select></div></div>
-      <aside class="edpanel"><div class="edpin edinsp" id="edinsp"></div></aside></div>
+      <aside class="edpanel edr"><div class="edpin edinsp" id="edinsp"></div><div class="edvsplit" data-side="r" role="separator" aria-orientation="vertical" title="${ta('Drag to make this panel wider or narrower - double-click: as it was')}"></div></aside></div>
     <div class="edsplitter" id="edsplitter" role="separator" aria-orientation="horizontal" title="${ta('Drag to make the preview bigger or smaller - double-click: as it was')}"></div>
     <div class="edtl" id="edtl"><div class="edtools">
         <button class="btn sm" id="edsplit" title="${ta('Split the shot under the playhead (S)')}">✂ ${t('Split')}</button>
@@ -615,7 +616,7 @@ function projEditor(el, P) {
         <div class="small muted">${frange(s.start, s.end, S.fps)}</div>
         ${lineSec(S, s)}
         ${edFrameSec(s)}
-        <details class="edsec" data-sec="shot.look" open><summary>${t('Position and size')}</summary><div id="edkeysbox">${keyRows(s)}</div></details>
+        <details class="edsec" data-sec="shot.look" open><summary>${t('Position and size')}</summary><div id="edkeysbox">${keyRows(s)}</div>${edBlendRow((drawOf(s.id) || {}).blend)}</details>
         <details class="edsec" data-sec="shot.speed" open><summary>${t('Speed')}</summary>
           ${edNum({id: 'speed', label: t('Speed'), value: s.speed, min: sp[0], max: sp[1], step: 0.05, unit: '×', dflt: 1, disabled: lock || s.special})}
           <div class="edchips">${ED_SPEEDS.map(x => `<button class="${Math.abs(x - s.speed) < 1e-6 ? 'on' : ''}" data-speed="${x}"${lock || s.special ? ' disabled' : ''}>${numLoc(x)}×</button>`).join('')}</div>
@@ -637,6 +638,7 @@ function projEditor(el, P) {
         ${lock ? `<div class="small bad">${t('This video\'s sound was made in a way the Editor cannot cut again, so its shots keep their timing - ask Claude for those changes.')}</div>` : s.special ? `<div class="small muted">${t('A held frame or a stutter: it keeps its speed.')}</div>` : ''}`;
       bindKeys(box, s);
       bindLine(box, S, s);
+      edBlendBind(box, (drawOf(s.id) || {}).blend, m => push({op: 'blend', shot: s.id, value: m}, t('Shot {n}: blend {mode}', {n: s.n, mode: edBlendName(m)})));
       $$('[data-frame]', box).forEach(b => b.onclick = () => { if (b.classList.contains('on')) return;
         push({op: 'frame', shot: s.id, layout: b.dataset.frame}, t('Shot {n}: framing {how}', {n: s.n, how: b.dataset.name})); });
       $$('[data-fmode]', box).forEach(b => b.onclick = () => { if (b.classList.contains('on')) return;
@@ -761,11 +763,13 @@ function projEditor(el, P) {
         ${cols.length ? `<div class="edlbl">${t('Colours')}</div>${setRows(g, cols)}` : ''}
         ${(S.clips || []).length && g.fit ? `<div class="edlbl" title="${ta('Part of the shot instead of pasted on top - it shows in the render (See it rendered)')}">${t('In the shot')}</div>
           <div class="edchips edfit">${ED_FIT().map(([k, l, tip]) => `<button data-fit="${k}" class="${g.fit[k] ? 'on' : ''}" title="${ta(tip)}">${esc(l)}</button>`).join('')}</div>` : ''}
+        ${edBlendRow(g.blend)}
         ${rest.length ? `<details class="edmore"><summary>${t('More settings')}</summary>${setRows(g, rest)}</details>` : ''}
         ${fo.problem ? `<div class="small bad">${esc(fo.problem)}</div>` : ''}
         <div class="row edbtns"><button class="btn sm eddanger" id="edgdel"><svg class="i"><use href="#i-trash"/></svg>${t('Remove')}</button>
           ${g.pieces > 1 ? `<button class="btn sm ghost" id="edgdelall">${t('Remove all {n} pieces', {n: g.pieces})}</button>` : ''}</div>`;
       bindSets(box, g);
+      edBlendBind(box, g.blend, m => push({op: 'blend', layer: g.id, value: m}, t('{graphic}: blend {mode}', {graphic: edGfxName(g, S, lib), mode: edBlendName(m)})));
       $$('[data-fit]', box).forEach(b => b.onclick = () => { const k = b.dataset.fit, on = !g.fit[k];
         push({op: 'gfit', layer: g.id, key: k, value: on}, on ? t('{graphic}: {what} on', {graphic: edGfxName(g, S, lib), what: b.textContent})
           : t('{graphic}: {what} off', {graphic: edGfxName(g, S, lib), what: b.textContent})); });
@@ -1551,6 +1555,28 @@ function projEditor(el, P) {
     spl.onpointerup = spl.onpointercancel = () => { spl.onpointermove = spl.onpointerup = spl.onpointercancel = null; spl.classList.remove('on'); if (cur) drawTL(); };
   };
   spl.ondblclick = () => { edPvH(null); if (pv) pv.fit(); };
+  // the side panels: wider / narrower by their inner edge, swapped left - right (edLayout; the preview fits itself to
+  // what is left - its ResizeObserver)
+  const mainEl = $('#edmain', el);
+  const applyLayout = () => {
+    const L = edLayout();
+    mainEl.classList.toggle('swap', !!L.swap);
+    $('#edswap', el).classList.toggle('on', !!L.swap);
+    ['l', 'r'].forEach(k => { if (L[k]) mainEl.style.setProperty(`--ed${k}`, `${L[k]}px`); else mainEl.style.removeProperty(`--ed${k}`); });
+  };
+  applyLayout();
+  $$('.edvsplit', el).forEach(h => {
+    const k = h.dataset.side, panel = h.parentElement;
+    h.onpointerdown = e => {
+      if (e.button) return;
+      e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('on');
+      const x0 = e.clientX, w0 = panel.getBoundingClientRect().width, sign = (k === 'l') !== !!edLayout().swap ? 1 : -1;   // (on the left: right = wider)
+      h.onpointermove = ev => { edLayout({[k]: Math.round(clamp(w0 + sign * (ev.clientX - x0), 220, Math.max(240, Math.min(620, window.innerWidth * 0.34))))}); applyLayout(); };
+      h.onpointerup = h.onpointercancel = () => { h.onpointermove = h.onpointerup = h.onpointercancel = null; h.classList.remove('on'); };
+    };
+    h.ondblclick = () => { edLayout({[k]: null}); applyLayout(); };
+  });
+  $('#edswap', el).onclick = () => { edLayout({swap: !edLayout().swap}); applyLayout(); };
   onCleanup(() => { gone = true; closeMenu(); document.body.classList.remove('edwide'); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); if (pv) { pv.destroy(); pv = null; } });
   brandData().then(() => { if (sel) drawInsp(); });
   api('/api/jobs').then(J => { saving = J.some(j => j.kind === 'miniedit' && (j.args || {}).project === P.name && ['running', 'queued'].includes(j.status)); if (cur) draw(); }).catch(() => {});

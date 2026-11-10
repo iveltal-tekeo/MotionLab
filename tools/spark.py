@@ -450,6 +450,7 @@ def prepare(a) -> int:
     title = dl.get("title") or re.sub(r"\s*\[[A-Za-z0-9_-]{6,}\]$", "", video.stem)
     issues: list[str] = []
     # 1. the light read first: its frame count is the one every number below uses
+    print("STEP 1/4: every frame", flush=True)      # the app's progress bar (jobs.STEP)
     with tempfile.TemporaryDirectory(dir=str(d), ignore_cleanup_errors=True) as tmp:
         met, hard, jump = light_read(video, pi, fps, Path(guard.check(Path(tmp))))
     n = len(met["frame"])
@@ -468,6 +469,7 @@ def prepare(a) -> int:
     write_json(guard.check(d / "video.json"), v)
     ref = {"name": name, "dir": d, "fps": fps, "frames": n, "video": video, "drop": False}
     # 2. the words: kept / the same video's notes or analysis / the platform's subtitles / speech to text
+    print("STEP 2/4: the words", flush=True)
     fetched = False
     if a.force or S.transcript(d) is None:
         src = None if a.force else _reuse_words(d, sha, fps)
@@ -498,6 +500,7 @@ def prepare(a) -> int:
     if tr0 and tr0.get("source") == "subtitles" and said and own and said.split("-")[0] != own.split("-")[0]:
         issues.append(f"the words are in '{said}' but the video says it is in '{own}' - a dubbed or translated track?")
     # 3. the numbers - the lookup the user started (the video's numbers and the creator's list)
+    print("STEP 3/4: the numbers", flush=True)
     if url and not a.no_lookup:
         try:
             lookup(d, ref, url, v, fresh_info=not fetched)
@@ -525,6 +528,7 @@ def prepare(a) -> int:
     v["chapters"] = S.chapters_of(info, fps, n)
     v["replayed"] = S.replayed_of(info, fps, n)
     # 4. the lab's numbers and the pictures
+    print("STEP 4/4: measures and pictures", flush=True)
     mea, pieces, shots = measures(met, hard, jump, n, fps, S.transcript(d))
     flux = S.same_video(sha, str(video))["flux"]
     if flux:                                     # its analysis' text events (checked by Claude) beat the rough measure

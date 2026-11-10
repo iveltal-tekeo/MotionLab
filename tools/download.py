@@ -35,6 +35,8 @@ MEDIA = VIDEOS + (".mp3", ".m4a")
 IMAGES = (".jpg", ".jpeg", ".png", ".webp", ".heic")          # the photos of a carousel / photo post
 LOGIN_HINT = ("the site wants you logged in for this video - turn on Settings > Downloads > \"Use my browser's "
               "login for downloads\" (Firefox works best), or save the video from your browser and drop it into refs\\")
+COOKIE_HINT = ("yt-dlp could not read your browser's login - Chrome and Edge lock and encrypt it: close that browser "
+               "and try again, or pick Firefox in Settings > Downloads (log in to the site in Firefox first)")
 # yt-dlp's ERROR line -> what it means, in words (the first match wins; measured 2026-10-12 with yt-dlp 2026.08.19)
 HINTS = [
     (("requested format is not available",),
@@ -46,8 +48,7 @@ HINTS = [
     # 0.4.2.1: reading the browser's login failed (Chrome / Edge lock their cookie file while open and encrypt it)
     (("could not copy", "cookie database", "dpapi", "failed to decrypt", "could not find firefox", "could not find "
       "chrome", "could not find edge", "unsupported browser"),
-     "yt-dlp could not read your browser's login - Chrome and Edge lock and encrypt it: close that browser and try "
-     "again, or pick Firefox in Settings > Downloads (log in to the site in Firefox first)"),
+     COOKIE_HINT),
     (("login", "logged-in", "empty media response", "registered users", "private", "cookies"), LOGIN_HINT),
     (("unsupported url",), "yt-dlp does not know this kind of link - paste the video's own page link"),
     (("video unavailable", "has been removed", "not available in your country", "no longer available"),
@@ -68,6 +69,23 @@ def hint(lines: list[str], login_on: bool = False) -> str:
         return ("the site wants you logged in, and your browser's login did not work - log in to the site in the "
                 "browser picked in Settings > Downloads, then try again")
     return h
+
+
+LOGIN_MARK = "LOGIN: "          # the app's pop-up (2026-11-10) reads it: offer the browser's login and try again
+BOT_WORDS = ("not a bot", "sign in to confirm")
+
+
+def login_kind(lines: list[str], login_on: bool = False) -> str:
+    """The failure is about a login: "needed" (the site wants one, the setting is off), "failed" (it is on and still
+    wanted: not logged in to the site in that browser), "cookies" (yt-dlp could not read the browser's login - Chrome
+    / Edge lock it); "" for anything else."""
+    err = next((ln for ln in reversed(lines) if ln.startswith("ERROR")), "").lower()
+    h = next((h for words, h in HINTS if err and any(w in err for w in words)), "")
+    if h == COOKIE_HINT:
+        return "cookies"
+    if h == LOGIN_HINT or any(w in err for w in BOT_WORDS):
+        return "failed" if login_on else "needed"
+    return ""
 
 
 def with_fields(cmd: list[str]) -> list[str]:
@@ -156,6 +174,8 @@ def finish(url: str, infos: list[dict], lines: list[str], rc: int, folder: Path,
             files.append((info, p))
     if not files:
         why = hint(lines, login_on)
+        if rc and login_kind(lines, login_on):
+            out(LOGIN_MARK + login_kind(lines, login_on))
         out((f"download failed (yt-dlp exit code {rc})" + (f": {why}" if why else "")) if rc else
             "download failed: yt-dlp ended well, but the saved file was not found in " + str(folder))
         return rc or 1
@@ -253,6 +273,16 @@ def selfcheck() -> list[str]:
             bad.append("login hint: points to Settings > Downloads")
         if "close that browser" not in hint(["ERROR: Could not copy Chrome cookie database"]):
             bad.append("cookie hint: Chrome / Edge lock their cookies")
+        bot = ["ERROR: [youtube] VLDJ_-wrwj8: Sign in to confirm you're not a bot. Use --cookies-from-browser"]
+        kinds = (login_kind(bot), login_kind(bot, True), login_kind(["ERROR: Could not copy Chrome cookie database"]),
+                 login_kind(["ERROR: [vimeo] 1: This video is only available for registered users"]),
+                 login_kind(["ERROR: [youtube] x: Video unavailable"]))
+        if kinds != ("needed", "failed", "cookies", "needed", ""):
+            bad.append(f"login kind for the app's pop-up (got {kinds})")
+        printed = []
+        finish("https://youtu.be/x", [], bot, 1, d, d / "downloads.json", out=printed.append)
+        if printed[:1] != [LOGIN_MARK + "needed"]:
+            bad.append(f"a failed login download prints {LOGIN_MARK}needed (got {printed[:1]})")
     return bad
 
 

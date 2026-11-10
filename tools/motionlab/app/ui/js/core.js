@@ -590,7 +590,7 @@ async function liveTick() {
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
 let SERVER_BOOT = 0;                                       // the server's start as the first ping gave it (ping)
-const API_LEVEL = 59;       // the server functions this page needs (server.API_LEVEL)
+const API_LEVEL = 62;       // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
 function overlay(text) {

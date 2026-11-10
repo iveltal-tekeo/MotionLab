@@ -347,7 +347,13 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   MARK line (`download.collect`, + playlist_index / n_entries) -> its own downloads.json entry with `post` (the link),
   `part`, `parts` (`download.record`; a single download keeps the 0.4.2 entry), the post's first video printed last
   (the `then` analysis takes it, the rest wait); files saved before yt-dlp failed on others are kept. The login hint
-  points to Settings > Downloads (`LOGIN_HINT`; a cookie-read failure has its own). `data.post_of`, `data.waiting`
+  points to Settings > Downloads (`LOGIN_HINT`; a cookie-read failure has its own). 2026-11-10 (the user: "a pop up
+  to add the 'cookies from browser' option ... so that we can download stuff"): a failed download prints `LOGIN:
+  needed | failed | cookies` (`download.login_kind`) -> the job's `login` (`Job.login`); the Analyser's progress panel
+  pops `loginModal` once by itself (`LOGIN_ASKED`, when no other download runs; a row button after) and *Download from
+  a link* shows the same form inline (`loginForm` / `loginWire`, js\jobs.js): the user's click turns
+  `download_login` on with the browser picked, then POST `/api/jobs/<id>/retry` (`Runner.retry`: the same args and
+  `then`; its batch only while the batch is still at work; `retried` hides the old row). `data.post_of`, `data.waiting`
   (photos / sound of a post included, parts together in order) -> the Analyser's *Downloaded, not analysed yet* (`waitingModal`) shows a
   post as one heading + its parts (`waitRows`); `system.downloads()` carries the post fields; a post's photo can be
   deleted (`trash.plan_file`, `data.IMAGE_EXT`). `download.py selfcheck` = a fake carousel, no network.
@@ -485,7 +491,11 @@ the shot list): GET `/api/project/<p>/shots?plan=`, `/api/project/<p>/moment?m=`
 `.../shots` {plan, swaps}, `.../shots/render` (the jobs `render` / `miniedit`), `.../catalogue/line` (the user's line),
 the job `catalogue`, the Editor state's `lines`, edit_request `shots_first`; 59 (the same day, Analyze videos'
 *Browse…*): POST `/api/pick/videos` (`system.pick_videos`: Windows' own Open dialog through PowerShell, owned by a hidden
-always-on-top window, several videos, one picker at a time - the page can never learn a file's place). `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
+always-on-top window, several videos, one picker at a time - the page can never learn a file's place); 60 (2026-11-10,
+blend modes): the Editor's change `blend` {shot | layer, value} (compose.BLEND_MODES - an older server's engine does not
+know it), the state's `bg`; 61 (2026-11-10, a download that wanted the login): POST `/api/jobs/<id>/retry`, a job's
+`login` / `retried`; 62 (the same day): GET / POST `/api/failed` (the runs that did not work, `.app\failed.json` -
+try again / forget), a job's `parent` / `progress` / `why`, the lists' `find`. `/files/` also serves `tools\overlays\examples\*\*.png` (the examples' thumbnails) and the motion templates' files (`tools\overlays\motion\<id>\`), nothing
   else under tools, and `.app\player\<16 hex>.mp4` (player copies), nothing else under `.app`.
 - The user's verdicts have ONE home: `analysis\<name>\feedback\verdicts.json` (`events`, `cuts`, `misses`, `missed`,
   `sound` (0.4.2: `{"amount": none|some|many, "where", "updated"}`, `data.clean_sound`; a save without it keeps it);

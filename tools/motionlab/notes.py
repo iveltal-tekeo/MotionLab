@@ -780,7 +780,18 @@ def summary(d: Path, n: dict) -> dict:
                       "takeaways": len(nt.get("takeaways") or []), "sections": len(nt.get("sections") or []),
                       "tldr": nt.get("tldr", "")} if has else None,
             "mine": (d / "mine.md").exists() and (d / "mine.md").stat().st_size > 0,
+            "find": _find_text(n, nt if has else {}),
             "status": "ready" if has else ("claude" if (tr or (d / "frames" / "frames.json").exists()) else "empty")}
+
+
+def _find_text(n: dict, nt: dict) -> str:
+    """What the Notes list's search reads (2026-11-10, the user: "filters so i can roam around them notes, and maybe a
+    search bar"): the names, the channel, the tags, the question, the TL;DR, the takeaways and the sections."""
+    bits = [n.get("title"), n.get("label"), n.get("uploader"), n.get("platform"), n.get("ask"), " ".join(n.get("tags") or []),
+            nt.get("title"), nt.get("tldr"), " ".join(nt.get("tags") or [])]
+    bits += [f"{x.get('phrase', '')} {x.get('text', '')}" for x in nt.get("takeaways") or [] if isinstance(x, dict)]
+    bits += [f"{x.get('title', '')} {x.get('gist', '')}" for x in nt.get("sections") or [] if isinstance(x, dict)]
+    return " ".join(str(b) for b in bits if b).lower()[:6000]
 
 
 def list_notes() -> list[dict]:

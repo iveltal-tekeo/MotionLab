@@ -668,6 +668,7 @@ function neSound(box, ne) {
         <button class="btn sm" id="neslink" title="${ta('Downloads the song of a TikTok, YouTube or SoundCloud link as an MP3 - your edit cuts on its beats. To post, MotionLab also makes a copy without it: you add the same sound in TikTok or Instagram.')}"><svg class="i"><use href="#i-download"/></svg>${t('From a link…')}</button></div>
       <div class="nesongrow" id="nelinkrow" hidden><input type="text" id="nelinku" placeholder="${ta('Paste a link - TikTok, YouTube, SoundCloud…')}">
         <button class="btn sm pri" id="nelinkgo"><svg class="i"><use href="#i-download"/></svg>${t('Download')}</button><span class="small muted" id="nelinkst"></span><pre id="nelinklog" hidden></pre></div>
+      <div id="nelinklg" hidden></div>
       <div class="nesongs" id="nesongs" hidden></div>
       <div id="nesongf"></div></div>
     <div class="neq" id="neambq"><label>${neIcon('i-volume', '--cyan')}${t('Ambience under your voice')} ${optTag(t('a quiet room, a café, a street - far under your words, it fills the silence between cuts'))}</label>
@@ -747,6 +748,7 @@ function neSound(box, ne) {
     followJob(j.id, pre, done => {
       go.disabled = false;
       const file = pre.textContent.split('\n').map(l => l.trim()).reverse().find(l => FILE_RX.test(l));
+      if (done.login) { msg.textContent = ''; loginInline($('#nelinklg', box), done.login, () => go.click()); return; }   // the site wants a login
       if (done.status !== 'done' || !file) { msg.innerHTML = esc(t(done.status)) + (done.status === 'failed' ? ' ' + reportBtn(done.id, 'sm ghost') : ''); return; }
       const name = file.split('\\').pop(), rel = 'refs/audio/' + name;
       if (!OPT.songs.some(s => s.rel === rel)) OPT.songs.push({name, rel});

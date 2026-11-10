@@ -208,6 +208,7 @@ def prepare(a) -> int:
     guard = SourceGuard(video, d)
     old = N._load(d / "note.json") or {}
     print(f"notes: {video.name} -> {d}", flush=True)
+    print("STEP 1/4: checking the video", flush=True)      # the app's progress bar (jobs.STEP)
     pi = probe(video)
     fps = _fps(pi["video"])
     frames = int(pi["video"].get("nb_frames") or round(float(pi.get("duration_s") or 0) * fps))
@@ -236,6 +237,7 @@ def prepare(a) -> int:
     ref = {"name": name, "dir": d, "fps": fps, "frames": frames, "video": video, "drop": False}
     issues = []
     # 1. the words: the platform's subtitles (+ its numbers, chapters, description, Most replayed), else speech to text
+    print("STEP 2/4: the words", flush=True)
     have = N.transcript(d) is not None and not a.force
     if url and not have:
         try:
@@ -265,6 +267,7 @@ def prepare(a) -> int:
         except Exception as e:                                  # noqa: BLE001
             issues.append(f"speech to text: {type(e).__name__}: {e}")
     # 2. the creator's chapters, YouTube's Most replayed, the sponsor parts
+    print("STEP 3/4: chapters and sponsor parts", flush=True)
     n["chapters"] = N.chapters_of(info, fps, frames)
     n["replayed"] = N.replayed_of(info, fps, frames)
     try:
@@ -273,6 +276,7 @@ def prepare(a) -> int:
         n["skip"] = old.get("skip") or []
         print(f"SponsorBlock: {type(e).__name__}: {e}", flush=True)
     # 3. what is shown
+    print("STEP 4/4: key frames", flush=True)
     try:
         fr = key_frames(ref, pi, guard)
     except Exception as e:                                      # noqa: BLE001 - the words alone still make notes

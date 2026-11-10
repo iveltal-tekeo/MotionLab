@@ -48,6 +48,9 @@ Operations ({"op": ...}):
                                                              holds its first frame; an end past its own length holds
                                                              its last frame
     gdelete {"layer": id, "all": bool}                       the layer (all = every layer of that graphic)
+    blend   {"layer": id | "shot": id, "value": mode}        2026-11-10: how a graphic or a shot's clip mixes with
+                                                             what is under it (compose.BLEND_MODES: normal, multiply,
+                                                             screen, overlay, difference, colour ...)
     gfit    {"layer": id, "key": k, "value": bool}           0.6.1, the graphic part of the shot (compose's keys):
                                                              behind (behind me, moves with the camera), glass (the room
                                                              frosted under it + a shadow), guard (off the face), pin
@@ -680,7 +683,7 @@ def state(plan: dict) -> dict:
             "fx_can": FX.availability(P, talk=_talking(P)),          # (why a kind cannot go where the playhead is)
             "trans_kinds": [[k, v[0], round(v[1] * fps)] for k, v in TR.KINDS.items()       # (one no longer offered:
                             if k in TR.OFFER or any(t["kind"] == k for t in TR.transitions(P))],   # where it is)
-            "sfx": cues, "draw": draw,
+            "sfx": cues, "draw": draw, "bg": float(P.get("background", 0.045)),   # (the ground compose blends onto)
             "curves": P.get("curves") or {}, "song": str(song) if song and mode == "song" else None,
             "song_cut": {"start_s": song_start(P), "db": float(cut.get("db") or 0)},
             "vol": [VOL_MIN, VOL_MAX], "song_db": list(SONG_DB),
@@ -1487,6 +1490,17 @@ def apply(plan: dict, ops: list[dict], tag: str = "m", copies: bool = True,
             elif op == "gtrim":
                 _gtrim(P, _layer(P, str(o["layer"])), "start" if o.get("side") == "start" else "end", int(o["by"]),
                        done, fps)
+            elif op == "blend":                             # 2026-11-10: how it mixes with what is under it
+                from .compose import BLEND_MODES
+                L = _find(P, str(o["shot"])) if o.get("shot") else _layer(P, str(o["layer"]))
+                m = str(o.get("value") or "normal")
+                if m not in BLEND_MODES:
+                    raise EditError(I18N.t("no blend mode {mode}", mode=m[:20]))
+                if m == "normal" and L.get("type") == "clip":
+                    L.pop("blend", None)
+                else:
+                    L["blend"] = m
+                done.append(f"{L['id']}: blend mode {m} ({_span(L, fps)})")
             elif op == "gfit":
                 L = _layer(P, str(o["layer"]))
                 _gfit(L, str(o.get("key")), bool(o.get("value")))
@@ -1973,6 +1987,18 @@ def selfcheck() -> dict:
     case("move a graphic, trim its end and another's start, remove the captions everywhere",
          lay(P, "title")["start"] == 30 and lay(P, "title")["end"] == 80 and lay(P, "pill")["start"] == 165
          and lay(P, "pill")["in"] == 5 and not any(has(P, i) for i in ("cap", "cap_b", "cap_c")))
+    P, done, _ = apply(plan(), [{"op": "blend", "shot": "s02_A", "value": "screen"},
+                                {"op": "blend", "layer": "title", "value": "multiply"},
+                                {"op": "blend", "shot": "s02_A", "value": "difference"}])
+    P2, _, _ = apply(P, [{"op": "blend", "shot": "s02_A", "value": "normal"}])
+    try:
+        apply(plan(), [{"op": "blend", "layer": "title", "value": "dissolve"}])
+        refused = False
+    except EditError:
+        refused = True
+    case("blend modes: a shot's clip (the last pick wins), a graphic; normal = the clip's key gone; one not known refused",
+         lay(P, "s02_A")["blend"] == "difference" and lay(P, "title")["blend"] == "multiply" and len(done) == 3
+         and "blend" not in lay(P2, "s02_A") and refused and state(P)["bg"] == 0.045)
     try:
         apply(plan(), [{"op": "set", "graphic": "title", "key": "main", "value": "One"}])
         refused = False

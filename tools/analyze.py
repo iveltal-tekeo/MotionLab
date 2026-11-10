@@ -121,6 +121,7 @@ def main() -> int:
     log(f"output folder: {out}")
 
     # ---- 0. fingerprint the source (read-only) -------------------------------------------------
+    print("STEP 1/10: checking the video", flush=True)      # the app's progress bar (jobs.STEP)
     try:                                                       # the video this folder was made from last time
         prev = read_json(out / "source.json") if (out / "source.json").exists() else {}
         prev_sha, unfinished = prev.get("sha256"), bool(prev.get("remaking"))
@@ -143,6 +144,7 @@ def main() -> int:
     remake = args.force or changed
 
     # ---- 1. probe ----------------------------------------------------------------------------------
+    print("STEP 2/10: the video's format", flush=True)
     info = PR.probe(src)
     pts = PR.frame_timestamps(src)
     timing = PR.analyze_timing(pts, info["video"]["r_fps"], cfg["probe"])
@@ -162,6 +164,7 @@ def main() -> int:
     est_frames = info_a["video"]["nb_frames"] or int(round((info_a["duration_s"] or 0) * fps)) or None
 
     # ---- 2. per-frame signal pass (cached) -------------------------------------------------------------
+    print("STEP 3/10: every frame", flush=True)
     cache = out / "cache"
     meta_p = cache / "meta.json"
     sig = {"sha256": sha_before, "analysis_cfg": cfg["analysis"], "fps": fps, "video": str(analysis_video)}
@@ -196,6 +199,7 @@ def main() -> int:
     thumbs = SG.load_thumbs(out, meta)
 
     # ---- 3. audio ------------------------------------------------------------------------------------------
+    print("STEP 4/10: the sound", flush=True)
     audio = None
     if wav is not None:
         if ok:
@@ -216,6 +220,7 @@ def main() -> int:
     log("metrics.csv written")
 
     # ---- 4. events -----------------------------------------------------------------------------------------
+    print("STEP 5/10: cuts and effects", flush=True)
     ctx = DT.Ctx(metrics, thumbs, fps, cfg, drop_tc)
     events, plain, shots = DT.run_detection(ctx)
     for ev in events:
@@ -225,6 +230,7 @@ def main() -> int:
     log(f"possible misses to check: {len(near)}")
 
     # ---- 5. frames, contact sheets, previews ---------------------------------------------------------------
+    print("STEP 6/10: contact sheets and previews", flush=True)
     plans = ME.plan(events, N, fps, cfg)
     beat_frames = {int(round(b["frame"])) for b in (audio or {}).get("beats", [])} if audio and audio.get("available") else set()
     down_frames = {int(round(b["frame"])) for b in (audio or {}).get("beats", []) if b["downbeat"]} if beat_frames else set()
@@ -256,11 +262,13 @@ def main() -> int:
         log(f"contact sheets and previews written for {len(events)} events")
 
     # ---- 6. overview ---------------------------------------------------------------------------------------
+    print("STEP 7/10: the overview", flush=True)
     OV.render(metrics, audio, events, plain, fps, guard.check(out / "overview.png"), "light")
     OV.render(metrics, audio, events, plain, fps, guard.check(out / "overview_dark.png"), "dark")
     log("overview.png written")
 
     # ---- 7. events.json + report.html ----------------------------------------------------------------------
+    print("STEP 8/10: the report", flush=True)
     analysis_id = f"{name}-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
     vmeta = {"n_frames": N, "vfr": timing["vfr"], "timing": timing,
              "analysis_video": "source" if analysis_video == src else analysis_video.name}
@@ -296,6 +304,7 @@ def main() -> int:
     AS.attach_breakdown(data, read_json(review_p) if review_p.exists() else {})
 
     # ---- 8. verify the source was not touched ---------------------------------------------------------------
+    print("STEP 9/10: the source checked", flush=True)
     sha_after = sha256_file(src)
     data["source"]["unchanged"] = bool(sha_after == sha_before and guard.verify_unchanged())
     AS.write_all(out, data)
@@ -306,6 +315,7 @@ def main() -> int:
                                                                    "title", "focus")})
 
     # ---- 9. what the focus adds: the transcript + the video's numbers (content creation) -----------------------
+    print("STEP 10/10: the words and numbers", flush=True)
     if data["focus"] in ("content", "both"):
         import content as CT                         # tools\content.py: never raises, says what it could not do
         for note in CT.auto(name, log):

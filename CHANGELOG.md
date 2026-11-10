@@ -7,6 +7,28 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
 
 ## Unreleased
 
+- **Blend modes in the Editor** - a shot or a graphic has *Blend* in its settings: Normal, Darken, Multiply, Lighten,
+  Screen, Add, Overlay, Soft light, Difference and Colour - how it mixes with what is under it (a light leak in
+  Screen, a texture in Overlay, a glitchy negative in Difference). The preview shows the same mix the render makes.
+- **Side panels your size, on your side** - drag the inner edge of the Editor's left or right panel to make it wider or
+  narrower (double-click: as it was), and ⇄ next to Undo swaps them, so the clips, sounds and graphics can sit on the
+  right. MotionLab remembers both on this PC.
+- **A download that needs your login asks for it** - when a link in Notes, SPARK, Animations & Effects, *Download
+  from a link* or a song from a link (New edit, Music) fails because the site wants you logged in (Instagram, Vimeo,
+  YouTube's "are you a bot" check), MotionLab offers your browser's login: pick the browser, press *Use my login and
+  try again*, and the same download starts again with its notes, SPARK or analysis after it. If the browser's login
+  did not work, or Chrome / Edge locked it, it says what to do. The failed row keeps a *Use my browser's login…*
+  button.
+- **Progress bars in the Analyser** - while it works, the Animations & Effects, SPARK and Notes pages show each video
+  on a progress bar in the way's own colour: its download (with its %), MotionLab's part step by step (Effects: 10
+  steps, every frame with its own %; SPARK and Notes: 4 - listening with speech to text is the long one), then Claude
+  checking or writing - and the batch's own bar on top ("2 of 5 ready").
+- **Try again later** - a video or link that did not work (a download, notes, SPARK, an analysis) is kept for 30 days:
+  each way's page shows "N videos did not work - try them again", a list grouped by the batch you added them in,
+  with *Try again*, *Try them all again* and ✕. What came after it comes again too; one that works leaves the list.
+- **Search and filters for what you analysed** - Effects, Why it worked and Notes have a search box (names, channels,
+  tags, and what Claude wrote: a note's takeaways and sections, a SPARK's verdict) and filters: Claude's state, the
+  platform, tags, the kind of notes or SPARK's result, and the order (newest, oldest, A to Z, longest, shortest).
 - **Sturdier when something is cancelled, fails or is tried again** - fixes from a review of the whole code. *Remove*
   on a job now stops everything it started (a cancelled render no longer keeps rendering in the background), and a
   job can no longer stay "running" for ever and hold the queue. A render that fails half-way never leaves a short

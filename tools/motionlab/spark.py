@@ -641,6 +641,10 @@ def summary(d: Path, v: dict) -> dict:
             "video_there": bool(v.get("video")) and Path(v.get("video") or "").is_file(),
             "views": T["views"]["v"], "outlier": T["outlier"]["v"], "result": result_of(T["outlier"]["v"]),
             "fetched": num.get("fetched"),
+            "find": " ".join(str(b) for b in [v.get("title"), label_of(v), v.get("uploader"), v.get("platform"), v.get("ask"),
+                                              " ".join(v.get("tags") or [])] + ([rep.get("title"), rep.get("verdict"),
+                                              rep.get("hook_type")] + [x.get("text") for x in rep.get("takeaways") or []
+                                                                       if isinstance(x, dict)] if has else []) if b).lower()[:6000],
             "spark": {"made": rep.get("made"), "verdict": rep.get("verdict"), "title": rep.get("title"),
                       "hook_type": rep.get("hook_type"), "result": rep.get("result")} if has else None,
             "status": "ready" if has else ("claude" if ready else "empty")}

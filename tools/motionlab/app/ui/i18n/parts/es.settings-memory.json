@@ -276,5 +276,20 @@
  "Verdict": "Veredicto",
  "{name}'s note: {note}": "Nota de {name}: {note}",
  "note: {note}": "nota: {note}",
- "No effects besides cuts.": "No hay efectos aparte de los cortes."
+ "No effects besides cuts.": "No hay efectos aparte de los cortes.",
+ "This site wants you logged in": "Este sitio quiere que inicies sesión",
+ "Some videos (Instagram, Vimeo, YouTube's “are you a bot” check) only download for someone logged in. MotionLab can let the downloader use your own login from a browser on this PC.": "Algunos vídeos (Instagram, Vimeo, la comprobación de YouTube de «¿eres un bot?») solo se descargan si has iniciado sesión. MotionLab puede dejar que el descargador use tu propia sesión de un navegador de este PC.",
+ "Your browser's login did not work": "La sesión de tu navegador no ha funcionado",
+ "Log in to the site in the browser below (open the video there once), then try again - or pick another browser.": "Inicia sesión en el sitio con el navegador de abajo (abre el vídeo allí una vez) y vuelve a intentarlo, o elige otro navegador.",
+ "MotionLab could not read your browser's login": "MotionLab no ha podido leer la sesión de tu navegador",
+ "Chrome and Edge lock and encrypt it while they are open: close that browser completely and try again, or pick Firefox (log in to the site there first).": "Chrome y Edge la bloquean y la cifran mientras están abiertos: cierra ese navegador del todo y vuelve a intentarlo, o elige Firefox (inicia sesión allí en el sitio primero).",
+ "Use the login of": "Usar la sesión de",
+ "The downloader reads it on this PC for each download - MotionLab keeps it nowhere and sends it nowhere. Turn it off any time in Settings → Downloads.": "El descargador la lee en este PC en cada descarga: MotionLab no la guarda en ningún sitio ni la envía a ninguna parte. Puedes desactivarlo cuando quieras en Ajustes → Descargas.",
+ "Use my login and try again": "Usar mi sesión y volver a intentarlo",
+ "Try again": "Volver a intentarlo",
+ "Not now": "Ahora no",
+ "Downloading {n} again with your login": {
+  "one": "Descargándolo de nuevo con tu sesión",
+  "other": "Descargando {n} de nuevo con tu sesión"
+ }
 }

@@ -4,7 +4,8 @@ cache next to the clip, cropped to the area that is ever visible (<clip>.rgba + 
 it from the PNG frames (exact pixels); any other transparent clip (e.g. a ProRes 4444 from another program) is
 decoded into it on first use. The renderer (also each parallel worker) then reads any frame directly.
 A plan layer: {"type": "overlay", "id": "title", "start": 0, "end": 29, "file": "<absolute path of the .mov>",
-"in": 0, "rect": [x, y, w, h] (default: where and how big it was authored), "blend": "normal" | "add" | "screen"}.
+"in": 0, "rect": [x, y, w, h] (default: where and how big it was authored), "blend": "normal" | "add" | "screen" | any
+other of compose.BLEND_MODES}.
 """
 from __future__ import annotations
 

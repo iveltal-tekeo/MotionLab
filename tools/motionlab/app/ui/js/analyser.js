@@ -143,39 +143,80 @@ function anWire(main, draw) {                  // the buttons any Analyser page 
   const on = (id, fn) => { const b = $(id, main); if (b) b.onclick = fn; };
   on('#an', () => addVideosModal()); on('#dl', downloadModal); on('#ntadd', () => addNotesModal()); on('#spadd', () => addSparkModal());
   on('#tadd', () => addThumbsModal()); on('#ttest', () => thumbTest()); on('#txadd', () => addTextsModal());
-  $$('[data-go]', main).forEach(c => c.onclick = e => { if (!e.target.closest('button, a, select, input, label')) location.hash = c.dataset.go; });
+  wireGo(main);
   if (draw) wireBatchRows(main, draw);
+}
+function wireGo(root) {                         // a card / way opens its page (not when its own button is clicked)
+  $$('[data-go]', root).forEach(c => c.onclick = e => { if (!e.target.closest('button, a, select, input, label')) location.hash = c.dataset.go; });
 }
 async function pageRefs(main, tab) {
   return tab ? anSection(main, tab) : anOverview(main);
 }
 // the lists, the same on the overview's tabs and on a way's own page: D = what the page fetched, F = its filters
 const AN_TABS = [['videos', t('Effects'), 'film'], ['spark', t('Why it worked'), 'sparkle'], ['notes', t('Notes'), 'pen'], ['thumbs', t('Thumbnails'), 'thumb'], ['texts', t('Scripts & prompts'), 'texts']];
+// Search and filters on the three ways' lists (2026-11-10, the user: "for the videos already analyzed (either from
+// index, spark or flux) add some filters so i can roam around them notes, and maybe a search bar"): one row - the
+// search (every word must be found: the names, the channel, the tags, and what Claude wrote - a note's TL;DR,
+// takeaways and sections, a SPARK's verdict and take-aways: the server's `find`), Claude's state, the platform, the
+// tags, each way's own (FLUX focus / category, Notes their kind, SPARK the result) and the order. Typing or picking
+// redraws the cards only (`anCards`): nothing is fetched again, the search box keeps the focus. The order is kept on
+// this PC (ml.anSort.<way>); the rest lasts while MotionLab is open (`AN_F`).
+const AN_SORT = {new: t('Newest first'), old: t('Oldest first'), az: t('A to Z'), long: t('Longest first'), short: t('Shortest first')};
+const AN_CARD = {videos: r => refCard(r), notes: n => noteCard(n), spark: s => sparkCard(s)};
+let AN_LAST = {k: '', items: []};                // the list on the page: the cards are drawn again from it
+const anItems = (k, D) => k === 'videos' ? D.all : k === 'notes' ? D.NOTES : D.SPARK;
+const anReady = (k, x) => k === 'videos' ? (x.flow || {}).next !== 'claude' : x.status === 'ready';
+const anName = (k, x) => (k === 'videos' ? x.label || x.title : k === 'notes' ? (x.notes && x.notes.title) || x.label : (x.spark && x.spark.title) || x.label) || '';
+const anFind = (k, x) => k === 'videos' ? [x.label, x.title, x.name, t(x.category_label || ''), (x.tags || []).join(' '), x.platform, ...Object.values(x.lines || {})].join(' ').toLowerCase()
+  : (x.find || [x.label, x.title, x.uploader, (x.tags || []).join(' ')].join(' ').toLowerCase());
+const anWhenOf = (k, x) => strTime(k === 'videos' ? x.generated : x.created);
+const anFiltered = F => !!((F.q || '').trim() || F.st || F.plat || F.tag || F.cat || F.foc || F.nk || F.res);
+function anFilter(k, items, F) {
+  const words = (F.q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  const rows = items.filter(x => (!words.length || words.every(w => anFind(k, x).includes(w)))
+    && (!F.st || (F.st === 'ready') === anReady(k, x)) && (!F.plat || (x.platform || '') === F.plat)
+    && (!F.tag || (x.tags || []).includes(F.tag)) && (!F.cat || x.category === F.cat) && (!F.foc || x.focus === F.foc)
+    && (!F.nk || (x.notes || {}).kind === F.nk) && (!F.res || (x.result || 'unknown') === F.res));
+  const by = F.sort || 'new', dur = x => x.duration_s || 0;
+  return rows.sort((a, b) => by === 'old' ? anWhenOf(k, a) - anWhenOf(k, b) : by === 'az' ? anName(k, a).localeCompare(anName(k, b), LANG)
+    : by === 'long' ? dur(b) - dur(a) : by === 'short' ? dur(a) - dur(b) : anWhenOf(k, b) - anWhenOf(k, a));
+}
+function anCards(k, F) {
+  const rows = anFilter(k, AN_LAST.items, F);
+  return {n: rows.length, html: rows.length ? `<div class="cards pcards">${rows.map(AN_CARD[k]).join('')}</div>`
+    : `<div class="empty">${t('Nothing matches.')} <a href="#" data-fclear>${t('Clear the search and filters')}</a></div>`};
+}
+function anFilterRow(k, items, F, tail = '') {
+  const sel = (id, all, opts, v) => `<select id="${id}" class="ffil">${`<option value="">${all}</option>`}${opts.map(([o, l, n]) => `<option value="${esc(o)}" ${o === v ? 'selected' : ''}>${esc(l)}${n != null ? ` (${n})` : ''}</option>`).join('')}</select>`;
+  const count = (f, v) => items.filter(x => f(x) === v).length;
+  const plats = [...new Set(items.map(x => x.platform).filter(Boolean))].sort(), tags = [...new Set(items.flatMap(x => x.tags || []))].sort();
+  const waitWord = k === 'videos' ? t('Not checked by Claude yet') : t('Waiting for Claude');
+  const own = k === 'videos'
+    ? sel('ffoc', t('Every focus'), Object.entries(FOCUS_SHORT).map(([f, l]) => [f, l, count(x => x.focus, f)]).filter(o => o[2]), F.foc)
+      + sel('fcat', t('All categories ({n})', {n: items.length}), [...new Map(items.filter(r => r.category).map(r => [r.category, r.category_label])).entries()].map(([c, l]) => [c, t(l || ''), count(x => x.category, c)]), F.cat)
+    : k === 'notes' ? (() => { const kinds = [...new Set(items.map(x => (x.notes || {}).kind).filter(Boolean))];
+        return kinds.length > 1 ? sel('fnk', t('Every kind'), kinds.map(c => [c, NKIND[c] || c, count(x => (x.notes || {}).kind, c)]), F.nk) : ''; })()
+    : (() => { const res = Object.keys(SP_RESULT).filter(r => items.some(x => (x.result || 'unknown') === r));
+        return res.length > 1 ? sel('fres', t('Every result'), res.map(r => [r, SP_RESULT[r], count(x => x.result || 'unknown', r)]), F.res) : ''; })();
+  return `<div class="row frow anfil">
+      <label class="ansearch"><svg class="i"><use href="#i-search"/></svg><input type="search" id="fq" value="${esc(F.q || '')}" placeholder="${ta(k === 'videos' ? 'Search names, categories, tags…' : 'Search names, channels, tags and what Claude wrote…')}" autocomplete="off"></label>
+      ${sel('fst', t('Any state'), [['ready', k === 'videos' ? t('Checked by Claude') : t('Ready')], ['claude', waitWord]], F.st)}
+      ${plats.length > 1 ? sel('fplat', t('Every platform'), plats.map(p => [p, p, count(x => x.platform, p)]), F.plat) : ''}
+      ${tags.length ? sel('ftag', t('All tags'), tags.map(g => [g, g]), F.tag) : ''}${own}
+      ${sel('fsort', AN_SORT.new, Object.entries(AN_SORT).slice(1), F.sort === 'new' ? '' : F.sort)}
+      <span class="grow"></span><span class="small dim" id="fcount"></span>${tail}</div>`;
+}
 function anList(k, D, F) {
-  if (k === 'videos') {
-    const all = D.all, cats = [...new Map(all.filter(r => r.category).map(r => [r.category, r.category_label])).entries()];
-    const tags = [...new Set(all.flatMap(r => r.tags || []))].sort();
-    const refs = all.filter(r => (!F.cat || r.category === F.cat) && (!F.tag || (r.tags || []).includes(F.tag)) && (!F.foc || r.focus === F.foc))
-      .sort((a, b) => strTime(b.generated) - strTime(a.generated));        // newest analysis first (0.4.3.5)
-    return `<div class="row frow">${all.length ? `<select id="ffoc" class="ffil"><option value="">${t('Every focus')}</option>${Object.entries(FOCUS_SHORT).map(([f, l]) => `<option value="${f}" ${f === F.foc ? 'selected' : ''}>${l} (${all.filter(r => r.focus === f).length})</option>`).join('')}</select>
-        <select id="fcat" class="ffil"><option value="">${t('All categories ({n})', {n: all.length})}</option>${cats.map(([c, l]) => `<option value="${c}" ${c === F.cat ? 'selected' : ''}>${esc(t(l || ''))} (${all.filter(r => r.category === c).length})</option>`).join('')}</select>
-        ${tags.length ? `<select id="ftag" class="ffil"><option value="">${t('All tags')}</option>${tags.map(g => `<option ${g === F.tag ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>` : ''}` : ''}
-        <span class="grow"></span><label class="chk small dim"><input type="checkbox" id="tests" ${F.tests ? 'checked' : ''}> ${t('show the test videos')}</label></div>
-      ${refs.length ? `<div class="cards pcards">${refs.map(refCard).join('')}</div>`
-        : all.length ? `<div class="empty">${t('No reference in this category.')}</div>` : `<div class="pcempty">${t('The videos you analyse land here - <i>Add videos</i> above.')}</div>`}`;
-  }
-  if (k === 'notes') {
-    const ntags = [...new Set(D.NOTES.flatMap(n => n.tags || []))].sort();
-    const ready = D.NOTES.filter(n => n.status === 'ready').length;
-    return D.NOTES.length ? `<div class="row frow">${ntags.length ? `<select id="fntag" class="ffil"><option value="">${t('All tags')}</option>${ntags.map(g => `<option ${g === F.ntag ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>` : ''}
-        <span class="grow"></span>${ready >= 2 ? `<button class="btn" id="ncombine" title="${ta('Several videos on one topic: one Markdown file with all their notes, or one question to Claude across them')}"><svg class="i"><use href="#i-copy"/></svg>${t('Combine notes…')}</button>` : ''}</div>
-        <div id="ncomb"></div>
-        <div class="cards pcards">${D.NOTES.filter(n => !F.ntag || (n.tags || []).includes(F.ntag)).map(noteCard).join('')}</div>`
-      : `<div class="pcempty">${t('The notes you take land here - <i>Take notes</i> above: a link or a video file.')}</div>`;
-  }
-  if (k === 'spark') {
-    return D.SPARK.length ? `<div class="cards pcards">${D.SPARK.map(sparkCard).join('')}</div>`
-      : `<div class="pcempty">${t('Why your references worked lands here - <i>Analyze with SPARK</i> above: a link or a video file.')}</div>`;
+  if (k === 'videos' || k === 'notes' || k === 'spark') {
+    const items = anItems(k, D) || [];
+    AN_LAST = {k, items};
+    if (F.sort === undefined) F.sort = anPref('anSort.' + k) || 'new';
+    const tail = k === 'videos' ? `<label class="chk small dim"><input type="checkbox" id="tests" ${F.tests ? 'checked' : ''}> ${t('show the test videos')}</label>`
+      : k === 'notes' && items.filter(n => n.status === 'ready').length >= 2 ? `<button class="btn" id="ncombine" title="${ta('Several videos on one topic: one Markdown file with all their notes, or one question to Claude across them')}"><svg class="i"><use href="#i-copy"/></svg>${t('Combine notes…')}</button>` : '';
+    if (!items.length) return (tail ? `<div class="row frow"><span class="grow"></span>${tail}</div>` : '') + `<div class="pcempty">${{videos: t('The videos you analyse land here - <i>Add videos</i> above.'),
+      notes: t('The notes you take land here - <i>Take notes</i> above: a link or a video file.'),
+      spark: t('Why your references worked lands here - <i>Analyze with SPARK</i> above: a link or a video file.')}[k]}</div>`;
+    return `${anFilterRow(k, items, F, tail)}${k === 'notes' ? '<div id="ncomb"></div>' : ''}<div id="ancards">${anCards(k, F).html}</div>`;
   }
   if (k === 'thumbs') {
     return D.SETS.length ? `<div class="cards pcards">${D.SETS.map(setCard).join('')}</div>`
@@ -188,10 +229,22 @@ function anListWire(main, F, draw, wait) {      // the filters and bars a list m
   const on = (id, ev, fn) => { const x = $(id, main); if (x) x[ev] = fn; };
   on('#wbar', 'onclick', () => waitingModal(wait));
   on('#tests', 'onchange', e => { F.tests = e.target.checked; draw(); });
-  on('#ffoc', 'onchange', e => { F.foc = e.target.value; draw(); });
-  on('#fcat', 'onchange', e => { F.cat = e.target.value; draw(); });
-  on('#ftag', 'onchange', e => { F.tag = e.target.value; draw(); });
-  on('#fntag', 'onchange', e => { F.ntag = e.target.value; draw(); });
+  const k = AN_LAST.k, box = $('#ancards', main);
+  if (box) {                                    // the search and filters: the cards drawn again, nothing fetched
+    const cards = () => { const C = anCards(k, F); box.innerHTML = C.html; wireGo(box);
+      $('#fcount', main).textContent = anFiltered(F) ? t('{n} of {total}', {n: C.n, total: AN_LAST.items.length}) : '';
+      $$('[data-fclear]', box).forEach(a => a.onclick = e => { e.preventDefault(); Object.assign(F, {q: '', st: '', plat: '', tag: '', cat: '', foc: '', nk: '', res: ''});
+        $$('.anfil select', main).forEach(s => { if (s.id !== 'fsort') s.value = ''; }); $('#fq', main).value = ''; cards(); }); };
+    const pick = {fst: 'st', fplat: 'plat', ftag: 'tag', ffoc: 'foc', fcat: 'cat', fnk: 'nk', fres: 'res'};
+    Object.entries(pick).forEach(([id, key]) => on('#' + id, 'onchange', e => { F[key] = e.target.value; cards(); }));
+    on('#fsort', 'onchange', e => { F.sort = e.target.value || 'new'; anPref('anSort.' + k, F.sort); cards(); });
+    on('#fq', 'oninput', e => { F.q = e.target.value; cards(); });
+    on('#fq', 'onfocus', () => { F.focusQ = true; });           // a redraw (a job ended, the live page) keeps typing there
+    on('#fq', 'onblur', () => { F.focusQ = false; });
+    on('#fq', 'onkeydown', e => { if (e.key === 'Escape' && e.target.value) { e.stopPropagation(); e.target.value = ''; F.q = ''; cards(); } });
+    cards();
+    if (F.focusQ) { const q = $('#fq', main); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  }
   on('#ncombine', 'onclick', () => combineModal());
   const nc = $('#ncomb', main);
   if (nc) api('/api/notes-combined').then(L => { nc.innerHTML = L.length ? `<div class="ncombl"><span class="small muted">${t('Across videos')}</span>${L.map(c => `<a class="ncombc" href="#/notes-combined/${encodeURIComponent(c.id)}">
@@ -203,9 +256,12 @@ const anPref = (k, v) => { try { if (v === undefined) return localStorage.getIte
 // the overview: the ways, then - as before (the user: "dont remove the existing tabs of stuff, cuz people would not
 // know where to look for") - what runs / is left / waits and one tab per kind with its list (the tab shown is
 // remembered, ml.anTab; the addresses #/analyze/<kind> are the ways' own pages)
+// a list's search and filters while MotionLab is open: a live redraw (route(true)) or coming back keeps them
+const AN_F = {};
+const anF = key => AN_F[key] || (AN_F[key] = {tests: false, cat: '', tag: '', foc: ''});
 async function anOverview(main) {
   let stop = null, tab = AN_TABS.some(x => x[0] === anPref('anTab')) ? anPref('anTab') : 'videos';
-  const F = {tests: false, cat: '', tag: '', foc: '', ntag: ''};
+  const F = anF('overview');
   onCleanup(() => stop && stop());
   const draw = async () => {
     const [all, wait, BAT, SETS, TXS, NOTES, JOBS, SPARK] = await Promise.all([api('/api/references' + (F.tests ? '?tests=1' : '')), api('/api/waiting').catch(() => []),
@@ -237,13 +293,15 @@ async function anOverview(main) {
     main.innerHTML = `<div class="head"><div><h1>${t('Analyser')}</h1><div class="sub">${t('Three ways to learn from a video - its effects, why it works, what it teaches - plus thumbnails, scripts and prompts. Measured by MotionLab, explained by Claude, remembered for your own videos.')}</div></div></div>
       <div class="gways g3 anways">${way('videos')}${way('spark')}${way('notes')}</div>
       <div class="gways g2 gmini">${mini('thumbs')}${mini('texts')}</div>
-      <div id="avprog"></div>${batchRows(BAT)}${anWaitBar(wait)}
+      <div id="avprog"></div><div id="anfail"></div>${batchRows(BAT)}${anWaitBar(wait)}
       ${none ? `<div class="row frow"><span class="grow"></span><label class="chk small dim"><input type="checkbox" id="tests" ${F.tests ? 'checked' : ''}> ${t('show the test videos')}</label></div>`
         : `<div class="tabs antabs">${AN_TABS.map(([k, l, ic]) => `<a href="${anHref(k)}" data-antab="${k}" class="${tab === k ? 'on' : ''}"><svg class="i"><use href="#i-${ic}"/></svg>${l} <span class="dim">${counts[k]}</span></a>`).join('')}</div>
           <div id="antab">${anList(tab, {all, NOTES, SETS, TXS, SPARK}, F)}</div>`}`;
     anWire(main, draw);
     anListWire(main, F, draw, wait);
-    $$('[data-antab]', main).forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.antab; anPref('anTab', tab); draw(); });
+    failedBar($('#anfail', main), '', draw);
+    $$('[data-antab]', main).forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.antab; anPref('anTab', tab);
+      Object.assign(F, {q: '', st: '', plat: '', tag: '', cat: '', foc: '', nk: '', res: '', sort: undefined, focusQ: false}); draw(); });   // each tab its own filters
     if (stop) stop();
     const live = mascotsLive(main), prog = progressPanel($('#avprog', main), () => draw(), ['download', 'analyze', 'notes', 'spark', 'spark_numbers', ...THUMBS_JOBS]);
     stop = () => { prog(); live(); };
@@ -255,7 +313,7 @@ async function anOverview(main) {
 // one ends well); Thumbnails and Scripts & prompts with the page head every sub page has
 async function anSection(main, k) {
   const M = AN_MODES[k], X = AN_EXTRA[k];
-  const F = {tests: false, cat: '', tag: '', foc: '', ntag: ''};
+  const F = anF(k);
   let first = true, stop = null;
   onCleanup(() => stop && stop());
   const head = state => M ? `<div class="anhead mhost w-${k}">${mascot(M.kind, {size: 92, state})}
@@ -288,11 +346,13 @@ async function anSection(main, k) {
     } else {
       body = anList('texts', {TXS: await api('/api/texts').catch(() => [])}, F);
     }
-    main.innerHTML = `${head(state)}<div id="avprog"></div>${body}`;
+    main.innerHTML = `${head(state)}<div id="avprog"></div><div id="anfail"></div>${body}`;
     anWire(main, draw);
     anListWire(main, F, draw, wait);
+    if (M) failedBar($('#anfail', main), k, draw);              // what did not work, kept to try again later
     if (stop) stop();
-    const live = mascotsLive(main), prog = kinds.length ? progressPanel($('#avprog', main), () => draw(), kinds, match) : () => {};
+    const live = mascotsLive(main), prog = PIPE[k] ? pipePanel($('#avprog', main), () => draw(), match, k)     // FLUX, SPARK, INDEX: progress bars
+      : kinds.length ? progressPanel($('#avprog', main), () => draw(), kinds, match) : () => {};
     stop = () => { prog(); live(); };
     const m = $('.anhead .masc', main);
     if (m && m.dataset.state === 'success') mascotState(m, 'success');

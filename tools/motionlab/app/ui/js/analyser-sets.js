@@ -28,7 +28,7 @@ function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () =>
     try { list = (await api('/api/jobs')).filter(j => kinds.includes(j.kind) && match(j)); } catch (e) { /* the next tick */ }
     const act = list.filter(j => j.status === 'running' || j.status === 'queued' || j.status === 'cancelling')
       .sort((a, b) => (a.status === 'queued') - (b.status === 'queued') || a.id - b.id);   // running first, then in turn
-    const ended = list.filter(j => !act.includes(j) && j.ended_ago_s != null && !GONE_JOBS.has(jobKey(j)));
+    const ended = list.filter(j => !act.includes(j) && j.ended_ago_s != null && !j.retried && !GONE_JOBS.has(jobKey(j)));
     const fresh = ended.filter(j => j.status !== 'failed' && j.ended_ago_s < DONE_SHOW_S);
     const recent = [...ended.filter(j => j.status === 'failed' && j.ended_ago_s < 900), ...fresh].slice(0, 4);
     const sig = act.map(j => j.id + j.status).join() + '|' + recent.map(j => j.id + j.status).join();
@@ -41,16 +41,201 @@ function progressPanel(el, onEnd, kinds = ['download', 'analyze'], match = () =>
       el.innerHTML = act.length || recent.length ? `<div class="panel progress"><div class="row sp"><h2>${act.length ? t('Working on {jobs}', {jobs: plural(act.length, 'job')}) : bad ? t('Something went wrong') : t('Done|jobs')}</h2><a class="small" href="#/jobs">${t('all jobs')} →</a></div>
         ${[...act, ...recent].map(j => `<div class="pjob ${esc(j.status)}"><span class="tag ${esc(j.status)}">${esc(word(j.status))}</span>
           <span class="grow">${esc(j.title)}${j.then ? ` <span class="small dim">${j.then_kind === 'notes' ? t('→ then its notes') : t('→ then analysed')}</span>` : ''}${j.then_claude ? ` <span class="small amber">${j.kind === 'notes' ? t('→ then Claude writes the notes') : t('→ then Claude checks it')}</span>` : ''}</span>
-          <a class="small" href="#/jobs/${j.id}">${t('log|job')}</a>${j.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${j.id}">${t('Remove')}</button>` : ''}${j.status === 'failed' ? reportBtn(j.id, 'sm ghost') : ''}
+          <a class="small" href="#/jobs/${j.id}">${t('log|job')}</a>${j.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${j.id}">${t('Remove')}</button>` : ''}${j.login ? `<button class="btn sm pri" data-login="${j.id}">${t('Use my browser\'s login…')}</button>` : j.status === 'failed' ? reportBtn(j.id, 'sm ghost') : ''}
           ${recent.includes(j) ? `<button class="btn sm ghost icon" data-hide="${esc(jobKey(j))}" title="${ta('Hide')}">✕</button>` : ''}</div>`).join('')}</div>` : '';
       $$('[data-cancel]', el).forEach(b => b.onclick = async () => { try { await api(`/api/jobs/${b.dataset.cancel}/cancel`, {}); tick(); } catch (e) { toast(e.message, 'err'); } });
       $$('[data-hide]', el).forEach(b => b.onclick = () => { hideJob(b.dataset.hide); last = ''; tick(); });
+      $$('[data-login]', el).forEach(b => b.onclick = () => loginModal(recent.filter(j => j.login), () => { last = ''; tick(); }));
     }
+    loginAsk(recent, act.some(j => j.kind === 'download'), () => { last = ''; tick(); });
     if (act.length) timer = setTimeout(tick, 2000);
     else if (fresh.length) timer = setTimeout(tick, (DONE_SHOW_S - Math.max(...fresh.map(j => j.ended_ago_s))) * 1000 + 150);
   };
   tick();
   return () => { stop = true; clearTimeout(timer); };
+}
+// a download that wanted the browser's login: the pop-up by itself, once, when the other downloads are done (one
+// pop-up for all of them - js\jobs.js loginModal)
+function loginAsk(failed, busy, again) {
+  const ask = failed.filter(j => j.login && j.ended_ago_s < 600 && !LOGIN_ASKED.has(jobKey(j)));
+  if (!ask.length || busy || !$('#modal').hidden) return;
+  ask.forEach(j => LOGIN_ASKED.add(jobKey(j)));
+  loginModal(failed.filter(j => j.login), again);
+}
+
+// The three ways' progress as bars (2026-11-10, the user: "is it possible to make the Take Notes stuff as a progress
+// bar? so its more visual instead of the similar table for jobs we currently have", then "add the progress bars to
+// SPARK and FLUX too"): a way's own page (FLUX, SPARK, INDEX) shows one row per video - its download (a link) and its
+// job joined (`parent`), the steps on a line (Download · the lab's part · Claude), a bar that fills as they go (yt-dlp's
+// % for the download, the tool's STEP i/n lines for the lab's part - analyze.py's every-frame pass with its own
+// frames; striped while it waits its turn, listens with speech to text, or Claude works) and what happens now in
+// words. A batch on top: "2 of 5 ready" and its own bar. Finished rows stay while the batch runs (then 8 s), a failed
+// one up to 15 min with why, ✕, the login button when the site wanted one. The job table stays on the overview.
+const PIPE = {
+  notes: {kinds: ['download', 'notes'], tint: '#3ee6bd', head: n => tn(n, 'Taking notes from {n} video', 'Taking notes from {n} videos'),
+    prep: () => t('Words & key frames'), cl: () => t('Claude writes the notes'),
+    steps: () => [t('Checking the video'), t('Getting the words'), t('Chapters and sponsor parts'), t('Picking the key frames')],
+    ready: () => t('Ready - the words and key frames are in'), writing: () => t('Claude Code is writing the notes'),
+    later: () => t('Ready - Claude writes them when the other videos are ready')},
+  spark: {kinds: ['download', 'spark', 'spark_numbers'], tint: '#ffb43a', head: n => tn(n, 'SPARK on {n} video', 'SPARK on {n} videos'),
+    prep: () => t('Shots, words & numbers'), cl: () => t('Claude writes why it worked'),
+    steps: () => [t('Reading every frame'), t('Getting the words'), t('Looking up the numbers'), t('Measuring and picking the pictures')],
+    ready: () => t('Ready - measured, waiting for Claude'), writing: () => t('Claude Code is writing why it worked'),
+    later: () => t('Ready - Claude writes them when the other videos are ready')},
+  videos: {kinds: ['download', 'analyze'], tint: '#6a86ff', head: n => tn(n, 'Analysing {n} video', 'Analysing {n} videos'),
+    prep: () => t('Measuring (lab pass)'), cl: () => t('Claude checks every effect'),
+    steps: () => [t('Checking the video'), t('Reading its format'), t('Measuring every frame'), t('The sound and its beats'), t('Finding the cuts and effects'),
+      t('Contact sheets and previews'), t('The overview'), t('The report'), t('Checking the video is unchanged'), t('The words and numbers')],
+    ready: () => t("Measured - ready for Claude's check"), writing: () => t('Claude Code is checking every effect'),
+    later: () => t('Measured - Claude checks them when the other videos are measured')}};
+const clockWords = s => { s = Math.max(0, Math.round(s || 0)); return s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${pad(s % 60)} min`; };
+function pipeRows(list) {
+  const kid = new Map(list.filter(j => j.parent).map(j => [j.parent, j]));
+  const opened = new Set(list.filter(j => j.claude && j.claude.ok && j.batch != null).map(j => j.batch));   // the batch's Claude window
+  return list.filter(j => !j.parent || !list.some(p => p.id === j.parent)).map(r => {
+    const dl = r.kind === 'download' ? r : null, job = dl ? kid.get(r.id) || null : r;
+    const live = x => x && ['running', 'queued', 'cancelling'].includes(x.status);
+    const fail = [dl, job].find(x => x && ['failed', 'cancelled'].includes(x.status)) || null;
+    const active = live(dl) || live(job) || (dl && dl.then && dl.status === 'done' && !job && dl.ended_ago_s < 30);
+    const end = fail || job || dl;
+    return {dl, job, fail, active, done: !active && !fail && (job ? job.status === 'done' : dl.status === 'done'),
+      opened: !!(job && ((job.claude && job.claude.ok) || (job.batch != null && opened.has(job.batch)))),
+      ended: active ? null : end.ended_ago_s, id: r.id};
+  }).sort((a, b) => a.id - b.id);
+}
+function pipeName(R) {
+  const a = (R.job && R.job.args) || {}, v = a.video;
+  if (v) return String(v).split(/[\\/]/).pop().replace(/ \[[^\]]+\]\.\w+$/, '').replace(/\.\w+$/, '');
+  if (a.name) return String(a.name).replace(/_/g, ' ');
+  const u = String(((R.dl || {}).args || {}).url || '');
+  return u.replace(/^https?:\/\/(www\.)?/, '').replace(/[?#].*$/, '') || (R.dl || R.job).title;
+}
+function pipeState(R, W) {              // where a row is: its steps, the one at work, the bar's %, what happens now
+  const {dl, job, fail} = R, claude = job ? job.then_claude : !!(dl && dl.then_cl), lookup = job && job.kind === 'spark_numbers';
+  const steps = [...(dl ? ['dl'] : []), ...(job || (dl && dl.then) ? ['prep'] : []), ...(claude ? ['cl'] : [])];
+  let at = steps[0], pct = 0, now = '', stripe = false;
+  const end = steps.includes('cl') ? 90 : 100, span = {dl: [0, steps.length > 1 ? 35 : 100], prep: [dl ? 35 : 0, end], cl: [90, 100]};
+  const fill = (k, f) => span[k][0] + (span[k][1] - span[k][0]) * Math.max(0, Math.min(1, f));
+  if (dl && (!job || dl.status !== 'done')) {
+    const p = (dl.progress || {}).pct;
+    if (dl.status === 'queued') { now = t('Waiting its turn'); stripe = true; }
+    else if (dl.status === 'done') { at = dl.then ? 'dl' : 'done'; now = dl.then ? t('Downloaded - starting') : t('Downloaded'); pct = fill('dl', 1); }
+    else { pct = fill('dl', (p || 0) / 100); now = p != null ? t('Downloading · {pct} %', {pct: Math.round(p)}) : t('Downloading…'); stripe = p == null; }
+  } else if (job && job.status !== 'done') {
+    const P = job.progress || {};
+    at = 'prep';
+    if (job.status === 'queued') { pct = fill('prep', 0); now = t('Waiting its turn'); stripe = true; }
+    else if (lookup) { pct = fill('prep', 0.5); now = t('Looking up the numbers…'); stripe = true; }
+    else if (P.i) {
+      const listen = P.listening && P.i === 2 && !!P.n && W !== PIPE.videos;
+      pct = fill('prep', (P.i - 1 + (P.sub != null ? P.sub : 0.5)) / P.n); stripe = listen || (P.sub == null && W === PIPE.videos && P.i === 3);
+      now = listen ? t('Listening to the video (speech to text) - the longest step')
+        : t('{step} · step {i} of {n}', {step: W.steps()[P.i - 1] || P.step, i: P.i, n: P.n}) + (P.sub != null ? ` · ${Math.round(P.sub * 100)} %` : '');
+    } else { pct = fill('prep', 0.03); now = t('Starting…'); stripe = true; }
+  } else if (job) {
+    at = claude ? 'cl' : 'done'; pct = claude ? fill('cl', 0.5) : 100;
+    now = lookup ? t('The numbers are looked up') : !claude ? W.ready() : R.opened ? W.writing() : job.claude ? t('Claude Code did not open - open it from the card') : W.later();
+    stripe = claude && R.opened;
+  }
+  if (fail) { now = fail.status === 'cancelled' ? t('Cancelled') : t(fail.why || '') || t('It did not work - see the log'); stripe = false; }
+  return {steps, at, now, stripe, pct: fail || at === 'done' ? 100 : Math.max(3, Math.round(pct))};
+}
+function pipeRow(R, W) {
+  const {dl, job, fail} = R, {steps, at, now, stripe, pct} = pipeState(R, W);
+  const word = {dl: t('Download'), prep: job && job.kind === 'spark_numbers' ? t('Looking up the numbers') : W.prep(), cl: W.cl()};
+  const atI = at === 'done' ? steps.length : steps.indexOf(at);
+  const dots = steps.map((s, i) => `<span class="pst ${fail && i === atI ? 'bad' : i < atI ? 'pdone' : i === atI ? 'on' : ''}"><i>${fail && i === atI ? '✕' : i < atI ? '✓' : i + 1}</i>${word[s]}</span>`).join('<span class="psl"></span>');
+  const cur = fail || (dl && (!job || dl.status !== 'done') ? dl : job) || dl;
+  const secs = R.active ? clockWords(cur.seconds) : '';
+  return `<div class="prow${fail ? ' bad' : R.done ? ' done' : ''}">
+    <div class="row prtop"><b class="grow prname" title="${esc(((dl || {}).args || {}).url || '')}">${esc(pipeName(R))}</b><span class="small dim">${secs}</span>
+      <a class="small" href="#/jobs/${cur.id}">${t('log|job')}</a>${cur.status === 'queued' ? `<button class="btn sm ghost" data-cancel="${cur.id}">${t('Remove')}</button>` : ''}
+      ${fail && fail.login ? `<button class="btn sm pri" data-login="${fail.id}">${t('Use my browser\'s login…')}</button>` : fail && fail.status === 'failed' ? reportBtn(fail.id, 'sm ghost') : ''}
+      ${R.active ? '' : `<button class="btn sm ghost icon" data-hide="${esc(jobKey(dl || job))}" title="${ta('Hide')}">✕</button>`}</div>
+    <div class="pstages">${dots}</div>
+    <div class="pbar${stripe ? ' stripe' : ''}"><i style="width:${pct}%"></i></div>
+    <div class="small ${fail ? 'bad' : 'muted'} prnow">${esc(now)}</div></div>`;
+}
+function pipePanel(el, onEnd, match, way) {
+  const W = PIPE[way];
+  let stop = false, last = '', was = new Set(), timer = null;
+  const tick = async () => {
+    if (stop) return;
+    clearTimeout(timer);
+    let list = [];
+    try { list = (await api('/api/jobs')).filter(j => W.kinds.includes(j.kind) && match(j) && !j.retried); } catch (e) { /* the next tick */ }
+    const rows = pipeRows(list).filter(R => !GONE_JOBS.has(jobKey(R.dl || R.job)));
+    const busy = rows.some(R => R.active);
+    const shown = rows.filter(R => R.active || (R.fail ? R.ended < 900 && R.fail.status === 'failed' : busy || R.ended < 8));
+    const now = new Set(list.filter(j => ['running', 'queued', 'cancelling'].includes(j.status)).map(j => j.id));
+    if ([...was].some(id => !now.has(id))) onEnd();
+    was = now;
+    const sig = JSON.stringify(shown.map(R => [R.dl && [R.dl.status, R.dl.progress], R.job && [R.job.status, R.job.progress, !!R.job.claude], R.opened, R.active ? Math.round(((R.job && R.job.status !== 'queued' ? R.job : R.dl) || {}).seconds || 0) : 0]));
+    if (sig !== last) {
+      last = sig;
+      const ready = shown.filter(R => R.done).length, bad = shown.filter(R => R.fail).length;
+      const tot = shown.length ? Math.round(shown.reduce((a, R) => a + (R.done || R.fail ? 100 : Math.min(99, pipeState(R, W).pct)), 0) / shown.length) : 0;
+      el.innerHTML = shown.length ? `<div class="panel pipe" style="--pc:${W.tint}">
+        <div class="row sp"><h2>${busy ? W.head(shown.length) : bad ? t('Something went wrong') : t('Done|jobs')}</h2>
+          <span class="small muted">${[shown.length > 1 ? t('{n} of {total} ready', {n: ready, total: shown.length}) : '', bad ? tn(bad, '{n} did not work', '{n} did not work') : ''].filter(Boolean).join(' · ')}</span><span class="grow"></span><a class="small" href="#/jobs">${t('all jobs')} →</a></div>
+        ${shown.length > 1 ? `<div class="pbar big"><i style="width:${Math.max(2, tot)}%"></i></div>` : ''}
+        ${shown.map(R => pipeRow(R, W)).join('')}</div>` : '';
+      $$('[data-cancel]', el).forEach(b => b.onclick = async () => { try { await api(`/api/jobs/${b.dataset.cancel}/cancel`, {}); tick(); } catch (e) { toast(e.message, 'err'); } });
+      $$('[data-hide]', el).forEach(b => b.onclick = () => { hideJob(b.dataset.hide); last = ''; tick(); });
+      $$('[data-login]', el).forEach(b => b.onclick = () => loginModal(shown.filter(R => R.fail && R.fail.login).map(R => R.fail), () => { last = ''; tick(); }));
+    }
+    const failed = shown.filter(R => R.fail).map(R => R.fail);
+    loginAsk(failed, rows.some(R => R.active && R.dl && R.dl.status !== 'done'), () => { last = ''; tick(); });
+    if (busy) timer = setTimeout(tick, 1200);
+    else if (shown.some(R => !R.fail)) timer = setTimeout(tick, 2000);
+  };
+  tick();
+  return () => { stop = true; clearTimeout(timer); };
+}
+
+// Didn't work - try again (2026-11-10, the user: "store a temporal log of videos or batches I tried to run and failed so
+// I can retry in the future"): GET /api/failed = .app\failed.json (30 days; jobs.Runner._remember) - a thin bar on each
+// way's page (that way's runs; the overview all of them) opens the list, grouped by the batch they were added in; Try
+// again / Try them all again start them as one batch (POST /api/failed {action: retry}), ✕ forgets one. A download
+// that wanted the login gets the login form on top (the setting, then those downloads again).
+const FAIL_WAY = {notes: () => t('Notes'), spark: () => 'SPARK', videos: () => t('Effects')};
+async function failedBar(box, way, again) {
+  if (!box) return;
+  let L = [];
+  try { L = (await api('/api/failed')).filter(e => !way || e.way === way); } catch (e) { return; }
+  const n = L.filter(e => !e.running).length;
+  box.innerHTML = n ? `<button class="wbar fbar" id="fbar"><svg class="i"><use href="#i-restart"/></svg><span class="grow">${tn(n, '<b>{n} video</b> did not work - try it again', '<b>{n} videos</b> did not work - try them again')}</span><span class="wgo">${t('Show them →')}</span></button>` : '';
+  if (n) $('#fbar', box).onclick = () => failedModal(way, again);
+}
+async function failedModal(way, again) {
+  let L, S;
+  try { [L, S] = await Promise.all([api('/api/failed'), api('/api/settings')]); } catch (e) { toast(e.message, 'err'); return; }
+  L = L.filter(e => !way || e.way === way);
+  if (!L.length) { closeModal(); again(); return; }
+  const groups = [...L.reduce((m, e) => m.set(e.batch || e.id, [...(m.get(e.batch || e.id) || []), e]), new Map()).values()];
+  const login = L.filter(e => e.login && !e.running), kind = login.some(e => e.login === 'cookies') ? 'cookies' : login.some(e => e.login === 'failed') || (S.settings || {}).download_login ? 'failed' : 'needed';
+  const row = e => `<div class="fitem${e.running ? ' run' : ''}"><div class="grow"><div class="fwhat" title="${esc(e.what)}">${esc(e.what || e.title)}</div>
+      <div class="small ${e.running ? 'muted' : 'bad'}">${e.running ? t('Trying again now…') : esc(t(e.why || '') || t('It did not work - see the log'))}</div></div>
+    ${e.running ? '' : `<button class="btn sm" data-fretry="${esc(e.id)}"><svg class="i"><use href="#i-restart"/></svg>${t('Try again')}</button><button class="btn sm ghost icon" data-fforget="${esc(e.id)}" title="${ta('Forget it')}">✕</button>`}</div>`;
+  modal(`<h2>${t('Did not work - try again')}</h2>
+    <p class="hint">${t('Videos and links that did not work in the last 30 days. Try one again, or the whole batch - what came after it (notes, SPARK, an analysis) comes again too. One that works leaves the list.')}</p>
+    ${login.length ? `<div class="flogin" id="flogin">${loginForm(kind, S)}</div>` : ''}
+    ${groups.map(G => { const open = G.filter(e => !e.running);
+      return `<div class="fgroup"><div class="row fghead"><b>${esc(FAIL_WAY[G[0].way] ? FAIL_WAY[G[0].way]() : t('Download'))}</b><span class="small dim">${esc(whenStr(G[0].when))} · ${tn(G.length, '{n} video', '{n} videos')}</span><span class="grow"></span>
+        ${open.length > 1 ? `<button class="btn sm pri" data-fretry="${esc(open.map(e => e.id).join(' '))}">${t('Try them all again')}</button>` : ''}</div>${G.map(row).join('')}</div>`; }).join('')}`, el => {
+    const go = async ids => {
+      try {
+        const r = await api('/api/failed', {action: 'retry', ids});
+        (r.errors || []).forEach(x => toast(`${x.what}: ${x.error}`, 'err'));
+        if ((r.jobs || []).length) toast(tn(r.jobs.length, 'Trying {n} again', 'Trying {n} again'));
+        ping(); closeModal(); again();
+      } catch (x) { toast(x.message, 'err'); }
+    };
+    $$('[data-fretry]', el).forEach(b => b.onclick = () => { b.disabled = true; go(b.dataset.fretry.split(' ')); });
+    $$('[data-fforget]', el).forEach(b => b.onclick = async () => {
+      try { await api('/api/failed', {action: 'forget', ids: [b.dataset.fforget]}); failedModal(way, again); } catch (x) { toast(x.message, 'err'); } });
+    if (login.length) loginWire($('#flogin', el), () => go(login.map(e => e.id)), () => { $('#flogin', el).hidden = true; });
+  });
 }
 // Analyze > Downloaded, not analysed yet: one row per file; the files of one post (an Instagram carousel, a TikTok
 // photo post with its sound - 0.4.2.1, downloads.json "post") under one heading, in their order

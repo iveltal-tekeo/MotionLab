@@ -40,6 +40,38 @@ class JobError(ValueError):
     pass
 
 
+# a job's progress for the page (2026-11-10, the user: Take notes "as a progress bar ... more visual"): yt-dlp's
+# "[download]  45.3%" lines, a tool's "STEP 2/4: ..." lines (tools\notes.py prepare)
+PCT = re.compile(r"^\[download\]\s+(\d{1,3}(?:\.\d+)?)%")
+STEP = re.compile(r"^STEP (\d+)/(\d+): (.+)$")
+FRAME = re.compile(r"signal pass: frame (\d+)/(\d+)")        # analyze.py's every-frame pass, as it goes
+# the runs that did not work, kept for a while to try again later (2026-11-10, the user: "store a temporal log of
+# videos or batches I tried to run and failed so I can retry in the future"): .app\failed.json, newest first, one per
+# link / video (a new failure replaces the old one, a success removes it), 30 days, 200 at most
+FAILED = LAB / ".app" / "failed.json"
+FAILED_DAYS, FAILED_MAX = 30, 200
+FAILED_KINDS = ("download", "notes", "spark", "analyze")
+FAILED_LOCK = threading.Lock()
+
+
+def fail_key(kind: str, args: dict) -> str:
+    return f"{kind}|{args.get('url') if kind == 'download' else args.get('video')}"
+
+
+def failed_list() -> list[dict]:
+    cut = time.time() - FAILED_DAYS * 86400
+    return [e for e in data.read_json(FAILED, []) or [] if isinstance(e, dict) and e.get("t", 0) >= cut]
+
+
+def _why(job: "Job") -> str:
+    """The failure in a line: download.py's hint (the page translates it), else the tool's last words."""
+    for ln in reversed(job.lines[-40:]):
+        if ln.startswith("download failed"):
+            return ln.split("): ", 1)[1] if "): " in ln else ln
+    tail = [ln.strip() for ln in job.lines[-15:] if ln.strip() and not ln.startswith(("#", "Traceback", "  "))]
+    return (tail[-1] if tail else "")[:300]
+
+
 def end_tree(proc: subprocess.Popen) -> str:
     """Stop a job and everything it started (2026-11-10 review). terminate() ends the tool's own process only: its
     ffmpeg, its render workers and HyperFrames' Chrome ran on - into the files of the next render, with the job's
@@ -635,6 +667,8 @@ class Job:
         self.claude: dict | None = None                                         # what was opened afterwards
         self.then: dict | None = None          # a download followed by its analysis: the analyze job's settings
         self.batch: int | None = None          # the jobs of one Add videos share it
+        self.retried: int | None = None        # a failed download started again (the login pop-up): the new job
+        self.parent: int | None = None         # the download whose saved video this job reads (its progress row)
 
     def info(self, since: int | None = None) -> dict:
         d = {"id": self.id, "kind": self.kind, "args": self.args, "title": self.title, "group": self.group,
@@ -643,12 +677,41 @@ class Job:
              "command": " ".join(Path(c).name if i < 2 else c for i, c in enumerate(self.cmd)),
              "lines": len(self.lines), "then_claude": self.then_claude, "claude": self.claude,
              "then": bool(self.then), "then_kind": (self.then or {}).get("kind") or ("analyze" if self.then else None),
-             "batch": self.batch,
+             "batch": self.batch, "login": self.login(), "retried": self.retried, "parent": self.parent,
+             "progress": self.progress(), "why": _why(self) if self.status == "failed" else "",
+             "then_cl": bool((self.then or {}).get("claude")),        # a download whose video Claude takes next (its bar's step)
              "ended_ago_s": round(time.time() - self.ended) if self.ended else None}
         if since is not None:
             d["log"] = self.lines[since:since + 5000]
             d["since"] = since
         return d
+
+    def login(self) -> str:
+        """A failed download that wants the browser's login (download.py's LOGIN line: needed | failed | cookies) -
+        the page offers Settings > Downloads' login and Try again in a pop-up; "" otherwise."""
+        if self.kind != "download" or self.status != "failed":
+            return ""
+        return next((ln[7:].strip() for ln in reversed(self.lines[-30:]) if ln.startswith("LOGIN: ")), "")
+
+    def progress(self) -> dict | None:
+        """While it runs: {"pct"} (a download) or {"i", "n", "step", "sub", "listening"} (a tool's STEP line; sub =
+        how far the step is when it says so - analyze.py's every-frame pass, after that STEP line only), else None."""
+        if self.status not in ("running", "cancelling"):
+            return None
+        sub, listening = None, False
+        for ln in reversed(self.lines[-200:]):
+            m = STEP.match(ln)
+            if m:
+                return {"i": int(m[1]), "n": int(m[2]), "step": m[3], "listening": listening,
+                        "sub": round(min(1.0, sub), 3) if sub is not None else None}
+            f = FRAME.search(ln) if sub is None else None
+            if f:
+                sub = int(f[1]) / max(1, int(f[2]))
+            listening = listening or "listening (speech to text" in ln
+            m = PCT.match(ln) if self.kind == "download" else None
+            if m:
+                return {"pct": min(100.0, float(m[1]))}
+        return None
 
 
 class Runner:
@@ -764,6 +827,7 @@ class Runner:
         job.status = "cancelled" if job.status == "cancelling" else (
             "done" if job.rc in OK_RC.get(job.kind, (0,)) else "failed")
         data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
+        self._remember(job)
         if job.then_claude and job.status == "done" and job.kind == "notes":
             self._collect_notes(job, f)
         elif job.then_claude and job.status == "done" and job.kind == "spark":
@@ -894,6 +958,7 @@ class Runner:
                     args = {k: v for k, v in job.then.items() if k != "kind"}
                     nj = self.start("spark", {**args, "video": str(saved), "url": str(job.args.get("url") or "")},
                                     queue=True, batch=job.batch)
+                    nj.parent = job.id
                     msg = f"Next: SPARK of {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
             except Exception as e:                              # noqa: BLE001 - the download itself succeeded
                 msg = f"Could not start SPARK of {saved.name if saved else 'the video'}: {e}"
@@ -908,6 +973,7 @@ class Runner:
                     args = {k: v for k, v in job.then.items() if k != "kind"}
                     nj = self.start("notes", {**args, "video": str(saved), "url": str(job.args.get("url") or "")},
                                     queue=True, batch=job.batch)
+                    nj.parent = job.id
                     msg = f"Next: the notes of {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
             except Exception as e:                              # noqa: BLE001 - the download itself succeeded
                 msg = f"Could not start the notes of {saved.name if saved else 'the video'}: {e}"
@@ -921,6 +987,7 @@ class Runner:
                 msg = f"{saved.name} is audio only - it waits for an edit (Editor), nothing to analyse"
             else:
                 nj = self.start("analyze", {**job.then, "video": str(saved)}, queue=True, batch=job.batch)
+                nj.parent = job.id
                 msg = f"Next: analysing {saved.name} (job {nj.id}{', waiting its turn' if nj.status == 'queued' else ''})"
                 if any(ln.startswith("saved ") and "from one post" in ln for ln in job.lines):     # a carousel
                     msg += " - the post's other files wait under Downloaded, not analysed yet"
@@ -959,6 +1026,72 @@ class Runner:
             msg = f"Could not open Claude Code: {e} - open it from the reference's page (Send to Claude)"
         job.lines.append(msg)
         f.write(msg + "\n")
+
+    @staticmethod
+    def _remember(job: Job) -> None:
+        """A failed download / notes / SPARK / analysis goes into .app\\failed.json (its link or video, what follows
+        it, why); one that ended well takes its link / video out. Cancelled ones change nothing."""
+        if job.kind not in FAILED_KINDS or job.status not in ("failed", "done"):
+            return
+        key = fail_key(job.kind, job.args)
+        with FAILED_LOCK:
+            old = failed_list()
+            keep = [e for e in old if e.get("key") != key]
+            if job.status == "failed":
+                way = (job.then or {}).get("kind") or ("videos" if job.kind in ("download", "analyze") else job.kind)
+                what = str(job.args.get("url") or "") if job.kind == "download" else Path(str(job.args.get("video") or "")).name
+                keep.insert(0, {"id": f"{job.started:.0f}-{job.id}", "key": key, "kind": job.kind, "args": job.args,
+                                "then": job.then, "way": way, "what": what, "title": job.title_en,
+                                "batch": f"{time.strftime('%Y%m%d', time.localtime(job.started))}-{job.batch}"
+                                if job.batch is not None else None,
+                                "when": data.stamp(job.ended), "t": job.ended, "why": _why(job), "login": job.login()})
+            elif len(keep) == len(old):
+                return
+            data.write_json_atomic(FAILED, keep[:FAILED_MAX])
+
+    def failed(self) -> list[dict]:
+        """The failed runs kept, newest first; `running` = the same link / video is at work again now."""
+        busy = {fail_key(j.kind, j.args) for j in self.active()}
+        return [{**e, "running": e.get("key") in busy} for e in failed_list()]
+
+    def failed_do(self, action: str, ids: list) -> dict:
+        """Try again (one batch for several: one Claude window, as when they were first added) or forget."""
+        ids = {str(i) for i in ids or []}
+        pick = [e for e in failed_list() if e.get("id") in ids]
+        if action == "forget":
+            with FAILED_LOCK:
+                data.write_json_atomic(FAILED, [e for e in failed_list() if e.get("id") not in ids])
+            return {"forgot": len(pick)}
+        if action != "retry":
+            raise JobError(I18N.t("unknown action {id}", id=action))
+        if not pick:
+            raise JobError(I18N.t("nothing to try again"))
+        batch = int(time.time() * 1000) % 10_000_000 if len(pick) > 1 else None
+        started, errors = [], []
+        for e in reversed(pick):                              # oldest first: the order they were added
+            try:
+                started.append(self.start(e["kind"], e.get("args") or {}, queue=True, then=e.get("then"),
+                                          batch=batch).info())
+            except (JobError, ValueError, OSError) as x:
+                errors.append({"id": e["id"], "what": e.get("what"), "error": str(x)})
+        return {"jobs": started, "errors": errors}
+
+    def retry(self, jid: int) -> Job:
+        """A failed download again, as it was (the link, the format, what follows it - an analysis, notes, SPARK);
+        it keeps its batch while the batch is still at work (one Claude window for all), else it goes alone."""
+        job = self.jobs.get(jid)
+        if not job:
+            raise JobError(I18N.t("no job {id}", id=jid))
+        if job.kind != "download" or job.status != "failed":
+            raise JobError(I18N.t("only a failed download can be tried again"))
+        if job.retried:
+            return self.jobs[job.retried]
+        with self.lock:
+            busy = job.batch is not None and job.batch not in self.opened and any(
+                j.status in ("running", "queued", "cancelling") for j in self.jobs.values() if j.batch == job.batch)
+        nj = self.start("download", dict(job.args), queue=True, then=job.then, batch=job.batch if busy else None)
+        job.retried = nj.id
+        return nj
 
     def cancel(self, jid: int) -> Job:
         job = self.jobs.get(jid)

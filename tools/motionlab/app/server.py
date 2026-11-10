@@ -49,7 +49,7 @@ from motionlab.util import LAB, fix_dotted_names, tool
 from . import data, jobs, live, player, report, system, trash, updater
 
 VERSION = __version__                               # one version: tools/motionlab/__init__.py
-API_LEVEL = 59                                  # ui\js\core.js API_LEVEL: the functions the page needs
+API_LEVEL = 62                                  # ui\js\core.js API_LEVEL: the functions the page needs
 UI = Path(__file__).resolve().parent / "ui"
 OV_GSAP = LAB / "tools" / "overlays" / "node_modules" / "gsap" / "dist" / "gsap.min.js"   # the motion templates' previews
 APPDIR = LAB / ".app"
@@ -676,6 +676,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(data.thumb_set(urllib.parse.unquote(m[1])))
         if path == "/api/texts":                         # 2026-10-18: the sets of scripts & prompts (Analyser)
             return self._json(data.text_sets())
+        if path == "/api/failed":                        # 2026-11-10: the runs that did not work, kept 30 days
+            return self._json(S.runner.failed())
         if path == "/api/notes":                         # 2026-10-27: notes from videos (Analyser > Notes)
             return self._json(NT.list_notes())
         if path == "/api/spark":                         # 2026-10-30: SPARK - why a video worked (Content creation)
@@ -1087,6 +1089,11 @@ class Handler(BaseHTTPRequestHandler):
         m = re.fullmatch(r"/api/jobs/(\d+)/cancel", path)
         if m:
             return self._json(S.runner.cancel(int(m[1])).info())
+        if path == "/api/failed":                        # 2026-11-10: the runs that did not work - try again / forget
+            return self._json(S.runner.failed_do(str(body.get("action") or ""), body.get("ids") or []))
+        m = re.fullmatch(r"/api/jobs/(\d+)/retry", path)      # 2026-11-10: a download that wanted the login, again
+        if m:
+            return self._json(S.runner.retry(int(m[1])).info())
         if path == "/api/settings":
             lg = I18N.lang()
             saved = system.save(body.get("settings") or {})

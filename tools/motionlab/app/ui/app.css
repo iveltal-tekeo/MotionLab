@@ -2882,8 +2882,20 @@ button.mnrow { cursor: pointer; } button.mnrow:hover { border-color: color-mix(i
   background: var(--edpan); border: 1px solid var(--edline); border-radius: 10px; padding: 12px; box-shadow: 0 12px 30px -10px #000; }
 .edpop > b { display: block; margin-bottom: 8px; }
 #edhist svg.i { color: var(--ed1); }
-.edmain { display: grid; grid-template-columns: 300px minmax(0, 1fr) 360px; gap: 10px; align-items: stretch; }
-@media (max-width: 1280px) { .edmain { grid-template-columns: 260px minmax(0, 1fr) 320px; } }
+/* --edl / --edr = the side panels' widths the user dragged (edLayout); .swap = the add panel on the right */
+.edmain { display: grid; grid-template-columns: var(--edl, 300px) minmax(0, 1fr) var(--edr, 360px); gap: 10px; align-items: stretch; }
+.edmain.swap { grid-template-columns: var(--edr, 360px) minmax(0, 1fr) var(--edl, 300px); }
+@media (max-width: 1280px) { .edmain { grid-template-columns: var(--edl, 260px) minmax(0, 1fr) var(--edr, 320px); }
+  .edmain.swap { grid-template-columns: var(--edr, 320px) minmax(0, 1fr) var(--edl, 260px); } }
+.edmain.swap > .edpanel.edr { order: 1; } .edmain.swap > .edview { order: 2; } .edmain.swap > .edpanel.edl { order: 3; }
+/* a side panel's inner edge: drag = its width (remembered), double-click = as it was */
+.edvsplit { position: absolute; top: 0; bottom: 0; width: 8px; z-index: 4; cursor: col-resize; touch-action: none; }
+.edpanel.edl .edvsplit, .edmain.swap .edpanel.edr .edvsplit { right: -4px; left: auto; }
+.edpanel.edr .edvsplit, .edmain.swap .edpanel.edl .edvsplit { left: -4px; right: auto; }
+.edvsplit::after { content: ""; position: absolute; top: 50%; left: 3px; width: 2px; height: 40px; margin-top: -20px; border-radius: 1px;
+  background: #3a3b41; transition: background .12s; }
+.edvsplit:hover::after, .edvsplit.on::after { background: var(--ed1); }
+.edswap.on { color: var(--ed1); }
 /* 2026-10-27, the user: "remove the padding from the main section so the mini editor can take up more space" */
 body.edwide main { padding: 10px 16px 24px; }
 /* between the preview row and the timeline: drag = the preview's height (remembered), double-click = as it was */
@@ -2891,7 +2903,7 @@ body.edwide main { padding: 10px 16px 24px; }
 .edsplitter::after { content: ""; position: absolute; left: 50%; top: 3px; width: 56px; height: 4px; margin-left: -28px; border-radius: 2px;
   background: var(--edline); transition: background .12s; }
 .edsplitter:hover::after, .edsplitter.on::after { background: var(--ed1); }
-@media (max-width: 1000px) { .edmain { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1000px) { .edmain, .edmain.swap { grid-template-columns: minmax(0, 1fr); } .edvsplit, .edswap { display: none; } }
 .edpanel { background: var(--edpan); border: 1px solid var(--edline); border-radius: 12px; position: relative; min-height: 300px; }
 .edpin { position: absolute; inset: 0; padding: 10px; overflow: auto; }   /* the preview sets the row's height */
 @media (max-width: 1000px) { .edpanel { height: 360px; } }
@@ -3177,6 +3189,8 @@ body.edwide main { padding: 10px 16px 24px; }
 .eddanger:not(:disabled):hover { border-color: var(--red); color: var(--red); }
 .edset { display: grid; grid-template-columns: 96px minmax(0, 1fr) 18px; align-items: center; gap: 8px; margin: 6px 0; font-size: 12.5px; }
 .edset > span:first-child { color: var(--muted); }
+.edblend select { width: 100%; min-width: 0; font-size: 12.5px; }
+.edsec .edblend { grid-template-columns: 86px minmax(0, 1fr) 18px; gap: 6px; }   /* (a shot's: under Opacity, in line with it) */
 .edin { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
 .edin input[type=text], .edin select, .edin input[type=number] { width: 100%; min-width: 0; }
 .edsw { display: inline-flex; gap: 3px; }
@@ -3239,6 +3253,8 @@ body.edwide main > #pjprog:not(:empty) { padding: 8px 16px 0; }
 .edpanel, .edview, .edtl { border-radius: 0; border: 0; }
 .edmain > .edpanel:first-child { border-right: 1px solid var(--edline); }
 .edmain > .edpanel:last-child { border-left: 1px solid var(--edline); }
+.edmain.swap > .edpanel:first-child { border-right: 0; border-left: 1px solid var(--edline); }
+.edmain.swap > .edpanel:last-child { border-left: 0; border-right: 1px solid var(--edline); }
 .edview { background: var(--edbg); padding: 12px 12px 8px; }
 .edrail { border-radius: 0; background: var(--edsunk); }
 .edstage { border-radius: 2px; outline: 1px solid #ffffff14; }
@@ -3819,3 +3835,53 @@ details.nsec > .nlist { margin: 0 0 10px 18px; }
 .edline { font-size: 13.5px; line-height: 1.4; margin-bottom: 4px; }
 .edlnby { font-size: 11.5px; padding: 1px 7px; border-radius: 8px; background: color-mix(in srgb, var(--edc) 18%, transparent); color: var(--edc); }
 .edsec #edlnw, .edsec #edlnwh, .edsec #edlnt { width: 100%; margin: 4px 0; }
+
+/* a download that wanted the browser's login (js\jobs.js loginForm, 2026-11-10) */
+.lgtitle{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+
+/* The Analyser's lists: search + filters (2026-11-10, js\analyser.js anFilterRow) */
+.anfil { flex-wrap: wrap; gap: 8px; }
+.ansearch { position: relative; flex: 1 1 260px; max-width: 420px; display: flex; }
+.ansearch .i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--dim); pointer-events: none; }
+.ansearch input { width: 100%; padding-left: 32px; }
+.anfil .ffil { max-width: 200px; }
+
+/* Take notes as progress bars (2026-11-10, js\analyser-sets.js pipePanel) - INDEX's teal */
+.panel.pipe { --pc: #3ee6bd; border-color: color-mix(in srgb, var(--pc) 30%, var(--line)); }
+.pipe h2 { margin: 0; }
+.pipe > .row.sp { gap: 12px; align-items: baseline; }
+.pbar { position: relative; height: 8px; border-radius: 99px; background: var(--panel2); overflow: hidden; margin: 8px 0 4px; }
+.pbar > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 70%, #000), var(--pc)); transition: width .6s ease; }
+.pbar.big { height: 10px; margin: 10px 0 6px; }
+.pbar.stripe > i { background-image: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--pc) 85%, #000) 0 10px, var(--pc) 10px 20px); background-size: 28px 28px; animation: pstripe 1s linear infinite; }
+@keyframes pstripe { to { background-position: 28px 0; } }
+@media (prefers-reduced-motion: reduce) { .pbar.stripe > i { animation: none; } .pbar > i { transition: none; } }
+.prow { padding: 12px 0 10px; border-top: 1px solid var(--line); }
+.prow:first-of-type, .pipe .pbar.big + .prow { border-top: 0; }
+.prtop { gap: 10px; align-items: center; }
+.prname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.pstages { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12.5px; color: var(--dim); flex-wrap: wrap; }
+.pst { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.pst i { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line2); font-style: normal; font-size: 11px; font-weight: 600; }
+.pst.on { color: var(--text); }
+.pst.on i { border-color: var(--pc); color: var(--pc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 18%, transparent); }
+.pst.pdone { color: color-mix(in srgb, var(--pc) 80%, var(--text)); }
+.pst.pdone i { background: var(--pc); border-color: var(--pc); color: #06231c; }
+.pst.bad { color: var(--red); }
+.pst.bad i { border-color: var(--red); color: var(--red); }
+.psl { flex: 0 1 36px; min-width: 14px; height: 1.5px; background: var(--line2); }
+.prow.bad .pbar > i { background: color-mix(in srgb, var(--red) 55%, var(--panel2)); }
+.prow.done .prnow { color: var(--pc); }
+
+/* Did not work - try again (2026-11-10, js\analyser-sets.js failedBar / failedModal) */
+.wbar.fbar { margin: 12px 0 16px; border-color: color-mix(in srgb, var(--red) 35%, var(--line)); background: color-mix(in srgb, var(--red) 5%, var(--panel)); }
+.wbar.fbar:hover { border-color: var(--red); }
+.wbar.fbar .i, .wbar.fbar .wgo { color: #ff8a8a; }
+.fgroup { margin-top: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel2); }
+.fghead { gap: 10px; align-items: baseline; margin-bottom: 4px; }
+.fitem { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.fghead + .fitem { border-top: 0; }
+.fitem .grow { min-width: 0; }
+.fwhat { font-family: var(--mono); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fitem.run { opacity: .7; }
+.flogin, .lginl { margin: 12px 0 4px; padding: 12px 14px; border: 1px solid var(--amber-d); border-radius: var(--r); background: color-mix(in srgb, var(--amber) 5%, var(--panel)); }

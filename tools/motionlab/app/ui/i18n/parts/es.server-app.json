@@ -634,5 +634,8 @@
  "the file picker is open already - look for it behind this window": "el selector de archivos ya está abierto: búscalo detrás de esta ventana",
  "the file picker needs Windows - paste the video's full path instead": "el selector de archivos necesita Windows: pega mejor la ruta completa del vídeo",
  "Pick the videos to take notes from": "Elige los vídeos de los que tomar notas",
- "Pick the videos for SPARK": "Elige los vídeos para SPARK"
+ "Pick the videos for SPARK": "Elige los vídeos para SPARK",
+ "only a failed download can be tried again": "solo se puede reintentar una descarga que ha fallado",
+ "nothing to try again": "no hay nada que volver a intentar",
+ "unknown action {id}": "acción desconocida {id}"
 }

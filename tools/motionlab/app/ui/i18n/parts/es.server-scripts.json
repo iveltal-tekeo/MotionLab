@@ -450,5 +450,6 @@
  "this month has no review yet": "este mes todavía no tiene repaso",
  "no next test {n}": "no existe la próxima prueba {n}",
  "this next test is on your calendar already": "esta próxima prueba ya está en tu calendario",
- "Next test from the monthly review ({month}). The same: {same}. Decided by: {metric}.": "Próxima prueba del repaso del mes ({month}). Se mantiene: {same}. Se decide por: {metric}."
+ "Next test from the monthly review ({month}). The same: {same}. Decided by: {metric}.": "Próxima prueba del repaso del mes ({month}). Se mantiene: {same}. Se decide por: {metric}.",
+ "no blend mode {mode}": "no hay ningún modo de fusión {mode}"
 }

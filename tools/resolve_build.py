@@ -964,6 +964,25 @@ def comp_mosaic(ctx: Ctx, L: dict) -> Comp:
     return fb.out(last)
 
 
+# a graphic's blend (compose.BLEND_MODES) as Resolve's composite mode - Resolve's names for the same mixes; "colour" =
+# Colorize (its hue and saturation over the brightness under it). 2026-11-10: mapped from Resolve's list, screen / add
+# tried in Resolve (dev\resolve_overlay_test.py), the others not yet
+RESOLVE_BLEND = {"screen": "COMPOSITE_SCREEN", "add": "COMPOSITE_ADD", "multiply": "COMPOSITE_MULTIPLY",
+                 "darken": "COMPOSITE_DARKEN", "lighten": "COMPOSITE_LIGHTEN", "overlay": "COMPOSITE_OVERLAY",
+                 "soft_light": "COMPOSITE_SOFTLIGHT", "difference": "COMPOSITE_DIFF", "colour": "COMPOSITE_COLORIZE"}
+
+
+def resolve_composite(r, blend: str):
+    """Resolve's CompositeMode for a layer's blend (None = Normal); a mode this Resolve does not name = an error."""
+    if blend in (None, "", "normal"):
+        return None
+    name = RESOLVE_BLEND.get(blend)
+    val = getattr(r, name, None) if name else None
+    if val is None:
+        raise RuntimeError(f"blend mode {blend}: no composite mode for it in this DaVinci Resolve")
+    return val
+
+
 # ================================================================================================= plan -> units
 def clip_is_static(L: dict) -> bool:
     an = L.get("anchor", [0.5, 0.5])
@@ -1592,8 +1611,8 @@ def build(sess: Session, plan: dict, plan_path: Path, sections: set, replace: bo
             if it.GetStart() != u.a or it.GetDuration() != n:
                 raise RuntimeError(f"{u.name}: overlay placed at {it.GetStart()}+{it.GetDuration()}, wanted {u.a}+{n}")
             it.SetName(u.name)
-            modes = {"screen": sess.r.COMPOSITE_SCREEN, "add": sess.r.COMPOSITE_ADD}
-            if u.composite in modes and not it.SetProperties({"CompositeMode": modes[u.composite]}):
+            mode = resolve_composite(sess.r, u.composite)
+            if mode and not it.SetProperties({"CompositeMode": mode}):
                 raise RuntimeError(f"{u.name}: composite mode {u.composite} refused")
             it.SetClipColor(u.color)
         else:
@@ -1854,8 +1873,8 @@ def drift(sess: Session, plan_path: Path, export_dir: Path | None = None, units:
         if composite is not None and it.GetProperty("CompositeMode") != composite:
             add(u, a, b, track, "composite mode", composite, it.GetProperty("CompositeMode"))
 
-    modes = {"normal": 0, "screen": sess.r.COMPOSITE_SCREEN, "linear_light": sess.r.COMPOSITE_LINEAR_LIGHT,
-             "add": sess.r.COMPOSITE_ADD}
+    modes = {"normal": 0, "linear_light": sess.r.COMPOSITE_LINEAR_LIGHT,
+             **{m: getattr(sess.r, n, None) for m, n in RESOLVE_BLEND.items()}}
     for u in man["units"]:
         if units and u["name"] not in units:
             continue

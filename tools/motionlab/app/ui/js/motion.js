@@ -173,7 +173,7 @@ function motionMusic(body, MU) {
         ${MU.unmeasured ? `<button class="btn" id="muindex"><svg class="i"><use href="#i-music"/></svg>${tn(MU.unmeasured, 'Measure {n} new', 'Measure {n} new')}</button>` : ''}</div>
       <div class="row sdtop" id="mulinkrow" hidden><input type="text" id="mulinku" placeholder="https://…" style="max-width:460px">
         <button class="btn" id="mulinkgo">${t('Download')}</button><span class="small muted">${t('YouTube, SoundCloud… saved as an MP3 with your downloads')}</span></div>
-      <div id="muprog" class="small"></div><pre class="log" id="mulog" hidden></pre>
+      <div id="muprog" class="small"></div><div id="mulg" hidden></div><pre class="log" id="mulog" hidden></pre>
       ${T.length ? `<div class="row pfilters" style="margin-bottom:8px">${[['all', t('In use'), n(MU_TAB, x => !x.off)], ['fav', `★ ${t('Favourites')}`, n(MU_TAB, x => x.fav && !x.off)], ['off', t('Hidden'), n(MU_TAB, x => x.off)]].map(([k, l, c]) =>
           `<button class="fchip${MU_FILTER === k ? ' on' : ''}" data-f="${k}">${l} <span class="dim">${c}</span></button>`).join('')}</div>` : ''}
       ${!T.length ? emptyHero(song ? 'music' : 'volume', song ? t('No songs yet') : t('No ambience yet'), song
@@ -192,7 +192,8 @@ function motionMusic(body, MU) {
       const j = await startJob('download', {url, preset: 'mp3'}, false);
       if (!j) return;
       $('#mulinkgo', body).disabled = true; pre.hidden = false; $('#muprog', body).textContent = t('downloading…');
-      followJob(j.id, pre, r => { if (r.status === 'done') measure(); else { $('#muprog', body).textContent = t(r.status); $('#mulinkgo', body).disabled = false; } });
+      followJob(j.id, pre, r => { if (r.status === 'done') measure(); else { $('#muprog', body).textContent = r.login ? '' : t(r.status); $('#mulinkgo', body).disabled = false;
+        if (r.login) loginInline($('#mulg', body), r.login, () => $('#mulinkgo', body).click()); } });   // the site wants a login
     };
     $('#mufiles', body).onchange = async e => {
       const files = [...e.target.files].filter(f => !/^\._/.test(f.name)), kind = $('#mukind', body) ? $('#mukind', body).value : '';
