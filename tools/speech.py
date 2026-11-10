@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from motionlab import speech as SP  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
-from motionlab.util import LAB, log, setup_console  # noqa: E402
+from motionlab.util import LAB, log, setup_console, write_json  # noqa: E402
 
 
 def out_path(media: Path, model: str, verbatim: bool = False) -> Path:
@@ -86,7 +86,7 @@ def transcript(media: Path, model: str = "small", names: str = "", lang: str | N
     d.update(name=media.stem, video=str(media.resolve()), fps=fps, frames=info["frames"], fingerprint=fp,
              made=time.strftime("%Y-%m-%d %H:%M"), seconds=round(time.time() - t0, 1))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
+    write_json(out, d, indent=1)                    # whole or not at all (a cut-off cache failed every later read)
     log(f"{d['words']} words in {len(d['lines'])} lines, language {d['lang']} ({d['lang_prob']}), "
         f"{d['seconds']} s -> {out}")
     return out, d

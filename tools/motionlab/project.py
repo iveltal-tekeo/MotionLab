@@ -62,6 +62,7 @@ class Project:
         self.build = self.dir / "build"
         self.cache = self.build / "cache"
         self.manifest_path = self.build / "sources.json"
+        self.changed: list[str] = []          # register_sources: clips that are another file than last time
 
     # ------------------------------------------------------------------ the user's files (read-only)
     def footage_files(self) -> list[Path]:
@@ -95,7 +96,13 @@ class Project:
                 ent["photo"] = True
             fp = file_fingerprint(f)
             if with_hash and (ent.get("fingerprint") != fp or not ent.get("sha256")):
-                ent["sha256"] = sha256_file(f)
+                sha = sha256_file(f)
+                # 2026-11-10 review: the new SHA went over the old one without a word, so verify_sources (which
+                # compares with what is stored) could only ever see a change made DURING one run. A clip that is
+                # another file than last time is named - self.changed, prep_footage.py says it
+                if ent.get("sha256") and ent["sha256"] != sha:
+                    self.changed.append(f"{key} {f.name}")
+                ent["sha256"] = sha
             ent["fingerprint"] = fp
         self.build.mkdir(parents=True, exist_ok=True)
         write_json(self.check(self.manifest_path), m)

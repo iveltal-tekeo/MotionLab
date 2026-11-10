@@ -318,7 +318,9 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
   `closeModal()` does not) - the dialogs opened from the pop-up and Add prompts' second screen use it. User-facing
   words: no paths, versions, SHA-256, effort levels; "lab pass" = Measure. UI changes are tested with a second test
   server on an empty copy of the app code.
-- "Claude" buttons start Claude Code in a new console in the lab folder (`.app\open_claude.cmd`; characters cmd would
+- "Claude" buttons start Claude Code in a new console in the lab folder (a launcher of its own per window,
+  `.app\launch\claude_<time>.cmd`, Claude's line ending in `& exit` - 2026-11-10: with one shared file a window ran
+  the next window's text when its Claude ended; characters cmd would
   interpret are stripped, double quotes become single ones; so a wish the user types goes to Claude in a request file -
   Prepare's req-NNN, Generate a new prompt / Use it, change… = `/write-prompt request <req-NNN>` (POST
   `/api/prompts/request`, 2026-10-19); in Spanish the first message ends with `system.LANG_LINE`, added after the

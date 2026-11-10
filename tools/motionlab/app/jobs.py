@@ -40,6 +40,59 @@ class JobError(ValueError):
     pass
 
 
+def end_tree(proc: subprocess.Popen) -> str:
+    """Stop a job and everything it started (2026-11-10 review). terminate() ends the tool's own process only: its
+    ffmpeg, its render workers and HyperFrames' Chrome ran on - into the files of the next render, with the job's
+    output still open. Windows: taskkill /T ends the whole tree; elsewhere, or when that fails, the process itself as
+    before. Never raises; returns "" or why a job that still runs could not be stopped (for its lines)."""
+    why = ""
+    if os.name == "nt":
+        try:
+            r = subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True, timeout=15,
+                               creationflags=NO_WINDOW)
+            if r.returncode == 0:
+                return ""
+            why = (r.stderr or r.stdout or b"").decode("utf-8", "replace").strip()[-200:]
+        except (OSError, subprocess.TimeoutExpired) as e:
+            why = str(e)
+    try:
+        proc.terminate()
+    except OSError as e:
+        why = why or str(e)
+    return why if proc.poll() is None else ""               # (gone already = stopped: nothing to say)
+
+
+class _Log:
+    """A job's log file that never stops its job: when it cannot be opened or written (a full disk in the middle of a
+    render) the lines stay in memory only - Job.lines, what the Jobs page shows - and one of them says so."""
+
+    def __init__(self, path: Path, say):
+        self.say = say
+        try:
+            self.f = open(path, "w", encoding="utf-8")
+        except OSError as e:
+            self.f = None
+            say(f"this job's log file could not be made ({e}) - its lines are kept here only")
+
+    def write(self, text: str) -> None:
+        if self.f is None:
+            return
+        try:
+            self.f.write(text)
+            self.f.flush()
+        except OSError as e:
+            self.close()
+            self.say(f"this job's log file could not be written any more ({e}) - its lines are kept here only")
+
+    def close(self) -> None:
+        f, self.f = self.f, None
+        if f is not None:
+            try:
+                f.close()
+            except OSError as e:
+                self.say(f"this job's log file did not close cleanly ({e})")
+
+
 def _latest_plan(project: str) -> Path:
     b = data.PROJECTS / data.safe_name(project) / "build"
     plans = sorted(b.glob("plan_v*.json"), key=lambda p: int(p.stem.split("_v")[-1]) if p.stem.split("_v")[-1].isdigit()
@@ -670,40 +723,62 @@ class Runner:
                                     stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace",
                                     env=env, creationflags=NO_WINDOW)
         if job.status == "cancelling":                        # Remove clicked while it was starting
-            job.proc.terminate()
+            why = end_tree(job.proc)
+            if why:
+                job.lines.append(f"could not stop it: {why}")
         threading.Thread(target=self._pump, args=(job,), daemon=True).start()
 
     def _pump(self, job: Job):
-        with open(job.log, "w", encoding="utf-8") as f:
-            f.write(f"# {job.title_en}\n# {' '.join(job.cmd)}\n")
-            for line in job.proc.stdout:
-                line = line.rstrip("\r\n")
-                job.lines.append(line)
-                if len(job.lines) > 20000:
-                    del job.lines[:5000]
-                f.write(line + "\n")
-                f.flush()
-            job.rc = job.proc.wait()
-            job.ended = time.time()
-            job.status = "cancelled" if job.status == "cancelling" else (
-                "done" if job.rc in OK_RC.get(job.kind, (0,)) else "failed")
-            data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
-            if job.then_claude and job.status == "done" and job.kind == "notes":
-                self._collect_notes(job, f)
-            elif job.then_claude and job.status == "done" and job.kind == "spark":
-                self._collect_spark(job)
-            elif job.then_claude and job.status == "done":
-                if self._mates(job):                          # 0.4.5: a batch - one Claude window for all of it
-                    self._collect(job, f)
-                else:
-                    self._hand_to_claude(job, f)
-            if job.then and job.status == "done":
-                self._then_analyse(job, f)
-            if job.batch is not None:
-                self._batch_to_claude(job, f)
-            self._notes_to_claude(job, f)
-            self._spark_to_claude(job, f)
-        self._next()
+        """The job's output -> its lines and its log, then its end. Whatever goes wrong here (2026-11-10 review: the
+        log could not be written on a full disk and the thread died), the job never stays "running" - that held its
+        group's queue, every update and every delete until MotionLab was started again - and the queue moves on."""
+        f = _Log(job.log, job.lines.append)
+        try:
+            self._pump_job(job, f)
+        except Exception as e:                                  # noqa: BLE001 - see above
+            job.lines.append(f"the app lost track of this job: {e!r}")
+        finally:
+            f.close()
+            if job.status in ("running", "cancelling"):       # its end was never recorded: stop it, call it failed
+                why = end_tree(job.proc)
+                if why:
+                    job.lines.append(f"its processes could not be stopped: {why}")
+                try:
+                    job.rc = job.proc.wait(timeout=30)
+                except (OSError, subprocess.TimeoutExpired):
+                    job.rc = -1
+                job.ended = time.time()
+                job.status = "cancelled" if job.status == "cancelling" else "failed"
+            self._next()
+
+    def _pump_job(self, job: Job, f: "_Log") -> None:
+        f.write(f"# {job.title_en}\n# {' '.join(job.cmd)}\n")
+        for line in job.proc.stdout:
+            line = line.rstrip("\r\n")
+            job.lines.append(line)
+            if len(job.lines) > 20000:
+                del job.lines[:5000]
+            f.write(line + "\n")
+        job.rc = job.proc.wait()
+        job.ended = time.time()
+        job.status = "cancelled" if job.status == "cancelling" else (
+            "done" if job.rc in OK_RC.get(job.kind, (0,)) else "failed")
+        data.record_job(job.kind, job.title_en, job.args, job.started, job.ended, job.status)   # What it took
+        if job.then_claude and job.status == "done" and job.kind == "notes":
+            self._collect_notes(job, f)
+        elif job.then_claude and job.status == "done" and job.kind == "spark":
+            self._collect_spark(job)
+        elif job.then_claude and job.status == "done":
+            if self._mates(job):                              # 0.4.5: a batch - one Claude window for all of it
+                self._collect(job, f)
+            else:
+                self._hand_to_claude(job, f)
+        if job.then and job.status == "done":
+            self._then_analyse(job, f)
+        if job.batch is not None:
+            self._batch_to_claude(job, f)
+        self._notes_to_claude(job, f)
+        self._spark_to_claude(job, f)
 
     def _mates(self, job: Job) -> list[Job]:
         with self.lock:
@@ -898,7 +973,9 @@ class Runner:
                 return job
         if job.status == "running" and job.proc:
             job.status = "cancelling"
-            job.proc.terminate()
+            why = end_tree(job.proc)
+            if why:                                           # (it stays "cancelling" until it ends by itself)
+                job.lines.append(f"could not stop it: {why}")
         return job
 
     def list(self) -> list[dict]:

@@ -45,7 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab import sfx as SFX  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
-from motionlab.util import LAB, setup_console  # noqa: E402
+from motionlab.util import LAB, setup_console, write_json  # noqa: E402
 
 PY, TOOLS = sys.executable, LAB / "tools"
 SUB_S = 0.12            # HyperFrames' seconds a (sub-)frame on this kind of PC (2026-10-23: 0.10-0.13, i5 + RTX 4070)
@@ -55,7 +55,10 @@ STILL_PX = 6            # a graphic whose fastest move is under this (px a frame
 
 
 def newest_plan(build: Path) -> Path:
-    plans = sorted(build.glob("plan_v*.json"), key=lambda p: int(re.sub(r"\D", "", p.stem) or 0))
+    # the number after _v, as draft_edit.next_version reads it (2026-11-10 review: every digit of the name was taken,
+    # so plan_v7_alt2.json counted as version 72 and was built as the newest plan)
+    plans = sorted(build.glob("plan_v*.json"),
+                   key=lambda p: int(m.group(1)) if (m := re.search(r"_v(\d+)", p.stem)) else 0)
     if not plans:
         raise SystemExit(f"no plan_vN.json in {build}")
     return plans[-1]
@@ -209,7 +212,7 @@ def main() -> int:
             ld.update(start=r["start"], **{"in": r["in"]})
             moved.append(f"{f.parent.name} start f{r['start']} in {r['in']}")
     if moved:
-        plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+        write_json(plan_path, plan, indent=1)
         lines.append(f"landed again (its settings moved the move; plan layers set): {'; '.join(moved)}")
     lines += [f"NOT landed again (left where it is): {b}" for b in bad]
     if plan.get("captions_fit") == "chin":              # 0.6.0 step 21: each shot's captions off the speaker's face
@@ -217,14 +220,14 @@ def main() -> int:
         before = json.dumps(plan, sort_keys=True)
         fit = FF.fit_captions(plan, build)
         if json.dumps(plan, sort_keys=True) != before:
-            plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+            write_json(plan_path, plan, indent=1)
         lines += [f"captions fit: {x}" for x in fit] or ["captions fit: every shot's captions already clear of the face"]
     if any(L.get("clear_face") for L in plan.get("layers", [])):     # 0.6.1: an edit by segments' cards off the face
         from motionlab import facefit as FF
         before = json.dumps(plan, sort_keys=True)
         fit = FF.fit_cards(plan, build)
         if json.dumps(plan, sort_keys=True) != before:
-            plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+            write_json(plan_path, plan, indent=1)
         lines += [f"cards fit: {x}" for x in fit] or ["cards fit: every card already clear of the faces"]
     # 2. the sound
     audio = (plan.get("audio") or {}).get("path") or ""
@@ -246,7 +249,7 @@ def main() -> int:
             if new_audio:
                 plan["audio"] = {**(plan.get("audio") or {}), "path": str(mix.resolve())}
             plan["sfx"] = plan.get("sfx") or True    # a quick draft's {"amount", "kinds"} stays (0.5.4)
-            plan_path.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding="utf-8")
+            write_json(plan_path, plan, indent=1)
         lines.append(f"sound: {cues[6:] or 'made'} -> {mix.name} (the plan's audio)")
         report["sfx"] = str(rep)
     else:

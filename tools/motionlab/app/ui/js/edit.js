@@ -255,26 +255,29 @@ async function newEdit(pre = {}) {    // pre = {project, from: 'reference' | 'pr
     $('#neback', el).onclick = () => go(NE_STEPS[ne.cur - 1][0]);
     $('#nenext', el).onclick = () => go(NE_STEPS[ne.cur + 1][0]);
     const save = () => api(`/api/project/${encodeURIComponent(ne.proj())}/edit_request`, {...neBody(st), shots_first: neShots(st, ne.P()), brand: brandOn(el, '#nebrand')});
-    $('#cvgo', el).onclick = async () => {
+    // one start per click (2026-11-10 review: nothing held a second click back while the first was still on its
+    // way, so a double click on Quick draft queued two drafts - two versions of the one request)
+    const one = fn => async () => { if (one.busy) return; one.busy = true; try { await fn(); } finally { one.busy = false; } };
+    $('#cvgo', el).onclick = one(async () => {
       try { const pj = ne.proj(), r = await save();
         openClaude(r.command, 'recreate', `${r.request.how} → ${pj}`); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
       catch (e) { toast(e.message, 'err'); }
-    };
-    $('#cvdraft', el).onclick = async () => {
+    });
+    $('#cvdraft', el).onclick = one(async () => {
       try { const pj = ne.proj(); await save();
         await api('/api/jobs', {kind: 'draft', args: {project: pj}, queue: true});
         toast(neShots(st, ne.P()) ? t('The quick draft is on its way - check its shots here when it is ready, then render it')
           : t('The quick draft is on its way - it shows up here when it is ready'), 'ok'); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
       catch (e) { toast(e.message, 'err'); }
-    };
-    $('#cvbuild', el).onclick = async () => {                 // 7: every part as picked, on the cuts, then rendered
+    });
+    $('#cvbuild', el).onclick = one(async () => {                 // 7: every part as picked, on the cuts, then rendered
       const S = ne.segs && ne.segs();
       if (!S || !S.plan) return;
       try { const pj = ne.proj();
         await api('/api/jobs', {kind: 'segments_build', args: {project: pj, plan: S.plan}, queue: true});
         toast(t('Your edit is being built - it shows up here when it is ready'), 'ok'); closeModal(); location.hash = '#/project/' + encodeURIComponent(pj); }
       catch (e) { toast(e.message, 'err'); }
-    };
+    });
     ne.save = save;
     ne.go = go;
     ne.changed(); go('clips');

@@ -36,7 +36,7 @@ from motionlab import miniedit as M  # noqa: E402
 from motionlab import overlay_settings as OS  # noqa: E402
 from motionlab.project import PHOTO_EXT, Project  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
-from motionlab.util import LAB, setup_console, tool  # noqa: E402
+from motionlab.util import LAB, setup_console, tool, write_json  # noqa: E402
 
 PY, TOOLS = sys.executable, LAB / "tools"
 WAVE_SR = 8000                                    # the loudness per frame is read from the sound at this rate
@@ -168,7 +168,10 @@ def cmd_apply(a) -> int:
     fps = float(P["fps"])
     for s in steps:                                         # the graphics' copies and new ones, their settings
         if s["op"] == "copy":
-            _run([str(TOOLS / "overlay.py"), "new", str(prj.check(Path(s["to"]))), "--from", s["from"]],
+            # --force (2026-11-10 review): the copy is this version's own folder (<graphic>_m<N>). A Save that
+            # stopped after it (the song gone, a cancel) left it there with no plan_v<N>, so the next Save took the
+            # same N and was refused here ("index.html exists") - every time, until the folder was removed by hand
+            _run([str(TOOLS / "overlay.py"), "new", str(prj.check(Path(s["to"]))), "--from", s["from"], "--force"],
                  f"copying {Path(s['from']).name}")
         elif s["op"] == "new":
             _run([str(TOOLS / "overlay.py"), "new", str(prj.check(Path(s["to"]))), "--from", s["template"],
@@ -198,7 +201,7 @@ def cmd_apply(a) -> int:
     P["made_by"] = {"tool": "miniedit.py", "list": f"edit_v{v}.list", "from": bp.name,
                     "sound": M._dict(base.get("made_by")).get("sound"), "date": time.strftime("%Y-%m-%d %H:%M")}
     out = prj.check(prj.build / f"plan_v{v}.json")
-    out.write_text(json.dumps(M.saved(P), indent=1, ensure_ascii=False), encoding="utf-8")
+    write_json(out, M.saved(P), indent=1)                   # whole or not at all (a kill mid-write)
     prj.check(prj.build / f"edit_v{v}.list").write_text(M.record(bp.name, ops, done), encoding="utf-8")
     oc = prj.check(prj.build / "outcome.json")              # what the user fixed by hand: Claude reads it next time
     try:
@@ -207,7 +210,7 @@ def cmd_apply(a) -> int:
         o = {}
     o["hand_fixes"] = ([*(o.get("hand_fixes") or []), {"date": time.strftime("%Y-%m-%d %H:%M"), "from": bp.name,
                                                         "to": out.name, "changes": done}])[-20:]
-    oc.write_text(json.dumps(o, indent=1, ensure_ascii=False), encoding="utf-8")
+    write_json(oc, o, indent=1)
     print(f"{bp.name} + {len(ops)} change(s) -> {out.name} ({int(P['frames'])} frames, last "
           f"{frame_to_tc(int(P['frames']) - 1, fps)}) in {time.time() - t0:.1f} s:")
     for ln in done:

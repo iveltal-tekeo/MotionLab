@@ -467,7 +467,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/ping":
             S.last_ping = time.time()
             u = S.update or {}
-            return self._json({"app": "motionlab", "version": VERSION, "running": len(S.runner.active()),
+            # "boot" (2026-11-10 review): this server's start. A window left open over a restart of the same version
+            # kept its old session token - every button refused - and now loads itself again (js\core.js ping)
+            return self._json({"app": "motionlab", "version": VERSION, "boot": int(S.started * 1000),
+                               "running": len(S.runner.active()),
                                "resolve": S.resolve, "phase": S.phase, "api": API_LEVEL,
                                "update": bool(u.get("can_update")), "update_kind": u.get("kind"),
                                "update_version": u.get("new_version"), "update_cards": u.get("new_cards", 0),

@@ -34,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from motionlab.compose import Renderer, resolve_paths  # noqa: E402
 from motionlab.media import fonts  # noqa: E402
 from motionlab.timecode import frame_to_tc  # noqa: E402
-from motionlab.util import log, setup_console, tool  # noqa: E402
+from motionlab.util import end_with_parent, log, setup_console, tool  # noqa: E402
 
 
 def _guard(out: Path, plan_path: Path, plan: dict) -> Path:
@@ -77,8 +77,32 @@ def encoder(out: Path, W: int, H: int, fps: float, audio: dict | None, a0: int, 
     return subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
 
-def render_range(R: Renderer, plan: dict, out: Path, a: int, b: int, crf: int, preset: str):
-    p = encoder(out, R.W, R.H, R.fps, plan.get("audio"), a, crf, preset)
+def work_folder(out: Path, plan_path: Path, plan: dict) -> Path:
+    """A render's own work folder, build\\<name>_parts\\ (2026-11-10 review): the video is written there and takes its
+    real name only when it is whole - a render that failed half-way left a playable but short video under the
+    version's own name, listed as that version. What an earlier run of it left behind (failed, or cancelled) goes
+    first: under other part names it made every later render fail at its very last step."""
+    tmp = _guard(out.parent / f"{out.stem}_parts", plan_path, plan)
+    tmp.mkdir(parents=True, exist_ok=True)
+    for old in [*tmp.glob("part_*.mp4"), tmp / "parts.txt", tmp / out.name]:
+        try:
+            old.unlink(missing_ok=True)
+        except OSError as e:
+            raise RuntimeError(f"another render of this video is still writing {old} - wait for it to end ({e})")
+    return tmp
+
+
+def finish(tmp: Path, out: Path) -> None:
+    """The whole video takes its name; the work folder goes when it is empty."""
+    os.replace(tmp / out.name, out)
+    try:
+        tmp.rmdir()
+    except OSError as e:                                       # something else lies in it: it stays, said once
+        log(f"note: the work folder {tmp.name} was left as it is ({e})")
+
+
+def render_range(R: Renderer, plan: dict, out: Path, a: int, b: int, crf: int, preset: str, tmp: Path):
+    p = encoder(tmp / out.name, R.W, R.H, R.fps, plan.get("audio"), a, crf, preset)
     t0 = time.time()
     try:
         for f in range(a, b + 1):
@@ -90,7 +114,43 @@ def render_range(R: Renderer, plan: dict, out: Path, a: int, b: int, crf: int, p
     finally:
         p.stdin.close()
         p.wait()
+    if p.returncode:                                           # (the parts of a parallel render were checked already)
+        raise RuntimeError(f"ffmpeg failed while encoding f{a}-f{b} (exit code {p.returncode})")
+    finish(tmp, out)
     log(f"wrote {out} ({b - a + 1} frames in {time.time() - t0:.0f}s)")
+
+
+CHECK_FRAMES = 10       # frames plan_check draws before a render starts
+
+
+def plan_check(R: Renderer, plan: dict, s0: int, s1: int) -> None:
+    """Draw a few frames before the render starts (2026-11-10 review: a plan with a blend, an effect or a curve the
+    compositor does not know failed only when that layer came up - minutes into the render, after the caches and the
+    person tracks were made). The frames are picked so that as many layers as possible are on screen in one of them,
+    the unusual ones first (graphics, effects, a blend of their own). Each is drawn exactly as the render draws it, so
+    nothing that renders today is refused; a frame that cannot be drawn ends the run before anything is written."""
+    layers = [L for L in plan["layers"]
+              if int(L["start"]) <= int(L["end"]) and int(L["end"]) >= s0 and int(L["start"]) <= s1]
+    plain = lambda L: L.get("type") == "clip" and L.get("blend") in (None, "normal")       # noqa: E731
+    frames, seen = [], set()
+    for L in sorted(layers, key=lambda L: (plain(L), int(L["start"]))):
+        if len(frames) >= CHECK_FRAMES:
+            break
+        if id(L) in seen:
+            continue
+        f = (max(int(L["start"]), s0) + min(int(L["end"]), s1)) // 2
+        frames.append(f)
+        seen |= {id(M) for M in layers if int(M["start"]) <= f <= int(M["end"])}
+    for f in sorted(frames):
+        try:
+            R.render(f)
+        except Exception as e:                                  # noqa: BLE001 - whatever the render would stop on
+            ids = [str(M.get("id") or M.get("type")) for M in layers if int(M["start"]) <= f <= int(M["end"])]
+            raise SystemExit(f"plan check: f{f} ({frame_to_tc(f, R.fps)}) cannot be drawn - {type(e).__name__}: {e}. "
+                             f"Layers on screen there: {', '.join(ids)}. Nothing was rendered: fix the plan "
+                             f"(--no-check renders up to that frame anyway).") from e
+    if frames:
+        log(f"plan check: {len(frames)} frame(s) drawn, {len(seen)} of {len(layers)} layers on screen in them")
 
 
 def default_workers() -> int:
@@ -103,7 +163,13 @@ def _render_part(plan_path: str, s0: int, s1: int, seg: str, crf: int, preset: s
     import cv2
     cv2.setNumThreads(1)                                   # the parallelism is the processes
     plan = resolve_paths(json.loads(Path(plan_path).read_text(encoding="utf-8")), Path(plan_path).parent)
-    plan["layers"] = [L for L in plan["layers"] if int(L["end"]) >= s0 and int(L["start"]) <= s1]
+    here = [L for L in plan["layers"] if int(L["end"]) >= s0 and int(L["start"]) <= s1]
+    # a graphic that follows the face / the camera takes its reference at its OWN first frame (compose OverlayLayer:
+    # face_at / room_ref of self.start). When that lies before this part, the layers shown there stay too - without
+    # them it stopped following in every part after its first and jumped at the part's edge (2026-11-10 review)
+    refs = {int(L["start"]) for L in here if L.get("follow") in ("face", "camera") and int(L["start"]) < s0}
+    plan["layers"] = [L for L in plan["layers"] if (int(L["end"]) >= s0 and int(L["start"]) <= s1)
+                      or any(int(L["start"]) <= f <= int(L["end"]) for f in refs)]
     t0 = time.time()
     R = Renderer(plan)
     p = encoder(Path(seg), R.W, R.H, R.fps, None, s0, crf, preset, threads=2)
@@ -118,7 +184,8 @@ def _render_part(plan_path: str, s0: int, s1: int, seg: str, crf: int, preset: s
     return s0, s1, time.time() - t0
 
 
-def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf: int, preset: str, workers: int):
+def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf: int, preset: str, workers: int,
+                    tmp: Path):
     """Frames a..b in `workers` processes, each encoding its own chunk; the chunks are joined without re-encoding
     (every chunk starts on a keyframe) and the soundtrack is added once. Same frames as a single-process render:
     the compositor is deterministic per frame (noise is seeded by plan seed + frame)."""
@@ -127,14 +194,12 @@ def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf:
     k = max(1, min(workers, n // 40))                      # at least ~40 frames per chunk
     edges = [a + round(i * n / k) for i in range(k + 1)]
     parts = [(edges[i], edges[i + 1] - 1) for i in range(k)]
-    tmp = _guard(out.parent / f"{out.stem}_parts", plan_path, plan)
-    tmp.mkdir(parents=True, exist_ok=True)
     segs = [tmp / f"part_{i:03d}_{s0}-{s1}.mp4" for i, (s0, s1) in enumerate(parts)]
     fps = float(plan["fps"])
     log(f"rendering f{a}-f{b} ({n} frames) in {k} parallel parts")
     t0 = time.time()
     done = 0
-    with ProcessPoolExecutor(max_workers=k) as ex:
+    with ProcessPoolExecutor(max_workers=k, initializer=end_with_parent) as ex:   # (a worker never outlives a Cancel)
         futs = [ex.submit(_render_part, str(plan_path), s0, s1, str(seg), crf, preset)
                 for (s0, s1), seg in zip(parts, segs)]
         for fu in as_completed(futs):
@@ -152,13 +217,13 @@ def render_parallel(plan_path: Path, plan: dict, out: Path, a: int, b: int, crf:
             + audio_codec(audio) + (["-shortest"] if audio.get("trim_to_video", True) else [])
     else:
         cmd += ["-map", "0:v", "-c:v", "copy"]
-    cmd += ["-movflags", "+faststart", str(out)]
+    cmd += ["-movflags", "+faststart", str(tmp / out.name)]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")   # accents in a path
     if r.returncode:
         raise RuntimeError(f"joining the parts failed: {r.stderr[-800:]}")
     for s in segs + [lst]:
         s.unlink(missing_ok=True)
-    tmp.rmdir()
+    finish(tmp, out)
     el = time.time() - t0
     log(f"wrote {out} ({n} frames in {el:.0f}s = {n / el:.1f} fps with {k} parts)")
 
@@ -281,6 +346,7 @@ def main() -> int:
     ap.add_argument("--preset", default="medium")
     ap.add_argument("--workers", type=int, default=default_workers(), help="parallel render processes")
     ap.add_argument("--no-master", action="store_true", help="leave the sound as mixed (no loudness master)")
+    ap.add_argument("--no-check", action="store_true", help="skip the few frames drawn before a render (plan_check)")
     a = ap.parse_args()
     plan_path = Path(a.plan).resolve()
     plan = resolve_paths(json.loads(plan_path.read_text(encoding="utf-8")), plan_path.parent)
@@ -363,11 +429,14 @@ def main() -> int:
     if a.range:
         out = out.with_name(f"{out.stem}_{s0}-{s1}{out.suffix}")
     out = _guard(out, plan_path, plan)
+    if not a.no_check:
+        plan_check(R, plan, s0, s1)
+    tmp = work_folder(out, plan_path, plan)
     if a.workers > 1 and s1 - s0 + 1 >= 80:
         del R                                              # the workers build their own renderers
-        render_parallel(plan_path, plan, out, s0, s1, a.crf, a.preset, a.workers)
+        render_parallel(plan_path, plan, out, s0, s1, a.crf, a.preset, a.workers, tmp)
     else:
-        render_range(R, plan, out, s0, s1, a.crf, a.preset)
+        render_range(R, plan, out, s0, s1, a.crf, a.preset, tmp)
     if plan.get("audio", {}).get("path") and not a.no_master:     # 0.6.0 step 22: the finished sound
         from motionlab import loudness as LD
         res = LD.master(out, plan["audio"], s0 / float(plan["fps"]), int(plan["frames"]), float(plan["fps"]), log=log,

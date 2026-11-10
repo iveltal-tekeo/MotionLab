@@ -33,6 +33,7 @@ import numpy as np
 
 from . import footage as FC
 from .timecode import frame_to_tc
+from .util import write_json
 
 VERSION = 1
 SIZES = ("wide", "medium", "close", "detail")
@@ -344,7 +345,7 @@ def make(prj, cfg: dict, log=print) -> dict:
     cat = {"version": VERSION, "made": _dt.datetime.now().isoformat(timespec="seconds"), "clips": clips,
            "groups": {str(k): [m for m in gid if gid[m] == k] for k in sorted(set(gid.values()))}, "days": days,
            "seconds": round(time.time() - t0, 1)}
-    prj.check(_rel(prj)).write_text(json.dumps(cat, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_json(prj.check(_rel(prj)), cat, indent=1)         # whole or not at all (it holds the user's own lines)
     return cat
 
 
@@ -439,7 +440,7 @@ def say(prj, lines: dict, by: str = "claude") -> dict:
                      "where": " ".join(str(ln.get("where") or "").split())[:80],
                      "tags": [str(t).strip().lower()[:24] for t in (ln.get("tags") or []) if str(t).strip()][:8], "by": by}
         kept.append(m)
-    prj.check(_rel(prj)).write_text(json.dumps(cat, ensure_ascii=False, indent=1), encoding="utf-8")
+    write_json(prj.check(_rel(prj)), cat, indent=1)         # whole or not at all (it holds the user's own lines)
     return {"kept": kept, "refused": refused, "left": sum(1 for _, mo in moments(cat) if not mo.get("say"))}
 
 

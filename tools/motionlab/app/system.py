@@ -567,8 +567,11 @@ def claude_launcher(prompt: str = "", task: str = "free", label: str = "", model
         args.append(f'--name "{name}"')
     # chcp 65001: the file is UTF-8 but cmd reads it in the OEM code page (850 ...), so a lab folder or claude.exe
     # under a Windows user name with an accent (José, María - common for Spanish friends) was "not found" (2026-10-18)
+    # "& exit" on Claude's own line (2026-11-10 review): cmd reads a batch file line by line, as it goes. Once Claude
+    # ended, the window read on from where it had been - in a file the next Claude button had rewritten by then - and
+    # ran the tail of that window's command as a command of its own. With exit on the same line it never reads again
     lines = ["@echo off", "chcp 65001 >nul", "title MotionLab - Claude Code", f'cd /d "{LAB}"',
-             f'call "{exe}"' + "".join(" " + a for a in args) + (f' "{clean}"' if clean else "")]
+             f'call "{exe}"' + "".join(" " + a for a in args) + (f' "{clean}"' if clean else "") + " & exit"]
     return clean, "\r\n".join(lines) + "\r\n", effort, model
 
 
@@ -578,8 +581,11 @@ def open_claude(prompt: str = "", task: str = "free", label: str = "", model: st
     hand-off texts: /analyze-reference ..., apply the feedback in ...), the model and the effort level (the
     dialog's choice, else Settings / the task's recommendation)."""
     clean, text, effort, model = claude_launcher(prompt, task, label, model, effort)
-    APPDIR.mkdir(exist_ok=True)
-    launcher = APPDIR / "open_claude.cmd"
+    # a file of its own per window (2026-11-10 review; one shared .app\open_claude.cmd before): two buttons pressed
+    # close together no longer rewrite the file the first window is still starting from. .app\launch is cache to
+    # tools\storage.py - nothing reads a launcher again once its window is up
+    launcher = APPDIR / "launch" / f"claude_{datetime.datetime.now():%Y%m%d_%H%M%S_%f}.cmd"
+    launcher.parent.mkdir(parents=True, exist_ok=True)
     launcher.write_text(text, encoding="utf-8")
     subprocess.Popen(["cmd", "/c", str(launcher)], cwd=str(LAB), creationflags=NEW_CONSOLE)
     return {"ok": True, "prompt": clean, "effort": effort, "model": model}

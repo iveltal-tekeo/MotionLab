@@ -122,18 +122,24 @@ def main() -> int:
 
     # ---- 0. fingerprint the source (read-only) -------------------------------------------------
     try:                                                       # the video this folder was made from last time
-        prev_sha = read_json(out / "source.json").get("sha256") if (out / "source.json").exists() else None
+        prev = read_json(out / "source.json") if (out / "source.json").exists() else {}
+        prev_sha, unfinished = prev.get("sha256"), bool(prev.get("remaking"))
     except (OSError, ValueError, AttributeError):
-        prev_sha = None
+        prev_sha, unfinished = None, False
     log("hashing source video (read-only)...")
     sha_before = sha256_file(src)
     source = {"path": str(src), "size": src.stat().st_size, "sha256": sha_before}
-    write_json(guard.check(out / "source.json"), source)
-    # the same path now holds another video (re-exported, downloaded again): nothing made from the old one is reused
-    changed = bool(prev_sha) and prev_sha != sha_before
+    # the same path now holds another video (re-exported, downloaded again): nothing made from the old one is reused.
+    # "remaking" stays in source.json until this run has written its results (2026-11-10 review): the new SHA was
+    # saved here at once, so a run stopped before the sound was extracted left the NEXT run sure nothing had changed -
+    # it took the old video's sound (its beats) and proxy for the new one
+    changed = (bool(prev_sha) and prev_sha != sha_before) or unfinished
+    write_json(guard.check(out / "source.json"), {**source, "remaking": True} if changed else source)
     if changed:
         log("the video differs from the one analysed here before (SHA-256 changed): its proxy, sound and "
-            "per-frame metrics are made again")
+            "per-frame metrics are made again" if prev_sha != sha_before else
+            "the last analysis of this video stopped before its proxy, sound and per-frame metrics were made again: "
+            "they are made again now")
     remake = args.force or changed
 
     # ---- 1. probe ----------------------------------------------------------------------------------
@@ -293,6 +299,8 @@ def main() -> int:
     sha_after = sha256_file(src)
     data["source"]["unchanged"] = bool(sha_after == sha_before and guard.verify_unchanged())
     AS.write_all(out, data)
+    if changed:                                                # everything is made from this video now (step 0)
+        write_json(guard.check(out / "source.json"), {k: source[k] for k in ("path", "size", "sha256")})
     if not (out / "meta.json").exists():
         KN.save_meta(name, **{k: v for k, v in m.items() if k in ("category", "tags", "url", "platform", "uploader",
                                                                    "title", "focus")})

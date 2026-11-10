@@ -99,6 +99,26 @@ def _json_default(o):
     raise TypeError(f"not JSON serializable: {type(o)}")
 
 
+def end_with_parent() -> None:
+    """A helper process's first step (a ProcessPoolExecutor initializer): it stops the moment the tool that started it
+    stops. A tool ended from outside (the app's Cancel, a shell's time limit) left its helpers behind: they rendered
+    on into the next run's files and kept the job's output open (analyze.py's end_with_analysis, measured 2026-10-19;
+    render_video.py's workers since the 2026-11-10 review)."""
+    import multiprocessing
+    import threading
+    from multiprocessing.connection import wait
+
+    parent = multiprocessing.parent_process()
+    if parent is None or parent.sentinel is None:
+        return
+
+    def watch():
+        wait([parent.sentinel])
+        os._exit(1)
+
+    threading.Thread(target=watch, daemon=True).start()
+
+
 def tool(name: str) -> str:
     exe = shutil.which(name)
     if not exe:

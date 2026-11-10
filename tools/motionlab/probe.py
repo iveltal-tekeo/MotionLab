@@ -178,6 +178,10 @@ def make_cfr_proxy(src: Path, dst: Path, fps: float, info: dict, cfg: dict) -> N
     vf = [f"fps={rate_fraction(fps)}"]
     if v["display_width"] > cfg["proxy_max_width"]:
         vf.append(f"scale={cfg['proxy_max_width']}:-2:flags=lanczos")
+    elif int(v["display_width"]) % 2 or int(v["display_height"]) % 2:
+        # 2026-11-10 review: a screen recording of an odd size (1919x1079) and a variable rate stopped the analysis
+        # here - libx264 takes even sizes only. The last column / row is left out (no resampling); even sizes: as before
+        vf.append("crop=trunc(iw/2)*2:trunc(ih/2)*2:0:0")
     cmd = [tool("ffmpeg"), "-y", "-v", "error", "-i", str(src), "-map", "0:v:0", "-map", "0:a:0?",
            "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "fast", "-crf", str(cfg["proxy_crf"]),
            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", str(dst)]

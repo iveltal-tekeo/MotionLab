@@ -347,6 +347,17 @@ def apply(plan: dict, ops: list[dict]) -> tuple[dict, list[str], list[dict]]:
                   else [s["f"] for s in steps if s["op"] == "graphic"])
             P["cues"] += [{"f": f, "kind": o["kind"], "what": f"{o['on']} (list line {o['line']})"} for f in at]
             done.append(f"sfx {o['kind']} on {len(at)} {o['on']}")
+    # 2026-11-10 review: a cut was never held against the video's length or the other cuts - one that ran past the
+    # end still took its whole length off "frames" (below zero for one that started past it), and two that overlapped
+    # were applied one after the other, the second on frames the first had already moved (202 frames gone for 151)
+    last = None
+    for o in sorted((o for o in ops if o["op"] == "cut"), key=lambda o: o["a"]):
+        if not 0 <= o["a"] <= o["b"] < int(P["frames"]):
+            raise ListError(f"line {o['line']}: cut f{o['a']}-f{o['b']} is outside the video (f0-f{int(P['frames']) - 1})")
+        if last is not None and o["a"] <= last["b"]:
+            raise ListError(f"line {o['line']}: cut f{o['a']}-f{o['b']} overlaps the cut f{last['a']}-f{last['b']} of "
+                            f"line {last['line']} - write them as one cut")
+        last = o
     for o in sorted((o for o in ops if o["op"] == "cut"), key=lambda o: -o["a"]):
         cut(P, o["a"], o["b"])
         done.append(f"cut f{o['a']}-f{o['b']} ({o['b'] - o['a'] + 1} frames)")

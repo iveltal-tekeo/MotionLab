@@ -77,10 +77,16 @@ def resolve(arg: str) -> dict:
         drop = bool(((ev.get("config") or {}).get("timecode") or {}).get("drop_frame"))
         return {"name": name, "dir": d, "fps": float(v["fps"]), "frames": int(v["frames"]),
                 "video": Path(ev.get("source", {}).get("path") or ""), "drop": drop}
-    from motionlab.probe import probe
+    from motionlab.probe import probe, snap_rate
     info = probe(p)
-    fps = float(info.get("fps") or 25)
-    return {"name": name, "dir": d, "fps": fps, "frames": int(info.get("frames") or round((info.get("duration_s") or 0) * fps)),
+    # 2026-11-10 review: this read info["fps"] / info["frames"], keys probe() never had - so a video without an
+    # analysis was always 25 fps and every frame and timecode of its transcript was off. The rate as tools\notes.py
+    # reads it: a phone's variable rate by its average, snapped to the standard rates
+    v = info.get("video") or {}
+    r, a = v.get("r_fps"), v.get("avg_fps")
+    fps = snap_rate(float(a if (r and a and abs(r - a) / a > 0.01) else (r or a or 25)))
+    return {"name": name, "dir": d, "fps": fps,
+            "frames": int(v.get("nb_frames") or round((info.get("duration_s") or 0) * fps)),
             "video": p.resolve(), "drop": False}
 
 

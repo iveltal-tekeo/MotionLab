@@ -5,6 +5,22 @@ What changed in each version of MotionLab, newest first. When a new version is o
 Version numbers: a new `0.x.0` is a big step; `0.x.y` adds a smaller feature; a four-part `0.x.y.z` is a small step
 between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: [CHANGELOG.es.md](CHANGELOG.es.md).
 
+## Unreleased
+
+- **Sturdier when something is cancelled, fails or is tried again** - fixes from a review of the whole code. *Remove*
+  on a job now stops everything it started (a cancelled render no longer keeps rendering in the background), and a
+  job can no longer stay "running" for ever and hold the queue. A render that fails half-way never leaves a short
+  video listed as a finished version, the leftovers of a cancelled render no longer make the next one fail, and a plan
+  with something the renderer does not know is refused in the first seconds instead of minutes in. A graphic pinned to
+  your face no longer jumps part-way through a fast render. In the Editor your changes stay safe until the new version
+  is really made - if the save fails or you take it off the queue, they come back as unsaved changes - and a save that
+  failed once can be tried again. One video with a broken plan no longer empties the whole Editor list.
+- **Smaller fixes** - a window left open while MotionLab was started again reloads itself instead of refusing every
+  button; *Free space* on the app's own folder only takes what the app can make again (never the speech-to-text
+  models, sounds made with ElevenLabs or your history); a double click on *Quick draft* starts one draft; an
+  odd-sized screen recording with an uneven frame rate can be analysed; the words of a video you have not analysed
+  use its real frame rate (a slow webcam's too); the rebuild notes of an analysis give every frame with its timecode.
+
 ## 0.6.0.10 - 2026-11-03 - Check the shots before the render, and browse for your own videos
 
 - **Videos you analysed with SPARK are references now** - New edit's *References*, *Edit several videos* and

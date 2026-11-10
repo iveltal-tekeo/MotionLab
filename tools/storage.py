@@ -33,6 +33,10 @@ from motionlab.util import LAB, setup_console  # noqa: E402
 RESOLVE_LUTS = Path(r"C:\ProgramData\Blackmagic Design\DaVinci Resolve\Support\LUT\MotionLab")
 CATS = ("source", "keep", "cache", "checks", "finals", "env")
 PRUNABLE = ("cache", "checks", "finals")
+# the folders of .app the app fills again by itself: pictures of videos, the thumbnail preview's feed, test scratch,
+# the Editor's sounds to hear, uploads on their way into the sound library, zips made for sharing, the Claude
+# windows' launchers (read once, when a window opens)
+APP_CACHE = ("thumbs", "thumbfeed", "dev", "tmp", "editor", "sound_import", "share", "launch")
 HOW = {"analysis cache": "analyze.py \"<video>\" redoes the signal pass (minutes); --redetect needs it",
        "footage cache": "prep_footage.py <project> rebuilds it (needed by render_video.py and resolve_build.py "
                         "--refresh-stills)",
@@ -62,7 +66,14 @@ def classify(rel: Path, used: dict) -> tuple[str, str]:
     if p[0] == ".venv":
         return "env", "python environment"
     if p[0] == ".app":
-        return ("cache", "player copies") if len(p) > 2 and p[1] == "player" else ("cache", "app cache")
+        # 2026-11-10 review: everything in .app counted as cache, so Free space on its row took the speech-to-text
+        # models (a 700 MB download), the sounds made with ElevenLabs, the log of what was deleted, the batches and
+        # What it took's history. Cache = only what the app makes again by itself; the rest is the app's own data
+        if len(p) > 2 and p[1] == "player":
+            return "cache", "player copies"
+        if len(p) > 2 and (p[1] in APP_CACHE or (p[1] == "jobs" and rel.suffix.lower() == ".log")):
+            return "cache", "app cache"
+        return "keep", "app data"
     if "__pycache__" in p:
         return "cache", "python cache"
     if p[0] == "refs":
@@ -188,6 +199,7 @@ def prune(files, target: str, what: set, yes: bool) -> int:
         return 0
     roots = [LAB / "analysis", LAB / "projects", LAB / "tools" / "selftest", LAB / ".app"]
     notes: dict[Path, list] = {}
+    in_use = []
     for rel, size, cat, w in sel:
         fp = (LAB / rel).resolve()
         # last line of defence: only below the lab's own output folders, never a source
@@ -195,7 +207,13 @@ def prune(files, target: str, what: set, yes: bool) -> int:
             raise SystemExit(f"refusing to delete {fp}")
         if rel.parts[0] == "projects" and (len(rel.parts) < 4 or rel.parts[2] != "build"):
             raise SystemExit(f"refusing to delete {fp} (project footage)")
-        fp.unlink()
+        try:
+            fp.unlink()
+        except PermissionError:                        # open somewhere: this very job's log (the app keeps it open),
+            in_use.append((rel, size))                 # a video the window plays - it stays, the rest goes on
+            continue                                   # (2026-11-10 review: the job stopped here, half done)
+        except FileNotFoundError:
+            continue
         u = unit_of(rel)
         home = LAB / u if u.startswith(("analysis", "projects")) else None
         if home is not None and u.startswith("projects"):
@@ -213,7 +231,10 @@ def prune(files, target: str, what: set, yes: bool) -> int:
             d.rmdir()                                  # remove folders the prune emptied
         except OSError:
             pass
-    print(f"freed {gb(total).strip()}")
+    print(f"freed {gb(total - sum(s for _, s in in_use)).strip()}")
+    if in_use:
+        print(f"left {len(in_use)} file(s) that are open somewhere ({gb(sum(s for _, s in in_use)).strip()}): "
+              + ", ".join(str(r) for r, _ in in_use[:5]) + (" ..." if len(in_use) > 5 else ""))
     return 0
 
 

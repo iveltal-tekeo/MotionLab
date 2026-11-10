@@ -62,7 +62,7 @@ def beat_info(frame: float, audio: dict | None, fps: float, tol: float) -> dict 
             "beat_period_frames": audio.get("beat_period_frames")}
 
 
-def timing_summary(ev: dict, audio: dict | None, fps: float, tol: float) -> dict:
+def timing_summary(ev: dict, audio: dict | None, fps: float, tol: float, drop_tc: bool = False) -> dict:
     pts = {"start": ev["start"], "key": ev["key"], "end": ev["end"]}
     out = {k: beat_info(v, audio, fps, tol) for k, v in pts.items()}
     if out["start"] is None:
@@ -75,7 +75,7 @@ def timing_summary(ev: dict, audio: dict | None, fps: float, tol: float) -> dict
         where = {"key": "lands", "start": "starts", "end": "ends"}[k]
         pos = f"bar {b['bar']} beat {b['beat_in_bar']}" if b["bar"] else f"beat {b['beat_index'] + 1}"
         txt = (f"{where} on the beat ({pos}{', bar start' if b['downbeat'] else ''}; "
-               f"offset {b['offset_frames']:+.1f} f at {ev[k] if k != 'key' else ev['key']})")
+               f"offset {b['offset_frames']:+.1f} f at f{int(ev[k])} ({frame_to_tc(int(ev[k]), fps, drop_tc)}))")
     else:
         b = out["key"]
         txt = f"not on a beat (nearest beat {b['offset_frames']:+.1f} frames from the key frame)"
@@ -131,23 +131,26 @@ def _pct(x):
     return f"{x:.0f}%"
 
 
-def rebuild(ev: dict, fps: float) -> str:
+def rebuild(ev: dict, fps: float, drop_tc: bool = False) -> str:
     t = ev["type"]
     comps = {c["type"]: c for c in ev["components"]}
     c = comps.get(t, ev["components"][0])
     e = c.get("evidence", {}) or {}
     n = ev["duration_frames"]
     s0, s1 = ev["start"], ev["end"]
+    # hard rule 2 (2026-11-10 review: these texts named bare frame numbers): a frame always with its timecode
+    at = lambda f: f"f{int(f)} ({frame_to_tc(int(f), fps, drop_tc)})"                      # noqa: E731
+    span = f"{at(s0)} - {at(s1)}"
     if t in ("flash_white", "flash"):
         decay = e.get("decay_luma_pct", [])
         peak = "100%" if t == "flash_white" else _pct(max(10, (e.get("peak_luma_pct", 60) - e.get("luma_before_pct", 40))))
-        return (f"Edit page: Solid Color generator (white) on V2 starting at frame {s0}, {n} frames long; "
-                f"Inspector > Composite > Opacity keyframes {peak} on the first frame falling to 0% on frame {s1 + 1} "
+        return (f"Edit page: Solid Color generator (white) on V2 starting at {at(s0)}, {n} frames long; "
+                f"Inspector > Composite > Opacity keyframes {peak} on the first frame falling to 0% on {at(s1 + 1)} "
                 f"(measured decay {' > '.join(str(v) + '%' for v in decay)} luma), ease the last keyframe for a soft tail. "
                 f"Fusion: Background (white) > Merge over MediaIn, Merge Blend keyframed 1.0 > 0.0 over {n} frames."
-                + (f" Place the clip cut under the white frame ({ev['cuts'][0]})." if ev.get("cuts") else ""))
+                + (f" Place the clip cut under the white frame ({at(ev['cuts'][0])})." if ev.get("cuts") else ""))
     if t == "flash_black":
-        return f"Edit page: leave {n} frame(s) of gap (or a black Solid Color) between the two clips at frame {s0}."
+        return f"Edit page: leave {n} frame(s) of gap (or a black Solid Color) between the two clips at {at(s0)}."
     if t in ("dip_black", "dip_white", "fade_in", "fade_out"):
         col = "black" if "black" in t or t.startswith("fade") else "white"
         o, h, i = e.get("ramp_out_frames", 0), e.get("hold_frames", 0), e.get("ramp_in_frames", 0)
@@ -161,7 +164,7 @@ def rebuild(ev: dict, fps: float) -> str:
                 f"{i}-frame Cross Dissolve out of it.")
     if t == "crossfade":
         return (f"Edit page: Video Transitions > Dissolve > 'Cross Dissolve', duration {n} frames ({n / fps:.2f}s), "
-                f"alignment Centre on Edit (frames {s0}-{s1}); easing measured: {e.get('easing', '?')}. Fusion: Merge "
+                f"alignment Centre on Edit ({span}); easing measured: {e.get('easing', '?')}. Fusion: Merge "
                 f"(Background = outgoing, Foreground = incoming) with Blend keyframed 0 > 1 over {n} frames.")
     if t == "wipe":
         return (f"Edit page: Video Transitions > Wipe > 'Edge Wipe', {n} frames, set the angle so the "
@@ -182,7 +185,7 @@ def rebuild(ev: dict, fps: float) -> str:
     if t == "zoom_transition":
         out_, in_ = e.get("outgoing") or {}, e.get("incoming") or {}
         cut = e.get("cut", ev["key"])
-        txt = f"Cut on frame {cut}. "
+        txt = f"Cut on {at(cut)}. "
         if out_:
             k = len(out_.get("scale_per_frame", []))
             txt += (f"Outgoing clip, last {k} frames: Fusion Transform Size keyframes 1.0 > {out_.get('total_scale', 2):.2f} "
@@ -197,35 +200,35 @@ def rebuild(ev: dict, fps: float) -> str:
     if t in ("zoom_in", "zoom_out"):
         tot = e.get("total_scale", 1.1)
         k = len(e.get("scale_per_frame", [])) or n
-        return (f"Edit page Inspector > Transform > Zoom keyframes 1.00 at frame {s0 - 1} > {tot:.2f} at frame {s1} "
+        return (f"Edit page Inspector > Transform > Zoom keyframes 1.00 at {at(max(0, s0 - 1))} > {tot:.2f} at {at(s1)} "
                 f"({k} frame(s), {e.get('easing', '')}). For a punch on the beat put the keyframes 1-2 frames apart; "
                 f"add Motion Blur via a Fusion Transform (Motion Blur on) for the smear.")
     if t == "whip_pan":
         return (f"Fusion: Transform Center keyframed so the frame travels ~{e.get('peak_speed_pct_per_frame', 20)}% of its "
-                f"width per frame at the peak (frames {s0}-{s1}), Edges: Mirror, Motion Blur on (Quality 8+, Shutter "
+                f"width per frame at the peak ({span}), Edges: Mirror, Motion Blur on (Quality 8+, Shutter "
                 f"Angle 360) or Directional Blur (Linear) with Length keyframed to the speed."
-                + (f" Cut at the blur peak (frame {ev['cuts'][0]}) and continue the move on the incoming clip."
+                + (f" Cut at the blur peak ({at(ev['cuts'][0])}) and continue the move on the incoming clip."
                    if ev.get("cuts") else ""))
     if t == "spin":
-        return (f"Fusion: Transform Angle keyframed {e.get('total_deg', 90):+.0f} deg over frames {s0}-{s1} "
+        return (f"Fusion: Transform Angle keyframed {e.get('total_deg', 90):+.0f} deg over {span} "
                 f"({e.get('easing', '')}), Size ~1.4 to hide the corners, Motion Blur on.")
     if t == "shake":
-        return (f"Edit page: Effects > Fusion Effects > 'Camera Shake' on frames {s0}-{s1} (or Fusion: Shake modifier on "
+        return (f"Edit page: Effects > Fusion Effects > 'Camera Shake' on {span} (or Fusion: Shake modifier on "
                 f"Transform Center): deviation ~{e.get('rms_jitter_pct', 1)}% of the frame, high rate, low smoothness; "
                 f"keyframe the strength so it hits on the beat and decays.")
     if t == "speed_ramp":
-        return (f"Edit page: Ctrl+R (Retime Controls), add speed points around frame {ev['key']}, set the speeds to "
+        return (f"Edit page: Ctrl+R (Retime Controls), add speed points around {at(ev['key'])}, set the speeds to "
                 f"match the measured {e.get('motion_before_pct')} > {e.get('motion_after_pct')} %/frame motion, and smooth "
                 f"the Retime Curve; Retime Process: Optical Flow.")
     if t == "freeze":
-        return (f"Edit page: blade at frame {s0}, Ctrl+R (Retime Controls) > Freeze Frame, and set the freeze to "
+        return (f"Edit page: blade at {at(s0)}, Ctrl+R (Retime Controls) > Freeze Frame, and set the freeze to "
                 f"{n} frames ({n / fps:.2f}s); playback resumes from the next frame.")
     if t == "stutter":
         ks = e.get("repeat_distance_frames") or [4]
         k = max(set(ks), key=ks.count)
         reps = max(1, round(n / max(1, k)))
-        return (f"Edit page: blade the {k}-frame chunk starting at frame {s0}, then Alt-drag copies so it plays {reps}x "
-                f"back-to-back (frames {s0}-{s1}). Fusion alternative: TimeStretcher with Source Time keyframed as a "
+        return (f"Edit page: blade the {k}-frame chunk starting at {at(s0)}, then Alt-drag copies so it plays {reps}x "
+                f"back-to-back ({span}). Fusion alternative: TimeStretcher with Source Time keyframed as a "
                 f"{k}-frame saw-tooth.")
     if t == "frame_repeat":
         return ("Fusion: TimeStretcher with Source Time = floor(time/2)*2 (holds every frame twice, 'on 2s'); or "
@@ -237,27 +240,27 @@ def rebuild(ev: dict, fps: float) -> str:
         r, b = e.get("red_offset_px", [0, 0]), e.get("blue_offset_px", [0, 0])
         return (f"Fusion: three Channel Booleans nodes isolate red, green and blue (other channels set to Black); "
                 f"Transform the red copy by {r[0]:+.0f} px X / {r[1]:+.0f} px Y and the blue copy by {b[0]:+.0f} px X / "
-                f"{b[1]:+.0f} px Y; Merge the three back with Apply Mode 'Screen'. Keyframe the offset over frames "
-                f"{s0}-{s1} (measured per frame: {', '.join(str(x) for x in e.get('shift_per_frame_px', []))} px).")
+                f"{b[1]:+.0f} px Y; Merge the three back with Apply Mode 'Screen'. Keyframe the offset over "
+                f"{span} (measured per frame: {', '.join(str(x) for x in e.get('shift_per_frame_px', []))} px).")
     if t == "glitch":
         return (f"Fusion: copy the clip, cut 2-4 horizontal bands with Rectangle masks, offset each with a Transform "
-                f"(Center X by a few %) for frames {s0}-{s1}, Merge back, add an RGB offset on the same frames. "
+                f"(Center X by a few %) for {span}, Merge back, add an RGB offset on the same frames. "
                 f"Quick version: Effects > Fusion Effects > 'Digital Glitch'.")
     if t == "blur":
-        return (f"Edit page: Effects > ResolveFX Blur > 'Gaussian Blur', keyframe strength 0 > peak > 0 over frames "
-                f"{s0}-{s1} (detail measured down to {e.get('sharpness_ratio_min', 0.2):.0%} of normal). Across a cut use "
+        return (f"Edit page: Effects > ResolveFX Blur > 'Gaussian Blur', keyframe strength 0 > peak > 0 over "
+                f"{span} (detail measured down to {e.get('sharpness_ratio_min', 0.2):.0%} of normal). Across a cut use "
                 f"the 'Blur Dissolve' transition. Fusion: Blur node, Blur Size keyframed.")
     if t == "flash_color":
         return (f"Edit page: Solid Color generator (tint hue ~{e.get('tint_hue_deg', 0):.0f} deg in Lab a/b) on V2 for "
-                f"frames {s0}-{s1}, Composite Mode 'Screen' or 'Add', Opacity keyframed peak > 0.")
+                f"{span}, Composite Mode 'Screen' or 'Add', Opacity keyframed peak > 0.")
     if t == "invert":
-        return (f"Edit page: blade frames {s0}-{s1} and add Effects > ResolveFX Color > 'Invert Color' (or Color page: "
+        return (f"Edit page: blade {span} and add Effects > ResolveFX Color > 'Invert Color' (or Color page: "
                 f"invert the YRGB curve).")
     if t == "sat_pop":
         return (f"Color page: dynamic keyframes on a node's Saturation: {e.get('sat_before_pct')} > {e.get('sat_after_pct')} "
-                f"(% of max) at frame {ev['key']}.")
+                f"(% of max) at {at(ev['key'])}.")
     if t == "light_leak":
-        return (f"Edit page: light-leak stock clip on V2 over frames {s0}-{s1}, Composite Mode 'Screen', Opacity "
+        return (f"Edit page: light-leak stock clip on V2 over {span}, Composite Mode 'Screen', Opacity "
                 f"keyframed in/out. Fusion: FastNoise (low Detail, high Contrast, Seethe animated) > Color Corrector "
                 f"(orange) > Merge Apply Mode Screen.")
     if t == "split_screen":
@@ -273,7 +276,7 @@ def rebuild(ev: dict, fps: float) -> str:
 
 def draft(ev: dict, m: dict, audio: dict | None, fps: float, cfg: dict, drop_tc: bool) -> dict:
     tol = cfg["audio"]["on_beat_tolerance_frames"]
-    timing = timing_summary(ev, audio, fps, tol)
+    timing = timing_summary(ev, audio, fps, tol, drop_tc)
     origin, why = origin_guess(ev, m)
     notes = []
     for comp in ev["components"]:
@@ -301,5 +304,5 @@ def draft(ev: dict, m: dict, audio: dict | None, fps: float, cfg: dict, drop_tc:
         "timing_points": timing["points"],
         "easing": easing or "n/a",
         "confidence": confidence_guess(ev),
-        "rebuild": rebuild(ev, fps),
+        "rebuild": rebuild(ev, fps, drop_tc),
     }

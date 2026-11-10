@@ -7,6 +7,25 @@ Qué cambia en cada versión de MotionLab, de la más nueva a la más antigua, d
 que no está aquí sale en inglés. Números de versión: una `0.x.0` nueva es un gran paso; una `0.x.y` añade algo más
 pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arreglos, mantenimiento, pulido).
 
+## Sin publicar
+
+- **Más sólido cuando algo se cancela, falla o se repite** - arreglos de una revisión de todo el código. *Quitar* en
+  una tarea detiene ahora todo lo que había puesto en marcha (un render cancelado ya no sigue renderizando por
+  detrás), y una tarea ya no puede quedarse «en marcha» para siempre y bloquear la cola. Un render que falla a medias
+  nunca deja un vídeo corto como si fuera una versión terminada, los restos de un render cancelado ya no hacen fallar
+  el siguiente, y un plan con algo que el renderizador no conoce se rechaza en los primeros segundos en vez de a los
+  minutos. Un gráfico fijado a tu cara ya no salta a mitad de un render rápido. En el Editor tus cambios están a salvo
+  hasta que la nueva versión está hecha de verdad - si el guardado falla o lo quitas de la cola, vuelven como cambios
+  sin guardar - y un guardado que falló una vez se puede repetir. Un vídeo con un plan roto ya no vacía toda la lista
+  del Editor.
+- **Arreglos pequeños** - una ventana que quedó abierta mientras MotionLab se iniciaba de nuevo se recarga sola en vez
+  de rechazar todos los botones; *Liberar espacio* en la carpeta de la propia app solo se lleva lo que la app puede
+  volver a hacer (nunca los modelos de voz a texto, los sonidos hechos con ElevenLabs ni tu historial); un doble clic
+  en *Borrador rápido* inicia un solo borrador; una grabación de pantalla de tamaño impar con una velocidad de
+  fotogramas irregular ya se puede analizar; las palabras de un vídeo que no has analizado usan su velocidad real
+  (también la de una webcam lenta); las notas de reconstrucción de un análisis dan cada fotograma con su código de
+  tiempo.
+
 ## 0.6.0.10 - 2026-11-03 - Revisa los planos antes del render y examina tus propios vídeos
 
 - **Los vídeos que analizaste con SPARK ya sirven de referencia** - Las *Referencias* de Nueva edición, *Editar varios

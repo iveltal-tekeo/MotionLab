@@ -589,6 +589,7 @@ async function liveTick() {
 
 // heartbeat: keeps the server alive while the window is open; shows jobs + Resolve; notices updates / restarts
 const PAGE_VERSION = (document.querySelector('meta[name=ml-version]') || {}).content || '';
+let SERVER_BOOT = 0;                                       // the server's start as the first ping gave it (ping)
 const API_LEVEL = 59;       // the server functions this page needs (server.API_LEVEL)
 let RELOADING = false;
 window.addEventListener('unhandledrejection', e => toast(t('Something went wrong: {err}', {err: (e.reason && e.reason.message) || e.reason}), 'err'));
@@ -630,6 +631,10 @@ async function ping() {
     if (p.phase === 'updating' || p.phase === 'restarting') { waitForServer(p.phase === 'updating' ? t('Updating MotionLab from GitHub…') : t('Restarting MotionLab…')); return; }
     if ((p.api || 1) < API_LEVEL) banner('oldsrv', `${t('MotionLab was updated but its server is still the old one.')} <button class="btn sm pri">${t('Restart now')}</button>`, restartApp);
     else if (PAGE_VERSION && p.version !== PAGE_VERSION) { location.reload(); return; }
+    // the server was started again since this window opened (the PC slept, MotionLab.bat again): the same version, but
+    // a new session token - every button of this window was refused. Loaded again it has the new one (2026-11-10
+    // review); a server from before that sends no "boot" - nothing to compare
+    if (p.boot) { if (SERVER_BOOT && p.boot !== SERVER_BOOT) { location.reload(); return; } SERVER_BOOT = p.boot; }
     sideUpdate(p);
     liveLine(p.claude || []);
     $('#jobcount').textContent = p.running || '';

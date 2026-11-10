@@ -593,7 +593,17 @@ def waiting() -> list[dict]:
 
 # ================================================================================================= projects
 def _plan_info(p: Path) -> dict:
+    """A plan's row for the pages. A plan they cannot read (written with "layers": null, "fps": "30fps", a list in
+    place of the plan) still gets its row - empty, with "problem" - where it used to fail the Editor's whole list, and
+    Home and New edit with it (2026-11-10 review)."""
     pl = read_json(p, {}) or {}
+    try:
+        return _plan_row(p, pl)
+    except Exception as e:                                # noqa: BLE001 - whatever is wrong with that one file
+        return {**_plan_row(p, {}), "problem": f"{type(e).__name__}: {e}"[:200]}
+
+
+def _plan_row(p: Path, pl: dict) -> dict:
     made = pl.get("made_by") or {}
     if not isinstance(made, dict):  # hand-written plans note the tool as one string
         made = {"tool": str(made)}
@@ -711,6 +721,8 @@ def list_projects() -> list[dict]:
         outcome = read_json(b / "outcome.json", {}) or {}
         made = read_json(b / "made_from.json", []) or []
         pkg = read_json(b / "publish" / "package.json", {}) or {}
+        outcome, pkg = (x if isinstance(x, dict) else {} for x in (outcome, pkg))    # (a file of another shape: empty)
+        made = made if isinstance(made, list) else []
         nt = newest.stat().st_mtime if newest else None
         created = _created(d)
         out.append({
@@ -1006,7 +1018,9 @@ def project(name: str) -> dict:
         r.update(fps=pl.get("fps"), frames=pl.get("frames"), width=pl.get("width"), height=pl.get("height"))
         renders.append(r)
     newest = max(renders, key=lambda r: r["mtime"]) if renders else None
-    made = read_json(b / "made_from.json", []) or []
+    # copies (2026-11-10 review): read_json hands out its cached objects, and the names added below for the page were
+    # written into made_from.json by the next add_made_from - a script's title of that day, kept for good
+    made = [dict(x) if isinstance(x, dict) else x for x in (read_json(b / "made_from.json", []) or [])]
     for x in made:                                    # Film it: "From the script: <its title>"
         if isinstance(x, dict) and x.get("kind") == "prompt":
             try:

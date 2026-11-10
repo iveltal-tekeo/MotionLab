@@ -99,7 +99,7 @@ its docstring (run it without arguments).
   played live on the app's Home) -> `roadmap.png` (README; `roadmap.mp4` stays local)
 - `.app\` the app's cache and logs (`server.log`, `deleted.log`, `install.log`, `jobs\` + `jobs\history.jsonl` (0.4.4:
   jobs ended), `batches\` (0.4.5: bulk Claude work - `/analyze-reference batch <id>`, `/recreate-video batch <id>`),
-  `player\` (player copies), `open_claude.cmd`, `server.json`);
+  `player\` (player copies), `launch\claude_<time>.cmd` (a Claude window's launcher), `server.json`);
   `settings.json` = the user's app settings; `.claude\skills\` = `analyze-reference\` (+ `lessons.md`),
   `write-script\` (+ `guidelines.md`), `write-title\` (+ `guidelines.md`), `recreate-video\`, `generate-video\`,
   `write-prompt\`, `whats-next\`

@@ -54,7 +54,11 @@ def probe(media: str | Path) -> dict:
         v["width"], v["height"] = v.get("height"), v.get("width")
     num, _, den = str(v.get("avg_frame_rate") or "0/1").partition("/")
     fps = float(num) / float(den or 1) if float(den or 1) else 0.0
-    fps = min(RATES, key=lambda r_: abs(r_ - fps)) if fps else 30.0
+    if fps:                                             # a phone's uneven rate -> the usual rate it means; a rate far
+        near = min(RATES, key=lambda r_: abs(r_ - fps))  # from every usual one stays what it is (2026-11-10 review: a
+        fps = near if abs(near - fps) / fps <= 0.12 else round(fps, 3)   # 15 fps webcam became 23.976, 120 fps 60 -
+    else:                                               # every frame and timecode of its words off by that much)
+        fps = 30.0
     dur = float((d.get("format") or {}).get("duration") or 0)
     return {"width": v.get("width"), "height": v.get("height"), "fps": fps, "duration_s": dur,
             "frames": int(round(dur * fps)), "has_video": bool(v),

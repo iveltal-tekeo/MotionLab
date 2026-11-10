@@ -23,7 +23,7 @@ from datetime import date, datetime
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-from .util import LAB
+from .util import LAB, write_json
 
 PATH = Path(__import__("os").environ.get("MOTIONLAB_STATS") or LAB / "knowledge" / "local" / "stats.json")  # (tests)
 PLATFORMS = ("youtube", "tiktok", "instagram", "facebook", "x", "linkedin", "threads")
@@ -250,8 +250,8 @@ def import_file(src: Path, platform: str | None = None, name: str = "", path: Pa
                                                       "date": time.strftime("%Y-%m-%d %H:%M")}]
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(S, indent=1, ensure_ascii=False), encoding="utf-8")
-    return {"platform": plat, "rows": len(rows), "new": new, "updated": upd, "columns": keys}
+    write_json(p, S, indent=1)                      # whole or not at all: a half-written file read back as "no stats
+    return {"platform": plat, "rows": len(rows), "new": new, "updated": upd, "columns": keys}   # yet" and was replaced
 
 
 def selfcheck() -> dict:

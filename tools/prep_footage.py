@@ -433,6 +433,9 @@ def main() -> int:
         return 1
     log(f"project {prj.name}: {len(files)} source file(s); hashing (read-only)")
     man = prj.register_sources()
+    if prj.changed:                                 # (hard rule 1: a change of a source is always said)
+        log(f"NOTE: not the same file as when it was last read here: {', '.join(prj.changed)} - replaced or "
+            f"exported again since; its caches are made from the new file")
     current = {str(f) for f in files}               # a junk file listed by an older version is never cached
     for sid, ent in sorted(man["sources"].items()):
         if Path(ent["path"]).exists() and ent["path"] in current:

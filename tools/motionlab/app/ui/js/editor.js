@@ -90,6 +90,17 @@ function projEditor(el, P) {
     let back = null;
     try { back = JSON.parse(localStorage.getItem(store()) || 'null'); } catch (e) { back = null; }
     if (back && back.ops && back.ops.length && back.sig && back.sig !== planSig(base)) back = null;   // the plan changed since
+    if (back && back.job && back.ops && back.ops.length) {    // sent with Save (2026-11-10): unsaved again only when
+      let j = null;                                           // that job never made its version
+      try { j = await api(`/api/jobs/${back.job}?since=999999`); } catch (e) { j = null; }   // (job numbers start again
+      if (my !== loadNo || gone) return;                                                     // with the server: its
+      const st = j && j.kind === 'miniedit' && j.args && j.args.changes === back.ch ? j.status : 'gone';   // changes file)
+      const vn = p => +String((p || {}).version || '').replace(/\D/g, '') || 0;                   // "v12" -> 12
+      const v0 = vn(P.plans.find(p => p.file === plan));
+      if (st === 'running' || st === 'queued' || st === 'cancelling') back = null;                // still being saved
+      else if (st === 'done' || (st === 'gone' && P.plans.some(p => vn(p) > v0))) {               // saved: forget them
+        back = null; try { localStorage.removeItem(store()); } catch (x) { /* private window */ } }
+    }
     if (back && back.ops && back.ops.length) {
       try { const S2 = await api(`/api/project/${enc}/miniedit/preview`, {plan, ops: back.ops});
         if (my !== loadNo || gone) return;
@@ -1445,7 +1456,13 @@ function projEditor(el, P) {
     const b = $('#edsave', el);
     b.disabled = true; await settle();
     if (!ops.length) { b.disabled = false; return; }
-    try { await api(`/api/project/${enc}/miniedit`, {plan, ops}); ops = []; labels = []; keep(); saving = true; if (pv) pv.pause();
+    try { const J = await api(`/api/project/${enc}/miniedit`, {plan, ops});
+      // 2026-11-10 review: the changes were dropped here, before the job had made anything of them - a save that
+      // failed or was taken off the queue lost them. They stay in this window's backup, marked with their job, and
+      // come back as unsaved changes if it never makes the new version (loadPlan)
+      try { if (J && J.id && J.args && J.args.changes) localStorage.setItem(store(), JSON.stringify({ops, labels, sig: planSig(base), job: J.id, ch: J.args.changes}));
+        else localStorage.removeItem(store()); } catch (x) { /* private window */ }
+      ops = []; labels = []; saving = true; if (pv) pv.pause();
       toast(t('Saving your changes as a new version - it shows here when it is ready.'), 'ok'); route(); }
     catch (e) { toast(e.message, 'err'); b.disabled = false; }    // (route: the page's progress panel follows the job)
   };
