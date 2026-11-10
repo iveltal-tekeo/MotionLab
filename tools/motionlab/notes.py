@@ -125,6 +125,15 @@ def _index(tr: dict) -> list[tuple[str, int]]:
     return out
 
 
+def quote_pieces_ok(quote: str) -> bool:
+    """A quote cut with ... / …: every piece at least QUOTE_MIN_WORDS words. 2026-11-10 review: pieces were only
+    counted together, so "you ... never ... sleep" passed as a quote of a transcript that says "you should sleep
+    early and never skip a meal or sleep too late" - single words up to 300 words apart quote nothing. None of the
+    1,053 quotes in the user's 42 notes that day was cut with ..., so no saved note depends on the old rule."""
+    pieces = [p for p in (_tokens(x) for x in re.split(r"\.\.\.|…", quote)) if p]
+    return len(pieces) <= 1 or all(len(p) >= QUOTE_MIN_WORDS for p in pieces)
+
+
 def find_quote(idx: list[tuple[str, int]], quote: str, hint: int | None = None) -> tuple[int, int] | None:
     """(first frame, last frame) of a quote's words in the transcript - pieces split by ... / … must follow each
     other within 300 words; between repeats the one nearest the hint frame. None when it is not there."""
@@ -206,6 +215,9 @@ def _evidence(C: dict, where: str, it: dict, out: dict, bad: list[str]) -> None:
             bad.append(f"{where}: the quote has {len(q)} characters - quote at most {QUOTE_MAX_CHARS}")
         elif len(_tokens(q)) < QUOTE_MIN_WORDS:
             bad.append(f"{where}: quote at least {QUOTE_MIN_WORDS} words, so it points at one place")
+        elif not quote_pieces_ok(q):
+            bad.append(f"{where}: every piece of a quote cut with ... needs at least {QUOTE_MIN_WORDS} words of its "
+                       f"own: {q[:120]!r}")
         elif not idx:
             bad.append(f"{where}: there is no transcript to quote - point at a frame of the sheets (shown) instead")
         else:
@@ -901,3 +913,89 @@ def show_text(name: str) -> str:
     L.append("notes: " + ("written " + str((_load(d / 'notes.json') or {}).get('made')) if (d / "notes.json").exists()
                           else "not written yet"))
     return "\n".join(L)
+
+
+def selfcheck() -> int:
+    """The gate on a made-up folder (no video, no network; 2026-11-10 review: the lab's most used gate had no check of
+    its own): a quote must be said word for word, each piece of one cut with ... needs its own words, a frame shown must
+    be on the sheets, nothing from a sponsor part, a resource only from the description, the limits; nothing is saved
+    on a failure; a good draft is saved with every place as frame + timecode. -> 0 = all passed."""
+    import copy
+    import tempfile
+    global ROOT
+    ok = True
+
+    def check(cond, what):
+        nonlocal ok
+        print(("PASS  " if cond else "FAIL  ") + what)
+        ok = ok and bool(cond)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        old, ROOT = ROOT, Path(tmp)
+        try:
+            d = ROOT / "x"
+            (d / "content").mkdir(parents=True)
+            (d / "frames").mkdir()
+            said = "you should sleep early and never skip a meal or sleep too late because the best ideas come in the morning"
+            ws = [{"w": w, "f": 30 + 10 * i} for i, w in enumerate(said.split())]            # a word every 10 frames
+            ad = [{"w": w, "f": 600 + 10 * i} for i, w in enumerate("this video is sponsored by nobody at all".split())]
+            write_json(d / "content" / "transcript.json", {
+                "source": "made up", "lang": "en", "words": len(ws) + len(ad),
+                "lines": [{"start": 30, "text": said, "words": ws}, {"start": 600, "text": "the ad", "words": ad}]})
+            write_json(d / "content" / "info.json", {"description": "the template: https://example.com/template"})
+            write_json(d / "frames" / "frames.json", {"frames": [{"f": 90}, {"f": 450}]})
+            write_json(d / "note.json", {"schema": SCHEMA, "name": "x", "fps": 30.0, "frames": 900, "drop_frame": False,
+                                         "chapters": [{"title": "one", "start": 0, "end": 899}], "replayed": [[80, 140]],
+                                         "skip": [{"category": "sponsor", "start": 590, "end": 700}]})
+            good = {"kind": "tutorial", "tldr": "Sleep early.", "ai_context": "Notes of a made-up video.",
+                    "takeaways": [{"phrase": "Sleep early", "text": "Go to bed early.", "quote": "you should sleep early"}],
+                    "sections": [{"title": "Sleep", "chapter": 0, "points": [
+                        {"text": "Eat.", "quote": "never skip a meal ... the best ideas come"},
+                        {"text": "On screen.", "shown": 450}]}],
+                    "apply": ["Sleep before midnight."],
+                    "resources": [{"name": "The template", "url": "https://example.com/template"}]}
+
+            def refused(change, words: str) -> bool:
+                dr = copy.deepcopy(good)
+                change(dr)
+                return any(words in b for b in check_draft("x", dr)[1])
+
+            notes, bad = check_draft("x", good)
+            t = (notes.get("takeaways") or [{}])[0]
+            p = ((notes.get("sections") or [{}])[0].get("points") or [{}, {}])
+            check(not bad and (t.get("at"), t.get("end")) == (30, 60) and t.get("at_label") == label(30, 30.0, False),
+                  f"a quote said word for word: its first and last word's frames, as {t.get('at_label')}")
+            check(not bad and (p[0].get("at"), p[0].get("end")) == (80, 200) and p[0].get("replayed") is True,
+                  "two pieces joined by ...: from the first piece's first word to the second's last; in a most-replayed part")
+            check(not bad and p[1].get("shown") == 450 and p[1].get("at_label") == label(450, 30.0, False)
+                  and notes["sections"][0].get("at") == 0, "a frame of the sheets as 'shown'; the section starts with its chapter")
+            check(refused(lambda dr: dr["takeaways"][0].update(quote="you should sleep late"), "not in the transcript"),
+                  "a quote the video does not say: refused")
+            check(refused(lambda dr: dr["takeaways"][0].update(quote="you ... never ... sleep"), "every piece of a quote"),
+                  "single words joined by ...: refused (each piece needs its own 3 words)")
+            check(refused(lambda dr: dr["sections"][0]["points"][1].update(shown=451), "not a frame of the sheets"),
+                  "a frame that is not on the sheets: refused")
+            check(refused(lambda dr: dr["takeaways"][0].update(quote="this video is sponsored"), "inside a sponsor part"),
+                  "a quote from the sponsor's part: refused")
+            check(refused(lambda dr: dr["resources"][0].update(url="https://example.com/other"), "not a link of the video's"),
+                  "a link the description does not give: refused")
+            check(refused(lambda dr: dr["sections"][0]["points"].append({"text": "From nowhere."}), "neither a quote"),
+                  "a point with no quote and no frame: refused")
+            check(refused(lambda dr: dr.update(takeaways=dr["takeaways"] * (MAX_TAKEAWAYS + 1)), f"at most {MAX_TAKEAWAYS}"),
+                  f"more than {MAX_TAKEAWAYS} takeaways: refused")
+            worse = copy.deepcopy(good)
+            worse["takeaways"][0]["quote"] = "you should sleep late"
+            try:
+                save_notes("x", worse)
+                kept = False
+            except ValueError:
+                kept = not (d / "notes.json").exists() and not (d / "notes.md").exists()
+            check(kept, "a draft with a problem: nothing saved")
+            save_notes("x", good)
+            md = (d / "notes.md").read_text(encoding="utf-8") if (d / "notes.md").exists() else ""
+            check((_load(d / "notes.json") or {}).get("takeaways") and label(30, 30.0, False) in md,
+                  "a good draft: notes.json + notes.md, the quote's place in the Markdown as frame + timecode")
+        finally:
+            ROOT = old
+    print("notes selfcheck: " + ("PASS" if ok else "FAIL"))
+    return 0 if ok else 1

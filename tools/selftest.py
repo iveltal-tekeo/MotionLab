@@ -757,6 +757,15 @@ def check_segments() -> dict:
     return {"passed": r["passed"]}
 
 
+def check_notes() -> dict:
+    """Notes' gate (motionlab.notes), no video, no network (2026-11-10): a quote said word for word and its frames, a
+    quote cut with ... (each piece its own words), a frame of the sheets, a sponsor's part, a link of the description,
+    the limits - all refused when wrong; nothing saved on a failure; a good draft saved with its Markdown."""
+    from motionlab import notes as NT
+    print("\n=== Notes: the gate - quotes word for word, frames of the sheets, nothing saved on a failure ===")
+    return {"passed": NT.selfcheck() == 0}
+
+
 def check_spark() -> dict:
     """SPARK - why a video worked (motionlab.spark), no video, no network: the creator's usual (the median of the videos
     around it, the video left out, too few = none, never across YouTube's view-count change), the result words, the
@@ -1146,7 +1155,7 @@ def main() -> int:
                "thumbnail": check_thumbnail(), "publish": check_publish(), "brand": check_brand(), "miniedit": check_miniedit(),
                "facefit": check_facefit(), "light_cache": check_light_cache(), "catalogue": check_catalogue(),
                "person": check_person(), "reframe": check_reframe(), "segments": check_segments(),
-               "spark": check_spark(), "usage": check_usage(), "ratchets": check_ratchets(),
+               "spark": check_spark(), "notes": check_notes(), "usage": check_usage(), "ratchets": check_ratchets(),
                "thumbsets": check_thumbsets(), "textsets": check_textsets(), "fonts": check_fonts(), "logos": check_logos(),
                "motion": check_motion(args.extended or args.only_extended)}
     if not args.only_extended:

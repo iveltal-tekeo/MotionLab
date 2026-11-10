@@ -38,7 +38,8 @@ first (the user's ask: Claude's part runs by itself); finish, then say what you 
 - Name the **kind**: tutorial (steps first), lecture / explainer (the concepts), interview / podcast (the topics, who
   said what), list (the list itself), opinion / news (the claims and their evidence), story, other.
 - Pick the quotes first: the exact words where each idea is said (3+ words, at most 400 characters, word for word
-  from the transcript; `...` joins two pieces of one passage). Then write each point in plain words around its quote.
+  from the transcript; `...` joins two pieces of one passage, each piece 3+ words of its own). Then write each point in
+  plain words around its quote.
 - A point the video only SHOWS (a slide, a value on screen, a step done without words): `"shown": <frame>` - one of
   the frames on the sheets (frames.json), no quote.
 

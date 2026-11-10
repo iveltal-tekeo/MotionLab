@@ -50,6 +50,12 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
   fotogramas irregular ya se puede analizar; las palabras de un vídeo que no has analizado usan su velocidad real
   (también la de una webcam lenta); las notas de reconstrucción de un análisis dan cada fotograma con su código de
   tiempo.
+- **Un corte bajo un desenfoque cuenta como cambio de plano** - un corte escondido bajo un desenfoque (un desenfoque
+  que sale de un plano y entra en el siguiente) faltaba en la lista de planos de un análisis, así que sus planos,
+  cortes por minuto y duraciones de plano salían más lentos de lo que está montado el vídeo - y un borrador con el
+  estilo de ese vídeo también iba más lento. Ahora es un cambio de plano siempre que la imagen antes del efecto y
+  después muestre otro plano; un destello dentro de un mismo plano y el parpadeo de un estroboscópico siguen sin
+  serlo. Los vídeos que ya analizaste mantienen sus números hasta que se analicen de nuevo.
 
 ## 0.6.0.10 - 2026-11-03 - Revisa los planos antes del render y examina tus propios vídeos
 

@@ -31,7 +31,7 @@ import threading
 import time
 from pathlib import Path
 
-from .notes import _index, _tokens, chapters_of, find_quote, replayed_of, transcript  # noqa: F401 (re-exported)
+from .notes import _index, _tokens, chapters_of, find_quote, quote_pieces_ok, replayed_of, transcript  # noqa: F401 (re-exported)
 from .timecode import frame_to_tc, label
 from .util import ANALYSIS, LAB, read_json, safe_name, write_json
 
@@ -399,6 +399,9 @@ def _evidence(C: dict, where: str, ev, bad: list[str]) -> list[dict]:
                 bad.append(f"{w}: the quote has {len(q)} characters - quote at most {QUOTE_MAX_CHARS}")
             elif len(_tokens(q)) < QUOTE_MIN_WORDS:
                 bad.append(f"{w}: quote at least {QUOTE_MIN_WORDS} words, so it points at one place")
+            elif not quote_pieces_ok(q):                    # (notes.quote_pieces_ok: single words joined by ...)
+                bad.append(f"{w}: every piece of a quote cut with ... needs at least {QUOTE_MIN_WORDS} words of its "
+                           f"own: {q[:120]!r}")
             elif not C["idx"]:
                 bad.append(f"{w}: there is no transcript to quote - show a frame (shown) instead")
             else:

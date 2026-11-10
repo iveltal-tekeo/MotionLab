@@ -1444,16 +1444,30 @@ def assemble(ctx: Ctx, comps: list[Comp], cuts: list[dict], jumps: list[dict]):
 SHOT_TRANSITIONS = ("crossfade", "wipe", "mask_reveal", "luma_fade", "push_slide")
 
 
-def shots_from(N: int, plain_cuts: list[dict], events: list[dict]) -> list[dict]:
-    """Shot list: split at plain cuts, at cuts owned by effects, and at the middle of gradual transitions."""
+def shots_from(N: int, plain_cuts: list[dict], events: list[dict], changed=None) -> list[dict]:
+    """Shot list: split at plain cuts, at cuts owned by effects, and at the middle of gradual transitions.
+    changed(a, b) = frames a and b show different shots (run_detection: not Ctx.same_shot) - see below."""
     bounds = {c["frame"] for c in plain_cuts if c.get("type") == "hard_cut"}
     for ev in events:
+        placed = False
         for comp in ev["components"]:
             if comp.get("cut") is not None:
                 bounds.add(comp["cut"])
+                placed = True
             if comp["type"] in SHOT_TRANSITIONS or "transition" in (comp.get("sub") or ""):
                 if comp.get("cut") is None:
                     bounds.add((comp["start"] + comp["end"] + 1) // 2)
+                    placed = True
+        # a cut an effect owns (2026-11-10 review, the user's yes). assemble takes it out of the plain cuts, and only
+        # the detectors that test it themselves bring it back (a flash "on cut", a dip that is a "transition", a
+        # component's own "cut") - a blur across a cut never did, so that shot change was in no list: on the user's 8
+        # analyses 8 of 42 such events, 7 of them blurs. The same test here for an event that placed no change of
+        # its own: the picture before it and after it shows another shot = ONE change, at its cut nearest the key
+        # frame. A cut the effect only looks like (a flash within a shot, a strobe's flicker - the self-test's
+        # ground truth has both) stays out, as before
+        own = sorted(int(c) for c in ev.get("cuts") or [])
+        if own and not placed and changed is not None and changed(int(ev["start"]) - 1, int(ev["end"]) + 1):
+            bounds.add(min(own, key=lambda c: abs(c - int(ev.get("key", own[0])))))
     b = sorted(x for x in bounds if 0 < x < N)
     edges = [0] + b + [N]
     return [{"index": i + 1, "start": s, "end": e - 1, "frames": e - s}
@@ -1513,4 +1527,4 @@ def run_detection(ctx: Ctx):
             hold[max(0, q.start - 1):q.end + 2] = True
     comps = [q for q in comps if not (q.type in ("shake", "speed_ramp", "unknown") and hold[q.start:q.end + 1].mean() > 0.3)]
     events, plain = assemble(ctx, comps, cuts, jumps)
-    return events, plain, shots_from(ctx.N, plain, events)
+    return events, plain, shots_from(ctx.N, plain, events, lambda a, b: not ctx.same_shot(a, b))

@@ -338,3 +338,46 @@ image models, briefs for Claude). What the plan still had open:
   Clavero vlog - what if I analysed one already?"): *Style like* on brief / script / hook cards links analysed
   references; their measured pacing / effects / BPM go into Claude's check, Optimize and Create video. Next: the
   look measured too (colour, 0.6.2), and several references of one creator averaged into one style.
+
+## Used and not used - to look at again (checked 2026-11-10)
+
+The user, 2026-11-10: "lets check for things we use/we dont use ... clean up features not used and then we go and
+improve the current ones" - then, asked which to hide: **"nothing for now lets just put a check on it and later i
+will look into it"**. So nothing was hidden or removed; this is the check. What each feature had produced on the
+user's PC that day (counts only; what friends use is not known):
+
+| Feature | On this PC | Last used |
+|---|---|---|
+| Notes (INDEX) | 43 videos | 2026-11-10 |
+| Editor: drafts, builds, graphics, sound | 18 videos, 121 plans, 83 renders | 2026-11-05 |
+| Downloads | 58 | 2026-11-10 |
+| SPARK | 5 | 2026-11-03 |
+| My Brand | filled in, 4 website imports | 2026-11-03 |
+| Effects analysis (FLUX) | 8 videos; verdicts on 2 of them (74) | 2026-10-26 (verdicts 2026-10-15) |
+| Editor timeline saves / Edit by segments / shot list | 11 saves in 4 videos / 2 videos / 3 videos | 2026-10-26 to 2026-11-04 |
+| Prepare (scripts, titles) / prompt library | 10 requests / 49 prompts, none rated | 2026-10-27 |
+| Thumbnail sets | 1 | 2026-10-15 |
+| Content agency: calendar, Your videos | both empty | never |
+| Content agency: stats, where people left, tests, what works, monthly | no data files | never |
+| Ready to post + a video's thumbnails | 0 | never |
+| DaVinci Resolve builds, saved library effects | 0 in the current videos | never (here) |
+| Scripts & prompts sets | 0 | never |
+| Sharing | "we dont actually use it" (the user) | on hold |
+
+How much sits behind each never-used one, and what leans on it (measured the same day):
+
+- **DaVinci Resolve side** - about 4,750 lines (resolve_build.py, library.py, fusion.py, resolve_mcp.py, its test);
+  three other Python files lean on it (overlay.py's refresh / resolve-clip, editreq, overlay_settings), but its
+  words are in seven page scripts. The biggest clean removal - if a lab render is the final video now.
+- **Content agency** - about 3,600 lines + the page. SPARK reads `social` and `retention`, so only *tests*, *what
+  works* and the *monthly review* (about 1,900 lines, built 2026-11-02, never tried) come out cleanly.
+- **Scripts & prompts sets** - about 1,600 lines; data.py, knowledge.py and prompts.py lean on it.
+- **Thumbnail sets + Preview your thumbnail** - about 2,200 lines; moodboard.py and thumbnail.py lean on it.
+- **Ready to post + thumbnails** - `thumbnail.py` is a shared helper of 14 modules and build.py / draft_edit.py use
+  `publish.py`: hide only, never remove.
+- **Sharing** - woven into knowledge.py and the server: hide only (the cards themselves are Claude's memory).
+
+The way to do it when the user picks: hide first (off the sidebar and its buttons for one version, the code stays),
+then remove what nobody missed - one feature per commit (its page script, routes and jobs, module and tool, Spanish
+texts, docs section, skill, self-check), each with the full gate. Never-used is not not-wanted: the Content agency
+parts were eight days old on the day of the check.

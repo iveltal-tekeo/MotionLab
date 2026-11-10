@@ -42,6 +42,11 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
   models, sounds made with ElevenLabs or your history); a double click on *Quick draft* starts one draft; an
   odd-sized screen recording with an uneven frame rate can be analysed; the words of a video you have not analysed
   use its real frame rate (a slow webcam's too); the rebuild notes of an analysis give every frame with its timecode.
+- **A cut under a blur counts as a shot change** - a cut hidden under a blur (a blur out of one shot into the next)
+  was missing from an analysis' shot list, so its shots, cuts per minute and shot lengths read slower than the video is
+  really cut - and a draft in that video's style was paced slower too. It is a shot change now whenever the picture
+  before the effect and after it shows another shot; a flash inside one shot and a strobe's flicker still are not.
+  Videos you already analysed keep their numbers until they are analysed again.
 
 ## 0.6.0.10 - 2026-11-03 - Check the shots before the render, and browse for your own videos
 
