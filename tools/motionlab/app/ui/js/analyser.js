@@ -613,6 +613,232 @@ async function pageCombined(main, id) {
   onCleanup(() => { left = true; clearTimeout(timer); });
   wait();
 }
+// ---- the note map (2026-11-11, the user: "a cool looking note map on the key things with a cool drawish style ... so
+// that with a quick look u an see the idea but still be able to deepen the definitions on the other sections"): the
+// notes as a hand-drawn mind map - the subject in the middle, one branch per section in its colour, the key takeaways
+// said inside it as its leaves; a click goes to that part further down. The words are HTML (they wrap, they are read
+// aloud, they are the notes' own); the lines are drawn over them once the page has laid them out (noteMapInk), with
+// the same wobble every time (seeded by the video's name). Sketchnote references: containers, connectors, one colour
+// per idea, a centre (docs\app_pages.md *Notes*)
+const NSK_ICON = {
+  bulb: 'M7.3 13.5C5.3 12.2 4.3 10.2 4.6 8.1 5 5.4 7.3 3.6 10.1 3.7 13 3.8 15.2 5.9 15.2 8.6 15.2 10.6 14.3 12.3 12.7 13.5M7.5 15.4C9.2 15.9 10.9 15.8 12.6 15.3M8.5 17.5C9.6 17.8 10.6 17.8 11.6 17.4',
+  spark: 'M10 2.8C10.4 7 11.4 8.8 17 10 11.6 10.9 10.5 12.8 10 17.2 9.5 12.9 8.6 11 3 10 8.7 9 9.5 7.2 10 2.8Z',
+  arrow: 'M3.5 10.2C7.5 9.6 11.5 9.8 16 10M11.8 5.6 16.3 10 12 14.6',
+  bolt: 'M11.6 2.8 5.6 11 9.8 11 8.2 17.4 14.6 8.8 10.2 8.8Z',
+  pin: 'M10 4.2C13.4 4.1 15.9 6.6 15.8 10 15.7 13.3 13.3 15.8 10 15.8 6.6 15.8 4.2 13.4 4.2 10 4.2 6.7 6.6 4.3 10 4.2ZM9.9 8.9C10.6 8.9 11.1 9.4 11.1 10 11.1 10.7 10.6 11.1 10 11.1 9.4 11.1 8.9 10.6 8.9 10 8.9 9.4 9.4 8.9 9.9 8.9Z',
+  star: 'M10.1 2.5 12.3 7.4 17.6 8 13.6 11.6 14.8 16.9 10 14.1 5.4 17.1 6.5 11.7 2.4 8.2 7.8 7.5Z',
+  steps: 'M3.8 15.6C6.4 15.9 8 14.2 7.5 12.1 7 10 9 8.5 11 9.5 13 10.5 15.5 9 15.4 5.2M13 6.9 15.5 4.4 17.4 7.3',
+  check: 'M3.8 4.3C7.9 3.8 12 3.9 16.2 4.2 16.6 8.2 16.5 12.2 16.1 16.2 12 16.6 7.9 16.5 3.9 16 3.5 12.1 3.4 8.2 3.8 4.3ZM6.6 10.3 9.3 13.2 14.2 6.9',
+};
+const nskIcon = k => `<svg class="nski" viewBox="0 0 20 20" aria-hidden="true"><path d="${NSK_ICON[k]}"/></svg>`;
+// every note its own drawing (2026-11-11, the user, on seeing the first maps: "make each drawing a 'little' bit more
+// different so not each one has the same feeling ... i kinda seems repetitive after some notes"): the video's name
+// picks one of each below - always the same for that video - plus a few doodles where the page is empty and the colour
+// its first section starts at. The handwriting, a colour per section and the layout stay: one family
+const NSK_LOOK = {
+  core: ['ring', 'cloud', 'burst', 'stamp', 'focus'],              // the shape round the subject
+  node: ['box', 'hatch', 'line', 'round', 'tab'],                  // a section's container
+  branch: ['curve', 'swoop', 'elbow'],                             // how a branch runs
+  leaf: ['bulb', 'spark', 'arrow', 'bolt', 'pin'],                 // a key takeaway's mark
+  paper: ['dots', 'grid', 'ruled', 'cross'],                       // the page under it
+  pen: ['fine', 'pencil', 'marker'],
+  tip: ['', '', 'arrow'],                                          // one map in three: arrowheads on its branches
+};
+const NSK_DOODLE = [                                               // small things a hand adds in the margin (24 x 24)
+  'M12 3C12.5 8.5 14 10.5 21 12 14.2 13.2 12.6 15.5 12 21 11.4 15.6 10 13.4 3 12 10 10.8 11.4 8.6 12 3Z',
+  'M12.2 12.4C11.2 11.6 11.6 10 13 10 15 10 15.8 12.4 14.6 14.2 13 16.4 9.6 16 8.2 13.6 6.6 10.6 8.6 7 12 6.4 16.4 5.8 19.6 9.4 19.2 13.6',
+  'M2.5 12C4.5 8.5 6.5 8.5 8.5 12 10.5 15.5 12.5 15.5 14.5 12 16.5 8.5 18.5 8.5 21.5 12',
+  'M3 14.5 7.5 8.5 11 14.5 15 8.5 18.5 14.5 21.5 10',
+  'M5.5 9 3 4.5M12 7.5 12 2.5M18.5 9 21 4.5',
+  'M7 4.5 7 11.5M3.5 8 10.5 8M17 13.5 17 19.5M14 16.5 20 16.5',
+  'M4 15C6 7 12 5.5 14.5 9 16.5 12 13 15 11 12.5 9.5 10 13 7 20 8.5M16.8 5.8 20.2 8.6 17.2 11.6',
+  'M12 3.5 14.2 9.2 20.3 9.6 15.6 13.5 17.1 19.5 12 16.2 6.9 19.5 8.4 13.5 3.7 9.6 9.8 9.2Z',
+  'M5 12 5.1 12M12 11.8 12.1 11.8M19 12 19.1 12',
+  'M4.5 6.5C9 4.5 15 4.5 19.5 6.5M4.5 17.5C9 19.5 15 19.5 19.5 17.5',
+];
+const nskSeed = name => [...String(name)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+function nskLook(seed) {
+  const r = skRand(seed ^ 0x5bd1e995); r(); r();
+  return Object.fromEntries(Object.entries(NSK_LOOK).map(([k, L]) => [k, L[Math.floor(r() * L.length)]]));
+}
+function noteMap(N, R, secOf, col, done, seed) {
+  const secs = N.sections, T = N.takeaways, two = i => String(i + 1).padStart(2, '0'), look = nskLook(seed);
+  const of = T.map(x => secs.length ? secOf(x.at) : -1);            // the section each takeaway is said in
+  const leaf = (x, i) => `<a href="#" class="nsk-leaf" data-go="ntk${i}" style="--c:${col(of[i])}" title="${esc(x.text)}">${nskIcon(look.leaf)}<span>${esc(x.phrase)}</span>${x.replayed
+    ? `<i class="nsk-rep" title="${ta("YouTube's Most replayed: viewers watch this part again")}">${nskIcon('star')}</i>` : ''}</a>`;
+  // the branches: the sections, each with its takeaways; notes without sections = one branch per takeaway
+  const B = secs.length ? secs.map((s, k) => ({k, go: 'nsec' + k, title: s.title, gist: s.gist || '', leaves: T.map((x, i) => of[i] === k ? leaf(x, i) : '').join(''), w: 1.6 + of.filter(o => o === k).length}))
+    : T.map((x, i) => ({k: i, go: 'ntk' + i, title: x.phrase, gist: x.text, leaves: '', w: 1}));
+  if (!B.length) return '';
+  const gists = B.length <= 8;                                     // many sections: their one-liners wait in the tooltip
+  const tot = B.reduce((a, b) => a + b.w, 0);
+  let cut = 0, acc = 0, best = Infinity;                           // the two sides as even as the order allows
+  B.forEach((b, i) => { acc += b.w; const d = Math.abs(tot - 2 * acc); if (i < B.length - 1 && d < best) { best = d; cut = i + 1; } });
+  // (a chapter the creator numbered - "3. Have a mission" - keeps its own number only)
+  const branch = b => `<div class="nsk-b" data-k="${b.k}" style="--c:${col(b.k)}"><a href="#" class="nsk-box" data-go="${b.go}"${b.gist ? ` title="${esc(b.gist)}"` : ''}>${/^\s*\d+\s*[.):-]/.test(b.title) ? '' : `<span class="nsk-n">${two(b.k)}</span>`}
+      <span class="nsk-t">${esc(b.title)}</span>${gists && b.gist ? `<span class="nsk-g">${esc(b.gist)}</span>` : ''}</a>${b.leaves ? `<div class="nsk-leaves">${b.leaves}</div>` : ''}</div>`;
+  const loose = secs.length ? T.map((x, i) => of[i] < 0 ? leaf(x, i) : '').join('') : '';
+  const title = N.title || R.label || '', kind = NKIND[N.kind] || '';
+  const chips = [N.steps.length && `<a href="#" class="nsk-chip" data-go="nsteps">${nskIcon('steps')}<span>${t('Steps')}</span><b>${N.steps.length}</b></a>`,
+    N.apply.length && `<a href="#" class="nsk-chip" data-go="napp">${nskIcon('check')}<span>${t('Apply it')}</span><b id="nprogt">${done.size} / ${N.apply.length}</b></a>`].filter(Boolean).join('');
+  const tilt = ((seed >>> 8) % 2 ? 1 : -1) * (1.5 + (seed >>> 4) % 5 * .6);
+  return `<div class="nsk" id="nsk" data-seed="${seed}" ${Object.entries(look).map(([k, v]) => `data-${k}="${v}"`).join(' ')}>
+    <div class="nsk-col l">${B.slice(0, cut).map(branch).join('')}</div>
+    <div class="nsk-mid"><div class="nsk-core${title.length > 90 ? ' long' : ''}">${kind ? `<span class="nsk-kind" style="transform:rotate(${tilt.toFixed(1)}deg)">${esc(kind)}</span>` : ''}<span class="nsk-title">${esc(title)}</span></div>
+      ${loose ? `<div class="nsk-leaves loose">${loose}</div>` : ''}${chips ? `<div class="nsk-chips">${chips}</div>` : ''}</div>
+    <div class="nsk-col r">${B.slice(cut).map(branch).join('')}</div>
+    <svg class="nsk-ink" aria-hidden="true"></svg></div>`;
+}
+// a hand's line: every stroke a little off, twice over as a pencil goes over a line (the idea of rough.js, in small)
+function skRand(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const skJ = (r, a) => (r() - 0.5) * 2 * a;
+const skN = v => v.toFixed(1);
+function skSeg(r, x1, y1, x2, y2, j = 1.3) {                       // straight, its ends a little off, its middle bowed
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1, o = skJ(r, Math.min(3.5, len * .025 + .6));
+  return `M${skN(x1 + skJ(r, j))} ${skN(y1 + skJ(r, j))}Q${skN((x1 + x2) / 2 - (y2 - y1) / len * o * 2)} ${skN((y1 + y2) / 2 + (x2 - x1) / len * o * 2)} ${skN(x2 + skJ(r, j))} ${skN(y2 + skJ(r, j))}`;
+}
+const skBox = (r, x, y, w, h) => [[x - 3, y, x + w + 3, y], [x + w, y - 3, x + w, y + h + 3], [x + w + 3, y + h, x - 3, y + h], [x, y + h + 3, x, y - 3]]
+  .map(s => skSeg(r, ...s)).join('');                              // four sides that run past their corners
+// a branch from the subject to a section, three ways of running (NSK_LOOK.branch): curve = it leaves sideways and
+// arrives sideways, swoop = it dives first like a tree's branch, elbow = two corners like a plan
+function skBranch(r, how, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, j = Math.min(5, Math.abs(dx) * .05 + 1.5);
+  if (how === 'elbow') { const m = x1 + dx * .5; return skSeg(r, x1, y1, m, y1, 1) + skSeg(r, m, y1, m, y2, 1) + skSeg(r, m, y2, x2, y2, 1); }
+  const a = `M${skN(x1 + skJ(r, 1.5))} ${skN(y1 + skJ(r, 1.5))}`, z = `${skN(x2 + skJ(r, 1.5))} ${skN(y2 + skJ(r, 1.5))}`;
+  if (how === 'swoop') return `${a}C${skN(x1 + dx * .28 + skJ(r, j))} ${skN(y1 + dy * .8 + skJ(r, j))} ${skN(x1 + dx * .55 + skJ(r, j))} ${skN(y2 + skJ(r, j))} ${z}`;
+  return `${a}C${skN(x1 + dx * .5 + skJ(r, j))} ${skN(y1 + skJ(r, j))} ${skN(x2 - dx * .5 + skJ(r, j))} ${skN(y2 + skJ(r, j))} ${z}`;
+}
+function skRim(x, y, w, h, n) {                                    // n points, evenly apart, along a squarish oval's rim
+  const cx = x + w / 2, cy = y + h / 2, S = [], D = [0], K = 240, P = [];
+  for (let i = 0; i <= K; i++) {
+    const a = i / K * 2 * Math.PI, c = Math.cos(a), s = Math.sin(a);
+    S.push([cx + Math.sign(c) * Math.abs(c) ** .5 * w / 2, cy + Math.sign(s) * Math.abs(s) ** .5 * h / 2]);
+    if (i) D.push(D[i - 1] + Math.hypot(S[i][0] - S[i - 1][0], S[i][1] - S[i - 1][1]));
+  }
+  for (let k = 0, i = 0; k < n; k++) { while (D[i + 1] < k / n * D[K]) i++; P.push(S[i]); }
+  return P;
+}
+function skCloud(r, x, y, w, h) {                                  // a cloud: one bump after the other along the rim
+  const n = Math.max(9, Math.round((w + h) / 26)), P = skRim(x, y, w, h, n), cx = x + w / 2, cy = y + h / 2;
+  let d = `M${skN(P[0][0])} ${skN(P[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, len = Math.hypot(mx - cx, my - cy) || 1;
+    const k = Math.hypot(b[0] - a[0], b[1] - a[1]) * (.55 + r() * .25);
+    d += `Q${skN(mx + (mx - cx) / len * k)} ${skN(my + (my - cy) / len * k)} ${skN(b[0] + skJ(r, 1.2))} ${skN(b[1] + skJ(r, 1.2))}`;
+  }
+  return d;
+}
+function skBurst(r, x, y, w, h) {                                  // a burst: the rim jumps out and back, all the way round
+  const cx = x + w / 2, cy = y + h / 2;
+  return skRim(x, y, w, h, Math.max(12, Math.round((w + h) / 17)) * 2).map((p, i) => {
+    const len = Math.hypot(p[0] - cx, p[1] - cy) || 1, k = i % 2 ? 9 + r() * 7 : skJ(r, 1.5);
+    return `${i ? 'L' : 'M'}${skN(p[0] + (p[0] - cx) / len * k)} ${skN(p[1] + (p[1] - cy) / len * k)}`; }).join('') + 'Z';
+}
+function skLoop(r, x, y, w, h, e = .6) {                           // a ring: a squarish oval (e: how square) that runs past its own start
+  const cx = x + w / 2, cy = y + h / 2, n = 16, a0 = 3.6 + r() * .8, P = [];
+  for (let i = 0; i <= n + 2; i++) {
+    const a = a0 + i / n * 2 * Math.PI, c = Math.cos(a), s = Math.sin(a), g = 1 + i / n * .04;
+    P.push([cx + Math.sign(c) * Math.abs(c) ** e * w / 2 * g + skJ(r, 2.2), cy + Math.sign(s) * Math.abs(s) ** e * h / 2 * g + skJ(r, 2.2)]);
+  }
+  let d = `M${skN(P[0][0])} ${skN(P[0][1])}`;                      // a smooth line through the points (Catmull-Rom)
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    d += `C${skN(p1[0] + (p2[0] - p0[0]) / 6)} ${skN(p1[1] + (p2[1] - p0[1]) / 6)} ${skN(p2[0] - (p3[0] - p1[0]) / 6)} ${skN(p2[1] - (p3[1] - p1[1]) / 6)} ${skN(p2[0])} ${skN(p2[1])}`;
+  }
+  return d;
+}
+// the shape round the subject, five ways (NSK_LOOK.core) -> [[path, class, more attributes], ...]. C = the subject's
+// place, T = its words'. The same line again a little lower and in the page's colour = a marker's shadow
+const NSK_SHADE = 'transform="translate(3.5 3.5)"';
+function skCore(r, how, C, T) {
+  if (how === 'cloud' || how === 'burst') { const d = (how === 'cloud' ? skCloud : skBurst)(r, C.l + 1, C.t + 1, C.w - 2, C.h - 2); return [[d, 'ring two', NSK_SHADE], [d, 'ring']]; }
+  if (how === 'stamp') { const d = () => skBox(r, C.l - 3, C.t - 3, C.w + 6, C.h + 6), d1 = d(); return [[d1, 'ring two', NSK_SHADE], [d1, 'ring'], [d(), 'ring']]; }
+  if (how === 'focus') {                                           // four corners, as a camera frames it, and a marker under the words
+    const a = Math.min(26, C.w / 4, C.h / 3), x0 = C.l - 4, x1 = C.r + 4, y0 = C.t - 4, y1 = C.b + 4;
+    const corner = (x, y, sx, sy) => skSeg(r, x + sx * a, y, x, y) + skSeg(r, x, y, x, y + sy * a);
+    const d = () => corner(x0, y0, 1, 1) + corner(x1, y0, -1, 1) + corner(x1, y1, -1, -1) + corner(x0, y1, 1, -1);
+    return [[d(), 'ring'], [d(), 'ring'], [skSeg(r, T.l + 2, T.b + 4, T.r - 2, T.b + 3) + skSeg(r, T.r - 8, T.b + 8, T.l + 14, T.b + 9), 'ring two mark']];
+  }
+  return [[skLoop(r, C.l - 4, C.t - 3, C.w + 8, C.h + 6), 'ring'], [skLoop(r, C.l - 7, C.t - 6, C.w + 14, C.h + 12), 'ring two']];
+}
+// the map's lines, from where the words landed: the shape round the subject, a branch to each section, its container,
+// a twig to each leaf, a few doodles where the page stays empty - each in this note's own way (the board's data-core /
+// node / branch / tip, noteMap). Drawn again only when something moved; `first` = the lines draw themselves once
+function noteMapInk(board, first) {
+  const svg = $('.nsk-ink', board), core = $('.nsk-core', board);
+  if (!svg || !core) return;
+  const O = board.getBoundingClientRect(), ox = O.left + board.clientLeft, oy = O.top + board.clientTop;
+  const at = el => { const b = el.getBoundingClientRect(); return {l: b.left - ox, t: b.top - oy, r: b.right - ox, b: b.bottom - oy, w: b.width, h: b.height, cy: (b.top + b.bottom) / 2 - oy}; };
+  const C = at(core), look = board.dataset, mode = look.mode, H = board.clientHeight;
+  const M = $$('.nsk-b', board).map(b => ({k: b.dataset.k, c: b.style.getPropertyValue('--c'), X: at($('.nsk-box', b)), L: $$('.nsk-leaf', b).map(at)}));
+  const cols = $$('.nsk-col, .nsk-mid', board).map(at);
+  const sig = JSON.stringify([board.clientWidth, H, mode, C, M.map(m => [m.X, m.L]), cols]);
+  if (sig === board._sig) return;
+  board._sig = sig;
+  const seed = +look.seed, r = skRand(seed), G = [], twice = f => [f(), f()];
+  const out = {cloud: 16, burst: 18, stamp: 10}[look.core] || 8;    // how far the subject's shape reaches past its words
+  G.push({k: 'core', c: '', p: skCore(r, look.core, C, at($('.nsk-title', core)))});
+  if (mode === 'stack' && M.length) {                              // under the subject: one trunk down the side
+    const x = M[0].X.l - 15, end = M[M.length - 1].X;
+    G.push({k: 'core', c: '', p: twice(() => [skSeg(r, x, C.b + out, x, look.node === 'line' ? end.b + 1 : end.cy), 'ring'])});
+  }
+  M.forEach(({k, c, X, L}) => {
+    const p = [], left = mode === 'two' && X.r <= C.l;             // two sides: the left one is the right one in a mirror
+    const near = left ? X.r : X.l, s = left ? -1 : 1, line = look.node === 'line';
+    const ex = line ? near : near - s * 4, ey = line ? X.b + 1 : X.cy;     // where its branch arrives
+    if (mode === 'stack') p.push(...twice(() => [skSeg(r, X.l - 15, ey, ex, ey), 'br']));
+    else {
+      const mid = (C.t + C.b) / 2, y = look.branch === 'elbow' ? mid : mid + Math.max(-C.h * .36, Math.min(C.h * .36, (ey - mid) * .28));
+      p.push(...twice(() => [skBranch(r, look.branch, left ? C.l - out : C.r + out, y, ex, ey), 'br']));
+      if (look.tip === 'arrow' && !line && look.node !== 'tab') p.push([skSeg(r, ex - s * 10, ey - 5.5, ex, ey, .6) + skSeg(r, ex - s * 10, ey + 5.5, ex, ey, .6), 'br']);
+    }
+    if (line) p.push(...twice(() => [skSeg(r, X.l - 2, X.b + 1, X.r + 2, X.b + 1), 'br']));               // its words sit on the branch
+    else if (look.node === 'round') p.push([skLoop(r, X.l - 3, X.t - 3, X.w + 6, X.h + 6, .3), 'bx']);
+    else if (look.node === 'tab') p.push(...twice(() => [skSeg(r, near, X.t - 2, near, X.b + 2), 'bar']));  // a marker's bar on its near side
+    else p.push(...twice(() => [skBox(r, X.l, X.t, X.w, X.h), 'bx']));                                    // box, hatch (its fill: app.css)
+    if (L.length) {                                                // the leaves hang on a stem under it
+      const x = near + s * 13;
+      p.push([skSeg(r, x, X.b + 4, x, L[L.length - 1].cy), 'tw']);
+      L.forEach(f => p.push([skSeg(r, x, f.cy, left ? f.r + 3 : f.l - 3, f.cy, .8), 'tw']));
+    }
+    G.push({k, c, p});
+  });
+  const rd = skRand((seed ^ 0x2545f491) >>> 0), dd = [];           // doodles: above and under a column shorter than the map
+  (mode === 'two' ? cols : mode === 'one' ? [cols[1]] : []).forEach(B => {     // (stacked columns have nothing empty above them)
+    if (B.w < 70 || B.h < 10) return;
+    [[16, B.t - 14], [B.b + 14, H - 16]].forEach(([y0, y1]) => {
+      const n = Math.min(2, Math.floor((y1 - y0) / 58));
+      for (let i = 0; i < n; i++) dd.push([NSK_DOODLE[Math.floor(rd() * NSK_DOODLE.length)], `dd${rd() < .4 ? ' acc' : ''}`,
+        `transform="translate(${skN(B.l + 10 + rd() * (B.w - 44))} ${skN(y0 + (y1 - y0) * (i + .5) / n - 12 + skJ(rd, 5))}) rotate(${skN(skJ(rd, 24))} 12 12)"`]);
+    });
+  });
+  if (dd.length) G.push({k: 'deco', c: '', p: dd});
+  svg.setAttribute('viewBox', `0 0 ${board.clientWidth} ${H}`);
+  svg.innerHTML = G.map((g, i) => `<g data-k="${esc(g.k)}" style="--i:${i}${g.c ? `;--c:${esc(g.c)}` : ''}">${g.p.map(([d, cls, more]) => `<path d="${d}" class="${cls}" pathLength="1"${more ? ' ' + more : ''}/>`).join('')}</g>`).join('');
+  svg.classList.toggle('draw', !!first && !MS_RM);
+}
+// the map follows its place: a side each when there is room, all to the right when narrower, under the subject when
+// very narrow; the lines wait for the handwriting font (the words move when it arrives)
+function noteMapWire(board) {
+  if (!board) return;
+  let ready = false, first = true;
+  const draw = () => {
+    const w = board.clientWidth;
+    if (!ready || !w) return;
+    board.dataset.mode = w >= 780 ? 'two' : w >= 520 ? 'one' : 'stack';
+    noteMapInk(board, first); first = false; board.dataset.ready = '1';
+  };
+  const start = () => { if (!ready) { ready = true; draw(); } };
+  const fonts = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 23px Caveat'), document.fonts.load('500 18px Caveat')]) : Promise.resolve();
+  fonts.then(start, start);
+  const late = setTimeout(start, 1500);                            // a font that never answers: the map still shows
+  const ro = new ResizeObserver(() => requestAnimationFrame(draw));   // (next frame: the layout it changes is its own size)
+  ro.observe(board);
+  onCleanup(() => { ro.disconnect(); clearTimeout(late); });
+  const lit = b => $$('.nsk-ink g', board).forEach(g => g.classList.toggle('on', !!b && g.dataset.k === b.dataset.k));
+  board.addEventListener('mouseover', e => lit(e.target.closest('.nsk-b')));
+  board.addEventListener('mouseleave', () => lit(null));
+}
 // one video's notes (#/note/<name>): the notes on the left in one reading column - TL;DR, Key takeaways, the sections
 // folded, Steps, Apply it (ticks), then Resources and Context for another AI folded; the video, My notes, the words and
 // the key frames on the right. Every time = frame + timecode and moves the player; its quote on hover
@@ -646,25 +872,24 @@ async function pageNote(main, name, atF) {
     const secs = N.sections, L = R.frames;
     const ends = secs.map((s, i) => s.chapter != null && R.chapters[s.chapter] ? R.chapters[s.chapter].end : i + 1 < secs.length ? Math.max(s.at, secs[i + 1].at - 1) : L - 1);
     const secOf = f => f == null ? -1 : secs.findIndex((s, i) => f >= s.at && f <= ends[i]);
-    const col = i => i < 0 ? 'var(--dim)' : NCOL[i % NCOL.length];
+    const seed = nskSeed(R.name);                    // this video's own drawing - and the colour its first section starts at
+    const col = i => i < 0 ? 'var(--dim)' : NCOL[(i + seed) % NCOL.length];
     const two = i => String(i + 1).padStart(2, '0');
     const pt = p => `<li>${esc(p.text)} ${nTime(p.at, fps, p.quote || '', p.replayed)}${p.shown != null && !p.quote ? `<span class="small dim"> ${t('(on screen)')}</span>` : ''}</li>`;
     const span = (a, b) => `${nTime(a, fps)}<span class="dim"> → </span><span class="ntc2">f${b} (${tc(b, fps)})</span>`;
-    const T = R.transcript || {}, st = R.stats || {};
-    const props = [[t('Type'), esc(NKIND[N.kind] || N.kind || '')], [t('Length'), esc(lenWords(R.frames, fps))], [t('Channel'), esc(R.uploader || '')],
-      [t('Words'), T.words ? `${tn(T.words, '{n} word', '{n} words')} · ${esc(T.source === 'speech' ? t('heard by speech to text') : t("the platform's subtitles"))}${T.lang ? ` · ${esc(String(T.lang).toUpperCase())}` : ''}` : ''],
-      [t('Views'), st.views != null ? numStr(st.views) : ''], [t('Notes by Claude'), esc(whenStr(N.made) || N.made || '')],
-      [t('Done'), N.apply.length ? `<span id="nprogt">${done.size} / ${N.apply.length}</span>` : '']].filter(x => x[1]);
-    const toc = [['ntl', 'TL;DR'], N.takeaways.length && ['ntake', t('Key takeaways')], secs.length && ['nsecs', t('Sections')], N.steps.length && ['nsteps', t('Steps')],
+    // 2026-11-11, the user: "remove the 'type/channel/views...' container at the start" - the note map took its place
+    // (the channel and the length stay in the head, the type sits on the map, Done on its *Apply it*)
+    const nmapHtml = noteMap(N, R, secOf, col, done, seed);
+    const toc = [['ntl', 'TL;DR'], nmapHtml && ['nsk', t('Map|notes')], N.takeaways.length && ['ntake', t('Key takeaways')], secs.length && ['nsecs', t('Sections')], N.steps.length && ['nsteps', t('Steps')],
       N.apply.length && ['napp', t('Apply it')], ['nask', t('Ask Claude')], ['nmore', t('Context for another AI')]].filter(Boolean);
     const map = secs.length ? `<div class="nmap" id="nmap">${secs.map((s, i) => `<a href="#" class="nseg" data-f="${s.at}" style="--c:${col(i)};left:${(s.at / L * 100).toFixed(3)}%;width:${((ends[i] - s.at + 1) / L * 100).toFixed(3)}%" title="${esc(`${two(i)} ${s.title} · ${lenWords(ends[i] - s.at + 1, fps)}`)}"><span>${two(i)} ${esc(s.title)}</span></a>`).join('')}
         ${N.takeaways.filter(x => x.at != null).map(x => `<a href="#" class="ndot" data-f="${x.at}" style="left:${(x.at / L * 100).toFixed(3)}%" title="${esc(x.phrase)}"></a>`).join('')}<i class="nplay" id="nplay"></i></div>` : '';
     left = `<nav class="ntoc">${toc.map(([id, w]) => `<a href="#" data-go="${id}">${w}</a>`).join('')}</nav>
-      <div class="nprops">${props.map(([k, v]) => `<div class="npk">${k}</div><div class="npv">${v}</div>`).join('')}</div>
       ${ask}${map}
       <div class="ntldr" id="ntl"><span class="ntk">TL;DR</span> ${esc(N.tldr)}</div>
+      ${nmapHtml}
       ${N.takeaways.length ? `<h2 class="nh" id="ntake">${t('Key takeaways')} <span class="ncount">${N.takeaways.length}</span></h2>
-        <div class="ntkgrid">${N.takeaways.map((x, i) => { const k = secOf(x.at); return `<div class="ntkc" style="--c:${col(k)}"><div class="ntkn">${two(i)}</div>
+        <div class="ntkgrid">${N.takeaways.map((x, i) => { const k = secOf(x.at); return `<div class="ntkc" id="ntk${i}" style="--c:${col(k)}"><div class="ntkn">${two(i)}</div>
           <b>${esc(x.phrase)}</b><p>${esc(x.text)}</p><div class="ntkf">${nTime(x.at, fps, x.quote || '', x.replayed)}${k >= 0 ? `<a href="#" class="nsecname" data-go="nsec${k}">${esc(secs[k].title)}</a>` : ''}</div></div>`; }).join('')}</div>` : ''}
       ${secs.length ? `<h2 class="nh" id="nsecs">${t('Sections')} <span class="ncount">${secs.length}</span></h2>
         ${secs.map((s, i) => `<details class="nsb" open id="nsec${i}" style="--c:${col(i)}"><summary><span class="nsn">${two(i)}</span>
@@ -702,11 +927,15 @@ async function pageNote(main, name, atF) {
       <div data-np="frames" hidden><div class="nsheets">${R.sheets.map((s, i) => `<img src="${fileUrl(s)}" data-i="${i}" loading="lazy" alt="">`).join('')}</div></div>
     </div></div>`;
   sparkWire(main);
+  noteMapWire($('#nsk', main));
   const vid = $('#nvid', main);
   const seek = f => { if (!vid) return; vid.currentTime = (+f + 0.5) / fps; vid.play().catch(() => {}); };
   $('.ngrid', main).addEventListener('click', e => {
     const g = e.target.closest('[data-go]');
-    if (g) { e.preventDefault(); const x = document.getElementById(g.dataset.go); if (x) { if (x.tagName === 'DETAILS') x.open = true; x.scrollIntoView({behavior: 'smooth', block: 'start'}); } return; }
+    if (g) { e.preventDefault(); const x = document.getElementById(g.dataset.go);
+      if (x) { if (x.tagName === 'DETAILS') x.open = true; x.scrollIntoView({behavior: 'smooth', block: 'start'});
+        if (x.matches('.ntkc, .nsb')) { x.classList.remove('nflash'); void x.offsetWidth; x.classList.add('nflash'); } }   // from the map: the card it meant lights up
+      return; }
     const a = e.target.closest('.ntime, .nline, .nseg, .ndot');
     if (!a || a.getAttribute('href') && a.getAttribute('href').startsWith('#/')) return;
     e.preventDefault(); seek(a.dataset.f);

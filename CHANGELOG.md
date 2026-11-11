@@ -7,6 +7,14 @@ between them (fixes, upkeep, polish). The same notes in Spanish, from 0.5.1 on: 
 
 ## Unreleased
 
+- **A hand-drawn map of every video's notes** - a video's notes now open with a sketched mind map under the TL;DR:
+  the subject in the middle, one branch per section in its colour, and the key takeaways hanging on the section they
+  are said in - one look gives you the idea. Click a section or a takeaway and the page goes to that part and lights
+  it up; *Steps* and *Apply it* (with how many you have done) sit under the subject. Every video gets a drawing of
+  its own - another shape round the subject, other boxes, branches, marks, paper and doodles, and its own first
+  colour - and keeps it every time you open it. The map follows the window: a side each when there is room,
+  everything to the right of the subject on a laptop, a list under it when the window is narrow. The table with type,
+  channel, words and views at the top is gone (the channel and the length stay under the title).
 - **Blend modes in the Editor** - a shot or a graphic has *Blend* in its settings: Normal, Darken, Multiply, Lighten,
   Screen, Add, Overlay, Soft light, Difference and Colour - how it mixes with what is under it (a light leak in
   Screen, a texture in Overlay, a glitchy negative in Difference). The preview shows the same mix the render makes.

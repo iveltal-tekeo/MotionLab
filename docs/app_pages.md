@@ -281,7 +281,7 @@ the video afterwards but keep the notes", no test-yourself questions).
   (the context block with the video's title and link), Folder, *Delete the video, keep the notes* (only when the
   video is in refs\: the Delete kind `notes_video` = the video alone) and Delete (kind `notes`: the folder + the video
   when it is in refs\ and nothing else uses it). Left, one reading column (74ch): *You asked for*, the **TL;DR**
-  callout, **Key takeaways** (a bold phrase + one sentence + the time chip `f480 (00:00:16:00)` - a click plays it,
+  callout, the note map (2026-11-11, below), **Key takeaways** (a bold phrase + one sentence + the time chip `f480 (00:00:16:00)` - a click plays it,
   the quote on hover, *most replayed* when it falls on a peak), **Sections** folded (title, one-line gist, its time;
   open = its points), **Steps** (how-tos only), **Apply it** (ticks = note.json `done`, POST `.../meta`), folded
   Resources and *Context for another AI* (+ Copy), the footer (when, *Write them again*). Without notes yet: what
@@ -293,13 +293,46 @@ the video afterwards but keep the notes", no test-yourself questions).
   like Notion would, also ur missing half the screen (cuz half the page is empty), also make each sectio in the index
   notes video more meaningful, maybe add some colors some corresponding section dividing"): the 74ch cap is gone - the
   notes column fills the page beside the video (460 px). Top to bottom: a sticky contents row (`.ntoc`, `data-go` =
-  the part's id), the properties (`.nprops`: type `NKIND`, length, channel, words + source + language, views, made,
-  Done n / m), the map of the video (`.nmap`: one `.nseg` per section at its real place and length, a dot per takeaway,
-  the red playhead; a click plays it), the TL;DR, the takeaways as cards (`.ntkgrid`: number, phrase, sentence, time,
-  the section it falls in), the sections as coloured blocks, open (`details.nsb`: number, title, gist, start → end,
-  length · points · % of the video; points in two columns when wide), the steps with numbered circles, Apply it with a
-  progress bar. One colour per section (`NCOL`, in order), carried by its block, its map piece, and every takeaway /
-  step said inside it. A section's end = its chapter's end, else the next section's start - 1.
+  the part's id), the strip of the video (`.nmap`: one `.nseg` per section at its real place and length, a dot per
+  takeaway, the red playhead; a click plays it), the TL;DR, the note map (below; until 2026-11-11 a property table sat
+  on top - type, length, channel, words, views, made, Done), the takeaways as cards (`.ntkgrid`: number, phrase,
+  sentence, time, the section it falls in), the sections as coloured blocks, open (`details.nsb`: number, title, gist,
+  start → end, length · points · % of the video; points in two columns when wide), the steps with numbered circles,
+  Apply it with a progress bar. One colour per section (`NCOL`, in order from the video's own start - `nskSeed`),
+  carried by its block, its strip piece, its branch of the note map and every takeaway / step said inside it. A
+  section's end = its chapter's end, else the next section's start - 1.
+- **The note map** (2026-11-11, the user: "i love the note taking section, do you think it isp ossible to upgrade it to
+  provide even more value on he voerview? remove the "type/channel/views..." container at the start, and maybe add a
+  cool loking note map on the key things with a cool drawish style ... so that with a quick look u an see the idea but
+  still be able to deepen the definitions on the other sections"): under the TL;DR, the notes as a hand-drawn mind map
+  (`noteMap` -> `.nsk`, *Map* in the contents row). The subject in the middle (the notes' title, the kind as a taped
+  label, under it *Steps n* and *Apply it done / all* = `#nprogt`, live with the ticks), one branch per section in
+  its colour (number, title, the gist in two lines - with more than 8 sections the gist waits in the tooltip; a
+  chapter the creator numbered keeps its own number only), and the takeaways as leaves under the section they are
+  said in (`secOf`; one said outside every section hangs under the subject; *most replayed* = an amber star). Notes
+  without sections: a branch per takeaway. A click on a box / a leaf / a chip = `data-go`: the page goes to that
+  section block / takeaway card (`#ntk<i>`) / part and the card lights up once (`.nflash`) - the map never plays the
+  video (the strip and the time chips do). **The words are HTML** in Caveat (SIL OFL 1.1, `ui\fonts\caveat\` - the
+  app's own file, served by `/ui/`, not part of the graphics' font library); **the lines are drawn over them** once
+  they are laid out (`noteMapInk`: an SVG on top, measured from the words' real places, drawn again only when
+  something moved - a signature of every rectangle; the first time the lines draw themselves, never with reduced
+  motion). The hand's line = `skRand` (seeded) + `skSeg` / `skBox` / `skLoop` / `skCloud` / `skBurst` / `skBranch`
+  (the idea of rough.js in ~60 lines: ends a little off, middles bowed, twice over). Three layouts by the map's own
+  width (`noteMapWire`, a ResizeObserver; `data-mode`): `two` (780 px and more: a side each, the left one mirrored,
+  split where the two sides weigh the same), `one` (520 px and more - a 1366 px laptop: all sections right of the
+  subject), `stack` (narrower: under the subject on one trunk). The lines wait for the font (`document.fonts.load`,
+  1.5 s at most). **Every note its own drawing** (the same day, on seeing the first maps: "i LOVE the style, but
+  maybe make each drawing a "little" bit more different so not each one has the same feeling u know? i kinda seems
+  repetitive after some notes"): the video's folder name (`nskSeed`) picks one of each in `NSK_LOOK` - the shape
+  round the subject (ring, cloud, burst, stamp, focus = four corners + a marker under the words), a section's
+  container (box, hatch, line = its words sit on the branch, round, tab = a marker's bar), how a branch runs (curve,
+  swoop, elbow), the leaves' mark (bulb, spark, arrow, bolt, pin), the paper (dots, grid, ruled, cross), the pen (fine,
+  pencil, marker), arrowheads on one map in three - plus a few doodles (`NSK_DOODLE`) where a column leaves the page
+  empty, the label's tilt and the colour the first section starts at. Always the same for that video (checked: a
+  resize and back gives the same lines), so a map is recognised again; the handwriting, a colour per section and the
+  layout stay the same everywhere - one family. A new look = a word in `NSK_LOOK` + its lines in `noteMapInk` /
+  `skCore` (or its CSS under `.nsk[data-…]`). References: sketchnote guides (containers, connectors, one colour per
+  idea, a centre; Gestalt: proximity, similarity, continuity) - Pinterest itself shows nothing without a login.
 - **Ask Claude** (2026-10-29, the user: "add a posiblity to run a prompt fo that video notes (imagine i wanted to
   expand on some topic or so)"): the panel under Apply it - suggestion chips (three general + *Go deeper on "<a
   section>"*), a text box, *Ask Claude* = POST `/api/notes/<name>/ask` {q} (`notes.add_ask` -> `asks.json`) then

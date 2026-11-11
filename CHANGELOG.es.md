@@ -9,6 +9,14 @@ pequeño; una `0.x.y.z` de cuatro partes es un paso pequeño entre ellas (arregl
 
 ## Sin publicar
 
+- **Un mapa dibujado a mano de las notas de cada vídeo** - las notas de un vídeo empiezan ahora con un mapa mental
+  a lápiz bajo el TL;DR: el tema en el centro, una rama por sección con su color y las ideas clave colgando de la
+  sección donde se dicen - de un vistazo captas la idea. Haz clic en una sección o en una idea clave y la página va a
+  esa parte y la ilumina; *Pasos* y *Aplícalo* (con cuántas llevas hechas) quedan bajo el tema. Cada vídeo tiene un
+  dibujo propio - otra forma alrededor del tema, otras cajas, ramas, marcas, papel y garabatos, y su propio primer
+  color - y lo conserva cada vez que lo abres. El mapa se adapta a la ventana: un lado para cada mitad cuando hay
+  sitio, todo a la derecha del tema en un portátil, una lista debajo cuando la ventana es estrecha. La tabla con
+  tipo, canal, palabras y visualizaciones del principio ya no está (el canal y la duración siguen bajo el título).
 - **Modos de fusión en el Editor** - un plano o un gráfico tiene *Fusión* en sus ajustes: Normal, Oscurecer,
   Multiplicar, Aclarar, Trama, Sumar, Superponer, Luz suave, Diferencia y Color: cómo se mezcla con lo que hay debajo
   (una fuga de luz en Trama, una textura en Superponer, un negativo con glitch en Diferencia). La vista previa muestra

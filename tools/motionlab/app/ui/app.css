@@ -3557,10 +3557,88 @@ body[data-page] .head .mtitle h1::before { display: none; }         /* the masco
 .nnotes [id] { scroll-margin-top: 40px; }
 .ntoc a { font-size: 12.5px; color: var(--muted); padding: 3px 10px; border-radius: 999px; }
 .ntoc a:hover { color: var(--text); background: var(--panel2); text-decoration: none; }
-.nprops { display: grid; grid-template-columns: max-content 1fr max-content 1fr; gap: 5px 14px; font-size: 13px; margin: 8px 0 14px; }
-.npk { color: var(--dim); }
-.npv { color: var(--text); min-width: 0; }
-@media (max-width: 1400px) { .nprops { grid-template-columns: max-content 1fr; } }
+/* the note map (2026-11-11, the user: "a cool looking note map on the key things with a cool drawish style ... with a
+   quick look u an see the idea but still be able to deepen the definitions on the other sections"; it took the place of
+   the property table): the notes as a hand-drawn mind map on a dotted page. The words = HTML in Caveat (SIL OFL 1.1,
+   ui\fonts\caveat - the app's own, not the graphics' font library); the lines = js\analyser.js noteMapInk, drawn over
+   the laid-out words. data-mode (noteMapWire, by the map's own width): two = a side each, one = all to the right of
+   the subject, stack = under it */
+@font-face { font-family: "Caveat"; src: url("fonts/caveat/Caveat-Variable.ttf") format("truetype"); font-weight: 400 700; font-style: normal; font-display: swap; }
+.nsk { --ink: #d6d6e0; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, 22%) minmax(0, 1fr); gap: 18px 46px; align-items: center;
+  margin: 16px 0 4px; padding: 28px 22px; border: 1px solid var(--line); border-radius: 12px; font-family: "Caveat", "Segoe Print", cursive; line-height: 1.05;
+  background: radial-gradient(circle, #ffffff14 1px, transparent 1.5px) 0 0 / 22px 22px, #111115; opacity: 0; transition: opacity .25s; }
+.nsk[data-ready] { opacity: 1; }
+/* every note its own drawing (the user: "make each drawing a 'little' bit more different ... i kinda seems repetitive
+   after some notes"): js\analyser.js NSK_LOOK picks, by the video's name, the page (data-paper), the pen, a section's
+   container (data-node; its lines: noteMapInk) - and the subject's shape, the branches and the doodles, all ink */
+.nsk[data-paper=grid] { background: linear-gradient(#ffffff0b 1px, transparent 1px) 0 0 / 26px 26px, linear-gradient(90deg, #ffffff0b 1px, transparent 1px) 0 0 / 26px 26px, #0f1116; }
+.nsk[data-paper=ruled] { background: linear-gradient(transparent 27px, #ffffff0f 27px) 0 4px / 100% 28px, #131212; }
+.nsk[data-paper=cross] { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><path d='M16 13v6M13 16h6' stroke='white' stroke-opacity='.1'/></svg>") 0 0 / 32px 32px, #121016; }
+.nsk { --pen: 1; }
+.nsk[data-pen=fine] { --pen: .8; }
+.nsk[data-pen=marker] { --pen: 1.25; }
+.nsk-ink { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.nsk-ink path { fill: none; stroke: var(--c, var(--ink)); stroke-width: calc(1.5px * var(--pen)); stroke-linecap: round; stroke-linejoin: round; transition: stroke-width .15s; }
+.nsk-ink path.br { stroke-width: calc(2.6px * var(--pen)); }
+.nsk-ink path.bar { stroke-width: calc(5px * var(--pen)); }
+.nsk-ink path.tw { stroke-width: 1.3px; stroke-opacity: .7; }
+.nsk-ink path.ring { stroke-width: calc(2.1px * var(--pen)); }
+.nsk-ink path.ring.two { stroke: var(--acc); stroke-opacity: .7; }
+.nsk-ink path.ring.mark { stroke-width: 5px; stroke-opacity: .5; }
+.nsk-ink path.dd { stroke: var(--ink); stroke-width: 1.6px; stroke-opacity: .42; }
+.nsk-ink path.dd.acc { stroke: var(--acc); stroke-opacity: .55; }
+.nsk-ink g.on path.br { stroke-width: calc(4px * var(--pen)); }
+.nsk-ink g.on path.bx { stroke-width: calc(2.1px * var(--pen)); }
+.nsk-ink.draw path { opacity: 0; stroke-dasharray: 1; stroke-dashoffset: 1; animation: nskdraw .55s ease-out calc(var(--i) * 60ms) forwards; }
+@keyframes nskdraw { from { opacity: 1; stroke-dashoffset: 1; } to { opacity: 1; stroke-dashoffset: 0; } }
+.nsk-col, .nsk-mid { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.nsk-col { gap: 18px; }
+.nsk-mid { align-items: center; gap: 16px; }
+.nsk-core { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 18px; text-align: center; }
+.nsk-title { font-size: 28px; font-weight: 700; color: var(--text); text-wrap: balance; }
+.nsk-core.long .nsk-title { font-size: 23px; }
+.nsk-kind { font-size: 18px; font-weight: 600; color: var(--acc); background: var(--acc-soft); padding: 1px 12px 2px; border-radius: 3px; transform: rotate(-2.5deg); }
+.nsk-b { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+.nsk-box { display: block; max-width: 100%; padding: 7px 13px 9px; border-radius: 3px; color: var(--text); background: color-mix(in srgb, var(--c) 9%, transparent); transition: box-shadow .15s; }
+.nsk-box:hover, .nsk-box:focus-visible { text-decoration: none; box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--c) 12%, transparent); }
+.nsk[data-node=hatch] .nsk-box { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 24%, transparent) 0 1.2px, transparent 1.2px 7px); }
+.nsk[data-node=line] .nsk-box { background: none; padding: 2px 6px 8px; }
+.nsk[data-node=round] .nsk-box { border-radius: 20px; padding: 9px 17px 11px; }
+.nsk[data-node=tab] .nsk-box { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 16%, transparent), transparent 92%); padding-left: 16px; }
+.nsk[data-node=tab][data-mode=two] .nsk-col.l .nsk-box { background: linear-gradient(270deg, color-mix(in srgb, var(--c) 16%, transparent), transparent 92%); padding: 7px 16px 9px 13px; }
+.nsk[data-core=cloud] .nsk-core, .nsk[data-core=burst] .nsk-core { margin: 10px 0; }
+.nsk-n { font-size: 20px; font-weight: 700; color: var(--c); margin-right: 5px; }
+.nsk-t { font-size: 24px; font-weight: 700; }
+.nsk-g { margin: 3px -4px 0; padding: 0 4px; font-size: 18px; font-weight: 500; color: var(--muted); display: -webkit-box;   /* (the room at its sides: a handwritten letter reaches past its own width) */ -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nsk-leaves { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding-left: 30px; max-width: 100%; }
+.nsk-leaves.loose { padding: 0; align-items: center; }
+.nsk-leaf { display: inline-flex; align-items: center; gap: 6px; padding: 1px 2px; font-size: 21px; font-weight: 600; color: var(--text); }
+.nsk-leaf:hover, .nsk-leaf:focus-visible, .nsk-chip:hover, .nsk-chip:focus-visible { text-decoration: underline wavy var(--c, var(--acc)) 1.5px; text-underline-offset: 4px; }
+.nski { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.nsk-leaf .nski { color: var(--c); font-size: 19px; }
+.nsk-rep { display: inline-flex; color: var(--amber); font-size: 15px; }
+.nsk-rep .nski { color: inherit; font-size: inherit; }
+.nsk-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; }
+.nsk-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 20px; font-weight: 600; color: var(--muted); }
+.nsk-chip b { font-weight: 700; color: var(--text); }
+.nsk-chip:hover { color: var(--text); }
+/* two sides: the left one is the right one in a mirror - its boxes, leaves and twigs lean on the subject */
+.nsk[data-mode=two] .nsk-col.l .nsk-b { align-items: flex-end; }
+.nsk[data-mode=two] .nsk-col.l .nsk-box { text-align: right; }
+.nsk[data-mode=two] .nsk-col.l .nsk-leaves { align-items: flex-end; padding: 0 30px 0 0; }
+.nsk[data-mode=two] .nsk-col.l .nsk-leaf { flex-direction: row-reverse; text-align: right; }
+.nsk[data-mode=one] { grid-template-columns: minmax(150px, 30%) minmax(0, 1fr); column-gap: 46px; }
+.nsk[data-mode=one] .nsk-mid { grid-column: 1; grid-row: 1 / span 2; }
+.nsk[data-mode=one] .nsk-col { grid-column: 2; }
+.nsk[data-mode=one] .nsk-col.l { grid-row: 1; }
+.nsk[data-mode=one] .nsk-col.r { grid-row: 2; }
+.nsk[data-mode=stack] { grid-template-columns: minmax(0, 1fr); padding: 22px 16px; }
+.nsk[data-mode=stack] .nsk-mid { order: -1; }
+.nsk[data-mode=stack] .nsk-col { padding-left: 26px; }
+.nsk[data-mode=stack][data-core=cloud] .nsk-core, .nsk[data-mode=stack][data-core=burst] .nsk-core { margin: 10px 14px; }   /* its bumps stay on the page */
+.nflash { animation: nflash 1.4s ease-out; }
+@keyframes nflash { 0%, 35% { box-shadow: 0 0 0 2px var(--c, var(--acc)), 0 0 22px color-mix(in srgb, var(--c, var(--acc)) 45%, transparent); } 100% { box-shadow: 0 0 0 2px transparent, 0 0 22px transparent; } }
+@media (prefers-reduced-motion: reduce) { .nsk, .nsk-ink path, .nsk-box { transition: none; } .nflash { animation: none; } }
 .nmap { position: relative; height: 34px; margin: 4px 0 16px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
 .nseg { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 22%, transparent); border-left: 2px solid var(--c);
   display: flex; align-items: center; padding: 0 8px; overflow: hidden; }

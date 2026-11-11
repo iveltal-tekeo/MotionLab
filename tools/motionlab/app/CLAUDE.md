@@ -162,7 +162,16 @@ read its section in `docs\app_pages.md`** (the table under **Pages** below).
     and *Combine notes* ("combine the knowledge of the videos selected ... a markdown with all important info"): the
     question goes in a file, an answer keeps what the video says (quoted) apart from what Claude adds (`more`). An
     answer across videos has more room than one video's (`notes.answer_limits`), and a file Claude makes beside it at
-    the user's ask is listed on its page, never written by the app (2026-11-10).
+    the user's ask is listed on its page, never written by the app (2026-11-10). **The note map** (2026-11-11, the
+    user: "remove the "type/channel/views..." container at the start, and maybe add a cool loking note map on the key
+    things with a cool drawish style ... so that with a quick look u an see the idea but still be able to deepen the
+    definitions on the other sections"; then "i LOVE the style, but maybe make each drawing a "little" bit more
+    different so not each one has the same feeling ... i kinda seems repetitive after some notes"): under the TL;DR a
+    hand-drawn mind map of the notes (`noteMap`, `noteMapInk`, `NSK_LOOK`) - its words are the notes' own (never
+    shortened by the page beyond a two-line gist, never new text), a click goes deeper on the page and never plays;
+    every video draws differently but always the same way for that video (seeded by its folder name - never
+    `Math.random`); the property table stays gone. Its handwriting font is the app's own (`ui\fonts\caveat\`), not one
+    of the graphics' library.
   - **The analysis page**: the user's 2026-10-07 layout, since 2026-10-18 in the one review pattern (**Reviews**,
     below); the raw text behind *Copy what Claude gets* = GET `/api/feedback/<name>` - no file path in the page's words.
   - **Bulk and thumbnail sets**: **Bulk** (0.4.5, the user: "bulk analyze thumbnails, videos, and also bulk edit stuff
